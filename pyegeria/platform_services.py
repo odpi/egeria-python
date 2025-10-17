@@ -12,7 +12,8 @@ import json
 
 import httpx
 
-from pyegeria._client_new import Client2, enable_ssl_check
+from pyegeria._client_new import Client2
+from pyegeria._globals import enable_ssl_check
 from pyegeria._exceptions import (
     InvalidParameterException,
     OMAGCommonErrorCode,

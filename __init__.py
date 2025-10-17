@@ -46,7 +46,7 @@ from pyegeria.egeria_cat_client import EgeriaCat
 from pyegeria.egeria_config_client import EgeriaConfig
 from pyegeria.egeria_my_client import EgeriaMy
 from pyegeria.egeria_tech_client import EgeriaTech
-from pyegeria.feedback_manager_omvs import FeedbackManager
+
 from pyegeria.full_omag_server_config import FullServerConfig
 
 from pyegeria.glossary_manager import GlossaryManager

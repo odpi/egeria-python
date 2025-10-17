@@ -49,7 +49,7 @@ from .egeria_client import Egeria
 from .egeria_config_client import EgeriaConfig
 from .egeria_my_client import EgeriaMy
 from .egeria_tech_client import EgeriaTech
-from .feedback_manager_omvs import FeedbackManager
+# from .feedback_manager_omvs import FeedbackManager
 from .full_omag_server_config import FullServerConfig
 from .glossary_manager import GlossaryManager
 from .governance_officer import GovernanceOfficer

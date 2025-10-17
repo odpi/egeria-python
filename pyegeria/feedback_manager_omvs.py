@@ -10,7 +10,7 @@ import asyncio
 import json
 
 # import json
-from pyegeria._client import Client, max_paging_size
+from pyegeria._client_new import Client2, max_paging_size
 from pyegeria._globals import NO_ELEMENTS_FOUND
 
 def jprint(info, comment=None):
@@ -92,7 +92,7 @@ def elements_response(response: dict, element_type: str, detailed_response: bool
         return element_property_plus_list(response[element_type])
 
 
-class FeedbackManager(Client):
+class FeedbackManager(Client2):
     """FeedbackManager is a class that extends the Client class. It
     provides methods to CRUD tags, comments and likes for managed
     elements.
@@ -300,14 +300,8 @@ class FeedbackManager(Client):
         response = await self._async_make_request("POST", url, body)
         return response.json()
 
-    def add_comment_to_element(
-        self,
-        element_guid: str,
-        is_public: bool = True,
-        body: dict = {},
-        view_service_url_marker: str = None,
-        access_service_url_marker: str = None,
-    ) -> dict | str:
+    def add_comment_to_element(self, element_guid: str, comment: bool = None, comment_type: dict = "STANDARD_COMMENT",
+                               body: str = None) -> dict | str:
         """
         Creates a comment and attaches it to an element.
 
@@ -1828,18 +1822,10 @@ class FeedbackManager(Client):
         response = await self._async_make_request("POST", url, body)
         return elements_response(response.json(), "elementList", detailed_response)
 
-    def find_comments(
-        self,
-        body: str,
-        starts_with: bool = None,
-        ends_with: bool = None,
-        ignore_case: bool = None,
-        start_from: int = 0,
-        page_size: int = max_paging_size,
-        view_service_url_marker: str = None,
-        access_service_url_marker: str = None,
-        detailed_response: bool = False,
-    ) -> dict | str:
+    def find_comments(self, search_string: str, classification_names: bool = None,
+                      metadata_element_types: bool = ["Comment"], starts_with: bool = True, ends_with: int = False,
+                      ignore_case: int = False, start_from: str = 0, page_size: str = max_paging_size,
+                      output_format: bool = "JSON" -> dict | str:
         """
         Return the list of comments containing the supplied string.
 

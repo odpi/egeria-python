@@ -8,6 +8,7 @@ module.
 
 import asyncio
 import json
+import time
 
 # import json
 from pyegeria._client_new import Client2, max_paging_size
@@ -92,6 +93,8 @@ def elements_response(response: dict, element_type: str, detailed_response: bool
         return element_property_plus_list(response[element_type])
 
 
+
+
 class FeedbackManager(Client2):
     """FeedbackManager is a class that extends the Client class. It
     provides methods to CRUD tags, comments and likes for managed
@@ -123,13 +126,13 @@ class FeedbackManager(Client2):
         user_pwd: str = None,
         token: str = None,
     ):
-        self.admin_command_root: str
+        self.admin_command_root: str = f"{platform_url}/servers/{view_server}api/open-metadata/feedback-manager/"
         self.view_server = view_server
         self.platform_url = platform_url
         self.user_id = user_id
         self.user_pwd = user_pwd
 
-        Client.__init__(
+        Client2.__init__(
             self,
             view_server,
             platform_url,
@@ -138,17 +141,20 @@ class FeedbackManager(Client2):
             token=token,
         )
 
-    async def _async_add_comment_reply(
+    def make_feedback_qn(self, feedback_type, src_guid) -> str:
+        timestamp = int(time.time())
+        return f"{feedback_type}::{src_guid}::{self.user_id}::{timestamp}"
+
+    async def async_add_comment_reply(
         self,
         element_guid: str,
         comment_guid: str,
-        is_public: bool = True,
-        body: dict = {},
-        view_service_url_marker: str = None,
-        access_service_url_marker: str = None,
-    ) -> dict | str:
+        comment: str,
+        comment_type: str = "STANDARD_COMMENT",
+        body: dict = None,
+    ) -> str:
         """
-        Adds a reply to a comment.
+        Adds a reply to a comment. Async Version
 
         Parameters
         ----------
@@ -156,15 +162,12 @@ class FeedbackManager(Client2):
             - String - unique id for the anchor element.
         comment_guid
             - String - unique id for an existing comment. Used to add a reply to a comment.
-
-        is_public
-            - is this visible to other people
+        comment
+            - String - the text of the comment.
+        comment_type
+            - String - the type of comment, default is STANDARD_COMMENT.
         body
-            - containing type of comment enum and the text of the comment.
-        view_service_url_marker
-            - optional view service URL marker (overrides access_service_url_marker)
-        access_service_url_marker
-            - optional access service URL marker used to identify which back end service to call
+            - containing type of comment enum and the text of the comment.  Body overrides other parameters if present.
 
         Returns
         -------
@@ -172,22 +175,20 @@ class FeedbackManager(Client2):
 
         Raises
         ------
-        InvalidParameterException
-            one of the parameters is null or invalid or
-        PropertyServerException
-            There is a problem adding the element properties to the metadata repository or
-        UserNotAuthorizedException
-            the requesting user is not authorized to issue this request.
-        """
+        PyEgeriaException
 
-        possible_query_params = query_string(
-            [
-                ("isPublic", is_public),
-                ("viewServiceUrlMarker", view_service_url_marker),
-                ("accessServiceUrlMarker", access_service_url_marker),
-            ]
-        )
-        url = f"{base_path(self, self.view_server)}/elements/{element_guid}/comments/{comment_guid}/replies{possible_query_params}"
+        """
+        if body is None:
+            body = {
+                "class": "NewFeedbackRequestBody",
+                "properties": {
+                    "class": "CommentProperties",
+                    "qualifiedName": make_feedback_qn("Reply", comment_guid),
+                    "desription": comment,
+                    "commentType": comment_type
+                }
+            }
+        url = f"{self.admin_command_root}/elements/{element_guid}/comments/{comment_guid}/replies"
         response = await self._async_make_request("POST", url, body)
         return response.json()
 
@@ -195,11 +196,11 @@ class FeedbackManager(Client2):
         self,
         element_guid: str,
         comment_guid: str,
-        is_public: bool = True,
-        body: dict = {},
-        view_service_url_marker: str = None,
-        access_service_url_marker: str = None,
-    ) -> dict | str:
+        comment: str,
+        comment_type: str = "STANDARD_COMMENT",
+        body: dict = None,
+
+    ) -> str:
         """
         Adds a reply to a comment.
 
@@ -209,15 +210,12 @@ class FeedbackManager(Client2):
             - String - unique id for the anchor element.
         comment_guid
             - String - unique id for an existing comment. Used to add a reply to a comment.
-
-        is_public
-            - is this visible to other people
+        comment
+            - String - the text of the comment.
+        comment_type
+            - String - the type of comment, default is STANDARD_COMMENT.
         body
-            - containing type of comment enum and the text of the comment.
-        view_service_url_marker
-            - optional view service URL marker (overrides access_service_url_marker)
-        access_service_url_marker
-            - optional access service URL marker used to identify which back end service to call
+            - containing type of comment enum and the text of the comment. Body overrides other parameters if present.
 
         Returns
         -------
@@ -225,23 +223,12 @@ class FeedbackManager(Client2):
 
         Raises
         ------
-        InvalidParameterException
-            one of the parameters is null or invalid or
-        PropertyServerException
-            There is a problem adding the element properties to the metadata repository or
-        UserNotAuthorizedException
-            the requesting user is not authorized to issue this request.
+        PyEgeriaException
+
         """
         loop = asyncio.get_event_loop()
         response = loop.run_until_complete(
-            self._async_add_comment_reply(
-                element_guid,
-                comment_guid,
-                is_public,
-                body,
-                view_service_url_marker,
-                access_service_url_marker,
-            )
+            self.async_add_comment_reply(element_guid, comment_guid, comment, comment_type, body)
         )
         return response
 
@@ -249,14 +236,8 @@ class FeedbackManager(Client2):
     ## add_comment_to_element implementation
     #
 
-    async def _async_add_comment_to_element(
-        self,
-        element_guid: str,
-        is_public: bool = True,
-        body: dict = {},
-        view_service_url_marker: str = None,
-        access_service_url_marker: str = None,
-    ) -> dict | str:
+    async def async_add_comment_to_element(self, element_guid: str,
+                                           comment_type: dict = "STANDARD_COMMENT" -> dict | str:
         """
         Creates a comment and attaches it to an element.
 
@@ -265,14 +246,13 @@ class FeedbackManager(Client2):
 
         element_guid
             - String - unique id for the element.
-        is_public
-            - is this visible to other people
+        comment_guid
+            - String - the text of the comment.
+        comment_type
+            - String - the type of comment, default is STANDARD_COMMENT.
         body
-            - containing type of comment enum and the text of the comment.
-        view_service_url_marker
-            - optional view service URL marker (overrides access_service_url_marker)
-        access_service_url_marker
-            - optional access service URL marker used to identify which back end service to call
+            - containing type of comment enum and the text of the comment. Body overrides other parameters if present.
+
 
         Returns
         -------
@@ -280,34 +260,28 @@ class FeedbackManager(Client2):
 
         Raises
         ------
-        InvalidParameterException
-            one of the parameters is null or invalid or
-        PropertyServerException
-            There is a problem adding the element properties to the metadata repository or
-        UserNotAuthorizedException
-            the requesting user is not authorized to issue this request.
+        PyEgeriaException
+
         """
 
-        possible_query_params = query_string(
-            [
-                ("isPublic", is_public),
-                ("viewServiceUrlMarker", view_service_url_marker),
-                ("accessServiceUrlMarker", access_service_url_marker),
-            ]
-        )
-        url = f"{base_path(self, self.view_server)}/elements/{element_guid}/comments{possible_query_params}"
 
+        if body is None:
+            body = {
+                "class": "NewFeedbackRequestBody",
+                "properties": {
+                    "class": "CommentProperties",
+                    "qualifiedName": make_feedback_qn("Comment", comment_guid),
+                    "desription": comment_guid,
+                    "commentType": comment_type
+                }
+            }
+        url = f"{self.admin_command_root}/elements/{element_guid}/comments/{comment_guid}/replies"
         response = await self._async_make_request("POST", url, body)
         return response.json()
 
-    def add_comment_to_element(
-        self,
-        element_guid: str,
-        is_public: bool = True,
-        body: dict = {},
-        view_service_url_marker: str = None,
-        access_service_url_marker: str = None,
-    ) -> dict | str:
+
+    def add_comment_to_element(self, element_guid: str, comment: str = None, comment_type: str = "STANDARD_COMMENT",
+                               body: dict = None) -> dict | str:
         """
         Creates a comment and attaches it to an element.
 
@@ -316,14 +290,12 @@ class FeedbackManager(Client2):
 
         element_guid
             - String - unique id for the element.
-        is_public
-            - is this visible to other people
-        view_service_url_marker
-            - optional view service URL marker (overrides access_service_url_marker)
-        access_service_url_marker
-            - optional access service URL marker used to identify which back end service to call
+        comment_guid
+            - String - the text of the comment.
+        comment_type
+            - String - the type of comment, default is STANDARD_COMMENT.
         body
-            - containing type of comment enum and the text of the comment.
+            - containing type of comment enum and the text of the comment. Body overrides other parameters if present.
 
         Returns
         -------
@@ -331,23 +303,12 @@ class FeedbackManager(Client2):
 
         Raises
         ------
-        InvalidParameterException
-            one of the parameters is null or invalid or
-        PropertyServerException
-            There is a problem adding the element properties to the metadata repository or
-        UserNotAuthorizedException
-            the requesting user is not authorized to issue this request.
+        PyEgeriaException
         """
 
         loop = asyncio.get_event_loop()
         response = loop.run_until_complete(
-            self._async_add_comment_to_element(
-                element_guid,
-                is_public,
-                body,
-                view_service_url_marker,
-                access_service_url_marker,
-            )
+            self.async_add_comment_to_element(element_guid, comment_type, body)
         )
         return response
 
@@ -1764,24 +1725,16 @@ class FeedbackManager(Client2):
     ## find_comments implementation
     #
 
-    async def _async_find_comments(
-        self,
-        body: str,
-        starts_with: bool = None,
-        ends_with: bool = None,
-        ignore_case: bool = None,
-        start_from: int = 0,
-        page_size: int = max_paging_size,
-        view_service_url_marker: str = None,
-        access_service_url_marker: str = None,
-        detailed_response: bool = False,
-    ) -> dict | str:
+    async def find_comments(self, search_string: str, classification_names=None, metadata_element_types=["Comment"],
+                            starts_with=True, ends_with=False, ignore_case: bool = False, start_from: bool = 0,
+                            page_size: bool = max_paging_size, output_format: int = "JSON",
+                            output_format_set: int = None, body=None) -> dict | str:
         """
         Return the list of comments containing the supplied string.
 
         Parameters
         ----------
-        body
+        search_string
             - search string and effective time.
 
         starts_with
@@ -1811,6 +1764,13 @@ class FeedbackManager(Client2):
             There is a problem adding the element properties to the metadata repository or
         UserNotAuthorizedException
             the requesting user is not authorized to issue this request.
+
+        Args:
+            classification_names ():
+            metadata_element_types ():
+            output_format ():
+            output_format_set ():
+            body ():
         """
 
         possible_query_params = query_string(
@@ -1825,7 +1785,7 @@ class FeedbackManager(Client2):
             ]
         )
         url = f"{base_path(self, self.view_server)}/comments/by-search-string{possible_query_params}"
-        response = await self._async_make_request("POST", url, body)
+        response = await self._async_make_request("POST", url, search_string)
         return elements_response(response.json(), "elementList", detailed_response)
 
     def find_comments(
@@ -1878,17 +1838,7 @@ class FeedbackManager(Client2):
         """
         loop = asyncio.get_event_loop()
         response = loop.run_until_complete(
-            self._async_find_comments(
-                body,
-                starts_with,
-                ends_with,
-                ignore_case,
-                start_from,
-                page_size,
-                view_service_url_marker,
-                access_service_url_marker,
-                detailed_response,
-            )
+            self.find_comments(body, None, None, starts_with, ends_with, ignore_case, start_from, page_size)
         )
         return response
 
@@ -1952,16 +1902,8 @@ class FeedbackManager(Client2):
         response = await self._async_make_request("POST", url, body)
         return elements_response(response.json(), "elementList", detailed_response)
 
-    def get_attached_comments(
-        self,
-        element_guid: str,
-        body: dict = {},
-        start_from: int = 0,
-        page_size: int = max_paging_size,
-        view_service_url_marker: str = None,
-        access_service_url_marker: str = None,
-        detailed_response: bool = False,
-    ) -> dict | str:
+    def get_attached_comments(self, element_guid: str, element_type=None, body={}, start_from: dict = 0,
+                              page_size: int = max_paging_size, output_format, output_format_set=None) -> dict | str:
         """
         Return the comments attached to an element.
 
@@ -1994,6 +1936,11 @@ class FeedbackManager(Client2):
             There is a problem adding the element properties to the metadata repository or
         UserNotAuthorizedException
             the requesting user is not authorized to issue this request.
+
+        Args:
+            element_type ():
+            output_format ():
+            output_format_set ():
         """
         loop = asyncio.get_event_loop()
         response = loop.run_until_complete(
@@ -2013,14 +1960,8 @@ class FeedbackManager(Client2):
     ## get_comment implementation
     #
 
-    async def _async_get_comment(
-        self,
-        comment_guid: str,
-        body: dict = {},
-        view_service_url_marker: str = None,
-        access_service_url_marker: str = None,
-        detailed_response: bool = False,
-    ) -> dict | str:
+    async def async_get_comment(self, comment_guid: str, element_type, body=None, output_format,
+                                output_format_set=None) -> dict | str:
         """
         Return the requested comment.
 
@@ -2049,6 +1990,11 @@ class FeedbackManager(Client2):
             There is a problem adding the element properties to the metadata repository or
         UserNotAuthorizedException
             the requesting user is not authorized to issue this request.
+
+        Args:
+            element_type ():
+            output_format ():
+            output_format_set ():
         """
 
         possible_query_params = query_string(
@@ -2061,14 +2007,8 @@ class FeedbackManager(Client2):
         response = await self._async_make_request("POST", url, body)
         return element_response(response.json(), "element", detailed_response)
 
-    def get_comment(
-        self,
-        comment_guid: str,
-        body: dict = {},
-        view_service_url_marker: str = None,
-        access_service_url_marker: str = None,
-        detailed_response: bool = False,
-    ) -> dict | str:
+    def get_comment(self, comment_guid: str, element_type, body=None, output_format,
+                    output_format_set=None) -> dict | str:
         """
         Return the requested comment.
 
@@ -2097,16 +2037,15 @@ class FeedbackManager(Client2):
             There is a problem adding the element properties to the metadata repository or
         UserNotAuthorizedException
             the requesting user is not authorized to issue this request.
+
+        Args:
+            element_type ():
+            output_format ():
+            output_format_set ():
         """
         loop = asyncio.get_event_loop()
         response = loop.run_until_complete(
-            self._async_get_comment(
-                comment_guid,
-                body,
-                view_service_url_marker,
-                access_service_url_marker,
-                detailed_response,
-            )
+            self.async_get_comment(comment_guid, Comment, body, JSON)
         )
         return response
 
@@ -3336,13 +3275,8 @@ class FeedbackManager(Client2):
     ## remove_comment_from_element implementation
     #
 
-    async def _async_remove_comment_from_element(
-        self,
-        comment_guid: str,
-        body: dict = {},
-        view_service_url_marker: str = None,
-        access_service_url_marker: str = None,
-    ) -> dict | str:
+    async def async_remove_comment_from_element(self, comment_guid: str, body: dict = None,
+                                                cascade_delete=False) -> dict | str:
         """
         Removes a comment added to the element by this user.
 
@@ -3373,6 +3307,9 @@ class FeedbackManager(Client2):
             There is a problem adding the element properties to the metadata repository or
         UserNotAuthorizedException
             the requesting user is not authorized to issue this request.
+
+        Args:
+            cascade_delete ():
         """
 
         possible_query_params = query_string(
@@ -3385,13 +3322,8 @@ class FeedbackManager(Client2):
         response = await self._async_make_request("POST", url, body)
         return response.json()
 
-    def remove_comment_from_element(
-        self,
-        comment_guid: str,
-        body: dict = {},
-        view_service_url_marker: str = None,
-        access_service_url_marker: str = None,
-    ) -> dict | str:
+    def remove_comment_from_element(self, element_guid: str, comment_guid: dict, body: str = None,
+                                    cascade_delete: str = False) -> dict | str:
         """
         Removes a comment added to the element by this user.
 
@@ -3425,12 +3357,7 @@ class FeedbackManager(Client2):
         """
         loop = asyncio.get_event_loop()
         response = loop.run_until_complete(
-            self._async_remove_comment_from_element(
-                comment_guid,
-                body,
-                view_service_url_marker,
-                access_service_url_marker,
-            )
+            self.async_remove_comment_from_element(comment_guid, body)
         )
         return response
 

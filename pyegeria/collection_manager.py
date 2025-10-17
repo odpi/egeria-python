@@ -1018,7 +1018,7 @@ class CollectionManager(Client2):
 
     @dynamic_catch
     async def _async_create_collection(self, display_name: str = None, description: str = None,
-                                       category: str = None, initial_classifications: list[str] = None,
+                                       category: str = None, initial_classifications: list[str] = None, prop: list[str] = "Collection",
                                        body: dict | NewElementRequestBody = None) -> str:
         """ Create a new generic collection. If the body is not present, the display_name, description, category
             and classification will be used to create a simple, self-anchored collection.
@@ -1037,7 +1037,8 @@ class CollectionManager(Client2):
         initial_classifications: list[str], optional
             An initial list of classifications for the collection. This can be used to distinguish, for instance, Folders
             from Root Collections.
-
+        prop: list[str], optional
+            The kind of collection property to use.
         body: dict | NewElementRequestBody, optional
             A dict or NewElementRequestBody representing the details of the collection to create. If supplied, this
             information will be used to create the collection and the other attributes will be ignored. The body is
@@ -1125,7 +1126,11 @@ class CollectionManager(Client2):
         if body:
             validated_body = self.validate_new_element_request(body,"CollectionProperties")
         elif (body is None) and (display_name is not None):
-            pre = initial_classifications[0] if initial_classifications is not None else "Collection"
+            if initial_classifications:
+                pre = initial_classifications[0]
+            else:
+                pre = prop[0]
+
             qualified_name = self.__create_qualified_name__(pre, display_name, EGERIA_LOCAL_QUALIFIER)
             if initial_classifications:
                 initial_classifications_dict = {}
@@ -1139,7 +1144,8 @@ class CollectionManager(Client2):
                                                              qualified_name = qualified_name,
                                                              display_name = display_name,
                                                              description = description,
-                                                             category = category
+                                                             category = category,
+                                                             typeName = prop[0]
                                                              )
             body = {
                 "class" :"NewElementRequestBody",
@@ -1152,15 +1158,22 @@ class CollectionManager(Client2):
             raise PyegeriaInvalidParameterException(additional_info={"reason": "Invalid input parameters"})
 
         url = f"{self.collection_command_root}"
-        json_body = validated_body.model_dump_json(indent=2, exclude_none=True)
-        logger.info(json_body)
-        resp = await self._async_make_request("POST", url, json_body, is_json=True)
-        logger.info(f"Create collection with GUID: {resp.json().get('guid')}")
-        return resp.json().get("guid", NO_GUID_RETURNED)
+
+        prop = validated_body.properties['class']
+        prop = prop.replace('Properties','')
+
+        # json_body = validated_body.model_dump_json(indent=2, exclude_none=True)
+        #
+        # logger.info(json_body)
+        # resp = await self._async_make_request("POST", url, json_body, is_json=True)
+        # logger.info(f"Create collection with GUID: {resp.json().get('guid')}")
+        # return resp.json().get("guid", NO_GUID_RETURNED)
+        response = await self._async_create_element_body_request(url, [prop], validated_body)
+        return response
 
 
     def create_collection(self, display_name: str = None, description: str = None,
-                                category: str = None, initial_classifications: list[str] = None,
+                                category: str = None, initial_classifications: list[str] = None, prop:list[str]="Collection",
                                 body: dict | NewElementRequestBody = None) -> str:
         """ Create a new generic collection. If the body is not present, the display_name, description, category
             and classification will be used to create a simple, self-anchored collection.
@@ -1178,7 +1191,8 @@ class CollectionManager(Client2):
         initial_classifications: str, optional
             An initial classification for the collection. This can be used to distinguish, for instance, Folders
             from Root Collections.
-
+        prop: str, optional
+            The types of the collection.
         body: dict | NewElementRequestBody, optional
             A dict or NewElementRequestBody representing the details of the collection to create. If supplied, this
             information will be used to create the collection and the other attributes will be ignored. The body is
@@ -1267,7 +1281,7 @@ class CollectionManager(Client2):
 
         return asyncio.get_event_loop().run_until_complete(
             self._async_create_collection(display_name, description,category,
-                                                 initial_classifications,    body))
+                                                 initial_classifications,  prop,  body))
 
 
     @dynamic_catch
@@ -1303,11 +1317,11 @@ class CollectionManager(Client2):
               The principle specified by the user_id does not have authorization for the requested action
 
         """
+        prop = "RootCollection"
 
         return asyncio.get_event_loop().run_until_complete(
             self._async_create_collection(display_name=display_name, description=description, category=category,
-                                         initial_classifications = ["RootCollection"], body=body))
-
+                                         initial_classifications = [], prop = [prop], body=body))
 
     @dynamic_catch
     def create_folder_collection(self, display_name: str = None, description: str = None,
@@ -1342,14 +1356,12 @@ class CollectionManager(Client2):
               The principle specified by the user_id does not have authorization for the requested action
 
         """
+        prop = "CollectionFolder"
 
         return asyncio.get_event_loop().run_until_complete(
-            self._async_create_collection(display_name, description, category,
-                                          ["Folder"], body))
+            self._async_create_collection(display_name=display_name, description=description, category=category,
+                                          initial_classifications=[], prop=[prop], body=body))
 
-
-
-        return resp
     @dynamic_catch
     def create_reference_list_collection(self, display_name: str = None, description: str = None,
                                       category: str = None, body: dict | NewElementRequestBody = None) -> str:

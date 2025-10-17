@@ -8,32 +8,24 @@ different client capabilities. It also provides the common methods used to make 
 """
 
 import asyncio
-import inspect
-import json
 import os
 import re
-import sys
+import time
 from collections.abc import Callable
 from typing import Any
 
-import httpcore
-import httpx
-from httpx import AsyncClient, Response, HTTPStatusError
+from httpx import Response
 # from venv import logger
 from loguru import logger
 from pydantic import TypeAdapter
 
+from pyegeria._base_client import BaseClient
 from pyegeria._exceptions_new import (
-    PyegeriaAPIException, PyegeriaConnectionException, PyegeriaInvalidParameterException,
-    PyegeriaUnknownException, PyegeriaClientException
+    PyegeriaConnectionException, PyegeriaInvalidParameterException
 )
-from pyegeria._globals import enable_ssl_check, max_paging_size, NO_ELEMENTS_FOUND, default_time_out
-from pyegeria._validators import (
-    validate_name,
-    validate_server_name,
-    validate_url,
-    validate_user_id,
-)
+from pyegeria._globals import max_paging_size, NO_ELEMENTS_FOUND, default_time_out
+from pyegeria._output_formats import get_output_format_type_match
+from pyegeria._output_formats import select_output_format_set
 from pyegeria.models import (SearchStringRequestBody, FilterRequestBody, GetRequestBody, NewElementRequestBody,
                              TemplateRequestBody, UpdateStatusRequestBody, UpdateElementRequestBody,
                              NewRelationshipRequestBody,
@@ -41,14 +33,13 @@ from pyegeria.models import (SearchStringRequestBody, FilterRequestBody, GetRequ
                              NewClassificationRequestBody,
                              DeleteElementRequestBody, DeleteRelationshipRequestBody, DeleteClassificationRequestBody,
                              LevelIdentifierQueryBody)
-
 from pyegeria.output_formatter import populate_common_columns, resolve_output_formats, generate_output
 from pyegeria.utils import body_slimmer, dynamic_catch
 
 ...
 
 
-class Client2:
+class Client2(BaseClient):
     """
     An abstract class used to establish connectivity for an Egeria Client
     for a particular server, platform and user.
@@ -99,16 +90,16 @@ class Client2:
             api_key: str = None,
             page_size: int = max_paging_size,
     ):
-        self.server_name = validate_server_name(server_name)
-        self.platform_url = validate_url(platform_url)
-        self.user_id = user_id
-        self.user_pwd = user_pwd
-        self.page_size = page_size
-        self.token_src = token_src
-        self.token = token
-        self.exc_type = None
-        self.exc_value = None
-        self.exc_tb = None
+        # self.server_name = validate_server_name(server_name)
+        # self.platform_url = validate_url(platform_url)
+        # self.user_id = user_id
+        # self.user_pwd = user_pwd
+        # self.page_size = page_size
+        # self.token_src = token_src
+        # self.token = token
+        # self.exc_type = None
+        # self.exc_value = None
+        # self.exc_tb = None
         # self.url_marker = "MetadataExpert"
 
         #
@@ -121,32 +112,36 @@ class Client2:
         #     else:
         #         self.token = token
 
-        if api_key is None:
-            api_key = os.environ.get("API_KEY", None)
-        self.api_key = api_key
+        # if api_key is None:
+        #     api_key = os.environ.get("API_KEY", None)
+        # self.api_key = api_key
+        #
+        # self.headers = {
+        #     "Content-Type": "application/json",
+        # }
+        # self.text_headers = {
+        #     "Content-Type": "text/plain",
+        # }
+        # if self.api_key is not None:
+        #     self.headers["X-Api-Key"] = self.api_key
+        #     self.text_headers["X-Api-Key"] = self.api_key
+        #
+        # if token is not None:
+        #     self.headers["Authorization"] = f"Bearer {token}"
+        #     self.text_headers["Authorization"] = f"Bearer {token}"
+        #
+        # v_url = validate_url(platform_url)
+        #
+        # if v_url:
+        #     self.platform_url = platform_url
+        #     if validate_server_name(server_name):
+        #         self.server_name = server_name
+        #     self.session = AsyncClient(verify=enable_ssl_check)
 
-        self.headers = {
-            "Content-Type": "application/json",
-        }
-        self.text_headers = {
-            "Content-Type": "text/plain",
-        }
-        if self.api_key is not None:
-            self.headers["X-Api-Key"] = self.api_key
-            self.text_headers["X-Api-Key"] = self.api_key
+        super().__init__(server_name, platform_url, user_id, user_pwd, token, 
+                         token_src, api_key, page_size)
 
-        if token is not None:
-            self.headers["Authorization"] = f"Bearer {token}"
-            self.text_headers["Authorization"] = f"Bearer {token}"
-
-        v_url = validate_url(platform_url)
-
-        if v_url:
-            self.platform_url = platform_url
-            if validate_server_name(server_name):
-                self.server_name = server_name
-            self.session = AsyncClient(verify=enable_ssl_check)
-        self.command_root: str = f"{self.platform_url}/servers/{self.server_name}/api/open-metadata/generic"
+        self.command_root: str = f"{self.platform_url}/servers/{self.server_name}/api/open-metadata/"
         self._search_string_request_adapter = TypeAdapter(SearchStringRequestBody)
         self._filter_request_adapter = TypeAdapter(FilterRequestBody)
         self._get_request_adapter = TypeAdapter(GetRequestBody)
@@ -170,398 +165,7 @@ class Client2:
         except PyegeriaConnectionException as e:
             raise
 
-    async def _async_check_connection(self) -> str:
-        """Check if the connection is working"""
-        try:
-            response = await self.async_get_platform_origin()
-            return response
-
-        except PyegeriaConnectionException as e:
-            raise
-    def check_connection(self) -> str:
-        """Check if the connection is working"""
-        loop = asyncio.get_event_loop()
-        response = loop.run_until_complete(self._async_check_connection())
-        return response
-
-    def __enter__(self):
-        return self
-
-    def __exit__(self, exc_type, exc_val, exc_tb):
-        self.session.aclose()
-        if exc_type is not None:
-            self.exc_type = exc_type
-            self.exc_val = exc_val
-            self.exc_tb = exc_tb
-
-        return False  # allows exceptions to propagate
-
-    def __str__(self):
-        return (f"EgeriaClient(server_name={self.server_name}, platform_url={self.platform_url}, "
-                f"user_id={self.user_id}, page_size={self.page_size})")
-
-    async def _async_close_session(self) -> None:
-        """Close the session"""
-        await self.session.aclose()
-
-    def close_session(self) -> None:
-        """Close the session"""
-        loop = asyncio.get_event_loop()
-        loop.run_until_complete(self._async_close_session())
-        return
-
-    async def _async_create_egeria_bearer_token(
-            self, user_id: str , password: str
-    ) -> str:
-        """Create and set an Egeria Bearer Token for the user. Async version
-        Parameters
-        ----------
-        user_id : str, opt
-            The user id to authenticate with. If None, then user_id from class instance used.
-        password : str, opt
-            The password for the user. If None, then user_pwd from class instance is used.
-
-        Returns
-        -------
-        token
-            The bearer token for the specified user.
-
-        Raises
-        ------
-        InvalidParameterException
-          If the client passes incorrect parameters on the request - such as bad URLs or invalid values
-        PropertyServerException
-          Raised by the server when an issue arises in processing a valid request
-        NotAuthorizedException
-          The principle specified by the user_id does not have authorization for the requested action
-        Notes
-        -----
-        This routine creates a new bearer token for the user and updates the object with it.
-        It uses Egeria's mechanisms to create a token. This is useful if an Egeria token expires.
-        A bearer token from another source can be set with the set_bearer_token() method.
-
-        """
-        if user_id is None:
-            user_id = self.user_id
-        if password is None:
-            password = self.user_pwd
-
-        url = f"{self.platform_url}/api/token"
-        data = {"userId": user_id, "password": password}
-        async with AsyncClient(verify=enable_ssl_check) as client:
-            try:
-                response = await client.post(url, json=data, headers=self.headers)
-                token = response.text
-            except httpx.HTTPError as e:
-                print(e)
-                return "FAILED"
-
-        if token:
-            self.token_src = "Egeria"
-            self.headers["Authorization"] = f"Bearer {token}"
-            self.text_headers["Authorization"] = f"Bearer {token}"
-            return token
-        else:
-            additional_info = {"reason": "No token returned - request issue?"}
-            raise PyegeriaInvalidParameterException(None, None, additional_info)
-
-    def create_egeria_bearer_token(
-            self, user_id: str = None, password: str = None
-    ) -> str:
-        """Create and set an Egeria Bearer Token for the user
-        Parameters
-        ----------
-        user_id : str
-            The user id to authenticate with.
-        password : str
-            The password for the user.
-
-        Returns
-        -------
-        token
-            The bearer token for the specified user.
-
-        Raises
-        ------
-        InvalidParameterException
-          If the client passes incorrect parameters on the request - such as bad URLs or invalid values
-        PropertyServerException
-          Raised by the server when an issue arises in processing a valid request
-        NotAuthorizedException
-          The principle specified by the user_id does not have authorization for the requested action
-        Notes
-        -----
-        This routine creates a new bearer token for the user and updates the object with it.
-        It uses Egeria's mechanisms to create a token. This is useful if an Egeria token expires.
-        A bearer token from another source can be set with the set_bearer_token() method.
-
-        """
-        loop = asyncio.get_event_loop()
-        response = loop.run_until_complete(
-            self._async_create_egeria_bearer_token(user_id, password)
-        )
-        return response
-
-    async def _async_refresh_egeria_bearer_token(self) -> str:
-        """
-        Refreshes the Egeria bearer token. Async version.
-
-        This method is used to refresh the bearer token used for authentication with Egeria. It checks if the token
-        source is 'Egeria', and if the user ID and password are valid. If all conditions are met, it calls the
-        `create_egeria_bearer_token` method to create a new bearer token. Otherwise,
-        it raises an `InvalidParameterException`.
-
-        Parameters:
-
-        Returns:
-            None
-
-        Raises:
-            InvalidParameterException: If the token source is invalid.
-        """
-        if (
-                (self.token_src == "Egeria")
-                and validate_user_id(self.user_id)
-                and validate_name(self.user_pwd)
-        ):
-            token = await self._async_create_egeria_bearer_token(
-                self.user_id, self.user_pwd
-            )
-            return token
-        else:
-            additional_info = {"reason": "Invalid token source"}
-            raise PyegeriaInvalidParameterException(None, None, additional_info)
-
-    def refresh_egeria_bearer_token(self) -> None:
-        """
-        Refreshes the Egeria bearer token.
-
-        This method is used to refresh the bearer token used for authentication with Egeria. It checks if the token
-        source is 'Egeria', and if the user ID and password are valid. If all conditions are met, it calls the
-        `create_egeria_bearer_token` method to create a new bearer token. Otherwise,
-        it raises an `InvalidParameterException`.
-
-        Parameters:
-
-        Returns:
-            None
-
-        Raises:
-            InvalidParameterException: If the token source is invalid.
-            PropertyServerException
-                Raised by the server when an issue arises in processing a valid request
-            NotAuthorizedException
-                The principle specified by the user_id does not have authorization for the requested action
-        """
-        loop = asyncio.get_event_loop()
-        token = loop.run_until_complete(self._async_refresh_egeria_bearer_token())
-        return token
-
-    def set_bearer_token(self, token: str) -> None:
-        """Retrieve and set a Bearer Token
-        Parameters
-        ----------
-        token: str
-        A bearer token supplied to the method.
-
-        Returns
-        -------
-        None
-            This method does not return anything.
-
-        Raises
-        ------
-        InvalidParameterException
-          If the client passes incorrect parameters on the request - such as bad URLs or invalid values
-        PropertyServerException
-          Raised by the server when an issue arises in processing a valid request
-        NotAuthorizedException
-          The principle specified by the user_id does not have authorization for the requested action
-        Notes
-        -----
-        This routine sets the bearer token for the current object. The user is responsible for providing the token.
-
-        """
-        validate_name(token)
-        self.headers["Authorization"] = f"Bearer {token}"
-        self.text_headers["Authorization"] = f"Bearer {token}"
-
-    def get_token(self) -> str:
-        """Retrieve and return the bearer token"""
-        return self.text_headers["Authorization"]
-
-    async def async_get_platform_origin(self) -> str:
-        """Return the platform origin string if reachable.
-
-        Historically this method returned a boolean; tests and helpers expect the actual origin text.
-        """
-        origin_url = f"{self.platform_url}/open-metadata/platform-services/users/{self.user_id}/server-platform/origin"
-        response = await self._async_make_request("GET", origin_url, is_json=False)
-        if response.status_code == 200:
-            text = response.text.strip()
-            logger.debug(f"Got response from {origin_url}\n Response: {text}")
-            return text
-        else:
-            logger.debug(f"Got response from {origin_url}\n status_code: {response.status_code}")
-            return ""
-
-
-    def get_platform_origin(self) -> str:
-        """Return the platform origin string if reachable.
-
-        Historically this method returned a boolean; tests and helpers expect the actual origin text.
-        """
-        loop = asyncio.get_event_loop()
-        response = loop.run_until_complete(self.async_get_platform_origin())
-        return response
-
     # @logger.catch
-    def make_request(
-            self,
-            request_type: str,
-            endpoint: str,
-            payload: str | dict = None,
-            time_out: int = 30,
-            is_json: bool = True
-    ) -> Response | str:
-        """Make a request to the Egeria API."""
-        try:
-            loop = asyncio.get_running_loop()
-            if loop.is_running():
-                coro = self._async_make_request(request_type, endpoint, payload, time_out, is_json)
-                return asyncio.run_coroutine_threadsafe(coro, loop).result()
-            else:
-                return loop.run_until_complete(
-                    self._async_make_request(request_type, endpoint, payload, time_out, is_json))
-        except RuntimeError:
-            # No running loop exists; run the coroutine
-            return asyncio.run(self._async_make_request(request_type, endpoint, payload, time_out, is_json))
-
-    async def _async_make_request(
-            self,
-            request_type: str,
-            endpoint: str,
-            payload: str | dict = None,
-            time_out: int = 30,
-            is_json: bool = True
-    ) -> Response | str:
-        """Make a request to the Egeria API - Async Version
-        Function to make an API call via the self.session Library. Raise an exception if the HTTP response code
-        is not 200/201. IF there is a REST communication exception, raise InvalidParameterException.
-
-        :param request_type: Type of Request.
-               Supported Values - GET, POST, (not PUT, PATCH, DELETE).
-               Type - String
-        :param endpoint: API Endpoint. Type - String
-        :param payload: API Request Parameters or Query String.
-               Type - String or Dict
-        :param time_out: Timeout in seconds. Type - Integer
-        :param is_json: Whether the payload is JSON or not. Type - Boolean
-        :return: Response. Type - JSON Formatted String
-
-        """
-        context: dict = {}
-        context['class name'] = __class__.__name__
-        context['caller method'] = inspect.currentframe().f_back.f_code.co_name
-        response: Response
-
-        try:
-            if request_type == "GET":
-                response = await self.session.get(
-                    endpoint, params=payload, headers=self.headers, timeout=time_out
-                )
-
-            elif request_type == "POST":
-                if payload is None:
-                    response = await self.session.post(
-                        endpoint, headers=self.headers, timeout=time_out
-                    )
-                elif type(payload) is dict:
-                    response = await self.session.post(
-                        endpoint, json=payload, headers=self.headers, timeout=time_out
-                    )
-                elif type(payload) is str:
-                    # if is_json:
-                    #     response = await self.session.post(
-                    #         endpoint, json=payload, headers=self.headers, timeout=time_out
-                    #         )
-                    # else:
-                    response = await self.session.post(
-                        endpoint,
-                        headers=self.headers,
-                        content=payload,
-                        timeout=time_out,
-                    )
-                else:
-                    # response = await self.session.post(
-                    #     endpoint, headers=self.headers, json=payload, timeout=time_out)
-                    raise TypeError(f"Invalid payload type {type(payload)}")
-
-
-            elif request_type == "POST-DATA":
-                if True:
-                    response = await self.session.post(
-                        endpoint, headers=self.headers, data=payload, timeout=time_out
-                    )
-            elif request_type == "DELETE":
-                if True:
-                    response = await self.session.delete(
-                        endpoint, headers=self.headers, timeout=time_out
-                    )
-            response.raise_for_status()
-
-            status_code = response.status_code
-
-        except (httpx.TimeoutException, httpcore.ConnectError, httpx.ConnectError) as e:
-            additional_info = {"endpoint": endpoint, "error_kind": "connection"}
-            raise PyegeriaConnectionException(context, additional_info, e)
-
-        except (HTTPStatusError, httpx.HTTPStatusError, httpx.RequestError) as e:
-            # context["caught_exception"] = e
-            # context['HTTPStatusCode'] = e.response.status_code
-            additional_info = {"userid": self.user_id, "reason": response.text}
-
-            raise PyegeriaClientException(response, context, additional_info, e)
-        #
-        # except json.JSONDecodeError as e:
-        #     # context["caught_exception"] = e
-        #     # context['HTTPStatusCode'] = e.response.status_code
-        #     additional_info = {"userid": self.user_id}
-        #     raise PyegeriaClientException(response, context, additional_info )
-        #
-        # except PyegeriaAPIException as e:
-        #     raise PyegeriaAPIException(response, context, additional_info=None)
-
-        except Exception as e:
-            additional_info = {"userid": self.user_id}
-            if 'response' in locals() and response is not None:
-                logger.error(f"Response error with code {response.status_code}")
-            else:
-                logger.error("Response object not available due to error")
-            raise PyegeriaUnknownException(None, context, additional_info, e)
-
-        if status_code in (200, 201):
-            try:
-                if is_json:
-                    json_response = response.json()
-                    related_http_code = json_response.get("relatedHTTPCode", 0)
-                    if related_http_code == 200:
-                        return response
-                    else:
-                        raise PyegeriaAPIException(response, context, additional_info=None)
-
-                else:  # Not JSON - Text?
-                    return response
-
-
-            except json.JSONDecodeError as e:
-                logger.error("Failed to decode JSON response from %s: %s", endpoint, response.text,
-                             exc_info=True)
-                context['caught_exception'] = e
-                raise PyegeriaInvalidParameterException(
-                    response, context, e=e
-                )
-
     async def __async_get_guid__(
             self,
             guid: str = None,
@@ -676,10 +280,6 @@ class Client2:
             )
         )
         return result
-
-
-
-
 
 
     def __create_qualified_name__(self, type: str, display_name: str, local_qualifier: str = None,
@@ -1303,7 +903,859 @@ class Client2:
         return result
 
 
+    #
+    #   Common feedback commands
+    #
+    
 
+    def make_feedback_qn(self, feedback_type, src_guid) -> str:
+        timestamp = int(time.time())
+        return f"{feedback_type}::{src_guid}::{self.user_id}::{timestamp}"
+
+    async def async_add_comment_reply(
+        self,
+        element_guid: str,
+        comment_guid: str,
+        comment: str,
+        comment_type: str = "STANDARD_COMMENT",
+        body: dict = None,
+    ) -> str:
+        """
+        Adds a reply to a comment. Async Version
+
+        Parameters
+        ----------
+        element_guid
+            - String - unique id for the anchor element.
+        comment_guid
+            - String - unique id for an existing comment. Used to add a reply to a comment.
+        comment
+            - String - the text of the comment.
+        comment_type
+            - String - the type of comment, default is STANDARD_COMMENT.
+        body
+            - containing type of comment enum and the text of the comment.  Body overrides other parameters if present.
+
+        Returns
+        -------
+        ElementGUID
+
+        Raises
+        ------
+        PyEgeriaException
+
+        """
+        if body is None:
+            body = {
+                "class": "NewFeedbackRequestBody",
+                "properties": {
+                    "class": "CommentProperties",
+                    "qualifiedName": self.make_feedback_qn("Reply", comment_guid),
+                    "desription": comment,
+                    "commentType": comment_type
+                }
+            }
+        url = f"{self.command_root}feedback-manager/{element_guid}/comments/{comment_guid}/replies"
+        response = await self._async_make_request("POST", url, body)
+        return response.json()
+
+    def add_comment_reply(
+        self,
+        element_guid: str,
+        comment_guid: str,
+        comment: str,
+        comment_type: str = "STANDARD_COMMENT",
+        body: dict = None,
+
+    ) -> str:
+        """
+        Adds a reply to a comment.
+
+        Parameters
+        ----------
+        element_guid
+            - String - unique id for the anchor element.
+        comment_guid
+            - String - unique id for an existing comment. Used to add a reply to a comment.
+        comment
+            - String - the text of the comment.
+        comment_type
+            - String - the type of comment, default is STANDARD_COMMENT.
+        body
+            - containing type of comment enum and the text of the comment. Body overrides other parameters if present.
+
+        Returns
+        -------
+        ElementGUID
+
+        Raises
+        ------
+        PyEgeriaException
+
+        """
+        loop = asyncio.get_event_loop()
+        response = loop.run_until_complete(
+            self.async_add_comment_reply(element_guid, comment_guid, comment, comment_type, body)
+        )
+        return response
+
+
+    async def async_add_comment_to_element(
+        self,
+        element_guid: str,
+        comment: str=None,
+        comment_type: str = "STANDARD_COMMENT",
+        body: dict = None,
+    ) -> dict | str:
+        """
+        Creates a comment and attaches it to an element.
+
+        Parameters
+        ----------
+
+        element_guid: str
+            - unique id for the element.
+        comment: str
+            - The text of the comment.
+
+        comment_type: str
+            - the type of comment, default is STANDARD_COMMENT.
+        body
+            - containing type of comment enum and the text of the comment. Body overrides other parameters if present.
+        Returns
+        -------
+        ElementGUID
+
+        Raises
+        ------
+        PyEgeriaException
+
+        """
+        if body is None:
+            body = {
+                "class": "NewFeedbackRequestBody",
+                "properties": {
+                    "class": "CommentProperties",
+                    "qualifiedName": self.make_feedback_qn("Comment", element_guid),
+                    "description": comment,
+                    "commentType": comment_type
+                }
+            }
+        url = f"{self.command_root}feedback-manager/elements/{element_guid}/comments"
+        response = await self._async_make_request("POST", url, body)
+        return response.json().get("guid", "NO_GUID_RETURNED")
+
+
+    def add_comment_to_element(
+        self,
+        element_guid: str,
+        comment: str = None,
+        comment_type: str = "STANDARD_COMMENT",
+        body: dict = None,
+    ) -> dict | str:
+        """
+        Creates a comment and attaches it to an element.
+
+        Parameters
+        ----------
+
+        element_guid
+            - String - unique id for the element.
+        comment: str
+            - The text of the comment.
+        comment_type
+            - String - the type of comment, default is STANDARD_COMMENT.
+        body
+            - containing type of comment enum and the text of the comment. Body overrides other parameters if present.
+
+        Returns
+        -------
+        ElementGUID
+
+        Raises
+        ------
+        PyEgeriaException
+        """
+
+        loop = asyncio.get_event_loop()
+        response = loop.run_until_complete(
+            self.async_add_comment_to_element(element_guid, comment, comment_type, body)
+        )
+        return response
+
+
+    async def async_update_comment(
+        self,
+        comment_guid: str,
+        comment: str=None,
+        comment_type: str = "STANDARD_COMMENT",
+        body: dict | UpdateElementRequestBody= None,
+        merge_update: bool = True,
+    ) -> None:
+        """
+        Updates a comment.
+
+        Parameters
+        ----------
+
+        comment_guid: str
+            - unique id for the comment.
+        comment: str
+            - The text of the comment.
+
+        comment_type: str
+            - the type of comment, default is STANDARD_COMMENT.
+        body: dict | UpdateElementRequestBody
+            - containing type of comment enum and the text of the comment. Body overrides other parameters if present.
+        merge_update: bool
+        - Whether to merge the updated attributes or replace them.
+
+        Returns
+        -------
+        None
+
+        Raises
+        ------
+        PyEgeriaException
+
+        """
+        if body is None:
+            body = {
+                "class": "UpdateElementRequestBody",
+                "mergeUpdate": merge_update,
+                "properties": {
+                    "class": "CommentProperties",
+                    "description": comment,
+                    "commentType": comment_type
+                }
+            }
+        url = f"{self.command_root}feedback-manager/comments{comment_guid}/update"
+        response = await self._async_update_element_body_request(body, url, ["Comment"])
+        return response
+
+
+    def update_comment(
+        self,
+        element_guid: str,
+        comment: str = None,
+        comment_type: str = "STANDARD_COMMENT",
+        body: dict | UpdateElementRequestBody = None,
+        merge_update: bool = True,
+    ) -> dict | str:
+        """
+        Creates a comment and attaches it to an element.
+
+        Parameters
+        ----------
+
+        comment_guid
+            - String - unique id for the comment.
+        comment: str
+            - The text of the comment.
+        comment_type
+            - String - the type of comment, default is STANDARD_COMMENT.
+        body
+            - containing type of comment enum and the text of the comment. Body overrides other parameters if present.
+        merge_update: bool
+            - Whether to merge the updated attributes or replace them.
+        Returns
+        -------
+        ElementGUID
+
+        Raises
+        ------
+        PyEgeriaException
+
+        """
+
+        loop = asyncio.get_event_loop()
+        response = loop.run_until_complete(
+            self.async_update_comment(element_guid, comment, comment_type, body, merge_update)
+        )
+        return response
+
+
+    async def async_setup_accepted_answer(
+        self,
+        question_comment_guid: str,
+        answer_comment_guid: str,
+
+    ) -> None:
+        """
+        Link a comment that contains the best answer to a question posed in another comment. Async version.
+
+        Parameters
+        ----------
+
+        question_comment_guid: str
+            - unique id for the question comment.
+        answer_comment_guid: str
+            - unique id for the answer comment.
+
+        Returns
+        -------
+        None
+
+        Raises
+        ------
+        PyEgeriaException
+
+        """
+
+        url = f"{self.command_root}feedback-manager/comments/questions/{question_comment_guid}/answers/{answer_comment_guid}"
+        await self._async_make_request( "POST",url)
+
+
+    def setup_accepted_answer(
+            self,
+            question_comment_guid: str,
+            answer_comment_guid: str,
+
+    ) -> None:
+        """
+        Link a comment that contains the best answer to a question posed in another comment.
+
+        Parameters
+        ----------
+
+        question_comment_guid: str
+            - unique id for the question comment.
+        answer_comment_guid: str
+            - unique id for the answer comment.
+
+        Returns
+        -------
+        None
+
+        Raises
+        ------
+        PyEgeriaException
+
+        """
+
+        loop = asyncio.get_event_loop()
+        loop.run_until_complete(
+            self.async_setup_accepted_answer(question_comment_guid, answer_comment_guid)
+        )
+
+    async def async_clear_accepted_answer(
+        self,
+        question_comment_guid: str,
+        answer_comment_guid: str,
+
+    ) -> None:
+        """
+        Link a comment that contains the best answer to a question posed in another comment. Async version.
+
+        Parameters
+        ----------
+
+        question_comment_guid: str
+            - unique id for the question comment.
+        answer_comment_guid: str
+            - unique id for the answer comment.
+
+        Returns
+        -------
+        None
+
+        Raises
+        ------
+        PyEgeriaException
+
+        """
+
+        url = f"{self.command_root}feedback-manager/comments/questions/{question_comment_guid}/answers/{answer_comment_guid}/remove"
+        await self._async_make_request( "POST",url)
+
+
+    def setup_clear_answer(
+            self,
+            question_comment_guid: str,
+            answer_comment_guid: str,
+
+    ) -> None:
+        """
+        Link a comment that contains the best answer to a question posed in another comment.
+
+        Parameters
+        ----------
+
+        question_comment_guid: str
+            - unique id for the question comment.
+        answer_comment_guid: str
+            - unique id for the answer comment.
+
+        Returns
+        -------
+        None
+
+        Raises
+        ------
+        PyEgeriaException
+
+        """
+
+        loop = asyncio.get_event_loop()
+        loop.run_until_complete(
+            self.async_clear_accepted_answer(question_comment_guid, answer_comment_guid)
+        )
+
+    async def async_remove_comment_from_element(
+        self,
+        element_guid:str,
+        comment_guid: str,
+        body: dict | DeleteRequestBody = None,
+        cascade_delete: bool = False,
+    ) -> None:
+        """
+        Removes a comment added to the element by this user.
+
+        This deletes the link to the comment, the comment itself and any comment replies attached to it.
+
+        Parameters
+        ----------
+        comment_guid
+            - String - unique id for the comment object
+        server_name
+            - name of the server instances for this request
+
+        body
+            - containing type of comment enum and the text of the comment.
+
+        Returns
+        -------
+        VoidResponse
+
+        Raises
+        ------
+        PyegeriaException
+
+        Args:
+            cascade_delete ():
+        """
+
+        url = f"{self.command_root}feedback-manager/elements/{element_guid}/comments/{comment_guid}/remove"
+        await self._async_delete_element_request(url,body,cascade_delete)
+
+
+    def remove_comment_from_element(
+        self,
+        element_guid: str,
+        comment_guid: str,
+        body: dict | DeleteRequestBody = None,
+        cascade_delete: bool = False,
+
+    ) -> None:
+        """
+        Removes a comment added to the element by this user.
+
+        This deletes the link to the comment, the comment itself and any comment replies attached to it.
+
+        Parameters
+        ----------
+        comment_guid
+            - String - unique id for the comment object
+        body
+            - containing type of comment enum and the text of the comment.
+        cascade_delete: bool = False
+
+
+        Returns
+        -------
+        VoidResponse
+
+        Raises
+        ------
+        PyEgeriaException
+        """
+        loop = asyncio.get_event_loop()
+        loop.run_until_complete(
+            self.async_remove_comment_from_element(element_guid,comment_guid, body,cascade_delete=cascade_delete)
+        )
+
+
+
+
+    async def async_get_comment_by_guid(
+        self,
+        comment_guid: str, element_type: str = "Comment",
+        body: dict | GetRequestBody = None,
+        output_format: str = "JSON",
+        output_format_set: str | dict = None
+    ) -> dict | str:
+        """
+        Return the requested comment.
+
+        Parameters
+        ----------
+        server_name
+            - name of the server instances for this request
+        comment_guid
+            - unique identifier for the comment object.
+        view_service_url_marker
+            - optional view service URL marker (overrides access_service_url_marker)
+        access_service_url_marker
+            - optional access service URL marker used to identify which back end service to call
+        body
+            - optional effective time
+
+        Returns
+        -------
+        comment properties
+
+        Raises
+        ------
+        InvalidParameterException
+            one of the parameters is null or invalid or
+        PropertyServerException
+            There is a problem adding the element properties to the metadata repository or
+        UserNotAuthorizedException
+            the requesting user is not authorized to issue this request.
+
+        Args:
+            element_type ():
+            output_format ():
+            output_format_set ():
+        """
+
+
+        url = f"{self.command_root}feedback-manager/comments/{comment_guid}/comments/retrieve"
+        response = await self._async_get_guid_request(url, _type=element_type,
+                                                      _gen_output=self._generate_comment_output,
+                                                      output_format=output_format, output_format_set=output_format_set,
+                                                      body=body)
+
+        return response
+
+    def get_comment_by_guid(
+        self,
+        comment_guid: str, element_type: str = "Comment",
+        body: dict | GetRequestBody = None,
+        output_format: str = "JSON",
+        output_format_set: str | dict = None
+    ) -> dict | str:
+        """
+        Return the requested comment.
+
+        Parameters
+        ----------
+        comment_guid
+            - unique identifier for the comment object.
+        server_name
+            - name of the server instances for this request
+        view_service_url_marker
+            - optional view service URL marker (overrides access_service_url_marker)
+        access_service_url_marker
+            - optional access service URL marker used to identify which back end service to call
+        body
+            - optional effective time
+
+        Returns
+        -------
+        comment properties
+
+        Raises
+        ------
+        InvalidParameterException
+            one of the parameters is null or invalid or
+        PropertyServerException
+            There is a problem adding the element properties to the metadata repository or
+        UserNotAuthorizedException
+            the requesting user is not authorized to issue this request.
+
+        Args:
+            element_type ():
+            output_format ():
+            output_format_set ():
+        """
+        loop = asyncio.get_event_loop()
+        response = loop.run_until_complete(
+            self.async_get_comment_by_guid(comment_guid, element_type,body,output_format, output_format_set)
+        )
+        return response
+
+    async def async_get_attached_comments(
+            self,
+            element_guid: str,
+            element_type: str = "Comment",
+            body: dict = {},
+            start_from: int = 0,
+            page_size: int = 0,
+            output_format: str = "JSON",
+            output_format_set: str | dict = None
+
+    ) -> dict | str:
+        """
+        Return the comments attached to an element.
+
+        Parameters
+        ----------
+        element_guid
+            - unique identifier for the element that the comments are connected to (maybe a comment too).
+        body
+            - optional effective time
+        start_from
+            - index of the list to start from (0 for start)
+        page_size
+            - maximum number of elements to return.
+
+
+        Returns
+        -------
+        list of comments
+
+        Raises
+        ------
+        PyegeriaException
+
+        """
+
+        url = f"{self.command_root}feedback-manager/elements/{element_guid}/comments/retrieve"
+        response = await self._async_make_request("POST", url, body)
+        element = response.json().get("elements", NO_ELEMENTS_FOUND)
+        if element == NO_ELEMENTS_FOUND:
+            return NO_ELEMENTS_FOUND
+        if output_format != 'JSON':  # return a simplified markdown representation
+            return self._generate_comment_output(element, None, output_format, output_format_set)
+        return response.json().get("elements", NO_ELEMENTS_FOUND)
+
+    def get_attached_comments(
+            self, element_guid: str,
+            element_type: str = None,
+            body: dict = {},
+            start_from: int = 0,
+            page_size: int = 0,
+            output_format: str = "JSON",
+            output_format_set: str | dict = None
+    ) -> dict | str:
+        """
+        Return the comments attached to an element.
+
+        Parameters
+        ----------
+        element_guid
+            - unique identifier for the element that the comments are connected to (maybe a comment too).
+        server_name
+            - name of the server instances for this request
+        body
+            - optional effective time
+        start_from
+            - index of the list to start from (0 for start)
+        page_size
+            - maximum number of elements to return.
+        view_service_url_marker
+            - optional view service URL marker (overrides access_service_url_marker)
+        access_service_url_marker
+            - optional access service URL marker used to identify which back end service to call
+
+        Returns
+        -------
+        list of comments
+
+        Raises
+        ------
+        InvalidParameterException
+            one of the parameters is null or invalid or
+        PropertyServerException
+            There is a problem adding the element properties to the metadata repository or
+        UserNotAuthorizedException
+            the requesting user is not authorized to issue this request.
+
+        Args:
+            element_type ():
+            output_format ():
+            output_format_set ():
+        """
+        loop = asyncio.get_event_loop()
+        response = loop.run_until_complete(
+            self.async_get_attached_comments(element_guid, element_type, body, start_from, page_size, output_format,
+                                             output_format_set)
+        )
+        return response
+
+    def _extract_comment_properties(self, element: dict, columns_struct: dict) -> dict:
+        props = element.get('properties', {}) or {}
+        normalized = {
+            'properties': props,
+            'elementHeader': element.get('elementHeader', {}),
+        }
+        # Common population pipeline
+        col_data = populate_common_columns(element, columns_struct)
+        columns_list = col_data.get('formats', {}).get('columns', [])
+        # Overlay extras (project roles) only where empty
+        # extra = self._extract_additional_project_properties(element, columns_struct)
+        # col_data = overlay_additional_values(col_data, extra)
+        return col_data
+
+
+
+    async def async_find_comments(
+        self,
+        search_string: str,
+        classification_names: list[str] = None,
+        metadata_element_types: list[str] = ["Comment"],
+        starts_with: bool = None,
+        ends_with: bool = None,
+        ignore_case: bool = None,
+        start_from: int = 0,
+        page_size: int = max_paging_size,
+        output_format: str = "JSON",
+        output_format_set: str | dict = None,
+        body: dict | SearchStringRequestBody = None
+    ) -> dict | str:
+
+        """
+        Return the list of comments containing the supplied string. Async Version.
+
+        Parameters
+        ----------
+        search_string
+            - search string and effective time.
+
+        starts_with
+            - does the value start with the supplied string?
+        ends_with
+            - does the value end with the supplied string?
+        ignore_case
+            - should the search ignore case?
+        start_from
+            - index of the list to start from (0 for start).
+        page_size
+            - maximum number of elements to return.
+        output_format
+            - output format for the response
+        output_format_set
+            - output format set for the response
+        body
+            - body of the request. Details of the body overrides other parameters if present.
+
+        Returns
+        -------
+        list of comment objects
+
+        Raises
+        ------
+        PyegeriaException
+
+        Args:
+            classification_names ():
+            metadata_element_types ():
+
+
+        """
+
+        url = f"{self.command_root}feedback-manager/comments/by-search-string"
+        response = await self._async_find_request(url, _type="Comment",
+                                                  _gen_output=self._generate_comment_output,
+                                                  search_string=search_string,
+                                                  classification_names=classification_names,
+                                                  metadata_element_types=metadata_element_types,
+                                                  starts_with=starts_with, ends_with=ends_with, ignore_case=ignore_case,
+                                                  start_from=start_from, page_size=page_size,
+                                                  output_format=output_format, output_format_set=output_format_set,
+                                                  body=body)
+
+        return response
+
+    def find_comments(
+            self,
+            search_string: str,
+            classification_names: list[str] = None, metadata_element_types: list[str]=["Comment"],
+            starts_with: bool = True,
+            ends_with: bool = False,
+            ignore_case: bool = False,
+            start_from: int = 0,
+            page_size: int = max_paging_size,
+            output_format: str = "JSON", output_format_set: str | dict = None,
+            body: dict | SearchStringRequestBody = None
+    ) -> dict | str:
+        """
+        Return the list of comments containing the supplied string. Async Version.
+
+        Parameters
+        ----------
+        search_string
+            - search string and effective time.
+
+        starts_with
+            - does the value start with the supplied string?
+        ends_with
+            - does the value end with the supplied string?
+        ignore_case
+            - should the search ignore case?
+        start_from
+            - index of the list to start from (0 for start).
+        page_size
+            - maximum number of elements to return.
+        output_format
+            - output format for the response
+        output_format_set
+            - output format set for the response
+        body
+            - body of the request. Details of the body overrides other parameters if present.
+
+        Returns
+        -------
+        list of comment objects
+
+        Raises
+        ------
+        PyegeriaException
+
+        Args:
+            classification_names ():
+            metadata_element_types ():
+
+
+        """
+        loop = asyncio.get_event_loop()
+        resp = loop.run_until_complete(
+            self.async_find_comments(
+                search_string,
+                classification_names,
+                metadata_element_types,
+                starts_with,
+                ends_with,
+                ignore_case,
+                start_from,
+                page_size,
+                output_format,
+                output_format_set,
+                body,
+            )
+        )
+
+        return resp
+
+
+
+
+    def _generate_comment_output(self, elements: dict | list[dict], search_string: str,
+                                 element_type_name: str | None,
+                                 output_format: str = 'DICT',
+                                 output_format_set: dict | str = None) -> str | list[dict]:
+        entity_type = 'Comment'
+        if output_format_set:
+            if isinstance(output_format_set, str):
+                output_formats = select_output_format_set(output_format_set, output_format)
+            elif isinstance(output_format_set, dict):
+                output_formats = get_output_format_type_match(output_format_set, output_format)
+            else:
+                output_formats = None
+        else:
+            output_formats = select_output_format_set(entity_type, output_format)
+        if output_formats is None:
+            output_formats = select_output_format_set('Default', output_format)
+        return generate_output(
+            elements=elements,
+            search_string=search_string,
+            entity_type=entity_type,
+            output_format=output_format,
+            extract_properties_func=self._extract_comment_properties,
+            get_additional_props_func=None,
+            columns_struct=output_formats,
+        )
     #
     # Helper functions for requests
     #
