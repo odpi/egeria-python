@@ -9,7 +9,7 @@ from loguru import logger
 from rich.prompt import Prompt
 
 from pyegeria._output_format_models import Column, Format, ActionParameter, FormatSet, FormatSetDict
-from pyegeria._output_formats import OPTIONAL_PARAMS  # ["page_size","start_from","starts_with","ends_with","ignore_case"]
+from pyegeria.base_report_formats import OPTIONAL_PARAMS  # ["page_size","start_from","starts_with","ends_with","ignore_case"]
 
 def _is_create_command(cmd_key: str, cmd_obj: dict) -> bool:
     name = str(cmd_obj.get("display_name", "")).strip()
@@ -162,7 +162,7 @@ def save_generated_format_sets(
     include_only_create: bool = True,
     default_types: Optional[List[str]] = None
 ) -> Path:
-    """Build and save to a JSON file loadable by _output_formats.load_output_format_sets."""
+    """Build and save to a JSON file loadable by _output_formats.load_report_specs."""
     sets = build_format_sets_from_commands(
         commands_json_path,
         include_only_create=include_only_create,
@@ -197,10 +197,10 @@ def merge_generated_format_sets(
     include_only_create: bool = True,
     default_types: Optional[List[str]] = None,
 ) -> int:
-    """Build a FormatSetDict and merge into pyegeria._output_formats.output_format_sets.
+    """Build a FormatSetDict and merge into pyegeria._output_formats.report_specs.
     Returns the number of sets merged/added.
     """
-    from pyegeria._output_formats import output_format_sets  # local import to avoid cycles on tooling
+    from pyegeria.base_report_formats import report_specs  # local import to avoid cycles on tooling
 
     gen = build_format_sets_from_commands(
         commands_json_path,
@@ -209,7 +209,7 @@ def merge_generated_format_sets(
     )
     count = 0
     for name, fs in gen.items():
-        output_format_sets[name] = fs
+        report_specs[name] = fs
         count += 1
     logger.info(f"Merged {count} generated format sets into built-ins")
     return count
@@ -343,7 +343,7 @@ def main():
     parser.add_argument("--emit", choices=["json", "dict", "code"], default="json",
                         help="Choose output mode: save JSON file, write Python code, or work with in-memory FormatSetDict")
     parser.add_argument("--merge", action="store_true",
-                        help="Merge generated sets into built-in registry (output_format_sets)")
+                        help="Merge generated sets into built-in registry (report_specs)")
     parser.add_argument("--list", action="store_true",
                         help="When emitting dict (and/or after merge), list set names to stdout")
     args = parser.parse_args()
@@ -361,8 +361,8 @@ def main():
             save_generated_format_sets(input_file, output_file)
             if args.merge:
                 # Also load and merge saved JSON into registry for convenience
-                from pyegeria._output_formats import load_output_format_sets
-                load_output_format_sets(output_file, merge=True)
+                from pyegeria.base_report_formats import load_report_specs
+                load_report_specs(output_file, merge=True)
                 logger.info("Merged saved JSON into built-in registry")
         elif args.emit == "code":
             # Python code output path
@@ -381,10 +381,10 @@ def main():
                     spec.loader.exec_module(mod)  # type: ignore
                     generated = getattr(mod, "generated_format_sets", None)
                     if generated:
-                        from pyegeria._output_formats import output_format_sets
+                        from pyegeria.base_report_formats import report_specs
                         merged = 0
                         for name, fs in generated.items():
-                            output_format_sets[name] = fs
+                            report_specs[name] = fs
                             merged += 1
                         logger.info(f"Merged {merged} generated format sets from code into built-ins")
                     else:
@@ -396,10 +396,10 @@ def main():
             sets = generate_format_sets(input_file)
             logger.info(f"Generated {len(sets)} format sets (in-memory FormatSetDict)")
             if args.merge:
-                from pyegeria._output_formats import output_format_sets
+                from pyegeria.base_report_formats import report_specs
                 merged = 0
                 for name, fs in sets.items():
-                    output_format_sets[name] = fs
+                    report_specs[name] = fs
                     merged += 1
                 logger.info(f"Merged {merged} generated format sets into built-ins")
                 if args.list:

@@ -9,9 +9,9 @@ Copyright Contributors to the ODPi Egeria project.
 
 import asyncio
 
-from pyegeria._output_formats import select_output_format_set
+from pyegeria.base_report_formats import select_report_spec
 from pyegeria._client_new import Client2
-from pyegeria._output_formats import get_output_format_type_match
+from pyegeria.base_report_formats import get_report_spec_match
 from pyegeria.config import settings as app_settings
 from pyegeria.models import (SearchStringRequestBody, FilterRequestBody, GetRequestBody, NewElementRequestBody,
                              TemplateRequestBody, DeleteRequestBody, UpdateElementRequestBody,
@@ -47,7 +47,7 @@ class ReferenceDataManager(Client2):
 
     Notes
     -----
-    - Most high-level list/report methods accept an `output_format` and an optional `output_format_set` and
+    - Most high-level list/report methods accept an `output_format` and an optional `report_spec` and
       delegate rendering to `pyegeria.output_formatter.generate_output` along with shared helpers such as
       `populate_common_columns`.
     - Private extractor methods follow the convention: `_extract_<entity>_properties(element, columns_struct)` and
@@ -76,7 +76,7 @@ class ReferenceDataManager(Client2):
 
 
         roles_required = any(column.get('key') == 'project_roles'
-                             for column in columns_struct.get('formats', {}).get('columns', []))
+                             for column in columns_struct.get('formats', {}).get('attributes', []))
         project_props = {}
 
         if roles_required:
@@ -101,7 +101,7 @@ class ReferenceDataManager(Client2):
         }
         # Common population pipeline
         col_data = populate_common_columns(element, columns_struct)
-        columns_list = col_data.get('formats', {}).get('columns', [])
+        columns_list = col_data.get('formats', {}).get('attributes', [])
         # Overlay extras (project roles) only where empty
 
         # extra = self._extract_additional_project_properties(element, columns_struct)
@@ -113,19 +113,19 @@ class ReferenceDataManager(Client2):
     def _generate_vv_def_output(self, elements: dict | list[dict], search_string: str,
                                  element_type_name: str | None,
                                  output_format: str = 'DICT',
-                                 output_format_set: dict | str = None) -> str | list[dict]:
+                                 report_spec: dict | str = None) -> str | list[dict]:
         entity_type = 'ValidValueDefinition'
-        if output_format_set:
-            if isinstance(output_format_set, str):
-                output_formats = select_output_format_set(output_format_set, output_format)
-            elif isinstance(output_format_set, dict):
-                output_formats = get_output_format_type_match(output_format_set, output_format)
+        if report_spec:
+            if isinstance(report_spec, str):
+                output_formats = select_report_spec(report_spec, output_format)
+            elif isinstance(report_spec, dict):
+                output_formats = get_report_spec_match(report_spec, output_format)
             else:
                 output_formats = None
         else:
-            output_formats = select_output_format_set(entity_type, output_format)
+            output_formats = select_report_spec(entity_type, output_format)
         if output_formats is None:
-            output_formats = select_output_format_set('Default', output_format)
+            output_formats = select_report_spec('Default', output_format)
         return generate_output(
             elements=elements,
             search_string=search_string,
@@ -150,7 +150,7 @@ class ReferenceDataManager(Client2):
             ignore_case: bool = False,
             start_from: int = 0,
             page_size: int = 0,
-            output_format: str = "json", output_format_set: str | dict = None,
+            output_format: str = "json", report_spec: str | dict = None,
             body: dict | SearchStringRequestBody = None
     ) -> list | str:
         """ Returns the list of valid value definitions matching the search string.
@@ -166,7 +166,7 @@ class ReferenceDataManager(Client2):
             Effective time of the query. If not specified will default to any time.
         output_format: str, default = "JSON"
             - Type of output to return.
-        output_format_set: dict | str, default = None
+        report_spec: dict | str, default = None
             - Output format set to use. If None, the default output format set is used.
 
         starts_with : bool, [default=False], optional
@@ -203,7 +203,7 @@ class ReferenceDataManager(Client2):
                                                   metadata_element_types=metadata_element_types,
                                                   starts_with=starts_with, ends_with=ends_with, ignore_case=ignore_case,
                                                   start_from=start_from, page_size=page_size,
-                                                  output_format=output_format, output_format_set=output_format_set,
+                                                  output_format=output_format, report_spec=report_spec,
                                                   body=body)
 
         return response
@@ -217,7 +217,7 @@ class ReferenceDataManager(Client2):
             ignore_case: bool = False,
             start_from: int = 0,
             page_size: int = 0,
-            output_format: str = "json", output_format_set: str | dict = None,
+            output_format: str = "json", report_spec: str | dict = None,
             body: dict | SearchStringRequestBody = None
     ) -> list | str:
 
@@ -268,7 +268,7 @@ class ReferenceDataManager(Client2):
                 start_from,
                 page_size,
                 output_format,
-                output_format_set,
+                report_spec,
                 body,
             )
         )
@@ -281,7 +281,7 @@ class ReferenceDataManager(Client2):
             body: dict | FilterRequestBody = None,
             start_from: int = 0, page_size: int = 0,
             output_format: str = 'JSON',
-            output_format_set: str | dict = None) -> list | str:
+            report_spec: str | dict = None) -> list | str:
         url = f"{self.ref_data_command_base}/valid-value-definitions/by-name"
 
         response = await self._async_get_name_request(url, _type="ValidValuesDefinition",
@@ -289,7 +289,7 @@ class ReferenceDataManager(Client2):
                                                       filter_string=filter_string,
                                                       classification_names=classification_names,
                                                       start_from=start_from, page_size=page_size,
-                                                      output_format=output_format, output_format_set=output_format_set,
+                                                      output_format=output_format, report_spec=report_spec,
                                                       body=body)
 
         return response
@@ -300,7 +300,7 @@ class ReferenceDataManager(Client2):
             body: dict | FilterRequestBody = None,
             start_from: int = 0, page_size: int = 0,
             output_format: str = 'JSON',
-            output_format_set: str | dict = None) -> list | str:
+            report_spec: str | dict = None) -> list | str:
 
         loop = asyncio.get_event_loop()
         resp = loop.run_until_complete(
@@ -311,7 +311,7 @@ class ReferenceDataManager(Client2):
                 start_from,
                 page_size,
                 output_format,
-                output_format_set,
+                report_spec,
             )
         )
         return resp
@@ -320,7 +320,7 @@ class ReferenceDataManager(Client2):
     async def _async_get_valid_value_definition_by_guid(self, vv_def_guid: str, element_type: str = None,
                                          body: dict | GetRequestBody = None,
                                          output_format: str = 'JSON',
-                                         output_format_set: str | dict = None) -> dict | str:
+                                         report_spec: str | dict = None) -> dict | str:
         """Return the properties of a specific project. Async version.
 
             Parameters
@@ -333,7 +333,7 @@ class ReferenceDataManager(Client2):
                 full request body.
             output_format: str, default = "JSON"
                 - one of "DICT", "MERMAID" or "JSON"
-            output_format_set: str | dict, optional, default = None
+            report_spec: str | dict, optional, default = None
                     The desired output columns/fields to include.
 
             Returns
@@ -364,7 +364,7 @@ class ReferenceDataManager(Client2):
 
         response = await self._async_get_guid_request(url, _type=type,
                                                       _gen_output=self._generate_vv_def_output,
-                                                      output_format=output_format, output_format_set=output_format_set,
+                                                      output_format=output_format, report_spec=report_spec,
                                                       body=body)
 
         return response
@@ -373,7 +373,7 @@ class ReferenceDataManager(Client2):
     def get_valid_value_definition_by_guid(self, vv_def_guid: str, element_type: str = None,
                             body: dict | GetRequestBody = None,
                             output_format: str = 'JSON',
-                            output_format_set: str | dict = None) -> dict | str:
+                            report_spec: str | dict = None) -> dict | str:
         """Return the properties of a specific project.
 
             Parameters
@@ -386,7 +386,7 @@ class ReferenceDataManager(Client2):
                 full request body.
             output_format: str, default = "JSON"
                 - one of "DICT", "MERMAID" or "JSON"
-            output_format_set: str | dict, optional, default = None
+            report_spec: str | dict, optional, default = None
                     The desired output columns/fields to include.
 
             Returns
@@ -418,7 +418,7 @@ class ReferenceDataManager(Client2):
             """
         loop = asyncio.get_event_loop()
         resp = loop.run_until_complete(
-            self._async_get_valid_value_definition_by_guid(vv_def_guid, element_type, body, output_format, output_format_set)
+            self._async_get_valid_value_definition_by_guid(vv_def_guid, element_type, body, output_format, report_spec)
         )
 
         return resp

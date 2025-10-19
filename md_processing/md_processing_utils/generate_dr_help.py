@@ -141,7 +141,7 @@ def create_help_terms():
                {'name': 'Valid Values', 'key': 'Valid Values'}]
     columns_struct = {"target_type": "Term", "formats": {
                                           "types": "ALL",
-                                        "columns": columns}
+                                        "attributes": columns}
                       }
 
     term_entry = """# Generating glossary entries for the documented commands\n\n

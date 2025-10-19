@@ -24,8 +24,8 @@ from pyegeria._exceptions_new import (
     PyegeriaConnectionException, PyegeriaInvalidParameterException
 )
 from pyegeria._globals import max_paging_size, NO_ELEMENTS_FOUND, default_time_out
-from pyegeria._output_formats import get_output_format_type_match
-from pyegeria._output_formats import select_output_format_set
+from pyegeria.base_report_formats import get_report_spec_match
+from pyegeria.base_report_formats import select_report_spec
 from pyegeria.models import (SearchStringRequestBody, FilterRequestBody, GetRequestBody, NewElementRequestBody,
                              TemplateRequestBody, UpdateStatusRequestBody, UpdateElementRequestBody,
                              NewRelationshipRequestBody,
@@ -536,7 +536,7 @@ class Client2(BaseClient):
             page_size: int = 0,
             time_out: int = default_time_out,
             output_format: str = "JSON",
-            output_format_set: dict | str = None,
+            report_spec: dict | str = None,
     ) -> list | str:
         """
         Retrieve elements by a value found in one of the properties specified.  The value must match exactly.
@@ -566,7 +566,7 @@ class Client2(BaseClient):
             - http request timeout for this request
         output_format: str, default = "JSON"
             - Type of output to return.
-        output_format_set: dict | str, default = None
+        report_spec: dict | str, default = None
             - Output format set to use. If None, the default output format set is used.
 
         Returns
@@ -1382,7 +1382,7 @@ class Client2(BaseClient):
         comment_guid: str, element_type: str = "Comment",
         body: dict | GetRequestBody = None,
         output_format: str = "JSON",
-        output_format_set: str | dict = None
+        report_spec: str | dict = None
     ) -> dict | str:
         """
         Return the requested comment.
@@ -1416,14 +1416,14 @@ class Client2(BaseClient):
         Args:
             element_type ():
             output_format ():
-            output_format_set ():
+            report_spec ():
         """
 
 
         url = f"{self.command_root}feedback-manager/comments/{comment_guid}/comments/retrieve"
         response = await self._async_get_guid_request(url, _type=element_type,
                                                       _gen_output=self._generate_comment_output,
-                                                      output_format=output_format, output_format_set=output_format_set,
+                                                      output_format=output_format, report_spec=report_spec,
                                                       body=body)
 
         return response
@@ -1433,7 +1433,7 @@ class Client2(BaseClient):
         comment_guid: str, element_type: str = "Comment",
         body: dict | GetRequestBody = None,
         output_format: str = "JSON",
-        output_format_set: str | dict = None
+        report_spec: str | dict = None
     ) -> dict | str:
         """
         Return the requested comment.
@@ -1467,11 +1467,11 @@ class Client2(BaseClient):
         Args:
             element_type ():
             output_format ():
-            output_format_set ():
+            report_spec ():
         """
         loop = asyncio.get_event_loop()
         response = loop.run_until_complete(
-            self.async_get_comment_by_guid(comment_guid, element_type,body,output_format, output_format_set)
+            self.async_get_comment_by_guid(comment_guid, element_type,body,output_format, report_spec)
         )
         return response
 
@@ -1483,7 +1483,7 @@ class Client2(BaseClient):
             start_from: int = 0,
             page_size: int = 0,
             output_format: str = "JSON",
-            output_format_set: str | dict = None
+            report_spec: str | dict = None
 
     ) -> dict | str:
         """
@@ -1517,7 +1517,7 @@ class Client2(BaseClient):
         if element == NO_ELEMENTS_FOUND:
             return NO_ELEMENTS_FOUND
         if output_format != 'JSON':  # return a simplified markdown representation
-            return self._generate_comment_output(element, None, output_format, output_format_set)
+            return self._generate_comment_output(element, None, output_format, report_spec)
         return response.json().get("elements", NO_ELEMENTS_FOUND)
 
     def get_attached_comments(
@@ -1527,7 +1527,7 @@ class Client2(BaseClient):
             start_from: int = 0,
             page_size: int = 0,
             output_format: str = "JSON",
-            output_format_set: str | dict = None
+            report_spec: str | dict = None
     ) -> dict | str:
         """
         Return the comments attached to an element.
@@ -1565,12 +1565,12 @@ class Client2(BaseClient):
         Args:
             element_type ():
             output_format ():
-            output_format_set ():
+            report_spec ():
         """
         loop = asyncio.get_event_loop()
         response = loop.run_until_complete(
             self.async_get_attached_comments(element_guid, element_type, body, start_from, page_size, output_format,
-                                             output_format_set)
+                                             report_spec)
         )
         return response
 
@@ -1582,7 +1582,7 @@ class Client2(BaseClient):
         }
         # Common population pipeline
         col_data = populate_common_columns(element, columns_struct)
-        columns_list = col_data.get('formats', {}).get('columns', [])
+        columns_list = col_data.get('formats', {}).get('attributes', [])
         # Overlay extras (project roles) only where empty
         # extra = self._extract_additional_project_properties(element, columns_struct)
         # col_data = overlay_additional_values(col_data, extra)
@@ -1601,7 +1601,7 @@ class Client2(BaseClient):
         start_from: int = 0,
         page_size: int = max_paging_size,
         output_format: str = "JSON",
-        output_format_set: str | dict = None,
+        report_spec: str | dict = None,
         body: dict | SearchStringRequestBody = None
     ) -> dict | str:
 
@@ -1625,7 +1625,7 @@ class Client2(BaseClient):
             - maximum number of elements to return.
         output_format
             - output format for the response
-        output_format_set
+        report_spec
             - output format set for the response
         body
             - body of the request. Details of the body overrides other parameters if present.
@@ -1653,7 +1653,7 @@ class Client2(BaseClient):
                                                   metadata_element_types=metadata_element_types,
                                                   starts_with=starts_with, ends_with=ends_with, ignore_case=ignore_case,
                                                   start_from=start_from, page_size=page_size,
-                                                  output_format=output_format, output_format_set=output_format_set,
+                                                  output_format=output_format, report_spec=report_spec,
                                                   body=body)
 
         return response
@@ -1667,7 +1667,7 @@ class Client2(BaseClient):
             ignore_case: bool = False,
             start_from: int = 0,
             page_size: int = max_paging_size,
-            output_format: str = "JSON", output_format_set: str | dict = None,
+            output_format: str = "JSON", report_spec: str | dict = None,
             body: dict | SearchStringRequestBody = None
     ) -> dict | str:
         """
@@ -1690,7 +1690,7 @@ class Client2(BaseClient):
             - maximum number of elements to return.
         output_format
             - output format for the response
-        output_format_set
+        report_spec
             - output format set for the response
         body
             - body of the request. Details of the body overrides other parameters if present.
@@ -1721,7 +1721,7 @@ class Client2(BaseClient):
                 start_from,
                 page_size,
                 output_format,
-                output_format_set,
+                report_spec,
                 body,
             )
         )
@@ -1734,19 +1734,19 @@ class Client2(BaseClient):
     def _generate_comment_output(self, elements: dict | list[dict], search_string: str,
                                  element_type_name: str | None,
                                  output_format: str = 'DICT',
-                                 output_format_set: dict | str = None) -> str | list[dict]:
+                                 report_spec: dict | str = None) -> str | list[dict]:
         entity_type = 'Comment'
-        if output_format_set:
-            if isinstance(output_format_set, str):
-                output_formats = select_output_format_set(output_format_set, output_format)
-            elif isinstance(output_format_set, dict):
-                output_formats = get_output_format_type_match(output_format_set, output_format)
+        if report_spec:
+            if isinstance(report_spec, str):
+                output_formats = select_report_spec(report_spec, output_format)
+            elif isinstance(report_spec, dict):
+                output_formats = get_report_spec_match(report_spec, output_format)
             else:
                 output_formats = None
         else:
-            output_formats = select_output_format_set(entity_type, output_format)
+            output_formats = select_report_spec(entity_type, output_format)
         if output_formats is None:
-            output_formats = select_output_format_set('Default', output_format)
+            output_formats = select_report_spec('Default', output_format)
         return generate_output(
             elements=elements,
             search_string=search_string,
@@ -1950,7 +1950,7 @@ class Client2(BaseClient):
                                   metadata_element_types: list[str] = None,
                                   starts_with: bool = True, ends_with: bool = False, ignore_case: bool = False,
                                   start_from: int = 0, page_size: int = 0, output_format: str = 'JSON',
-                                  output_format_set: str | dict = None,
+                                  report_spec: str | dict = None,
                                   body: dict | SearchStringRequestBody = None) -> Any:
 
         if isinstance(body, SearchStringRequestBody):
@@ -1984,15 +1984,15 @@ class Client2(BaseClient):
             return NO_ELEMENTS_FOUND
 
         if output_format.upper() != 'JSON':  # return a simplified markdown representation
-            # logger.info(f"Found elements, output format: {output_format} and output_format_set: {output_format_set}")
+            # logger.info(f"Found elements, output format: {output_format} and report_spec: {report_spec}")
             return _gen_output(elements, search_string, _type,
-                               output_format, output_format_set)
+                               output_format, report_spec)
         return elements
 
     async def _async_get_name_request(self, url: str, _type: str, _gen_output: Callable[..., Any],
                                       filter_string: str, classification_names: list[str] = None,
                                       start_from: int = 0, page_size: int = 0, output_format: str = 'JSON',
-                                      output_format_set: str | dict = None,
+                                      report_spec: str | dict = None,
                                       body: dict | FilterRequestBody = None) -> Any:
 
         if isinstance(body, FilterRequestBody):
@@ -2023,13 +2023,13 @@ class Client2(BaseClient):
             return NO_ELEMENTS_FOUND
 
         if output_format != 'JSON':  # return a simplified markdown representation
-            logger.info(f"Found elements, output format: {output_format} and output_format_set: {output_format_set}")
+            logger.info(f"Found elements, output format: {output_format} and report_spec: {report_spec}")
             return _gen_output(elements, filter_string, _type,
-                               output_format, output_format_set)
+                               output_format, report_spec)
         return elements
 
     async def _async_get_guid_request(self, url: str, _type: str, _gen_output: Callable[..., Any],
-                                      output_format: str = 'JSON', output_format_set: str | dict = None,
+                                      output_format: str = 'JSON', report_spec: str | dict = None,
                                       body: dict | GetRequestBody = None) -> Any:
 
         if isinstance(body, GetRequestBody):
@@ -2052,13 +2052,13 @@ class Client2(BaseClient):
             return NO_ELEMENTS_FOUND
 
         if output_format != 'JSON':  # return a simplified markdown representation
-            logger.info(f"Found elements, output format: {output_format} and output_format_set: {output_format_set}")
-            return _gen_output(elements, "GUID", _type, output_format, output_format_set)
+            logger.info(f"Found elements, output format: {output_format} and report_spec: {report_spec}")
+            return _gen_output(elements, "GUID", _type, output_format, report_spec)
         return elements
 
     async def _async_get_results_body_request(self, url: str, _type: str, _gen_output: Callable[..., Any],
                                               start_from: int = 0, page_size: int = 0, output_format: str = 'JSON',
-                                              output_format_set: str | dict = None,
+                                              report_spec: str | dict = None,
                                               body: dict | ResultsRequestBody = None) -> Any:
         if isinstance(body, ResultsRequestBody):
             validated_body = body
@@ -2084,14 +2084,14 @@ class Client2(BaseClient):
             return NO_ELEMENTS_FOUND
 
         if output_format != 'JSON':  # return a simplified markdown representation
-            logger.info(f"Found elements, output format: {output_format} and output_format_set: {output_format_set}")
+            logger.info(f"Found elements, output format: {output_format} and report_spec: {report_spec}")
             return _gen_output(elements, "Members", _type,
-                               output_format, output_format_set)
+                               output_format, report_spec)
         return elements
 
     async def _async_get_level_identifier_query_body_request(self, url: str, _gen_output: Callable[..., Any],
                                               output_format: str = 'JSON',
-                                              output_format_set: str | dict = None,
+                                              report_spec: str | dict = None,
                                               body: dict | ResultsRequestBody = None) -> Any:
         if isinstance(body, LevelIdentifierQueryBody):
             validated_body = body
@@ -2112,9 +2112,9 @@ class Client2(BaseClient):
             return NO_ELEMENTS_FOUND
 
         if output_format != 'JSON':  # return a simplified markdown representation
-            logger.info(f"Found elements, output format: {output_format} and output_format_set: {output_format_set}")
+            logger.info(f"Found elements, output format: {output_format} and report_spec: {report_spec}")
             return _gen_output(elements, "", "Referenceable",
-                               output_format, output_format_set)
+                               output_format, report_spec)
         return elements
 
 
@@ -2661,7 +2661,7 @@ class Client2(BaseClient):
     def _generate_referenceable_output(self, elements: dict | list[dict], search_string: str | None,
                                        element_type_name: str | None,
                                        output_format: str = "JSON",
-                                       output_format_set: dict | str = None) -> str | list[dict]:
+                                       report_spec: dict | str = None) -> str | list[dict]:
         """Generate formatted output for generic Referenceable elements.
 
         If output_format is 'JSON', returns elements unchanged. Otherwise, resolves an
@@ -2670,7 +2670,7 @@ class Client2(BaseClient):
         if output_format == "JSON":
             return elements
         entity_type = element_type_name or "Referenceable"
-        output_formats = resolve_output_formats(entity_type, output_format, output_format_set, default_label=entity_type)
+        output_formats = resolve_output_formats(entity_type, output_format, report_spec, default_label=entity_type)
         return generate_output(
             elements=elements,
             search_string=search_string,

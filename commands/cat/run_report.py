@@ -3,7 +3,7 @@
 SPDX-License-Identifier: Apache-2.0
 Copyright Contributors to the ODPi Egeria project.
 
-A command that takes an output format set name, looks up the format set using select_output_format_set,
+A command that takes an output format set name, looks up the format set using select_report_spec,
 and invokes the specified function with parameters filled from command line arguments.
 
 This command works with any format set defined in output_formatter.py that has an "action" property.
@@ -58,9 +58,9 @@ from pyegeria.config import settings
 from pyegeria.external_references import ExternalReferences
 from pyegeria.logging_configuration import config_logging
 from pyegeria._output_format_models import load_format_sets_from_json
-from pyegeria._output_formats import (select_output_format_set, get_output_format_set_heading,
-                                      load_user_format_sets, load_output_format_sets,
-                                       get_output_format_set_description)
+from pyegeria.base_report_formats import (select_report_format, get_report_format_heading,
+                                          load_user_report_specs, load_report_specs,
+                                          get_report_format_description)
 from pyegeria._exceptions_new import PyegeriaException, print_exception_response
 
 # pydevd_pycharm.settrace('host.docker.internal',  # Use 'host.docker.internal' to connect to the host machine
@@ -122,7 +122,7 @@ def execute_format_set_action(
     # Get the output format set
     # logger.info(f"Entering execute_format_set_action, format set name: {format_set_name}, search_string: {kwargs.get('search_string',"meow")}")
     # logger.info(json.dumps(kwargs, indent=2))
-    format_set = select_output_format_set(format_set_name, output_format)
+    format_set = select_report_format(format_set_name, output_format)
     if not format_set:
         print(f"Error: Output format set '{format_set_name}' does not have a format compatible with output format '{output_format}'.")
         return
@@ -154,7 +154,7 @@ def execute_format_set_action(
     params.update(spec_params)
 
     params['output_format'] = output_format
-    params['output_format_set'] = format_set_name
+    params['report_spec'] = format_set_name
 
     # Determine the appropriate client class based on the format set name or function
     client_class = None
@@ -206,8 +206,8 @@ def execute_format_set_action(
     client.create_egeria_bearer_token()
 
     # Get heading and description information
-    heading = get_output_format_set_heading(format_set_name)
-    desc = get_output_format_set_description(format_set_name)
+    heading = get_report_format_heading(format_set_name)
+    desc = get_report_format_description(format_set_name)
     preamble = f"# {heading}\n{desc}\n\n" if heading and desc else ""
 
     try:
@@ -366,14 +366,14 @@ def main():
 
     # Get the format set to determine parameters
     format_set_name = initial_args.report
-    format_set = select_output_format_set(format_set_name, "ANY")
+    format_set = select_report_format(format_set_name, "ANY")
 
     # Check if the format set exists
     if not format_set:
         print(f"Error: Format set for '{format_set_name}' not found.")
         print("Available format sets:")
-        from pyegeria._output_formats import output_format_set_list
-        for name in output_format_set_list():
+        from pyegeria.base_report_formats import report_spec_list
+        for name in report_spec_list():
             print(f"  - {name}")
         return
     

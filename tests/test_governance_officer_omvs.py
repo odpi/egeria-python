@@ -12,6 +12,7 @@ A running Egeria environment is needed to run these tests.
 """
 
 import json
+import os
 import time
 
 from pydantic import ValidationError
@@ -25,11 +26,11 @@ console = Console(width=200)
 
 import pytest
 
-@pytest.fixture(autouse=True)
-def _ensure_server():
-    require_local_server()
+# @pytest.fixture(autouse=True)
+# def _ensure_server():
+#     require_local_server()
 
-from pyegeria import GovernanceOfficer, PyegeriaException, print_basic_exception
+from pyegeria import GovernanceOfficer, PyegeriaException, print_basic_exception, settings
 from pyegeria._exceptions import (
     InvalidParameterException,
     PropertyServerException,
@@ -39,6 +40,7 @@ from pyegeria._exceptions import (
 from pyegeria.governance_officer import GovernanceOfficer
 
 disable_ssl_warnings = True
+app_config = settings.Environment
 
 
 def jprint(info, comment=None):
@@ -55,10 +57,10 @@ def valid_guid(guid):
 
 
 class TestGovernanceOfficer:
-    platform_url = PLATFORM_URL
-    view_server = VIEW_SERVER
-    user = USER_ID
-    password = USER_PWD
+    platform_url = app_config.egeria_view_server_url
+    view_server = app_config.egeria_view_server
+    user = os.getenv("EGORIA_USER", "peterprofile")
+    password = os.getenv("EGERIA_USER_PASSWORD","secret")
 
     #
     ##
@@ -358,7 +360,7 @@ class TestGovernanceOfficer:
 
                 )
             start_time = time.perf_counter()
-            response = s_client.find_governance_definitions(search_string=filter, body=body, output_format="DICT", output_format_set="Governance Definitions")
+            response = s_client.find_governance_definitions(search_string=filter, body=body, output_format="DICT", report_spec="Governance Definitions")
             duration = time.perf_counter() - start_time
             print(
                 f"\n\tDuration was {duration:.2f} seconds, Type: {type(response)}, Element count is {len(response)}"

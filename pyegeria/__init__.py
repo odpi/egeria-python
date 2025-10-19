@@ -68,7 +68,7 @@ from .valid_metadata_omvs import ValidMetadataManager
 from .x_action_author_omvs import ActionAuthor
 from .template_manager_omvs import TemplateManager
 from .data_designer import DataDesigner
-from ._output_formats import select_output_format_set
+from ._output_formats import select_report_spec
 from .mcp_adapter import list_reports, describe_report, run_report, _async_run_report, _execute_egeria_call_blocking
 
 #

@@ -15,9 +15,9 @@ from typing import Any, Dict, Optional
 
 from loguru import logger
 
-from pyegeria._output_formats import (
+from pyegeria.base_report_formats import (
     list_mcp_format_sets,
-    select_output_format_set,
+    select_report_spec,
 )
 from pyegeria.egeria_tech_client import EgeriaTech
 from pyegeria.format_set_executor import exec_format_set, _async_run_report
@@ -33,7 +33,7 @@ def describe_report(name: str, output_type: str = "DICT") -> Dict[str, Any]:
     Describe a format set for MCP discovery. If outputType != ANY, a concrete format
     will be resolved; otherwise only metadata/action are returned.
     """
-    meta = select_output_format_set(name, output_type)
+    meta = select_report_spec(name, output_type)
     if not meta:
         raise ValueError(f"Unknown or incompatible format set: {name}")
     return meta

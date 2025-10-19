@@ -182,7 +182,7 @@ def process_glossary_upsert_command(egeria_client: EgeriaTech, txt: str, directi
                     'guid': guid, 'display_name': display_name
                     })
                 return egeria_client.get_collection_by_guid(guid, element_type='Glossary',
-                                                            output_format='MD', output_format_set = "DrE-Glossary")
+                                                            output_format='MD', report_spec = "DrE-Glossary")
 
 
             elif object_action == "Create":
@@ -570,7 +570,7 @@ def process_term_upsert_command(egeria_client: EgeriaTech, txt: str, directive: 
                     'guid': guid, 'display_name': display_name
                     })
                 return egeria_client.get_term_by_guid(guid, element_type='GlossaryTerm',
-                                                            output_format='MD', output_format_set=output_set)
+                                                            output_format='MD', report_spec=output_set)
 
 
             elif object_action == "Create":
@@ -599,7 +599,7 @@ def process_term_upsert_command(egeria_client: EgeriaTech, txt: str, directive: 
                             })
                         msg = f"Created Element `{display_name}` with GUID {guid}\n\n___"
                         logger.success(msg)
-                        return egeria_client.get_term_by_guid(guid, obj, output_format='MD', output_format_set=output_set)
+                        return egeria_client.get_term_by_guid(guid, obj, output_format='MD', report_spec=output_set)
                     else:
                         msg = f"Failed to create element `{display_name}` with GUID {guid}\n\n___"
                         logger.error(msg)

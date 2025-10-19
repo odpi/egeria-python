@@ -232,7 +232,7 @@ def process_collection_upsert_command(egeria_client: EgeriaTech, txt: str, direc
                     'guid': guid, 'display_name': display_name
                 })
                 return egeria_client.get_collection_by_guid(guid, element_type=obj,
-                                                            output_format='MD', output_format_set=output_set)
+                                                            output_format='MD', report_spec=output_set)
 
 
             elif object_action == "Create":
@@ -265,7 +265,7 @@ def process_collection_upsert_command(egeria_client: EgeriaTech, txt: str, direc
                         # add this guid to the product collection
                         logger.success(msg)
                         return egeria_client.get_collection_by_guid(guid, obj, output_format='MD',
-                                                                    output_format_set=output_set)
+                                                                    report_spec=output_set)
                     else:
                         msg = f"Failed to create element `{display_name}` with GUID {guid}\n\n___"
                         logger.error(msg)
@@ -356,7 +356,7 @@ def process_digital_product_upsert_command(egeria_client: EgeriaTech, txt: str,
                     'guid': guid, 'display_name': display_name
                 })
                 return egeria_client.get_collection_by_guid(guid, element_type='Digital Product',
-                                                            output_format='MD', output_format_set=output_set)
+                                                            output_format='MD', report_spec=output_set)
 
 
             elif object_action == "Create":
@@ -382,7 +382,7 @@ def process_digital_product_upsert_command(egeria_client: EgeriaTech, txt: str,
                         msg = f"Created Element `{display_name}` with GUID {guid}\n\n___"
                         logger.success(msg)
                         return egeria_client.get_collection_by_guid(guid, element_type='Digital Product',
-                                                                    output_format='MD', output_format_set=output_set)
+                                                                    output_format='MD', report_spec=output_set)
                     else:
                         msg = f"Failed to create element `{display_name}` with GUID {guid}\n\n___"
                         logger.error(msg)
@@ -467,7 +467,7 @@ def process_digital_product_upsert_command(egeria_client: EgeriaTech, txt: str,
     #                     'guid': guid, 'display_name': display_name
     #                 })
     #                 return egeria_client.get_collection_by_guid(guid, element_type='Digital Product',
-    #                                                             output_format='MD', output_format_set=output_set)
+    #                                                             output_format='MD', report_spec=output_set)
     #
     #
     #             elif object_action == "Create":
@@ -495,7 +495,7 @@ def process_digital_product_upsert_command(egeria_client: EgeriaTech, txt: str,
     #                         logger.success(msg)
     #                         return egeria_client.get_collection_by_guid(guid, element_type='Digital Product',
     #                                                                     output_format='MD',
-    #                                                                     output_format_set=output_set)
+    #                                                                     report_spec=output_set)
     #                     else:
     #                         msg = f"Failed to create element `{display_name}` with GUID {guid}\n\n___"
     #                         logger.error(msg)
@@ -585,7 +585,7 @@ def process_agreement_upsert_command(egeria_client: EgeriaTech, txt: str, direct
                     'guid': guid, 'display_name': display_name
                 })
                 return egeria_client.get_collection_by_guid(guid, element_type='Data Specification',
-                                                            output_format='MD', output_format_set=output_set)
+                                                            output_format='MD', report_spec=output_set)
 
 
             elif object_action == "Create":
@@ -611,7 +611,7 @@ def process_agreement_upsert_command(egeria_client: EgeriaTech, txt: str, direct
                         msg = f"Created Element `{display_name}` with GUID {guid}\n\n___"
                         logger.success(msg)
                         return egeria_client.get_collection_by_guid(guid, obj, output_format='MD',
-                                                                    output_format_set=output_set)
+                                                                    report_spec=output_set)
                     else:
                         msg = f"Failed to create element `{display_name}` with GUID {guid}\n\n___"
                         logger.error(msg)

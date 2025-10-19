@@ -532,7 +532,7 @@ class TestAutomatedCuration:
             token = a_client.create_egeria_bearer_token()
 
             start_time = time.perf_counter()
-            response = a_client.find_engine_actions("*", output_format = "DICT", output_format_set = "Referenceable")
+            response = a_client.find_engine_actions("*", output_format = "DICT", report_spec = "Referenceable")
             duration = time.perf_counter() - start_time
             print(f"\n\tDuration was {duration} seconds")
             if type(response) is list:
@@ -705,7 +705,7 @@ class TestAutomatedCuration:
             token = a_client.create_egeria_bearer_token()
 
             start_time = time.perf_counter()
-            response = a_client.get_all_technology_types(output_format = "DICT", output_format_set = "Referenceable")
+            response = a_client.get_all_technology_types(output_format = "DICT", report_spec = "Referenceable")
             duration = time.perf_counter() - start_time
             print(f"\n\tDuration was {duration} seconds")
             if type(response) is list:
@@ -773,7 +773,7 @@ class TestAutomatedCuration:
 
             start_time = time.perf_counter()
             response = a_client.get_tech_types_for_open_metadata_type(
-                "SoftwareServer", "Database", output_format = "JSON", output_format_set = "Referenceable"
+                "SoftwareServer", "Database", output_format = "JSON", report_spec = "Referenceable"
             )
             duration = time.perf_counter() - start_time
             print(f"\n\tDuration was {duration} seconds")
@@ -808,7 +808,7 @@ class TestAutomatedCuration:
             start_time = time.perf_counter()
             # response = a_client.get_technology_type_detail("CSV Data File", True)
             response = a_client.get_technology_type_detail("File System", output_format="DICT",
-                                                           output_format_set="TechTypeDetail")
+                                                           report_spec="TechTypeDetail")
             duration = time.perf_counter() - start_time
             print(f"\n\tDuration was {duration} seconds")
             if type(response) is list:

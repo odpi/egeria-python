@@ -24,7 +24,7 @@ from pyegeria.output_formatter import (
     get_required_relationships,
     populate_common_columns,
 )
-from pyegeria._output_formats import select_output_format_set, get_output_format_type_match
+from pyegeria.base_report_formats import select_report_spec, get_report_spec_match
 
 sys.path.insert(0, os.path.abspath(os.path.dirname(__file__)))
 from pyegeria._exceptions_new import PyegeriaInvalidParameterException
@@ -106,7 +106,7 @@ class GovernanceOfficer(Client2):
     # Extract properties functions
     #
     def _generate_governance_definition_output(self, elements: list | dict, search_string: str, element_type_name: str = None,
-                                               output_format: str = 'DICT', output_format_set: dict | str = None
+                                               output_format: str = 'DICT', report_spec: dict | str = None
                                                ) -> str | list:
         """
         Render governance definitions using the shared output pipeline.
@@ -121,7 +121,7 @@ class GovernanceOfficer(Client2):
             Friendly type label to display (defaults to "Governance Definition").
         output_format : str
             One of: MD, FORM, REPORT, LIST, DICT, MERMAID, HTML.
-        output_format_set : dict | str, optional
+        report_spec : dict | str, optional
             Either a label for a format set or a concrete format-set dict. When omitted, a sensible
             default for Governance Definitions is chosen, falling back to "Default".
 
@@ -136,18 +136,18 @@ class GovernanceOfficer(Client2):
 
         entity_type = element_type_name if element_type_name else "Governance Definition"
         # Resolve columns_struct via output format sets
-        if output_format_set:
-            if isinstance(output_format_set, str):
-                output_formats = select_output_format_set(output_format_set, output_format)
-            elif isinstance(output_format_set, dict):
-                output_formats = get_output_format_type_match(output_format_set, output_format)
+        if report_spec:
+            if isinstance(report_spec, str):
+                output_formats = select_report_spec(report_spec, output_format)
+            elif isinstance(report_spec, dict):
+                output_formats = get_report_spec_match(report_spec, output_format)
             else:
                 output_formats = None
         else:
             # Default to the Governance Definitions format set
-            output_formats = select_output_format_set("Governance Definitions", output_format)
+            output_formats = select_report_spec("Governance Definitions", output_format)
         if output_formats is None:
-            output_formats = select_output_format_set("Default", output_format)
+            output_formats = select_report_spec("Default", output_format)
 
         logger.trace(f"Executing generate_governance_definition_output: {output_formats}")
         return generate_output(
@@ -1672,7 +1672,7 @@ class GovernanceOfficer(Client2):
                                                  starts_with: bool = True,
                                                  ends_with: bool = False, ignore_case: bool = False,
                                                  start_from: int = 0, page_size: int = 0,
-                                                 output_format: str = 'JSON', output_format_set: dict = None,
+                                                 output_format: str = 'JSON', report_spec: dict = None,
                                                  body: dict | SearchStringRequestBody = None,
                                                  ) -> list | str:
         """ Retrieve the list of governance definition metadata elements that contain the search string.
@@ -1741,7 +1741,7 @@ class GovernanceOfficer(Client2):
                                               metadata_element_types=metadata_element_types,
                                               starts_with=starts_with, ends_with=ends_with, ignore_case=ignore_case,
                                               start_from=start_from, page_size=page_size,
-                                              output_format=output_format, output_format_set=output_format_set,
+                                              output_format=output_format, report_spec=report_spec,
                                               body=body)
 
     @dynamic_catch
@@ -1749,7 +1749,7 @@ class GovernanceOfficer(Client2):
                                     metadata_element_types: list[str] = None,
                                     starts_with: bool = True, ends_with: bool = False,
                                     ignore_case: bool = False, start_from: int = 0, page_size: int = 0,
-                                    output_format: str = 'JSON', output_format_set: dict = None,
+                                    output_format: str = 'JSON', report_spec: dict = None,
                                     body: dict | SearchStringRequestBody = None, ) -> list | str:
         """ Retrieve the list of governance definition metadata elements that contain the search string.
 
@@ -1810,7 +1810,7 @@ class GovernanceOfficer(Client2):
         response = loop.run_until_complete(
             self._async_find_governance_definitions(search_string, classification_names, metadata_element_types,
                                                     starts_with, ends_with, ignore_case, start_from,
-                                                    page_size, output_format, output_format_set, body))
+                                                    page_size, output_format, report_spec, body))
         return response
 
     @dynamic_catch
@@ -1819,7 +1819,7 @@ class GovernanceOfficer(Client2):
                                                         body: dict | FilterRequestBody = None,
                                                         start_from: int = 0, page_size: int = 0,
                                                         output_format: str = "JSON",
-                                                        output_format_set: dict = None) -> list | str:
+                                                        report_spec: dict = None) -> list | str:
         """ Returns the list of governance definitions with a particular name. Async Version.
 
             Parameters
@@ -1877,7 +1877,7 @@ class GovernanceOfficer(Client2):
                                                       filter_string=filter_string,
                                                       classification_names=classification_names,
                                                       start_from=start_from, page_size=page_size,
-                                                      output_format=output_format, output_format_set=output_format_set,
+                                                      output_format=output_format, report_spec=report_spec,
                                                       body=body)
 
         return response
@@ -1887,7 +1887,7 @@ class GovernanceOfficer(Client2):
                                            body: dict | FilterRequestBody = None,
                                            start_from: int = 0, page_size: int = 0,
                                            output_format: str = "JSON",
-                                           output_format_set: dict = None) -> list | str:
+                                           report_spec: dict = None) -> list | str:
         """ Returns the list of governance definitions with a particular name."""
 
         """ Returns the list of information governance definitions with a particular name. Async Version.
@@ -1947,14 +1947,14 @@ class GovernanceOfficer(Client2):
         loop = asyncio.get_event_loop()
         response = loop.run_until_complete(
             self._async_get_governance_definitions_by_name(filter_string, classification_names, body,
-                                                           start_from, page_size, output_format, output_format_set))
+                                                           start_from, page_size, output_format, report_spec))
         return response
 
     @dynamic_catch
     async def _async_get_governance_definition_by_guid(self, guid: str, element_type: str = None,
                                                        body: dict | FilterRequestBody = None,
                                                        output_format: str = "JSON",
-                                                       output_format_set: dict = None) -> dict | str:
+                                                       report_spec: dict = None) -> dict | str:
 
         """ Get governance definition by guid.
             Async version.
@@ -2008,7 +2008,7 @@ class GovernanceOfficer(Client2):
 
         response = await self._async_get_guid_request(url, _type=type,
                                                       _gen_output=self._generate_governance_definition_output,
-                                                      output_format=output_format, output_format_set=output_format_set,
+                                                      output_format=output_format, report_spec=report_spec,
                                                       body=body)
 
         return response
@@ -2016,7 +2016,7 @@ class GovernanceOfficer(Client2):
     @dynamic_catch
     def get_governance_definition_by_guid(self, guid: str, element_type: str = None, body: dict = None,
                                           output_format: str = "JSON",
-                                          output_format_set: dict = None) -> dict | str:
+                                          report_spec: dict = None) -> dict | str:
 
         """ Get governance definition by guid.
 
@@ -2063,7 +2063,7 @@ class GovernanceOfficer(Client2):
         loop = asyncio.get_event_loop()
         response = loop.run_until_complete(self._async_get_governance_definition_by_guid(guid, element_type, body,
                                                                                          output_format,
-                                                                                         output_format_set))
+                                                                                         report_spec))
         return response
 
     @dynamic_catch

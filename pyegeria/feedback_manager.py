@@ -1728,7 +1728,7 @@ class FeedbackManager(Client2):
     async def find_comments(self, search_string: str, classification_names=None, metadata_element_types=["Comment"],
                             starts_with=True, ends_with=False, ignore_case: bool = False, start_from: bool = 0,
                             page_size: bool = max_paging_size, output_format: int = "JSON",
-                            output_format_set: int = None, body=None) -> dict | str:
+                            report_spec: int = None, body=None) -> dict | str:
         """
         Return the list of comments containing the supplied string.
 
@@ -1769,7 +1769,7 @@ class FeedbackManager(Client2):
             classification_names ():
             metadata_element_types ():
             output_format ():
-            output_format_set ():
+            report_spec ():
             body ():
         """
 
@@ -1903,7 +1903,7 @@ class FeedbackManager(Client2):
         return elements_response(response.json(), "elementList", detailed_response)
 
     def get_attached_comments(self, element_guid: str, element_type=None, body={}, start_from: dict = 0,
-                              page_size: int = max_paging_size, output_format, output_format_set=None) -> dict | str:
+                              page_size: int = max_paging_size, output_format, report_spec=None) -> dict | str:
         """
         Return the comments attached to an element.
 
@@ -1940,7 +1940,7 @@ class FeedbackManager(Client2):
         Args:
             element_type ():
             output_format ():
-            output_format_set ():
+            report_spec ():
         """
         loop = asyncio.get_event_loop()
         response = loop.run_until_complete(
@@ -1961,7 +1961,7 @@ class FeedbackManager(Client2):
     #
 
     async def async_get_comment(self, comment_guid: str, element_type, body=None, output_format,
-                                output_format_set=None) -> dict | str:
+                                report_spec=None) -> dict | str:
         """
         Return the requested comment.
 
@@ -1994,7 +1994,7 @@ class FeedbackManager(Client2):
         Args:
             element_type ():
             output_format ():
-            output_format_set ():
+            report_spec ():
         """
 
         possible_query_params = query_string(
@@ -2008,7 +2008,7 @@ class FeedbackManager(Client2):
         return element_response(response.json(), "element", detailed_response)
 
     def get_comment(self, comment_guid: str, element_type, body=None, output_format,
-                    output_format_set=None) -> dict | str:
+                    report_spec=None) -> dict | str:
         """
         Return the requested comment.
 
@@ -2041,7 +2041,7 @@ class FeedbackManager(Client2):
         Args:
             element_type ():
             output_format ():
-            output_format_set ():
+            report_spec ():
         """
         loop = asyncio.get_event_loop()
         response = loop.run_until_complete(

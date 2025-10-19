@@ -149,7 +149,7 @@ class TestProjectManager:
             search_string = "Second"
 
             response = p_client.find_projects(
-                search_string, output_format="REPORT", output_format_set="Project"
+                search_string, output_format="REPORT", report_spec="Project"
             )
             duration = time.perf_counter() - start_time
 
@@ -252,7 +252,7 @@ class TestProjectManager:
             start_time = time.perf_counter()
             project_guid = "79ec7de5-7367-4bde-a3c8-b8d8c582b521"
 
-            response = p_client.get_project_by_guid(project_guid, output_format="DICT", output_format_set="Projects")
+            response = p_client.get_project_by_guid(project_guid, output_format="DICT", report_spec="Projects")
             duration = time.perf_counter() - start_time
 
             print(f"\n\tDuration was {duration} seconds")
@@ -289,7 +289,7 @@ class TestProjectManager:
 
             project_guid = "79ec7de5-7367-4bde-a3c8-b8d8c582b521"
 
-            response = p_client.get_project_graph(project_guid, output_format='DICT', output_format_set='Project')
+            response = p_client.get_project_graph(project_guid, output_format='DICT', report_spec='Project')
             duration = time.perf_counter() - start_time
 
             print(f"\n\tDuration was {duration} seconds")

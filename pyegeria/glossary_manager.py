@@ -27,7 +27,7 @@ from pyegeria.models import (NewElementRequestBody,
                              ReferenceableProperties, UpdateElementRequestBody, DeleteRequestBody, TemplateRequestBody,
                              NewRelationshipRequestBody, UpdateRelationshipRequestBody, NewClassificationRequestBody,
                              FilterRequestBody, GetRequestBody, SearchStringRequestBody, UpdateStatusRequestBody)
-from pyegeria._output_formats import select_output_format_set, get_output_format_type_match
+from pyegeria.base_report_formats import select_report_spec, get_report_spec_match
 from pyegeria.output_formatter import (generate_output,
                                        _extract_referenceable_properties, populate_columns_from_properties,
                                        get_required_relationships, populate_common_columns, overlay_additional_values, resolve_output_formats)
@@ -2510,7 +2510,7 @@ class GlossaryManager(CollectionManager):
         # Use centralized population
         col_data = populate_common_columns(element, columns_struct)
         # Term-specific classifications (collectionCategories) to 'classifications' column
-        columns_list = col_data.get('formats', {}).get('columns', [])
+        columns_list = col_data.get('formats', {}).get('attributes', [])
         try:
             classification_names = ""
             classifications = element.get('elementHeader', {}).get("collectionCategories", [])
@@ -2568,9 +2568,9 @@ class GlossaryManager(CollectionManager):
     def _generate_glossary_output(self, elements: dict | list[dict], search_string: str,
                                   element_type_name: str | None,
                                   output_format: str = 'DICT',
-                                  output_format_set: dict | str = None) -> str | list[dict]:
+                                  report_spec: dict | str = None) -> str | list[dict]:
         entity_type = 'Glossary'
-        output_formats = resolve_output_formats(entity_type, output_format, output_format_set)
+        output_formats = resolve_output_formats(entity_type, output_format, report_spec)
         return generate_output(
             elements=elements,
             search_string=search_string,
@@ -2584,9 +2584,9 @@ class GlossaryManager(CollectionManager):
     def _generate_term_output(self, elements: dict | list[dict], search_string: str,
                                element_type_name: str | None,
                                output_format: str = 'DICT',
-                               output_format_set: dict | str = None) -> str | list[dict]:
+                               report_spec: dict | str = None) -> str | list[dict]:
         entity_type = 'GlossaryTerm'
-        output_formats = resolve_output_formats(entity_type, output_format, output_format_set)
+        output_formats = resolve_output_formats(entity_type, output_format, report_spec)
         return generate_output(
             elements=elements,
             search_string=search_string,
@@ -2645,56 +2645,56 @@ class GlossaryManager(CollectionManager):
                                      metadata_element_types: list[str] = ["Glossary"],
                                      starts_with: bool = False, ends_with: bool = False, ignore_case: bool = False,
                                      start_from: int = 0,page_size: int = 0, output_format: str = 'JSON',
-                                     output_format_set: str | dict  = None,
+                                     report_spec: str | dict  = None,
                                      body: dict | SearchStringRequestBody = None) -> list | str:
 
         response = await self._async_find_collections(search_string, classificaton_names,
                                                       metadata_element_types, starts_with, ends_with, ignore_case,
-                                                      start_from, page_size, output_format, output_format_set, body)
+                                                      start_from, page_size, output_format, report_spec, body)
         return response
 
     def find_glossaries(self, search_string: str = "*", classificaton_names: list[str] = None,
                                      metadata_element_types: list[str] = ["Glossary"],
                                      starts_with: bool = False, ends_with: bool = False, ignore_case: bool = False,
                                      start_from: int = 0,page_size: int = 0, output_format: str = 'JSON',
-                                     output_format_set: str | dict  = None,
+                                     report_spec: str | dict  = None,
                                      body: dict | SearchStringRequestBody = None) -> list | str:
         loop = asyncio.get_event_loop()
         response = loop.run_until_complete(
-                    self._async_find_glossaries(search_string,  classificaton_names, metadata_element_types, starts_with, ends_with, ignore_case, start_from, page_size, output_format, output_format_set, body))
+                    self._async_find_glossaries(search_string,  classificaton_names, metadata_element_types, starts_with, ends_with, ignore_case, start_from, page_size, output_format, report_spec, body))
         return response
 
     async def _async_get_glossaries_by_name(self, filter_string: str = None, classification_names: list[str] = None,
                                              body: dict | FilterRequestBody = None,
                                              start_from: int = 0, page_size: int = 0,
                                              output_format: str = 'JSON',
-                                             output_format_set: str | dict = None) -> dict | str:
-        return await self._async_get_collections_by_name(filter_string, classification_names, body, start_from, page_size, output_format, output_format_set)
+                                             report_spec: str | dict = None) -> dict | str:
+        return await self._async_get_collections_by_name(filter_string, classification_names, body, start_from, page_size, output_format, report_spec)
 
 
     def get_glossaries_by_name(self, filter_string: str = None, classification_names: list[str] = None,
                                              body: dict | FilterRequestBody = None,
                                              start_from: int = 0, page_size: int = 0,
                                              output_format: str = 'JSON',
-                                             output_format_set: str | dict = None) -> dict | str:
+                                             report_spec: str | dict = None) -> dict | str:
         loop = asyncio.get_event_loop()
         response = loop.run_until_complete(
             self._async_get_glossaries_by_name(filter_string, classification_names, body,start_from, page_size,
-                                               output_format, output_format_set))
+                                               output_format, report_spec))
         return response
 
     async def _async_get_glossary_by_guid(self, glossary_guid: str, element_type: str = "Glossary", body: dict | GetRequestBody = None,
-                                          output_format: str = "JSON", output_format_set: str | dict = None) -> dict | str:
+                                          output_format: str = "JSON", report_spec: str | dict = None) -> dict | str:
 
-        return await self._async_get_collection_by_guid(glossary_guid, element_type, body, output_format, output_format_set)
+        return await self._async_get_collection_by_guid(glossary_guid, element_type, body, output_format, report_spec)
 
 
 
     def get_glossary_by_guid(self, glossary_guid: str, element_type: str = "Glossary", body: dict| GetRequestBody=None,
-                             output_format: str = "JSON", output_format_set: str | dict = None) -> dict | str:
+                             output_format: str = "JSON", report_spec: str | dict = None) -> dict | str:
         loop = asyncio.get_event_loop()
         response = loop.run_until_complete(
-            self._async_get_glossary_by_guid(glossary_guid, element_type, body,output_format, output_format_set))
+            self._async_get_glossary_by_guid(glossary_guid, element_type, body,output_format, report_spec))
         return response
 
 
@@ -2703,7 +2703,7 @@ class GlossaryManager(CollectionManager):
                                              body: dict | FilterRequestBody = None,
                                              start_from: int = 0, page_size: int = 0,
                                              output_format: str = 'JSON',
-                                             output_format_set: str | dict = None) -> list:
+                                             report_spec: str | dict = None) -> list:
         url = (f"{self.platform_url}/servers/{self.view_server}/api/open-metadata/glossary-manager/glossaries/"
                f"terms/by-name")
         response = await self._async_get_name_request(url, _type="GlossaryTerm",
@@ -2711,7 +2711,7 @@ class GlossaryManager(CollectionManager):
                                                       filter_string=filter_string,
                                                       classification_names=classification_names,
                                                       start_from=start_from, page_size=page_size,
-                                                      output_format=output_format, output_format_set=output_format_set,
+                                                      output_format=output_format, report_spec=report_spec,
                                                       body=body)
         return response
 
@@ -2719,34 +2719,34 @@ class GlossaryManager(CollectionManager):
                                              body: dict | FilterRequestBody = None,
                                              start_from: int = 0, page_size: int = 0,
                                              output_format: str = 'JSON',
-                                             output_format_set: str | dict = None) -> list:
+                                             report_spec: str | dict = None) -> list:
         loop = asyncio.get_event_loop()
         response = loop.run_until_complete(
             self._async_get_terms_by_name(filter_string, classification_names, body,start_from, page_size,
-                                           output_format, output_format_set))
+                                           output_format, report_spec))
         return response
 
     async def _async_get_term_by_guid(self, term_guid: str, element_type: str = "GlossaryTerm", body: dict| GetRequestBody=None,
-                             output_format: str = "JSON", output_format_set: str | dict = None) -> dict | str:
+                             output_format: str = "JSON", report_spec: str | dict = None) -> dict | str:
         url = (f"{self.platform_url}/servers/{self.view_server}/api/open-metadata/glossary-manager/glossaries/terms/"
                f"{term_guid}")
         response = await self._async_get_guid_request(url, _type=element_type,
                                                       _gen_output=self._generate_term_output,
-                                                      output_format=output_format, output_format_set=output_format_set,
+                                                      output_format=output_format, report_spec=report_spec,
                                                       body=body)
         return response
 
     def get_term_by_guid(self, term_guid: str, element_type: str = "GlossaryTerm", body: dict| GetRequestBody=None,
-                             output_format: str = "JSON", output_format_set: str | dict = None) -> dict | str:
+                             output_format: str = "JSON", report_spec: str | dict = None) -> dict | str:
         loop = asyncio.get_event_loop()
-        response = loop.run_until_complete(self._async_get_term_by_guid(term_guid, element_type, body,  output_format, output_format_set))
+        response = loop.run_until_complete(self._async_get_term_by_guid(term_guid, element_type, body,  output_format, report_spec))
         return response
 
     async def _async_find_glossary_terms(self, search_string: str, starts_with: bool = True,
                                      ends_with: bool = False, ignore_case: bool = False, type_name: str = "GlossaryTerm",
                                      classification_names: list[str] = None, start_from: int = 0,
                                      page_size: int = 0, output_format: str = 'JSON',
-                                     output_format_set: str | dict = "Glossary-Term-DrE", body: dict = None) -> list | str:
+                                     report_spec: str | dict = "Glossary-Term-DrE", body: dict = None) -> list | str:
         url = (f"{self.platform_url}/servers/{self.view_server}/api/open-metadata/glossary-manager/glossaries/terms/"
                f"by-search-string")
         response = await self._async_find_request(url, _type= type_name,
@@ -2755,7 +2755,7 @@ class GlossaryManager(CollectionManager):
                                                   metadata_element_types = ["GlossaryTerm"],
                                                   starts_with = starts_with, ends_with = ends_with, ignore_case = ignore_case,
                                                   start_from = start_from, page_size = page_size,
-                                                  output_format=output_format, output_format_set=output_format_set,
+                                                  output_format=output_format, report_spec=report_spec,
                                                   body=body)
         return response
 
@@ -2763,13 +2763,13 @@ class GlossaryManager(CollectionManager):
                                      ends_with: bool = False, ignore_case: bool = False, type_name: str = "GlossaryTerm",
                                      classification_names: list[str] = None, start_from: int = 0,
                                      page_size: int = 0, output_format: str = 'JSON',
-                                     output_format_set: str | dict = None, body: dict = None) -> list | str:
+                                     report_spec: str | dict = None, body: dict = None) -> list | str:
         loop = asyncio.get_event_loop()
         response = loop.run_until_complete(
             self._async_find_glossary_terms(search_string, starts_with,
                                             ends_with, ignore_case, type_name,classification_names,
                                             start_from,
-                                            page_size, output_format, output_format_set, body))
+                                            page_size, output_format, report_spec, body))
         return response
 
 

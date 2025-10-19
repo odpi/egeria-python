@@ -112,7 +112,7 @@ class TestExternalReferences:
             search_string = "ExtRef::Milvus---Web-Site"
 
             response = p_client.find_external_references(
-                search_string, metadata_element_types=["ExternalReference"],output_format="JSON", output_format_set="Regerenceable"
+                search_string, metadata_element_types=["ExternalReference"],output_format="JSON", report_spec="Regerenceable"
             )
             duration = time.perf_counter() - start_time
 
@@ -215,7 +215,7 @@ class TestExternalReferences:
             start_time = time.perf_counter()
             ref_guid = 'c85c1f5e-f7fb-4a2c-82ee-4bc90534fcbd'
 
-            response = p_client.get_external_reference_by_guid(ref_guid, element_type="Cited Document", output_format="DICT", output_format_set="External-Reference-DrE")
+            response = p_client.get_external_reference_by_guid(ref_guid, element_type="Cited Document", output_format="DICT", report_spec="External-Reference-DrE")
             duration = time.perf_counter() - start_time
             duration = time.perf_counter() - start_time
 

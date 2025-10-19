@@ -498,7 +498,7 @@ def process_data_spec_upsert_command(egeria_client: EgeriaTech, txt: str, direct
                     'guid': guid, 'display_name': display_name
                 })
                 return egeria_client.get_collection_by_guid(guid, element_type='Data-Specification-DrE',
-                                                            output_format='MD', output_format_set=output_set)
+                                                            output_format='MD', report_spec=output_set)
 
             elif object_action == "Create":
                 if valid is False and exists:
@@ -526,7 +526,7 @@ def process_data_spec_upsert_command(egeria_client: EgeriaTech, txt: str, direct
                         })
                         msg = f"Created Element `{display_name}` with GUID {guid}\n\n___"
                         logger.success(msg)
-                        return egeria_client.get_collection_by_guid(guid, object_type, output_format='MD', output_format_set=output_set)
+                        return egeria_client.get_collection_by_guid(guid, object_type, output_format='MD', report_spec=output_set)
                     else:
                         msg = f"Failed to create element `{display_name}` with GUID {guid}\n\n___"
                         logger.error(msg)
@@ -610,7 +610,7 @@ def process_data_dict_upsert_command(egeria_client: EgeriaTech, txt: str, direct
                     'guid': guid, 'display_name': display_name
                 })
                 return egeria_client.get_collection_by_guid(guid, element_type='Data Specification',
-                                                            output_format='MD', output_format_set=output_set)
+                                                            output_format='MD', report_spec=output_set)
 
             elif object_action == "Create":
                 if valid is False and exists:
@@ -637,7 +637,7 @@ def process_data_dict_upsert_command(egeria_client: EgeriaTech, txt: str, direct
                         })
                         msg = f"Created Element `{display_name}` with GUID {guid}\n\n___"
                         logger.success(msg)
-                        return egeria_client.get_collection_by_guid(guid, object_type, output_format='MD', output_format_set=output_set)
+                        return egeria_client.get_collection_by_guid(guid, object_type, output_format='MD', report_spec=output_set)
                     else:
                         msg = f"Failed to create element `{display_name}` with GUID {guid}\n\n___"
                         logger.error(msg)
@@ -731,7 +731,7 @@ def process_data_structure_upsert_command(egeria_client: EgeriaTech, txt: str,
                         })
                     logger.success(f"Updated  {object_type} `{display_name}` with GUID {guid}\n\n___")
 
-                    core_props = egeria_client.get_data_structure_by_guid(guid, output_format='MD', output_format_set=output_set)
+                    core_props = egeria_client.get_data_structure_by_guid(guid, output_format='MD', report_spec=output_set)
 
                     update_element_dictionary(qualified_name, {
                         'guid': guid, 'display_name': display_name
@@ -770,7 +770,7 @@ def process_data_structure_upsert_command(egeria_client: EgeriaTech, txt: str,
                             'guid': guid, 'display_name': display_name
                             })
 
-                        core_props = egeria_client.get_data_structure_by_guid(guid, output_format='MD', output_format_set=output_set)
+                        core_props = egeria_client.get_data_structure_by_guid(guid, output_format='MD', report_spec=output_set)
 
                         if in_data_dictionary:
                             logger.info(f"Will add to data dictionary(s) `{in_data_dictionary}`")
@@ -907,7 +907,7 @@ def process_data_field_upsert_command(egeria_client: EgeriaTech, txt: str, direc
                 update_element_dictionary(qualified_name, {
                     'guid': guid, 'display_name': display_name
                     })
-                core_props = egeria_client.get_data_field_by_guid(guid, output_format='MD', output_format_set=output_set)  ## update back to by_guid?
+                core_props = egeria_client.get_data_field_by_guid(guid, output_format='MD', report_spec=output_set)  ## update back to by_guid?
 
                 # existing_data_field = egeria_client.get_data_field_by_guid(guid, output_format='JSON')
 
@@ -949,7 +949,7 @@ def process_data_field_upsert_command(egeria_client: EgeriaTech, txt: str, direc
                             'guid': guid, 'display_name': display_name
                             })
                         # Start assembling the information we will present back out
-                        core_props = egeria_client.get_data_field_by_guid(guid, 'MD', output_format_set=output_set)
+                        core_props = egeria_client.get_data_field_by_guid(guid, 'MD', report_spec=output_set)
 
                         # Add the field to any data dictionaries
                         if in_data_dictionary:
@@ -1187,7 +1187,7 @@ def process_data_class_upsert_command(egeria_client: EgeriaTech, txt: str, direc
                 update_element_dictionary(qualified_name, {
                     'guid': guid, 'display_name': display_name
                     })
-                core_props = egeria_client.get_data_class_by_guid(guid, None, 'MD', output_format_set=output_set)
+                core_props = egeria_client.get_data_class_by_guid(guid, None, 'MD', report_spec=output_set)
 
                 # Sync membership in data dictionaries
                 update_data_collection_memberships(egeria_client, object_type, data_dict_guid_list, "DataDictionary",
@@ -1235,7 +1235,7 @@ def process_data_class_upsert_command(egeria_client: EgeriaTech, txt: str, direc
                             'guid': guid, 'display_name': display_name
                             })
                         # Start assembling the information we will present back out
-                        core_props = egeria_client.get_data_class_by_guid(guid, None, 'MD', output_format_set=output_set)
+                        core_props = egeria_client.get_data_class_by_guid(guid, None, 'MD', report_spec=output_set)
 
                         # Add the field to any data dictionaries
                         if in_data_dictionary:

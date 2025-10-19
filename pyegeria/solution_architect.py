@@ -18,7 +18,7 @@ from pyegeria.models import NewElementRequestBody, TemplateRequestBody, UpdateEl
     NewRelationshipRequestBody, DeleteRequestBody, UpdateStatusRequestBody, SearchStringRequestBody
 from pyegeria.output_formatter import make_preamble, make_md_attribute, generate_output, extract_mermaid_only, \
     extract_basic_dict, MD_SEPARATOR, populate_common_columns
-from pyegeria._output_formats import select_output_format_set, get_output_format_type_match
+from pyegeria.base_report_formats import select_report_spec, get_report_spec_match
 from pyegeria._validators import validate_guid
 from pyegeria.governance_officer import GovernanceOfficer
 from pyegeria._client_new import Client2, max_paging_size
@@ -502,7 +502,7 @@ class SolutionArchitect(Client2):
         # We only set a column's value if it is currently empty (None or "").
         try:
             formats = col_data.get('formats') if isinstance(col_data, dict) else None
-            columns = formats.get('columns') if isinstance(formats, dict) else None
+            columns = formats.get('attributes') if isinstance(formats, dict) else None
             if isinstance(columns, list) and isinstance(rel_dict, dict):
                 for col in columns:
                     if not isinstance(col, dict):
@@ -531,24 +531,24 @@ class SolutionArchitect(Client2):
     # Markdown output support
     #
     def generate_info_supply_chain_output(self, elements: list | dict, search_string: str, element_type_name: str | None,
-                                          output_format: str = 'MD', output_format_set: dict | str = None) -> str | list:
+                                          output_format: str = 'MD', report_spec: dict | str = None) -> str | list:
         """Render Information Supply Chains using the shared output pipeline.
         """
         if output_format == "MERMAID":
             return extract_mermaid_only(elements)
 
         entity_type = "Information Supply Chain"
-        if output_format_set:
-            if isinstance(output_format_set, str):
-                output_formats = select_output_format_set(output_format_set, output_format)
-            elif isinstance(output_format_set, dict):
-                output_formats = get_output_format_type_match(output_format_set, output_format)
+        if report_spec:
+            if isinstance(report_spec, str):
+                output_formats = select_report_spec(report_spec, output_format)
+            elif isinstance(report_spec, dict):
+                output_formats = get_report_spec_match(report_spec, output_format)
             else:
                 output_formats = None
         else:
-            output_formats = select_output_format_set("Information Supply Chains", output_format)
+            output_formats = select_report_spec("Information Supply Chains", output_format)
         if output_formats is None:
-            output_formats = select_output_format_set("Default", output_format)
+            output_formats = select_report_spec("Default", output_format)
 
         return generate_output(
             elements=elements,
@@ -561,7 +561,7 @@ class SolutionArchitect(Client2):
         )
 
     def generate_solution_blueprint_output(self, elements: list | dict, search_string: str, element_type_name: str | None,
-                                           output_format: str = 'MD', output_format_set: dict | str = None) -> str | list:
+                                           output_format: str = 'MD', report_spec: dict | str = None) -> str | list:
         """
         Generate output for solution blueprints in the specified format.
 
@@ -577,17 +577,17 @@ class SolutionArchitect(Client2):
             return extract_mermaid_only(elements)
 
         entity_type = "Solution Blueprint"
-        if output_format_set:
-            if isinstance(output_format_set, str):
-                output_formats = select_output_format_set(output_format_set, output_format)
-            elif isinstance(output_format_set, dict):
-                output_formats = get_output_format_type_match(output_format_set, output_format)
+        if report_spec:
+            if isinstance(report_spec, str):
+                output_formats = select_report_spec(report_spec, output_format)
+            elif isinstance(report_spec, dict):
+                output_formats = get_report_spec_match(report_spec, output_format)
             else:
                 output_formats = None
         else:
-            output_formats = select_output_format_set("Solution Blueprints", output_format)
+            output_formats = select_report_spec("Solution Blueprints", output_format)
         if output_formats is None:
-            output_formats = select_output_format_set("Default", output_format)
+            output_formats = select_report_spec("Default", output_format)
 
         return generate_output(
             elements=elements,
@@ -600,7 +600,7 @@ class SolutionArchitect(Client2):
         )
 
     def generate_solution_roles_output(self, elements: list | dict, search_string: str, element_type_name: str | None,
-                                       output_format: str = 'MD', output_format_set: dict | str = None) -> str | list:
+                                       output_format: str = 'MD', report_spec: dict | str = None) -> str | list:
         """
         Generate output for solution roles in the specified format.
 
@@ -616,17 +616,17 @@ class SolutionArchitect(Client2):
             return extract_mermaid_only(elements)
 
         entity_type = "Solution Role"
-        if output_format_set:
-            if isinstance(output_format_set, str):
-                output_formats = select_output_format_set(output_format_set, output_format)
-            elif isinstance(output_format_set, dict):
-                output_formats = get_output_format_type_match(output_format_set, output_format)
+        if report_spec:
+            if isinstance(report_spec, str):
+                output_formats = select_report_spec(report_spec, output_format)
+            elif isinstance(report_spec, dict):
+                output_formats = get_report_spec_match(report_spec, output_format)
             else:
                 output_formats = None
         else:
-            output_formats = select_output_format_set("Solution Roles", output_format)
+            output_formats = select_report_spec("Solution Roles", output_format)
         if output_formats is None:
-            output_formats = select_output_format_set("Default", output_format)
+            output_formats = select_report_spec("Default", output_format)
 
         return generate_output(
             elements=elements,
@@ -639,7 +639,7 @@ class SolutionArchitect(Client2):
         )
 
     def generate_solution_components_output(self, elements: list | dict, search_string: str, element_type_name: str | None,
-                                            output_format: str = 'MD', output_format_set: dict | str = None) -> str | list:
+                                            output_format: str = 'MD', report_spec: dict | str = None) -> str | list:
         """
         Generate output for solution components in the specified format.
 
@@ -660,17 +660,17 @@ class SolutionArchitect(Client2):
             return extract_mermaid_only(elements)
 
         entity_type = "Solution Component"
-        if output_format_set:
-            if isinstance(output_format_set, str):
-                output_formats = select_output_format_set(output_format_set, output_format)
-            elif isinstance(output_format_set, dict):
-                output_formats = get_output_format_type_match(output_format_set, output_format)
+        if report_spec:
+            if isinstance(report_spec, str):
+                output_formats = select_report_spec(report_spec, output_format)
+            elif isinstance(report_spec, dict):
+                output_formats = get_report_spec_match(report_spec, output_format)
             else:
                 output_formats = None
         else:
-            output_formats = select_output_format_set("Solution Components", output_format)
+            output_formats = select_report_spec("Solution Components", output_format)
         if output_formats is None:
-            output_formats = select_output_format_set("Default", output_format)
+            output_formats = select_report_spec("Default", output_format)
 
         return generate_output(
             elements=elements,
@@ -1604,7 +1604,7 @@ class SolutionArchitect(Client2):
                                                     starts_with: bool = True, ends_with: bool = False,
                                                     ignore_case: bool = False, start_from: int = 0,
                                                     page_size: int = 0, output_format: str = 'JSON',
-                                                    output_format_set: str = None,
+                                                    report_spec: str = None,
                                                     body: dict| SearchStringRequestBody = None) -> (list[dict] | str):
         """ Retrieve a list of all information supply chains
              Parameters
@@ -1652,7 +1652,7 @@ class SolutionArchitect(Client2):
                 }
         """
 
-        return self.find_information_supply_chains("*", classification_names, metadata_element_types, starts_with, ends_with, ignore_case, start_from, page_size, output_format, output_format_set, body)
+        return self.find_information_supply_chains("*", classification_names, metadata_element_types, starts_with, ends_with, ignore_case, start_from, page_size, output_format, report_spec, body)
 
     async def _async_find_information_supply_chains(self, search_string: str = "*", add_implementation: bool = True,
                                                     classification_names: list[str] = None,
@@ -1660,7 +1660,7 @@ class SolutionArchitect(Client2):
                                                     starts_with: bool = True, ends_with: bool = False,
                                                     ignore_case: bool = False, start_from: int = 0,
                                                     page_size: int = 0, output_format: str = 'JSON',
-                                                    output_format_set: str = None,
+                                                    report_spec: str = None,
                                                     body: dict| SearchStringRequestBody = None) -> list[dict] | str:
         """Retrieve the list of information supply chain metadata elements that contain the search string.
                https://egeria-project.org/concepts/information-supply-chain
@@ -1725,7 +1725,7 @@ class SolutionArchitect(Client2):
                                               metadata_element_types=metadata_element_types,
                                               starts_with=starts_with, ends_with=ends_with, ignore_case=ignore_case,
                                               start_from=start_from, page_size=page_size,
-                                              output_format=output_format, output_format_set=output_format_set,
+                                              output_format=output_format, report_spec=report_spec,
                                               body=body)
 
 
@@ -1736,7 +1736,7 @@ class SolutionArchitect(Client2):
                                     starts_with: bool = True, ends_with: bool = False,
                                     ignore_case: bool = False, start_from: int = 0,
                                     page_size: int = 0, output_format: str = 'JSON',
-                                    output_format_set: str = None,
+                                    report_spec: str = None,
                                     body: dict| SearchStringRequestBody = None) -> list[dict] | str:
         """Retrieve the list of information supply chain metadata elements that contain the search string.
           https://egeria-project.org/concepts/information-supply-chain
@@ -1803,7 +1803,7 @@ class SolutionArchitect(Client2):
             self._async_find_information_supply_chains(search_string, add_implementation,classification_names, metadata_element_types,
                                                        starts_with, ends_with, ignore_case,
                                                        start_from, page_size,  output_format,
-                                                       output_format_set, body))
+                                                       report_spec, body))
         return response
 
     async def _async_get_info_supply_chain_by_name(self, search_filter: str, body: dict = None,
@@ -2947,7 +2947,7 @@ class SolutionArchitect(Client2):
                                     starts_with: bool = True, ends_with: bool = False,
                                     ignore_case: bool = False, start_from: int = 0,
                                     page_size: int = 0, output_format: str = 'JSON',
-                                    output_format_set: str = "Solution-Blueprint",
+                                    report_spec: str = "Solution-Blueprint",
                                     body: dict| SearchStringRequestBody = None) -> list[dict] | str:
         """Retrieve the solution blueprint elements that contain the search string.
            https://egeria-project.org/concepts/solution-blueprint
@@ -3012,7 +3012,7 @@ class SolutionArchitect(Client2):
                                               metadata_element_types=metadata_element_types,
                                               starts_with=starts_with, ends_with=ends_with, ignore_case=ignore_case,
                                               start_from=start_from, page_size=page_size,
-                                              output_format=output_format, output_format_set=output_format_set,
+                                              output_format=output_format, report_spec=report_spec,
                                               body=body)
 
 
@@ -3021,7 +3021,7 @@ class SolutionArchitect(Client2):
                                     starts_with: bool = True, ends_with: bool = False,
                                     ignore_case: bool = False, start_from: int = 0,
                                     page_size: int = 0, output_format: str = 'JSON',
-                                    output_format_set: str = None,
+                                    report_spec: str = None,
                                     body: dict| SearchStringRequestBody = None) -> list[dict] | str:
         """Retrieve the list of solution blueprint elements that contain the search string.
            https://egeria-project.org/concepts/solution-blueprint
@@ -3084,7 +3084,7 @@ class SolutionArchitect(Client2):
         response = loop.run_until_complete(
             self._async_find_solution_blueprints(search_string, classification_names, metadata_element_types,
                                                   starts_with, ends_with, ignore_case, start_from,
-                                                  page_size, output_format, output_format_set, body))
+                                                  page_size, output_format, report_spec, body))
         return response
 
     def find_all_solution_blueprints(self, classification_names: list[str] = None,
@@ -3092,19 +3092,19 @@ class SolutionArchitect(Client2):
                                     starts_with: bool = True, ends_with: bool = False,
                                     ignore_case: bool = False, start_from: int = 0,
                                     page_size: int = 0, output_format: str = 'JSON',
-                                    output_format_set: str = None,
+                                    report_spec: str = None,
                                     body: dict| SearchStringRequestBody = None) -> list[dict] | str:
         """Retrieve a list of all solution blueprint elements
         https://egeria-project.org/concepts/solution-blueprint
         """
         return self.find_solution_blueprints("*", classification_names, metadata_element_types,
                                               starts_with, ends_with, ignore_case, start_from,
-                                              page_size, output_format, output_format_set, body)
+                                              page_size, output_format, report_spec, body)
 
 
     async def _async_get_solution_blueprint_by_guid(self, guid: str, body: dict = None,
                                                     output_format: str = "JSON",
-                                                    output_format_set: str| Dict = "Solution-Blueprint") -> dict | str:
+                                                    report_spec: str| Dict = "Solution-Blueprint") -> dict | str:
         """Return the properties of a specific solution blueprint. Async Version.
 
             Parameters
@@ -3120,7 +3120,7 @@ class SolutionArchitect(Client2):
                 FORM - output markdown with a preamble for a form
                 REPORT - output markdown with a preamble for a report
                 MERMAID - output mermaid markdown
-            output_format_set: str|Dict, optional
+            report_spec: str|Dict, optional
                 Structure of content to return.
 
             Returns
@@ -3161,11 +3161,11 @@ class SolutionArchitect(Client2):
             return NO_ELEMENTS_FOUND
         if output_format != 'JSON':  # return a simplified markdown representation
             return self.generate_solution_blueprint_output(element, guid, "SolutionBlueprint",
-                                                           output_format, output_format_set=output_format_set)
+                                                           output_format, report_spec=report_spec)
         return response.json().get("element", NO_ELEMENTS_FOUND)
 
     def get_solution_blueprint_by_guid(self, guid: str, body: dict = None, output_format: str = "JSON",
-                                       output_format_set: str| Dict = "Solution-Blueprint") -> dict | str:
+                                       report_spec: str| Dict = "Solution-Blueprint") -> dict | str:
         """ Return the properties of a specific solution blueprint.
 
             Parameters
@@ -3181,7 +3181,7 @@ class SolutionArchitect(Client2):
                 FORM - output markdown with a preamble for a form
                 REPORT - output markdown with a preamble for a report
                 MERMAID - output mermaid markdown
-            output_format_set: str|Dict, optional
+            report_spec: str|Dict, optional
                 Structure of content to return.
 
             Returns
@@ -3211,12 +3211,12 @@ class SolutionArchitect(Client2):
         """
         loop = asyncio.get_event_loop()
         response = loop.run_until_complete(self._async_get_solution_blueprint_by_guid(guid, body,
-                                                                                      output_format, output_format_set))
+                                                                                      output_format, report_spec))
         return response
 
     async def _async_get_solution_blueprints_by_name(self, search_filter: str, body: dict = None, start_from: int = 0,
                                                      page_size: int = max_paging_size,
-                                                     output_format: str = "JSON", output_format_set: str| Dict = "Solution-Blueprint") -> dict | str:
+                                                     output_format: str = "JSON", report_spec: str| Dict = "Solution-Blueprint") -> dict | str:
         """ Returns the list of solution blueprints with a particular name. Async Version.
 
             Parameters
@@ -3232,7 +3232,7 @@ class SolutionArchitect(Client2):
                 FORM - output markdown with a preamble for a form
                 REPORT - output markdown with a preamble for a report
                 MERMAID - output mermaid markdown
-            output_format_set: str|Dict, optional
+            report_spec: str|Dict, optional
                 Structure of content to return.
 
             Returns
@@ -3280,12 +3280,12 @@ class SolutionArchitect(Client2):
         if element == NO_ELEMENTS_FOUND:
             return NO_ELEMENTS_FOUND
         if output_format != 'JSON':  # return a simplified markdown representation
-            return self.generate_solution_blueprint_output(element, search_filter, output_format, output_format_set=output_format_set)
+            return self.generate_solution_blueprint_output(element, search_filter, output_format, report_spec=report_spec)
         return response.json().get("elements", NO_ELEMENTS_FOUND)
 
     def get_solution_blueprints_by_name(self, search_filter: str, body: dict = None, start_from: int = 0,
                                         page_size: int = max_paging_size, output_format: str = "JSON",
-                                        output_format_set: str| Dict = "Solution-Blueprint") -> dict | str:
+                                        report_spec: str| Dict = "Solution-Blueprint") -> dict | str:
         """ Returns the list of solution blueprints with a particular name.
 
             Parameters
@@ -3306,7 +3306,7 @@ class SolutionArchitect(Client2):
                 FORM - output markdown with a preamble for a form
                 REPORT - output markdown with a preamble for a report
                 MERMAID - output mermaid markdown
-            output_format_set: str|Dict, optional
+            report_spec: str|Dict, optional
                 Structure of content to return.
 
             Returns
@@ -3341,7 +3341,7 @@ class SolutionArchitect(Client2):
         """
         loop = asyncio.get_event_loop()
         response = loop.run_until_complete(
-            self._async_get_solution_blueprints_by_name(search_filter, body, start_from, page_size, output_format, output_format_set))
+            self._async_get_solution_blueprints_by_name(search_filter, body, start_from, page_size, output_format, report_spec))
         return response
 
 
@@ -4268,7 +4268,7 @@ class SolutionArchitect(Client2):
                                     starts_with: bool = True, ends_with: bool = False,
                                     ignore_case: bool = False, start_from: int = 0,
                                     page_size: int = 0, output_format: str = 'JSON',
-                                    output_format_set: str = None,
+                                    report_spec: str = None,
                                     body: dict| SearchStringRequestBody = None) -> list[dict] | str:
         """ Retrieve the solution component elements that contain the search string. The solutions components returned
             include information about consumers, actors, and other solution components that are associated with them.
@@ -4335,7 +4335,7 @@ class SolutionArchitect(Client2):
                                               metadata_element_types=metadata_element_types,
                                               starts_with=starts_with, ends_with=ends_with, ignore_case=ignore_case,
                                               start_from=start_from, page_size=page_size,
-                                              output_format=output_format, output_format_set=output_format_set,
+                                              output_format=output_format, report_spec=report_spec,
                                               body=body)
 
     def find_solution_components(self, search_string: str = "*", classification_names: list[str] = None,
@@ -4343,7 +4343,7 @@ class SolutionArchitect(Client2):
                                     starts_with: bool = True, ends_with: bool = False,
                                     ignore_case: bool = False, start_from: int = 0,
                                     page_size: int = 0, output_format: str = 'JSON',
-                                    output_format_set: str = None,
+                                    report_spec: str = None,
                                     body: dict| SearchStringRequestBody = None) -> list[dict] | str:
         """ Retrieve the solution component elements that contain the search string. The solutions components returned
             include information about consumers, actors, and other solution components that are associated with them.
@@ -4402,7 +4402,7 @@ class SolutionArchitect(Client2):
 
         loop = asyncio.get_event_loop()
         response = loop.run_until_complete(
-            self._async_find_solution_components(search_string, classification_names, metadata_element_types, starts_with, ends_with, ignore_case, start_from, page_size, output_format, output_format_set, body))
+            self._async_find_solution_components(search_string, classification_names, metadata_element_types, starts_with, ends_with, ignore_case, start_from, page_size, output_format, report_spec, body))
         return response
 
     def find_all_solution_components(self, classification_names: list[str] = None,
@@ -4410,12 +4410,12 @@ class SolutionArchitect(Client2):
                                     starts_with: bool = True, ends_with: bool = False,
                                     ignore_case: bool = False, start_from: int = 0,
                                     page_size: int = 0, output_format: str = 'JSON',
-                                    output_format_set: str = None,
+                                    report_spec: str = None,
                                     body: dict| SearchStringRequestBody = None) -> list[dict] | str:
         """Retrieve a list of all solution component elements
         https://egeria-project.org/concepts/solution-components
         """
-        return self.find_solution_components("*", classification_names, metadata_element_types, starts_with, ends_with, ignore_case, start_from, page_size, output_format, output_format_set, body)
+        return self.find_solution_components("*", classification_names, metadata_element_types, starts_with, ends_with, ignore_case, start_from, page_size, output_format, report_spec, body)
 
 
     async def _async_get_solution_components_by_name(self, search_filter: str, body: dict = None, start_from: int = 0,
@@ -4543,7 +4543,7 @@ class SolutionArchitect(Client2):
         return response
 
     async def _async_get_solution_component_by_guid(self, guid: str, body: dict = None,
-                                                    output_format: str = "JSON", output_format_set: str = "Solution-Component-DrE") -> dict | str:
+                                                    output_format: str = "JSON", report_spec: str = "Solution-Component-DrE") -> dict | str:
         """ Return the properties of a specific solution component. Async Version.
 
             Parameters
@@ -4559,7 +4559,7 @@ class SolutionArchitect(Client2):
                 FORM - output markdown with a preamble for a form
                 REPORT - output markdown with a preamble for a report
                 MERMAID - output mermaid markdown
-            output_format_set: str, default = "Solution-Component-DrE"
+            report_spec: str, default = "Solution-Component-DrE"
                 Structure of output to produce:
 
             Returns
@@ -4592,7 +4592,7 @@ class SolutionArchitect(Client2):
                f"solution-components/{guid}/retrieve")
         response = await self._async_get_guid_request(url, 'SolutionComponent',
                                                       self.generate_solution_components_output,
-                                                      output_format, output_format_set, body)
+                                                      output_format, report_spec, body)
         return response
 
         # if body is None:
@@ -5549,7 +5549,7 @@ class SolutionArchitect(Client2):
                                     starts_with: bool = True, ends_with: bool = False,
                                     ignore_case: bool = False, start_from: int = 0,
                                     page_size: int = 0, output_format: str = 'JSON',
-                                    output_format_set: str = None,
+                                    report_spec: str = None,
                                     body: dict| SearchStringRequestBody = None) -> list[dict] | str:
         """Retrieve the solution role elements that contain the search string.
            https://egeria-project.org/concepts/actor
@@ -5616,7 +5616,7 @@ class SolutionArchitect(Client2):
                                               metadata_element_types=metadata_element_types,
                                               starts_with=starts_with, ends_with=ends_with, ignore_case=ignore_case,
                                               start_from=start_from, page_size=page_size,
-                                              output_format=output_format, output_format_set=output_format_set,
+                                              output_format=output_format, report_spec=report_spec,
                                               body=body)
 
     def find_solution_roles(self, search_string: str = "*", classification_names: list[str] = None,
@@ -5624,7 +5624,7 @@ class SolutionArchitect(Client2):
                                     starts_with: bool = True, ends_with: bool = False,
                                     ignore_case: bool = False, start_from: int = 0,
                                     page_size: int = 0, output_format: str = 'JSON',
-                                    output_format_set: str = None,
+                                    report_spec: str = None,
                                     body: dict| SearchStringRequestBody = None) -> list[dict] | str:
         """Retrieve the list of solution role elements that contain the search string.
            https://egeria-project.org/concepts/actor
@@ -5689,7 +5689,7 @@ class SolutionArchitect(Client2):
 
         loop = asyncio.get_event_loop()
         response = loop.run_until_complete(
-            self._async_find_solution_roles(search_string, classification_names, metadata_element_types, starts_with, ends_with, ignore_case, start_from, page_size, output_format, output_format_set, body))
+            self._async_find_solution_roles(search_string, classification_names, metadata_element_types, starts_with, ends_with, ignore_case, start_from, page_size, output_format, report_spec, body))
         return response
 
     def find_all_solution_roles(self,  classification_names: list[str] = None,
@@ -5697,12 +5697,12 @@ class SolutionArchitect(Client2):
                                     starts_with: bool = True, ends_with: bool = False,
                                     ignore_case: bool = False, start_from: int = 0,
                                     page_size: int = 0, output_format: str = 'JSON',
-                                    output_format_set: str = None,
+                                    report_spec: str = None,
                                     body: dict| SearchStringRequestBody = None) -> list[dict] | str:
         """Retrieve a list of all solution blueprint elements
         https://egeria-project.org/concepts/actor
         """
-        return self.find_solution_roles("*", classification_names, metadata_element_types, starts_with, ends_with, ignore_case, start_from, page_size, output_format, output_format_set, body)
+        return self.find_solution_roles("*", classification_names, metadata_element_types, starts_with, ends_with, ignore_case, start_from, page_size, output_format, report_spec, body)
 
 
     async def _async_get_solution_roles_by_name(self, search_filter: str, body: dict = None, start_from: int = 0,

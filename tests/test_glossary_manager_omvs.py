@@ -556,7 +556,7 @@ class TestGlossaryManager:
                 False,
                 True,
                 output_format="JSON",
-                output_format_set = "Basic-Terms"
+                report_spec = "Basic-Terms"
             )
             print(f"Duration is {time.perf_counter() - start_time} seconds")
             print(f"Number of terms is: {len(response)}")

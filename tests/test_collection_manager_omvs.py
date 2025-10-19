@@ -107,18 +107,18 @@ class TestCollectionManager:
             c_client = CollectionManager(self.good_server_2, self.good_platform1_url, user_id=self.good_user_2, )
             token = c_client.create_egeria_bearer_token(self.good_user_2, "secret")
             start_time = time.perf_counter()
-            search_string = None
+            search_string = "*"
             classification_name = None
-            element_type = ["Glossary"]
+            element_type = []
             output_format = "DICT"
-            output_format_set = "Glossary"
+            report_spec = "BasicCollections"
 
             response = c_client.find_collections(search_string = search_string, classification_names = classification_name
                                                  ,metadata_element_types=element_type
-                                                 ,output_format=output_format, output_format_set=output_format_set)
+                                                 ,output_format=output_format, report_spec=report_spec)
             duration = time.perf_counter() - start_time
             if response:
-                print(f"\nOutput Format: {output_format} and Output Format Set: {output_format_set}")
+                print(f"\nOutput Format: {output_format} and Output Format Set: {report_spec}")
                 print(f"\n\tNumber elements {len(response)} & Duration was {duration:.2f} seconds")
                 if type(response) is list:
                     print(f"Found {len(response)} collections {type(response)}\n\n")
@@ -150,7 +150,7 @@ class TestCollectionManager:
                     "heading": "General Agreement Information",
                     "description": "Attributes generic to all Agreements.",
                     "aliases": [],
-                    "formats": [{"columns": [
+                    "formats": [{"attributes": [
                         {'name': 'Name', 'key': 'display_name'},
                         {'name': 'Qualified Name', 'key': 'qualified_name', 'format': True},
                         {'name': 'Category', 'key': 'category'},
@@ -184,7 +184,7 @@ class TestCollectionManager:
                 "metadataElementSubtypeNames": []
                 }
 
-            response = c_client.find_collections(body=body, output_format="JSON", output_format_set="Digital-Products")
+            response = c_client.find_collections(body=body, output_format="JSON", report_spec="Digital-Products")
             duration = time.perf_counter() - start_time
 
             print(f"\n\tNumber elements {len(response)} & Duration was {duration:.2f} seconds")
@@ -217,7 +217,7 @@ class TestCollectionManager:
                     "heading": "General Agreement Information",
                     "description": "Attributes generic to all Agreements.",
                     "aliases": [],
-                    "formats": [{"columns": [
+                    "formats": [{"attributes": [
                         {'name': 'Name', 'key': 'display_name'},
                         {'name': 'Qualified Name', 'key': 'qualified_name', 'format': True},
                         {'name': 'Super Category', 'key': 'category'},
@@ -245,7 +245,7 @@ class TestCollectionManager:
 
                 )
 
-            response = c_client.find_collections(request_body, output_format="DICT", output_format_set="Collections")
+            response = c_client.find_collections(request_body, output_format="DICT", report_spec="Collections")
             duration = time.perf_counter() - start_time
 
             print(f"\n\tNumber elements {len(response)} & Duration was {duration:.2f} seconds")
@@ -275,7 +275,7 @@ class TestCollectionManager:
             start_time = time.perf_counter()
             collection_name = "Subscription::GeoSpatial-Products-Subscription"
 
-            response = c_client.get_collections_by_name(collection_name, output_format="DICT", output_format_set="Collections" )
+            response = c_client.get_collections_by_name(collection_name, output_format="DICT", report_spec="Collections" )
             duration = time.perf_counter() - start_time
             print(f"Type is {type(response)}")
             print(f"\n\tDuration was {duration} seconds")
@@ -308,7 +308,7 @@ class TestCollectionManager:
                 include_only_classified_elements=None
                 )
             response = c_client.get_collections_by_name(body=filter_body, output_format="DICT",
-                                                        output_format_set="Collections")
+                                                        report_spec="Collections")
             duration = time.perf_counter() - start_time
             print(f"Type is {type(response)}")
             print(f"\n\tDuration was {duration} seconds")
@@ -336,7 +336,7 @@ class TestCollectionManager:
             category = "GeoSpatial"
             classification_name = None
 
-            response = c_client.get_collections_by_category(category, classification_name, output_format="DICT")
+            response = c_client.get_collections_by_category(category, classification_name, output_format="DICT", report_spec="BasicCollections")
             duration = time.perf_counter() - start_time
             if response:
                 print(f"\n\tNumber elements was {len(response)} & Duration was {duration:.2f} seconds")
@@ -365,7 +365,7 @@ class TestCollectionManager:
             collection_guid = "5f4ed132-407a-4047-ac65-dee8ca09c057"
             element_type = None
             response = c_client.get_collection_by_guid(collection_guid, element_type,
-                                                       output_format="JSON", output_format_set="Folders")
+                                                       output_format="JSON", report_spec="Folders")
             duration = time.perf_counter() - start_time
 
             print(f"\n\tDuration was {duration} seconds")
@@ -399,7 +399,7 @@ class TestCollectionManager:
             collection_guid = "04806a43-8002-4e5a-a59c-f9b614cd4180"
 
             response = c_client.get_collection_hierarchy(collection_guid, output_format="JSON",
-                                                         output_format_set="Collections")
+                                                         report_spec="Collections")
             duration = time.perf_counter() - start_time
 
             print(f"\n\tDuration was {duration} seconds")

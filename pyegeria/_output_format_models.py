@@ -110,31 +110,42 @@ def load_format_sets_from_json(file_path: str) -> Dict[str, 'FormatSet']:
 
 class Column(BaseModel):
     """
-    Represents a column in an output format.
+    Represents an attribute (formerly called a column) in an output format.
     
-    Attributes:
-        name: The display name of the column
-        key: The key used to access the column's value in the data
-        format: Whether the column's value should be formatted
+    Fields:
+        name: The display name of the attribute
+        key: The key used to access the attribute's value in the data
+        format: Whether the attribute's value should be formatted
     """
     name: str
     key: str
     format: bool = False
 
+# New preferred alias for Column
+Attribute = Column
+
 class Format(BaseModel):
     """
-    Represents a format configuration with types and columns.
+    Represents a format configuration with types and attributes.
     
-    Attributes:
+    Fields:
         types: The output types this format supports (e.g., "DICT", "TABLE", "ALL")
-        columns: The columns to include in the output
+        attributes: The attributes (formerly columns) to include in the output
     """
     types: List[str]
-    columns: List[Union[Column, Dict[str, Any]]]
+    attributes: List[Union[Column, Dict[str, Any]]]
     
-    @validator('columns', pre=True)
-    def validate_columns(cls, v):
-        """Convert dictionary columns to Column objects."""
+    @root_validator(pre=True)
+    def _migrate_columns_to_attributes(cls, values):
+        """Support legacy 'columns' by migrating to 'attributes' when loading."""
+        if isinstance(values, dict):
+            if 'attributes' not in values and 'columns' in values:
+                values['attributes'] = values.pop('columns')
+        return values
+
+    @validator('attributes', pre=True)
+    def validate_attributes(cls, v):
+        """Convert dictionary attributes to Attribute/Column objects."""
         result = []
         for item in v:
             if isinstance(item, dict):
@@ -144,13 +155,27 @@ class Format(BaseModel):
         return result
     
     def dict(self, *args, **kwargs):
-        """Override dict method to convert Column objects back to dictionaries."""
+        """Override dict method to convert Attribute objects back to dictionaries.
+        Emits both 'attributes' (preferred) and 'columns' (deprecated) for backward compatibility.
+        """
         result = super().dict(*args, **kwargs)
-        result['columns'] = [
-            column if isinstance(column, dict) else column.dict()
-            for column in self.columns
+        result['attributes'] = [
+            attr if isinstance(attr, dict) else attr.dict()
+            for attr in self.attributes
         ]
+        # Backward-compat alias
+        result['columns'] = list(result['attributes'])
         return result
+
+    # Backward-compat property to expose 'columns'
+    @property
+    def columns(self):
+        return self.attributes
+
+    @columns.setter
+    def columns(self, value):
+        # Allow setting via legacy field
+        self.attributes = self.validate_attributes(value)
 
 class ActionParameter(BaseModel):
     """

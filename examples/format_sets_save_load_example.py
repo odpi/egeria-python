@@ -22,12 +22,12 @@ from pathlib import Path
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 from pyegeria._output_format_models import Column, Format, ActionParameter, FormatSet, FormatSetDict
-from pyegeria._output_formats import (
-    output_format_sets,
-    save_output_format_sets,
-    load_output_format_sets,
+from pyegeria.base_report_formats import (
+    report_specs,
+    save_report_specs,
+    load_report_specs,
     USER_FORMAT_SETS_DIR,
-    select_output_format_set,
+    select_report_spec,
 )
 
 def create_custom_format_sets():
@@ -143,7 +143,7 @@ def save_format_sets_example(custom_format_sets):
     
     # Save all format sets to a file
     all_format_sets_path = os.path.join(example_dir, "all_format_sets.json")
-    save_output_format_sets(all_format_sets_path)
+    save_report_specs(all_format_sets_path)
     print(f"Saved all format sets to {all_format_sets_path}")
     
     # Save only the custom format sets to a file
@@ -153,7 +153,7 @@ def save_format_sets_example(custom_format_sets):
     
     # Save a subset of the predefined format sets to a file
     subset_format_sets_path = os.path.join(example_dir, "subset_format_sets.json")
-    save_output_format_sets(subset_format_sets_path, format_set_names=["Collections", "DataDictionary"])
+    save_report_specs(subset_format_sets_path, format_set_names=["Collections", "DataDictionary"])
     print(f"Saved subset of format sets to {subset_format_sets_path}")
     
     return custom_format_sets_path
@@ -199,12 +199,12 @@ def use_loaded_format_sets(loaded_format_sets):
     """
     print("\n=== Using Loaded Format Sets ===")
     
-    # Add the loaded format sets to the global output_format_sets
+    # Add the loaded format sets to the global report_specs
     for name, format_set in loaded_format_sets.items():
-        output_format_sets[name] = format_set
+        report_specs[name] = format_set
     
-    # Use the select_output_format_set function to get a format set by name
-    product_format_set = select_output_format_set("Product", "TABLE")
+    # Use the select_report_spec function to get a format set by name
+    product_format_set = select_report_spec("Product", "TABLE")
     if product_format_set:
         print(f"Found format set for 'Product' with output type 'TABLE'")
         print(f"  Heading: {product_format_set['heading']}")
@@ -213,8 +213,8 @@ def use_loaded_format_sets(loaded_format_sets):
     else:
         print("Format set for 'Product' not found")
     
-    # Use the select_output_format_set function to get a format set by alias
-    customer_format_set = select_output_format_set("Customers", "DETAIL")
+    # Use the select_report_spec function to get a format set by alias
+    customer_format_set = select_report_spec("Customers", "DETAIL")
     if customer_format_set:
         print(f"Found format set for 'Customers' with output type 'DETAIL'")
         print(f"  Heading: {customer_format_set['heading']}")
@@ -257,14 +257,14 @@ def user_format_sets_directory_example(custom_format_sets):
     print(f"Saved user custom format set to {user_format_sets_path}")
     
     # Load the user format sets
-    from pyegeria._output_formats import load_user_format_sets
-    load_user_format_sets()
+    from pyegeria.base_report_formats import load_user_report_specs
+    load_user_report_specs()
     
     # Check if the user format set was loaded
-    if "UserCustomFormatSet" in output_format_sets:
+    if "UserCustomFormatSet" in report_specs:
         print("User custom format set was successfully loaded")
-        print(f"  Heading: {output_format_sets['UserCustomFormatSet'].heading}")
-        print(f"  Description: {output_format_sets['UserCustomFormatSet'].description}")
+        print(f"  Heading: {report_specs['UserCustomFormatSet'].heading}")
+        print(f"  Description: {report_specs['UserCustomFormatSet'].description}")
     else:
         print("User custom format set was not loaded")
 

@@ -28,7 +28,7 @@ from md_processing.md_processing_utils.common_md_utils import (update_element_di
 from md_processing.md_processing_utils.extraction_utils import (extract_command_plus, update_a_command)
 from md_processing.md_processing_utils.md_processing_constants import (get_command_spec)
 from md_processing.md_processing_utils.message_constants import (ERROR, INFO, WARNING, ALWAYS, EXISTS_REQUIRED)
-from pyegeria import EgeriaTech, select_output_format_set, PyegeriaException, print_basic_exception, \
+from pyegeria import EgeriaTech, select_report_spec, PyegeriaException, print_basic_exception, \
     print_validation_error
 
 from pyegeria._globals import DEBUG_LEVEL
@@ -1148,7 +1148,7 @@ def process_output_command(egeria_client: EgeriaTech, txt: str, directive: str =
     """
     Processes a generic output request by extracting attributes (including Output Format and
     Output Format Set) and dynamically invoking the find function specified by the
-    output_format_set, following the approach used in commands/cat/list_format_set.
+    report_spec, following the approach used in commands/cat/list_format_set.
 
     This is modeled on process_gov_definition_list_command but uses the dynamic
     dispatch via the output format set rather than directly calling a specific
@@ -1172,13 +1172,13 @@ def process_output_command(egeria_client: EgeriaTech, txt: str, directive: str =
 
     search_string = attr.get('Search String', {}).get('value', '*')
     output_format = attr.get('Output Format', {}).get('value', 'LIST')
-    output_format_set = attr.get('Output Format Set', {}).get('value', object_type)
+    report_spec = attr.get('Output Format Set', {}).get('value', object_type)
 
     if directive == "display":
         return None
     elif directive == "validate":
         # Validate that the format set exists and has an action
-        fmt = select_output_format_set(output_format_set, "ANY") if valid else None
+        fmt = select_report_spec(report_spec, "ANY") if valid else None
         if valid and fmt and fmt.get("action"):
             print(Markdown(f"==> Validation of {command} completed successfully!\n"))
             return True
@@ -1195,9 +1195,9 @@ def process_output_command(egeria_client: EgeriaTech, txt: str, directive: str =
                 return None
 
             # Resolve the find function from the output format set
-            fmt = select_output_format_set(output_format_set, output_format)
+            fmt = select_report_spec(report_spec, output_format)
             if not fmt:
-                logger.error(f"Output format set '{output_format_set}' not found or not compatible with '{output_format}'.")
+                logger.error(f"Output format set '{report_spec}' not found or not compatible with '{output_format}'.")
                 return None
             action = fmt.get("action", {})
             func_spec = action.get("function")
@@ -1220,7 +1220,7 @@ def process_output_command(egeria_client: EgeriaTech, txt: str, directive: str =
                 'search_string': search_string,
                 'body': body,
                 'output_format': output_format,
-                'output_format_set': output_format_set,
+                'report_spec': report_spec,
             }
 
             # Call the resolved method
@@ -1230,7 +1230,7 @@ def process_output_command(egeria_client: EgeriaTech, txt: str, directive: str =
                 list_md += f"```\n{json.dumps(struct, indent=4)}\n```\n"
             else:
                 list_md += struct
-            logger.info(f"Wrote `{object_type}` for search string: `{search_string}` using format set '{output_format_set}'")
+            logger.info(f"Wrote `{object_type}` for search string: `{search_string}` using format set '{report_spec}'")
 
             return list_md
 

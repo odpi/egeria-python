@@ -15,7 +15,7 @@ from pyegeria._client_new import Client2
 from pyegeria._globals import default_time_out, NO_ELEMENTS_FOUND
 from pyegeria.models import LevelIdentifierQueryBody, FilterRequestBody, GetRequestBody
 from pyegeria.utils import body_slimmer, dynamic_catch
-from pyegeria._output_formats import select_output_format_set, get_output_format_type_match
+from pyegeria.base_report_formats import select_report_spec, get_report_spec_match
 from pyegeria.output_formatter import (
     generate_output,
     _extract_referenceable_properties,
@@ -98,7 +98,7 @@ class ClassificationManager(Client2):
         Tolerant of missing values; fills from properties, header, relationships, and mermaid graph.
         """
         col_data = populate_columns_from_properties(element, columns_struct)
-        columns_list = col_data.get("formats", {}).get("columns", [])
+        columns_list = col_data.get("formats", {}).get("attributes", [])
 
         # Header-derived fields (GUID, qualifiedName, displayName, etc.)
         header_props = _extract_referenceable_properties(element)
@@ -126,24 +126,24 @@ class ClassificationManager(Client2):
                                        filter: str | None,
                                        element_type_name: str | None,
                                        output_format: str = "DICT",
-                                       output_format_set: dict | str | None = None) -> str | list[dict]:
+                                       report_spec: dict | str | None = None) -> str | list[dict]:
         """Resolve format set and generate output for Referenceable-derived elements."""
         entity_type = element_type_name or self.REFERENCEABLE_LABEL
 
         # Resolve output format set
         get_additional_props_func = None
-        if output_format_set:
-            if isinstance(output_format_set, str):
-                output_formats = select_output_format_set(output_format_set, output_format)
+        if report_spec:
+            if isinstance(report_spec, str):
+                output_formats = select_report_spec(report_spec, output_format)
             else:
-                output_formats = get_output_format_type_match(output_format_set, output_format)
+                output_formats = get_report_spec_match(report_spec, output_format)
         elif element_type_name:
-            output_formats = select_output_format_set(element_type_name, output_format)
+            output_formats = select_report_spec(element_type_name, output_format)
         else:
-            output_formats = select_output_format_set(entity_type, output_format)
+            output_formats = select_report_spec(entity_type, output_format)
 
         if output_formats is None:
-            output_formats = select_output_format_set("Default", output_format)
+            output_formats = select_report_spec("Default", output_format)
 
         # Optional hook: allow format set to specify an enrichment method on this class
         get_additional_props_name = (
@@ -174,7 +174,7 @@ class ClassificationManager(Client2):
             classification_name: str,
             body: dict | LevelIdentifierQueryBody,
             output_format: str = "JSON",
-            output_format_set: dict | str = None
+            report_spec: dict | str = None
     ) -> list | str:
         """
         Return information about the elements classified with the specified classification. Async version.
@@ -189,7 +189,7 @@ class ClassificationManager(Client2):
             Details of the query. See LevelIdentifierQueryBody for details.
         output_format: str, default = "JSON"
             Type of output to return.
-        output_format_set: dict | str, default = None
+        report_spec: dict | str, default = None
             Output format set to use. If None, the default output format set is used.
         Returns
         -------
@@ -225,7 +225,7 @@ class ClassificationManager(Client2):
 
         response = await self._async_get_level_identifier_query_body_request(
            url = url, _gen_output = self._generate_referenceable_output, output_format=output_format,
-            output_format_set=output_format_set,body=body
+            report_spec=report_spec,body=body
         )
         return response
 
@@ -235,7 +235,7 @@ class ClassificationManager(Client2):
             classification_name: str,
             body: dict | LevelIdentifierQueryBody,
             output_format: str = "JSON",
-            output_format_set: dict | str = None
+            report_spec: dict | str = None
     ) -> list | str:
         """
         Return information about the elements classified with the specified classification.
@@ -250,7 +250,7 @@ class ClassificationManager(Client2):
             Details of the query. See LevelIdentifierQueryBody for details.
         output_format: str, default = "JSON"
             Type of output to return.
-        output_format_set: dict | str, default = None
+        report_spec: dict | str, default = None
             Output format set to use. If None, the default output format set is used.
         Returns
         -------
@@ -284,7 +284,7 @@ class ClassificationManager(Client2):
         loop = asyncio.get_event_loop()
         response = loop.run_until_complete(
             self.async_get_classified_elements_by(
-                classification_name, body, output_format, output_format_set
+                classification_name, body, output_format, report_spec
             )
         )
         return response
@@ -294,7 +294,7 @@ class ClassificationManager(Client2):
             self,
             body: dict,
             output_format: str = "JSON",
-            output_format_set: dict | str = None
+            report_spec: dict | str = None
     ) -> list | str:
         """
         Return information about the elements classified with the security tags classification. Async version.
@@ -306,7 +306,7 @@ class ClassificationManager(Client2):
             Details of the query.
         output_format: str, default = "JSON"
             Type of output to return.
-        output_format_set: dict | str, default = None
+        report_spec: dict | str, default = None
             Output format set to use. If None, the default output format set is used.
         Returns
         -------
@@ -355,9 +355,9 @@ class ClassificationManager(Client2):
             return NO_ELEMENTS_FOUND
 
         if output_format != 'JSON':  # return a simplified markdown representation
-            logger.info(f"Found elements, output format: {output_format} and output_format_set: {output_format_set}")
+            logger.info(f"Found elements, output format: {output_format} and report_spec: {report_spec}")
             return self._generate_referenceable_output(elements, "", "Referenceable",
-                               output_format, output_format_set)
+                               output_format, report_spec)
         return elements
 
     @dynamic_catch
@@ -365,7 +365,7 @@ class ClassificationManager(Client2):
             self,
             body: dict,
             output_format: str = "JSON",
-            output_format_set: dict | str = None
+            report_spec: dict | str = None
     ) -> list | str:
         """
         Return information about the elements classified with the specified classification.
@@ -378,7 +378,7 @@ class ClassificationManager(Client2):
             Details of the query. See LevelIdentifierQueryBody for details.
         output_format: str, default = "JSON"
             Type of output to return.
-        output_format_set: dict | str, default = None
+        report_spec: dict | str, default = None
             Output format set to use. If None, the default output format set is used.
         Returns
         -------
@@ -416,7 +416,7 @@ class ClassificationManager(Client2):
         loop = asyncio.get_event_loop()
         response = loop.run_until_complete(
             self.async_get_security_tagged_elements(
-                body, output_format, output_format_set
+                body, output_format, report_spec
             )
         )
         return response
@@ -427,7 +427,7 @@ class ClassificationManager(Client2):
             owner_name: str,
             body: dict | FilterRequestBody,
             output_format: str = "JSON",
-            output_format_set: dict | str = None
+            report_spec: dict | str = None
     ) -> list | str:
         """
         Return information about the elements classified with the ownership classification. Async version.
@@ -442,7 +442,7 @@ class ClassificationManager(Client2):
             Details of the query. See LevelIdentifierQueryBody for details.
         output_format: str, default = "JSON"
             Type of output to return.
-        output_format_set: dict | str, default = None
+        report_spec: dict | str, default = None
             Output format set to use. If None, the default output format set is used.
         Returns
         -------
@@ -478,7 +478,7 @@ class ClassificationManager(Client2):
         response = await self._async_get_name_request(url, "Referenceable",
                                                       self._generate_referenceable_output, owner_name,
                                                       None, 0, 0,
-                                                      output_format, output_format_set, body)
+                                                      output_format, report_spec, body)
         return response
 
     @dynamic_catch
@@ -487,7 +487,7 @@ class ClassificationManager(Client2):
             owner_name: str,
             body: dict | FilterRequestBody,
             output_format: str = "JSON",
-            output_format_set: dict | str = None
+            report_spec: dict | str = None
     ) -> list | str:
         """
         Return information about the elements classified with the ownership classification.
@@ -502,7 +502,7 @@ class ClassificationManager(Client2):
             Details of the query. See LevelIdentifierQueryBody for details.
         output_format: str, default = "JSON"
             Type of output to return.
-        output_format_set: dict | str, default = None
+        report_spec: dict | str, default = None
             Output format set to use. If None, the default output format set is used.
         Returns
         -------
@@ -535,7 +535,7 @@ class ClassificationManager(Client2):
         loop = asyncio.get_event_loop()
         response = loop.run_until_complete(
             self.async_get_owners_elements(
-                owner_name, body, output_format, output_format_set
+                owner_name, body, output_format, report_spec
             )
         )
         return response
@@ -546,7 +546,7 @@ class ClassificationManager(Client2):
             subject_area: str,
             body: dict | FilterRequestBody,
             output_format: str = "JSON",
-            output_format_set: dict | str = None
+            report_spec: dict | str = None
     ) -> list | str:
         """
         Return information about the elements classified with the subject area classification. Async version.
@@ -561,7 +561,7 @@ class ClassificationManager(Client2):
             Details of the query. See LevelIdentifierQueryBody for details.
         output_format: str, default = "JSON"
             Type of output to return.
-        output_format_set: dict | str, default = None
+        report_spec: dict | str, default = None
             Output format set to use. If None, the default output format set is used.
         Returns
         -------
@@ -598,7 +598,7 @@ class ClassificationManager(Client2):
         response = await self._async_get_name_request(url, "Referenceable",
                                                       self._generate_referenceable_output, subject_area,
                                                       None, 0, 0,
-                                                      output_format, output_format_set, body)
+                                                      output_format, report_spec, body)
         return response
 
     @dynamic_catch
@@ -607,7 +607,7 @@ class ClassificationManager(Client2):
             subject_area: str,
             body: dict | FilterRequestBody,
             output_format: str = "JSON",
-            output_format_set: dict | str = None
+            report_spec: dict | str = None
     ) -> list | str:
         """
         Return information about the elements classified with the subject area classification.
@@ -622,7 +622,7 @@ class ClassificationManager(Client2):
             Details of the query. See LevelIdentifierQueryBody for details.
         output_format: str, default = "JSON"
             Type of output to return.
-        output_format_set: dict | str, default = None
+        report_spec: dict | str, default = None
             Output format set to use. If None, the default output format set is used.
         Returns
         -------
@@ -657,7 +657,7 @@ class ClassificationManager(Client2):
         loop = asyncio.get_event_loop()
         response = loop.run_until_complete(
             self.async_get_subject_area_members(
-                subject_area, body, output_format, output_format_set
+                subject_area, body, output_format, report_spec
             )
         )
         return response
@@ -667,7 +667,7 @@ class ClassificationManager(Client2):
             self,
             body: dict ,
             output_format: str = "JSON",
-            output_format_set: dict | str = None
+            report_spec: dict | str = None
     ) -> list | str:
         """
         Return information about the digital resources from a specific origin. Async version.
@@ -681,7 +681,7 @@ class ClassificationManager(Client2):
             Details of the query.
         output_format: str, default = "JSON"
             Type of output to return.
-        output_format_set: dict | str, default = None
+        report_spec: dict | str, default = None
             Output format set to use. If None, the default output format set is used.
         Returns
         -------
@@ -728,9 +728,9 @@ class ClassificationManager(Client2):
             return NO_ELEMENTS_FOUND
 
         if output_format != 'JSON':  # return a simplified markdown representation
-            logger.info(f"Found elements, output format: {output_format} and output_format_set: {output_format_set}")
+            logger.info(f"Found elements, output format: {output_format} and report_spec: {report_spec}")
             return self._generate_referenceable_output(elements, "", "Referenceable",
-                                                       output_format, output_format_set)
+                                                       output_format, report_spec)
         return elements
 
     @dynamic_catch
@@ -738,7 +738,7 @@ class ClassificationManager(Client2):
             self,
             body: dict ,
             output_format: str = "JSON",
-            output_format_set: dict | str = None
+            report_spec: dict | str = None
     ) -> list | str:
         """
         Return information about the digital resources from a specific origin.
@@ -752,7 +752,7 @@ class ClassificationManager(Client2):
             Details of the query.
         output_format: str, default = "JSON"
             Type of output to return.
-        output_format_set: dict | str, default = None
+        report_spec: dict | str, default = None
             Output format set to use. If None, the default output format set is used.
         Returns
         -------
@@ -789,7 +789,7 @@ class ClassificationManager(Client2):
 
         loop = asyncio.get_event_loop()
         response = loop.run_until_complete(
-            self.async_get_elements_by_origin(body, output_format, output_format_set
+            self.async_get_elements_by_origin(body, output_format, report_spec
                 )
         )
         return response
@@ -800,7 +800,7 @@ class ClassificationManager(Client2):
             element_guid: str,
             body: dict ,
             output_format: str = "JSON",
-            output_format_set: dict | str = None
+            report_spec: dict | str = None
     ) -> list | str:
         """
         Retrieve the glossary terms linked via a "SemanticAssignment" relationship to the requested element. Async version.
@@ -814,7 +814,7 @@ class ClassificationManager(Client2):
             Details of the query.
         output_format: str, default = "JSON"
             Type of output to return.
-        output_format_set: dict | str, default = None
+        report_spec: dict | str, default = None
             Output format set to use. If None, the default output format set is used.
         Returns
         -------
@@ -865,9 +865,9 @@ class ClassificationManager(Client2):
             return NO_ELEMENTS_FOUND
 
         if output_format != 'JSON':  # return a simplified markdown representation
-            logger.info(f"Found elements, output format: {output_format} and output_format_set: {output_format_set}")
+            logger.info(f"Found elements, output format: {output_format} and report_spec: {report_spec}")
             return self._generate_referenceable_output(elements, "", "Referenceable",
-                                                       output_format, output_format_set)
+                                                       output_format, report_spec)
         return elements
 
     @dynamic_catch
@@ -876,7 +876,7 @@ class ClassificationManager(Client2):
             element_guid: str,
             body: dict ,
             output_format: str = "JSON",
-            output_format_set: dict | str = None
+            report_spec: dict | str = None
     ) -> list | str:
         """
         Retrieve the glossary terms linked via a "SemanticAssignment" relationship to the requested element.
@@ -890,7 +890,7 @@ class ClassificationManager(Client2):
             Details of the query.
         output_format: str, default = "JSON"
             Type of output to return.
-        output_format_set: dict | str, default = None
+        report_spec: dict | str, default = None
             Output format set to use. If None, the default output format set is used.
         Returns
         -------
@@ -930,7 +930,7 @@ class ClassificationManager(Client2):
 
         loop = asyncio.get_event_loop()
         response = loop.run_until_complete(
-            self.async_get_meanings(element_guid,body, output_format, output_format_set
+            self.async_get_meanings(element_guid,body, output_format, report_spec
                 )
         )
         return response
@@ -941,7 +941,7 @@ class ClassificationManager(Client2):
             term_guid: str,
             body: dict ,
             output_format: str = "JSON",
-            output_format_set: dict | str = None
+            report_spec: dict | str = None
     ) -> list | str:
         """
         Retrieve the elements linked via a "SemanticAssignment" relationship to the requested glossary term. Async version.
@@ -955,7 +955,7 @@ class ClassificationManager(Client2):
             Details of the query.
         output_format: str, default = "JSON"
             Type of output to return.
-        output_format_set: dict | str, default = None
+        report_spec: dict | str, default = None
             Output format set to use. If None, the default output format set is used.
         Returns
         -------
@@ -1006,9 +1006,9 @@ class ClassificationManager(Client2):
             return NO_ELEMENTS_FOUND
 
         if output_format != 'JSON':  # return a simplified markdown representation
-            logger.info(f"Found elements, output format: {output_format} and output_format_set: {output_format_set}")
+            logger.info(f"Found elements, output format: {output_format} and report_spec: {report_spec}")
             return self._generate_referenceable_output(elements, "", "Referenceable",
-                                                       output_format, output_format_set)
+                                                       output_format, report_spec)
         return elements
 
     @dynamic_catch
@@ -1017,7 +1017,7 @@ class ClassificationManager(Client2):
             term_guid: str,
             body: dict ,
             output_format: str = "JSON",
-            output_format_set: dict | str = None
+            report_spec: dict | str = None
     ) -> list | str:
         """
         Retrieve the elements linked via a "SemanticAssignment" relationship to the requested glossary term.
@@ -1031,7 +1031,7 @@ class ClassificationManager(Client2):
             Details of the query.
         output_format: str, default = "JSON"
             Type of output to return.
-        output_format_set: dict | str, default = None
+        report_spec: dict | str, default = None
             Output format set to use. If None, the default output format set is used.
         Returns
         -------
@@ -1071,7 +1071,7 @@ class ClassificationManager(Client2):
 
         loop = asyncio.get_event_loop()
         response = loop.run_until_complete(
-            self.async_get_semantic_asignees(term_guid,body, output_format, output_format_set
+            self.async_get_semantic_asignees(term_guid,body, output_format, report_spec
                 )
         )
         return response
@@ -1082,7 +1082,7 @@ class ClassificationManager(Client2):
             gov_def_guid: str,
             body: dict = None,
             output_format: str = "JSON",
-            output_format_set: dict | str = None,
+            report_spec: dict | str = None,
             start_from: int = 0,
             page_size: int = 0
     ) -> list | str:
@@ -1098,7 +1098,7 @@ class ClassificationManager(Client2):
             Details of the query.
         output_format: str, default = "JSON"
             Type of output to return.
-        output_format_set: dict | str, default = None
+        report_spec: dict | str, default = None
             Output format set to use. If None, the default output format set is used.
         start_from: int, default = 0
             When multiple pages of results are available, the element number to start from.
@@ -1137,7 +1137,7 @@ class ClassificationManager(Client2):
 
         response = await self._async_get_results_body_request(url, "Referenceable", self._generate_referenceable_output,
                                                               start_from, page_size, output_format,
-                                                              output_format_set, body)
+                                                              report_spec, body)
         return response
 
     @dynamic_catch
@@ -1146,7 +1146,7 @@ class ClassificationManager(Client2):
             gov_def_guid: str,
             body: dict = None,
             output_format: str = "JSON",
-            output_format_set: dict | str = None,
+            report_spec: dict | str = None,
             start_from: int = 0,
             page_size: int = 0
     ) -> list | str:
@@ -1162,7 +1162,7 @@ class ClassificationManager(Client2):
             Details of the query.
         output_format: str, default = "JSON"
             Type of output to return.
-        output_format_set: dict | str, default = None
+        report_spec: dict | str, default = None
             Output format set to use. If None, the default output format set is used.
         start_from: int, default = 0
             When multiple pages of results are available, the element number to start from.
@@ -1198,7 +1198,7 @@ class ClassificationManager(Client2):
 
         loop = asyncio.get_event_loop()
         response = loop.run_until_complete(
-            self.async_get_governed_elements(gov_def_guid,body, output_format, output_format_set,
+            self.async_get_governed_elements(gov_def_guid,body, output_format, report_spec,
                                              start_from, page_size)
         )
         return response
@@ -1209,7 +1209,7 @@ class ClassificationManager(Client2):
             element_guid: str,
             body: dict = None,
             output_format: str = "JSON",
-            output_format_set: dict | str = None,
+            report_spec: dict | str = None,
             start_from: int = 0,
             page_size: int = 0
     ) -> list | str:
@@ -1225,7 +1225,7 @@ class ClassificationManager(Client2):
             Details of the query.
         output_format: str, default = "JSON"
             Type of output to return.
-        output_format_set: dict | str, default = None
+        report_spec: dict | str, default = None
             Output format set to use. If None, the default output format set is used.
         start_from: int, default = 0
             When multiple pages of results are available, the element number to start from.
@@ -1264,7 +1264,7 @@ class ClassificationManager(Client2):
 
         response = await self._async_get_results_body_request(url, "Referenceable", self._generate_referenceable_output,
                                                               start_from, page_size, output_format,
-                                                              output_format_set, body)
+                                                              report_spec, body)
         return response
 
 
@@ -1274,7 +1274,7 @@ class ClassificationManager(Client2):
             element_guid: str,
             body: dict = None,
             output_format: str = "JSON",
-            output_format_set: dict | str = None,
+            report_spec: dict | str = None,
             start_from: int = 0,
             page_size: int = 0
     ) -> list | str:
@@ -1290,7 +1290,7 @@ class ClassificationManager(Client2):
             Details of the query.
         output_format: str, default = "JSON"
             Type of output to return.
-        output_format_set: dict | str, default = None
+        report_spec: dict | str, default = None
             Output format set to use. If None, the default output format set is used.
         start_from: int, default = 0
             When multiple pages of results are available, the element number to start from.
@@ -1326,7 +1326,7 @@ class ClassificationManager(Client2):
 
         loop = asyncio.get_event_loop()
         response = loop.run_until_complete(
-            self.async_get_governed_by_definitions(element_guid,body, output_format, output_format_set,
+            self.async_get_governed_by_definitions(element_guid,body, output_format, report_spec,
                                              start_from, page_size)
         )
         return response
@@ -1338,7 +1338,7 @@ class ClassificationManager(Client2):
             element_guid: str,
             body: dict = None,
             output_format: str = "JSON",
-            output_format_set: dict | str = None,
+            report_spec: dict | str = None,
             start_from: int = 0,
             page_size: int = 0
     ) -> list | str:
@@ -1357,7 +1357,7 @@ class ClassificationManager(Client2):
             Details of the query.
         output_format: str, default = "JSON"
             Type of output to return.
-        output_format_set: dict | str, default = None
+        report_spec: dict | str, default = None
             Output format set to use. If None, the default output format set is used.
         start_from: int, default = 0
             When multiple pages of results are available, the element number to start from.
@@ -1396,7 +1396,7 @@ class ClassificationManager(Client2):
 
         response = await self._async_get_results_body_request(url, "Referenceable", self._generate_referenceable_output,
                                                               start_from, page_size, output_format,
-                                                              output_format_set, body)
+                                                              report_spec, body)
         return response
 
     @dynamic_catch
@@ -1405,7 +1405,7 @@ class ClassificationManager(Client2):
             element_guid: str,
             body: dict = None,
             output_format: str = "JSON",
-            output_format_set: dict | str = None,
+            report_spec: dict | str = None,
             start_from: int = 0,
             page_size: int = 0
     ) -> list | str:
@@ -1424,7 +1424,7 @@ class ClassificationManager(Client2):
             Details of the query.
         output_format: str, default = "JSON"
             Type of output to return.
-        output_format_set: dict | str, default = None
+        report_spec: dict | str, default = None
             Output format set to use. If None, the default output format set is used.
         start_from: int, default = 0
             When multiple pages of results are available, the element number to start from.
@@ -1460,7 +1460,7 @@ class ClassificationManager(Client2):
 
         loop = asyncio.get_event_loop()
         response = loop.run_until_complete(
-            self.async_get_certified_elements(element_guid, body, output_format, output_format_set, start_from,
+            self.async_get_certified_elements(element_guid, body, output_format, report_spec, start_from,
                                               page_size)
         )
         return response
@@ -1471,7 +1471,7 @@ class ClassificationManager(Client2):
             element_guid: str,
             body: dict = None,
             output_format: str = "JSON",
-            output_format_set: dict | str = None,
+            report_spec: dict | str = None,
             start_from: int = 0,
             page_size: int = 0
     ) -> list | str:
@@ -1489,7 +1489,7 @@ class ClassificationManager(Client2):
             Details of the query.
         output_format: str, default = "JSON"
             Type of output to return.
-        output_format_set: dict | str, default = None
+        report_spec: dict | str, default = None
             Output format set to use. If None, the default output format set is used.
         start_from: int, default = 0
             When multiple pages of results are available, the element number to start from.
@@ -1528,7 +1528,7 @@ class ClassificationManager(Client2):
 
         response = await self._async_get_results_body_request(url, "Referenceable", self._generate_referenceable_output,
                                                               start_from, page_size, output_format,
-                                                              output_format_set, body)
+                                                              report_spec, body)
         return response
 
     @dynamic_catch
@@ -1537,7 +1537,7 @@ class ClassificationManager(Client2):
             element_guid: str,
             body: dict = None,
             output_format: str = "JSON",
-            output_format_set: dict | str = None,
+            report_spec: dict | str = None,
             start_from: int = 0,
             page_size: int = 0
     ) -> list | str:
@@ -1555,7 +1555,7 @@ class ClassificationManager(Client2):
             Details of the query.
         output_format: str, default = "JSON"
             Type of output to return.
-        output_format_set: dict | str, default = None
+        report_spec: dict | str, default = None
             Output format set to use. If None, the default output format set is used.
         start_from: int, default = 0
             When multiple pages of results are available, the element number to start from.
@@ -1591,7 +1591,7 @@ class ClassificationManager(Client2):
 
         loop = asyncio.get_event_loop()
         response = loop.run_until_complete(
-            self.async_get_elements_sourced_from(element_guid, body, output_format, output_format_set,
+            self.async_get_elements_sourced_from(element_guid, body, output_format, report_spec,
                                            start_from, page_size)
         )
         return response
@@ -1602,7 +1602,7 @@ class ClassificationManager(Client2):
             element_guid: str,
             body: dict = None,
             output_format: str = "JSON",
-            output_format_set: dict | str = None,
+            report_spec: dict | str = None,
             start_from: int = 0,
             page_size: int = 0
     ) -> list | str:
@@ -1618,7 +1618,7 @@ class ClassificationManager(Client2):
             Details of the query.
         output_format: str, default = "JSON"
             Type of output to return.
-        output_format_set: dict | str, default = None
+        report_spec: dict | str, default = None
             Output format set to use. If None, the default output format set is used.
         start_from: int, default = 0
             When multiple pages of results are available, the element number to start from.
@@ -1657,7 +1657,7 @@ class ClassificationManager(Client2):
 
         response = await self._async_get_results_body_request(url, "Referenceable", self._generate_referenceable_output,
                                                               start_from, page_size, output_format,
-                                                              output_format_set, body)
+                                                              report_spec, body)
         return response
 
     @dynamic_catch
@@ -1666,7 +1666,7 @@ class ClassificationManager(Client2):
             element_guid: str,
             body: dict = None,
             output_format: str = "JSON",
-            output_format_set: dict | str = None,
+            report_spec: dict | str = None,
             start_from: int = 0,
             page_size: int = 0
     ) -> list | str:
@@ -1682,7 +1682,7 @@ class ClassificationManager(Client2):
             Details of the query.
         output_format: str, default = "JSON"
             Type of output to return.
-        output_format_set: dict | str, default = None
+        report_spec: dict | str, default = None
             Output format set to use. If None, the default output format set is used.
         start_from: int, default = 0
             When multiple pages of results are available, the element number to start from.
@@ -1718,7 +1718,7 @@ class ClassificationManager(Client2):
 
         loop = asyncio.get_event_loop()
         response = loop.run_until_complete(
-            self.async_get_certified_elements(element_guid, body, output_format, output_format_set, start_from,
+            self.async_get_certified_elements(element_guid, body, output_format, report_spec, start_from,
                                               page_size)
         )
         return response
@@ -1729,7 +1729,7 @@ class ClassificationManager(Client2):
             scope_guid: str,
             body: dict = None,
             output_format: str = "JSON",
-            output_format_set: dict | str = None,
+            report_spec: dict | str = None,
             start_from: int = 0,
             page_size: int = 0
     ) -> list | str:
@@ -1745,7 +1745,7 @@ class ClassificationManager(Client2):
             Details of the query.
         output_format: str, default = "JSON"
             Type of output to return.
-        output_format_set: dict | str, default = None
+        report_spec: dict | str, default = None
             Output format set to use. If None, the default output format set is used.
         start_from: int, default = 0
             When multiple pages of results are available, the element number to start from.
@@ -1784,7 +1784,7 @@ class ClassificationManager(Client2):
 
         response = await self._async_get_results_body_request(url, "Referenceable", self._generate_referenceable_output,
                                                               start_from, page_size, output_format,
-                                                              output_format_set, body)
+                                                              report_spec, body)
         return response
 
     @dynamic_catch
@@ -1793,7 +1793,7 @@ class ClassificationManager(Client2):
             scope_guid: str,
             body: dict = None,
             output_format: str = "JSON",
-            output_format_set: dict | str = None,
+            report_spec: dict | str = None,
             start_from: int = 0,
             page_size: int = 0
     ) -> list | str:
@@ -1809,7 +1809,7 @@ class ClassificationManager(Client2):
             Details of the query.
         output_format: str, default = "JSON"
             Type of output to return.
-        output_format_set: dict | str, default = None
+        report_spec: dict | str, default = None
             Output format set to use. If None, the default output format set is used.
         start_from: int, default = 0
             When multiple pages of results are available, the element number to start from.
@@ -1845,7 +1845,7 @@ class ClassificationManager(Client2):
 
         loop = asyncio.get_event_loop()
         response = loop.run_until_complete(
-            self.async_get_scoped_elements(scope_guid, body, output_format, output_format_set, start_from, page_size)
+            self.async_get_scoped_elements(scope_guid, body, output_format, report_spec, start_from, page_size)
         )
         return response
 
@@ -1855,7 +1855,7 @@ class ClassificationManager(Client2):
             license_type_guid: str,
             body: dict = None,
             output_format: str = "JSON",
-            output_format_set: dict | str = None,
+            report_spec: dict | str = None,
             start_from: int = 0,
             page_size: int = 0
     ) -> list | str:
@@ -1870,7 +1870,7 @@ class ClassificationManager(Client2):
             Details of the query.
         output_format: str, default = "JSON"
             Type of output to return.
-        output_format_set: dict | str, default = None
+        report_spec: dict | str, default = None
             Output format set to use. If None, the default output format set is used.
         start_from: int, default = 0
             When multiple pages of results are available, the element number to start from.
@@ -1909,7 +1909,7 @@ class ClassificationManager(Client2):
 
         response = await self._async_get_results_body_request(url, "Referenceable", self._generate_referenceable_output,
                                                               start_from, page_size, output_format,
-                                                              output_format_set, body)
+                                                              report_spec, body)
         return response
 
     @dynamic_catch
@@ -1918,7 +1918,7 @@ class ClassificationManager(Client2):
             license_type_guid: str,
             body: dict = None,
             output_format: str = "JSON",
-            output_format_set: dict | str = None,
+            report_spec: dict | str = None,
             start_from: int = 0,
             page_size: int = 0
     ) -> list | str:
@@ -1934,7 +1934,7 @@ class ClassificationManager(Client2):
             Details of the query.
         output_format: str, default = "JSON"
             Type of output to return.
-        output_format_set: dict | str, default = None
+        report_spec: dict | str, default = None
             Output format set to use. If None, the default output format set is used.
         start_from: int, default = 0
             When multiple pages of results are available, the element number to start from.
@@ -1970,7 +1970,7 @@ class ClassificationManager(Client2):
 
         loop = asyncio.get_event_loop()
         response = loop.run_until_complete(
-            self.async_get_licensed_elements(license_type_guid, body, output_format, output_format_set, start_from, page_size)
+            self.async_get_licensed_elements(license_type_guid, body, output_format, report_spec, start_from, page_size)
         )
         return response
 
@@ -1980,7 +1980,7 @@ class ClassificationManager(Client2):
             element_guid: str,
             body: dict = None,
             output_format: str = "JSON",
-            output_format_set: dict | str = None,
+            report_spec: dict | str = None,
             start_from: int = 0,
             page_size: int = 0
     ) -> list | str:
@@ -1996,7 +1996,7 @@ class ClassificationManager(Client2):
             Details of the query.
         output_format: str, default = "JSON"
             Type of output to return.
-        output_format_set: dict | str, default = None
+        report_spec: dict | str, default = None
             Output format set to use. If None, the default output format set is used.
         start_from: int, default = 0
             When multiple pages of results are available, the element number to start from.
@@ -2035,7 +2035,7 @@ class ClassificationManager(Client2):
 
         response = await self._async_get_results_body_request(url, "Referenceable", self._generate_referenceable_output,
                                                               start_from, page_size, output_format,
-                                                              output_format_set, body)
+                                                              report_spec, body)
         return response
 
     @dynamic_catch
@@ -2044,7 +2044,7 @@ class ClassificationManager(Client2):
             element_guid: str,
             body: dict = None,
             output_format: str = "JSON",
-            output_format_set: dict | str = None,
+            report_spec: dict | str = None,
             start_from: int = 0,
             page_size: int = 0
     ) -> list | str:
@@ -2060,7 +2060,7 @@ class ClassificationManager(Client2):
             Details of the query.
         output_format: str, default = "JSON"
             Type of output to return.
-        output_format_set: dict | str, default = None
+        report_spec: dict | str, default = None
             Output format set to use. If None, the default output format set is used.
         start_from: int, default = 0
             When multiple pages of results are available, the element number to start from.
@@ -2096,7 +2096,7 @@ class ClassificationManager(Client2):
 
         loop = asyncio.get_event_loop()
         response = loop.run_until_complete(
-            self.async_get_licenses(element_guid, body, output_format, output_format_set,
+            self.async_get_licenses(element_guid, body, output_format, report_spec,
                                            start_from, page_size)
         )
         return response
@@ -2108,7 +2108,7 @@ class ClassificationManager(Client2):
             certification_type_guid: str,
             body: dict = None,
             output_format: str = "JSON",
-            output_format_set: dict | str = None,
+            report_spec: dict | str = None,
             start_from: int = 0,
             page_size: int = 0
     ) -> list | str:
@@ -2124,7 +2124,7 @@ class ClassificationManager(Client2):
             Details of the query.
         output_format: str, default = "JSON"
             Type of output to return.
-        output_format_set: dict | str, default = None
+        report_spec: dict | str, default = None
             Output format set to use. If None, the default output format set is used.
         start_from: int, default = 0
             When multiple pages of results are available, the element number to start from.
@@ -2163,7 +2163,7 @@ class ClassificationManager(Client2):
 
         response = await self._async_get_results_body_request(url, "Referenceable", self._generate_referenceable_output,
                                                               start_from, page_size, output_format,
-                                                              output_format_set, body)
+                                                              report_spec, body)
         return response
 
     @dynamic_catch
@@ -2172,7 +2172,7 @@ class ClassificationManager(Client2):
             certification_type_guid: str,
             body: dict = None,
             output_format: str = "JSON",
-            output_format_set: dict | str = None,
+            report_spec: dict | str = None,
             start_from: int = 0,
             page_size: int = 0
     ) -> list | str:
@@ -2188,7 +2188,7 @@ class ClassificationManager(Client2):
             Details of the query.
         output_format: str, default = "JSON"
             Type of output to return.
-        output_format_set: dict | str, default = None
+        report_spec: dict | str, default = None
             Output format set to use. If None, the default output format set is used.
         start_from: int, default = 0
             When multiple pages of results are available, the element number to start from.
@@ -2224,7 +2224,7 @@ class ClassificationManager(Client2):
 
         loop = asyncio.get_event_loop()
         response = loop.run_until_complete(
-            self.async_get_certified_elements(certification_type_guid, body, output_format, output_format_set, start_from,
+            self.async_get_certified_elements(certification_type_guid, body, output_format, report_spec, start_from,
                                               page_size)
         )
         return response
@@ -2237,7 +2237,7 @@ class ClassificationManager(Client2):
             element_guid: str,
             body: dict = None,
             output_format: str = "JSON",
-            output_format_set: dict | str = None,
+            report_spec: dict | str = None,
             start_from: int = 0,
             page_size: int = 0
     ) -> list | str:
@@ -2253,7 +2253,7 @@ class ClassificationManager(Client2):
             Details of the query.
         output_format: str, default = "JSON"
             Type of output to return.
-        output_format_set: dict | str, default = None
+        report_spec: dict | str, default = None
             Output format set to use. If None, the default output format set is used.
         start_from: int, default = 0
             When multiple pages of results are available, the element number to start from.
@@ -2292,7 +2292,7 @@ class ClassificationManager(Client2):
 
         response = await self._async_get_results_body_request(url, "Referenceable", self._generate_referenceable_output,
                                                               start_from, page_size, output_format,
-                                                              output_format_set, body)
+                                                              report_spec, body)
         return response
 
     @dynamic_catch
@@ -2301,7 +2301,7 @@ class ClassificationManager(Client2):
             element_guid: str,
             body: dict = None,
             output_format: str = "JSON",
-            output_format_set: dict | str = None,
+            report_spec: dict | str = None,
             start_from: int = 0,
             page_size: int = 0
     ) -> list | str:
@@ -2317,7 +2317,7 @@ class ClassificationManager(Client2):
             Details of the query.
         output_format: str, default = "JSON"
             Type of output to return.
-        output_format_set: dict | str, default = None
+        report_spec: dict | str, default = None
             Output format set to use. If None, the default output format set is used.
         start_from: int, default = 0
             When multiple pages of results are available, the element number to start from.
@@ -2353,7 +2353,7 @@ class ClassificationManager(Client2):
 
         loop = asyncio.get_event_loop()
         response = loop.run_until_complete(
-            self.async_get_certifications(element_guid, body, output_format, output_format_set, start_from,
+            self.async_get_certifications(element_guid, body, output_format, report_spec, start_from,
                                               page_size)
         )
         return response
@@ -2443,7 +2443,7 @@ class ClassificationManager(Client2):
             page_size: int = 0,
             time_out: int = default_time_out,
             output_format: str = "JSON",
-            output_format_set: dict | str = None,
+            report_spec: dict | str = None,
     ) -> list | str:
         """
         Retrieve elements of the requested type name. If no type name is specified, then any type of element may
@@ -2469,7 +2469,7 @@ class ClassificationManager(Client2):
             - http request timeout for this request
         output_format: str, default = "JSON"
             - Type of output to return.
-        output_format_set: dict | str, default = None
+        report_spec: dict | str, default = None
             - Output format set to use. If None, the default output format set is used.
 
         Returns
@@ -2496,7 +2496,7 @@ class ClassificationManager(Client2):
         )
         if isinstance(response, list) and output_format != "JSON":
             return self._generate_referenceable_output(response, None, self.REFERENCEABLE_LABEL,
-                                                       output_format=output_format, output_format_set=output_format_set)
+                                                       output_format=output_format, report_spec=report_spec)
         return response
 
     async def async_get_elements_by_property_value(
@@ -2511,7 +2511,7 @@ class ClassificationManager(Client2):
             page_size: int = 0,
             time_out: int = default_time_out,
             output_format: str = "JSON",
-            output_format_set: dict | str = None,
+            report_spec: dict | str = None,
     ) -> list | str:
         """
         Retrieve elements by a value found in one of the properties specified.  The value must match exactly.
@@ -2541,7 +2541,7 @@ class ClassificationManager(Client2):
             - http request timeout for this request
         output_format: str, default = "JSON"
             - Type of output to return.
-        output_format_set: dict | str, default = None
+        report_spec: dict | str, default = None
             - Output format set to use. If None, the default output format set is used.
 
 
@@ -2582,7 +2582,7 @@ class ClassificationManager(Client2):
             filter=property_value,
             element_type_name=metadata_element_type_name,
             output_format=output_format,
-            output_format_set=output_format_set,
+            report_spec=report_spec,
         )
 
     def get_elements_by_property_value(
@@ -2597,7 +2597,7 @@ class ClassificationManager(Client2):
             page_size: int = 0,
             time_out: int = default_time_out,
             output_format: str = "JSON",
-            output_format_set: dict | str = None,
+            report_spec: dict | str = None,
     ) -> list | str:
         """
         Retrieve elements by a value found in one of the properties specified.  The value must match exactly.
@@ -2625,7 +2625,7 @@ class ClassificationManager(Client2):
             - maximum number of elements to return.
         output_format: str, default = "JSON"
             - Type of output to return.
-        output_format_set: dict | str, default = None
+        report_spec: dict | str, default = None
             - Output format set to use. If None, the default output format set is used.
         time_out: int, default = default_time_out
             - http request timeout for this request
@@ -2657,7 +2657,7 @@ class ClassificationManager(Client2):
             page_size: int = 0,
             time_out: int = default_time_out,
             output_format: str = "JSON",
-            output_format_set: dict | str = None,
+            report_spec: dict | str = None,
             body: dict = None,
     ) -> list | str:
         """
@@ -2683,7 +2683,7 @@ class ClassificationManager(Client2):
             - http request timeout for this request
         output_format: str, default = "JSON"
             - Type of output to return.
-        output_format_set: dict | str = None
+        report_spec: dict | str = None
             - Output format set to use. If None, the default output format set is used.
         body: dict = None
 -           - Full request body - supercedes other parameters.
@@ -2742,7 +2742,7 @@ class ClassificationManager(Client2):
             filter=property_value,
             element_type_name=metadata_element_type_name,
             output_format=output_format,
-            output_format_set=output_format_set,
+            report_spec=report_spec,
         )
 
     def find_elements_by_property_value(
@@ -2754,7 +2754,7 @@ class ClassificationManager(Client2):
             page_size: int = 0,
             time_out: int = default_time_out,
             output_format: str = "JSON",
-            output_format_set: dict | str = None,
+            report_spec: dict | str = None,
             body: dict = None,
     ) -> list | str:
         """
@@ -2780,7 +2780,7 @@ class ClassificationManager(Client2):
             - http request timeout for this request
         output_format: str, default = "JSON"
             - Type of output to return.
-        output_format_set: dict | str = None
+        report_spec: dict | str = None
             - Output format set to use. If None, the default output format set is used.
         body: dict = None
 -           - Full request body - supercedes other parameters.
@@ -2821,7 +2821,7 @@ class ClassificationManager(Client2):
                 page_size,
                 time_out,
                 output_format,
-                output_format_set,
+                report_spec,
                 body,
             )
         )
@@ -2832,7 +2832,7 @@ class ClassificationManager(Client2):
             element_guid: str,
             element_type_name: str = None,
             output_format: str = "JSON",
-            output_format_set: dict | str = "Referenceable",
+            report_spec: dict | str = "Referenceable",
             body: dict | GetRequestBody = None,
     ) -> dict | str:
         """
@@ -2848,7 +2848,7 @@ class ClassificationManager(Client2):
             - type of element to be returned
         output_format: str, default = "JSON"
             - output format to be used
-        output_format_set: dict | str, default = "Referenceable"
+        report_spec: dict | str, default = "Referenceable"
             - output format set to be used
         body: dict | GetRequestBody, default = None
             - full request specification - if provided, overrides other parameters.
@@ -2868,7 +2868,7 @@ class ClassificationManager(Client2):
 
         response = await self._async_get_guid_request(url, element_type_name,
                                                       self._generate_referenceable_output,output_format,
-                                                      output_format_set, body)
+                                                      report_spec, body)
         return response
 
     def get_element_by_guid(
@@ -2876,7 +2876,7 @@ class ClassificationManager(Client2):
             element_guid: str,
             element_type_name: str = None,
             output_format: str = "JSON",
-            output_format_set: dict | str = None,
+            report_spec: dict | str = None,
             body: dict | GetRequestBody = None
     ) -> dict | str:
         """
@@ -2892,7 +2892,7 @@ class ClassificationManager(Client2):
             - type of element to be returned
         output_format: str, default = "JSON"
             - output format to be used
-        output_format_set: dict | str, default = "Referenceable"
+        report_spec: dict | str, default = "Referenceable"
             - output format set to be used
         body: dict | GetRequestBody, default = None
             - full request specification - if provided, overrides other parameters.
@@ -2911,7 +2911,7 @@ class ClassificationManager(Client2):
         response = loop.run_until_complete(
             self.async_get_element_by_guid(
                 element_guid,
-                element_type_name, output_format, output_format_set, body
+                element_type_name, output_format, report_spec, body
             )
         )
         return response
@@ -2930,7 +2930,7 @@ class ClassificationManager(Client2):
             name: str,
             property_name: str = None,
             output_format: str = "JSON",
-            output_format_set: dict | str = "Referenceable",
+            report_spec: dict | str = "Referenceable",
             body: dict = None
     ) -> list | str:
         """
@@ -2947,7 +2947,7 @@ class ClassificationManager(Client2):
             - optional name of property to search. If not specified, defaults to qualifiedName
         output_format: str, default = "JSON"
             - output format to be used
-        output_format_set: dict | str, default = "Referenceable"
+        report_spec: dict | str, default = "Referenceable"
             - output format set to be used
         body: dict, default = None
             - full request specification - if provided, overrides other parameters.
@@ -2981,8 +2981,8 @@ class ClassificationManager(Client2):
             return NO_ELEMENTS_FOUND
 
         if output_format != 'JSON':  # return a simplified markdown representation
-            logger.info(f"Found element, output format: {output_format} and output_format_set: {output_format_set}")
-            return self._generate_referenceable_output(elements, "GUID", "Referenceable", output_format, output_format_set)
+            logger.info(f"Found element, output format: {output_format} and report_spec: {report_spec}")
+            return self._generate_referenceable_output(elements, "GUID", "Referenceable", output_format, report_spec)
         return elements
 
 
@@ -2991,7 +2991,7 @@ class ClassificationManager(Client2):
             name: str,
             property_name: str = None,
             output_format: str = "JSON",
-            output_format_set: dict | str = "Referenceable",
+            report_spec: dict | str = "Referenceable",
             body: dict = None
     ) -> list | str:
         """
@@ -3007,7 +3007,7 @@ class ClassificationManager(Client2):
             - optional name of property to search. If not specified, defaults to qualifiedName
         output_format: str, default = "JSON"
             - output format to be used
-        output_format_set: dict | str, default = "Referenceable"
+        report_spec: dict | str, default = "Referenceable"
             - output format set to be used
         body: dict, default = None
             - full request specification - if provided, overrides other parameters.
@@ -3024,7 +3024,7 @@ class ClassificationManager(Client2):
 
         loop = asyncio.get_event_loop()
         response = loop.run_until_complete(
-            self.async_get_element_by_unique_name(name, property_name, output_format, output_format_set, body)
+            self.async_get_element_by_unique_name(name, property_name, output_format, report_spec, body)
         )
         return response
 
@@ -3262,7 +3262,7 @@ class ClassificationManager(Client2):
             page_size: int = 0,
             time_out: int = default_time_out,
             output_format: str = "JSON",
-            output_format_set: dict | str = None,
+            report_spec: dict | str = None,
     ) -> list | str:
         """
         Retrieve elements with the requested classification name. It is also possible to limit the results
@@ -3291,7 +3291,7 @@ class ClassificationManager(Client2):
             - http request timeout for this request
         output_format: str, default = "JSON"
             - Type of output to return.
-        output_format_set: dict | str, default = None
+        report_spec: dict | str, default = None
             - Output format set to use. If None, the default output format set is used.
 
         Returns
@@ -3322,7 +3322,7 @@ class ClassificationManager(Client2):
             filter=classification_name,
             element_type_name=metadata_element_type_name,
             output_format=output_format,
-            output_format_set=output_format_set,
+            report_spec=report_spec,
         )
 
     async def async_get_elements_by_classification_with_property_value(
@@ -3422,7 +3422,7 @@ class ClassificationManager(Client2):
             page_size: int = 0,
             time_out: int = default_time_out,
             output_format: str = "JSON",
-            output_format_set: dict | str = None,
+            report_spec: dict | str = None,
     ) -> list | str:
         """
         Retrieve elements by a value found in one of the properties specified.  The value must match exactly.
@@ -3454,7 +3454,7 @@ class ClassificationManager(Client2):
             - http request timeout for this request
         output_format: str, default = "JSON"
             - Type of output to return.
-        output_format_set: dict | str, default = None
+        report_spec: dict | str, default = None
             - Output format set to use. If None, the default output format set is used.
 
         Returns
@@ -3487,7 +3487,7 @@ class ClassificationManager(Client2):
             filter=property_value,
             element_type_name=metadata_element_type_name,
             output_format=output_format,
-            output_format_set=output_format_set,
+            report_spec=report_spec,
         )
 
     async def async_find_elements_by_classification_with_property_value(
@@ -3503,7 +3503,7 @@ class ClassificationManager(Client2):
             page_size: int = 0,
             time_out: int = default_time_out,
             output_format: str = "JSON",
-            output_format_set: dict | str = None,
+            report_spec: dict | str = None,
     ) -> list | str:
         """
         Retrieve elements with the requested classification name and with the requested value found in
@@ -3537,7 +3537,7 @@ class ClassificationManager(Client2):
             - http request timeout for this request
         output_format: str, default = "JSON"
             - Type of output to return.
-        output_format_set: dict | str, default = None
+        report_spec: dict | str, default = None
             - Output format set to use. If None, the default output format set is used.
 
         Returns
@@ -3579,7 +3579,7 @@ class ClassificationManager(Client2):
             filter=property_value,
             element_type_name=metadata_element_type_name,
             output_format=output_format,
-            output_format_set=output_format_set,
+            report_spec=report_spec,
         )
 
     def find_elements_by_classification_with_property_value(
@@ -3595,7 +3595,7 @@ class ClassificationManager(Client2):
             page_size: int = 0,
             time_out: int = default_time_out,
             output_format: str = "JSON",
-            output_format_set: dict | str = None,
+            report_spec: dict | str = None,
     ) -> list | str:
         """
         Retrieve elements with the requested classification name and with the requested a value found in
@@ -3629,7 +3629,7 @@ class ClassificationManager(Client2):
             - http request timeout for this request
         output_format: str, default = "JSON"
             - Type of output to return.
-        output_format_set: dict | str, default = None
+        report_spec: dict | str, default = None
             - Output format set to use. If None, the default output format set is used.
         Returns
         -------
@@ -3655,7 +3655,7 @@ class ClassificationManager(Client2):
                 page_size,
                 time_out,
                 output_format,
-                output_format_set
+                report_spec
             )
         )
         return response
@@ -3761,7 +3761,7 @@ class ClassificationManager(Client2):
             page_size: int = 0,
             time_out: int = default_time_out,
             output_format: str = "JSON",
-            output_format_set: dict | str = None,
+            report_spec: dict | str = None,
     ) -> list | str:
         """
         Retrieve elements linked by relationship type name. If the relationship type is None, then all related elements
@@ -3794,7 +3794,7 @@ class ClassificationManager(Client2):
             - http request timeout for this request
         output_format: str, default = "JSON"
             - Type of output to return.
-        output_format_set: dict | str, default = None
+        report_spec: dict | str, default = None
             - Output format set to use. If None, the default output format set is used.
 
         Returns
@@ -3827,7 +3827,7 @@ class ClassificationManager(Client2):
             filter=(relationship_type or "AllRelationships"),
             element_type_name=metadata_element_type_name,
             output_format=output_format,
-            output_format_set=output_format_set,
+            report_spec=report_spec,
         )
 
     async def async_get_related_elements_with_property_value(
@@ -3931,7 +3931,7 @@ class ClassificationManager(Client2):
             page_size: int = 0,
             time_out: int = default_time_out,
             output_format: str = "JSON",
-            output_format_set: dict | str = None,
+            report_spec: dict | str = None,
     ) -> list | str:
         """
         Retrieve elements linked via the requested relationship type name and with the requested a value found in one of
@@ -3968,7 +3968,7 @@ class ClassificationManager(Client2):
             - http request timeout for this request
         output_format: str, default = "JSON"
             - Type of output to return.
-        output_format_set: dict | str, default = None
+        report_spec: dict | str, default = None
             - Output format set to use. If None, the default output format set is used.
 
         Returns
@@ -4003,7 +4003,7 @@ class ClassificationManager(Client2):
             filter = property_value,
             element_type_name=metadata_element_type_name,
             output_format=output_format,
-            output_format_set=output_format_set,
+            report_spec=report_spec,
         )
 
     async def async_find_related_elements_with_property_value(
@@ -4110,7 +4110,7 @@ class ClassificationManager(Client2):
             page_size: int = 0,
             time_out: int = default_time_out,
             output_format: str = "JSON",
-            output_format_set: dict | str = None,
+            report_spec: dict | str = None,
     ) -> list | str:
         """
         Retrieve elements linked via the requested relationship type name and with the requested a value found in one of
@@ -4148,7 +4148,7 @@ class ClassificationManager(Client2):
             - http request timeout for this request
         output_format: str, default = "JSON"
             - Type of output to return.
-        output_format_set: dict | str, default = None
+        report_spec: dict | str, default = None
             - Output format set to use. If None, the default output format set is used.
 
         Returns
@@ -4183,7 +4183,7 @@ class ClassificationManager(Client2):
             filter = property_value,
             element_type_name=metadata_element_type_name,
             output_format=output_format,
-            output_format_set=output_format_set,
+            report_spec=report_spec,
         )
 
     #

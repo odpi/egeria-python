@@ -9,7 +9,7 @@
         "types": [
           "ALL"
         ],
-        "columns": [
+        "attributes": [
           {
             "name": "Display Name",
             "key": "display_name",
@@ -129,7 +129,7 @@
         "types": [
           "DICT"
         ],
-        "columns": [
+        "attributes": [
           {
             "name": "Display Name",
             "key": "display_name",
@@ -176,7 +176,7 @@
         "types": [
           "TABLE"
         ],
-        "columns": [
+        "attributes": [
           {
             "name": "Display Name",
             "key": "display_name",
@@ -203,7 +203,7 @@
         "types": [
           "ALL"
         ],
-        "columns": [
+        "attributes": [
           {
             "name": "Display Name",
             "key": "display_name",
@@ -255,7 +255,7 @@
         "types": [
           "DICT"
         ],
-        "columns": [
+        "attributes": [
           {
             "name": "Display Name",
             "key": "display_name",
@@ -302,7 +302,7 @@
         "types": [
           "TABLE"
         ],
-        "columns": [
+        "attributes": [
           {
             "name": "Display Name",
             "key": "display_name",
@@ -351,7 +351,7 @@
         "types": [
           "REPORT"
         ],
-        "columns": [
+        "attributes": [
           {
             "name": "Display Name",
             "key": "display_name",
@@ -444,7 +444,7 @@
         "types": [
           "ALL"
         ],
-        "columns": [
+        "attributes": [
           {
             "name": "Display Name",
             "key": "display_name",
@@ -487,7 +487,7 @@
         "types": [
           "ALL"
         ],
-        "columns": [
+        "attributes": [
           {
             "name": "Display Name",
             "key": "display_name",
@@ -542,7 +542,7 @@
           "REPORT",
           "HTML"
         ],
-        "columns": [
+        "attributes": [
           {
             "name": "Display Name",
             "key": "display_name",
@@ -574,7 +574,7 @@
         "types": [
           "MERMAID"
         ],
-        "columns": [
+        "attributes": [
           {
             "name": "Display Name",
             "key": "display_name",
@@ -591,7 +591,7 @@
         "types": [
           "ALL"
         ],
-        "columns": [
+        "attributes": [
           {
             "name": "Display Name",
             "key": "display_name",
@@ -647,7 +647,7 @@
         "types": [
           "ALL"
         ],
-        "columns": [
+        "attributes": [
           {
             "name": "Display Name",
             "key": "display_name",
@@ -699,7 +699,7 @@
         "types": [
           "ALL"
         ],
-        "columns": [
+        "attributes": [
           {
             "name": "Display Name",
             "key": "display_name",
@@ -747,7 +747,7 @@
         "types": [
           "TABLE"
         ],
-        "columns": [
+        "attributes": [
           {
             "name": "Display Name",
             "key": "display_name",
@@ -780,7 +780,7 @@
           "DICT",
           "LIST"
         ],
-        "columns": [
+        "attributes": [
           {
             "name": "Display Name",
             "key": "display_name",
@@ -814,7 +814,7 @@
           "MERMAID",
           "HTML"
         ],
-        "columns": [
+        "attributes": [
           {
             "name": "Display Name",
             "key": "display_name",
@@ -856,7 +856,7 @@
         "types": [
           "ALL"
         ],
-        "columns": [
+        "attributes": [
           {
             "name": "Display Name",
             "key": "display_name",

@@ -25,7 +25,7 @@ from pyegeria import (
 )
 from pyegeria.config import settings, get_app_config
 from pyegeria.logging_configuration import config_logging
-from pyegeria._output_formats import (select_output_format_set, get_output_format_set_heading, get_output_format_set_description)
+from pyegeria.base_report_formats import (select_report_spec, get_report_spec_heading, get_report_spec_description)
 from pyegeria._exceptions_new import (PyegeriaException, print_basic_exception, print_validation_error,
                                       PyegeriaInvalidParameterException, PyegeriaConnectionException,
                                       PyegeriaAPIException, PyegeriaUnknownException, print_exception_table

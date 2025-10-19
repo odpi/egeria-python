@@ -23,6 +23,9 @@ to visualize and use Egeria. The commands also serve as useful examples.
 
 An examples folder holds some useful examples showing different facets of using pyegeria.
 
+For detailed guidance on report formats (selection, dynamic loading, runtime registration, and migration from columns→attributes), see:
+- examples/doc_samples/report_formats.md
+
 WARNING: files that start with "X" are in-progress placeholders that are not meant to be used..they will mature and 
 evolve.
 

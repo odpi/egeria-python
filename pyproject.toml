@@ -3,7 +3,7 @@
 
 [project]
 name = "pyegeria"
-version = "5.4.7.9"
+version = "5.4.8"
 license = 'Apache-2.0'
 license-files = ["LICENSE"]
 authors = [{name = "Dan Wolfson", email = "dan.wolfson@pdr-associates.com"},]
@@ -38,6 +38,7 @@ dependencies = [
     "altair",
     "modelcontextprotocol",
     "mcp>=1.15.0",
+    "markers>=0.3.0",
 ]
 
 [project.scripts]

@@ -1,0 +1,15 @@
+{
+  "Acme-Asset": {
+    "heading": "Acme Asset",
+    "description": "Standard Acme asset attributes",
+    "formats": [
+      {
+        "types": ["DICT", "MD"],
+        "attributes": [
+          {"name": "Display Name", "key": "display_name"},
+          {"name": "Qualified Name", "key": "qualified_name"}
+        ]
+      }
+    ]
+  }
+}

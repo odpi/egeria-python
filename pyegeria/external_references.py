@@ -13,7 +13,7 @@ from loguru import logger
 from pydantic import HttpUrl
 
 from pyegeria._globals import NO_GUID_RETURNED
-from pyegeria._output_formats import select_output_format_set, get_output_format_type_match
+from pyegeria.base_report_formats import select_report_spec, get_report_spec_match
 from pyegeria.config import settings
 from pyegeria.models import (SearchStringRequestBody, FilterRequestBody, GetRequestBody, NewElementRequestBody,
                              TemplateRequestBody,
@@ -1229,7 +1229,7 @@ class ExternalReferences(Client2):
                                               starts_with: bool = True, ends_with: bool = False,
                                               ignore_case: bool = False,
                                               start_from: int = 0, page_size: int = 0, output_format: str = 'JSON',
-                                              output_format_set: str | dict = "ExternalReference",
+                                              report_spec: str | dict = "ExternalReference",
                                               body: dict | SearchStringRequestBody = None) -> list | str:
         """ Returns the list of external references matching the search string filtered by the optional classification.
             This method can either be used with a body, allowing full control, or with the individual parameters.
@@ -1258,7 +1258,7 @@ class ExternalReferences(Client2):
             the class instance.
         output_format: str, default = "JSON"
             - one of "MD", "LIST", "FORM", "REPORT", "DICT", "MERMAID" or "JSON"
-        output_format_set: str | dict , optional, default = None
+        report_spec: str | dict , optional, default = None
             - The desired output columns/fields to include.
         body: dict | SearchStringRequestBody, optional, default = None
             - if provided, the search parameters in the body will supercede other attributes, such as "search_string"
@@ -1287,7 +1287,7 @@ class ExternalReferences(Client2):
                                                   metadata_element_types=metadata_element_types,
                                                   starts_with=starts_with, ends_with=ends_with, ignore_case=ignore_case,
                                                   start_from=start_from, page_size=page_size,
-                                                  output_format=output_format, output_format_set=output_format_set,
+                                                  output_format=output_format, report_spec=report_spec,
                                                   body=body)
 
         return response
@@ -1297,7 +1297,7 @@ class ExternalReferences(Client2):
                                  metadata_element_types: list[str] = EXTERNAL_REFERENCE_TYPES, starts_with: bool = True,
                                  ends_with: bool = False, ignore_case: bool = False,
                                  start_from: int = 0, page_size: int = 0, output_format: str = 'JSON',
-                                 output_format_set: str | dict = "ExternalReference",
+                                 report_spec: str | dict = "ExternalReference",
                                  body: dict | SearchStringRequestBody = None) -> list | str:
         """ Returns the list of external references matching the search string filtered by the optional classification.
             This method can either be used with a body, allowing full control, or with the individual parameters.
@@ -1327,7 +1327,7 @@ class ExternalReferences(Client2):
             the class instance.
         output_format: str, default = "JSON"
             - one of "MD", "LIST", "FORM", "REPORT", "DICT", "MERMAID" or "JSON"
-        output_format_set: str | dict , optional, default = None
+        report_spec: str | dict , optional, default = None
             - The desired output columns/fields to include.
         body: dict | SearchStringRequestBody, optional, default = None
             - if provided, the search parameters in the body will supercede other attributes, such as "search_string"
@@ -1357,7 +1357,7 @@ class ExternalReferences(Client2):
             self._async_find_external_references(search_string, classification_names, metadata_element_types,
                                                  starts_with, ends_with, ignore_case,
                                                  start_from, page_size, output_format,
-                                                 output_format_set, body))
+                                                 report_spec, body))
 
     @dynamic_catch
     async def _async_get_external_references_by_name(self, filter_string: str = None,
@@ -1365,7 +1365,7 @@ class ExternalReferences(Client2):
                                                      body: dict | FilterRequestBody = None,
                                                      start_from: int = 0, page_size: int = 0,
                                                      output_format: str = 'JSON',
-                                                     output_format_set: str | dict = "ExternalReference") -> list | str:
+                                                     report_spec: str | dict = "ExternalReference") -> list | str:
         """ Returns the list of external references with a particular name.
 
             Parameters
@@ -1383,7 +1383,7 @@ class ExternalReferences(Client2):
                 the class instance.
             output_format: str, default = "JSON"
                 - one of "DICT", "MERMAID" or "JSON"
-            output_format_set: dict , optional, default = None
+            report_spec: dict , optional, default = None
                 The desired output columns/fields to include.
 
             Returns
@@ -1408,7 +1408,7 @@ class ExternalReferences(Client2):
                                                       filter_string=filter_string,
                                                       classification_names=classification_names,
                                                       start_from=start_from, page_size=page_size,
-                                                      output_format=output_format, output_format_set=output_format_set,
+                                                      output_format=output_format, report_spec=report_spec,
                                                       body=body)
 
         return response
@@ -1416,7 +1416,7 @@ class ExternalReferences(Client2):
     def get_external_references_by_name(self, filter_string: str = None, classification_names: list[str] = None,
                                         body: dict | FilterRequestBody = None,
                                         start_from: int = 0, page_size: int = 0, output_format: str = 'JSON',
-                                        output_format_set: str | dict = "ExternalReference") -> list | str:
+                                        report_spec: str | dict = "ExternalReference") -> list | str:
         """Returns the list of external references matching the filter string. Async version.
             The search string is located in the request body and is interpreted as a plain string.
             The request parameters, startsWith, endsWith, and ignoreCase can be used to allow a fuzzy search.
@@ -1436,7 +1436,7 @@ class ExternalReferences(Client2):
             the class instance.
         output_format: str, default = "JSON"
             - one of "DICT", "MERMAID" or "JSON"
-         output_format_set: str | dict, optional, default = None
+         report_spec: str | dict, optional, default = None
                 The desired output columns/fields to include.
 
         Returns
@@ -1453,13 +1453,13 @@ class ExternalReferences(Client2):
         return asyncio.get_event_loop().run_until_complete(
             self._async_get_external_references_by_name(filter_string, classification_names, body, start_from,
                                                         page_size,
-                                                        output_format, output_format_set))
+                                                        output_format, report_spec))
 
     @dynamic_catch
     async def _async_get_external_reference_by_guid(self, ext_ref_guid: str, element_type: str = None,
                                                     body: dict | GetRequestBody = None,
                                                     output_format: str = 'JSON',
-                                                    output_format_set: str | dict = "ExternalReference") -> dict | str:
+                                                    report_spec: str | dict = "ExternalReference") -> dict | str:
         """Return the properties of a specific external reference. Async version.
 
         Parameters
@@ -1472,7 +1472,7 @@ class ExternalReferences(Client2):
             full request body.
         output_format: str, default = "JSON"
             - one of "DICT", "MERMAID" or "JSON"
-         output_format_set: str | dict, optional, default = None
+         report_spec: str | dict, optional, default = None
                 The desired output columns/fields to include.
 
         Returns
@@ -1508,7 +1508,7 @@ class ExternalReferences(Client2):
 
         response = await self._async_get_guid_request(url, _type=type,
                                                       _gen_output=self._generate_external_reference_output,
-                                                      output_format=output_format, output_format_set=output_format_set,
+                                                      output_format=output_format, report_spec=report_spec,
                                                       body=body)
 
         return response
@@ -1517,7 +1517,7 @@ class ExternalReferences(Client2):
     def get_external_reference_by_guid(self, ext_ref_guid: str, element_type: str = None,
                                        body: dict | GetRequestBody = None,
                                        output_format: str = 'JSON',
-                                       output_format_set: str | dict = "ExternalReference") -> dict | str:
+                                       report_spec: str | dict = "ExternalReference") -> dict | str:
         """ Return the properties of a specific external reference. Async version.
 
             Parameters
@@ -1530,7 +1530,7 @@ class ExternalReferences(Client2):
                 full request body.
             output_format: str, default = "JSON"
                 - one of "DICT", "MERMAID" or "JSON"
-            output_format_set: dict , optional, default = None
+            report_spec: dict , optional, default = None
                 The desired output columns/fields to include.
 
 
@@ -1563,7 +1563,7 @@ class ExternalReferences(Client2):
         """
         return asyncio.get_event_loop().run_until_complete(
             self._async_get_external_reference_by_guid(ext_ref_guid, element_type, body,
-                                                       output_format, output_format_set))
+                                                       output_format, report_spec))
 
     def _extract_external_reference_properties(self, element: dict, columns_struct: dict) -> dict:
         """
@@ -1579,7 +1579,7 @@ class ExternalReferences(Client2):
         # First, populate from element.properties using the utility
         col_data = populate_columns_from_properties(element, columns_struct)
 
-        columns_list = col_data.get("formats", {}).get("columns", [])
+        columns_list = col_data.get("formats", {}).get("attributes", [])
 
         # Populate header-derived values
         header_props = _extract_referenceable_properties(element)
@@ -1628,7 +1628,7 @@ class ExternalReferences(Client2):
 
     def _generate_external_reference_output(self, elements: dict | list[dict], filter: Optional[str],
                                             element_type_name: Optional[str], output_format: str = "DICT",
-                                            output_format_set: dict | str = None) -> str | list[dict]:
+                                            report_spec: dict | str = None) -> str | list[dict]:
         """ Generate output for external_references in the specified format.
 
             Args:
@@ -1636,7 +1636,7 @@ class ExternalReferences(Client2):
                 filter (Optional[str]): The search string used to find the elements
                 element_type_name (Optional[str]): The type of external_reference
                 output_format (str): The desired output format (MD, FORM, REPORT, LIST, DICT, MERMAID, HTML)
-                output_format_set (Optional[dict], optional): List of dictionaries containing column data. Defaults
+                report_spec (Optional[dict], optional): List of dictionaries containing column data. Defaults
                 to None.
 
             Returns:
@@ -1646,22 +1646,22 @@ class ExternalReferences(Client2):
             entity_type = "ExternalReference"
         else:
             entity_type = element_type_name
-        # First see if the user has specified an output_format_set - either a label or a dict
+        # First see if the user has specified an report_spec - either a label or a dict
         get_additional_props_func = None
-        if output_format_set:
-            if isinstance(output_format_set, str):
-                output_formats = select_output_format_set(output_format_set, output_format)
-            elif isinstance(output_format_set, dict):
-                output_formats = get_output_format_type_match(output_format_set, output_format)
+        if report_spec:
+            if isinstance(report_spec, str):
+                output_formats = select_report_spec(report_spec, output_format)
+            elif isinstance(report_spec, dict):
+                output_formats = get_report_spec_match(report_spec, output_format)
 
         # If no output_format was set, then use the element_type_name to lookup the output format
         elif element_type_name:
-            output_formats = select_output_format_set(element_type_name, output_format)
+            output_formats = select_report_spec(element_type_name, output_format)
         else:
             # fallback to external_references or entity type
-            output_formats = select_output_format_set(entity_type, output_format)
+            output_formats = select_report_spec(entity_type, output_format)
         if output_formats is None:
-            output_formats = select_output_format_set("Default", output_format)
+            output_formats = select_report_spec("Default", output_format)
 
         if output_formats:
             get_additional_props_name = output_formats.get("get_additional_props", {}).get("function", None)
