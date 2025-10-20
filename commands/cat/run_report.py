@@ -55,7 +55,7 @@ from pyegeria import (
     NO_ELEMENTS_FOUND, GovernanceOfficer, GlossaryManager, print_validation_error,
 )
 from pyegeria.config import settings
-from pyegeria.external_references import ExternalReferences
+from pyegeria.external_links import ExternalReferences
 from pyegeria.logging_configuration import config_logging
 from pyegeria._output_format_models import load_format_sets_from_json
 from pyegeria.base_report_formats import (select_report_format, get_report_format_heading,

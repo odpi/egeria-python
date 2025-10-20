@@ -19,9 +19,7 @@ from loguru import logger
 from rich import print, print_json
 from rich.console import Console
 from pyegeria.collection_manager import CollectionManager, CollectionProperties
-from pyegeria.collection_models import ClassificationProperties
-# from pyegeria import EgeriaTech, CollectionManager
-from pyegeria.config import settings
+from pyegeria.egeria_tech_client import EgeriaTech
 from pyegeria.logging_configuration import config_logging, init_logging
 from pyegeria._exceptions_new import (
     PyegeriaInvalidParameterException, PyegeriaException, PyegeriaConnectionException, PyegeriaClientException,
@@ -102,9 +100,9 @@ class TestCollectionManager:
         finally:
             c_client.close_session()
 
-    def test_find_collections(self):
+    async def test_find_collections(self):
         try:
-            c_client = CollectionManager(self.good_server_2, self.good_platform1_url, user_id=self.good_user_2, )
+            c_client = EgeriaTech(self.good_server_2, self.good_platform1_url, user_id=self.good_user_2, )
             token = c_client.create_egeria_bearer_token(self.good_user_2, "secret")
             start_time = time.perf_counter()
             search_string = "*"
@@ -113,7 +111,7 @@ class TestCollectionManager:
             output_format = "DICT"
             report_spec = "BasicCollections"
 
-            response = c_client.find_collections(search_string = search_string, classification_names = classification_name
+            response = await c_client._async_find_collections(search_string = search_string, classification_names = classification_name
                                                  ,metadata_element_types=element_type
                                                  ,output_format=output_format, report_spec=report_spec)
             duration = time.perf_counter() - start_time
@@ -2070,7 +2068,11 @@ class TestCollectionManager:
         try:
             # Use helper to ensure token etc. If unavailable, fall back to direct constructor
             try:
-                c_client = make_client(CollectionManager)
+                c_client = CollectionManager(self.good_view_server_1, self.good_platform1_url,
+                                             user_id=self.good_user_2, )
+
+                token = c_client.create_egeria_bearer_token(self.good_user_2, "secret")
+
             except Exception:
                 c_client = CollectionManager(self.good_view_server_1, self.good_platform1_url, user_id=self.good_user_2)
                 c_client.create_egeria_bearer_token(self.good_user_2, USER_PWD)

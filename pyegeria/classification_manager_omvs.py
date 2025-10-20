@@ -336,7 +336,7 @@ class ClassificationManager(Client2):
         )
         return response
 
-    async def async_get_elements_by_property_value(
+    async def _async_get_elements_by_property_value(
             self,
             property_value: str,
             property_names: [str],
@@ -466,7 +466,7 @@ class ClassificationManager(Client2):
 
         loop = asyncio.get_event_loop()
         response = loop.run_until_complete(
-            self.async_get_elements_by_property_value(
+            self._async_get_elements_by_property_value(
                 property_value,
                 property_names,
                 metadata_element_type_name,
@@ -980,7 +980,7 @@ class ClassificationManager(Client2):
         )
         return response
 
-    async def async_get_guid_for_name(
+    async def _async_get_guid_for_name(
             self, name: str
     ) -> list | str:
         """
@@ -1005,7 +1005,7 @@ class ClassificationManager(Client2):
         """
 
         property_name = ["name", "displayName", "title", "qualifiedName"]
-        elements = await self.async_get_elements_by_property_value(
+        elements = await self._async_get_elements_by_property_value(
             name, property_name, None
         )
 
@@ -1042,7 +1042,7 @@ class ClassificationManager(Client2):
 
         loop = asyncio.get_event_loop()
         response = loop.run_until_complete(
-            self.async_get_guid_for_name(name)
+            self._async_get_guid_for_name(name)
         )
         return response
 
@@ -1838,7 +1838,7 @@ class ClassificationManager(Client2):
             report_spec=report_spec,
         )
 
-    async def async_get_related_elements_with_property_value(
+    async def _async_get_related_elements_with_property_value(
             self,
             element_guid: str,
             relationship_type: str,
@@ -1991,7 +1991,7 @@ class ClassificationManager(Client2):
 
         loop = asyncio.get_event_loop()
         response = loop.run_until_complete(
-            self.async_get_related_elements_with_property_value(
+            self._async_get_related_elements_with_property_value(
                 element_guid,
                 relationship_type,
                 property_value,

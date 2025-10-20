@@ -449,7 +449,7 @@ class Client2(BaseClient):
         return response
 
 
-    async def async_get_elements_by_property_value(
+    async def _async_get_elements_by_property_value(
             self,
             property_value: str,
             property_names: [str],
@@ -581,7 +581,7 @@ class Client2(BaseClient):
 
         loop = asyncio.get_event_loop()
         response = loop.run_until_complete(
-            self.async_get_elements_by_property_value(
+            self._async_get_elements_by_property_value(
                 property_value,
                 property_names,
                 metadata_element_type_name,
@@ -595,7 +595,7 @@ class Client2(BaseClient):
         )
         return response
 
-    async def async_get_guid_for_name(
+    async def _async_get_guid_for_name(
             self, name: str, property_name: [str] = ["qualifiedName","displayName"], type_name: str = "ValidMetadataValue"
 
     ) -> list | str:
@@ -621,7 +621,7 @@ class Client2(BaseClient):
         PyegeriaException
         """
 
-        elements = await self.async_get_elements_by_property_value(
+        elements = await self._async_get_elements_by_property_value(
             name, property_name, type_name
         )
 
@@ -661,12 +661,12 @@ class Client2(BaseClient):
 
         loop = asyncio.get_event_loop()
         response = loop.run_until_complete(
-            self.async_get_guid_for_name(name, property_name, type_name)
+            self._async_get_guid_for_name(name, property_name, type_name)
         )
         return response
 
 
-    async def async_get_element_by_guid_(self, element_guid: str) -> dict | str:
+    async def _async_get_element_by_guid_(self, element_guid: str) -> dict | str:
         """
             Simplified, internal version of get_element_by_guid found in Classification Manager.
             Retrieve an element by its guid.  Async version.
@@ -705,7 +705,7 @@ class Client2(BaseClient):
 
         return elements
 
-    async def async_get_related_elements_with_property_value(
+    async def _async_get_related_elements_with_property_value(
             self,
             element_guid: str,
             relationship_type: str,
@@ -863,7 +863,7 @@ class Client2(BaseClient):
         )
         return response
 
-    async def async_get_connector_guid(self, connector_name: str) -> str:
+    async def _async_get_connector_guid(self, connector_name: str) -> str:
         """Get the guid of a connector. Async version.
             Parameters:
                 connector_name (str): The name of the connector to retrieve the guid for.
@@ -896,7 +896,7 @@ class Client2(BaseClient):
 
         loop = asyncio.get_event_loop()
         result = loop.run_until_complete(
-            self.async_get_connector_guid(
+            self._async_get_connector_guid(
                 connector_name
             )
         )
@@ -912,7 +912,7 @@ class Client2(BaseClient):
         timestamp = int(time.time())
         return f"{feedback_type}::{src_guid}::{self.user_id}::{timestamp}"
 
-    async def async_add_comment_reply(
+    async def _async_add_comment_reply(
         self,
         element_guid: str,
         comment_guid: str,
@@ -995,12 +995,12 @@ class Client2(BaseClient):
         """
         loop = asyncio.get_event_loop()
         response = loop.run_until_complete(
-            self.async_add_comment_reply(element_guid, comment_guid, comment, comment_type, body)
+            self._async_add_comment_reply(element_guid, comment_guid, comment, comment_type, body)
         )
         return response
 
 
-    async def async_add_comment_to_element(
+    async def _async_add_comment_to_element(
         self,
         element_guid: str,
         comment: str=None,
@@ -1079,12 +1079,12 @@ class Client2(BaseClient):
 
         loop = asyncio.get_event_loop()
         response = loop.run_until_complete(
-            self.async_add_comment_to_element(element_guid, comment, comment_type, body)
+            self._async_add_comment_to_element(element_guid, comment, comment_type, body)
         )
         return response
 
 
-    async def async_update_comment(
+    async def _async_update_comment(
         self,
         comment_guid: str,
         comment: str=None,
@@ -1170,12 +1170,12 @@ class Client2(BaseClient):
 
         loop = asyncio.get_event_loop()
         response = loop.run_until_complete(
-            self.async_update_comment(element_guid, comment, comment_type, body, merge_update)
+            self._async_update_comment(element_guid, comment, comment_type, body, merge_update)
         )
         return response
 
 
-    async def async_setup_accepted_answer(
+    async def _async_setup_accepted_answer(
         self,
         question_comment_guid: str,
         answer_comment_guid: str,
@@ -1235,10 +1235,10 @@ class Client2(BaseClient):
 
         loop = asyncio.get_event_loop()
         loop.run_until_complete(
-            self.async_setup_accepted_answer(question_comment_guid, answer_comment_guid)
+            self._async_setup_accepted_answer(question_comment_guid, answer_comment_guid)
         )
 
-    async def async_clear_accepted_answer(
+    async def _async_clear_accepted_answer(
         self,
         question_comment_guid: str,
         answer_comment_guid: str,
@@ -1298,10 +1298,10 @@ class Client2(BaseClient):
 
         loop = asyncio.get_event_loop()
         loop.run_until_complete(
-            self.async_clear_accepted_answer(question_comment_guid, answer_comment_guid)
+            self._async_clear_accepted_answer(question_comment_guid, answer_comment_guid)
         )
 
-    async def async_remove_comment_from_element(
+    async def _async_remove_comment_from_element(
         self,
         element_guid:str,
         comment_guid: str,
@@ -1371,13 +1371,13 @@ class Client2(BaseClient):
         """
         loop = asyncio.get_event_loop()
         loop.run_until_complete(
-            self.async_remove_comment_from_element(element_guid,comment_guid, body,cascade_delete=cascade_delete)
+            self._async_remove_comment_from_element(element_guid, comment_guid, body, cascade_delete=cascade_delete)
         )
 
 
 
 
-    async def async_get_comment_by_guid(
+    async def _async_get_comment_by_guid(
         self,
         comment_guid: str, element_type: str = "Comment",
         body: dict | GetRequestBody = None,
@@ -1420,7 +1420,7 @@ class Client2(BaseClient):
         """
 
 
-        url = f"{self.command_root}feedback-manager/comments/{comment_guid}/comments/retrieve"
+        url = f"{self.command_root}feedback-manager/comments/{comment_guid}/retrieve"
         response = await self._async_get_guid_request(url, _type=element_type,
                                                       _gen_output=self._generate_comment_output,
                                                       output_format=output_format, report_spec=report_spec,
@@ -1471,11 +1471,11 @@ class Client2(BaseClient):
         """
         loop = asyncio.get_event_loop()
         response = loop.run_until_complete(
-            self.async_get_comment_by_guid(comment_guid, element_type,body,output_format, report_spec)
+            self._async_get_comment_by_guid(comment_guid, element_type, body, output_format, report_spec)
         )
         return response
 
-    async def async_get_attached_comments(
+    async def _async_get_attached_comments(
             self,
             element_guid: str,
             element_type: str = "Comment",
@@ -1569,8 +1569,8 @@ class Client2(BaseClient):
         """
         loop = asyncio.get_event_loop()
         response = loop.run_until_complete(
-            self.async_get_attached_comments(element_guid, element_type, body, start_from, page_size, output_format,
-                                             report_spec)
+            self._async_get_attached_comments(element_guid, element_type, body, start_from, page_size, output_format,
+                                              report_spec)
         )
         return response
 
@@ -1590,7 +1590,7 @@ class Client2(BaseClient):
 
 
 
-    async def async_find_comments(
+    async def _async_find_comments(
         self,
         search_string: str,
         classification_names: list[str] = None,
@@ -1711,19 +1711,8 @@ class Client2(BaseClient):
         """
         loop = asyncio.get_event_loop()
         resp = loop.run_until_complete(
-            self.async_find_comments(
-                search_string,
-                classification_names,
-                metadata_element_types,
-                starts_with,
-                ends_with,
-                ignore_case,
-                start_from,
-                page_size,
-                output_format,
-                report_spec,
-                body,
-            )
+            self._async_find_comments(search_string, classification_names, metadata_element_types, starts_with,
+                                      ends_with, ignore_case, start_from, page_size, output_format, report_spec, body)
         )
 
         return resp

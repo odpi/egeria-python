@@ -26,7 +26,7 @@ from pyegeria.governance_officer import GovernanceOfficer
 from pyegeria.glossary_manager import GlossaryManager
 from pyegeria._globals import NO_ELEMENTS_FOUND
 from pyegeria.config import settings
-from pyegeria.external_references import ExternalReferences
+from pyegeria.external_links import ExternalReferences
 from pyegeria._exceptions_new import PyegeriaException
 from pyegeria.base_report_formats import (
     select_report_spec,

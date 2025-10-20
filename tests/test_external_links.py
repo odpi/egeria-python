@@ -14,7 +14,7 @@ A running Egeria environment is needed to run these tests.
 import json
 import time
 from pydantic import ValidationError
-from pyegeria.external_references import ExternalReferences
+from pyegeria.external_links import ExternalReferences
 from pyegeria._exceptions_new import PyegeriaException, print_basic_exception, print_exception_table, \
     print_validation_error, PyegeriaAPIException
 
@@ -159,13 +159,12 @@ class TestExternalReferences:
             assert True
 
         except (
-            InvalidParameterException,
-            PropertyServerException,
-            UserNotAuthorizedException,
+            PyegeriaException
         ) as e:
-            print_exception_response(e)
+            print_basic_exception(e)
             assert False, "Invalid request"
-
+        except ValidationError as e:
+            print_validation_error(e)
         finally:
             p_client.close_session()
 

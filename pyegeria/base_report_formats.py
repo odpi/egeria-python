@@ -121,7 +121,8 @@ COMMON_COLUMNS = [
     Column(name='Category', key='category'),
     Column(name='Description', key='description', format=True),
     Column(name='Status', key='status'),
-    Column(name='Type Name', key='type_name')
+    Column(name='Type Name', key='type_name'),
+    Column(name='URL', key='url')
 ]
 # Preferred terminology alias
 COMMON_ATTRIBUTES = COMMON_COLUMNS
@@ -430,8 +431,9 @@ base_report_specs = FormatSetDict({
             spec_params={},
         )
     ),
-    "Terms": FormatSet(
+    "Glossary-Terms": FormatSet(
         target_type="Term",
+        # aliases=["Glossary-Terms"],
         heading="Basic Glossary Term Attributes",
         description="Attributes that apply to all Basic Glossary Terms.",
         annotations={},
@@ -858,7 +860,7 @@ base_report_specs = FormatSetDict({
             spec_params={},
         )
     ),
-    'External-Reference': FormatSet(target_type='External-Reference',
+    'External-References': FormatSet(target_type='External-Reference',
                                     heading='External-Reference Attributes',
                                     description='External References', formats=[
             Format(types=['MD', 'FORM', 'DICT'], attributes=[Column(name='Display Name', key='display_name'),

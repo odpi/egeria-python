@@ -18,8 +18,9 @@ import time
 from contextlib import nullcontext as does_not_raise
 
 import pytest
+from pydantic import ValidationError
 
-from pyegeria import Client2, PyegeriaException, print_basic_exception
+from pyegeria import Client2, PyegeriaException, print_basic_exception, print_validation_error
 from pyegeria._exceptions import (
     InvalidParameterException,
     PropertyServerException,
@@ -243,6 +244,14 @@ def test_add_comment_to_element():
         print_basic_exception(e)
     except InvalidParameterException as e:
         print_exception_response(e)
+
+
+def test_add_comment_to_element_live():
+    guid = "d52a42e9-87a1-4382-aa0e-d0a3a63465f6"
+    comment = "My simple command interface for Egeria"
+    comment_type = "STANDARD_COMMENT"
+    response = fm_client.add_comment_to_element(guid, comment, comment_type)
+    print(response)
 
 
 #
@@ -509,13 +518,21 @@ def test_can_handle_no_comments_with_details_requested():
 
 def test_find_comments():
     # create_response = fm_client.add_comment_to_element(term_guid, body=standard_comment)
-    response = fm_client.find_comments("*")
+    response = fm_client.find_comments("kafka")
     assert "class" in response[0]
     assert response[0]["properties"]["class"] == "CommentProperties"
     assert "qualifiedName" in response[0]["properties"].keys()
     assert "guid" in response[0]['elementHeader']
     # fm_client.remove_comment_from_element(create_response["guid"])
 
+def test_get_comment_by_guid_live():
+    try:
+        response = fm_client.get_comment_by_guid('783c1136-df57-44f1-8c48-856cd871336d')
+        print(json.dumps(response, indent=2))
+    except PyegeriaException:
+        print_basic_exception(e)
+    except ValidationError as e:
+        print_validation_error(e)
 
 def test_find_comments_detailed():
     create_response = fm_client.add_comment_to_element(term_guid, body=standard_comment)

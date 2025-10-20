@@ -27,7 +27,7 @@ dependencies = [
     "click",
     "trogon",
     "mermaid-py",
-    "psycopg2-binary",
+    "psycopg2-binary>=2.9.11",
     "jupyter-notebook-parser",
     "loguru",
     "inflect",
@@ -180,3 +180,6 @@ exclude = ["tests"]
 
 [tool.setuptools.package-data]
 "md_processing" = ["data/*.json", "data/*.py"]
+
+[project.optional-dependencies]
+test = ["pytest"]

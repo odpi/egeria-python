@@ -40,8 +40,8 @@ class TestRegisteredInfoServices:
     bad_user_2 = ""
 
     good_server_1 = "simple-metadata-store"
-    good_server_2 = "view-server"
-    good_server_3 = "active-metadata-store"
+    good_server_2 = "qs-view-server"
+    good_server_3 = "qs-metadata-store"
     bad_server_1 = "coco"
     bad_server_2 = ""
 

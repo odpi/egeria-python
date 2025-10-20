@@ -145,7 +145,7 @@ class FeedbackManager(Client2):
         timestamp = int(time.time())
         return f"{feedback_type}::{src_guid}::{self.user_id}::{timestamp}"
 
-    async def async_add_comment_reply(
+    async def _async_add_comment_reply(
         self,
         element_guid: str,
         comment_guid: str,
@@ -228,7 +228,7 @@ class FeedbackManager(Client2):
         """
         loop = asyncio.get_event_loop()
         response = loop.run_until_complete(
-            self.async_add_comment_reply(element_guid, comment_guid, comment, comment_type, body)
+            self._async_add_comment_reply(element_guid, comment_guid, comment, comment_type, body)
         )
         return response
 
@@ -236,8 +236,8 @@ class FeedbackManager(Client2):
     ## add_comment_to_element implementation
     #
 
-    async def async_add_comment_to_element(self, element_guid: str,
-                                           comment_type: dict = "STANDARD_COMMENT" -> dict | str:
+    async def _async_add_comment_to_element(self, element_guid: str,
+                                            comment_type: dict = "STANDARD_COMMENT" -> dict | str:
         """
         Creates a comment and attaches it to an element.
 
@@ -308,7 +308,7 @@ class FeedbackManager(Client2):
 
         loop = asyncio.get_event_loop()
         response = loop.run_until_complete(
-            self.async_add_comment_to_element(element_guid, comment_type, body)
+            self._async_add_comment_to_element(element_guid, comment_type, body)
         )
         return response
 
@@ -3275,8 +3275,8 @@ class FeedbackManager(Client2):
     ## remove_comment_from_element implementation
     #
 
-    async def async_remove_comment_from_element(self, comment_guid: str, body: dict = None,
-                                                cascade_delete=False) -> dict | str:
+    async def _async_remove_comment_from_element(self, comment_guid: str, body: dict = None,
+                                                 cascade_delete=False) -> dict | str:
         """
         Removes a comment added to the element by this user.
 
@@ -3357,7 +3357,7 @@ class FeedbackManager(Client2):
         """
         loop = asyncio.get_event_loop()
         response = loop.run_until_complete(
-            self.async_remove_comment_from_element(comment_guid, body)
+            self._async_remove_comment_from_element(comment_guid, body)
         )
         return response
 

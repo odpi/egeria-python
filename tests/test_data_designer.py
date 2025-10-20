@@ -30,8 +30,8 @@ from pyegeria.data_designer import DataDesigner
 from pyegeria.config import settings
 
 disable_ssl_warnings = True
-PLATFORM_URL = settings.Environment[EGERIA_PLATFORM_URL]
-VIEW_SERVER = settings.Environment.EGERIA_VIEW_SERVER
+PLATFORM_URL = settings.Environment.egeria_platform_url
+VIEW_SERVER = settings.Environment.egeria_view_server
 USER_PWD = os.environ.get("EGERIA_USER_PASSWORD", "secret")
 
 
@@ -53,12 +53,8 @@ def valid_guid(guid):
 
 EGERIA_USER = os.environ.get("EGERIA_USER", "erinoverview")
 EGERIA_USER_PASSWORD = os.environ.get("EGERIA_USER_PASSWORD", "secret")
-PLATFORM_URL = settings.Environment.PLATFORM_URL
-VIEW_SERVER = settings.Environment.VIEW_SERVER
 USER_PWD = EGERIA_USER_PASSWORD
 
-
-app_config = settings.Environment
 
 import pytest
 
