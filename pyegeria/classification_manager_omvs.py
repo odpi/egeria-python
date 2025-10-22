@@ -94,7 +94,7 @@ class ClassificationManager(Client2):
             classification_name: str,
             body: dict | LevelIdentifierQueryBody,
             output_format: str = "JSON",
-            output_format_set: dict | str = None
+            report_spec: dict | str = None
     ) -> list | str:
         """
         Return information about the elements classified with the specified classification. Async version.
@@ -109,7 +109,7 @@ class ClassificationManager(Client2):
             Details of the query. See LevelIdentifierQueryBody for details.
         output_format: str, default = "JSON"
             Type of output to return.
-        output_format_set: dict | str, default = None
+        report_spec: dict | str, default = None
             Output format set to use. If None, the default output format set is used.
         Returns
         -------
@@ -145,7 +145,7 @@ class ClassificationManager(Client2):
 
         response = await self._async_get_level_identifier_query_body_request(
            url = url, _gen_output = self._generate_referenceable_output, output_format=output_format,
-            output_format_set=output_format_set,body=body
+            report_spec=report_spec,body=body
         )
         return response
 
@@ -154,7 +154,7 @@ class ClassificationManager(Client2):
             classification_name: str,
             body: dict | LevelIdentifierQueryBody,
             output_format: str = "JSON",
-            output_format_set: dict | str = None
+            report_spec: dict | str = None
     ) -> list | str:
         """
         Return information about the elements classified with the specified classification.
@@ -169,7 +169,7 @@ class ClassificationManager(Client2):
             Details of the query. See LevelIdentifierQueryBody for details.
         output_format: str, default = "JSON"
             Type of output to return.
-        output_format_set: dict | str, default = None
+        report_spec: dict | str, default = None
             Output format set to use. If None, the default output format set is used.
         Returns
         -------
@@ -203,7 +203,7 @@ class ClassificationManager(Client2):
         loop = asyncio.get_event_loop()
         response = loop.run_until_complete(
             self.async_get_classified_elements_by(
-                classification_name, body, output_format, output_format_set
+                classification_name, body, output_format, report_spec
             )
         )
         return response
@@ -285,7 +285,7 @@ class ClassificationManager(Client2):
             page_size: int = 0,
             time_out: int = default_time_out,
             output_format: str = "JSON",
-            output_format_set: dict | str = None,
+            report_spec: dict | str = None,
     ) -> list | str:
         """
         Retrieve elements of the requested type name. If no type name is specified, then any type of element may
@@ -336,18 +336,11 @@ class ClassificationManager(Client2):
         )
         return response
 
-    async def async_get_elements_by_property_value(
-            self,
-            property_value: str,
-            property_names: [str],
-            metadata_element_type_name: str = None,
-            effective_time: str = None,
-            for_lineage: bool = None,
-            for_duplicate_processing: bool = None,
-            start_from: int = 0,
-            page_size: int = 0,
-            time_out: int = default_time_out,
-    ) -> list | str:
+    async def _async_get_elements_by_property_value(self, property_value: str, property_names: [str],
+                                                    metadata_element_type_name: str = None, effective_time: str = None,
+                                                    for_lineage: bool = None, for_duplicate_processing: bool = None,
+                                                    start_from: int = 0, page_size: int = 0,
+                                                    time_out: int = default_time_out) -> list | str:
         """
         Retrieve elements by a value found in one of the properties specified.  The value must match exactly.
         An open metadata type name may be supplied to restrict the results. Async version.
@@ -385,6 +378,8 @@ class ClassificationManager(Client2):
         Raises
         ------
         PyegeriaException
+
+        Args:
         """
 
         body = {
@@ -411,20 +406,11 @@ class ClassificationManager(Client2):
                 return NO_ELEMENTS_FOUND
         return elements
 
-    def get_elements_by_property_value(
-            self,
-            property_value: str,
-            property_names: [str],
-            metadata_element_type_name: str = None,
-            effective_time: str = None,
-            for_lineage: bool = None,
-            for_duplicate_processing: bool = None,
-            start_from: int = 0,
-            page_size: int = 0,
-            time_out: int = default_time_out,
-            output_format: str = "JSON",
-            output_format_set: dict | str = None,
-    ) -> list | str:
+    def get_elements_by_property_value(self, property_value: str, property_names: [str],
+                                       metadata_element_type_name: str = None, effective_time: str = None,
+                                       for_lineage: bool = None, for_duplicate_processing: bool = None,
+                                       start_from: int = 0, page_size: int = 0,
+                                       time_out: int = default_time_out) -> list | str:
         """
         Retrieve elements by a value found in one of the properties specified.  The value must match exactly.
         An open metadata type name may be supplied to restrict the results.
@@ -466,24 +452,16 @@ class ClassificationManager(Client2):
 
         loop = asyncio.get_event_loop()
         response = loop.run_until_complete(
-            self.async_get_elements_by_property_value(
-                property_value,
-                property_names,
-                metadata_element_type_name,
-                effective_time,
-                for_lineage,
-                for_duplicate_processing,
-                start_from,
-                page_size,
-                time_out,
-            )
+            self._async_get_elements_by_property_value(property_value, property_names, metadata_element_type_name,
+                                                       effective_time, for_lineage, for_duplicate_processing,
+                                                       start_from, page_size, time_out)
         )
         return self._generate_referenceable_output(
             elements=response,
             search_string=property_value,
             element_type_name=metadata_element_type_name,
             output_format=output_format,
-            output_format_set=output_format_set,
+            report_spec=report_spec,
         )
 
     async def async_find_elements_by_property_value(
@@ -574,7 +552,7 @@ class ClassificationManager(Client2):
             page_size: int = 0,
             time_out: int = default_time_out,
             output_format: str = "JSON",
-            output_format_set: dict | str = None,
+            report_spec: dict | str = None,
     ) -> list | str:
         """
         Retrieve elements by a value found in one of the properties specified. The value must only be contained in the
@@ -695,7 +673,7 @@ class ClassificationManager(Client2):
             for_duplicate_processing: bool = None,
             time_out: int = default_time_out,
             output_format: str = "JSON",
-            output_format_set: dict | str = None,
+            report_spec: dict | str = None,
     ) -> dict | str:
         """
         Retrieve element by its unique identifier.
@@ -742,7 +720,7 @@ class ClassificationManager(Client2):
             search_string=element_guid,
             element_type_name=None,
             output_format=output_format,
-            output_format_set=output_format_set,
+            report_spec=report_spec,
         )
 
     def get_actor_for_guid(self, guid: str) -> str:
@@ -980,7 +958,7 @@ class ClassificationManager(Client2):
         )
         return response
 
-    async def async_get_guid_for_name(
+    async def _async_get_guid_for_name(
             self, name: str
     ) -> list | str:
         """
@@ -1005,9 +983,7 @@ class ClassificationManager(Client2):
         """
 
         property_name = ["name", "displayName", "title", "qualifiedName"]
-        elements = await self.async_get_elements_by_property_value(
-            name, property_name, None
-        )
+        elements = await self._async_get_elements_by_property_value(name, property_name, None)
 
         if type(elements) is list:
             if len(elements) == 0:
@@ -1042,7 +1018,7 @@ class ClassificationManager(Client2):
 
         loop = asyncio.get_event_loop()
         response = loop.run_until_complete(
-            self.async_get_guid_for_name(name)
+            self._async_get_guid_for_name(name)
         )
         return response
 
@@ -1132,7 +1108,7 @@ class ClassificationManager(Client2):
             page_size: int = 0,
             time_out: int = default_time_out,
             output_format: str = "JSON",
-            output_format_set: dict | str = None,
+            report_spec: dict | str = None,
     ) -> list | str:
         """
         Retrieve elements by a value found in one of the properties specified.  The value must be contained in the
@@ -1193,7 +1169,7 @@ class ClassificationManager(Client2):
             search_string=property_value,
             element_type_name=metadata_element_type_name,
             output_format=output_format,
-            output_format_set=output_format_set,
+            report_spec=report_spec,
         )
 
     #
@@ -1280,7 +1256,7 @@ class ClassificationManager(Client2):
             page_size: int = 0,
             time_out: int = default_time_out,
             output_format: str = "JSON",
-            output_format_set: dict | str = None,
+            report_spec: dict | str = None,
     ) -> list | str:
         """
         Retrieve elements with the requested classification name. It is also possible to limit the results
@@ -1338,7 +1314,7 @@ class ClassificationManager(Client2):
             search_string=classification_name,
             element_type_name=metadata_element_type_name,
             output_format=output_format,
-            output_format_set=output_format_set,
+            report_spec=report_spec,
         )
 
     async def async_get_elements_by_classification_with_property_value(
@@ -1439,7 +1415,7 @@ class ClassificationManager(Client2):
             page_size: int = 0,
             time_out: int = default_time_out,
             output_format: str = "JSON",
-            output_format_set: dict | str = None,
+            report_spec: dict | str = None,
     ) -> list | str:
         """
         Retrieve elements by a value found in one of the properties specified.  The value must match exactly.
@@ -1502,7 +1478,7 @@ class ClassificationManager(Client2):
             search_string=property_value,
             element_type_name=metadata_element_type_name,
             output_format=output_format,
-            output_format_set=output_format_set,
+            report_spec=report_spec,
         )
 
     async def async_find_elements_by_classification_with_property_value(
@@ -1601,7 +1577,7 @@ class ClassificationManager(Client2):
             page_size: int = 0,
             time_out: int = default_time_out,
             output_format: str = "JSON",
-            output_format_set: dict | str = None,
+            report_spec: dict | str = None,
     ) -> list | str:
         """
         Retrieve elements with the requested classification name and with the requested a value found in
@@ -1666,7 +1642,7 @@ class ClassificationManager(Client2):
             search_string=property_value,
             element_type_name=metadata_element_type_name,
             output_format=output_format,
-            output_format_set=output_format_set,
+            report_spec=report_spec,
         )
 
     #
@@ -1771,7 +1747,7 @@ class ClassificationManager(Client2):
             page_size: int = 0,
             time_out: int = default_time_out,
             output_format: str = "JSON",
-            output_format_set: dict | str = None,
+            report_spec: dict | str = None,
     ) -> list | str:
         """
         Retrieve elements linked by relationship type name. If the relationship type is None, then all related elements
@@ -1835,10 +1811,10 @@ class ClassificationManager(Client2):
             search_string=(relationship_type or "AllRelationships"),
             element_type_name=metadata_element_type_name,
             output_format=output_format,
-            output_format_set=output_format_set,
+            report_spec=report_spec,
         )
 
-    async def async_get_related_elements_with_property_value(
+    async def _async_get_related_elements_with_property_value(
             self,
             element_guid: str,
             relationship_type: str,
@@ -1941,7 +1917,7 @@ class ClassificationManager(Client2):
             page_size: int = 0,
             time_out: int = default_time_out,
             output_format: str = "JSON",
-            output_format_set: dict | str = None,
+            report_spec: dict | str = None,
     ) -> list | str:
         """
         Retrieve elements linked via the requested relationship type name and with the requested a value found in one of
@@ -1991,7 +1967,7 @@ class ClassificationManager(Client2):
 
         loop = asyncio.get_event_loop()
         response = loop.run_until_complete(
-            self.async_get_related_elements_with_property_value(
+            self._async_get_related_elements_with_property_value(
                 element_guid,
                 relationship_type,
                 property_value,
@@ -2011,7 +1987,7 @@ class ClassificationManager(Client2):
             search_string=property_value,
             element_type_name=metadata_element_type_name,
             output_format=output_format,
-            output_format_set=output_format_set,
+            report_spec=report_spec,
         )
 
     async def async_find_related_elements_with_property_value(
@@ -2119,7 +2095,7 @@ class ClassificationManager(Client2):
             page_size: int = 0,
             time_out: int = default_time_out,
             output_format: str = "JSON",
-            output_format_set: dict | str = None,
+            report_spec: dict | str = None,
     ) -> list | str:
         """
         Retrieve elements linked via the requested relationship type name and with the requested a value found in one of
@@ -2190,7 +2166,7 @@ class ClassificationManager(Client2):
             search_string=property_value,
             element_type_name=metadata_element_type_name,
             output_format=output_format,
-            output_format_set=output_format_set,
+            report_spec=report_spec,
         )
 
     #

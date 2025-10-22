@@ -751,7 +751,7 @@ class TestSolutionArchitect:
 
             s_client.create_egeria_bearer_token()
             start_time = time.perf_counter()
-            response = s_client.find_solution_blueprints(search_string, output_format='JSON', output_format_set='Solution-Blueprint')
+            response = s_client.find_solution_blueprints(search_string, output_format='JSON', report_spec='Solution-Blueprint')
             duration = time.perf_counter() - start_time
             print(
                 f"\n\tDuration was {duration:.2f} seconds, Type: {type(response)}, Element count is {len(response)}"
@@ -1356,7 +1356,7 @@ class TestSolutionArchitect:
             s_client.close_session()
 
     def test_find_solution_components(self):
-        filter = "Data-Prep"
+        filter = "*"
         try:
             s_client = SolutionArchitect(
                 self.view_server, self.platform_url, self.user, self.password
@@ -1364,7 +1364,7 @@ class TestSolutionArchitect:
 
             s_client.create_egeria_bearer_token()
             start_time = time.perf_counter()
-            response = s_client.find_solution_components(filter, output_format='DICT', output_format_set="Solution-Component-DrE")
+            response = s_client.find_solution_components(filter, output_format='DICT', report_spec="Solution-Component-DrE")
             duration = time.perf_counter() - start_time
             print(
                 f"\n\tDuration was {duration:.2f} seconds, Type: {type(response)}, Element count is {len(response)}"

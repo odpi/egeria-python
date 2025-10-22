@@ -118,7 +118,7 @@ def test_get_security_tagged_elements():
                 "groupName": ["???"]
             }
         }
-        response = c_client.get_security_tagged_elements(body, output_format="DICT", output_format_set="Referenceable")
+        response = c_client.get_security_tagged_elements(body, output_format="DICT", report_spec="Referenceable")
 
         if type(response) is list:
             print(f"\n\tElement count is: {len(response)}")
@@ -148,7 +148,7 @@ def test_get_owners_elements():
             "filter": owner_name
         }
         response = c_client.get_owners_elements(owner_name, body, output_format="DICT",
-                                                output_format_set="Referenceable")
+                                                report_spec="Referenceable")
 
         if type(response) is list:
             print(f"\n\tElement count is: {len(response)}")
@@ -178,7 +178,7 @@ def test_get_elements_by_origin():
             "metadataElementTypeName": "ValidValueDefinition",
             "otherOriginValues": {"homeMetadataCollectionName": home_metadata_collection}
         }
-        response = c_client.get_elements_by_origin(body, output_format="JSON", output_format_set="Referenceable")
+        response = c_client.get_elements_by_origin(body, output_format="JSON", report_spec="Referenceable")
 
         if type(response) is list:
             print(f"\n\tElement count is: {len(response)}")
@@ -207,7 +207,7 @@ def test_get_elements():
         c_client = ClassificationManager(view_server, platform_url)
 
         bearer_token = c_client.create_egeria_bearer_token(user, password)
-        response = c_client.get_elements(open_metadata_type_name, output_format="DICT", output_format_set="Collections")
+        response = c_client.get_elements(open_metadata_type_name, output_format="DICT", report_spec="Collections")
 
         if type(response) is list:
             print(f"\n\tElement count is: {len(response)}")
@@ -244,9 +244,7 @@ def test_get_elements_by_property_value():
 
         bearer_token = c_client.create_egeria_bearer_token(user, password)
         start_time = time.perf_counter()
-        result = c_client.get_elements_by_property_value(
-            property_value, property_names, metadata_element_type_name
-        )
+        result = c_client.get_elements_by_property_value(property_value, property_names, metadata_element_type_name)
         duration = time.perf_counter() - start_time
         print(f"\n\tDuration was {duration} seconds")
         if type(result) is list:
@@ -286,7 +284,7 @@ def test_find_elements_by_property_value():
         start_time = time.perf_counter()
         result = c_client.find_elements_by_property_value(
             property_value, property_names, open_metadata_type_name,
-            output_format="DICT", output_format_set="Referenceable"
+            output_format="DICT", report_spec="Referenceable"
         )
         duration = time.perf_counter() - start_time
         print(f"\n\tDuration was {duration} seconds")
@@ -416,7 +414,7 @@ def test_get_element_by_unique_name():
 
         start_time = time.perf_counter()
         result = c_client.get_element_by_unique_name(property_value, "qualifiedName", output_format="DICT",
-                                                     output_format_set="Referenceable")
+                                                     report_spec="Referenceable")
         duration = time.perf_counter() - start_time
         print(f"\n\tDuration was {duration} seconds")
         if isinstance(result, list | dict):
@@ -441,7 +439,7 @@ def test_get_elements_by_classification():
 
     bearer_token = c_client.create_egeria_bearer_token(user, password)
     response = c_client.get_elements_by_classification(
-        classification, open_metadata_type_name, output_format="DICT", output_format_set="Collections"
+        classification, open_metadata_type_name, output_format="DICT", report_spec="Collections"
     )
 
     if type(response) is list:

@@ -12,7 +12,7 @@
         "types": [
           "TABLE"
         ],
-        "columns": [
+        "attributes": [
           {
             "name": "ID",
             "key": "id",
@@ -35,7 +35,7 @@
           "DETAIL",
           "FORM"
         ],
-        "columns": [
+        "attributes": [
           {
             "name": "ID",
             "key": "id",
@@ -78,7 +78,7 @@
           "TECHNICAL",
           "DICT"
         ],
-        "columns": [
+        "attributes": [
           {
             "name": "ID",
             "key": "id",
@@ -135,7 +135,7 @@
         "types": [
           "TABLE"
         ],
-        "columns": [
+        "attributes": [
           {
             "name": "ID",
             "key": "id",
@@ -158,7 +158,7 @@
           "DETAIL",
           "FORM"
         ],
-        "columns": [
+        "attributes": [
           {
             "name": "ID",
             "key": "id",
@@ -201,7 +201,7 @@
           "FULL",
           "REPORT"
         ],
-        "columns": [
+        "attributes": [
           {
             "name": "ID",
             "key": "id",

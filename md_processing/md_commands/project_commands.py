@@ -139,7 +139,7 @@ def process_project_upsert_command(egeria_client: EgeriaTech, txt: str, directiv
                     'guid': guid, 'display_name': display_name
                     })
                 return egeria_client.get_project_by_guid(guid, element_type='Project',
-                                                            output_format='MD', output_format_set = output_set)
+                                                            output_format='MD', report_spec = output_set)
 
 
             elif object_action == "Create":
@@ -170,7 +170,7 @@ def process_project_upsert_command(egeria_client: EgeriaTech, txt: str, directiv
                             })
                         msg = f"Created Element `{display_name}` with GUID {guid}\n\n___"
                         logger.success(msg)
-                        return egeria_client.get_project_by_guid(guid, output_format='MD', output_format_set = output_set)
+                        return egeria_client.get_project_by_guid(guid, output_format='MD', report_spec = output_set)
                     else:
                         msg = f"Failed to create element `{display_name}` with GUID {guid}\n\n___"
                         logger.error(msg)

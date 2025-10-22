@@ -26,12 +26,12 @@ from pyegeria.governance_officer import GovernanceOfficer
 from pyegeria.glossary_manager import GlossaryManager
 from pyegeria._globals import NO_ELEMENTS_FOUND
 from pyegeria.config import settings
-from pyegeria.external_references import ExternalReferences
+from pyegeria.external_links import ExternalReferences
 from pyegeria._exceptions_new import PyegeriaException
-from pyegeria._output_formats import (
-    select_output_format_set,
-    get_output_format_set_heading,
-    get_output_format_set_description,
+from pyegeria.base_report_formats import (
+    select_report_spec,
+    get_report_spec_heading,
+    get_report_spec_description,
 )
 
 
@@ -95,7 +95,7 @@ async def _async_run_report(
     user_pwd = egeria_client.user_pwd
 
     # Resolve the format set and action
-    fmt = select_output_format_set(report_name, output_format)
+    fmt = select_report_spec(report_name, output_format)
     if not fmt:
         raise ValueError(
             f"Output format set '{report_name}' does not have a compatible '{output_format}' format."
@@ -133,9 +133,9 @@ async def _async_run_report(
     # Include fixed specifics
     call_params.update(spec_params)
 
-    # Always include output_format and output_format_set for downstream rendering
+    # Always include output_format and report_spec for downstream rendering
     call_params["output_format"] = output_format
-    call_params["output_format_set"] = report_name
+    call_params["report_spec"] = report_name
 
     client_class, method_name = _resolve_client_and_method(func_decl)
 
@@ -173,8 +173,8 @@ async def _async_run_report(
             return {"kind": "empty"}
 
         # Prepare optional preamble for narrative outputs
-        heading = get_output_format_set_heading(report_name)
-        desc = get_output_format_set_description(report_name)
+        heading = get_report_spec_heading(report_name)
+        desc = get_report_spec_description(report_name)
         preamble = f"# {heading}\n{desc}\n\n" if heading and desc else ""
 
         if output_format in {"DICT", "JSON", "ALL"}:
@@ -201,7 +201,7 @@ async def _async_run_report(
 
 
 
-def exec_format_set(
+def exec_report_spec(
     format_set_name: str,
     *,
     output_format: str = "DICT",
@@ -224,7 +224,7 @@ def exec_format_set(
     params = dict(params or {})
 
     # Resolve the format set and action
-    fmt = select_output_format_set(format_set_name, output_format)
+    fmt = select_report_spec(format_set_name, output_format)
     if not fmt:
         raise ValueError(
             f"Output format set '{format_set_name}' does not have a compatible '{output_format}' format."
@@ -255,9 +255,9 @@ def exec_format_set(
     # Include fixed specifics
     call_params.update(spec_params)
 
-    # Always include output_format and output_format_set for downstream rendering
+    # Always include output_format and report_spec for downstream rendering
     call_params["output_format"] = output_format
-    call_params["output_format_set"] = format_set_name
+    call_params["report_spec"] = format_set_name
 
     client_class, method_name = _resolve_client_and_method(func_decl)
     client = client_class(view_server, view_url, user_id=user, user_pwd=user_pass)
@@ -276,8 +276,8 @@ def exec_format_set(
             return {"kind": "empty"}
 
         # Prepare optional preamble for narrative outputs
-        heading = get_output_format_set_heading(format_set_name)
-        desc = get_output_format_set_description(format_set_name)
+        heading = get_report_spec_heading(format_set_name)
+        desc = get_report_spec_description(format_set_name)
         preamble = f"# {heading}\n{desc}\n\n" if heading and desc else ""
 
         if output_format in {"DICT", "JSON", "ALL"}:

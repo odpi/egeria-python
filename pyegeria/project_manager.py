@@ -9,9 +9,9 @@ Copyright Contributors to the ODPi Egeria project.
 
 import asyncio
 
-from pyegeria._output_formats import select_output_format_set
+from pyegeria.base_report_formats import select_report_spec
 from pyegeria._client_new import Client2
-from pyegeria._output_formats import get_output_format_type_match
+from pyegeria.base_report_formats import get_report_spec_match
 from pyegeria.config import settings as app_settings
 from pyegeria.models import (SearchStringRequestBody, FilterRequestBody, GetRequestBody, NewElementRequestBody,
                              TemplateRequestBody, DeleteRequestBody, UpdateElementRequestBody,
@@ -50,7 +50,7 @@ class ProjectManager(Client2):
 
     Notes
     -----
-    - Most high-level list/report methods accept an `output_format` and an optional `output_format_set` and
+    - Most high-level list/report methods accept an `output_format` and an optional `report_spec` and
       delegate rendering to `pyegeria.output_formatter.generate_output` along with shared helpers such as
       `populate_common_columns`.
     - Private extractor methods follow the convention: `_extract_<entity>_properties(element, columns_struct)` and
@@ -79,7 +79,7 @@ class ProjectManager(Client2):
 
 
         roles_required = any(column.get('key') == 'project_roles'
-                             for column in columns_struct.get('formats', {}).get('columns', []))
+                             for column in columns_struct.get('formats', {}).get('attributes', []))
         project_props = {}
 
         if roles_required:
@@ -104,7 +104,7 @@ class ProjectManager(Client2):
         }
         # Common population pipeline
         col_data = populate_common_columns(element, columns_struct)
-        columns_list = col_data.get('formats', {}).get('columns', [])
+        columns_list = col_data.get('formats', {}).get('attributes', [])
         # Overlay extras (project roles) only where empty
         extra = self._extract_additional_project_properties(element, columns_struct)
         col_data = overlay_additional_values(col_data, extra)
@@ -114,19 +114,19 @@ class ProjectManager(Client2):
     def _generate_project_output(self, elements: dict | list[dict], search_string: str,
                                  element_type_name: str | None,
                                  output_format: str = 'DICT',
-                                 output_format_set: dict | str = None) -> str | list[dict]:
+                                 report_spec: dict | str = None) -> str | list[dict]:
         entity_type = 'Project'
-        if output_format_set:
-            if isinstance(output_format_set, str):
-                output_formats = select_output_format_set(output_format_set, output_format)
-            elif isinstance(output_format_set, dict):
-                output_formats = get_output_format_type_match(output_format_set, output_format)
+        if report_spec:
+            if isinstance(report_spec, str):
+                output_formats = select_report_spec(report_spec, output_format)
+            elif isinstance(report_spec, dict):
+                output_formats = get_report_spec_match(report_spec, output_format)
             else:
                 output_formats = None
         else:
-            output_formats = select_output_format_set(entity_type, output_format)
+            output_formats = select_report_spec(entity_type, output_format)
         if output_formats is None:
-            output_formats = select_output_format_set('Default', output_format)
+            output_formats = select_report_spec('Default', output_format)
         return generate_output(
             elements=elements,
             search_string=search_string,
@@ -146,7 +146,7 @@ class ProjectManager(Client2):
             parent_guid: str,
             body: dict | GetRequestBody = None,
             output_format: str = 'JSON',
-            output_format_set: str | dict = None,
+            report_spec: str | dict = None,
     ) -> list | str:
         """Returns the list of projects that are linked off of the supplied element. Any relationship will do.
              The request body is optional, but if supplied acts as a filter on project status. Async version.
@@ -159,7 +159,7 @@ class ProjectManager(Client2):
             Optionally, filter results by project status.
         output_format: str, default = "JSON"
             - Type of output to return.
-        output_format_set: dict | str, default = None
+        report_spec: dict | str, default = None
             - Output format set to use. If None, the default output format set is used.
 
         start_from: int, [default=0], optional
@@ -193,7 +193,7 @@ class ProjectManager(Client2):
         response = await self._async_get_guid_request(url, "Project", self._extract_project_properties,
                                                       body=body,
                                                       output_format=output_format,
-                                                      output_format_set=output_format_set)
+                                                      report_spec=report_spec)
         return response
 
     @dynamic_catch
@@ -202,7 +202,7 @@ class ProjectManager(Client2):
             parent_guid: str,
             body: dict | GetRequestBody = None,
             output_format: str = 'JSON',
-            output_format_set: str | dict = None) -> str | dict:
+            report_spec: str | dict = None) -> str | dict:
 
         """Returns the list of projects that are linked off of the supplied element. Any relationship will do.
              The request body is optional, but if supplied acts as a filter on project status.
@@ -217,7 +217,7 @@ class ProjectManager(Client2):
             Time at which to query for projects. Time format is "YYYY-MM-DDTHH:MM:SS" (ISO 8601).
         output_format: str, default = "JSON"
             - Type of output to return.
-        output_format_set: dict | str, default = None
+        report_spec: dict | str, default = None
             - Output format set to use. If None, the default output format set is used.
 
         start_from: int, [default=0], optional
@@ -248,7 +248,7 @@ class ProjectManager(Client2):
                 parent_guid,
                 body,
                 output_format,
-                output_format_set
+                report_spec
             )
         )
         return resp
@@ -260,7 +260,7 @@ class ProjectManager(Client2):
             start_from: int = 0,
             page_size: int = 0,
             output_format: str = 'JSON',
-            output_format_set: str | dict = None,
+            report_spec: str | dict = None,
             body: dict | GetRequestBody = None,) -> str | dict:
 
         """Returns the list of projects with a particular classification. The name of the classification is
@@ -303,7 +303,7 @@ class ProjectManager(Client2):
                                                       filter_string = project_classification, start_from=start_from,
                                                       page_size=page_size, body=body,
                                                       output_format=output_format,
-                                                      output_format_set=output_format_set)
+                                                      report_spec=report_spec)
         return response
 
     @dynamic_catch
@@ -313,7 +313,7 @@ class ProjectManager(Client2):
             start_from: int = 0,
             page_size: int = 0,
             output_format: str = 'JSON',
-            output_format_set: str | dict = None,
+            report_spec: str | dict = None,
             body: dict | GetRequestBody = None,
     ) -> str | dict:
         """Returns the list of projects with a particular classification. The name of the classification is
@@ -355,7 +355,7 @@ class ProjectManager(Client2):
                 start_from,page_size,
 
                 output_format,
-                output_format_set,
+                report_spec,
                 body
             )
         )
@@ -370,7 +370,7 @@ class ProjectManager(Client2):
             ignore_case: bool = False,
             start_from: int = 0,
             page_size: int = 0,
-            output_format: str = "json", output_format_set: str | dict = None,
+            output_format: str = "json", report_spec: str | dict = None,
             body: dict | SearchStringRequestBody = None
     ) -> list | str:
         """Returns the list of projects matching the search string.
@@ -426,7 +426,7 @@ class ProjectManager(Client2):
                                                   metadata_element_types=metadata_element_types,
                                                   starts_with=starts_with, ends_with=ends_with, ignore_case=ignore_case,
                                                   start_from=start_from, page_size=page_size,
-                                                  output_format=output_format, output_format_set=output_format_set,
+                                                  output_format=output_format, report_spec=report_spec,
                                                   body=body)
 
         return response
@@ -440,7 +440,7 @@ class ProjectManager(Client2):
             ignore_case: bool = False,
             start_from: int = 0,
             page_size: int = 0,
-            output_format: str = "json", output_format_set: str | dict = None,
+            output_format: str = "json", report_spec: str | dict = None,
             body: dict | SearchStringRequestBody = None
     ) -> list | str:
 
@@ -495,7 +495,7 @@ class ProjectManager(Client2):
                 start_from,
                 page_size,
                 output_format,
-                output_format_set,
+                report_spec,
                 body,
             )
         )
@@ -508,7 +508,7 @@ class ProjectManager(Client2):
             body: dict | FilterRequestBody = None,
             start_from: int = 0, page_size: int = 0,
             output_format: str = 'JSON',
-            output_format_set: str | dict = None) -> list | str:
+            report_spec: str | dict = None) -> list | str:
         url = f"{self.project_command_base}/by-name"
 
         response = await self._async_get_name_request(url, _type="Projects",
@@ -516,7 +516,7 @@ class ProjectManager(Client2):
                                                       filter_string=filter_string,
                                                       classification_names=classification_names,
                                                       start_from=start_from, page_size=page_size,
-                                                      output_format=output_format, output_format_set=output_format_set,
+                                                      output_format=output_format, report_spec=report_spec,
                                                       body=body)
 
         return response
@@ -527,7 +527,7 @@ class ProjectManager(Client2):
             body: dict | FilterRequestBody = None,
             start_from: int = 0, page_size: int = 0,
             output_format: str = 'JSON',
-            output_format_set: str | dict = None) -> list | str:
+            report_spec: str | dict = None) -> list | str:
 
         loop = asyncio.get_event_loop()
         resp = loop.run_until_complete(
@@ -538,7 +538,7 @@ class ProjectManager(Client2):
                 start_from,
                 page_size,
                 output_format,
-                output_format_set,
+                report_spec,
             )
         )
         return resp
@@ -547,7 +547,7 @@ class ProjectManager(Client2):
     async def _async_get_project_by_guid(self, project_guid: str, element_type: str = None,
                                          body: dict | GetRequestBody = None,
                                          output_format: str = 'JSON',
-                                         output_format_set: str | dict = None) -> dict | str:
+                                         report_spec: str | dict = None) -> dict | str:
         """Return the properties of a specific project. Async version.
 
             Parameters
@@ -560,7 +560,7 @@ class ProjectManager(Client2):
                 full request body.
             output_format: str, default = "JSON"
                 - one of "DICT", "MERMAID" or "JSON"
-            output_format_set: str | dict, optional, default = None
+            report_spec: str | dict, optional, default = None
                     The desired output columns/fields to include.
 
             Returns
@@ -597,7 +597,7 @@ class ProjectManager(Client2):
 
         response = await self._async_get_guid_request(url, _type=type,
                                                       _gen_output=self._generate_comment_output,
-                                                      output_format=output_format, output_format_set=output_format_set,
+                                                      output_format=output_format, report_spec=report_spec,
                                                       body=body)
 
         return response
@@ -606,7 +606,7 @@ class ProjectManager(Client2):
     def get_project_by_guid(self, project_guid: str, element_type: str = None,
                             body: dict | GetRequestBody = None,
                             output_format: str = 'JSON',
-                            output_format_set: str | dict = None) -> dict | str:
+                            report_spec: str | dict = None) -> dict | str:
         """Return the properties of a specific project.
 
             Parameters
@@ -619,7 +619,7 @@ class ProjectManager(Client2):
                 full request body.
             output_format: str, default = "JSON"
                 - one of "DICT", "MERMAID" or "JSON"
-            output_format_set: str | dict, optional, default = None
+            report_spec: str | dict, optional, default = None
                     The desired output columns/fields to include.
 
             Returns
@@ -651,7 +651,7 @@ class ProjectManager(Client2):
             """
         loop = asyncio.get_event_loop()
         resp = loop.run_until_complete(
-            self._async_get_project_by_guid(project_guid, element_type, body, output_format, output_format_set)
+            self._async_get_project_by_guid(project_guid, element_type, body, output_format, report_spec)
         )
 
         return resp
@@ -663,7 +663,7 @@ class ProjectManager(Client2):
             element_type: str = None,
             body: dict | GetRequestBody = None,
             output_format: str = 'JSON',
-            output_format_set: str | dict = None,
+            report_spec: str | dict = None,
     ) -> dict | str:
         """Return the mermaid graph of a specific project. Async version.
 
@@ -696,7 +696,7 @@ class ProjectManager(Client2):
 
         response = await self._async_get_guid_request(url, _type=element_type,
                                                       _gen_output=self._generate_comment_output,
-                                                      output_format=output_format, output_format_set=output_format_set,
+                                                      output_format=output_format, report_spec=report_spec,
                                                       body=body)
 
         return response
@@ -708,7 +708,7 @@ class ProjectManager(Client2):
             element_type: str = None,
             body: dict | GetRequestBody = None,
             output_format: str = 'JSON',
-            output_format_set: str | dict = None,
+            report_spec: str | dict = None,
     ) -> dict | str:
         """Return the mermaid graph of a specific project. Async version.
 
@@ -737,7 +737,7 @@ class ProjectManager(Client2):
         """
         loop = asyncio.get_event_loop()
         resp = loop.run_until_complete(
-            self._async_get_project_graph(project_guid, element_type, body, output_format, output_format_set)
+            self._async_get_project_graph(project_guid, element_type, body, output_format, report_spec)
         )
 
         return resp

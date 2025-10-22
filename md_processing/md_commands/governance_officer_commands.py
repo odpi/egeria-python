@@ -154,7 +154,7 @@ def process_gov_definition_upsert_command(egeria_client: EgeriaTech, txt: str,
                     egeria_client.update_element_status(guid, status)
                 logger.success(f"Updated {object_type} `{display_name}` with GUID {guid}")
                 return egeria_client.get_governance_definition_by_guid(guid, output_format='MD',
-                                                                       output_format_set=output_set)
+                                                                       report_spec=output_set)
 
             elif object_action == "Create":
                 if valid is False and exists:
@@ -175,7 +175,7 @@ def process_gov_definition_upsert_command(egeria_client: EgeriaTech, txt: str,
                     if guid:
                         logger.success(f"Created {object_type} `{display_name}` with GUID {guid}")
                         return egeria_client.get_governance_definition_by_guid(guid, output_format='MD',
-                                                                               output_format_set=output_set)
+                                                                               report_spec=output_set)
                     else:
                         logger.error(f"Failed to create {object_type} `{display_name}`.")
                         return None

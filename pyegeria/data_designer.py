@@ -12,7 +12,7 @@ import asyncio
 from loguru import logger
 
 from pyegeria._client_new import max_paging_size, Client2
-from pyegeria._output_formats import select_output_format_set, get_output_format_type_match
+from pyegeria.base_report_formats import select_report_spec, get_report_spec_match
 from pyegeria.models import (SearchStringRequestBody, FilterRequestBody, GetRequestBody, NewElementRequestBody,
                              TemplateRequestBody,
                              UpdateElementRequestBody, NewRelationshipRequestBody,
@@ -781,7 +781,7 @@ class DataDesigner(Client2):
         loop.run_until_complete(self._async_delete_data_field(data_struct_guid, body, cascade_delete))
 
     @dynamic_catch
-    def find_all_data_structures(self, output_format: str = 'JSON', output_format_set: str | dict = None) -> list | str:
+    def find_all_data_structures(self, output_format: str = 'JSON', report_spec: str | dict = None) -> list | str:
         """Returns a list of all known data structures. Async version.
 
         Parameters
@@ -789,7 +789,7 @@ class DataDesigner(Client2):
 
         output_format: str, default = "DICT"
             - output format of the data structure. Possible values: "DICT", "JSON", "MERMAID".
-        output_format_set: dict, optional, default = None
+        report_spec: dict, optional, default = None
             - The desired output columns/field options.
         Returns
         -------
@@ -808,14 +808,14 @@ class DataDesigner(Client2):
         """
 
         return self.find_data_structures(search_string="*", output_format=output_format,
-                                         output_format_set=output_format_set)
+                                         report_spec=report_spec)
 
     @dynamic_catch
     async def _async_find_data_structures(self, search_string: str, start_from: int = 0, page_size: int = 0,
                                           starts_with: bool = True, ends_with: bool = False, ignore_case: bool = True,
                                           body: dict | SearchStringRequestBody = None,
                                           output_format: str = 'JSON',
-                                          output_format_set: str | dict = None) -> list | str:
+                                          report_spec: str | dict = None) -> list | str:
         """ Find the list of data structure metadata elements that contain the search string.
             Async version.
 
@@ -835,7 +835,7 @@ class DataDesigner(Client2):
             - If True, the case of the search string is ignored.
         output_format: str, default = "DICT"
             - one of "DICT", "MERMAID" or "JSON"
-        output_format_set: dict|str, optional, default = None
+        report_spec: dict|str, optional, default = None
             - The desired output columns/field options.
         Returns
         -------
@@ -878,13 +878,13 @@ class DataDesigner(Client2):
                                               search_string, start_from=start_from, page_size=page_size,
                                               starts_with=starts_with, ends_with=ends_with, ignore_case=ignore_case,
                                               body=body, output_format=output_format,
-                                              output_format_set=output_format_set)
+                                              report_spec=report_spec)
 
     @dynamic_catch
     def find_data_structures(self, search_string: str, start_from: int = 0, page_size: int = 0,
                              starts_with: bool = True, ends_with: bool = False, ignore_case: bool = True,
                              body: dict | SearchStringRequestBody = None,
-                             output_format: str = 'JSON', output_format_set: str | dict = None) -> list | str:
+                             output_format: str = 'JSON', report_spec: str | dict = None) -> list | str:
         """ Find the list of data structure metadata elements that contain the search string.
 
         Parameters
@@ -903,7 +903,7 @@ class DataDesigner(Client2):
             - If True, the case of the search string is ignored.
         output_format: str, default = "DICT"
             - one of "DICT", "MERMAID" or "JSON"
-        output_format_set: dict|str, optional, default = None
+        report_spec: dict|str, optional, default = None
             - The desired output columns/field options.
         Returns
         -------
@@ -943,7 +943,7 @@ class DataDesigner(Client2):
         loop = asyncio.get_event_loop()
         response = loop.run_until_complete(
             self._async_find_data_structures(search_string, start_from, page_size, starts_with, ends_with, ignore_case,
-                                             body, output_format, output_format_set))
+                                             body, output_format, report_spec))
         return response
 
     @dynamic_catch
@@ -951,7 +951,7 @@ class DataDesigner(Client2):
                                                  body: dict | FilterRequestBody = None, start_from: int = 0,
                                                  page_size: int = 0,
                                                  output_format: str = 'JSON',
-                                                 output_format_set: str | dict = None) -> list | str:
+                                                 report_spec: str | dict = None) -> list | str:
         """ Get the list of data structure metadata elements with a matching name to the search string filter.
             Async version.
 
@@ -967,7 +967,7 @@ class DataDesigner(Client2):
             - maximum number of elements to return.
         output_format: str, default = "DICT"
             - one of "DICT", "MERMAID" or "JSON"
-        output_format_set: str | dict, optional, default = None
+        report_spec: str | dict, optional, default = None
             - The desired output columns/field options.
 
         Returns
@@ -1005,7 +1005,7 @@ class DataDesigner(Client2):
                                                       filter_string=filter_string,
                                                       classification_names=classification_names,
                                                       start_from=start_from, page_size=page_size,
-                                                      output_format=output_format, output_format_set=output_format_set,
+                                                      output_format=output_format, report_spec=report_spec,
                                                       body=body)
 
         return response
@@ -1014,7 +1014,7 @@ class DataDesigner(Client2):
     def get_data_structures_by_name(self, filter: str, classification_names: list[str] = None,
                                     body: dict | FilterRequestBody = None, start_from: int = 0,
                                     page_size: int = max_paging_size, output_format: str = 'JSON',
-                                    output_format_set: str | dict = None) -> list | str:
+                                    report_spec: str | dict = None) -> list | str:
         """ Get the list of data structure metadata elements with a matching name to the search string filter.
 
         Parameters
@@ -1029,7 +1029,7 @@ class DataDesigner(Client2):
             - maximum number of elements to return.
         output_format: str, default = "DICT"
          - one of "DICT", "MERMAID" or "JSON"
-        output_format_set: str | dict, optional, default = None
+        report_spec: str | dict, optional, default = None
             - The desired output columns/field options.
 
         Returns
@@ -1052,14 +1052,14 @@ class DataDesigner(Client2):
         loop = asyncio.get_event_loop()
         response = loop.run_until_complete(
             self._async_get_data_structures_by_name(filter, classification_names, body, start_from, page_size,
-                                                    output_format, output_format_set))
+                                                    output_format, report_spec))
         return response
 
     @dynamic_catch
     async def _async_get_data_structure_by_guid(self, guid: str, element_type: str = None,
                                                 body: dict | GetRequestBody = None,
                                                 output_format: str = 'JSON',
-                                                output_format_set: str | dict = None) -> list | str:
+                                                report_spec: str | dict = None) -> list | str:
         """ Get the  data structure metadata elements for the specified GUID.
             Async version.
 
@@ -1073,7 +1073,7 @@ class DataDesigner(Client2):
             - optional request body.
         output_format: str, default = "DICT"
          - one of "DICT", "MERMAID" or "JSON"
-        output_format_set: str | dict, optional, default = None
+        report_spec: str | dict, optional, default = None
             - The desired output columns/field options.
 
         Returns
@@ -1110,14 +1110,14 @@ class DataDesigner(Client2):
 
         response = await self._async_get_guid_request(url, _type=type,
                                                       _gen_output=self._generate_data_structure_output,
-                                                      output_format=output_format, output_format_set=output_format_set,
+                                                      output_format=output_format, report_spec=report_spec,
                                                       body=body)
 
         return response
 
     @dynamic_catch
     def get_data_structure_by_guid(self, guid: str, element_type: str = None, body: str = None,
-                                   output_format: str = 'JSON', output_format_set: str | dict = None) -> list | str:
+                                   output_format: str = 'JSON', report_spec: str | dict = None) -> list | str:
         """ Get the data structure metadata element with the specified unique identifier..
 
         Parameters
@@ -1130,7 +1130,7 @@ class DataDesigner(Client2):
             - optional request body.
         output_format: str, default = "DICT"
          - one of "DICT", "MERMAID" or "JSON"
-        output_format_set: str | dict, optional, default = None
+        report_spec: str | dict, optional, default = None
             - The desired output columns/field options.
 
         Returns
@@ -1163,7 +1163,7 @@ class DataDesigner(Client2):
 
         loop = asyncio.get_event_loop()
         response = loop.run_until_complete(
-            self._async_get_data_structure_by_guid(guid, element_type, body, output_format, output_format_set))
+            self._async_get_data_structure_by_guid(guid, element_type, body, output_format, report_spec))
         return response
 
     def get_data_memberships(self, data_get_fcn: callable, data_struct_guid: str) -> dict | None:
@@ -2225,7 +2225,7 @@ class DataDesigner(Client2):
 
     @dynamic_catch
     async def _async_find_all_data_fields(self, output_format: str = 'JSON',
-                                          output_format_set: str | dict = None) -> list | str:
+                                          report_spec: str | dict = None) -> list | str:
         """Returns a list of all known data fields. Async version.
 
         Parameters
@@ -2236,7 +2236,7 @@ class DataDesigner(Client2):
             - maximum number of elements to return.
         output_format: str, default = "DICT"
             - output format of the data structure. Possible values: "DICT", "JSON", "MERMAID".
-        output_format_set: str|dict, optional, default = None
+        report_spec: str|dict, optional, default = None
             - The desired output columns/field options.
 
         Returns
@@ -2256,10 +2256,10 @@ class DataDesigner(Client2):
         """
 
         return self.find_data_fields(search_string="*", output_format=output_format,
-                                     output_format_set=output_format_set)
+                                     report_spec=report_spec)
 
     @dynamic_catch
-    def find_all_data_fields(self, output_format: str = 'JSON', output_format_set: str | dict = None) -> list | str:
+    def find_all_data_fields(self, output_format: str = 'JSON', report_spec: str | dict = None) -> list | str:
         """ Returns a list of all known data fields.
 
         Parameters
@@ -2270,7 +2270,7 @@ class DataDesigner(Client2):
             - maximum number of elements to return.
         output_format: str, default = "DICT"
             - output format of the data structure. Possible values: "DICT", "JSON", "MERMAID".
-        output_format_set: str|dict, optional, default = None
+        report_spec: str|dict, optional, default = None
             - The desired output columns/field options.
 
         Returns
@@ -2291,14 +2291,14 @@ class DataDesigner(Client2):
 
         loop = asyncio.get_event_loop()
         response = loop.run_until_complete(
-            self._async_find_all_data_fields(output_format, output_format_set))
+            self._async_find_all_data_fields(output_format, report_spec))
         return response
 
     @dynamic_catch
     async def _async_find_data_fields(self, search_string: str, start_from: int = 0, page_size: int = 0,
                                       starts_with: bool = True, ends_with: bool = False, ignore_case: bool = True,
                                       body: dict | SearchStringRequestBody = None,
-                                      output_format: str = 'JSON', output_format_set: str | dict = None) -> list | str:
+                                      output_format: str = 'JSON', report_spec: str | dict = None) -> list | str:
         """ Find the list of data class elements that contain the search string.
             Async version.
 
@@ -2318,7 +2318,7 @@ class DataDesigner(Client2):
             - If True, the case of the search string is ignored.
         output_format: str, default = "DICT"
             - output format of the data structure. Possible values: "DICT", "JSON", "MERMAID".
-        output_format_set: str|dict, optional, default = None
+        report_spec: str|dict, optional, default = None
             - The desired output columns/field options.
 
         Returns
@@ -2343,13 +2343,13 @@ class DataDesigner(Client2):
                                               search_string, start_from=start_from, page_size=page_size,
                                               starts_with=starts_with, ends_with=ends_with, ignore_case=ignore_case,
                                               body=body, output_format=output_format,
-                                              output_format_set=output_format_set)
+                                              report_spec=report_spec)
 
     @dynamic_catch
     def find_data_fields(self, search_string: str, start_from: int = 0, page_size: int = max_paging_size,
                          starts_with: bool = True, ends_with: bool = False, ignore_case: bool = True,
                          body: dict | SearchStringRequestBody = None,
-                         output_format: str = 'JSON', output_format_set: str | dict = None) -> list | str:
+                         output_format: str = 'JSON', report_spec: str | dict = None) -> list | str:
         """ Retrieve the list of data fields elements that contain the search string filter.
 
         Parameters
@@ -2368,7 +2368,7 @@ class DataDesigner(Client2):
             - If True, the case of the search string is ignored.
         output_format: str, default = "DICT"
             - output format of the data structure. Possible values: "DICT", "JSON", "MERMAID".
-        output_format_set: str|dict, optional, default = None
+        report_spec: str|dict, optional, default = None
             - The desired output columns/field options.
 
         Returns
@@ -2391,7 +2391,7 @@ class DataDesigner(Client2):
         loop = asyncio.get_event_loop()
         response = loop.run_until_complete(
             self._async_find_data_fields(search_string, start_from, page_size, starts_with, ends_with, ignore_case,
-                                         body, output_format, output_format_set))
+                                         body, output_format, report_spec))
         return response
 
     @dynamic_catch
@@ -2399,7 +2399,7 @@ class DataDesigner(Client2):
                                              body: dict = None | FilterRequestBody, start_from: int = 0,
                                              page_size: int = 0,
                                              output_format: str = 'JSON',
-                                             output_format_set: str | dict = None) -> list | str:
+                                             report_spec: str | dict = None) -> list | str:
         """ Get the list of data class metadata elements with a matching name to the search string filter.
             Async version.
 
@@ -2415,7 +2415,7 @@ class DataDesigner(Client2):
             - maximum number of elements to return.
         output_format: str, default = "DICT"
             - output format of the data structure. Possible values: "DICT", "JSON", "MERMAID".
-        output_format_set: str|dict, optional, default = None
+        report_spec: str|dict, optional, default = None
             - The desired output columns/field options.
 
         Returns
@@ -2454,7 +2454,7 @@ class DataDesigner(Client2):
                                                       filter_string=filter_string,
                                                       classification_names=classification_names,
                                                       start_from=start_from, page_size=page_size,
-                                                      output_format=output_format, output_format_set=output_format_set,
+                                                      output_format=output_format, report_spec=report_spec,
                                                       body=body)
 
         return response
@@ -2463,7 +2463,7 @@ class DataDesigner(Client2):
     def get_data_fields_by_name(self, filter_string: str, classification_names: list[str] = None, body: dict = None,
                                 start_from: int = 0,
                                 page_size: int = max_paging_size, output_format: str = 'JSON',
-                                output_format_set: str | dict = None) -> list | str:
+                                report_spec: str | dict = None) -> list | str:
         """ Get the list of data class elements with a matching name to the search string filter.
 
         Parameters
@@ -2478,7 +2478,7 @@ class DataDesigner(Client2):
             - maximum number of elements to return.
         output_format: str, default = "DICT"
             - output format of the data structure. Possible values: "DICT", "JSON", "MERMAID".
-        output_format_set: str|dict, optional, default = None
+        report_spec: str|dict, optional, default = None
             - The desired output columns/field options.
 
         Returns
@@ -2515,14 +2515,14 @@ class DataDesigner(Client2):
         loop = asyncio.get_event_loop()
         response = loop.run_until_complete(
             self._async_get_data_fields_by_name(filter_string, classification_names, body, start_from, page_size,
-                                                output_format, output_format_set))
+                                                output_format, report_spec))
         return response
 
     @dynamic_catch
     async def _async_get_data_field_by_guid(self, guid: str, element_type: str = None,
                                             body: dict | GetRequestBody = None,
                                             output_format: str = 'JSON',
-                                            output_format_set: str | dict = None) -> list | str:
+                                            report_spec: str | dict = None) -> list | str:
         """ Get the  data class elements for the specified GUID.
             Async version.
 
@@ -2534,7 +2534,7 @@ class DataDesigner(Client2):
             - optional request body.
         output_format: str, default = "DICT"
             - output format of the data structure. Possible values: "DICT", "JSON", "MERMAID".
-        output_format_set: str|dict, optional, default = None
+        report_spec: str|dict, optional, default = None
             - The desired output columns/field options.
 
         Returns
@@ -2570,14 +2570,14 @@ class DataDesigner(Client2):
         type = element_type if element_type else "DataField"
         response = await self._async_get_guid_request(url, _type=type,
                                                       _gen_output=self._generate_data_field_output,
-                                                      output_format=output_format, output_format_set=output_format_set,
+                                                      output_format=output_format, report_spec=report_spec,
                                                       body=body)
 
         return response
 
     @dynamic_catch
     def get_data_field_by_guid(self, guid: str, element_type: str = None, body: str | GetRequestBody = None,
-                               output_format: str = 'JSON', output_format_set: str | dict = None) -> list | str:
+                               output_format: str = 'JSON', report_spec: str | dict = None) -> list | str:
         """ Get the  data structure metadata element with the specified unique identifier..
 
         Parameters
@@ -2588,7 +2588,7 @@ class DataDesigner(Client2):
             - optional request body.
         output_format: str, default = "DICT"
             - output format of the data structure. Possible values: "DICT", "JSON", "MERMAID".
-        output_format_set: str|dict, optional, default = None
+        report_spec: str|dict, optional, default = None
             - The desired output columns/field options.
 
         Returns
@@ -2621,7 +2621,7 @@ class DataDesigner(Client2):
 
         loop = asyncio.get_event_loop()
         response = loop.run_until_complete(self._async_get_data_field_by_guid(guid, element_type,
-                                                                              body, output_format, output_format_set))
+                                                                              body, output_format, report_spec))
         return response
 
     ###
@@ -3660,7 +3660,7 @@ class DataDesigner(Client2):
     @dynamic_catch
     async def _async_find_all_data_classes(self,
                                            output_format: str = 'JSON',
-                                           output_format_set: str | dict = None) -> list | str:
+                                           report_spec: str | dict = None) -> list | str:
         """ Returns a list of all data classes. Async version.
 
         Parameters
@@ -3671,7 +3671,7 @@ class DataDesigner(Client2):
             - maximum number of elements to return.
         output_format: str, default = "DICT"
             - output format of the data structure. Possible values: "DICT", "JSON", "MERMAID".
-        output_format_set: str|dict, optional, default = None
+        report_spec: str|dict, optional, default = None
             - The desired output columns/field options.
 
 
@@ -3694,11 +3694,11 @@ class DataDesigner(Client2):
         url = f"{base_path(self, self.view_server)}/data-classes/by-search-string"
 
         return self.find_data_classes(search_string="*", output_format=output_format,
-                                      output_format_set=output_format_set)
+                                      report_spec=report_spec)
 
     @dynamic_catch
     def find_all_data_classes(self,
-                              output_format: str = 'JSON', output_format_set: str | dict = None) -> list | str:
+                              output_format: str = 'JSON', report_spec: str | dict = None) -> list | str:
         """ Returns a list of all data classes.
 
         Parameters
@@ -3709,7 +3709,7 @@ class DataDesigner(Client2):
             - maximum number of elements to return.
         output_format: str, default = "DICT"
             - output format of the data structure. Possible values: "DICT", "JSON", "MERMAID".
-        output_format_set: str|dict, optional, default = None
+        report_spec: str|dict, optional, default = None
             - The desired output columns/field options.
 
         Returns
@@ -3730,13 +3730,13 @@ class DataDesigner(Client2):
 
         loop = asyncio.get_event_loop()
         response = loop.run_until_complete(
-            self._async_find_all_data_classes(output_format, output_format_set))
+            self._async_find_all_data_classes(output_format, report_spec))
         return response
 
     @dynamic_catch
     async def _async_find_data_classes(self, search_string: str, start_from: int = 0, page_size: int = max_paging_size,
                                        starts_with: bool = True, ends_with: bool = False, ignore_case: bool = True,
-                                       output_format: str = 'JSON', output_format_set: str | dict = None,
+                                       output_format: str = 'JSON', report_spec: str | dict = None,
                                        body: dict | SearchStringRequestBody = None) -> list | str:
         """ Find the list of data class elements that contain the search string.
             Async version.
@@ -3757,7 +3757,7 @@ class DataDesigner(Client2):
             - If True, the case of the search string is ignored.
         output_format: str, default = "DICT"
             - output format of the data structure. Possible values: "DICT", "JSON", "MERMAID".
-        output_format_set: str|dict, optional, default = None
+        report_spec: str|dict, optional, default = None
             - The desired output columns/field options.
 
 
@@ -3782,12 +3782,12 @@ class DataDesigner(Client2):
                                               search_string, start_from=start_from, page_size=page_size,
                                               starts_with=starts_with, ends_with=ends_with, ignore_case=ignore_case,
                                               body=body, output_format=output_format,
-                                              output_format_set=output_format_set)
+                                              report_spec=report_spec)
 
     @dynamic_catch
     def find_data_classes(self, search_string: str, start_from: int = 0, page_size: int = max_paging_size,
                           starts_with: bool = True, ends_with: bool = False, ignore_case: bool = True,
-                          output_format: str = 'JSON', output_format_set: str | dict = None,
+                          output_format: str = 'JSON', report_spec: str | dict = None,
                           body: dict | SearchStringRequestBody = None) -> list | str:
         """ Retrieve the list of data fields elements that contain the search string filter.
 
@@ -3807,7 +3807,7 @@ class DataDesigner(Client2):
             - If True, the case of the search string is ignored.
         output_format: str, default = "DICT"
             - output format of the data structure. Possible values: "DICT", "JSON", "MERMAID".
-        output_format_set: str|dict, optional, default = None
+        report_spec: str|dict, optional, default = None
             - The desired output columns/field options.
 
 
@@ -3831,7 +3831,7 @@ class DataDesigner(Client2):
         loop = asyncio.get_event_loop()
         response = loop.run_until_complete(
             self._async_find_data_classes(search_string, start_from, page_size, starts_with, ends_with, ignore_case,
-                                          output_format, output_format_set, body))
+                                          output_format, report_spec, body))
         return response
 
     @dynamic_catch
@@ -3839,7 +3839,7 @@ class DataDesigner(Client2):
                                               body: dict | FilterRequestBody = None, start_from: int = 0,
                                               page_size: int = 0,
                                               output_format: str = 'JSON',
-                                              output_format_set: str | dict = None) -> list | str:
+                                              report_spec: str | dict = None) -> list | str:
         """ Get the list of data class metadata elements with a matching name to the search string filter.
             Async version.
 
@@ -3855,7 +3855,7 @@ class DataDesigner(Client2):
             - maximum number of elements to return.
         output_format: str, default = "DICT"
             - output format of the data structure. Possible values: "DICT", "JSON", "MERMAID".
-        output_format_set: str|dict, optional, default = None
+        report_spec: str|dict, optional, default = None
             - The desired output columns/field options.
 
         Returns
@@ -3894,7 +3894,7 @@ class DataDesigner(Client2):
                                                       filter_string=filter_string,
                                                       classification_names=classification_names,
                                                       start_from=start_from, page_size=page_size,
-                                                      output_format=output_format, output_format_set=output_format_set,
+                                                      output_format=output_format, report_spec=report_spec,
                                                       body=body)
 
         return response
@@ -3903,7 +3903,7 @@ class DataDesigner(Client2):
     def get_data_classes_by_name(self, filter_string: str, classification_names: list[str] = None,
                                  body: dict | FilterRequestBody = None, start_from: int = 0,
                                  page_size: int = max_paging_size, output_format: str = 'JSON',
-                                 output_format_set: str | dict = None) -> list | str:
+                                 report_spec: str | dict = None) -> list | str:
         """ Get the list of data class elements with a matching name to the search string filter.
 
         Parameters
@@ -3918,7 +3918,7 @@ class DataDesigner(Client2):
             - maximum number of elements to return.
         output_format: str, default = "DICT"
             - output format of the data structure. Possible values: "DICT", "JSON", "MERMAID".
-        output_format_set: str|dict, optional, default = None
+        report_spec: str|dict, optional, default = None
             - The desired output columns/field options.
 
 
@@ -3955,7 +3955,7 @@ class DataDesigner(Client2):
         loop = asyncio.get_event_loop()
         response = loop.run_until_complete(
             self._async_get_data_classes_by_name(filter_string, classification_names, body,
-                                                 start_from, page_size, output_format, output_format_set
+                                                 start_from, page_size, output_format, report_spec
                                                  ))
         return response
 
@@ -3963,7 +3963,7 @@ class DataDesigner(Client2):
     async def _async_get_data_class_by_guid(self, guid: str, element_type: str = None,
                                             body: dict | GetRequestBody = None,
                                             output_format: str = 'JSON',
-                                            output_format_set: str | dict = None) -> list | str:
+                                            report_spec: str | dict = None) -> list | str:
         """ Get the  data class elements for the specified GUID.
             Async version.
 
@@ -3975,7 +3975,7 @@ class DataDesigner(Client2):
             - optional request body.
         output_format: str, default = "DICT"
             - output format of the data structure. Possible values: "DICT", "JSON", "MERMAID".
-        output_format_set: str|dict, optional, default = None
+        report_spec: str|dict, optional, default = None
             - The desired output columns/field options.
 
         Returns
@@ -4011,14 +4011,14 @@ class DataDesigner(Client2):
 
         response = await self._async_get_guid_request(url, _type=type,
                                                       _gen_output=self._generate_data_class_output,
-                                                      output_format=output_format, output_format_set=output_format_set,
+                                                      output_format=output_format, report_spec=report_spec,
                                                       body=body)
         return response
 
     @dynamic_catch
     def get_data_class_by_guid(self, guid: str, element_type: str = None, body: dict | FilterRequestBody = None,
                                output_format: str = 'JSON',
-                               output_format_set: str | dict = None) -> list | str:
+                               report_spec: str | dict = None) -> list | str:
         """ Get the  data structure metadata element with the specified unique identifier..
 
         Parameters
@@ -4029,7 +4029,7 @@ class DataDesigner(Client2):
             - optional request body.
         output_format: str, default = "DICT"
             - output format of the data structure. Possible values: "DICT", "JSON", "MERMAID".
-        output_format_set: str|dict, optional, default = None
+        report_spec: str|dict, optional, default = None
             - The desired output columns/field options.
 
         Returns
@@ -4062,7 +4062,7 @@ class DataDesigner(Client2):
 
         loop = asyncio.get_event_loop()
         response = loop.run_until_complete(
-            self._async_get_data_class_by_guid(guid, element_type, body, output_format, output_format_set))
+            self._async_get_data_class_by_guid(guid, element_type, body, output_format, report_spec))
         return response
 
     ###
@@ -4713,13 +4713,13 @@ class DataDesigner(Client2):
 
                 if targets:
                     for fmt in targets:
-                        cols = fmt.get("columns", []) if isinstance(fmt, dict) else []
+                        cols = fmt.get("attributes", []) if isinstance(fmt, dict) else []
                         for col in cols:
                             key = col.get("key") if isinstance(col, dict) else None
                             if key and key in related_map:
                                 col["value"] = related_map.get(key)
                 else:
-                    cols = col_data.get("columns", []) if isinstance(col_data, dict) else []
+                    cols = col_data.get("attributes", []) if isinstance(col_data, dict) else []
                     for col in cols:
                         key = col.get("key") if isinstance(col, dict) else None
                         if key and key in related_map:
@@ -4757,13 +4757,13 @@ class DataDesigner(Client2):
 
                 if targets:
                     for fmt in targets:
-                        cols = fmt.get("columns", []) if isinstance(fmt, dict) else []
+                        cols = fmt.get("attributes", []) if isinstance(fmt, dict) else []
                         for col in cols:
                             key = col.get("key") if isinstance(col, dict) else None
                             if key and key in related_map:
                                 col["value"] = related_map.get(key)
                 else:
-                    cols = col_data.get("columns", []) if isinstance(col_data, dict) else []
+                    cols = col_data.get("attributes", []) if isinstance(col_data, dict) else []
                     for col in cols:
                         key = col.get("key") if isinstance(col, dict) else None
                         if key and key in related_map:
@@ -4802,9 +4802,9 @@ class DataDesigner(Client2):
                 elif isinstance(formats, dict):
                     # Handle dict variant. It may be a single format dict or a wrapper containing 'formats'.
                     # Examples seen:
-                    #   { 'columns': [...] }
-                    #   { 'types': 'ALL', 'columns': [...] }
-                    #   { 'formats': { 'columns': [...] } }
+                    #   { 'attributes': [...] }
+                    #   { 'types': 'ALL', 'attributes': [...] }
+                    #   { 'formats': { 'attributes': [...] } }
                     inner = formats.get("formats") if isinstance(formats.get("formats"), dict | list) else None
                     if isinstance(inner, list):
                         targets = inner
@@ -4814,17 +4814,17 @@ class DataDesigner(Client2):
                         targets = [formats]
                 else:
                     targets = []
-
+        
                 if targets:
                     for fmt in targets:
-                        cols = fmt.get("columns", []) if isinstance(fmt, dict) else []
+                        cols = fmt.get("attributes", []) if isinstance(fmt, dict) else []
                         for col in cols:
                             key = col.get("key") if isinstance(col, dict) else None
                             if key and key in related_map:
                                 col["value"] = related_map.get(key)
                 else:
-                    # If columns are on the top-level (non-standard), attempt to handle gracefully
-                    cols = col_data.get("columns", []) if isinstance(col_data, dict) else []
+                    # If attributes are on the top-level (non-standard), attempt to handle gracefully
+                    cols = col_data.get("attributes", []) if isinstance(col_data, dict) else []
                     for col in cols:
                         key = col.get("key") if isinstance(col, dict) else None
                         if key and key in related_map:
@@ -4879,7 +4879,7 @@ class DataDesigner(Client2):
 
     def _generate_data_structure_output(self, elements: dict | list[dict], filter: str = None, type: str = None,
                                         output_format: str = "DICT",
-                                        output_format_set: str | dict = None) -> str | list:
+                                        report_spec: str | dict = None) -> str | list:
         """
         Generate output for data structures in the specified format.
 
@@ -4892,14 +4892,14 @@ class DataDesigner(Client2):
             Formatted output as string or list of dictionaries
         """
         entity_type = "Data Structure"
-        if output_format_set is None:
-            output_format_set = select_output_format_set(entity_type, output_format)
+        if report_spec is None:
+            report_spec = select_report_spec(entity_type, output_format)
 
-        if output_format_set:
-            if isinstance(output_format_set, str):
-                output_formats = select_output_format_set(output_format_set, output_format)
-            elif isinstance(output_format_set, dict):
-                output_formats = get_output_format_type_match(output_format_set, output_format)
+        if report_spec:
+            if isinstance(report_spec, str):
+                output_formats = select_report_spec(report_spec, output_format)
+            elif isinstance(report_spec, dict):
+                output_formats = get_report_spec_match(report_spec, output_format)
         else:
             output_formats = None
         logger.trace(f"Executing _generate_data_structure_output for {entity_type}: {output_formats}")
@@ -4913,7 +4913,7 @@ class DataDesigner(Client2):
                                )
 
     def _generate_data_class_output(self, elements: dict | list[dict], filter: str = None, type: str = None, output_format: str = "DICT",
-                                    output_format_set: str | dict = None) -> str | list:
+                                    report_spec: str | dict = None) -> str | list:
         """
         Generate output for data classes in the specified format.
 
@@ -4921,20 +4921,20 @@ class DataDesigner(Client2):
             elements: Dictionary or list of dictionaries containing data class elements
             filter: The search string used to find the elements
             output_format: The desired output format (MD, FORM, REPORT, LIST, DICT, MERMAID, HTML)
-            output_format_set: Optional output format set
+            report_spec: Optional output format set
                 - Option column/attribute selection and definition.
         Returns:
             Formatted output as either a string or list of dictionaries
         """
         entity_type = "Data Class"
-        if output_format_set is None:
-            output_format_set = select_output_format_set(entity_type, output_format)
+        if report_spec is None:
+            report_spec = select_report_spec(entity_type, output_format)
 
-        if output_format_set:
-            if isinstance(output_format_set, str):
-                output_formats = select_output_format_set(output_format_set, output_format)
-            if isinstance(output_format_set, dict):
-                output_formats = get_output_format_type_match(output_format_set, output_format)
+        if report_spec:
+            if isinstance(report_spec, str):
+                output_formats = select_report_spec(report_spec, output_format)
+            if isinstance(report_spec, dict):
+                output_formats = get_report_spec_match(report_spec, output_format)
         else:
             output_formats = None
         logger.trace(f"Executing _generate_data_class_output for {entity_type}: {output_formats}")
@@ -4948,7 +4948,7 @@ class DataDesigner(Client2):
                                )
 
     def _generate_data_field_output(self, elements: dict | list[dict], filter: str = None, type: str = None, output_format: str = "DICT",
-                                    output_format_set: str | dict = None) -> str | list:
+                                    report_spec: str | dict = None) -> str | list:
         """
         Generate output for data fields in the specified format.
 
@@ -4956,21 +4956,21 @@ class DataDesigner(Client2):
             elements: Dictionary or list of dictionaries containing data field elements
             filter: The search string used to find the elements
             output_format: The desired output format (MD, FORM, REPORT, LIST, DICT, MERMAID, HTML)
-            output_format_set: str|dict, Optional, default = None
+            report_spec: str|dict, Optional, default = None
             - Option column/attribute selection and definition.
 
         Returns:
             Formatted output as a string or list of dictionaries
         """
         entity_type = "Data Field"
-        if output_format_set is None:
-            output_format_set = select_output_format_set(entity_type, output_format)
+        if report_spec is None:
+            report_spec = select_report_spec(entity_type, output_format)
 
-        if output_format_set:
-            if isinstance(output_format_set, str):
-                output_formats = select_output_format_set(output_format_set, output_format)
-            if isinstance(output_format_set, dict):
-                output_formats = get_output_format_type_match(output_format_set, output_format)
+        if report_spec:
+            if isinstance(report_spec, str):
+                output_formats = select_report_spec(report_spec, output_format)
+            if isinstance(report_spec, dict):
+                output_formats = get_report_spec_match(report_spec, output_format)
         else:
             output_formats = None
         logger.trace(f"Executing _generate_data_field_output for {entity_type}: {output_formats}")

@@ -151,7 +151,7 @@ def display_command_terms(
             file_name = f"Command-Help-{time.strftime('%Y-%m-%d-%H-%M-%S')}-{action}.md"
             full_file_path = os.path.join(file_path, file_name)
             os.makedirs(os.path.dirname(full_file_path), exist_ok=True)
-            output = g_client.find_glossary_terms(search_string,  output_format=output_format, output_format_set="Help-Terms")
+            output = g_client.find_glossary_terms(search_string,  output_format=output_format, report_spec="Help-Terms")
             if output == "NO_TERMS_FOUND":
                 print(f"\n==> No commands found for search string '{search_string}'")
                 return

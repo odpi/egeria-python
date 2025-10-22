@@ -10,7 +10,7 @@
         "types": [
           "ALL"
         ],
-        "columns": [
+        "attributes": [
           {
             "name": "Display Name",
             "key": "display_name",
@@ -130,7 +130,7 @@
         "types": [
           "ALL"
         ],
-        "columns": [
+        "attributes": [
           {
             "name": "Display Name",
             "key": "display_name",
@@ -250,7 +250,7 @@
         "types": [
           "ALL"
         ],
-        "columns": [
+        "attributes": [
           {
             "name": "Display Name",
             "key": "display_name",
@@ -353,7 +353,7 @@
         "types": [
           "ALL"
         ],
-        "columns": [
+        "attributes": [
           {
             "name": "Display Name",
             "key": "display_name",
@@ -466,7 +466,7 @@
         "types": [
           "ALL"
         ],
-        "columns": [
+        "attributes": [
           {
             "name": "Display Name",
             "key": "display_name",
@@ -569,7 +569,7 @@
         "types": [
           "ALL"
         ],
-        "columns": [
+        "attributes": [
           {
             "name": "Display Name",
             "key": "display_name",
@@ -672,7 +672,7 @@
         "types": [
           "ALL"
         ],
-        "columns": [
+        "attributes": [
           {
             "name": "Display Name",
             "key": "display_name",
@@ -775,7 +775,7 @@
         "types": [
           "ALL"
         ],
-        "columns": [
+        "attributes": [
           {
             "name": "Display Name",
             "key": "display_name",
@@ -878,7 +878,7 @@
         "types": [
           "ALL"
         ],
-        "columns": [
+        "attributes": [
           {
             "name": "Display Name",
             "key": "display_name",
@@ -981,7 +981,7 @@
         "types": [
           "ALL"
         ],
-        "columns": [
+        "attributes": [
           {
             "name": "Display Name",
             "key": "display_name",
@@ -1084,7 +1084,7 @@
         "types": [
           "ALL"
         ],
-        "columns": [
+        "attributes": [
           {
             "name": "Display Name",
             "key": "display_name",
@@ -1197,7 +1197,7 @@
         "types": [
           "ALL"
         ],
-        "columns": [
+        "attributes": [
           {
             "name": "Display Name",
             "key": "display_name",
@@ -1300,7 +1300,7 @@
         "types": [
           "ALL"
         ],
-        "columns": [
+        "attributes": [
           {
             "name": "Display Name",
             "key": "display_name",
@@ -1403,7 +1403,7 @@
         "types": [
           "ALL"
         ],
-        "columns": [
+        "attributes": [
           {
             "name": "Display Name",
             "key": "display_name",
@@ -1511,7 +1511,7 @@
         "types": [
           "ALL"
         ],
-        "columns": [
+        "attributes": [
           {
             "name": "Display Name",
             "key": "display_name",
@@ -1619,7 +1619,7 @@
         "types": [
           "ALL"
         ],
-        "columns": [
+        "attributes": [
           {
             "name": "Display Name",
             "key": "display_name",
@@ -1727,7 +1727,7 @@
         "types": [
           "ALL"
         ],
-        "columns": [
+        "attributes": [
           {
             "name": "Display Name",
             "key": "display_name",
@@ -1835,7 +1835,7 @@
         "types": [
           "ALL"
         ],
-        "columns": [
+        "attributes": [
           {
             "name": "Display Name",
             "key": "display_name",
@@ -1943,7 +1943,7 @@
         "types": [
           "ALL"
         ],
-        "columns": [
+        "attributes": [
           {
             "name": "Display Name",
             "key": "display_name",
@@ -2046,7 +2046,7 @@
         "types": [
           "ALL"
         ],
-        "columns": [
+        "attributes": [
           {
             "name": "Display Name",
             "key": "display_name",
@@ -2154,7 +2154,7 @@
         "types": [
           "ALL"
         ],
-        "columns": [
+        "attributes": [
           {
             "name": "Display Name",
             "key": "display_name",
@@ -2257,7 +2257,7 @@
         "types": [
           "ALL"
         ],
-        "columns": [
+        "attributes": [
           {
             "name": "Display Name",
             "key": "display_name",
@@ -2360,7 +2360,7 @@
         "types": [
           "ALL"
         ],
-        "columns": [
+        "attributes": [
           {
             "name": "Display Name",
             "key": "display_name",
@@ -2520,7 +2520,7 @@
         "types": [
           "ALL"
         ],
-        "columns": [
+        "attributes": [
           {
             "name": "Display Name",
             "key": "display_name",
@@ -2630,7 +2630,7 @@
         "types": [
           "ALL"
         ],
-        "columns": [
+        "attributes": [
           {
             "name": "Display Name",
             "key": "display_name",
@@ -2683,7 +2683,7 @@
         "types": [
           "ALL"
         ],
-        "columns": [
+        "attributes": [
           {
             "name": "Display Name",
             "key": "display_name",
@@ -2781,7 +2781,7 @@
         "types": [
           "ALL"
         ],
-        "columns": [
+        "attributes": [
           {
             "name": "Display Name",
             "key": "display_name",
@@ -2866,7 +2866,7 @@
         "types": [
           "ALL"
         ],
-        "columns": [
+        "attributes": [
           {
             "name": "Display Name",
             "key": "display_name",
@@ -2934,7 +2934,7 @@
         "types": [
           "ALL"
         ],
-        "columns": [
+        "attributes": [
           {
             "name": "Display Name",
             "key": "display_name",
@@ -3007,7 +3007,7 @@
         "types": [
           "ALL"
         ],
-        "columns": [
+        "attributes": [
           {
             "name": "Display Name",
             "key": "display_name",
@@ -3050,7 +3050,7 @@
         "types": [
           "ALL"
         ],
-        "columns": [
+        "attributes": [
           {
             "name": "Display Name",
             "key": "display_name",
@@ -3093,7 +3093,7 @@
         "types": [
           "ALL"
         ],
-        "columns": [
+        "attributes": [
           {
             "name": "Display Name",
             "key": "display_name",
@@ -3151,7 +3151,7 @@
         "types": [
           "ALL"
         ],
-        "columns": [
+        "attributes": [
           {
             "name": "Display Name",
             "key": "display_name",
@@ -3284,7 +3284,7 @@
         "types": [
           "ALL"
         ],
-        "columns": [
+        "attributes": [
           {
             "name": "Display Name",
             "key": "display_name",
@@ -3417,7 +3417,7 @@
         "types": [
           "ALL"
         ],
-        "columns": [
+        "attributes": [
           {
             "name": "Display Name",
             "key": "display_name",
@@ -3485,7 +3485,7 @@
         "types": [
           "ALL"
         ],
-        "columns": [
+        "attributes": [
           {
             "name": "Display Name",
             "key": "display_name",
@@ -3543,7 +3543,7 @@
         "types": [
           "ALL"
         ],
-        "columns": [
+        "attributes": [
           {
             "name": "Display Name",
             "key": "display_name",
@@ -3631,7 +3631,7 @@
         "types": [
           "ALL"
         ],
-        "columns": [
+        "attributes": [
           {
             "name": "Name",
             "key": "name",
@@ -3694,7 +3694,7 @@
         "types": [
           "ALL"
         ],
-        "columns": [
+        "attributes": [
           {
             "name": "Display Name",
             "key": "display_name",
@@ -3742,7 +3742,7 @@
         "types": [
           "ALL"
         ],
-        "columns": [
+        "attributes": [
           {
             "name": "Display Name",
             "key": "term_name",
@@ -3815,7 +3815,7 @@
         "types": [
           "ALL"
         ],
-        "columns": [
+        "attributes": [
           {
             "name": "Display Name",
             "key": "display_name",
@@ -3925,7 +3925,7 @@
         "types": [
           "ALL"
         ],
-        "columns": [
+        "attributes": [
           {
             "name": "Display Name",
             "key": "display_name",
@@ -4035,7 +4035,7 @@
         "types": [
           "ALL"
         ],
-        "columns": [
+        "attributes": [
           {
             "name": "Display Name",
             "key": "display_name",

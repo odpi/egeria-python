@@ -66,7 +66,7 @@ class TestReferenceDataManager:
             search_string = "*"
 
             response = p_client.find_valid_value_definitions(
-                search_string, output_format="DICT", output_format_set="Valid-Value-Def"
+                search_string, output_format="DICT", report_spec="Valid-Value-Def"
             )
             duration = time.perf_counter() - start_time
 
@@ -135,7 +135,7 @@ class TestReferenceDataManager:
             start_time = time.perf_counter()
             guid = "8fbc6e7f-ac2f-47b6-8a31-f42ea92868ae"
 
-            response = p_client.get_valid_value_definition_by_guid(guid, output_format="DICT", output_format_set="Valid-Value-Def")
+            response = p_client.get_valid_value_definition_by_guid(guid, output_format="DICT", report_spec="Valid-Value-Def")
             duration = time.perf_counter() - start_time
             duration = time.perf_counter() - start_time
 

@@ -22,7 +22,7 @@ from pyegeria._validators import validate_guid, validate_name, validate_search_s
 # )
 from pyegeria.models import GetRequestBody, FilterRequestBody, SearchStringRequestBody
 from pyegeria.utils import body_slimmer
-from pyegeria._output_formats import select_output_format_set, get_output_format_type_match
+from pyegeria.base_report_formats import select_report_format, get_report_spec_match
 from pyegeria.output_formatter import (
     generate_output,
     _extract_referenceable_properties,
@@ -95,7 +95,7 @@ class AutomatedCuration(Client2):
         #     or element.get("elementType", {}).get("typeName")
         #     or ""
         # )
-        columns_list = columns_struct.get("formats", {}).get("columns", [])
+        columns_list = columns_struct.get("formats", {}).get("attributes", [])
 
         guid = element.get('technologyTypeGUID',None)
         qualified_name = element.get('qualifiedName',None)
@@ -136,7 +136,7 @@ class AutomatedCuration(Client2):
             elif column.get("key") == "ref_url":
                 column["value"] = external_references[0]['relatedElement']['properties'].get('url',"")
 
-        columns_struct["formats"]["columns"] = columns_list
+        columns_struct["formats"]["attributes"] = columns_list
         return columns_struct
 
     def _generate_tech_type_output(
@@ -145,25 +145,28 @@ class AutomatedCuration(Client2):
         filter: str | None,
         element_type_name: str | None,
         output_format: str = "DICT",
-        output_format_set: dict | str | None = None,
+        report_spec: dict | str | None = None,
+        **kwargs,
     ) -> str | list[dict]:
         """Generate output for technology types in the specified format."""
         entity_type = element_type_name or self.TECH_TYPE_ENTITY_LABEL
 
-        # Resolve output format set
+        # Resolve report format (with backward-compatible legacy kwarg)
         get_additional_props_func = None
-        if output_format_set:
-            if isinstance(output_format_set, str):
-                output_formats = select_output_format_set(output_format_set, output_format)
+        if report_spec is None and isinstance(kwargs, dict) and 'report_spec' in kwargs:
+            report_spec = kwargs.get('report_spec')
+        if report_spec:
+            if isinstance(report_spec, str):
+                output_formats = select_report_format(report_spec, output_format)
             else:
-                output_formats = get_output_format_type_match(output_format_set, output_format)
+                output_formats = get_report_spec_match(report_spec, output_format)
         elif element_type_name:
-            output_formats = select_output_format_set(element_type_name, output_format)
+            output_formats = select_report_format(element_type_name, output_format)
         else:
-            output_formats = select_output_format_set(entity_type, output_format)
+            output_formats = select_report_format(entity_type, output_format)
 
         if output_formats is None:
-            output_formats = select_output_format_set("Default", output_format)
+            output_formats = select_report_format("Default", output_format)
 
         # Optional hook for extra server calls to enrich rows
         get_additional_props_name = (
@@ -187,7 +190,7 @@ class AutomatedCuration(Client2):
 
     def _extract_gov_action_type_properties(self, element: dict, columns_struct: dict) -> dict:
         col_data = populate_columns_from_properties(element, columns_struct)
-        columns_list = col_data.get("formats", {}).get("columns", [])
+        columns_list = col_data.get("formats", {}).get("attributes", [])
         header_props = _extract_referenceable_properties(element)
         for column in columns_list:
             key = column.get("key")
@@ -205,20 +208,23 @@ class AutomatedCuration(Client2):
 
     def _generate_gov_action_type_output(self, elements: dict | list[dict], filter: str | None,
                                          element_type_name: str | None, output_format: str = "DICT",
-                                         output_format_set: dict | str | None = None) -> str | list[dict]:
+                                         report_format: dict | str | None = None,
+                                         **kwargs) -> str | list[dict]:
         entity_type = element_type_name or self.GOV_ACTION_TYPE_LABEL
         get_additional_props_func = None
-        if output_format_set:
-            if isinstance(output_format_set, str):
-                output_formats = select_output_format_set(output_format_set, output_format)
+        if report_format is None and isinstance(kwargs, dict) and 'report_spec' in kwargs:
+            report_format = kwargs.get('report_spec')
+        if report_format:
+            if isinstance(report_format, str):
+                output_formats = select_report_format(report_format, output_format)
             else:
-                output_formats = get_output_format_type_match(output_format_set, output_format)
+                output_formats = get_report_spec_match(report_format, output_format)
         elif element_type_name:
-            output_formats = select_output_format_set(element_type_name, output_format)
+            output_formats = select_report_format(element_type_name, output_format)
         else:
-            output_formats = select_output_format_set(entity_type, output_format)
+            output_formats = select_report_format(entity_type, output_format)
         if output_formats is None:
-            output_formats = select_output_format_set("Default", output_format)
+            output_formats = select_report_format("Default", output_format)
         get_additional_props_name = (
             output_formats.get("get_additional_props", {}).get("function") if output_formats else None
         )
@@ -238,7 +244,7 @@ class AutomatedCuration(Client2):
 
     def _extract_catalog_target_properties(self, element: dict, columns_struct: dict) -> dict:
         col_data = populate_columns_from_properties(element, columns_struct)
-        columns_list = col_data.get("formats", {}).get("columns", [])
+        columns_list = col_data.get("formats", {}).get("attributes", [])
         header_props = _extract_referenceable_properties(element)
         for column in columns_list:
             key = column.get("key")
@@ -256,20 +262,23 @@ class AutomatedCuration(Client2):
 
     def _generate_catalog_target_output(self, elements: dict | list[dict], filter: str | None,
                                         element_type_name: str | None, output_format: str = "DICT",
-                                        output_format_set: dict | str | None = None) -> str | list[dict]:
+                                        report_format: dict | str | None = None,
+                                        **kwargs) -> str | list[dict]:
         entity_type = element_type_name or self.CATALOG_TARGET_LABEL
         get_additional_props_func = None
-        if output_format_set:
-            if isinstance(output_format_set, str):
-                output_formats = select_output_format_set(output_format_set, output_format)
+        if report_format is None and isinstance(kwargs, dict) and 'report_spec' in kwargs:
+            report_format = kwargs.get('report_spec')
+        if report_format:
+            if isinstance(report_format, str):
+                output_formats = select_report_format(report_format, output_format)
             else:
-                output_formats = get_output_format_type_match(output_format_set, output_format)
+                output_formats = get_report_spec_match(report_format, output_format)
         elif element_type_name:
-            output_formats = select_output_format_set(element_type_name, output_format)
+            output_formats = select_report_format(element_type_name, output_format)
         else:
-            output_formats = select_output_format_set(entity_type, output_format)
+            output_formats = select_report_format(entity_type, output_format)
         if output_formats is None:
-            output_formats = select_output_format_set("Default", output_format)
+            output_formats = select_report_format("Default", output_format)
         return generate_output(
             elements,
             filter,
@@ -282,7 +291,7 @@ class AutomatedCuration(Client2):
 
     def _extract_engine_action_properties(self, element: dict, columns_struct: dict) -> dict:
         col_data = populate_columns_from_properties(element, columns_struct)
-        columns_list = col_data.get("formats", {}).get("columns", [])
+        columns_list = col_data.get("formats", {}).get("attributes", [])
         header_props = _extract_referenceable_properties(element)
         for col in columns_list:
             key = col.get("key")
@@ -331,20 +340,20 @@ class AutomatedCuration(Client2):
 
     def _generate_engine_action_output(self, elements: dict | list[dict], filter: str | None,
                                        element_type_name: str | None, output_format: str = "DICT",
-                                       output_format_set: dict | str | None = None) -> str | list[dict]:
+                                       report_spec: dict | str | None = None) -> str | list[dict]:
         entity_type = element_type_name or self.ENGINE_ACTION_LABEL
         get_additional_props_func = None
-        if output_format_set:
-            if isinstance(output_format_set, str):
-                output_formats = select_output_format_set(output_format_set, output_format)
+        if report_spec:
+            if isinstance(report_spec, str):
+                output_formats = select_report_format(report_spec, output_format)
             else:
-                output_formats = get_output_format_type_match(output_format_set, output_format)
+                output_formats = get_report_spec_match(report_spec, output_format)
         elif element_type_name:
-            output_formats = select_output_format_set(element_type_name, output_format)
+            output_formats = select_report_format(element_type_name, output_format)
         else:
-            output_formats = select_output_format_set(entity_type, output_format)
+            output_formats = select_report_format(entity_type, output_format)
         if output_formats is None:
-            output_formats = select_output_format_set("Default", output_format)
+            output_formats = select_report_format("Default", output_format)
         get_additional_props_name = (
             output_formats.get("get_additional_props", {}).get("function") if output_formats else None
         )
@@ -364,7 +373,7 @@ class AutomatedCuration(Client2):
 
     def _extract_gov_action_process_properties(self, element: dict, columns_struct: dict) -> dict:
         col_data = populate_columns_from_properties(element, columns_struct)
-        columns_list = col_data.get("formats", {}).get("columns", [])
+        columns_list = col_data.get("formats", {}).get("attributes", [])
         header_props = _extract_referenceable_properties(element)
         for col in columns_list:
             key = col.get("key")
@@ -399,20 +408,20 @@ class AutomatedCuration(Client2):
 
     def _generate_gov_action_process_output(self, elements: dict | list[dict], filter: str | None,
                                             element_type_name: str | None, output_format: str = "DICT",
-                                            output_format_set: dict | str | None = None) -> str | list[dict]:
+                                            report_spec: dict | str | None = None) -> str | list[dict]:
         entity_type = element_type_name or self.GOV_ACTION_PROCESS_LABEL
         get_additional_props_func = None
-        if output_format_set:
-            if isinstance(output_format_set, str):
-                output_formats = select_output_format_set(output_format_set, output_format)
+        if report_spec:
+            if isinstance(report_spec, str):
+                output_formats = select_report_format(report_spec, output_format)
             else:
-                output_formats = get_output_format_type_match(output_format_set, output_format)
+                output_formats = get_report_spec_match(report_spec, output_format)
         elif element_type_name:
-            output_formats = select_output_format_set(element_type_name, output_format)
+            output_formats = select_report_format(element_type_name, output_format)
         else:
-            output_formats = select_output_format_set(entity_type, output_format)
+            output_formats = select_report_format(entity_type, output_format)
         if output_formats is None:
-            output_formats = select_output_format_set("Default", output_format)
+            output_formats = select_report_format("Default", output_format)
         return generate_output(
             elements,
             filter,
@@ -1812,7 +1821,7 @@ class AutomatedCuration(Client2):
 
     async def _async_get_active_engine_actions(
             self, start_from: int = 0, page_size: int = 0,
-            output_format: str = "JSON", output_format_set: str | dict = "EngineAction",
+            output_format: str = "JSON", report_spec: str | dict = "EngineAction",
     ) -> list | str:
         """Retrieve the engine actions that are still in process. Async Version.
 
@@ -1850,14 +1859,14 @@ class AutomatedCuration(Client2):
             return "No Actions Found"
 
         if output_format.upper() != 'JSON':  # return a simplified markdown representation
-            # logger.info(f"Found elements, output format: {output_format} and output_format_set: {output_format_set}")
+            # logger.info(f"Found elements, output format: {output_format} and report_spec: {report_spec}")
             return self._generate_engine_action_output(elements, None, "EngineAction",
-                               output_format, output_format_set)
+                               output_format, report_spec)
         return elements
 
     def get_active_engine_actions(
             self, start_from: int = 0, page_size: int = 0,
-            output_format: str = "JSON", output_format_set: str | dict = "EngineAction",
+            output_format: str = "JSON", report_spec: str | dict = "EngineAction",
     ) -> list | str:
         """Retrieve the engine actions that are still in process.
 
@@ -1885,7 +1894,7 @@ class AutomatedCuration(Client2):
         loop = asyncio.get_event_loop()
         response = loop.run_until_complete(
             self._async_get_active_engine_actions(start_from, page_size,
-                                                  output_format=output_format, output_format_set=output_format_set)
+                                                  output_format=output_format, report_spec=report_spec)
         )
         return response
 
@@ -1979,7 +1988,7 @@ class AutomatedCuration(Client2):
             start_from: int = 0,
             page_size: int = 0,
             output_format: str = "JSON",
-            output_format_set: str | dict = "EngineAction",
+            report_spec: str | dict = "EngineAction",
     ) -> list | str:
         """Retrieve the list of engine action metadata elements that contain the search string. Async Version.
         Parameters
@@ -2036,7 +2045,7 @@ class AutomatedCuration(Client2):
             start_from=start_from,
             page_size=page_size,
             output_format=output_format,
-            output_format_set=output_format_set,
+            report_spec=report_spec,
             body=None,
         )
 
@@ -2049,7 +2058,7 @@ class AutomatedCuration(Client2):
             start_from: int = 0,
             page_size: int = 0,
             output_format: str = "JSON",
-            output_format_set: str | dict = "EngineAction",
+            report_spec: str | dict = "EngineAction",
     ) -> list | str:
         """Retrieve the list of engine action metadata elements that contain the search string.
         Parameters
@@ -2098,7 +2107,7 @@ class AutomatedCuration(Client2):
                 start_from,
                 page_size,
                 output_format=output_format,
-                output_format_set=output_format_set,
+                report_spec=report_spec,
             )
         )
         return response
@@ -2802,7 +2811,7 @@ class AutomatedCuration(Client2):
             start_from: int = 0,
             page_size: int = 0,
             output_format: str = "JSON",
-            output_format_set: str | dict = "CatalogTarget",
+            report_spec: str | dict = "CatalogTarget",
     ) -> list | str:
         """Retrieve the details of the metadata elements identified as catalog targets with an integration connector.
         Async version.
@@ -2836,7 +2845,7 @@ class AutomatedCuration(Client2):
             return elements
         return self._generate_catalog_target_output(elements, None, self.CATALOG_TARGET_LABEL,
                                                     output_format=output_format,
-                                                    output_format_set=output_format_set)
+                                                    report_spec=report_spec)
 
     def get_catalog_targets(
             self,
@@ -2844,7 +2853,7 @@ class AutomatedCuration(Client2):
             start_from: int = 0,
             page_size: int = 0,
             output_format: str = "JSON",
-            output_format_set: str | dict = "CatalogTarget",
+            report_spec: str | dict = "CatalogTarget",
     ) -> list | str:
         """Retrieve the details of the metadata elements identified as catalog targets with an integration connector.
 
@@ -2868,13 +2877,13 @@ class AutomatedCuration(Client2):
         response = loop.run_until_complete(
             self._async_get_catalog_targets(integ_connector_guid, start_from, page_size,
                                             output_format=output_format,
-                                            output_format_set=output_format_set)
+                                            report_spec=report_spec)
         )
         return response
 
     async def _async_get_catalog_target(self, relationship_guid: str,
                                         output_format: str = "JSON",
-                                        output_format_set: str | dict = "CatalogTarget",
+                                        report_spec: str | dict = "CatalogTarget",
                                         body: dict | GetRequestBody = None) -> dict | str:
         """Retrieve a specific catalog target associated with an integration connector. Further Information:
         https://egeria-project.org/concepts/integration-connector/ .    Async version.
@@ -2904,14 +2913,14 @@ class AutomatedCuration(Client2):
             _type=self.CATALOG_TARGET_LABEL,
             _gen_output=self._generate_catalog_target_output,
             output_format=output_format,
-            output_format_set=output_format_set,
+            report_spec=report_spec,
             body=body,
         )
         return response
 
     def get_catalog_target(self, relationship_guid: str,
                            output_format: str = "JSON",
-                           output_format_set: str | dict = "CatalogTarget",
+                           report_spec: str | dict = "CatalogTarget",
                            body: dict | GetRequestBody = None) -> dict | str:
         """Retrieve a specific catalog target associated with an integration connector.  Further Information:
         https://egeria-project.org/concepts/integration-connector/ .
@@ -2937,7 +2946,7 @@ class AutomatedCuration(Client2):
         response = loop.run_until_complete(
             self._async_get_catalog_target(relationship_guid,
                                            output_format=output_format,
-                                           output_format_set=output_format_set,
+                                           report_spec=report_spec,
                                            body=body)
         )
         return response
@@ -3325,7 +3334,7 @@ class AutomatedCuration(Client2):
     async def _async_get_technology_type_detail(self, type_name: str,
                                                 body: dict | FilterRequestBody = None,
                                                 output_format: str = "JSON",
-                                                output_format_set: str | dict = "TechType") -> list | str:
+                                                report_spec: str | dict = "TechType") -> list | str:
         """Retrieve the details of the named technology type. This name should be the name of the technology type
             and contain no wild cards. Async version.
         Parameters
@@ -3380,15 +3389,15 @@ class AutomatedCuration(Client2):
             return NO_ELEMENTS_FOUND
 
         if output_format != 'JSON':  # return a simplified markdown representation
-            logger.info(f"Found elements, output format: {output_format} and output_format_set: {output_format_set}")
+            logger.info(f"Found elements, output format: {output_format} and report_spec: {report_spec}")
             return self._generate_tech_type_output(element, type_name, "ValidMetadataValue",
-                               output_format, output_format_set)
+                               output_format, report_spec)
         return element
 
     def get_technology_type_detail(self, type_name: str,
                                    body: dict | FilterRequestBody = None,
                                    output_format: str = "JSON",
-                                   output_format_set: str | dict = "TechType") -> list | str:
+                                   report_spec: str | dict = "TechType") -> list | str:
         """Retrieve the details of the named technology type. This name should be the name of the technology type
                  and contain no wild cards.
              Parameters
@@ -3432,7 +3441,7 @@ class AutomatedCuration(Client2):
         response = loop.run_until_complete(
             self._async_get_technology_type_detail(type_name, body=body,
                                                    output_format=output_format,
-                                                   output_format_set=output_format_set)
+                                                   report_spec=report_spec)
         )
         return response
 
@@ -3460,7 +3469,7 @@ class AutomatedCuration(Client2):
             ends_with: bool = False,
             ignore_case: bool = True,
             output_format: str = "JSON",
-            output_format_set: str | dict = "TechType"
+            report_spec: str | dict = "TechType"
     ) -> list | str:
         """Retrieve the list of technology types that contain the search string. Async version.
 
@@ -3525,9 +3534,9 @@ class AutomatedCuration(Client2):
             return NO_ELEMENTS_FOUND
 
         if output_format.upper() != 'JSON':  # return a simplified markdown representation
-            # logger.info(f"Found elements, output format: {output_format} and output_format_set: {output_format_set}")
+            # logger.info(f"Found elements, output format: {output_format} and report_spec: {report_spec}")
             return self._generate_tech_type_output(elements, search_string, "TechType",
-                                                   output_format, output_format_set)
+                                                   output_format, report_spec)
         return elements
 
 
@@ -3540,7 +3549,7 @@ class AutomatedCuration(Client2):
             ends_with: bool = False,
             ignore_case: bool = True,
             output_format: str = "JSON",
-            output_format_set: str | dict = "TechType",
+            report_spec: str | dict = "TechType",
     ) -> list | str:
         """Retrieve the list of technology types that contain the search string. Async version.
 
@@ -3575,7 +3584,7 @@ class AutomatedCuration(Client2):
                 ends_with,
                 ignore_case,
                 output_format,
-                output_format_set
+                report_spec
             )
         )
         return response
@@ -3589,7 +3598,7 @@ class AutomatedCuration(Client2):
             ends_with: bool = False,
             ignore_case: bool = True,
             output_format: str = "JSON",
-            output_format_set: str | dict = "TechType",
+            report_spec: str | dict = "TechType",
             body: dict | SearchStringRequestBody = None
     ) -> list | str:
         """Retrieve the list of technology types that contain the search string. Async version.
@@ -3641,7 +3650,7 @@ class AutomatedCuration(Client2):
                                                   metadata_element_types='ValidMetadataValue',
                                                   starts_with=starts_with, ends_with=ends_with, ignore_case=ignore_case,
                                                   start_from=start_from, page_size=page_size,
-                                                  output_format=output_format, output_format_set=output_format_set,
+                                                  output_format=output_format, report_spec=report_spec,
                                                   body=body)
 
         return response
@@ -3693,16 +3702,16 @@ class AutomatedCuration(Client2):
         return response
 
     async def _async_get_all_technology_types(
-            self, start_from: int = 0, page_size: int = 0, output_format: str = "JSON", output_format_set: str = "TechType"
+            self, start_from: int = 0, page_size: int = 0, output_format: str = "JSON", report_spec: str = "TechType"
     ) -> list | str:
         """Get all technology types - async version"""
-        return await self._async_find_technology_types("*", start_from, page_size, output_format, output_format_set)
+        return await self._async_find_technology_types("*", start_from, page_size, output_format, report_spec)
 
     def get_all_technology_types(
-            self, start_from: int = 0, page_size: int = 0, output_format: str = "JSON", output_format_set: str = "TechType"
+            self, start_from: int = 0, page_size: int = 0, output_format: str = "JSON", report_spec: str = "TechType"
     ) -> list | str:
         """Get all technology types"""
-        return self.find_technology_types("*", start_from, page_size, output_format, output_format_set)
+        return self.find_technology_types("*", start_from, page_size, output_format, report_spec)
 
     def print_engine_action_summary(self, governance_action: dict):
         """print_governance_action_summary

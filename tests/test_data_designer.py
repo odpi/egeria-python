@@ -12,7 +12,7 @@ A running Egeria environment is needed to run these tests.
 """
 
 import json
-import time
+import time, os
 
 from rich import print, print_json
 from rich.console import Console
@@ -27,8 +27,12 @@ from pyegeria._exceptions import (
     )
 from pyegeria._exceptions_new import PyegeriaException, print_basic_exception, print_exception_table
 from pyegeria.data_designer import DataDesigner
+from pyegeria.config import settings
 
 disable_ssl_warnings = True
+PLATFORM_URL = settings.Environment.egeria_platform_url
+VIEW_SERVER = settings.Environment.egeria_view_server
+USER_PWD = os.environ.get("EGERIA_USER_PASSWORD", "secret")
 
 
 console = Console(width=250)
@@ -47,17 +51,19 @@ def valid_guid(guid):
         return True
 
 
-from unit_test._helpers import PLATFORM_URL, VIEW_SERVER, USER_ID, USER_PWD, require_local_server, make_client
+EGERIA_USER = os.environ.get("EGERIA_USER", "erinoverview")
+EGERIA_USER_PASSWORD = os.environ.get("EGERIA_USER_PASSWORD", "secret")
+USER_PWD = EGERIA_USER_PASSWORD
+
+
 import pytest
 
-@pytest.fixture(autouse=True)
-def _ensure_server():
-    require_local_server()
+
 
 class TestDataDesigner:
     platform_url = PLATFORM_URL
     view_server = VIEW_SERVER
-    user = USER_ID
+    user = EGERIA_USER
     password = USER_PWD
 
     #
@@ -227,7 +233,7 @@ class TestDataDesigner:
             "aliases": [],
 
             "formats": [{'types': ["ALL"],
-                "columns": [
+                "attributes": [
                     {'name': 'Name', 'key': 'display_name'},
                     {'name': 'Qualified Name', 'key': 'qualified_name', 'format': True},
                     {'name': 'Super Category', 'key': 'category'},
@@ -245,7 +251,7 @@ class TestDataDesigner:
 
             m_client.create_egeria_bearer_token(self.user, self.password)
             start_time = time.perf_counter()
-            response = m_client.find_all_data_structures(output_format="REPORT", output_format_set = "Data Structures")
+            response = m_client.find_all_data_structures(output_format="REPORT", report_spec = "Data Structures")
             duration = time.perf_counter() - start_time
             print(
                 f"\n\tDuration was {duration:.2f} seconds, Type: {type(response)}"
@@ -266,11 +272,11 @@ class TestDataDesigner:
             m_client.close_session()
 
     def test_find_data_structures(self):
-        output_format_set = {
+        report_spec = {
             "heading": "data structs",
             "description": "structs generic to all Agreements.",
             "formats": [{"types": "ALL",
-                "columns": [
+                "attributes": [
                     {'name': 'Name', 'key': 'display_name'},
                     {'name': 'Qualified Name', 'key': 'qualified_name', 'format': True},
                     {'name': 'Super Category', 'key': 'category'},
@@ -289,7 +295,7 @@ class TestDataDesigner:
             start_time = time.perf_counter()
             search_string = "*"
             response = m_client.find_data_structures(search_string, output_format="DICT",
-                                                     output_format_set=output_format_set)
+                                                     report_spec=report_spec)
             duration = time.perf_counter() - start_time
             print(
                 f"\n\tDuration was {duration:.2f} seconds, Type: {type(response)}"
@@ -373,7 +379,7 @@ class TestDataDesigner:
 
             m_client.create_egeria_bearer_token(self.user, self.password)
             start_time = time.perf_counter()
-            response = m_client.get_data_structure_by_guid(guid, output_format="REPORT", output_format_set="Mandy-DataStruct")
+            response = m_client.get_data_structure_by_guid(guid, output_format="REPORT", report_spec="Mandy-DataStruct")
             duration = time.perf_counter() - start_time
             print(
                 f"\n\tDuration was {duration:.2f} seconds, Type: {type(response)}"
@@ -462,7 +468,7 @@ class TestDataDesigner:
 
             m_client.create_egeria_bearer_token(self.user, self.password)
             start_time = time.perf_counter()
-            response = m_client.find_all_data_fields(output_format="REPORT", output_format_set="DataFields")
+            response = m_client.find_all_data_fields(output_format="REPORT", report_spec="DataFields")
             duration = time.perf_counter() - start_time
             print(
                 f"\n\tDuration was {duration:.2f} seconds, Type: {type(response)}"
@@ -489,7 +495,7 @@ class TestDataDesigner:
 
             m_client.create_egeria_bearer_token(self.user, self.password)
             start_time = time.perf_counter()
-            response = m_client.get_data_fields_by_name(filter_string=name, output_format="DICT", output_format_set="DataField-DrE")
+            response = m_client.get_data_fields_by_name(filter_string=name, output_format="DICT", report_spec="DataField-DrE")
             duration = time.perf_counter() - start_time
             print(
                 f"\n\tDuration was {duration:.2f} seconds, Type: {type(response)}"
@@ -516,7 +522,7 @@ class TestDataDesigner:
 
             m_client.create_egeria_bearer_token(self.user, self.password)
             start_time = time.perf_counter()
-            response = m_client.get_data_field_by_guid(guid, output_format="JSON", output_format_set="DataField-DrE")
+            response = m_client.get_data_field_by_guid(guid, output_format="JSON", report_spec="DataField-DrE")
             duration = time.perf_counter() - start_time
             print(
                 f"\n\tDuration was {duration:.2f} seconds, Type: {type(response)}"
@@ -811,7 +817,7 @@ class TestDataDesigner:
 
             m_client.create_egeria_bearer_token(self.user, self.password)
             start_time = time.perf_counter()
-            response = m_client.find_all_data_classes(output_format="DICT", output_format_set="DataClass-DrE")
+            response = m_client.find_all_data_classes(output_format="DICT", report_spec="DataClass-DrE")
             duration = time.perf_counter() - start_time
             print(
                 f"\n\tDuration was {duration:.2f} seconds, Type: {type(response)}"
@@ -840,7 +846,7 @@ class TestDataDesigner:
             # search_string = "DataClass::ISO-Date"
             search_string = "*"
             start_time = time.perf_counter()
-            response = m_client.find_data_classes(search_string,output_format="DICT", output_format_set="DataClass-DrE")
+            response = m_client.find_data_classes(search_string,output_format="DICT", report_spec="DataClass-DrE")
             duration = time.perf_counter() - start_time
             print(
                 f"\n\tDuration was {duration:.2f} seconds, Type: {type(response)}"

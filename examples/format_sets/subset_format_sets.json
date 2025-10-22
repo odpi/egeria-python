@@ -23,7 +23,7 @@
         "types": [
           "DICT"
         ],
-        "columns": [
+        "attributes": [
           {
             "name": "Display Name",
             "key": "display_name",
@@ -70,7 +70,7 @@
         "types": [
           "TABLE"
         ],
-        "columns": [
+        "attributes": [
           {
             "name": "Display Name",
             "key": "display_name",
@@ -97,7 +97,7 @@
         "types": [
           "ALL"
         ],
-        "columns": [
+        "attributes": [
           {
             "name": "Display Name",
             "key": "display_name",
@@ -148,7 +148,7 @@
         "types": [
           "ALL"
         ],
-        "columns": [
+        "attributes": [
           {
             "name": "Display Name",
             "key": "display_name",

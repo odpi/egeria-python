@@ -8,7 +8,7 @@ Example script demonstrating how to use the Pydantic models for output formats.
 This script shows how to:
 1. Create custom columns, formats, and format sets
 2. Compose formats by reusing columns
-3. Add a custom format set to the output_format_sets dictionary
+3. Add a custom format set to the report_specs dictionary
 4. Use the functions in _output_formats.py with the new models
 """
 
@@ -19,13 +19,13 @@ import os
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 from pyegeria._output_format_models import Column, Format, ActionParameter, FormatSet
-from pyegeria._output_formats import (
-    output_format_sets,
-    select_output_format_set,
-    output_format_set_list,
-    get_output_format_set_heading,
-    get_output_format_set_description,
-    get_output_format_type_match,
+from pyegeria.base_report_formats import (
+    report_specs,
+    select_report_spec,
+    report_spec_list,
+    get_report_spec_heading,
+    get_report_spec_description,
+    get_report_spec_match,
 )
 
 def create_custom_format_set():
@@ -112,19 +112,19 @@ def create_custom_format_set():
 
 def add_format_set_to_dictionary(format_set):
     """
-    Add a format set to the output_format_sets dictionary.
+    Add a format set to the report_specs dictionary.
     
     This demonstrates how to add a custom format set to the
-    output_format_sets dictionary for use with the functions
+    report_specs dictionary for use with the functions
     in _output_formats.py.
     """
     print("\n=== Adding format set to dictionary ===")
     
-    # Add the format set to the output_format_sets dictionary
-    output_format_sets["CustomExample"] = format_set
+    # Add the format set to the report_specs dictionary
+    report_specs["CustomExample"] = format_set
     
     # Verify that the format set was added
-    format_sets = output_format_set_list()
+    format_sets = report_spec_list()
     if "CustomExample" in format_sets:
         print("Format set successfully added to the dictionary!")
         print(f"Available format sets: {format_sets}")
@@ -141,7 +141,7 @@ def use_output_format_functions():
     print("\n=== Using output format functions ===")
     
     # Get a format set by name
-    format_set = select_output_format_set("CustomExample", "TABLE")
+    format_set = select_report_spec("CustomExample", "TABLE")
     if format_set:
         print("Successfully retrieved format set by name!")
         print(f"Heading: {format_set['heading']}")
@@ -150,7 +150,7 @@ def use_output_format_functions():
         print("Failed to retrieve format set by name.")
     
     # Get a format set by alias
-    format_set = select_output_format_set("Example", "TABLE")
+    format_set = select_report_spec("Example", "TABLE")
     if format_set:
         print("\nSuccessfully retrieved format set by alias!")
         print(f"Heading: {format_set['heading']}")
@@ -159,14 +159,14 @@ def use_output_format_functions():
         print("\nFailed to retrieve format set by alias.")
     
     # Get the heading and description of a format set
-    heading = get_output_format_set_heading("CustomExample")
-    description = get_output_format_set_description("CustomExample")
+    heading = get_report_spec_heading("CustomExample")
+    description = get_report_spec_description("CustomExample")
     print(f"\nHeading: {heading}")
     print(f"Description: {description}")
     
     # Match a format set with a specific output type
-    format_set = select_output_format_set("CustomExample", "ANY")
-    matched_format_set = get_output_format_type_match(format_set, "DETAIL")
+    format_set = select_report_spec("CustomExample", "ANY")
+    matched_format_set = get_report_spec_match(format_set, "DETAIL")
     if matched_format_set and "formats" in matched_format_set:
         print("\nSuccessfully matched format set with output type!")
         print(f"Output type: {matched_format_set['formats']['types']}")
@@ -181,7 +181,7 @@ def main():
     # Create a custom format set
     custom_format_set = create_custom_format_set()
     
-    # Add the format set to the output_format_sets dictionary
+    # Add the format set to the report_specs dictionary
     add_format_set_to_dictionary(custom_format_set)
     
     # Use the functions in _output_formats.py with the new models

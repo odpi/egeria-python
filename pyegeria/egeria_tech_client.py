@@ -6,7 +6,7 @@ Runtime manager is a view service that supports user interaction with the runnin
 
 """
 from pyegeria.automated_curation import AutomatedCuration
-from pyegeria.classification_manager_omvs import ClassificationManager
+from pyegeria.classification_manager import ClassificationManager
 from pyegeria.data_designer import DataDesigner
 from pyegeria.egeria_cat_client import EgeriaCat
 from pyegeria.metadata_explorer_omvs import MetadataExplorer
@@ -17,7 +17,7 @@ from pyegeria.template_manager_omvs import TemplateManager
 from pyegeria.valid_metadata_omvs import ValidMetadataManager
 from pyegeria.governance_officer import GovernanceOfficer
 from pyegeria.collection_manager import CollectionManager
-from pyegeria.external_references import ExternalReferences
+from pyegeria.external_links import ExternalReferences
 from pyegeria._globals import NO_ELEMENTS_FOUND
 
 class EgeriaTech:

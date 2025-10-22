@@ -36,7 +36,7 @@ config_logging()
 out_struct = {
             "formats": {
                 "types": ["ALL"],
-                "columns": [
+                "attributes": [
                     {'name': 'display_name', 'key': 'display_name'},
                     {'name': 'qualified_name', 'key': 'qualified_name', 'format': True},
                     {'name': 'description', 'key': 'description', 'format': True},
@@ -139,7 +139,7 @@ def display_collections(
 
         collections = m_client.find_collections(
             search_string.strip(), None, ["Collection"],True, False, ignore_case=True,
-            output_format = "DICT", output_format_set=out_struct
+            output_format = "DICT", report_spec=out_struct
         )
         if type(collections) is list:
 

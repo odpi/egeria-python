@@ -18,8 +18,9 @@ import time
 from contextlib import nullcontext as does_not_raise
 
 import pytest
+from pydantic import ValidationError
 
-from pyegeria import Client2, PyegeriaException, print_basic_exception
+from pyegeria import Client2, PyegeriaException, print_basic_exception, print_validation_error
 from pyegeria._exceptions import (
     InvalidParameterException,
     PropertyServerException,
@@ -45,7 +46,8 @@ fm_client = Client2(view_server, TESTING_EGERIA_PLATFORM_URL, user)
 
 bearer_token = fm_client.create_egeria_bearer_token(user, password)
 
-term_guid = "25791bdf-9301-46e0-9546-8596d5734572"
+element_guid = "fb6dd0e5-afe1-4144-9b7d-e4559e7b09d2"
+term_guid = element_guid
 
 tag_for_testing = {
     "isPrivateTag": False,
@@ -186,6 +188,19 @@ def valid_guid(guid):
         return True
 
 
+def test_add_comment_reply_with_private_reply():
+    try:
+        comment_response = fm_client.add_comment_to_element(element_guid, body=standard_comment)
+        reply_response = fm_client.add_comment_reply(
+            term_guid, comment_response, body=reply_comment
+        )
+        fm_client.remove_comment(comment_response,reply_response)
+        fm_client.remove_comment(element_guid, comment_response)
+        assert reply_response["relatedHTTPCode"] == 200
+        assert reply_response["class"] == "GUIDResponse"
+        assert "guid" in reply_response
+    except PyegeriaException as e:
+        print_basic_exception(e)
 #
 ## test_add_comment_reply test
 #
@@ -194,23 +209,14 @@ def test_add_comment_reply():
     reply_response = fm_client.add_comment_reply(
         term_guid, comment_response["guid"], body=reply_comment
     )
-    fm_client.remove_comment_from_element(reply_response["guid"])
-    fm_client.remove_comment_from_element(comment_response["guid"])
+    fm_client.remove_comment(element_guid,reply_response["guid"])
+    fm_client.remove_comment(comment_response["guid"])
     assert reply_response["relatedHTTPCode"] == 200
     assert reply_response["class"] == "GUIDResponse"
     assert "guid" in reply_response
 
 
-def test_add_comment_reply_with_private_reply():
-    comment_response = fm_client.add_comment_to_element(term_guid, body=standard_comment)
-    reply_response = fm_client.add_comment_reply(
-        term_guid, comment_response["guid"], body=reply_comment, is_public=False
-    )
-    fm_client.remove_comment_from_element(reply_response["guid"])
-    fm_client.remove_comment_from_element(comment_response["guid"])
-    assert reply_response["relatedHTTPCode"] == 200
-    assert reply_response["class"] == "GUIDResponse"
-    assert "guid" in reply_response
+
 
 
 def test_add_comment_reply_with_access_service_specified():
@@ -221,8 +227,8 @@ def test_add_comment_reply_with_access_service_specified():
         body=reply_comment,
         access_service_url_marker="asset-manager",
     )
-    fm_client.remove_comment_from_element(reply_response["guid"])
-    fm_client.remove_comment_from_element(comment_response["guid"])
+    fm_client.remove_note_log(reply_response["guid"])
+    fm_client.remove_note_log(comment_response["guid"])
     assert reply_response["relatedHTTPCode"] == 200
     assert reply_response["class"] == "GUIDResponse"
     assert "guid" in reply_response
@@ -235,7 +241,7 @@ def test_add_comment_to_element():
 
     try:
         response = fm_client.add_comment_to_element(term_guid, body=standard_comment)
-        fm_client.remove_comment_from_element(response["guid"])
+        fm_client.remove_note_log(response["guid"])
         assert response["relatedHTTPCode"] == 200
         assert response["class"] == "GUIDResponse"
         assert "guid" in response
@@ -243,6 +249,14 @@ def test_add_comment_to_element():
         print_basic_exception(e)
     except InvalidParameterException as e:
         print_exception_response(e)
+
+
+def test_add_comment_to_element_live():
+    guid = "d52a42e9-87a1-4382-aa0e-d0a3a63465f6"
+    comment = "My simple command interface for Egeria"
+    comment_type = "STANDARD_COMMENT"
+    response = fm_client.add_comment_to_element(guid, comment, comment_type)
+    print(response)
 
 
 #
@@ -292,8 +306,8 @@ def test_clear_accepted_answer():
     response = fm_client.clear_accepted_answer(
         question_comment_response["guid"], answer_comment_response["guid"]
     )
-    fm_client.remove_comment_from_element(answer_comment_response["guid"])
-    fm_client.remove_comment_from_element(question_comment_response["guid"])
+    fm_client.remove_note_log(answer_comment_response["guid"])
+    fm_client.remove_note_log(question_comment_response["guid"])
     assert response["relatedHTTPCode"] == 200
     assert response["class"] == "VoidResponse"
 
@@ -428,7 +442,7 @@ def test_find_note_logs_with_no_no_note_and_details():
 def test_find_notes():
     note_log_response = fm_client.create_note_log(term_guid, body=notelog_for_testing)
     response = fm_client.create_note(note_log_response["guid"], body=note_for_testing)
-    response = fm_client.find_notes({"filter": ""})
+    response = fm_client.find_notes(body={"filter": ""}, output_format="JSON")
     assert "class" in response[0]
     assert "qualifiedName" in response[0]
     assert "guid" in response[0]
@@ -440,7 +454,7 @@ def test_find_notes_detailed():
     note_response = fm_client.create_note(
         note_log_response["guid"], body=note_for_testing
     )
-    response = fm_client.find_notes({"filter": ""}, detailed_response=True)
+    response = fm_client.find_notes(body={"filter": ""}, output_format="JSON")
     assert response["relatedHTTPCode"] == 200
     assert response["class"] == "NotesResponse"
     assert "elementList" in response
@@ -448,15 +462,13 @@ def test_find_notes_detailed():
 
 
 def test_find_notes_with_no_notes():
-    response = fm_client.find_notes({"filter": ""}, starts_with=True)
+    response = fm_client.find_notes(body={"filter": ""}, starts_with=True, output_format="JSON")
     assert response["class"] == "NotesResponse"
     assert response["relatedHTTPCode"] == 200
 
 
 def test_find_notes_with_no_notes_and_details():
-    response = fm_client.find_notes(
-        {"filter": ""}, starts_with=True, detailed_response=True
-    )
+    response = fm_client.find_notes(body={"filter": ""}, starts_with=True, output_format="JSON")
     assert response["class"] == "NotesResponse"
     assert response["relatedHTTPCode"] == 200
 
@@ -485,9 +497,7 @@ def test_find_tags_with_no_tags():
 
 
 def test_find_tags_with_no_tags_and_details():
-    response = fm_client.find_tags(
-        {"filter": "one"}, starts_with=True, detailed_response=True
-    )
+    response = fm_client.find_tags({"filter": "one"}, starts_with=True)
     assert response["class"] == "InformalTagsResponse"
     assert response["relatedHTTPCode"] == 200
 
@@ -496,34 +506,42 @@ def test_find_tags_with_no_tags_and_details():
 ## test_find_comments test
 #
 def test_can_handle_no_comments():
-    response = fm_client.find_comments({"filter": ""})
+    response = fm_client.find_note_logs({"filter": ""})
     assert response["class"] == "CommentElementsResponse"
     assert response["relatedHTTPCode"] == 200
 
 
 def test_can_handle_no_comments_with_details_requested():
-    response = fm_client.find_comments({"filter": ""})
+    response = fm_client.find_note_logs({"filter": ""})
     assert response["class"] == "CommentElementsResponse"
     assert response["relatedHTTPCode"] == 200
 
 
 def test_find_comments():
     # create_response = fm_client.add_comment_to_element(term_guid, body=standard_comment)
-    response = fm_client.find_comments("*")
+    response = fm_client.find_note_logs("kafka")
     assert "class" in response[0]
     assert response[0]["properties"]["class"] == "CommentProperties"
     assert "qualifiedName" in response[0]["properties"].keys()
     assert "guid" in response[0]['elementHeader']
     # fm_client.remove_comment_from_element(create_response["guid"])
 
+def test_get_comment_by_guid_live():
+    try:
+        response = fm_client.get_comment_by_guid('783c1136-df57-44f1-8c48-856cd871336d')
+        print(json.dumps(response, indent=2))
+    except PyegeriaException as e:
+        print_basic_exception(e)
+    except ValidationError as e:
+        print_validation_error(e)
 
 def test_find_comments_detailed():
     create_response = fm_client.add_comment_to_element(term_guid, body=standard_comment)
-    response = fm_client.find_comments({"filter": ""})
+    response = fm_client.find_note_logs({"filter": ""})
     assert response["relatedHTTPCode"] == 200
     assert response["class"] == "CommentElementsResponse"
     assert "elementList" in response
-    fm_client.remove_comment_from_element(create_response["guid"])
+    fm_client.remove_note_log(create_response["guid"])
 
 
 #
@@ -531,31 +549,31 @@ def test_find_comments_detailed():
 #
 def test_get_attached_comments():
     create_response = fm_client.add_comment_to_element(term_guid, body=standard_comment)
-    response = fm_client.get_attached_comments(term_guid)
+    response = fm_client.get_attached_note_logs(term_guid)
     assert "class" in response[0]
     assert response[0]["class"] == "CommentProperties"
     assert "qualifiedName" in response[0]
     assert "guid" in response[0]
-    fm_client.remove_comment_from_element(create_response["guid"])
+    fm_client.remove_note_log(create_response["guid"])
 
 
 def test_get_attached_comments_detailed():
     create_response = fm_client.add_comment_to_element(term_guid, body=standard_comment)
-    response = fm_client.get_attached_comments(term_guid, detailed_response=True)
+    response = fm_client.get_attached_note_logs(term_guid)
     assert response["relatedHTTPCode"] == 200
     assert response["class"] == "CommentElementsResponse"
     assert "elementList" in response
-    fm_client.remove_comment_from_element(create_response["guid"])
+    fm_client.remove_note_log(create_response["guid"])
 
 
 def test_get_attached_comments_with_no_comments():
-    response = fm_client.get_attached_comments(term_guid)
+    response = fm_client.get_attached_note_logs(term_guid)
     assert response["class"] == "CommentElementsResponse"
     assert response["relatedHTTPCode"] == 200
 
 
 def test_get_attached_comments_with_no_comments_and_details():
-    response = fm_client.get_attached_comments(term_guid, detailed_response=True)
+    response = fm_client.get_attached_note_logs(term_guid)
     assert response["class"] == "CommentElementsResponse"
     assert response["relatedHTTPCode"] == 200
 
@@ -673,7 +691,7 @@ def test_get_comment():
     assert response["class"] == "CommentProperties"
     assert "qualifiedName" in response
     assert "guid" in response
-    fm_client.remove_comment_from_element(create_response["guid"])
+    fm_client.remove_note_log(create_response["guid"])
 
 
 def test_get_comment_detailed():
@@ -681,7 +699,7 @@ def test_get_comment_detailed():
     response = fm_client.get_comment(create_response["guid"], detailed_response=True)
     assert response["relatedHTTPCode"] == 200
     assert response["class"] == "CommentResponse"
-    fm_client.remove_comment_from_element(create_response["guid"])
+    fm_client.remove_note_log(create_response["guid"])
 
 
 def test_get_comment_with_bad_guid():
@@ -725,7 +743,7 @@ def test_get_note_by_guid():
     note_response = fm_client.create_note(
         note_log_response["guid"], body=note_for_testing
     )
-    response = fm_client.get_note_by_guid(note_response["guid"])
+    response = fm_client.get_note_by_guid(note_response["guid"], output_format="JSON")
     assert "class" in response
     assert "qualifiedName" in response
     assert "guid" in response
@@ -737,7 +755,7 @@ def test_get_note_by_guid_detailed():
     note_response = fm_client.create_note(
         note_log_response["guid"], body=note_for_testing
     )
-    response = fm_client.get_note_by_guid(note_response["guid"], detailed_response=True)
+    response = fm_client.get_note_by_guid(note_response["guid"], output_format="JSON")
     assert response["relatedHTTPCode"] == 200
     assert response["class"] == "NoteResponse"
     assert "element" in response
@@ -866,16 +884,20 @@ def test_get_tag():
     delete_response = fm_client.delete_tag(create_response["guid"])
 
 
+def test_get_tags_by_name():
+    response = fm_client.get_tags_by_name("Meow")
+    print(json.dumps(response, indent=2))
+
 #
 ## test_get_tags_by_name test 1
 #
 def test_get_tags_by_name_test1():
     my_test_tag_body = {
         "isPrivateTag": False,
-        "name": "test-tag-from-python",
+        "name": "Meow",
         "description": "this tag was created using the python API for testing purposes",
     }
-    create_response = fm_client.create_informal_tag(my_test_tag_body)
+    create_response = fm_client.get_tags_by_name(my_test_tag_body)
     response = fm_client.get_tags_by_name({"filter": my_test_tag_body["name"]})
     assert response[0]["isPrivateTag"] == my_test_tag_body["isPrivateTag"]
     assert response[0]["name"] == my_test_tag_body["name"]
@@ -932,7 +954,7 @@ def test_get_tags_by_name_test3():
 #
 def test_remove_comment_from_element():
     create_comment = fm_client.add_comment_to_element(term_guid, body=standard_comment)
-    response = fm_client.remove_comment_from_element(create_comment["guid"])
+    response = fm_client.remove_note_log(create_comment["guid"])
     assert response["relatedHTTPCode"] == 200
     assert response["class"] == "VoidResponse"
 
@@ -1003,8 +1025,8 @@ def test_setup_accepted_answer():
     response = fm_client.setup_accepted_answer(
         question_comment_response["guid"], answer_comment_response["guid"]
     )
-    fm_client.remove_comment_from_element(answer_comment_response["guid"])
-    fm_client.remove_comment_from_element(question_comment_response["guid"])
+    fm_client.remove_note_log(answer_comment_response["guid"])
+    fm_client.remove_note_log(question_comment_response["guid"])
     assert response["relatedHTTPCode"] == 200
     assert response["class"] == "VoidResponse"
 
@@ -1017,7 +1039,7 @@ def test_update_comment():
     response = fm_client.update_comment(add_response["guid"], updated_standard_comment)
     assert response["relatedHTTPCode"] == 200
     assert response["class"] == "VoidResponse"
-    fm_client.remove_comment_from_element(add_response["guid"])
+    fm_client.remove_note_log(add_response["guid"])
 
 
 #
@@ -1030,7 +1052,7 @@ def test_update_comment_visibility():
     )
     assert response["relatedHTTPCode"] == 200
     assert response["class"] == "VoidResponse"
-    fm_client.remove_comment_from_element(add_response["guid"])
+    fm_client.remove_note_log(add_response["guid"])
 
 
 def test_update_comment_visibility2():
@@ -1040,7 +1062,7 @@ def test_update_comment_visibility2():
     )
     assert response["relatedHTTPCode"] == 200
     assert response["class"] == "VoidResponse"
-    fm_client.remove_comment_from_element(add_response["guid"])
+    fm_client.remove_note_log(add_response["guid"])
 
 
 #
@@ -1054,9 +1076,7 @@ def test_update_note():
     )
     jprint(note_response, "Note Response:")
     jprint(updated_note_for_testing, "Updated Note for testing:")
-    response = fm_client.update_note(
-        note_response["guid"], updated_note_for_testing, is_merge_update=True
-    )
+    response = fm_client.update_note(note_response["guid"], updated_note_for_testing)
     assert response["relatedHTTPCode"] == 200
     assert response["class"] == "VoidResponse"
     fm_client.remove_note_log(note_log_response["guid"])
@@ -1094,3 +1114,45 @@ def test_update_tag_description():
     get_response = fm_client.get_tag(create_response["guid"])
     assert get_response["description"] == updated_description
     fm_client.delete_tag(create_response["guid"])
+
+
+def test_find_comments():
+    search_string = "*"
+    response = fm_client.find_comments(search_string, output_format="DICT")
+    print(json.dumps(response, indent=2))
+
+def test_add_comment_to_element():
+    comment_guid = "1d463812-3dab-4dd6-84b0-1378ed899912"
+    element_guid = "fc98766a-d334-4ca0-90dd-d29d0013cddd"
+    try:
+        fm_client.add_comment_to_element(element_guid, "Meow" )
+    except PyegeriaException as e:
+        print_basic_exception(e)
+# comment guid 1d463812-3dab-4dd6-84b0-1378ed899912
+
+def test_remove_comment_from_element():
+    comment_guid = "1d463812-3dab-4dd6-84b0-1378ed899912"
+    element_guid = "fc98766a-d334-4ca0-90dd-d29d0013cddd"
+    try:
+        fm_client.remove_comment_from_element(element_guid, comment_guid)
+    except PyegeriaException as e:
+        print_basic_exception(e)
+
+def test_create_tag():
+    create_response = fm_client.create_informal_tag("Puddy Approves","Puddy voices approval")
+    print(create_response)
+    assert create_response["relatedHTTPCode"] == 200
+    assert create_response["class"] == "GUIDResponse"
+    global tag_guid
+    tag_guid = create_response["guid"]
+    print(tag_guid)
+
+def test_delete_tag():
+    delete_response = fm_client.delete_tag(tag_guid)
+    print(delete_response)
+
+def test_find_tags():
+    search_string = "*"
+    response = fm_client.find_tags(search_string)
+    print(json.dumps(response, indent=2))
+

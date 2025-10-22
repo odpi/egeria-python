@@ -14,7 +14,7 @@ A running Egeria environment is needed to run these tests.
 import json
 import time
 from pydantic import ValidationError
-from pyegeria.external_references import ExternalReferences
+from pyegeria.external_links import ExternalReferences
 from pyegeria._exceptions_new import PyegeriaException, print_basic_exception, print_exception_table, \
     print_validation_error, PyegeriaAPIException
 
@@ -112,7 +112,7 @@ class TestExternalReferences:
             search_string = "ExtRef::Milvus---Web-Site"
 
             response = p_client.find_external_references(
-                search_string, metadata_element_types=["ExternalReference"],output_format="JSON", output_format_set="Regerenceable"
+                search_string, metadata_element_types=["ExternalReference"],output_format="JSON", report_spec="Regerenceable"
             )
             duration = time.perf_counter() - start_time
 
@@ -159,13 +159,12 @@ class TestExternalReferences:
             assert True
 
         except (
-            InvalidParameterException,
-            PropertyServerException,
-            UserNotAuthorizedException,
+            PyegeriaException
         ) as e:
-            print_exception_response(e)
+            print_basic_exception(e)
             assert False, "Invalid request"
-
+        except ValidationError as e:
+            print_validation_error(e)
         finally:
             p_client.close_session()
 
@@ -215,7 +214,7 @@ class TestExternalReferences:
             start_time = time.perf_counter()
             ref_guid = 'c85c1f5e-f7fb-4a2c-82ee-4bc90534fcbd'
 
-            response = p_client.get_external_reference_by_guid(ref_guid, element_type="Cited Document", output_format="DICT", output_format_set="External-Reference-DrE")
+            response = p_client.get_external_reference_by_guid(ref_guid, element_type="Cited Document", output_format="DICT", report_spec="External-Reference-DrE")
             duration = time.perf_counter() - start_time
             duration = time.perf_counter() - start_time
 

@@ -329,7 +329,7 @@ def process_blueprint_upsert_command(egeria_client: EgeriaTech, txt: str, direct
                     sync_blueprint_related_elements(egeria_client, object_type, component_guids, guid, qualified_name,
                                                     display_name, replace_all_props)
                     logger.success(f"===> Updated {object_type} `{display_name}` related elements\n\n")
-                    return egeria_client.get_solution_blueprints_by_name(qualified_name, output_format='MD', output_format_set = "Solution-Blueprint-DrE")
+                    return egeria_client.get_solution_blueprints_by_name(qualified_name, output_format='MD', report_spec = "Solution-Blueprint-DrE")
 
 
             elif object_action == "Create":
@@ -363,7 +363,7 @@ def process_blueprint_upsert_command(egeria_client: EgeriaTech, txt: str, direct
                     msg = f"Created Element `{display_name}` with GUID {guid}\n\n___"
                     print(Markdown(msg))
                     logger.success(msg)
-                    return egeria_client.get_solution_blueprint_by_guid(guid, output_format='MD', output_format_set = "Solution-Blueprint-DrE")
+                    return egeria_client.get_solution_blueprint_by_guid(guid, output_format='MD', report_spec = "Solution-Blueprint-DrE")
                 else:
                     msg = f"Failed to create element `{display_name}` with GUID {guid}\n\n___"
                     print(Markdown(msg))
@@ -515,7 +515,7 @@ def process_solution_component_upsert_command(egeria_client: EgeriaTech, txt: st
                                                 display_name,
                                                 merge_update)
                 logger.success(f"==>Updated  {object_type} `{display_name}` with related elements")
-                return egeria_client.get_solution_component_by_guid(guid, output_format='MD', output_format_set = "Solution-Component-DrE")
+                return egeria_client.get_solution_component_by_guid(guid, output_format='MD', report_spec = "Solution-Component-DrE")
 
 
             elif object_action == "Create":

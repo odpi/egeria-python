@@ -8,14 +8,14 @@ from loguru import logger
 from pyegeria.config import settings
 
 from pyegeria.mermaid_utilities import construct_mermaid_web
-from pyegeria._output_formats import select_output_format_set, MD_SEPARATOR, get_output_format_type_match
+from pyegeria.base_report_formats import select_report_format, MD_SEPARATOR, get_report_spec_match
 from pyegeria.models import to_camel_case
 
 """
-Note on select_output_format_set function:
+Note on select_report_spec function:
 
 This function and related data structures have been moved back to _output_formats.py.
-Please import select_output_format_set from pyegeria._output_formats instead of from this module.
+Please import select_report_spec from pyegeria._output_formats instead of from this module.
 """
 
 console = Console(width=settings.Environment.console_width)
@@ -237,7 +237,7 @@ def populate_columns_from_properties(element: dict, columns_struct: dict) -> dic
     Populate a columns_struct with values from the element's properties.
 
     The element dict is expected to have a nested 'properties' dict whose keys are in camelCase.
-    The columns_struct is expected to follow the format returned by select_output_format_set, where
+    The columns_struct is expected to follow the format returned by select_report_spec, where
     columns are located at columns_struct['formats']['columns'] and each column is a dict containing
     at least a 'key' field expressed in snake_case. For each column whose snake_case key corresponds
     to a key in the element properties (after converting to camelCase), this function adds a 'value'
@@ -258,9 +258,9 @@ def populate_columns_from_properties(element: dict, columns_struct: dict) -> dic
     if not isinstance(props, dict):
         return columns_struct
 
-    # Get the columns list if present
+    # Get the attributes list if present
     formats = columns_struct.get('formats') or {}
-    columns = formats.get('columns') if isinstance(formats, dict) else None
+    columns = formats.get('attributes') if isinstance(formats, dict) else None
     if not isinstance(columns, list):
         return columns_struct
 
@@ -306,7 +306,7 @@ def get_required_relationships(element: dict, columns_struct: dict) -> dict:
         return columns_struct
 
     formats = columns_struct.get('formats') or {}
-    columns = formats.get('columns') if isinstance(formats, dict) else None
+    columns = formats.get('attributes') if isinstance(formats, dict) else None
     if not isinstance(columns, list):
         return columns_struct
 
@@ -403,10 +403,10 @@ def generate_entity_md(elements: List[Dict],
     """
     heading = columns_struct.get("heading")
     if heading == "Default Base Attributes":
-        elements_md = "## Reporting on Default Base Attributes - Perhaps couldn't find a valid combination of output_format_set and output_format?\n\n"
+        elements_md = "## Reporting on Default Base Attributes - Perhaps couldn't find a valid combination of report_spec and output_format?\n\n"
     else:
         elements_md = ""
-    base_columns = columns_struct['formats'].get('columns') if columns_struct else None
+    base_columns = columns_struct['formats'].get('attributes') if columns_struct else None
 
     for element in elements:
         if element is None:
@@ -437,7 +437,7 @@ def generate_entity_md(elements: List[Dict],
         # Determine display name
         display_name = None
         if returned_struct is not None:
-            cols = returned_struct.get('formats', {}).get('columns', [])
+            cols = returned_struct.get('formats', {}).get('attributes', [])
             # Find value from 'display_name' or 'title'
             for col in cols:
                 if col.get('key') in ('display_name', 'title'):
@@ -461,7 +461,7 @@ def generate_entity_md(elements: List[Dict],
 
         # Add attributes based on column spec if available, otherwise, add all (legacy)
         if returned_struct is not None:
-            cols = returned_struct.get('formats', {}).get('columns', [])
+            cols = returned_struct.get('formats', {}).get('attributes', [])
             for column in cols:
                 name = column.get('name')
                 key = column.get('key')
@@ -536,10 +536,10 @@ def generate_entity_md_table(elements: List[Dict],
 
     entity_type_plural = f"{target_type[:-1]}ies" if target_type.endswith('y') else f"{target_type}s"
     # entity_type_plural = target_type
-    columns = columns_struct['formats'].get('columns', [])
+    columns = columns_struct['formats'].get('attributes', [])
     heading = columns_struct.get("heading")
     if heading == "Default Base Attributes":
-        elements_md = "## Reporting on Default Base Attributes - Perhaps couldn't find a valid combination of output_format_set and output_format?\n\n"
+        elements_md = "## Reporting on Default Base Attributes - Perhaps couldn't find a valid combination of report_spec and output_format?\n\n"
     else:
         elements_md = ""
 
@@ -569,7 +569,7 @@ def generate_entity_md_table(elements: List[Dict],
 
         # For help mode, bypass extraction
         if output_format == "help":
-            returned_struct = {"formats": {"columns": columns}}
+            returned_struct = {"formats": {"attributes": columns}}
 
         # Additional props (if any)
         additional_props = {}
@@ -579,7 +579,7 @@ def generate_entity_md_table(elements: List[Dict],
         # Build row
         row = "| "
         if returned_struct is not None:
-            for column in returned_struct.get('formats', {}).get('columns', []):
+            for column in returned_struct.get('formats', {}).get('attributes', []):
                 key = column.get('key')
                 value = column.get('value')
                 if (value in (None, "")) and key in additional_props:
@@ -654,9 +654,9 @@ def generate_entity_dict(elements: List[Dict],
         # Create entity dictionary
         entity_dict = {}
 
-        columns = columns_struct['formats'].get('columns', None) if columns_struct else None
+        columns = columns_struct['formats'].get('attributes', None) if columns_struct else None
         if returned_struct is not None:
-            for column in returned_struct.get('formats', {}).get('columns', []):
+            for column in returned_struct.get('formats', {}).get('attributes', []):
                 key = column.get('key')
                 name = column.get('name')
                 value = column.get('value')
@@ -725,29 +725,41 @@ def generate_entity_dict(elements: List[Dict],
 
 def resolve_output_formats(entity_type: str,
                            output_format: str,
-                           output_format_set: Optional[Union[str, dict]] = None,
-                           default_label: Optional[str] = None) -> Optional[dict]:
+                           report_spec: Optional[Union[str, dict]] = None,
+                           default_label: Optional[str] = None,
+                           **kwargs) -> Optional[dict]:
     """
-    Resolve an output format set structure given an entity type, the desired output format
+    Resolve a report format structure given an entity type, the desired output format
     (e.g., DICT, LIST, MD, REPORT, FORM), and either a label (str) or a dict of format sets.
 
+    Backward compatibility:
+    - Accepts legacy kwarg 'report_spec' and treats it as report_spec.
+
     Selection order:
-    - If output_format_set is a str: select by label.
-    - If output_format_set is a dict: use get_output_format_type_match to pick a matching format.
+    - If report_spec is a str: select by label.
+    - If report_spec is a dict: use get_report_spec_match to pick a matching format.
     - Else: try selecting by entity_type or default_label.
     - Fallback: select "Default".
     """
-    from pyegeria._output_formats import select_output_format_set, get_output_format_type_match
+    from pyegeria.base_report_formats import get_report_spec_match
 
-    if isinstance(output_format_set, str):
-        return select_output_format_set(output_format_set, output_format)
-    if isinstance(output_format_set, dict):
-        return get_output_format_type_match(output_format_set, output_format)
+    if report_spec is None and isinstance(kwargs, dict):
+        if 'report_spec' in kwargs:
+            report_spec = kwargs.get('report_spec')
+        elif 'report_format' in kwargs:
+            report_spec = kwargs.get('report_format')
+        elif 'output_format_spec' in kwargs:
+            report_spec = kwargs.get('output_format_spec')
+
+    if isinstance(report_spec, str):
+        return select_report_format(report_spec, output_format)
+    if isinstance(report_spec, dict):
+        return get_report_spec_match(report_spec, output_format)
 
     label = default_label or entity_type
-    fmt = select_output_format_set(label, output_format)
+    fmt = select_report_format(label, output_format)
     if fmt is None:
-        fmt = select_output_format_set("Default", output_format)
+        fmt = select_report_format("Default", output_format)
     return fmt
 
 
@@ -758,7 +770,7 @@ def overlay_additional_values(columns_struct: dict, extra: Optional[dict]) -> di
     """
     if not isinstance(columns_struct, dict) or not extra:
         return columns_struct
-    columns = columns_struct.get('formats', {}).get('columns')
+    columns = columns_struct.get('formats', {}).get('attributes')
     if not isinstance(columns, list):
         return columns_struct
     for col in columns:
@@ -795,7 +807,7 @@ def populate_common_columns(
     """
     # 1) Base properties
     col_data = populate_columns_from_properties(element, columns_struct)
-    columns_list = col_data.get('formats', {}).get('columns', [])
+    columns_list = col_data.get('formats', {}).get('attributes', [])
 
     # 2) Header overlay
     header_props = _extract_referenceable_properties(element) if include_header else {}
@@ -925,7 +937,7 @@ def _extract_default_properties(self, element: dict, columns_struct: dict) -> di
     }
     # Common population pipeline
     col_data = populate_common_columns(element, columns_struct)
-    columns_list = col_data.get('formats', {}).get('columns', [])
+    columns_list = col_data.get('formats', {}).get('attributes', [])
 
     return col_data
 
@@ -933,19 +945,23 @@ def _extract_default_properties(self, element: dict, columns_struct: dict) -> di
 def _generate_default_output(self, elements: dict | list[dict], search_string: str,
                              element_type_name: str | None,
                              output_format: str = 'DICT',
-                             output_format_set: dict | str = None) -> str | list[dict]:
+                             report_format: dict | str | None = None,
+                             **kwargs) -> str | list[dict]:
     entity_type = 'Referenceable'
-    if output_format_set:
-        if isinstance(output_format_set, str):
-            output_formats = select_output_format_set(output_format_set, output_format)
-        elif isinstance(output_format_set, dict):
-            output_formats = get_output_format_type_match(output_format_set, output_format)
+    # Backward compatibility: accept legacy kwarg
+    if report_format is None and isinstance(kwargs, dict) and 'report_spec' in kwargs:
+        report_format = kwargs.get('report_spec')
+    if report_format:
+        if isinstance(report_format, str):
+            output_formats = select_report_format(report_format, output_format)
+        elif isinstance(report_format, dict):
+            output_formats = get_report_spec_match(report_format, output_format)
         else:
             output_formats = None
     else:
-        output_formats = select_output_format_set(entity_type, output_format)
+        output_formats = select_report_format(entity_type, output_format)
     if output_formats is None:
-        output_formats = select_output_format_set('Default', output_format)
+        output_formats = select_report_format('Default', output_format)
     return generate_output(
         elements=elements,
         search_string=search_string,
@@ -979,11 +995,11 @@ def generate_output(elements: Union[Dict, List[Dict]],
     Returns:
         Formatted output as string or list of dictionaries
     """
-    columns = columns_struct['formats'].get('columns',None) if columns_struct else None
+    columns = columns_struct['formats'].get('attributes',None) if columns_struct else None
     if not columns:
-        columns_struct = select_output_format_set("Default",output_format)
+        columns_struct = select_report_format("Default",output_format)
         if columns_struct:
-            columns = columns_struct.get('formats', {}).get('columns', None)
+            columns = columns_struct.get('formats', {}).get('attributes', None)
 
     target_type = columns_struct.get('target_type', entity_type) if columns_struct else entity_type
     if target_type is None:

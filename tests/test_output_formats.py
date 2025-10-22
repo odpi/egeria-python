@@ -12,28 +12,28 @@ import os
 # Add the parent directory to the path so we can import the modules
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
-from pyegeria._output_formats import (
-    output_format_sets,
-    select_output_format_set,
-    output_format_set_list,
-    get_output_format_set_heading,
-    get_output_format_set_description,
-    get_output_format_type_match,
+from pyegeria.base_report_formats import (
+    report_specs,
+    select_report_spec,
+    report_spec_list,
+    get_report_spec_heading,
+    get_report_spec_description,
+    get_report_spec_match,
 )
 from pyegeria._output_format_models import Column, Format, ActionParameter, FormatSet, FormatSetDict
 
-def test_output_format_sets():
-    """Test that the output_format_sets dictionary is correctly initialized."""
-    print("\nTesting output_format_sets initialization...")
+def test_report_specs():
+    """Test that the report_specs dictionary is correctly initialized."""
+    print("\nTesting report_specs initialization...")
     
-    # Check that output_format_sets is a FormatSetDict
-    assert isinstance(output_format_sets, FormatSetDict), f"Expected FormatSetDict, got {type(output_format_sets)}"
+    # Check that report_specs is a FormatSetDict
+    assert isinstance(report_specs, FormatSetDict), f"Expected FormatSetDict, got {type(report_specs)}"
     
     # Check that we have some format sets
-    assert len(output_format_sets) > 0, "Expected at least one format set"
+    assert len(report_specs) > 0, "Expected at least one format set"
     
     # Check that each format set is a FormatSet
-    for key, value in output_format_sets.items():
+    for key, value in report_specs.items():
         assert isinstance(value, FormatSet), f"Expected FormatSet for {key}, got {type(value)}"
         
         # Check that each format set has the required attributes
@@ -59,45 +59,45 @@ def test_output_format_sets():
     
     print("Output format sets initialization test passed!")
 
-def test_select_output_format_set():
-    """Test the select_output_format_set function."""
-    print("\nTesting select_output_format_set function...")
+def test_select_report_spec():
+    """Test the select_report_spec function."""
+    print("\nTesting select_report_spec function...")
     
     # Test getting a format set by name
-    format_set = select_output_format_set("Collections", "TABLE")
+    format_set = select_report_spec("Collections", "TABLE")
     assert format_set is not None, "Expected format set for Collections"
     assert "heading" in format_set, "Expected heading in format set"
     assert "description" in format_set, "Expected description in format set"
     assert "formats" in format_set, "Expected formats in format set"
     
     # Test getting a format set by alias
-    format_set = select_output_format_set("Collection", "TABLE")
+    format_set = select_report_spec("Collection", "TABLE")
     assert format_set is not None, "Expected format set for Collection alias"
     
     # Test getting a format set with a specific output type
-    format_set = select_output_format_set("Collections", "DICT")
+    format_set = select_report_spec("Collections", "DICT")
     assert format_set is not None, "Expected format set for Collections with DICT output type"
     assert "formats" in format_set, "Expected formats in format set"
     assert "types" in format_set["formats"], "Expected types in format"
     assert "DICT" in format_set["formats"]["types"], "Expected DICT in types"
     
     # Test getting a format set with the ANY output type
-    format_set = select_output_format_set("Collections", "ANY")
+    format_set = select_report_spec("Collections", "ANY")
     assert format_set is not None, "Expected format set for Collections with ANY output type"
     assert "formats" not in format_set, "Expected no formats in format set for ANY output type"
     
     # Test getting a format set that doesn't exist
-    format_set = select_output_format_set("NonExistentFormatSet", "TABLE")
+    format_set = select_report_spec("NonExistentFormatSet", "TABLE")
     assert format_set is None, "Expected None for non-existent format set"
     
     print("Select output format set test passed!")
 
-def test_output_format_set_list():
-    """Test the output_format_set_list function."""
-    print("\nTesting output_format_set_list function...")
+def test_report_spec_list():
+    """Test the report_spec_list function."""
+    print("\nTesting report_spec_list function...")
     
     # Get the list of format sets
-    format_sets = output_format_set_list()
+    format_sets = report_spec_list()
     
     # Check that we have some format sets
     assert len(format_sets) > 0, "Expected at least one format set"
@@ -112,13 +112,13 @@ def test_output_format_set_list():
     
     print("Output format set list test passed!")
 
-def test_get_output_format_set_heading_and_description():
-    """Test the get_output_format_set_heading and get_output_format_set_description functions."""
-    print("\nTesting get_output_format_set_heading and get_output_format_set_description functions...")
+def test_get_report_spec_heading_and_description():
+    """Test the get_report_spec_heading and get_report_spec_description functions."""
+    print("\nTesting get_report_spec_heading and get_report_spec_description functions...")
     
     # Get the heading and description for a format set
-    heading = get_output_format_set_heading("Collections")
-    description = get_output_format_set_description("Collections")
+    heading = get_report_spec_heading("Collections")
+    description = get_report_spec_description("Collections")
     
     # Check that the heading and description are strings
     assert isinstance(heading, str), f"Expected string for heading, got {type(heading)}"
@@ -131,14 +131,14 @@ def test_get_output_format_set_heading_and_description():
     print("Get output format set heading and description test passed!")
 
 def test_get_output_format_type_match():
-    """Test the get_output_format_type_match function."""
-    print("\nTesting get_output_format_type_match function...")
+    """Test the get_report_spec_match function."""
+    print("\nTesting get_report_spec_match function...")
     
     # Get a format set
-    format_set = select_output_format_set("Collections", "ANY")
+    format_set = select_report_spec("Collections", "ANY")
     
     # Match the format set with a specific output type
-    matched_format_set = get_output_format_type_match(format_set, "TABLE")
+    matched_format_set = get_report_spec_match(format_set, "TABLE")
     
     # Check that the matched format set is a dictionary
     assert isinstance(matched_format_set, dict), f"Expected dict, got {type(matched_format_set)}"
@@ -204,10 +204,10 @@ def test_format_composition():
 
 def main():
     """Run all tests."""
-    test_output_format_sets()
-    test_select_output_format_set()
-    test_output_format_set_list()
-    test_get_output_format_set_heading_and_description()
+    test_report_specs()
+    test_select_report_spec()
+    test_report_spec_list()
+    test_get_report_spec_heading_and_description()
     test_get_output_format_type_match()
     test_format_composition()
     

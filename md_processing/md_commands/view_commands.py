@@ -21,7 +21,7 @@ from pyegeria import DEBUG_LEVEL, body_slimmer, print_basic_exception, print_val
 from pyegeria.egeria_tech_client import EgeriaTech, NO_ELEMENTS_FOUND
 from pyegeria.config import settings
 from pyegeria.logging_configuration import config_logging
-from pyegeria._output_formats import (select_output_format_set, get_output_format_set_heading, get_output_format_set_description)
+from pyegeria.base_report_formats import (select_report_spec, get_report_spec_heading, get_report_spec_description)
 from pyegeria._exceptions_new import PyegeriaException, print_exception_response
 
 GERIA_METADATA_STORE = os.environ.get("EGERIA_METADATA_STORE", "active-metadata-store")
@@ -85,7 +85,7 @@ def process_format_set_action(
         Additional parameters to override the default parameters in the format set.
     """
     # Get the output format set
-    format_set = select_output_format_set(format_set_name, output_format)
+    format_set = select_report_spec(format_set_name, output_format)
     if not format_set:
         print(
             f"Error: Output format set '{format_set_name}' does not have a format compatible with output format '{output_format}'.")
@@ -125,7 +125,7 @@ def process_format_set_action(
     params.update(spec_params)
 
     params['output_format'] = output_format
-    params['output_format_set'] = format_set_name
+    params['report_spec'] = format_set_name
 
     # Determine the appropriate client class based on the format set name or function
     client_class = None
@@ -174,8 +174,8 @@ def process_format_set_action(
     # egeria_client.create_egeria_bearer_token()
 
     # # Get heading and description information
-    # heading = get_output_format_set_heading(format_set_name)
-    # desc = get_output_format_set_description(format_set_name)
+    # heading = get_report_spec_heading(format_set_name)
+    # desc = get_report_spec_description(format_set_name)
     # preamble = f"# {heading}\n{desc}\n\n" if heading and desc else ""
 
     try:
@@ -254,7 +254,7 @@ def process_output_command(egeria_client: EgeriaTech, txt: str, directive: str =
         attributes = parsed_output['attributes']
         search_string = attributes.get('Search String', {}).get('value', '*')
         output_format = attributes.get('Output Format', {}).get('value', 'LIST')
-        output_format_set = attributes.get('Output Format Set', {}).get('value', object_type)
+        report_spec = attributes.get('Output Format Set', {}).get('value', object_type)
         kwargs = parsed_output.get("kwargs", {})
         for key, value in attributes.items():
             kwargs[key] = value.get('value', None) if key not in ["Search String", "Output Format", "Output Format Set"] else None
@@ -267,7 +267,7 @@ def process_output_command(egeria_client: EgeriaTech, txt: str, directive: str =
 
             list_md = process_format_set_action(
                 egeria_client,
-                output_format_set,
+                report_spec,
                 output_format,
                 search_string,
                 ** kwargs

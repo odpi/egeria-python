@@ -103,20 +103,20 @@ def test_remove_comment_from_element_sync_calls_async(monkeypatch, client):
         Client2, "async_remove_comment_from_element", fake_async_remove_comment_from_element
     )
 
-    assert client.remove_comment_from_element("e-1", "c-1", {"y": 2}, cascade_delete=True) is None
+    assert client.remove_note_log("e-1", {"y": 2}, cascade_delete=True) is None
     assert calls["args"] == ("e-1", "c-1", {"y": 2}, True)
 
 
 def test_get_comment_by_guid_sync_calls_async(monkeypatch, client):
     calls = {}
 
-    async def fake_async_get_comment_by_guid(self, comment_guid, element_type, body, output_format, output_format_set):
-        calls["args"] = (comment_guid, element_type, body, output_format, output_format_set)
+    async def fake_async_get_comment_by_guid(self, comment_guid, element_type, body, output_format, report_spec):
+        calls["args"] = (comment_guid, element_type, body, output_format, report_spec)
         return {"comment_guid": comment_guid, "ok": True}
 
     monkeypatch.setattr(Client2, "async_get_comment_by_guid", fake_async_get_comment_by_guid)
 
-    out = client.get_comment_by_guid("cg-1", element_type="Comment", body=None, output_format="JSON", output_format_set=None)
+    out = client.get_comment_by_guid("cg-1", element_type="Comment", body=None, output_format="JSON", report_spec=None)
     assert out == {"comment_guid": "cg-1", "ok": True}
     assert calls["args"] == ("cg-1", "Comment", None, "JSON", None)
 
@@ -124,8 +124,8 @@ def test_get_comment_by_guid_sync_calls_async(monkeypatch, client):
 def test_get_attached_comments_sync_calls_async(monkeypatch, client):
     calls = {}
 
-    async def fake_async_get_attached_comments(self, element_guid, element_type, body, start_from, page_size, output_format, output_format_set):
-        calls["args"] = (element_guid, element_type, body, start_from, page_size, output_format, output_format_set)
+    async def fake_async_get_attached_comments(self, element_guid, element_type, body, start_from, page_size, output_format, report_spec):
+        calls["args"] = (element_guid, element_type, body, start_from, page_size, output_format, report_spec)
         return [
             {"guid": "c1"},
             {"guid": "c2"},
@@ -133,7 +133,8 @@ def test_get_attached_comments_sync_calls_async(monkeypatch, client):
 
     monkeypatch.setattr(Client2, "async_get_attached_comments", fake_async_get_attached_comments)
 
-    result = client.get_attached_comments("elem-99", element_type="Comment", body={}, start_from=0, page_size=10, output_format="JSON", output_format_set=None)
+    result = client.get_attached_note_logs("elem-99", element_type="Comment", body={}, start_from=0, page_size=10,
+                                           output_format="JSON", report_spec=None)
 
     assert result == [{"guid": "c1"}, {"guid": "c2"}]
     assert calls["args"] == ("elem-99", "Comment", {}, 0, 10, "JSON", None)
@@ -153,7 +154,7 @@ def test_find_comments_sync_calls_async(monkeypatch, client):
         start_from,
         page_size,
         output_format,
-        output_format_set,
+        report_spec,
         body,
     ):
         calls["args"] = (
@@ -166,26 +167,16 @@ def test_find_comments_sync_calls_async(monkeypatch, client):
             start_from,
             page_size,
             output_format,
-            output_format_set,
+            report_spec,
             body,
         )
         return [{"guid": "c1"}]
 
     monkeypatch.setattr(Client2, "async_find_comments", fake_async_find_comments)
 
-    result = client.find_comments(
-        "foo",
-        classification_names=["X"],
-        metadata_element_types=["Comment"],
-        starts_with=True,
-        ends_with=False,
-        ignore_case=False,
-        start_from=5,
-        page_size=25,
-        output_format="JSON",
-        output_format_set=None,
-        body=None,
-    )
+    result = client.find_note_logs("foo", classification_names=["X"], metadata_element_types=["Comment"],
+                                   starts_with=True, ends_with=False, ignore_case=False, start_from=5, page_size=25,
+                                   output_format="JSON", report_spec=None, body=None)
 
     assert result == [{"guid": "c1"}]
     assert calls["args"] == (
