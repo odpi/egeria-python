@@ -336,18 +336,11 @@ class ClassificationManager(Client2):
         )
         return response
 
-    async def _async_get_elements_by_property_value(
-            self,
-            property_value: str,
-            property_names: [str],
-            metadata_element_type_name: str = None,
-            effective_time: str = None,
-            for_lineage: bool = None,
-            for_duplicate_processing: bool = None,
-            start_from: int = 0,
-            page_size: int = 0,
-            time_out: int = default_time_out,
-    ) -> list | str:
+    async def _async_get_elements_by_property_value(self, property_value: str, property_names: [str],
+                                                    metadata_element_type_name: str = None, effective_time: str = None,
+                                                    for_lineage: bool = None, for_duplicate_processing: bool = None,
+                                                    start_from: int = 0, page_size: int = 0,
+                                                    time_out: int = default_time_out) -> list | str:
         """
         Retrieve elements by a value found in one of the properties specified.  The value must match exactly.
         An open metadata type name may be supplied to restrict the results. Async version.
@@ -385,6 +378,8 @@ class ClassificationManager(Client2):
         Raises
         ------
         PyegeriaException
+
+        Args:
         """
 
         body = {
@@ -411,20 +406,11 @@ class ClassificationManager(Client2):
                 return NO_ELEMENTS_FOUND
         return elements
 
-    def get_elements_by_property_value(
-            self,
-            property_value: str,
-            property_names: [str],
-            metadata_element_type_name: str = None,
-            effective_time: str = None,
-            for_lineage: bool = None,
-            for_duplicate_processing: bool = None,
-            start_from: int = 0,
-            page_size: int = 0,
-            time_out: int = default_time_out,
-            output_format: str = "JSON",
-            report_spec: dict | str = None,
-    ) -> list | str:
+    def get_elements_by_property_value(self, property_value: str, property_names: [str],
+                                       metadata_element_type_name: str = None, effective_time: str = None,
+                                       for_lineage: bool = None, for_duplicate_processing: bool = None,
+                                       start_from: int = 0, page_size: int = 0,
+                                       time_out: int = default_time_out) -> list | str:
         """
         Retrieve elements by a value found in one of the properties specified.  The value must match exactly.
         An open metadata type name may be supplied to restrict the results.
@@ -466,17 +452,9 @@ class ClassificationManager(Client2):
 
         loop = asyncio.get_event_loop()
         response = loop.run_until_complete(
-            self._async_get_elements_by_property_value(
-                property_value,
-                property_names,
-                metadata_element_type_name,
-                effective_time,
-                for_lineage,
-                for_duplicate_processing,
-                start_from,
-                page_size,
-                time_out,
-            )
+            self._async_get_elements_by_property_value(property_value, property_names, metadata_element_type_name,
+                                                       effective_time, for_lineage, for_duplicate_processing,
+                                                       start_from, page_size, time_out)
         )
         return self._generate_referenceable_output(
             elements=response,
@@ -1005,9 +983,7 @@ class ClassificationManager(Client2):
         """
 
         property_name = ["name", "displayName", "title", "qualifiedName"]
-        elements = await self._async_get_elements_by_property_value(
-            name, property_name, None
-        )
+        elements = await self._async_get_elements_by_property_value(name, property_name, None)
 
         if type(elements) is list:
             if len(elements) == 0:

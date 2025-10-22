@@ -244,9 +244,7 @@ def test_get_elements_by_property_value():
 
         bearer_token = c_client.create_egeria_bearer_token(user, password)
         start_time = time.perf_counter()
-        result = c_client.get_elements_by_property_value(
-            property_value, property_names, metadata_element_type_name
-        )
+        result = c_client.get_elements_by_property_value(property_value, property_names, metadata_element_type_name)
         duration = time.perf_counter() - start_time
         print(f"\n\tDuration was {duration} seconds")
         if type(result) is list:

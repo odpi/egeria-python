@@ -81,9 +81,7 @@ def display_archive_list(
         open_metadata_type_name = None
         property_value = "omarchive"
         property_names = ["fileExtension"]
-        archives = c_client.get_elements_by_property_value(
-            property_value, property_names, open_metadata_type_name
-        )
+        archives = c_client.get_elements_by_property_value(property_value, property_names, open_metadata_type_name)
 
         if type(archives) != list:
             raise ValueError("--> No archives found")

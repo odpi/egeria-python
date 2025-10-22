@@ -20,7 +20,7 @@ from pyegeria.base_report_formats import (
     select_report_spec,
 )
 from pyegeria.egeria_tech_client import EgeriaTech
-from pyegeria.format_set_executor import exec_format_set, _async_run_report
+from pyegeria.format_set_executor import exec_report_spec, _async_run_report
 
 
 def list_reports() -> dict:
@@ -62,7 +62,7 @@ def _execute_egeria_call_blocking(
     from pyegeria.config import settings as _settings
 
 
-    return exec_format_set(
+    return exec_report_spec(
         format_set_name=report,
         output_format="DICT",
         params=params or {},
@@ -97,7 +97,7 @@ def run_report(
     # Lazy import of settings to avoid circulars when optional args are None
     from pyegeria.config import settings as _settings
     logger.info(f"Format set: {report}\nparams: {json.dumps(params)}\nview_server: {view_server}\nview_url: {view_url}\nuser: {user}\nuser_pass: {user_pass}")
-    return exec_format_set(
+    return exec_report_spec(
         format_set_name=report,
         output_format="DICT",
         params=params or {},

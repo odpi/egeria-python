@@ -430,7 +430,7 @@ class TestRuntimeManager:
                 user_pwd="secret",
             )
             token = r_client.create_egeria_bearer_token()
-            name = "qs-integration-daemon"
+            name = "qs-metadata-server"
 
             start_time = time.perf_counter()
             server_guid = None

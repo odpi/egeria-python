@@ -92,7 +92,7 @@ try:
     qualified_name = client.__create_qualified_name__("Folder", display_name)
 
     props_body = {
-        "class": "CollectionProperties",
+        "class": "DigitalProductCatalogProperties",
         "qualifiedName": qualified_name,
         "displayName": display_name,
         "description": description,
@@ -115,7 +115,7 @@ try:
         marketplace_guid = marketplace[0]['elementHeader']['guid']
         print(f"Found marketplace guid of {marketplace_guid}")
     else:
-        marketplace_guid = client.create_folder_collection(body=request_body)
+        marketplace_guid = client.create_digital_product_catalog(body=request_body)
         logger.success(f"Created folder collection for marketplace: {marketplace_guid}")
     #
     # GeoSpatial Products folder
@@ -126,7 +126,7 @@ try:
     qualified_name = client.__create_qualified_name__("Folder", display_name)
 
     props_body = {
-        "class": "CollectionProperties",
+        "class": "DigitalProductCatalogProperties",
         "qualifiedName": qualified_name,
         "displayName": display_name,
         "description": description,
@@ -148,7 +148,7 @@ try:
         geo_prods_guid = geo_prods[0]['elementHeader']['guid']
         print(f"Found geo_prods guid of {geo_prods_guid}")
     else:
-        geo_prods_guid = client.create_folder_collection(body=request_body)
+        geo_prods_guid = client.create_digital_product_catalog(body=request_body)
         logger.success(f"Created folder collection for geoprods: {geo_prods_guid}")
     #
     #   Agricultural Products Folder
@@ -160,7 +160,7 @@ try:
 
     props_body = {
 
-        "class": "CollectionProperties",
+        "class": "DigitalProductCatalogProperties",
         "qualifiedName": qualified_name,
         "displayName": display_name,
         "description": description,
@@ -183,7 +183,7 @@ try:
         ag_prods_guid = ag_prods[0]['elementHeader']['guid']
         print(f"Found ag_prods guid of {ag_prods_guid}")
     else:
-        ag_prods_guid = client.create_folder_collection(body=request_body)
+        ag_prods_guid = client.create_digital_product_catalog(body=request_body)
         logger.success(f"Created folder collection for  ag products: {ag_prods_guid}")
     #
     #   Folder to hold Prepared Imagery Products
@@ -194,7 +194,7 @@ try:
     qualified_name = client.__create_qualified_name__("Folder", display_name)
 
     props_body = {
-        "class": "CollectionProperties",
+        "class": "DigitalProductCatalogProperties",
         "qualifiedName": qualified_name,
         "displayName": display_name,
         "description": description,
@@ -216,7 +216,7 @@ try:
         prepared_imagery_guid = prepared_imagery[0]['elementHeader']['guid']
         print(f"Found prepared_imagery guid of {prepared_imagery_guid}")
     else:
-        prepared_imagery_guid = client.create_folder_collection(body=request_body)
+        prepared_imagery_guid = client.create_digital_product_catalog(body=request_body)
         logger.success(f"Created folder for prepared imagery products: {prepared_imagery_guid}")
     #
     #   A digital product covering NDVI - derived from Sentinel 2
@@ -266,7 +266,7 @@ try:
     qualified_name = client.__create_qualified_name__("Folder", display_name)
 
     props_body = {
-        "class": "CollectionProperties",
+        "class": "DigitalProductCatalogProperties",
         "qualifiedName": qualified_name,
         "displayName": display_name,
         "description": description,
@@ -288,7 +288,7 @@ try:
         raw_imagery_guid = raw_imagery[0]['elementHeader']['guid']
         print(f"Found raw_imagery guid of {raw_imagery_guid}")
     else:
-        raw_imagery_guid = client.create_folder_collection(body=request_body)
+        raw_imagery_guid = client.create_digital_product_catalog(body=request_body)
         logger.success(f"Created folder for raw imagery products: {raw_imagery_guid}")
     #
     #   A digital product providing Sentinel-2a imagery

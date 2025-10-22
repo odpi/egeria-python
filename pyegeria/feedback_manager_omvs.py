@@ -884,13 +884,7 @@ class FeedbackManager(Client2):
     ## create_note implementation
     #
 
-    async def _async_create_note(
-        self,
-        note_log_guid: str,
-        body: dict = {},
-        view_service_url_marker: str = None,
-        access_service_url_marker: str = None,
-    ) -> dict | str:
+    async def _async_create_note(self, note_log_guid: str, display_name=None, description=None, body=None) -> dict | str:
         """
         Creates a new note for a note log and returns the unique identifier for it.
 
@@ -919,6 +913,10 @@ class FeedbackManager(Client2):
             There is a problem adding the element properties to the metadata repository or
         UserNotAuthorizedException
             the requesting user is not authorized to issue this request.
+
+        Args:
+            display_name ():
+            description ():
         """
 
         possible_query_params = query_string(
@@ -970,12 +968,7 @@ class FeedbackManager(Client2):
         """
         loop = asyncio.get_event_loop()
         response = loop.run_until_complete(
-            self._async_create_note(
-                note_log_guid,
-                body,
-                view_service_url_marker,
-                access_service_url_marker,
-            )
+            self._async_create_note(note_log_guid, body=body)
         )
         return response
 
@@ -983,14 +976,8 @@ class FeedbackManager(Client2):
     ## create_note_log implementation
     #
 
-    async def _async_create_note_log(
-        self,
-        element_guid: str,
-        is_public: bool = True,
-        body: dict = {},
-        view_service_url_marker: str = None,
-        access_service_url_marker: str = None,
-    ) -> dict | str:
+    async def _async_create_note_log(self, element_guid: str, display_name: bool = None, description: dict = None,
+                                     body: str = None) -> dict | str:
         """
         Creates a new noteLog and returns the unique identifier for it.
 
@@ -1075,13 +1062,7 @@ class FeedbackManager(Client2):
         """
         loop = asyncio.get_event_loop()
         response = loop.run_until_complete(
-            self._async_create_note_log(
-                element_guid,
-                is_public,
-                body,
-                view_service_url_marker,
-                access_service_url_marker,
-            )
+            self._async_create_note_log(element_guid, is_public, view_service_url_marker, body)
         )
         return response
 
@@ -1089,13 +1070,7 @@ class FeedbackManager(Client2):
     ## delete_tag implementation
     #
 
-    async def _async_delete_tag(
-        self,
-        tag_guid: str,
-        body: dict = {},
-        view_service_url_marker: str = None,
-        access_service_url_marker: str = None,
-    ) -> dict | str:
+    async def _async_delete_tag(self, tag_guid: str) -> dict | str:
         """
         Removes an informal tag from the repository.
 
@@ -1157,13 +1132,7 @@ class FeedbackManager(Client2):
         response = await self._async_make_request("POST", url, {})
         return response.json()
 
-    def delete_tag(
-        self,
-        tag_guid: str,
-        body: dict = {},
-        view_service_url_marker: str = None,
-        access_service_url_marker: str = None,
-    ) -> dict | str:
+    def delete_tag(self, tag_guid: str) -> dict | str:
         """
         Removes an informal tag from the repository.
 
@@ -1215,12 +1184,7 @@ class FeedbackManager(Client2):
         """
         loop = asyncio.get_event_loop()
         response = loop.run_until_complete(
-            self._async_delete_tag(
-                tag_guid,
-                body,
-                view_service_url_marker,
-                access_service_url_marker,
-            )
+            self._async_delete_tag(tag_guid)
         )
         return response
 
@@ -1494,18 +1458,8 @@ class FeedbackManager(Client2):
     ## find_notes implementation
     #
 
-    async def _async_find_notes(
-        self,
-        body: dict,
-        starts_with: bool = None,
-        ends_with: bool = None,
-        ignore_case: bool = None,
-        start_from: int = 0,
-        page_size: int = max_paging_size,
-        view_service_url_marker: str = None,
-        access_service_url_marker: str = None,
-        detailed_response: bool = False,
-    ) -> dict | str:
+    async def _async_find_notes(self, search_string=None, body=None, starts_with: dict = True, ends_with: bool = False,
+                                ignore_case: bool = False, start_from: bool = 0, page_size: int = 0) -> dict | str:
         """
         Retrieve the list of note metadata elements that contain the search string.
 
@@ -1541,6 +1495,9 @@ class FeedbackManager(Client2):
             There is a problem adding the element properties to the metadata repository or
         UserNotAuthorizedException
             the requesting user is not authorized to issue this request.
+
+        Args:
+            search_string ():
         """
 
         possible_query_params = query_string(
@@ -1558,18 +1515,9 @@ class FeedbackManager(Client2):
         response = await self._async_make_request("POST", url, body)
         return elements_response(response.json(), "elementList", detailed_response)
 
-    def find_notes(
-        self,
-        body: dict,
-        starts_with: bool = None,
-        ends_with: bool = None,
-        ignore_case: bool = None,
-        start_from: int = 0,
-        page_size: int = max_paging_size,
-        view_service_url_marker: str = None,
-        access_service_url_marker: str = None,
-        detailed_response: bool = False,
-    ) -> dict | str:
+    def find_notes(self, search_string=None, body=None, starts_with: dict = None, ends_with: bool = None,
+                   ignore_case: bool = None, start_from: bool = 0, page_size: int = 0, output_format,
+                   report_spec=None) -> dict | str:
         """
         Retrieve the list of note metadata elements that contain the search string.
 
@@ -1605,20 +1553,16 @@ class FeedbackManager(Client2):
             There is a problem adding the element properties to the metadata repository or
         UserNotAuthorizedException
             the requesting user is not authorized to issue this request.
+
+        Args:
+            output_format ():
+            report_spec ():
+            search_string ():
         """
         loop = asyncio.get_event_loop()
         response = loop.run_until_complete(
-            self._async_find_notes(
-                body,
-                starts_with,
-                ends_with,
-                ignore_case,
-                start_from,
-                page_size,
-                view_service_url_marker,
-                access_service_url_marker,
-                detailed_response,
-            )
+            self._async_find_notes(body=body, starts_with=starts_with, ends_with=ends_with, ignore_case=ignore_case,
+                                   start_from=start_from, page_size=page_size)
         )
         return response
 
@@ -1626,18 +1570,9 @@ class FeedbackManager(Client2):
     ## find_tags implementation
     #
 
-    async def _async_find_tags(
-        self,
-        body: str,
-        starts_with: bool = None,
-        ends_with: bool = None,
-        ignore_case: bool = None,
-        start_from: int = 0,
-        page_size: int = max_paging_size,
-        detailed_response: bool = False,
-        view_service_url_marker: str = None,
-        access_service_url_marker: str = None,
-    ) -> dict | str:
+    async def _async_find_tags(self, search_string=None, body=None, starts_with: str = True, ends_with: bool = False,
+                               ignore_case: bool = False, start_from: bool = 0, page_size: int = max_paging_size,
+                               output_format="json", report_spec=None) -> dict | str:
         """
         Return the list of tags containing the supplied string in the text. The search string is a regular expression (RegEx).
 
@@ -1673,6 +1608,11 @@ class FeedbackManager(Client2):
             There is a problem adding the element properties to the metadata repository or
         UserNotAuthorizedException
             the requesting user is not authorized to issue this request.
+
+        Args:
+            search_string ():
+            output_format ():
+            report_spec ():
         """
 
         possible_query_params = query_string(
@@ -1690,18 +1630,9 @@ class FeedbackManager(Client2):
         response = await self._async_make_request("POST", url, body)
         return elements_response(response.json(), "tags", detailed_response)
 
-    def find_tags(
-        self,
-        body: str,
-        starts_with: bool = None,
-        ends_with: bool = None,
-        ignore_case: bool = None,
-        start_from: int = 0,
-        page_size: int = max_paging_size,
-        view_service_url_marker: str = None,
-        access_service_url_marker: str = None,
-        detailed_response: bool = False,
-    ) -> dict | str:
+    def find_tags(self, search_string: str = None, body: bool = None, starts_with: bool = True, ends_with: bool = False,
+                  ignore_case: int = False, start_from: int = 0, page_size: str = max_paging_size,
+                  output_format: str = "json", report_spec: bool = None) -> dict | str:
         """
         Return the list of tags containing the supplied string in the text. The search string is a regular expression (RegEx).
 
@@ -1722,7 +1653,7 @@ class FeedbackManager(Client2):
             - optional view service URL marker (overrides access_service_url_marker)
         access_service_url_marker
             - optional access service URL marker used to identify which back end service to call
-        body
+        search_string
             - search string and effective time.
 
         Returns
@@ -1740,17 +1671,8 @@ class FeedbackManager(Client2):
         """
         loop = asyncio.get_event_loop()
         response = loop.run_until_complete(
-            self._async_find_tags(
-                body,
-                starts_with=starts_with,
-                ends_with=ends_with,
-                ignore_case=ignore_case,
-                start_from=start_from,
-                page_size=page_size,
-                view_service_url_marker=view_service_url_marker,
-                access_service_url_marker=access_service_url_marker,
-                detailed_response=detailed_response,
-            )
+            self._async_find_tags(None, search_string, starts_with=starts_with, ends_with=ends_with, ignore_case=ignore_case,
+                                  start_from=start_from, page_size=page_size, output_format=JSON)
         )
         return response
 
@@ -1807,25 +1729,15 @@ class FeedbackManager(Client2):
             the requesting user is not authorized to issue this request.
         """
 
-        possible_query_params = query_string(
-            [
-                ("startsWith", starts_with),
-                ("endsWith", ends_with),
-                ("ignoreCase", ignore_case),
-                ("startFrom", start_from),
-                ("pageSize", page_size),
-                ("viewServiceUrlMarker", view_service_url_marker),
-                ("accessServiceUrlMarker", access_service_url_marker),
-            ]
-        )
+
         url = f"{base_path(self, self.view_server)}/comments/by-search-string{possible_query_params}"
         response = await self._async_make_request("POST", url, body)
         return elements_response(response.json(), "elementList", detailed_response)
 
-    def find_comments(self, search_string: str, classification_names: bool = None,
-                      metadata_element_types: bool = ["Comment"], starts_with: bool = True, ends_with: int = False,
-                      ignore_case: int = False, start_from: str = 0, page_size: str = max_paging_size,
-                      output_format: bool = "JSON" -> dict | str:
+    def find_note_logs(self, search_string: str, classification_names: bool = None,
+                       metadata_element_types: bool = ["Comment"], starts_with: bool = True, ends_with: int = False,
+                       ignore_case: int = False, start_from: str = 0, page_size: str = max_paging_size,
+                       output_format: bool = "JSON" -> dict | str:
         """
         Return the list of comments containing the supplied string.
 
@@ -1882,16 +1794,9 @@ class FeedbackManager(Client2):
     ## get_attached_comments implementation
     #
 
-    async def _async_get_attached_comments(
-        self,
-        element_guid: str,
-        body: dict = {},
-        start_from: int = 0,
-        page_size: int = max_paging_size,
-        view_service_url_marker: str = None,
-        access_service_url_marker: str = None,
-        detailed_response: bool = False,
-    ) -> dict | str:
+    async def _async_get_attached_comments(self, element_guid: str, element_type: dict = "Comment", body: int = {},
+                                           start_from: int = 0, page_size: str = 0, output_format: str = "JSON",
+                                           report_spec: bool = None) -> dict | str:
         """
         Return the comments attached to an element.
 
@@ -1938,7 +1843,7 @@ class FeedbackManager(Client2):
         response = await self._async_make_request("POST", url, body)
         return elements_response(response.json(), "elementList", detailed_response)
 
-    def get_attached_comments(
+    def get_attached_note_logs(
         self,
         element_guid: str,
         body: dict = {},
@@ -1983,15 +1888,8 @@ class FeedbackManager(Client2):
         """
         loop = asyncio.get_event_loop()
         response = loop.run_until_complete(
-            self._async_get_attached_comments(
-                element_guid,
-                body,
-                start_from,
-                page_size,
-                view_service_url_marker,
-                access_service_url_marker,
-                detailed_response,
-            )
+            self._async_get_attached_comments(element_guid, body, start_from, page_size, view_service_url_marker,
+                                              access_service_url_marker, detailed_response)
         )
         return response
 
@@ -2497,15 +2395,7 @@ class FeedbackManager(Client2):
             the requesting user is not authorized to issue this request.
         """
 
-        possible_query_params = query_string(
-            [
-                ("startFrom", start_from),
-                ("pageSize", page_size),
-                ("viewServiceUrlMarker", view_service_url_marker),
-                ("accessServiceUrlMarker", access_service_url_marker),
-            ]
-        )
-        url = f"{base_path(self, self.view_server)}/elements/by-tag/{tag_guid}/retrieve{possible_query_params}"
+        url = f"{self.command_root}feedback-manager/tags/update"
         response = await self._async_make_request("POST", url, body)
         return related_elements_response(response.json(), detailed_response)
 
@@ -2570,14 +2460,8 @@ class FeedbackManager(Client2):
     ## get_note_by_guid implementation
     #
 
-    async def _async_get_note_by_guid(
-        self,
-        note_guid: str,
-        body: str = {},
-        view_service_url_marker: str = None,
-        access_service_url_marker: str = None,
-        detailed_response: bool = False,
-    ) -> dict | str:
+    async def _async_get_note_by_guid(self, note_guid: str, body: str = None, output_format="JSON",
+                                      report_spec=None) -> dict | str:
         """
         Retrieve the note metadata element with the supplied unique identifier.
 
@@ -2604,6 +2488,9 @@ class FeedbackManager(Client2):
              There is a problem adding the element properties to the metadata repository or
          UserNotAuthorizedException
              the requesting user is not authorized to issue this request.
+
+        Args:
+            output_format ():
         """
 
         possible_query_params = query_string(
@@ -2616,14 +2503,7 @@ class FeedbackManager(Client2):
         response = await self._async_make_request("POST", url, body)
         return element_response(response.json(), "element", detailed_response)
 
-    def get_note_by_guid(
-        self,
-        note_guid: str,
-        body: str = {},
-        view_service_url_marker: str = None,
-        access_service_url_marker: str = None,
-        detailed_response: bool = False,
-    ) -> dict | str:
+    def get_note_by_guid(self, note_guid: str, body: str = None, output_format, report_spec=None) -> dict | str:
         """
         Retrieve the note metadata element with the supplied unique identifier.
 
@@ -2650,16 +2530,14 @@ class FeedbackManager(Client2):
              There is a problem adding the element properties to the metadata repository or
          UserNotAuthorizedException
              the requesting user is not authorized to issue this request.
+
+        Args:
+            output_format ():
+            report_spec ():
         """
         loop = asyncio.get_event_loop()
         response = loop.run_until_complete(
-            self._async_get_note_by_guid(
-                note_guid,
-                body,
-                view_service_url_marker,
-                access_service_url_marker,
-                detailed_response,
-            )
+            self._async_get_note_by_guid(note_guid, body, JSON)
         )
         return response
 
@@ -3116,13 +2994,7 @@ class FeedbackManager(Client2):
     ## get_tag implementation
     #
 
-    async def _async_get_tag(
-        self,
-        tag_guid: str,
-        view_service_url_marker: str = None,
-        access_service_url_marker: str = None,
-        detailed_response: bool = False,
-    ) -> dict | str:
+    async def _async_get_tag(self, tag_guid: str, body=None, output_format, report_spec=None) -> dict | str:
         """
         Return the informal tag for the supplied unique identifier (tag_guid).
 
@@ -3150,6 +3022,11 @@ class FeedbackManager(Client2):
             There is a problem adding the element properties to the metadata repository or
         UserNotAuthorizedException
             the requesting user is not authorized to issue this request.
+
+        Args:
+            body ():
+            output_format ():
+            report_spec ():
         """
 
         possible_query_params = query_string(
@@ -3200,12 +3077,7 @@ class FeedbackManager(Client2):
         """
         loop = asyncio.get_event_loop()
         response = loop.run_until_complete(
-            self._async_get_tag(
-                tag_guid,
-                view_service_url_marker,
-                access_service_url_marker,
-                detailed_response,
-            )
+            self._async_get_tag(tag_guid, output_format=JSON)
         )
         return response
 
@@ -3322,13 +3194,7 @@ class FeedbackManager(Client2):
     ## remove_comment_from_element implementation
     #
 
-    async def _async_remove_comment_from_element(
-        self,
-        comment_guid: str,
-        body: dict = {},
-        view_service_url_marker: str = None,
-        access_service_url_marker: str = None,
-    ) -> dict | str:
+    async def _async_remove_note_log(self, note_log_guid: str, body: str = None -> dict | str:
         """
         Removes a comment added to the element by this user.
 
@@ -3336,7 +3202,7 @@ class FeedbackManager(Client2):
 
         Parameters
         ----------
-        comment_guid
+        note_log_guid
             - String - unique id for the comment object
         server_name
             - name of the server instances for this request
@@ -3367,17 +3233,11 @@ class FeedbackManager(Client2):
                 ("accessServiceUrlMarker", access_service_url_marker),
             ]
         )
-        url = f"{base_path(self, self.view_server)}/comments/{comment_guid}/remove{possible_query_params}"
+        url = f"{base_path(self, self.view_server)}/comments/{note_log_guid}/remove{possible_query_params}"
         response = await self._async_make_request("POST", url, body)
         return response.json()
 
-    def remove_comment_from_element(
-        self,
-        comment_guid: str,
-        body: dict = {},
-        view_service_url_marker: str = None,
-        access_service_url_marker: str = None,
-    ) -> dict | str:
+    def remove_note_log(self, note_log_guid: str, body: str = None -> dict | str:
         """
         Removes a comment added to the element by this user.
 
@@ -3385,7 +3245,7 @@ class FeedbackManager(Client2):
 
         Parameters
         ----------
-        comment_guid
+        note_log_guid
             - String - unique id for the comment object
         server_name
             - name of the server instances for this request
@@ -3411,12 +3271,7 @@ class FeedbackManager(Client2):
         """
         loop = asyncio.get_event_loop()
         response = loop.run_until_complete(
-            self._async_remove_comment_from_element(
-                comment_guid,
-                body,
-                view_service_url_marker,
-                access_service_url_marker,
-            )
+            self._async_remove_note_log(note_logguid, view_service_url_marker, access_service_url_marker)
         )
         return response
 
@@ -3570,13 +3425,7 @@ class FeedbackManager(Client2):
         response = await self._async_make_request("POST", url, body)
         return response.json()
 
-    def remove_note(
-        self,
-        note_guid: str,
-        body: dict = {},
-        view_service_url_marker: str = None,
-        access_service_url_marker: str = None,
-    ) -> dict | str:
+    def remove_note(self, note_guid: str, body: dict = {}) -> dict | str:
         """
         Removes a note from the repository.
 
@@ -4090,14 +3939,8 @@ class FeedbackManager(Client2):
         response = await self._async_make_request("POST", url, body)
         return response.json()
 
-    def update_comment(
-        self,
-        comment_guid: str,
-        body: dict,
-        is_merge_update: bool = None,
-        view_service_url_marker: str = None,
-        access_service_url_marker: str = None,
-    ) -> dict | str:
+    def update_comment(self, comment_guid: str, comment: dict = None, comment_type: bool = "STANDARD_COMMENT",
+                       body: str = None, merge_update: str = True) -> dict | str:
         """
         Update an existing comment.
 
@@ -4251,14 +4094,8 @@ class FeedbackManager(Client2):
     ## update_note implementation
     #
 
-    async def _async_update_note(
-        self,
-        note_guid: str,
-        body: dict,
-        is_merge_update: bool = None,
-        view_service_url_marker: str = None,
-        access_service_url_marker: str = None,
-    ) -> dict | str:
+    async def _async_update_note(self, note_guid: str, display_name: dict = None, description: bool = None,
+                                 body: str = None, merge_update=True) -> dict | str:
         """
         Update an existing note.
 
@@ -4288,6 +4125,9 @@ class FeedbackManager(Client2):
             There is a problem adding the element properties to the metadata repository or
         UserNotAuthorizedException
             the requesting user is not authorized to issue this request.
+
+        Args:
+            merge_update ():
         """
 
         possible_query_params = query_string(
@@ -4301,14 +4141,8 @@ class FeedbackManager(Client2):
         response = await self._async_make_request("POST", url, body)
         return response.json()
 
-    def update_note(
-        self,
-        note_guid: str,
-        body: dict,
-        is_merge_update: bool = None,
-        view_service_url_marker: str = None,
-        access_service_url_marker: str = None,
-    ) -> dict | str:
+    def update_note(self, note_guid: str, display_name: dict = None, description: bool = None, body: str = None,
+                    merge_update=True) -> dict | str:
         """
         Update an existing note.
 
@@ -4338,16 +4172,13 @@ class FeedbackManager(Client2):
             There is a problem adding the element properties to the metadata repository or
         UserNotAuthorizedException
             the requesting user is not authorized to issue this request.
+
+        Args:
+            merge_update ():
         """
         loop = asyncio.get_event_loop()
         response = loop.run_until_complete(
-            self._async_update_note(
-                note_guid,
-                body,
-                is_merge_update,
-                view_service_url_marker,
-                access_service_url_marker,
-            )
+            self._async_update_note(note_guid, body, is_merge_update, view_service_url_marker)
         )
         return response
 
@@ -4355,14 +4186,8 @@ class FeedbackManager(Client2):
     ## update_note_log implementation
     #
 
-    async def _async_update_note_log(
-        self,
-        note_log_guid: str,
-        body: dict,
-        is_merge_update: bool = None,
-        view_service_url_marker: str = None,
-        access_service_url_marker: str = None,
-    ) -> dict | str:
+    async def _async_update_note_log(self, note_log_guid: str, display_name=None, description=None, body=None,
+                                     merge_update=True) -> dict | str:
         """
         Update an existing note log.
 
@@ -4392,6 +4217,10 @@ class FeedbackManager(Client2):
             There is a problem adding the element properties to the metadata repository or
         UserNotAuthorizedException
             the requesting user is not authorized to issue this request.
+
+        Args:
+            display_name ():
+            description ():
         """
 
         possible_query_params = query_string(
@@ -4445,13 +4274,7 @@ class FeedbackManager(Client2):
         """
         loop = asyncio.get_event_loop()
         response = loop.run_until_complete(
-            self._async_update_note_log(
-                note_log_guid,
-                body,
-                is_merge_update,
-                view_service_url_marker,
-                access_service_url_marker,
-            )
+            self.update_note_log(note_log_guid, body=body, merge_update=is_merge_update)
         )
         return response
 
@@ -4459,13 +4282,7 @@ class FeedbackManager(Client2):
     ## update_tag_description implementation
     #
 
-    async def _async_update_tag_description(
-        self,
-        tag_guid: str,
-        body: str,
-        view_service_url_marker: str = None,
-        access_service_url_marker: str = None,
-    ) -> dict | str:
+    async def _async_update_tag_description(self, tag_guid: str) -> dict | str:
         """
         Updates the description of an existing tag (either private or public).
 
@@ -4545,12 +4362,7 @@ class FeedbackManager(Client2):
         """
         loop = asyncio.get_event_loop()
         response = loop.run_until_complete(
-            self._async_update_tag_description(
-                tag_guid,
-                body,
-                view_service_url_marker,
-                access_service_url_marker,
-            )
+            self._async_update_tag_description(tag_guid)
         )
         return response
 

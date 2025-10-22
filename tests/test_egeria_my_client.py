@@ -103,7 +103,7 @@ class TestEgeriaMy:
         response = m_client.create_note(
             note_log_response["guid"], body=note_for_testing
         )
-        response = m_client.find_notes({"filter": ""})
+        response = m_client.find_notes(body={"filter": ""}, output_format=JSON)
         assert "class" in response[0]
         assert "qualifiedName" in response[0]
         assert "guid" in response[0]
