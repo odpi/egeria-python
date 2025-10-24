@@ -1,3 +1,4 @@
+import json
 import types
 import pytest
 import os
@@ -30,6 +31,38 @@ def test_add_archive_file():
         archive_file = "content-packs/CocoComboArchive.omarchive"
         response = client.add_archive_file(archive_file, display_name = "qs-metadata-store")
         print(response)
+        assert True
+    except PyegeriaException as e:
+        print_basic_exception(e)
+        assert False
+
+
+
+def test_add_search_keyword():
+    keyword = "Sentinel"
+    element_guid = "a3442fd4-7e23-4778-b139-9739172fdcd7"
+
+    try:
+        client = Client2(view_server, view_url, user, user_pass)
+        client.create_egeria_bearer_token()
+
+        response = client.add_search_keyword_to_element(element_guid, keyword)
+        print(response)
+        assert True
+    except PyegeriaException as e:
+        print_basic_exception(e)
+        assert False
+
+def test_find_search_keyword() :
+    keyword = "Sentinel2"
+    try:
+        client = Client2(view_server, view_url, user, user_pass)
+        client.create_egeria_bearer_token()
+        response = client.find_search_keywords(keyword, output_format="FORM", report_spec = "Search-Keywords")
+        if isinstance(response, dict | list):
+            print(json.dumps(response, indent = 2))
+        else:
+            print(response)
         assert True
     except PyegeriaException as e:
         print_basic_exception(e)

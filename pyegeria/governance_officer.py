@@ -33,7 +33,7 @@ from pyegeria.config import settings as app_settings
 from pyegeria.models import (SearchStringRequestBody, FilterRequestBody, NewElementRequestBody,
                              ReferenceableProperties, TemplateRequestBody,
                              UpdateElementRequestBody, UpdateStatusRequestBody, NewRelationshipRequestBody,
-                             DeleteRequestBody)
+                             DeleteElementRequestBody, DeleteRelationshipRequestBody,DeleteClassificationRequestBody)
 from pyegeria.utils import dynamic_catch
 
 GOV_DEF_PROPERTIES_LIST = ["GovernanceDefinitionProperties", "GovernanceStrategyProperties", "RegulationProperties",
@@ -851,7 +851,7 @@ class GovernanceOfficer(Client2):
 
     @dynamic_catch
     async def _async_delete_governance_definition(self, definition_guid: str,
-                                                  body: dict | DeleteRequestBody = None,
+                                                  body: dict | DeleteElementRequestBody = None,
                                                   cascade: bool = False) -> None:
         """ Delete a governance definition. Async Version.
 
@@ -863,7 +863,7 @@ class GovernanceOfficer(Client2):
         cascade: bool, optional, defaults to True
             If true, a cascade delete is performed.
 
-        body: dict DeleteRequestBodyt, optional, default = None
+        body: dict DeleteElementRequestBodyt, optional, default = None
             A dict representing the details of the relationship.
 
         Returns
@@ -895,10 +895,10 @@ class GovernanceOfficer(Client2):
             f"{self.platform_url}/s"
             f"ervers/{self.view_server}/api/open-metadata/governance-officer/governance-definitions/"
             f"{definition_guid}/delete")
-        await self._async_delete_request(url, body, cascade)
+        await self._async_delete_element_request(url, body, cascade)
         logger.info(f"Deleted collection {definition_guid} with cascade {cascade}")
 
-    def delete_governance_definition(self, definition_guid: str, body: dict | DeleteRequestBody = None,
+    def delete_governance_definition(self, definition_guid: str, body: dict | DeleteElementRequestBody = None,
                                      cascade: bool = False) -> None:
         """Delete a governance definition.
 
@@ -910,7 +910,7 @@ class GovernanceOfficer(Client2):
         cascade: bool, optional, defaults to True
             If true, a cascade delete is performed.
 
-        body: dict DeleteRequestBodyt, optional, default = None
+        body: dict DeleteElementRequestBodyt, optional, default = None
             A dict representing the details of the relationship.
 
         Returns
@@ -1065,7 +1065,7 @@ class GovernanceOfficer(Client2):
 
     @dynamic_catch
     async def _async_detach_peer_definitions(self, definition_guid1: str, relationship_type: str, definition_guid2: str,
-                                             body: dict | DeleteRequestBody = None) -> None:
+                                             body: dict | DeleteRelationshipRequestBody = None) -> None:
         """ Detach two peer governance definitions. Request body is optional. Async Version.
 
         Parameters
@@ -1110,12 +1110,12 @@ class GovernanceOfficer(Client2):
             f"{self.platform_url}/servers/{self.view_server}/api/open-metadata/"
             f"{self.url_marker}/governance-definitions/"
             f"{definition_guid1}/peer-definitions/{relationship_type}/{definition_guid2}/detach")
-        await self._async_delete_request(url, body)
+        await self._async_delete_relationship_request(url, body)
         logger.info(f"Detached peer definitions: {definition_guid1} -> {definition_guid2}")
 
     @dynamic_catch
     def detach_peer_definitions(self, definition_guid1: str, relationship_type: str, definition_guid2: str,
-                                body: dict = None | DeleteRequestBody) -> None:
+                                body: dict = None | DeleteRelationshipRequestBody) -> None:
         """ Detach two peer governance definitions. Request body is optional.
 
         Parameters
@@ -1287,7 +1287,7 @@ class GovernanceOfficer(Client2):
     @dynamic_catch
     async def _async_detach_supporting_definitions(self, definition_guid1: str, relationship_type: str,
                                                    definition_guid2: str,
-                                                   body: dict | DeleteRequestBody = None) -> None:
+                                                   body: dict | DeleteRelationshipRequestBody = None) -> None:
         """ Detach a governance definition from a supporting governance definition.
             Request body is optional. Async Version.
 
@@ -1333,12 +1333,12 @@ class GovernanceOfficer(Client2):
             f"{self.url_marker}/governance-definitions/"
             f"{definition_guid1}/supporting-definitions/{relationship_type}/{definition_guid2}/detach"
         )
-        await self._async_delete_request(url, body)
+        await self._async_delete_relationship_request(url, body)
         logger.info(f"Detached digital supporting definitions: {definition_guid1} -> {definition_guid2}")
 
     @dynamic_catch
-    def detach_supporting_definitions(self, definition_guid: str, relationship_type: str, definition_guid2: str,
-                                      body: dict | DeleteRequestBody = None) -> None:
+    def detach_supporting_definitions(self, definition_guid1: str, relationship_type: str, definition_guid2: str,
+                                      body: dict | DeleteRelationshipRequestBody = None) -> None:
         """ Detach a governance definition from a supporting governance definition.
             Request body is optional.
 
@@ -1481,7 +1481,7 @@ class GovernanceOfficer(Client2):
 
     @dynamic_catch
     async def _async_detach_governed_by_definition(self, element_guid: str, definition_guid: str,
-                                                   body: dict | DeleteRequestBody = None) -> None:
+                                                   body: dict | DeleteRelationshipRequestBody = None) -> None:
         """ Detach a governance definition from a supporting governance definition.
             Request body is optional. Async Version.
 
@@ -1512,7 +1512,7 @@ class GovernanceOfficer(Client2):
 
         Body structure:
         {
-          "class" : "DeleteRequestBody",
+          "class" : "DeleteRelationshipRequestBody",
           "externalSourceGUID": "add guid here",
           "externalSourceName": "add qualified name here",
           "effectiveTime" : "{{$isoTimestamp}}",
@@ -1524,12 +1524,12 @@ class GovernanceOfficer(Client2):
             f"{self.platform_url}/servers/{self.view_server}/api/open-metadata/"
             f"{self.url_marker}/elements/{element_guid}/governed-by/{definition_guid}/detach"
         )
-        await self._async_delete_request(url, body)
+        await self._async_delete_relationship_request(url, body)
         logger.info(f"Detached governed-by relationshup between: {definition_guid} -> {element_guid}")
 
     @dynamic_catch
     def detach_governed_by_definitio(self, element_guid: str, definition_guid: str,
-                                      body: dict | DeleteRequestBody = None) -> None:
+                                      body: dict | DeleteRelationshipRequestBody = None) -> None:
         """ Detach a governance definition from a supporting governance definition.
             Request body is optional.
 
@@ -1560,7 +1560,7 @@ class GovernanceOfficer(Client2):
 
         Body structure:
         {
-          "class" : "DeleteRequestBody",
+          "class" : "DeleteRelationshipRequestBody",
           "externalSourceGUID": "add guid here",
           "externalSourceName": "add qualified name here",
           "effectiveTime" : "{{$isoTimestamp}}",
@@ -1575,7 +1575,7 @@ class GovernanceOfficer(Client2):
 
 
     @dynamic_catch
-    async def _async_delete_governance_definition(self, guid: str, body: dict | DeleteRequestBody = None) -> None:
+    async def _async_delete_governance_definition(self, guid: str, body: dict | DeleteElementRequestBody = None) -> None:
         """ Delete an information supply. Async version.
 
         Parameters
@@ -1617,12 +1617,12 @@ class GovernanceOfficer(Client2):
        """
         url = (f"{self.platform_url}/servers/{self.view_server}/api/open-metadata/"
                f"{self.url_marker}/governance-definitions/{guid}/delete")
-        await self._async_delete_request(url, body)
+        await self._async_delete_element_request(url, body)
         logger.info(f"Deleted governance definition: {guid} ")
 
 
     @dynamic_catch
-    def delete_governance_definition(self, guid: str, body: dict | DeleteRequestBody = None) -> None:
+    def delete_governance_definition(self, guid: str, body: dict | DeleteElementRequestBody = None) -> None:
         """ Delete an information supply. Request body is optional. Async version.
 
         Parameters
@@ -2180,7 +2180,7 @@ class GovernanceOfficer(Client2):
 
     @dynamic_catch
     async def _async_detach_design_from_implementation(self, design_desc_guid: str, implementation_guid: str,
-                                                       body: dict | DeleteRequestBody = None) -> None:
+                                                       body: dict | DeleteElementRequestBody = None) -> None:
         """ Detach a governance definition from its implementation. Async Version.
 
         Parameters
@@ -2221,13 +2221,13 @@ class GovernanceOfficer(Client2):
 
         url = (f"{self.platform_url}/servers/{self.view_server}/api/open-metadata/{self.url_marker}/designs/"
                f"{design_desc_guid}/implementations/{implementation_guid}/detach")
-        await self._async_delete_request(url, body)
+        await self._async_delete_relationship_request(url, body)
         logger.info(
             f"Detached design from implementation: {design_desc_guid} -> {implementation_guid}")
 
     @dynamic_catch
     def detach_design_from_implementation(self, design_desc_guid: str, implementation_guid: str,
-                                          body: dict | DeleteRequestBody = None) -> None:
+                                          body: dict | DeleteElementRequestBody = None) -> None:
         """ Detach a governance definition from its implementation. Request body is optional.
 
         Parameters
@@ -2383,7 +2383,7 @@ class GovernanceOfficer(Client2):
 
     @dynamic_catch
     async def _async_detach_implementation_resource(self, design_desc_guid: str, implementation_guid: str,
-                                                    body: dict | DeleteRequestBody = None) -> None:
+                                                    body: dict | DeleteRelationshipRequestBody = None) -> None:
         """ Detach a design object such as a solution component or governance definition from one of its implementation
             resources. Request body is optional. Async version.
 
@@ -2425,12 +2425,12 @@ class GovernanceOfficer(Client2):
 
         url = (f"{self.platform_url}/servers/{self.view_server}/api/open-metadata/{self.url_marker}/designs/"
                f"{design_desc_guid}/implementation-resources/{implementation_guid}/detach")
-        await self._async_delete_request(url, body)
+        await self._async_delete_relationship_request(url, body)
         logger.info(
             f"Detached design from implementation resource: {design_desc_guid} -> {implementation_guid}")
 
     def detach_implementation_resource(self, design_desc_guid: str, implementation_guid: str,
-                                       body: dict | DeleteRequestBody = None) -> None:
+                                       body: dict | DeleteRelationshipRequestBody = None) -> None:
         """ Detach a design object such as a solution component or governance definition from one of its implementation
             resources. Request body is optional.
 
@@ -2570,10 +2570,10 @@ class GovernanceOfficer(Client2):
         }
         """
         loop = asyncio.get_event_loop()
-        loop.run_until_complete(self._async_link_governance_results(gov_metric_guid, data_asset_guid, implementation_guid, body))
+        loop.run_until_complete(self._async_link_governance_results(gov_metric_guid, data_asset_guid, body))
 
     @dynamic_catch
-    async def _async_detach_governance_results(self, gov_metric_guid: str, data_asset_guid: str, body: dict | DeleteRequestBody = None) -> None:
+    async def _async_detach_governance_results(self, gov_metric_guid: str, data_asset_guid: str, body: dict | DeleteRelationshipRequestBody = None) -> None:
         """ Detach an governance metric from its measurements data set. Request body is optional.
             https://egeria-project.org/concepts/governance-definition/ Async version.
 
@@ -2611,12 +2611,12 @@ class GovernanceOfficer(Client2):
 
         url = (f"{self.platform_url}/servers/{self.view_server}/api/open-metadata/{self.url_marker}/governance-metrics/"
                f"{gov_metric_guid}/measurements/{data_asset_guid}/detach")
-        await self._async_delete_request(url, body)
+        await self._async_delete_relationship_request(url, body)
         logger.info(
             f"Detached governance metric from the asset where measurements were stored: {gov_metric_guid} -> {data_asset_guid}")
 
     def detach_governance_results(self, gov_metric_guid: str, data_asset_guid: str,
-                                  body: dict | DeleteRequestBody = None) -> None:
+                                  body: dict | DeleteRelationshipRequestBody = None) -> None:
         """ Detach an governance metric from its measurements data set. Request body is optional.
              https://egeria-project.org/concepts/governance-definition/
 

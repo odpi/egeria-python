@@ -104,7 +104,7 @@ updated_note_for_testing = {
 
 
 standard_comment = {
-    "class": "NewFeedbackRequestBody",
+    "class": "NewAttachmentRequestBody",
     "properties": {
         "class": "CommentProperties",
         "qualifiedName": "ExampleStandardComment",
@@ -713,7 +713,7 @@ def test_get_comment_with_bad_guid():
 def test_get_elements_by_tag():
     create_response = fm_client.create_informal_tag(tag_for_testing)
     fm_client.add_tag_to_element(term_guid, create_response["guid"])
-    response = fm_client.get_elements_by_tag(create_response["guid"])
+    response = fm_client.get_search_keyword_by_guid(create_response["guid"], JSON)
     assert "name" in response[0]
     assert "typeName" in response[0]
     assert "properties" in response[0]
@@ -724,9 +724,7 @@ def test_get_elements_by_tag():
 def test_get_elements_by_tag_detailed():
     create_response = fm_client.create_informal_tag(tag_for_testing)
     fm_client.add_tag_to_element(term_guid, create_response["guid"])
-    response = fm_client.get_elements_by_tag(
-        create_response["guid"], detailed_response=True
-    )
+    response = fm_client.get_search_keyword_by_guid(create_response["guid"], JSON)
     assert response["relatedHTTPCode"] == 200
     assert response["class"] == "RelatedElementsResponse"
     assert "elementList" in response

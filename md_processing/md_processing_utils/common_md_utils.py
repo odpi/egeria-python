@@ -482,7 +482,7 @@ def set_rel_request_body_for_type(object_type: str, attributes: dict)->dict:
 
 def set_delete_request_body(object_type: str, attributes: dict)->dict:
     return {
-        "class": "DeleteRequestBody",
+        "class": "DeleteElementRequestBody",
         "externalSourceGUID": attributes.get('External Source GUID', {}).get('guid', None),
         "externalSourceName": attributes.get('External Source Name', {}).get('value', None),
         "effectiveTime": attributes.get('Effective Time', {}).get('value', None),

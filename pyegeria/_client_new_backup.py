@@ -32,8 +32,7 @@ from pyegeria.models import (SearchStringRequestBody, FilterRequestBody, GetRequ
                              NewClassificationRequestBody,
                              DeleteElementRequestBody, DeleteRelationshipRequestBody, DeleteClassificationRequestBody,
                              LevelIdentifierQueryBody)
-from pyegeria.output_formatter import populate_common_columns, resolve_output_formats, generate_output, \
-    overlay_additional_values
+from pyegeria.output_formatter import populate_common_columns, resolve_output_formats, generate_output
 from pyegeria.utils import body_slimmer, dynamic_catch
 
 ...
@@ -511,7 +510,7 @@ class Client2(BaseClient):
             - Normally false. Set true when the caller is part of a deduplication function
         start_from: int, default = 0
             - index of the list to start from (0 for start).
-        page_size: int, default = 0
+        page_size
             - maximum number of elements to return.
         time_out: int, default = default_time_out
             - http request timeout for this request
@@ -548,7 +547,7 @@ class Client2(BaseClient):
         name: str
             - element name to be searched.
         property_name: [str], default = ["qualifiedName","displayName"]
-            - properties to search in.
+            - propertys to search in.
         type_name: str, default = "ValidMetadataValue"
             - metadata element type name to be used to restrict the search
         Returns
@@ -585,7 +584,7 @@ class Client2(BaseClient):
         name: str
             - element name to be searched.
         property_name: [str], default = ["qualifiedName","displayName"]
-            - properties to search in.
+            - propertys to search in.
         type_name: str, default = "ValidMetadataValue"
             - metadata element type name to be used to restrict the search
         Returns
@@ -595,7 +594,7 @@ class Client2(BaseClient):
 
         Raises
         ------
-        PyegeriaException
+        PyegeriaExeception
         """
 
         loop = asyncio.get_event_loop()
@@ -1216,10 +1215,11 @@ class Client2(BaseClient):
 
     ) -> None:
         """
-        Remove the accepted-answer link between a question comment and its answer. Async version.
+        Link a comment that contains the best answer to a question posed in another comment. Async version.
 
         Parameters
         ----------
+
         question_comment_guid: str
             - unique id for the question comment.
         answer_comment_guid: str
@@ -1232,6 +1232,7 @@ class Client2(BaseClient):
         Raises
         ------
         PyEgeriaException
+
         """
 
         url = f"{self.command_root}feedback-manager/comments/questions/{question_comment_guid}/answers/{answer_comment_guid}/remove"
@@ -1244,10 +1245,11 @@ class Client2(BaseClient):
 
     ) -> None:
         """
-        Remove the accepted-answer link between a question comment and its answer.
+        Link a comment that contains the best answer to a question posed in another comment.
 
         Parameters
         ----------
+
         question_comment_guid: str
             - unique id for the question comment.
         answer_comment_guid: str
@@ -1260,6 +1262,7 @@ class Client2(BaseClient):
         Raises
         ------
         PyEgeriaException
+
         """
 
         loop = asyncio.get_event_loop()
@@ -1290,7 +1293,7 @@ class Client2(BaseClient):
 
         Returns
         -------
-        None
+        VoidResponse
 
         Raises
         ------
@@ -1312,24 +1315,22 @@ class Client2(BaseClient):
 
     ) -> None:
         """
-        Remove a comment from an element added by this user.
+        Removes a comment added to the element by this user.
 
         This deletes the link to the comment, the comment itself and any comment replies attached to it.
 
         Parameters
         ----------
-        element_guid: str
-            - unique id for the element
-        comment_guid: str
-            - unique id for the comment object
-        body: dict | DeleteElementRequestBody, optional
-            - contains comment type and text
-        cascade_delete: bool, default = False
-            - whether to cascade delete
+        comment_guid
+            - String - unique id for the comment object
+        body
+            - containing type of comment enum and the text of the comment.
+        cascade_delete: bool = False
+
 
         Returns
         -------
-        None
+        VoidResponse
 
         Raises
         ------
@@ -1973,7 +1974,7 @@ class Client2(BaseClient):
 
         Returns
         -------
-        None
+        VoidResponse
 
         Raises
         ------
@@ -1993,20 +1994,22 @@ class Client2(BaseClient):
 
     ) -> None:
         """
-        Remove a note log from the repository. All relationships to referenceables are lost.
+        Removes a comment added to the element by this user.
+
+        This deletes the link to the comment, the comment itself and any comment replies attached to it.
 
         Parameters
         ----------
-        note_log_guid: str
-            - unique id for the note log
-        body: dict | DeleteElementRequestBody, optional
-            - request body details (if provided, supersedes other parameters)
-        cascade_delete: bool, default = False
-            - if True, deletes all comments and replies associated with the note log
+        note_log_guid
+            - String - unique id for the comment object
+        body
+            - containing type of comment enum and the text of the comment.
+        cascade_delete: bool = False
+
 
         Returns
         -------
-        None
+        VoidResponse
 
         Raises
         ------
@@ -3062,7 +3065,7 @@ class Client2(BaseClient):
 
         Returns
         -------
-        None
+        VoidResponse :
 
         Raises
         ------
@@ -3085,22 +3088,23 @@ class Client2(BaseClient):
 
     ) -> None:
         """
-        Update the description of an existing tag.
+          Updates the description of an existing tag. Async version.
 
-        Parameters
-        ----------
-        tag_guid: str
-            - unique id for the tag
-        description: str
+          Parameters
+          ----------
+
+         tag_guid
+              - unique id for the tag
+         description: str
             - description of the tag
 
-        Returns
-        -------
-        None
+          Returns
+          -------
+          VoidResponse :
 
-        Raises
-        ------
-        PyegeriaException
+          Raises
+          ------
+          PyegeriaException
         """
         loop = asyncio.get_event_loop()
         response = loop.run_until_complete(
@@ -3129,7 +3133,7 @@ class Client2(BaseClient):
             - String - unique id for the tag.
         Returns
         -------
-        None
+        VOIDResponse
 
         Raises
         ------
@@ -4330,7 +4334,7 @@ class Client2(BaseClient):
         return response
 
     @dynamic_catch
-    def find_search_keywords(
+    def get_search_keyword_by_keyword(
             self,
             search_string: str,
             start_from: int = 0,
@@ -4390,28 +4394,6 @@ class Client2(BaseClient):
         # col_data = overlay_additional_values(col_data, extra)
         return col_data
 
-    def _extract_element_properties_for_keyword(self, element: dict, columns_struct: dict) -> dict:
-        keyword_elements = None
-        keyword_elements = element["keywordElements"]
-        out_body = {}
-        keyword = element["properties"].get('keyword', '')
-        for el in keyword_elements:
-            element = el.get("relatedElement", {})
-            element_guid = element['elementHeader']['guid']
-            element_type = element['elementHeader']['type']['typeName']
-            element_display_name = element['properties'].get('displayName',"")
-            element_description = element['properties'].get('description',"")
-            element_category = element['properties'].get('category',"")
-            out_body = {
-                "element_display_name": element_display_name,
-                "element_description": element_description,
-                "element_category": element_category,
-                "element_type": element_type,
-                "element_guid": element_guid,
-                "keyword": keyword
-            }
-        return out_body
-
     @dynamic_catch
     def _extract_feedback_properties(self, element: dict, columns_struct: dict) -> dict:
         props = element.get('properties', {}) or {}
@@ -4423,10 +4405,8 @@ class Client2(BaseClient):
         col_data = populate_common_columns(element, columns_struct)
         columns_list = col_data.get('formats', {}).get('attributes', [])
         # Overlay extras (project roles) only where empty
-        if isinstance(element['keywordElements'], list):
-            extra = self._extract_element_properties_for_keyword(element, columns_struct)
-            col_data = overlay_additional_values(col_data, extra)
-
+        # extra = self._extract_additional_project_properties(element, columns_struct)
+        # col_data = overlay_additional_values(col_data, extra)
         return col_data
 
     @dynamic_catch

@@ -9,11 +9,11 @@ This module tests the CollectionManager class and methods
 A running Egeria environment is needed to run these tests.
 
 """
-
+import asyncio
 import json
 import time
 from datetime import datetime
-
+# import pytest.asyncio
 from loguru import logger
 
 from rich import print, print_json
@@ -100,7 +100,7 @@ class TestCollectionManager:
         finally:
             c_client.close_session()
 
-    async def test_find_collections(self):
+    def test_find_collections(self):
         try:
             c_client = EgeriaTech(self.good_server_2, self.good_platform1_url, user_id=self.good_user_2, )
             token = c_client.create_egeria_bearer_token(self.good_user_2, "secret")
@@ -111,7 +111,7 @@ class TestCollectionManager:
             output_format = "DICT"
             report_spec = "BasicCollections"
 
-            response = await c_client._async_find_collections(search_string = search_string, classification_names = classification_name
+            response = c_client.find_collections(search_string = search_string, classification_names = classification_name
                                                  ,metadata_element_types=element_type
                                                  ,output_format=output_format, report_spec=report_spec)
             duration = time.perf_counter() - start_time
@@ -1300,7 +1300,7 @@ class TestCollectionManager:
             start_time = time.perf_counter()
             collection_guid = "8b407ab4-59fd-40c7-954a-a27163d727e8"
             body = {
-                "class": "DeleteRequestBody",
+                "class": "DeleteElementRequestBody",
                 "cascadedDelete": True
                 }
             response = c_client.delete_collection(collection_guid, body=body)
