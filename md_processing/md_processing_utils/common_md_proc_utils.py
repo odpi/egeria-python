@@ -13,7 +13,7 @@ from rich import print
 from rich.markdown import Markdown
 from rich.console import Console
 from pyegeria.utils import parse_to_dict
-
+from pyegeria.config import settings
 from md_processing.md_processing_utils.common_md_utils import (get_current_datetime_string, get_element_dictionary,
                                                                update_element_dictionary,
                                                                split_tb_string, str_to_bool, )
@@ -33,15 +33,19 @@ from pyegeria import EgeriaTech, select_report_spec, PyegeriaException, print_ba
 
 from pyegeria._globals import DEBUG_LEVEL
 
+debug_level = DEBUG_LEVEL
+global COMMAND_DEFINITIONS
+
+user_config = settings.User_Profile
 
 # Constants
 EGERIA_WIDTH = int(os.environ.get("EGERIA_WIDTH", "200"))
-EGERIA_USAGE_LEVEL = os.environ.get("EGERIA_USAGE_LEVEL", "Advanced")
+EGERIA_USAGE_LEVEL = os.environ.get("EGERIA_USAGE_LEVEL", user_config.egeria_usage_level)
 LOCAL_QUALIFIER = os.environ.get("EGERIA_LOCAL_QUALIFIER", None)
 console = Console(width=EGERIA_WIDTH)
 
-debug_level = DEBUG_LEVEL
-global COMMAND_DEFINITIONS
+
+
 
 
 @logger.catch

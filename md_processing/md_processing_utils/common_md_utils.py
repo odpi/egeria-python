@@ -11,6 +11,8 @@ from loguru import logger
 from rich import print
 from rich.console import Console
 from rich.markdown import Markdown
+
+from pyegeria import Client2, PyegeriaException
 from pyegeria.utils import (camel_to_title_case, body_slimmer)
 from pyegeria._globals import DEBUG_LEVEL
 from md_processing.md_processing_utils.message_constants import message_types
@@ -539,3 +541,28 @@ def set_object_classifications(object_type: str, attributes: dict, obj_types: li
         for classification in classifications:
             body[classification] = {"class" : f"{classification}Properties"}
     return body
+
+def add_search_keywords(client: Client2, element_guid: str, keywords: list[str]):
+    """Add a search keyword to an element. Throw an exception if a problem is encountered.
+
+    Args:
+        client (Client2): The Egeria client instance.
+        element_guid (str): The GUID of the element to add the keyword to.
+        keyword (str): The search keyword to add.
+
+    Returns:
+        None
+    """
+    try:
+        for keyword in keywords:
+            client.add_search_keyword_to_element(element_guid, keyword)
+            print("Added keyword `{}` to element `{}`".format(keyword, element_guid))
+
+    except PyegeriaException as e:
+        context = {
+            "readon" : "Exception encountered executing add_search_keyword",
+            "element_guid": element_guid,
+            "keyword": keyword,
+            "exception": str(e)
+        }
+        raise PyegeriaException(context = context)

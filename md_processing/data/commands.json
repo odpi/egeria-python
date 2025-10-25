@@ -1,7 +1,7 @@
 
 
 {"Command Specifications":{
-	"exported": "Oct 23, 2025 at 8:01:15 AM",
+	"exported": "Oct 24, 2025 at 3:19:19 PM",
 
 
 
@@ -30,24 +30,102 @@
 
 
 
-{"Display Name":{
-		"variable_name": "display_name",
+{"Version Identifier":{
+		"variable_name": "version_identifier",
 	"inUpdate": true,
-	"attr_labels": "Name",
+	"attr_labels": "",
+	"examples": "V1.01",
+	"default_value": "",
+	"valid_values": "",
+	"existing_element": "",
+	"description": "Published  version identifier.",
+	"qualified_name_pattern": "",
+	"generated": false,
+	"style": "Simple",
+	"user_specified": true,
+	"unique": false,
+	"input_required": false,
+	"isParent": false,
+	"isAnchor": false,
+	"min_cardinality": 0,
+	"max_cardinality": 1,
+	"level": "Basic",
+	"Journal Entry": ""
+	}
+}
+ ,
+
+
+{"User Defined Status":{
+		"variable_name": "user_defined_status",
+	"inUpdate": true,
+	"attr_labels": "",
+	"examples": "Pink",
+	"default_value": "",
+	"valid_values": "",
+	"existing_element": "",
+	"description": "Only valid if Product Status is set to OTHER. User defined & managed status values.",
+	"qualified_name_pattern": "",
+	"generated": false,
+	"style": "Simple",
+	"user_specified": true,
+	"unique": false,
+	"input_required": false,
+	"isParent": false,
+	"isAnchor": false,
+	"min_cardinality": 0,
+	"max_cardinality": 1,
+	"level": "Basic",
+	"Journal Entry": ""
+	}
+}
+ ,
+
+
+{"Usage":{
+		"variable_name": "usage",
+	"inUpdate": true,
+	"attr_labels": "",
 	"examples": "",
 	"default_value": "",
 	"valid_values": "",
 	"existing_element": "",
-	"description": "Name of the  definition.",
+	"description": "How the governance definition will be used.",
 	"qualified_name_pattern": "",
 	"generated": false,
-	"style": "ID",
+	"style": "Simple",
 	"user_specified": true,
 	"unique": false,
-	"input_required": true,
+	"input_required": false,
 	"isParent": false,
 	"isAnchor": false,
-	"min_cardinality": 1,
+	"min_cardinality": 0,
+	"max_cardinality": 1,
+	"level": "Basic",
+	"Journal Entry": ""
+	}
+}
+ ,
+
+
+{"URL":{
+		"variable_name": "url",
+	"inUpdate": true,
+	"attr_labels": "",
+	"examples": "",
+	"default_value": "",
+	"valid_values": "",
+	"existing_element": "",
+	"description": "Link to supporting information",
+	"qualified_name_pattern": "",
+	"generated": false,
+	"style": "Simple",
+	"user_specified": true,
+	"unique": false,
+	"input_required": false,
+	"isParent": false,
+	"isAnchor": false,
+	"min_cardinality": 0,
 	"max_cardinality": 1,
 	"level": "Basic",
 	"Journal Entry": ""
@@ -74,6 +152,656 @@
 	"isParent": false,
 	"isAnchor": false,
 	"min_cardinality": 0,
+	"max_cardinality": 1,
+	"level": "Basic",
+	"Journal Entry": ""
+	}
+}
+ ,
+
+
+{"Status":{
+		"variable_name": "element_status",
+	"inUpdate": true,
+	"attr_labels": "Definition Status",
+	"examples": "APPROVED",
+	"default_value": "ACTIVE",
+	"valid_values": "DRAFT; PREPARED; PROPOSED; APPROVED; REJECTED; ACTIVE'; DEPRECATED; OTHER",
+	"existing_element": "",
+	"description": "The status of the business imperative. There is a list of valid values that this conforms to.",
+	"qualified_name_pattern": "",
+	"generated": false,
+	"style": "Valid Value",
+	"user_specified": true,
+	"unique": false,
+	"input_required": false,
+	"isParent": false,
+	"isAnchor": false,
+	"min_cardinality": 1,
+	"max_cardinality": 1,
+	"level": "Basic",
+	"Journal Entry": ""
+	}
+}
+ ,
+
+
+{"Search Keywords":{
+		"variable_name": "search_keywords",
+	"inUpdate": true,
+	"attr_labels": "",
+	"examples": "",
+	"default_value": "",
+	"valid_values": "",
+	"existing_element": "",
+	"description": "Keywords to facilitate finding the element",
+	"qualified_name_pattern": "",
+	"generated": false,
+	"style": "Simple List",
+	"user_specified": true,
+	"unique": false,
+	"input_required": false,
+	"isParent": false,
+	"isAnchor": false,
+	"min_cardinality": 0,
+	"max_cardinality": 20,
+	"level": "Basic",
+	"Journal Entry": ""
+	}
+}
+ ,
+
+
+{"Scope":{
+		"variable_name": "scope",
+	"inUpdate": true,
+	"attr_labels": "",
+	"examples": "",
+	"default_value": "",
+	"valid_values": "",
+	"existing_element": "",
+	"description": "Scope of the definition.",
+	"qualified_name_pattern": "",
+	"generated": false,
+	"style": "Simple",
+	"user_specified": true,
+	"unique": false,
+	"input_required": false,
+	"isParent": false,
+	"isAnchor": false,
+	"min_cardinality": 0,
+	"max_cardinality": 1,
+	"level": "Basic",
+	"Journal Entry": ""
+	}
+}
+ ,
+
+
+{"Results":{
+		"variable_name": "results",
+	"inUpdate": true,
+	"attr_labels": "",
+	"examples": "No regulatory violations.",
+	"default_value": "",
+	"valid_values": "",
+	"existing_element": "",
+	"description": "A list of expected results.",
+	"qualified_name_pattern": "",
+	"generated": false,
+	"style": "Simple List",
+	"user_specified": true,
+	"unique": false,
+	"input_required": false,
+	"isParent": false,
+	"isAnchor": false,
+	"min_cardinality": 0,
+	"max_cardinality": 1,
+	"level": "Basic",
+	"Journal Entry": ""
+	}
+}
+ ,
+
+
+{"Qualified Name":{
+		"variable_name": "qualified_name",
+	"inUpdate": true,
+	"attr_labels": "",
+	"examples": "dataField::a data field",
+	"default_value": "",
+	"valid_values": "",
+	"existing_element": "",
+	"description": "A unique qualified name for the element. Generated using the qualified name pattern  if not user specified.",
+	"qualified_name_pattern": "local_qualifier::namespace::DigitalProduct:display_name::version_id",
+	"generated": true,
+	"style": "QN",
+	"user_specified": true,
+	"unique": true,
+	"input_required": false,
+	"isParent": false,
+	"isAnchor": false,
+	"min_cardinality": 1,
+	"max_cardinality": 1,
+	"level": "Basic",
+	"Journal Entry": ""
+	}
+}
+ ,
+
+
+{"Parent Relationship Type Name":{
+		"variable_name": "parent_rel_type_name",
+	"inUpdate": true,
+	"attr_labels": "",
+	"examples": "",
+	"default_value": "",
+	"valid_values": "",
+	"existing_element": "",
+	"description": "The kind of the relationship to the parent element.",
+	"qualified_name_pattern": "",
+	"generated": false,
+	"style": "Simple",
+	"user_specified": true,
+	"unique": false,
+	"input_required": false,
+	"isParent": false,
+	"isAnchor": false,
+	"min_cardinality": 0,
+	"max_cardinality": 1,
+	"level": "Advanced",
+	"Journal Entry": "Any restrictions?"
+	}
+}
+ ,
+
+
+{"Parent ID":{
+		"variable_name": "parent_id",
+	"inUpdate": true,
+	"attr_labels": "Parent;",
+	"examples": "DataDict::MyParent",
+	"default_value": "",
+	"valid_values": "",
+	"existing_element": "DataDicti",
+	"description": "Unique name of the parent element.",
+	"qualified_name_pattern": "",
+	"generated": false,
+	"style": "Reference Name",
+	"user_specified": true,
+	"unique": false,
+	"input_required": false,
+	"isParent": false,
+	"isAnchor": false,
+	"min_cardinality": 0,
+	"max_cardinality": 1,
+	"level": "Advanced",
+	"Journal Entry": "Should the parent be anything or just a collection?"
+	}
+}
+ ,
+
+
+{"Parent at End1":{
+		"variable_name": "parent_end1",
+	"inUpdate": true,
+	"attr_labels": "",
+	"examples": "",
+	"default_value": "True",
+	"valid_values": "",
+	"existing_element": "",
+	"description": "Is the parent at end1 of the relationship?",
+	"qualified_name_pattern": "",
+	"generated": false,
+	"style": "Bool",
+	"user_specified": true,
+	"unique": false,
+	"input_required": false,
+	"isParent": false,
+	"isAnchor": false,
+	"min_cardinality": 0,
+	"max_cardinality": 1,
+	"level": "Advanced",
+	"Journal Entry": ""
+	}
+}
+ ,
+
+
+{"Outcomes":{
+		"variable_name": "outcomes",
+	"inUpdate": true,
+	"attr_labels": "",
+	"examples": "",
+	"default_value": "",
+	"valid_values": "",
+	"existing_element": "",
+	"description": "List of desired outcomes.",
+	"qualified_name_pattern": "",
+	"generated": false,
+	"style": "Simple List",
+	"user_specified": true,
+	"unique": false,
+	"input_required": false,
+	"isParent": false,
+	"isAnchor": false,
+	"min_cardinality": 0,
+	"max_cardinality": -1,
+	"level": "Basic",
+	"Journal Entry": ""
+	}
+}
+ ,
+
+
+{"Merge Update":{
+		"variable_name": "merge_update",
+	"inUpdate": true,
+	"attr_labels": "Merge",
+	"examples": "",
+	"default_value": "True",
+	"valid_values": "",
+	"existing_element": "",
+	"description": "If true, only those attributes specified in the update will be updated; If false, any attributes not provided during the update will be set to None.",
+	"qualified_name_pattern": "",
+	"generated": false,
+	"style": "Bool",
+	"user_specified": true,
+	"unique": false,
+	"input_required": false,
+	"isParent": false,
+	"isAnchor": false,
+	"min_cardinality": 0,
+	"max_cardinality": 1,
+	"level": "Advanced",
+	"Journal Entry": ""
+	}
+}
+ ,
+
+
+{"Journal Entry":{
+		"variable_name": "journal_entry",
+	"inUpdate": true,
+	"attr_labels": "",
+	"examples": "",
+	"default_value": "",
+	"valid_values": "",
+	"existing_element": "",
+	"description": "",
+	"qualified_name_pattern": "",
+	"generated": false,
+	"style": "Simple",
+	"user_specified": true,
+	"unique": false,
+	"input_required": false,
+	"isParent": false,
+	"isAnchor": false,
+	"min_cardinality": 0,
+	"max_cardinality": 1,
+	"level": "Basic",
+	"Journal Entry": ""
+	}
+}
+ ,
+
+
+{"Is Own Anchor":{
+		"variable_name": "is_own_anchor",
+	"inUpdate": true,
+	"attr_labels": "Own Anchor",
+	"examples": "",
+	"default_value": "True",
+	"valid_values": "",
+	"existing_element": "",
+	"description": "Generally true. ",
+	"qualified_name_pattern": "",
+	"generated": false,
+	"style": "Bool",
+	"user_specified": true,
+	"unique": false,
+	"input_required": false,
+	"isParent": false,
+	"isAnchor": false,
+	"min_cardinality": 1,
+	"max_cardinality": 1,
+	"level": "Advanced",
+	"Journal Entry": ""
+	}
+}
+ ,
+
+
+{"Importance":{
+		"variable_name": "importance",
+	"inUpdate": true,
+	"attr_labels": "",
+	"examples": "",
+	"default_value": "",
+	"valid_values": "",
+	"existing_element": "",
+	"description": "Importance of the definition.",
+	"qualified_name_pattern": "",
+	"generated": false,
+	"style": "Simple",
+	"user_specified": true,
+	"unique": false,
+	"input_required": false,
+	"isParent": false,
+	"isAnchor": false,
+	"min_cardinality": 0,
+	"max_cardinality": 1,
+	"level": "Basic",
+	"Journal Entry": ""
+	}
+}
+ ,
+
+
+{"Implications":{
+		"variable_name": "implications",
+	"inUpdate": true,
+	"attr_labels": "",
+	"examples": "",
+	"default_value": "",
+	"valid_values": "",
+	"existing_element": "",
+	"description": "List of implications.",
+	"qualified_name_pattern": "",
+	"generated": false,
+	"style": "Simple List",
+	"user_specified": true,
+	"unique": false,
+	"input_required": false,
+	"isParent": false,
+	"isAnchor": false,
+	"min_cardinality": 0,
+	"max_cardinality": -1,
+	"level": "Basic",
+	"Journal Entry": ""
+	}
+}
+ ,
+
+
+{"Identifier":{
+		"variable_name": "identifier",
+	"inUpdate": true,
+	"attr_labels": "Doc Id",
+	"examples": "",
+	"default_value": "",
+	"valid_values": "",
+	"existing_element": "",
+	"description": "A user supplied identifier for the governance definition.",
+	"qualified_name_pattern": "",
+	"generated": false,
+	"style": "Simple",
+	"user_specified": true,
+	"unique": false,
+	"input_required": false,
+	"isParent": false,
+	"isAnchor": false,
+	"min_cardinality": 0,
+	"max_cardinality": 1,
+	"level": "Basic",
+	"Journal Entry": ""
+	}
+}
+ ,
+
+
+{"GUID":{
+		"variable_name": "guid",
+	"inUpdate": true,
+	"attr_labels": "Guid; guid",
+	"examples": "00585a82-0f7d-45ef-9b87-7078665917a9",
+	"default_value": "",
+	"valid_values": "",
+	"existing_element": "",
+	"description": "A system generated unique identifier.",
+	"qualified_name_pattern": "",
+	"generated": true,
+	"style": "GUID",
+	"user_specified": false,
+	"unique": true,
+	"input_required": false,
+	"isParent": false,
+	"isAnchor": false,
+	"min_cardinality": 1,
+	"max_cardinality": 1,
+	"level": "Basic",
+	"Journal Entry": ""
+	}
+}
+ ,
+
+
+{"Glossary Term":{
+		"variable_name": "glossary_term",
+	"inUpdate": true,
+	"attr_labels": "Term",
+	"examples": "Term::Zip Code",
+	"default_value": "",
+	"valid_values": "",
+	"existing_element": "GlossaryTerm",
+	"description": "Term that provides meaning to this field.",
+	"qualified_name_pattern": "",
+	"generated": false,
+	"style": "Reference Name",
+	"user_specified": true,
+	"unique": false,
+	"input_required": false,
+	"isParent": false,
+	"isAnchor": false,
+	"min_cardinality": 0,
+	"max_cardinality": 1,
+	"level": "Advanced",
+	"Journal Entry": ""
+	}
+}
+ ,
+
+
+{"External Source Name":{
+		"variable_name": "external_source_name",
+	"inUpdate": true,
+	"attr_labels": "",
+	"examples": "",
+	"default_value": "",
+	"valid_values": "",
+	"existing_element": "",
+	"description": "Name of an external element that is associated with this element.",
+	"qualified_name_pattern": "",
+	"generated": false,
+	"style": "Simple",
+	"user_specified": true,
+	"unique": false,
+	"input_required": false,
+	"isParent": false,
+	"isAnchor": false,
+	"min_cardinality": 0,
+	"max_cardinality": 1,
+	"level": "Advanced",
+	"Journal Entry": ""
+	}
+}
+ ,
+
+
+{"External Source GUID":{
+		"variable_name": "external_source_guid",
+	"inUpdate": true,
+	"attr_labels": "",
+	"examples": "",
+	"default_value": "",
+	"valid_values": "",
+	"existing_element": "",
+	"description": "Identifier of an external source that is associated with this element.",
+	"qualified_name_pattern": "",
+	"generated": false,
+	"style": "Simple",
+	"user_specified": true,
+	"unique": false,
+	"input_required": false,
+	"isParent": false,
+	"isAnchor": false,
+	"min_cardinality": 0,
+	"max_cardinality": 1,
+	"level": "Advanced",
+	"Journal Entry": ""
+	}
+}
+ ,
+
+
+{"Extended Properties":{
+		"variable_name": "additional_properties",
+	"inUpdate": true,
+	"attr_labels": "",
+	"examples": "",
+	"default_value": "",
+	"valid_values": "",
+	"existing_element": "",
+	"description": "Additional user defined values organized as name value pairs in a dictionary.",
+	"qualified_name_pattern": "",
+	"generated": false,
+	"style": "Dictionary",
+	"user_specified": true,
+	"unique": false,
+	"input_required": false,
+	"isParent": false,
+	"isAnchor": false,
+	"min_cardinality": 0,
+	"max_cardinality": -1,
+	"level": "Invisible",
+	"Journal Entry": ""
+	}
+}
+ ,
+
+
+{"Effective To":{
+		"variable_name": "effective_to",
+	"inUpdate": true,
+	"attr_labels": "",
+	"examples": "",
+	"default_value": "",
+	"valid_values": "",
+	"existing_element": "",
+	"description": "A string in ISO-8601 format that defines the when an element is no longer effective (visible).",
+	"qualified_name_pattern": "",
+	"generated": false,
+	"style": "Simple",
+	"user_specified": true,
+	"unique": false,
+	"input_required": false,
+	"isParent": false,
+	"isAnchor": false,
+	"min_cardinality": 1,
+	"max_cardinality": 1,
+	"level": "Advanced",
+	"Journal Entry": ""
+	}
+}
+ ,
+
+
+{"Effective Time":{
+		"variable_name": "effective_time",
+	"inUpdate": true,
+	"attr_labels": "",
+	"examples": "",
+	"default_value": "",
+	"valid_values": "",
+	"existing_element": "",
+	"description": "An ISO-8601 string representing the time to use for evaluating effectivity of the elements related to this one.",
+	"qualified_name_pattern": "",
+	"generated": false,
+	"style": "Simple",
+	"user_specified": true,
+	"unique": false,
+	"input_required": false,
+	"isParent": false,
+	"isAnchor": false,
+	"min_cardinality": 1,
+	"max_cardinality": 1,
+	"level": "Advanced",
+	"Journal Entry": ""
+	}
+}
+ ,
+
+
+{"Effective From":{
+		"variable_name": "effective_from",
+	"inUpdate": true,
+	"attr_labels": "",
+	"examples": "",
+	"default_value": "",
+	"valid_values": "",
+	"existing_element": "",
+	"description": "A string in ISO-8601 format that defines the when an element becomes effective (visible).",
+	"qualified_name_pattern": "",
+	"generated": false,
+	"style": "Simple",
+	"user_specified": true,
+	"unique": false,
+	"input_required": false,
+	"isParent": false,
+	"isAnchor": false,
+	"min_cardinality": 0,
+	"max_cardinality": 1,
+	"level": "Advanced",
+	"Journal Entry": ""
+	}
+}
+ ,
+
+
+{"Domain Identifier":{
+		"variable_name": "domain_identifier",
+	"inUpdate": true,
+	"attr_labels": "",
+	"examples": "",
+	"default_value": "0",
+	"valid_values": "",
+	"existing_element": "",
+	"description": "Integer representing the governance domain. All domains is 0.",
+	"qualified_name_pattern": "",
+	"generated": false,
+	"style": "Simple Int",
+	"user_specified": true,
+	"unique": false,
+	"input_required": false,
+	"isParent": false,
+	"isAnchor": false,
+	"min_cardinality": 1,
+	"max_cardinality": 1,
+	"level": "Basic",
+	"Journal Entry": ""
+	}
+}
+ ,
+
+
+{"Display Name":{
+		"variable_name": "display_name",
+	"inUpdate": true,
+	"attr_labels": "Name",
+	"examples": "",
+	"default_value": "",
+	"valid_values": "",
+	"existing_element": "",
+	"description": "Name of the  definition.",
+	"qualified_name_pattern": "",
+	"generated": false,
+	"style": "ID",
+	"user_specified": true,
+	"unique": false,
+	"input_required": true,
+	"isParent": false,
+	"isAnchor": false,
+	"min_cardinality": 1,
 	"max_cardinality": 1,
 	"level": "Basic",
 	"Journal Entry": ""
@@ -134,310 +862,24 @@
  ,
 
 
-{"Domain Identifier":{
-		"variable_name": "domain_identifier",
-	"inUpdate": true,
-	"attr_labels": "",
-	"examples": "",
-	"default_value": "0",
-	"valid_values": "",
-	"existing_element": "",
-	"description": "Integer representing the governance domain. All domains is 0.",
-	"qualified_name_pattern": "",
-	"generated": false,
-	"style": "Simple Int",
-	"user_specified": true,
-	"unique": false,
-	"input_required": false,
-	"isParent": false,
-	"isAnchor": false,
-	"min_cardinality": 1,
-	"max_cardinality": 1,
-	"level": "Basic",
-	"Journal Entry": ""
-	}
-}
- ,
-
-
-{"Identifier":{
-		"variable_name": "identifier",
-	"inUpdate": true,
-	"attr_labels": "Doc Id",
-	"examples": "",
-	"default_value": "",
-	"valid_values": "",
-	"existing_element": "",
-	"description": "A user supplied identifier for the governance definition.",
-	"qualified_name_pattern": "",
-	"generated": false,
-	"style": "Simple",
-	"user_specified": true,
-	"unique": false,
-	"input_required": false,
-	"isParent": false,
-	"isAnchor": false,
-	"min_cardinality": 0,
-	"max_cardinality": 1,
-	"level": "Basic",
-	"Journal Entry": ""
-	}
-}
- ,
-
-
-{"Version Identifier":{
-		"variable_name": "version_identifier",
-	"inUpdate": true,
-	"attr_labels": "",
-	"examples": "V1.01",
-	"default_value": "",
-	"valid_values": "",
-	"existing_element": "",
-	"description": "Published  version identifier.",
-	"qualified_name_pattern": "",
-	"generated": false,
-	"style": "Simple",
-	"user_specified": true,
-	"unique": false,
-	"input_required": false,
-	"isParent": false,
-	"isAnchor": false,
-	"min_cardinality": 0,
-	"max_cardinality": 1,
-	"level": "Basic",
-	"Journal Entry": ""
-	}
-}
- ,
-
-
-{"Usage":{
-		"variable_name": "usage",
+{"Anchor Scope Name":{
+		"variable_name": "anchor_scope_guid",
 	"inUpdate": true,
 	"attr_labels": "",
 	"examples": "",
 	"default_value": "",
 	"valid_values": "",
-	"existing_element": "",
-	"description": "How the governance definition will be used.",
+	"existing_element": "DataDict",
+	"description": "Optional qualified name of an anchor scope.",
 	"qualified_name_pattern": "",
 	"generated": false,
-	"style": "Simple",
+	"style": "Reference Name",
 	"user_specified": true,
 	"unique": false,
 	"input_required": false,
 	"isParent": false,
 	"isAnchor": false,
 	"min_cardinality": 0,
-	"max_cardinality": 1,
-	"level": "Basic",
-	"Journal Entry": ""
-	}
-}
- ,
-
-
-{"Scope":{
-		"variable_name": "scope",
-	"inUpdate": true,
-	"attr_labels": "",
-	"examples": "",
-	"default_value": "",
-	"valid_values": "",
-	"existing_element": "",
-	"description": "Scope of the definition.",
-	"qualified_name_pattern": "",
-	"generated": false,
-	"style": "Simple",
-	"user_specified": true,
-	"unique": false,
-	"input_required": false,
-	"isParent": false,
-	"isAnchor": false,
-	"min_cardinality": 0,
-	"max_cardinality": 1,
-	"level": "Basic",
-	"Journal Entry": ""
-	}
-}
- ,
-
-
-{"Importance":{
-		"variable_name": "importance",
-	"inUpdate": true,
-	"attr_labels": "",
-	"examples": "",
-	"default_value": "",
-	"valid_values": "",
-	"existing_element": "",
-	"description": "Importance of the definition.",
-	"qualified_name_pattern": "",
-	"generated": false,
-	"style": "Simple",
-	"user_specified": true,
-	"unique": false,
-	"input_required": false,
-	"isParent": false,
-	"isAnchor": false,
-	"min_cardinality": 0,
-	"max_cardinality": 1,
-	"level": "Basic",
-	"Journal Entry": ""
-	}
-}
- ,
-
-
-{"Implications":{
-		"variable_name": "implications",
-	"inUpdate": true,
-	"attr_labels": "",
-	"examples": "",
-	"default_value": "",
-	"valid_values": "",
-	"existing_element": "",
-	"description": "List of implications.",
-	"qualified_name_pattern": "",
-	"generated": false,
-	"style": "Simple List",
-	"user_specified": true,
-	"unique": false,
-	"input_required": false,
-	"isParent": false,
-	"isAnchor": false,
-	"min_cardinality": 0,
-	"max_cardinality": -1,
-	"level": "Basic",
-	"Journal Entry": ""
-	}
-}
- ,
-
-
-{"Outcomes":{
-		"variable_name": "outcomes",
-	"inUpdate": true,
-	"attr_labels": "",
-	"examples": "",
-	"default_value": "",
-	"valid_values": "",
-	"existing_element": "",
-	"description": "List of desired outcomes.",
-	"qualified_name_pattern": "",
-	"generated": false,
-	"style": "Simple List",
-	"user_specified": true,
-	"unique": false,
-	"input_required": false,
-	"isParent": false,
-	"isAnchor": false,
-	"min_cardinality": 0,
-	"max_cardinality": -1,
-	"level": "Basic",
-	"Journal Entry": ""
-	}
-}
- ,
-
-
-{"Results":{
-		"variable_name": "results",
-	"inUpdate": true,
-	"attr_labels": "",
-	"examples": "No regulatory violations.",
-	"default_value": "",
-	"valid_values": "",
-	"existing_element": "",
-	"description": "A list of expected results.",
-	"qualified_name_pattern": "",
-	"generated": false,
-	"style": "Simple List",
-	"user_specified": true,
-	"unique": false,
-	"input_required": false,
-	"isParent": false,
-	"isAnchor": false,
-	"min_cardinality": 0,
-	"max_cardinality": 1,
-	"level": "Basic",
-	"Journal Entry": ""
-	}
-}
- ,
-
-
-{"Status":{
-		"variable_name": "element_status",
-	"inUpdate": true,
-	"attr_labels": "Definition Status",
-	"examples": "APPROVED",
-	"default_value": "ACTIVE",
-	"valid_values": "DRAFT; PREPARED; PROPOSED; APPROVED; REJECTED; ACTIVE'; DEPRECATED; OTHER",
-	"existing_element": "",
-	"description": "The status of the business imperative. There is a list of valid values that this conforms to.",
-	"qualified_name_pattern": "",
-	"generated": false,
-	"style": "Valid Value",
-	"user_specified": true,
-	"unique": false,
-	"input_required": false,
-	"isParent": false,
-	"isAnchor": false,
-	"min_cardinality": 1,
-	"max_cardinality": 1,
-	"level": "Basic",
-	"Journal Entry": ""
-	}
-}
- ,
-
-
-{"User Defined Status":{
-		"variable_name": "user_defined_status",
-	"inUpdate": true,
-	"attr_labels": "",
-	"examples": "Pink",
-	"default_value": "",
-	"valid_values": "",
-	"existing_element": "",
-	"description": "Only valid if Product Status is set to OTHER. User defined & managed status values.",
-	"qualified_name_pattern": "",
-	"generated": false,
-	"style": "Simple",
-	"user_specified": true,
-	"unique": false,
-	"input_required": false,
-	"isParent": false,
-	"isAnchor": false,
-	"min_cardinality": 0,
-	"max_cardinality": 1,
-	"level": "Basic",
-	"Journal Entry": ""
-	}
-}
- ,
-
-
-{"Is Own Anchor":{
-		"variable_name": "is_own_anchor",
-	"inUpdate": true,
-	"attr_labels": "Own Anchor",
-	"examples": "",
-	"default_value": "True",
-	"valid_values": "",
-	"existing_element": "",
-	"description": "Generally true. ",
-	"qualified_name_pattern": "",
-	"generated": false,
-	"style": "Bool",
-	"user_specified": true,
-	"unique": false,
-	"input_required": false,
-	"isParent": false,
-	"isAnchor": false,
-	"min_cardinality": 1,
 	"max_cardinality": 1,
 	"level": "Advanced",
 	"Journal Entry": ""
@@ -472,292 +914,6 @@
  ,
 
 
-{"Parent ID":{
-		"variable_name": "parent_id",
-	"inUpdate": true,
-	"attr_labels": "Parent;",
-	"examples": "DataDict::MyParent",
-	"default_value": "",
-	"valid_values": "",
-	"existing_element": "DataDicti",
-	"description": "Unique name of the parent element.",
-	"qualified_name_pattern": "",
-	"generated": false,
-	"style": "Reference Name",
-	"user_specified": true,
-	"unique": false,
-	"input_required": false,
-	"isParent": false,
-	"isAnchor": false,
-	"min_cardinality": 0,
-	"max_cardinality": 1,
-	"level": "Advanced",
-	"Journal Entry": "Should the parent be anything or just a collection?"
-	}
-}
- ,
-
-
-{"Parent Relationship Type Name":{
-		"variable_name": "parent_rel_type_name",
-	"inUpdate": true,
-	"attr_labels": "",
-	"examples": "",
-	"default_value": "",
-	"valid_values": "",
-	"existing_element": "",
-	"description": "The kind of the relationship to the parent element.",
-	"qualified_name_pattern": "",
-	"generated": false,
-	"style": "Simple",
-	"user_specified": true,
-	"unique": false,
-	"input_required": false,
-	"isParent": false,
-	"isAnchor": false,
-	"min_cardinality": 0,
-	"max_cardinality": 1,
-	"level": "Advanced",
-	"Journal Entry": "Any restrictions?"
-	}
-}
- ,
-
-
-{"Anchor Scope Name":{
-		"variable_name": "anchor_scope_guid",
-	"inUpdate": true,
-	"attr_labels": "",
-	"examples": "",
-	"default_value": "",
-	"valid_values": "",
-	"existing_element": "DataDict",
-	"description": "Optional qualified name of an anchor scope.",
-	"qualified_name_pattern": "",
-	"generated": false,
-	"style": "Reference Name",
-	"user_specified": true,
-	"unique": false,
-	"input_required": false,
-	"isParent": false,
-	"isAnchor": false,
-	"min_cardinality": 0,
-	"max_cardinality": 1,
-	"level": "Advanced",
-	"Journal Entry": ""
-	}
-}
- ,
-
-
-{"Parent at End1":{
-		"variable_name": "parent_end1",
-	"inUpdate": true,
-	"attr_labels": "",
-	"examples": "",
-	"default_value": "True",
-	"valid_values": "",
-	"existing_element": "",
-	"description": "Is the parent at end1 of the relationship?",
-	"qualified_name_pattern": "",
-	"generated": false,
-	"style": "Bool",
-	"user_specified": true,
-	"unique": false,
-	"input_required": false,
-	"isParent": false,
-	"isAnchor": false,
-	"min_cardinality": 0,
-	"max_cardinality": 1,
-	"level": "Advanced",
-	"Journal Entry": ""
-	}
-}
- ,
-
-
-{"Glossary Term":{
-		"variable_name": "glossary_term",
-	"inUpdate": true,
-	"attr_labels": "Term",
-	"examples": "Term::Zip Code",
-	"default_value": "",
-	"valid_values": "",
-	"existing_element": "GlossaryTerm",
-	"description": "Term that provides meaning to this field.",
-	"qualified_name_pattern": "",
-	"generated": false,
-	"style": "Reference Name",
-	"user_specified": true,
-	"unique": false,
-	"input_required": false,
-	"isParent": false,
-	"isAnchor": false,
-	"min_cardinality": 0,
-	"max_cardinality": 1,
-	"level": "Advanced",
-	"Journal Entry": ""
-	}
-}
- ,
-
-
-{"Qualified Name":{
-		"variable_name": "qualified_name",
-	"inUpdate": true,
-	"attr_labels": "",
-	"examples": "dataField::a data field",
-	"default_value": "",
-	"valid_values": "",
-	"existing_element": "",
-	"description": "A unique qualified name for the element. Generated using the qualified name pattern  if not user specified.",
-	"qualified_name_pattern": "local_qualifier::namespace::DigitalProduct:display_name::version_id",
-	"generated": true,
-	"style": "QN",
-	"user_specified": true,
-	"unique": true,
-	"input_required": false,
-	"isParent": false,
-	"isAnchor": false,
-	"min_cardinality": 1,
-	"max_cardinality": 1,
-	"level": "Basic",
-	"Journal Entry": ""
-	}
-}
- ,
-
-
-{"GUID":{
-		"variable_name": "guid",
-	"inUpdate": true,
-	"attr_labels": "Guid; guid",
-	"examples": "00585a82-0f7d-45ef-9b87-7078665917a9",
-	"default_value": "",
-	"valid_values": "",
-	"existing_element": "",
-	"description": "A system generated unique identifier.",
-	"qualified_name_pattern": "",
-	"generated": true,
-	"style": "GUID",
-	"user_specified": false,
-	"unique": true,
-	"input_required": false,
-	"isParent": false,
-	"isAnchor": false,
-	"min_cardinality": 1,
-	"max_cardinality": 1,
-	"level": "Basic",
-	"Journal Entry": ""
-	}
-}
- ,
-
-
-{"Effective Time":{
-		"variable_name": "effective_time",
-	"inUpdate": true,
-	"attr_labels": "",
-	"examples": "",
-	"default_value": "",
-	"valid_values": "",
-	"existing_element": "",
-	"description": "An ISO-8601 string representing the time to use for evaluating effectivity of the elements related to this one.",
-	"qualified_name_pattern": "",
-	"generated": false,
-	"style": "Simple",
-	"user_specified": true,
-	"unique": false,
-	"input_required": false,
-	"isParent": false,
-	"isAnchor": false,
-	"min_cardinality": 1,
-	"max_cardinality": 1,
-	"level": "Advanced",
-	"Journal Entry": ""
-	}
-}
- ,
-
-
-{"Effective From":{
-		"variable_name": "effective_from",
-	"inUpdate": true,
-	"attr_labels": "",
-	"examples": "",
-	"default_value": "",
-	"valid_values": "",
-	"existing_element": "",
-	"description": "A string in ISO-8601 format that defines the when an element becomes effective (visible).",
-	"qualified_name_pattern": "",
-	"generated": false,
-	"style": "Simple",
-	"user_specified": true,
-	"unique": false,
-	"input_required": false,
-	"isParent": false,
-	"isAnchor": false,
-	"min_cardinality": 0,
-	"max_cardinality": 1,
-	"level": "Advanced",
-	"Journal Entry": ""
-	}
-}
- ,
-
-
-{"Effective To":{
-		"variable_name": "effective_to",
-	"inUpdate": true,
-	"attr_labels": "",
-	"examples": "",
-	"default_value": "",
-	"valid_values": "",
-	"existing_element": "",
-	"description": "A string in ISO-8601 format that defines the when an element is no longer effective (visible).",
-	"qualified_name_pattern": "",
-	"generated": false,
-	"style": "Simple",
-	"user_specified": true,
-	"unique": false,
-	"input_required": false,
-	"isParent": false,
-	"isAnchor": false,
-	"min_cardinality": 1,
-	"max_cardinality": 1,
-	"level": "Advanced",
-	"Journal Entry": ""
-	}
-}
- ,
-
-
-{"Merge Update":{
-		"variable_name": "merge_update",
-	"inUpdate": true,
-	"attr_labels": "Merge",
-	"examples": "",
-	"default_value": "True",
-	"valid_values": "",
-	"existing_element": "",
-	"description": "If true, only those attributes specified in the update will be updated; If false, any attributes not provided during the update will be set to None.",
-	"qualified_name_pattern": "",
-	"generated": false,
-	"style": "Bool",
-	"user_specified": true,
-	"unique": false,
-	"input_required": false,
-	"isParent": false,
-	"isAnchor": false,
-	"min_cardinality": 0,
-	"max_cardinality": 1,
-	"level": "Advanced",
-	"Journal Entry": ""
-	}
-}
- ,
-
-
 {"Additional Properties":{
 		"variable_name": "additional_properties",
 	"inUpdate": true,
@@ -777,110 +933,6 @@
 	"isAnchor": false,
 	"min_cardinality": 0,
 	"max_cardinality": -1,
-	"level": "Advanced",
-	"Journal Entry": ""
-	}
-}
- ,
-
-
-{"Extended Properties":{
-		"variable_name": "additional_properties",
-	"inUpdate": true,
-	"attr_labels": "",
-	"examples": "",
-	"default_value": "",
-	"valid_values": "",
-	"existing_element": "",
-	"description": "Additional user defined values organized as name value pairs in a dictionary.",
-	"qualified_name_pattern": "",
-	"generated": false,
-	"style": "Dictionary",
-	"user_specified": true,
-	"unique": false,
-	"input_required": false,
-	"isParent": false,
-	"isAnchor": false,
-	"min_cardinality": 0,
-	"max_cardinality": -1,
-	"level": "Invisible",
-	"Journal Entry": ""
-	}
-}
- ,
-
-
-{"Journal Entry":{
-		"variable_name": "journal_entry",
-	"inUpdate": true,
-	"attr_labels": "",
-	"examples": "",
-	"default_value": "",
-	"valid_values": "",
-	"existing_element": "",
-	"description": "",
-	"qualified_name_pattern": "",
-	"generated": false,
-	"style": "Simple",
-	"user_specified": true,
-	"unique": false,
-	"input_required": false,
-	"isParent": false,
-	"isAnchor": false,
-	"min_cardinality": 0,
-	"max_cardinality": 1,
-	"level": "Basic",
-	"Journal Entry": ""
-	}
-}
- ,
-
-
-{"External Source GUID":{
-		"variable_name": "external_source_guid",
-	"inUpdate": true,
-	"attr_labels": "",
-	"examples": "",
-	"default_value": "",
-	"valid_values": "",
-	"existing_element": "",
-	"description": "Identifier of an external source that is associated with this element.",
-	"qualified_name_pattern": "",
-	"generated": false,
-	"style": "Simple",
-	"user_specified": true,
-	"unique": false,
-	"input_required": false,
-	"isParent": false,
-	"isAnchor": false,
-	"min_cardinality": 0,
-	"max_cardinality": 1,
-	"level": "Advanced",
-	"Journal Entry": ""
-	}
-}
- ,
-
-
-{"External Source Name":{
-		"variable_name": "external_source_name",
-	"inUpdate": true,
-	"attr_labels": "",
-	"examples": "",
-	"default_value": "",
-	"valid_values": "",
-	"existing_element": "",
-	"description": "Name of an external element that is associated with this element.",
-	"qualified_name_pattern": "",
-	"generated": false,
-	"style": "Simple",
-	"user_specified": true,
-	"unique": false,
-	"input_required": false,
-	"isParent": false,
-	"isAnchor": false,
-	"min_cardinality": 0,
-	"max_cardinality": 1,
 	"level": "Advanced",
 	"Journal Entry": ""
 	}
@@ -1307,6 +1359,32 @@
  ,
 
 
+{"URL":{
+		"variable_name": "url",
+	"inUpdate": true,
+	"attr_labels": "",
+	"examples": "",
+	"default_value": "",
+	"valid_values": "",
+	"existing_element": "",
+	"description": "Link to supporting information",
+	"qualified_name_pattern": "",
+	"generated": false,
+	"style": "Simple",
+	"user_specified": true,
+	"unique": false,
+	"input_required": false,
+	"isParent": false,
+	"isAnchor": false,
+	"min_cardinality": 0,
+	"max_cardinality": 1,
+	"level": "Basic",
+	"Journal Entry": ""
+	}
+}
+ ,
+
+
 {"Is Own Anchor":{
 		"variable_name": "is_own_anchor",
 	"inUpdate": true,
@@ -1769,6 +1847,32 @@
 	"min_cardinality": 0,
 	"max_cardinality": 1,
 	"level": "Advanced",
+	"Journal Entry": ""
+	}
+}
+ ,
+
+
+{"Search Keywords":{
+		"variable_name": "search_keywords",
+	"inUpdate": true,
+	"attr_labels": "",
+	"examples": "",
+	"default_value": "",
+	"valid_values": "",
+	"existing_element": "",
+	"description": "Keywords to facilitate finding the element",
+	"qualified_name_pattern": "",
+	"generated": false,
+	"style": "Simple List",
+	"user_specified": true,
+	"unique": false,
+	"input_required": false,
+	"isParent": false,
+	"isAnchor": false,
+	"min_cardinality": 0,
+	"max_cardinality": 20,
+	"level": "Basic",
 	"Journal Entry": ""
 	}
 }
@@ -2194,6 +2298,32 @@
  ,
 
 
+{"URL":{
+		"variable_name": "url",
+	"inUpdate": true,
+	"attr_labels": "",
+	"examples": "",
+	"default_value": "",
+	"valid_values": "",
+	"existing_element": "",
+	"description": "Link to supporting information",
+	"qualified_name_pattern": "",
+	"generated": false,
+	"style": "Simple",
+	"user_specified": true,
+	"unique": false,
+	"input_required": false,
+	"isParent": false,
+	"isAnchor": false,
+	"min_cardinality": 0,
+	"max_cardinality": 1,
+	"level": "Basic",
+	"Journal Entry": ""
+	}
+}
+ ,
+
+
 {"Is Own Anchor":{
 		"variable_name": "is_own_anchor",
 	"inUpdate": true,
@@ -2656,6 +2786,32 @@
 	"min_cardinality": 0,
 	"max_cardinality": 1,
 	"level": "Advanced",
+	"Journal Entry": ""
+	}
+}
+ ,
+
+
+{"Search Keywords":{
+		"variable_name": "search_keywords",
+	"inUpdate": true,
+	"attr_labels": "",
+	"examples": "",
+	"default_value": "",
+	"valid_values": "",
+	"existing_element": "",
+	"description": "Keywords to facilitate finding the element",
+	"qualified_name_pattern": "",
+	"generated": false,
+	"style": "Simple List",
+	"user_specified": true,
+	"unique": false,
+	"input_required": false,
+	"isParent": false,
+	"isAnchor": false,
+	"min_cardinality": 0,
+	"max_cardinality": 20,
+	"level": "Basic",
 	"Journal Entry": ""
 	}
 }
@@ -3133,6 +3289,32 @@
  ,
 
 
+{"URL":{
+		"variable_name": "url",
+	"inUpdate": true,
+	"attr_labels": "",
+	"examples": "",
+	"default_value": "",
+	"valid_values": "",
+	"existing_element": "",
+	"description": "Link to supporting information",
+	"qualified_name_pattern": "",
+	"generated": false,
+	"style": "Simple",
+	"user_specified": true,
+	"unique": false,
+	"input_required": false,
+	"isParent": false,
+	"isAnchor": false,
+	"min_cardinality": 0,
+	"max_cardinality": 1,
+	"level": "Basic",
+	"Journal Entry": ""
+	}
+}
+ ,
+
+
 {"Is Own Anchor":{
 		"variable_name": "is_own_anchor",
 	"inUpdate": true,
@@ -3595,6 +3777,32 @@
 	"min_cardinality": 0,
 	"max_cardinality": 1,
 	"level": "Advanced",
+	"Journal Entry": ""
+	}
+}
+ ,
+
+
+{"Search Keywords":{
+		"variable_name": "search_keywords",
+	"inUpdate": true,
+	"attr_labels": "",
+	"examples": "",
+	"default_value": "",
+	"valid_values": "",
+	"existing_element": "",
+	"description": "Keywords to facilitate finding the element",
+	"qualified_name_pattern": "",
+	"generated": false,
+	"style": "Simple List",
+	"user_specified": true,
+	"unique": false,
+	"input_required": false,
+	"isParent": false,
+	"isAnchor": false,
+	"min_cardinality": 0,
+	"max_cardinality": 20,
+	"level": "Basic",
 	"Journal Entry": ""
 	}
 }
@@ -4020,6 +4228,32 @@
  ,
 
 
+{"URL":{
+		"variable_name": "url",
+	"inUpdate": true,
+	"attr_labels": "",
+	"examples": "",
+	"default_value": "",
+	"valid_values": "",
+	"existing_element": "",
+	"description": "Link to supporting information",
+	"qualified_name_pattern": "",
+	"generated": false,
+	"style": "Simple",
+	"user_specified": true,
+	"unique": false,
+	"input_required": false,
+	"isParent": false,
+	"isAnchor": false,
+	"min_cardinality": 0,
+	"max_cardinality": 1,
+	"level": "Basic",
+	"Journal Entry": ""
+	}
+}
+ ,
+
+
 {"Is Own Anchor":{
 		"variable_name": "is_own_anchor",
 	"inUpdate": true,
@@ -4482,6 +4716,32 @@
 	"min_cardinality": 0,
 	"max_cardinality": 1,
 	"level": "Advanced",
+	"Journal Entry": ""
+	}
+}
+ ,
+
+
+{"Search Keywords":{
+		"variable_name": "search_keywords",
+	"inUpdate": true,
+	"attr_labels": "",
+	"examples": "",
+	"default_value": "",
+	"valid_values": "",
+	"existing_element": "",
+	"description": "Keywords to facilitate finding the element",
+	"qualified_name_pattern": "",
+	"generated": false,
+	"style": "Simple List",
+	"user_specified": true,
+	"unique": false,
+	"input_required": false,
+	"isParent": false,
+	"isAnchor": false,
+	"min_cardinality": 0,
+	"max_cardinality": 20,
+	"level": "Basic",
 	"Journal Entry": ""
 	}
 }
@@ -5372,6 +5632,58 @@
 	"Journal Entry": ""
 	}
 }
+ ,
+
+
+{"URL":{
+		"variable_name": "url",
+	"inUpdate": true,
+	"attr_labels": "",
+	"examples": "",
+	"default_value": "",
+	"valid_values": "",
+	"existing_element": "",
+	"description": "Link to supporting information",
+	"qualified_name_pattern": "",
+	"generated": false,
+	"style": "Simple",
+	"user_specified": true,
+	"unique": false,
+	"input_required": false,
+	"isParent": false,
+	"isAnchor": false,
+	"min_cardinality": 0,
+	"max_cardinality": 1,
+	"level": "Basic",
+	"Journal Entry": ""
+	}
+}
+ ,
+
+
+{"Search Keywords":{
+		"variable_name": "search_keywords",
+	"inUpdate": true,
+	"attr_labels": "",
+	"examples": "",
+	"default_value": "",
+	"valid_values": "",
+	"existing_element": "",
+	"description": "Keywords to facilitate finding the element",
+	"qualified_name_pattern": "",
+	"generated": false,
+	"style": "Simple List",
+	"user_specified": true,
+	"unique": false,
+	"input_required": false,
+	"isParent": false,
+	"isAnchor": false,
+	"min_cardinality": 0,
+	"max_cardinality": 20,
+	"level": "Basic",
+	"Journal Entry": ""
+	}
+}
 
 ]
 }
@@ -6256,6 +6568,58 @@
 	"min_cardinality": 0,
 	"max_cardinality": 1,
 	"level": "Advanced",
+	"Journal Entry": ""
+	}
+}
+ ,
+
+
+{"URL":{
+		"variable_name": "url",
+	"inUpdate": true,
+	"attr_labels": "",
+	"examples": "",
+	"default_value": "",
+	"valid_values": "",
+	"existing_element": "",
+	"description": "Link to supporting information",
+	"qualified_name_pattern": "",
+	"generated": false,
+	"style": "Simple",
+	"user_specified": true,
+	"unique": false,
+	"input_required": false,
+	"isParent": false,
+	"isAnchor": false,
+	"min_cardinality": 0,
+	"max_cardinality": 1,
+	"level": "Basic",
+	"Journal Entry": ""
+	}
+}
+ ,
+
+
+{"Search Keywords":{
+		"variable_name": "search_keywords",
+	"inUpdate": true,
+	"attr_labels": "",
+	"examples": "",
+	"default_value": "",
+	"valid_values": "",
+	"existing_element": "",
+	"description": "Keywords to facilitate finding the element",
+	"qualified_name_pattern": "",
+	"generated": false,
+	"style": "Simple List",
+	"user_specified": true,
+	"unique": false,
+	"input_required": false,
+	"isParent": false,
+	"isAnchor": false,
+	"min_cardinality": 0,
+	"max_cardinality": 20,
+	"level": "Basic",
 	"Journal Entry": ""
 	}
 }
@@ -7146,6 +7510,58 @@
 	"Journal Entry": ""
 	}
 }
+ ,
+
+
+{"URL":{
+		"variable_name": "url",
+	"inUpdate": true,
+	"attr_labels": "",
+	"examples": "",
+	"default_value": "",
+	"valid_values": "",
+	"existing_element": "",
+	"description": "Link to supporting information",
+	"qualified_name_pattern": "",
+	"generated": false,
+	"style": "Simple",
+	"user_specified": true,
+	"unique": false,
+	"input_required": false,
+	"isParent": false,
+	"isAnchor": false,
+	"min_cardinality": 0,
+	"max_cardinality": 1,
+	"level": "Basic",
+	"Journal Entry": ""
+	}
+}
+ ,
+
+
+{"Search Keywords":{
+		"variable_name": "search_keywords",
+	"inUpdate": true,
+	"attr_labels": "",
+	"examples": "",
+	"default_value": "",
+	"valid_values": "",
+	"existing_element": "",
+	"description": "Keywords to facilitate finding the element",
+	"qualified_name_pattern": "",
+	"generated": false,
+	"style": "Simple List",
+	"user_specified": true,
+	"unique": false,
+	"input_required": false,
+	"isParent": false,
+	"isAnchor": false,
+	"min_cardinality": 0,
+	"max_cardinality": 20,
+	"level": "Basic",
+	"Journal Entry": ""
+	}
+}
 
 ]
 }
@@ -8030,6 +8446,58 @@
 	"min_cardinality": 0,
 	"max_cardinality": 1,
 	"level": "Advanced",
+	"Journal Entry": ""
+	}
+}
+ ,
+
+
+{"URL":{
+		"variable_name": "url",
+	"inUpdate": true,
+	"attr_labels": "",
+	"examples": "",
+	"default_value": "",
+	"valid_values": "",
+	"existing_element": "",
+	"description": "Link to supporting information",
+	"qualified_name_pattern": "",
+	"generated": false,
+	"style": "Simple",
+	"user_specified": true,
+	"unique": false,
+	"input_required": false,
+	"isParent": false,
+	"isAnchor": false,
+	"min_cardinality": 0,
+	"max_cardinality": 1,
+	"level": "Basic",
+	"Journal Entry": ""
+	}
+}
+ ,
+
+
+{"Search Keywords":{
+		"variable_name": "search_keywords",
+	"inUpdate": true,
+	"attr_labels": "",
+	"examples": "",
+	"default_value": "",
+	"valid_values": "",
+	"existing_element": "",
+	"description": "Keywords to facilitate finding the element",
+	"qualified_name_pattern": "",
+	"generated": false,
+	"style": "Simple List",
+	"user_specified": true,
+	"unique": false,
+	"input_required": false,
+	"isParent": false,
+	"isAnchor": false,
+	"min_cardinality": 0,
+	"max_cardinality": 20,
+	"level": "Basic",
 	"Journal Entry": ""
 	}
 }
@@ -8920,6 +9388,58 @@
 	"Journal Entry": ""
 	}
 }
+ ,
+
+
+{"URL":{
+		"variable_name": "url",
+	"inUpdate": true,
+	"attr_labels": "",
+	"examples": "",
+	"default_value": "",
+	"valid_values": "",
+	"existing_element": "",
+	"description": "Link to supporting information",
+	"qualified_name_pattern": "",
+	"generated": false,
+	"style": "Simple",
+	"user_specified": true,
+	"unique": false,
+	"input_required": false,
+	"isParent": false,
+	"isAnchor": false,
+	"min_cardinality": 0,
+	"max_cardinality": 1,
+	"level": "Basic",
+	"Journal Entry": ""
+	}
+}
+ ,
+
+
+{"Search Keywords":{
+		"variable_name": "search_keywords",
+	"inUpdate": true,
+	"attr_labels": "",
+	"examples": "",
+	"default_value": "",
+	"valid_values": "",
+	"existing_element": "",
+	"description": "Keywords to facilitate finding the element",
+	"qualified_name_pattern": "",
+	"generated": false,
+	"style": "Simple List",
+	"user_specified": true,
+	"unique": false,
+	"input_required": false,
+	"isParent": false,
+	"isAnchor": false,
+	"min_cardinality": 0,
+	"max_cardinality": 20,
+	"level": "Basic",
+	"Journal Entry": ""
+	}
+}
 
 ]
 }
@@ -9804,6 +10324,58 @@
 	"min_cardinality": 0,
 	"max_cardinality": 1,
 	"level": "Advanced",
+	"Journal Entry": ""
+	}
+}
+ ,
+
+
+{"URL":{
+		"variable_name": "url",
+	"inUpdate": true,
+	"attr_labels": "",
+	"examples": "",
+	"default_value": "",
+	"valid_values": "",
+	"existing_element": "",
+	"description": "Link to supporting information",
+	"qualified_name_pattern": "",
+	"generated": false,
+	"style": "Simple",
+	"user_specified": true,
+	"unique": false,
+	"input_required": false,
+	"isParent": false,
+	"isAnchor": false,
+	"min_cardinality": 0,
+	"max_cardinality": 1,
+	"level": "Basic",
+	"Journal Entry": ""
+	}
+}
+ ,
+
+
+{"Search Keywords":{
+		"variable_name": "search_keywords",
+	"inUpdate": true,
+	"attr_labels": "",
+	"examples": "",
+	"default_value": "",
+	"valid_values": "",
+	"existing_element": "",
+	"description": "Keywords to facilitate finding the element",
+	"qualified_name_pattern": "",
+	"generated": false,
+	"style": "Simple List",
+	"user_specified": true,
+	"unique": false,
+	"input_required": false,
+	"isParent": false,
+	"isAnchor": false,
+	"min_cardinality": 0,
+	"max_cardinality": 20,
+	"level": "Basic",
 	"Journal Entry": ""
 	}
 }
@@ -10746,6 +11318,58 @@
 	"Journal Entry": ""
 	}
 }
+ ,
+
+
+{"URL":{
+		"variable_name": "url",
+	"inUpdate": true,
+	"attr_labels": "",
+	"examples": "",
+	"default_value": "",
+	"valid_values": "",
+	"existing_element": "",
+	"description": "Link to supporting information",
+	"qualified_name_pattern": "",
+	"generated": false,
+	"style": "Simple",
+	"user_specified": true,
+	"unique": false,
+	"input_required": false,
+	"isParent": false,
+	"isAnchor": false,
+	"min_cardinality": 0,
+	"max_cardinality": 1,
+	"level": "Basic",
+	"Journal Entry": ""
+	}
+}
+ ,
+
+
+{"Search Keywords":{
+		"variable_name": "search_keywords",
+	"inUpdate": true,
+	"attr_labels": "",
+	"examples": "",
+	"default_value": "",
+	"valid_values": "",
+	"existing_element": "",
+	"description": "Keywords to facilitate finding the element",
+	"qualified_name_pattern": "",
+	"generated": false,
+	"style": "Simple List",
+	"user_specified": true,
+	"unique": false,
+	"input_required": false,
+	"isParent": false,
+	"isAnchor": false,
+	"min_cardinality": 0,
+	"max_cardinality": 20,
+	"level": "Basic",
+	"Journal Entry": ""
+	}
+}
 
 ]
 }
@@ -11633,6 +12257,58 @@
 	"Journal Entry": ""
 	}
 }
+ ,
+
+
+{"URL":{
+		"variable_name": "url",
+	"inUpdate": true,
+	"attr_labels": "",
+	"examples": "",
+	"default_value": "",
+	"valid_values": "",
+	"existing_element": "",
+	"description": "Link to supporting information",
+	"qualified_name_pattern": "",
+	"generated": false,
+	"style": "Simple",
+	"user_specified": true,
+	"unique": false,
+	"input_required": false,
+	"isParent": false,
+	"isAnchor": false,
+	"min_cardinality": 0,
+	"max_cardinality": 1,
+	"level": "Basic",
+	"Journal Entry": ""
+	}
+}
+ ,
+
+
+{"Search Keywords":{
+		"variable_name": "search_keywords",
+	"inUpdate": true,
+	"attr_labels": "",
+	"examples": "",
+	"default_value": "",
+	"valid_values": "",
+	"existing_element": "",
+	"description": "Keywords to facilitate finding the element",
+	"qualified_name_pattern": "",
+	"generated": false,
+	"style": "Simple List",
+	"user_specified": true,
+	"unique": false,
+	"input_required": false,
+	"isParent": false,
+	"isAnchor": false,
+	"min_cardinality": 0,
+	"max_cardinality": 20,
+	"level": "Basic",
+	"Journal Entry": ""
+	}
+}
 
 ]
 }
@@ -12517,6 +13193,58 @@
 	"min_cardinality": 0,
 	"max_cardinality": 1,
 	"level": "Advanced",
+	"Journal Entry": ""
+	}
+}
+ ,
+
+
+{"URL":{
+		"variable_name": "url",
+	"inUpdate": true,
+	"attr_labels": "",
+	"examples": "",
+	"default_value": "",
+	"valid_values": "",
+	"existing_element": "",
+	"description": "Link to supporting information",
+	"qualified_name_pattern": "",
+	"generated": false,
+	"style": "Simple",
+	"user_specified": true,
+	"unique": false,
+	"input_required": false,
+	"isParent": false,
+	"isAnchor": false,
+	"min_cardinality": 0,
+	"max_cardinality": 1,
+	"level": "Basic",
+	"Journal Entry": ""
+	}
+}
+ ,
+
+
+{"Search Keywords":{
+		"variable_name": "search_keywords",
+	"inUpdate": true,
+	"attr_labels": "",
+	"examples": "",
+	"default_value": "",
+	"valid_values": "",
+	"existing_element": "",
+	"description": "Keywords to facilitate finding the element",
+	"qualified_name_pattern": "",
+	"generated": false,
+	"style": "Simple List",
+	"user_specified": true,
+	"unique": false,
+	"input_required": false,
+	"isParent": false,
+	"isAnchor": false,
+	"min_cardinality": 0,
+	"max_cardinality": 20,
+	"level": "Basic",
 	"Journal Entry": ""
 	}
 }
@@ -13433,6 +14161,58 @@
 	"Journal Entry": ""
 	}
 }
+ ,
+
+
+{"URL":{
+		"variable_name": "url",
+	"inUpdate": true,
+	"attr_labels": "",
+	"examples": "",
+	"default_value": "",
+	"valid_values": "",
+	"existing_element": "",
+	"description": "Link to supporting information",
+	"qualified_name_pattern": "",
+	"generated": false,
+	"style": "Simple",
+	"user_specified": true,
+	"unique": false,
+	"input_required": false,
+	"isParent": false,
+	"isAnchor": false,
+	"min_cardinality": 0,
+	"max_cardinality": 1,
+	"level": "Basic",
+	"Journal Entry": ""
+	}
+}
+ ,
+
+
+{"Search Keywords":{
+		"variable_name": "search_keywords",
+	"inUpdate": true,
+	"attr_labels": "",
+	"examples": "",
+	"default_value": "",
+	"valid_values": "",
+	"existing_element": "",
+	"description": "Keywords to facilitate finding the element",
+	"qualified_name_pattern": "",
+	"generated": false,
+	"style": "Simple List",
+	"user_specified": true,
+	"unique": false,
+	"input_required": false,
+	"isParent": false,
+	"isAnchor": false,
+	"min_cardinality": 0,
+	"max_cardinality": 20,
+	"level": "Basic",
+	"Journal Entry": ""
+	}
+}
 
 ]
 }
@@ -14346,6 +15126,58 @@
 	"Journal Entry": ""
 	}
 }
+ ,
+
+
+{"URL":{
+		"variable_name": "url",
+	"inUpdate": true,
+	"attr_labels": "",
+	"examples": "",
+	"default_value": "",
+	"valid_values": "",
+	"existing_element": "",
+	"description": "Link to supporting information",
+	"qualified_name_pattern": "",
+	"generated": false,
+	"style": "Simple",
+	"user_specified": true,
+	"unique": false,
+	"input_required": false,
+	"isParent": false,
+	"isAnchor": false,
+	"min_cardinality": 0,
+	"max_cardinality": 1,
+	"level": "Basic",
+	"Journal Entry": ""
+	}
+}
+ ,
+
+
+{"Search Keywords":{
+		"variable_name": "search_keywords",
+	"inUpdate": true,
+	"attr_labels": "",
+	"examples": "",
+	"default_value": "",
+	"valid_values": "",
+	"existing_element": "",
+	"description": "Keywords to facilitate finding the element",
+	"qualified_name_pattern": "",
+	"generated": false,
+	"style": "Simple List",
+	"user_specified": true,
+	"unique": false,
+	"input_required": false,
+	"isParent": false,
+	"isAnchor": false,
+	"min_cardinality": 0,
+	"max_cardinality": 20,
+	"level": "Basic",
+	"Journal Entry": ""
+	}
+}
 
 ]
 }
@@ -15256,6 +16088,58 @@
 	"min_cardinality": 0,
 	"max_cardinality": 1,
 	"level": "Advanced",
+	"Journal Entry": ""
+	}
+}
+ ,
+
+
+{"URL":{
+		"variable_name": "url",
+	"inUpdate": true,
+	"attr_labels": "",
+	"examples": "",
+	"default_value": "",
+	"valid_values": "",
+	"existing_element": "",
+	"description": "Link to supporting information",
+	"qualified_name_pattern": "",
+	"generated": false,
+	"style": "Simple",
+	"user_specified": true,
+	"unique": false,
+	"input_required": false,
+	"isParent": false,
+	"isAnchor": false,
+	"min_cardinality": 0,
+	"max_cardinality": 1,
+	"level": "Basic",
+	"Journal Entry": ""
+	}
+}
+ ,
+
+
+{"Search Keywords":{
+		"variable_name": "search_keywords",
+	"inUpdate": true,
+	"attr_labels": "",
+	"examples": "",
+	"default_value": "",
+	"valid_values": "",
+	"existing_element": "",
+	"description": "Keywords to facilitate finding the element",
+	"qualified_name_pattern": "",
+	"generated": false,
+	"style": "Simple List",
+	"user_specified": true,
+	"unique": false,
+	"input_required": false,
+	"isParent": false,
+	"isAnchor": false,
+	"min_cardinality": 0,
+	"max_cardinality": 20,
+	"level": "Basic",
 	"Journal Entry": ""
 	}
 }
@@ -16198,6 +17082,58 @@
 	"Journal Entry": ""
 	}
 }
+ ,
+
+
+{"URL":{
+		"variable_name": "url",
+	"inUpdate": true,
+	"attr_labels": "",
+	"examples": "",
+	"default_value": "",
+	"valid_values": "",
+	"existing_element": "",
+	"description": "Link to supporting information",
+	"qualified_name_pattern": "",
+	"generated": false,
+	"style": "Simple",
+	"user_specified": true,
+	"unique": false,
+	"input_required": false,
+	"isParent": false,
+	"isAnchor": false,
+	"min_cardinality": 0,
+	"max_cardinality": 1,
+	"level": "Basic",
+	"Journal Entry": ""
+	}
+}
+ ,
+
+
+{"Search Keywords":{
+		"variable_name": "search_keywords",
+	"inUpdate": true,
+	"attr_labels": "",
+	"examples": "",
+	"default_value": "",
+	"valid_values": "",
+	"existing_element": "",
+	"description": "Keywords to facilitate finding the element",
+	"qualified_name_pattern": "",
+	"generated": false,
+	"style": "Simple List",
+	"user_specified": true,
+	"unique": false,
+	"input_required": false,
+	"isParent": false,
+	"isAnchor": false,
+	"min_cardinality": 0,
+	"max_cardinality": 20,
+	"level": "Basic",
+	"Journal Entry": ""
+	}
+}
 
 ]
 }
@@ -17082,6 +18018,58 @@
 	"min_cardinality": 0,
 	"max_cardinality": 1,
 	"level": "Advanced",
+	"Journal Entry": ""
+	}
+}
+ ,
+
+
+{"URL":{
+		"variable_name": "url",
+	"inUpdate": true,
+	"attr_labels": "",
+	"examples": "",
+	"default_value": "",
+	"valid_values": "",
+	"existing_element": "",
+	"description": "Link to supporting information",
+	"qualified_name_pattern": "",
+	"generated": false,
+	"style": "Simple",
+	"user_specified": true,
+	"unique": false,
+	"input_required": false,
+	"isParent": false,
+	"isAnchor": false,
+	"min_cardinality": 0,
+	"max_cardinality": 1,
+	"level": "Basic",
+	"Journal Entry": ""
+	}
+}
+ ,
+
+
+{"Search Keywords":{
+		"variable_name": "search_keywords",
+	"inUpdate": true,
+	"attr_labels": "",
+	"examples": "",
+	"default_value": "",
+	"valid_values": "",
+	"existing_element": "",
+	"description": "Keywords to facilitate finding the element",
+	"qualified_name_pattern": "",
+	"generated": false,
+	"style": "Simple List",
+	"user_specified": true,
+	"unique": false,
+	"input_required": false,
+	"isParent": false,
+	"isAnchor": false,
+	"min_cardinality": 0,
+	"max_cardinality": 20,
+	"level": "Basic",
 	"Journal Entry": ""
 	}
 }
@@ -17998,6 +18986,58 @@
 	"Journal Entry": ""
 	}
 }
+ ,
+
+
+{"URL":{
+		"variable_name": "url",
+	"inUpdate": true,
+	"attr_labels": "",
+	"examples": "",
+	"default_value": "",
+	"valid_values": "",
+	"existing_element": "",
+	"description": "Link to supporting information",
+	"qualified_name_pattern": "",
+	"generated": false,
+	"style": "Simple",
+	"user_specified": true,
+	"unique": false,
+	"input_required": false,
+	"isParent": false,
+	"isAnchor": false,
+	"min_cardinality": 0,
+	"max_cardinality": 1,
+	"level": "Basic",
+	"Journal Entry": ""
+	}
+}
+ ,
+
+
+{"Search Keywords":{
+		"variable_name": "search_keywords",
+	"inUpdate": true,
+	"attr_labels": "",
+	"examples": "",
+	"default_value": "",
+	"valid_values": "",
+	"existing_element": "",
+	"description": "Keywords to facilitate finding the element",
+	"qualified_name_pattern": "",
+	"generated": false,
+	"style": "Simple List",
+	"user_specified": true,
+	"unique": false,
+	"input_required": false,
+	"isParent": false,
+	"isAnchor": false,
+	"min_cardinality": 0,
+	"max_cardinality": 20,
+	"level": "Basic",
+	"Journal Entry": ""
+	}
+}
 
 ]
 }
@@ -18882,6 +19922,58 @@
 	"min_cardinality": 0,
 	"max_cardinality": 1,
 	"level": "Advanced",
+	"Journal Entry": ""
+	}
+}
+ ,
+
+
+{"URL":{
+		"variable_name": "url",
+	"inUpdate": true,
+	"attr_labels": "",
+	"examples": "",
+	"default_value": "",
+	"valid_values": "",
+	"existing_element": "",
+	"description": "Link to supporting information",
+	"qualified_name_pattern": "",
+	"generated": false,
+	"style": "Simple",
+	"user_specified": true,
+	"unique": false,
+	"input_required": false,
+	"isParent": false,
+	"isAnchor": false,
+	"min_cardinality": 0,
+	"max_cardinality": 1,
+	"level": "Basic",
+	"Journal Entry": ""
+	}
+}
+ ,
+
+
+{"Search Keywords":{
+		"variable_name": "search_keywords",
+	"inUpdate": true,
+	"attr_labels": "",
+	"examples": "",
+	"default_value": "",
+	"valid_values": "",
+	"existing_element": "",
+	"description": "Keywords to facilitate finding the element",
+	"qualified_name_pattern": "",
+	"generated": false,
+	"style": "Simple List",
+	"user_specified": true,
+	"unique": false,
+	"input_required": false,
+	"isParent": false,
+	"isAnchor": false,
+	"min_cardinality": 0,
+	"max_cardinality": 20,
+	"level": "Basic",
 	"Journal Entry": ""
 	}
 }
@@ -19795,6 +20887,58 @@
 	"min_cardinality": 0,
 	"max_cardinality": 1,
 	"level": "Advanced",
+	"Journal Entry": ""
+	}
+}
+ ,
+
+
+{"URL":{
+		"variable_name": "url",
+	"inUpdate": true,
+	"attr_labels": "",
+	"examples": "",
+	"default_value": "",
+	"valid_values": "",
+	"existing_element": "",
+	"description": "Link to supporting information",
+	"qualified_name_pattern": "",
+	"generated": false,
+	"style": "Simple",
+	"user_specified": true,
+	"unique": false,
+	"input_required": false,
+	"isParent": false,
+	"isAnchor": false,
+	"min_cardinality": 0,
+	"max_cardinality": 1,
+	"level": "Basic",
+	"Journal Entry": ""
+	}
+}
+ ,
+
+
+{"Search Keywords":{
+		"variable_name": "search_keywords",
+	"inUpdate": true,
+	"attr_labels": "",
+	"examples": "",
+	"default_value": "",
+	"valid_values": "",
+	"existing_element": "",
+	"description": "Keywords to facilitate finding the element",
+	"qualified_name_pattern": "",
+	"generated": false,
+	"style": "Simple List",
+	"user_specified": true,
+	"unique": false,
+	"input_required": false,
+	"isParent": false,
+	"isAnchor": false,
+	"min_cardinality": 0,
+	"max_cardinality": 20,
+	"level": "Basic",
 	"Journal Entry": ""
 	}
 }
@@ -21470,6 +22614,58 @@
 	"Journal Entry": ""
 	}
 }
+ ,
+
+
+{"URL":{
+		"variable_name": "url",
+	"inUpdate": true,
+	"attr_labels": "",
+	"examples": "",
+	"default_value": "",
+	"valid_values": "",
+	"existing_element": "",
+	"description": "Link to supporting information",
+	"qualified_name_pattern": "",
+	"generated": false,
+	"style": "Simple",
+	"user_specified": true,
+	"unique": false,
+	"input_required": false,
+	"isParent": false,
+	"isAnchor": false,
+	"min_cardinality": 0,
+	"max_cardinality": 1,
+	"level": "Basic",
+	"Journal Entry": ""
+	}
+}
+ ,
+
+
+{"Search Keywords":{
+		"variable_name": "search_keywords",
+	"inUpdate": true,
+	"attr_labels": "",
+	"examples": "",
+	"default_value": "",
+	"valid_values": "",
+	"existing_element": "",
+	"description": "Keywords to facilitate finding the element",
+	"qualified_name_pattern": "",
+	"generated": false,
+	"style": "Simple List",
+	"user_specified": true,
+	"unique": false,
+	"input_required": false,
+	"isParent": false,
+	"isAnchor": false,
+	"min_cardinality": 0,
+	"max_cardinality": 20,
+	"level": "Basic",
+	"Journal Entry": ""
+	}
+}
 
 ]
 }
@@ -22458,6 +23654,58 @@
 	"min_cardinality": 0,
 	"max_cardinality": 1,
 	"level": "Advanced",
+	"Journal Entry": ""
+	}
+}
+ ,
+
+
+{"URL":{
+		"variable_name": "url",
+	"inUpdate": true,
+	"attr_labels": "",
+	"examples": "",
+	"default_value": "",
+	"valid_values": "",
+	"existing_element": "",
+	"description": "Link to supporting information",
+	"qualified_name_pattern": "",
+	"generated": false,
+	"style": "Simple",
+	"user_specified": true,
+	"unique": false,
+	"input_required": false,
+	"isParent": false,
+	"isAnchor": false,
+	"min_cardinality": 0,
+	"max_cardinality": 1,
+	"level": "Basic",
+	"Journal Entry": ""
+	}
+}
+ ,
+
+
+{"Search Keywords":{
+		"variable_name": "search_keywords",
+	"inUpdate": true,
+	"attr_labels": "",
+	"examples": "",
+	"default_value": "",
+	"valid_values": "",
+	"existing_element": "",
+	"description": "Keywords to facilitate finding the element",
+	"qualified_name_pattern": "",
+	"generated": false,
+	"style": "Simple List",
+	"user_specified": true,
+	"unique": false,
+	"input_required": false,
+	"isParent": false,
+	"isAnchor": false,
+	"min_cardinality": 0,
+	"max_cardinality": 20,
+	"level": "Basic",
 	"Journal Entry": ""
 	}
 }
@@ -27966,6 +29214,32 @@
 	"Journal Entry": ""
 	}
 }
+ ,
+
+
+{"Search Keywords":{
+		"variable_name": "search_keywords",
+	"inUpdate": true,
+	"attr_labels": "",
+	"examples": "",
+	"default_value": "",
+	"valid_values": "",
+	"existing_element": "",
+	"description": "Keywords to facilitate finding the element",
+	"qualified_name_pattern": "",
+	"generated": false,
+	"style": "Simple List",
+	"user_specified": true,
+	"unique": false,
+	"input_required": false,
+	"isParent": false,
+	"isAnchor": false,
+	"min_cardinality": 0,
+	"max_cardinality": 20,
+	"level": "Basic",
+	"Journal Entry": ""
+	}
+}
 
 ]
 }
@@ -28207,14 +29481,14 @@
 
 
 {"URL":{
-		"variable_name": "reference_url",
+		"variable_name": "url",
 	"inUpdate": true,
 	"attr_labels": "",
 	"examples": "",
 	"default_value": "",
 	"valid_values": "",
 	"existing_element": "",
-	"description": "URL to access the external reference.",
+	"description": "Link to supporting information",
 	"qualified_name_pattern": "",
 	"generated": false,
 	"style": "Simple",
@@ -28850,6 +30124,32 @@
 	"min_cardinality": 0,
 	"max_cardinality": 1,
 	"level": "Advanced",
+	"Journal Entry": ""
+	}
+}
+ ,
+
+
+{"Search Keywords":{
+		"variable_name": "search_keywords",
+	"inUpdate": true,
+	"attr_labels": "",
+	"examples": "",
+	"default_value": "",
+	"valid_values": "",
+	"existing_element": "",
+	"description": "Keywords to facilitate finding the element",
+	"qualified_name_pattern": "",
+	"generated": false,
+	"style": "Simple List",
+	"user_specified": true,
+	"unique": false,
+	"input_required": false,
+	"isParent": false,
+	"isAnchor": false,
+	"min_cardinality": 0,
+	"max_cardinality": 20,
+	"level": "Basic",
 	"Journal Entry": ""
 	}
 }
@@ -29094,14 +30394,14 @@
 
 
 {"URL":{
-		"variable_name": "reference_url",
+		"variable_name": "url",
 	"inUpdate": true,
 	"attr_labels": "",
 	"examples": "",
 	"default_value": "",
 	"valid_values": "",
 	"existing_element": "",
-	"description": "URL to access the external reference.",
+	"description": "Link to supporting information",
 	"qualified_name_pattern": "",
 	"generated": false,
 	"style": "Simple",
@@ -29737,6 +31037,32 @@
 	"min_cardinality": 0,
 	"max_cardinality": 1,
 	"level": "Advanced",
+	"Journal Entry": ""
+	}
+}
+ ,
+
+
+{"Search Keywords":{
+		"variable_name": "search_keywords",
+	"inUpdate": true,
+	"attr_labels": "",
+	"examples": "",
+	"default_value": "",
+	"valid_values": "",
+	"existing_element": "",
+	"description": "Keywords to facilitate finding the element",
+	"qualified_name_pattern": "",
+	"generated": false,
+	"style": "Simple List",
+	"user_specified": true,
+	"unique": false,
+	"input_required": false,
+	"isParent": false,
+	"isAnchor": false,
+	"min_cardinality": 0,
+	"max_cardinality": 20,
+	"level": "Basic",
 	"Journal Entry": ""
 	}
 }
@@ -30728,6 +32054,32 @@
 	"min_cardinality": 0,
 	"max_cardinality": 1,
 	"level": "Advanced",
+	"Journal Entry": ""
+	}
+}
+ ,
+
+
+{"Search Keywords":{
+		"variable_name": "search_keywords",
+	"inUpdate": true,
+	"attr_labels": "",
+	"examples": "",
+	"default_value": "",
+	"valid_values": "",
+	"existing_element": "",
+	"description": "Keywords to facilitate finding the element",
+	"qualified_name_pattern": "",
+	"generated": false,
+	"style": "Simple List",
+	"user_specified": true,
+	"unique": false,
+	"input_required": false,
+	"isParent": false,
+	"isAnchor": false,
+	"min_cardinality": 0,
+	"max_cardinality": 20,
+	"level": "Basic",
 	"Journal Entry": ""
 	}
 }
@@ -31901,6 +33253,32 @@
 	"min_cardinality": 0,
 	"max_cardinality": 1,
 	"level": "Advanced",
+	"Journal Entry": ""
+	}
+}
+ ,
+
+
+{"Search Keywords":{
+		"variable_name": "search_keywords",
+	"inUpdate": true,
+	"attr_labels": "",
+	"examples": "",
+	"default_value": "",
+	"valid_values": "",
+	"existing_element": "",
+	"description": "Keywords to facilitate finding the element",
+	"qualified_name_pattern": "",
+	"generated": false,
+	"style": "Simple List",
+	"user_specified": true,
+	"unique": false,
+	"input_required": false,
+	"isParent": false,
+	"isAnchor": false,
+	"min_cardinality": 0,
+	"max_cardinality": 20,
+	"level": "Basic",
 	"Journal Entry": ""
 	}
 }
@@ -33895,6 +35273,58 @@
 	"Journal Entry": ""
 	}
 }
+ ,
+
+
+{"URL":{
+		"variable_name": "url",
+	"inUpdate": true,
+	"attr_labels": "",
+	"examples": "",
+	"default_value": "",
+	"valid_values": "",
+	"existing_element": "",
+	"description": "Link to supporting information",
+	"qualified_name_pattern": "",
+	"generated": false,
+	"style": "Simple",
+	"user_specified": true,
+	"unique": false,
+	"input_required": false,
+	"isParent": false,
+	"isAnchor": false,
+	"min_cardinality": 0,
+	"max_cardinality": 1,
+	"level": "Basic",
+	"Journal Entry": ""
+	}
+}
+ ,
+
+
+{"Search Keywords":{
+		"variable_name": "search_keywords",
+	"inUpdate": true,
+	"attr_labels": "",
+	"examples": "",
+	"default_value": "",
+	"valid_values": "",
+	"existing_element": "",
+	"description": "Keywords to facilitate finding the element",
+	"qualified_name_pattern": "",
+	"generated": false,
+	"style": "Simple List",
+	"user_specified": true,
+	"unique": false,
+	"input_required": false,
+	"isParent": false,
+	"isAnchor": false,
+	"min_cardinality": 0,
+	"max_cardinality": 20,
+	"level": "Basic",
+	"Journal Entry": ""
+	}
+}
 
 ]
 }
@@ -34545,6 +35975,58 @@
 	"min_cardinality": 0,
 	"max_cardinality": 1,
 	"level": "Advanced",
+	"Journal Entry": ""
+	}
+}
+ ,
+
+
+{"URL":{
+		"variable_name": "url",
+	"inUpdate": true,
+	"attr_labels": "",
+	"examples": "",
+	"default_value": "",
+	"valid_values": "",
+	"existing_element": "",
+	"description": "Link to supporting information",
+	"qualified_name_pattern": "",
+	"generated": false,
+	"style": "Simple",
+	"user_specified": true,
+	"unique": false,
+	"input_required": false,
+	"isParent": false,
+	"isAnchor": false,
+	"min_cardinality": 0,
+	"max_cardinality": 1,
+	"level": "Basic",
+	"Journal Entry": ""
+	}
+}
+ ,
+
+
+{"Search Keywords":{
+		"variable_name": "search_keywords",
+	"inUpdate": true,
+	"attr_labels": "",
+	"examples": "",
+	"default_value": "",
+	"valid_values": "",
+	"existing_element": "",
+	"description": "Keywords to facilitate finding the element",
+	"qualified_name_pattern": "",
+	"generated": false,
+	"style": "Simple List",
+	"user_specified": true,
+	"unique": false,
+	"input_required": false,
+	"isParent": false,
+	"isAnchor": false,
+	"min_cardinality": 0,
+	"max_cardinality": 20,
+	"level": "Basic",
 	"Journal Entry": ""
 	}
 }
@@ -35484,6 +36966,58 @@
 	"min_cardinality": 0,
 	"max_cardinality": 1,
 	"level": "Advanced",
+	"Journal Entry": ""
+	}
+}
+ ,
+
+
+{"URL":{
+		"variable_name": "url",
+	"inUpdate": true,
+	"attr_labels": "",
+	"examples": "",
+	"default_value": "",
+	"valid_values": "",
+	"existing_element": "",
+	"description": "Link to supporting information",
+	"qualified_name_pattern": "",
+	"generated": false,
+	"style": "Simple",
+	"user_specified": true,
+	"unique": false,
+	"input_required": false,
+	"isParent": false,
+	"isAnchor": false,
+	"min_cardinality": 0,
+	"max_cardinality": 1,
+	"level": "Basic",
+	"Journal Entry": ""
+	}
+}
+ ,
+
+
+{"Search Keywords":{
+		"variable_name": "search_keywords",
+	"inUpdate": true,
+	"attr_labels": "",
+	"examples": "",
+	"default_value": "",
+	"valid_values": "",
+	"existing_element": "",
+	"description": "Keywords to facilitate finding the element",
+	"qualified_name_pattern": "",
+	"generated": false,
+	"style": "Simple List",
+	"user_specified": true,
+	"unique": false,
+	"input_required": false,
+	"isParent": false,
+	"isAnchor": false,
+	"min_cardinality": 0,
+	"max_cardinality": 20,
+	"level": "Basic",
 	"Journal Entry": ""
 	}
 }
@@ -36533,6 +38067,58 @@
 	"Journal Entry": ""
 	}
 }
+ ,
+
+
+{"URL":{
+		"variable_name": "url",
+	"inUpdate": true,
+	"attr_labels": "",
+	"examples": "",
+	"default_value": "",
+	"valid_values": "",
+	"existing_element": "",
+	"description": "Link to supporting information",
+	"qualified_name_pattern": "",
+	"generated": false,
+	"style": "Simple",
+	"user_specified": true,
+	"unique": false,
+	"input_required": false,
+	"isParent": false,
+	"isAnchor": false,
+	"min_cardinality": 0,
+	"max_cardinality": 1,
+	"level": "Basic",
+	"Journal Entry": ""
+	}
+}
+ ,
+
+
+{"Search Keywords":{
+		"variable_name": "search_keywords",
+	"inUpdate": true,
+	"attr_labels": "",
+	"examples": "",
+	"default_value": "",
+	"valid_values": "",
+	"existing_element": "",
+	"description": "Keywords to facilitate finding the element",
+	"qualified_name_pattern": "",
+	"generated": false,
+	"style": "Simple List",
+	"user_specified": true,
+	"unique": false,
+	"input_required": false,
+	"isParent": false,
+	"isAnchor": false,
+	"min_cardinality": 0,
+	"max_cardinality": 20,
+	"level": "Basic",
+	"Journal Entry": ""
+	}
+}
 
 ]
 }
@@ -37290,6 +38876,58 @@
 	"Journal Entry": ""
 	}
 }
+ ,
+
+
+{"URL":{
+		"variable_name": "url",
+	"inUpdate": true,
+	"attr_labels": "",
+	"examples": "",
+	"default_value": "",
+	"valid_values": "",
+	"existing_element": "",
+	"description": "Link to supporting information",
+	"qualified_name_pattern": "",
+	"generated": false,
+	"style": "Simple",
+	"user_specified": true,
+	"unique": false,
+	"input_required": false,
+	"isParent": false,
+	"isAnchor": false,
+	"min_cardinality": 0,
+	"max_cardinality": 1,
+	"level": "Basic",
+	"Journal Entry": ""
+	}
+}
+ ,
+
+
+{"Search Keywords":{
+		"variable_name": "search_keywords",
+	"inUpdate": true,
+	"attr_labels": "",
+	"examples": "",
+	"default_value": "",
+	"valid_values": "",
+	"existing_element": "",
+	"description": "Keywords to facilitate finding the element",
+	"qualified_name_pattern": "",
+	"generated": false,
+	"style": "Simple List",
+	"user_specified": true,
+	"unique": false,
+	"input_required": false,
+	"isParent": false,
+	"isAnchor": false,
+	"min_cardinality": 0,
+	"max_cardinality": 20,
+	"level": "Basic",
+	"Journal Entry": ""
+	}
+}
 
 ]
 }
@@ -38021,6 +39659,58 @@
 	"Journal Entry": ""
 	}
 }
+ ,
+
+
+{"URL":{
+		"variable_name": "url",
+	"inUpdate": true,
+	"attr_labels": "",
+	"examples": "",
+	"default_value": "",
+	"valid_values": "",
+	"existing_element": "",
+	"description": "Link to supporting information",
+	"qualified_name_pattern": "",
+	"generated": false,
+	"style": "Simple",
+	"user_specified": true,
+	"unique": false,
+	"input_required": false,
+	"isParent": false,
+	"isAnchor": false,
+	"min_cardinality": 0,
+	"max_cardinality": 1,
+	"level": "Basic",
+	"Journal Entry": ""
+	}
+}
+ ,
+
+
+{"Search Keywords":{
+		"variable_name": "search_keywords",
+	"inUpdate": true,
+	"attr_labels": "",
+	"examples": "",
+	"default_value": "",
+	"valid_values": "",
+	"existing_element": "",
+	"description": "Keywords to facilitate finding the element",
+	"qualified_name_pattern": "",
+	"generated": false,
+	"style": "Simple List",
+	"user_specified": true,
+	"unique": false,
+	"input_required": false,
+	"isParent": false,
+	"isAnchor": false,
+	"min_cardinality": 0,
+	"max_cardinality": 20,
+	"level": "Basic",
+	"Journal Entry": ""
+	}
+}
 
 ]
 }
@@ -38567,6 +40257,58 @@
 	"min_cardinality": 0,
 	"max_cardinality": 1,
 	"level": "Advanced",
+	"Journal Entry": ""
+	}
+}
+ ,
+
+
+{"URL":{
+		"variable_name": "url",
+	"inUpdate": true,
+	"attr_labels": "",
+	"examples": "",
+	"default_value": "",
+	"valid_values": "",
+	"existing_element": "",
+	"description": "Link to supporting information",
+	"qualified_name_pattern": "",
+	"generated": false,
+	"style": "Simple",
+	"user_specified": true,
+	"unique": false,
+	"input_required": false,
+	"isParent": false,
+	"isAnchor": false,
+	"min_cardinality": 0,
+	"max_cardinality": 1,
+	"level": "Basic",
+	"Journal Entry": ""
+	}
+}
+ ,
+
+
+{"Search Keywords":{
+		"variable_name": "search_keywords",
+	"inUpdate": true,
+	"attr_labels": "",
+	"examples": "",
+	"default_value": "",
+	"valid_values": "",
+	"existing_element": "",
+	"description": "Keywords to facilitate finding the element",
+	"qualified_name_pattern": "",
+	"generated": false,
+	"style": "Simple List",
+	"user_specified": true,
+	"unique": false,
+	"input_required": false,
+	"isParent": false,
+	"isAnchor": false,
+	"min_cardinality": 0,
+	"max_cardinality": 20,
+	"level": "Basic",
 	"Journal Entry": ""
 	}
 }
@@ -41500,6 +43242,58 @@
 	"Journal Entry": ""
 	}
 }
+ ,
+
+
+{"URL":{
+		"variable_name": "url",
+	"inUpdate": true,
+	"attr_labels": "",
+	"examples": "",
+	"default_value": "",
+	"valid_values": "",
+	"existing_element": "",
+	"description": "Link to supporting information",
+	"qualified_name_pattern": "",
+	"generated": false,
+	"style": "Simple",
+	"user_specified": true,
+	"unique": false,
+	"input_required": false,
+	"isParent": false,
+	"isAnchor": false,
+	"min_cardinality": 0,
+	"max_cardinality": 1,
+	"level": "Basic",
+	"Journal Entry": ""
+	}
+}
+ ,
+
+
+{"Search Keywords":{
+		"variable_name": "search_keywords",
+	"inUpdate": true,
+	"attr_labels": "",
+	"examples": "",
+	"default_value": "",
+	"valid_values": "",
+	"existing_element": "",
+	"description": "Keywords to facilitate finding the element",
+	"qualified_name_pattern": "",
+	"generated": false,
+	"style": "Simple List",
+	"user_specified": true,
+	"unique": false,
+	"input_required": false,
+	"isParent": false,
+	"isAnchor": false,
+	"min_cardinality": 0,
+	"max_cardinality": 20,
+	"level": "Basic",
+	"Journal Entry": ""
+	}
+}
 
 ]
 }
@@ -42101,6 +43895,58 @@
 	"Journal Entry": ""
 	}
 }
+ ,
+
+
+{"URL":{
+		"variable_name": "url",
+	"inUpdate": true,
+	"attr_labels": "",
+	"examples": "",
+	"default_value": "",
+	"valid_values": "",
+	"existing_element": "",
+	"description": "Link to supporting information",
+	"qualified_name_pattern": "",
+	"generated": false,
+	"style": "Simple",
+	"user_specified": true,
+	"unique": false,
+	"input_required": false,
+	"isParent": false,
+	"isAnchor": false,
+	"min_cardinality": 0,
+	"max_cardinality": 1,
+	"level": "Basic",
+	"Journal Entry": ""
+	}
+}
+ ,
+
+
+{"Search Keywords":{
+		"variable_name": "search_keywords",
+	"inUpdate": true,
+	"attr_labels": "",
+	"examples": "",
+	"default_value": "",
+	"valid_values": "",
+	"existing_element": "",
+	"description": "Keywords to facilitate finding the element",
+	"qualified_name_pattern": "",
+	"generated": false,
+	"style": "Simple List",
+	"user_specified": true,
+	"unique": false,
+	"input_required": false,
+	"isParent": false,
+	"isAnchor": false,
+	"min_cardinality": 0,
+	"max_cardinality": 20,
+	"level": "Basic",
+	"Journal Entry": ""
+	}
+}
 
 ]
 }
@@ -42647,6 +44493,58 @@
 	"min_cardinality": 0,
 	"max_cardinality": 1,
 	"level": "Advanced",
+	"Journal Entry": ""
+	}
+}
+ ,
+
+
+{"URL":{
+		"variable_name": "url",
+	"inUpdate": true,
+	"attr_labels": "",
+	"examples": "",
+	"default_value": "",
+	"valid_values": "",
+	"existing_element": "",
+	"description": "Link to supporting information",
+	"qualified_name_pattern": "",
+	"generated": false,
+	"style": "Simple",
+	"user_specified": true,
+	"unique": false,
+	"input_required": false,
+	"isParent": false,
+	"isAnchor": false,
+	"min_cardinality": 0,
+	"max_cardinality": 1,
+	"level": "Basic",
+	"Journal Entry": ""
+	}
+}
+ ,
+
+
+{"Search Keywords":{
+		"variable_name": "search_keywords",
+	"inUpdate": true,
+	"attr_labels": "",
+	"examples": "",
+	"default_value": "",
+	"valid_values": "",
+	"existing_element": "",
+	"description": "Keywords to facilitate finding the element",
+	"qualified_name_pattern": "",
+	"generated": false,
+	"style": "Simple List",
+	"user_specified": true,
+	"unique": false,
+	"input_required": false,
+	"isParent": false,
+	"isAnchor": false,
+	"min_cardinality": 0,
+	"max_cardinality": 20,
+	"level": "Basic",
 	"Journal Entry": ""
 	}
 }
@@ -43641,6 +45539,58 @@
 	"Journal Entry": ""
 	}
 }
+ ,
+
+
+{"URL":{
+		"variable_name": "url",
+	"inUpdate": true,
+	"attr_labels": "",
+	"examples": "",
+	"default_value": "",
+	"valid_values": "",
+	"existing_element": "",
+	"description": "Link to supporting information",
+	"qualified_name_pattern": "",
+	"generated": false,
+	"style": "Simple",
+	"user_specified": true,
+	"unique": false,
+	"input_required": false,
+	"isParent": false,
+	"isAnchor": false,
+	"min_cardinality": 0,
+	"max_cardinality": 1,
+	"level": "Basic",
+	"Journal Entry": ""
+	}
+}
+ ,
+
+
+{"Search Keywords":{
+		"variable_name": "search_keywords",
+	"inUpdate": true,
+	"attr_labels": "",
+	"examples": "",
+	"default_value": "",
+	"valid_values": "",
+	"existing_element": "",
+	"description": "Keywords to facilitate finding the element",
+	"qualified_name_pattern": "",
+	"generated": false,
+	"style": "Simple List",
+	"user_specified": true,
+	"unique": false,
+	"input_required": false,
+	"isParent": false,
+	"isAnchor": false,
+	"min_cardinality": 0,
+	"max_cardinality": 20,
+	"level": "Basic",
+	"Journal Entry": ""
+	}
+}
 
 ]
 }
@@ -44629,6 +46579,58 @@
 	"min_cardinality": 0,
 	"max_cardinality": 1,
 	"level": "Advanced",
+	"Journal Entry": ""
+	}
+}
+ ,
+
+
+{"URL":{
+		"variable_name": "url",
+	"inUpdate": true,
+	"attr_labels": "",
+	"examples": "",
+	"default_value": "",
+	"valid_values": "",
+	"existing_element": "",
+	"description": "Link to supporting information",
+	"qualified_name_pattern": "",
+	"generated": false,
+	"style": "Simple",
+	"user_specified": true,
+	"unique": false,
+	"input_required": false,
+	"isParent": false,
+	"isAnchor": false,
+	"min_cardinality": 0,
+	"max_cardinality": 1,
+	"level": "Basic",
+	"Journal Entry": ""
+	}
+}
+ ,
+
+
+{"Search Keywords":{
+		"variable_name": "search_keywords",
+	"inUpdate": true,
+	"attr_labels": "",
+	"examples": "",
+	"default_value": "",
+	"valid_values": "",
+	"existing_element": "",
+	"description": "Keywords to facilitate finding the element",
+	"qualified_name_pattern": "",
+	"generated": false,
+	"style": "Simple List",
+	"user_specified": true,
+	"unique": false,
+	"input_required": false,
+	"isParent": false,
+	"isAnchor": false,
+	"min_cardinality": 0,
+	"max_cardinality": 20,
+	"level": "Basic",
 	"Journal Entry": ""
 	}
 }
@@ -48088,6 +50090,58 @@
 	"Journal Entry": ""
 	}
 }
+ ,
+
+
+{"URL":{
+		"variable_name": "url",
+	"inUpdate": true,
+	"attr_labels": "",
+	"examples": "",
+	"default_value": "",
+	"valid_values": "",
+	"existing_element": "",
+	"description": "Link to supporting information",
+	"qualified_name_pattern": "",
+	"generated": false,
+	"style": "Simple",
+	"user_specified": true,
+	"unique": false,
+	"input_required": false,
+	"isParent": false,
+	"isAnchor": false,
+	"min_cardinality": 0,
+	"max_cardinality": 1,
+	"level": "Basic",
+	"Journal Entry": ""
+	}
+}
+ ,
+
+
+{"Search Keywords":{
+		"variable_name": "search_keywords",
+	"inUpdate": true,
+	"attr_labels": "",
+	"examples": "",
+	"default_value": "",
+	"valid_values": "",
+	"existing_element": "",
+	"description": "Keywords to facilitate finding the element",
+	"qualified_name_pattern": "",
+	"generated": false,
+	"style": "Simple List",
+	"user_specified": true,
+	"unique": false,
+	"input_required": false,
+	"isParent": false,
+	"isAnchor": false,
+	"min_cardinality": 0,
+	"max_cardinality": 20,
+	"level": "Basic",
+	"Journal Entry": ""
+	}
+}
 
 ]
 }
@@ -48582,6 +50636,58 @@
 	"min_cardinality": 0,
 	"max_cardinality": 1,
 	"level": "Advanced",
+	"Journal Entry": ""
+	}
+}
+ ,
+
+
+{"URL":{
+		"variable_name": "url",
+	"inUpdate": true,
+	"attr_labels": "",
+	"examples": "",
+	"default_value": "",
+	"valid_values": "",
+	"existing_element": "",
+	"description": "Link to supporting information",
+	"qualified_name_pattern": "",
+	"generated": false,
+	"style": "Simple",
+	"user_specified": true,
+	"unique": false,
+	"input_required": false,
+	"isParent": false,
+	"isAnchor": false,
+	"min_cardinality": 0,
+	"max_cardinality": 1,
+	"level": "Basic",
+	"Journal Entry": ""
+	}
+}
+ ,
+
+
+{"Search Keywords":{
+		"variable_name": "search_keywords",
+	"inUpdate": true,
+	"attr_labels": "",
+	"examples": "",
+	"default_value": "",
+	"valid_values": "",
+	"existing_element": "",
+	"description": "Keywords to facilitate finding the element",
+	"qualified_name_pattern": "",
+	"generated": false,
+	"style": "Simple List",
+	"user_specified": true,
+	"unique": false,
+	"input_required": false,
+	"isParent": false,
+	"isAnchor": false,
+	"min_cardinality": 0,
+	"max_cardinality": 20,
+	"level": "Basic",
 	"Journal Entry": ""
 	}
 }
@@ -49287,6 +51393,58 @@
 	"min_cardinality": 0,
 	"max_cardinality": 1,
 	"level": "Advanced",
+	"Journal Entry": ""
+	}
+}
+ ,
+
+
+{"URL":{
+		"variable_name": "url",
+	"inUpdate": true,
+	"attr_labels": "",
+	"examples": "",
+	"default_value": "",
+	"valid_values": "",
+	"existing_element": "",
+	"description": "Link to supporting information",
+	"qualified_name_pattern": "",
+	"generated": false,
+	"style": "Simple",
+	"user_specified": true,
+	"unique": false,
+	"input_required": false,
+	"isParent": false,
+	"isAnchor": false,
+	"min_cardinality": 0,
+	"max_cardinality": 1,
+	"level": "Basic",
+	"Journal Entry": ""
+	}
+}
+ ,
+
+
+{"Search Keywords":{
+		"variable_name": "search_keywords",
+	"inUpdate": true,
+	"attr_labels": "",
+	"examples": "",
+	"default_value": "",
+	"valid_values": "",
+	"existing_element": "",
+	"description": "Keywords to facilitate finding the element",
+	"qualified_name_pattern": "",
+	"generated": false,
+	"style": "Simple List",
+	"user_specified": true,
+	"unique": false,
+	"input_required": false,
+	"isParent": false,
+	"isAnchor": false,
+	"min_cardinality": 0,
+	"max_cardinality": 20,
+	"level": "Basic",
 	"Journal Entry": ""
 	}
 }
@@ -50151,6 +52309,58 @@
 	"min_cardinality": 0,
 	"max_cardinality": 1,
 	"level": "Advanced",
+	"Journal Entry": ""
+	}
+}
+ ,
+
+
+{"URL":{
+		"variable_name": "url",
+	"inUpdate": true,
+	"attr_labels": "",
+	"examples": "",
+	"default_value": "",
+	"valid_values": "",
+	"existing_element": "",
+	"description": "Link to supporting information",
+	"qualified_name_pattern": "",
+	"generated": false,
+	"style": "Simple",
+	"user_specified": true,
+	"unique": false,
+	"input_required": false,
+	"isParent": false,
+	"isAnchor": false,
+	"min_cardinality": 0,
+	"max_cardinality": 1,
+	"level": "Basic",
+	"Journal Entry": ""
+	}
+}
+ ,
+
+
+{"Search Keywords":{
+		"variable_name": "search_keywords",
+	"inUpdate": true,
+	"attr_labels": "",
+	"examples": "",
+	"default_value": "",
+	"valid_values": "",
+	"existing_element": "",
+	"description": "Keywords to facilitate finding the element",
+	"qualified_name_pattern": "",
+	"generated": false,
+	"style": "Simple List",
+	"user_specified": true,
+	"unique": false,
+	"input_required": false,
+	"isParent": false,
+	"isAnchor": false,
+	"min_cardinality": 0,
+	"max_cardinality": 20,
+	"level": "Basic",
 	"Journal Entry": ""
 	}
 }
@@ -52122,6 +54332,58 @@
 	"Journal Entry": ""
 	}
 }
+ ,
+
+
+{"URL":{
+		"variable_name": "url",
+	"inUpdate": true,
+	"attr_labels": "",
+	"examples": "",
+	"default_value": "",
+	"valid_values": "",
+	"existing_element": "",
+	"description": "Link to supporting information",
+	"qualified_name_pattern": "",
+	"generated": false,
+	"style": "Simple",
+	"user_specified": true,
+	"unique": false,
+	"input_required": false,
+	"isParent": false,
+	"isAnchor": false,
+	"min_cardinality": 0,
+	"max_cardinality": 1,
+	"level": "Basic",
+	"Journal Entry": ""
+	}
+}
+ ,
+
+
+{"Search Keywords":{
+		"variable_name": "search_keywords",
+	"inUpdate": true,
+	"attr_labels": "",
+	"examples": "",
+	"default_value": "",
+	"valid_values": "",
+	"existing_element": "",
+	"description": "Keywords to facilitate finding the element",
+	"qualified_name_pattern": "",
+	"generated": false,
+	"style": "Simple List",
+	"user_specified": true,
+	"unique": false,
+	"input_required": false,
+	"isParent": false,
+	"isAnchor": false,
+	"min_cardinality": 0,
+	"max_cardinality": 20,
+	"level": "Basic",
+	"Journal Entry": ""
+	}
+}
 
 ]
 }
@@ -53512,6 +55774,58 @@
 	"Journal Entry": ""
 	}
 }
+ ,
+
+
+{"URL":{
+		"variable_name": "url",
+	"inUpdate": true,
+	"attr_labels": "",
+	"examples": "",
+	"default_value": "",
+	"valid_values": "",
+	"existing_element": "",
+	"description": "Link to supporting information",
+	"qualified_name_pattern": "",
+	"generated": false,
+	"style": "Simple",
+	"user_specified": true,
+	"unique": false,
+	"input_required": false,
+	"isParent": false,
+	"isAnchor": false,
+	"min_cardinality": 0,
+	"max_cardinality": 1,
+	"level": "Basic",
+	"Journal Entry": ""
+	}
+}
+ ,
+
+
+{"Search Keywords":{
+		"variable_name": "search_keywords",
+	"inUpdate": true,
+	"attr_labels": "",
+	"examples": "",
+	"default_value": "",
+	"valid_values": "",
+	"existing_element": "",
+	"description": "Keywords to facilitate finding the element",
+	"qualified_name_pattern": "",
+	"generated": false,
+	"style": "Simple List",
+	"user_specified": true,
+	"unique": false,
+	"input_required": false,
+	"isParent": false,
+	"isAnchor": false,
+	"min_cardinality": 0,
+	"max_cardinality": 20,
+	"level": "Basic",
+	"Journal Entry": ""
+	}
+}
 
 ]
 }
@@ -54110,6 +56424,58 @@
 	"min_cardinality": 0,
 	"max_cardinality": 1,
 	"level": "Advanced",
+	"Journal Entry": ""
+	}
+}
+ ,
+
+
+{"URL":{
+		"variable_name": "url",
+	"inUpdate": true,
+	"attr_labels": "",
+	"examples": "",
+	"default_value": "",
+	"valid_values": "",
+	"existing_element": "",
+	"description": "Link to supporting information",
+	"qualified_name_pattern": "",
+	"generated": false,
+	"style": "Simple",
+	"user_specified": true,
+	"unique": false,
+	"input_required": false,
+	"isParent": false,
+	"isAnchor": false,
+	"min_cardinality": 0,
+	"max_cardinality": 1,
+	"level": "Basic",
+	"Journal Entry": ""
+	}
+}
+ ,
+
+
+{"Search Keywords":{
+		"variable_name": "search_keywords",
+	"inUpdate": true,
+	"attr_labels": "",
+	"examples": "",
+	"default_value": "",
+	"valid_values": "",
+	"existing_element": "",
+	"description": "Keywords to facilitate finding the element",
+	"qualified_name_pattern": "",
+	"generated": false,
+	"style": "Simple List",
+	"user_specified": true,
+	"unique": false,
+	"input_required": false,
+	"isParent": false,
+	"isAnchor": false,
+	"min_cardinality": 0,
+	"max_cardinality": 20,
+	"level": "Basic",
 	"Journal Entry": ""
 	}
 }
@@ -54714,6 +57080,58 @@
 	"Journal Entry": ""
 	}
 }
+ ,
+
+
+{"URL":{
+		"variable_name": "url",
+	"inUpdate": true,
+	"attr_labels": "",
+	"examples": "",
+	"default_value": "",
+	"valid_values": "",
+	"existing_element": "",
+	"description": "Link to supporting information",
+	"qualified_name_pattern": "",
+	"generated": false,
+	"style": "Simple",
+	"user_specified": true,
+	"unique": false,
+	"input_required": false,
+	"isParent": false,
+	"isAnchor": false,
+	"min_cardinality": 0,
+	"max_cardinality": 1,
+	"level": "Basic",
+	"Journal Entry": ""
+	}
+}
+ ,
+
+
+{"Search Keywords":{
+		"variable_name": "search_keywords",
+	"inUpdate": true,
+	"attr_labels": "",
+	"examples": "",
+	"default_value": "",
+	"valid_values": "",
+	"existing_element": "",
+	"description": "Keywords to facilitate finding the element",
+	"qualified_name_pattern": "",
+	"generated": false,
+	"style": "Simple List",
+	"user_specified": true,
+	"unique": false,
+	"input_required": false,
+	"isParent": false,
+	"isAnchor": false,
+	"min_cardinality": 0,
+	"max_cardinality": 20,
+	"level": "Basic",
+	"Journal Entry": ""
+	}
+}
 
 ]
 }
@@ -55315,6 +57733,58 @@
 	"Journal Entry": ""
 	}
 }
+ ,
+
+
+{"URL":{
+		"variable_name": "url",
+	"inUpdate": true,
+	"attr_labels": "",
+	"examples": "",
+	"default_value": "",
+	"valid_values": "",
+	"existing_element": "",
+	"description": "Link to supporting information",
+	"qualified_name_pattern": "",
+	"generated": false,
+	"style": "Simple",
+	"user_specified": true,
+	"unique": false,
+	"input_required": false,
+	"isParent": false,
+	"isAnchor": false,
+	"min_cardinality": 0,
+	"max_cardinality": 1,
+	"level": "Basic",
+	"Journal Entry": ""
+	}
+}
+ ,
+
+
+{"Search Keywords":{
+		"variable_name": "search_keywords",
+	"inUpdate": true,
+	"attr_labels": "",
+	"examples": "",
+	"default_value": "",
+	"valid_values": "",
+	"existing_element": "",
+	"description": "Keywords to facilitate finding the element",
+	"qualified_name_pattern": "",
+	"generated": false,
+	"style": "Simple List",
+	"user_specified": true,
+	"unique": false,
+	"input_required": false,
+	"isParent": false,
+	"isAnchor": false,
+	"min_cardinality": 0,
+	"max_cardinality": 20,
+	"level": "Basic",
+	"Journal Entry": ""
+	}
+}
 
 ]
 }
@@ -55913,6 +58383,58 @@
 	"min_cardinality": 0,
 	"max_cardinality": 1,
 	"level": "Advanced",
+	"Journal Entry": ""
+	}
+}
+ ,
+
+
+{"URL":{
+		"variable_name": "url",
+	"inUpdate": true,
+	"attr_labels": "",
+	"examples": "",
+	"default_value": "",
+	"valid_values": "",
+	"existing_element": "",
+	"description": "Link to supporting information",
+	"qualified_name_pattern": "",
+	"generated": false,
+	"style": "Simple",
+	"user_specified": true,
+	"unique": false,
+	"input_required": false,
+	"isParent": false,
+	"isAnchor": false,
+	"min_cardinality": 0,
+	"max_cardinality": 1,
+	"level": "Basic",
+	"Journal Entry": ""
+	}
+}
+ ,
+
+
+{"Search Keywords":{
+		"variable_name": "search_keywords",
+	"inUpdate": true,
+	"attr_labels": "",
+	"examples": "",
+	"default_value": "",
+	"valid_values": "",
+	"existing_element": "",
+	"description": "Keywords to facilitate finding the element",
+	"qualified_name_pattern": "",
+	"generated": false,
+	"style": "Simple List",
+	"user_specified": true,
+	"unique": false,
+	"input_required": false,
+	"isParent": false,
+	"isAnchor": false,
+	"min_cardinality": 0,
+	"max_cardinality": 20,
+	"level": "Basic",
 	"Journal Entry": ""
 	}
 }
@@ -57053,6 +59575,6 @@
 }
 
 
-	 ,
+
 	}
 }

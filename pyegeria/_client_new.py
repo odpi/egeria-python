@@ -12,6 +12,7 @@ import os
 import re
 import time
 from collections.abc import Callable
+from datetime import datetime
 from typing import Any
 
 from httpx import Response
@@ -1687,7 +1688,7 @@ class Client2(BaseClient):
     @dynamic_catch
     async def _async_create_note_log(
             self,
-            element_guid: str,
+            element_guid: str = None,
             display_name: str = None,
             description: str = None,
             body: dict = None,
@@ -1697,8 +1698,8 @@ class Client2(BaseClient):
 
         Parameters
         ----------
-        element_guid: str
-            - unique identifier of the element where the note log is located
+        element_guid: str, optional
+            - unique identifier of the element where the note log is attached
         display_name: str, optional
             - name of the note log
         description: str, optional
@@ -1752,6 +1753,12 @@ class Client2(BaseClient):
             context = {"issue": "Invalid display name and body not provided"}
             raise PyegeriaInvalidParameterException(context=context)
 
+        # TODO - find a nice way to get the user's GUID if no element_guid supplied
+        # Use the user's GUID if no element_guid supplied
+        if element_guid is None:
+            pass
+
+
         url = f"{self.command_root}feedback-manager/elements/{element_guid}/note-logs"
         response = await self._async_make_request("POST", url, body_slimmer(body))
         return response.json()
@@ -1759,7 +1766,7 @@ class Client2(BaseClient):
     @dynamic_catch
     def create_note_log(
             self,
-            element_guid: str,
+            element_guid: str = None,
             display_name: str = None,
             description: str = None,
             body: dict = None,
@@ -1769,8 +1776,8 @@ class Client2(BaseClient):
 
         Parameters
         ----------
-        element_guid
-            - unique identifier of the element where the note log is located
+        element_guid, str, optional
+            - unique identifier of the element where the note log is attached
         display_name: str, optional
             - name of the note log
         description: str, optional
@@ -2162,7 +2169,7 @@ class Client2(BaseClient):
         return resp
 
     @dynamic_catch
-    async def _async_get_note_logs_by_gname(
+    async def _async_get_note_logs_by_name(
             self, filter: str,
             element_type: str = "NoteLog",
             body: dict | FilterRequestBody = None,
@@ -2233,7 +2240,7 @@ class Client2(BaseClient):
         """
         loop = asyncio.get_event_loop()
         response = loop.run_until_complete(
-            self._async_get_note_log_by_name(filter, element_type, body, output_format, report_spec, start_from,
+            self._async_get_note_logs_by_name(filter, element_type, body, output_format, report_spec, start_from,
                                              page_size)
         )
         return response
@@ -2497,6 +2504,178 @@ class Client2(BaseClient):
             self._async_create_note(note_log_guid, display_name, body)
         )
         return response
+
+    @dynamic_catch
+    async def _async_add_journal_entry(self, note_log_qn: str = None, element_qn: str =  None, note_log_display_name: str = None, journal_entry_display_name: str = None, journal_entry_description: str = None,
+                                body: dict | NewElementRequestBody = None ) -> str:
+        """
+        Creates a new journal entry for a note log and returns the unique identifier for it. The note_log will be
+        created if it does not exist. Async version.
+
+        Parameters
+        ----------
+        note_log_qn: str = None
+            - If provided, the journal entry will be attached to this note log. If not provided, a new note_log will be created.
+        element_qn: str = None
+            - If provided, and note log needs to be created, this will be used to define the new note log and attach it
+             to the specified element.
+        note_log_display_name: str = None
+            - optional note log display name
+        journal_entry_display_name: str = None
+            - optional journal entry display name
+        journal_entry_description: str = None
+            - the journal entry text
+
+        body
+            - optional body for the note - if provided, details here will supercede other parameters.
+
+        Returns
+        -------
+        GUID for the journal entry (note).
+
+        Raises
+        ------
+        PyegeriaException
+
+        Notes
+        _____
+
+        Sample body (a note is an asset)
+        {
+          "class" : "NewElementRequestBody",
+          "anchorGUID" : "{{noteLogGUID}}",
+          "isOwnAnchor": false,
+          "parentGUID": "{{noteLogGUID}}",
+          "parentRelationshipTypeName": "AttachedNoteLogEntry",
+          "parentAtEnd1": true,
+          "properties": {
+            "class" : "NotificationProperties",
+            "typeName" : "Notification",
+            "qualifiedName": "add unique name here",
+            "displayName": "add short name here",
+            "description": "add description here",
+            "systemAction" : "add optional system action that occurred as part of this notification processing",
+            "userResponse" : "add optional action that the reader should take",
+            "priority" : 1,
+            "activityStatus" : "FOR_INFO",
+            "additionalProperties": {
+              "property1" : "propertyValue1",
+              "property2" : "propertyValue2"
+            },
+            "extendedProperties": {
+              "property1" : "propertyValue1",
+              "property2" : "propertyValue2"
+            },
+            "effectiveFrom": "{{$isoTimestamp}}",
+            "effectiveTo": "{{$isoTimestamp}}"
+          },
+          "externalSourceGUID": "add guid here",
+          "externalSourceName": "add qualified name here",
+          "effectiveTime" : "{{$isoTimestamp}}",
+          "forLineage" : false,
+          "forDuplicateProcessing" : false
+        }
+
+        """
+        # If a note_log_qn has been provided, look up its GUID
+        note_log_guid = await self._async_get_guid_for_name(note_log_qn, ["qualifiedName"],'NoteLog' ) if note_log_qn else None
+
+        # If we need to create a new note_log, then use the qualified name from the element_qn parameter, if provided.
+        if note_log_guid is None:
+            if element_qn is None:
+                if note_log_display_name is None:
+                    note_log_display_name = f"NoName-{datetime.now().strftime('%Y-%m-%d %H:%M')}"
+            else:
+                element_guid = self._get_guid_for_name(element_qn, ["qualifiedName"],'None')
+            # Create the note_log
+            note_log_guid = await self._async_create_note_log(element_guid = element_guid, display_name = note_log_display_name)
+
+        # Create the Journal Entry (Note)
+        journal_entry_guid = await self._async_create_note_entry(note_log_guid, journal_entry_display_name,
+                                                                 journal_entry_description, body)
+
+        return journal_entry_guid
+
+    @dynamic_catch
+    def add_journal_entry(self, note_log_qn: str = None, element_qn: str = None,
+                                       note_log_display_name: str = None, journal_entry_display_name: str = None,
+                                       journal_entry_description: str = None,
+                                       body: dict | NewElementRequestBody = None) -> str:
+        """
+        Creates a new journal entry for a note log and returns the unique identifier for it. The note_log will be
+        created if it does not exist.
+
+        Parameters
+        ----------
+        note_log_qn: str = None
+            - If provided, the journal entry will be attached to this note log. If not provided, a new note_log will be created.
+        element_qn: str = None
+            - If provided, and note log needs to be created, this will be used to define the new note log and attach it
+             to the specified element.
+        note_log_display_name: str = None
+            - optional note log display name
+        journal_entry_display_name: str = None
+            - optional journal entry display name
+        journal_entry_description: str = None
+            - the journal entry text
+
+        body
+            - optional body for the note - if provided, details here will supercede other parameters.
+
+        Returns
+        -------
+        GUID for the journal entry (note).
+
+        Raises
+        ------
+        PyegeriaException
+
+        Notes
+        _____
+
+        Sample body (a note is an asset)
+        {
+          "class" : "NewElementRequestBody",
+          "anchorGUID" : "{{noteLogGUID}}",
+          "isOwnAnchor": false,
+          "parentGUID": "{{noteLogGUID}}",
+          "parentRelationshipTypeName": "AttachedNoteLogEntry",
+          "parentAtEnd1": true,
+          "properties": {
+            "class" : "NotificationProperties",
+            "typeName" : "Notification",
+            "qualifiedName": "add unique name here",
+            "displayName": "add short name here",
+            "description": "add description here",
+            "systemAction" : "add optional system action that occurred as part of this notification processing",
+            "userResponse" : "add optional action that the reader should take",
+            "priority" : 1,
+            "activityStatus" : "FOR_INFO",
+            "additionalProperties": {
+              "property1" : "propertyValue1",
+              "property2" : "propertyValue2"
+            },
+            "extendedProperties": {
+              "property1" : "propertyValue1",
+              "property2" : "propertyValue2"
+            },
+            "effectiveFrom": "{{$isoTimestamp}}",
+            "effectiveTo": "{{$isoTimestamp}}"
+          },
+          "externalSourceGUID": "add guid here",
+          "externalSourceName": "add qualified name here",
+          "effectiveTime" : "{{$isoTimestamp}}",
+          "forLineage" : false,
+          "forDuplicateProcessing" : false
+        }
+
+        """
+        loop = asyncio.get_event_loop()
+        response = loop.run_until_complete(
+            self._async_add_journal_entry(note_log_qn, element_qn, note_log_display_name, journal_entry_display_name, journal_entry_description, body)
+        )
+        return response
+
 
     @dynamic_catch
     async def _async_update_note(self, note_guid: str, display_name: str = None, description: str = None,
@@ -3873,6 +4052,7 @@ class Client2(BaseClient):
     #
     # Search Tags
     #
+    @dynamic_catch
     async def _async_add_search_keyword_to_element(
             self,
             element_guid: str,
@@ -3929,6 +4109,7 @@ class Client2(BaseClient):
         response = await self._async_make_request("POST", url, body_slimmer(body))
         return response.json().get('guid', 'Search keyword was not created')
 
+    @dynamic_catch
     def add_search_keyword_to_element(
             self,
             element_guid: str,
@@ -3976,6 +4157,8 @@ class Client2(BaseClient):
         )
         return response
 
+
+    @dynamic_catch
     async def _async_update_search_keyword(
             self,
             keyword_guid: str,
@@ -4017,6 +4200,7 @@ class Client2(BaseClient):
         url = f"{self.command_root}classification-manager/search-keywords/{keyword_guid}/update"
         await self._async_update_relationship_request(url, None, body_slimmer(body))
 
+    @dynamic_catch
     def update_search_keyword(
             self,
             keyword_guid: str,
@@ -4060,6 +4244,7 @@ class Client2(BaseClient):
             self._async_update_search_keyword(keyword_guid, body)
         )
 
+    @dynamic_catch
     async def _async_remove_search_keyword(
             self,
             keyword_guid: str
@@ -4083,16 +4268,15 @@ class Client2(BaseClient):
         """
 
         url = f"{self.command_root}classification-manager/search-keywords/{keyword_guid}/remove"
-        await self._async_delete_relationship_request(url)
+        await self._async_delete_relationship_request(url = url, body = None, cascade_delete = False)
 
+    @dynamic_catch
     def remove_search_keyword(
             self,
             keyword_guid,
     ) -> None:
         """
-        Remove the licensed for an element.
-
-        licenses: https://egeria-project.org/types/1/0120-Assignment-licenses/
+        Remove the search keyword for an element.
 
         Parameters
         ----------
@@ -4111,7 +4295,7 @@ class Client2(BaseClient):
 
         loop = asyncio.get_event_loop()
         loop.run_until_complete(
-            self._async_remove_search_keyword(keyword_guid, )
+            self._async_remove_search_keyword(keyword_guid )
         )
 
     @dynamic_catch
@@ -4456,6 +4640,7 @@ class Client2(BaseClient):
             columns_struct=output_formats,
         )
 
+
     #
     # Helper functions for requests
     #
@@ -4556,11 +4741,12 @@ class Client2(BaseClient):
         elif isinstance(body, dict):
             validated_body = self._delete_relationship_request_adapter.validate_python(body)
         else:  # handle case where body not provided
-            body = {
-                "class": "DeleteRelationshipRequestBody",
-                "cascadeDelete": cascade_delete
-            }
-            validated_body = DeleteRelationshipRequestBody.model_validate(body)
+            # body = {
+            #     "class": "DeleteRelationshipRequestBody",
+            #     "cascadeDelete": cascade_delete
+            # }
+            # validated_body = DeleteRelationshipRequestBody.model_validate(body)
+            return None
         return validated_body
 
     @dynamic_catch
@@ -4888,7 +5074,7 @@ class Client2(BaseClient):
     @dynamic_catch
     async def _async_delete_relationship_request(self, url: str, body: dict | DeleteRelationshipRequestBody = None,
                                                  cascade_delete: bool = False) -> None:
-        validated_body = self.validate_delete_relationshp_request(body, cascade_delete)
+        validated_body = self.validate_delete_relationship_request(body, cascade_delete)
         if validated_body:
             json_body = validated_body.model_dump_json(indent=2, exclude_none=True)
             logger.info(json_body)

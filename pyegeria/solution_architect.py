@@ -1810,7 +1810,7 @@ class SolutionArchitect(Client2):
     async def _async_get_info_supply_chain_by_name(self, search_filter: str, body: dict = None,
                                                    add_implementation: bool = True, start_from: int = 0,
                                                    page_size: int = max_paging_size,
-                                                   output_format: str = "JSON") -> dict | str:
+                                                   output_format: str = "JSON", report_spec: str | dict = None) -> dict | str:
         """ Returns the list of information supply chains with a particular name. Async Version.
 
             Parameters
@@ -1875,12 +1875,12 @@ class SolutionArchitect(Client2):
         if element == NO_ELEMENTS_FOUND:
             return NO_ELEMENTS_FOUND
         if output_format != 'JSON':  # return a simplified markdown representation
-            return self.generate_info_supply_chain_output(element, None, output_format)
+            return self.generate_info_supply_chain_output(element, None, output_format, report_spec=report_spec)
         return response.json().get("elements", NO_ELEMENTS_FOUND)
 
     def get_info_supply_chain_by_name(self, search_filter: str, body: dict = None, add_implementation: bool = True,
                                       start_from: int = 0, page_size: int = max_paging_size,
-                                      output_format: str = "JSON") -> dict | str:
+                                      output_format: str = "JSON", report_spec: str | dict = None) -> dict | str:
         """ Returns the list of information supply chains with a particular name. Async Version.
 
             Parameters
@@ -1937,11 +1937,11 @@ class SolutionArchitect(Client2):
         loop = asyncio.get_event_loop()
         response = loop.run_until_complete(
             self._async_get_info_supply_chain_by_name(search_filter, body, add_implementation, start_from, page_size,
-                                                      output_format))
+                                                      output_format, report_spec))
         return response
 
     async def _async_get_info_supply_chain_by_guid(self, guid: str, body: dict = None, add_implementation: bool = True,
-                                                   output_format: str = "JSON") -> dict | str:
+                                                   output_format: str = "JSON", report_spec: str | dict = None) -> dict | str:
         """Return the properties of a specific information supply chain. Async Version.
 
             Parameters
@@ -1998,11 +1998,11 @@ class SolutionArchitect(Client2):
         if element == NO_ELEMENTS_FOUND:
             return NO_ELEMENTS_FOUND
         if output_format != 'JSON':  # return a simplified markdown representation
-            return self.generate_info_supply_chain_output(element, None, output_format)
+            return self.generate_info_supply_chain_output(element, None, output_format, report_spec=report_spec)
         return element
 
     def get_info_supply_chain_by_guid(self, guid: str, body: dict = None, add_implementation: bool = True,
-                                      output_format: str = "JSON") -> dict | str:
+                                      output_format: str = "JSON", report_spec: str | dict = None) -> dict | str:
         """ Return the properties of a specific information supply chain.
 
             Parameters
@@ -2048,7 +2048,7 @@ class SolutionArchitect(Client2):
         """
         loop = asyncio.get_event_loop()
         response = loop.run_until_complete(
-            self._async_get_info_supply_chain_by_guid(guid, body, add_implementation, output_format))
+            self._async_get_info_supply_chain_by_guid(guid, body, add_implementation, output_format, report_spec))
         return response
 
     #
@@ -4344,7 +4344,7 @@ class SolutionArchitect(Client2):
                                     starts_with: bool = True, ends_with: bool = False,
                                     ignore_case: bool = False, start_from: int = 0,
                                     page_size: int = 0, output_format: str = 'JSON',
-                                    report_spec: str = None,
+                                    report_spec: str | dict = None,
                                     body: dict| SearchStringRequestBody = None) -> list[dict] | str:
         """ Retrieve the solution component elements that contain the search string. The solutions components returned
             include information about consumers, actors, and other solution components that are associated with them.
@@ -4420,7 +4420,7 @@ class SolutionArchitect(Client2):
 
 
     async def _async_get_solution_components_by_name(self, search_filter: str, body: dict = None, start_from: int = 0,
-                                                     page_size: int = 0, output_format: str = "JSON") -> dict | str:
+                                                     page_size: int = 0, output_format: str = "JSON", report_spec: str | dict = None) -> dict | str:
         """ Returns the list of solution components with a particular name. Async Version.
 
             Parameters
@@ -4482,11 +4482,12 @@ class SolutionArchitect(Client2):
         if element == NO_ELEMENTS_FOUND:
             return NO_ELEMENTS_FOUND
         if output_format != 'JSON':  # return a simplified markdown representation
-            return self.generate_solution_components_output(element, search_filter, output_format)
+            return self.generate_solution_components_output(element, search_filter, output_format, report_spec=report_spec)
         return response.json().get("elements", NO_ELEMENTS_FOUND)
 
     def get_solution_components_by_name(self, search_filter: str, body: dict = None, start_from: int = 0,
-                                        page_size: int = max_paging_size, output_format: str = "JSON") -> dict | str:
+                                        page_size: int = max_paging_size, output_format: str = "JSON",
+                                        report_spec: str | dict = None) -> dict | str:
         """ Returns the list of solution components with a particular name.
 
             Parameters
@@ -4537,10 +4538,13 @@ class SolutionArchitect(Client2):
               "filter": "Add name here"
             }
 
+        Args:
+            report_spec ():
+
         """
         loop = asyncio.get_event_loop()
         response = loop.run_until_complete(
-            self._async_get_solution_components_by_name(search_filter, body, start_from, page_size, output_format))
+            self._async_get_solution_components_by_name(search_filter, body, start_from, page_size, output_format, report_spec))
         return response
 
     async def _async_get_solution_component_by_guid(self, guid: str, body: dict = None,
@@ -4607,7 +4611,7 @@ class SolutionArchitect(Client2):
         #     return self.generate_solution_components_output(element, None, output_format)
         # return response.json().get("element", NO_ELEMENTS_FOUND)
 
-    def get_solution_component_by_guid(self, guid: str, body: dict = None, output_format: str = "JSON") -> dict | str:
+    def get_solution_component_by_guid(self, guid: str, body: dict = None, output_format: str = "JSON", report_spec: str | dict = "Solution-Component-DrE") -> dict | str:
         """ Return the properties of a specific solution component.
 
             Parameters
@@ -4650,7 +4654,7 @@ class SolutionArchitect(Client2):
 
         """
         loop = asyncio.get_event_loop()
-        response = loop.run_until_complete(self._async_get_solution_component_by_guid(guid, body, output_format))
+        response = loop.run_until_complete(self._async_get_solution_component_by_guid(guid, body, output_format, report_spec))
         return response
 
 
@@ -4667,17 +4671,32 @@ class SolutionArchitect(Client2):
         blueprint_guids = []
         supply_chain_guids = []
         parent_component_guids = []
+        keywords_list = {}
 
-        col_members = response.get('memberOfCollection', None)
+        col_members = response.get('memberOfCollections', None)
         if col_members is not None:
             for member in col_members:
-                guid = member['relatedElement'].get('guid', None)
-                member_props = member['relatedElement'].get('properties', None)
-                if member_props is not None:
-                    if member_props.get('typeName', None) == 'SolutionBlueprint':
-                        blueprint_guids.append(guid)
-                    elif member_props.get('class', None) == 'InformationSupplyChain':
-                        supply_chain_guids.append(guid)
+                guid = member['relatedElement']['elementHeader'].get('guid', None)
+                type_name = member['relatedElement']['elementHeader']['type'].get('typeName',None)
+                if type_name == 'SolutionBlueprint':
+                    blueprint_guids.append(guid)
+                elif type_name == 'InformationSupplyChain':
+                    supply_chain_guids.append(guid)
+        derived_from = response.get('derivedFrom', None)
+        if derived_from is not None:
+            for mem in derived_from:
+                guid = mem['relatedElement']['elementHeader'].get('guid', None)
+                type_name = mem['relatedElement']['elementHeader']['type'].get('typeName',None)
+                if type_name == 'SolutionBlueprint':
+                    supply_chain_guids.append(guid)
+
+        keywords = response.get('searchKeywords', None)
+        for mem in keywords:
+            guid = mem['relatedElement']['elementHeader'].get('guid', None)
+            keyword = mem['relatedElement']['properties'].get('displayName',None)
+            if keyword is  None:
+                keyword = mem['relatedElement']['properties'].get('keyword',None)
+            keywords_list[keyword] = guid
 
         sub_components = response.get('nestedSolutionComponents', None)
         if sub_components is not None:
@@ -4706,6 +4725,7 @@ class SolutionArchitect(Client2):
             "blueprint_guids": blueprint_guids,
             "supply_chain_guids": supply_chain_guids,
             "parent_component_guids": parent_component_guids,
+            "keywords_list": keywords_list,
             }
 
 
@@ -5708,7 +5728,7 @@ class SolutionArchitect(Client2):
 
     async def _async_get_solution_roles_by_name(self, search_filter: str, body: dict = None, start_from: int = 0,
                                                 page_size: int = max_paging_size,
-                                                output_format: str = "JSON") -> dict | str:
+                                                output_format: str = "JSON", report_spec: str | dict = None) -> dict | str:
         """ Returns the list of solution roles with a particular name. Async Version.
 
             Parameters
@@ -5772,11 +5792,11 @@ class SolutionArchitect(Client2):
         if element == NO_ELEMENTS_FOUND:
             return NO_ELEMENTS_FOUND
         if output_format != 'JSON':  # return a simplified markdown representation
-            return self.generate_solution_roles_output(element, search_filter, output_format)
+            return self.generate_solution_roles_output(element, search_filter, output_format, report_spec=report_spec)
         return response.json().get("elements", NO_ELEMENTS_FOUND)
 
     def get_solution_roles_by_name(self, search_filter: str, body: dict = None, start_from: int = 0,
-                                   page_size: int = max_paging_size, output_format: str = "JSON") -> dict | str:
+                                   page_size: int = max_paging_size, output_format: str = "JSON", report_spec: str | dict = None) -> dict | str:
         """ Returns the list of solution roles with a particular name.
 
             Parameters
@@ -5830,12 +5850,12 @@ class SolutionArchitect(Client2):
         """
         loop = asyncio.get_event_loop()
         response = loop.run_until_complete(
-            self._async_get_solution_roles_by_name(search_filter, body, start_from, page_size, output_format))
+            self._async_get_solution_roles_by_name(search_filter, body, start_from, page_size, output_format, report_spec))
         return response
 
 
     async def _async_get_solution_role_by_guid(self, guid: str, body: dict = None,
-                                               output_format: str = "JSON") -> dict | str:
+                                               output_format: str = "JSON", report_spec: str | dict = None) -> dict | str:
         """ Return the properties of a specific solution role. Async Version.
 
             Parameters
@@ -5889,10 +5909,10 @@ class SolutionArchitect(Client2):
         if element == NO_ELEMENTS_FOUND:
             return NO_ELEMENTS_FOUND
         if output_format != 'JSON':  # return a simplified markdown representation
-            return self.generate_solution_roles_output(element, None, output_format)
+            return self.generate_solution_roles_output(element, None, output_format, report_spec=report_spec)
         return response.json().get("element", NO_ELEMENTS_FOUND)
 
-    def get_solution_role_by_guid(self, guid: str, body: dict = None, output_format: str = "JSON") -> dict | str:
+    def get_solution_role_by_guid(self, guid: str, body: dict = None, output_format: str = "JSON", report_spec: str | dict = None) -> dict | str:
         """ Return the properties of a specific solution role.
 
             Parameters

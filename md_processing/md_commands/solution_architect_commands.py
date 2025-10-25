@@ -1,8 +1,10 @@
 """
 This file contains blueprint/solution-related object_action functions for processing Egeria Markdown
 """
+
 import json
 import sys
+from datetime import datetime
 from typing import Optional
 
 from loguru import logger
@@ -13,7 +15,7 @@ from rich.markdown import Markdown
 
 from md_processing.md_processing_utils.common_md_proc_utils import (parse_upsert_command, parse_view_command)
 from md_processing.md_processing_utils.common_md_utils import update_element_dictionary, set_element_prop_body, \
-    set_update_body, set_create_body
+    set_update_body, set_create_body, add_search_keywords
 from md_processing.md_processing_utils.extraction_utils import (extract_command_plus, update_a_command)
 from md_processing.md_processing_utils.md_processing_constants import (load_commands)
 from pyegeria import body_slimmer, EgeriaTech, PyegeriaException, print_basic_exception
@@ -68,7 +70,7 @@ def sync_chain_related_elements(egeria_client: EgeriaTech, guid:str, in_supply_c
 @logger.catch
 def sync_component_related_elements(egeria_client: EgeriaTech, object_type: str,
                                     supply_chain_guids: list, parent_component_guids: list,
-                                    actor_guids: list, in_blueprint_guids: list, guid: str, qualified_name: str,
+                                    actor_guids: list, in_blueprint_guids: list, keywords: list[str], guid: str, qualified_name: str,
                                     display_name: str, merge_update: bool = True) -> None:
     """Sync a components related elements.
 
@@ -81,18 +83,37 @@ def sync_component_related_elements(egeria_client: EgeriaTech, object_type: str,
         as_is_blueprints = set(rel_el_list.get("blueprint_guids", []))
         as_is_parent_components = set(rel_el_list.get("parent_component_guids", []))
         as_is_supply_chains = set(rel_el_list.get("supply_chain_guids", []))
+        as_is_keywords_list = set(rel_el_list.get("keywords_list", {}))
+        as_is_keywords = set(rel_el_list.get("keywords_list", {}).keys())
 
 
         to_be_actors = set(actor_guids) if actor_guids is not None else set()
         to_be_blueprints = set(in_blueprint_guids) if in_blueprint_guids is not None else set()
         to_be_parent_components = set(parent_component_guids) if parent_component_guids is not None else set()
         to_be_supply_chains = set(supply_chain_guids) if supply_chain_guids is not None else set()
+        to_be_keywords_list = set(keywords) if keywords is not None else set()
 
 
         logger.trace(
             f"as_is_sub_components: {list(as_is_parent_components)} to_be_sub_components: {list(to_be_parent_components)}")
         logger.trace(f"as_is_actors: {list(as_is_actors)} to_be_actors: {list(to_be_actors)}")
         logger.trace(f"as_is_blueprints: {list(as_is_blueprints)} to_be_blueprints: {list(to_be_blueprints)}")
+
+        keywords_to_add = to_be_keywords_list - as_is_keywords
+        logger.trace(f"keywords_to_add: {list(keywords_to_add)}")
+        if len(keywords_to_add) > 0:
+            for ds in keywords_to_add:
+                egeria_client.add_search_keyword_to_element(guid, ds)
+                msg = f"Added `{ds}` to component `{guid}`"
+                logger.trace(msg)
+
+        keywords_to_remove = as_is_keywords_list - to_be_keywords_list
+        logger.trace(f"keyword_to_remove: {list(keywords_to_remove)}")
+        if len(keywords_to_remove) > 0:
+            for ds in keywords_to_remove: ## change structure of get related elements to return pairs of keywords and guids
+                egeria_client.remove_search_keyword(rel_el_list['keywords_list'][ds])
+                msg = f"Removed `{ds}` from component `{guid}`"
+                logger.trace(msg)
 
         parent_components_to_remove = as_is_parent_components - to_be_parent_components
         logger.trace(f"sub_components_to_remove: {list(parent_components_to_remove)}")
@@ -101,6 +122,8 @@ def sync_component_related_elements(egeria_client: EgeriaTech, object_type: str,
                 egeria_client.detach_sub_component(ds, guid, None)
                 msg = f"Removed `{display_name}` from component `{ds}`"
                 logger.trace(msg)
+
+
 
         parent_components_to_add = to_be_parent_components - as_is_parent_components
         logger.trace(f"parent_components_to_add: {list(parent_components_to_add)}")
@@ -185,6 +208,9 @@ def sync_component_related_elements(egeria_client: EgeriaTech, object_type: str,
                 egeria_client.link_solution_component_to_blueprint(bp, guid, None)
                 msg = f"Added `{in_blueprint_guids}` to `{display_name}`"
                 logger.trace(msg)
+
+        if keywords:
+            add_search_keywords(egeria_client, guid, keywords)
 
         if supply_chain_guids:
             body = {
@@ -276,7 +302,7 @@ def process_blueprint_upsert_command(egeria_client: EgeriaTech, txt: str, direct
     attributes = parsed_output['attributes']
     description = attributes.get('Description', {}).get('value', None)
     display_name = attributes['Display Name'].get('value', None)
-
+    search_keywords = attributes['Search Keywords'].get('value', None)
 
 
 
@@ -413,6 +439,9 @@ def process_solution_component_upsert_command(egeria_client: EgeriaTech, txt: st
     solution_component_type = attributes.get('Solution Component Type', {}).get('value', None)
     planned_deployed_impl_type = attributes.get('Planned Deployed Implementation Type', {}).get('value', None)
     initial_status = attributes.get('Status', {}).get('value', None)
+    url = attributes.get('URL', {}).get('value', None)
+    search_keywords = attributes.get('Search Keywords', {}).get('value', None)
+    journal_entry = attributes.get('Journal Entry', {}).get('value', None)
     user_defined_status = attributes.get('User Defined Status', {}).get('value', None)
     if initial_status != "OTHER":
         user_defined_status = None
@@ -499,7 +528,8 @@ def process_solution_component_upsert_command(egeria_client: EgeriaTech, txt: st
                         "additionalProperties": additional_properties,
                         "extendedProperties": extended_properties,
                         "effectiveFrom": effective_from,
-                        "effectiveTo": effective_to
+                        "effectiveTo": effective_to,
+                        "URL": url
                         }
                     })
 
@@ -511,9 +541,15 @@ def process_solution_component_upsert_command(egeria_client: EgeriaTech, txt: st
                 # Sync Parent Components and Blueprints
                 sync_component_related_elements(egeria_client, object_type ,
                                                 in_supply_chain_guids,parent_component_guids,actor_guids,
-                                                in_blueprint_guids, guid, qualified_name, 
+                                                in_blueprint_guids, search_keywords, guid, qualified_name,
                                                 display_name,
                                                 merge_update)
+
+                if journal_entry:
+                    note_log_qn = f"{qualified_name}-notelog"
+                    note_log_display_name = f"{display_name}-notelog"
+                    journal_entry_display_name = f"{display_name}-{egeria_client.user_id}-notelog-{datetime.now().strftime('%Y-%m-%d %H:%M')}"
+                    journal_entry_guid = egeria_client.add_journal_entry(note_log_qn, qualified_name, None, journal_entry_display_name, journal_entry)
                 logger.success(f"==>Updated  {object_type} `{display_name}` with related elements")
                 return egeria_client.get_solution_component_by_guid(guid, output_format='MD', report_spec = "Solution-Component-DrE")
 
@@ -551,7 +587,8 @@ def process_solution_component_upsert_command(egeria_client: EgeriaTech, txt: st
                             "additionalProperties": additional_properties,
                             "extendedProperties": extended_properties,
                             "effectiveFrom": effective_from,
-                            "effectiveTo": effective_to
+                            "effectiveTo": effective_to,
+                            "URL": url
                         },
                         "initialStatus": initial_status,
                         "externalSourceGUID": external_source_guid,
@@ -568,6 +605,9 @@ def process_solution_component_upsert_command(egeria_client: EgeriaTech, txt: st
                             })
                         msg = f"Created Element `{display_name}` with GUID {guid}\n\n___"
                         logger.success(msg)
+                        if search_keywords:
+                            add_search_keywords(egeria_client, guid, search_keywords)
+
                         if in_component_guids:
                             for comp in in_component_guids:
                                 egeria_client.link_subcomponent(comp, guid, None)

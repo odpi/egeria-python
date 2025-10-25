@@ -1,5 +1,7 @@
 import json
 import types
+from json import JSONDecodeError
+
 import pytest
 import os
 from pyegeria._client_new import Client2
@@ -54,16 +56,42 @@ def test_add_search_keyword():
         assert False
 
 def test_find_search_keyword() :
-    keyword = "Sentinel2"
+    keyword = "*"
     try:
         client = Client2(view_server, view_url, user, user_pass)
         client.create_egeria_bearer_token()
-        response = client.find_search_keywords(keyword, output_format="FORM", report_spec = "Search-Keywords")
+        response = client.find_search_keywords(keyword, output_format="JSON", report_spec = "Search-Keywords")
         if isinstance(response, dict | list):
             print(json.dumps(response, indent = 2))
         else:
             print(response)
         assert True
     except PyegeriaException as e:
+        print_basic_exception(e)
+        assert False
+
+
+def test_remove_search_keyword() :
+    keyword_guid = "49cedf27-3aa3-4522-b4b9-7764bac99a3d"
+    try:
+        client = Client2(view_server, view_url, user, user_pass)
+        client.create_egeria_bearer_token()
+        client.remove_search_keyword(keyword_guid)
+
+        assert True
+    except (PyegeriaException, JSONDecodeError) as e:
+        print_basic_exception(e)
+        assert False
+
+def test_get_user_guid() :
+    user_id = "peterprofile"
+    try:
+        client = Client2(view_server, view_url, user, user_pass)
+        client.create_egeria_bearer_token()
+        response = client.get_elements_by_property_value(user_id,['userid', 'displayName','fullName'],None)
+        if isinstance(response, dict | list):
+            print(json.dumps(response, indent = 2))
+        assert True
+    except (PyegeriaException, JSONDecodeError) as e:
         print_basic_exception(e)
         assert False

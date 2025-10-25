@@ -379,7 +379,12 @@ def print_basic_exception(e: PyegeriaException):
     table.caption = e.pyegeria_code
     table.add_column("Facet", justify="center")
     table.add_column("Item", justify="left", width=80)
-    related_response = e.response.json() if e.response else ""
+    if e.response:
+        related_response = e.response.json() if isinstance(e, PyegeriaException) else None
+        exception_msg_id = related_response.get("exceptionErrorMessageId", None)
+    else:
+        exception_msg_id = ""
+
     table = Table(title=f"Exception: {e.__class__.__name__}", show_lines=True, header_style="bold", box=box.HEAVY_HEAD)
     table.caption = e.pyegeria_code
     table.add_column("Facet", justify="center")

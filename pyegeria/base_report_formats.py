@@ -307,6 +307,7 @@ base_report_specs = FormatSetDict({
             Format(
                 types=["ALL"],
                 attributes= [
+                    Column(name='Search Keyword', key='keyword'),
                     Column(name="Search Keyword GUID", key='guid'),
                     Column(name="Element Display Name", key='element_display_name'),
                     Column(name="Element GUID", key='element_guid'),
