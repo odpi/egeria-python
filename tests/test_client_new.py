@@ -4,14 +4,16 @@ from json import JSONDecodeError
 
 import pytest
 import os
+
+from pydantic import ValidationError
+
 from pyegeria._client_new import Client2
 from pyegeria.config import settings
 from pyegeria.external_links import ExternalReferences
 from pyegeria.logging_configuration import config_logging
 
-from pyegeria._exceptions_new import PyegeriaException, print_exception_response, print_basic_exception
-
-
+from pyegeria._exceptions_new import PyegeriaException, print_exception_response, print_basic_exception, \
+    print_validation_error
 
 EGERIA_USER = os.environ.get("EGERIA_USER", "peterprofile")
 EGERIA_USER_PASSWORD = os.environ.get("EGERIA_USER_PASSWORD", "secret")
@@ -60,7 +62,7 @@ def test_find_search_keyword() :
     try:
         client = Client2(view_server, view_url, user, user_pass)
         client.create_egeria_bearer_token()
-        response = client.find_search_keywords(keyword, output_format="JSON", report_spec = "Search-Keywords")
+        response = client.find_search_keywords(keyword, output_format="DICT", report_spec = "Search-Keywords")
         if isinstance(response, dict | list):
             print(json.dumps(response, indent = 2))
         else:
@@ -92,6 +94,89 @@ def test_get_user_guid() :
         if isinstance(response, dict | list):
             print(json.dumps(response, indent = 2))
         assert True
+    except (PyegeriaException, JSONDecodeError) as e:
+        print_basic_exception(e)
+        assert False
+
+def test_add_journal_entry():
+    element_guid = "1a16188a-9cba-4c86-835b-e223e97d22bb" # Milvus
+    element_qn = "SolutionComponent::Milvus::V1.0"
+    note_log_display_name = "Milvus-NoteLog"
+    journal_entry_display_name = "test-journal-entry"
+    journal_entry_description = "First Journal Entry"
+
+    try:
+        client = Client2(view_server, view_url, user, user_pass)
+        client.create_egeria_bearer_token()
+        response = client.add_journal_entry(element_qn = element_qn,
+                                            note_log_display_name=note_log_display_name,
+                                            journal_entry_display_name=journal_entry_display_name,
+                                            journal_entry_description=journal_entry_description,)
+        print("\n\n" + response)
+        assert True
+    except (PyegeriaException, JSONDecodeError) as e:
+        print_basic_exception(e)
+        assert False
+
+def test_find_note_logs():
+    try:
+        client = Client2(view_server, view_url, user, user_pass)
+        client.create_egeria_bearer_token()
+        search_string = "*"
+        output_format = "DICT"
+        report_spec = "Referenceables"
+        response = client.find_note_logs(search_string, output_format = output_format, report_spec=report_spec)
+        if isinstance(response, dict | list):
+            print(json.dumps(response, indent = 2))
+        else:
+            print(response)
+    except (PyegeriaException, JSONDecodeError) as e:
+        print_basic_exception(e)
+        assert False
+
+def test_remove_note_log() :
+    note_log_guid = "5bcc6c62-b9aa-4f56-9d86-4c2bd63eb7f8"
+    try:
+        client = Client2(view_server, view_url, user, user_pass)
+        client.create_egeria_bearer_token()
+        client.remove_note_log(note_log_guid)
+
+        assert True
+    except (PyegeriaException, JSONDecodeError) as e:
+        print_basic_exception(e)
+        assert False
+
+def test_find_notes():
+    try:
+        client = Client2(view_server, view_url, user, user_pass)
+        client.create_egeria_bearer_token()
+        search_string = "Milvus"
+        output_format = "DICT"
+        report_spec = "Referenceables"
+        response = client.find_notes(search_string, output_format = output_format, report_spec=report_spec)
+        if isinstance(response, dict | list):
+            print(json.dumps(response, indent = 2))
+        else:
+            print(response)
+    except (PyegeriaException, JSONDecodeError) as e:
+        print_basic_exception(e)
+        assert False
+    except ValidationError as e:
+        print_validation_error(e)
+        assert False
+
+def test_get_notes_for_note_log():
+    try:
+        client = Client2(view_server, view_url, user, user_pass)
+        client.create_egeria_bearer_token()
+        note_log_guid = "5c01cab6-3e57-4f74-b2b2-2438cf36415b"
+        output_format = "JSON"
+        report_spec = "Referenceables"
+        response = client.get_notes_for_note_log(note_log_guid, output_format = output_format, report_spec = report_spec)
+        if isinstance(response, dict | list):
+            print(json.dumps(response, indent = 2))
+        else:
+            print(response)
     except (PyegeriaException, JSONDecodeError) as e:
         print_basic_exception(e)
         assert False

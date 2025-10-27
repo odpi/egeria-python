@@ -15,7 +15,7 @@ from rich.markdown import Markdown
 
 from md_processing.md_processing_utils.common_md_proc_utils import (parse_upsert_command, parse_view_command)
 from md_processing.md_processing_utils.common_md_utils import update_element_dictionary, set_element_prop_body, \
-    set_update_body, set_create_body, add_search_keywords
+    set_update_body, set_create_body, add_search_keywords, add_note_in_dr_e
 from md_processing.md_processing_utils.extraction_utils import (extract_command_plus, update_a_command)
 from md_processing.md_processing_utils.md_processing_constants import (load_commands)
 from pyegeria import body_slimmer, EgeriaTech, PyegeriaException, print_basic_exception
@@ -294,7 +294,7 @@ def process_blueprint_upsert_command(egeria_client: EgeriaTech, txt: str, direct
 
     qualified_name = parsed_output.get('qualified_name', None)
     guid = parsed_output.get('guid', None)
-
+    journal_entry = parsed_output.get('Journey Entry', {}.get('value', None))
     print(Markdown(parsed_output['display']))
 
     logger.debug(json.dumps(parsed_output, indent=4))
@@ -354,6 +354,8 @@ def process_blueprint_upsert_command(egeria_client: EgeriaTech, txt: str, direct
                     logger.success(msg)
                     sync_blueprint_related_elements(egeria_client, object_type, component_guids, guid, qualified_name,
                                                     display_name, replace_all_props)
+
+                    journal_entry_guid = add_note_in_dr_e(egeria_client, qualified_name, display_name, journal_entry)
                     logger.success(f"===> Updated {object_type} `{display_name}` related elements\n\n")
                     return egeria_client.get_solution_blueprints_by_name(qualified_name, output_format='MD', report_spec = "Solution-Blueprint-DrE")
 
@@ -386,6 +388,7 @@ def process_blueprint_upsert_command(egeria_client: EgeriaTech, txt: str, direct
                     update_element_dictionary(qualified_name, {
                         'guid': guid, 'display_name': display_name
                         })
+                    journal_entry_guid = add_note_in_dr_e(egeria_client, qualified_name, display_name, journal_entry)
                     msg = f"Created Element `{display_name}` with GUID {guid}\n\n___"
                     print(Markdown(msg))
                     logger.success(msg)
@@ -546,11 +549,7 @@ def process_solution_component_upsert_command(egeria_client: EgeriaTech, txt: st
                                                 merge_update)
 
                 if journal_entry:
-                    note_log_qn = f"{qualified_name}-notelog"
-                    note_log_display_name = f"{display_name}-notelog"
-                    journal_entry_display_name = f"{display_name}-{egeria_client.user_id}-notelog-{datetime.now().strftime('%Y-%m-%d %H:%M')}"
-                    journal_entry_guid = egeria_client.add_journal_entry(note_log_qn, qualified_name, None, journal_entry_display_name, journal_entry)
-                logger.success(f"==>Updated  {object_type} `{display_name}` with related elements")
+                    journal_entry_guid = add_note_in_dr_e(egeria_client, qualified_name, display_name, journal_entry)
                 return egeria_client.get_solution_component_by_guid(guid, output_format='MD', report_spec = "Solution-Component-DrE")
 
 
@@ -631,7 +630,8 @@ def process_solution_component_upsert_command(egeria_client: EgeriaTech, txt: st
                                 egeria_client.link_design_to_implementation(isc, guid, None)
                             msg = f"Added  `{display_name}`to supply chain `{in_supply_chain_names}`"
                             logger.trace(msg)
-
+                        journal_entry_guid = add_note_in_dr_e(egeria_client, qualified_name, display_name,
+                                                              journal_entry)
                         return egeria_client.get_solution_component_by_guid(guid, output_format='MD')
                     else:
                         msg = f"Failed to create element `{display_name}` with GUID {guid}\n\n___"
@@ -802,6 +802,7 @@ def process_information_supply_chain_upsert_command(egeria_client: EgeriaTech, t
     description = attributes.get('Description', {}).get('value', None)
     display_name = attributes['Display Name'].get('value', None)
     version_identifier = attributes.get('Version Identifier', {}).get('value', None)
+    journal_entry = attributes.get('Journal Entry', {}).get('Value', None)
     effective_time = attributes.get('Effective Time', {}).get('value', None)
     effective_from = attributes.get('Effective From', {}).get('value', None)
     effective_to = attributes.get('Effective To', {}).get('value', None)
@@ -876,8 +877,9 @@ def process_information_supply_chain_upsert_command(egeria_client: EgeriaTech, t
                 update_element_dictionary(qualified_name, {
                     'guid': guid, 'display_name': display_name
                     })
+                journal_entry_guid = add_note_in_dr_e(egeria_client, qualified_name, display_name, journal_entry)
 
-                # logger.success(f"===> Updated {object_type} `{display_name}` related elements\n\n")
+                logger.success(f"===> Updated {object_type} `{display_name}` related elements\n\n")
                 return egeria_client.get_info_supply_chain_by_guid(guid, output_format='MD')
 
 
@@ -930,6 +932,8 @@ def process_information_supply_chain_upsert_command(egeria_client: EgeriaTech, t
                         if len(in_supply_chain_guids) > 0:
                             for nested_chain in in_supply_chain_guids:
                                 egeria_client.compose_info_supply_chains(guid, nested_chain)
+                        journal_entry_guid = add_note_in_dr_e(egeria_client, qualified_name, display_name,
+                                                              journal_entry)
 
                         msg = f"==>Created Element `{display_name}` with GUID {guid}\n"
                         logger.success(msg)

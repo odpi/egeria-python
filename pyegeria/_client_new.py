@@ -537,7 +537,7 @@ class Client2(BaseClient):
 
     async def _async_get_guid_for_name(
             self, name: str, property_name: list[str] = ["qualifiedName", "displayName"],
-            type_name: str = "ValidMetadataValue"
+            type_name: str = None
 
     ) -> list | str:
         """
@@ -571,6 +571,8 @@ class Client2(BaseClient):
                 raise PyegeriaException(context={"issue": "Multiple elements found for supplied name!"})
             elif len(elements) == 1:
                 return elements[0]["elementHeader"]["guid"]
+        else:
+            return NO_ELEMENTS_FOUND
         return elements
 
     def get_guid_for_name(
@@ -1753,13 +1755,10 @@ class Client2(BaseClient):
             context = {"issue": "Invalid display name and body not provided"}
             raise PyegeriaInvalidParameterException(context=context)
 
-        # TODO - find a nice way to get the user's GUID if no element_guid supplied
-        # Use the user's GUID if no element_guid supplied
-        if element_guid is None:
-            pass
-
-
-        url = f"{self.command_root}feedback-manager/elements/{element_guid}/note-logs"
+        if element_guid:
+            url = f"{self.command_root}feedback-manager/elements/{element_guid}/note-logs"
+        else:
+            url = f"{self.command_root}feedback-manager/elements/note-logs"
         response = await self._async_make_request("POST", url, body_slimmer(body))
         return response.json()
 
@@ -1988,7 +1987,7 @@ class Client2(BaseClient):
 
         """
 
-        url = f"{self.command_root}feedback-manager/elements/{note_log_guid}/remove"
+        url = f"{self.command_root}feedback-manager/note-logs/{note_log_guid}/remove"
         await self._async_delete_element_request(url, body, cascade_delete)
 
     @dynamic_catch
@@ -2097,7 +2096,7 @@ class Client2(BaseClient):
 
         url = f"{self.command_root}feedback-manager/note-logs/by-search-string"
         response = await self._async_find_request(url, _type="NoteLog",
-                                                  _gen_output=self._generate_note_log_output,
+                                                  _gen_output=self._generate_feedback_output,
                                                   search_string=search_string,
                                                   classification_names=classification_names,
                                                   metadata_element_types=metadata_element_types,
@@ -2201,7 +2200,7 @@ class Client2(BaseClient):
 
         url = f"{self.command_root}feedback-manager/note-logs/by-name"
         response = await self._async_get_name_request(url, _type=element_type,
-                                                      _gen_output=self._generate_note_log_output, start_from=start_from,
+                                                      _gen_output=self._generate_feedback_output, start_from=start_from,
                                                       page_size=page_size, output_format=output_format,
                                                       report_spec=report_spec,
                                                       body=body)
@@ -2288,7 +2287,7 @@ class Client2(BaseClient):
         if element == NO_ELEMENTS_FOUND:
             return NO_ELEMENTS_FOUND
         if output_format != 'JSON':  # return a simplified markdown representation
-            return self._generate_note_log_output(element, None, output_format, report_spec)
+            return self._generate_feedback_output(element, None, output_format, report_spec)
         return response.json().get("elements", NO_ELEMENTS_FOUND)
 
     @dynamic_catch
@@ -2577,30 +2576,35 @@ class Client2(BaseClient):
         }
 
         """
+        note_log_guid = None
+        element_guid = None
         # If a note_log_qn has been provided, look up its GUID
-        note_log_guid = await self._async_get_guid_for_name(note_log_qn, ["qualifiedName"],'NoteLog' ) if note_log_qn else None
+        if note_log_qn:
+            note_log_guid = await self._async_get_guid_for_name(note_log_qn, ["qualifiedName"],'NoteLog' ) if note_log_qn else None
 
         # If we need to create a new note_log, then use the qualified name from the element_qn parameter, if provided.
-        if note_log_guid is None:
+        if note_log_guid is None or note_log_guid == NO_ELEMENTS_FOUND:
             if element_qn is None:
                 if note_log_display_name is None:
                     note_log_display_name = f"NoName-{datetime.now().strftime('%Y-%m-%d %H:%M')}"
+
             else:
-                element_guid = self._get_guid_for_name(element_qn, ["qualifiedName"],'None')
-            # Create the note_log
-            note_log_guid = await self._async_create_note_log(element_guid = element_guid, display_name = note_log_display_name)
+                element_guid = await self._async_get_guid_for_name(element_qn, ["qualifiedName"])
+
+            note_log = await self._async_create_note_log(element_guid = element_guid, display_name = note_log_display_name)
+            note_log_guid = note_log["guid"]
 
         # Create the Journal Entry (Note)
-        journal_entry_guid = await self._async_create_note_entry(note_log_guid, journal_entry_display_name,
+        journal_entry_guid = await self._async_create_note(note_log_guid, journal_entry_display_name,
                                                                  journal_entry_description, body)
 
         return journal_entry_guid
 
     @dynamic_catch
     def add_journal_entry(self, note_log_qn: str = None, element_qn: str = None,
-                                       note_log_display_name: str = None, journal_entry_display_name: str = None,
-                                       journal_entry_description: str = None,
-                                       body: dict | NewElementRequestBody = None) -> str:
+                           note_log_display_name: str = None, journal_entry_display_name: str = None,
+                           journal_entry_description: str = None,
+                           body: dict | NewElementRequestBody = None) -> str:
         """
         Creates a new journal entry for a note log and returns the unique identifier for it. The note_log will be
         created if it does not exist.
@@ -2946,19 +2950,19 @@ class Client2(BaseClient):
 
         url = f"{self.command_root}feedback-manager/assets/by-search-string"
         response = await self._async_find_request(url, "Notification", self._generate_feedback_output,
-                                                  search_string, [], ["Notification"],
+                                                  search_string, None, ["Notification"] ,
                                                   starts_with, ends_with, ignore_case,
                                                   start_from, page_size, output_format, report_spec,
-                                                  body, )
+                                                  body )
         return response
 
     @dynamic_catch
     def find_notes(
             self, search_string: str = None,
             body: dict | SearchStringRequestBody = None,
-            starts_with: bool = None,
-            ends_with: bool = None,
-            ignore_case: bool = None,
+            starts_with: bool = True,
+            ends_with: bool = False,
+            ignore_case: bool = False,
             start_from: int = 0,
             page_size: int = 0,
             output_format: str = "JSON",
@@ -3108,7 +3112,7 @@ class Client2(BaseClient):
 
         """
 
-        url = f"{self.command_root}feedback-manager/note-logs/by-name"
+        url = f"{self.command_root}feedback-manager/note-logs/{note_log_guid}/retrieve"
         response = await self._async_get_results_body_request(url, "Notification", self._generate_feedback_output,
                                                               0, 0, output_format, report_spec, body)
         return response
@@ -4607,7 +4611,9 @@ class Client2(BaseClient):
         col_data = populate_common_columns(element, columns_struct)
         columns_list = col_data.get('formats', {}).get('attributes', [])
         # Overlay extras (project roles) only where empty
-        if isinstance(element['keywordElements'], list):
+        keyword_elements = element.get("keywordElements", [])
+
+        if keyword_elements != [] and isinstance(element['keywordElements'], list):
             extra = self._extract_element_properties_for_keyword(element, columns_struct)
             col_data = overlay_additional_values(col_data, extra)
 

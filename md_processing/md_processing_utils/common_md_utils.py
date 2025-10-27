@@ -12,7 +12,7 @@ from rich import print
 from rich.console import Console
 from rich.markdown import Markdown
 
-from pyegeria import Client2, PyegeriaException
+from pyegeria import Client2, PyegeriaException, egeria_client
 from pyegeria.utils import (camel_to_title_case, body_slimmer)
 from pyegeria._globals import DEBUG_LEVEL
 from md_processing.md_processing_utils.message_constants import message_types
@@ -566,3 +566,15 @@ def add_search_keywords(client: Client2, element_guid: str, keywords: list[str])
             "exception": str(e)
         }
         raise PyegeriaException(context = context)
+
+def add_note_in_dr_e(client: Client2, qualified_name: str, display_name: str, journal_entry: str)-> str:
+    if journal_entry:
+        note_log_qn = f"{qualified_name}-NoteLog"
+        note_log_display_name = f"{display_name}-NoteLog"
+        note_display_name = f"{qualified_name}-Journal-Entry-{datetime.now().strftime('%Y-%m-%d %H:%M')}"
+        journal_entry_guid = client.add_journal_entry(note_log_qn, qualified_name, note_log_display_name, note_display_name,
+                                                             journal_entry)
+        logger.info(f"Added journal entry `{journal_entry_guid}` to `{qualified_name}`")
+        return journal_entry_guid
+    else:
+        return None
