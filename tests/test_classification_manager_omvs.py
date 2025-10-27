@@ -202,12 +202,12 @@ def test_get_elements():
     # metadata_element_type_name = 'CertificationType'
     #
     # metadata_element_type_name = "DeployedDatabaseSchema"
-    open_metadata_type_name = "Collection"
+    open_metadata_type_name = "UserIdentity"
     try:
         c_client = ClassificationManager(view_server, platform_url)
 
         bearer_token = c_client.create_egeria_bearer_token(user, password)
-        response = c_client.get_elements(open_metadata_type_name, output_format="DICT", report_spec="Collections")
+        response = c_client.get_elements(open_metadata_type_name, output_format="DICT", report_spec="Referenceable")
 
         if type(response) is list:
             print(f"\n\tElement count is: {len(response)}")
@@ -270,12 +270,12 @@ def test_find_elements_by_property_value():
     # metadata_element_type_name = "ValidValueDefinition"
     # metadata_element_type_name = None
     # metadata_element_type_name = "ArchiveFile"
-    open_metadata_type_name = "GovernanceActionProcess"
+    open_metadata_type_name = "UserIdentity"
     # metadata_element_type_name = None
     # property_names = ["name"]
     # property_value = "Set up new clinical trial"
-    property_names = ["displayName"]
-    property_value = "FileDirectory"
+    property_names = ["userId"]
+    property_value = "erinoverview"
 
     try:
         c_client = ClassificationManager(view_server, platform_url)
@@ -284,7 +284,7 @@ def test_find_elements_by_property_value():
         start_time = time.perf_counter()
         result = c_client.find_elements_by_property_value(
             property_value, property_names, open_metadata_type_name,
-            output_format="DICT", report_spec="Referenceable"
+            output_format="JSON", report_spec="Referenceable"
         )
         duration = time.perf_counter() - start_time
         print(f"\n\tDuration was {duration} seconds")

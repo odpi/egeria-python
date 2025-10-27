@@ -7,27 +7,25 @@ Copyright Contributors to the ODPi Egeria project.
 """
 
 import asyncio
-import inspect
 from datetime import datetime
 from typing import Optional, Annotated, Literal, Union
 
 from loguru import logger
-from pydantic import ValidationError, Field, HttpUrl
+from pydantic import Field, HttpUrl
 
 from pyegeria._exceptions_new import PyegeriaInvalidParameterException
-from pyegeria._globals import NO_ELEMENTS_FOUND, NO_GUID_RETURNED, NO_MEMBERS_FOUND
+from pyegeria._globals import NO_ELEMENTS_FOUND, NO_GUID_RETURNED
 from pyegeria.base_report_formats import select_report_spec, get_report_spec_match
 from pyegeria.config import settings
 from pyegeria.models import (SearchStringRequestBody, FilterRequestBody, GetRequestBody, NewElementRequestBody,
                              ReferenceableProperties, InitialClassifications, TemplateRequestBody,
                              UpdateElementRequestBody, UpdateStatusRequestBody, NewRelationshipRequestBody,
-                             DeleteRequestBody, UpdateRelationshipRequestBody, ResultsRequestBody,
+                             DeleteElementRequestBody, DeleteRelationshipRequestBody, UpdateRelationshipRequestBody,
+                             ResultsRequestBody,
                              get_defined_field_values, PyegeriaModel)
 from pyegeria.output_formatter import (generate_output,
-                                       _extract_referenceable_properties, populate_columns_from_properties,
-                                       get_required_relationships, populate_common_columns)
+                                       populate_common_columns)
 from pyegeria.utils import body_slimmer, dynamic_catch
-
 
 app_settings = settings
 EGERIA_LOCAL_QUALIFIER = app_settings.User_Profile.egeria_local_qualifier
@@ -2866,7 +2864,7 @@ class CollectionManager(Client2):
     @dynamic_catch
     async def _async_detach_digital_product_dependency(self, upstream_digital_prod_guid: str,
                                                        downstream_digital_prod_guid: str,
-                                                       body: dict | DeleteRequestBody = None)-> None:
+                                                       body: dict | DeleteRelationshipRequestBody = None)-> None:
         """ Unlink two dependent digital products.  The linked elements are of type DigitalProduct.
             Request body is optional. Async version.
 
@@ -2876,7 +2874,7 @@ class CollectionManager(Client2):
             The guid of the first digital product
         downstream_digital_prod_guid: str
             The guid of the downstream digital product
-        body: dict | DeleteRequestBody, optional, default = None
+        body: dict | DeleteRelationshipRequestBody, optional, default = None
             A structure representing the details of the relationship.
 
         Returns
@@ -2896,7 +2894,7 @@ class CollectionManager(Client2):
         -----
         JSON Structure looks like:
         {
-          "class": "DeleteRequestBody",
+          "class": "DeleteRelationshipRequestBody",
           "externalSourceGUID": "add guid here",
           "externalSourceName": "add qualified name here",
           "effectiveTime": "{{$isoTimestamp}}",
@@ -2910,12 +2908,12 @@ class CollectionManager(Client2):
             f"{self.platform_url}/servers/"
             f"{self.view_server}/api/open-metadata/collection-manager/collections/digital-products/"
             f"{upstream_digital_prod_guid}/product-dependencies/{downstream_digital_prod_guid}/detach")
-        await self._async_delete_request(url, body)
+        await self._async_delete_relationship_request(url, body)
         logger.info(f"Detached digital product dependency {upstream_digital_prod_guid} -> {downstream_digital_prod_guid}")
 
 
     def detach_digital_product_dependency(self, upstream_digital_prod_guid: str, downstream_digital_prod_guid: str,
-                                        body: dict | DeleteRequestBody= None):
+                                        body: dict | DeleteRelationshipRequestBody= None):
         """ Unlink two dependent digital products.  The linked elements are of type DigitalProduct.
             Request body is optional.
 
@@ -2925,7 +2923,7 @@ class CollectionManager(Client2):
             The guid of the first digital product
         downstream_digital_prod_guid: str
             The guid of the downstream digital product
-        body: dict | DeleteRequestBody, optional, default = None
+        body: dict | DeleteRelationshipRequestBody, optional, default = None
             A structure representing the details of the relationship.
 
         Returns
@@ -2945,7 +2943,7 @@ class CollectionManager(Client2):
         -----
         JSON Structure looks like:
         {
-          "class": "DeleteRequestBody",
+          "class": "DeleteRelationshipRequestBody",
           "externalSourceGUID": "add guid here",
           "externalSourceName": "add qualified name here",
           "effectiveTime": "{{$isoTimestamp}}",
@@ -3067,7 +3065,7 @@ class CollectionManager(Client2):
     @dynamic_catch
     async def _async_detach_product_manager(self, digital_prod_guid: str,
                                              digital_prod_manager_guid: str,
-                                             body: dict | DeleteRequestBody = None)-> None:
+                                             body: dict | DeleteRelationshipRequestBody = None)-> None:
         """ Detach a digital product manager from a digital product.
             Request body is optional. Async version.
 
@@ -3077,7 +3075,7 @@ class CollectionManager(Client2):
             The guid of the digital product.
         prod_manager: str
             The guid of the digital product manager.
-        body: dict | DeleteRequestBody, optional, default = None
+        body: dict | DeleteRelationshipRequestBody, optional, default = None
             A structure representing the details of the relationship.
 
         Returns
@@ -3097,7 +3095,7 @@ class CollectionManager(Client2):
         -----
         JSON Structure looks like:
         {
-          "class": "DeleteRequestBody",
+          "class": "DeleteRelationshipRequestBody",
           "externalSourceGUID": "add guid here",
           "externalSourceName": "add qualified name here",
           "effectiveTime": "{{$isoTimestamp}}",
@@ -3110,12 +3108,12 @@ class CollectionManager(Client2):
             f"{self.platform_url}/servers/"
             f"{self.view_server}/api/open-metadata/collection-manager/collections/digital-products/"
             f"{digital_prod_guid}/product-dependencies/{digital_prod_manager_guid}/detach")
-        await self._async_delete_request(url, body)
+        await self._async_delete_relationship_request(url, body)
         logger.info(f"Detached digital product manager {digital_prod_guid} -> {digital_prod_manager_guid}")
 
     @dynamic_catch
     def detach_product_manager(self, digital_prod_guid: str, digital_prod_manager_guid: str,
-                                body: dict | DeleteRequestBody= None):
+                                body: dict | DeleteRelationshipRequestBody= None):
         """ Detach a digital product manager from a digital product.
             Request body is optional. Async version.
 
@@ -3125,7 +3123,7 @@ class CollectionManager(Client2):
             The guid of the digital product.
         digital_prod_manager_guid: str
             The guid of the digital product manager.
-        body: dict | DeleteRequestBody, optional, default = None
+        body: dict | DeleteRelationshipRequestBody, optional, default = None
             A structure representing the details of the relationship.
 
         Returns
@@ -3145,7 +3143,7 @@ class CollectionManager(Client2):
         -----
         JSON Structure looks like:
         {
-          "class": "DeleteRequestBody",
+          "class": "DeleteRelationshipRequestBody",
           "externalSourceGUID": "add guid here",
           "externalSourceName": "add qualified name here",
           "effectiveTime": "{{$isoTimestamp}}",
@@ -3698,7 +3696,7 @@ class CollectionManager(Client2):
     @dynamic_catch
     async def _async_detach_agreement_actor(self, agreement_guid: str,
                                              actor_guid: str,
-                                             body: dict | DeleteRequestBody = None)-> None:
+                                             body: dict | DeleteRelationshipRequestBody = None)-> None:
         """ Detach an actor from an agreement.
             Request body is optional. Async Version.
 
@@ -3708,7 +3706,7 @@ class CollectionManager(Client2):
             The guid of the agreement.
         actor_guid: str
             The guid of the actor.
-        body: dict | DeleteRequestBody, optional, default = None
+        body: dict | DeleteRelationshipRequestBody, optional, default = None
             A structure representing the details of the relationship.
 
         Returns
@@ -3728,7 +3726,7 @@ class CollectionManager(Client2):
         -----
         JSON Structure looks like:
         {
-          "class": "DeleteRequestBody",
+          "class": "DeleteRelationshipRequestBody",
           "externalSourceGUID": "add guid here",
           "externalSourceName": "add qualified name here",
           "effectiveTime": "{{$isoTimestamp}}",
@@ -3742,12 +3740,12 @@ class CollectionManager(Client2):
             f"{self.platform_url}/servers/"
             f"{self.view_server}/api/open-metadata/collection-manager/collections/agreements/"
             f"{agreement_guid}/agreement-actors/{actor_guid}/detach")
-        self._async_delete_request(url, body)
+        self._async_delete_relationship_request(url, body)
         logger.info(f"Detached digital product manager {agreement_guid} -> {actor_guid}")
 
 
     def detach_agreement_actor(self, agreement_guid: str, actor_guid: str,
-                                body: dict | DeleteRequestBody= None):
+                                body: dict | DeleteRelationshipRequestBody= None):
         """ Detach an actor from an agreement.
             Request body is optional.
 
@@ -3757,7 +3755,7 @@ class CollectionManager(Client2):
             The guid of the agreement.
         actor_guid: str
             The guid of the actor.
-        body: dict | DeleteRequestBody, optional, default = None
+        body: dict | DeleteRelationshipRequestBody, optional, default = None
             A structure representing the details of the relationship.
 
         Returns
@@ -3777,7 +3775,7 @@ class CollectionManager(Client2):
         -----
         JSON Structure looks like:
         {
-          "class": "DeleteRequestBody",
+          "class": "DeleteRelationshipRequestBody",
           "externalSourceGUID": "add guid here",
           "externalSourceName": "add qualified name here",
           "effectiveTime": "{{$isoTimestamp}}",
@@ -3931,7 +3929,7 @@ class CollectionManager(Client2):
 
     @dynamic_catch
     async def _async_detach_agreement_item(self, agreement_guid: str, agreement_item_guid: str,
-                                           body: dict | DeleteRequestBody = None) -> None:
+                                           body: dict | DeleteRelationshipRequestBody = None) -> None:
         """Detach an agreement item from an agreement. Request body is optional. Async version.
 
         Parameters
@@ -3940,7 +3938,7 @@ class CollectionManager(Client2):
             The guid of the agreement to link.
         agreement_item_guid: str
             The guid of the element to attach.
-        body: dict | DeleteRequestBody, optional, default = None
+        body: dict | DeleteRelationshipRequestBody, optional, default = None
             A structure representing the details of the relationship.
 
         Returns
@@ -3959,7 +3957,7 @@ class CollectionManager(Client2):
         Notes
         _____
         {
-          "class": "DeleteRequestBody",
+          "class": "DeleteRelationshipRequestBody",
           "externalSourceGUID": "add guid here",
           "externalSourceName": "add qualified name here",
           "effectiveTime": "{{$isoTimestamp}}",
@@ -3972,7 +3970,7 @@ class CollectionManager(Client2):
             f"{self.platform_url}/servers/{self.view_server}/api/open-metadata/collection-manager/collections"
             f"/agreements"
             f"{agreement_guid}/agreement-items/{agreement_item_guid}/detach")
-        await self._async_delete_request(url, body)
+        await self._async_delete_relationship_request(url, body)
         logger.info(f"Detached agreement item {agreement_item_guid} from {agreement_guid}")
 
 
@@ -4169,7 +4167,7 @@ class CollectionManager(Client2):
         url = (
             f"{self.platform_url}/servers/{self.view_server}/api/open-metadata/collection-manager/collections"
             f"/agreements/{agreement_guid}/contract-links/{external_ref_guid}/detach")
-        await self._async_delete_request(url, body)
+        await self._async_delete_relationship_request(url, body)
         logger.info(f"Detached contract: {external_ref_guid} from {agreement_guid}")
 
     @dynamic_catch
@@ -4708,7 +4706,7 @@ class CollectionManager(Client2):
 
     @dynamic_catch
     async def _async_detach_subscriber(self, subscriber_guid: str, subscription_guid: str,
-                                       body: dict | DeleteRequestBody = None) -> None:
+                                       body: dict | DeleteRelationshipRequestBody = None) -> None:
         """ Detach a subscriber from a subscription Request body is optional. Async version.
 
         Parameters
@@ -4717,7 +4715,7 @@ class CollectionManager(Client2):
             The unique identifier of the subscriber.
         subscription_guid: str
             The unique identifier of the subscription.
-        body: dict | DeleteRequestBody, optional, default = None
+        body: dict | DeleteRelationshipRequestBody, optional, default = None
             A structure representing the details of the relationship.
 
         Returns
@@ -4749,11 +4747,11 @@ class CollectionManager(Client2):
             f"{self.platform_url}/servers/{self.view_server}/api/open-metadata/collection-manager/collections"
             f"/agreements/"
             f"{subscriber_guid}/agreement-actors/{subscription_guid}/detach")
-        await self._async_delete_request(url, body)
+        await self._async_delete_relationship_request(url, body)
         logger.info(f"Detached subscriber {subscriber_guid} from subscription {subscription_guid}")
 
 
-    def detach_subscriber(self, subscriber_guid: str, subscription_guid: str, body: dict | DeleteRequestBody= None):
+    def detach_subscriber(self, subscriber_guid: str, subscription_guid: str, body: dict | DeleteRelationshipRequestBody= None):
         """ Detach a subscriber from a subscription. Request body is optional.
 
         Parameters
@@ -4916,7 +4914,7 @@ class CollectionManager(Client2):
 
     @dynamic_catch
     async def _async_detach_collection(self, parent_guid: str, collection_guid: str,
-                                       body: dict | DeleteRequestBody = None):
+                                       body: dict | DeleteRelationshipRequestBody = None):
         """ Detach an existing collection from an element. If the collection is anchored to the element,
         it is delete.
             Async version.
@@ -4927,7 +4925,7 @@ class CollectionManager(Client2):
                 The unique identifier of the parent to detach from.
         collection_guid: str
                 The identifier of the collection being detached.
-        body: dict | DeleteRequestBody, optional, default = None
+        body: dict | DeleteRelationshipRequestBody, optional, default = None
             A structure representing the details of the relationship.
 
 
@@ -4948,7 +4946,7 @@ class CollectionManager(Client2):
         -----
         JSON Structure looks like:
         {
-          "class": "DeleteRequestBody",
+          "class": "DeleteRelationshipRequestBody",
           "externalSourceGUID": "add guid here",
           "externalSourceName": "add qualified name here",
           "effectiveTime": "{{$isoTimestamp}}",
@@ -4961,12 +4959,12 @@ class CollectionManager(Client2):
             f"{self.platform_url}/servers/"
             f"{self.view_server}/api/open-metadata/collection-manager/metadata-elements/"
             f"{parent_guid}/collections/{collection_guid}/detach")
-        await self._async_delete_request(url, body)
+        await self._async_delete_relationship_request(url, body)
         logger.info(f"Detached collection {collection_guid} from {parent_guid}")
 
 
     def detach_collection(self, parent_guid: str, collection_guid: str,
-                          body: dict | DeleteRequestBody = None):
+                          body: dict | DeleteRelationshipRequestBody = None):
         """ Detach an existing collection from an element. If the collection is anchored to the element,
         it is delete.
 
@@ -5009,7 +5007,7 @@ class CollectionManager(Client2):
 
 
     @dynamic_catch
-    async def _async_delete_collection(self, collection_guid: str, body: dict | DeleteRequestBody= None,
+    async def _async_delete_collection(self, collection_guid: str, body: dict | DeleteElementRequestBody= None,
                                        cascade: bool = False) -> None:
         """Delete a collection.  It is detected from all parent elements.  If members are anchored to the collection
         then they are also deleted. Async version
@@ -5023,7 +5021,7 @@ class CollectionManager(Client2):
         cascade: bool, optional, defaults to True
             If true, a cascade delete is performed.
 
-        body: dict | DeleteRequestBody, optional, default = None
+        body: dict | DeleteElementRequestBody, optional, default = None
             A structure representing the details of the relationship.
 
         Returns
@@ -5043,7 +5041,7 @@ class CollectionManager(Client2):
         _____
         JSON Structure looks like:
         {
-          "class": "DeleteRequestBody",
+          "class": "DeleteElementRequestBody",
           "externalSourceGUID": "add guid here",
           "externalSourceName": "add qualified name here",
           "effectiveTime": "{{$isoTimestamp}}",
@@ -5054,11 +5052,11 @@ class CollectionManager(Client2):
 
         """
         url = f"{self.collection_command_root}/{collection_guid}/delete"
-        await self._async_delete_request(url, body, cascade)
+        await self._async_delete_element_request(url, body, cascade)
         logger.info(f"Deleted collection {collection_guid} with cascade {cascade}")
 
 
-    def delete_collection(self, collection_guid: str, body: dict | DeleteRequestBody = None,
+    def delete_collection(self, collection_guid: str, body: dict | DeleteElementRequestBody = None,
                           cascade: bool = False) -> None:
         """Delete a collection.  It is deleted from all parent elements.  If members are anchored to the collection
         then they are also deleted.
@@ -5071,7 +5069,7 @@ class CollectionManager(Client2):
         cascade: bool, optional, defaults to True
             If true, a cascade delete is performed.
 
-        body: dict DeleteRequestBodyt, optional, default = None
+        body: dict DeleteElementRequestBodyt, optional, default = None
             A dict representing the details of the relationship.
 
         Returns
@@ -5359,7 +5357,7 @@ class CollectionManager(Client2):
 
     @dynamic_catch
     async def _async_remove_from_collection(self, collection_guid: str, element_guid: str,
-                                            body: dict | DeleteRequestBody = None) -> None:
+                                            body: dict | DeleteRelationshipRequestBody = None) -> None:
         """Remove an element from a collection. Async version.
 
         Parameters
@@ -5368,7 +5366,7 @@ class CollectionManager(Client2):
             identity of the collection to return members for.
         element_guid: str
             Effective time of the query. If not specified will default to any time.
-        body: dict | DeleteRequestBody, optional, defaults to None
+        body: dict | DeleteRelationshipRequestBody, optional, defaults to None
             The body of the request to add to the collection. See notes.
 
         Returns
@@ -5388,7 +5386,7 @@ class CollectionManager(Client2):
         Notes
         -----
         {
-          "class" : "DeleteRequestBody",
+          "class" : "DeleteRelationshipRequestBody",
           "externalSourceGUID": "add guid here",
           "externalSourceName": "add qualified name here",
           "effectiveTime" : "{{$isoTimestamp}}",
@@ -5400,12 +5398,12 @@ class CollectionManager(Client2):
 
         url = (f"{self.collection_command_root}/{collection_guid}/members/"
                f"{element_guid}/detach")
-        await self._async_delete_request(url, body)
+        await self._async_delete_relationship_request(url, body)
         logger.info(f"Removed member {element_guid} from collection {collection_guid}")
 
 
     def remove_from_collection(self, collection_guid: str, element_guid: str,
-                               body: dict | DeleteRequestBody= None) -> None:
+                               body: dict | DeleteRelationshipRequestBody= None) -> None:
         """Remove an element from a collection. Async version.
 
         Parameters
@@ -5452,7 +5450,7 @@ class CollectionManager(Client2):
 
 
     def remove_term_from_category(self, folder_guid: str, term_guid: str,
-                               body: dict | DeleteRequestBody= None) -> None:
+                               body: dict | DeleteRelationshipRequestBody= None) -> None:
         """Remove a term from a category.
 
         Parameters

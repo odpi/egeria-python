@@ -130,7 +130,6 @@ COMMON_ATTRIBUTES = COMMON_COLUMNS
 
 COMMON_METADATA_COLUMNS = [
     Column(name='GUID', key='guid', format=True),
-    Column(name='Type Name', key='type_name'),
     Column(name='Metadata Collection ID', key='metadata_collection_id', format=True),
     Column(name='Metadata Collection Name', key='metadata_collection_name', format=True),
 ]
@@ -299,6 +298,36 @@ base_report_specs = FormatSetDict({
                 ],
             )
         ],
+    ),
+    "Search-Keywords": FormatSet(
+        heading="Search Keyword Report",
+        description="A report of elements with search keywords matching the specified string",
+        annotations={},  # No specific annotations
+        formats=[
+            Format(
+                types=["ALL"],
+                attributes= [
+                    Column(name='Search Keyword', key='keyword'),
+                    Column(name="Search Keyword GUID", key='guid'),
+                    Column(name="Element Display Name", key='element_display_name'),
+                    Column(name="Element GUID", key='element_guid'),
+                    Column(name="Element Type", key='element_type'),
+                    Column(name="Element Description", key='element_description'),
+                    Column(name="Element Category", key='element_category'),
+                ],
+            )
+        ],
+        action=ActionParameter(
+            function="_client_new.find_search_keywords",
+            optional_params=OPTIONAL_PARAMS,
+            required_params=["search_string"],
+            spec_params={},
+        ),
+        get_additional_props=ActionParameter(
+            function="_client_extract_element_properties_for_keyword",
+            required_params=[],
+            spec_params={},
+        )
     ),
     "TechTypeDetail": FormatSet(
         target_type="TechTypeDetail",
@@ -2832,4 +2861,4 @@ def get_report_format_description(fmt_name: str) -> Optional[str]:
 
 # Legacy names remain available (no change to behavior) and can be deprecated later.
 # Temporary aliases for backwards compatibility during migration
-select_rreport_spec = select_report_format
+select_report_spec = select_report_format

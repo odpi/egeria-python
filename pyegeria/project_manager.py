@@ -14,7 +14,7 @@ from pyegeria._client_new import Client2
 from pyegeria.base_report_formats import get_report_spec_match
 from pyegeria.config import settings as app_settings
 from pyegeria.models import (SearchStringRequestBody, FilterRequestBody, GetRequestBody, NewElementRequestBody,
-                             TemplateRequestBody, DeleteRequestBody, UpdateElementRequestBody,
+                             TemplateRequestBody, DeleteElementRequestBody, DeleteRelationshipRequestBody, UpdateElementRequestBody,
                              NewRelationshipRequestBody)
 from pyegeria.output_formatter import generate_output, populate_columns_from_properties, \
     _extract_referenceable_properties, get_required_relationships, populate_common_columns, overlay_additional_values
@@ -1097,7 +1097,7 @@ class ProjectManager(Client2):
     @dynamic_catch
     async def _async_delete_project(
             self,
-            project_guid: str, cascade: bool = False, body: dict | DeleteRequestBody = None) -> None:
+            project_guid: str, cascade: bool = False, body: dict | DeleteElementRequestBody = None) -> None:
         """Delete a project.  It is detected from all parent elements. Async version
 
         Parameters
@@ -1127,13 +1127,13 @@ class ProjectManager(Client2):
             f"{project_guid}/delete"
         )
 
-        await self._async_delete_request(url, body, cascade)
+        await self._async_delete_element_request(url, body, cascade)
         logger.info(f"Deleted project {project_guid} with cascade {cascade}")
 
     @dynamic_catch
     def delete_project(
             self,
-            project_guid: str, cascade: bool = False, body: dict | DeleteRequestBody = None) -> None:
+            project_guid: str, cascade: bool = False, body: dict | DeleteElementRequestBody = None) -> None:
         """Delete a project.  It is detected from all parent elements.
 
         Parameters
@@ -1244,7 +1244,7 @@ class ProjectManager(Client2):
     @dynamic_catch
     async def _async_clear_project_dependency(self, project_guid: str,
                                               upstream_project_guid: str,
-                                              body: dict | DeleteRequestBody = None) -> None:
+                                              body: dict | DeleteRelationshipRequestBody = None) -> None:
         """ Unlink two dependent projects.  Request body is optional. Async version.
 
         Parameters
@@ -1253,7 +1253,7 @@ class ProjectManager(Client2):
             The guid of the dependent project.
         upstream_project_guid: str
             The guid of the upstream digital project
-        body: dict | DeleteRequestBody, optional, default = None
+        body: dict | DeleteRelationshipRequestBody, optional, default = None
             A structure representing the details of the relationship.
 
         Returns
@@ -1273,7 +1273,7 @@ class ProjectManager(Client2):
         -----
         JSON Structure looks like:
         {
-          "class": "DeleteRequestBody",
+          "class": "DeleteRelationshipRequestBody",
           "externalSourceGUID": "add guid here",
           "externalSourceName": "add qualified name here",
           "effectiveTime": "{{$isoTimestamp}}",
@@ -1285,13 +1285,13 @@ class ProjectManager(Client2):
 
         url = "{self.project_command_base}/{project_guid}/project-dependencies/{upstream_project_guid}/detach"
 
-        await self._async_delete_request(url, body)
+        await self._async_delete_relationship_request(url, body)
         logger.info(
             f"Detached project {project_guid} from -> {upstream_project_guid}")
 
     @dynamic_catch
     def clear_project_dependency(self, project_guid: str, upstream_project_guid: str,
-                                 body: dict | DeleteRequestBody = None):
+                                 body: dict | DeleteRelationshipRequestBody = None):
         """ Unlink two dependent projects.  Request body is optional.
 
         Parameters
@@ -1300,7 +1300,7 @@ class ProjectManager(Client2):
             The guid of the dependent project.
         upstream_project_guid: str
             The guid of the upstream digital project
-        body: dict | DeleteRequestBody, optional, default = None
+        body: dict | DeleteRelationshipRequestBody, optional, default = None
             A structure representing the details of the relationship.
 
         Returns
@@ -1320,7 +1320,7 @@ class ProjectManager(Client2):
         -----
         JSON Structure looks like:
         {
-          "class": "DeleteRequestBody",
+          "class": "DeleteRelationshipRequestBody",
           "externalSourceGUID": "add guid here",
           "externalSourceName": "add qualified name here",
           "effectiveTime": "{{$isoTimestamp}}",
@@ -1413,7 +1413,7 @@ class ProjectManager(Client2):
     @dynamic_catch
     async def _async_clear_project_hierarchy(self, project_guid: str,
                                              parent_project_guid: str,
-                                             body: dict | DeleteRequestBody = None) -> None:
+                                             body: dict | DeleteRelationshipRequestBody = None) -> None:
         """ Unlink hierarchy relationship.  Request body is optional. Async version.
 
         Parameters
@@ -1422,7 +1422,7 @@ class ProjectManager(Client2):
             The guid of the dependent project.
         parent_project_guid: str
             The guid of the upstream digital project
-        body: dict | DeleteRequestBody, optional, default = None
+        body: dict | DeleteRelationshipRequestBody, optional, default = None
             A structure representing the details of the relationship.
 
         Returns
@@ -1442,7 +1442,7 @@ class ProjectManager(Client2):
         -----
         JSON Structure looks like:
         {
-          "class": "DeleteRequestBody",
+          "class": "DeleteRelationshipRequestBody",
           "externalSourceGUID": "add guid here",
           "externalSourceName": "add qualified name here",
           "effectiveTime": "{{$isoTimestamp}}",
@@ -1454,13 +1454,13 @@ class ProjectManager(Client2):
 
         url = "{self.project_command_base}/{parent_project_guid}/project-dependencies/{project_guid}/detach"
 
-        await self._async_delete_request(url, body)
+        await self._async_delete_relationship_request(url, body)
         logger.info(
             f"Detached project {project_guid} from -> {parent_project_guid}")
 
     @dynamic_catch
     def clear_project_hierarchy(self, project_guid: str, parent_project_guid: str,
-                                body: dict | DeleteRequestBody = None):
+                                body: dict | DeleteRelationshipRequestBody = None):
         """ Unlink two dependent projects.  Request body is optional.
 
         Parameters
@@ -1469,7 +1469,7 @@ class ProjectManager(Client2):
             The guid of the dependent project.
         parent_project_guid: str
             The guid of the upstream digital project
-        body: dict | DeleteRequestBody, optional, default = None
+        body: dict | DeleteRelationshipRequestBody, optional, default = None
             A structure representing the details of the relationship.
 
         Returns
@@ -1489,7 +1489,7 @@ class ProjectManager(Client2):
         -----
         JSON Structure looks like:
         {
-          "class": "DeleteRequestBody",
+          "class": "DeleteRelationshipRequestBody",
           "externalSourceGUID": "add guid here",
           "externalSourceName": "add qualified name here",
           "effectiveTime": "{{$isoTimestamp}}",
@@ -1616,7 +1616,7 @@ class ProjectManager(Client2):
             self,
             project_guid: str,
             actor_guid: str,
-            body: dict | DeleteRequestBody = None
+            body: dict | DeleteRelationshipRequestBody = None
     ) -> None:
         """Remove an actor from a project. Async version.
 
@@ -1648,7 +1648,7 @@ class ProjectManager(Client2):
             f"members/{actor_guid}/detach"
         )
 
-        await self._async_delete_request(url, body)
+        await self._async_delete_relationship_request(url, body)
         logger.info(f"Removed member {actor_guid} from project {project_guid}")
 
     @dynamic_catch
@@ -1656,7 +1656,7 @@ class ProjectManager(Client2):
             self,
             project_guid: str,
             actor_guid: str,
-            body: dict | DeleteRequestBody = None
+            body: dict | DeleteRelationshipRequestBody = None
     ) -> None:
         """Remove an actor from a project.
 

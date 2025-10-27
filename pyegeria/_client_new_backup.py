@@ -12,7 +12,6 @@ import os
 import re
 import time
 from collections.abc import Callable
-from datetime import datetime
 from typing import Any
 
 from httpx import Response
@@ -33,8 +32,7 @@ from pyegeria.models import (SearchStringRequestBody, FilterRequestBody, GetRequ
                              NewClassificationRequestBody,
                              DeleteElementRequestBody, DeleteRelationshipRequestBody, DeleteClassificationRequestBody,
                              LevelIdentifierQueryBody)
-from pyegeria.output_formatter import populate_common_columns, resolve_output_formats, generate_output, \
-    overlay_additional_values
+from pyegeria.output_formatter import populate_common_columns, resolve_output_formats, generate_output
 from pyegeria.utils import body_slimmer, dynamic_catch
 
 ...
@@ -512,7 +510,7 @@ class Client2(BaseClient):
             - Normally false. Set true when the caller is part of a deduplication function
         start_from: int, default = 0
             - index of the list to start from (0 for start).
-        page_size: int, default = 0
+        page_size
             - maximum number of elements to return.
         time_out: int, default = default_time_out
             - http request timeout for this request
@@ -537,7 +535,7 @@ class Client2(BaseClient):
 
     async def _async_get_guid_for_name(
             self, name: str, property_name: list[str] = ["qualifiedName", "displayName"],
-            type_name: str = None
+            type_name: str = "ValidMetadataValue"
 
     ) -> list | str:
         """
@@ -549,7 +547,7 @@ class Client2(BaseClient):
         name: str
             - element name to be searched.
         property_name: [str], default = ["qualifiedName","displayName"]
-            - properties to search in.
+            - propertys to search in.
         type_name: str, default = "ValidMetadataValue"
             - metadata element type name to be used to restrict the search
         Returns
@@ -571,8 +569,6 @@ class Client2(BaseClient):
                 raise PyegeriaException(context={"issue": "Multiple elements found for supplied name!"})
             elif len(elements) == 1:
                 return elements[0]["elementHeader"]["guid"]
-        else:
-            return NO_ELEMENTS_FOUND
         return elements
 
     def get_guid_for_name(
@@ -588,7 +584,7 @@ class Client2(BaseClient):
         name: str
             - element name to be searched.
         property_name: [str], default = ["qualifiedName","displayName"]
-            - properties to search in.
+            - propertys to search in.
         type_name: str, default = "ValidMetadataValue"
             - metadata element type name to be used to restrict the search
         Returns
@@ -598,7 +594,7 @@ class Client2(BaseClient):
 
         Raises
         ------
-        PyegeriaException
+        PyegeriaExeception
         """
 
         loop = asyncio.get_event_loop()
@@ -1219,10 +1215,11 @@ class Client2(BaseClient):
 
     ) -> None:
         """
-        Remove the accepted-answer link between a question comment and its answer. Async version.
+        Link a comment that contains the best answer to a question posed in another comment. Async version.
 
         Parameters
         ----------
+
         question_comment_guid: str
             - unique id for the question comment.
         answer_comment_guid: str
@@ -1235,6 +1232,7 @@ class Client2(BaseClient):
         Raises
         ------
         PyEgeriaException
+
         """
 
         url = f"{self.command_root}feedback-manager/comments/questions/{question_comment_guid}/answers/{answer_comment_guid}/remove"
@@ -1247,10 +1245,11 @@ class Client2(BaseClient):
 
     ) -> None:
         """
-        Remove the accepted-answer link between a question comment and its answer.
+        Link a comment that contains the best answer to a question posed in another comment.
 
         Parameters
         ----------
+
         question_comment_guid: str
             - unique id for the question comment.
         answer_comment_guid: str
@@ -1263,6 +1262,7 @@ class Client2(BaseClient):
         Raises
         ------
         PyEgeriaException
+
         """
 
         loop = asyncio.get_event_loop()
@@ -1293,7 +1293,7 @@ class Client2(BaseClient):
 
         Returns
         -------
-        None
+        VoidResponse
 
         Raises
         ------
@@ -1315,24 +1315,22 @@ class Client2(BaseClient):
 
     ) -> None:
         """
-        Remove a comment from an element added by this user.
+        Removes a comment added to the element by this user.
 
         This deletes the link to the comment, the comment itself and any comment replies attached to it.
 
         Parameters
         ----------
-        element_guid: str
-            - unique id for the element
-        comment_guid: str
-            - unique id for the comment object
-        body: dict | DeleteElementRequestBody, optional
-            - contains comment type and text
-        cascade_delete: bool, default = False
-            - whether to cascade delete
+        comment_guid
+            - String - unique id for the comment object
+        body
+            - containing type of comment enum and the text of the comment.
+        cascade_delete: bool = False
+
 
         Returns
         -------
-        None
+        VoidResponse
 
         Raises
         ------
@@ -1690,7 +1688,7 @@ class Client2(BaseClient):
     @dynamic_catch
     async def _async_create_note_log(
             self,
-            element_guid: str = None,
+            element_guid: str,
             display_name: str = None,
             description: str = None,
             body: dict = None,
@@ -1700,8 +1698,8 @@ class Client2(BaseClient):
 
         Parameters
         ----------
-        element_guid: str, optional
-            - unique identifier of the element where the note log is attached
+        element_guid: str
+            - unique identifier of the element where the note log is located
         display_name: str, optional
             - name of the note log
         description: str, optional
@@ -1755,17 +1753,14 @@ class Client2(BaseClient):
             context = {"issue": "Invalid display name and body not provided"}
             raise PyegeriaInvalidParameterException(context=context)
 
-        if element_guid:
-            url = f"{self.command_root}feedback-manager/elements/{element_guid}/note-logs"
-        else:
-            url = f"{self.command_root}feedback-manager/elements/note-logs"
+        url = f"{self.command_root}feedback-manager/elements/{element_guid}/note-logs"
         response = await self._async_make_request("POST", url, body_slimmer(body))
         return response.json()
 
     @dynamic_catch
     def create_note_log(
             self,
-            element_guid: str = None,
+            element_guid: str,
             display_name: str = None,
             description: str = None,
             body: dict = None,
@@ -1775,8 +1770,8 @@ class Client2(BaseClient):
 
         Parameters
         ----------
-        element_guid, str, optional
-            - unique identifier of the element where the note log is attached
+        element_guid
+            - unique identifier of the element where the note log is located
         display_name: str, optional
             - name of the note log
         description: str, optional
@@ -1979,7 +1974,7 @@ class Client2(BaseClient):
 
         Returns
         -------
-        None
+        VoidResponse
 
         Raises
         ------
@@ -1987,7 +1982,7 @@ class Client2(BaseClient):
 
         """
 
-        url = f"{self.command_root}feedback-manager/note-logs/{note_log_guid}/remove"
+        url = f"{self.command_root}feedback-manager/elements/{note_log_guid}/remove"
         await self._async_delete_element_request(url, body, cascade_delete)
 
     @dynamic_catch
@@ -1999,20 +1994,22 @@ class Client2(BaseClient):
 
     ) -> None:
         """
-        Remove a note log from the repository. All relationships to referenceables are lost.
+        Removes a comment added to the element by this user.
+
+        This deletes the link to the comment, the comment itself and any comment replies attached to it.
 
         Parameters
         ----------
-        note_log_guid: str
-            - unique id for the note log
-        body: dict | DeleteElementRequestBody, optional
-            - request body details (if provided, supersedes other parameters)
-        cascade_delete: bool, default = False
-            - if True, deletes all comments and replies associated with the note log
+        note_log_guid
+            - String - unique id for the comment object
+        body
+            - containing type of comment enum and the text of the comment.
+        cascade_delete: bool = False
+
 
         Returns
         -------
-        None
+        VoidResponse
 
         Raises
         ------
@@ -2096,7 +2093,7 @@ class Client2(BaseClient):
 
         url = f"{self.command_root}feedback-manager/note-logs/by-search-string"
         response = await self._async_find_request(url, _type="NoteLog",
-                                                  _gen_output=self._generate_feedback_output,
+                                                  _gen_output=self._generate_note_log_output,
                                                   search_string=search_string,
                                                   classification_names=classification_names,
                                                   metadata_element_types=metadata_element_types,
@@ -2168,7 +2165,7 @@ class Client2(BaseClient):
         return resp
 
     @dynamic_catch
-    async def _async_get_note_logs_by_name(
+    async def _async_get_note_logs_by_gname(
             self, filter: str,
             element_type: str = "NoteLog",
             body: dict | FilterRequestBody = None,
@@ -2200,7 +2197,7 @@ class Client2(BaseClient):
 
         url = f"{self.command_root}feedback-manager/note-logs/by-name"
         response = await self._async_get_name_request(url, _type=element_type,
-                                                      _gen_output=self._generate_feedback_output, start_from=start_from,
+                                                      _gen_output=self._generate_note_log_output, start_from=start_from,
                                                       page_size=page_size, output_format=output_format,
                                                       report_spec=report_spec,
                                                       body=body)
@@ -2239,7 +2236,7 @@ class Client2(BaseClient):
         """
         loop = asyncio.get_event_loop()
         response = loop.run_until_complete(
-            self._async_get_note_logs_by_name(filter, element_type, body, output_format, report_spec, start_from,
+            self._async_get_note_log_by_name(filter, element_type, body, output_format, report_spec, start_from,
                                              page_size)
         )
         return response
@@ -2287,7 +2284,7 @@ class Client2(BaseClient):
         if element == NO_ELEMENTS_FOUND:
             return NO_ELEMENTS_FOUND
         if output_format != 'JSON':  # return a simplified markdown representation
-            return self._generate_feedback_output(element, None, output_format, report_spec)
+            return self._generate_note_log_output(element, None, output_format, report_spec)
         return response.json().get("elements", NO_ELEMENTS_FOUND)
 
     @dynamic_catch
@@ -2503,183 +2500,6 @@ class Client2(BaseClient):
             self._async_create_note(note_log_guid, display_name, body)
         )
         return response
-
-    @dynamic_catch
-    async def _async_add_journal_entry(self, note_log_qn: str = None, element_qn: str =  None, note_log_display_name: str = None, journal_entry_display_name: str = None, journal_entry_description: str = None,
-                                body: dict | NewElementRequestBody = None ) -> str:
-        """
-        Creates a new journal entry for a note log and returns the unique identifier for it. The note_log will be
-        created if it does not exist. Async version.
-
-        Parameters
-        ----------
-        note_log_qn: str = None
-            - If provided, the journal entry will be attached to this note log. If not provided, a new note_log will be created.
-        element_qn: str = None
-            - If provided, and note log needs to be created, this will be used to define the new note log and attach it
-             to the specified element.
-        note_log_display_name: str = None
-            - optional note log display name
-        journal_entry_display_name: str = None
-            - optional journal entry display name
-        journal_entry_description: str = None
-            - the journal entry text
-
-        body
-            - optional body for the note - if provided, details here will supercede other parameters.
-
-        Returns
-        -------
-        GUID for the journal entry (note).
-
-        Raises
-        ------
-        PyegeriaException
-
-        Notes
-        _____
-
-        Sample body (a note is an asset)
-        {
-          "class" : "NewElementRequestBody",
-          "anchorGUID" : "{{noteLogGUID}}",
-          "isOwnAnchor": false,
-          "parentGUID": "{{noteLogGUID}}",
-          "parentRelationshipTypeName": "AttachedNoteLogEntry",
-          "parentAtEnd1": true,
-          "properties": {
-            "class" : "NotificationProperties",
-            "typeName" : "Notification",
-            "qualifiedName": "add unique name here",
-            "displayName": "add short name here",
-            "description": "add description here",
-            "systemAction" : "add optional system action that occurred as part of this notification processing",
-            "userResponse" : "add optional action that the reader should take",
-            "priority" : 1,
-            "activityStatus" : "FOR_INFO",
-            "additionalProperties": {
-              "property1" : "propertyValue1",
-              "property2" : "propertyValue2"
-            },
-            "extendedProperties": {
-              "property1" : "propertyValue1",
-              "property2" : "propertyValue2"
-            },
-            "effectiveFrom": "{{$isoTimestamp}}",
-            "effectiveTo": "{{$isoTimestamp}}"
-          },
-          "externalSourceGUID": "add guid here",
-          "externalSourceName": "add qualified name here",
-          "effectiveTime" : "{{$isoTimestamp}}",
-          "forLineage" : false,
-          "forDuplicateProcessing" : false
-        }
-
-        """
-        note_log_guid = None
-        element_guid = None
-        # If a note_log_qn has been provided, look up its GUID
-        if note_log_qn:
-            note_log_guid = await self._async_get_guid_for_name(note_log_qn, ["qualifiedName"],'NoteLog' ) if note_log_qn else None
-
-        # If we need to create a new note_log, then use the qualified name from the element_qn parameter, if provided.
-        if note_log_guid is None or note_log_guid == NO_ELEMENTS_FOUND:
-            if element_qn is None:
-                if note_log_display_name is None:
-                    note_log_display_name = f"NoName-{datetime.now().strftime('%Y-%m-%d %H:%M')}"
-
-            else:
-                element_guid = await self._async_get_guid_for_name(element_qn, ["qualifiedName"])
-
-            note_log = await self._async_create_note_log(element_guid = element_guid, display_name = note_log_display_name)
-            note_log_guid = note_log["guid"]
-
-        # Create the Journal Entry (Note)
-        journal_entry_guid = await self._async_create_note(note_log_guid, journal_entry_display_name,
-                                                                 journal_entry_description, body)
-
-        return journal_entry_guid
-
-    @dynamic_catch
-    def add_journal_entry(self, note_log_qn: str = None, element_qn: str = None,
-                           note_log_display_name: str = None, journal_entry_display_name: str = None,
-                           journal_entry_description: str = None,
-                           body: dict | NewElementRequestBody = None) -> str:
-        """
-        Creates a new journal entry for a note log and returns the unique identifier for it. The note_log will be
-        created if it does not exist.
-
-        Parameters
-        ----------
-        note_log_qn: str = None
-            - If provided, the journal entry will be attached to this note log. If not provided, a new note_log will be created.
-        element_qn: str = None
-            - If provided, and note log needs to be created, this will be used to define the new note log and attach it
-             to the specified element.
-        note_log_display_name: str = None
-            - optional note log display name
-        journal_entry_display_name: str = None
-            - optional journal entry display name
-        journal_entry_description: str = None
-            - the journal entry text
-
-        body
-            - optional body for the note - if provided, details here will supercede other parameters.
-
-        Returns
-        -------
-        GUID for the journal entry (note).
-
-        Raises
-        ------
-        PyegeriaException
-
-        Notes
-        _____
-
-        Sample body (a note is an asset)
-        {
-          "class" : "NewElementRequestBody",
-          "anchorGUID" : "{{noteLogGUID}}",
-          "isOwnAnchor": false,
-          "parentGUID": "{{noteLogGUID}}",
-          "parentRelationshipTypeName": "AttachedNoteLogEntry",
-          "parentAtEnd1": true,
-          "properties": {
-            "class" : "NotificationProperties",
-            "typeName" : "Notification",
-            "qualifiedName": "add unique name here",
-            "displayName": "add short name here",
-            "description": "add description here",
-            "systemAction" : "add optional system action that occurred as part of this notification processing",
-            "userResponse" : "add optional action that the reader should take",
-            "priority" : 1,
-            "activityStatus" : "FOR_INFO",
-            "additionalProperties": {
-              "property1" : "propertyValue1",
-              "property2" : "propertyValue2"
-            },
-            "extendedProperties": {
-              "property1" : "propertyValue1",
-              "property2" : "propertyValue2"
-            },
-            "effectiveFrom": "{{$isoTimestamp}}",
-            "effectiveTo": "{{$isoTimestamp}}"
-          },
-          "externalSourceGUID": "add guid here",
-          "externalSourceName": "add qualified name here",
-          "effectiveTime" : "{{$isoTimestamp}}",
-          "forLineage" : false,
-          "forDuplicateProcessing" : false
-        }
-
-        """
-        loop = asyncio.get_event_loop()
-        response = loop.run_until_complete(
-            self._async_add_journal_entry(note_log_qn, element_qn, note_log_display_name, journal_entry_display_name, journal_entry_description, body)
-        )
-        return response
-
 
     @dynamic_catch
     async def _async_update_note(self, note_guid: str, display_name: str = None, description: str = None,
@@ -2950,19 +2770,19 @@ class Client2(BaseClient):
 
         url = f"{self.command_root}feedback-manager/assets/by-search-string"
         response = await self._async_find_request(url, "Notification", self._generate_feedback_output,
-                                                  search_string, None, ["Notification"] ,
+                                                  search_string, [], ["Notification"],
                                                   starts_with, ends_with, ignore_case,
                                                   start_from, page_size, output_format, report_spec,
-                                                  body )
+                                                  body, )
         return response
 
     @dynamic_catch
     def find_notes(
             self, search_string: str = None,
             body: dict | SearchStringRequestBody = None,
-            starts_with: bool = True,
-            ends_with: bool = False,
-            ignore_case: bool = False,
+            starts_with: bool = None,
+            ends_with: bool = None,
+            ignore_case: bool = None,
             start_from: int = 0,
             page_size: int = 0,
             output_format: str = "JSON",
@@ -3112,7 +2932,7 @@ class Client2(BaseClient):
 
         """
 
-        url = f"{self.command_root}feedback-manager/note-logs/{note_log_guid}/retrieve"
+        url = f"{self.command_root}feedback-manager/note-logs/by-name"
         response = await self._async_get_results_body_request(url, "Notification", self._generate_feedback_output,
                                                               0, 0, output_format, report_spec, body)
         return response
@@ -3245,7 +3065,7 @@ class Client2(BaseClient):
 
         Returns
         -------
-        None
+        VoidResponse :
 
         Raises
         ------
@@ -3268,22 +3088,23 @@ class Client2(BaseClient):
 
     ) -> None:
         """
-        Update the description of an existing tag.
+          Updates the description of an existing tag. Async version.
 
-        Parameters
-        ----------
-        tag_guid: str
-            - unique id for the tag
-        description: str
+          Parameters
+          ----------
+
+         tag_guid
+              - unique id for the tag
+         description: str
             - description of the tag
 
-        Returns
-        -------
-        None
+          Returns
+          -------
+          VoidResponse :
 
-        Raises
-        ------
-        PyegeriaException
+          Raises
+          ------
+          PyegeriaException
         """
         loop = asyncio.get_event_loop()
         response = loop.run_until_complete(
@@ -3312,7 +3133,7 @@ class Client2(BaseClient):
             - String - unique id for the tag.
         Returns
         -------
-        None
+        VOIDResponse
 
         Raises
         ------
@@ -4056,7 +3877,6 @@ class Client2(BaseClient):
     #
     # Search Tags
     #
-    @dynamic_catch
     async def _async_add_search_keyword_to_element(
             self,
             element_guid: str,
@@ -4113,7 +3933,6 @@ class Client2(BaseClient):
         response = await self._async_make_request("POST", url, body_slimmer(body))
         return response.json().get('guid', 'Search keyword was not created')
 
-    @dynamic_catch
     def add_search_keyword_to_element(
             self,
             element_guid: str,
@@ -4161,8 +3980,6 @@ class Client2(BaseClient):
         )
         return response
 
-
-    @dynamic_catch
     async def _async_update_search_keyword(
             self,
             keyword_guid: str,
@@ -4204,7 +4021,6 @@ class Client2(BaseClient):
         url = f"{self.command_root}classification-manager/search-keywords/{keyword_guid}/update"
         await self._async_update_relationship_request(url, None, body_slimmer(body))
 
-    @dynamic_catch
     def update_search_keyword(
             self,
             keyword_guid: str,
@@ -4248,7 +4064,6 @@ class Client2(BaseClient):
             self._async_update_search_keyword(keyword_guid, body)
         )
 
-    @dynamic_catch
     async def _async_remove_search_keyword(
             self,
             keyword_guid: str
@@ -4272,15 +4087,16 @@ class Client2(BaseClient):
         """
 
         url = f"{self.command_root}classification-manager/search-keywords/{keyword_guid}/remove"
-        await self._async_delete_relationship_request(url = url, body = None, cascade_delete = False)
+        await self._async_delete_relationship_request(url)
 
-    @dynamic_catch
     def remove_search_keyword(
             self,
             keyword_guid,
     ) -> None:
         """
-        Remove the search keyword for an element.
+        Remove the licensed for an element.
+
+        licenses: https://egeria-project.org/types/1/0120-Assignment-licenses/
 
         Parameters
         ----------
@@ -4299,7 +4115,7 @@ class Client2(BaseClient):
 
         loop = asyncio.get_event_loop()
         loop.run_until_complete(
-            self._async_remove_search_keyword(keyword_guid )
+            self._async_remove_search_keyword(keyword_guid, )
         )
 
     @dynamic_catch
@@ -4518,7 +4334,7 @@ class Client2(BaseClient):
         return response
 
     @dynamic_catch
-    def find_search_keywords(
+    def get_search_keyword_by_keyword(
             self,
             search_string: str,
             start_from: int = 0,
@@ -4578,28 +4394,6 @@ class Client2(BaseClient):
         # col_data = overlay_additional_values(col_data, extra)
         return col_data
 
-    def _extract_element_properties_for_keyword(self, element: dict, columns_struct: dict) -> dict:
-        keyword_elements = None
-        keyword_elements = element["keywordElements"]
-        out_body = {}
-        keyword = element["properties"].get('keyword', '')
-        for el in keyword_elements:
-            element = el.get("relatedElement", {})
-            element_guid = element['elementHeader']['guid']
-            element_type = element['elementHeader']['type']['typeName']
-            element_display_name = element['properties'].get('displayName',"")
-            element_description = element['properties'].get('description',"")
-            element_category = element['properties'].get('category',"")
-            out_body = {
-                "element_display_name": element_display_name,
-                "element_description": element_description,
-                "element_category": element_category,
-                "element_type": element_type,
-                "element_guid": element_guid,
-                "keyword": keyword
-            }
-        return out_body
-
     @dynamic_catch
     def _extract_feedback_properties(self, element: dict, columns_struct: dict) -> dict:
         props = element.get('properties', {}) or {}
@@ -4611,12 +4405,8 @@ class Client2(BaseClient):
         col_data = populate_common_columns(element, columns_struct)
         columns_list = col_data.get('formats', {}).get('attributes', [])
         # Overlay extras (project roles) only where empty
-        keyword_elements = element.get("keywordElements", [])
-
-        if keyword_elements != [] and isinstance(element['keywordElements'], list):
-            extra = self._extract_element_properties_for_keyword(element, columns_struct)
-            col_data = overlay_additional_values(col_data, extra)
-
+        # extra = self._extract_additional_project_properties(element, columns_struct)
+        # col_data = overlay_additional_values(col_data, extra)
         return col_data
 
     @dynamic_catch
@@ -4645,7 +4435,6 @@ class Client2(BaseClient):
             get_additional_props_func=None,
             columns_struct=output_formats,
         )
-
 
     #
     # Helper functions for requests
@@ -4747,12 +4536,11 @@ class Client2(BaseClient):
         elif isinstance(body, dict):
             validated_body = self._delete_relationship_request_adapter.validate_python(body)
         else:  # handle case where body not provided
-            # body = {
-            #     "class": "DeleteRelationshipRequestBody",
-            #     "cascadeDelete": cascade_delete
-            # }
-            # validated_body = DeleteRelationshipRequestBody.model_validate(body)
-            return None
+            body = {
+                "class": "DeleteRelationshipRequestBody",
+                "cascadeDelete": cascade_delete
+            }
+            validated_body = DeleteRelationshipRequestBody.model_validate(body)
         return validated_body
 
     @dynamic_catch
@@ -5080,7 +4868,7 @@ class Client2(BaseClient):
     @dynamic_catch
     async def _async_delete_relationship_request(self, url: str, body: dict | DeleteRelationshipRequestBody = None,
                                                  cascade_delete: bool = False) -> None:
-        validated_body = self.validate_delete_relationship_request(body, cascade_delete)
+        validated_body = self.validate_delete_relationshp_request(body, cascade_delete)
         if validated_body:
             json_body = validated_body.model_dump_json(indent=2, exclude_none=True)
             logger.info(json_body)

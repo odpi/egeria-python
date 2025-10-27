@@ -440,16 +440,14 @@ def generate_entity_md(elements: List[Dict],
             cols = returned_struct.get('formats', {}).get('attributes', [])
             # Find value from 'display_name' or 'title'
             for col in cols:
-                if col.get('key') in ('display_name', 'title', 'keyword'):
+                if col.get('key') in ('display_name', 'title'):
                     display_name = col.get('value')
                     if display_name:
                         break
         else:
-            display_name = props.get('display_name') or props.get('title') or props.get('keyword')
+            display_name = props.get('display_name') or props.get('title')
 
-        if display_name is None and (keyword:= element['properties'].get('keyword',None)) is not None:
-            display_name = keyword
-        elif display_name is None:
+        if display_name is None:
             display_name = "NO DISPLAY NAME"
 
         # Format header based on output format
@@ -634,20 +632,16 @@ def generate_entity_dict(elements: List[Dict],
 
     #####
     # Add attributes based on column spec if available, otherwise, add all
-    import copy
     for element in elements:
         if element is None:
             continue
 
         guid = element.get('elementHeader', {}).get('guid')
 
-        # Work on a per-element deep copy of the columns structure to avoid value leakage across rows
-        local_columns_struct = copy.deepcopy(columns_struct) if columns_struct is not None else None
-
         returned_struct = None
-        if local_columns_struct is not None:
+        if columns_struct is not None:
             try:
-                returned_struct = extract_properties_func(element, local_columns_struct)
+                returned_struct = extract_properties_func(element, columns_struct)
             except TypeError as e:
                 logger.info(f"Error - didn't find extractor?: {e}")
                 returned_struct = None
@@ -660,7 +654,7 @@ def generate_entity_dict(elements: List[Dict],
         # Create entity dictionary
         entity_dict = {}
 
-        cols = local_columns_struct['formats'].get('attributes', None) if local_columns_struct else None
+        columns = columns_struct['formats'].get('attributes', None) if columns_struct else None
         if returned_struct is not None:
             for column in returned_struct.get('formats', {}).get('attributes', []):
                 key = column.get('key')
@@ -670,10 +664,11 @@ def generate_entity_dict(elements: List[Dict],
                     value = additional_props[key]
                 if column.get('format'):
                     value = format_for_markdown_table(value, guid)
-                # Avoid overwriting when multiple columns share the same display name in a spec
-                dict_key = name
-                if dict_key in entity_dict:
-                    logger.warning(f"DICT key collision for display name '{dict_key}'. Suffixing duplicate to preserve all values.")
+                # Use machine key for DICT output to avoid name collisions (e.g., multiple 'GUID' display names)
+                dict_key = key or name
+                # If the key already exists and differs only by case, preserve both by preferring exact key
+                if dict_key in entity_dict and name and name != dict_key:
+                    # suffix with _1 to avoid overwrite
                     suffix_idx = 1
                     tmp_key = f"{dict_key}_{suffix_idx}"
                     while tmp_key in entity_dict:
@@ -681,8 +676,8 @@ def generate_entity_dict(elements: List[Dict],
                         tmp_key = f"{dict_key}_{suffix_idx}"
                     dict_key = tmp_key
                 entity_dict[dict_key] = value
-        elif cols:
-            for column in cols:
+        elif columns:
+            for column in columns:
                 key = column['key']
                 name = column['name']
                 value = ""
@@ -693,9 +688,8 @@ def generate_entity_dict(elements: List[Dict],
                     value = additional_props[key]
                 if  column.get('format', None):
                     value = format_for_markdown_table(value, guid or props.get('GUID'))
-                dict_key = name
-                if dict_key in entity_dict:
-                    logger.warning(f"DICT key collision for display name '{dict_key}'. Suffixing duplicate to preserve all values.")
+                dict_key = key or name
+                if dict_key in entity_dict and name and name != dict_key:
                     suffix_idx = 1
                     tmp_key = f"{dict_key}_{suffix_idx}"
                     while tmp_key in entity_dict:
@@ -704,7 +698,7 @@ def generate_entity_dict(elements: List[Dict],
                     dict_key = tmp_key
                 entity_dict[dict_key] = value
         else:
-            props = extract_properties_func(element, local_columns_struct)
+            props = extract_properties_func(element, columns_struct)
             # Add properties based on include/exclude lists
             for key, value in props.items():
                 if key not in ['properties', 'mermaid']:  # Skip the raw properties object
@@ -1103,3 +1097,31 @@ def generate_output(elements: Union[Dict, List[Dict]],
         )
 
         return elements_md
+
+# Machine keys explanation
+# -------------------------
+# In pyegeria’s reporting system, each output column is defined with two identifiers:
+# - name: the human-readable display label (e.g., "GUID", "Display Name") shown in tables and reports.
+# - key: the stable, programmatic identifier (usually snake_case, e.g., guid, display_name) used internally.
+#
+# We refer to the key as the machine key. It is intended to be:
+# - Unique within a given row/spec: so downstream code can unambiguously reference values.
+# - Stable over time: it should not change with presentation tweaks or localization.
+# - Program-friendly: lowercase with underscores, matching the data model or derivation (e.g., header vs properties).
+#
+# Why DICT output uses machine keys
+# - Display names are for humans and may repeat across different sources of data in one row. For example,
+#   Collections may include a GUID from the element header (key: guid, display name: "GUID") and a related member GUID
+#   (key: GUID, display name: "GUID"). If the DICT used display names, one would overwrite the other.
+# - By using the machine key (column['key']) as the dictionary key, DICT output avoids these collisions and remains
+#   deterministic for programmatic consumers.
+#
+# Collision handling
+# - If, within an unusual spec, two columns share the same key, DICT generation adds a numeric suffix (e.g., guid_1)
+#   to preserve both values. This is a safeguard and such collisions should be avoided in specs.
+#
+# Guidance for spec authors
+# - Choose clear, stable machine keys in snake_case that map to actual data fields or well-defined derivations.
+# - Reserve display names for presentation; do not rely on them for programmatic access.
+# - When you need two visually identical labels (e.g., both "GUID"), ensure their keys differ (e.g., guid vs GUID) to
+#   reflect different sources/semantics.

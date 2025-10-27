@@ -37,7 +37,7 @@ from pyegeria._validators import (
 from pyegeria.models import (SearchStringRequestBody, FilterRequestBody, GetRequestBody, NewElementRequestBody,
                              TemplateRequestBody, UpdateStatusRequestBody, UpdateElementRequestBody,
                              NewRelationshipRequestBody,
-                             DeleteRequestBody, UpdateRelationshipRequestBody, ResultsRequestBody,
+                              UpdateRelationshipRequestBody, ResultsRequestBody,
                              NewClassificationRequestBody,
                              DeleteElementRequestBody, DeleteRelationshipRequestBody, DeleteClassificationRequestBody,
                              LevelIdentifierQueryBody)
@@ -147,22 +147,6 @@ class BaseClient:
                 self.server_name = server_name
             self.session = AsyncClient(verify=enable_ssl_check)
         self.command_root: str = f"{self.platform_url}/servers/{self.server_name}/api/open-metadata/generic"
-        self._search_string_request_adapter = TypeAdapter(SearchStringRequestBody)
-        self._filter_request_adapter = TypeAdapter(FilterRequestBody)
-        self._get_request_adapter = TypeAdapter(GetRequestBody)
-        self._new_element_request_adapter = TypeAdapter(NewElementRequestBody)
-        self._update_element_request_adapter = TypeAdapter(UpdateElementRequestBody)
-        self._update_status_request_adapter = TypeAdapter(UpdateStatusRequestBody)
-        self._new_relationship_request_adapter = TypeAdapter(NewRelationshipRequestBody)
-        self._new_classification_request_adapter = TypeAdapter(NewClassificationRequestBody)
-        self._delete_request_adapter = TypeAdapter(DeleteRequestBody)
-        self._delete_element_request_adapter = TypeAdapter(DeleteElementRequestBody)
-        self._delete_relationship_request_adapter = TypeAdapter(DeleteRelationshipRequestBody)
-        self._delete_classification_request_adapter = TypeAdapter(DeleteClassificationRequestBody)
-        self._template_request_adapter = TypeAdapter(TemplateRequestBody)
-        self._update_relationship_request_adapter = TypeAdapter(UpdateRelationshipRequestBody)
-        self._results_request_adapter = TypeAdapter(ResultsRequestBody)
-        self._level_identifier_query_body = TypeAdapter(LevelIdentifierQueryBody)
 
         try:
             result = self.check_connection()

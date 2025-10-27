@@ -23,10 +23,12 @@ from pyegeria._globals import NO_GUID_RETURNED
 from pyegeria._validators import validate_guid
 from pyegeria.collection_manager import CollectionManager
 from pyegeria.config import settings as app_settings
-from pyegeria.models import (NewElementRequestBody,
-                             ReferenceableProperties, UpdateElementRequestBody, DeleteRequestBody, TemplateRequestBody,
+from pyegeria.models import (NewElementRequestBody, DeleteElementRequestBody, DeleteRelationshipRequestBody,
+                             DeleteClassificationRequestBody,
+                             ReferenceableProperties, UpdateElementRequestBody, TemplateRequestBody,
                              NewRelationshipRequestBody, UpdateRelationshipRequestBody, NewClassificationRequestBody,
-                             FilterRequestBody, GetRequestBody, SearchStringRequestBody, UpdateStatusRequestBody)
+                             FilterRequestBody, GetRequestBody, SearchStringRequestBody, UpdateStatusRequestBody,
+                             DeleteClassificationRequestBody)
 from pyegeria.base_report_formats import select_report_spec, get_report_spec_match
 from pyegeria.output_formatter import (generate_output,
                                        _extract_referenceable_properties, populate_columns_from_properties,
@@ -34,11 +36,6 @@ from pyegeria.output_formatter import (generate_output,
 from pyegeria.utils import body_slimmer, dynamic_catch
 
 EGERIA_LOCAL_QUALIFIER = app_settings.User_Profile.egeria_local_qualifier
-
-
-("params are in the form of [(paramName, value), (param2Name, value)] if the value is not None, it will be added to "
- "the query string")
-
 
 
 
@@ -145,7 +142,7 @@ class GlossaryManager(CollectionManager):
             )
         return response
 
-    async def _async_delete_glossary(self, glossary_guid: str, body: dict | DeleteRequestBody = None,
+    async def _async_delete_glossary(self, glossary_guid: str, body: dict | DeleteElementRequestBody = None,
                                      cascade: bool = False) -> None:
         """Delete glossary. Async version.
 
@@ -166,7 +163,7 @@ class GlossaryManager(CollectionManager):
 
         logger.info(f"Deleted glossary {glossary_guid} with cascade {cascade}")
 
-    def delete_glossary(self, glossary_guid: str, body: dict | DeleteRequestBody = None, cascade: bool = False) -> None:
+    def delete_glossary(self, glossary_guid: str, body: dict | DeleteElementRequestBody = None, cascade: bool = False) -> None:
         """Delete a new glossary.
 
         Parameters
@@ -998,7 +995,7 @@ class GlossaryManager(CollectionManager):
             self,
             term_guid: str,
             cascade: bool = False,
-            body: dict | DeleteRequestBody = None
+            body: dict | DeleteElementRequestBody = None
             ) -> None:
         """Delete the glossary terms associated with the specified glossary. Async version.
 
@@ -1033,7 +1030,7 @@ class GlossaryManager(CollectionManager):
             f"{self.platform_url}/servers/{self.view_server}/api/open-metadata/glossary-manager/glossaries/"
             f"terms/{term_guid}/delete"
         )
-        await self._async_delete_request(url, body, cascade)
+        await self._async_delete_element_request(url, body, cascade)
         logger.info(f"Deleted collection {term_guid} with cascade {cascade}")
 
 
@@ -1041,7 +1038,7 @@ class GlossaryManager(CollectionManager):
             self,
             term_guid: str,
             cascade: bool = False,
-            body: dict | DeleteRequestBody = None
+            body: dict | DeleteElementRequestBody = None
             ) -> None:
         """Delete the glossary terms associated with the specified glossary.
 
@@ -1078,7 +1075,7 @@ class GlossaryManager(CollectionManager):
             self,
             term_guid: str,
             glossary_guid: str,
-            body: dict | DeleteRequestBody = None
+            body: dict | DeleteRelationshipRequestBody = None
             ) -> None:
         """Move the glossary terms to the specified glossary. Async version.
 
@@ -1110,7 +1107,7 @@ class GlossaryManager(CollectionManager):
             f"{self.platform_url}/servers/{self.view_server}/api/open-metadata/glossary-manager/glossaries/"
             f"terms/{term_guid}/move-to/{glossary_guid}"
         )
-        await self._async_delete_request(url, body)
+        await self._async_delete_relationship_request(url, body)
         logger.info(f"Moved collection {term_guid} to glossary {glossary_guid}")
 
 
@@ -1118,7 +1115,7 @@ class GlossaryManager(CollectionManager):
             self,
             term_guid: str,
             glossary_guid: str,
-            body: dict | DeleteRequestBody = None
+            body: dict | DeleteRelationshipRequestBody = None
             ) -> None:
         """Move the glossary terms to the specified glossary.
 
@@ -1224,7 +1221,7 @@ class GlossaryManager(CollectionManager):
                     }
                 }
 
-        await self._async_new_classification_request(url, "AbstractConceptProperties",body)
+        await self._async_new_classification_request(url, "AbstractConceptProperties", body)
         logger.info(f"Added AbstractConcept classification to {term_guid}")
 
 
@@ -1285,7 +1282,7 @@ class GlossaryManager(CollectionManager):
             )
 
     async def _async_remove_is_abstract_concepts(
-            self, term_guid: str, body: dict | DeleteRequestBody = None,
+            self, term_guid: str, body: dict | DeleteClassificationRequestBody = None,
             ) -> None:
         """Add a relationship between terms. Async Version.
 
@@ -1336,11 +1333,11 @@ class GlossaryManager(CollectionManager):
             f"{self.platform_url}/servers/{self.view_server}/api/open-metadata/glossary-manager/glossaries/"
             f"terms/{term_guid}/is-abstract-concept/remove"
         )
-        await self._async_delete_request(url, body)
+        await self._async_delete_classification_request(url, body)
         logger.info(f"Removed AbstractConcept classification to {term_guid}")
 
     def remove_is_abstract_concept(
-            self, term_guid: str, body: dict | DeleteRequestBody = None,
+            self, term_guid: str, body: dict | DeleteClassificationRequestBody = None,
             ) -> None:
         """Add a relationship between terms.
 
@@ -1457,7 +1454,7 @@ class GlossaryManager(CollectionManager):
                     }
                 }
 
-        await self._async_new_classification_request(url, "ContextDefinitionProperties",body)
+        await self._async_new_classification_request(url, "ContextDefinitionProperties", body)
         logger.info(f"Added AbstractConcept classification to {term_guid}")
 
 
@@ -1519,7 +1516,7 @@ class GlossaryManager(CollectionManager):
             )
 
     async def _async_remove_is_context_definition(
-            self, term_guid: str, body: dict | DeleteRequestBody = None,
+            self, term_guid: str, body: dict | DeleteClassificationRequestBody = None,
             ) -> None:
         """Add a relationship between terms. Async Version.
 
@@ -1570,11 +1567,11 @@ class GlossaryManager(CollectionManager):
             f"{self.platform_url}/servers/{self.view_server}/api/open-metadata/glossary-manager/glossaries/"
             f"terms/{term_guid}/is-context-definition/remove"
         )
-        await self._async_delete_request(url, body)
+        await self._async_delete_classification_request(url, body)
         logger.info(f"Removed ContextDefinition classification to {term_guid}")
 
     def remove_is_context_definition(
-            self, term_guid: str, body: dict | DeleteRequestBody = None,
+            self, term_guid: str, body: dict | DeleteClassificationRequestBody = None,
             ) -> None:
         """Add a relationship between terms.
 
@@ -1691,7 +1688,7 @@ class GlossaryManager(CollectionManager):
                     }
                 }
 
-        await self._async_new_classification_request(url, "DataValueProperties",body)
+        await self._async_new_classification_request(url, "DataValueProperties", body)
         logger.info(f"Added DataValue classification to {term_guid}")
 
 
@@ -1753,7 +1750,7 @@ class GlossaryManager(CollectionManager):
             )
 
     async def _async_remove_is_data_value(
-            self, term_guid: str, body: dict | DeleteRequestBody = None,
+            self, term_guid: str, body: dict | DeleteClassificationRequestBody = None,
             ) -> None:
         """Add a relationship between terms. Async Version.
 
@@ -1804,11 +1801,11 @@ class GlossaryManager(CollectionManager):
             f"{self.platform_url}/servers/{self.view_server}/api/open-metadata/glossary-manager/glossaries/"
             f"terms/{term_guid}/is-data-value/remove"
         )
-        await self._async_delete_request(url, body)
+        await self._async_delete_classification_request(url, body)
         logger.info(f"Removed DataValue classification to {term_guid}")
 
     def remove_is_data_value(
-            self, term_guid: str, body: dict | DeleteRequestBody = None,
+            self, term_guid: str, body: dict | DeleteClassificationRequestBody = None,
             ) -> None:
         """Add a relationship between terms.
 
@@ -1925,7 +1922,7 @@ class GlossaryManager(CollectionManager):
             f"{self.platform_url}/servers/{self.view_server}/api/open-metadata/glossary-manager/glossaries/"
             f"terms/{term_guid}/is-activity"
         )
-        await self._async_new_classification_request(url, "ActivityDescriptionProperties",body)
+        await self._async_new_classification_request(url, "ActivityDescriptionProperties", body)
         logger.info(f"Added DataValue classification to {term_guid}")
 
 
@@ -1987,7 +1984,7 @@ class GlossaryManager(CollectionManager):
             )
 
     async def _async_remove_activity_description(
-            self, term_guid: str, body: dict | DeleteRequestBody = None,
+            self, term_guid: str, body: dict | DeleteClassificationRequestBody = None,
             ) -> None:
         """Add a relationship between terms. Async Version.
 
@@ -2038,11 +2035,11 @@ class GlossaryManager(CollectionManager):
             f"{self.platform_url}/servers/{self.view_server}/api/open-metadata/glossary-manager/glossaries/"
             f"terms/{term_guid}/is-activity/remove"
         )
-        await self._async_delete_request(url, body)
+        await self._async_delete_classification_request(url, body)
         logger.info(f"Removed ActivityDescription classification to {term_guid}")
 
     def remove_activity_description(
-            self, term_guid: str, body: dict | DeleteRequestBody = None,
+            self, term_guid: str, body: dict | DeleteClassificationRequestBody = None,
             ) -> None:
         """Add a relationship between terms.
 
@@ -2354,7 +2351,7 @@ class GlossaryManager(CollectionManager):
             )
 
     async def _async_remove_relationship_between_terms(
-            self, term1_guid: str, term2_guid: str, relationship_type: str, body: dict | DeleteRequestBody = None,
+            self, term1_guid: str, term2_guid: str, relationship_type: str, body: dict | DeleteRelationshipRequestBody = None,
             ) -> None:
         """Remove a relationship between terms. Async Version.
 
@@ -2398,10 +2395,10 @@ class GlossaryManager(CollectionManager):
             f"terms/{term1_guid}/relationships/{relationship_type}/terms/{term2_guid}/remove"
         )
 
-        await self._async_delete_request(url, body)
+        await self._async_delete_relationship_request(url, body)
 
     def remove_relationship_between_terms(
-            self, term1_guid: str, term2_guid: str, relationship_type: str, body: dict | DeleteRequestBody = None) -> None:
+            self, term1_guid: str, term2_guid: str, relationship_type: str, body: dict | DeleteRelationshipRequestBody = None) -> None:
 
         """Remove a relationship between terms.
 

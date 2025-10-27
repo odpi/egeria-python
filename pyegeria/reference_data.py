@@ -14,7 +14,7 @@ from pyegeria._client_new import Client2
 from pyegeria.base_report_formats import get_report_spec_match
 from pyegeria.config import settings as app_settings
 from pyegeria.models import (SearchStringRequestBody, FilterRequestBody, GetRequestBody, NewElementRequestBody,
-                             TemplateRequestBody, DeleteRequestBody, UpdateElementRequestBody,
+                             TemplateRequestBody, UpdateElementRequestBody,
                              NewRelationshipRequestBody, DeleteElementRequestBody, DeleteRelationshipRequestBody)
 from pyegeria.output_formatter import generate_output, populate_columns_from_properties, \
     _extract_referenceable_properties, get_required_relationships, populate_common_columns, overlay_additional_values
@@ -1095,7 +1095,7 @@ class ReferenceDataManager(Client2):
 
         url = f"{self.ref_data_command_base}/valid-value-definitions/{vv_def_guid}/delete"
 
-        await self._async_delete_request(url, body, cascade_delete)
+        await self._async_delete_element_request(url, body, cascade_delete)
         logger.info(f"Deleted valid value definition {vv_def_guid} with cascade {cascade_delete}")
 
     @dynamic_catch

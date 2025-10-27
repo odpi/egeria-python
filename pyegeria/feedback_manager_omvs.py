@@ -2351,22 +2351,13 @@ class FeedbackManager(Client2):
     ## get_elements_by_tag implementation
     #
 
-    async def _async_get_elements_by_tag(
-        self,
-        tag_guid: str,
-        body: dict = {},
-        start_from: int = 0,
-        page_size: int = max_paging_size,
-        view_service_url_marker: str = None,
-        access_service_url_marker: str = None,
-        detailed_response: bool = False,
-    ) -> dict | str:
+    async def _async_get_search_keyword_by_guid(self, keyword_guid: str, output_format, report_spec=None) -> dict | str:
         """
         Return the list of unique identifiers for elements that are linked to a specific tag either directly, or via one of its schema elements.
 
         Parameters
         ----------
-        tag_guid
+        keyword_guid
             - unique identifier of tag.
         server_name
             - name of the server instances for this request
@@ -2393,28 +2384,23 @@ class FeedbackManager(Client2):
             There is a problem adding the element properties to the metadata repository or
         UserNotAuthorizedException
             the requesting user is not authorized to issue this request.
+
+        Args:
+            output_format ():
+            report_spec ():
         """
 
         url = f"{self.command_root}feedback-manager/tags/update"
         response = await self._async_make_request("POST", url, body)
         return related_elements_response(response.json(), detailed_response)
 
-    def get_elements_by_tag(
-        self,
-        tag_guid: str,
-        body: dict = {},
-        start_from: int = 0,
-        page_size: int = max_paging_size,
-        view_service_url_marker: str = None,
-        access_service_url_marker: str = None,
-        detailed_response: bool = False,
-    ) -> dict | str:
+    def get_search_keyword_by_guid(self, keyword_guid: str, output_format, report_spec=None) -> dict | str:
         """
         Return the list of unique identifiers for elements that are linked to a specific tag either directly, or via one of its schema elements.
 
         Parameters
         ----------
-        tag_guid
+        keyword_guid
             - unique identifier of tag.
         server_name
             - name of the server instances for this request
@@ -2441,18 +2427,14 @@ class FeedbackManager(Client2):
             There is a problem adding the element properties to the metadata repository or
         UserNotAuthorizedException
             the requesting user is not authorized to issue this request.
+
+        Args:
+            output_format ():
+            report_spec ():
         """
         loop = asyncio.get_event_loop()
         response = loop.run_until_complete(
-            self._async_get_elements_by_tag(
-                tag_guid,
-                body,
-                start_from,
-                page_size,
-                view_service_url_marker,
-                access_service_url_marker,
-                detailed_response,
-            )
+            self._async_get_search_keyword_by_guid(keyword_guid, JSON)
         )
         return response
 

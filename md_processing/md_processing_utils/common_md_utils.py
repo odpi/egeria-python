@@ -11,6 +11,8 @@ from loguru import logger
 from rich import print
 from rich.console import Console
 from rich.markdown import Markdown
+
+from pyegeria import Client2, PyegeriaException, egeria_client
 from pyegeria.utils import (camel_to_title_case, body_slimmer)
 from pyegeria._globals import DEBUG_LEVEL
 from md_processing.md_processing_utils.message_constants import message_types
@@ -482,7 +484,7 @@ def set_rel_request_body_for_type(object_type: str, attributes: dict)->dict:
 
 def set_delete_request_body(object_type: str, attributes: dict)->dict:
     return {
-        "class": "DeleteRequestBody",
+        "class": "DeleteElementRequestBody",
         "externalSourceGUID": attributes.get('External Source GUID', {}).get('guid', None),
         "externalSourceName": attributes.get('External Source Name', {}).get('value', None),
         "effectiveTime": attributes.get('Effective Time', {}).get('value', None),
@@ -539,3 +541,40 @@ def set_object_classifications(object_type: str, attributes: dict, obj_types: li
         for classification in classifications:
             body[classification] = {"class" : f"{classification}Properties"}
     return body
+
+def add_search_keywords(client: Client2, element_guid: str, keywords: list[str]):
+    """Add a search keyword to an element. Throw an exception if a problem is encountered.
+
+    Args:
+        client (Client2): The Egeria client instance.
+        element_guid (str): The GUID of the element to add the keyword to.
+        keyword (str): The search keyword to add.
+
+    Returns:
+        None
+    """
+    try:
+        for keyword in keywords:
+            client.add_search_keyword_to_element(element_guid, keyword)
+            print("Added keyword `{}` to element `{}`".format(keyword, element_guid))
+
+    except PyegeriaException as e:
+        context = {
+            "readon" : "Exception encountered executing add_search_keyword",
+            "element_guid": element_guid,
+            "keyword": keyword,
+            "exception": str(e)
+        }
+        raise PyegeriaException(context = context)
+
+def add_note_in_dr_e(client: Client2, qualified_name: str, display_name: str, journal_entry: str)-> str:
+    if journal_entry:
+        note_log_qn = f"{qualified_name}-NoteLog"
+        note_log_display_name = f"{display_name}-NoteLog"
+        note_display_name = f"{qualified_name}-Journal-Entry-{datetime.now().strftime('%Y-%m-%d %H:%M')}"
+        journal_entry_guid = client.add_journal_entry(note_log_qn, qualified_name, note_log_display_name, note_display_name,
+                                                             journal_entry)
+        logger.info(f"Added journal entry `{journal_entry_guid}` to `{qualified_name}`")
+        return journal_entry_guid
+    else:
+        return None

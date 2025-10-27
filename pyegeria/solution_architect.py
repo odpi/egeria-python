@@ -15,7 +15,8 @@ from httpx import Response
 from loguru import logger
 
 from pyegeria.models import NewElementRequestBody, TemplateRequestBody, UpdateElementRequestBody, \
-    NewRelationshipRequestBody, DeleteRequestBody, UpdateStatusRequestBody, SearchStringRequestBody
+    NewRelationshipRequestBody, UpdateStatusRequestBody, SearchStringRequestBody, DeleteElementRequestBody, \
+    DeleteRelationshipRequestBody
 from pyegeria.output_formatter import make_preamble, make_md_attribute, generate_output, extract_mermaid_only, \
     extract_basic_dict, MD_SEPARATOR, populate_common_columns
 from pyegeria.base_report_formats import select_report_spec, get_report_spec_match
@@ -1218,7 +1219,7 @@ class SolutionArchitect(Client2):
 
     @dynamic_catch
     async def _async_unlink_peer_info_supply_chains(self, peer1_guid: str, peer2_guid: str,
-                                                       body: dict | DeleteRequestBody = None) -> None:
+                                                       body: dict | DeleteRelationshipRequestBody = None) -> None:
         """ Detach two peers in an information supply chain from one another.  The linked elements are of type
            'Referenceable' to allow significant data stores to be included in the definition of the information
            supply chain. Request body is optional. Async Version.
@@ -1229,7 +1230,7 @@ class SolutionArchitect(Client2):
             guid of the first information supply chain to link.
         peer2_guid: str
             guid of the second information supply chain to link.
-        body: dict | DeleteRequestBody, optional
+        body: dict | DeleteRelationshipRequestBody, optional
             The body describing the link between the two segments.
 
         Returns
@@ -1250,7 +1251,7 @@ class SolutionArchitect(Client2):
 
         Body structure:
         {
-          "class": "DeleteRequestBody",
+          "class": "DeleteRelationshipRequestBody",
           "externalSourceGUID": "add guid here",
           "externalSourceName": "add qualified name here",
           "effectiveTime": {{isotime}},
@@ -1263,7 +1264,7 @@ class SolutionArchitect(Client2):
         validate_guid(peer2_guid)
         url = (f"{self.platform_url}/servers/{self.view_server}/api/open-metadata/solution-architect/"
                f"information-supply-chains/{peer1_guid}/peer-links/{peer2_guid}/detach")
-        await self._async_delete_request(url, body)
+        await self._async_delete_relationship_request(url, body)
         logger.info(
             f"Detached supply chains  {peer1_guid} -> {peer2_guid}")
 
@@ -1464,12 +1465,12 @@ class SolutionArchitect(Client2):
         url = (f"{self.platform_url}/servers/{self.view_server}/api/open-metadata/solution-architect/"
                f"information-supply-chains/{chain_guid}/compositions/{nested_chain_guid}/detach")
 
-        await self._async_delete_request(url, body)
+        await self._async_delete_relationship_request(url, body)
         logger.info(f"Removed composition of {nested_chain_guid} -> {chain_guid}")
 
     @dynamic_catch
     def decompose_info_supply_chains(self, chain_guid: str, nested_chain_guid: str,
-                                                       body: dict | DeleteRequestBody = None) -> None:
+                                                       body: dict | DeleteRelationshipRequestBody = None) -> None:
         """ Detach two peers in an information supply chain from one another.  Request body is optional.
 
         Parameters
@@ -1478,7 +1479,7 @@ class SolutionArchitect(Client2):
             guid of the first information supply chain to link.
         nested_chain_guid: str
             guid of the second information supply chain to link.
-        body: dict | DeleteRequestBody, optional
+        body: dict | DeleteRelationshipRequestBody, optional
             The body describing the link between the two segments.
 
         Returns
@@ -1499,7 +1500,7 @@ class SolutionArchitect(Client2):
 
         Body structure:
         {
-          "class": "DeleteRequestBody",
+          "class": "DeleteRelationshipRequestBody",
           "externalSourceGUID": "add guid here",
           "externalSourceName": "add qualified name here",
           "effectiveTime": {{isotime}},
@@ -1512,7 +1513,7 @@ class SolutionArchitect(Client2):
                                                                          nested_chain_guid, body))
 
     @dynamic_catch
-    async def _async_delete_info_supply_chain(self, guid: str, body: dict | DeleteRequestBody = None, cascade_delete: bool = False) -> None:
+    async def _async_delete_info_supply_chain(self, guid: str, body: dict | DeleteElementRequestBody = None, cascade_delete: bool = False) -> None:
         """Delete an information supply chain. Async Version.
 
            Parameters
@@ -1542,7 +1543,7 @@ class SolutionArchitect(Client2):
 
            Body structure:
             {
-              "class": "DeleteRequestBody",
+              "class": "DeleteElementRequestBody",
               "externalSourceGUID": "add guid here",
               "externalSourceName": "add qualified name here",
               "effectiveTime": {{isotime}},
@@ -1555,18 +1556,18 @@ class SolutionArchitect(Client2):
         url = (f"{self.platform_url}/servers/{self.view_server}/api/open-metadata/solution-architect/"
                f"information-supply-chains/{guid}/delete")
 
-        await self._async_delete_request(url, body, cascade_delete=cascade_delete)
+        await self._async_delete_element_request(url, body, cascade_delete=cascade_delete)
         logger.info(f"Deleted Info Supply Chain  {guid} with cascade {cascade_delete}")
 
     @dynamic_catch
-    def delete_info_supply_chain(self, guid: str, body: dict | DeleteRequestBody= None, cascade_delete: bool = False) -> None:
+    def delete_info_supply_chain(self, guid: str, body: dict | DeleteElementRequestBody= None, cascade_delete: bool = False) -> None:
         """ Delete an information supply chain.
 
             Parameters
             ----------
             guid: str
                 guid of the information supply chain to delete.
-            body: dict | DeleteRequestBody, optional
+            body: dict | DeleteElementRequestBody, optional
                 A dictionary containing parameters of the deletion.
            cascade_delete: bool, optional
                If true, the child objects will also be deleted.
@@ -1588,7 +1589,7 @@ class SolutionArchitect(Client2):
 
             Body structure:
             {
-              "class": "DeleteRequestBody",
+              "class": "DeleteElementRequestBody",
               "externalSourceGUID": "add guid here",
               "externalSourceName": "add qualified name here",
               "effectiveTime": {{isotime}},
@@ -1809,7 +1810,7 @@ class SolutionArchitect(Client2):
     async def _async_get_info_supply_chain_by_name(self, search_filter: str, body: dict = None,
                                                    add_implementation: bool = True, start_from: int = 0,
                                                    page_size: int = max_paging_size,
-                                                   output_format: str = "JSON") -> dict | str:
+                                                   output_format: str = "JSON", report_spec: str | dict = None) -> dict | str:
         """ Returns the list of information supply chains with a particular name. Async Version.
 
             Parameters
@@ -1874,12 +1875,12 @@ class SolutionArchitect(Client2):
         if element == NO_ELEMENTS_FOUND:
             return NO_ELEMENTS_FOUND
         if output_format != 'JSON':  # return a simplified markdown representation
-            return self.generate_info_supply_chain_output(element, None, output_format)
+            return self.generate_info_supply_chain_output(element, None, output_format, report_spec=report_spec)
         return response.json().get("elements", NO_ELEMENTS_FOUND)
 
     def get_info_supply_chain_by_name(self, search_filter: str, body: dict = None, add_implementation: bool = True,
                                       start_from: int = 0, page_size: int = max_paging_size,
-                                      output_format: str = "JSON") -> dict | str:
+                                      output_format: str = "JSON", report_spec: str | dict = None) -> dict | str:
         """ Returns the list of information supply chains with a particular name. Async Version.
 
             Parameters
@@ -1936,11 +1937,11 @@ class SolutionArchitect(Client2):
         loop = asyncio.get_event_loop()
         response = loop.run_until_complete(
             self._async_get_info_supply_chain_by_name(search_filter, body, add_implementation, start_from, page_size,
-                                                      output_format))
+                                                      output_format, report_spec))
         return response
 
     async def _async_get_info_supply_chain_by_guid(self, guid: str, body: dict = None, add_implementation: bool = True,
-                                                   output_format: str = "JSON") -> dict | str:
+                                                   output_format: str = "JSON", report_spec: str | dict = None) -> dict | str:
         """Return the properties of a specific information supply chain. Async Version.
 
             Parameters
@@ -1997,11 +1998,11 @@ class SolutionArchitect(Client2):
         if element == NO_ELEMENTS_FOUND:
             return NO_ELEMENTS_FOUND
         if output_format != 'JSON':  # return a simplified markdown representation
-            return self.generate_info_supply_chain_output(element, None, output_format)
+            return self.generate_info_supply_chain_output(element, None, output_format, report_spec=report_spec)
         return element
 
     def get_info_supply_chain_by_guid(self, guid: str, body: dict = None, add_implementation: bool = True,
-                                      output_format: str = "JSON") -> dict | str:
+                                      output_format: str = "JSON", report_spec: str | dict = None) -> dict | str:
         """ Return the properties of a specific information supply chain.
 
             Parameters
@@ -2047,7 +2048,7 @@ class SolutionArchitect(Client2):
         """
         loop = asyncio.get_event_loop()
         response = loop.run_until_complete(
-            self._async_get_info_supply_chain_by_guid(guid, body, add_implementation, output_format))
+            self._async_get_info_supply_chain_by_guid(guid, body, add_implementation, output_format, report_spec))
         return response
 
     #
@@ -2562,7 +2563,7 @@ class SolutionArchitect(Client2):
 
 
     @dynamic_catch
-    async def _async_delete_solution_blueprint(self, guid: str, body: dict | DeleteRequestBody, cascade: bool = False) -> None:
+    async def _async_delete_solution_blueprint(self, guid: str, body: dict | DeleteElementRequestBody, cascade: bool = False) -> None:
         """ Delete a solution blueprint. Async Version.
          Parameters
            ----------
@@ -2591,7 +2592,7 @@ class SolutionArchitect(Client2):
 
            Body structure:
             {
-              "class": "DeleteRequestBody",
+              "class": "DeleteElementRequestBody",
               "externalSourceGUID": "add guid here",
               "externalSourceName": "add qualified name here",
               "effectiveTime": {{isotime}},
@@ -2603,11 +2604,11 @@ class SolutionArchitect(Client2):
         url = (f"{self.platform_url}/servers/{self.view_server}/api/open-metadata/solution-architect/"
                f"information-supply-chains/{guid}/delete")
 
-        await self._async_delete_request(url, body, cascade_delete=cascade)
+        await self._async_delete_element_request(url, body, cascade_delete=cascade)
         logger.info(f"Deleted Info Supply Chain  {guid} with cascade {cascade}")
 
     @dynamic_catch
-    def delete_solution_blueprint(self, guid: str, body: dict | DeleteRequestBody = None,
+    def delete_solution_blueprint(self, guid: str, body: dict | DeleteElementRequestBody = None,
                                  cascade: bool = False) -> None:
         """ Delete an Solution Blueprint.
 
@@ -2615,7 +2616,7 @@ class SolutionArchitect(Client2):
             ----------
             guid: str
                 guid of the information supply chain to delete.
-            body: dict | DeleteRequestBody, optional
+            body: dict | DeleteElementRequestBody, optional
                 A dictionary containing parameters of the deletion.
            cascade: bool, optional
                If true, the child objects will also be deleted.
@@ -2637,7 +2638,7 @@ class SolutionArchitect(Client2):
 
             Body structure:
             {
-              "class": "DeleteRequestBody",
+              "class": "DeleteElementRequestBody",
               "externalSourceGUID": "add guid here",
               "externalSourceName": "add qualified name here",
               "effectiveTime": {{isotime}},
@@ -2755,7 +2756,7 @@ class SolutionArchitect(Client2):
 
     @dynamic_catch
     async def _async_detach_solution_component_from_blueprint(self, blueprint_guid: str, component_guid: str,
-                                                              body: dict | DeleteRequestBody = None) -> None:
+                                                              body: dict | DeleteRelationshipRequestBody = None) -> None:
         """ Detach a solution component from a solution blueprint.
             Async Version.
 
@@ -2799,13 +2800,13 @@ class SolutionArchitect(Client2):
         url = (f"{self.platform_url}/servers/{self.view_server}/api/open-metadata/solution-architect/"
                f"solution-blueprints/{blueprint_guid}/solution-components/{component_guid}/detach")
 
-        await self._async_delete_request(url, body)
+        await self._async_delete_relationship_request(url, body)
         logger.info(
             f"Detached component from blueprint  {component_guid} -> {blueprint_guid}")
 
     @dynamic_catch
     def detach_solution_component_from_blueprint(self, blueprint_guid: str, component_guid: str,
-                                                 body: dict | DeleteRequestBody = None) -> None:
+                                                 body: dict | DeleteRelationshipRequestBody = None) -> None:
         """ Detach a solution component from a solution blueprint.
 
         Parameters
@@ -2851,7 +2852,7 @@ class SolutionArchitect(Client2):
 
     @dynamic_catch
     async def _async_delete_solution_blueprint(self, blueprint_guid: str, cascade_delete: bool = False,
-                                               body: dict | DeleteRequestBody = None) -> None:
+                                               body: dict | DeleteElementRequestBody = None) -> None:
         """Delete a solution blueprint. Async Version.
 
            Parameters
@@ -2895,11 +2896,11 @@ class SolutionArchitect(Client2):
 
         url = (f"{self.platform_url}/servers/{self.view_server}/api/open-metadata/solution-architect/"
                f"solution-blueprints/{blueprint_guid}/delete")
-        await self._async_delete_request(url, body, cascade_delete=cascade_delete)
+        await self._async_delete_element_request(url, body, cascade_delete=cascade_delete)
         logger.info(f"Deleted Blueprint  {blueprint_guid} with cascade {cascade_delete}")
 
     @dynamic_catch
-    def delete_solution_blueprint(self, blueprint_guid: str, cascade_delete: bool = False, body: dict | DeleteRequestBody = None) -> None:
+    def delete_solution_blueprint(self, blueprint_guid: str, cascade_delete: bool = False, body: dict | DeleteElementRequestBody = None) -> None:
         """ Delete a solution blueprint.
             Parameters
             ----------
@@ -3887,7 +3888,7 @@ class SolutionArchitect(Client2):
         loop.run_until_complete(self._async_link_subcomponent(component_guid, sub_component_guid, body))
     @dynamic_catch
     async def _async_detach_sub_component(self, parent_component_guid: str, member_component_guid: str,
-                                          body: dict |DeleteRequestBody = None) -> None:
+                                          body: dict |DeleteRelationshipRequestBody = None) -> None:
         """ Detach a solution component from a solution component.
             Async Version.
 
@@ -3918,7 +3919,7 @@ class SolutionArchitect(Client2):
 
         Body structure:
         {
-          "class": "DeleteRequestBody",
+          "class": "DeleteRelationshipRequestBody",
           "externalSourceGUID": "add guid here",
           "externalSourceName": "add qualified name here",
           "effectiveTime": {{isotime}},
@@ -3931,12 +3932,12 @@ class SolutionArchitect(Client2):
         url = (f"{self.platform_url}/servers/{self.view_server}/api/open-metadata/solution-architect/"
                f"solution-components/{parent_component_guid}/subcomponents/{member_component_guid}/detach")
 
-        await self._async_delete_request(url, body)
+        await self._async_delete_relationship_request(url, body)
         logger.info(
             f"Detached components  {parent_component_guid} -> {member_component_guid}")
 
     @dynamic_catch
-    def detach_sub_component(self, parent_component_guid: str, member_component_guid: str, body: dict| DeleteRequestBody = None) -> None:
+    def detach_sub_component(self, parent_component_guid: str, member_component_guid: str, body: dict| DeleteRelationshipRequestBody = None) -> None:
         """ Detach a solution component from a solution component.
             Async Version.
 
@@ -3946,7 +3947,7 @@ class SolutionArchitect(Client2):
             guid of the parent component to disconnect from.
         member_component_guid: str
             guid of the member (child) component to disconnect.
-        body: dict | DeleteRequestBody
+        body: dict | DeleteRelationshipRequestBody
             The body describing the request.
 
         Returns
@@ -3967,7 +3968,7 @@ class SolutionArchitect(Client2):
 
         Body structure:
         {
-          "class": "DeleteRequestBody",
+          "class": "DeleteRelationshipRequestBody",
           "externalSourceGUID": "add guid here",
           "externalSourceName": "add qualified name here",
           "effectiveTime": {{isotime}},
@@ -4081,7 +4082,7 @@ class SolutionArchitect(Client2):
 
     @dynamic_catch
     async def _async_detach_solution_linking_wire(self, component1_guid: str, component2_guid: str,
-                                                  body: dict | DeleteRequestBody = None) -> None:
+                                                  body: dict | DeleteRelationshipRequestBody = None) -> None:
         """ Detach a solution component from a peer solution component.
             Async Version.
 
@@ -4091,7 +4092,7 @@ class SolutionArchitect(Client2):
             GUID of the first component to unlink.
         component2_guid: str
             GUID of the second component to unlink.
-        body: dict | DeleteRequestBody
+        body: dict | DeleteRelationshipRequestBody
             The body describing the request.
 
         Returns
@@ -4112,7 +4113,7 @@ class SolutionArchitect(Client2):
 
         Body structure:
         {
-          "class" : "DeleteRequestBody",
+          "class" : "DeleteRelationshipRequestBody",
           "externalSourceGUID": "add guid here",
           "externalSourceName": "add qualified name here",
           "effectiveTime" : "{{$isoTimestamp}}",
@@ -4125,12 +4126,12 @@ class SolutionArchitect(Client2):
         url = (f"{self.platform_url}/servers/{self.view_server}/api/open-metadata/solution-architect/"
                f"solution-components/{component1_guid}/wired-to/{component2_guid}/detach")
 
-        await self._async_delete_request(url, body)
+        await self._async_delete_relationship_request(url, body)
         logger.info(
             f"Detached solution linking wire between  {component1_guid} -> {component2_guid}")
 
     @dynamic_catch
-    def detach_solution_linking_wire(self, component1_guid: str, component2_guid: str, body: dict | DeleteRequestBody = None) -> None:
+    def detach_solution_linking_wire(self, component1_guid: str, component2_guid: str, body: dict | DeleteRelationshipRequestBody = None) -> None:
         """ Detach a solution component from a peer solution component.
                     Async Version.
 
@@ -4140,7 +4141,7 @@ class SolutionArchitect(Client2):
                     GUID of the first component to unlink.
                 component2_guid: str
                     GUID of the second component to unlink.
-                body: dict | DeleteRequestBody
+                body: dict | DeleteRelationshipRequestBody
                     The body describing the request.
                     The body describing the request.
 
@@ -4162,7 +4163,7 @@ class SolutionArchitect(Client2):
 
                 Body structure:
                 {
-                  "class" : "DeleteRequestBody",
+                  "class" : "DeleteRelationshipRequestBody",
                   "externalSourceGUID": "add guid here",
                   "externalSourceName": "add qualified name here",
                   "effectiveTime" : "{{$isoTimestamp}}",
@@ -4176,7 +4177,7 @@ class SolutionArchitect(Client2):
 
     @dynamic_catch
     async def _async_delete_solution_component(self, solution_component_guid: str, cascade_delete: bool = False,
-                                               body: dict  | DeleteRequestBody= None) -> None:
+                                               body: dict  | DeleteElementRequestBody= None) -> None:
         """Delete a solution component. Async Version.
 
            Parameters
@@ -4185,7 +4186,7 @@ class SolutionArchitect(Client2):
                guid of the component to delete.
            cascade_delete: bool, optional, default: False
                Cascade the delete to dependent objects?
-           body: dict | DeleteRequestBody, optional
+           body: dict | DeleteElementRequestBody, optional
                A dictionary containing parameters for the deletion.
 
            Returns
@@ -4206,7 +4207,7 @@ class SolutionArchitect(Client2):
 
            Body structure:
             {
-              "class": "DeleteRequestBody",
+              "class": "DeleteElementRequestBody",
               "externalSourceGUID": "add guid here",
               "externalSourceName": "add qualified name here",
               "effectiveTime": {{isotime}},
@@ -4218,12 +4219,12 @@ class SolutionArchitect(Client2):
 
         url = (f"{self.platform_url}/servers/{self.view_server}/api/open-metadata/solution-architect/"
                f"solution-components/{solution_component_guid}/delete")
-        await self._async_delete_request(url, body, cascade_delete=cascade_delete)
+        await self._async_delete_element_request(url, body, cascade_delete=cascade_delete)
         logger.info(f"Deleted Solution Component  {solution_component_guid} with cascade {cascade_delete}")
 
     @dynamic_catch
     def delete_solution_component(self, solution_component_guid: str, cascade_delete: bool = False,
-                                  body: dict | DeleteRequestBody = None) -> None:
+                                  body: dict | DeleteElementRequestBody = None) -> None:
         """Delete a solution component.
            Parameters
            ----------
@@ -4231,7 +4232,7 @@ class SolutionArchitect(Client2):
                guid of the component to delete.
            cascade_delete: bool, optional, default: False
                Cascade the delete to dependent objects?
-           body: dict | DeleteRequestBody, optional
+           body: dict | DeleteElementRequestBody, optional
                A dictionary containing parameters for the deletion.
 
            Returns
@@ -4252,7 +4253,7 @@ class SolutionArchitect(Client2):
 
            Body structure:
             {
-              "class": "DeleteRequestBody",
+              "class": "DeleteElementRequestBody",
               "externalSourceGUID": "add guid here",
               "externalSourceName": "add qualified name here",
               "effectiveTime": {{isotime}},
@@ -4343,7 +4344,7 @@ class SolutionArchitect(Client2):
                                     starts_with: bool = True, ends_with: bool = False,
                                     ignore_case: bool = False, start_from: int = 0,
                                     page_size: int = 0, output_format: str = 'JSON',
-                                    report_spec: str = None,
+                                    report_spec: str | dict = None,
                                     body: dict| SearchStringRequestBody = None) -> list[dict] | str:
         """ Retrieve the solution component elements that contain the search string. The solutions components returned
             include information about consumers, actors, and other solution components that are associated with them.
@@ -4419,7 +4420,7 @@ class SolutionArchitect(Client2):
 
 
     async def _async_get_solution_components_by_name(self, search_filter: str, body: dict = None, start_from: int = 0,
-                                                     page_size: int = 0, output_format: str = "JSON") -> dict | str:
+                                                     page_size: int = 0, output_format: str = "JSON", report_spec: str | dict = None) -> dict | str:
         """ Returns the list of solution components with a particular name. Async Version.
 
             Parameters
@@ -4481,11 +4482,12 @@ class SolutionArchitect(Client2):
         if element == NO_ELEMENTS_FOUND:
             return NO_ELEMENTS_FOUND
         if output_format != 'JSON':  # return a simplified markdown representation
-            return self.generate_solution_components_output(element, search_filter, output_format)
+            return self.generate_solution_components_output(element, search_filter, output_format, report_spec=report_spec)
         return response.json().get("elements", NO_ELEMENTS_FOUND)
 
     def get_solution_components_by_name(self, search_filter: str, body: dict = None, start_from: int = 0,
-                                        page_size: int = max_paging_size, output_format: str = "JSON") -> dict | str:
+                                        page_size: int = max_paging_size, output_format: str = "JSON",
+                                        report_spec: str | dict = None) -> dict | str:
         """ Returns the list of solution components with a particular name.
 
             Parameters
@@ -4536,10 +4538,13 @@ class SolutionArchitect(Client2):
               "filter": "Add name here"
             }
 
+        Args:
+            report_spec ():
+
         """
         loop = asyncio.get_event_loop()
         response = loop.run_until_complete(
-            self._async_get_solution_components_by_name(search_filter, body, start_from, page_size, output_format))
+            self._async_get_solution_components_by_name(search_filter, body, start_from, page_size, output_format, report_spec))
         return response
 
     async def _async_get_solution_component_by_guid(self, guid: str, body: dict = None,
@@ -4606,7 +4611,7 @@ class SolutionArchitect(Client2):
         #     return self.generate_solution_components_output(element, None, output_format)
         # return response.json().get("element", NO_ELEMENTS_FOUND)
 
-    def get_solution_component_by_guid(self, guid: str, body: dict = None, output_format: str = "JSON") -> dict | str:
+    def get_solution_component_by_guid(self, guid: str, body: dict = None, output_format: str = "JSON", report_spec: str | dict = "Solution-Component-DrE") -> dict | str:
         """ Return the properties of a specific solution component.
 
             Parameters
@@ -4649,7 +4654,7 @@ class SolutionArchitect(Client2):
 
         """
         loop = asyncio.get_event_loop()
-        response = loop.run_until_complete(self._async_get_solution_component_by_guid(guid, body, output_format))
+        response = loop.run_until_complete(self._async_get_solution_component_by_guid(guid, body, output_format, report_spec))
         return response
 
 
@@ -4666,17 +4671,32 @@ class SolutionArchitect(Client2):
         blueprint_guids = []
         supply_chain_guids = []
         parent_component_guids = []
+        keywords_list = {}
 
-        col_members = response.get('memberOfCollection', None)
+        col_members = response.get('memberOfCollections', None)
         if col_members is not None:
             for member in col_members:
-                guid = member['relatedElement'].get('guid', None)
-                member_props = member['relatedElement'].get('properties', None)
-                if member_props is not None:
-                    if member_props.get('typeName', None) == 'SolutionBlueprint':
-                        blueprint_guids.append(guid)
-                    elif member_props.get('class', None) == 'InformationSupplyChain':
-                        supply_chain_guids.append(guid)
+                guid = member['relatedElement']['elementHeader'].get('guid', None)
+                type_name = member['relatedElement']['elementHeader']['type'].get('typeName',None)
+                if type_name == 'SolutionBlueprint':
+                    blueprint_guids.append(guid)
+                elif type_name == 'InformationSupplyChain':
+                    supply_chain_guids.append(guid)
+        derived_from = response.get('derivedFrom', None)
+        if derived_from is not None:
+            for mem in derived_from:
+                guid = mem['relatedElement']['elementHeader'].get('guid', None)
+                type_name = mem['relatedElement']['elementHeader']['type'].get('typeName',None)
+                if type_name == 'SolutionBlueprint':
+                    supply_chain_guids.append(guid)
+
+        keywords = response.get('searchKeywords', None)
+        for mem in keywords:
+            guid = mem['relatedElement']['elementHeader'].get('guid', None)
+            keyword = mem['relatedElement']['properties'].get('displayName',None)
+            if keyword is  None:
+                keyword = mem['relatedElement']['properties'].get('keyword',None)
+            keywords_list[keyword] = guid
 
         sub_components = response.get('nestedSolutionComponents', None)
         if sub_components is not None:
@@ -4705,6 +4725,7 @@ class SolutionArchitect(Client2):
             "blueprint_guids": blueprint_guids,
             "supply_chain_guids": supply_chain_guids,
             "parent_component_guids": parent_component_guids,
+            "keywords_list": keywords_list,
             }
 
 
@@ -5365,7 +5386,7 @@ class SolutionArchitect(Client2):
         loop.run_until_complete(self._async_link_component_to_actor(role_guid, component_guid, body))
 
     @dynamic_catch
-    async def _async_detach_component_actor(self, role_guid: str, component_guid: str, body: dict | DeleteRequestBody = None) -> None:
+    async def _async_detach_component_actor(self, role_guid: str, component_guid: str, body: dict | DeleteRelationshipRequestBody = None) -> None:
         """ Detach a solution role from a solution component.
             Async Version.
 
@@ -5375,7 +5396,7 @@ class SolutionArchitect(Client2):
             guid of the role to disconnect from.
         component_guid: str
             guid of the component to disconnect.
-        body: dict | DeleteRequestBody, optional
+        body: dict | DeleteRelationshipRequestBody, optional
             A dictionary containing the properties of the relationship to create.
 
         Returns
@@ -5396,7 +5417,7 @@ class SolutionArchitect(Client2):
 
         Body structure:
         {
-          "class": "DeleteRequestBody",
+          "class": "DeleteRelationshipRequestBody",
           "externalSourceGUID": "add guid here",
           "externalSourceName": "add qualified name here",
           "effectiveTime": {{isotime}},
@@ -5409,12 +5430,12 @@ class SolutionArchitect(Client2):
         url = (f"{self.platform_url}/servers/{self.view_server}/api/open-metadata/solution-architect/"
                f"solution-components/{role_guid}/solution-component-actors/{component_guid}/detach")
 
-        await self._async_delete_request(url, body)
+        await self._async_delete_relationship_request(url, body)
         logger.info(
             f"Detached role from component  {role_guid} -> {component_guid}")
 
     @dynamic_catch
-    def detach_component_actore(self, role_guid: str, component_guid: str, body: dict |DeleteRequestBody = None) -> None:
+    def detach_component_actore(self, role_guid: str, component_guid: str, body: dict |DeleteRelationshipRequestBody = None) -> None:
         """ Detach a solution role from a solution component.
 
         Parameters
@@ -5423,7 +5444,7 @@ class SolutionArchitect(Client2):
             guid of the role to disconnect from.
         component_guid: str
             guid of the component to disconnect.
-        body: dict | DeleteRequestBody, optional
+        body: dict | DeleteRelationshipRequestBody, optional
             A dictionary containing the properties of the relationship to create.
 
         Returns
@@ -5444,7 +5465,7 @@ class SolutionArchitect(Client2):
 
         Body structure:
         {
-          "class": "DeleteRequestBody",
+          "class": "DeleteRelationshipRequestBody",
           "externalSourceGUID": "add guid here",
           "externalSourceName": "add qualified name here",
           "effectiveTime": {{isotime}},
@@ -5456,14 +5477,14 @@ class SolutionArchitect(Client2):
         loop.run_until_complete(self._async_detach_component_actor(role_guid, component_guid, body))
 
     @dynamic_catch
-    async def _async_delete_solution_role(self, guid: str,  body: dict | DeleteRequestBody= None, cascade_delete: bool = False,) -> None:
+    async def _async_delete_solution_role(self, guid: str,  body: dict | DeleteElementRequestBody= None, cascade_delete: bool = False,) -> None:
         """Delete a solution role. Async Version.
 
            Parameters
            ----------
            guid: str
                guid of the role to delete.
-            body: dict | DeleteRequestBody, optional
+            body: dict | DeleteElementRequestBody, optional
                A dictionary containing parameters for the deletion.
            cascade_delete: bool, optional, default: False
                Cascade the delete to dependent objects?
@@ -5487,7 +5508,7 @@ class SolutionArchitect(Client2):
 
            Body structure:
             {
-              "class": "DeleteRequestBody",
+              "class": "DeleteElementRequestBody",
               "externalSourceGUID": "add guid here",
               "externalSourceName": "add qualified name here",
               "effectiveTime": {{isotime}},
@@ -5499,18 +5520,18 @@ class SolutionArchitect(Client2):
         url = (f"{self.platform_url}/servers/{self.view_server}/api/open-metadata/solution-architect/"
                f"solution-roles/{guid}/delete")
 
-        await self._async_delete_request(url, body, cascade_delete=cascade_delete)
+        await self._async_delete_element_request(url, body, cascade_delete=cascade_delete)
         logger.info(f"Delete solution rule  {guid} with cascade {cascade_delete}")
 
     @dynamic_catch
-    def delete_solution_role(self, guid: str, body: dict | DeleteRequestBody = None,cascade_delete: bool = False) -> None:
+    def delete_solution_role(self, guid: str, body: dict | DeleteElementRequestBody = None,cascade_delete: bool = False) -> None:
         """Delete a solution role. Async Version.
 
            Parameters
            ----------
            guid: str
                guid of the role to delete.
-           body: dict | DeleteRequestBody, optional
+           body: dict | DeleteElementRequestBody, optional
                A dictionary containing parameters for the deletion.
            cascade_delete: bool, optional, default: False
                Cascade the delete to dependent objects?
@@ -5533,7 +5554,7 @@ class SolutionArchitect(Client2):
 
            Body structure:
             {
-              "class": "DeleteRequestBody",
+              "class": "DeleteElementRequestBody",
               "externalSourceGUID": "add guid here",
               "externalSourceName": "add qualified name here",
               "effectiveTime": {{isotime}},
@@ -5707,7 +5728,7 @@ class SolutionArchitect(Client2):
 
     async def _async_get_solution_roles_by_name(self, search_filter: str, body: dict = None, start_from: int = 0,
                                                 page_size: int = max_paging_size,
-                                                output_format: str = "JSON") -> dict | str:
+                                                output_format: str = "JSON", report_spec: str | dict = None) -> dict | str:
         """ Returns the list of solution roles with a particular name. Async Version.
 
             Parameters
@@ -5771,11 +5792,11 @@ class SolutionArchitect(Client2):
         if element == NO_ELEMENTS_FOUND:
             return NO_ELEMENTS_FOUND
         if output_format != 'JSON':  # return a simplified markdown representation
-            return self.generate_solution_roles_output(element, search_filter, output_format)
+            return self.generate_solution_roles_output(element, search_filter, output_format, report_spec=report_spec)
         return response.json().get("elements", NO_ELEMENTS_FOUND)
 
     def get_solution_roles_by_name(self, search_filter: str, body: dict = None, start_from: int = 0,
-                                   page_size: int = max_paging_size, output_format: str = "JSON") -> dict | str:
+                                   page_size: int = max_paging_size, output_format: str = "JSON", report_spec: str | dict = None) -> dict | str:
         """ Returns the list of solution roles with a particular name.
 
             Parameters
@@ -5829,12 +5850,12 @@ class SolutionArchitect(Client2):
         """
         loop = asyncio.get_event_loop()
         response = loop.run_until_complete(
-            self._async_get_solution_roles_by_name(search_filter, body, start_from, page_size, output_format))
+            self._async_get_solution_roles_by_name(search_filter, body, start_from, page_size, output_format, report_spec))
         return response
 
 
     async def _async_get_solution_role_by_guid(self, guid: str, body: dict = None,
-                                               output_format: str = "JSON") -> dict | str:
+                                               output_format: str = "JSON", report_spec: str | dict = None) -> dict | str:
         """ Return the properties of a specific solution role. Async Version.
 
             Parameters
@@ -5888,10 +5909,10 @@ class SolutionArchitect(Client2):
         if element == NO_ELEMENTS_FOUND:
             return NO_ELEMENTS_FOUND
         if output_format != 'JSON':  # return a simplified markdown representation
-            return self.generate_solution_roles_output(element, None, output_format)
+            return self.generate_solution_roles_output(element, None, output_format, report_spec=report_spec)
         return response.json().get("element", NO_ELEMENTS_FOUND)
 
-    def get_solution_role_by_guid(self, guid: str, body: dict = None, output_format: str = "JSON") -> dict | str:
+    def get_solution_role_by_guid(self, guid: str, body: dict = None, output_format: str = "JSON", report_spec: str | dict = None) -> dict | str:
         """ Return the properties of a specific solution role.
 
             Parameters

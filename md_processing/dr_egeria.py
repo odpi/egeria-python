@@ -10,14 +10,11 @@ from pydantic import ValidationError
 
 from .md_commands.project_commands import process_link_project_dependency_command
 
-log_format = "{time} | {level} | {function} | {line} | {message} | {extra}"
-logger.remove()
-logger.add(sys.stderr, level="ERROR", format=log_format, colorize=True)
-logger.add("debug_log.log", rotation="1 day", retention="1 week", compression="zip", level="INFO", format=log_format,
-           colorize=True)
+
 
 from rich import print
 from rich.console import Console
+from md_processing.md_commands.product_manager_commands import process_csv_element_upsert_command
 
 from md_processing import (extract_command, process_glossary_upsert_command, process_term_upsert_command,
                            process_provenance_command, get_current_datetime_string,
@@ -69,6 +66,11 @@ EGERIA_ROOT_PATH = os.environ.get("EGERIA_ROOT_PATH", "../../")
 EGERIA_INBOX_PATH = os.environ.get("EGERIA_INBOX_PATH", "md_processing/dr_egeria_inbox")
 EGERIA_OUTBOX_PATH = os.environ.get("EGERIA_OUTBOX_PATH", "md_processing/dr_egeria_outbox")
 
+log_format = "{time} | {level} | {function} | {line} | {message} | {extra}"
+logger.remove()
+logger.add(sys.stderr, level="ERROR", format=log_format, colorize=True)
+logger.add("debug_log.log", rotation="1 day", retention="1 week", compression="zip", level="INFO", format=log_format,
+           colorize=True)
 
 @logger.catch
 def process_md_file(input_file: str, output_folder:str, directive: str, server: str, url: str, userid: str,

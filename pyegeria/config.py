@@ -150,6 +150,7 @@ class UserProfileConfig(BaseModel):
     egeria_home_collection: str = Field(default="MyHome", alias="Egeria Home Collection")
     egeria_home_glossary_name: str = Field(default="Egeria-Markdown", alias="Egeria Home Glossary Name")
     egeria_local_qualifier: str = Field(default="PDR", alias="Egeria Local Qualifier")
+    egeria_usage_level: str = Field(default="Advanced", alias="Egeria Usage Level")
     user_name: Optional[str] = "erinoverview"
     user_pwd: Optional[str] = "secret"
     

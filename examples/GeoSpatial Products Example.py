@@ -108,7 +108,6 @@ try:
         "parentRelationshipTypeName": "CollectionMembership",
         "parentAtEnd1": True,
         "properties": props_body,
-        "initialClassifications": {"Folder": {"class": "ClassificationProperties"}}
         }
     marketplace = client.get_collections_by_name(qualified_name)
     if isinstance(marketplace, dict | list):
@@ -141,7 +140,6 @@ try:
         "parentRelationshipTypeName": "CollectionMembership",
         "parentAtEnd1": True,
         "properties": props_body,
-        "initialClassifications": {"Folder": {"class": "ClassificationProperties"}}
         }
     geo_prods = client.get_collections_by_name(qualified_name)
     if isinstance(geo_prods, dict | list):
@@ -175,9 +173,7 @@ try:
         "parentGUID": marketplace_guid,
         "parentRelationshipTypeName": "CollectionMembership",
         "parentAtEnd1": True,
-        "properties": props_body,
-        "initialClassifications": {"Folder": {"class": "ClassificationProperties"}}
-        }
+        "properties": props_body,        }
     ag_prods = client.get_collections_by_name(qualified_name)
     if isinstance(ag_prods, dict | list):
         ag_prods_guid = ag_prods[0]['elementHeader']['guid']
@@ -209,7 +205,6 @@ try:
         "parentRelationshipTypeName": "CollectionMembership",
         "parentAtEnd1": True,
         "properties": props_body,
-        "initialClassifications": {"Folder": {"class": "ClassificationProperties"}}
         }
     prepared_imagery = client.get_collections_by_name(qualified_name)
     if isinstance(prepared_imagery, dict | list):
@@ -247,7 +242,6 @@ try:
         "parentRelationshipTypeName": "CollectionMembership",
         "parentAtEnd1": True,
         "properties": props_body,
-        "initialClassifications": {"Folder": {"class": "ClassificationProperties"}}
         }
 
     ndvi = client.get_collections_by_name(qualified_name)
@@ -281,7 +275,6 @@ try:
         "parentRelationshipTypeName": "CollectionMembership",
         "parentAtEnd1": True,
         "properties": props_body,
-        "initialClassifications": {"Folder": {"class": "ClassificationProperties"}}
         }
     raw_imagery = client.get_collections_by_name(qualified_name)
     if isinstance(raw_imagery, dict | list):
@@ -319,7 +312,6 @@ try:
         "parentRelationshipTypeName": "CollectionMembership",
         "parentAtEnd1": True,
         "properties": props_body,
-        "initialClassifications": {"Folder": {"class": "ClassificationProperties"}}
         }
     sentinel2a = client.get_collections_by_name(qualified_name)
     if isinstance(sentinel2a, dict | list):
@@ -357,7 +349,6 @@ try:
         "parentRelationshipTypeName": "CollectionMembership",
         "parentAtEnd1": True,
         "properties": props_body,
-        "initialClassifications": {"Folder": {"class": "ClassificationProperties"}}
         }
     subscriptions_folder = client.get_collections_by_name(qualified_name)
     if isinstance(subscriptions_folder, dict | list):
@@ -451,7 +442,6 @@ try:
         "parentRelationshipTypeName": "CollectionMembership",
         "parentAtEnd1": True,
         "properties": props_body,
-        "initialClassifications": {"Folder": {"class": "ClassificationProperties"}}
         }
     license_type_folder = client.get_collections_by_name(qualified_name)
     if not isinstance(license_type_folder, dict | list):

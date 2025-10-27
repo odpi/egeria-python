@@ -1259,7 +1259,7 @@ class TestSolutionArchitect:
             s_client.close_session()
 
     def test_get_solution_component_by_guid(self):
-        guid = '7186fd6e-1314-47e3-bddf-da564318a468'
+        guid = '1a16188a-9cba-4c86-835b-e223e97d22bb'
         try:
             s_client = SolutionArchitect(
                 self.view_server, self.platform_url, self.user, self.password
@@ -1267,7 +1267,7 @@ class TestSolutionArchitect:
 
             s_client.create_egeria_bearer_token()
             start_time = time.perf_counter()
-            response = s_client.get_solution_component_by_guid(guid, output_format='DICT')
+            response = s_client.get_solution_component_by_guid(guid, output_format='JSON')
             duration = time.perf_counter() - start_time
             duration = time.perf_counter() - start_time
             print(
@@ -1460,7 +1460,7 @@ class TestSolutionArchitect:
         finally:
             s_client.close_session()
 
-    def test_call_execution_flowt(self):
+    def test_call_execution_flow(self):
         try:
             s_client = SolutionArchitect(
                 self.view_server, self.platform_url, self.user, self.password
@@ -1469,6 +1469,33 @@ class TestSolutionArchitect:
             s_client.create_egeria_bearer_token()
 
             out = s_client.get_find_solution_components_call_flow("TEXT")
+
+            print(
+                out
+            )
+
+            assert True
+        except (
+            InvalidParameterException,
+            PropertyServerException,
+            UserNotAuthorizedException,
+        ) as e:
+            print_exception_response(e)
+            assert False, "Invalid request"
+
+        finally:
+            s_client.close_session()
+
+    def test_get_component_related_elements(self):
+        try:
+            guid = "1a16188a-9cba-4c86-835b-e223e97d22bb"
+            s_client = SolutionArchitect(
+                self.view_server, self.platform_url, self.user, self.password
+            )
+
+            s_client.create_egeria_bearer_token()
+
+            out = s_client.get_component_related_elements(guid)
 
             print(
                 out

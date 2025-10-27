@@ -16,7 +16,7 @@ from pyegeria.base_report_formats import select_report_spec, get_report_spec_mat
 from pyegeria.models import (SearchStringRequestBody, FilterRequestBody, GetRequestBody, NewElementRequestBody,
                              TemplateRequestBody,
                              UpdateElementRequestBody, NewRelationshipRequestBody,
-                             DeleteRequestBody)
+                             DeleteElementRequestBody, DeleteRelationshipRequestBody)
 from pyegeria.output_formatter import (extract_mermaid_only, extract_basic_dict, populate_columns_from_properties,
                                        get_required_relationships, populate_common_columns)
 from pyegeria.output_formatter import (generate_output,
@@ -579,7 +579,7 @@ class DataDesigner(Client2):
 
     @dynamic_catch
     async def _async_detach_member_data_field(self, parent_data_struct_guid: str, member_data_field_guid: str,
-                                              body: dict | DeleteRequestBody = None,
+                                              body: dict | DeleteRelationshipRequestBody = None,
                                               cascade_delete: bool = False) -> None:
         """
         Detach a data class from a data structure. Request body is optional. Async version.
@@ -612,7 +612,7 @@ class DataDesigner(Client2):
 
         Full sample body:
         {
-          "class": "DeleteRequestBody",
+          "class": "DeleteRelationshipRequestBody",
           "cascadedDelete": false,
           "deleteMethod": "LOOK_FOR_LINEAGE",
           "externalSourceGUID": "add guid here",
@@ -628,12 +628,12 @@ class DataDesigner(Client2):
         url = (f"{self.data_designer_root}/data-structures/{parent_data_struct_guid}"
                f"/member-data-fields/{member_data_field_guid}/detach")
 
-        await self._async_delete_request(url, body, cascade_delete)
+        await self._async_delete_relationship_request(url, body, cascade_delete)
         logger.info(f"Data field {member_data_field_guid} detached from data structure {parent_data_struct_guid}.")
 
     @dynamic_catch
     def detach_member_data_field(self, parent_data_struct_guid: str, member_data_field_guid: str,
-                                 body: dict = None | DeleteRequestBody, cascade_delete: bool = False) -> None:
+                                 body: dict = None | DeleteRelationshipRequestBody, cascade_delete: bool = False) -> None:
         """
         Detach a data class from a data structure. Request body is optional.
 
@@ -664,7 +664,7 @@ class DataDesigner(Client2):
 
         Full sample body:
         {
-          "class": "DeleteRequestBody",
+          "class": "DeleteRelationshipRequestBody",
           "cascadedDelete": false,
           "deleteMethod": "LOOK_FOR_LINEAGE",
           "externalSourceGUID": "add guid here",
@@ -715,7 +715,7 @@ class DataDesigner(Client2):
         Full sample body:
 
         {
-          "class": "DeleteRequestBody",
+          "class": "DeleteRelationshipRequestBody",
           "cascadedDelete": false,
           "deleteMethod": "LOOK_FOR_LINEAGE",
           "externalSourceGUID": "add guid here",
@@ -729,7 +729,7 @@ class DataDesigner(Client2):
 
         url = f"{self.data_designer_root}/data-structures/{data_struct_guid}/delete"
 
-        await self._async_delete_request(url, body, cascade_delete)
+        await self._async_delete_element_request(url, body, cascade_delete)
         logger.info(f"Data structure {data_struct_guid} deleted.")
 
     @dynamic_catch
@@ -765,7 +765,7 @@ class DataDesigner(Client2):
         Full sample body:
 
         {
-          "class": "DeleteRequestBody",
+          "class": "DeleteRelationshipRequestBody",
           "cascadedDelete": false,
           "deleteMethod": "LOOK_FOR_LINEAGE",
           "externalSourceGUID": "add guid here",
@@ -1286,11 +1286,11 @@ class DataDesigner(Client2):
                 data_structure_guids.append(guid)
                 data_structure_names.append(display_name)
                 data_structure_qnames.append(qualified_name)
-
-        elif type == "DataField":
-            parent_guids.append(guid)
-            parent_names.append(display_name)
-            parent_qnames.append(qualified_name)
+# Todo - check the logic here
+        # elif type == "DataField":
+        #     parent_guids.append(guid)
+        #     parent_names.append(display_name)
+        #     parent_qnames.append(qualified_name)
 
         member_of_collections = el_struct.get("memberOfCollections", {})
         for collection in member_of_collections:
@@ -2027,7 +2027,7 @@ class DataDesigner(Client2):
 
     @dynamic_catch
     async def _async_detach_nested_data_field(self, parent_data_field_guid: str, nested_data_field_guid: str,
-                                              body: dict | DeleteRequestBody = None) -> None:
+                                              body: dict | DeleteRelationshipRequestBody = None) -> None:
         """
         Detach a nested data class from a data class. Request body is optional. Async version.
 
@@ -2073,12 +2073,12 @@ class DataDesigner(Client2):
         url = (f"{base_path(self, self.view_server)}/data-fields/{parent_data_field_guid}"
                f"/member-data-fields/{nested_data_field_guid}/detach")
 
-        await self._async_delete_request(url, body)
+        await self._async_delete_relationship_request(url, body)
         logger.info(f"Data field {parent_data_field_guid} detached from data structure {nested_data_field_guid}.")
 
     @dynamic_catch
     def detach_nested_data_field(self, parent_data_field_guid: str, nested_data_field_guid: str,
-                                 body: dict | DeleteRequestBody = None) -> None:
+                                 body: dict | DeleteRelationshipRequestBody = None) -> None:
         """
         Detach a nested data class from a data class. Request body is optional.
 
@@ -2125,7 +2125,7 @@ class DataDesigner(Client2):
             self._async_detach_nested_data_field(parent_data_field_guid, nested_data_field_guid, body))
 
     @dynamic_catch
-    async def _async_delete_data_field(self, data_field_guid: str, body: dict | DeleteRequestBody = None,
+    async def _async_delete_data_field(self, data_field_guid: str, body: dict | DeleteElementRequestBody = None,
                                        cascade_delete: bool = False) -> None:
         """
         Delete a data class. Request body is optional. Async version.
@@ -2134,7 +2134,7 @@ class DataDesigner(Client2):
         ----------
         data_field_guid: str
             - the GUID of the data class to delete.
-        body: dict, optional
+        body: dict| DeleteElementRequestBody, optional
             - a dictionary containing additional properties.
         cascade: bool, optional
             - if True, then all child data fields will be deleted as well.
@@ -2159,7 +2159,7 @@ class DataDesigner(Client2):
         Full sample body:
 
        {
-          "class": "MetadataSourceRequestBody",
+          "class": "DeleteElementRequestBody",
           "externalSourceGUID": "add guid here",
           "externalSourceName": "add qualified name here",
           "effectiveTime": "{{$isoTimestamp}}",
@@ -2172,11 +2172,11 @@ class DataDesigner(Client2):
 
         url = f"{base_path(self, self.view_server)}/data-fields/{data_field_guid}/delete"
 
-        await self._async_delete_request(url, body, cascade_delete)
+        await self._async_delete_element_request(url, body, cascade_delete)
         logger.info(f"Data Field {data_field_guid} deleted.")
 
     @dynamic_catch
-    def delete_data_field(self, data_field_guid: str, body: dict | DeleteRequestBody = None,
+    def delete_data_field(self, data_field_guid: str, body: dict | DeleteElementRequestBody = None,
                           cascade_delete: bool = False) -> None:
         """
         Delete a data class. Request body is optional.
@@ -2185,7 +2185,7 @@ class DataDesigner(Client2):
         ----------
         data_field_guid: str
             - the GUID of the data class the data class to delete.
-        body: dict, optional
+        body: dict | DeleteElementRequestBody, optional
             - a dictionary containing additional properties.
         cascade: bool, optional
             - if True, then all child data fields will be deleted as well.
@@ -3258,7 +3258,7 @@ class DataDesigner(Client2):
 
     @dynamic_catch
     async def _async_detach_nested_data_class(self, parent_data_class_guid: str, child_data_class_guid: str,
-                                              body: dict | DeleteRequestBody = None,
+                                              body: dict | DeleteRelationshipRequestBody = None,
                                               cascade_delete: bool = False) -> None:
         """
         Detach two nested data classes from each other. Request body is optional. Async version.
@@ -3305,12 +3305,12 @@ class DataDesigner(Client2):
         url = (f"{base_path(self, self.view_server)}/data-classes/{parent_data_class_guid}"
                f"/nested-data-classes/{child_data_class_guid}/detach")
 
-        await self._async_delete_request(url, body, cascade_delete)
+        await self._async_delete_relationship_request(url, body, cascade_delete)
         logger.info(f"Data Class {child_data_class_guid} detached from data structure {parent_data_class_guid}.")
 
     @dynamic_catch
     def detach_nested_data_class(self, parent_data_class_guid: str, child_data_class_guid: str,
-                                 body: dict | DeleteRequestBody = None, cascade_delete: bool = False) -> None:
+                                 body: dict | DeleteRelationshipRequestBody = None, cascade_delete: bool = False) -> None:
         """
         Detach two nested data classes from each other. Request body is optional.
 
@@ -3457,7 +3457,7 @@ class DataDesigner(Client2):
 
     @dynamic_catch
     async def _async_detach_specialized_data_class(self, parent_data_class_guid: str, child_data_class_guid: str,
-                                                   body: dict | DeleteRequestBody = None,
+                                                   body: dict | DeleteRelationshipRequestBody = None,
                                                    cascade_delete: bool = False) -> None:
         """
         Detach two data classes from each other. Request body is optional. Async version.
@@ -3504,12 +3504,12 @@ class DataDesigner(Client2):
         url = (f"{base_path(self, self.view_server)}/data-classes/{parent_data_class_guid}"
                f"/specialized-data-classes/{child_data_class_guid}/detach")
 
-        await self._async_delete_request(url, body, cascade_delete)
+        await self._async_delete_relationship_request(url, body, cascade_delete)
         logger.info(f"Data field {child_data_class_guid} detached from data structure {parent_data_class_guid}.")
 
     @dynamic_catch
     def detach_specialized_data_class(self, parent_data_class_guid: str, child_data_class_guid: str,
-                                      body: dict | DeleteRequestBody = None, cascade_delete: bool = False) -> None:
+                                      body: dict | DeleteRelationshipRequestBody = None, cascade_delete: bool = False) -> None:
         """
         Detach two data classes from each other. Request body is optional.
 
@@ -3557,7 +3557,7 @@ class DataDesigner(Client2):
                                                       cascade_delete))
 
     @dynamic_catch
-    async def _async_delete_data_class(self, data_class_guid: str, body: dict | DeleteRequestBody = None,
+    async def _async_delete_data_class(self, data_class_guid: str, body: dict | DeleteElementRequestBody = None,
                                        cascade_delete: bool = False) -> None:
         """
         Delete a data class. Request body is optional. Async version.
@@ -3604,13 +3604,13 @@ class DataDesigner(Client2):
 
         url = f"{base_path(self, self.view_server)}/data-classes/{data_class_guid}/delete"
 
-        await self._async_delete_request(url, body, cascade_delete)
+        await self._async_delete_element_request(url, body, cascade_delete)
         logger.info(f"Data structure {data_class_guid} deleted.")
 
     @dynamic_catch
     def delete_data_class(self,
                           data_class_guid: str,
-                          body: dict | DeleteRequestBody = None,
+                          body: dict | DeleteElementRequestBody = None,
                           cascade_delete: bool = False) -> None:
         """
         Delete a data class. Request body is optional.
@@ -4171,7 +4171,7 @@ class DataDesigner(Client2):
 
     @dynamic_catch
     async def _async_detach_data_class_definition(self, data_definition_guid: str, data_class_guid: str,
-                                                  body: dict | DeleteRequestBody = None,
+                                                  body: dict | DeleteRelationshipRequestBody = None,
                                                   cascade_delete: bool = False) -> None:
         """
         Detach a data definition from a data class. Request body is optional. Async version.
@@ -4218,12 +4218,12 @@ class DataDesigner(Client2):
         url = (f"{base_path(self, self.view_server)}/data-definitions/{data_definition_guid}"
                f"/data-class-definition/{data_class_guid}/detach")
 
-        await self._async_delete_request(url, body, cascade_delete)
+        await self._async_delete_relationship_request(url, body, cascade_delete)
         logger.info(f"Data class {data_class_guid} detached from data definition {data_definition_guid}.")
 
     @dynamic_catch
     def detach_data_class_definition(self, data_definition_guid: str, data_class_guid: str,
-                                     body: dict | DeleteRequestBody = None, cascade_delete: bool = False) -> None:
+                                     body: dict | DeleteRelationshipRequestBody = None, cascade_delete: bool = False) -> None:
         """
         Detach a data definition from a data class. Request body is optional.
 
@@ -4373,7 +4373,7 @@ class DataDesigner(Client2):
 
     @dynamic_catch
     async def _async_detach_semantic_definition(self, data_definition_guid: str, glossary_term_guid: str,
-                                                body: dict | DeleteRequestBody = None,
+                                                body: dict | DeleteRelationshipRequestBody = None,
                                                 cascade_delete: bool = False) -> None:
         """
         Detach a data definition from a glossary term. Request body is optional. Async version.
@@ -4419,12 +4419,12 @@ class DataDesigner(Client2):
 
         url = (f"{base_path(self, self.view_server)}/data-definitions/{data_definition_guid}"
                f"/semantic-definition/{glossary_term_guid}/detach")
-        await self._async_delete_request(url, body, cascade_delete)
+        await self._async_delete_relationship_request(url, body, cascade_delete)
         logger.info(f"Data definition {data_definition_guid} detached from term {glossary_term_guid}.")
 
     @dynamic_catch
     def detach_semantic_definition(self, data_definition_guid: str, glossary_term_guid: str,
-                                   body: dict | DeleteRequestBody = None, cascade_delete: bool = False) -> None:
+                                   body: dict | DeleteRelationshipRequestBody = None, cascade_delete: bool = False) -> None:
         """
         Detach a data definition from a glossary term. Request body is optional.
 
@@ -4579,7 +4579,7 @@ class DataDesigner(Client2):
             self._async_link_certification_type_to_data_structure(certification_type_guid, data_structure_guid, body))
 
     async def _async_detach_certification_type_from_data_structure(self, certification_type_guid: str,
-                                                                   data_structure_guid: str, body: dict | DeleteRequestBody = None, cascade_delete: bool = False) -> None:
+                                                                   data_structure_guid: str, body: dict | DeleteRelationshipRequestBody = None, cascade_delete: bool = False) -> None:
         """
         Detach a data structure from a certification type. Request body is optional. Async version.
 
@@ -4624,12 +4624,12 @@ class DataDesigner(Client2):
         url = (f"{base_path(self, self.view_server)}/certification-stypes/{certification_type_guid}"
                f"/data-structure-definition/{data_structure_guid}/detach")
 
-        await self._async_delete_request(url, body, cascade_delete)
+        await self._async_delete_relationship_request(url, body, cascade_delete)
         logger.info(f"Certification type {certification_type_guid} detached from data structure {data_structure_guid}.")
 
 
     def detach_certification_type_from_data_structure(self, certification_type_guid: str, data_structure_guid: str,
-                                                      body: dict | DeleteRequestBody= None, cascade_delete: bool = False) -> None:
+                                                      body: dict | DeleteRelationshipRequestBody= None, cascade_delete: bool = False) -> None:
         """
         Detach a data structure from a certification type. Request body is optional.
 

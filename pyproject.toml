@@ -3,7 +3,7 @@
 
 [project]
 name = "pyegeria"
-version = "5.4.8"
+version = "5.4.8.3"
 license = 'Apache-2.0'
 license-files = ["LICENSE"]
 authors = [{name = "Dan Wolfson", email = "dan.wolfson@pdr-associates.com"},]
@@ -19,7 +19,7 @@ classifiers = [
 
 dependencies = [
     "httpx",
-    "rich",
+    "rich>=14.2",
     "validators",
     "urllib3",
     "requests",
@@ -31,14 +31,15 @@ dependencies = [
     "jupyter-notebook-parser",
     "loguru",
     "inflect",
-    "pydantic >=2.11.7",
+    "pydantic >=2.12.3",
     "pydantic-settings >= 2.10.1",
-    "pydevd-pycharm >=252.23892.364",
+    "pydevd-pycharm >=253.27642.35",
     "wcwidth",
     "altair",
     "modelcontextprotocol",
-    "mcp>=1.15.0",
+    "mcp>=1.18.0",
     "markers>=0.3.0",
+    "pytest-asyncio>=1.2.0",
 ]
 
 [project.scripts]

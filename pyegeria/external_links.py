@@ -18,7 +18,7 @@ from pyegeria.config import settings
 from pyegeria.models import (SearchStringRequestBody, FilterRequestBody, GetRequestBody, NewElementRequestBody,
                              TemplateRequestBody,
                              UpdateElementRequestBody, NewRelationshipRequestBody,
-                             DeleteRequestBody)
+                             DeleteElementRequestBody, DeleteRelationshipRequestBody)
 from pyegeria.output_formatter import (generate_output,
                                        _extract_referenceable_properties, populate_columns_from_properties,
                                        get_required_relationships)
@@ -635,7 +635,7 @@ class ExternalReferences(Client2):
 
     @dynamic_catch
     async def _async_detach_external_reference(self, element_guid: str, ext_ref_guid: str,
-                                               body: dict | DeleteRequestBody = None) -> None:
+                                               body: dict | DeleteRelationshipRequestBody = None) -> None:
         """ Detach an element from an external reference; body is optional. Async version.
     
         Parameters
@@ -644,7 +644,7 @@ class ExternalReferences(Client2):
             The unique identifier of the subscriber.
         ext_ref_guid: str
             The unique identifier of the subscription.
-        body: dict | DeleteRequestBody, optional, default = None
+        body: dict | DeleteRelationshipRequestBody, optional, default = None
             A structure representing the details of the relationship.
     
         Returns
@@ -664,7 +664,7 @@ class ExternalReferences(Client2):
         -----
         JSON Structure looks like:
         {
-          "class": "DeleteRequestBody",
+          "class": "DeleteRelationshipRequestBody",
           "externalSourceGUID": "add guid here",
           "externalSourceName": "add qualified name here",
           "effectiveTime": "{{$isoTimestamp}}",
@@ -674,10 +674,10 @@ class ExternalReferences(Client2):
         """
         url = (f"{self.command_root}/elements/{element_guid}/external_references/{ext_ref_guid}/detach")
 
-        await self._async_delete_request(url, body)
+        await self._async_delete_element_request(url, body)
         logger.info(f"Detached element {element_guid} from external reference {ext_ref_guid}")
 
-    def detach_external_reference(self, element_guid: str, ext_ref_guid: str, body: dict | DeleteRequestBody = None):
+    def detach_external_reference(self, element_guid: str, ext_ref_guid: str, body: dict | DeleteRelationshipRequestBody = None):
         """ Detach an element from an external reference. Request body is optional.
     
         Parameters
@@ -706,7 +706,7 @@ class ExternalReferences(Client2):
         -----
         JSON Structure looks like:
         {
-          "class": "DeleteRequestBody",
+          "class": "DeleteRelationshipRequestBody",
           "externalSourceGUID": "add guid here",
           "externalSourceName": "add qualified name here",
           "effectiveTime": "{{$isoTimestamp}}",
@@ -861,7 +861,7 @@ class ExternalReferences(Client2):
 
     @dynamic_catch
     async def _async_detach_media_reference(self, element_guid: str, media_ref_guid: str,
-                                            body: dict | DeleteRequestBody = None) -> None:
+                                            body: dict | DeleteRelationshipRequestBody = None) -> None:
         """ Detach an element from an external media reference; body is optional. Async version.
     
         Parameters
@@ -870,7 +870,7 @@ class ExternalReferences(Client2):
             The unique identifier of the subscriber.
         media_ref_guid: str
             The unique identifier of the subscription.
-        body: dict | DeleteRequestBody, optional, default = None
+        body: dict | DeleteRelationshipRequestBody, optional, default = None
             A structure representing the details of the relationship.
     
         Returns
@@ -890,7 +890,7 @@ class ExternalReferences(Client2):
         -----
         JSON Structure looks like:
         {
-          "class": "DeleteRequestBody",
+          "class": "DeleteRelationshipRequestBody",
           "externalSourceGUID": "add guid here",
           "externalSourceName": "add qualified name here",
           "effectiveTime": "{{$isoTimestamp}}",
@@ -901,11 +901,11 @@ class ExternalReferences(Client2):
         url = (
             f"{self.command_root}/elements/{element_guid}/media-references/{media_ref_guid}/detach")
 
-        await self._async_delete_request(url, body)
+        await self._async_delete_relationship_request(url, body)
         logger.info(f"Detached element {element_guid} from external media reference {media_ref_guid}")
 
     @dynamic_catch
-    def detach_media_reference(self, element_guid: str, media_ref_guid: str, body: dict | DeleteRequestBody = None):
+    def detach_media_reference(self, element_guid: str, media_ref_guid: str, body: dict | DeleteRelationshipRequestBody = None):
         """ Detach an element from an external media reference. Request body is optional.
     
         Parameters
@@ -934,7 +934,7 @@ class ExternalReferences(Client2):
         -----
         JSON Structure looks like:
         {
-          "class": "DeleteRequestBody",
+          "class": "DeleteRelationshipRequestBody",
           "externalSourceGUID": "add guid here",
           "externalSourceName": "add qualified name here",
           "effectiveTime": "{{$isoTimestamp}}",
@@ -1045,7 +1045,7 @@ class ExternalReferences(Client2):
 
     @dynamic_catch
     async def _async_detach_cited_document(self, element_guid: str, cited_doc_guid: str,
-                                           body: dict | DeleteRequestBody = None) -> None:
+                                           body: dict | DeleteRelationshipRequestBody = None) -> None:
         """ Detach an element from an cited document reference; body is optional. Async version.
     
         Parameters
@@ -1054,7 +1054,7 @@ class ExternalReferences(Client2):
             The unique identifier of the subscriber.
         cited_doc_guid: str
             The unique identifier of the subscription.
-        body: dict | DeleteRequestBody, optional, default = None
+        body: dict | DeleteRelationshipRequestBody, optional, default = None
             A structure representing the details of the relationship.
     
         Returns
@@ -1074,7 +1074,7 @@ class ExternalReferences(Client2):
         -----
         JSON Structure looks like:
         {
-          "class": "DeleteRequestBody",
+          "class": "DeleteRelationshipRequestBody",
           "externalSourceGUID": "add guid here",
           "externalSourceName": "add qualified name here",
           "effectiveTime": "{{$isoTimestamp}}",
@@ -1084,11 +1084,11 @@ class ExternalReferences(Client2):
         """
         url = f"{self.command_root}/elements/{element_guid}/cited-document-references/{cited_doc_guid}/detach"
 
-        await self._async_delete_request(url, body)
+        await self._async_delete_relationship_request(url, body)
         logger.info(f"Detached element {element_guid} from cited document reference {cited_doc_guid}")
 
     @dynamic_catch
-    def detach_cited_document(self, element_guid: str, cited_doc_guid: str, body: dict | DeleteRequestBody = None):
+    def detach_cited_document(self, element_guid: str, cited_doc_guid: str, body: dict | DeleteRelationshipRequestBody = None):
         """ Detach an element from acited document reference. Request body is optional.
     
         Parameters
@@ -1117,7 +1117,7 @@ class ExternalReferences(Client2):
         -----
         JSON Structure looks like:
         {
-          "class": "DeleteRequestBody",
+          "class": "DeleteRelationshipRequestBody",
           "externalSourceGUID": "add guid here",
           "externalSourceName": "add qualified name here",
           "effectiveTime": "{{$isoTimestamp}}",
@@ -1133,7 +1133,7 @@ class ExternalReferences(Client2):
     #
     @dynamic_catch
     async def _async_delete_external_reference(self, ext_ref_guid: str,
-                                               body: dict | DeleteRequestBody = None,
+                                               body: dict | DeleteRelationshipRequestBody = None,
                                                cascade: bool = False) -> None:
         """ Delete an external reference. Async Version.
     
@@ -1145,7 +1145,7 @@ class ExternalReferences(Client2):
         cascade: bool, optional, defaults to True
             If true, a cascade delete is performed.
     
-        body: dict DeleteRequestBodyt, optional, default = None
+        body: dict DeleteRelationshipRequestBodyt, optional, default = None
             A dict representing the details of the relationship.
     
         Returns
@@ -1165,7 +1165,7 @@ class ExternalReferences(Client2):
         _____
         JSON Structure looks like:
         {
-          "class" : "DeleteRequestBody",
+          "class" : "DeleteRelationshipRequestBody",
           "externalSourceGUID": "add guid here",
           "externalSourceName": "add qualified name here",
           "effectiveTime" : "{{$isoTimestamp}}",
@@ -1175,11 +1175,11 @@ class ExternalReferences(Client2):
         """
         url = f"{self.command_root}/external-references/{ext_ref_guid}/delete"
 
-        await self._async_delete_request(url, body, cascade)
+        await self._async_delete_element_request(url, body, cascade)
         logger.info(f"Deleted collection {ext_ref_guid} with cascade {cascade}")
 
     @dynamic_catch
-    def delete_external_reference(self, ext_ref_guid: str, body: dict | DeleteRequestBody = None,
+    def delete_external_reference(self, ext_ref_guid: str, body: dict | DeleteElementRequestBody = None,
                                   cascade: bool = False) -> None:
         """Delete an external reference..
     
@@ -1191,7 +1191,7 @@ class ExternalReferences(Client2):
         cascade: bool, optional, defaults to True
             If true, a cascade delete is performed.
     
-        body: dict DeleteRequestBody, optional, default = None
+        body: dict DeleteElementRequestBody, optional, default = None
             A dict representing the details of the relationship.
     
         Returns
@@ -1211,7 +1211,7 @@ class ExternalReferences(Client2):
         _____
         JSON Structure looks like:
         {
-          "class" : "DeleteRequestBody",
+          "class" : "DeleteElementRequestBody",
           "externalSourceGUID": "add guid here",
           "externalSourceName": "add qualified name here",
           "effectiveTime" : "{{$isoTimestamp}}",

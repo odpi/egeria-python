@@ -4,7 +4,8 @@ This package contains functions to parse and process Egeria Markdown (Freddie)
 from md_processing.md_commands.governance_officer_commands import (process_gov_definition_upsert_command,
                                                                    process_gov_def_link_detach_command,
                                                                    process_supporting_gov_def_link_detach_command,
-                                                                   process_gov_def_context_command, process_governed_by_link_detach_command
+                                                                   process_gov_def_context_command,
+                                                                   process_governed_by_link_detach_command
                                                                    )
 
 

@@ -13,15 +13,17 @@ from loguru import logger
 from pyegeria import PyegeriaException
 from pyegeria._client_new import Client2
 from pyegeria._globals import default_time_out, NO_ELEMENTS_FOUND
-from pyegeria.models import LevelIdentifierQueryBody, FilterRequestBody, GetRequestBody
-from pyegeria.utils import body_slimmer, dynamic_catch
 from pyegeria.base_report_formats import select_report_spec, get_report_spec_match
+from pyegeria.models import LevelIdentifierQueryBody, FilterRequestBody, GetRequestBody, NewClassificationRequestBody, \
+    DeleteClassificationRequestBody, NewRelationshipRequestBody, DeleteRelationshipRequestBody, \
+    UpdateRelationshipRequestBody
 from pyegeria.output_formatter import (
     generate_output,
     _extract_referenceable_properties,
     populate_columns_from_properties,
     get_required_relationships,
 )
+from pyegeria.utils import body_slimmer, dynamic_catch
 
 
 def query_seperator(current_string):
@@ -93,6 +95,7 @@ class ClassificationManager(Client2):
         # Default entity label for formatter when not specified
         self.REFERENCEABLE_LABEL = "Referenceable"
 
+    @dynamic_catch
     def _extract_referenceable_output_properties(self, element: dict, columns_struct: dict) -> dict:
         """Populate requested columns from a generic Referenceable element.
         Tolerant of missing values; fills from properties, header, relationships, and mermaid graph.
@@ -121,6 +124,7 @@ class ClassificationManager(Client2):
 
         return col_data
 
+    @dynamic_catch
     def _generate_referenceable_output(self,
                                        elements: dict | list[dict],
                                        filter: str | None,
@@ -164,12 +168,11 @@ class ClassificationManager(Client2):
             output_formats,
         )
 
-
     #
     #   Get elements
     #
     @dynamic_catch
-    async def async_get_classified_elements_by(
+    async def _async_get_classified_elements_by(
             self,
             classification_name: str,
             body: dict | LevelIdentifierQueryBody,
@@ -224,8 +227,8 @@ class ClassificationManager(Client2):
                f"classification-explorer/elements/by-{classification_name}")
 
         response = await self._async_get_level_identifier_query_body_request(
-           url = url, _gen_output = self._generate_referenceable_output, output_format=output_format,
-            report_spec=report_spec,body=body
+            url=url, _gen_output=self._generate_referenceable_output, output_format=output_format,
+            report_spec=report_spec, body=body
         )
         return response
 
@@ -283,14 +286,14 @@ class ClassificationManager(Client2):
 
         loop = asyncio.get_event_loop()
         response = loop.run_until_complete(
-            self.async_get_classified_elements_by(
+            self._async_get_classified_elements_by(
                 classification_name, body, output_format, report_spec
             )
         )
         return response
 
     @dynamic_catch
-    async def async_get_security_tagged_elements(
+    async def _async_get_security_tagged_elements(
             self,
             body: dict,
             output_format: str = "JSON",
@@ -357,7 +360,7 @@ class ClassificationManager(Client2):
         if output_format != 'JSON':  # return a simplified markdown representation
             logger.info(f"Found elements, output format: {output_format} and report_spec: {report_spec}")
             return self._generate_referenceable_output(elements, "", "Referenceable",
-                               output_format, report_spec)
+                                                       output_format, report_spec)
         return elements
 
     @dynamic_catch
@@ -415,14 +418,14 @@ class ClassificationManager(Client2):
 
         loop = asyncio.get_event_loop()
         response = loop.run_until_complete(
-            self.async_get_security_tagged_elements(
+            self._async_get_security_tagged_elements(
                 body, output_format, report_spec
             )
         )
         return response
 
     @dynamic_catch
-    async def async_get_owners_elements(
+    async def _async_get_owners_elements(
             self,
             owner_name: str,
             body: dict | FilterRequestBody,
@@ -534,14 +537,14 @@ class ClassificationManager(Client2):
 
         loop = asyncio.get_event_loop()
         response = loop.run_until_complete(
-            self.async_get_owners_elements(
+            self._async_get_owners_elements(
                 owner_name, body, output_format, report_spec
             )
         )
         return response
 
     @dynamic_catch
-    async def async_get_subject_area_members(
+    async def _async_get_subject_area_members(
             self,
             subject_area: str,
             body: dict | FilterRequestBody,
@@ -656,16 +659,16 @@ class ClassificationManager(Client2):
 
         loop = asyncio.get_event_loop()
         response = loop.run_until_complete(
-            self.async_get_subject_area_members(
+            self._async_get_subject_area_members(
                 subject_area, body, output_format, report_spec
             )
         )
         return response
 
     @dynamic_catch
-    async def async_get_elements_by_origin(
+    async def _async_get_elements_by_origin(
             self,
-            body: dict ,
+            body: dict,
             output_format: str = "JSON",
             report_spec: dict | str = None
     ) -> list | str:
@@ -736,7 +739,7 @@ class ClassificationManager(Client2):
     @dynamic_catch
     def get_elements_by_origin(
             self,
-            body: dict ,
+            body: dict,
             output_format: str = "JSON",
             report_spec: dict | str = None
     ) -> list | str:
@@ -789,16 +792,16 @@ class ClassificationManager(Client2):
 
         loop = asyncio.get_event_loop()
         response = loop.run_until_complete(
-            self.async_get_elements_by_origin(body, output_format, report_spec
-                )
+            self._async_get_elements_by_origin(body, output_format, report_spec
+                                              )
         )
         return response
 
     @dynamic_catch
-    async def async_get_meanings(
+    async def _async_get_meanings(
             self,
             element_guid: str,
-            body: dict ,
+            body: dict,
             output_format: str = "JSON",
             report_spec: dict | str = None
     ) -> list | str:
@@ -874,7 +877,7 @@ class ClassificationManager(Client2):
     def get_meanings(
             self,
             element_guid: str,
-            body: dict ,
+            body: dict,
             output_format: str = "JSON",
             report_spec: dict | str = None
     ) -> list | str:
@@ -930,16 +933,16 @@ class ClassificationManager(Client2):
 
         loop = asyncio.get_event_loop()
         response = loop.run_until_complete(
-            self.async_get_meanings(element_guid,body, output_format, report_spec
-                )
+            self._async_get_meanings(element_guid, body, output_format, report_spec
+                                    )
         )
         return response
 
     @dynamic_catch
-    async def async_get_semantic_asignees(
+    async def _async_get_semantic_asignees(
             self,
             term_guid: str,
-            body: dict ,
+            body: dict,
             output_format: str = "JSON",
             report_spec: dict | str = None
     ) -> list | str:
@@ -1015,7 +1018,7 @@ class ClassificationManager(Client2):
     def get_semantic_asignees(
             self,
             term_guid: str,
-            body: dict ,
+            body: dict,
             output_format: str = "JSON",
             report_spec: dict | str = None
     ) -> list | str:
@@ -1071,13 +1074,13 @@ class ClassificationManager(Client2):
 
         loop = asyncio.get_event_loop()
         response = loop.run_until_complete(
-            self.async_get_semantic_asignees(term_guid,body, output_format, report_spec
-                )
+            self._async_get_semantic_asignees(term_guid, body, output_format, report_spec
+                                             )
         )
         return response
 
     @dynamic_catch
-    async def async_get_governed_elements(
+    async def _async_get_governed_elements(
             self,
             gov_def_guid: str,
             body: dict = None,
@@ -1198,13 +1201,13 @@ class ClassificationManager(Client2):
 
         loop = asyncio.get_event_loop()
         response = loop.run_until_complete(
-            self.async_get_governed_elements(gov_def_guid,body, output_format, report_spec,
+            self._async_get_governed_elements(gov_def_guid, body, output_format, report_spec,
                                              start_from, page_size)
         )
         return response
 
     @dynamic_catch
-    async def async_get_governed_by_definitions(
+    async def _async_get_governed_by_definitions(
             self,
             element_guid: str,
             body: dict = None,
@@ -1267,7 +1270,6 @@ class ClassificationManager(Client2):
                                                               report_spec, body)
         return response
 
-
     @dynamic_catch
     def get_governed_by_definitions(
             self,
@@ -1326,14 +1328,13 @@ class ClassificationManager(Client2):
 
         loop = asyncio.get_event_loop()
         response = loop.run_until_complete(
-            self.async_get_governed_by_definitions(element_guid,body, output_format, report_spec,
-                                             start_from, page_size)
+            self._async_get_governed_by_definitions(element_guid, body, output_format, report_spec,
+                                                   start_from, page_size)
         )
         return response
 
-
     @dynamic_catch
-    async def async_get_source_elements(
+    async def _async_get_source_elements(
             self,
             element_guid: str,
             body: dict = None,
@@ -1392,7 +1393,7 @@ class ClassificationManager(Client2):
         """
 
         url = (f"{self.platform_url}/servers/{self.view_server}/api/open-metadata/"
-               f"classification-explorer/glossaries/elements/{element_guid }/source")
+               f"classification-explorer/glossaries/elements/{element_guid}/source")
 
         response = await self._async_get_results_body_request(url, "Referenceable", self._generate_referenceable_output,
                                                               start_from, page_size, output_format,
@@ -1460,13 +1461,13 @@ class ClassificationManager(Client2):
 
         loop = asyncio.get_event_loop()
         response = loop.run_until_complete(
-            self.async_get_certified_elements(element_guid, body, output_format, report_spec, start_from,
+            self._async_get_certified_elements(element_guid, body, output_format, report_spec, start_from,
                                               page_size)
         )
         return response
 
     @dynamic_catch
-    async def async_get_elements_sourced_from(
+    async def _async_get_elements_sourced_from(
             self,
             element_guid: str,
             body: dict = None,
@@ -1591,13 +1592,13 @@ class ClassificationManager(Client2):
 
         loop = asyncio.get_event_loop()
         response = loop.run_until_complete(
-            self.async_get_elements_sourced_from(element_guid, body, output_format, report_spec,
-                                           start_from, page_size)
+            self._async_get_elements_sourced_from(element_guid, body, output_format, report_spec,
+                                                 start_from, page_size)
         )
         return response
 
     @dynamic_catch
-    async def async_get_scopes(
+    async def _async_get_scopes(
             self,
             element_guid: str,
             body: dict = None,
@@ -1718,13 +1719,13 @@ class ClassificationManager(Client2):
 
         loop = asyncio.get_event_loop()
         response = loop.run_until_complete(
-            self.async_get_certified_elements(element_guid, body, output_format, report_spec, start_from,
+            self._async_get_certified_elements(element_guid, body, output_format, report_spec, start_from,
                                               page_size)
         )
         return response
 
     @dynamic_catch
-    async def async_get_scoped_elements(
+    async def _async_get_scoped_elements(
             self,
             scope_guid: str,
             body: dict = None,
@@ -1845,12 +1846,12 @@ class ClassificationManager(Client2):
 
         loop = asyncio.get_event_loop()
         response = loop.run_until_complete(
-            self.async_get_scoped_elements(scope_guid, body, output_format, report_spec, start_from, page_size)
+            self._async_get_scoped_elements(scope_guid, body, output_format, report_spec, start_from, page_size)
         )
         return response
 
     @dynamic_catch
-    async def async_get_licensed_elements(
+    async def _async_get_licensed_elements(
             self,
             license_type_guid: str,
             body: dict = None,
@@ -1970,12 +1971,12 @@ class ClassificationManager(Client2):
 
         loop = asyncio.get_event_loop()
         response = loop.run_until_complete(
-            self.async_get_licensed_elements(license_type_guid, body, output_format, report_spec, start_from, page_size)
+            self._async_get_licensed_elements(license_type_guid, body, output_format, report_spec, start_from, page_size)
         )
         return response
 
     @dynamic_catch
-    async def async_get_licenses(
+    async def _async_get_licenses(
             self,
             element_guid: str,
             body: dict = None,
@@ -2096,14 +2097,13 @@ class ClassificationManager(Client2):
 
         loop = asyncio.get_event_loop()
         response = loop.run_until_complete(
-            self.async_get_licenses(element_guid, body, output_format, report_spec,
-                                           start_from, page_size)
+            self._async_get_licenses(element_guid, body, output_format, report_spec,
+                                    start_from, page_size)
         )
         return response
 
-
     @dynamic_catch
-    async def async_get_certified_elements(
+    async def _async_get_certified_elements(
             self,
             certification_type_guid: str,
             body: dict = None,
@@ -2224,15 +2224,13 @@ class ClassificationManager(Client2):
 
         loop = asyncio.get_event_loop()
         response = loop.run_until_complete(
-            self.async_get_certified_elements(certification_type_guid, body, output_format, report_spec, start_from,
+            self._async_get_certified_elements(certification_type_guid, body, output_format, report_spec, start_from,
                                               page_size)
         )
         return response
 
-
-
     @dynamic_catch
-    async def async_get_certifications(
+    async def _async_get_certifications(
             self,
             element_guid: str,
             body: dict = None,
@@ -2353,23 +2351,15 @@ class ClassificationManager(Client2):
 
         loop = asyncio.get_event_loop()
         response = loop.run_until_complete(
-            self.async_get_certifications(element_guid, body, output_format, report_spec, start_from,
-                                              page_size)
+            self._async_get_certifications(element_guid, body, output_format, report_spec, start_from,
+                                          page_size)
         )
         return response
 
-
-
-
-
-
-
-
-
     #
     #
     #
-    async def async_get_elements(
+    async def _async_get_elements(
             self,
             metadata_element_type_name: str = None,
             effective_time: str = None,
@@ -2484,7 +2474,7 @@ class ClassificationManager(Client2):
 
         loop = asyncio.get_event_loop()
         response = loop.run_until_complete(
-            self.async_get_elements(
+            self._async_get_elements(
                 metadata_element_type_name,
                 effective_time,
                 for_lineage,
@@ -2503,7 +2493,8 @@ class ClassificationManager(Client2):
                                                     metadata_element_type_name: str = None, effective_time: str = None,
                                                     for_lineage: bool = None, for_duplicate_processing: bool = None,
                                                     start_from: int = 0, page_size: int = 0,
-                                                    time_out: int = default_time_out, output_format: str = "JSON", report_spec: str | dict = None) -> list | str:
+                                                    time_out: int = default_time_out, output_format: str = "JSON",
+                                                    report_spec: str | dict = None) -> list | str:
         """
         Retrieve elements by a value found in one of the properties specified.  The value must match exactly.
         An open metadata type name may be supplied to restrict the results. Async version.
@@ -2583,7 +2574,8 @@ class ClassificationManager(Client2):
                                        metadata_element_type_name: str = None, effective_time: str = None,
                                        for_lineage: bool = None, for_duplicate_processing: bool = None,
                                        start_from: int = 0, page_size: int = 0,
-                                       time_out: int = default_time_out, output_format: str = "JSON", report_spec: str | dict = None) -> list | str:
+                                       time_out: int = default_time_out, output_format: str = "JSON",
+                                       report_spec: str | dict = None) -> list | str:
         """
         Retrieve elements by a value found in one of the properties specified.  The value must match exactly.
         An open metadata type name may be supplied to restrict the results.
@@ -2633,7 +2625,7 @@ class ClassificationManager(Client2):
         )
         return response
 
-    async def async_find_elements_by_property_value(
+    async def _async_find_elements_by_property_value(
             self,
             property_value: str,
             property_names: list[str],
@@ -2722,13 +2714,13 @@ class ClassificationManager(Client2):
         if output_format == "JSON":
             return elements
         else:
-            return  self._generate_referenceable_output(
-            elements=elements,
-            filter=property_value,
-            element_type_name=metadata_element_type_name,
-            output_format=output_format,
-            report_spec=report_spec,
-        )
+            return self._generate_referenceable_output(
+                elements=elements,
+                filter=property_value,
+                element_type_name=metadata_element_type_name,
+                output_format=output_format,
+                report_spec=report_spec,
+            )
 
     def find_elements_by_property_value(
             self,
@@ -2798,7 +2790,7 @@ class ClassificationManager(Client2):
 
         loop = asyncio.get_event_loop()
         response = loop.run_until_complete(
-            self.async_find_elements_by_property_value(
+            self._async_find_elements_by_property_value(
                 property_value,
                 property_names,
                 metadata_element_type_name,
@@ -2812,7 +2804,7 @@ class ClassificationManager(Client2):
         )
         return response
 
-    async def async_get_element_by_guid(
+    async def _async_get_element_by_guid(
             self,
             element_guid: str,
             element_type_name: str = None,
@@ -2852,7 +2844,7 @@ class ClassificationManager(Client2):
                f"classification-explorer/elements/{element_guid}")
 
         response = await self._async_get_guid_request(url, element_type_name,
-                                                      self._generate_referenceable_output,output_format,
+                                                      self._generate_referenceable_output, output_format,
                                                       report_spec, body)
         return response
 
@@ -2894,7 +2886,7 @@ class ClassificationManager(Client2):
 
         loop = asyncio.get_event_loop()
         response = loop.run_until_complete(
-            self.async_get_element_by_guid(
+            self._async_get_element_by_guid(
                 element_guid,
                 element_type_name, output_format, report_spec, body
             )
@@ -2910,7 +2902,7 @@ class ClassificationManager(Client2):
             return "GUID does not represent a UserIdentity"
         return details["properties"]["userId"]
 
-    async def async_get_element_by_unique_name(
+    async def _async_get_element_by_unique_name(
             self,
             name: str,
             property_name: str = None,
@@ -2970,7 +2962,6 @@ class ClassificationManager(Client2):
             return self._generate_referenceable_output(elements, "GUID", "Referenceable", output_format, report_spec)
         return elements
 
-
     def get_element_by_unique_name(
             self,
             name: str,
@@ -3009,15 +3000,15 @@ class ClassificationManager(Client2):
 
         loop = asyncio.get_event_loop()
         response = loop.run_until_complete(
-            self.async_get_element_by_unique_name(name, property_name, output_format, report_spec, body)
+            self._async_get_element_by_unique_name(name, property_name, output_format, report_spec, body)
         )
         return response
 
-    async def async_get_element_guid_by_unique_name(
+    async def _async_get_element_guid_by_unique_name(
             self,
             name: str,
             property_name: str = None,
-            body: dict = None  ) -> list | str:
+            body: dict = None) -> list | str:
         """
         Retrieve the guid associated with the supplied unique element name.
         If more than one element returned, an exception is thrown. Async version.
@@ -3062,7 +3053,7 @@ class ClassificationManager(Client2):
             self,
             name: str,
             property_name: str = None,
-            body: dict = None  ) -> list | str:
+            body: dict = None) -> list | str:
         """
         Retrieve the guid associated with the supplied unique element name.
         If more than one element returned, an exception is thrown.
@@ -3087,7 +3078,7 @@ class ClassificationManager(Client2):
 
         loop = asyncio.get_event_loop()
         response = loop.run_until_complete(
-            self.async_get_element_guid_by_unique_name(
+            self._async_get_element_guid_by_unique_name(
                 name,
                 property_name,
                 body
@@ -3096,7 +3087,7 @@ class ClassificationManager(Client2):
         return response
 
     async def _async_get_guid_for_name(self, name: str, property_name: list[str] = ["qualifiedName", "displayName"],
-                                       type_name: str = "ValidMetadataValue") ->  str:
+                                       type_name: str = "ValidMetadataValue") -> str:
         """
         Retrieve the guid associated with the supplied element name.
         If more than one element returned, an exception is thrown. Async version.
@@ -3120,20 +3111,20 @@ class ClassificationManager(Client2):
         PyegeriaException
         """
 
-
         elements = await self._async_get_elements_by_property_value(name, property_name, type_name)
 
         if type(elements) is list:
             if len(elements) == 0:
                 return NO_ELEMENTS_FOUND
             elif len(elements) > 1:
-                raise PyegeriaException(context = {"output":"Multiple elements found for supplied name!"})
+                raise PyegeriaException(context={"output": "Multiple elements found for supplied name!"})
             elif len(elements) == 1:
                 return elements[0]["elementHeader"]["guid"]
         return elements
 
     def get_guid_for_name(
-            self, name: str, property_name: list[str] = ["qualifiedName", "displayName"], type_name: str = "ValidMetadataValue"
+            self, name: str, property_name: list[str] = ["qualifiedName", "displayName"],
+            type_name: str = "ValidMetadataValue"
     ) -> str:
         """
         Retrieve the guid associated with the supplied element name.
@@ -3167,7 +3158,7 @@ class ClassificationManager(Client2):
     #
     # Elements by classification
     #
-    async def async_get_elements_by_classification(
+    async def _async_get_elements_by_classification(
             self,
             classification_name: str,
             metadata_element_type_name: str = None,
@@ -3291,7 +3282,7 @@ class ClassificationManager(Client2):
 
         loop = asyncio.get_event_loop()
         response = loop.run_until_complete(
-            self.async_get_elements_by_classification(
+            self._async_get_elements_by_classification(
                 classification_name,
                 metadata_element_type_name,
                 effective_time,
@@ -3310,7 +3301,7 @@ class ClassificationManager(Client2):
             report_spec=report_spec,
         )
 
-    async def async_get_elements_by_classification_with_property_value(
+    async def _async_get_elements_by_classification_with_property_value(
             self,
             classification_name: str,
             property_value: str,
@@ -3454,7 +3445,7 @@ class ClassificationManager(Client2):
 
         loop = asyncio.get_event_loop()
         response = loop.run_until_complete(
-            self.async_get_elements_by_classification_with_property_value(
+            self._async_get_elements_by_classification_with_property_value(
                 classification_name,
                 property_value,
                 property_names,
@@ -3475,7 +3466,7 @@ class ClassificationManager(Client2):
             report_spec=report_spec,
         )
 
-    async def async_find_elements_by_classification_with_property_value(
+    async def _async_find_elements_by_classification_with_property_value(
             self,
             classification_name: str,
             property_value: str,
@@ -3628,7 +3619,7 @@ class ClassificationManager(Client2):
 
         loop = asyncio.get_event_loop()
         response = loop.run_until_complete(
-            self.async_find_elements_by_classification_with_property_value(
+            self._async_find_elements_by_classification_with_property_value(
                 classification_name,
                 property_value,
                 property_names,
@@ -3649,7 +3640,7 @@ class ClassificationManager(Client2):
     #   related elements
     #
 
-    async def async_get_related_elements(
+    async def _async_get_related_elements(
             self,
             element_guid: str,
             relationship_type: str = None,
@@ -3794,7 +3785,7 @@ class ClassificationManager(Client2):
 
         loop = asyncio.get_event_loop()
         response = loop.run_until_complete(
-            self.async_get_related_elements(
+            self._async_get_related_elements(
                 element_guid,
                 relationship_type,
                 metadata_element_type_name,
@@ -3985,13 +3976,13 @@ class ClassificationManager(Client2):
         )
         return self._generate_referenceable_output(
             elements=response,
-            filter = property_value,
+            filter=property_value,
             element_type_name=metadata_element_type_name,
             output_format=output_format,
             report_spec=report_spec,
         )
 
-    async def async_find_related_elements_with_property_value(
+    async def _async_find_related_elements_with_property_value(
             self,
             element_guid: str,
             relationship_type: str,
@@ -4148,7 +4139,7 @@ class ClassificationManager(Client2):
 
         loop = asyncio.get_event_loop()
         response = loop.run_until_complete(
-            self.async_find_related_elements_with_property_value(
+            self._async_find_related_elements_with_property_value(
                 element_guid,
                 relationship_type,
                 property_value,
@@ -4165,7 +4156,7 @@ class ClassificationManager(Client2):
         )
         return self._generate_referenceable_output(
             elements=response,
-            filter = property_value,
+            filter=property_value,
             element_type_name=metadata_element_type_name,
             output_format=output_format,
             report_spec=report_spec,
@@ -4174,7 +4165,7 @@ class ClassificationManager(Client2):
     #
     #   relationships
 
-    async def async_get_relationships(
+    async def _async_get_relationships(
             self,
             relationship_type: str,
             effective_time: str = None,
@@ -4280,7 +4271,7 @@ class ClassificationManager(Client2):
 
         loop = asyncio.get_event_loop()
         response = loop.run_until_complete(
-            self.async_get_relationships(
+            self._async_get_relationships(
                 relationship_type,
                 effective_time,
                 for_lineage,
@@ -4292,7 +4283,7 @@ class ClassificationManager(Client2):
         )
         return response
 
-    async def async_get_relationships_with_property_value(
+    async def _async_get_relationships_with_property_value(
             self,
             relationship_type: str,
             property_value: str,
@@ -4419,7 +4410,7 @@ class ClassificationManager(Client2):
 
         loop = asyncio.get_event_loop()
         response = loop.run_until_complete(
-            self.async_get_relationships_with_property_value(
+            self._async_get_relationships_with_property_value(
                 relationship_type,
                 property_value,
                 property_names,
@@ -4433,12 +4424,11 @@ class ClassificationManager(Client2):
         )
         return response
 
-
     #
     #  guid
     #
 
-    async def async_retrieve_instance_for_guid(
+    async def _async_retrieve_instance_for_guid(
             self,
             guid: str,
             effective_time: str = None,
@@ -4528,7 +4518,7 @@ class ClassificationManager(Client2):
 
         loop = asyncio.get_event_loop()
         response = loop.run_until_complete(
-            self.async_retrieve_instance_for_guid(
+            self._async_retrieve_instance_for_guid(
                 guid,
                 effective_time,
                 for_lineage,
@@ -4542,7 +4532,7 @@ class ClassificationManager(Client2):
     #   Classification CRUD
     #
 
-    async def async_set_confidence_classification(
+    async def _async_set_confidence_classification(
             self,
             element_guid: str,
             body: dict,
@@ -4660,14 +4650,14 @@ class ClassificationManager(Client2):
 
         loop = asyncio.get_event_loop()
         loop.run_until_complete(
-            self.async_set_confidence_classification(
+            self._async_set_confidence_classification(
                 element_guid,
                 body,
                 time_out,
             )
         )
 
-    async def async_clear_confidence_classification(
+    async def _async_clear_confidence_classification(
             self,
             element_guid: str,
             for_lineage: bool = None,
@@ -4766,7 +4756,7 @@ class ClassificationManager(Client2):
 
         loop = asyncio.get_event_loop()
         loop.run_until_complete(
-            self.async_clear_confidence_classification(
+            self._async_clear_confidence_classification(
                 element_guid,
                 for_lineage,
                 for_duplicate_processing,
@@ -4775,7 +4765,7 @@ class ClassificationManager(Client2):
             )
         )
 
-    async def async_set_confidentiality_classification(
+    async def _async_set_confidentiality_classification(
             self,
             element_guid: str,
             body: dict,
@@ -4899,14 +4889,14 @@ class ClassificationManager(Client2):
 
         loop = asyncio.get_event_loop()
         loop.run_until_complete(
-            self.async_set_confidentiality_classification(
+            self._async_set_confidentiality_classification(
                 element_guid,
                 body,
                 time_out
             )
         )
 
-    async def async_clear_confidentiality_classification(
+    async def _async_clear_confidentiality_classification(
             self,
             element_guid: str,
             for_lineage: bool = None,
@@ -5002,7 +4992,7 @@ class ClassificationManager(Client2):
 
         loop = asyncio.get_event_loop()
         loop.run_until_complete(
-            self.async_clear_confidentiality_classification(
+            self._async_clear_confidentiality_classification(
                 element_guid,
                 for_lineage,
                 for_duplicate_processing,
@@ -5011,7 +5001,7 @@ class ClassificationManager(Client2):
             )
         )
 
-    async def async_set_impact_classification(
+    async def _async_set_impact_classification(
             self,
             element_guid: str,
             body: dict,
@@ -5142,14 +5132,14 @@ class ClassificationManager(Client2):
 
         loop = asyncio.get_event_loop()
         loop.run_until_complete(
-            self.async_set_impact_classification(
+            self._async_set_impact_classification(
                 element_guid,
                 body,
                 time_out
             )
         )
 
-    async def async_clear_impact_classification(
+    async def _async_clear_impact_classification(
             self,
             element_guid: str,
             for_lineage: bool = None,
@@ -5245,7 +5235,7 @@ class ClassificationManager(Client2):
 
         loop = asyncio.get_event_loop()
         loop.run_until_complete(
-            self.async_clear_impact_classification(
+            self._async_clear_impact_classification(
                 element_guid,
                 for_lineage,
                 for_duplicate_processing,
@@ -5254,7 +5244,7 @@ class ClassificationManager(Client2):
             )
         )
 
-    async def async_set_criticality_classification(
+    async def _async_set_criticality_classification(
             self,
             element_guid: str,
             body: dict,
@@ -5373,14 +5363,14 @@ class ClassificationManager(Client2):
 
         loop = asyncio.get_event_loop()
         loop.run_until_complete(
-            self.async_set_criticality_classification(
+            self._async_set_criticality_classification(
                 element_guid,
                 body,
                 time_out,
             )
         )
 
-    async def async_clear_criticality_classification(
+    async def _async_clear_criticality_classification(
             self,
             element_guid: str,
             for_lineage: bool = None,
@@ -5476,7 +5466,7 @@ class ClassificationManager(Client2):
 
         loop = asyncio.get_event_loop()
         loop.run_until_complete(
-            self.async_clear_criticality_classification(
+            self._async_clear_criticality_classification(
                 element_guid,
                 for_lineage,
                 for_duplicate_processing,
@@ -5485,7 +5475,7 @@ class ClassificationManager(Client2):
             )
         )
 
-    async def async_add_gov_definition_to_element(
+    async def _async_add_gov_definition_to_element(
             self,
             definition_guid: str,
             element_guid: str,
@@ -5581,7 +5571,7 @@ class ClassificationManager(Client2):
 
         loop = asyncio.get_event_loop()
         loop.run_until_complete(
-            self.async_add_gov_definition_to_element(
+            self._async_add_gov_definition_to_element(
                 definition_guid,
                 element_guid,
                 effective_time,
@@ -5591,14 +5581,14 @@ class ClassificationManager(Client2):
             )
         )
 
-    async def async_clear_gov_definition_from_element(
+    async def _async_clear_gov_definition_from_element(
             self,
             definition_guid,
             element_guid: str,
             for_lineage: bool = None,
             for_duplicate_processing: bool = None,
             effective_time: str = None,
-            time_out: int = default_time_out,
+
     ) -> None:
         """
         Remove the GovernedBy relationship between a governance definition and an element. Async Version.
@@ -5617,10 +5607,6 @@ class ClassificationManager(Client2):
             - Normally false. Set true when the caller is part of a deduplication function
         effective_time: str, default = None
             - Time format is "YYYY-MM-DDTHH:MM:SS" (ISO 8601)
-
-
-        time_out: int, default = default_time_out
-            - http request timeout for this request
 
         Returns
         -------
@@ -5643,17 +5629,16 @@ class ClassificationManager(Client2):
                 "forDuplicateProcessing": for_duplicate_processing}
 
         await self._async_make_request(
-            "POST", url, body_slimmer(body), time_out=time_out
+            "POST", url, body_slimmer(body)
         )
 
     def clear_gov_definition_from_element(
             self,
-            definition_guid,
+            scoped_by_guid,
             element_guid: str,
             for_lineage: bool = None,
             for_duplicate_processing: bool = None,
             effective_time: str = None,
-            time_out: int = default_time_out,
     ) -> None:
         """
         Remove the GovernedBy relationship between a governance definition and an element. Async Version.
@@ -5662,7 +5647,7 @@ class ClassificationManager(Client2):
 
         Parameters
         ----------
-        definition_guid: str
+        scoped_by_guid: str
             - identity of the governance definition to add
         element_guid: str
             - the identity of the element to update
@@ -5672,10 +5657,6 @@ class ClassificationManager(Client2):
             - Normally false. Set true when the caller is part of a deduplication function
         effective_time: str, default = None
             - Time format is "YYYY-MM-DDTHH:MM:SS" (ISO 8601)
-
-
-        time_out: int, default = default_time_out
-            - http request timeout for this request
 
         Returns
         -------
@@ -5691,17 +5672,777 @@ class ClassificationManager(Client2):
 
         loop = asyncio.get_event_loop()
         loop.run_until_complete(
-            self.async_clear_gov_definition_from_element(
-                definition_guid,
+            self._async_clear_gov_definition_from_element(scoped_by_guid, element_guid, for_lineage,
+                                                         for_duplicate_processing, effective_time)
+        )
+
+    async def _async_add_scope_to_element(
+            self,
+            scoped_by_guid: str,
+            element_guid: str,
+            body: dict | NewRelationshipRequestBody = None,
+    ) -> None:
+        """
+        Link a scope to an element using the ScopedBy relationship. Async version.
+
+        Scopes: https://egeria-project.org/types/1/0120-Assignment-Scopes/
+
+        Parameters
+        ----------
+        scoped_by_guid: str
+            - identity of the governance scope to add
+        element_guid: str
+            - the identity of the element to update
+        body: dict | NewRelationshipRequestBody, optional
+            - structure containing scope information - see Notes
+
+        Returns
+        -------
+        None
+
+        Raises
+        ------
+        PyegeriaException
+
+        """
+
+        url = f"{base_path(self, self.view_server)}/elements/{element_guid}/scoped-by/{scoped_by_guid}/attach"
+
+        await self._async_new_relationship_request(url, ['ScopedBy'], body)
+
+    def add_scope_to_element(
+            self,
+            scoped_by_guid: str,
+            element_guid: str,
+            body: dict | NewRelationshipRequestBody = None,
+    ) -> None:
+        """
+        Link a scope to an element using the ScopedBy relationship.
+
+        Scopes: https://egeria-project.org/types/1/0120-Assignment-Scopes/
+
+        Parameters
+        ----------
+        scoped_by_guid: str
+            - identity of the governance scope to add
+        element_guid: str
+            - the identity of the element to update
+        body: dict | NewRelationshipRequestBody, optional
+            - structure containing scope information - see Notes
+
+        """
+
+        loop = asyncio.get_event_loop()
+        loop.run_until_complete(
+            self._async_add_scope_to_element(
+                scoped_by_guid,
                 element_guid,
-                for_lineage,
-                for_duplicate_processing,
-                effective_time,
-                time_out,
+                body
             )
         )
 
-    async def async_add_ownership_to_element(
+    async def _async_remove_scope_from_element(
+            self,
+            scoped_by_guid,
+            element_guid: str,
+            body: dict | DeleteRelationshipRequestBody = None,
+    ) -> None:
+        """
+        Remove the ScopedBy relationship between a scope and an element. Async Version.
+
+        Scopes: https://egeria-project.org/types/1/0120-Assignment-Scopes/
+
+        Parameters
+        ----------
+        scoped_by_guid: str
+            - identity of the governance definition to add
+        element_guid: str
+            - the identity of the element to update
+        body: dict | DeleteRelationshipRequestBody, optional
+            - structure request information
+
+        Returns
+        -------
+
+        Raises
+        ------
+        PyegeriaException
+
+
+        """
+
+        url = f"{base_path(self, self.view_server)}/elements/{element_guid}/scoped-by/{scoped_by_guid}/detach"
+
+
+        await self._async_delete_relationship_request(url, body_slimmer(body))
+
+    def remove_scope_from_element(
+            self,
+            scoped_by_guid,
+            element_guid: str,
+            body : dict | DeleteRelationshipRequestBody = None,
+    ) -> None:
+        """
+        Remove the ScopeddBy relationship between a scope and an element.
+
+        Scopes: https://egeria-project.org/types/1/0120-Assignment-Scopes/
+
+        Parameters
+        ----------
+        scoped_by_guid: str
+            - identity of the governance definition to add
+        element_guid: str
+            - the identity of the element to update
+
+        body: dict | DeleteRelationshipRequestBody, optional
+            - structure request information
+
+        Returns
+        -------
+        None
+
+        Raises
+        ------
+        PyegeriaException
+
+        """
+
+        loop = asyncio.get_event_loop()
+        loop.run_until_complete(
+            self._async_remove_scope_from_element(scoped_by_guid, element_guid, body)
+        )
+
+
+    async def _async_add_certification_to_element(
+            self,
+            certification_type_guid: str,
+            element_guid: str,
+            body: dict | NewRelationshipRequestBody = None,
+    ) -> str:
+        """
+        Link an element to a certification type and include details of the certification in the relationship properties.
+        The GUID returned is the identifier of the relationship. Async Version.
+
+        Parameters
+        ----------
+        certification_type_guid: str
+            - identity of the governance certification to add
+        element_guid: str
+            - the identity of the element to update
+        body: dict | NewRelationshipRequestBody, optional
+            - structure containing certification information - see Notes
+
+        Returns
+        -------
+        GUID of the certification.
+
+        Raises
+        ------
+        PyegeriaException
+
+        Notes
+        -----
+        Sample body:
+        {
+           "class" : "NewRelationshipRequestBody",
+           "externalSourceGUID": "Add guid here",
+           "externalSourceName": "Add qualified name here",
+           "forLineage": false,
+           "forDuplicateProcessing": false,
+           "effectiveTime" : "{{$isoTimestamp}}",
+           "properties": {
+              "class" : "LicenseProperties",
+              "certificateId" : "",
+              "startDate" : "{{$isoTimestamp}}",
+              "endDate" : "{{$isoTimestamp}}",
+              "conditions" : "",
+              "certifiedBy" : "",
+              "certifiedByTypeName" : "",
+              "certifiedByPropertyName" : "",
+              "custodian" : "",
+              "custodianTypeName" : "",
+              "custodianPropertyName" : "",
+              "recipient" : "",
+              "recipientTypeName" : "",
+              "recipientPropertyName" : "",
+              "notes" : ""
+           }
+        }
+
+        """
+
+        url = f"{base_path(self, self.view_server)}/elements/{element_guid}/certification-types/{certification_type_guid}/certify"
+
+        response = await self._async_make_request("POST",url, body_slimmer(body))
+        return response.json().get('guid','Relationship was not created')
+
+    def add_certification_to_element(
+            self,
+            certification_type_guid: str,
+            element_guid: str,
+            body: dict | NewRelationshipRequestBody = None,
+    ) -> str:
+        """
+        Link an element to a certification type and include details of the certification in the relationship properties.
+        The GUID returned is the identifier of the relationship. Async Version.
+
+        Parameters
+        ----------
+        certification_type_guid: str
+            - identity of the governance certification to add
+        element_guid: str
+            - the identity of the element to update
+        body: dict | NewRelationshipRequestBody, optional
+            - structure containing certification information - see Notes
+
+        Returns
+        -------
+        None
+
+        Raises
+        ------
+        PyegeriaException
+
+        Notes
+        -----
+        Sample body:
+        {
+           "class" : "NewRelationshipRequestBody",
+           "externalSourceGUID": "Add guid here",
+           "externalSourceName": "Add qualified name here",
+           "forLineage": false,
+           "forDuplicateProcessing": false,
+           "effectiveTime" : "{{$isoTimestamp}}",
+           "properties": {
+              "class" : "certificationProperties",
+              "certificationId" : "",
+              "startDate" : "{{$isoTimestamp}}",
+              "endDate" : "{{$isoTimestamp}}",
+              "conditions" : "",
+              "certificationdBy" : "",
+              "certificationdByTypeName" : "",
+              "certificationdByPropertyName" : "",
+              "custodian" : "",
+              "custodianTypeName" : "",
+              "custodianPropertyName" : "",
+              "certificatione" : "",
+              "certificationeTypeName" : "",
+              "certificationePropertyName" : "",
+              "entitlements" : "",
+              "restrictions" : "",
+              "obligations" : "",
+              "notes" : ""
+           }
+        }
+
+        """
+
+        loop = asyncio.get_event_loop()
+        response = loop.run_until_complete(
+            self._async_add_certification_to_element(certification_type_guid, element_guid, body)
+        )
+        return response
+
+    async def _async_update_certification(
+            self,
+            certification_guid: str,
+            body: dict | UpdateRelationshipRequestBody = None,
+    ) -> str:
+        """
+            Update the properties of a certification.  Remember to include the certificationId in the properties if the element has multiple
+            certifications for the same certification type. Async version.
+
+            Parameters
+            ----------
+            certification_guid: str
+                - identity of the certification to update
+            body: dict | UpdateRelationshipRequestBody, optional
+                - structure containing certification information - see Notes
+
+            Returns
+            -------
+            None
+
+            Raises
+            ------
+            PyegeriaException
+
+            Notes
+            -----
+            Sample body:
+            {
+               "class" : "UpdateRelationshipRequestBody",
+               "externalSourceGUID": "Add guid here",
+               "externalSourceName": "Add qualified name here",
+               "forLineage": false,
+               "forDuplicateProcessing": false,
+               "effectiveTime" : "{{$isoTimestamp}}",
+               "properties": {
+                  "class" : "CertificationProperties",
+                  "certificateId" : "",
+                  "startDate" : "{{$isoTimestamp}}",
+                  "endDate" : "{{$isoTimestamp}}",
+                  "conditions" : "",
+                  "certifiedBy" : "",
+                  "certifiedByTypeName" : "",
+                  "certifiedByPropertyName" : "",
+                  "custodian" : "",
+                  "custodianTypeName" : "",
+                  "custodianPropertyName" : "",
+                  "recipient" : "",
+                  "recipientTypeName" : "",
+                  "recipientPropertyName" : "",
+                  "notes" : ""
+               }
+            }
+            """
+
+        url = f"{base_path(self, self.view_server)}/certifications/{certification_guid}/update"
+
+        await self._async_update_relationship_request(url, None, body_slimmer(body))
+
+    def update_certification(
+            self,
+            certification_guid: str,
+            body: dict | UpdateRelationshipRequestBody = None,
+    ) -> str:
+        """
+            Update the properties of a certification.  Remember to include the certificationId in the properties if the element has multiple
+            certifications for the same certification type.
+
+            Parameters
+            ----------
+            certification_guid: str
+                - identity of the certification to update
+            body: dict | UpdateRelationshipRequestBody, optional
+                - structure containing certification information - see Notes
+
+            Returns
+            -------
+            None
+
+            Raises
+            ------
+            PyegeriaException
+
+            Notes
+            -----
+            Sample body:
+            {
+               "class" : "UpdateRelationshipRequestBody",
+               "externalSourceGUID": "Add guid here",
+               "externalSourceName": "Add qualified name here",
+               "forLineage": false,
+               "forDuplicateProcessing": false,
+               "effectiveTime" : "{{$isoTimestamp}}",
+               "properties": {
+                  "class" : "CertificationProperties",
+                  "certificateId" : "",
+                  "startDate" : "{{$isoTimestamp}}",
+                  "endDate" : "{{$isoTimestamp}}",
+                  "conditions" : "",
+                  "certifiedBy" : "",
+                  "certifiedByTypeName" : "",
+                  "certifiedByPropertyName" : "",
+                  "custodian" : "",
+                  "custodianTypeName" : "",
+                  "custodianPropertyName" : "",
+                  "recipient" : "",
+                  "recipientTypeName" : "",
+                  "recipientPropertyName" : "",
+                  "notes" : ""
+               }
+            }
+            """
+
+        loop = asyncio.get_event_loop()
+        loop.run_until_complete(
+            self._async_update_certification(certification_guid, body)
+        )
+
+
+    async def _async_decertify_element(
+            self,
+            certification_guid,
+            body: dict | DeleteRelationshipRequestBody = None,
+    ) -> None:
+        """
+        Remove the certification for an element. Async Version.
+
+        Parameters
+        ----------
+        certification_guid: str
+            - identity of the certification to remove.
+        body: dict | DeleteRelationshipRequestBody, optional
+            - structure request information
+
+        Returns
+        -------
+
+        Raises
+        ------
+        PyegeriaException
+
+        """
+
+        url = f"{base_path(self, self.view_server)}/certifications/{certification_guid}/delete"
+        await self._async_delete_relationship_request(url, body_slimmer(body))
+
+    def decertify_element(
+            self,
+            certification_guid,
+            body : dict | DeleteRelationshipRequestBody = None,
+    ) -> None:
+        """
+        Remove the certification for an element.
+
+        Parameters
+        ----------
+        certification_guid: str
+            - identity of the cerrification to remove
+        body: dict | DeleteRelationshipRequestBody, optional
+            - structure request information
+
+        Returns
+        -------
+        None
+
+        Raises
+        ------
+        PyegeriaException
+
+        """
+
+        loop = asyncio.get_event_loop()
+        loop.run_until_complete(
+            self._async_decertify_element(certification_guid, body)
+        )
+
+    async def _async_add_license_to_element(
+            self,
+            license_type_guid: str,
+            element_guid: str,
+            body: dict | NewRelationshipRequestBody = None,
+    ) -> str:
+        """
+        Link an element to a license type and include details of the license in the relationship properties.
+        The GUID returned is the identifier of the relationship. Async Version.
+
+        Parameters
+        ----------
+        license_type_guid: str
+            - identity of the governance license to add
+        element_guid: str
+            - the identity of the element to update
+        body: dict | NewRelationshipRequestBody, optional
+            - structure containing license information - see Notes
+
+        Returns
+        -------
+        Guid of the license.
+
+        Raises
+        ------
+        PyegeriaException
+
+        Notes
+        -----
+        Sample body:
+        {
+           "class" : "NewRelationshipRequestBody",
+           "externalSourceGUID": "Add guid here",
+           "externalSourceName": "Add qualified name here",
+           "forLineage": false,
+           "forDuplicateProcessing": false,
+           "effectiveTime" : "{{$isoTimestamp}}",
+           "properties": {
+              "class" : "LicenseProperties",
+              "licenseId" : "",
+              "startDate" : "{{$isoTimestamp}}",
+              "endDate" : "{{$isoTimestamp}}",
+              "conditions" : "",
+              "licensedBy" : "",
+              "licensedByTypeName" : "",
+              "licensedByPropertyName" : "",
+              "custodian" : "",
+              "custodianTypeName" : "",
+              "custodianPropertyName" : "",
+              "licensee" : "",
+              "licenseeTypeName" : "",
+              "licenseePropertyName" : "",
+              "entitlements" : "",
+              "restrictions" : "",
+              "obligations" : "",
+              "notes" : ""
+           }
+        }
+
+        """
+
+        url = f"{base_path(self, self.view_server)}/elements/{element_guid}/licensed-types/{license_type_guid}/license"
+
+        response = await self._async_make_request("POST",url, body_slimmer(body))
+        return response.json().get('guid','Relationship was not created')
+
+    def add_license_to_element(
+            self,
+            license_type_guid: str,
+            element_guid: str,
+            body: dict | NewRelationshipRequestBody = None,
+    ) -> str:
+        """
+        Link an element to a license type and include details of the license in the relationship properties.
+        The GUID returned is the identifier of the relationship.
+
+        Parameters
+        ----------
+        license_type_guid: str
+            - identity of the governance license to add
+        element_guid: str
+            - the identity of the element to update
+        body: dict | NewRelationshipRequestBody, optional
+            - structure containing license information - see Notes
+
+        Returns
+        -------
+        GUID of the license.
+
+        Raises
+        ------
+        PyegeriaException
+
+        Notes
+        -----
+        Sample body:
+        {
+           "class" : "NewRelationshipRequestBody",
+           "externalSourceGUID": "Add guid here",
+           "externalSourceName": "Add qualified name here",
+           "forLineage": false,
+           "forDuplicateProcessing": false,
+           "effectiveTime" : "{{$isoTimestamp}}",
+           "properties": {
+              "class" : "LicenseProperties",
+              "licenseId" : "",
+              "startDate" : "{{$isoTimestamp}}",
+              "endDate" : "{{$isoTimestamp}}",
+              "conditions" : "",
+              "licensedBy" : "",
+              "licensedByTypeName" : "",
+              "licensedByPropertyName" : "",
+              "custodian" : "",
+              "custodianTypeName" : "",
+              "custodianPropertyName" : "",
+              "licensee" : "",
+              "licenseeTypeName" : "",
+              "licenseePropertyName" : "",
+              "entitlements" : "",
+              "restrictions" : "",
+              "obligations" : "",
+              "notes" : ""
+           }
+        }
+
+        """
+
+        loop = asyncio.get_event_loop()
+        response = loop.run_until_complete(
+            self._async_add_license_to_element(license_type_guid, element_guid, body)
+        )
+        return response
+
+    async def _async_update_license(
+            self,
+            license_guid: str,
+            body: dict | UpdateRelationshipRequestBody = None,
+    ) -> str:
+        """
+       Update the properties of a license.  Remember to include the licenseId in the properties if the element has multiple
+       licenses for the same license type. Async Version.
+
+        Parameters
+        ----------
+        license_guid: str
+            - identity of the license to update
+        body: dict | UpdateRelationshipRequestBody, optional
+            - structure containing license information - see Notes
+
+        Returns
+        -------
+        None
+
+        Raises
+        ------
+        PyegeriaException
+
+        Notes
+        -----
+        Sample body:
+        {
+           "class" : "UpdateRelationshipRequestBody",
+           "externalSourceGUID": "Add guid here",
+           "externalSourceName": "Add qualified name here",
+           "forLineage": false,
+           "forDuplicateProcessing": false,
+           "effectiveTime" : "{{$isoTimestamp}}",
+           "properties": {
+              "class" : "LicenseProperties",
+              "licenseId" : "",
+              "startDate" : "{{$isoTimestamp}}",
+              "endDate" : "{{$isoTimestamp}}",
+              "conditions" : "",
+              "licensedBy" : "",
+              "licensedByTypeName" : "",
+              "licensedByPropertyName" : "",
+              "custodian" : "",
+              "custodianTypeName" : "",
+              "custodianPropertyName" : "",
+              "licensee" : "",
+              "licenseeTypeName" : "",
+              "licenseePropertyName" : "",
+              "entitlements" : "",
+              "restrictions" : "",
+              "obligations" : "",
+              "notes" : ""
+           }
+        }
+
+        """
+
+        url = f"{base_path(self, self.view_server)}/licenses/{license_guid}/update"
+
+        await self._async_update_relationship_request(url, None, body_slimmer(body))
+
+    def update_license(
+            self,
+            license_guid: str,
+            body: dict | UpdateRelationshipRequestBody = None,
+    ) -> str:
+        """
+       Update the properties of a license.  Remember to include the licenseId in the properties if the element has multiple
+       licenses for the same license type.
+
+        Parameters
+        ----------
+        license_guid: str
+            - identity of the license to update
+        body: dict | UpdateRelationshipRequestBody, optional
+            - structure containing license information - see Notes
+
+        Returns
+        -------
+        None
+
+        Raises
+        ------
+        PyegeriaException
+
+        Notes
+        -----
+        Sample body:
+        {
+           "class" : "UpdateRelationshipRequestBody",
+           "externalSourceGUID": "Add guid here",
+           "externalSourceName": "Add qualified name here",
+           "forLineage": false,
+           "forDuplicateProcessing": false,
+           "effectiveTime" : "{{$isoTimestamp}}",
+           "properties": {
+              "class" : "LicenseProperties",
+              "licenseId" : "",
+              "startDate" : "{{$isoTimestamp}}",
+              "endDate" : "{{$isoTimestamp}}",
+              "conditions" : "",
+              "licensedBy" : "",
+              "licensedByTypeName" : "",
+              "licensedByPropertyName" : "",
+              "custodian" : "",
+              "custodianTypeName" : "",
+              "custodianPropertyName" : "",
+              "licensee" : "",
+              "licenseeTypeName" : "",
+              "licenseePropertyName" : "",
+              "entitlements" : "",
+              "restrictions" : "",
+              "obligations" : "",
+              "notes" : ""
+           }
+        }
+
+        """
+
+        loop = asyncio.get_event_loop()
+        loop.run_until_complete(
+            self._async_update_license(license_guid, body)
+        )
+
+
+    async def _async_unlicense_element(
+            self,
+            license_guid,
+            body: dict | DeleteRelationshipRequestBody = None,
+    ) -> None:
+        """
+        Remove the licensed for an element. Async Version.
+
+        licenses: https://egeria-project.org/types/1/0120-Assignment-licenses/
+
+        Parameters
+        ----------
+        license_guid: str
+            - identity of the license to remove.
+        body: dict | DeleteRelationshipRequestBody, optional
+            - structure request information
+
+        Returns
+        -------
+
+        Raises
+        ------
+        PyegeriaException
+
+
+        """
+
+        url = f"{base_path(self, self.view_server)}/licenses/{license_guid}/delete"
+        await self._async_delete_relationship_request(url, body_slimmer(body))
+
+    def unlicense_element(
+            self,
+            license_guid,
+            body : dict | DeleteRelationshipRequestBody = None,
+    ) -> None:
+        """
+        Remove the licensed for an element.
+
+        licenses: https://egeria-project.org/types/1/0120-Assignment-licenses/
+
+        Parameters
+        ----------
+        license_guid: str
+            - identity of the license to remove
+        body: dict | DeleteRelationshipRequestBody, optional
+            - structure request information
+
+        Returns
+        -------
+        None
+
+        Raises
+        ------
+        PyegeriaException
+
+        """
+
+        loop = asyncio.get_event_loop()
+        loop.run_until_complete(
+            self._async_unlicense_element(license_guid, body)
+        )
+
+
+
+
+    async def _async_add_ownership_to_element(
             self,
             element_guid: str,
             body: dict,
@@ -5808,14 +6549,14 @@ class ClassificationManager(Client2):
 
         loop = asyncio.get_event_loop()
         loop.run_until_complete(
-            self.async_add_ownership_to_element(
+            self._async_add_ownership_to_element(
                 element_guid,
                 body,
                 time_out,
             )
         )
 
-    async def async_clear_ownership_from_element(
+    async def _async_clear_ownership_from_element(
             self,
             element_guid: str,
             for_lineage: bool = None,
@@ -5907,16 +6648,351 @@ class ClassificationManager(Client2):
 
         loop = asyncio.get_event_loop()
         loop.run_until_complete(
-            self.async_clear_ownership_from_element(
+            self._async_clear_digital_resource_origin_from_element(element_guid, for_lineage, for_duplicate_processing,
+                                                                  effective_time, time_out)
+        )
+
+    @dynamic_catch
+    async def _async_add_digital_resource_origin(
+            self,
+            element_guid: str,
+            body: dict | NewClassificationRequestBody
+    ) -> None:
+        """
+        Add the digital resource origin classification for an element. Async Version.
+
+        Origin: https://egeria-project.org/types/4/0440-Organizational-Controls/
+
+        Parameters
+        ----------
+        element_guid: str
+            - the identity of the element to update
+        body: dict | NewClassificationRequestBody
+            - structure containing origin information - see Notes
+
+        Returns
+        -------
+        None
+
+        Raises
+        ------
+        PyegeriaException
+
+        Notes
+        -----
+
+        {
+           "class": "NewClassificationRequestBody",
+           "effectiveTime": "an isoTimestamp",
+           "forDuplicateProcessing": false,
+           "forLineage": false,
+           "properties": {
+               "class": "DigitalResourceOriginProperties",
+               "owner": "Add value here",
+               "ownerTypeName": "Add value here",
+               "ownerPropertyName": "Add value here"
+           }
+        }
+
+        """
+
+        url = f"{base_path(self, self.view_server)}/elements/{element_guid}/digital-resource-origin"
+        await self._async_new_classification_request(url, ["DigitalResourceOriginProperties"], body)
+
+    @dynamic_catch
+    def add_digital_resource_origin(
+            self,
+            element_guid: str,
+            body: dict | NewClassificationRequestBody
+    ) -> None:
+        """
+        Add or replace the digital resource origin classification for an element.
+
+        Origin: https://egeria-project.org/types/4/0440-Organizational-Controls/
+
+        Parameters
+        ----------
+        element_guid: str
+            - the identity of the element to update
+        body: dict | NewClassificationRequestBody
+            - structure containing ownership information - see Notes
+
+        Returns
+        -------
+        None
+
+        Raises
+        ------
+        PyegeriaException
+
+        Notes
+        -----
+
+        {
+           "class": "ClassificationRequestBody",
+           "effectiveTime": "an isoTimestamp",
+           "forDuplicateProcessing": false,
+           "forLineage": false,
+           "properties": {
+               "class": "DigitalResourceOriginProperties",
+               "owner": "Add value here",
+               "ownerTypeName": "Add value here",
+               "ownerPropertyName": "Add value here"
+           }
+        }
+
+        """
+
+        loop = asyncio.get_event_loop()
+        loop.run_until_complete(
+            self._async_add_digital_resource_origin(
                 element_guid,
-                for_lineage,
-                for_duplicate_processing,
-                effective_time,
-                time_out,
+                body,
             )
         )
 
-    async def async_set_retention_classification(
+    @dynamic_catch
+    async def _async_clear_digital_resource_origin_from_element(
+            self,
+            element_guid: str,
+            body: dict | DeleteClassificationRequestBody
+    ) -> None:
+        """
+        Remove the digital resource classification from an element. Async version.
+
+        Ownership: https://egeria-project.org/types/4/0445-Governance-Roles/
+
+        Parameters
+        ----------
+        element_guid: str
+            - the identity of the element to update
+        body: dict | DeleteClassificationRequestBody
+        - structure containing digital resource request - see Notes
+
+        Returns
+        -------
+        None
+
+        Raises
+        ------
+        PyegeriaException
+
+
+        """
+
+        url = f"{base_path(self, self.view_server)}/elements/{element_guid}/digital-resource-origin/remove"
+
+        await self._async_delete_classification_request(
+             url, body
+        )
+
+    @dynamic_catch
+    def clear_digital_resource_origin_from_element(
+            self,
+            element_guid: str,
+            body: dict | DeleteClassificationRequestBody
+    ) -> None:
+        """
+        Remove the digital resource classification from an element.
+
+        Ownership: https://egeria-project.org/types/4/0445-Governance-Roles/
+
+        Parameters
+        ----------
+        element_guid: str
+            - the identity of the element to update
+        body: dict | DeleteClassificationRequestBody
+            - structure containing digital resource request - see Notes
+
+
+        Returns
+        -------
+        None
+
+        Raises
+        ------
+        PyegeriaException
+
+        """
+
+        loop = asyncio.get_event_loop()
+        loop.run_until_complete(
+            self._async_clear_digital_resource_origin_from_element(element_guid, body)
+        )
+
+    @dynamic_catch
+    async def _async_add_zone_membership(
+            self,
+            element_guid: str,
+            body: dict | NewClassificationRequestBody
+    ) -> None:
+        """
+        Add the zone membership classification for an element. Async Version.
+
+        Origin: Governance Zones: https://egeria-project.org/types/4/0424-Governance-Zones/
+
+        Parameters
+        ----------
+        element_guid: str
+            - the identity of the element to update
+        body: dict | NewClassificationRequestBody
+            - structure containing zone information - see Notes
+
+        Returns
+        -------
+        None
+
+        Raises
+        ------
+        PyegeriaException
+
+        Notes
+        -----
+
+        {
+           "class": "NewClassificationRequestBody",
+           "effectiveTime": "an isoTimestamp",
+           "forDuplicateProcessing": false,
+           "forLineage": false,
+           "properties": {
+               "class": "ZoneMembershipProperties",
+               "owner": "Add value here",
+               "ownerTypeName": "Add value here",
+               "ownerPropertyName": "Add value here"
+           }
+        }
+
+        """
+
+        url = f"{base_path(self, self.view_server)}/elements/{element_guid}/zone-membership"
+        await self._async_new_classification_request(url, ["ZoneMembershipProperties"], body)
+
+    @dynamic_catch
+    def add_zone_membership(
+            self,
+            element_guid: str,
+            body: dict | NewClassificationRequestBody
+    ) -> None:
+        """
+        Add the zone membership classification for an element.
+
+        Origin: https://egeria-project.org/types/4/0424-Governance-Zones/
+
+        Parameters
+        ----------
+        element_guid: str
+            - the identity of the element to update
+        body: dict | NewClassificationRequestBody
+            - structure containing zone information - see Notes
+
+        Returns
+        -------
+        None
+
+        Raises
+        ------
+        PyegeriaException
+
+        Notes
+        -----
+
+        {
+           "class": "ClassificationRequestBody",
+           "effectiveTime": "an isoTimestamp",
+           "forDuplicateProcessing": false,
+           "forLineage": false,
+           "properties": {
+               "class": "ZoneMembershipProperties",
+               "owner": "Add value here",
+               "ownerTypeName": "Add value here",
+               "ownerPropertyName": "Add value here"
+           }
+        }
+
+        """
+
+        loop = asyncio.get_event_loop()
+        loop.run_until_complete(
+            self._async_add_zone_membership(element_guid, body
+            )
+        )
+
+    @dynamic_catch
+    async def _async_clear_zone_membership(
+            self,
+            element_guid: str,
+            body: dict | DeleteClassificationRequestBody
+    ) -> None:
+        """
+        Remove the zone membership classification from an element. Async version.
+
+        Ownership: https://egeria-project.org/types/4/0424-Governance-Zones/
+
+        Parameters
+        ----------
+        element_guid: str
+            - the identity of the element to update
+        body: dict | DeleteClassificationRequestBody
+        - structure containing zone information - see Notes
+
+        Returns
+        -------
+        None
+
+        Raises
+        ------
+        PyegeriaException
+
+
+        """
+
+        url = f"{base_path(self, self.view_server)}/elements/{element_guid}/zone-membership/remove"
+
+        await self._async_delete_classification_request(
+             url, body
+        )
+
+    @dynamic_catch
+    def clear_zone_membership(
+            self,
+            element_guid: str,
+            body: dict | DeleteClassificationRequestBody
+    ) -> None:
+        """
+        Remove the zone membership classification from an element.
+
+        Ownership: https://egeria-project.org/types/4/0424-Governance-Zones/
+
+        Parameters
+        ----------
+        element_guid: str
+            - the identity of the element to update
+        body: dict | DeleteClassificationRequestBody
+            - structure containing zone information - see Notes
+
+        Returns
+        -------
+        None
+
+        Raises
+        ------
+        PyegeriaException
+
+        """
+
+        loop = asyncio.get_event_loop()
+        loop.run_until_complete(
+            self._async_clear_zone_membership(element_guid, body)
+        )
+
+
+
+
+
+
+
+
+    async def _async_set_retention_classification(
             self,
             element_guid: str,
             body: dict,
@@ -6048,14 +7124,14 @@ class ClassificationManager(Client2):
 
         loop = asyncio.get_event_loop()
         loop.run_until_complete(
-            self.async_set_retention_classification(
+            self._async_set_retention_classification(
                 element_guid,
                 body,
                 time_out,
             )
         )
 
-    async def async_clear_retention_classification(
+    async def _async_clear_retention_classification(
             self,
             element_guid: str,
             for_lineage: bool = None,
@@ -6151,7 +7227,7 @@ class ClassificationManager(Client2):
 
         loop = asyncio.get_event_loop()
         loop.run_until_complete(
-            self.async_clear_retention_classification(
+            self._async_clear_retention_classification(
                 element_guid,
                 for_lineage,
                 for_duplicate_processing,
@@ -6160,7 +7236,7 @@ class ClassificationManager(Client2):
             )
         )
 
-    async def async_set_governance_expectation(
+    async def _async_set_governance_expectation(
             self,
             element_guid: str,
             body: dict,
@@ -6290,14 +7366,14 @@ class ClassificationManager(Client2):
 
         loop = asyncio.get_event_loop()
         loop.run_until_complete(
-            self.async_set_governance_expectation(
+            self._async_set_governance_expectation(
                 element_guid,
                 body,
                 time_out,
             )
         )
 
-    async def async_clear_governance_expectation(
+    async def _async_clear_governance_expectation(
             self,
             element_guid: str,
             for_lineage: bool = None,
@@ -6349,7 +7425,7 @@ class ClassificationManager(Client2):
             "POST", url, body_slimmer(body), time_out=time_out
         )
 
-    async def async_update_governance_expectation(
+    async def _async_update_governance_expectation(
             self,
             element_guid: str,
             body: dict,
@@ -6424,7 +7500,7 @@ class ClassificationManager(Client2):
             element_guid: str,
             body: dict,
             time_out: int = default_time_out,
-        ) -> None:
+    ) -> None:
         """
          Classify/reclassify the element (typically an asset) to Add the governance expectations classification to an element. Async version
          Governance Rollout: https://egeria-project.org/types/4/0450-Governance-Rollout/
@@ -6482,15 +7558,14 @@ class ClassificationManager(Client2):
 
         loop = asyncio.get_event_loop()
         loop.run_until_complete(
-            self.async_update_governance_expectation(
+            self._async_update_governance_expectation(
                 element_guid,
                 body,
                 time_out,
             )
         )
 
-
-    async def async_set_security_tags_classification(
+    async def _async_set_security_tags_classification(
             self,
             element_guid: str,
             body: dict,
@@ -6617,14 +7692,14 @@ class ClassificationManager(Client2):
 
         loop = asyncio.get_event_loop()
         loop.run_until_complete(
-            self.async_set_security_tags_classification(
+            self._async_set_security_tags_classification(
                 element_guid,
                 body,
                 time_out,
             )
         )
 
-    async def async_clear_security_tags_classification(
+    async def _async_clear_security_tags_classification(
             self,
             element_guid: str,
             for_lineage: bool = None,
@@ -6714,7 +7789,7 @@ class ClassificationManager(Client2):
 
         loop = asyncio.get_event_loop()
         loop.run_until_complete(
-            self.async_clear_security_tags_classification(
+            self._async_clear_security_tags_classification(
                 element_guid,
                 for_lineage,
                 for_duplicate_processing,
@@ -6723,7 +7798,7 @@ class ClassificationManager(Client2):
             )
         )
 
-    async def async_setup_semantic_assignment(
+    async def _async_setup_semantic_assignment(
             self,
             glossary_term_guid: str,
             element_guid: str,
@@ -6853,7 +7928,7 @@ class ClassificationManager(Client2):
 
         loop = asyncio.get_event_loop()
         loop.run_until_complete(
-            self.async_setup_semantic_assignment(
+            self._async_setup_semantic_assignment(
                 glossary_term_guid,
                 element_guid,
                 body,
@@ -6861,7 +7936,7 @@ class ClassificationManager(Client2):
             )
         )
 
-    async def async_clear_semantic_assignment_classification(
+    async def _async_clear_semantic_assignment_classification(
             self,
             glossary_term_guid: str,
             element_guid: str,
@@ -6958,7 +8033,7 @@ class ClassificationManager(Client2):
 
         loop = asyncio.get_event_loop()
         loop.run_until_complete(
-            self.async_clear_semantic_assignment_classification(
+            self._async_clear_semantic_assignment_classification(
                 glossary_term_guid,
                 element_guid,
                 for_lineage,
@@ -6968,7 +8043,7 @@ class ClassificationManager(Client2):
             )
         )
 
-    async def async_add_element_to_subject_area(
+    async def _async_add_element_to_subject_area(
             self,
             element_guid: str,
             body: dict,
@@ -7074,14 +8149,14 @@ class ClassificationManager(Client2):
 
         loop = asyncio.get_event_loop()
         loop.run_until_complete(
-            self.async_add_element_to_subject_area(
+            self._async_add_element_to_subject_area(
                 element_guid,
                 body,
                 time_out,
             )
         )
 
-    async def async_remove_element_from_subject_area(
+    async def _async_remove_element_from_subject_area(
             self,
             element_guid: str,
             for_lineage: bool = None,
@@ -7181,7 +8256,7 @@ class ClassificationManager(Client2):
 
         loop = asyncio.get_event_loop()
         loop.run_until_complete(
-            self.async_remove_element_from_subject_area(
+            self._async_remove_element_from_subject_area(
                 element_guid,
                 for_lineage,
                 for_duplicate_processing,
@@ -7189,8 +8264,6 @@ class ClassificationManager(Client2):
                 time_out,
             )
         )
-
-
 
 
 if __name__ == "__main__":
