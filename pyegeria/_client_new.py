@@ -4925,6 +4925,7 @@ class Client2(BaseClient):
         elif isinstance(body, dict):
             validated_body = self._get_request_adapter.validate_python(body)
         else:
+            _type = _type.replace(" ", "")
             body = {
                 "class": "GetRequestBody",
                 "metadataElementTypeName": _type

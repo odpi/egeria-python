@@ -8,7 +8,7 @@ from datetime import datetime
 from loguru import logger
 from pydantic import ValidationError
 
-from .md_commands.project_commands import process_link_project_dependency_command
+from md_processing.md_commands.project_commands import process_link_project_dependency_command
 
 
 

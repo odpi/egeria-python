@@ -743,7 +743,7 @@ class TestSolutionArchitect:
 
 
     def test_find_solution_blueprints(self):
-        search_string = "Initial Data"
+        search_string = "*"
         try:
             s_client = SolutionArchitect(
                 self.view_server, self.platform_url, self.user, self.password
@@ -751,7 +751,7 @@ class TestSolutionArchitect:
 
             s_client.create_egeria_bearer_token()
             start_time = time.perf_counter()
-            response = s_client.find_solution_blueprints(search_string, output_format='JSON', report_spec='Solution-Blueprint')
+            response = s_client.find_solution_blueprints(search_string, output_format='DICT', report_spec='Solution-Blueprint')
             duration = time.perf_counter() - start_time
             print(
                 f"\n\tDuration was {duration:.2f} seconds, Type: {type(response)}, Element count is {len(response)}"
@@ -1259,7 +1259,7 @@ class TestSolutionArchitect:
             s_client.close_session()
 
     def test_get_solution_component_by_guid(self):
-        guid = '1a16188a-9cba-4c86-835b-e223e97d22bb'
+        guid = '8e5aa063-468a-4504-a93f-5960f8bcee71'
         try:
             s_client = SolutionArchitect(
                 self.view_server, self.platform_url, self.user, self.password
@@ -1281,11 +1281,9 @@ class TestSolutionArchitect:
 
             assert True
         except (
-            InvalidParameterException,
-            PropertyServerException,
-            UserNotAuthorizedException,
+            PyegeriaException,
         ) as e:
-            print_exception_response(e)
+            print_basic_exception(e)
             assert False, "Invalid request"
 
         finally:
@@ -1356,7 +1354,7 @@ class TestSolutionArchitect:
             s_client.close_session()
 
     def test_find_solution_components(self):
-        filter = "*"
+        filter = "Docling"
         try:
             s_client = SolutionArchitect(
                 self.view_server, self.platform_url, self.user, self.password

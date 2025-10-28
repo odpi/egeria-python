@@ -2205,6 +2205,7 @@ generated_format_sets = FormatSetDict({
                                            Column(name='Qualified Name', key='qualified_name'),
                                            Column(name='Category', key='category'),
                                            Column(name='Description', key='description'),
+                                           Column(name='URL', key='url'),
                                            Column(name='Status', key='element_status'),
                                            Column(name='Solution Component Type', key='solution_component_type'),
                                            Column(name='Planned Deployed Implementation Type',
