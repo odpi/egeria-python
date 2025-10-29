@@ -44,8 +44,8 @@ logger.info(f"Console width is {app_config.console_width}")
 
 view_server = app_config.egeria_view_server
 view_url = app_config.egeria_view_server_url
-user = app_settings.User_Profile.user_name
-user_pass = app_settings.User_Profile.user_pwd
+user = EGERIA_USER
+user_pass = EGERIA_USER_PASSWORD
 
 
 console = Console(
@@ -89,7 +89,7 @@ try:
     display_name = "Digital Products MarketPlace"
     description = "This is the digital products marketplace"
     category = "GeoSpatial"
-    qualified_name = client.__create_qualified_name__("Folder", display_name)
+    qualified_name = client.__create_qualified_name__("Marketplace", display_name)
 
     props_body = {
         "class": "DigitalProductCatalogProperties",

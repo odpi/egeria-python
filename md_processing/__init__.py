@@ -32,6 +32,12 @@ from md_processing.md_commands.data_designer_commands import (process_data_field
                                                               process_data_dict_upsert_command,
                                                               process_data_structure_upsert_command)
 
+from md_processing.md_commands.feedback_commands import (process_add_comment_command, process_upsert_note_log_command,
+                                                         process_upsert_note_command, process_attach_note_log_command,
+                                                         process_upsert_informal_tag_command, process_tag_element_command)
+
+
+
 from md_processing.md_commands.glossary_commands import (process_glossary_upsert_command,
                                                          process_term_upsert_command,
                                                          process_link_term_term_relationship_command,

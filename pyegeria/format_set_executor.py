@@ -202,7 +202,7 @@ async def _async_run_report(
 
 
 def exec_report_spec(
-    format_set_name: str,
+    format_set_name: str | dict,
     *,
     output_format: str = "DICT",
     params: Optional[Dict[str, Any]] = None,
@@ -224,7 +224,10 @@ def exec_report_spec(
     params = dict(params or {})
 
     # Resolve the format set and action
-    fmt = select_report_spec(format_set_name, output_format)
+    if isinstance(format_set_name, dict):
+        fmt = format_set_name
+    else:
+        fmt = select_report_spec(format_set_name, output_format)
     if not fmt:
         raise ValueError(
             f"Output format set '{format_set_name}' does not have a compatible '{output_format}' format."

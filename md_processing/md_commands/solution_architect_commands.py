@@ -389,7 +389,7 @@ def process_blueprint_upsert_command(egeria_client: EgeriaTech, txt: str, direct
                         'guid': guid, 'display_name': display_name
                         })
                     journal_entry_guid = add_note_in_dr_e(egeria_client, qualified_name, display_name, journal_entry)
-                    msg = f"Created Element `{display_name}` with GUID {guid}\n\n___"
+                    msg = f"\n\nCreated Element `{display_name}` with GUID {guid}\n\n___"
                     print(Markdown(msg))
                     logger.success(msg)
                     return egeria_client.get_solution_blueprint_by_guid(guid, output_format='MD', report_spec = "Solution-Blueprint-DrE")
@@ -537,7 +537,9 @@ def process_solution_component_upsert_command(egeria_client: EgeriaTech, txt: st
                     })
 
                 egeria_client.update_solution_component(guid, body)
-                logger.success(f"==>Updated  {object_type} `{display_name}` with GUID {guid}\n")
+                msg = f"\n==>Updated  {object_type} `{display_name}` with GUID {guid}\n"
+                logger.success(msg)
+                print(Markdown(msg))
                 update_element_dictionary(qualified_name, {
                     'guid': guid, 'display_name': display_name
                     })
@@ -602,8 +604,10 @@ def process_solution_component_upsert_command(egeria_client: EgeriaTech, txt: st
                         update_element_dictionary(qualified_name, {
                             'guid': guid, 'display_name': display_name
                             })
-                        msg = f"Created Element `{display_name}` with GUID {guid}\n\n___"
+                        msg = f"\n\n==> Created Element `{display_name}` with GUID {guid}\n\n___"
                         logger.success(msg)
+                        print(Markdown(msg))
+
                         if search_keywords:
                             add_search_keywords(egeria_client, guid, search_keywords)
 
@@ -632,6 +636,7 @@ def process_solution_component_upsert_command(egeria_client: EgeriaTech, txt: st
                             logger.trace(msg)
                         journal_entry_guid = add_note_in_dr_e(egeria_client, qualified_name, display_name,
                                                               journal_entry)
+
                         return egeria_client.get_solution_component_by_guid(guid, output_format='MD')
                     else:
                         msg = f"Failed to create element `{display_name}` with GUID {guid}\n\n___"

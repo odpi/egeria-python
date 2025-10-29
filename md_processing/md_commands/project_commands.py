@@ -1,5 +1,5 @@
 """
-This file contains glossary-related object_action functions for processing Egeria Markdown
+This file contains project-related object_action functions for processing Egeria Markdown
 """
 
 import json

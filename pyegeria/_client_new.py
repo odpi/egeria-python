@@ -23,7 +23,7 @@ from pyegeria._base_client import BaseClient
 from pyegeria._exceptions_new import (
     PyegeriaConnectionException, PyegeriaInvalidParameterException, PyegeriaException
 )
-from pyegeria._globals import max_paging_size, NO_ELEMENTS_FOUND, default_time_out
+from pyegeria._globals import max_paging_size, NO_ELEMENTS_FOUND, default_time_out, COMMENT_TYPES
 from pyegeria.base_report_formats import get_report_spec_match
 from pyegeria.base_report_formats import select_report_spec
 from pyegeria.models import (SearchStringRequestBody, FilterRequestBody, GetRequestBody, NewElementRequestBody,
@@ -920,12 +920,15 @@ class Client2(BaseClient):
 
         """
         if body is None:
+            if comment_type not in COMMENT_TYPES:
+                context = {"issue": "Invalid comment type"}
+                raise PyegeriaInvalidParameterException(context=context)
             body = {
                 "class": "NewAttachmentRequestBody",
                 "properties": {
                     "class": "CommentProperties",
-                    "qualifiedName": self.make_feedback_qn("Reply", comment_guid),
-                    "desription": comment,
+                    "qualifiedName": self.make_feedback_qn("Comment", comment_guid),
+                    "description": comment,
                     "commentType": comment_type
                 }
             }
@@ -1005,6 +1008,9 @@ class Client2(BaseClient):
 
         """
         if body is None:
+            if comment_type not in COMMENT_TYPES:
+                context = {"issue": "Invalid comment type"}
+                raise PyegeriaInvalidParameterException(context=context)
             body = {
                 "class": "NewAttachmentRequestBody",
                 "properties": {
@@ -1095,6 +1101,9 @@ class Client2(BaseClient):
 
         """
         if body is None and comment:
+            if comment_type not in COMMENT_TYPES:
+                context = {"issue": "Invalid comment type"}
+                raise PyegeriaInvalidParameterException(context=context)
             body = {
                 "class": "UpdateElementRequestBody",
                 "mergeUpdate": merge_update,
@@ -1426,7 +1435,7 @@ class Client2(BaseClient):
         """
         loop = asyncio.get_event_loop()
         response = loop.run_until_complete(
-            self._async_get_note_log_by_guid(comment_guid, element_type, body, output_format, report_spec)
+            self._async_get_comment_by_guid(comment_guid, element_type, body, output_format, report_spec)
         )
         return response
 
@@ -1707,8 +1716,8 @@ class Client2(BaseClient):
         description: str, optional
             - text of the note log
         body
-            - contains the name of the log and text. If present, the contents overridee
-              the supplied parameters.
+            - contains the name of the log and text. If present, the contents overrides
+              the supplied parameters. If no element is provided, the property class must be "NewElementRequestBody".
 
         Returns
         -------
@@ -1719,7 +1728,7 @@ class Client2(BaseClient):
         PyegeriaException
         Notes:
         ------
-        Sample Body:
+        Sample Body (simple version attaching to an associated element):
 
         {
             "class" : "NewAttachmentRequestBody",
@@ -1740,8 +1749,47 @@ class Client2(BaseClient):
               }
             }
         }
+
+        Full feature version allowing optional standalone use or attachment to an additional element:
+        {
+          "class" : "NewElementRequestBody",
+          "anchorGUID" : "add guid here",
+          "isOwnAnchor": false,
+          "parentGUID": "add guid here",
+          "parentRelationshipTypeName": "add type name here",
+          "parentRelationshipProperties": {
+            "class": "RelationshipElementProperties",
+            "propertyValueMap" : {
+              "description" : {
+                "class": "PrimitiveTypePropertyValue",
+                "typeName": "string",
+                "primitiveValue" : "New description"
+              }
+            }
+          },
+          "parentAtEnd1": false,
+          "properties": {
+            "class": "NoteLogProperties",
+            "qualifiedName": "Add unique name here",
+            "displayName": "Add name here",
+            "description": "Add description here",
+            "additionalProperties": {
+              "propertyName 1": "property value 1",
+              "propertyName 2": "property value 2"
+            },
+            "effectiveFrom": "{{$isoTimestamp}}",
+            "effectiveTo": "{{$isoTimestamp}}"
+          },
+          "externalSourceGUID": "add guid here",
+          "externalSourceName": "add qualified name here",
+          "effectiveTime" : "{{$isoTimestamp}}",
+          "forLineage" : false,
+          "forDuplicateProcessing" : false
+        }
+
+
         """
-        if body is None:
+        if body is None and element_guid:
             body = {
                 "class": "NewAttachmentRequestBody",
                 "properties": {
@@ -1751,6 +1799,17 @@ class Client2(BaseClient):
                     "description": description,
                 }
             }
+        elif body is None and not element_guid:
+            body = {
+                "class": "NewAElementRequestBody",
+                "properties": {
+                    "class": "NoteLogProperties",
+                    "displayName": display_name,
+                    "qualifiedName": self.make_feedback_qn("NoteLog", element_guid, display_name),
+                    "description": description,
+                }
+            }
+
         elif body is None and display_name is None:
             context = {"issue": "Invalid display name and body not provided"}
             raise PyegeriaInvalidParameterException(context=context)
@@ -1815,6 +1874,44 @@ class Client2(BaseClient):
               }
             }
         }
+
+        Full feature version allowing optional standalone use or attachment to an additional element:
+        {
+          "class" : "NewElementRequestBody",
+          "anchorGUID" : "add guid here",
+          "isOwnAnchor": false,
+          "parentGUID": "add guid here",
+          "parentRelationshipTypeName": "add type name here",
+          "parentRelationshipProperties": {
+            "class": "RelationshipElementProperties",
+            "propertyValueMap" : {
+              "description" : {
+                "class": "PrimitiveTypePropertyValue",
+                "typeName": "string",
+                "primitiveValue" : "New description"
+              }
+            }
+          },
+          "parentAtEnd1": false,
+          "properties": {
+            "class": "NoteLogProperties",
+            "qualifiedName": "Add unique name here",
+            "displayName": "Add name here",
+            "description": "Add description here",
+            "additionalProperties": {
+              "propertyName 1": "property value 1",
+              "propertyName 2": "property value 2"
+            },
+            "effectiveFrom": "{{$isoTimestamp}}",
+            "effectiveTo": "{{$isoTimestamp}}"
+          },
+          "externalSourceGUID": "add guid here",
+          "externalSourceName": "add qualified name here",
+          "effectiveTime" : "{{$isoTimestamp}}",
+          "forLineage" : false,
+          "forDuplicateProcessing" : false
+        }
+
         """
         loop = asyncio.get_event_loop()
         response = loop.run_until_complete(
@@ -2208,7 +2305,7 @@ class Client2(BaseClient):
         return response
 
     @dynamic_catch
-    def get_note_log_by_name(
+    def get_note_logs_by_name(
             self, filter: str,
             element_type: str = "NoteLog",
             body: dict | FilterRequestBody = None,
@@ -3354,7 +3451,7 @@ class Client2(BaseClient):
         )
 
     @dynamic_catch
-    async def _async_get_tag(
+    async def _async_get_tag_by_guid(
             self,
             tag_guid: str,
             body: dict | GetRequestBody = None,
@@ -3396,7 +3493,7 @@ class Client2(BaseClient):
         return response
 
     @dynamic_catch
-    def get_tag(
+    def get_tag_by_guid(
             self,
             tag_guid: str,
             body: dict | GetRequestBody = None,
@@ -3427,7 +3524,7 @@ class Client2(BaseClient):
             """
         loop = asyncio.get_event_loop()
         response = loop.run_until_complete(
-            self._async_get_tag(tag_guid, body, output_format, report_spec)
+            self._async_get_tag_by_guid(tag_guid, body, output_format, report_spec)
         )
         return response
 
@@ -4925,6 +5022,7 @@ class Client2(BaseClient):
         elif isinstance(body, dict):
             validated_body = self._get_request_adapter.validate_python(body)
         else:
+            _type = _type.replace(" ", "")
             body = {
                 "class": "GetRequestBody",
                 "metadataElementTypeName": _type

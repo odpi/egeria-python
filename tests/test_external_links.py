@@ -109,7 +109,7 @@ class TestExternalReferences:
             )
             token = p_client.create_egeria_bearer_token(self.good_user_2, "secret")
             start_time = time.perf_counter()
-            search_string = "ExtRef::Milvus---Web-Site"
+            search_string = "*"
 
             response = p_client.find_external_references(
                 search_string, metadata_element_types=["ExternalReference"],output_format="JSON", report_spec="Regerenceable"
@@ -212,9 +212,9 @@ class TestExternalReferences:
             )
             token = p_client.create_egeria_bearer_token(self.good_user_2, "secret")
             start_time = time.perf_counter()
-            ref_guid = 'c85c1f5e-f7fb-4a2c-82ee-4bc90534fcbd'
+            ref_guid = '4aa07538-57de-4d86-ab5c-566bbc3531c8'
 
-            response = p_client.get_external_reference_by_guid(ref_guid, element_type="Cited Document", output_format="DICT", report_spec="External-Reference-DrE")
+            response = p_client.get_external_reference_by_guid(ref_guid, element_type="CitedDocument", output_format="DICT", report_spec="External-Reference-DrE")
             duration = time.perf_counter() - start_time
             duration = time.perf_counter() - start_time
 
@@ -326,8 +326,8 @@ class TestExternalReferences:
             )
             token = p_client.create_egeria_bearer_token(self.good_user_2, "secret")
             start_time = time.perf_counter()
-            ref_guid = '75821ed5-eec9-41cf-867c-349eb8c797f6'
-            element = '60f00f73-76c6-4227-9859-313253a5fdbe'
+            ref_guid = '43419d38-6b33-4509-b48f-b588b55a9136'
+            element = '8e5aa063-468a-4504-a93f-5960f8bcee71'
             pages = '1'
             description = 'This is a test description'
             body = {
@@ -430,7 +430,7 @@ class TestExternalReferences:
 
             token = p_client.create_egeria_bearer_token(self.good_user_2, "secret")
             start_time = time.perf_counter()
-            ext_ref_guid = '----'
+            ext_ref_guid = '4aa07538-57de-4d86-ab5c-566bbc3531c8'
 
             response = p_client.delete_external_reference(ext_ref_guid)
             duration = time.perf_counter() - start_time

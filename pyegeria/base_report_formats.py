@@ -348,6 +348,23 @@ base_report_specs = FormatSetDict({
             )
         ],
     ),
+    "Comments-DrE": FormatSet(
+        target_type="Comments",
+        heading="Comments",
+        description="Details of a comment.",
+        annotations={},  # No specific annotations
+        formats=[
+            Format(
+                types=["ALL"],
+                attributes=[
+                    Column(name='Display Name', key='display_name'),
+                    Column(name="Qualified Name", key='qualified_name'),
+                    Column(name="GUID", key='guid'),
+                    Column(name="Comment", key='description')
+                ],
+            )
+        ],
+    ),
 
     "ExternalReference": FormatSet(
         target_type="External Reference",
@@ -2205,6 +2222,7 @@ generated_format_sets = FormatSetDict({
                                            Column(name='Qualified Name', key='qualified_name'),
                                            Column(name='Category', key='category'),
                                            Column(name='Description', key='description'),
+                                           Column(name='URL', key='url'),
                                            Column(name='Status', key='element_status'),
                                            Column(name='Solution Component Type', key='solution_component_type'),
                                            Column(name='Planned Deployed Implementation Type',

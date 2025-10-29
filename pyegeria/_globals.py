@@ -15,13 +15,14 @@ enable_ssl_check = False
 max_paging_size = 500
 default_time_out = 30
 DEBUG_LEVEL = "quiet"
-comment_types = (
+COMMENT_TYPES = (
+    "STANDARD_COMMENT",
     "ANSWER",
     "OTHER",
     "QUESTION",
-    "STANDARD_COMMENT",
     "SUGGESTION",
     "USAGE_EXPERIENCE",
+    "REQUIREMENT"
 )
 star_ratings = (
     "FIVE_STARS",
