@@ -348,6 +348,23 @@ base_report_specs = FormatSetDict({
             )
         ],
     ),
+    "Comments-DrE": FormatSet(
+        target_type="Comments",
+        heading="Comments",
+        description="Details of a comment.",
+        annotations={},  # No specific annotations
+        formats=[
+            Format(
+                types=["ALL"],
+                attributes=[
+                    Column(name='Display Name', key='display_name'),
+                    Column(name="Qualified Name", key='qualified_name'),
+                    Column(name="GUID", key='guid'),
+                    Column(name="Comment", key='description')
+                ],
+            )
+        ],
+    ),
 
     "ExternalReference": FormatSet(
         target_type="External Reference",

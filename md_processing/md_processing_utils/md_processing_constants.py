@@ -167,7 +167,8 @@ COLLECTION_CREATE = ["Create Collection", "Update Collection", "Create Digital P
                 "Update Digital Product Catalog",
                 "Create Root Collection", "Update Root Collection", "Create Folder", "Update Folder",
             ]
-
+FEEDBACK_COMMANDS = ["Create Comment", "Update Comment", "Create NoteLog", "Update NoteLog", "Create Note", "Update Note",
+                     "Create Informal Tag", "Update Informal Tag", "Tag Element"]
 
 command_list = ["Provenance", "Create Glossary", "Update Glossary", "Create Term", "Update Term", "List Terms",
                 "List Term Details", "List Glossary Terms", "List Term History", "List Term Revision History",
@@ -256,7 +257,7 @@ command_list.extend(PROJECT_COMMANDS)
 command_list.extend(EXT_REF_COMMANDS)
 command_list.extend(["Link Governance Response", "Detach Governance Response",
                      "Link Governance Mechanism", "Detach Governance Mechanism"])
-
+command_list.extend(FEEDBACK_COMMANDS)
 pre_command = "\n---\n==> Processing object_action:"
 command_seperator = Markdown("\n---\n")
 EXISTS_REQUIRED = "Exists Required"
@@ -265,18 +266,147 @@ COMMAND_DEFINITIONS = {}
 debug_level = DEBUG_LEVEL
 
 
+# def load_commands(filename: str) -> None:
+#     global COMMAND_DEFINITIONS
+#
+#     try:
+#         config_path = importlib.resources.files("md_processing") / "data" / filename
+#         config_str = config_path.read_text(encoding="utf-8")
+#         COMMAND_DEFINITIONS = json.loads(config_str)
+#
+#     except FileNotFoundError:
+#         msg = f"ERROR: File {filename} not found."
+#         print(ERROR, msg, debug_level)
+
 def load_commands(filename: str) -> None:
     global COMMAND_DEFINITIONS
 
     try:
         config_path = importlib.resources.files("md_processing") / "data" / filename
         config_str = config_path.read_text(encoding="utf-8")
-        COMMAND_DEFINITIONS = json.loads(config_str)
+
+        # Validate JSON before attempting to load
+        try:
+            COMMAND_DEFINITIONS = json.loads(config_str)
+            print(f"Successfully loaded {filename}")
+        except json.JSONDecodeError as json_err:
+            # Provide detailed error information
+            error_line = json_err.lineno
+            error_col = json_err.colno
+            error_pos = json_err.pos
+
+            # Extract context around the error
+            lines = config_str.split('\n')
+            start_line = max(0, error_line - 3)
+            end_line = min(len(lines), error_line + 2)
+
+            context = '\n'.join([
+                f"Line {i + 1}: {lines[i]}"
+                for i in range(start_line, end_line)
+            ])
+
+            error_msg = (
+                f"\n{'=' * 80}\n"
+                f"ERROR: Invalid JSON in {filename}\n"
+                f"{'=' * 80}\n"
+                f"Location: Line {error_line}, Column {error_col} (char position {error_pos})\n"
+                f"Error: {json_err.msg}\n"
+                f"\nContext around error:\n{context}\n"
+                f"{'=' * 80}\n"
+                f"\nPlease fix the JSON syntax error in {filename} at line {error_line}.\n"
+                f"Common issues:\n"
+                f"  - Missing comma between elements\n"
+                f"  - Trailing comma before closing bracket/brace\n"
+                f"  - Unescaped quotes in strings\n"
+                f"  - Missing closing bracket/brace\n"
+                f"{'=' * 80}\n"
+            )
+
+            print(error_msg)
+
+            # Initialize with empty dict to allow application to continue
+            # (though functionality will be limited)
+            COMMAND_DEFINITIONS = {}
+
+            # Re-raise with more context
+            raise json.JSONDecodeError(
+                f"Invalid JSON in {filename}: {json_err.msg}",
+                json_err.doc,
+                json_err.pos
+            ) from json_err
 
     except FileNotFoundError:
         msg = f"ERROR: File {filename} not found."
-        print(ERROR, msg, debug_level)
+        print(msg)
+        COMMAND_DEFINITIONS = {}
+        raise FileNotFoundError(msg)
+    except Exception as e:
+        msg = f"ERROR: Unexpected error loading {filename}: {str(e)}"
+        print(msg)
+        COMMAND_DEFINITIONS = {}
+        raise
 
+
+def validate_json_file(filename: str) -> tuple[bool, str]:
+    """
+    Validate a JSON file and return status with error details.
+
+    Returns:
+        tuple: (is_valid: bool, message: str)
+    """
+    try:
+        config_path = importlib.resources.files("md_processing") / "data" / filename
+        config_str = config_path.read_text(encoding="utf-8")
+        json.loads(config_str)
+        return True, f"JSON file {filename} is valid"
+    except json.JSONDecodeError as e:
+        error_msg = (
+            f"Invalid JSON at line {e.lineno}, column {e.colno}: {e.msg}\n"
+            f"Character position: {e.pos}"
+        )
+        return False, error_msg
+    except Exception as e:
+        return False, f"Error reading file: {str(e)}"
+
+
+def find_json_errors(filename: str, max_errors: int = 10) -> list[str]:
+    """
+    Attempt to find multiple JSON errors in a file.
+
+    This function tries to parse the JSON and collect error information.
+    """
+    errors = []
+    try:
+        config_path = importlib.resources.files("md_processing") / "data" / filename
+        config_str = config_path.read_text(encoding="utf-8")
+
+        # Try to parse
+        json.loads(config_str)
+        return ["No errors found - JSON is valid"]
+
+    except json.JSONDecodeError as e:
+        lines = config_str.split('\n')
+        error_line = e.lineno - 1  # Convert to 0-indexed
+
+        # Get context
+        start = max(0, error_line - 2)
+        end = min(len(lines), error_line + 3)
+
+        error_context = []
+        for i in range(start, end):
+            prefix = ">>> " if i == error_line else "    "
+            error_context.append(f"{prefix}Line {i + 1}: {lines[i]}")
+
+        error_msg = (
+                f"Error at line {e.lineno}, column {e.colno}: {e.msg}\n" +
+                "\n".join(error_context)
+        )
+        errors.append(error_msg)
+
+    except Exception as e:
+        errors.append(f"Unexpected error: {str(e)}")
+
+    return errors
 
 def get_command_spec(command: str) -> dict | None:
     global COMMAND_DEFINITIONS

@@ -180,3 +180,45 @@ def test_get_notes_for_note_log():
     except (PyegeriaException, JSONDecodeError) as e:
         print_basic_exception(e)
         assert False
+
+def test_add_comment():
+    try:
+        client = Client2(view_server, view_url, user, user_pass)
+        client.create_egeria_bearer_token()
+        associated_guid = "ec80a761-2472-4c2a-a088-872c68b4961d"
+        comment = "a new comment"
+        comment_type = "STANDARD_COMMENT"
+        body = {
+            "class": "NewAttachmentRequestBody",
+            "properties": {
+                "class": "CommentProperties",
+                "qualifiedName": client.make_feedback_qn("Comment", associated_guid),
+                "description": comment,
+                "commentType": comment_type
+            }
+        }
+        response = client.add_comment_to_element(associated_guid, body=body)
+        if isinstance(response, dict | list):
+            print(json.dumps(response, indent = 2))
+        else:
+            print(response)
+    except (PyegeriaException, JSONDecodeError) as e:
+        print_basic_exception(e)
+        assert False
+
+
+
+def test_get_comment_by_guid():
+    try:
+        client = Client2(view_server, view_url, user, user_pass)
+        client.create_egeria_bearer_token()
+        guid = '11c2d9aa-8128-43c3-a06d-7231f148ecc6'
+
+        response = client.get_comment_by_guid(guid)
+        if isinstance(response, dict | list):
+            print(json.dumps(response, indent = 2))
+        else:
+            print(response)
+    except (PyegeriaException, JSONDecodeError) as e:
+        print_basic_exception(e)
+        assert False

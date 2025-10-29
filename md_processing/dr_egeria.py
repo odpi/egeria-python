@@ -45,6 +45,11 @@ from md_processing.md_commands.data_designer_commands import (process_data_spec_
                                                               process_data_structure_upsert_command,
                                                               process_data_class_upsert_command)
 
+from md_processing.md_commands.feedback_commands import (process_add_comment_command, process_upsert_note_log_command,
+                                                         process_upsert_note_command, process_attach_note_log_command,
+                                                         process_upsert_informal_tag_command, process_tag_element_command)
+
+
 from pyegeria import EgeriaTech, PyegeriaException, print_basic_exception, print_validation_error
 
 EGERIA_METADATA_STORE = os.environ.get("EGERIA_METADATA_STORE", "active-metadata-store")
@@ -116,6 +121,19 @@ def process_md_file(input_file: str, output_folder:str, directive: str, server: 
             if potential_command == "Provenance":
                 result = process_provenance_command(input_file, current_block)
                 prov_found = True
+
+            elif potential_command in ["Create Comment", "Update Comment"]:
+                result = process_add_comment_command(client, current_block, directive)
+            elif potential_command in ["Create NoteLog", "Update NoteLog"]:
+                result = process_upsert_note_log_command(client, current_block, directive)
+            elif potential_command in ["Create Note", "Update Note"]:
+                result = process_upsert_note_command(client, current_block, directive)
+            elif potential_command in ["Link NoteLog", "Detach NoteLog"]:
+                result = process_attach_note_log_command(client, current_block, directive)
+            elif potential_command in ["Create Informal Tag", "Update Informal Tag"]:
+                result = process_upsert_informal_tag_command(client, current_block, directive)
+            elif potential_command in ["Link Tag", "Detach Tag"]:
+                result = process_tag_element_command(client, current_block, directive)
 
             elif potential_command in EXT_REF_UPSERT:
                 result = process_external_reference_upsert_command(client, current_block, directive)
