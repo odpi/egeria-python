@@ -391,17 +391,25 @@ def print_basic_exception(e: PyegeriaException):
     table.add_column("Item", justify="left", width=80)
 
     if isinstance(e, PyegeriaException):
-        table.add_row("HTTP Code", str(e.response_code))
-        table.add_row("HTTP Reason", str(http_reason))
-        table.add_row("Egeria Code", str(related_code))
-        table.add_row("Caller Method", e.context.get("caller method", "---")) if e.context else ""
-        table.add_row("Request URL", str(e.response_url))
-        table.add_row("Egeria Message",
-                      format_dict_to_string(related_response.get('exceptionErrorMessage',"")) if isinstance(related_response,dict) else related_response)
-        table.add_row("Egeria User Action",
-                      format_dict_to_string(related_response.get('exceptionUserAction',"")) if isinstance(related_response,dict) else related_response)
+        if e.context:
+            table.add_row("Context", e.context.get('reason',""), style = "bold yellow")
+        if e.response:
+            table.add_row("HTTP Code", str(e.response_code))
+            table.add_row("HTTP Reason", str(http_reason))
+            table.add_row("Egeria Code", str(related_code))
+            table.add_row("Caller Method", e.context.get("caller method", "---")) if e.context else ""
+            table.add_row("Request URL", str(e.response_url))
+            if related_response:
+                if isinstance(related_response, dict):
+                    table.add_row("Egeria Message",
+                          format_dict_to_string(related_response.get('exceptionErrorMessage',"")))
+                elif isinstance(related_response, str):
+                    table.add_row(related_response,)
 
-        exception_msg_id = related_response.get("exceptionErrorMessageId", None) if isinstance(related_response,dict) else related_response
+            table.add_row("Egeria User Action",
+                          format_dict_to_string(related_response.get('exceptionUserAction',"")) if isinstance(related_response,dict) else related_response)
+
+            exception_msg_id = related_response.get("exceptionErrorMessageId", None) if isinstance(related_response,dict) else related_response
         table.add_row("Pyegeria Exception", exception_msg_id)
         table.add_row("Pyegeria Message", e.message)
         console.print(table)

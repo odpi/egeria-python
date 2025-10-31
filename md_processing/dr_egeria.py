@@ -23,7 +23,7 @@ from md_processing import (extract_command, process_glossary_upsert_command, pro
                            process_csv_element_upsert_command,
                            process_link_term_term_relationship_command,
                            process_information_supply_chain_upsert_command,
-                           process_information_supply_chain_link_unlink_command, process_sol_arch_list_command,
+                           process_information_supply_chain_link_unlink_command,
                            process_digital_product_upsert_command, process_agreement_upsert_command,
                            process_collection_upsert_command, process_link_agreement_item_command,
                            process_gov_definition_upsert_command, GOV_COM_LIST, GOV_LINK_LIST,
@@ -45,7 +45,7 @@ from md_processing.md_commands.data_designer_commands import (process_data_spec_
                                                               process_data_structure_upsert_command,
                                                               process_data_class_upsert_command)
 
-from md_processing.md_commands.feedback_commands import (process_add_comment_command, process_upsert_note_log_command,
+from md_processing.md_commands.feedback_commands import (process_add_comment_command, process_journal_entry_command,
                                                          process_upsert_note_command, process_attach_note_log_command,
                                                          process_upsert_informal_tag_command, process_tag_element_command)
 
@@ -124,15 +124,15 @@ def process_md_file(input_file: str, output_folder:str, directive: str, server: 
 
             elif potential_command in ["Create Comment", "Update Comment"]:
                 result = process_add_comment_command(client, current_block, directive)
-            elif potential_command in ["Create NoteLog", "Update NoteLog"]:
-                result = process_upsert_note_log_command(client, current_block, directive)
+            elif potential_command in ["Create Journal Entry"]:
+                result = process_journal_entry_command(client, current_block, directive)
             elif potential_command in ["Create Note", "Update Note"]:
                 result = process_upsert_note_command(client, current_block, directive)
             elif potential_command in ["Link NoteLog", "Detach NoteLog"]:
                 result = process_attach_note_log_command(client, current_block, directive)
             elif potential_command in ["Create Informal Tag", "Update Informal Tag"]:
                 result = process_upsert_informal_tag_command(client, current_block, directive)
-            elif potential_command in ["Link Tag", "Detach Tag"]:
+            elif potential_command in ["Link Tag", "Detach Tag", "Tag Element"]:
                 result = process_tag_element_command(client, current_block, directive)
 
             elif potential_command in EXT_REF_UPSERT:
@@ -170,14 +170,7 @@ def process_md_file(input_file: str, output_folder:str, directive: str, server: 
             elif potential_command in ["Create Blueprint", "Update Blueprint", "Create Solution Blueprint",
                                        "Update Solution Blueprint"]:
                 result = process_blueprint_upsert_command(client, current_block, directive)
-            elif potential_command in ["View Solution Blueprints", "View Blueprint", "View Solution Blueprint"]:
-                result = process_sol_arch_list_command(client, current_block, "Solution Blueprints", directive)
-            elif potential_command in ["View Solution Component", "View Solution Components"]:
-                result = process_sol_arch_list_command(client, current_block, "Solution Components", directive)
-            elif potential_command in ["View Solution Roles", "View Solution Role"]:
-                result = process_sol_arch_list_command(client, current_block, "Solution Roles", directive)
-            elif potential_command in ["View Information Supply Chain", "View Information Supply Chains"]:
-                result = process_sol_arch_list_command(client, current_block, "Information Supply Chains", directive)
+
             elif potential_command in ["Create Solution Component", "Update Solution Component"]:
                 result = process_solution_component_upsert_command(client, current_block, directive)
             elif potential_command in ["Link Solution Components", "Link Solution Component Peers", "Wire Solution Components",

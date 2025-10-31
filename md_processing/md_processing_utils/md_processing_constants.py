@@ -6,10 +6,12 @@ import json
 import os
 
 import inflect
+from loguru import logger
 from rich.markdown import Markdown
 
 from md_processing.md_processing_utils.message_constants import ERROR
 from pyegeria._globals import DEBUG_LEVEL
+from pyegeria.logging_configuration import config_logging
 
 inflect_engine = inflect.engine()
 
@@ -167,8 +169,8 @@ COLLECTION_CREATE = ["Create Collection", "Update Collection", "Create Digital P
                 "Update Digital Product Catalog",
                 "Create Root Collection", "Update Root Collection", "Create Folder", "Update Folder",
             ]
-FEEDBACK_COMMANDS = ["Create Comment", "Update Comment", "Create NoteLog", "Update NoteLog", "Create Note", "Update Note",
-                     "Create Informal Tag", "Update Informal Tag", "Tag Element"]
+FEEDBACK_COMMANDS = ["Create Comment", "Update Comment", "Create Journal Entry",
+                     "Create Informal Tag", "Update Informal Tag", "Tag Element", "Link Tag", "Detach Tag"]
 
 command_list = ["Provenance", "Create Glossary", "Update Glossary", "Create Term", "Update Term", "List Terms",
                 "List Term Details", "List Glossary Terms", "List Term History", "List Term Revision History",
@@ -263,8 +265,15 @@ command_seperator = Markdown("\n---\n")
 EXISTS_REQUIRED = "Exists Required"
 COMMAND_DEFINITIONS = {}
 
-debug_level = DEBUG_LEVEL
 
+generic_bodies = {
+
+}
+
+
+config_logging()
+logger.enable("pyegeria")
+debug_level = DEBUG_LEVEL
 
 # def load_commands(filename: str) -> None:
 #     global COMMAND_DEFINITIONS
@@ -288,7 +297,8 @@ def load_commands(filename: str) -> None:
         # Validate JSON before attempting to load
         try:
             COMMAND_DEFINITIONS = json.loads(config_str)
-            print(f"Successfully loaded {filename}")
+            msg = f"Successfully loaded {filename}"
+            logger.debug(msg)
         except json.JSONDecodeError as json_err:
             # Provide detailed error information
             error_line = json_err.lineno
@@ -408,7 +418,7 @@ def find_json_errors(filename: str, max_errors: int = 10) -> list[str]:
 
     return errors
 
-def get_command_spec(command: str) -> dict | None:
+def get_command_spec(command: str, body_type: str = None) -> dict | None:
     global COMMAND_DEFINITIONS
 
     com = COMMAND_DEFINITIONS.get('Command Specifications', {}).get(command, None)

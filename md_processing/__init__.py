@@ -25,14 +25,14 @@ from md_processing.md_commands.solution_architect_commands import (process_bluep
                                                                    process_component_link_unlink_command,
                                                                    process_information_supply_chain_upsert_command,
                                                                    process_information_supply_chain_link_unlink_command,
-                                                                   process_sol_arch_list_command)
+                                                                   )
 
 from md_processing.md_commands.data_designer_commands import (process_data_field_upsert_command,
                                                               process_data_spec_upsert_command,
                                                               process_data_dict_upsert_command,
                                                               process_data_structure_upsert_command)
 
-from md_processing.md_commands.feedback_commands import (process_add_comment_command, process_upsert_note_log_command,
+from md_processing.md_commands.feedback_commands import (process_add_comment_command, process_journal_entry_command,
                                                          process_upsert_note_command, process_attach_note_log_command,
                                                          process_upsert_informal_tag_command, process_tag_element_command)
 

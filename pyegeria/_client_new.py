@@ -21,7 +21,7 @@ from pydantic import TypeAdapter
 
 from pyegeria._base_client import BaseClient
 from pyegeria._exceptions_new import (
-    PyegeriaConnectionException, PyegeriaInvalidParameterException, PyegeriaException
+    PyegeriaConnectionException, PyegeriaInvalidParameterException, PyegeriaException, PyegeriaErrorCode
 )
 from pyegeria._globals import max_paging_size, NO_ELEMENTS_FOUND, default_time_out, COMMENT_TYPES
 from pyegeria.base_report_formats import get_report_spec_match
@@ -886,95 +886,6 @@ class Client2(BaseClient):
         else:
             return f"{feedback_type}::{src_guid}::{self.user_id}::{display_name}::{timestamp}"
 
-    async def _async_add_comment_reply(
-            self,
-            element_guid: str,
-            comment_guid: str,
-            comment: str,
-            comment_type: str = "STANDARD_COMMENT",
-            body: dict = None,
-    ) -> str:
-        """
-        Adds a reply to a comment. Async Version
-
-        Parameters
-        ----------
-        element_guid
-            - String - unique id for the anchor element.
-        comment_guid
-            - String - unique id for an existing comment. Used to add a reply to a comment.
-        comment
-            - String - the text of the comment.
-        comment_type
-            - String - the type of comment, default is STANDARD_COMMENT.
-        body
-            - containing type of comment enum and the text of the comment.  Body overrides other parameters if present.
-
-        Returns
-        -------
-        ElementGUID
-
-        Raises
-        ------
-        PyEgeriaException
-
-        """
-        if body is None:
-            if comment_type not in COMMENT_TYPES:
-                context = {"issue": "Invalid comment type"}
-                raise PyegeriaInvalidParameterException(context=context)
-            body = {
-                "class": "NewAttachmentRequestBody",
-                "properties": {
-                    "class": "CommentProperties",
-                    "qualifiedName": self.make_feedback_qn("Comment", comment_guid),
-                    "description": comment,
-                    "commentType": comment_type
-                }
-            }
-        url = f"{self.command_root}feedback-manager/{element_guid}/comments/{comment_guid}/replies"
-        response = await self._async_make_request("POST", url, body)
-        return response.json()
-
-    def add_comment_reply(
-            self,
-            element_guid: str,
-            comment_guid: str,
-            comment: str,
-            comment_type: str = "STANDARD_COMMENT",
-            body: dict = None,
-
-    ) -> str:
-        """
-        Adds a reply to a comment.
-
-        Parameters
-        ----------
-        element_guid
-            - String - unique id for the anchor element.
-        comment_guid
-            - String - unique id for an existing comment. Used to add a reply to a comment.
-        comment
-            - String - the text of the comment.
-        comment_type
-            - String - the type of comment, default is STANDARD_COMMENT.
-        body
-            - containing type of comment enum and the text of the comment. Body overrides other parameters if present.
-
-        Returns
-        -------
-        ElementGUID
-
-        Raises
-        ------
-        PyEgeriaException
-
-        """
-        loop = asyncio.get_event_loop()
-        response = loop.run_until_complete(
-            self._async_add_comment_reply(element_guid, comment_guid, comment, comment_type, body)
-        )
-        return response
 
     async def _async_add_comment_to_element(
             self,
@@ -1317,7 +1228,6 @@ class Client2(BaseClient):
 
     def remove_comment_from_element(
             self,
-            element_guid: str,
             comment_guid: str,
             body: dict | DeleteElementRequestBody = None,
             cascade_delete: bool = False,
@@ -1330,8 +1240,6 @@ class Client2(BaseClient):
 
         Parameters
         ----------
-        element_guid: str
-            - unique id for the element
         comment_guid: str
             - unique id for the comment object
         body: dict | DeleteElementRequestBody, optional
@@ -1349,7 +1257,7 @@ class Client2(BaseClient):
         """
         loop = asyncio.get_event_loop()
         loop.run_until_complete(
-            self._async_remove_note_log(element_guid, body, cascade_delete=cascade_delete)
+            self._async_remove_comment_from_element(comment_guid, body, cascade_delete=cascade_delete)
         )
 
     async def _async_get_comment_by_guid(
@@ -1794,6 +1702,7 @@ class Client2(BaseClient):
                 "class": "NewAttachmentRequestBody",
                 "properties": {
                     "class": "NoteLogProperties",
+                    "typeName": "NoteLog",
                     "displayName": display_name,
                     "qualifiedName": self.make_feedback_qn("NoteLog", element_guid, display_name),
                     "description": description,
@@ -1804,6 +1713,7 @@ class Client2(BaseClient):
                 "class": "NewAElementRequestBody",
                 "properties": {
                     "class": "NoteLogProperties",
+                    "typeName": "NoteLog",
                     "displayName": display_name,
                     "qualifiedName": self.make_feedback_qn("NoteLog", element_guid, display_name),
                     "description": description,
@@ -1817,7 +1727,7 @@ class Client2(BaseClient):
         if element_guid:
             url = f"{self.command_root}feedback-manager/elements/{element_guid}/note-logs"
         else:
-            url = f"{self.command_root}feedback-manager/elements/note-logs"
+            url = f"{self.command_root}feedback-manager/note-logs"
         response = await self._async_make_request("POST", url, body_slimmer(body))
         return response.json()
 
@@ -2296,7 +2206,7 @@ class Client2(BaseClient):
         """
 
         url = f"{self.command_root}feedback-manager/note-logs/by-name"
-        response = await self._async_get_name_request(url, _type=element_type,
+        response = await self._async_get_name_request(url, _type=element_type, filter=filter,
                                                       _gen_output=self._generate_feedback_output, start_from=start_from,
                                                       page_size=page_size, output_format=output_format,
                                                       report_spec=report_spec,
@@ -2438,7 +2348,7 @@ class Client2(BaseClient):
 
     @dynamic_catch
     async def _async_create_note(self, note_log_guid: str, display_name: str = None, description: str = None,
-                                 body: dict | NewElementRequestBody = None) -> str:
+                                 associated_element: str = None, body: dict | NewElementRequestBody = None) -> str:
         """
         Creates a new note for a note log and returns the unique identifier for it. Async version.
 
@@ -2450,6 +2360,8 @@ class Client2(BaseClient):
             - optional display name for the note
         description
             - optional description for the note
+        associated_element: str, default is None
+            - guid of the element to associate with the note - if provided, the note will be anchored to this element.
         body
             - optional body for the note
 
@@ -2501,10 +2413,11 @@ class Client2(BaseClient):
         }
 
         """
+
         if body is None and display_name:
             body = {
                 "class": "NewElementRequestBody",
-                "anchorGUID": note_log_guid,
+                "anchorGUID": associated_element if associated_element else note_log_guid,
                 "isOwnAnchor": False,
                 "parentGUID": note_log_guid,
                 "parentRelationshipTypeName": "AttachedNoteLogEntry",
@@ -2602,8 +2515,10 @@ class Client2(BaseClient):
         return response
 
     @dynamic_catch
-    async def _async_add_journal_entry(self, note_log_qn: str = None, element_qn: str =  None, note_log_display_name: str = None, journal_entry_display_name: str = None, journal_entry_description: str = None,
-                                body: dict | NewElementRequestBody = None ) -> str:
+    async def _async_add_journal_entry(self, note_log_qn: str = None, element_qn: str =  None,
+                                       note_log_display_name: str = None, journal_entry_display_name: str = None,
+                                       note_entry: str = None,
+                                       body: dict | NewElementRequestBody = None) -> str:
         """
         Creates a new journal entry for a note log and returns the unique identifier for it. The note_log will be
         created if it does not exist. Async version.
@@ -2619,7 +2534,7 @@ class Client2(BaseClient):
             - optional note log display name
         journal_entry_display_name: str = None
             - optional journal entry display name
-        journal_entry_description: str = None
+        note_entry: str = None
             - the journal entry text
 
         body
@@ -2683,24 +2598,29 @@ class Client2(BaseClient):
         if note_log_guid is None or note_log_guid == NO_ELEMENTS_FOUND:
             if element_qn is None:
                 if note_log_display_name is None:
-                    note_log_display_name = f"NoName-{datetime.now().strftime('%Y-%m-%d %H:%M')}"
+                    note_log_display_name = f"NoteLog-{datetime.now().strftime('%Y-%m-%d %H:%M')}"
 
             else:
                 element_guid = await self._async_get_guid_for_name(element_qn, ["qualifiedName"])
+                if element_guid is None or element_guid == NO_ELEMENTS_FOUND:
+                    context = { "reason" : "The specified associated element was not found"}
+                    raise PyegeriaException(error_code = PyegeriaErrorCode.VALIDATION_ERROR, context = context)
 
             note_log = await self._async_create_note_log(element_guid = element_guid, display_name = note_log_display_name)
             note_log_guid = note_log["guid"]
 
         # Create the Journal Entry (Note)
+        if journal_entry_display_name is None:
+            journal_entry_display_name = f"Note-{datetime.now().strftime('%Y-%m-%d %H:%M')}"
         journal_entry_guid = await self._async_create_note(note_log_guid, journal_entry_display_name,
-                                                                 journal_entry_description, body)
+                                                           note_entry, body)
 
         return journal_entry_guid
 
     @dynamic_catch
     def add_journal_entry(self, note_log_qn: str = None, element_qn: str = None,
                            note_log_display_name: str = None, journal_entry_display_name: str = None,
-                           journal_entry_description: str = None,
+                          note_entry: str = None,
                            body: dict | NewElementRequestBody = None) -> str:
         """
         Creates a new journal entry for a note log and returns the unique identifier for it. The note_log will be
@@ -2717,7 +2637,7 @@ class Client2(BaseClient):
             - optional note log display name
         journal_entry_display_name: str = None
             - optional journal entry display name
-        journal_entry_description: str = None
+        note_entry: str = None
             - the journal entry text
 
         body
@@ -2773,7 +2693,7 @@ class Client2(BaseClient):
         """
         loop = asyncio.get_event_loop()
         response = loop.run_until_complete(
-            self._async_add_journal_entry(note_log_qn, element_qn, note_log_display_name, journal_entry_display_name, journal_entry_description, body)
+            self._async_add_journal_entry(note_log_qn, element_qn, note_log_display_name, journal_entry_display_name, note_entry, body)
         )
         return response
 
@@ -3284,12 +3204,16 @@ class Client2(BaseClient):
         if display_name is None:
             raise PyegeriaInvalidParameterException(context={"reason": "display_name is required"})
         body = {
-            "class": "TagProperties",
-            "displayName": display_name,
-            "description": description
+            "class": "NewElementRequestBody",
+            "properties": {
+                "class": "InformalTagProperties",
+                "displayName": display_name,
+                "qualifiedName" : self.make_feedback_qn("InformalTag", None,  display_name),
+                "description": description
+            }
         }
-        response = await self._async_make_request("POST", url, body)
-        return response.json()
+        response = await self._async_create_element_body_request(url, ["InformalTagProperties"], body)
+        return response
 
     @dynamic_catch
     def create_informal_tag(
@@ -3416,7 +3340,7 @@ class Client2(BaseClient):
         PyegeriaException
         """
 
-        url = f"{self.command_root}feedback-manager/tags/update"
+        url = f"{self.command_root}feedback-manager/tags/{tag_guid}/remove"
         await self._async_make_request("POST", url)
 
     @dynamic_catch
@@ -3563,9 +3487,9 @@ class Client2(BaseClient):
 
         url = f"{self.command_root}feedback-manager/tags/by-name"
 
-        response = await self._async_get_name_request(url, "InformalTag", self._generate_feedback_output,
-                                                      tag_name, [], start_from,
-                                                      page_size, output_format, report_spec)
+        response = await self._async_get_name_request(url, self._generate_feedback_output, tag_name,
+                                                      None,start_from, page_size, output_format, report_spec
+                                                     )
         return response
 
     @dynamic_catch
@@ -3659,7 +3583,7 @@ class Client2(BaseClient):
 
         url = f"{self.command_root}feedback-manager/tags/by-search-string"
         response = await self._async_find_request(url, "InformalTag", self._generate_feedback_output,
-                                                  search_string, [], [],
+                                                  search_string, None, None,
                                                   starts_with, ends_with, ignore_case,
                                                   start_from, page_size, output_format,
                                                   report_spec, body)
@@ -4714,6 +4638,11 @@ class Client2(BaseClient):
             extra = self._extract_element_properties_for_keyword(element, columns_struct)
             col_data = overlay_additional_values(col_data, extra)
 
+        note_logs = element.get("presentInNoteLogs", [])
+        if note_logs != []:
+            extra = self._extract_element_properties_for_notes( element, columns_struct)
+            col_data = overlay_additional_values(col_data, extra)
+
         return col_data
 
     @dynamic_catch
@@ -4783,7 +4712,7 @@ class Client2(BaseClient):
 
     @dynamic_catch
     def validate_new_relationship_request(self, body: dict | NewRelationshipRequestBody,
-                                          prop: str = None) -> NewRelationshipRequestBody | None:
+                                          prop: list[str] = None) -> NewRelationshipRequestBody | None:
         if isinstance(body, NewRelationshipRequestBody):
             if (prop and body.properties.class_ in prop) or (prop is None):
                 validated_body = body
@@ -4791,7 +4720,7 @@ class Client2(BaseClient):
                 raise PyegeriaInvalidParameterException(additional_info=
                                                         {"reason": "unexpected property class name"})
         elif isinstance(body, dict):
-            if prop is None or body.get("properties", {}).get("class", "") == prop:
+            if prop is None or body.get("properties", {}).get("class", "") in prop:
                 validated_body = self._new_relationship_request_adapter.validate_python(body)
             else:
                 raise PyegeriaInvalidParameterException(additional_info=
@@ -5667,3 +5596,65 @@ class Client2(BaseClient):
             get_additional_props_func=None,
             columns_struct=output_formats,
         )
+
+    def _extract_element_properties_for_keyword(self, element: dict, columns_struct: dict) -> dict:
+        keyword_elements = None
+        keyword_elements = element["keywordElements"]
+        out_body = {}
+        keyword = element["properties"].get('keyword', '')
+        for el in keyword_elements:
+            element = el.get("relatedElement", {})
+            element_guid = element['elementHeader']['guid']
+            element_type = element['elementHeader']['type']['typeName']
+            element_display_name = element['properties'].get('displayName',"")
+            element_description = element['properties'].get('description',"")
+            element_category = element['properties'].get('category',"")
+            out_body = {
+                "element_display_name": element_display_name,
+                "element_description": element_description,
+                "element_category": element_category,
+                "element_type": element_type,
+                "element_guid": element_guid,
+                "keyword": keyword
+            }
+        return out_body
+
+    def _extract_element_properties_for_notes(self, element: dict, columns_struct: dict):
+        note_log_qualified_name = None
+        note_log_guid = None
+        note_log_display_name = None
+        note_log_description = None
+
+        note_log_el = element.get("presentInNoteLogs",{})[0].get("relatedElement",None)
+        if note_log_el:
+            note_log_guid = note_log_el['elementHeader']['guid']
+            note_log_display_name = note_log_el['properties'].get('displayName',"")
+            note_log_qualified_name = note_log_el['properties']['qualifiedName']
+            note_log_description = note_log_el['properties'].get('description',"")
+
+        return {
+            "note_log_name": note_log_display_name,
+            "note_log_description": note_log_description,
+            "note_log_qualified_name": note_log_qualified_name,
+            "note_log_guid": note_log_guid,
+        }
+
+    def _extract_element_properties_for_note_logs(self, element: dict, columns_struct: dict):
+        note_log_qualified_name = None
+        note_log_guid = None
+        note_log_display_name = None
+        note_log_description = None
+
+        note_log_el = element.get("presentInNoteLogs",{})[0].get("relatedElement",None)
+        if note_log_el:
+            note_log_guid = note_log_el['elementHeader']['guid']
+            note_log_display_name = note_log_el['properties'].get('displayName',"")
+            note_log_qualified_name = note_log_el['properties']['qualifiedName']
+            note_log_description = note_log_el['properties'].get('description',"")
+
+        return {
+            "note_log_name": note_log_display_name,
+            "note_log_description": note_log_description,
+            "note_log_qualified_name": note_log_qualified_name,
+            "note_log_guid": note_log_guid,
+        }

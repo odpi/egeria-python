@@ -112,8 +112,8 @@ def update_data_collection_memberships(egeria_client: EgeriaTech, entity_type: s
                                        replace_all_props: bool = True) -> None:
     """ update the collection membership of the element
 
-        If replace_all_props is set to True, all existing memberships are removed and new memberships are added.
-        If replace_all_props is set to False, only the new memberships are added.
+        If merge_update is set to True, all existing memberships are removed and new memberships are added.
+        If merge_update is set to False, only the new memberships are added.
     """
 
     if replace_all_props:

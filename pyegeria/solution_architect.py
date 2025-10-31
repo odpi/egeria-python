@@ -110,44 +110,23 @@ class SolutionArchitect(Client2):
         implemented_by_names = []
         implemented_by_qnames = []
 
-        external_references_guids = []
-        external_references_names = []
-        external_references_qnames = []
+        supply_to_guids = []
+        supply_to_names = []
+        supply_to_qnames = []
+        supply_to_link_labels = []
 
-        other_related_elements_guids = []
-        other_related_elements_names = []
-        other_related_elements_qnames = []
+        supply_from_guids = []
+        supply_from_names = []
+        supply_from_link_labels = []
+        supply_from_qnames = []
 
+        member_of_collections_guids = []
+        member_of_collections_names = []
+        member_of_collections_qnames = []
 
-        nested_supply_chains_guids = []
-        nested_supply_chains_names = []
-        nested_supply_chains_qnames = []
-
-        peer_supply_chains_guids = []
-        peer_supply_chains_names = []
-        peer_supply_chains_qnames = []
-        peer_supply_chain_linl_label = []
-
-
-
-        # # extract existing related data structure and data field elements
-        # other_related_elements = el_struct.get("otherRelatedElements",None)
-        # if other_related_elements:
-        #     for rel in other_related_elements:
-        #         related_element = rel["relatedElement"]
-        #         type = related_element["elementHeader"]["type"]["typeName"]
-        #         guid = related_element["elementHeader"]["guid"]
-        #         qualified_name = related_element["properties"].get("qualifiedName","") or ""
-        #         display_name = related_element["properties"].get("displayName","") or ""
-        #         if type == "DataStructure":
-        #             implementation_guids.append(guid)
-        #             implementation_names.append(display_name)
-        #             implementation_qnames.append(qualified_name)
-        #
-        #         elif type == "DataField":
-        #             parent_guids.append(guid)
-        #             parent_names.append(display_name)
-        #             parent_qnames.append(qualified_name)
+        collection_members_guids = []
+        collection_members_names = []
+        collection_members_qnames = []
 
         parents = el_struct.get("parents", {})
         if parents:
@@ -156,21 +135,41 @@ class SolutionArchitect(Client2):
                 parent_names.append(parent['relatedElement']['properties'].get("displayName",""))
                 parent_qnames.append(parent['relatedElement']['properties'].get("qualifiedName",""))
 
-        peer_supply_chains = el_struct.get("links", {})
-        if peer_supply_chains:
-            for peer in peer_supply_chains:
-                peer_supply_chains_guids.append(peer['relatedElement']['elementHeader']['guid'])
-                peer_supply_chains_names.append(peer['relatedElement']['properties'].get("displayName",""))
-                peer_supply_chains_qnames.append(peer['relatedElement']['properties'].get("qualifiedName",""))
-                peer_supply_chain_linl_label.append(peer['relationshipProperties'].get('label',""))
+        supply_to = el_struct.get("supplyTo", {})
+        if supply_to:
+            for element in supply_to:
+                supply_to_guids.append(element['relatedElement']['elementHeader']['guid'])
+                supply_to_names.append(element['relatedElement']['properties'].get("displayName", ""))
+                supply_to_qnames.append(element['relatedElement']['properties'].get("qualifiedName", ""))
+                supply_to_link_labels.append(element['relationshipProperties'].get('label', ""))
+
+        supply_from = el_struct.get("supplyFrom", {})
+        if supply_from:
+            for element in supply_from:
+                supply_from_guids.append(element['relatedElement']['elementHeader']['guid'])
+                supply_from_names.append(element['relatedElement']['properties'].get("displayName", ""))
+                supply_from_qnames.append(element['relatedElement']['properties'].get("qualifiedName", ""))
+                supply_from_link_labels.append(element['relationshipProperties'].get('label', ""))
 
         implemented_by = el_struct.get("implementedByList", {})
         if implemented_by:
-            for peer in peer_supply_chains:
-                implemented_by_guids.append(peer['relatedElement']['elementHeader']['guid'])
-                implemented_by_names.append(peer['relatedElement']['properties'].get("displayName", ""))
-                implemented_by_qnames.append(peer['relatedElement']['properties'].get("qualifiedName", ""))
+            for element in implemented_by:
+                implemented_by_guids.append(element['relatedElement']['elementHeader']['guid'])
+                implemented_by_names.append(element['relatedElement']['properties'].get("displayName", ""))
+                implemented_by_qnames.append(element['relatedElement']['properties'].get("qualifiedName", ""))
 
+        member_of = el_struct.get("memberOfCollections", {})
+        if member_of:
+            for element in member_of:
+                member_of_collections_guids.append(element['relatedElement']['elementHeader']['guid'])
+                member_of_collections_names.append(element['relatedElement']['properties'].get("displayName", ""))
+                member_of_collections_qnames.append(element['relatedElement']['properties'].get("qualifiedName", ""))
+        collection_members = el_struct.get("collectionMembers", {})
+        if collection_members:
+            for element in collection_members:
+                collection_members_guids.append(element['relatedElement']['elementHeader']['guid'])
+                collection_members_names.append(element['relatedElement']['properties'].get("displayName", ""))
+                collection_members_qnames.append(element['relatedElement']['properties'].get("qualifiedName", ""))
 
 
         # nested_supply_chains = el_struct.get("nestedDataClasses", {})
@@ -190,17 +189,21 @@ class SolutionArchitect(Client2):
                 "implemented_by_names": implemented_by_names,
                 "implemented_by_qnames": implemented_by_qnames,
 
-                "peer_supply_chains_guids": peer_supply_chains_guids,
-                "peer_supply_chains_names": peer_supply_chains_names,
-                "peer_supply_chains_qnames": peer_supply_chains_qnames,
+                "supply_to_guids": supply_to_guids,
+                "supply_to_names": supply_to_names,
+                "supply_to_qnames": supply_to_qnames,
 
-                "nested_data_class_guids": nested_supply_chains_guids,
-                "nested_data_class_names": nested_supply_chains_names,
-                "nested_data_class_qnames": nested_supply_chains_qnames,
+                "supply_from_guids": supply_from_guids,
+                "supply_from_names": supply_from_names,
+                "supply_from_qnames": supply_from_qnames,
 
-                "external_references_guids": external_references_guids,
-                "external_references_names": external_references_names,
-                "external_references_qnames": external_references_qnames,
+                "in_supply_chain_guids": member_of_collections_guids,
+                "in_supply_chain_names": member_of_collections_names,
+                "in_supply_chain": member_of_collections_qnames,
+
+                "nested_info_supply_chain_guids": collection_members_guids,
+                "nested_info_supply_chain_names": collection_members_names,
+                "nested_info_supply_chains": collection_members_qnames,
 
                 "mermaid" : mermaid,
             }
@@ -237,7 +240,8 @@ class SolutionArchitect(Client2):
             Dictionary with extracted properties
         """
         # Follow common extractor pattern using populate_common_columns
-        return populate_common_columns(
+        # Start with common columns (header, relationships, subject area, and mermaid where applicable)
+        col_data = populate_common_columns(
             element,
             columns_struct,
             include_header=True,
@@ -246,6 +250,39 @@ class SolutionArchitect(Client2):
             mermaid_source_key='mermaidGraph',
             mermaid_dest_key='mermaid'
         )
+
+        # Build a dictionary of relationship-derived values for this component
+        rel_dict = self._get_supply_chain_rel_elements_dict(element)
+
+        # If we have a columns structure, populate any matching keys from rel_dict.
+        # We only set a column's value if it is currently empty (None or "").
+        try:
+            formats = col_data.get('formats') if isinstance(col_data, dict) else None
+            columns = formats.get('attributes') if isinstance(formats, dict) else None
+            if isinstance(columns, list) and isinstance(rel_dict, dict):
+                for col in columns:
+                    if not isinstance(col, dict):
+                        continue
+                    key = col.get('key')
+                    if not key:
+                        continue
+                    # Skip if already has a value
+                    if col.get('value') not in (None, ""):
+                        continue
+                    if key in rel_dict:
+                        val = rel_dict.get(key)
+                        # Join lists to a readable string; stringify primitives
+                        if isinstance(val, list):
+                            col['value'] = ", ".join([str(v) for v in val])
+                        elif val is None:
+                            col['value'] = ""
+                        else:
+                            col['value'] = str(val)
+        except Exception as e:
+            # Keep extraction resilient; log at debug level and proceed with existing col_data
+            logger.debug(f"_extract_supply_chain_properties: error applying rel_dict values: {e}")
+
+        return col_data
 
     def _extract_solution_blueprint_properties(self, element: dict, columns_struct: dict) -> dict:
         """
@@ -338,8 +375,6 @@ class SolutionArchitect(Client2):
         actor_guids = []
         blueprint_guids = []
         supply_chain_guids = []
-
-
 
         sub_components = el_struct.get('nestedSolutionComponents', None)
         if sub_components is not None:
@@ -1600,7 +1635,7 @@ class SolutionArchitect(Client2):
         loop = asyncio.get_event_loop()
         loop.run_until_complete(self._async_delete_info_supply_chain(guid, body, cascade_delete))
 
-    def find_all_information_supply_chains(self, search_string: str = "*", classification_names: list[str] = None,
+    def find_all_information_supply_chains(self, search_string: str = "*", add_implementation: bool = True, classification_names: list[str] = None,
                                                     metadata_element_types: list[str] = None,
                                                     starts_with: bool = True, ends_with: bool = False,
                                                     ignore_case: bool = False, start_from: int = 0,
@@ -1651,9 +1686,14 @@ class SolutionArchitect(Client2):
                   "sequencingOrder" : "PROPERTY_ASCENDING",
                   "sequencingProperty" : "qualifiedName"
                 }
+
+        Args:
+            add_implementation ():
         """
 
-        return self.find_information_supply_chains("*", classification_names, metadata_element_types, starts_with, ends_with, ignore_case, start_from, page_size, output_format, report_spec, body)
+        return self.find_information_supply_chains("*", add_implementation, classification_names, metadata_element_types,
+                                                   starts_with, ends_with, ignore_case,
+                                                   start_from, page_size, output_format, report_spec, body)
 
     async def _async_find_information_supply_chains(self, search_string: str = "*", add_implementation: bool = True,
                                                     classification_names: list[str] = None,
@@ -1720,7 +1760,7 @@ class SolutionArchitect(Client2):
             """
 
         url = f"{self.solution_architect_command_root}/information-supply-chains/by-search-string?addImplementation={add_implementation}"
-        return await self._async_find_request(url, _type="GovernanceDefinition",
+        return await self._async_find_request(url, _type="InformationSupplyChain",
                                               _gen_output=self.generate_info_supply_chain_output,
                                               search_string=search_string, classification_names=classification_names,
                                               metadata_element_types=metadata_element_types,

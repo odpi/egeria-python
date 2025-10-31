@@ -466,7 +466,7 @@ class AssetCatalog(Client):
             f"as-graph?startFrom={start_from}&pageSize={page_size}"
         )
 
-        response = await self._async_make_request("GET", url)
+        response = await self._async_make_request("POST", url)
         return response.json().get("assetGraph", NO_ASSETS_FOUND)
 
     def get_asset_graph(
@@ -836,7 +836,7 @@ class AssetCatalog(Client):
 
         return response.json().get("types", "NO_ASSETS_FOUND")
 
-    def get_asset_catalog_types(self) -> str | dict:
+    def get_asset_types(self) -> str | dict:
         """Return all the elements that are anchored to an asset plus relationships between these elements and to
           other elements.
          Parameters

@@ -1019,7 +1019,7 @@ class ProjectManager(Client2):
             Start date of the project in ISO 8601 string format.
         planned_end_date: str, optional, defaults to None
             Planned completion date in ISO 8601 string format.
-        replace_all_props: bool, optional, defaults to False
+        merge_update: bool, optional, defaults to False
             If True, then all the properties of the project will be replaced with the specified properties.
 
         Returns
@@ -1074,7 +1074,7 @@ class ProjectManager(Client2):
             Start date of the project in ISO 8601 string format.
         planned_end_date: str, optional, defaults to None
             Planned completion date in ISO 8601 string format.
-        replace_all_props: bool, optional, defaults to False
+        merge_update: bool, optional, defaults to False
             If True, then all the properties of the project will be replaced with the specified properties.
 
         Returns
