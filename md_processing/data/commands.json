@@ -1,6 +1,6 @@
 {
   "Command Specifications": {
-    "exported": "Oct 29, 2025 at 10:57:59 AM",
+    "exported": "Oct 30, 2025 at 11:35:20 AM",
     "Create Comment": {
       "display_name": "Comment",
       "qn_prefix": "Comment",
@@ -54,37 +54,13 @@
             "default_value": "",
             "valid_values": "",
             "existing_element": "",
-            "description": "The element the comment is attached to.",
+            "description": "The element the comment is attached to. To reply to a previous comment, you would use the ID of the previous comment as the associated element.",
             "qualified_name_pattern": "",
             "generated": false,
             "style": "Reference Name",
             "user_specified": true,
             "unique": false,
             "input_required": true,
-            "isParent": false,
-            "isAnchor": false,
-            "min_cardinality": 1,
-            "max_cardinality": 1,
-            "level": "Basic",
-            "Journal Entry": ""
-          }
-        },
-        {
-          "Parent Comment": {
-            "variable_name": "parent_comment",
-            "inUpdate": true,
-            "attr_labels": "Element",
-            "examples": "",
-            "default_value": "",
-            "valid_values": "",
-            "existing_element": "",
-            "description": "The comment being replied to. If provided, the Associated Element will be ignored (this becomes the associated element).",
-            "qualified_name_pattern": "",
-            "generated": false,
-            "style": "ID",
-            "user_specified": true,
-            "unique": false,
-            "input_required": false,
             "isParent": false,
             "isAnchor": false,
             "min_cardinality": 1,
@@ -455,10 +431,10 @@
         }
       ]
     },
-    "Create NoteLog": {
+    "Create Journal Entry": {
       "display_name": "NoteLog",
       "qn_prefix": "NoteLog",
-      "alternate_names": "",
+      "alternate_names": "Note Log; Journal",
       "family": "Feedback Manager",
       "description": "Allows a sequence of notes to be attached to an associated element.",
       "verb": "Create",
@@ -476,21 +452,21 @@
       "Journal Entry": "",
       "Attributes": [
         {
-          "Display Name": {
+          "Journal Name": {
             "variable_name": "display_name",
             "inUpdate": true,
-            "attr_labels": "Name",
+            "attr_labels": "Name; Title",
             "examples": "",
             "default_value": "",
             "valid_values": "",
             "existing_element": "",
-            "description": "Name of the  NoteLog.",
+            "description": "Name of the  NoteLog or Journal.",
             "qualified_name_pattern": "",
             "generated": false,
-            "style": "Simple",
+            "style": "ID",
             "user_specified": true,
             "unique": false,
-            "input_required": false,
+            "input_required": true,
             "isParent": false,
             "isAnchor": false,
             "min_cardinality": 0,
@@ -524,8 +500,8 @@
           }
         },
         {
-          "Description": {
-            "variable_name": "description",
+          "Journal Description": {
+            "variable_name": "journal_description",
             "inUpdate": true,
             "attr_labels": "",
             "examples": "",
@@ -542,6 +518,30 @@
             "isParent": false,
             "isAnchor": false,
             "min_cardinality": 0,
+            "max_cardinality": 1,
+            "level": "Basic",
+            "Journal Entry": ""
+          }
+        },
+        {
+          "Note Entry": {
+            "variable_name": "note_entry",
+            "inUpdate": true,
+            "attr_labels": "Note; Journal Entry",
+            "examples": "",
+            "default_value": "",
+            "valid_values": "",
+            "existing_element": "",
+            "description": "The text of the journal entry.",
+            "qualified_name_pattern": "",
+            "generated": false,
+            "style": "Simple",
+            "user_specified": true,
+            "unique": false,
+            "input_required": true,
+            "isParent": false,
+            "isAnchor": false,
+            "min_cardinality": 1,
             "max_cardinality": 1,
             "level": "Basic",
             "Journal Entry": ""
@@ -885,7 +885,7 @@
           "Display Name": {
             "variable_name": "display_name",
             "inUpdate": true,
-            "attr_labels": "Name",
+            "attr_labels": "Name; Title",
             "examples": "",
             "default_value": "",
             "valid_values": "",
@@ -909,7 +909,7 @@
           "NoteLog": {
             "variable_name": "note_log",
             "inUpdate": true,
-            "attr_labels": "",
+            "attr_labels": "Journal",
             "examples": "",
             "default_value": "",
             "valid_values": "",
@@ -933,12 +933,12 @@
           "Description": {
             "variable_name": "description",
             "inUpdate": true,
-            "attr_labels": "",
+            "attr_labels": "Text",
             "examples": "",
             "default_value": "",
             "valid_values": "",
             "existing_element": "",
-            "description": "Description of the NoteLog.",
+            "description": "The text of the note..",
             "qualified_name_pattern": "",
             "generated": false,
             "style": "Simple",

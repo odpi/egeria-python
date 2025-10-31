@@ -27,8 +27,8 @@ console = Console(width=int(200))
 
 @logger.catch
 def sync_chain_related_elements(egeria_client: EgeriaTech, guid:str, in_supply_chain_guids:list, display_name:str,
-                               replace_all_props:bool):
-    if replace_all_props:
+                                merge_update:bool):
+    if not merge_update:
         rel_el_list = egeria_client._get_supply_chain_rel_elements(guid)
         if rel_el_list is None:
             logger.warning("Unexpected -> the list was None - assigning empty list")
@@ -405,6 +405,141 @@ def process_blueprint_upsert_command(egeria_client: EgeriaTech, txt: str, direct
             return None
     else:
         return None
+
+
+# TODO - I think this comes after (or part of) doing the Actors
+@logger.catch
+def process_solution_roles_upsert_command(egeria_client: EgeriaTech, txt: str, directive: str = "display") -> Optional[str]:
+    """
+    Processes a solution role create or update object_action by extracting key attributes such as from the given text.
+
+    :param txt: A string representing the input cell to be processed for
+        extracting blueprint-related attributes.
+    :param directive: an optional string indicating the directive to be used - display, validate or execute
+    :return: A string summarizing the outcome of the processing.
+    """
+    command, object_type, object_action = extract_command_plus(txt)
+    print(Markdown(f"# {command}\n"))
+    parsed_output = parse_upsert_command(egeria_client, object_type, object_action, txt, directive)
+
+    valid = parsed_output['valid']
+    exists = parsed_output['exists']
+
+    qualified_name = parsed_output.get('qualified_name', None)
+    guid = parsed_output.get('guid', None)
+    journal_entry = parsed_output.get('Journey Entry', {}.get('value', None))
+    print(Markdown(parsed_output['display']))
+
+    logger.debug(json.dumps(parsed_output, indent=4))
+
+    attributes = parsed_output['attributes']
+    description = attributes.get('Description', {}).get('value', None)
+    display_name = attributes['Display Name'].get('value', None)
+    search_keywords = attributes['Search Keywords'].get('value', None)
+
+
+
+    component_guids = attributes.get('Solution Components', {}).get('guid_list', None)
+
+    status = attributes.get('Status', {}).get('value', None)
+    if status is None:
+        status = "ACTIVE"
+
+    replace_all_props = not attributes.get('Merge Update', {}).get('value', True)
+
+    if directive == "display":
+
+        return None
+    elif directive == "validate":
+        if valid:
+            print(Markdown(f"==> Validation of {command} completed successfully!\n"))
+        else:
+            msg = f"Validation failed for object_action `{command}`\n"
+        return valid
+
+    elif directive == "process":
+        prop_body = set_element_prop_body(object_type, qualified_name, attributes)
+
+        try:
+            if object_action == "Update":
+                if not exists:
+                    msg = (f" Element `{display_name}` does not exist! Updating result document with Create "
+                           f"object_action\n")
+                    logger.error(msg)
+                    print(Markdown(msg))
+                    return update_a_command(txt, object_action, object_type, qualified_name, guid)
+                elif not valid:
+                    return None
+                else:
+                    print(Markdown(
+                        f"==> Validation of {command} completed successfully! Proceeding to apply the changes.\n"))
+
+                    body = set_update_body(object_type, attributes)
+                    body['properties'] = prop_body
+                    egeria_client.update_solution_blueprint(guid, body)
+                    if status:
+                        egeria_client.update_solution_element_status(guid, status)
+
+                    msg = f"Updated  {object_type} `{display_name}` with GUID {guid}\n\n___"
+                    update_element_dictionary(qualified_name, {
+                        'guid': guid, 'display_name': display_name
+                    })
+                    logger.success(msg)
+                    sync_blueprint_related_elements(egeria_client, object_type, component_guids, guid, qualified_name,
+                                                    display_name, replace_all_props)
+
+                    journal_entry_guid = add_note_in_dr_e(egeria_client, qualified_name, display_name, journal_entry)
+                    logger.success(f"===> Updated {object_type} `{display_name}` related elements\n\n")
+                    return egeria_client.get_solution_blueprints_by_name(qualified_name, output_format='MD', report_spec = "Solution-Blueprint-DrE")
+
+
+            elif object_action == "Create":
+                print(f"valid: {valid}, type: {type(valid)}")
+                try:
+                    if valid is False and exists:
+                        msg = (f"  Data Specification `{display_name}` already exists and result document updated changing "
+                               f"`Create` to `Update` in processed output\n\n___")
+                        logger.error(msg)
+                        print(Markdown(msg))
+                        return update_a_command(txt, object_action, object_type, qualified_name, guid)
+
+                    elif not valid:
+                        msg = (f"==>{object_type} `{display_name}` is not valid and can't be created")
+                        print(Markdown(msg))
+                        logger.error(msg)
+                        return
+
+                    else:
+                        body = set_create_body(object_type,attributes)
+                        body['properties'] = prop_body
+                        guid = egeria_client.create_solution_blueprint(body)
+                except Exception as e:
+                    print(f"Unexpected error: {e}, {type(valid)}, {valid}")
+
+
+                if guid:
+                    update_element_dictionary(qualified_name, {
+                        'guid': guid, 'display_name': display_name
+                        })
+                    journal_entry_guid = add_note_in_dr_e(egeria_client, qualified_name, display_name, journal_entry)
+                    msg = f"\n\nCreated Element `{display_name}` with GUID {guid}\n\n___"
+                    print(Markdown(msg))
+                    logger.success(msg)
+                    return egeria_client.get_solution_blueprint_by_guid(guid, output_format='MD', report_spec = "Solution-Blueprint-DrE")
+                else:
+                    msg = f"Failed to create element `{display_name}` with GUID {guid}\n\n___"
+                    print(Markdown(msg))
+                    logger.error(msg)
+                    return None
+
+        except PyegeriaException as e:
+            print_basic_exception(e)
+            logger.error(f"Error performing {command}: {e}")
+            return None
+    else:
+        return None
+
+
 
 
 @logger.catch
@@ -807,23 +942,12 @@ def process_information_supply_chain_upsert_command(egeria_client: EgeriaTech, t
     description = attributes.get('Description', {}).get('value', None)
     display_name = attributes['Display Name'].get('value', None)
     version_identifier = attributes.get('Version Identifier', {}).get('value', None)
-    journal_entry = attributes.get('Journal Entry', {}).get('Value', None)
+    journal_entry = attributes.get('Journal Entry', {}).get('value', None)
     effective_time = attributes.get('Effective Time', {}).get('value', None)
     effective_from = attributes.get('Effective From', {}).get('value', None)
     effective_to = attributes.get('Effective To', {}).get('value', None)
-    external_source_guid = attributes.get('External Source GUID', {}).get('value', None)
-    external_source_name = attributes.get('External Source Name', {}).get('value', None)
 
-    anchor_guid = attributes.get('Anchor ID', {}).get('guid', None)
-    parent_guid = attributes.get('Parent ID', {}).get('guid', None)
-    parent_relationship_type_name = attributes.get('Parent Relationship Type Name', {}).get('value', None)
-    parent_at_end1 = attributes.get('Parent at End1', {}).get('value', True)
-
-    anchor_scope_guid = attributes.get('Anchor Scope GUID', {}).get('value', None)
-    is_own_anchor = attributes.get('Is Own Anchor', {}).get('value', True)
-    if parent_guid is None:
-        is_own_anchor = True
-    nested_supply_chain_guids = attributes.get('Nested Supply Chain', {}).get('guids', None)
+    nested_supply_chain_guids = attributes.get('Nested Information Supply Chains', {}).get('guid_list', None)
     additional_prop = attributes.get('Additional Properties', {}).get('value', None)
     additional_properties = json.loads(additional_prop) if additional_prop is not None else None
     extended_prop = attributes.get('Extended Properties', {}).get('value', None)
@@ -832,8 +956,8 @@ def process_information_supply_chain_upsert_command(egeria_client: EgeriaTech, t
     scope = attributes.get('Scope', {}).get('value', None)
     purposes = attributes.get('Purposes', {}).get('value', None)
     in_supply_chain_guids = attributes.get('In Information Supply Chain', {}).get('guid_list', None)
+    merge_update = attributes.get('Merge Update', {}).get('value', True),
 
-    replace_all_props = not attributes.get('Merge Update', {}).get('value', True)
 
     if directive == "display":
 
@@ -847,6 +971,14 @@ def process_information_supply_chain_upsert_command(egeria_client: EgeriaTech, t
 
     elif directive == "process":
         try:
+            prop_body = {
+                "class": "InformationSupplyChainProperties", "effectiveFrom": effective_from,
+                "effectiveTo": effective_to, "extendedProperties": extended_properties,
+                "qualifiedName": qualified_name, "additionalProperties": additional_properties,
+                "displayName": display_name, "description": description, "scope": scope,
+                "purposes": purposes, "version": version_identifier
+            }
+
             if object_action == "Update":
                 if not exists:
                     msg = (f" Element `{display_name}` does not exist! Updating result document with Create "
@@ -859,25 +991,12 @@ def process_information_supply_chain_upsert_command(egeria_client: EgeriaTech, t
                     print(Markdown(
                         f"==> Validation of {command} completed successfully! Proceeding to apply the changes.\n"))
 
-                    body = body_slimmer({
-                        "class": "UpdateElementRequestBody",
-                        "externalSourceGUID": external_source_guid,
-                        "externalSourceName": external_source_name,
-                        "effectiveTime": effective_time,
-                        "forLineage": False,
-                        "forDuplicateProcessing": False,
-                        "properties": {
-                            "class": "InformationSupplyChainProperties", "effectiveFrom": effective_from,
-                            "effectiveTo": effective_to, "extendedProperties": extended_properties,
-                            "qualifiedName": qualified_name, "additionalProperties": additional_properties,
-                            "displayName": display_name, "description": description, "scope": scope,
-                            "purposes": purposes, "version": version_identifier
-                            }
-                        })
 
-                egeria_client.update_info_supply_chain(guid, body, replace_all_props)
+                body = set_update_body("InformationSupplyChain", attributes)
+                body['properties'] = prop_body
+                egeria_client.update_info_supply_chain(guid, body)
 
-                sync_chain_related_elements(egeria_client, guid, in_supply_chain_guids, display_name, replace_all_props)
+                sync_chain_related_elements(egeria_client, guid, in_supply_chain_guids, display_name, merge_update)
                 logger.success(f"==> Updated  {object_type} `{display_name}` with GUID {guid}\n\n")
                 update_element_dictionary(qualified_name, {
                     'guid': guid, 'display_name': display_name
@@ -885,7 +1004,7 @@ def process_information_supply_chain_upsert_command(egeria_client: EgeriaTech, t
                 journal_entry_guid = add_note_in_dr_e(egeria_client, qualified_name, display_name, journal_entry)
 
                 logger.success(f"===> Updated {object_type} `{display_name}` related elements\n\n")
-                return egeria_client.get_info_supply_chain_by_guid(guid, output_format='MD')
+                return egeria_client.get_info_supply_chain_by_guid(guid, output_format='MD', report_spec = "Information-Supply-Chain-DrE")
 
 
             elif object_action == "Create":
@@ -901,48 +1020,32 @@ def process_information_supply_chain_upsert_command(egeria_client: EgeriaTech, t
                     logger.error(msg)
                     return
                 else:
-                    body = {
-                        "class": "NewElementRequestBody",
-                        "externalSourceGUID": external_source_guid,
-                        "externalSourceName": external_source_name,
-                        "forLineage": False,
-                        "forDuplicateProcessing": False,
-                        "effectiveTime": effective_time,
-                        "anchorGUID": anchor_guid,
-                        "isOwnAnchor": is_own_anchor,
-                        "anchorScopeGUID": anchor_scope_guid,
-                        "parentGUID": parent_guid,
-                        "parentRelationshipTypeName": parent_relationship_type_name,
-                        "parentAtEnd1": parent_at_end1,
-                        "properties": {
-                            "class": "InformationSupplyChainProperties",
-                            "effectiveFrom": effective_from,
-                            "effectiveTo": effective_to,
-                            "extendedProperties": extended_properties,
-                            "qualifiedName": qualified_name,
-                            "additionalProperties": additional_properties,
-                            "displayName": display_name,
-                            "description": description,
-                            "scope": scope,
-                            "purposes": purposes,
-                            "version": version_identifier
-                            }
-                        }
+                    body = set_create_body("InformationSupplyChain", attributes)
+                    body['properties'] = prop_body
 
                     guid = egeria_client.create_info_supply_chain(body)
                     if guid:
+                        msg = f"==>Created Element `{display_name}` with GUID {guid}\n"
+                        logger.success(msg)
+                        print(Markdown(msg))
                         update_element_dictionary(qualified_name, {
                             'guid': guid, 'display_name': display_name
                             })
-                        if len(in_supply_chain_guids) > 0:
+                        if in_supply_chain_guids:
                             for nested_chain in in_supply_chain_guids:
-                                egeria_client.compose_info_supply_chains(guid, nested_chain)
-                        journal_entry_guid = add_note_in_dr_e(egeria_client, qualified_name, display_name,
-                                                              journal_entry)
+                                egeria_client.compose_info_supply_chains(nested_chain, guid)
 
-                        msg = f"==>Created Element `{display_name}` with GUID {guid}\n"
+                        if journal_entry:
+                            journal_entry_guid = add_note_in_dr_e(egeria_client, qualified_name, display_name,
+                                                              journal_entry)
+                        if nested_supply_chain_guids:
+                            for nested_supply_chain in nested_supply_chain_guids:
+                                egeria_client.compose_info_supply_chains(guid, nested_supply_chain)
+
+                        msg = f"==>Created Element `{display_name}` Relationships\n"
                         logger.success(msg)
-                        return egeria_client.get_info_supply_chain_by_guid(guid, output_format='MD')
+                        print(Markdown(msg))
+                        return egeria_client.get_info_supply_chain_by_guid(guid, output_format='MD', report_spec="Information-Supply-Chain-DrE")
                     else:
                         msg = f"==>Failed to create element `{display_name}` with GUID {guid}\n"
                         logger.error(msg)
@@ -978,13 +1081,13 @@ def process_information_supply_chain_link_unlink_command(egeria_client: EgeriaTe
 
     attributes = parsed_output['attributes']
 
-    component1 = attributes.get('component1', {}).get('guid', None)
-    component2 = attributes.get('component2', {}).get('guid', None)
+    segment1 = attributes.get('Segment1', {}).get('guid', None)
+    segment2 = attributes.get('Segment2', {}).get('guid', None)
     label = attributes.get('Link Label', {}).get('value', None)
     description = attributes.get('Description', {}).get('value', None)
 
     valid = parsed_output['valid']
-    exists = component1 is not None and  component2 is not None
+    exists = segment1 is not None and  segment2 is not None
 
 
     external_source_guid = attributes.get('External Source GUID', {}).get('value', None)
@@ -1025,7 +1128,7 @@ def process_information_supply_chain_link_unlink_command(egeria_client: EgeriaTe
                         f"==> Validation of {command} completed successfully! Proceeding to apply the changes.\n"))
 
                     body = body_slimmer({
-                        "class": "MetadataSourceRequestBody",
+                        "class": "DeleteRelationshipRequestBody",
                         "externalSourceGUID": external_source_guid,
                         "externalSourceName": external_source_name,
                         "effectiveTime": effective_time,
@@ -1033,9 +1136,9 @@ def process_information_supply_chain_link_unlink_command(egeria_client: EgeriaTe
                         "forDuplicateProcessing": False
                         })
 
-                egeria_client.unlink_peer_info_supply_chains(component1, component2, body)
+                egeria_client.unlink_peer_info_supply_chains(segment1, segment2, body)
 
-                logger.success(f"===> Detached segment with {label} from `{component1}`to {component2}\n")
+                logger.success(f"===> Detached segment with {label} from `{segment1}`to {segment2}\n")
                 out = parsed_output['display'].replace('Unlink', 'Link', 1)
 
                 return (out)
@@ -1066,7 +1169,7 @@ def process_information_supply_chain_link_unlink_command(egeria_client: EgeriaTe
                             }
                         }
 
-                    egeria_client.link_peer_info_supply_chain(component1, component2, body)
+                    egeria_client.link_peer_info_supply_chains(segment1, segment2, body)
                     msg = f"==>Created {object_type} link named `{label}`\n"
                     logger.success(msg)
                     out = parsed_output['display'].replace('Link', 'Detach', 1)
@@ -1078,76 +1181,4 @@ def process_information_supply_chain_link_unlink_command(egeria_client: EgeriaTe
             return None
     else:
         return None
-
-@logger.catch
-def process_sol_arch_list_command(egeria_client: EgeriaTech, txt: str, kind:str, directive: str = "display" ) -> Optional[str]:
-    """
-    Processes Solution Blueprint list object_action by extracting key attributes such as
-     search string from the given text.
-
-    :param txt: A string representing the input cell to be processed for
-        extracting term-related attributes.
-    :param directive: an optional string indicating the directive to be used - display, validate or execute
-    :return: A string summarizing the outcome of the processing.
-    """
-    command, object_type, object_action = extract_command_plus(txt)
-    print(Markdown(f"# {command}\n"))
-
-    parsed_output = parse_view_command(egeria_client, object_type, object_action, txt, directive)
-
-    attributes = parsed_output['attributes']
-
-    valid = parsed_output['valid']
-
-    print(Markdown(parsed_output['display']))
-
-    if directive == "display":
-        return None
-    elif directive == "validate":
-        if valid:
-            print(Markdown(f"==> Validation of {command} completed successfully!\n"))
-        else:
-            msg = f"Validation failed for object_action `{command}`\n"
-            logger.error(msg)
-        return valid
-
-    elif directive == "process":
-        attributes = parsed_output['attributes']
-        search_string = attributes.get('Search String', {}).get('value', '*')
-        output_format = attributes.get('Output Format', {}).get('value', 'LIST')
-        detailed = attributes.get('Detailed', {}).get('value', False)
-
-        match kind:
-            case "Solution Blueprints":
-                find_proc = egeria_client.find_solution_blueprints
-            case "Information Supply Chains":
-                find_proc = egeria_client.find_information_supply_chains
-            case "Solution Components":
-                find_proc = egeria_client.find_solution_components
-            case "Solution Roles":
-                find_proc = egeria_client.find_solution_roles
-
-        try:
-            if not valid:  # First validate the command before we process it
-                msg = f"Validation failed for {object_action} `{object_type}`\n"
-                logger.error(msg)
-                return None
-
-            list_md = f"\n# {kind} with filter: `{search_string}`\n\n"
-            if output_format == "DICT":
-                struct = find_proc(search_string, output_format=output_format)
-                list_md += f"```{json.dumps(struct, indent=4)}```\n"
-            else:
-                list_md += find_proc(search_string, output_format=output_format)
-            logger.info(f"Wrote Output for search string: `{search_string}`")
-
-            return list_md
-
-        except Exception as e:
-            logger.error(f"Error performing {command}: {e}")
-            console.print_exception(show_locals=True)
-            return None
-    else:
-        return None
-
 

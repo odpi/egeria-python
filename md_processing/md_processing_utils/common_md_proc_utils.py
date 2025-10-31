@@ -68,7 +68,7 @@ def process_provenance_command(file_path: str, txt: [str]) -> str:
 
 @logger.catch
 def parse_upsert_command(egeria_client: EgeriaTech, object_type: str, object_action: str, txt: str,
-                       directive: str = "display") -> dict:
+                       directive: str = "display", body_type: str = None) -> dict:
     parsed_attributes, parsed_output = {}, {}
 
     parsed_output['valid'] = True
@@ -77,7 +77,7 @@ def parse_upsert_command(egeria_client: EgeriaTech, object_type: str, object_act
     display_name = ""
     labels = {}
 
-    command_spec = get_command_spec(f"Create {object_type}")
+    command_spec = get_command_spec(f"Create {object_type}", body_type = body_type)
     if command_spec is None:
         logger.error("Command not found in command spec")
         raise Exception("Command not found in command spec")
@@ -881,6 +881,9 @@ def proc_ids(egeria_client: EgeriaTech, element_type: str, element_labels: set, 
     element_name = extract_attribute(txt, element_labels)
 
     if element_name:
+        if element_type == "Tag ID": # Special case for informal tags
+            element_type = "InformalTag"
+
         if '\n' in element_name or ',' in element_name:
             msg = f"Element name `{element_name}` appears to be a list rather than a single element"
             logger.error(msg)

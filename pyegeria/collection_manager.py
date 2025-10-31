@@ -4460,7 +4460,7 @@ class CollectionManager(Client2):
             The guid of the digital_subscription to update.
         body: dict
             A dict representing the details of the collection to create.
-        replace_all_props: bool, optional, defaults to False
+        merge_update: bool, optional, defaults to False
             Whether to replace all properties in the collection.
 
 
@@ -5238,7 +5238,7 @@ class CollectionManager(Client2):
             Effective time of the query. If not specified will default to any time.
         body: dict, optional, defaults to None
             The body of the request to add to the collection. See notes.
-        replace_all_props: bool, optional, defaults to False
+        merge_update: bool, optional, defaults to False
             Replace all properties or just update ones specified in body.
 
             The name of the server to use.
@@ -5304,7 +5304,7 @@ class CollectionManager(Client2):
             Effective time of the query. If not specified will default to any time.
         body: dict, optional, defaults to None
             The body of the request to add to the collection. See notes.
-        replace_all_props: bool, optional, defaults to False
+        merge_update: bool, optional, defaults to False
             Replace all properties or just update ones specified in body.
 
             The name of the server to use.

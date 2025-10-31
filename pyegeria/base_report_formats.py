@@ -299,6 +299,35 @@ base_report_specs = FormatSetDict({
             )
         ],
     ),
+    "Common-Mermaid": FormatSet(
+        target_type="Referenceable",
+        heading="Common Attributes with Mermaid",
+        description="Attributes that apply to all Referenceables.",
+        annotations={},  # No specific annotations
+        formats=[
+            Format(
+                types=["DICT", "REPORT"],
+                attributes=[
+                    Column(name='Display Name', key='display_name'),
+                    Column(name="Qualified Name", key='qualified_name'),
+                    Column(name="Description", key='description'),
+                    Column(name="GUID", key='guid'),
+                    Column(name="Mermaid Graph", key='mermaid_graph'),
+                    Column(name="Anchor Mermaid Graph", key='anchorMermaidGraph'),
+                    Column(name="Information Supply Chain Mermaid Graph", key='informationSupplyChainMermaidGraph'),
+                    Column(name="Field Level Lineage Graph", key ='fieldLevelLineageGraph'),
+                    Column(name= "Action Mermaid Graph", key = 'actionMermaidGraph'),
+                    Column(name="Local Lineage Graph", key="localLineageGraph"),
+                    Column(name="Edge Mermaid",key="edgeMermaidGraph"),
+                    Column(name="ISC Implementation Graph", key='iscImplementationGraph'),
+                    Column(name="Specification Mermaid Graph", key='specificationMermaidGraph'),
+                    Column(name="Solution Blueprint Mermaid Graph", key='solutionBlueprintMermaidGraph'),
+                    Column(name="Solution Subcomponent Mermaid Graph", key='solutionSubcomponentMermaidGraph'),
+
+                ],
+            )
+        ],
+    ),
     "Search-Keywords": FormatSet(
         heading="Search Keyword Report",
         description="A report of elements with search keywords matching the specified string",
@@ -348,22 +377,54 @@ base_report_specs = FormatSetDict({
             )
         ],
     ),
-    "Comments-DrE": FormatSet(
-        target_type="Comments",
-        heading="Comments",
-        description="Details of a comment.",
+
+"Journal-Entry-DrE": FormatSet(
+        target_type="Notification",
+        heading="Journal Entry",
+        description="Details of a journal entry.",
         annotations={},  # No specific annotations
         formats=[
             Format(
                 types=["ALL"],
                 attributes=[
-                    Column(name='Display Name', key='display_name'),
-                    Column(name="Qualified Name", key='qualified_name'),
-                    Column(name="GUID", key='guid'),
-                    Column(name="Comment", key='description')
+                    Column(name='Journal Name', key='note_log_name'),
+                    Column(name='Journal Qualified Name', key='note_log_qualified_name'),
+                    Column(name="Journal Entry Qualified Name", key='qualified_name'),
+                    Column(name="Journal Entry GUID", key='guid'),
+                    Column(name="Journal Entry", key='description')
                 ],
             )
         ],
+        action=ActionParameter(
+            function="Client2.find_notes",
+            optional_params=OPTIONAL_PARAMS,
+            required_params=["search_string"],
+            spec_params={},
+        )
+    ),
+"Informal-Tags-DrE": FormatSet(
+        target_type="Informal Tag",
+        heading="Informal Tags",
+        description="Details of Informal Tags.",
+        annotations={},  # No specific annotations
+        formats=[
+            Format(
+                types=["ALL"],
+                attributes=[
+                    Column(name='Tag Name', key='display_name'),
+                    Column(name='Qualified Name', key='qualified_name'),
+                    Column(name="Description", key='description'),
+                    Column(name="GUID", key='guid'),
+                    Column(name="Tagged Elements", key='tagged_elements'),
+                ],
+            )
+        ],
+        action=ActionParameter(
+            function="Client2.find_tags",
+            optional_params=OPTIONAL_PARAMS,
+            required_params=["search_string"],
+            spec_params={},
+        )
     ),
 
     "ExternalReference": FormatSet(
@@ -1904,6 +1965,7 @@ generated_format_sets = FormatSetDict({
                                                                               key='nested_info_supply_chains'),
                                                                        Column(name='In Information Supply Chain',
                                                                               key='in_supply_chain'),
+                                                                       Column(name="Journal Entry", key='journal_entry'),
                                                                        Column(name='Qualified Name',
                                                                               key='qualified_name'),
                                                                        Column(name='GUID', key='guid'),

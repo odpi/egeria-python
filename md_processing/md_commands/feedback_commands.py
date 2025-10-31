@@ -64,7 +64,8 @@ def process_add_comment_command(egeria_client: EgeriaTech, txt: str, directive: 
 
     attributes = parsed_output['attributes']
 
-
+    valid = parsed_output['valid']
+    exists = parsed_output['exists']
 
     qualified_name = parsed_output.get('qualified_name', None)
     guid = parsed_output.get('guid', None)
@@ -79,19 +80,18 @@ def process_add_comment_command(egeria_client: EgeriaTech, txt: str, directive: 
     associated_element = attributes.get('Associated Element', {}).get('value', None)
     associated_element_guid = attributes.get('Associated Element', {}).get('guid', None)
     description = attributes.get('Comment Text', {}).get('value', None)
-    comment_type = attributes.get('Comment Type', {}).get('value', None)
-    parent_comment = attributes.get('Parent Comment', {}).get('value', None)
-    parent_comment_guid = attributes.get('Parent Comment', {}).get('guid', None)
+    comment_type = attributes.get('Comment Type', {}).get('value', None).strip()
 
-    if associated_element_guid is None and parent_comment_guid is None:
-        valid = False
-        msg = f"Validation failed for {command} - One of `Associated Element` or `Parent Comment` must be specified\n"
-        logger.error(msg)
-        print(msg)
-    else:
-        if description:
-            valid = True
-            exists = True
+
+    # if associated_element_guid is None and parent_comment_guid is None:
+    #     valid = False
+    #     msg = f"Validation failed for {command} - One of `Associated Element` or `Parent Comment` must be specified\n"
+    #     logger.error(msg)
+    #     print(msg)
+    # else:
+    #     if description:
+    #         valid = True
+    #         exists = True
     #
 
     if directive == "display":
@@ -109,13 +109,14 @@ def process_add_comment_command(egeria_client: EgeriaTech, txt: str, directive: 
             obj = "Comment"
             if comment_type not in COMMENT_TYPES:
                 raise ValueError(f"Invalid comment type: {comment_type}")
-            target_guid = parent_comment_guid if parent_comment_guid else associated_element_guid
+            # target_guid = parent_comment_guid if parent_comment_guid else associated_element_guid
             if qualified_name is None:
-                qualified_name = egeria_client.make_feedback_qn("Comment",target_guid,display_name)
+                qualified_name = egeria_client.make_feedback_qn("Comment",associated_element_guid,display_name)
             #   Set the property body for a glossary collection
             #
             prop_body = {
                     "class": "CommentProperties",
+                    "displayName": display_name,
                     "qualifiedName": qualified_name,
                     "description": description,
                     "commentType": comment_type
@@ -165,20 +166,21 @@ def process_add_comment_command(egeria_client: EgeriaTech, txt: str, directive: 
                     return None
 
                 else:
+
                     body = set_create_body(object_type,attributes)
                     body['class'] = "NewAttachmentRequestBody"
                     body["properties"] = prop_body
                     slim_body = body_slimmer(body)
-                    if parent_comment_guid:
-                        guid = egeria_client.add_comment_reply(element_guid = parent_comment_guid, body = slim_body)
-                    else:
-                        guid = egeria_client.add_comment_to_element(element_guid = associated_element_guid, body =slim_body)
+                    # if parent_comment_guid:
+                    #     guid = egeria_client.add_comment_reply(element_guid = parent_comment_guid, body = slim_body)
+                    # else:
+                    guid = egeria_client.add_comment_to_element(element_guid = associated_element_guid, body =slim_body)
 
                     if guid:
                         update_element_dictionary(qualified_name, {
                             'guid': guid, 'display_name': display_name
                             })
-                        msg = f"Created Element `{display_name}` with GUID {guid}\n\n___"
+                        msg = f"## ==> Created Element `{display_name}` with GUID {guid}\n\n___"
                         logger.success(msg)
                         print(Markdown(msg))
                         return egeria_client.get_comment_by_guid(guid, output_format='MD', report_spec = "Comments-DrE")
@@ -196,10 +198,11 @@ def process_add_comment_command(egeria_client: EgeriaTech, txt: str, directive: 
     else:
         return None
 
-def process_upsert_note_log_command(egeria_client: EgeriaTech, txt: str, directive: str = "display") -> Optional[str]:
+def process_journal_entry_command(egeria_client: EgeriaTech, txt: str,
+                                         directive: str = "display") -> Optional[str]:
     """
-    Processes a noteLog create or update  object_action by extracting key attributes from the given text and applying
-    this using the pyegeria function.
+    Creates or updates a journal entry. If the journal (NoteLog) doesn't exist, then it will be created. Each journal
+    entry is a note in a NoteLog.
 
     :param txt: A string representing the input cell to be processed for
         extracting glossary-related attributes.
@@ -227,10 +230,24 @@ def process_upsert_note_log_command(egeria_client: EgeriaTech, txt: str, directi
 
     attributes = parsed_output['attributes']
 
-    display_name = attributes['Display Name'].get('value', None)
-    description = attributes['Description'].get('value', None)
+    journal_name = attributes['Journal Name'].get('value', None)
+    journal_qn = attributes['Journal Name'].get('qualified_name', None)
+    journal_exists = attributes['Journal Name'].get('Exists', False)
+    note_entry = attributes['Note Entry'].get('value', None)
+    journal_description = attributes['Journal Description'].get('value', None)
+
     associated_element = attributes.get('Associated Element', {}).get('value', None)
-    associated_element_guid = attributes.get('Associated Element', {}).get('guid', None)
+    associated_element_qn = attributes.get('Associated Element', {}).get('qualified_name', None)
+
+    if journal_exists is False:
+        qualified_name = None
+        journal_qn = None
+
+
+    if journal_name and note_entry:
+        valid = True
+    else:
+        valid = False
     #
 
     if directive == "display":
@@ -244,71 +261,29 @@ def process_upsert_note_log_command(egeria_client: EgeriaTech, txt: str, directi
 
     elif directive == "process":
         try:
-            obj = "NoteLog"
 
-            #   Set the property body for a glossary collection
-            #
-            prop_body = set_element_prop_body(obj, qualified_name, attributes)
-
-            if object_action == "Update":
-                if not exists:
-                    msg = (f" Element `{display_name}` does not exist! Updating result document with Create "
-                           f"{object_action}\n")
+            if object_action == "Create":
+                if valid is False:
+                    msg = "Journal name or Journal entry are missing."
                     logger.error(msg)
-                    return update_a_command(txt, object_action, object_type, qualified_name, guid)
-                elif not valid:
-                    msg = ("  The input data is invalid and cannot be processed. \nPlease review")
-                    logger.error(msg)
+                    print(msg)
                     print(Markdown(f"==> Validation of {command} failed!!\n"))
-                    print(Markdown(msg))
-                    return None
-                else:
-                    print(Markdown(
-                        f"==> Validation of {command} completed successfully! Proceeding to apply the changes.\n"))
-
-
-                body = set_update_body(obj, attributes)
-                body['properties'] = prop_body
-
-                egeria_client.update_note_log(associated_element_guid, body)
-
-                logger.success(f"Updated  {object_type} `{display_name}` with GUID {guid}\n\n___")
-                update_element_dictionary(qualified_name, {
-                    'guid': guid, 'display_name': display_name
-                    })
-                return egeria_client.get_note_logs_by_name(filter = qualified_name, element_type="NoteLog",
-                                                                   output_format='MD', report_spec = "NoteLog-DrE")
-
-
-            elif object_action == "Create":
-                if valid is False and exists:
-                    msg = (f"NoteLog `{display_name}` already exists and result document updated changing "
-                           f"`Create` to `Update` in processed output\n\n___")
-                    logger.error(msg)
-                    return update_a_command(txt, object_action, object_type, qualified_name, guid)
-                elif not valid:
-                    msg = ("The input data is invalid and cannot be processed. \nPlease review")
-                    logger.error(msg)
-                    print(Markdown(f"==> Validation of {command} failed!!\n"))
-                    print(Markdown(msg))
                     return None
 
                 else:
-                    body = set_create_body(object_type,attributes)
 
-                    body["properties"] = prop_body
-                    slim_body = body_slimmer(body)
-                    guid = egeria_client.create_note_log(associated_element_guid, slim_body)
-                    if guid:
-                        update_element_dictionary(qualified_name, {
-                            'guid': guid, 'display_name': display_name
-                            })
-                        msg = f"Created Element `{display_name}` with GUID {guid}\n\n___"
+                    note_guid = egeria_client.add_journal_entry(note_log_qn = journal_qn,
+                                                                   element_qn = associated_element_qn,
+                                                                   note_log_display_name = journal_name,
+                                                                   note_entry = note_entry )
+                    if note_guid:
+                        msg = f"Created entry in `{journal_name}` with GUID {note_guid}\n\n___"
                         logger.success(msg)
-                        return egeria_client.get_note_logs_by_name(filter = qualified_name, element_type="NoteLog",
-                                                                   output_format='MD', report_spec = "NoteLog-DrE")
+                        print(Markdown(msg))
+                        return egeria_client.get_note_by_guid(note_guid,
+                                                                   output_format='MD', report_spec = "Journal-Entry-DrE")
                     else:
-                        msg = f"Failed to create element `{display_name}` with GUID {guid}\n\n___"
+                        msg = f"Failed to create entry for  `{journal_name}`\n\n___"
                         logger.error(msg)
                         return None
 
@@ -627,7 +602,7 @@ def process_upsert_informal_tag_command(egeria_client: EgeriaTech, txt: str, dir
 
             elif object_action == "Create":
                 if valid is False and exists:
-                    msg = (f"Project `{display_name}` already exists and result document updated changing "
+                    msg = (f"Informal Tag `{display_name}` already exists and result document updated changing "
                            f"`Create` to `Update` in processed output\n\n___")
                     logger.error(msg)
                     return update_a_command(txt, object_action, object_type, qualified_name, guid)
@@ -646,8 +621,9 @@ def process_upsert_informal_tag_command(egeria_client: EgeriaTech, txt: str, dir
                             'guid': guid, 'display_name': display_name
                             })
                         msg = f"Created Element `{display_name}` with GUID {guid}\n\n___"
+                        print(Markdown(msg))
                         logger.success(msg)
-                        return egeria_client.get_informal_tag_by_guid(guid, output_format='MD', report_spec = "Informal-Tag-DrE")
+                        return egeria_client.get_tag_by_guid(guid, output_format='MD', report_spec = "Informal-Tags-DrE")
                     else:
                         msg = f"Failed to create element `{display_name}` with GUID {guid}\n\n___"
                         logger.error(msg)

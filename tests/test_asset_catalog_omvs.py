@@ -316,7 +316,7 @@ class TestAssetCatalog:
 
             token = a_client.create_egeria_bearer_token(self.good_user_2, "secret")
 
-            response = a_client.get_asset_catalog_types()
+            response = a_client.get_asset_types()
             print(f"type is {type(response)}")
             if type(response) is list:
                 print("\n\n" + json.dumps(response, indent=4))

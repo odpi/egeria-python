@@ -291,7 +291,7 @@ def set_update_body(object_type: str, attributes: dict)->dict:
       "effectiveTime": attributes.get('Effective Time', {}).get('value', None),
       "forLineage": attributes.get('For Lineage', {}).get('value', False),
       "forDuplicateProcessing": attributes.get('For Duplicate Processing', {}).get('value', False),
-      "mergeUpdate": attributes.get('Merge Update', {}).get('value', True),
+              "mergeUpdate": attributes.get('Merge Update', {}).get('value', True),
       "properties": "",
     }
 def set_rel_prop_body(object_type: str, attributes: dict)->dict:
@@ -572,8 +572,8 @@ def add_note_in_dr_e(client: Client2, qualified_name: str, display_name: str, jo
         note_log_qn = f"{qualified_name}-NoteLog"
         note_log_display_name = f"{display_name}-NoteLog"
         note_display_name = f"{qualified_name}-Journal-Entry-{datetime.now().strftime('%Y-%m-%d %H:%M')}"
-        journal_entry_guid = client.add_journal_entry(note_log_qn, qualified_name, note_log_display_name, note_display_name,
-                                                             journal_entry)
+        journal_entry_guid = client.add_journal_entry(note_log_qn, qualified_name, note_log_display_name,
+                                                      note_display_name, journal_entry)
         logger.info(f"Added journal entry `{journal_entry_guid}` to `{qualified_name}`")
         return journal_entry_guid
     else:

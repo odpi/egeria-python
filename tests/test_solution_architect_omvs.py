@@ -14,7 +14,9 @@ A running Egeria environment is needed to run these tests.
 import json
 import time
 
+from pydantic import ValidationError
 from rich import print, print_json
+from rich.console import Console
 
 from pyegeria import SolutionArchitect, PyegeriaException
 from pyegeria._exceptions import (
@@ -23,10 +25,11 @@ from pyegeria._exceptions import (
     UserNotAuthorizedException,
     print_exception_response,
 )
-from pyegeria._exceptions_new import PyegeriaException, print_basic_exception
+from pyegeria._exceptions_new import PyegeriaException, print_basic_exception, print_validation_error
 
 disable_ssl_warnings = True
 
+console = Console(width = 200)
 
 def jprint(info, comment=None):
     if comment:
@@ -59,7 +62,7 @@ class TestSolutionArchitect:
                 self.view_server, self.platform_url, self.user, self.password
                 )
             s_client.create_egeria_bearer_token()
-            display_name = "puddys_supply_chain"
+            display_name = "rovers_supply_chain"
             q_name = s_client.__create_qualified_name__("InformationSupplyChain",display_name)
             # body = {
             #     "class": "NewElementRequestBody",
@@ -195,7 +198,7 @@ class TestSolutionArchitect:
             s_client.close_session()
 
     def test_find_information_supply_chains(self):
-        filter_string = "puddys_"
+        filter_string = "*"
         try:
             s_client = SolutionArchitect(
                 self.view_server, self.platform_url, self.user, self.password
@@ -203,7 +206,7 @@ class TestSolutionArchitect:
 
             s_client.create_egeria_bearer_token()
             start_time = time.perf_counter()
-            response = s_client.find_information_supply_chains(filter_string, output_format='DICT')
+            response = s_client.find_information_supply_chains(filter_string, output_format='DICT', report_spec="Common-Mermaid")
             duration = time.perf_counter() - start_time
             print(
                 f"\n\tDuration was {duration:.2f} seconds, Type: {type(response)}, Element count is {len(response)}"
@@ -225,7 +228,7 @@ class TestSolutionArchitect:
             s_client.close_session()
 
     def test_get_information_supply_chain_by_guid(self):
-        guid = "7cbcb2ae-0b06-4dc6-83b7-d5951c435fe3"
+        guid = "5ee59b8b-c68a-48de-bd27-8f9ae3027fe5"
         try:
             s_client = SolutionArchitect(
                 self.view_server, self.platform_url, self.user, self.password
@@ -233,7 +236,7 @@ class TestSolutionArchitect:
 
             s_client.create_egeria_bearer_token()
             start_time = time.perf_counter()
-            response = s_client.get_info_supply_chain_by_guid(guid, output_format='DICT')
+            response = s_client.get_info_supply_chain_by_guid(guid, output_format='JSON', report_spec="Information-Supply-Chain-DrE")
             duration = time.perf_counter() - start_time
             duration = time.perf_counter() - start_time
             print(
@@ -343,7 +346,7 @@ class TestSolutionArchitect:
 
 
     def test_find_information_supply_chains_body(self):
-        filter = "puddy"
+        filter = "evil"
         try:
             s_client = SolutionArchitect(
                 self.view_server, self.platform_url, self.user, self.password
@@ -360,16 +363,16 @@ class TestSolutionArchitect:
                 }
             start_time = time.perf_counter()
             response = s_client.find_information_supply_chains(filter,
-                                                               body=body, output_format="DICT")
+                                                               body=body, output_format="DICT", report_spec="Information-Supply-Chain-DrE")
             duration = time.perf_counter() - start_time
             print(
                 f"\n\tDuration was {duration:.2f} seconds, Type: {type(response)}, Element count is {len(response)}"
             )
             if isinstance(response, (list, dict)):
-                print_json(data=response)
+                console.print_json(data=response)
 
             elif type(response) is str:
-                print("\n\n\t Response is: " + response)
+                console.print("\n\n\t Response is: " + response)
 
             assert True
         except (
@@ -390,7 +393,8 @@ class TestSolutionArchitect:
 
             s_client.create_egeria_bearer_token()
             start_time = time.perf_counter()
-            response = s_client.find_all_information_supply_chains(output_format='DICT')
+            response = s_client.find_all_information_supply_chains(output_format='DICT',
+                                                                   report_spec="Information-Supply-Chain-DrE")
             duration = time.perf_counter() - start_time
             print(
                 f"\n\tDuration was {duration:.2f} seconds, Type: {type(response)}, Element count is {len(response)}"
@@ -407,14 +411,16 @@ class TestSolutionArchitect:
         ) as e:
             print_basic_exception(e)
             assert False, "Invalid request"
-
+        except ValidationError as e:
+            print_validation_error(e)
+            assert False, "Invalid request"
         finally:
             s_client.close_session()
 
     def test_link_peer_supply_chains(self):
         name = "sell to the highest bidder2"
-        guid = "fdbedd27-2332-4fe5-b50c-9007238fd527"
-        guid2 = "70e1ae07-fc8d-49c1-89de-582f671d2b65"
+        guid = "c7986bcc-84fd-4a22-b78c-1c74e9260ced"
+        guid2 = "327ccde8-c668-47ea-ae60-47dc207ed5bf"
         try:
             s_client = SolutionArchitect(
                 self.view_server, self.platform_url, self.user, self.password
@@ -423,7 +429,7 @@ class TestSolutionArchitect:
             s_client.create_egeria_bearer_token()
             q_name = s_client.__create_qualified_name__("InformationSupplyChainSegment",name)
             body = {
-                "class": "RelationshipRequestBody",
+                "class": "NewRelationshipRequestBody",
                 "properties": {
                     "class": "InformationSupplyChainLinkProperties",
                     "label": "a first label",
@@ -433,21 +439,19 @@ class TestSolutionArchitect:
 
 
             start_time = time.perf_counter()
-            s_client.link_peer_info_supply_chain(guid, guid2, body)
+            s_client.link_peer_info_supply_chains(guid, guid2, body)
             duration = time.perf_counter() - start_time
             print(
                 f"\n\tDuration was {duration:.2f} seconds,"
             )
 
             assert True
-        except (
-            InvalidParameterException,
-            PropertyServerException,
-            UserNotAuthorizedException,
-        ) as e:
-            print_exception_response(e)
+        except PyegeriaException as e:
+            print_basic_exception(e)
             assert False, "Invalid request"
-
+        except ValidationError as e:
+            print_validation_error(e)
+            assert False, "Invalid request"
         finally:
             s_client.close_session()
 
@@ -561,6 +565,36 @@ class TestSolutionArchitect:
         finally:
             s_client.close_session()
 
+    def test_delete_info_supply_chain(self):
+        guid = "78865344-36ba-4846-a62e-db15405b6456"
+
+        try:
+            s_client = SolutionArchitect(
+                self.view_server, self.platform_url, self.user, self.password
+            )
+
+            s_client.create_egeria_bearer_token()
+
+            start_time = time.perf_counter()
+            s_client.delete_info_supply_chain(guid, cascade_delete=True)
+            duration = time.perf_counter() - start_time
+            print()
+            duration = time.perf_counter() - start_time
+            print(
+                f"\n\tDuration was {duration:.2f} seconds"
+            )
+
+            assert True
+        except PyegeriaException as e:
+            print_basic_exception(e)
+            assert False, "Invalid request"
+        except ValidationError as e:
+            print_validation_error(e)
+            assert False, "Invalid request"
+
+        finally:
+            s_client.close_session()
+
 
     def test_create_solution_blueprint(self):
         try:
@@ -649,7 +683,7 @@ class TestSolutionArchitect:
                 self.view_server, self.platform_url, self.user, self.password
                 )
             s_client.create_egeria_bearer_token()
-            guid = "8e42075c-4bbe-47fb-9e96-8bd60c41bf6d"
+            guid = '0f5b8b40-270c-4b03-a0bb-eabad6294376'
             # body = {
             #     "class": "NewInformationSupplyChainRequestBody",
             #     "properties": {
@@ -751,7 +785,7 @@ class TestSolutionArchitect:
 
             s_client.create_egeria_bearer_token()
             start_time = time.perf_counter()
-            response = s_client.find_solution_blueprints(search_string, output_format='DICT', report_spec='Solution-Blueprint')
+            response = s_client.find_solution_blueprints(search_string, output_format='DICT', report_spec='Common-Mermaid')
             duration = time.perf_counter() - start_time
             print(
                 f"\n\tDuration was {duration:.2f} seconds, Type: {type(response)}, Element count is {len(response)}"
@@ -1354,7 +1388,7 @@ class TestSolutionArchitect:
             s_client.close_session()
 
     def test_find_solution_components(self):
-        filter = "Docling"
+        filter = "*"
         try:
             s_client = SolutionArchitect(
                 self.view_server, self.platform_url, self.user, self.password
@@ -1362,7 +1396,7 @@ class TestSolutionArchitect:
 
             s_client.create_egeria_bearer_token()
             start_time = time.perf_counter()
-            response = s_client.find_solution_components(filter, output_format='DICT', report_spec="Solution-Component-DrE")
+            response = s_client.find_solution_components(filter, output_format='DICT', report_spec="Referenceable")
             duration = time.perf_counter() - start_time
             print(
                 f"\n\tDuration was {duration:.2f} seconds, Type: {type(response)}, Element count is {len(response)}"

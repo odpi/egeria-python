@@ -142,17 +142,21 @@ def extract_attribute(text: str, labels: List[str]) -> Optional[str]:
     Returns:
         The cleaned value of the attribute, or None if not found.
     """
+
+
     for label in labels:
-        # Construct pattern for the current label
-        pattern = rf"## {re.escape(label)}\n(.*?)(?=^##|\Z)"  # Captures content until the next '##' or end of text
+        # Construct pattern for the current label - stops at next ##, ___ separator, or end of text
+        pattern = rf"## {re.escape(label)}\n(.*?)(?=^##|^_{3,}|\Z)"
         match = re.search(pattern, text, re.DOTALL | re.MULTILINE)
         if match:
             # Extract matched text
             extracted_text = match.group(1)
 
-            # Remove lines starting with '>'
-            filtered_lines = [line for line in extracted_text.splitlines() if not line.lstrip().startswith(">")]
-
+            # Remove lines starting with '>' and lines that are only underscores/whitespace
+            filtered_lines = [
+                line for line in extracted_text.splitlines()
+                if not line.lstrip().startswith(">") and not re.match(r'^\s*_+\s*$', line)
+            ]
             # Join the lines back, preserving single newlines
             cleaned_text = "\n".join(filtered_lines).strip()
 
@@ -461,7 +465,10 @@ def get_element_by_name(egeria_client, element_type: str, element_name: str) -> 
 
     # Haven't seen this element before
     property_names = ['qualifiedName', 'displayName', 'title']
-    open_metadata_type_name = None
+    if element_type == "InformalTag":
+        open_metadata_type_name = element_type
+    else:
+        open_metadata_type_name = None
     details = egeria_client.get_elements_by_property_value(element_name, property_names, open_metadata_type_name)
     if isinstance(details, str):
         msg = f"{element_type} `{element_name}` not found in Egeria"

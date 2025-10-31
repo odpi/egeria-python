@@ -1,6 +1,8 @@
 from datetime import datetime
 import re
 from typing import Any, Callable, Dict, List, Optional, Tuple, Union
+
+from pyegeria._globals import MERMAID_GRAPH_TITLES, MERMAID_GRAPHS
 from pyegeria.utils import (camel_to_title_case)
 from markdown_it import MarkdownIt
 from rich.console import Console
@@ -204,7 +206,7 @@ def make_md_attribute(attribute_name: str, attribute_value: str, output_type: st
 
         output = f"## {attribute_title}\n{attribute_value}\n\n"
     elif output_type in ["REPORT", "MERMAID"]:
-        if attribute_title in ['Mermaid Graph', 'Mermaid', 'Solution Blueprint Mermaid Graph']:
+        if attribute_title in MERMAID_GRAPH_TITLES + ['Mermaid Graph', 'Mermaid']:
             output = f"## {attribute_title}\n\n```mermaid\n{attribute_value}\n```\n"
         elif attribute_value:
             output = f"## {attribute_title}\n{attribute_value}\n\n"
@@ -257,6 +259,54 @@ def populate_columns_from_properties(element: dict, columns_struct: dict) -> dic
     # If properties is not a dict, do nothing
     if not isinstance(props, dict):
         return columns_struct
+
+    # Get the attributes list if present
+    formats = columns_struct.get('formats') or {}
+    columns = formats.get('attributes') if isinstance(formats, dict) else None
+    if not isinstance(columns, list):
+        return columns_struct
+
+    for col in columns:
+        try:
+            key_snake = col.get('key') if isinstance(col, dict) else None
+            if not key_snake:
+                continue
+            # Convert the snake_case key to camelCase to look up in properties
+            key_camel = to_camel_case(key_snake)
+            if key_camel in props:
+                col['value'] = props.get(key_camel)
+        except Exception as e:
+            # Be resilient; log and continue
+            logger.debug(f"populate_columns_from_properties: skipping column due to error: {e}")
+            continue
+
+    return columns_struct
+
+def populate_feedback(element: dict, columns_struct: dict) -> dict:
+    """
+    Populate a columns_struct with values from the element's feedback.
+
+    The element dict may have feedback relationships. If these are present in the column request, extract them
+    and add the values to the columns_struct.
+    The columns_struct is expected to follow the format returned by select_report_spec, where
+    columns are located at columns_struct['formats']['columns'] and each column is a dict containing
+    at least a 'key' field expressed in snake_case. For each column whose snake_case key corresponds
+    to a key in the element properties (after converting to camelCase), this function adds a 'value'
+    entry to the column with the matching property's value.
+
+    Args:
+        element: The element containing a 'properties' dict with camelCase keys.
+        columns_struct: The columns structure whose columns have snake_case 'key' fields.
+
+    Returns:
+        The updated columns_struct (the input structure is modified in place and also returned).
+    """
+    if not isinstance(columns_struct, dict):
+        return columns_struct
+
+    # Need to think more about what I want to produce
+    return columns_struct
+    props = {}
 
     # Get the attributes list if present
     formats = columns_struct.get('formats') or {}
@@ -833,7 +883,8 @@ def populate_common_columns(
     # 1) Base properties
     col_data = populate_columns_from_properties(element, columns_struct)
     columns_list = col_data.get('formats', {}).get('attributes', [])
-
+    # Get any Feedback Values that have been requested
+    col_data = populate_feedback(element, columns_struct)
     # 2) Header overlay
     header_props = _extract_referenceable_properties(element) if include_header else {}
     guid = header_props.get('GUID') if include_header else None
@@ -872,9 +923,11 @@ def populate_common_columns(
     try:
         mermaid_val = element.get(mermaid_source_key, '') or ''
         for column in columns_list:
+            column_key = column.get('key')
             if column.get('key') == mermaid_dest_key and column.get('value') in (None, ""):
                 column['value'] = mermaid_val
-                break
+            if (column_key in MERMAID_GRAPHS and mermaid_dest_key not in MERMAID_GRAPHS):
+                column['value'] = element.get(column_key, '')
     except Exception as e:
         logger.debug(f"populate_common_columns: mermaid handling error: {e}")
 

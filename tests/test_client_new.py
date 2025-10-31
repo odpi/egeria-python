@@ -98,7 +98,7 @@ def test_get_user_guid() :
         print_basic_exception(e)
         assert False
 
-def test_add_journal_entry():
+def test_create_note_log():
     element_guid = "1a16188a-9cba-4c86-835b-e223e97d22bb" # Milvus
     element_qn = "SolutionComponent::Milvus::V1.0"
     note_log_display_name = "Milvus-NoteLog"
@@ -108,10 +108,28 @@ def test_add_journal_entry():
     try:
         client = Client2(view_server, view_url, user, user_pass)
         client.create_egeria_bearer_token()
-        response = client.add_journal_entry(element_qn = element_qn,
+        response = client.create_note_log(element_qn = element_qn,
                                             note_log_display_name=note_log_display_name,
-                                            journal_entry_display_name=journal_entry_display_name,
                                             journal_entry_description=journal_entry_description,)
+        print("\n\n" + response)
+        assert True
+    except (PyegeriaException, JSONDecodeError) as e:
+        print_basic_exception(e)
+        assert False
+
+def test_add_journal_entry():
+    element_guid = "1a16188a-9cba-4c86-835b-e223e97d22bb" # Milvus
+    element_qn = "SolutionComponent::Milvus"
+    note_log_display_name = "Milvus-NoteLog"
+    journal_entry_display_name = "test-journal-entry"
+    journal_entry_description = "First Journal Entry"
+
+    try:
+        client = Client2(view_server, view_url, user, user_pass)
+        client.create_egeria_bearer_token()
+        response = client.add_journal_entry(element_qn=element_qn, note_log_display_name=note_log_display_name,
+                                            journal_entry_display_name=journal_entry_display_name,
+                                            note_entry=journal_entry_description)
         print("\n\n" + response)
         assert True
     except (PyegeriaException, JSONDecodeError) as e:
@@ -123,7 +141,7 @@ def test_find_note_logs():
         client = Client2(view_server, view_url, user, user_pass)
         client.create_egeria_bearer_token()
         search_string = "*"
-        output_format = "DICT"
+        output_format = "JSON"
         report_spec = "Referenceables"
         response = client.find_note_logs(search_string, output_format = output_format, report_spec=report_spec)
         if isinstance(response, dict | list):
@@ -146,13 +164,25 @@ def test_remove_note_log() :
         print_basic_exception(e)
         assert False
 
+def test_remove_note() :
+    note_guid = "14067611-c5d6-4dd9-aa0a-52b8d0516610"
+    try:
+        client = Client2(view_server, view_url, user, user_pass)
+        client.create_egeria_bearer_token()
+        client.remove_note(note_guid)
+
+        assert True
+    except (PyegeriaException, JSONDecodeError) as e:
+        print_basic_exception(e)
+        assert False
+
 def test_find_notes():
     try:
         client = Client2(view_server, view_url, user, user_pass)
         client.create_egeria_bearer_token()
-        search_string = "Milvus"
-        output_format = "DICT"
-        report_spec = "Referenceables"
+        search_string = "Note::71a2d327-115b-4700-aac8"
+        output_format = "JSON"
+        report_spec = "Journal-Entry-DrE"
         response = client.find_notes(search_string, output_format = output_format, report_spec=report_spec)
         if isinstance(response, dict | list):
             print(json.dumps(response, indent = 2))
@@ -206,7 +236,20 @@ def test_add_comment():
         print_basic_exception(e)
         assert False
 
+def test_remove_comment_from_element():
+    try:
+        client = Client2(view_server, view_url, user, user_pass)
+        client.create_egeria_bearer_token()
+        guid = "5c0a9924-b72a-4f0d-aac2-44e5cc7a05f6"
 
+        response = client.remove_comment_from_element(comment_guid = guid, cascade_delete=True)
+        if isinstance(response, dict | list):
+            print(json.dumps(response, indent = 2))
+        else:
+            print(response)
+    except (PyegeriaException, JSONDecodeError) as e:
+        print_basic_exception(e)
+        assert False
 
 def test_get_comment_by_guid():
     try:
@@ -219,6 +262,83 @@ def test_get_comment_by_guid():
             print(json.dumps(response, indent = 2))
         else:
             print(response)
+    except (PyegeriaException, JSONDecodeError) as e:
+        print_basic_exception(e)
+        assert False
+
+def test_find_comments():
+    try:
+        client = Client2(view_server, view_url, user, user_pass)
+        client.create_egeria_bearer_token()
+        search_string = "*"
+
+        response = client.find_comments(search_string, output_format = "DICT", report_spec = "Journal-Entry-DrE")
+        if isinstance(response, dict | list):
+            print(json.dumps(response, indent = 2))
+        if isinstance(response, dict | list):
+            print(json.dumps(response, indent = 2))
+        else:
+            print(response)
+    except (PyegeriaException, JSONDecodeError) as e:
+        print_basic_exception(e)
+        assert False
+
+
+def test_create_informal_tag():
+    tag = "GeoSpatial"
+    description = "Tag for GeoSpatial"
+
+    try:
+        client = Client2(view_server, view_url, user, user_pass)
+        client.create_egeria_bearer_token()
+
+        response = client.create_informal_tag(tag, description)
+        if isinstance(response, dict | list):
+            print(response)
+        else:
+            print(response)
+        assert True
+    except PyegeriaException as e:
+        print_basic_exception(e)
+        assert False
+
+def test_find_informal_tags() :
+    search_string = "*"
+    try:
+        client = Client2(view_server, view_url, user, user_pass)
+        client.create_egeria_bearer_token()
+        response = client.find_tags(search_string, output_format="DICT", report_spec = "Referenceables")
+        if isinstance(response, dict | list):
+            print(json.dumps(response, indent = 2))
+        else:
+            print(response)
+        assert True
+    except PyegeriaException as e:
+        print_basic_exception(e)
+        assert False
+
+
+def test_delete_tag() :
+    keyword_guid = "959f258b-0abc-4951-b867-f662d10d23db"
+    try:
+        client = Client2(view_server, view_url, user, user_pass)
+        client.create_egeria_bearer_token()
+        client.delete_tag(keyword_guid)
+
+        assert True
+    except (PyegeriaException, JSONDecodeError) as e:
+        print_basic_exception(e)
+        assert False
+
+def test_get_tag_by_guid() :
+    guid = "d465235f-0dfa-435f-82b7-e50becde2b25"
+    try:
+        client = Client2(view_server, view_url, user, user_pass)
+        client.create_egeria_bearer_token()
+        response = client.get_tag_by_guid(guid, output_format = "DICT", report_spec = "Informal-Tags-DrE")
+        if isinstance(response, dict | list):
+            print(json.dumps(response, indent = 2))
+        assert True
     except (PyegeriaException, JSONDecodeError) as e:
         print_basic_exception(e)
         assert False
