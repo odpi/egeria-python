@@ -736,7 +736,7 @@ def generate_entity_dict(elements: List[Dict],
                 key = column['key']
                 name = column['name']
                 value = ""
-                props = extract_properties_func(element)
+                props = extract_properties_func(element, columns_struct)
                 if key in props:
                     value = props[key]
                 elif key in additional_props:

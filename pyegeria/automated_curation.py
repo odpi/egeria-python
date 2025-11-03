@@ -103,6 +103,7 @@ class AutomatedCuration(Client2):
         description = element.get('description',None)
         catalog_templates = element.get('catalogTemplates',None)
         external_references = element.get('externalReferences',None)
+        url = element.get('url',None)
 
 
         # Mermaid graph support if present
@@ -134,8 +135,10 @@ class AutomatedCuration(Client2):
             elif column.get("key") == "external_references":
                 column["value"] = external_references
             elif column.get("key") == "ref_url":
-                column["value"] = external_references[0]['relatedElement']['properties'].get('url',"")
-
+                if isinstance(external_references, dict):
+                    column["value"] = external_references[0]['relatedElement']['properties'].get('url',"")
+            elif column.get("key") == "url":
+                column["value"] = url
         columns_struct["formats"]["attributes"] = columns_list
         return columns_struct
 

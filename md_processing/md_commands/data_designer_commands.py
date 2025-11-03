@@ -33,7 +33,7 @@ from md_processing.md_processing_utils.common_md_utils import (
 # - Inner: element-specific Properties dict placed under the outer["properties"] key
 # Always build inner bodies via helpers (set_element_prop_body, set_data_field_body, etc.) and assign to the outer
 from md_processing.md_processing_utils.extraction_utils import (extract_command_plus, update_a_command)
-from md_processing.md_processing_utils.md_processing_constants import (load_commands, ERROR)
+from md_processing.md_processing_utils.md_processing_constants import (load_commands)
 from pyegeria import DEBUG_LEVEL, body_slimmer
 from pyegeria.egeria_tech_client import EgeriaTech
 from pyegeria.utils import make_format_set_name_from_type

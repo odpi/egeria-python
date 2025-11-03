@@ -26,7 +26,7 @@ from md_processing.md_processing_utils.common_md_utils import (update_element_di
                                                                set_filter_request_body,
                                                                ALL_GOVERNANCE_DEFINITIONS, set_find_body)
 from md_processing.md_processing_utils.extraction_utils import (extract_command_plus, update_a_command)
-from md_processing.md_processing_utils.md_processing_constants import (get_command_spec)
+from md_processing.md_processing_utils.md_processing_constants import (get_command_spec, add_default_upsert_attributes)
 from md_processing.md_processing_utils.message_constants import (ERROR, INFO, WARNING, ALWAYS, EXISTS_REQUIRED)
 from pyegeria import EgeriaTech, select_report_spec, PyegeriaException, print_basic_exception, \
     print_validation_error
@@ -81,7 +81,8 @@ def parse_upsert_command(egeria_client: EgeriaTech, object_type: str, object_act
     if command_spec is None:
         logger.error("Command not found in command spec")
         raise Exception("Command not found in command spec")
-    attributes = command_spec.get('Attributes', [])
+    distinguished_attributes = command_spec.get('Attributes', [])
+    attributes = add_default_upsert_attributes(distinguished_attributes)
     command_display_name = command_spec.get('display_name', None)
     command_qn_prefix = command_spec.get('qn_prefix', None)
 
@@ -144,7 +145,7 @@ def parse_upsert_command(egeria_client: EgeriaTech, object_type: str, object_act
                 style = attr[key]['style']
                 if style in ['Simple', 'Comment']:
                     parsed_attributes[key] = proc_simple_attribute(txt, object_action, labels, if_missing, default_value)
-                elif style == 'Dictionary':
+                elif style in ['Dictionary', "Named DICT"]:
                     parsed_attributes[key] = proc_dictionary_attribute(txt, object_action, labels, if_missing, default_value)
                     if key in parsed_attributes and parsed_attributes[key] is not None:
                             if parsed_attributes[key].get('value', None) is not None:
@@ -320,14 +321,18 @@ def parse_view_command(egeria_client: EgeriaTech, object_type: str, object_actio
     labels = {}
     if object_action in ["Unlink","Detach"]:
         command_spec = get_command_spec(f"Link {object_type}")
+        distinguished_attributes = command_spec.get('distinguished_attributes', None)
+        if distinguished_attributes:
+            attributes = add_default_upsert_attributes(distinguished_attributes)
     else:
         command_spec = get_command_spec(f"{object_action} {object_type}")
+        attributes = command_spec.get('Attributes', None)
     if command_spec is None:
         msg = f"Parser failed to find `{object_action} {object_type}` command for in the specification"
         logger.error(msg)
         print(Markdown("# " + msg))
         exit(0)
-    attributes = command_spec.get('Attributes', [])
+
     command_display_name = command_spec.get('display_name', None)
 
     parsed_output['reason'] = ""
