@@ -738,7 +738,7 @@ class TestAutomatedCuration:
 
             start_time = time.perf_counter()
             response = a_client.find_technology_types(
-                "File", starts_with=True, ignore_case=True
+                "File", starts_with=True, ignore_case=True, output_format = "DICT", report_spec = "Tech-Types"
             )
             duration = time.perf_counter() - start_time
             print(f"\n\t# Elements was {len(response)} with {duration:.2f} seconds")
@@ -808,7 +808,7 @@ class TestAutomatedCuration:
             start_time = time.perf_counter()
             # response = a_client.get_technology_type_detail("CSV Data File", True)
             response = a_client.get_technology_type_detail("File System", output_format="DICT",
-                                                           report_spec="TechTypeDetail")
+                                                           report_spec="Tech-Type-Detail")
             duration = time.perf_counter() - start_time
             print(f"\n\tDuration was {duration} seconds")
             if type(response) is list:

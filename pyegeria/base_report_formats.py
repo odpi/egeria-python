@@ -358,7 +358,7 @@ base_report_specs = FormatSetDict({
             spec_params={},
         )
     ),
-    "TechTypeDetail": FormatSet(
+    "Tech-Type-Details": FormatSet(
         target_type="TechTypeDetail",
         heading="Technology Type Details",
         description="Details of a Technology Type Valid Value.",
@@ -376,6 +376,36 @@ base_report_specs = FormatSetDict({
                 ],
             )
         ],
+    action=ActionParameter(
+            function="Client2.get_technology_type_detail",
+            optional_params=OPTIONAL_PARAMS,
+            required_params=["search_string"],
+            spec_params={},
+        )
+    ),
+"Tech-Types": FormatSet(
+        target_type="TechTypeDetail",
+        heading="Technology Type Details",
+        description="Details of a Technology Type Valid Value.",
+        annotations={},  # No specific annotations
+        formats=[
+            Format(
+                types=["ALL"],
+                attributes= [
+                    Column(name='Display Name', key='display_name'),
+                    Column(name="Qualified Name", key='qualified_name'),
+                    Column(name="GUID", key='guid'),
+                    Column(name="Description", key='description'),
+                    Column(name="Reference URL", key='url'),
+                ],
+            )
+        ],
+        action=ActionParameter(
+            function="Client2.find_technology_types",
+            optional_params=OPTIONAL_PARAMS,
+            required_params=["search_string"],
+            spec_params={},
+        )
     ),
 
 "Journal-Entry-DrE": FormatSet(

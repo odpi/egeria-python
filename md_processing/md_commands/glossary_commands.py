@@ -18,7 +18,7 @@ from md_processing.md_processing_utils.common_md_utils import update_element_dic
     set_rel_request_body, set_create_body, set_object_classifications, set_product_body, set_rel_prop_body
 
 from md_processing.md_processing_utils.extraction_utils import (extract_command_plus, update_a_command)
-from md_processing.md_processing_utils.md_processing_constants import (load_commands, ERROR)
+from md_processing.md_processing_utils.md_processing_constants import (load_commands)
 from pyegeria import DEBUG_LEVEL, body_slimmer, to_pascal_case, PyegeriaException, print_basic_exception, print_exception_table
 from pyegeria.egeria_tech_client import EgeriaTech
 
@@ -688,7 +688,7 @@ def process_link_term_term_relationship_command(egeria_client: EgeriaTech, txt: 
 
 
         except Exception as e:
-            print(f"{ERROR}Error performing {command}: {e}")
+            print(f"Error performing {command}: {e}")
             print_basic_exception(e)
             return None
             return None

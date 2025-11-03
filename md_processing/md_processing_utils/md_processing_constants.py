@@ -9,7 +9,6 @@ import inflect
 from loguru import logger
 from rich.markdown import Markdown
 
-from md_processing.md_processing_utils.message_constants import ERROR
 from pyegeria._globals import DEBUG_LEVEL
 from pyegeria.logging_configuration import config_logging
 
@@ -166,9 +165,9 @@ EXT_REF_UPSERT = ["Create External Reference", "Update External Reference",
 EXT_REF_COMMANDS = EXT_REF_UPSERT + LINK_EXT_REF + LINK_MEDIA + LINK_CITED_DOC
 
 COLLECTION_CREATE = ["Create Collection", "Update Collection", "Create Digital Product Catalog",
-                "Update Digital Product Catalog",
-                "Create Root Collection", "Update Root Collection", "Create Folder", "Update Folder",
-            ]
+                     "Update Digital Product Catalog",
+                     "Create Root Collection", "Update Root Collection", "Create Folder", "Update Folder",
+                     ]
 FEEDBACK_COMMANDS = ["Create Comment", "Update Comment", "Create Journal Entry",
                      "Create Informal Tag", "Update Informal Tag", "Tag Element", "Link Tag", "Detach Tag"]
 
@@ -265,15 +264,14 @@ command_seperator = Markdown("\n---\n")
 EXISTS_REQUIRED = "Exists Required"
 COMMAND_DEFINITIONS = {}
 
-
 generic_bodies = {
 
 }
 
-
 config_logging()
 logger.enable("pyegeria")
 debug_level = DEBUG_LEVEL
+
 
 # def load_commands(filename: str) -> None:
 #     global COMMAND_DEFINITIONS
@@ -418,6 +416,7 @@ def find_json_errors(filename: str, max_errors: int = 10) -> list[str]:
 
     return errors
 
+
 def get_command_spec(command: str, body_type: str = None) -> dict | None:
     global COMMAND_DEFINITIONS
 
@@ -495,3 +494,710 @@ def get_attribute_labels(command: str, attrib_name: str) -> list | None:
     else:
         print("Key not found in the dictionary.")
         return None
+
+
+def add_default_upsert_attributes(attributes: list[dict]) -> list[dict]:
+    new_attributes = attributes
+    default_upsert_attributes = [
+        {
+            "Status": {
+                "variable_name": "element_status",
+                "inUpdate": True,
+                "attr_labels": "",
+                "examples": "APPROVED",
+                "default_value": "ACTIVE",
+                "valid_values": "DRAFT; PREPARED; PROPOSED; APPROVED; REJECTED; APPROVED_CONCEPT; UNDER_DEVELOPMENT; DEVELOPMENT_COMPLETE; APPROVED_FOR_DEPLOYMENT; ACTIVE; DISABLED; DEPRECATED; OTHER",
+                "existing_element": "",
+                "description": "The status of the digital product. There is a list of valid values that this conforms to.",
+                "qualified_name_pattern": "",
+                "generated": False,
+                "style": "Valid Value",
+                "user_specified": True,
+                "unique": False,
+                "input_required": False,
+                "isParent": False,
+                "isAnchor": False,
+                "min_cardinality": 1,
+                "max_cardinality": 1,
+                "level": "INVISIBLE",
+                "Journal Entry": ""
+            }
+        },
+        {
+            "Category": {
+                "variable_name": "category",
+                "inUpdate": True,
+                "attr_labels": "Category Name",
+                "examples": "",
+                "default_value": "",
+                "valid_values": "",
+                "existing_element": "",
+                "description": "A user specified category name that can be used for example, to define product types or agreement types.",
+                "qualified_name_pattern": "",
+                "generated": False,
+                "style": "Simple",
+                "user_specified": True,
+                "unique": False,
+                "input_required": False,
+                "isParent": False,
+                "isAnchor": False,
+                "min_cardinality": 0,
+                "max_cardinality": 1,
+                "level": "Basic",
+                "Journal Entry": ""
+            }
+        },
+        {
+            "Version Identifier": {
+                "variable_name": "current_version",
+                "inUpdate": True,
+                "attr_labels": "",
+                "examples": "V1.01",
+                "default_value": "1.0",
+                "valid_values": "",
+                "existing_element": "",
+                "description": "Published product version identifier.",
+                "qualified_name_pattern": "",
+                "generated": False,
+                "style": "Simple",
+                "user_specified": True,
+                "unique": False,
+                "input_required": False,
+                "isParent": False,
+                "isAnchor": False,
+                "min_cardinality": 0,
+                "max_cardinality": 1,
+                "level": "Basic",
+                "Journal Entry": ""
+            }
+        },
+        {
+            "URL": {
+                "variable_name": "url",
+                "inUpdate": True,
+                "attr_labels": "",
+                "examples": "",
+                "default_value": "",
+                "valid_values": "",
+                "existing_element": "",
+                "description": "Link to supporting information",
+                "qualified_name_pattern": "",
+                "generated": False,
+                "style": "Simple",
+                "user_specified": True,
+                "unique": False,
+                "input_required": False,
+                "isParent": False,
+                "isAnchor": False,
+                "min_cardinality": 0,
+                "max_cardinality": 1,
+                "level": "Basic",
+                "Journal Entry": ""
+            }
+        },
+        {
+            "identifier": {
+                "variable_name": "identifier",
+                "inUpdate": True,
+                "attr_labels": "",
+                "examples": "",
+                "default_value": "",
+                "valid_values": "",
+                "existing_element": "",
+                "description": "role identifier",
+                "qualified_name_pattern": "",
+                "generated": False,
+                "style": "Simple",
+                "user_specified": True,
+                "unique": False,
+                "input_required": False,
+                "isParent": False,
+                "isAnchor": False,
+                "min_cardinality": 1,
+                "max_cardinality": 1,
+                "level": "Basic",
+                "Journal Entry": ""
+            }
+        },
+        {
+            "Classifications": {
+                "variable_name": "classifications",
+                "inUpdate": True,
+                "attr_labels": "classification",
+                "examples": "Folder;  RootCollection; ReferenceList; HomeCollection; ResultSet; RecentAccess; WorkItemList; NameSpace ",
+                "default_value": "",
+                "valid_values": "",
+                "existing_element": "",
+                "description": "Optionally specify the initial classifications for a collection. Multiple classifications can be specified. ",
+                "qualified_name_pattern": "",
+                "generated": False,
+                "style": "Named DICT",
+                "min_cardinality": 0,
+                "max_cardinality": 1,
+                "level": "Advanced"
+            }
+        },
+        {
+            "Is Own Anchor": {
+                "variable_name": "is_own_anchor",
+                "inUpdate": True,
+                "attr_labels": "Own Anchor",
+                "examples": "",
+                "default_value": "True",
+                "valid_values": "",
+                "existing_element": "",
+                "description": "Generally True. ",
+                "qualified_name_pattern": "",
+                "generated": False,
+                "style": "Bool",
+                "user_specified": True,
+                "unique": False,
+                "input_required": False,
+                "isParent": False,
+                "isAnchor": False,
+                "min_cardinality": 1,
+                "max_cardinality": 1,
+                "level": "Advanced",
+                "Journal Entry": ""
+            }
+        },
+        {
+            "Anchor ID": {
+                "variable_name": "anchor_id",
+                "inUpdate": True,
+                "attr_labels": "",
+                "examples": "",
+                "default_value": "",
+                "valid_values": "",
+                "existing_element": "",
+                "description": "Anchor identity for the collection. Typically a qualified name but if display name is unique then it could be used (not recommended)",
+                "qualified_name_pattern": "",
+                "generated": False,
+                "style": "Reference Name",
+                "user_specified": True,
+                "unique": True,
+                "input_required": False,
+                "isParent": False,
+                "isAnchor": False,
+                "min_cardinality": 0,
+                "max_cardinality": 1,
+                "level": "Advanced",
+                "Journal Entry": ""
+            }
+        },
+        {
+            "Parent ID": {
+                "variable_name": "parent_id",
+                "inUpdate": True,
+                "attr_labels": "Parent;",
+                "examples": "DataDict::MyParent",
+                "default_value": "",
+                "valid_values": "",
+                "existing_element": "DataDicti",
+                "description": "Unique name of the parent element.",
+                "qualified_name_pattern": "",
+                "generated": False,
+                "style": "Reference Name",
+                "user_specified": True,
+                "unique": False,
+                "input_required": False,
+                "isParent": False,
+                "isAnchor": False,
+                "min_cardinality": 0,
+                "max_cardinality": 1,
+                "level": "Advanced",
+                "Journal Entry": "Should the parent be anything or just a collection?"
+            }
+        },
+        {
+            "Parent Relationship Type Name": {
+                "variable_name": "parent_rel_type_name",
+                "inUpdate": True,
+                "attr_labels": "",
+                "examples": "",
+                "default_value": "",
+                "valid_values": "",
+                "existing_element": "",
+                "description": "The kind of the relationship to the parent element.",
+                "qualified_name_pattern": "",
+                "generated": False,
+                "style": "Simple",
+                "user_specified": True,
+                "unique": False,
+                "input_required": False,
+                "isParent": False,
+                "isAnchor": False,
+                "min_cardinality": 0,
+                "max_cardinality": 1,
+                "level": "Advanced",
+                "Journal Entry": "Any restrictions?"
+            }
+        },
+        {
+            "Anchor Scope Name": {
+                "variable_name": "anchor_scope_guid",
+                "inUpdate": True,
+                "attr_labels": "",
+                "examples": "",
+                "default_value": "",
+                "valid_values": "",
+                "existing_element": "DataDict",
+                "description": "Optional qualified name of an anchor scope.",
+                "qualified_name_pattern": "",
+                "generated": False,
+                "style": "Reference Name",
+                "user_specified": True,
+                "unique": False,
+                "input_required": False,
+                "isParent": False,
+                "isAnchor": False,
+                "min_cardinality": 0,
+                "max_cardinality": 1,
+                "level": "Advanced",
+                "Journal Entry": ""
+            }
+        },
+        {
+            "Parent at End1": {
+                "variable_name": "parent_end1",
+                "inUpdate": True,
+                "attr_labels": "",
+                "examples": "",
+                "default_value": "True",
+                "valid_values": "",
+                "existing_element": "",
+                "description": "Is the parent at end1 of the relationship?",
+                "qualified_name_pattern": "",
+                "generated": False,
+                "style": "Bool",
+                "user_specified": True,
+                "unique": False,
+                "input_required": False,
+                "isParent": False,
+                "isAnchor": False,
+                "min_cardinality": 0,
+                "max_cardinality": 1,
+                "level": "Advanced",
+                "Journal Entry": ""
+            }
+        },
+        {
+            "Qualified Name": {
+                "variable_name": "qualified_name",
+                "inUpdate": True,
+                "attr_labels": "",
+                "examples": "dataField::a data field",
+                "default_value": "",
+                "valid_values": "",
+                "existing_element": "",
+                "description": "A unique qualified name for the element. Generated using the qualified name pattern  if not user specified.",
+                "qualified_name_pattern": "local_qualifier::namespace::DataDictionary:display_name::version_id",
+                "generated": True,
+                "style": "QN",
+                "user_specified": True,
+                "unique": True,
+                "input_required": False,
+                "isParent": False,
+                "isAnchor": False,
+                "min_cardinality": 1,
+                "max_cardinality": 1,
+                "level": "Basic",
+                "Journal Entry": ""
+            }
+        },
+        {
+            "GUID": {
+                "variable_name": "guid",
+                "inUpdate": True,
+                "attr_labels": "Guid; guid",
+                "examples": "00585a82-0f7d-45ef-9b87-7078665917a9",
+                "default_value": "",
+                "valid_values": "",
+                "existing_element": "",
+                "description": "A system generated unique identifier.",
+                "qualified_name_pattern": "",
+                "generated": True,
+                "style": "GUID",
+                "user_specified": False,
+                "unique": True,
+                "input_required": False,
+                "isParent": False,
+                "isAnchor": False,
+                "min_cardinality": 1,
+                "max_cardinality": 1,
+                "level": "Basic",
+                "Journal Entry": ""
+            }
+        },
+        {
+            "Effective Time": {
+                "variable_name": "effective_time",
+                "inUpdate": True,
+                "attr_labels": "",
+                "examples": "",
+                "default_value": "",
+                "valid_values": "",
+                "existing_element": "",
+                "description": "An ISO-8601 string representing the time to use for evaluating effectivity of the elements related to this one.",
+                "qualified_name_pattern": "",
+                "generated": False,
+                "style": "Simple",
+                "user_specified": True,
+                "unique": False,
+                "input_required": False,
+                "isParent": False,
+                "isAnchor": False,
+                "min_cardinality": 1,
+                "max_cardinality": 1,
+                "level": "Advanced",
+                "Journal Entry": ""
+            }
+        },
+        {
+            "Effective From": {
+                "variable_name": "effective_from",
+                "inUpdate": True,
+                "attr_labels": "",
+                "examples": "",
+                "default_value": "",
+                "valid_values": "",
+                "existing_element": "",
+                "description": "A string in ISO-8601 format that defines the when an element becomes effective (visible).",
+                "qualified_name_pattern": "",
+                "generated": False,
+                "style": "Simple",
+                "user_specified": True,
+                "unique": False,
+                "input_required": False,
+                "isParent": False,
+                "isAnchor": False,
+                "min_cardinality": 0,
+                "max_cardinality": 1,
+                "level": "Advanced",
+                "Journal Entry": ""
+            }
+        },
+        {
+            "Effective To": {
+                "variable_name": "effective_to",
+                "inUpdate": True,
+                "attr_labels": "",
+                "examples": "",
+                "default_value": "",
+                "valid_values": "",
+                "existing_element": "",
+                "description": "A string in ISO-8601 format that defines the when an element is no longer effective (visible).",
+                "qualified_name_pattern": "",
+                "generated": False,
+                "style": "Simple",
+                "user_specified": True,
+                "unique": False,
+                "input_required": False,
+                "isParent": False,
+                "isAnchor": False,
+                "min_cardinality": 1,
+                "max_cardinality": 1,
+                "level": "Advanced",
+                "Journal Entry": ""
+            }
+        },
+        {
+            "Merge Update": {
+                "variable_name": "merge_update",
+                "inUpdate": True,
+                "attr_labels": "Merge",
+                "examples": "",
+                "default_value": "True",
+                "valid_values": "",
+                "existing_element": "",
+                "description": "If True, only those attributes specified in the update will be updated; If False, any attributes not provided during the update will be set to None.",
+                "qualified_name_pattern": "",
+                "generated": False,
+                "style": "Bool",
+                "user_specified": True,
+                "unique": False,
+                "input_required": False,
+                "isParent": False,
+                "isAnchor": False,
+                "min_cardinality": 0,
+                "max_cardinality": 1,
+                "level": "Advanced",
+                "Journal Entry": ""
+            }
+        },
+        {
+            "Additional Properties": {
+                "variable_name": "additional_properties",
+                "inUpdate": True,
+                "attr_labels": "",
+                "examples": "",
+                "default_value": "",
+                "valid_values": "",
+                "existing_element": "",
+                "description": "Additional user defined values organized as name value pairs in a dictionary.",
+                "qualified_name_pattern": "",
+                "generated": False,
+                "style": "Dictionary",
+                "user_specified": True,
+                "unique": False,
+                "input_required": False,
+                "isParent": False,
+                "isAnchor": False,
+                "min_cardinality": 0,
+                "max_cardinality": -1,
+                "level": "Advanced",
+                "Journal Entry": ""
+            }
+        },
+        {
+            "Extended Properties": {
+                "variable_name": "additional_properties",
+                "inUpdate": True,
+                "attr_labels": "",
+                "examples": "",
+                "default_value": "",
+                "valid_values": "",
+                "existing_element": "",
+                "description": "Additional user defined values organized as name value pairs in a dictionary.",
+                "qualified_name_pattern": "",
+                "generated": False,
+                "style": "Dictionary",
+                "user_specified": True,
+                "unique": False,
+                "input_required": False,
+                "isParent": False,
+                "isAnchor": False,
+                "min_cardinality": 0,
+                "max_cardinality": -1,
+                "level": "Invisible",
+                "Journal Entry": ""
+            }
+        },
+        {
+            "External Source GUID": {
+                "variable_name": "external_source_guid",
+                "inUpdate": True,
+                "attr_labels": "",
+                "examples": "",
+                "default_value": "",
+                "valid_values": "",
+                "existing_element": "",
+                "description": "Identifier of an external source that is associated with this element.",
+                "qualified_name_pattern": "",
+                "generated": False,
+                "style": "Simple",
+                "user_specified": True,
+                "unique": False,
+                "input_required": False,
+                "isParent": False,
+                "isAnchor": False,
+                "min_cardinality": 0,
+                "max_cardinality": 1,
+                "level": "Advanced",
+                "Journal Entry": ""
+            }
+        },
+        {
+            "External Source Name": {
+                "variable_name": "external_source_name",
+                "inUpdate": True,
+                "attr_labels": "",
+                "examples": "",
+                "default_value": "",
+                "valid_values": "",
+                "existing_element": "",
+                "description": "Name of an external element that is associated with this element.",
+                "qualified_name_pattern": "",
+                "generated": False,
+                "style": "Simple",
+                "user_specified": True,
+                "unique": False,
+                "input_required": False,
+                "isParent": False,
+                "isAnchor": False,
+                "min_cardinality": 0,
+                "max_cardinality": 1,
+                "level": "Advanced",
+                "Journal Entry": ""
+            }
+        },
+        {
+            "Journal Entry": {
+                "variable_name": "journal_entry",
+                "inUpdate": True,
+                "attr_labels": "",
+                "examples": "",
+                "default_value": "",
+                "valid_values": "",
+                "existing_element": "",
+                "description": "",
+                "qualified_name_pattern": "",
+                "generated": False,
+                "style": "Simple",
+                "user_specified": True,
+                "unique": False,
+                "input_required": False,
+                "isParent": False,
+                "isAnchor": False,
+                "min_cardinality": 0,
+                "max_cardinality": 1,
+                "level": "Basic",
+                "Journal Entry": ""
+            }
+        },
+        {
+            "URL": {
+                "variable_name": "url",
+                "inUpdate": True,
+                "attr_labels": "",
+                "examples": "",
+                "default_value": "",
+                "valid_values": "",
+                "existing_element": "",
+                "description": "Link to supporting information",
+                "qualified_name_pattern": "",
+                "generated": False,
+                "style": "Simple",
+                "user_specified": True,
+                "unique": False,
+                "input_required": False,
+                "isParent": False,
+                "isAnchor": False,
+                "min_cardinality": 0,
+                "max_cardinality": 1,
+                "level": "Basic",
+                "Journal Entry": ""
+            }
+        },
+        {
+            "Search Keywords": {
+                "variable_name": "search_keywords",
+                "inUpdate": True,
+                "attr_labels": "",
+                "examples": "",
+                "default_value": "",
+                "valid_values": "",
+                "existing_element": "",
+                "description": "Keywords to facilitate finding the element",
+                "qualified_name_pattern": "",
+                "generated": False,
+                "style": "Simple List",
+                "user_specified": True,
+                "unique": False,
+                "input_required": False,
+                "isParent": False,
+                "isAnchor": False,
+                "min_cardinality": 0,
+                "max_cardinality": 20,
+                "level": "Basic",
+                "Journal Entry": ""
+            }
+        },
+    ]
+    new_attributes.extend(default_upsert_attributes)
+    return new_attributes
+
+
+def add_default_link_attributes(attributes: list[dict]) -> list[dict]:
+    new_attributes = attributes
+    default_link_attributes = [
+        {
+            "Effective Time": {
+                "variable_name": "effective_time",
+                "inUpdate": True,
+                "attr_labels": "",
+                "examples": "",
+                "default_value": "",
+                "valid_values": "",
+                "existing_element": "",
+                "description": "An ISO-8601 string representing the time to use for evaluating effectivity of the elements related to this one.",
+                "qualified_name_pattern": "",
+                "generated": False,
+                "style": "Simple",
+                "user_specified": True,
+                "unique": False,
+                "input_required": False,
+                "isParent": False,
+                "isAnchor": False,
+                "min_cardinality": 1,
+                "max_cardinality": 1,
+                "level": "Advanced",
+                "Journal Entry": ""
+            }
+        },
+        {
+            "Effective From": {
+                "variable_name": "effective_from",
+                "inUpdate": True,
+                "attr_labels": "",
+                "examples": "",
+                "default_value": "",
+                "valid_values": "",
+                "existing_element": "",
+                "description": "A string in ISO-8601 format that defines the when an element becomes effective (visible).",
+                "qualified_name_pattern": "",
+                "generated": False,
+                "style": "Simple",
+                "user_specified": True,
+                "unique": False,
+                "input_required": False,
+                "isParent": False,
+                "isAnchor": False,
+                "min_cardinality": 0,
+                "max_cardinality": 1,
+                "level": "Advanced",
+                "Journal Entry": ""
+            }
+        },
+        {
+            "Effective To": {
+                "variable_name": "effective_to",
+                "inUpdate": True,
+                "attr_labels": "",
+                "examples": "",
+                "default_value": "",
+                "valid_values": "",
+                "existing_element": "",
+                "description": "A string in ISO-8601 format that defines the when an element is no longer effective (visible).",
+                "qualified_name_pattern": "",
+                "generated": False,
+                "style": "Simple",
+                "user_specified": True,
+                "unique": False,
+                "input_required": False,
+                "isParent": False,
+                "isAnchor": False,
+                "min_cardinality": 1,
+                "max_cardinality": 1,
+                "level": "Advanced",
+                "Journal Entry": ""
+            }
+        },
+        {
+            "Extended Properties": {
+                "variable_name": "additional_properties",
+                "inUpdate": True,
+                "attr_labels": "",
+                "examples": "",
+                "default_value": "",
+                "valid_values": "",
+                "existing_element": "",
+                "description": "Additional user defined values organized as name value pairs in a dictionary.",
+                "qualified_name_pattern": "",
+                "generated": False,
+                "style": "Dictionary",
+                "user_specified": True,
+                "unique": False,
+                "input_required": False,
+                "isParent": False,
+                "isAnchor": False,
+                "min_cardinality": 0,
+                "max_cardinality": -1,
+                "level": "Invisible",
+                "Journal Entry": ""
+            }
+        }
+    ]
+    new_attributes.extend(default_link_attributes)
+    return new_attributes
+
