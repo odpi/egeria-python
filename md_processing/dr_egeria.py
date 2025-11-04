@@ -132,7 +132,7 @@ def process_md_file(input_file: str, output_folder:str, directive: str, server: 
                 result = process_attach_note_log_command(client, current_block, directive)
             elif potential_command in ["Create Informal Tag", "Update Informal Tag"]:
                 result = process_upsert_informal_tag_command(client, current_block, directive)
-            elif potential_command in ["Link Tag", "Detach Tag", "Tag Element"]:
+            elif potential_command in ["Link Tag", "Detach Tag", "Link Tag->Element"]:
                 result = process_tag_element_command(client, current_block, directive)
 
             elif potential_command in EXT_REF_UPSERT:

@@ -169,7 +169,7 @@ COLLECTION_CREATE = ["Create Collection", "Update Collection", "Create Digital P
                      "Create Root Collection", "Update Root Collection", "Create Folder", "Update Folder",
                      ]
 FEEDBACK_COMMANDS = ["Create Comment", "Update Comment", "Create Journal Entry",
-                     "Create Informal Tag", "Update Informal Tag", "Tag Element", "Link Tag", "Detach Tag"]
+                     "Create Informal Tag", "Update Informal Tag", "Link Tag->Element", "Link Tag", "Detach Tag"]
 
 command_list = ["Provenance", "Create Glossary", "Update Glossary", "Create Term", "Update Term", "List Terms",
                 "List Term Details", "List Glossary Terms", "List Term History", "List Term Revision History",
@@ -509,20 +509,40 @@ def add_default_upsert_attributes(attributes: list[dict]) -> list[dict]:
                 "valid_values": "DRAFT; PREPARED; PROPOSED; APPROVED; REJECTED; APPROVED_CONCEPT; UNDER_DEVELOPMENT; DEVELOPMENT_COMPLETE; APPROVED_FOR_DEPLOYMENT; ACTIVE; DISABLED; DEPRECATED; OTHER",
                 "existing_element": "",
                 "description": "The status of the digital product. There is a list of valid values that this conforms to.",
-                "qualified_name_pattern": "",
+
                 "generated": False,
                 "style": "Valid Value",
                 "user_specified": True,
                 "unique": False,
                 "input_required": False,
-                "isParent": False,
-                "isAnchor": False,
+
                 "min_cardinality": 1,
                 "max_cardinality": 1,
                 "level": "INVISIBLE",
-                "Journal Entry": ""
+
             }
         },
+        {
+            "User Defined Status": {
+                "variable_name": "user_defined_status",
+                "inUpdate": True,
+                "attr_labels": "",
+                "examples": "Pink",
+                "default_value": "",
+                "valid_values": "",
+                "existing_element": "",
+                "description": "Only valid if Product Status is set to OTHER. User defined & managed status values.",
+                "generated": False,
+                "style": "Simple",
+                "user_specified": True,
+                "unique": False,
+                "input_required": False,
+                "min_cardinality": 0,
+                "max_cardinality": 1,
+                "level": "Basic",
+            }
+        },
+
         {
             "Category": {
                 "variable_name": "category",
@@ -533,18 +553,17 @@ def add_default_upsert_attributes(attributes: list[dict]) -> list[dict]:
                 "valid_values": "",
                 "existing_element": "",
                 "description": "A user specified category name that can be used for example, to define product types or agreement types.",
-                "qualified_name_pattern": "",
+
                 "generated": False,
                 "style": "Simple",
                 "user_specified": True,
                 "unique": False,
                 "input_required": False,
-                "isParent": False,
-                "isAnchor": False,
+
                 "min_cardinality": 0,
                 "max_cardinality": 1,
                 "level": "Basic",
-                "Journal Entry": ""
+
             }
         },
         {
@@ -557,18 +576,17 @@ def add_default_upsert_attributes(attributes: list[dict]) -> list[dict]:
                 "valid_values": "",
                 "existing_element": "",
                 "description": "Published product version identifier.",
-                "qualified_name_pattern": "",
+
                 "generated": False,
                 "style": "Simple",
                 "user_specified": True,
                 "unique": False,
                 "input_required": False,
-                "isParent": False,
-                "isAnchor": False,
+
                 "min_cardinality": 0,
                 "max_cardinality": 1,
                 "level": "Basic",
-                "Journal Entry": ""
+
             }
         },
         {
@@ -581,22 +599,21 @@ def add_default_upsert_attributes(attributes: list[dict]) -> list[dict]:
                 "valid_values": "",
                 "existing_element": "",
                 "description": "Link to supporting information",
-                "qualified_name_pattern": "",
+
                 "generated": False,
                 "style": "Simple",
                 "user_specified": True,
                 "unique": False,
                 "input_required": False,
-                "isParent": False,
-                "isAnchor": False,
+
                 "min_cardinality": 0,
                 "max_cardinality": 1,
                 "level": "Basic",
-                "Journal Entry": ""
+
             }
         },
         {
-            "identifier": {
+            "Identifier": {
                 "variable_name": "identifier",
                 "inUpdate": True,
                 "attr_labels": "",
@@ -605,18 +622,17 @@ def add_default_upsert_attributes(attributes: list[dict]) -> list[dict]:
                 "valid_values": "",
                 "existing_element": "",
                 "description": "role identifier",
-                "qualified_name_pattern": "",
+
                 "generated": False,
                 "style": "Simple",
                 "user_specified": True,
                 "unique": False,
                 "input_required": False,
-                "isParent": False,
-                "isAnchor": False,
+
                 "min_cardinality": 1,
                 "max_cardinality": 1,
                 "level": "Basic",
-                "Journal Entry": ""
+
             }
         },
         {
@@ -629,7 +645,7 @@ def add_default_upsert_attributes(attributes: list[dict]) -> list[dict]:
                 "valid_values": "",
                 "existing_element": "",
                 "description": "Optionally specify the initial classifications for a collection. Multiple classifications can be specified. ",
-                "qualified_name_pattern": "",
+
                 "generated": False,
                 "style": "Named DICT",
                 "min_cardinality": 0,
@@ -647,18 +663,17 @@ def add_default_upsert_attributes(attributes: list[dict]) -> list[dict]:
                 "valid_values": "",
                 "existing_element": "",
                 "description": "Generally True. ",
-                "qualified_name_pattern": "",
+
                 "generated": False,
                 "style": "Bool",
                 "user_specified": True,
                 "unique": False,
                 "input_required": False,
-                "isParent": False,
-                "isAnchor": False,
+
                 "min_cardinality": 1,
                 "max_cardinality": 1,
                 "level": "Advanced",
-                "Journal Entry": ""
+
             }
         },
         {
@@ -671,18 +686,17 @@ def add_default_upsert_attributes(attributes: list[dict]) -> list[dict]:
                 "valid_values": "",
                 "existing_element": "",
                 "description": "Anchor identity for the collection. Typically a qualified name but if display name is unique then it could be used (not recommended)",
-                "qualified_name_pattern": "",
+
                 "generated": False,
                 "style": "Reference Name",
                 "user_specified": True,
                 "unique": True,
                 "input_required": False,
-                "isParent": False,
-                "isAnchor": False,
+
                 "min_cardinality": 0,
                 "max_cardinality": 1,
                 "level": "Advanced",
-                "Journal Entry": ""
+
             }
         },
         {
@@ -695,14 +709,13 @@ def add_default_upsert_attributes(attributes: list[dict]) -> list[dict]:
                 "valid_values": "",
                 "existing_element": "DataDicti",
                 "description": "Unique name of the parent element.",
-                "qualified_name_pattern": "",
+
                 "generated": False,
                 "style": "Reference Name",
                 "user_specified": True,
                 "unique": False,
                 "input_required": False,
-                "isParent": False,
-                "isAnchor": False,
+
                 "min_cardinality": 0,
                 "max_cardinality": 1,
                 "level": "Advanced",
@@ -719,14 +732,13 @@ def add_default_upsert_attributes(attributes: list[dict]) -> list[dict]:
                 "valid_values": "",
                 "existing_element": "",
                 "description": "The kind of the relationship to the parent element.",
-                "qualified_name_pattern": "",
+
                 "generated": False,
                 "style": "Simple",
                 "user_specified": True,
                 "unique": False,
                 "input_required": False,
-                "isParent": False,
-                "isAnchor": False,
+
                 "min_cardinality": 0,
                 "max_cardinality": 1,
                 "level": "Advanced",
@@ -743,18 +755,17 @@ def add_default_upsert_attributes(attributes: list[dict]) -> list[dict]:
                 "valid_values": "",
                 "existing_element": "DataDict",
                 "description": "Optional qualified name of an anchor scope.",
-                "qualified_name_pattern": "",
+
                 "generated": False,
                 "style": "Reference Name",
                 "user_specified": True,
                 "unique": False,
                 "input_required": False,
-                "isParent": False,
-                "isAnchor": False,
+
                 "min_cardinality": 0,
                 "max_cardinality": 1,
                 "level": "Advanced",
-                "Journal Entry": ""
+
             }
         },
         {
@@ -767,18 +778,17 @@ def add_default_upsert_attributes(attributes: list[dict]) -> list[dict]:
                 "valid_values": "",
                 "existing_element": "",
                 "description": "Is the parent at end1 of the relationship?",
-                "qualified_name_pattern": "",
+
                 "generated": False,
                 "style": "Bool",
                 "user_specified": True,
                 "unique": False,
                 "input_required": False,
-                "isParent": False,
-                "isAnchor": False,
+
                 "min_cardinality": 0,
                 "max_cardinality": 1,
                 "level": "Advanced",
-                "Journal Entry": ""
+
             }
         },
         {
@@ -797,12 +807,11 @@ def add_default_upsert_attributes(attributes: list[dict]) -> list[dict]:
                 "user_specified": True,
                 "unique": True,
                 "input_required": False,
-                "isParent": False,
-                "isAnchor": False,
+
                 "min_cardinality": 1,
                 "max_cardinality": 1,
                 "level": "Basic",
-                "Journal Entry": ""
+
             }
         },
         {
@@ -815,18 +824,17 @@ def add_default_upsert_attributes(attributes: list[dict]) -> list[dict]:
                 "valid_values": "",
                 "existing_element": "",
                 "description": "A system generated unique identifier.",
-                "qualified_name_pattern": "",
+
                 "generated": True,
                 "style": "GUID",
                 "user_specified": False,
                 "unique": True,
                 "input_required": False,
-                "isParent": False,
-                "isAnchor": False,
+
                 "min_cardinality": 1,
                 "max_cardinality": 1,
                 "level": "Basic",
-                "Journal Entry": ""
+
             }
         },
         {
@@ -839,18 +847,17 @@ def add_default_upsert_attributes(attributes: list[dict]) -> list[dict]:
                 "valid_values": "",
                 "existing_element": "",
                 "description": "An ISO-8601 string representing the time to use for evaluating effectivity of the elements related to this one.",
-                "qualified_name_pattern": "",
+
                 "generated": False,
                 "style": "Simple",
                 "user_specified": True,
                 "unique": False,
                 "input_required": False,
-                "isParent": False,
-                "isAnchor": False,
+
                 "min_cardinality": 1,
                 "max_cardinality": 1,
                 "level": "Advanced",
-                "Journal Entry": ""
+
             }
         },
         {
@@ -863,18 +870,15 @@ def add_default_upsert_attributes(attributes: list[dict]) -> list[dict]:
                 "valid_values": "",
                 "existing_element": "",
                 "description": "A string in ISO-8601 format that defines the when an element becomes effective (visible).",
-                "qualified_name_pattern": "",
                 "generated": False,
                 "style": "Simple",
                 "user_specified": True,
                 "unique": False,
                 "input_required": False,
-                "isParent": False,
-                "isAnchor": False,
                 "min_cardinality": 0,
                 "max_cardinality": 1,
                 "level": "Advanced",
-                "Journal Entry": ""
+
             }
         },
         {
@@ -887,18 +891,17 @@ def add_default_upsert_attributes(attributes: list[dict]) -> list[dict]:
                 "valid_values": "",
                 "existing_element": "",
                 "description": "A string in ISO-8601 format that defines the when an element is no longer effective (visible).",
-                "qualified_name_pattern": "",
+
                 "generated": False,
                 "style": "Simple",
                 "user_specified": True,
                 "unique": False,
                 "input_required": False,
-                "isParent": False,
-                "isAnchor": False,
+
                 "min_cardinality": 1,
                 "max_cardinality": 1,
                 "level": "Advanced",
-                "Journal Entry": ""
+
             }
         },
         {
@@ -911,18 +914,17 @@ def add_default_upsert_attributes(attributes: list[dict]) -> list[dict]:
                 "valid_values": "",
                 "existing_element": "",
                 "description": "If True, only those attributes specified in the update will be updated; If False, any attributes not provided during the update will be set to None.",
-                "qualified_name_pattern": "",
+
                 "generated": False,
                 "style": "Bool",
                 "user_specified": True,
                 "unique": False,
                 "input_required": False,
-                "isParent": False,
-                "isAnchor": False,
+
                 "min_cardinality": 0,
                 "max_cardinality": 1,
                 "level": "Advanced",
-                "Journal Entry": ""
+
             }
         },
         {
@@ -935,18 +937,17 @@ def add_default_upsert_attributes(attributes: list[dict]) -> list[dict]:
                 "valid_values": "",
                 "existing_element": "",
                 "description": "Additional user defined values organized as name value pairs in a dictionary.",
-                "qualified_name_pattern": "",
+
                 "generated": False,
                 "style": "Dictionary",
                 "user_specified": True,
                 "unique": False,
                 "input_required": False,
-                "isParent": False,
-                "isAnchor": False,
+
                 "min_cardinality": 0,
                 "max_cardinality": -1,
                 "level": "Advanced",
-                "Journal Entry": ""
+
             }
         },
         {
@@ -959,18 +960,14 @@ def add_default_upsert_attributes(attributes: list[dict]) -> list[dict]:
                 "valid_values": "",
                 "existing_element": "",
                 "description": "Additional user defined values organized as name value pairs in a dictionary.",
-                "qualified_name_pattern": "",
                 "generated": False,
-                "style": "Dictionary",
+                "style": "Named DICT",
                 "user_specified": True,
                 "unique": False,
                 "input_required": False,
-                "isParent": False,
-                "isAnchor": False,
                 "min_cardinality": 0,
                 "max_cardinality": -1,
                 "level": "Invisible",
-                "Journal Entry": ""
             }
         },
         {
@@ -983,18 +980,17 @@ def add_default_upsert_attributes(attributes: list[dict]) -> list[dict]:
                 "valid_values": "",
                 "existing_element": "",
                 "description": "Identifier of an external source that is associated with this element.",
-                "qualified_name_pattern": "",
+
                 "generated": False,
                 "style": "Simple",
                 "user_specified": True,
                 "unique": False,
                 "input_required": False,
-                "isParent": False,
-                "isAnchor": False,
+
                 "min_cardinality": 0,
                 "max_cardinality": 1,
                 "level": "Advanced",
-                "Journal Entry": ""
+
             }
         },
         {
@@ -1007,18 +1003,15 @@ def add_default_upsert_attributes(attributes: list[dict]) -> list[dict]:
                 "valid_values": "",
                 "existing_element": "",
                 "description": "Name of an external element that is associated with this element.",
-                "qualified_name_pattern": "",
                 "generated": False,
                 "style": "Simple",
                 "user_specified": True,
                 "unique": False,
                 "input_required": False,
-                "isParent": False,
-                "isAnchor": False,
                 "min_cardinality": 0,
                 "max_cardinality": 1,
                 "level": "Advanced",
-                "Journal Entry": ""
+
             }
         },
         {
@@ -1031,18 +1024,16 @@ def add_default_upsert_attributes(attributes: list[dict]) -> list[dict]:
                 "valid_values": "",
                 "existing_element": "",
                 "description": "",
-                "qualified_name_pattern": "",
                 "generated": False,
                 "style": "Simple",
                 "user_specified": True,
                 "unique": False,
                 "input_required": False,
-                "isParent": False,
-                "isAnchor": False,
+
                 "min_cardinality": 0,
                 "max_cardinality": 1,
                 "level": "Basic",
-                "Journal Entry": ""
+
             }
         },
         {
@@ -1055,18 +1046,17 @@ def add_default_upsert_attributes(attributes: list[dict]) -> list[dict]:
                 "valid_values": "",
                 "existing_element": "",
                 "description": "Link to supporting information",
-                "qualified_name_pattern": "",
+
                 "generated": False,
                 "style": "Simple",
                 "user_specified": True,
                 "unique": False,
                 "input_required": False,
-                "isParent": False,
-                "isAnchor": False,
+
                 "min_cardinality": 0,
                 "max_cardinality": 1,
                 "level": "Basic",
-                "Journal Entry": ""
+
             }
         },
         {
@@ -1079,18 +1069,57 @@ def add_default_upsert_attributes(attributes: list[dict]) -> list[dict]:
                 "valid_values": "",
                 "existing_element": "",
                 "description": "Keywords to facilitate finding the element",
-                "qualified_name_pattern": "",
+
                 "generated": False,
                 "style": "Simple List",
                 "user_specified": True,
                 "unique": False,
                 "input_required": False,
-                "isParent": False,
-                "isAnchor": False,
+
                 "min_cardinality": 0,
                 "max_cardinality": 20,
                 "level": "Basic",
-                "Journal Entry": ""
+
+            }
+        },
+        {
+            "Translation Details": {
+                "variable_name": "translation_details",
+                "inUpdate": True,
+                "attr_labels": "",
+                "examples": "",
+                "default_value": "",
+                "valid_values": "",
+                "existing_element": "",
+                "description": "Allow translation information for the element to be provided.",
+                "generated": False,
+                "style": "Named DICT",
+                "user_specified": True,
+                "unique": False,
+                "input_required": False,
+                "min_cardinality": 0,
+                "max_cardinality": -1,
+                "level": "Invisible",
+            }
+        },
+        {
+            "Supplementary Properties": {
+                "variable_name": "supplementary_properties",
+                "inUpdate": True,
+                "attr_labels": "",
+                "examples": "",
+                "default_value": "",
+                "valid_values": "",
+                "existing_element": "",
+                "description": "Provide supplementary information to the element using the structure of a glossary term",
+                "generated": False,
+                "style": "Named DICT",
+                "user_specified": True,
+                "unique": False,
+                "input_required": False,
+                "min_cardinality": 0,
+                "max_cardinality": -1,
+                "level": "Advanced",
             }
         },
     ]
@@ -1111,18 +1140,17 @@ def add_default_link_attributes(attributes: list[dict]) -> list[dict]:
                 "valid_values": "",
                 "existing_element": "",
                 "description": "An ISO-8601 string representing the time to use for evaluating effectivity of the elements related to this one.",
-                "qualified_name_pattern": "",
+
                 "generated": False,
                 "style": "Simple",
                 "user_specified": True,
                 "unique": False,
                 "input_required": False,
-                "isParent": False,
-                "isAnchor": False,
+
                 "min_cardinality": 1,
                 "max_cardinality": 1,
                 "level": "Advanced",
-                "Journal Entry": ""
+
             }
         },
         {
@@ -1135,18 +1163,17 @@ def add_default_link_attributes(attributes: list[dict]) -> list[dict]:
                 "valid_values": "",
                 "existing_element": "",
                 "description": "A string in ISO-8601 format that defines the when an element becomes effective (visible).",
-                "qualified_name_pattern": "",
+
                 "generated": False,
                 "style": "Simple",
                 "user_specified": True,
                 "unique": False,
                 "input_required": False,
-                "isParent": False,
-                "isAnchor": False,
+
                 "min_cardinality": 0,
                 "max_cardinality": 1,
                 "level": "Advanced",
-                "Journal Entry": ""
+
             }
         },
         {
@@ -1159,18 +1186,17 @@ def add_default_link_attributes(attributes: list[dict]) -> list[dict]:
                 "valid_values": "",
                 "existing_element": "",
                 "description": "A string in ISO-8601 format that defines the when an element is no longer effective (visible).",
-                "qualified_name_pattern": "",
+
                 "generated": False,
                 "style": "Simple",
                 "user_specified": True,
                 "unique": False,
                 "input_required": False,
-                "isParent": False,
-                "isAnchor": False,
+
                 "min_cardinality": 1,
                 "max_cardinality": 1,
                 "level": "Advanced",
-                "Journal Entry": ""
+
             }
         },
         {
@@ -1183,21 +1209,20 @@ def add_default_link_attributes(attributes: list[dict]) -> list[dict]:
                 "valid_values": "",
                 "existing_element": "",
                 "description": "Additional user defined values organized as name value pairs in a dictionary.",
-                "qualified_name_pattern": "",
+
                 "generated": False,
                 "style": "Dictionary",
                 "user_specified": True,
                 "unique": False,
                 "input_required": False,
-                "isParent": False,
-                "isAnchor": False,
+
                 "min_cardinality": 0,
                 "max_cardinality": -1,
                 "level": "Invisible",
-                "Journal Entry": ""
+
             }
         }
+
     ]
     new_attributes.extend(default_link_attributes)
     return new_attributes
-

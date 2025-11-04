@@ -26,7 +26,8 @@ from md_processing.md_processing_utils.common_md_utils import (update_element_di
                                                                set_filter_request_body,
                                                                ALL_GOVERNANCE_DEFINITIONS, set_find_body)
 from md_processing.md_processing_utils.extraction_utils import (extract_command_plus, update_a_command)
-from md_processing.md_processing_utils.md_processing_constants import (get_command_spec, add_default_upsert_attributes)
+from md_processing.md_processing_utils.md_processing_constants import (get_command_spec, add_default_upsert_attributes,
+                                                                       add_default_link_attributes)
 from md_processing.md_processing_utils.message_constants import (ERROR, INFO, WARNING, ALWAYS, EXISTS_REQUIRED)
 from pyegeria import EgeriaTech, select_report_spec, PyegeriaException, print_basic_exception, \
     print_validation_error
@@ -319,19 +320,20 @@ def parse_view_command(egeria_client: EgeriaTech, object_type: str, object_actio
     parsed_output['exists'] = False
 
     labels = {}
-    if object_action in ["Unlink","Detach"]:
+    if object_action in ["Link", "Attach", "Unlink", "Detach"]:
         command_spec = get_command_spec(f"Link {object_type}")
+        if command_spec is None:
+            logger.error(f"Command specification not found for 'Link {object_type}'")
+            return None
         distinguished_attributes = command_spec.get('distinguished_attributes', None)
         if distinguished_attributes:
-            attributes = add_default_upsert_attributes(distinguished_attributes)
+            attributes = add_default_link_attributes(distinguished_attributes)
     else:
         command_spec = get_command_spec(f"{object_action} {object_type}")
+        if command_spec is None:
+            logger.error(f"Command specification not found for '{object_action} {object_type}'")
+            return None
         attributes = command_spec.get('Attributes', None)
-    if command_spec is None:
-        msg = f"Parser failed to find `{object_action} {object_type}` command for in the specification"
-        logger.error(msg)
-        print(Markdown("# " + msg))
-        exit(0)
 
     command_display_name = command_spec.get('display_name', None)
 

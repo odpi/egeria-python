@@ -5,7 +5,7 @@ import os
 import sys
 from typing import List, Dict
 import io
-
+import copy
 from loguru import logger
 from rich import print
 from rich.console import Console
@@ -16,7 +16,9 @@ from md_processing.md_processing_utils.common_md_utils import (get_current_datet
                                                                split_tb_string, str_to_bool, )
 from md_processing.md_processing_utils.extraction_utils import (process_simple_attribute, extract_attribute,
                                                                 get_element_by_name)
-from md_processing.md_processing_utils.md_processing_constants import (get_command_spec, load_commands, load_commands, COMMAND_DEFINITIONS)
+from md_processing.md_processing_utils.md_processing_constants import (get_command_spec, load_commands, load_commands,
+                                                                       COMMAND_DEFINITIONS, add_default_link_attributes,
+                                                                       add_default_upsert_attributes)
 
 from md_processing.md_processing_utils.message_constants import (ERROR, INFO, WARNING, ALWAYS, EXISTS_REQUIRED)
 from pyegeria import EgeriaTech
@@ -61,7 +63,7 @@ def main():
     for command, values in commands.items():
         if command == "exported":
             continue
-        if values.get("level", "") not in ["Basic"]:
+        if values.get("level", "") not in ["Basic", "Advanced"]:
             continue
 
         family = values.get("family", "Other")
@@ -89,13 +91,21 @@ def main():
 
             # Write command header
             command_output.write(f"# {command}\n>\t{command_description}\n")
-            print(f"\n## {command_verb} {command}\n>\t{command_description}")
+            # print(f"\n## {command_verb} {command}\n>\t{command_description}")
+            print(f"\n# {command}\n>\t{command_description}")
 
             # Process command attributes
-            attributes = values['Attributes']
+            distinguished_attributes = values['Attributes']
+            if command_verb == "Link":
+                attributes = add_default_link_attributes(copy.deepcopy(distinguished_attributes))
+            elif command_verb == "Create":
+                attributes = add_default_upsert_attributes(copy.deepcopy(distinguished_attributes))
+            else:
+                attributes = add_default_link_attributes(copy.deepcopy(distinguished_attributes))
+
             for attribute in attributes:
                 for key, value in attribute.items():
-                    if value.get('level', "") not in ["Basic", "Advanced"]:
+                    if value.get('level', "") not in ["Basic","Advanced"]:
                         continue
                     user_specified = value.get('user_specified', 'true') in ["true", "True"]
 

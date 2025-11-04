@@ -545,6 +545,7 @@ def process_upsert_informal_tag_command(egeria_client: EgeriaTech, txt: str, dir
     exists = parsed_output['exists']
 
     qualified_name = parsed_output.get('qualified_name', None)
+
     guid = parsed_output.get('guid', None)
 
     print(Markdown(parsed_output['display']))
@@ -590,7 +591,7 @@ def process_upsert_informal_tag_command(egeria_client: EgeriaTech, txt: str, dir
                     print(Markdown(
                         f"==> Validation of {command} completed successfully! Proceeding to apply the changes.\n"))
 
-                egeria_client.update_informal_tag(guid, description)
+                egeria_client.update_tag_description(guid, description)
 
                 logger.success(f"Updated  {object_type} `{display_name}` with GUID {guid}\n\n___")
                 update_element_dictionary(qualified_name, {
@@ -615,7 +616,7 @@ def process_upsert_informal_tag_command(egeria_client: EgeriaTech, txt: str, dir
 
                 else:
 
-                    guid = egeria_client.create_informal_tag(display_name, description)
+                    guid = egeria_client.create_informal_tag(display_name, description, qualified_name)
                     if guid:
                         update_element_dictionary(qualified_name, {
                             'guid': guid, 'display_name': display_name

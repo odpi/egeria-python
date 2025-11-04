@@ -3179,7 +3179,8 @@ class Client2(BaseClient):
     async def _async_create_informal_tag(
             self,
             display_name: str,
-            description: str
+            description: str,
+            qualified_name: str = None
     ) -> str:
         """
         Creates a new informal tag and returns the unique identifier for it. Async Version.
@@ -3191,6 +3192,8 @@ class Client2(BaseClient):
             - The name of the informal tag.
         description: str
             - The description of the informal tag.
+        qualified_name: str, optional
+            - The qualified name of the informal tag. If not provided, it will be generated.
 
         Returns
         -------
@@ -3203,12 +3206,14 @@ class Client2(BaseClient):
         url = f"{self.command_root}feedback-manager/tags"
         if display_name is None:
             raise PyegeriaInvalidParameterException(context={"reason": "display_name is required"})
+        if qualified_name is None:
+            qualified_name = self.make_feedback_qn("InformalTag", None, display_name)
         body = {
             "class": "NewElementRequestBody",
             "properties": {
                 "class": "InformalTagProperties",
                 "displayName": display_name,
-                "qualifiedName" : self.make_feedback_qn("InformalTag", None,  display_name),
+                "qualifiedName" : qualified_name,
                 "description": description
             }
         }
@@ -3219,7 +3224,8 @@ class Client2(BaseClient):
     def create_informal_tag(
             self,
             display_name: str,
-            description: str
+            description: str,
+            qualified_name: str = None
     ) -> str:
         """
         Creates a new informal tag and returns the unique identifier for it.
@@ -3231,6 +3237,8 @@ class Client2(BaseClient):
             - The name of the informal tag.
         description: str
             - The description of the informal tag.
+        qualified_name: str, optional
+            - The qualified name of the informal tag. If not provided, it will be created automatically.
 
         Returns
         -------
@@ -3242,7 +3250,7 @@ class Client2(BaseClient):
         """
         loop = asyncio.get_event_loop()
         response = loop.run_until_complete(
-            self._async_create_informal_tag(display_name, description)
+            self._async_create_informal_tag(display_name, description, qualified_name)
         )
         return response
 
@@ -3277,7 +3285,7 @@ class Client2(BaseClient):
             "description": description
         }
 
-        url = f"{self.command_root}feedback-manager/tags/update"
+        url = f"{self.command_root}feedback-manager/tags/{tag_guid}/update"
 
         await self._async_make_request("POST", url, body)
 
