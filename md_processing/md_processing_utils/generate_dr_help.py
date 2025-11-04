@@ -18,7 +18,10 @@ from md_processing.md_processing_utils.common_md_utils import (get_current_datet
                                                                split_tb_string, str_to_bool, )
 from md_processing.md_processing_utils.extraction_utils import (process_simple_attribute, extract_attribute,
                                                                 get_element_by_name)
-from md_processing.md_processing_utils.md_processing_constants import (get_command_spec, load_commands, load_commands, COMMAND_DEFINITIONS)
+from md_processing.md_processing_utils.md_processing_constants import (get_command_spec, load_commands, load_commands,
+                                                                       COMMAND_DEFINITIONS,
+                                                                       add_default_upsert_attributes,
+                                                                       add_default_link_attributes)
 
 from md_processing.md_processing_utils.message_constants import (ERROR, INFO, WARNING, ALWAYS, EXISTS_REQUIRED)
 from pyegeria import EgeriaTech
@@ -74,7 +77,16 @@ def _extract_help_fields(command: dict):
     """
 
     command_spec = get_command_spec(command)
-    attributes = command_spec.get('Attributes', [])
+    verb = command_spec.get('verb', None)
+    if verb == "Create":
+        distinguished_attributes = command_spec.get('Attributes', [])
+        attributes = add_default_upsert_attributes(distinguished_attributes)
+    elif verb in ["Link","Attach"]  :
+        distinguished_attributes = command_spec.get('Attributes', [])
+        attributes = add_default_link_attributes(distinguished_attributes)
+    else:
+        attributes = command_spec.get('Attributes', [])
+
 
     term_entry: list = []
     for attr in attributes:
@@ -149,7 +161,7 @@ def create_help_terms():
             each Dr.Egeria command. 
 
 > Usage: Before executing this file, make sure you have a glossary named `Egeria-Markdown`
-> already created. If you Need to create one, you can use the \n"""
+> already created. If you Need to create one, you can use the `hey_egeria tui` command.\n"""
 
     for command, values in commands.items():
         if command == "exported":

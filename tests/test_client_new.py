@@ -307,7 +307,7 @@ def test_find_informal_tags() :
     try:
         client = Client2(view_server, view_url, user, user_pass)
         client.create_egeria_bearer_token()
-        response = client.find_tags(search_string, output_format="DICT", report_spec = "Referenceables")
+        response = client.find_tags(search_string, output_format="DICT", report_spec = "Informal-Tags-DrE")
         if isinstance(response, dict | list):
             print(json.dumps(response, indent = 2))
         else:
@@ -319,7 +319,7 @@ def test_find_informal_tags() :
 
 
 def test_delete_tag() :
-    keyword_guid = "959f258b-0abc-4951-b867-f662d10d23db"
+    keyword_guid = "cd87a519-4dab-4bc4-b4e0-e939082820e8"
     try:
         client = Client2(view_server, view_url, user, user_pass)
         client.create_egeria_bearer_token()
