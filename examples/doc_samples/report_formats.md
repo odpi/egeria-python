@@ -21,16 +21,16 @@ The core models are defined in pyegeria/_output_format_models.py:
 ## Quick Start: Selecting a Report Format
 
 ```python
-from pyegeria.base_report_formats import select_report_format, report_format_list, get_report_format_heading
+from pyegeria.base_report_formats import select_report_spec, report_spec_list, get_report_spec_heading
 
-# List all available report formats
-labels = report_format_list()
+# List all available report specs
+labels = report_spec_list()
 print(labels[:5])
 
-# Select a particular report format for a given output type
-fmt = select_report_format("Referenceable", "DICT")
+# Select a particular report spec for a given output type
+fmt = select_report_spec("Referenceable", "DICT")
 if not fmt:
-    raise ValueError("Report format not found")
+    raise ValueError("Report spec not found")
 
 print(fmt["heading"])          # format set heading
 print(fmt["description"])      # description
@@ -38,13 +38,32 @@ print(fmt["formats"]["types"])  # e.g., ["DICT"]
 print(fmt["formats"]["attributes"])  # the attributes to include
 
 # Get just metadata (no concrete format) using output_type ANY
-meta_only = select_report_format("Referenceable", "ANY")
+meta_only = select_report_spec("Referenceable", "ANY")
 print(meta_only["heading"])  # no "formats" key when using ANY
 ```
 
 Notes:
 - The selector matches by label and also respects aliases configured in a FormatSet.
 - If no specific format for the output type is found, and a format with type "ALL" exists, the "ALL" format is used as a fallback.
+
+## Families & filtering
+
+Format sets can carry an optional `family` tag to help organize and discover related specs.
+
+- Show names with family, sorted by family then name:
+
+```python
+from pyegeria.base_report_formats import report_spec_list
+print("\n".join(report_spec_list(show_family=True, sort_by_family=True)))
+```
+
+- Programmatically filter by family (case-insensitive):
+
+```python
+from pyegeria.base_report_formats import report_specs
+security = report_specs.filter_by_family("Security")   # dict[str, FormatSet]
+no_family = report_specs.filter_by_family("")         # specs with no family assigned
+```
 
 ## Dynamic Loading (No Restart)
 
@@ -78,7 +97,7 @@ Collision policy: If any newly loaded set defines a report format label that alr
 You can register and unregister report formats entirely in-memory during a session.
 
 ```python
-from pyegeria.base_report_formats import register_report_specs, unregister_report_format, select_report_format
+from pyegeria.base_report_formats import register_report_specs, unregister_report_spec, select_report_spec
 
 # Register a temporary report format programmatically
 register_report_specs({
@@ -95,11 +114,11 @@ register_report_specs({
 })
 
 # Use it immediately
-fmt = select_report_format("My-Temp-Report", "DICT")
+fmt = select_report_spec("My-Temp-Report", "DICT")
 print(fmt["formats"]["attributes"])  # access attributes
 
 # Remove it if no longer wanted
-unregister_report_format("My-Temp-Report")
+unregister_report_spec("My-Temp-Report")
 ```
 
 ## JSON File Shape
@@ -130,12 +149,12 @@ Backward compatibility: When serializing, pyegeria also emits a deprecated colum
 
 ## Migration Notes
 
-- report_spec → report_format: New public APIs use the term report format. Legacy functions remain available for now but will be deprecated in a future release.
-- columns → attributes: Models and JSON prefer attributes. Legacy columns remain supported as an alias.
+- report_spec vs report_format: The codebase and docs may use the terms interchangeably. Public APIs currently expose `report_spec_*` names. Legacy dictionary shapes are supported via model migrations.
+- columns → attributes: Models and JSON prefer `attributes`. Legacy `columns` remain supported as an alias and are emitted on serialization for backward compatibility.
 
 Minimal migration for callers:
-- Replace calls like report_spec_list() with report_format_list() when convenient.
-- When defining formats in JSON/Python, prefer attributes instead of columns.
+- Use `report_spec_list()` for listing, and `select_report_spec(kind, output_type)` for selection.
+- When defining formats in JSON/Python, prefer `attributes` instead of `columns`.
 
 ## Troubleshooting
 
@@ -145,19 +164,18 @@ Minimal migration for callers:
 
 ## Related APIs
 
-All below are available in pyegeria.base_report_formats:
-- select_report_format(kind, output_type)
-- report_format_list()
-- get_report_format_heading(fmt_name)
-- get_report_format_description(fmt_name)
-- refresh_report_formats()
-- register_report_formats(new_formats, source="runtime")
-- unregister_report_format(label)
-- clear_runtime_report_formats()
-- list_report_formats()
-- get_report_registry()
+Available in `pyegeria.base_report_formats`:
+- `select_report_spec(kind, output_type)`
+- `report_spec_list(*, show_family=False, sort_by_family=False)`
+- `get_report_spec_heading(fmt_name)`
+- `get_report_spec_description(fmt_name)`
+- `refresh_report_specs()`
+- `register_report_specs(new_formats, source="runtime")`
+- `unregister_report_spec(label)`
+- `list_report_specs()`
+- `get_report_registry()`
 
-Core models in pyegeria._output_format_models:
-- Attribute (alias Column)
-- Format (types, attributes)
-- FormatSet (formats, heading, description, aliases, annotations)
+Core models in `pyegeria._output_format_models`:
+- `Attribute` (alias `Column`)
+- `Format` (types, attributes)
+- `FormatSet` (formats, heading, description, aliases, annotations, family)

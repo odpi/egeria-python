@@ -112,6 +112,27 @@ def test_report_spec_list():
     
     print("Output format set list test passed!")
 
+
+def test_report_spec_list_records_and_markdown():
+    """Test the new return kinds for report_spec_list: records and markdown."""
+    from pyegeria.base_report_formats import report_spec_list
+
+    # Records mode
+    records = report_spec_list(return_kind="records")
+    assert isinstance(records, list), f"Expected list for records, got {type(records)}"
+    assert len(records) > 0, "Expected at least one record"
+    sample = records[0]
+    assert set(["family", "name", "description"]).issubset(sample.keys()), "Missing expected keys in record"
+    assert isinstance(sample["name"], str)
+    assert isinstance(sample.get("family", None) if sample.get("family", None) is None else sample.get("family"), (str, type(None)))
+
+    # Markdown mode
+    md = report_spec_list(return_kind="markdown_table")
+    assert isinstance(md, str), f"Expected markdown string, got {type(md)}"
+    assert md.startswith("| Family | Report Name | Description |")
+    # It should contain at least one row separator
+    assert "\n|---|---|---|\n" in md or "\n|---|---|---|" in md
+
 def test_get_report_spec_heading_and_description():
     """Test the get_report_spec_heading and get_report_spec_description functions."""
     print("\nTesting get_report_spec_heading and get_report_spec_description functions...")

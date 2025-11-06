@@ -52,7 +52,7 @@ def list_templates(
             if "deployedImplementationType" not in item["qualifiedName"]:
                 continue
 
-            details = a_client.get_technology_type_detail(item["name"])
+            details = a_client.get_tech_type_detail(item["name"])
             entry = {details["name"]: {}}
             if type(details) is str:
                 tech_info_list.append(entry)
@@ -136,7 +136,7 @@ def display_templates_spec(
 
                 name = item.get("name", "none")
 
-                details = a_client.get_technology_type_detail(name)
+                details = a_client.get_tech_type_detail(name)
                 if type(details) is str:
                     console.log(f"Missing details for - {name}: {details}")
                     continue
@@ -272,7 +272,7 @@ def main():
 #
 #                 name = item.get("name", "none")
 #
-#                 details = a_client.get_technology_type_detail(name)
+#                 details = a_client.get_tech_type_detail(name)
 #                 if type(details) is str:
 #                     console.log(f"Missing details for - {name}: {details}")
 #                     continue

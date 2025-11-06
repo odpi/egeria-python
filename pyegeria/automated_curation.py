@@ -116,7 +116,7 @@ class AutomatedCuration(Client2):
                 specs = ""
                 for template in catalog_templates:
                     for placeholder in template['specification']['placeholderProperty']:
-                        specs += (f"* Placeholder Property: {placeholder['placeholderPropertyName']}\n\t"
+                        specs += (f"* Placeholder Property: {placeholder.get('name','')}\n\t"
                                   f"Type: {placeholder.get('dataType',"")}\n\t"
                                   f"Description:  {placeholder.get('description',"")}\n\t"
                                   f"Required: {placeholder.get("required","")}\n\t"
@@ -3334,10 +3334,10 @@ class AutomatedCuration(Client2):
         )
         return response
 
-    async def _async_get_technology_type_detail(self, type_name: str,
-                                                body: dict | FilterRequestBody = None,
-                                                output_format: str = "JSON",
-                                                report_spec: str | dict = "TechType") -> list | str:
+    async def _async_get_tech_type_detail(self, type_name: str,
+                                          body: dict | FilterRequestBody = None,
+                                          output_format: str = "JSON",
+                                          report_spec: str | dict = "TechType") -> list | str:
         """Retrieve the details of the named technology type. This name should be the name of the technology type
             and contain no wild cards. Async version.
         Parameters
@@ -3397,10 +3397,10 @@ class AutomatedCuration(Client2):
                                output_format, report_spec)
         return element
 
-    def get_technology_type_detail(self, type_name: str,
-                                   body: dict | FilterRequestBody = None,
-                                   output_format: str = "JSON",
-                                   report_spec: str | dict = "TechType") -> list | str:
+    def get_tech_type_detail(self, type_name: str,
+                             body: dict | FilterRequestBody = None,
+                             output_format: str = "JSON",
+                             report_spec: str | dict = "TechType") -> list | str:
         """Retrieve the details of the named technology type. This name should be the name of the technology type
                  and contain no wild cards.
              Parameters
@@ -3442,14 +3442,14 @@ class AutomatedCuration(Client2):
 
         loop = asyncio.get_event_loop()
         response = loop.run_until_complete(
-            self._async_get_technology_type_detail(type_name, body=body,
-                                                   output_format=output_format,
-                                                   report_spec=report_spec)
+            self._async_get_tech_type_detail(type_name, body=body,
+                                             output_format=output_format,
+                                             report_spec=report_spec)
         )
         return response
 
     async def _async_get_template_guid_for_technology_type(self, type_name: str) -> str:
-        details = await self._async_get_technology_type_detail(type_name)
+        details = await self._async_get_tech_type_detail(type_name)
         if isinstance(details, dict):
             return details.get("catalogTemplates", {})[0].get("relatedElement", {}).get("elementHeader", {}).get("guid",
                                                                                                                  None)

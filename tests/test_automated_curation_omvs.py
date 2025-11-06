@@ -795,7 +795,7 @@ class TestAutomatedCuration:
         finally:
             a_client.close_session()
 
-    def test_get_technology_type_detail(self):
+    def test_get_tech_type_detail(self):
         try:
             a_client = AutomatedCuration(
                 self.good_view_server_2,
@@ -806,9 +806,9 @@ class TestAutomatedCuration:
             token = a_client.create_egeria_bearer_token()
 
             start_time = time.perf_counter()
-            # response = a_client.get_technology_type_detail("CSV Data File", True)
-            response = a_client.get_technology_type_detail("File System", output_format="DICT",
-                                                           report_spec="Tech-Type-Detail")
+            # response = a_client.get_tech_type_detail("CSV Data File", True)
+            response = a_client.get_tech_type_detail("File System", output_format="DICT",
+                                                     report_spec="Tech-Type-Details")
             duration = time.perf_counter() - start_time
             print(f"\n\tDuration was {duration} seconds")
             if type(response) is list:

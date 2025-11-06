@@ -210,6 +210,7 @@ class FormatSet(BaseModel):
         description: A description of what the format set is for
         aliases: Alternative names that can be used to reference this format set
         annotations: Additional metadata, like wiki links
+        family: Optional tag to group related format sets for organization/searching
         formats: A list of format configurations
         action: Optional action associated with the format set
         get_additional_props: Optional action used to retrieve additional properties for a format set
@@ -219,6 +220,7 @@ class FormatSet(BaseModel):
     description: str
     aliases: List[str] = Field(default_factory=list)
     annotations: Dict[str, List[str]] = Field(default_factory=dict)
+    family: Optional[str] = None
     formats: List[Union[Format, Dict[str, Any]]]
     action: Optional[Union[ActionParameter, Dict[str, Any]]] = None
     get_additional_props: Optional[Union[ActionParameter, Dict[str, Any]]] = None
@@ -310,7 +312,7 @@ class FormatSetDict(Dict[str, FormatSet]):
         Args:
             key: The name or alias to look up
             default: The default value to return if the key is not found
-            
+        
         Returns:
             FormatSet: The format set if found, otherwise the default value
         """
@@ -337,11 +339,41 @@ class FormatSetDict(Dict[str, FormatSet]):
         Args:
             key: The name or alias to look up
             default: The default value to return if the key is not found
-            
+        
         Returns:
             FormatSet: The format set if found, otherwise the default value
         """
         return self.find_by_name_or_alias(key, default)
+    
+    def filter_by_family(self, family: str) -> Dict[str, FormatSet]:
+        """
+        Return a plain dict of format sets whose `family` matches the given value.
+        
+        Matching rules
+        - Case-insensitive comparison
+        - Leading/trailing whitespace in the input and stored family are ignored
+        - Pass an empty string ("") to match entries with no family assigned
+        
+        Args:
+            family: Family name to match (case-insensitive). Use "" to select entries with no family.
+        
+        Returns:
+            dict[str, FormatSet]: Mapping of spec name -> FormatSet for matching entries.
+        """
+        # Normalize the requested family
+        fam_norm = (family or "").strip().lower()
+        result: Dict[str, FormatSet] = {}
+        for name, fs in self.items():
+            fs_family_raw = getattr(fs, "family", None)
+            fs_family_norm = (fs_family_raw or "").strip().lower()
+            if fam_norm == "":
+                # Select items with no family set
+                if fs_family_norm == "":
+                    result[name] = fs
+            else:
+                if fs_family_norm == fam_norm:
+                    result[name] = fs
+        return result
     
     def values(self):
         """Get all format sets."""
@@ -389,7 +421,7 @@ class FormatSetDict(Dict[str, FormatSet]):
         
         Args:
             key: The name or alias to check
-            
+        
         Returns:
             bool: True if the format set exists, False otherwise
         """

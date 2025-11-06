@@ -74,6 +74,15 @@ from loguru import logger
 
 from pyegeria._output_format_models import (Attribute, Column, Format, ActionParameter, FormatSet, FormatSetDict)
 
+# Import generated format sets from within pyegeria package
+try:
+    from pyegeria.dr_egeria_reports import generated_format_sets
+
+    logger.debug(f"Loaded {len(generated_format_sets)} generated format sets from pyegeria.dr_egeria_reports")
+except (ImportError, ModuleNotFoundError) as e:
+    logger.debug(f"No pyegeria.dr_egeria_reports module found, using empty set: {e}")
+    generated_format_sets = FormatSetDict()
+
 
 # from pyegeria.config import settings
 
@@ -127,7 +136,6 @@ COMMON_COLUMNS = [
 # Preferred terminology alias
 COMMON_ATTRIBUTES = COMMON_COLUMNS
 
-
 COMMON_METADATA_COLUMNS = [
     Column(name='GUID', key='guid', format=True),
     Column(name='Metadata Collection ID', key='metadata_collection_id', format=True),
@@ -155,7 +163,6 @@ COMMON_FORMATS_ALL = Format(
     types=["ALL"],
     attributes=COMMON_COLUMNS,
 )
-
 
 MERMAID_FORMAT = Format(
     types=["MERMAID"],
@@ -256,6 +263,7 @@ base_report_specs = FormatSetDict({
         heading="Default Base Attributes",
         description="Was a valid combination of report_spec and output_format provided?",
         annotations={},  # No specific annotations
+        family="General",
         formats=[
             Format(
                 types=["ALL"],
@@ -280,6 +288,7 @@ base_report_specs = FormatSetDict({
         heading="Common Attributes",
         description="Attributes that apply to all Referenceables.",
         annotations={},  # No specific annotations
+        family="General",
         formats=[
             Format(
                 types=["ALL"],
@@ -302,8 +311,9 @@ base_report_specs = FormatSetDict({
     "Common-Mermaid": FormatSet(
         target_type="Referenceable",
         heading="Common Attributes with Mermaid",
-        description="Attributes that apply to all Referenceables.",
+        description="Common Attributes and all Mermaid graphs.",
         annotations={},  # No specific annotations
+        family="General",
         formats=[
             Format(
                 types=["DICT", "REPORT"],
@@ -315,10 +325,10 @@ base_report_specs = FormatSetDict({
                     Column(name="Mermaid Graph", key='mermaid_graph'),
                     Column(name="Anchor Mermaid Graph", key='anchorMermaidGraph'),
                     Column(name="Information Supply Chain Mermaid Graph", key='informationSupplyChainMermaidGraph'),
-                    Column(name="Field Level Lineage Graph", key ='fieldLevelLineageGraph'),
-                    Column(name= "Action Mermaid Graph", key = 'actionMermaidGraph'),
+                    Column(name="Field Level Lineage Graph", key='fieldLevelLineageGraph'),
+                    Column(name="Action Mermaid Graph", key='actionMermaidGraph'),
                     Column(name="Local Lineage Graph", key="localLineageGraph"),
-                    Column(name="Edge Mermaid",key="edgeMermaidGraph"),
+                    Column(name="Edge Mermaid", key="edgeMermaidGraph"),
                     Column(name="ISC Implementation Graph", key='iscImplementationGraph'),
                     Column(name="Specification Mermaid Graph", key='specificationMermaidGraph'),
                     Column(name="Solution Blueprint Mermaid Graph", key='solutionBlueprintMermaidGraph'),
@@ -332,10 +342,11 @@ base_report_specs = FormatSetDict({
         heading="Search Keyword Report",
         description="A report of elements with search keywords matching the specified string",
         annotations={},  # No specific annotations
+        family="Feedback Manager",
         formats=[
             Format(
                 types=["ALL"],
-                attributes= [
+                attributes=[
                     Column(name='Search Keyword', key='keyword'),
                     Column(name="Search Keyword GUID", key='guid'),
                     Column(name="Element Display Name", key='element_display_name'),
@@ -363,10 +374,11 @@ base_report_specs = FormatSetDict({
         heading="Technology Type Details",
         description="Details of a Technology Type Valid Value.",
         annotations={},  # No specific annotations
+        family="Automated Curation",
         formats=[
             Format(
                 types=["ALL"],
-                attributes= [
+                attributes=[
                     Column(name='Display Name', key='display_name'),
                     Column(name="Qualified Name", key='qualified_name'),
                     Column(name="GUID", key='guid'),
@@ -376,22 +388,23 @@ base_report_specs = FormatSetDict({
                 ],
             )
         ],
-    action=ActionParameter(
-            function="Client2.get_technology_type_detail",
+        action=ActionParameter(
+            function="Client2.get_tech_type_detail",
             optional_params=OPTIONAL_PARAMS,
-            required_params=["search_string"],
+            required_params=["type_name"],
             spec_params={},
         )
     ),
-"Tech-Types": FormatSet(
+    "Tech-Types": FormatSet(
         target_type="TechTypeDetail",
         heading="Technology Type Details",
         description="Details of a Technology Type Valid Value.",
         annotations={},  # No specific annotations
+        family="Automated Curation",
         formats=[
             Format(
                 types=["ALL"],
-                attributes= [
+                attributes=[
                     Column(name='Display Name', key='display_name'),
                     Column(name="Qualified Name", key='qualified_name'),
                     Column(name="GUID", key='guid'),
@@ -408,11 +421,12 @@ base_report_specs = FormatSetDict({
         )
     ),
 
-"Journal-Entry-DrE": FormatSet(
+    "Journal-Entry-DrE": FormatSet(
         target_type="Notification",
         heading="Journal Entry",
         description="Details of a journal entry.",
         annotations={},  # No specific annotations
+        family="Feedback Manager",
         formats=[
             Format(
                 types=["ALL"],
@@ -432,11 +446,12 @@ base_report_specs = FormatSetDict({
             spec_params={},
         )
     ),
-"Informal-Tags-DrE": FormatSet(
+    "Informal-Tags-DrE": FormatSet(
         target_type="Informal Tag",
         heading="Informal Tags",
         description="Details of Informal Tags.",
         annotations={},  # No specific annotations
+        family="Feedback Manager",
         formats=[
             Format(
                 types=["ALL"],
@@ -462,6 +477,7 @@ base_report_specs = FormatSetDict({
         heading="External Reference Attributes",
         description="Attributes that apply to all External References.",
         annotations={},
+        family="External References",
         aliases=["ExternalDataSource", "ExternalModelSource", "External References"],
         formats=[
             Format(
@@ -481,6 +497,7 @@ base_report_specs = FormatSetDict({
         heading="Related Media Attributes",
         description="Attributes that apply to related media.",
         annotations={},
+        family="External References",
         formats=[
             Format(
                 types=["ALL", "LIST"],
@@ -505,6 +522,7 @@ base_report_specs = FormatSetDict({
         heading="Cited Document Attributes",
         description="Attributes that apply to all Cited Documents.",
         annotations={},
+        family="External References",
         formats=[
             Format(
                 types=["ALL", "LIST"],
@@ -536,6 +554,7 @@ base_report_specs = FormatSetDict({
         heading="Project Attributes",
         description="Attributes that apply to all Projects.",
         annotations={},
+        family="Project Manager",
         formats=[
             Format(
                 types=["ALL", "LIST"],
@@ -555,6 +574,7 @@ base_report_specs = FormatSetDict({
         heading="Glossary Attributes",
         description="Attributes that apply to all Glossaries.",
         annotations={"wikilinks": ["[[Glossaries]]"]},
+        family="Glossary Manager",
         formats=[
             Format(
                 types=["ALL"],
@@ -574,6 +594,7 @@ base_report_specs = FormatSetDict({
         heading="Basic Glossary Term Attributes",
         description="Attributes that apply to all Basic Glossary Terms.",
         annotations={},
+        family="Glossary Manager",
         formats=[
             Format(
                 types=["ALL"],
@@ -606,6 +627,7 @@ base_report_specs = FormatSetDict({
         heading="Display Help for Dr.Egeria Commands",
         description="Designed for help output of Dr.Egeria commands.",
         annotations={"wikilinks": ["[[Help]]", "[[Dr.Egeria]]"]},
+        family="General",
         formats=[
             Format(
 
@@ -634,7 +656,9 @@ base_report_specs = FormatSetDict({
         aliases=["Collection", "RootCollection", "Folder", "ReferenceList", "HomeCollection",
                  "ResultSet", "RecentAccess", "WorkItemList", "Namespace"],
         annotations=COMMON_ANNOTATIONS,
-        formats=[MERMAID_FORMAT, COLLECTION_DICT, COLLECTION_TABLE, COLLECTION_REPORT, COMMON_FORMATS_ALL],  # Reusing common formats
+        family="Collection Manager",
+        formats=[MERMAID_FORMAT, COLLECTION_DICT, COLLECTION_TABLE, COLLECTION_REPORT, COMMON_FORMATS_ALL],
+        # Reusing common formats
         action=ActionParameter(
             function="CollectionManager.find_collections",
             required_params=["search_string"],
@@ -648,6 +672,7 @@ base_report_specs = FormatSetDict({
         description="Attributes generic to all Collections.",
         aliases=[],
         annotations=COMMON_ANNOTATIONS,
+        family="Collection Manager",
         formats=[Format(
             types=["ALL"],
             attributes=BASIC_COLLECTIONS_COLUMNS,
@@ -665,6 +690,7 @@ base_report_specs = FormatSetDict({
         description="Attributes generic to all Folders.",
         aliases=[],
         annotations=COMMON_ANNOTATIONS,
+        family="External References",
         formats=[Format(
             types=["ALL"],
             attributes=BASIC_COLLECTIONS_COLUMNS,
@@ -683,6 +709,7 @@ base_report_specs = FormatSetDict({
         description="Attributes about all CollectionMembers.",
         aliases=["CollectionMember", "Member", "Members"],
         annotations={"wikilinks": ["[[CollectionMembers]]"]},
+        family="External References",
         formats=[COLLECTION_DICT, COLLECTION_TABLE],
         action=ActionParameter(
             function="CollectionManager.get_collection_members",
@@ -691,12 +718,13 @@ base_report_specs = FormatSetDict({
             spec_params={"output_format": "DICT"},
         )
     ),
-"Solution-Blueprint": FormatSet(
+    "Solution-Blueprint": FormatSet(
         target_type="SolutionBlueprint",
         heading="Solution Blueprint Report",
         description="Details of a Solution Blueprint.",
         aliases=[],
         annotations={"Wikilinks": ["[[Solution-Blueprint]]"]},
+        family="Solution Architect",
         formats=[
             Format(
                 types=["DICT", "TABLE", "LIST", "MD", "FORM"],
@@ -711,7 +739,7 @@ base_report_specs = FormatSetDict({
                 ]),
             Format(
                 types=["MERMAID"],
-                attributes= [
+                attributes=[
                     Column(name="Mermaid", key='mermaid'),
                     Column(name="Solution Blueprint Mermaid Graph", key='solutionBlueprintMermaidGraph'),
                 ])
@@ -729,6 +757,7 @@ base_report_specs = FormatSetDict({
         description="Attributes generic to all Digital Product Catalogs..",
         aliases=["Product Catalog", "DataProductCatalog"],
         annotations={"Wikilinks": ["[[Digital Products]]"]},
+        family="Product Manager",
         formats=[
             Format(
                 types=["DICT", "TABLE", "LIST", "MD", "FORM"],
@@ -742,7 +771,7 @@ base_report_specs = FormatSetDict({
                 ]),
             Format(
                 types=["MERMAID"],
-                attributes= [
+                attributes=[
                     Column(name="Mermaid", key='mermaid'),
                 ])
         ],
@@ -753,15 +782,16 @@ base_report_specs = FormatSetDict({
             spec_params={"metadata_element_types": ["DigitalProductCatalog"]},
         ),
     ),
-"Digital-Product-Catalog-MyE": FormatSet(
+    "Digital-Product-Catalog-MyE": FormatSet(
         target_type="DigitalProductCatalog",
         heading="Catalogs for Digital Products",
         description="Attributes generic to all Digital Product Catalogs..",
         aliases=[],
         annotations={},
+        family="Product Manager",
         formats=[
             Format(
-                types=["DICT", "TABLE", "LIST", "MD", "FORM","REPORT"],
+                types=["DICT", "TABLE", "LIST", "MD", "FORM", "REPORT"],
                 attributes=COMMON_COLUMNS + [
                     Column(name="Containing Members", key='collection_members'),
                     Column(name="Member Of", key='member_of_collections')
@@ -783,6 +813,7 @@ base_report_specs = FormatSetDict({
         description="Attributes useful to Digital Products.",
         aliases=["DigitalProduct", "DataProducts"],
         annotations={},
+        family="Product Manager",
         formats=[
             Format(
                 types=["FORM", "DICT", "TABLE", "LIST"],
@@ -802,7 +833,7 @@ base_report_specs = FormatSetDict({
                     Column(name='Solution Blueprint', key='solution_designs'),
                 ]),
             Format(
-                types=[ "REPORT", "HTML"],
+                types=["REPORT", "HTML"],
                 attributes=COMMON_COLUMNS + [
                     Column(name="Status", key='status'),
                     Column(name='Product Name', key='product_name'),
@@ -817,7 +848,7 @@ base_report_specs = FormatSetDict({
                     Column(name='Product Manager', key='assigned_actors'),
                     Column(name='License', key='governed_by'),
                     Column(name='Solution Blueprint', key='solution_designs'),
-                    Column(name="Mermaid",key = "mermaid")
+                    Column(name="Mermaid", key="mermaid")
                 ],
             )
         ],
@@ -839,6 +870,7 @@ base_report_specs = FormatSetDict({
         description="Attributes useful to Digital Products.",
         aliases=[],
         annotations={},
+        family="Product Manager",
         formats=[
             Format(
                 types=["FORM", "DICT", "TABLE", "LIST", "MD"],
@@ -887,6 +919,7 @@ base_report_specs = FormatSetDict({
         description="Attributes generic to all Agreements.",
         aliases=["DataSharingAgreement", "Agreement", "Subscriptions"],
         annotations={"wikilinks": ["[[Agreements]]", "[[Egeria]]"]},
+        family="Product Manager",
         formats=[
             Format(
                 types=["REPORT", "DICT", "TABLE", "LIST", "FORM"],
@@ -918,6 +951,7 @@ base_report_specs = FormatSetDict({
         description="Attributes useful to Data Dictionary.",
         aliases=["Data Dict", "Data Dictionary"],
         annotations={"wikilinks": ["[[Data Dictionary]]"]},
+        family="Data Designer",
         formats=[COMMON_FORMATS_ALL],  # Reusing common formats and columns
         action=ActionParameter(
             function="CollectionManager.find_collections",
@@ -932,6 +966,7 @@ base_report_specs = FormatSetDict({
         description="Attributes useful to Data Specification.",
         aliases=["Data Spec", "DataSpec", "DataSpecification"],
         annotations={"wikilinks": ["[[Data Specification]]"]},
+        family="Data Designer",
         formats=[
             Format(types=["REPORT", "HTML"], attributes=COMMON_COLUMNS + [Column(name="Mermaid", key='mermaid'), ]),
             Format(types=["MERMAID"], attributes=[
@@ -952,19 +987,23 @@ base_report_specs = FormatSetDict({
         description="Attributes useful to Data Structures.",
         aliases=["Data Structure", "DataStructures", "Data Structures", "Data Struct", "DataStructure"],
         annotations={"wikilinks": ["[[Data Structure]]"]},
+        family="Data Designer",
         formats=[Format(types=["FORM", "DICT", "LIST"], attributes=COMMON_COLUMNS +
-                                               [
-                                                   Column(name="In Data Specifications", key='in_data_spec'),
-                                                   Column(name="In Data Dictionaries", key='in_data_dictionary'),
-                                                   Column(name="Member Data Fields", key='member_data_fields')                                               ]
+                                                                   [
+                                                                       Column(name="In Data Specifications",
+                                                                              key='in_data_spec'),
+                                                                       Column(name="In Data Dictionaries",
+                                                                              key='in_data_dictionary'),
+                                                                       Column(name="Member Data Fields",
+                                                                              key='member_data_fields')]
                         ),  # Reusing common formats and columns
-                Format(types=["REPORT"], attributes=COMMON_COLUMNS +
-                                               [
-                                                   Column(name="In Data Specifications", key='in_data_spec'),
-                                                   Column(name="In Data Dictionaries", key='in_data_dictionary'),
-                                                   Column(name="Member Data Fields", key='member_data_fields'),
-                                                   Column(name="Mermaid", key='mermaid')
-                                               ]
+                 Format(types=["REPORT"], attributes=COMMON_COLUMNS +
+                                                     [
+                                                         Column(name="In Data Specifications", key='in_data_spec'),
+                                                         Column(name="In Data Dictionaries", key='in_data_dictionary'),
+                                                         Column(name="Member Data Fields", key='member_data_fields'),
+                                                         Column(name="Mermaid", key='mermaid')
+                                                     ]
                         )],
         action=ActionParameter(
             function="DataDesigner.find_data_structures",
@@ -979,16 +1018,17 @@ base_report_specs = FormatSetDict({
         description="Attributes useful to Data Structures.",
         aliases=["Data Field", "Data Fields", "DataFields"],
         annotations={"wikilinks": ["[[Data Field]]"]},
+        family="Data Designer",
         formats=[Format(types=["MD", "FORM", "DICT"], attributes=COMMON_COLUMNS + [
-                                                        Column(name="In Data Dictionaries", key='in_data_dictionary'),
-                                                        Column(name="In Data Structure", key='in_data_structure')]),
+            Column(name="In Data Dictionaries", key='in_data_dictionary'),
+            Column(name="In Data Structure", key='in_data_structure')]),
                  Format(types=["REPORT"], attributes=COMMON_COLUMNS +
-                                                  [
-                                                      Column(name="In Data Structure", key='in_data_structure'),
-                                                      Column(name="In Data Dictionaries", key='in_data_dictionary'),
-                                                      Column(name="Member Data Fields", key='member_data_fields'),
-                                                      Column(name="Mermaid", key='mermaid')
-                                                  ]
+                                                     [
+                                                         Column(name="In Data Structure", key='in_data_structure'),
+                                                         Column(name="In Data Dictionaries", key='in_data_dictionary'),
+                                                         Column(name="Member Data Fields", key='member_data_fields'),
+                                                         Column(name="Mermaid", key='mermaid')
+                                                     ]
                         )],
 
         action=ActionParameter(
@@ -998,123 +1038,78 @@ base_report_specs = FormatSetDict({
         )
     ),
     'External-References': FormatSet(target_type='External-Reference',
-                                    heading='External-Reference Attributes',
-                                    description='External References', formats=[
-            Format(types=['MD', 'FORM', 'DICT'], attributes=[Column(name='Display Name', key='display_name'),
-                                                          Column(name='Description', key='description'),
-                                                          Column(name='Category', key='category'),
-                                                          Column(name='Reference Title', key='reference_title'),
-                                                          Column(name='Reference Abstract', key='reference_abstract'),
-                                                          Column(name='Authors', key='authors'),
-                                                          Column(name='Organization', key='organization'),
-                                                          Column(name='URL', key='reference_url'),
-                                                          Column(name='Sources', key='reference_sources'),
-                                                          Column(name='License', key='license'),
-                                                          Column(name='Copyright', key='copyright'),
-                                                          Column(name='Number of Pages', key='number_of_pages'),
-                                                          Column(name='Page Range', key='page_range'),
-                                                          Column(name='Publication Series', key='publication_series'),
-                                                          Column(name='Publication Series Volume',
-                                                                 key='pub_series_volume'),
-                                                          Column(name='Publisher', key='publisher'),
-                                                          Column(name='First Publication Date', key='first_pub_date'),
-                                                          Column(name='Publication Date', key='pub_date'),
-                                                          Column(name='Publication City', key='pub_city'),
-                                                          Column(name='Publication Year', key='pub_year'),
-                                                          Column(name='Publication Numbers', key='pub_numbers'),
-                                                          Column(name='Version Identifier', key='current_version'),
-                                                          Column(name='Classifications', key='classifications'),
-                                                          Column(name='Qualified Name', key='qualified_name'),
-                                                          Column(name='GUID', key='guid')]),
-            Format(types=['TABLE','LIST'], attributes=[Column(name='Display Name', key='display_name'),
+                                     heading='External-Reference Attributes',
+                                     description='External References',
+                                     family="External References",
+                                     formats=[
+                                         Format(types=['MD', 'FORM', 'DICT'],
+                                                attributes=[Column(name='Display Name', key='display_name'),
+                                                            Column(name='Description', key='description'),
+                                                            Column(name='Category', key='category'),
+                                                            Column(name='Reference Title', key='reference_title'),
+                                                            Column(name='Reference Abstract', key='reference_abstract'),
+                                                            Column(name='Authors', key='authors'),
+                                                            Column(name='Organization', key='organization'),
+                                                            Column(name='URL', key='reference_url'),
+                                                            Column(name='Sources', key='reference_sources'),
+                                                            Column(name='License', key='license'),
+                                                            Column(name='Copyright', key='copyright'),
+                                                            Column(name='Number of Pages', key='number_of_pages'),
+                                                            Column(name='Page Range', key='page_range'),
+                                                            Column(name='Publication Series', key='publication_series'),
+                                                            Column(name='Publication Series Volume',
+                                                                   key='pub_series_volume'),
+                                                            Column(name='Publisher', key='publisher'),
+                                                            Column(name='First Publication Date', key='first_pub_date'),
+                                                            Column(name='Publication Date', key='pub_date'),
+                                                            Column(name='Publication City', key='pub_city'),
+                                                            Column(name='Publication Year', key='pub_year'),
+                                                            Column(name='Publication Numbers', key='pub_numbers'),
+                                                            Column(name='Version Identifier', key='current_version'),
+                                                            Column(name='Classifications', key='classifications'),
+                                                            Column(name='Qualified Name', key='qualified_name'),
+                                                            Column(name='GUID', key='guid')]),
+                                         Format(types=['TABLE', 'LIST'],
+                                                attributes=[Column(name='Display Name', key='display_name'),
 
-                                             Column(name='Category', key='category'),
-                                             Column(name='Reference Title', key='reference_title'),
+                                                            Column(name='Category', key='category'),
+                                                            Column(name='Reference Title', key='reference_title'),
 
-                                             Column(name='Sources', key='reference_sources'),
-                                             Column(name='License', key='license'),
-                                             Column(name='Qualified Name', key='qualified_name'),
-                                             ]),
-            Format(types=["REPORT"], attributes=[Column(name='Display Name', key='display_name'),
-                                              Column(name='Description', key='description'),
-                                              Column(name='Category', key='category'),
-                                              Column(name='Reference Title', key='reference_title'),
-                                              Column(name='Reference Abstract', key='reference_abstract'),
-                                              Column(name='Organization', key='organization'),
-                                              Column(name='URL', key='reference_url'),
-                                              Column(name='Sources', key='reference_sources'),
-                                              Column(name='License', key='license'),
-                                              Column(name='Qualified Name', key='qualified_name'),
-                                              Column(name='Mermaid', key='mermaid'),
-                                              ]),
+                                                            Column(name='Sources', key='reference_sources'),
+                                                            Column(name='License', key='license'),
+                                                            Column(name='Qualified Name', key='qualified_name'),
+                                                            ]),
+                                         Format(types=["REPORT"],
+                                                attributes=[Column(name='Display Name', key='display_name'),
+                                                            Column(name='Description', key='description'),
+                                                            Column(name='Category', key='category'),
+                                                            Column(name='Reference Title', key='reference_title'),
+                                                            Column(name='Reference Abstract', key='reference_abstract'),
+                                                            Column(name='Organization', key='organization'),
+                                                            Column(name='URL', key='reference_url'),
+                                                            Column(name='Sources', key='reference_sources'),
+                                                            Column(name='License', key='license'),
+                                                            Column(name='Qualified Name', key='qualified_name'),
+                                                            Column(name='Mermaid', key='mermaid'),
+                                                            ]),
 
-            Format(types=["MERMAID"], attributes=[Column(name='Mermaid', key='mermaid')]),
-        ],
-                                    action=ActionParameter(function='ExternalReference.find_external_references',
-                                                           required_params=['search_string'],
-                                                           optional_params=['page_size', 'start_from',
-                                                                            'starts_with', 'ends_with',
-                                                                            'ignore_case'], spec_params={
-                                            'metadata_element_types': ['ExternalReference']})),
+                                         Format(types=["MERMAID"], attributes=[Column(name='Mermaid', key='mermaid')]),
+                                     ],
+                                     action=ActionParameter(function='ExternalReference.find_external_references',
+                                                            required_params=['search_string'],
+                                                            optional_params=['page_size', 'start_from',
+                                                                             'starts_with', 'ends_with',
+                                                                             'ignore_case'], spec_params={
+                                             'metadata_element_types': ['ExternalReference']})
+                                     ),
 
-    "Mandy-DataStruct": FormatSet(
-        target_type="Data Structure",
-        heading="Puddy Approves",
-        description="This is a tutorial on how to use a data struct description",
-        aliases=[],
-        annotations={"wikilinks": ["[[Data Structure]]"]},
-        formats=[
-            Format(types=["TABLE"], attributes=COMMON_COLUMNS + [Column(name='GUID', key='GUID')]),
-            Format(types=["DICT", "LIST", ], attributes=COMMON_COLUMNS + [Column(name='GUID', key='GUID')]),
-            Format(types=["REPORT", "MERMAID", "HTML"], attributes=[Column(name='Display Name', key='display_name'),
-                                                                 Column(name='Mermaid', key='mermaid'), ]),
-        ],
-        action=ActionParameter(
-            function="DataDesigner.find_data_structures",
-            required_params=["search_string"],
-            spec_params={"output_format": "DICT"},
-        )
-    ),
-    "DataStruct-DrE": FormatSet(
-        target_type="Data Structure",
-        heading="Data Structure Information",
-        description="Information used with Dr. Egeria to describe Data Structures.",
-        aliases=[],
-        annotations={"wikilinks": ["[[Data Structure]]"]},
-        formats=[
-            Format(types=["TABLE", "LIST"], attributes=COMMON_COLUMNS + [
-                Column(name='Namespace', key='namespace'),
-                Column(name='In Data Specifications', key='member_of_data_spec_qnames'),
-                Column(name='In Data Dictionary', key='member_of_data_dicts_qnames'),
-                Column(name='Data Fields', key='containsDataFields'),
-                Column(name='Glossary Term', key='glossary_term'),
-            ]),
-            Format(types=["DICT", "MD"], attributes=COMMON_COLUMNS + [
-                Column(name='Namespace', key='namespace'),
-                Column(name='In Data Specifications', key='member_of_data_spec_qnames'),
-                Column(name='In Data Dictionary', key='member_of_data_dicts_qnames'),
-                Column(name='Glossary Term', key='glossary_term'),
-                Column(name='GUID', key='GUID')]),
-            Format(types=["REPORT", "MERMAID", "HTML"], attributes=COMMON_COLUMNS + [
-                Column(name='Namespace', key='namespace'),
-                Column(name='In Data Specifications', key='member_of_data_spec_qnames'),
-                Column(name='In Data Dictionary', key='member_of_data_dicts_qnames'),
-                Column(name='Glossary Term', key='glossary_term'),
-                Column(name='Mermaid', key='mermaid'),
-                Column(name='GUID', key='GUID')])
-        ],
-        action=ActionParameter(
-            function="DataDesigner.find_data_structures",
-            required_params=["search_string"],
-            spec_params={"output_format": "DICT"},
-        )
-    ),
     "Governance Basics": FormatSet(
         target_type="Governance Definition",
         heading="Basic Governance-Definitions Information",
         description="Core Attributes useful to Governance-Definitions.",
         aliases=["BasicGovernance"],
         annotations={"wikilinks": ["[[Governance]]"]},
+        family="Governance Officer",
         formats=[Format(types=["ALL"], attributes=GOVERNANCE_DEFINITIONS_BASIC)],
         action=ActionParameter(
             function="GovernanceOfficer.find_governance_definitions",
@@ -1128,6 +1123,7 @@ base_report_specs = FormatSetDict({
         description="Attributes useful to Governance-Definitions.",
         aliases=["GovernanceDefinitions"],
         annotations={"wikilinks": ["[[Governance]]"]},
+        family="Governance Officer",
         formats=[Format(types=["ALL"], attributes=GOVERNANCE_DEFINITIONS_COLUMNS)],
         action=ActionParameter(
             function="GovernanceOfficer.find_governance_definitions",
@@ -1141,6 +1137,7 @@ base_report_specs = FormatSetDict({
         description="Attributes useful to Governance-Definitions.",
         aliases=["GovernanceDefinitions"],
         annotations={"wikilinks": ["[[Governance]]"]},
+        family="Governance Officer",
         formats=[Format(types=["ALL"], attributes=GOVERNANCE_DEFINITIONS_BASIC)],
         action=ActionParameter(
             function="GovernanceOfficer.find_governance_definitions",
@@ -1148,51 +1145,63 @@ base_report_specs = FormatSetDict({
             spec_params={"metadata_element_types": ["GovernancePrinciple", "GovernanceStrategy", "GovernanceResponse"]},
         )
     ),
-    'Governance-Control': FormatSet(target_type='Governance Control', heading='Control Attributes',
-                                    description= 'Governance Control (Create).', formats=[
-            Format(types=['DICT', 'MD', 'FORM', 'REPORT'],
-                   attributes=[Column(name='Display Name', key='display_name'), Column(name='Summary', key='summary'),
-                            Column(name='Description', key='description'), Column(name='Category', key='category'),
-                            Column(name='Domain Identifier', key='domain_identifier'),
-                            Column(name='Identifier', key='identifier'),
-                            Column(name='Version Identifier', key='version_identifier'),
-                            Column(name='Usage', key='usage'), Column(name='Scope', key='scope'),
-                            Column(name='Importance', key='importance'), Column(name='measurement', key='measurement'),
-                            Column(name='target', key='target'), Column(name='Implications', key='implications'),
-                            Column(name='Outcomes', key='outcomes'), Column(name='Results', key='results'),
-                            Column(name='Status', key='element_status'),
-                            Column(name='User Defined Status', key='user_defined_status'),
-                            Column(name='Qualified Name', key='qualified_name'), Column(name='GUID', key='guid')
-                            ]),
-            Format(types=['TABLE', 'LIST'],
-                   attributes=[Column(name='Display Name', key='display_name'),
-                            Column(name='Summary', key='summary'),
-                            Column(name='Category', key='category'),
-                            Column(name='Identifier', key='identifier'),
-                            Column(name='Usage', key='usage'),
-                            Column(name='Status', key='element_status'),
-                            Column(name='Qualified Name', key='qualified_name'),
-                            ])
-        ],
-            action=ActionParameter(
-                function="GovernanceOfficer.find_governance_definitions",
-                required_params=["search_string"],
-                optional_params=OPTIONAL_PARAMS,
-                spec_params={"metadata_element_types": ["GovernanceControl"]},
-            )
-    ),
+    'Governance-Control': FormatSet(target_type='Governance Control',
+                                    heading='Control Attributes',
+                                    description='Governance Control (Create).',
+                                    family="Governance Officer",
+                                    formats=[
+                                        Format(types=['DICT', 'MD', 'FORM', 'REPORT'],
+                                               attributes=[Column(name='Display Name', key='display_name'),
+                                                           Column(name='Summary', key='summary'),
+                                                           Column(name='Description', key='description'),
+                                                           Column(name='Category', key='category'),
+                                                           Column(name='Domain Identifier', key='domain_identifier'),
+                                                           Column(name='Identifier', key='identifier'),
+                                                           Column(name='Version Identifier', key='version_identifier'),
+                                                           Column(name='Usage', key='usage'),
+                                                           Column(name='Scope', key='scope'),
+                                                           Column(name='Importance', key='importance'),
+                                                           Column(name='measurement', key='measurement'),
+                                                           Column(name='target', key='target'),
+                                                           Column(name='Implications', key='implications'),
+                                                           Column(name='Outcomes', key='outcomes'),
+                                                           Column(name='Results', key='results'),
+                                                           Column(name='Status', key='element_status'),
+                                                           Column(name='User Defined Status',
+                                                                  key='user_defined_status'),
+                                                           Column(name='Qualified Name', key='qualified_name'),
+                                                           Column(name='GUID', key='guid')
+                                                           ]),
+                                        Format(types=['TABLE', 'LIST'],
+                                               attributes=[Column(name='Display Name', key='display_name'),
+                                                           Column(name='Summary', key='summary'),
+                                                           Column(name='Category', key='category'),
+                                                           Column(name='Identifier', key='identifier'),
+                                                           Column(name='Usage', key='usage'),
+                                                           Column(name='Status', key='element_status'),
+                                                           Column(name='Qualified Name', key='qualified_name'),
+                                                           ])
+                                    ],
+                                    action=ActionParameter(
+                                        function="GovernanceOfficer.find_governance_definitions",
+                                        required_params=["search_string"],
+                                        optional_params=OPTIONAL_PARAMS,
+                                        spec_params={"metadata_element_types": ["GovernanceControl"]},
+                                    )
+                                    ),
     "Valid-Value-Def": FormatSet(
         target_type="Valid Value Definition",
         heading="Valid Value Definitions Information",
         description="Attributes useful to Valid Value Definitions.",
         aliases=[],
         annotations={"wikilinks": ["[[VV-Def]]"]},
+        family="General",
         formats=[Format(types=["ALL"], attributes=COMMON_COLUMNS +
-                                               [Column(name='Data Type', key='data_type'),
-                                                Column(name='Preferred Value', key='preferred_value'),
-                                                Column(name='Usage', key='usage'),
-                                                Column(name='Scope', key='scope'),
-                                        ])
+                                                  [Column(name='Data Type', key='data_type'),
+                                                   Column(name='Preferred Value', key='preferred_value'),
+                                                   Column(name='Usage', key='usage'),
+                                                   Column(name='Scope', key='scope'),
+                                                   ])
                  ],
         action=ActionParameter(
             function="reference_data.find_valid_value_definitions",
@@ -1201,39 +1210,49 @@ base_report_specs = FormatSetDict({
         )
     ),
 
-    'License-Type': FormatSet(target_type='License Type', heading='License Type Attributes',
-                                    description='Attributes of a License type.', formats=[
-            Format(types=['DICT', 'MD', 'FORM', 'REPORT'],
-                   attributes=[Column(name='Display Name', key='display_name'), Column(name='Summary', key='summary'),
-                            Column(name='Description', key='description'), Column(name='Category', key='category'),
-                            Column(name='Domain Identifier', key='domain_identifier'),
-                            Column(name='Identifier', key='identifier'),
-                            Column(name='Version Identifier', key='version_identifier'),
-                            Column(name='Usage', key='usage'), Column(name='Scope', key='scope'),
-                            Column(name='Importance', key='importance'), Column(name='measurement', key='measurement'),
-                            Column(name='target', key='target'), Column(name='Implications', key='implications'),
-                            Column(name='Outcomes', key='outcomes'), Column(name='Results', key='results'),
-                            Column(name='Status', key='element_status'),
-                            Column(name='User Defined Status', key='user_defined_status'),
-                            Column(name='Qualified Name', key='qualified_name'), Column(name='GUID', key='guid')
-                            ]),
-            Format(types=['TABLE', 'LIST'],
-                   attributes=[Column(name='Display Name', key='display_name'),
-                            Column(name='Summary', key='summary'),
-                            Column(name='Category', key='category'),
-                            Column(name='Identifier', key='identifier'),
-                            Column(name='Usage', key='usage'),
-                            Column(name='Status', key='element_status'),
-                            Column(name='Qualified Name', key='qualified_name'),
-                            ])
-        ],
-            action=ActionParameter(
-                function="GovernanceOfficer.find_governance_definitions",
-                required_params=["search_string"],
-                optional_params=OPTIONAL_PARAMS,
-                spec_params={"metadata_element_types": ["LicenseType"]},
-            )
-            ),
+    'License-Type': FormatSet(target_type='License Type',
+                              heading='License Type Attributes',
+                              description='Attributes of a License type.',
+                              family="Governance Officer",
+                              formats=[
+                                  Format(types=['DICT', 'MD', 'FORM', 'REPORT'],
+                                         attributes=[Column(name='Display Name', key='display_name'),
+                                                     Column(name='Summary', key='summary'),
+                                                     Column(name='Description', key='description'),
+                                                     Column(name='Category', key='category'),
+                                                     Column(name='Domain Identifier', key='domain_identifier'),
+                                                     Column(name='Identifier', key='identifier'),
+                                                     Column(name='Version Identifier', key='version_identifier'),
+                                                     Column(name='Usage', key='usage'),
+                                                     Column(name='Scope', key='scope'),
+                                                     Column(name='Importance', key='importance'),
+                                                     Column(name='measurement', key='measurement'),
+                                                     Column(name='target', key='target'),
+                                                     Column(name='Implications', key='implications'),
+                                                     Column(name='Outcomes', key='outcomes'),
+                                                     Column(name='Results', key='results'),
+                                                     Column(name='Status', key='element_status'),
+                                                     Column(name='User Defined Status', key='user_defined_status'),
+                                                     Column(name='Qualified Name', key='qualified_name'),
+                                                     Column(name='GUID', key='guid')
+                                                     ]),
+                                  Format(types=['TABLE', 'LIST'],
+                                         attributes=[Column(name='Display Name', key='display_name'),
+                                                     Column(name='Summary', key='summary'),
+                                                     Column(name='Category', key='category'),
+                                                     Column(name='Identifier', key='identifier'),
+                                                     Column(name='Usage', key='usage'),
+                                                     Column(name='Status', key='element_status'),
+                                                     Column(name='Qualified Name', key='qualified_name'),
+                                                     ])
+                              ],
+                              action=ActionParameter(
+                                  function="GovernanceOfficer.find_governance_definitions",
+                                  required_params=["search_string"],
+                                  optional_params=OPTIONAL_PARAMS,
+                                  spec_params={"metadata_element_types": ["LicenseType"]},
+                              )
+                              ),
 
     "Governance Policies": FormatSet(
         target_type="GovernancePolicy",
@@ -1241,6 +1260,7 @@ base_report_specs = FormatSetDict({
         description="Attributes useful to Governance-Definitions.",
         aliases=["GovernanceDefinitions"],
         annotations={"wikilinks": ["[[Governance]]"]},
+        family="Governance Officer",
         formats=[Format(types=["ALL"], attributes=GOVERNANCE_DEFINITIONS_COLUMNS)],
         action=ActionParameter(
             function="GovernanceOfficer.find_governance_definitions",
@@ -1253,1193 +1273,85 @@ base_report_specs = FormatSetDict({
 }
 )
 
-generated_format_sets = FormatSetDict({
-    'Agreement-DrE': FormatSet(target_type='Agreement-DrE', heading='Agreement-DrE Attributes',
-                               description='Auto-generated format for Agreement (Create).', formats=[
-            Format(types=['ALL'], attributes=[Column(name='Display Name', key='display_name'),
-                                           Column(name='Description', key='description'),
-                                           Column(name='Identifier', key='agreement_identifier'),
-                                           Column(name='Category', key='category'),
-                                           Column(name='Status', key='element_status'),
-                                           Column(name='User Defined Status', key='user_defined_status'),
-                                           Column(name='Version Identifier', key='version_identifier'),
-                                           Column(name='Agreement Actors', key='agreement_actors'),
-                                           Column(name='Qualified Name', key='qualified_name'),
-                                           Column(name='GUID', key='guid')])],
-                               action=ActionParameter(function='CollectionManager.find_collections',
-                                                      required_params=['search_string'],
-                                                      optional_params=['page_size', 'start_from', 'starts_with',
-                                                                       'ends_with', 'ignore_case'],
-                                                      spec_params={'metadata_element_types': ['Agreement']})),
-    'Business-Imperative-DrE': FormatSet(target_type='Business-Imperative-DrE',
-                                         heading='Business-Imperative-DrE Attributes',
-                                         description='Auto-generated format for Business Imperative (Create).',
-                                         formats=[Format(types=['ALL'],
-                                                         attributes=[Column(name='Display Name', key='display_name'),
-                                                                  Column(name='Summary', key='summary'),
-                                                                  Column(name='Description', key='description'),
-                                                                  Column(name='Category', key='category'),
-                                                                  Column(name='Domain Identifier',
-                                                                         key='domain_identifier'),
-                                                                  Column(name='Identifier', key='identifier'),
-                                                                  Column(name='Version Identifier',
-                                                                         key='version_identifier'),
-                                                                  Column(name='Usage', key='usage'),
-                                                                  Column(name='Scope', key='scope'),
-                                                                  Column(name='Importance', key='importance'),
-                                                                  Column(name='Implications', key='implications'),
-                                                                  Column(name='Outcomes', key='outcomes'),
-                                                                  Column(name='Results', key='results'),
-                                                                  Column(name='Status', key='element_status'),
-                                                                  Column(name='User Defined Status',
-                                                                         key='user_defined_status'),
-                                                                  Column(name='Qualified Name', key='qualified_name'),
-                                                                  Column(name='GUID', key='guid')])],
-                                         action=ActionParameter(
-                                             function='GovernanceOfficer.find_governance_definitions',
-                                             required_params=['search_string'],
-                                             optional_params=['page_size', 'start_from', 'starts_with', 'ends_with',
-                                                              'ignore_case'],
-                                             spec_params={'metadata_element_types': ['GovernanceDriver']})),
-    'Campaign-DrE': FormatSet(target_type='Campaign-DrE', heading='Campaign-DrE Attributes',
-                              description='Auto-generated format for Campaign (Create).',
-                              formats=[Format(types=['ALL'],
-                                              attributes=[
-                                                  Column(
-                                                      name='Display Name',
-                                                      key='display_name'),
-                                                  Column(
-                                                      name='Description',
-                                                      key='description'),
-                                                  Column(
-                                                      name='Project Type',
-                                                      key='project_type'),
-                                                  Column(
-                                                      name='Category',
-                                                      key='category'),
-                                                  Column(
-                                                      name='Identifier',
-                                                      key='project_identifier'),
-                                                  Column(
-                                                      name='Mission',
-                                                      key='mission'),
-                                                  Column(
-                                                      name='Purposes',
-                                                      key='purposes'),
-                                                  Column(
-                                                      name='Start Date',
-                                                      key='start_date'),
-                                                  Column(
-                                                      name='Planned End Date',
-                                                      key='end_date'),
-                                                  Column(
-                                                      name='Priority',
-                                                      key='priority'),
-                                                  Column(
-                                                      name='Project Phase',
-                                                      key='project_phase'),
-                                                  Column(
-                                                      name='Project Status',
-                                                      key='project_status'),
-                                                  Column(
-                                                      name='Project Health',
-                                                      key='project_health'),
-                                                  Column(
-                                                      name='Qualified Name',
-                                                      key='qualified_name'),
-                                                  Column(
-                                                      name='GUID',
-                                                      key='guid')])],
-                              action=ActionParameter(function='ProjectManager.find_projects',
-                                                     required_params=['search_string'],
-                                                     optional_params=['page_size', 'start_from', 'starts_with',
-                                                                      'ends_with', 'ignore_case'],
-                                                     spec_params={'classification_names': ['Campaign']})),
-    'Certification-Type-DrE': FormatSet(target_type='Certification-Type-DrE',
-                                        heading='Certification-Type-DrE Attributes',
-                                        description='Auto-generated format for Certification Type (Create).', formats=[
-            Format(types=['ALL'],
-                   attributes=[Column(name='Display Name', key='display_name'), Column(name='Summary', key='summary'),
-                            Column(name='Description', key='description'), Column(name='Category', key='category'),
-                            Column(name='Domain Identifier', key='domain_identifier'),
-                            Column(name='Document Identifier', key='document_identifier'),
-                            Column(name='Version Identifier', key='version_identifier'),
-                            Column(name='Scope', key='scope'), Column(name='Importance', key='importance'),
-                            Column(name='Details', key='details'), Column(name='Implications', key='implications'),
-                            Column(name='Outcomes', key='outcomes'), Column(name='Results', key='results'),
-                            Column(name='Status', key='element_status'),
-                            Column(name='User Defined Status', key='user_defined_status'),
-                            Column(name='Qualified Name', key='qualified_name'), Column(name='GUID', key='guid')])],
-                                        action=ActionParameter(function='GovernanceOfficer.find_governance_definitions',
-                                                               required_params=['search_string'],
-                                                               optional_params=['page_size', 'start_from',
-                                                                                'starts_with', 'ends_with',
-                                                                                'ignore_case'], spec_params={
-                                                'metadata_element_types': ['CertificationTYpe']})),
-    'Collection-DrE': FormatSet(target_type='Collection-DrE', heading='Collection-DrE Attributes',
-                                description='Auto-generated format for Collection (Create).', formats=[
-            Format(types=['ALL'], attributes=[Column(name='Display Name', key='display_name'),
-                                           Column(name='Description', key='description'),
-                                           Column(name='Classifications', key='classifications'),
-                                           Column(name='Category', key='category'),
-                                           Column(name='Version Identifier', key='current_version'),
-                                           Column(name='Qualified Name', key='qualified_name'),
-                                           Column(name='GUID', key='guid')])],
-                                action=ActionParameter(function='CollectionManager.find_collections',
-                                                       required_params=['search_string'],
-                                                       optional_params=['page_size', 'start_from', 'starts_with',
-                                                                        'ends_with', 'ignore_case'])),
-    'Data-Class-DrE': FormatSet(target_type='Data-Class-DrE', heading='Data-Class-DrE Attributes',
-                                description='Auto-generated format for Data Class (Create).', formats=[
-            Format(types=['ALL'], attributes=[Column(name='Display Name', key='display_name'),
-                                           Column(name='Description', key='description'),
-                                           Column(name='Category', key='category'),
-                                           Column(name='Status', key='element_status'),
-                                           Column(name='Namespace', key='namespace'),
-                                           Column(name='Match Property Names', key='match_property_names'),
-                                           Column(name='Match Threshold', key='match_threshold'),
-                                           Column(name='IsCaseSensitive', key='is_case_sensitive'),
-                                           Column(name='Data Type', key='data_type'),
-                                           Column(name='Allow Duplicate Values', key='duplicates_allowed'),
-                                           Column(name='isNullable', key='is_nullable'),
-                                           Column(name='Default Value', key='default_value'),
-                                           Column(name='Average Value', key='avg_value'),
-                                           Column(name='Value List', key='value_list'),
-                                           Column(name='Value Range From', key='value_range_from'),
-                                           Column(name='Value Range To', key='value_range_to'),
-                                           Column(name='Sample Values', key='sample_values'),
-                                           Column(name='Data Patterns', key='data_patterns'),
-                                           Column(name='In Data Dictionary', key='in_data_dictionary'),
-                                           Column(name='Containing Data Class', key='containing_data_class'),
-                                           Column(name='Specializes Data Class', key='specializes_data_class'),
-                                           Column(name='Qualified Name', key='qualified_name'),
-                                           Column(name='GUID', key='guid')])],
-                                action=ActionParameter(function='DataDesigner.find_data_classes',
-                                                       required_params=['search_string'],
-                                                       optional_params=['page_size', 'start_from', 'starts_with',
-                                                                        'ends_with', 'ignore_case'])),
-    'Data-Dictionary-DrE': FormatSet(target_type='Data-Dictionary-DrE', heading='Data-Dictionary-DrE Attributes',
-                                     description='Auto-generated format for Data Dictionary (Create).', formats=[
-            Format(types=['ALL'], attributes=[Column(name='Display Name', key='display_name'),
-                                           Column(name='Description', key='description'),
-                                           Column(name='Category', key='category'),
-                                           Column(name='Qualified Name', key='qualified_name'),
-                                           Column(name='GUID', key='guid')])],
-                                     action=ActionParameter(function='CollectionManager.find_collections',
-                                                            required_params=['search_string'],
-                                                            optional_params=['page_size', 'start_from', 'starts_with',
-                                                                             'ends_with', 'ignore_case'], spec_params={
-                                             'metadata_element_types': ['DataDictionary']})),
-    'Data-Field-DrE': FormatSet(target_type='Data-Field-DrE', heading='Data-Field-DrE Attributes',
-                                description='Auto-generated format for Data Field (Create).', formats=[
-            Format(types=['ALL', 'MD'], attributes=[Column(name='Display Name', key='display_name'),
-                                           Column(name='Description', key='description'),
-                                           Column(name='Category', key='category'),
-                                           Column(name='Status', key='element_status'),
-                                           Column(name='Data Type', key='data_type'),
-                                           Column(name='Position', key='position'),
-                                           Column(name='Minimum Cardinality', key='min_cardinality'),
-                                           Column(name='Maximum Cardinality', key='max_cardinality'),
-                                           Column(name='In Data Structure', key='in_data_structure'),
-                                           Column(name='Data Class', key='data_class'),
-                                           Column(name='Glossary Term', key='glossary_term'),
-                                           Column(name='isNullable', key='is_nullable'),
-                                           Column(name='Minimum Length', key='min_length'),
-                                           Column(name='Length', key='length'),
-                                           Column(name='Precision', key='precision'),
-                                           Column(name='Ordered Values', key='ordered_values'),
-                                           Column(name='Units', key='units'),
-                                           Column(name='Default Value', key='default_value'),
-                                           Column(name='Version Identifier', key='version_id'),
-                                           Column(name='In Data Dictionary', key='in_data_dictionary'),
-                                           Column(name='Parent Data Field', key='parent_data_field'),
-                                           Column(name='Qualified Name', key='qualified_name'),
-                                           Column(name='GUID', key='guid')])],
-                                action=ActionParameter(function='DataDesigner.find_data_fields',
-                                                       required_params=['search_string'],
-                                                       optional_params=['page_size', 'start_from', 'starts_with',
-                                                                        'ends_with', 'ignore_case'])),
-    'Data-Processing-Purpose-DrE': FormatSet(target_type='Data-Processing-Purpose-DrE',
-                                             heading='Data-Processing-Purpose-DrE Attributes',
-                                             description='Auto-generated format for Data Processing Purpose (Create).',
-                                             formats=[Format(types=['ALL'],
-                                                             attributes=[Column(name='Display Name', key='display_name'),
-                                                                      Column(name='Summary', key='summary'),
-                                                                      Column(name='Description', key='description'),
-                                                                      Column(name='Category', key='category'),
-                                                                      Column(name='Domain Identifier',
-                                                                             key='domain_identifier'),
-                                                                      Column(name='Identifier', key='identifier'),
-                                                                      Column(name='Version Identifier',
-                                                                             key='version_identifier'),
-                                                                      Column(name='Usage', key='usage'),
-                                                                      Column(name='Scope', key='scope'),
-                                                                      Column(name='Importance', key='importance'),
-                                                                      Column(name='Implications', key='implications'),
-                                                                      Column(name='Outcomes', key='outcomes'),
-                                                                      Column(name='Results', key='results'),
-                                                                      Column(name='Status', key='element_status'),
-                                                                      Column(name='User Defined Status',
-                                                                             key='user_defined_status'),
-                                                                      Column(name='Qualified Name',
-                                                                             key='qualified_name'),
-                                                                      Column(name='GUID', key='guid')])],
-                                             action=ActionParameter(
-                                                 function='GovernanceOfficer.find_governance_definitions',
-                                                 required_params=['search_string'],
-                                                 optional_params=['page_size', 'start_from', 'starts_with', 'ends_with',
-                                                                  'ignore_case'],
-                                                 spec_params={'metadata_element_types': ['DataProcessingPurpose']})),
-    'Data-Sharing-Agreement-DrE': FormatSet(target_type='Data-Sharing-Agreement-DrE',
-                                            heading='Data-Sharing-Agreement-DrE Attributes',
-                                            description='Auto-generated format for Data Sharing Agreement (Create).',
-                                            formats=[Format(types=['ALL'],
-                                                            attributes=[Column(name='Display Name', key='display_name'),
-                                                                     Column(name='Description', key='description'),
-                                                                     Column(name='Category', key='category'),
-                                                                     Column(name='Identifier', key='identifier'),
-                                                                     Column(name='Status', key='element_status'),
-                                                                     Column(name='User_Defined_Status',
-                                                                            key='user_defined_status'),
-                                                                     Column(name='Version Identifier',
-                                                                            key='version_identifier'),
-                                                                     Column(name='Product Manager',
-                                                                            key='product_manager'),
-                                                                     Column(name='Qualified Name',
-                                                                            key='qualified_name'),
-                                                                     Column(name='GUID', key='guid')])],
-                                            action=ActionParameter(function='CollectionManager.find_collections',
-                                                                   required_params=['search_string'],
-                                                                   optional_params=['page_size', 'start_from',
-                                                                                    'starts_with', 'ends_with',
-                                                                                    'ignore_case'], spec_params={
-                                                    'classification_names': ['DataSharingAgreement']})),
-    'Data-Specification-DrE': FormatSet(target_type='Data-Specification-DrE',
-                                        heading='Data-Specification-DrE Attributes',
-                                        description='Auto-generated format for Data Specification (Create).', formats=[
-            Format(types=['ALL'], attributes=[Column(name='Display Name', key='display_name'),
-                                           Column(name='Description', key='description'),
-                                           Column(name='Category', key='category'),
-                                           Column(name='Qualified Name', key='qualified_name'),
-                                           Column(name='GUID', key='guid')])],
-                                        action=ActionParameter(function='CollectionManager.find_collections',
-                                                               required_params=['search_string'],
-                                                               optional_params=['page_size', 'start_from',
-                                                                                'starts_with', 'ends_with',
-                                                                                'ignore_case'],
-                                                               spec_params={'metadata_element_types': ['DataSpec']})),
-    'Data-Structure-DrE': FormatSet(target_type='Data-Structure-DrE', heading='Data-Structure-DrE Attributes',
-                                    description='Auto-generated format for Data Structure (Create).', formats=[
-            Format(types=['ALL'], attributes=[Column(name='Display Name', key='display_name'),
-                                           Column(name='Description', key='description'),
-                                           Column(name='Category', key='category'),
-                                           Column(name='Status', key='element_status'),
-                                           Column(name='In Data Specification', key='in_data_spec'),
-                                           Column(name='In Data Dictionary', key='in_data_dictionary'),
-                                           Column(name='Qualified Name', key='qualified_name'),
-                                           Column(name='GUID', key='guid')])],
-                                    action=ActionParameter(function='DataDesigner.find_data_structures',
-                                                           required_params=['search_string'],
-                                                           optional_params=['page_size', 'start_from', 'starts_with',
-                                                                            'ends_with', 'ignore_case'])),
-    'Digital-Product-DrE': FormatSet(target_type='Digital-Product-DrE', heading='Digital-Product-DrE Attributes',
-                                     description='Auto-generated format for Digital Product (Create).', formats=[
-            Format(types=['ALL'], attributes=[Column(name='Display Name', key='display_name'),
-                                           Column(name='Description', key='description'),
-                                           Column(name='Product Name', key='product_name'),
-                                           Column(name='Status', key='element_status'),
-                                           Column(name='User Defined Status', key='user_defined_status'),
-                                           Column(name='Category', key='category'),
-                                           Column(name='Identifier', key='identifier'),
-                                           Column(name='Maturity', key='maturity'),
-                                           Column(name='Service Life', key='service_life'),
-                                           Column(name='Introduction Date', key='introduction_date'),
-                                           Column(name='Next Version Date', key='next_version_date'),
-                                           Column(name='Withdrawal Date', key='withdrawal_date'),
-                                           Column(name='Version Identifier', key='current_version'),
-                                           Column(name='Product Manager', key='product_manager'),
-                                           Column(name='Qualified Name', key='qualified_name'),
-                                           Column(name='GUID', key='guid')])],
-                                     action=ActionParameter(function='CollectionManager.find_collections',
-                                                            required_params=['search_string'],
-                                                            optional_params=['page_size', 'start_from', 'starts_with',
-                                                                             'ends_with', 'ignore_case'], spec_params={
-                                             'metadata_element_types': ['DigitalProductCatalog', 'DigitalProductCatalogFolder']})),
-    'Digital-Subscription-DrE': FormatSet(target_type='Digital-Subscription-DrE',
-                                          heading='Digital-Subscription-DrE Attributes',
-                                          description='Auto-generated format for Digital Subscription (Create).',
-                                          formats=[Format(types=['ALL'],
-                                                          attributes=[Column(name='Display Name', key='display_name'),
-                                                                   Column(name='Description', key='description'),
-                                                                   Column(name='Identifier', key='identifier'),
-                                                                   Column(name='Category', key='category'),
-                                                                   Column(name='Status', key='element_status'),
-                                                                   Column(name='User_Defined_Status',
-                                                                          key='user_defined_status'),
-                                                                   Column(name='Support Level', key='support_level'),
-                                                                   Column(name='Service Levels', key='service_levels'),
-                                                                   Column(name='Version Identifier',
-                                                                          key='version_identifier'),
-                                                                   Column(name='Qualified Name', key='qualified_name'),
-                                                                   Column(name='GUID', key='guid')])],
-                                          action=ActionParameter(function='CollectionManager.find_collections',
-                                                                 required_params=['search_string'],
-                                                                 optional_params=['page_size', 'start_from',
-                                                                                  'starts_with', 'ends_with',
-                                                                                  'ignore_case'], spec_params={
-                                                  'metadata_element_types': ['DigitalSubscription']})),
-    'External-Data-Source-DrE': FormatSet(target_type='External Data Source',
-                                          heading='External-Data-Source-DrE Attributes',
-                                          description='Auto-generated format for External Data Source (Create).',
-                                          formats=[Format(types=['ALL'],
-                                                          attributes=[Column(name='Display Name', key='display_name'),
-                                                                   Column(name='Description', key='description'),
-                                                                   Column(name='Category', key='category'),
-                                                                   Column(name='Reference Title',
-                                                                          key='reference_title'),
-                                                                   Column(name='Reference Abstract',
-                                                                          key='reference_abstract'),
-                                                                   Column(name='Authors', key='authors'),
-                                                                   Column(name='Organization', key='organization'),
-                                                                   Column(name='URL', key='reference_url'),
-                                                                   Column(name='Sources', key='reference_sources'),
-                                                                   Column(name='License', key='license'),
-                                                                   Column(name='Copyright', key='copyright'),
-                                                                   Column(name='Version Identifier',
-                                                                          key='current_version'),
-                                                                   Column(name='Classifications',
-                                                                          key='classifications'),
-                                                                   Column(name='Qualified Name', key='qualified_name'),
-                                                                   Column(name='GUID', key='guid')])],
-                                          action=ActionParameter(function='ExternalReference.find_external_references',
-                                                                 required_params=['search_string'],
-                                                                 optional_params=['page_size', 'start_from',
-                                                                                  'starts_with', 'ends_with',
-                                                                                  'ignore_case'], spec_params={
-                                                  'metadata_element_types': ['ExternalDataSource']})),
-    'External-Reference-DrE': FormatSet(target_type='External-Reference-DrE',
-                                        heading='External-Reference-DrE Attributes',
-                                        description='Auto-generated format for External Reference (Create).', formats=[
-            Format(types=['ALL'], attributes=[Column(name='Display Name', key='display_name'),
-                                           Column(name='Description', key='description'),
-                                           Column(name='Category', key='category'),
-                                           Column(name='Reference Title', key='reference_title'),
-                                           Column(name='Reference Abstract', key='reference_abstract'),
-                                           Column(name='Authors', key='authors'),
-                                           Column(name='Organization', key='organization'),
-                                           Column(name='URL', key='reference_url'),
-                                           Column(name='Sources', key='reference_sources'),
-                                           Column(name='License', key='license'),
-                                           Column(name='Copyright', key='copyright'),
-                                           Column(name='Number of Pages', key='number_of_pages'),
-                                           Column(name='Page Range', key='page_range'),
-                                           Column(name='Publication Series', key='publication_series'),
-                                           Column(name='Publication Series Volume', key='pub_series_volume'),
-                                           Column(name='Publisher', key='publisher'),
-                                           Column(name='First Publication Date', key='first_pub_date'),
-                                           Column(name='Publication Date', key='pub_date'),
-                                           Column(name='Publication City', key='pub_city'),
-                                           Column(name='Publication Year', key='pub_year'),
-                                           Column(name='Publication Numbers', key='pub_numbers'),
-                                           Column(name='Version Identifier', key='current_version'),
-                                           Column(name='Classifications', key='classifications'),
-                                           Column(name='Qualified Name', key='qualified_name'),
-                                           Column(name='GUID', key='guid')])],
-                                        action=ActionParameter(function='ExternalReference.find_external_references',
-                                                               required_params=['search_string'],
-                                                               optional_params=['page_size', 'start_from',
-                                                                                'starts_with', 'ends_with',
-                                                                                'ignore_case'], spec_params={
-                                                'metadata_element_types': ['ExternalReference']})),
+# Build initial combined specs, then reorganize by family and slugged names
+_initial_combined_specs = combine_format_set_dicts(base_report_specs, generated_format_sets)
 
-    'Glossary-DrE': FormatSet(target_type='Glossary-DrE', heading='Glossary-DrE Attributes',
-                              description='Auto-generated format for Glossary (Create).', formats=[Format(types=['ALL'],
-                                                                                                          attributes=[
-                                                                                                              Column(
-                                                                                                                  name='Display Name',
-                                                                                                                  key='display_name'),
-                                                                                                              Column(
-                                                                                                                  name='Description',
-                                                                                                                  key='description'),
-                                                                                                              Column(
-                                                                                                                  name='Category',
-                                                                                                                  key='category'),
-                                                                                                              Column(
-                                                                                                                  name='Language',
-                                                                                                                  key='language'),
-                                                                                                              Column(
-                                                                                                                  name='Qualified Name',
-                                                                                                                  key='qualified_name'),
-                                                                                                              Column(
-                                                                                                                  name='GUID',
-                                                                                                                  key='guid')])],
-                              action=ActionParameter(function='CollectionManager.find_collections',
-                                                     required_params=['search_string'],
-                                                     optional_params=['page_size', 'start_from', 'starts_with',
-                                                                      'ends_with', 'ignore_case'],
-                                                     spec_params={'metadata_element_types': ['Glossary']})),
-    'Glossary-Term-DrE': FormatSet(target_type='Glossary-Term-DrE', heading='Glossary-Term-DrE Attributes',
-                                   description='Auto-generated format for Glossary Term (Create).', formats=[
-            Format(types=['ALL'],
-                   attributes=[Column(name='Display Name', key='term_name'), Column(name='Glossary', key='glossary_name'),
-                            Column(name='Summary', key='summary'), Column(name='Description', key='description'),
-                            Column(name='Abbreviation', key='abbreviation'), Column(name='Example', key='example'),
-                            Column(name='Usage', key='usage'), Column(name='Status', key='element_status'),
-                            Column(name='Version Identifier', key='version_identifier'),
-                            Column(name='Qualified Name', key='qualified_name'), Column(name='GUID', key='guid')])],
-                                   action=ActionParameter(function='GlossaryManager.find_glossary_terms',
-                                                          required_params=['search_string'],
-                                                          optional_params=['page_size', 'start_from', 'starts_with',
-                                                                           'ends_with', 'ignore_case'])),
-    'Governance-Action-DrE': FormatSet(target_type='Governance-Action-DrE', heading='Governance-Action-DrE Attributes',
-                                       description='Auto-generated format for Governance Action (Create).', formats=[
-            Format(types=['ALL'],
-                   attributes=[Column(name='Display Name', key='display_name'), Column(name='Summary', key='summary'),
-                            Column(name='Description', key='description'), Column(name='Category', key='category'),
-                            Column(name='Domain Identifier', key='domain_identifier'),
-                            Column(name='Identifier', key='identifier'),
-                            Column(name='Version Identifier', key='version_identifier'),
-                            Column(name='Usage', key='usage'), Column(name='Scope', key='scope'),
-                            Column(name='Importance', key='importance'),
-                            Column(name='Implications', key='implications'), Column(name='Outcomes', key='outcomes'),
-                            Column(name='Results', key='results'), Column(name='Status', key='element_status'),
-                            Column(name='User Defined Status', key='user_defined_status'),
-                            Column(name='Qualified Name', key='qualified_name'), Column(name='GUID', key='guid')])],
-                                       action=ActionParameter(function='GovernanceOfficer.find_governance_definitions',
-                                                              required_params=['search_string'],
-                                                              optional_params=['page_size', 'start_from', 'starts_with',
-                                                                               'ends_with', 'ignore_case'],
-                                                              spec_params={
-                                                                  'metadata_element_types': ['GovernanceAction']})),
-    'Governance-Approach-DrE': FormatSet(target_type='Governance-Approach-DrE',
-                                         heading='Governance-Approach-DrE Attributes',
-                                         description='Auto-generated format for Governance Approach (Create).',
-                                         formats=[Format(types=['ALL'],
-                                                         attributes=[Column(name='Display Name', key='display_name'),
-                                                                  Column(name='Summary', key='summary'),
-                                                                  Column(name='Description', key='description'),
-                                                                  Column(name='Category', key='category'),
-                                                                  Column(name='Domain Identifier',
-                                                                         key='domain_identifier'),
-                                                                  Column(name='Identifier', key='identifier'),
-                                                                  Column(name='Version Identifier',
-                                                                         key='version_identifier'),
-                                                                  Column(name='Usage', key='usage'),
-                                                                  Column(name='Scope', key='scope'),
-                                                                  Column(name='Importance', key='importance'),
-                                                                  Column(name='Implications', key='implications'),
-                                                                  Column(name='Outcomes', key='outcomes'),
-                                                                  Column(name='Results', key='results'),
-                                                                  Column(name='Status', key='element_status'),
-                                                                  Column(name='User Defined Status',
-                                                                         key='user_defined_status'),
-                                                                  Column(name='Qualified Name', key='qualified_name'),
-                                                                  Column(name='GUID', key='guid')])],
-                                         action=ActionParameter(
-                                             function='GovernanceOfficer.find_governance_definitions',
-                                             required_params=['search_string'],
-                                             optional_params=['page_size', 'start_from', 'starts_with', 'ends_with',
-                                                              'ignore_case'],
-                                             spec_params={'metadata_element_types': ['GovernanceApproach']})),
-    'Governance-Control-DrE': FormatSet(target_type='Governance-Control-DrE',
-                                        heading='Governance-Control-DrE Attributes',
-                                        description='Auto-generated format for Governance Control (Create).', formats=[
-            Format(types=['ALL'],
-                   attributes=[Column(name='Display Name', key='display_name'), Column(name='Summary', key='summary'),
-                            Column(name='Description', key='description'), Column(name='Category', key='category'),
-                            Column(name='Domain Identifier', key='domain_identifier'),
-                            Column(name='Identifier', key='identifier'),
-                            Column(name='Version Identifier', key='version_identifier'),
-                            Column(name='Usage', key='usage'), Column(name='Scope', key='scope'),
-                            Column(name='Importance', key='importance'), Column(name='measurement', key='measurement'),
-                            Column(name='target', key='target'), Column(name='Implications', key='implications'),
-                            Column(name='Outcomes', key='outcomes'), Column(name='Results', key='results'),
-                            Column(name='Status', key='element_status'),
-                            Column(name='User Defined Status', key='user_defined_status'),
-                            Column(name='Qualified Name', key='qualified_name'), Column(name='GUID', key='guid')])],
-                                        action=ActionParameter(function='GovernanceOfficer.find_governance_definitions',
-                                                               required_params=['search_string'],
-                                                               optional_params=['page_size', 'start_from',
-                                                                                'starts_with', 'ends_with',
-                                                                                'ignore_case'], spec_params={
-                                                'metadata_element_types': ['GovernanceMetric']})),
-    'Governance-Driver-DrE': FormatSet(target_type='Governance-Driver-DrE', heading='Governance-Driver-DrE Attributes',
-                                       description='Auto-generated format for Governance Driver (Create).', formats=[
-            Format(types=['ALL'],
-                   attributes=[Column(name='Display Name', key='display_name'), Column(name='Summary', key='summary'),
-                            Column(name='Description', key='description'), Column(name='Category', key='category'),
-                            Column(name='Domain Identifier', key='domain_identifier'),
-                            Column(name='Identifier', key='identifier'),
-                            Column(name='Version Identifier', key='version_identifier'),
-                            Column(name='Usage', key='usage'), Column(name='Scope', key='scope'),
-                            Column(name='Importance', key='importance'),
-                            Column(name='Implications', key='implications'), Column(name='Outcomes', key='outcomes'),
-                            Column(name='Results', key='results'), Column(name='Status', key='element_status'),
-                            Column(name='User Defined Status', key='user_defined_status'),
-                            Column(name='Qualified Name', key='qualified_name'), Column(name='GUID', key='guid')])],
-                                       action=ActionParameter(function='GovernanceOfficer.find_governance_definitions',
-                                                              required_params=['search_string'],
-                                                              optional_params=['page_size', 'start_from', 'starts_with',
-                                                                               'ends_with', 'ignore_case'],
-                                                              spec_params={
-                                                                  'metadata_element_types': ['GovernanceDriver']})),
-    'Governance-Obligation-DrE': FormatSet(target_type='Governance-Obligation-DrE',
-                                           heading='Governance-Obligation-DrE Attributes',
-                                           description='Auto-generated format for Governance Obligation (Create).',
-                                           formats=[Format(types=['ALL'],
-                                                           attributes=[Column(name='Display Name', key='display_name'),
-                                                                    Column(name='Summary', key='summary'),
-                                                                    Column(name='Description', key='description'),
-                                                                    Column(name='Category', key='category'),
-                                                                    Column(name='Domain Identifier',
-                                                                           key='domain_identifier'),
-                                                                    Column(name='Identifier', key='identifier'),
-                                                                    Column(name='Version Identifier',
-                                                                           key='version_identifier'),
-                                                                    Column(name='Usage', key='usage'),
-                                                                    Column(name='Scope', key='scope'),
-                                                                    Column(name='Importance', key='importance'),
-                                                                    Column(name='Implications', key='implications'),
-                                                                    Column(name='Outcomes', key='outcomes'),
-                                                                    Column(name='Results', key='results'),
-                                                                    Column(name='Status', key='element_status'),
-                                                                    Column(name='User Defined Status',
-                                                                           key='user_defined_status'),
-                                                                    Column(name='Qualified Name', key='qualified_name'),
-                                                                    Column(name='GUID', key='guid')])],
-                                           action=ActionParameter(
-                                               function='GovernanceOfficer.find_governance_definitions',
-                                               required_params=['search_string'],
-                                               optional_params=['page_size', 'start_from', 'starts_with', 'ends_with',
-                                                                'ignore_case'],
-                                               spec_params={'metadata_element_types': ['GovernanceObligation']})),
-    'Governance-Policy-DrE': FormatSet(target_type='Governance-Policy-DrE', heading='Governance-Policy-DrE Attributes',
-                                       description='Auto-generated format for Governance Policy (Create).', formats=[
-            Format(types=['ALL'],
-                   attributes=[Column(name='Display Name', key='display_name'), Column(name='Summary', key='summary'),
-                            Column(name='Description', key='description'), Column(name='Category', key='category'),
-                            Column(name='Domain Identifier', key='domain_identifier'),
-                            Column(name='Identifier', key='identifier'),
-                            Column(name='Version Identifier', key='version_identifier'),
-                            Column(name='Usage', key='usage'), Column(name='Scope', key='scope'),
-                            Column(name='Importance', key='importance'),
-                            Column(name='Implications', key='implications'), Column(name='Outcomes', key='outcomes'),
-                            Column(name='Results', key='results'), Column(name='Status', key='element_status'),
-                            Column(name='User Defined Status', key='user_defined_status'),
-                            Column(name='Qualified Name', key='qualified_name'), Column(name='GUID', key='guid')])],
-                                       action=ActionParameter(function='GovernanceOfficer.find_governance_definitions',
-                                                              required_params=['search_string'],
-                                                              optional_params=['page_size', 'start_from', 'starts_with',
-                                                                               'ends_with', 'ignore_case'],
-                                                              spec_params={
-                                                                  'metadata_element_types': ['GovernancePolicy']})),
-    'Governance-Principle-DrE': FormatSet(target_type='Governance-Principle-DrE',
-                                          heading='Governance-Principle-DrE Attributes',
-                                          description='Auto-generated format for Governance Principle (Create).',
-                                          formats=[Format(types=['ALL'],
-                                                          attributes=[Column(name='Display Name', key='display_name'),
-                                                                   Column(name='Summary', key='summary'),
-                                                                   Column(name='Description', key='description'),
-                                                                   Column(name='Category', key='category'),
-                                                                   Column(name='Domain Identifier',
-                                                                          key='domain_identifier'),
-                                                                   Column(name='Identifier', key='identifier'),
-                                                                   Column(name='Version Identifier',
-                                                                          key='version_identifier'),
-                                                                   Column(name='Usage', key='usage'),
-                                                                   Column(name='Scope', key='scope'),
-                                                                   Column(name='Importance', key='importance'),
-                                                                   Column(name='Implications', key='implications'),
-                                                                   Column(name='Outcomes', key='outcomes'),
-                                                                   Column(name='Results', key='results'),
-                                                                   Column(name='Status', key='element_status'),
-                                                                   Column(name='User Defined Status',
-                                                                          key='user_defined_status'),
-                                                                   Column(name='Qualified Name', key='qualified_name'),
-                                                                   Column(name='GUID', key='guid')])],
-                                          action=ActionParameter(
-                                              function='GovernanceOfficer.find_governance_definitions',
-                                              required_params=['search_string'],
-                                              optional_params=['page_size', 'start_from', 'starts_with', 'ends_with',
-                                                               'ignore_case'],
-                                              spec_params={'metadata_element_types': ['GovernancePrinciple']})),
-    'Governance-Procedure-DrE': FormatSet(target_type='Governance-Procedure-DrE',
-                                          heading='Governance-Procedure-DrE Attributes',
-                                          description='Auto-generated format for Governance Procedure (Create).',
-                                          formats=[Format(types=['ALL'],
-                                                          attributes=[Column(name='Display Name', key='display_name'),
-                                                                   Column(name='Summary', key='summary'),
-                                                                   Column(name='Description', key='description'),
-                                                                   Column(name='Category', key='category'),
-                                                                   Column(name='Domain Identifier',
-                                                                          key='domain_identifier'),
-                                                                   Column(name='Document Identifier',
-                                                                          key='document_identifier'),
-                                                                   Column(name='Version Identifier',
-                                                                          key='version_identifier'),
-                                                                   Column(name='Scope', key='scope'),
-                                                                   Column(name='Importance', key='importance'),
-                                                                   Column(name='Implementation Description',
-                                                                          key='implementation_description'),
-                                                                   Column(name='Supports Policies',
-                                                                          key='supports_policies'),
-                                                                   Column(name='Implications', key='implications'),
-                                                                   Column(name='Outcomes', key='outcomes'),
-                                                                   Column(name='Results', key='results'),
-                                                                   Column(name='Status', key='element_status'),
-                                                                   Column(name='User Defined Status',
-                                                                          key='user_defined_status'),
-                                                                   Column(name='Qualified Name', key='qualified_name'),
-                                                                   Column(name='GUID', key='guid')])],
-                                          action=ActionParameter(
-                                              function='GovernanceOfficer.find_governance_definitions',
-                                              required_params=['search_string'],
-                                              optional_params=['page_size', 'start_from', 'starts_with', 'ends_with',
-                                                               'ignore_case'],
-                                              spec_params={'metadata_element_types': ['GovernanceProcedure']})),
-    'Governance-Responsibility-DrE': FormatSet(target_type='Governance-Responsibility-DrE',
-                                               heading='Governance-Responsibility-DrE Attributes',
-                                               description='Auto-generated format for Governance Responsibility (Create).',
-                                               formats=[Format(types=['ALL'],
-                                                               attributes=[Column(name='Display Name', key='display_name'),
-                                                                        Column(name='Summary', key='summary'),
-                                                                        Column(name='Description', key='description'),
-                                                                        Column(name='Category', key='category'),
-                                                                        Column(name='Domain Identifier',
-                                                                               key='domain_identifier'),
-                                                                        Column(name='Document Identifier',
-                                                                               key='document_identifier'),
-                                                                        Column(name='Version Identifier',
-                                                                               key='version_identifier'),
-                                                                        Column(name='Scope', key='scope'),
-                                                                        Column(name='Importance', key='importance'),
-                                                                        Column(name='Implementation Description',
-                                                                               key='implementation_description'),
-                                                                        Column(name='Supports Policies',
-                                                                               key='supports_policies'),
-                                                                        Column(name='Implications', key='implications'),
-                                                                        Column(name='Outcomes', key='outcomes'),
-                                                                        Column(name='Results', key='results'),
-                                                                        Column(name='Status', key='element_status'),
-                                                                        Column(name='User Defined Status',
-                                                                               key='user_defined_status'),
-                                                                        Column(name='Qualified Name',
-                                                                               key='qualified_name'),
-                                                                        Column(name='GUID', key='guid')])],
-                                               action=ActionParameter(
-                                                   function='GovernanceOfficer.find_governance_definitions',
-                                                   required_params=['search_string'],
-                                                   optional_params=['page_size', 'start_from', 'starts_with',
-                                                                    'ends_with', 'ignore_case'], spec_params={
-                                                       'metadata_element_types': ['GovernanceResponsibility']})),
-    'Governance-Rule-DrE': FormatSet(target_type='Governance-Rule-DrE', heading='Governance-Rule-DrE Attributes',
-                                     description='Auto-generated format for Governance Rule (Create).', formats=[
-            Format(types=['ALL'],
-                   attributes=[Column(name='Display Name', key='display_name'), Column(name='Summary', key='summary'),
-                            Column(name='Description', key='description'), Column(name='Category', key='category'),
-                            Column(name='Domain Identifier', key='domain_identifier'),
-                            Column(name='Document Identifier', key='document_identifier'),
-                            Column(name='Version Identifier', key='version_identifier'),
-                            Column(name='Scope', key='scope'), Column(name='Importance', key='importance'),
-                            Column(name='Implementation Description', key='implementation_description'),
-                            Column(name='Supports Policies', key='supports_policies'),
-                            Column(name='Implications', key='implications'), Column(name='Outcomes', key='outcomes'),
-                            Column(name='Results', key='results'), Column(name='Status', key='element_status'),
-                            Column(name='User Defined Status', key='user_defined_status'),
-                            Column(name='Qualified Name', key='qualified_name'), Column(name='GUID', key='guid')])],
-                                     action=ActionParameter(function='GovernanceOfficer.find_governance_definitions',
-                                                            required_params=['search_string'],
-                                                            optional_params=['page_size', 'start_from', 'starts_with',
-                                                                             'ends_with', 'ignore_case'], spec_params={
-                                             'metadata_element_types': ['GovernanceRule']})),
-    'Governance-Strategy-DrE': FormatSet(target_type='Governance-Strategy-DrE',
-                                         heading='Governance-Strategy-DrE Attributes',
-                                         description='Auto-generated format for Governance Strategy (Create).',
-                                         formats=[Format(types=['ALL'],
-                                                         attributes=[Column(name='Display Name', key='display_name'),
-                                                                  Column(name='Summary', key='summary'),
-                                                                  Column(name='Description', key='description'),
-                                                                  Column(name='Category', key='category'),
-                                                                  Column(name='Domain Identifier',
-                                                                         key='domain_identifier'),
-                                                                  Column(name='Identifier', key='identifier'),
-                                                                  Column(name='Version Identifier',
-                                                                         key='version_identifier'),
-                                                                  Column(name='Usage', key='usage'),
-                                                                  Column(name='Scope', key='scope'),
-                                                                  Column(name='Importance', key='importance'),
-                                                                  Column(name='Implications', key='implications'),
-                                                                  Column(name='Outcomes', key='outcomes'),
-                                                                  Column(name='Results', key='results'),
-                                                                  Column(name='Status', key='element_status'),
-                                                                  Column(name='User Defined Status',
-                                                                         key='user_defined_status'),
-                                                                  Column(name='Qualified Name', key='qualified_name'),
-                                                                  Column(name='GUID', key='guid')])],
-                                         action=ActionParameter(
-                                             function='GovernanceOfficer.find_governance_definitions',
-                                             required_params=['search_string'],
-                                             optional_params=['page_size', 'start_from', 'starts_with', 'ends_with',
-                                                              'ignore_case'],
-                                             spec_params={'metadata_element_types': ['GovernanceStrategy']})),
-    'Information-Supply-Chain-DrE': FormatSet(target_type='Information-Supply-Chain-DrE',
-                                              heading='Information-Supply-Chain-DrE Attributes',
-                                              description='Auto-generated format for Information Supply Chain (Create).',
-                                              formats=[Format(types=['ALL'],
-                                                              attributes=[Column(name='Display Name', key='display_name'),
-                                                                       Column(name='Description', key='description'),
-                                                                       Column(name='Category', key='category'),
-                                                                       Column(name='Scope', key='scope'),
-                                                                       Column(name='Purposes', key='purposes'),
-                                                                       Column(name='Nested Information Supply Chains',
-                                                                              key='nested_info_supply_chains'),
-                                                                       Column(name='In Information Supply Chain',
-                                                                              key='in_supply_chain'),
-                                                                       Column(name="Journal Entry", key='journal_entry'),
-                                                                       Column(name='Qualified Name',
-                                                                              key='qualified_name'),
-                                                                       Column(name='GUID', key='guid'),
-                                                                       Column(name='Merge Update',
-                                                                              key='merge_update')])],
-                                              action=ActionParameter(
-                                                  function='SolutionArchitect.find_information_supply_chains',
-                                                  required_params=['search_string'],
-                                                  optional_params=['page_size', 'start_from', 'starts_with',
-                                                                   'ends_with', 'ignore_case'])),
-    'License-Type-DrE': FormatSet(target_type='License-Type-DrE', heading='License-Type-DrE Attributes',
-                                  description='Auto-generated format for License Type (Create).', formats=[
-            Format(types=['ALL'],
-                   attributes=[Column(name='Display Name', key='display_name'), Column(name='Summary', key='summary'),
-                            Column(name='Description', key='description'), Column(name='Category', key='category'),
-                            Column(name='Domain Identifier', key='domain_identifier'),
-                            Column(name='Document Identifier', key='document_identifier'),
-                            Column(name='Version Identifier', key='version_identifier'),
-                            Column(name='Scope', key='scope'), Column(name='Importance', key='importance'),
-                            Column(name='Details', key='details'), Column(name='Implications', key='implications'),
-                            Column(name='Outcomes', key='outcomes'), Column(name='Results', key='results'),
-                            Column(name='Status', key='element_status'),
-                            Column(name='User Defined Status', key='user_defined_status'),
-                            Column(name='Qualified Name', key='qualified_name'), Column(name='GUID', key='guid')])],
-                                  action=ActionParameter(function='GovernanceOfficer.find_governance_definitions',
-                                                         required_params=['search_string'],
-                                                         optional_params=['page_size', 'start_from', 'starts_with',
-                                                                          'ends_with', 'ignore_case'],
-                                                         spec_params={'metadata_element_types': ['LicenseType']})),
-    'Naming-Standard-Rule-DrE': FormatSet(target_type='Naming-Standard-Rule-DrE',
-                                          heading='Naming-Standard-Rule-DrE Attributes',
-                                          description='Auto-generated format for Naming Standard Rule (Create).',
-                                          formats=[Format(types=['ALL'],
-                                                          attributes=[Column(name='Display Name', key='display_name'),
-                                                                   Column(name='Summary', key='summary'),
-                                                                   Column(name='Description', key='description'),
-                                                                   Column(name='Category', key='category'),
-                                                                   Column(name='Domain Identifier',
-                                                                          key='domain_identifier'),
-                                                                   Column(name='Document Identifier',
-                                                                          key='document_identifier'),
-                                                                   Column(name='Version Identifier',
-                                                                          key='version_identifier'),
-                                                                   Column(name='Scope', key='scope'),
-                                                                   Column(name='Importance', key='importance'),
-                                                                   Column(name='Implementation Description',
-                                                                          key='implementation_description'),
-                                                                   Column(name='Supports Policies',
-                                                                          key='supports_policies'),
-                                                                   Column(name='Name Patterns', key='implications'),
-                                                                   Column(name='Outcomes', key='outcomes'),
-                                                                   Column(name='Results', key='results'),
-                                                                   Column(name='Status', key='element_status'),
-                                                                   Column(name='User Defined Status',
-                                                                          key='user_defined_status'),
-                                                                   Column(name='Qualified Name', key='qualified_name'),
-                                                                   Column(name='GUID', key='guid')])],
-                                          action=ActionParameter(
-                                              function='GovernanceOfficer.find_governance_definitions',
-                                              required_params=['search_string'],
-                                              optional_params=['page_size', 'start_from', 'starts_with', 'ends_with',
-                                                               'ignore_case'],
-                                              spec_params={'metadata_element_types': ['NamingStandardRule']})),
-    'Personal-Project-DrE': FormatSet(target_type='Personal-Project-DrE', heading='Personal-Project-DrE Attributes',
-                                      description='Auto-generated format for Personal Project (Create).', formats=[
-            Format(types=['ALL'], attributes=[Column(name='Display Name', key='display_name'),
-                                           Column(name='Description', key='description'),
-                                           Column(name='Project Type', key='project_type'),
-                                           Column(name='Category', key='category'),
-                                           Column(name='Identifier', key='project_identifier'),
-                                           Column(name='Mission', key='mission'),
-                                           Column(name='Purposes', key='purposes'),
-                                           Column(name='Start Date', key='start_date'),
-                                           Column(name='Planned End Date', key='end_date'),
-                                           Column(name='Priority', key='priority'),
-                                           Column(name='Project Phase', key='project_phase'),
-                                           Column(name='Project Status', key='project_status'),
-                                           Column(name='Project Health', key='project_health'),
-                                           Column(name='Qualified Name', key='qualified_name'),
-                                           Column(name='GUID', key='guid')])],
-                                      action=ActionParameter(function='ProjectManager.find_projects',
-                                                             required_params=['search_string'],
-                                                             optional_params=['page_size', 'start_from', 'starts_with',
-                                                                              'ends_with', 'ignore_case'], spec_params={
-                                              'classification_names': ['PersonalProject']})),
-    'Project-DrE': FormatSet(target_type='Project-DrE', heading='Project-DrE Attributes',
-                             description='Auto-generated format for Project (Create).', formats=[Format(types=['ALL'],
-                                                                                                        attributes=[Column(
-                                                                                                            name='Display Name',
-                                                                                                            key='display_name'),
-                                                                                                            Column(
-                                                                                                                name='Description',
-                                                                                                                key='description'),
-                                                                                                            Column(
-                                                                                                                name='Project Type',
-                                                                                                                key='project_type'),
-                                                                                                            Column(
-                                                                                                                name='Category',
-                                                                                                                key='category'),
-                                                                                                            Column(
-                                                                                                                name='Identifier',
-                                                                                                                key='project_identifier'),
-                                                                                                            Column(
-                                                                                                                name='Mission',
-                                                                                                                key='mission'),
-                                                                                                            Column(
-                                                                                                                name='Purposes',
-                                                                                                                key='purposes'),
-                                                                                                            Column(
-                                                                                                                name='Start Date',
-                                                                                                                key='start_date'),
-                                                                                                            Column(
-                                                                                                                name='Planned End Date',
-                                                                                                                key='end_date'),
-                                                                                                            Column(
-                                                                                                                name='Priority',
-                                                                                                                key='priority'),
-                                                                                                            Column(
-                                                                                                                name='Project Phase',
-                                                                                                                key='project_phase'),
-                                                                                                            Column(
-                                                                                                                name='Project Status',
-                                                                                                                key='project_status'),
-                                                                                                            Column(
-                                                                                                                name='Project Health',
-                                                                                                                key='project_health'),
-                                                                                                            Column(
-                                                                                                                name='Qualified Name',
-                                                                                                                key='qualified_name'),
-                                                                                                            Column(
-                                                                                                                name='GUID',
-                                                                                                                key='guid')])],
-                             action=ActionParameter(function='ProjectManager.find_projects',
-                                                    required_params=['search_string'],
-                                                    optional_params=['page_size', 'start_from', 'starts_with',
-                                                                     'ends_with', 'ignore_case'])),
-    'Regulation-Article-DrE': FormatSet(target_type='Regulation-Article-DrE',
-                                        heading='Regulation-Article-DrE Attributes',
-                                        description='Auto-generated format for Regulation Article (Create).', formats=[
-            Format(types=['ALL'],
-                   attributes=[Column(name='Display Name', key='display_name'), Column(name='Summary', key='summary'),
-                            Column(name='Description', key='description'), Column(name='Category', key='category'),
-                            Column(name='Domain Identifier', key='domain_identifier'),
-                            Column(name='Identifier', key='identifier'),
-                            Column(name='Version Identifier', key='version_identifier'),
-                            Column(name='Usage', key='usage'), Column(name='Scope', key='scope'),
-                            Column(name='Importance', key='importance'),
-                            Column(name='Implications', key='implications'), Column(name='Outcomes', key='outcomes'),
-                            Column(name='Results', key='results'), Column(name='Status', key='element_status'),
-                            Column(name='User Defined Status', key='user_defined_status'),
-                            Column(name='Qualified Name', key='qualified_name'), Column(name='GUID', key='guid')])],
-                                        action=ActionParameter(function='GovernanceOfficer.find_governance_definitions',
-                                                               required_params=['search_string'],
-                                                               optional_params=['page_size', 'start_from',
-                                                                                'starts_with', 'ends_with',
-                                                                                'ignore_case'], spec_params={
-                                                'metadata_element_types': ['RegulationArticle']})),
-    'Regulation-DrE': FormatSet(target_type='Regulation-DrE', heading='Regulation-DrE Attributes',
-                                description='Auto-generated format for Regulation (Create).', formats=[
-            Format(types=['ALL'],
-                   attributes=[Column(name='Display Name', key='display_name'), Column(name='Summary', key='summary'),
-                            Column(name='Description', key='description'), Column(name='Category', key='category'),
-                            Column(name='Domain Identifier', key='domain_identifier'),
-                            Column(name='Identifier', key='identifier'),
-                            Column(name='Version Identifier', key='version_identifier'),
-                            Column(name='Usage', key='usage'), Column(name='Scope', key='scope'),
-                            Column(name='Importance', key='importance'),
-                            Column(name='Regulation Source', key='regulation_source'),
-                            Column(name='Regulators', key='regulators'),
-                            Column(name='Implications', key='implications'), Column(name='Outcomes', key='outcomes'),
-                            Column(name='Results', key='results'), Column(name='Status', key='element_status'),
-                            Column(name='User Defined Status', key='user_defined_status'),
-                            Column(name='Qualified Name', key='qualified_name'), Column(name='GUID', key='guid')])],
-                                action=ActionParameter(function='GovernanceOfficer.find_governance_definitions',
-                                                       required_params=['search_string'],
-                                                       optional_params=['page_size', 'start_from', 'starts_with',
-                                                                        'ends_with', 'ignore_case'],
-                                                       spec_params={'metadata_element_types': ['Regulation']})),
-    'Security-Access-Control-DrE': FormatSet(target_type='Security-Access-Control-DrE',
-                                             heading='Security-Access-Control-DrE Attributes',
-                                             description='Auto-generated format for Security Access Control (Create).',
-                                             formats=[Format(types=['ALL'],
-                                                             attributes=[Column(name='Display Name', key='display_name'),
-                                                                      Column(name='Summary', key='summary'),
-                                                                      Column(name='Description', key='description'),
-                                                                      Column(name='Category', key='category'),
-                                                                      Column(name='Domain Identifier',
-                                                                             key='domain_identifier'),
-                                                                      Column(name='Identifier', key='identifier'),
-                                                                      Column(name='Version Identifier',
-                                                                             key='version_identifier'),
-                                                                      Column(name='Usage', key='usage'),
-                                                                      Column(name='Scope', key='scope'),
-                                                                      Column(name='Importance', key='importance'),
-                                                                      Column(name='Implications', key='implications'),
-                                                                      Column(name='Outcomes', key='outcomes'),
-                                                                      Column(name='Results', key='results'),
-                                                                      Column(name='Status', key='element_status'),
-                                                                      Column(name='User Defined Status',
-                                                                             key='user_defined_status'),
-                                                                      Column(name='Qualified Name',
-                                                                             key='qualified_name'),
-                                                                      Column(name='GUID', key='guid')])],
-                                             action=ActionParameter(
-                                                 function='GovernanceOfficer.find_governance_definitions',
-                                                 required_params=['search_string'],
-                                                 optional_params=['page_size', 'start_from', 'starts_with', 'ends_with',
-                                                                  'ignore_case'],
-                                                 spec_params={'metadata_element_types': ['SecurityAccessControl']})),
-    'Security-Group-DrE': FormatSet(target_type='Security-Group-DrE', heading='Security-Group-DrE Attributes',
-                                    description='Auto-generated format for Security Group (Create).', formats=[
-            Format(types=['ALL'],
-                   attributes=[Column(name='Display Name', key='display_name'), Column(name='Summary', key='summary'),
-                            Column(name='Description', key='description'), Column(name='Category', key='category'),
-                            Column(name='Domain Identifier', key='domain_identifier'),
-                            Column(name='Identifier', key='identifier'),
-                            Column(name='Version Identifier', key='version_identifier'),
-                            Column(name='Usage', key='usage'), Column(name='Scope', key='scope'),
-                            Column(name='Importance', key='importance'),
-                            Column(name='Implications', key='implications'), Column(name='Outcomes', key='outcomes'),
-                            Column(name='Results', key='results'), Column(name='Status', key='element_status'),
-                            Column(name='User Defined Status', key='user_defined_status'),
-                            Column(name='Qualified Name', key='qualified_name'), Column(name='GUID', key='guid')])],
-                                    action=ActionParameter(function='GovernanceOfficer.find_governance_definitions',
-                                                           required_params=['search_string'],
-                                                           optional_params=['page_size', 'start_from', 'starts_with',
-                                                                            'ends_with', 'ignore_case'],
-                                                           spec_params={'metadata_element_types': ['SEcurityGroup']})),
-    'security_access_control-DrE': FormatSet(target_type='security_access_control-DrE',
-                                             heading='security_access_control-DrE Attributes',
-                                             description='Auto-generated format for security_access_control (Create).',
-                                             formats=[Format(types=['ALL'],
-                                                             attributes=[Column(name='Display Name', key='display_name'),
-                                                                      Column(name='Summary', key='summary'),
-                                                                      Column(name='Description', key='description'),
-                                                                      Column(name='Category', key='category'),
-                                                                      Column(name='Domain Identifier',
-                                                                             key='domain_identifier'),
-                                                                      Column(name='Identifier', key='identifier'),
-                                                                      Column(name='Version Identifier',
-                                                                             key='version_identifier'),
-                                                                      Column(name='Usage', key='usage'),
-                                                                      Column(name='Scope', key='scope'),
-                                                                      Column(name='Importance', key='importance'),
-                                                                      Column(name='criteria', key='criteria'),
-                                                                      Column(name='Implications', key='implications'),
-                                                                      Column(name='Outcomes', key='outcomes'),
-                                                                      Column(name='Results', key='results'),
-                                                                      Column(name='Status', key='element_status'),
-                                                                      Column(name='User Defined Status',
-                                                                             key='user_defined_status'),
-                                                                      Column(name='Qualified Name',
-                                                                             key='qualified_name'),
-                                                                      Column(name='GUID', key='guid')])],
-                                             action=ActionParameter(
-                                                 function='GovernanceOfficer.find_governance_definitions',
-                                                 required_params=['search_string'],
-                                                 optional_params=['page_size', 'start_from', 'starts_with', 'ends_with',
-                                                                  'ignore_case'],
-                                                 spec_params={'metadata_element_types': ['GovernanceZone']})),
-    'Service-Level-Objectives-DrE': FormatSet(target_type='Service-Level-Objectives-DrE',
-                                              heading='Service-Level-Objectives-DrE Attributes',
-                                              description='Auto-generated format for Service Level Objectives (Create).',
-                                              formats=[Format(types=['ALL'],
-                                                              attributes=[Column(name='Display Name', key='display_name'),
-                                                                       Column(name='Summary', key='summary'),
-                                                                       Column(name='Description', key='description'),
-                                                                       Column(name='Category', key='category'),
-                                                                       Column(name='Domain Identifier',
-                                                                              key='domain_identifier'),
-                                                                       Column(name='Document Identifier',
-                                                                              key='document_identifier'),
-                                                                       Column(name='Version Identifier',
-                                                                              key='version_identifier'),
-                                                                       Column(name='Scope', key='scope'),
-                                                                       Column(name='Importance', key='importance'),
-                                                                       Column(name='Implementation Description',
-                                                                              key='implementation_description'),
-                                                                       Column(name='Supports Policies',
-                                                                              key='supports_policies'),
-                                                                       Column(name='Implications', key='implications'),
-                                                                       Column(name='Outcomes', key='outcomes'),
-                                                                       Column(name='Results', key='results'),
-                                                                       Column(name='Status', key='element_status'),
-                                                                       Column(name='User Defined Status',
-                                                                              key='user_defined_status'),
-                                                                       Column(name='Qualified Name',
-                                                                              key='qualified_name'),
-                                                                       Column(name='GUID', key='guid')])],
-                                              action=ActionParameter(
-                                                  function='GovernanceOfficer.find_governance_definitions',
-                                                  required_params=['search_string'],
-                                                  optional_params=['page_size', 'start_from', 'starts_with',
-                                                                   'ends_with', 'ignore_case'],
-                                                  spec_params={'metadata_element_types': ['ServiceLevelObjectives']})),
-    'Solution-Blueprint-DrE': FormatSet(target_type='Solution-Blueprint-DrE',
-                                        heading='Solution-Blueprint-DrE Attributes',
-                                        description='Auto-generated format for Solution Blueprint (Create).', formats=[
-            Format(types=['ALL'], attributes=[Column(name='Display Name', key='display_name'),
-                                           Column(name='Description', key='description'),
-                                           Column(name='Category', key='category'),
-                                           Column(name='Status', key='element_status'),
-                                           Column(name='Version Identifier', key='version_id'),
-                                           Column(name='Solution Components', key='solution_components'),
-                                           Column(name='Qualified Name', key='qualified_name'),
-                                           Column(name='GUID', key='guid')])],
-                                        action=ActionParameter(function='SolutionArchitect.find_solution_blueprints',
-                                                               required_params=['search_string'],
-                                                               optional_params=['page_size', 'start_from',
-                                                                                'starts_with', 'ends_with',
-                                                                                'ignore_case'])),
-    'Solution-Component-DrE': FormatSet(target_type='Solution-Component-DrE',
-                                        heading='Solution-Component-DrE Attributes',
-                                        description='Auto-generated format for Solution Component (Create).', formats=[
-            Format(types=['ALL'], attributes=[Column(name='Display Name', key='display_name'),
-                                           Column(name='Qualified Name', key='qualified_name'),
-                                           Column(name='Category', key='category'),
-                                           Column(name='Description', key='description'),
-                                           Column(name='URL', key='url'),
-                                           Column(name='Status', key='element_status'),
-                                           Column(name='Solution Component Type', key='solution_component_type'),
-                                           Column(name='Planned Deployed Implementation Type',
-                                                  key='planned_deployed_implementation_type'),
-                                           Column(name='Initial Status', key='initial_status'),
-                                           Column(name='In Solution Components', key='in_components'),
-                                           Column(name='In Solution Blueprints', key='solution_blueprints'),
-                                           Column(name='In Information Supply Chains', key='in_supply_chains'),
-                                           Column(name='Actors', key='actors'), Column(name='GUID', key='guid'),
-                                           Column(name='Merge Update', key='merge_update')])],
-                                        action=ActionParameter(function='SolutionArchitect.find_solution_components',
-                                                               required_params=['search_string'],
-                                                               optional_params=['page_size', 'start_from',
-                                                                                'starts_with', 'ends_with',
-                                                                                'ignore_case'])),
-    'Solution-Role-DrE': FormatSet(target_type='Solution-Role-DrE', heading='Solution-Role-DrE Attributes',
-                                   description='Auto-generated format for Solution Role (Create).', formats=[
-            Format(types=['ALL'],
-                   attributes=[Column(name='Name', key='name'), Column(name='Description', key='description'),
-                            Column(name='Title', key='title'), Column(name='Scope', key='scope'),
-                            Column(name='identifier', key='identifier'),
-                            Column(name='Domain Identifier', key='domain_identifier'),
-                            Column(name='Category', key='category'),
-                            Column(name='Qualified Name', key='qualified_name'), Column(name='GUID', key='guid')])],
-                                   action=ActionParameter(function='SolutionArchitect.find_solution_roles',
-                                                          required_params=['search_string'],
-                                                          optional_params=['page_size', 'start_from', 'starts_with',
-                                                                           'ends_with', 'ignore_case'])),
-    'Study-Project-DrE': FormatSet(target_type='Study-Project-DrE', heading='Study-Project-DrE Attributes',
-                                   description='Auto-generated format for Study Project (Create).', formats=[
-            Format(types=['ALL'], attributes=[Column(name='Display Name', key='display_name'),
-                                           Column(name='Description', key='description'),
-                                           Column(name='Project Type', key='project_type'),
-                                           Column(name='Category', key='category'),
-                                           Column(name='Identifier', key='project_identifier'),
-                                           Column(name='Mission', key='mission'),
-                                           Column(name='Purposes', key='purposes'),
-                                           Column(name='Start Date', key='start_date'),
-                                           Column(name='Planned End Date', key='end_date'),
-                                           Column(name='Priority', key='priority'),
-                                           Column(name='Project Phase', key='project_phase'),
-                                           Column(name='Project Status', key='project_status'),
-                                           Column(name='Project Health', key='project_health'),
-                                           Column(name='Qualified Name', key='qualified_name'),
-                                           Column(name='GUID', key='guid')])],
-                                   action=ActionParameter(function='ProjectManager.find_projects',
-                                                          required_params=['search_string'],
-                                                          optional_params=['page_size', 'start_from', 'starts_with',
-                                                                           'ends_with', 'ignore_case'],
-                                                          spec_params={'classification_names': ['StudyProject']})),
-    'Task-DrE': FormatSet(target_type='Task-DrE', heading='Task-DrE Attributes',
-                          description='Auto-generated format for Task (Create).', formats=[Format(types=['ALL'],
-                                                                                                  attributes=[Column(
-                                                                                                      name='Display Name',
-                                                                                                      key='display_name'),
-                                                                                                      Column(
-                                                                                                          name='Description',
-                                                                                                          key='description'),
-                                                                                                      Column(
-                                                                                                          name='Project Type',
-                                                                                                          key='project_type'),
-                                                                                                      Column(
-                                                                                                          name='Category',
-                                                                                                          key='category'),
-                                                                                                      Column(
-                                                                                                          name='Identifier',
-                                                                                                          key='project_identifier'),
-                                                                                                      Column(
-                                                                                                          name='Mission',
-                                                                                                          key='mission'),
-                                                                                                      Column(
-                                                                                                          name='Purposes',
-                                                                                                          key='purposes'),
-                                                                                                      Column(
-                                                                                                          name='Start Date',
-                                                                                                          key='start_date'),
-                                                                                                      Column(
-                                                                                                          name='Planned End Date',
-                                                                                                          key='end_date'),
-                                                                                                      Column(
-                                                                                                          name='Priority',
-                                                                                                          key='priority'),
-                                                                                                      Column(
-                                                                                                          name='Project Phase',
-                                                                                                          key='project_phase'),
-                                                                                                      Column(
-                                                                                                          name='Project Status',
-                                                                                                          key='project_status'),
-                                                                                                      Column(
-                                                                                                          name='Project Health',
-                                                                                                          key='project_health'),
-                                                                                                      Column(
-                                                                                                          name='Qualified Name',
-                                                                                                          key='qualified_name'),
-                                                                                                      Column(
-                                                                                                          name='GUID',
-                                                                                                          key='guid')])],
-                          action=ActionParameter(function='ProjectManager.find_projects',
-                                                 required_params=['search_string'],
-                                                 optional_params=['page_size', 'start_from', 'starts_with', 'ends_with',
-                                                                  'ignore_case'],
-                                                 spec_params={'classification_names': ['Task']})),
-    'Threat-Definition-DrE': FormatSet(target_type='Threat-Definition-DrE', heading='Threat-Definition-DrE Attributes',
-                                       description='Auto-generated format for Threat Definition (Create).', formats=[
-            Format(types=['ALL'],
-                   attributes=[Column(name='Display Name', key='display_name'), Column(name='Summary', key='summary'),
-                            Column(name='Description', key='description'), Column(name='Category', key='category'),
-                            Column(name='Domain Identifier', key='domain_identifier'),
-                            Column(name='Identifier', key='identifier'),
-                            Column(name='Version Identifier', key='version_identifier'),
-                            Column(name='Usage', key='usage'), Column(name='Scope', key='scope'),
-                            Column(name='Importance', key='importance'),
-                            Column(name='Implications', key='implications'), Column(name='Outcomes', key='outcomes'),
-                            Column(name='Results', key='results'), Column(name='Status', key='element_status'),
-                            Column(name='User Defined Status', key='user_defined_status'),
-                            Column(name='Qualified Name', key='qualified_name'), Column(name='GUID', key='guid')])],
-                                       action=ActionParameter(function='GovernanceOfficer.find_governance_definitions',
-                                                              required_params=['search_string'],
-                                                              optional_params=['page_size', 'start_from', 'starts_with',
-                                                                               'ends_with', 'ignore_case'],
-                                                              spec_params={
-                                                                  'metadata_element_types': ['ThreatDefinition']}))
-})
+# Utilities for reorganizing specs by family and normalizing labels
+import re as _re
 
-report_specs = combine_format_set_dicts(base_report_specs, generated_format_sets)
+
+def _slugify_label(label: str) -> str:
+    """Turn a display label into a key by collapsing whitespace to '-'.
+    Keeps existing hyphens, trims outer whitespace, and collapses multiple dashes.
+    """
+    if not isinstance(label, str):
+        return str(label)
+    s = label.strip()
+    s = _re.sub(r"\s+", "-", s)
+    s = _re.sub(r"-+", "-", s)
+    return s
+
+
+def _add_alias(fs: FormatSet, alias: str) -> None:
+    try:
+        if alias and alias not in fs.aliases:
+            fs.aliases.append(alias)
+    except Exception:
+        # Ensure aliases exists even if not initialized
+        try:
+            fs.aliases = list(set((getattr(fs, 'aliases', []) or []) + [alias]))
+        except Exception:
+            pass
+
+
+def _build_family_registries(specs: FormatSetDict) -> dict[str, FormatSetDict]:
+    """Group specs by family and return mapping family -> FormatSetDict with slugified keys.
+    - Missing/blank family -> "General"
+    - Keys are slugified (spaces -> '-')
+    - If slug differs from original, add original as an alias for backward compatibility
+    - Within each family, entries are alphabetized by slugified name (case-insensitive)
+    - Disambiguate collisions by appending numeric suffixes
+    """
+    families: dict[str, FormatSetDict] = {}
+    for orig_name, fs in specs.items():
+        fam_raw = getattr(fs, 'family', None)
+        family = (fam_raw or '').strip() or 'General'
+        fam_dict = families.setdefault(family, FormatSetDict())
+
+        base_slug = _slugify_label(orig_name)
+        slug = base_slug
+        suffix = 2
+        while slug in fam_dict:
+            slug = f"{base_slug}-{suffix}"
+            suffix += 1
+        # Add alias if the key is changing
+        if slug != orig_name:
+            _add_alias(fs, orig_name)
+        # Also add a space-restored alias if someone passes slug with spaces (reverse unlikely but cheap)
+        maybe_space = orig_name.replace('-', ' ')
+        if maybe_space != orig_name:
+            _add_alias(fs, maybe_space)
+        fam_dict[slug] = fs
+
+    # Sort each family by key and rebuild as FormatSetDict in that order (preserves insertion order)
+    for fam, fdict in list(families.items()):
+        ordered = FormatSetDict()
+        for key in sorted(list(fdict.keys()), key=lambda s: s.lower()):
+            ordered[key] = fdict[key]
+        families[fam] = ordered
+    return families
+
+
+# Build family registries and a merged overall report_specs ordered by family then name
+family_report_specs = _build_family_registries(_initial_combined_specs)
+
+_report_specs_merged = FormatSetDict()
+for fam_name in sorted(family_report_specs.keys(), key=lambda s: s.lower()):
+    fam_dict = family_report_specs[fam_name]
+    for key, fs in fam_dict.items():
+        _report_specs_merged[key] = fs
+
+report_specs = _report_specs_merged
 
 
 def select_report_spec(kind: str, output_type: str) -> dict | None:
@@ -2512,14 +1424,81 @@ def select_report_spec(kind: str, output_type: str) -> dict | None:
     return None
 
 
-def report_spec_list() -> list[str]:
+def report_spec_list(*, show_family: bool = False, sort_by_family: bool = False, return_kind: str = "strings") -> list[
+                                                                                                                      str] | str | \
+                                                                                                                  list[
+                                                                                                                      dict]:
     """
-    Returns a list of all available format set names.
+    Return the available report specs in one of three forms: strings (default), a Markdown table, or records.
 
-    Returns:
-        list[str]: A list of format set names
+    Parameters
+    - show_family: when True and return_kind=="strings", include the family tag alongside each name (e.g., "Collections [Catalog]")
+    - sort_by_family: when True, sort results by family (case-insensitive; empty/no-family first),
+      then alphabetize by name within each family (case-insensitive). When False, preserve insertion order.
+    - return_kind: one of {"strings", "markdown_table", "markdown", "records", "dicts"}
+      - "strings" (default): returns list[str] (optionally decorated with family when show_family=True)
+      - "markdown_table"/"markdown": returns a Markdown table string with columns: Family | Report Name | Description
+      - "records"/"dicts": returns a list of dicts: {"family": str|None, "name": str, "description": str}
+
+    Returns
+    - list[str] when return_kind=="strings"
+    - str when return_kind in {"markdown_table", "markdown"}
+    - list[dict] when return_kind in {"records", "dicts"}
+
+    Notes
+    - Default behavior remains backward-compatible with previous implementation: calling with no
+      arguments returns only names in insertion order.
     """
-    return list(report_specs.keys())
+    # Build list of (name, FormatSet)
+    items = list(report_specs.items())
+
+    if sort_by_family:
+        def _key(n_fs: tuple[str, FormatSet]):
+            name, fs = n_fs
+            fam = (getattr(fs, "family", None) or "").strip().lower()
+            return (fam, name.lower())
+
+        items.sort(key=_key)
+
+    rk = (return_kind or "strings").strip().lower()
+
+    if rk in ("markdown_table", "markdown",):
+        # Build rows for the markdown table
+        def _esc(text: str) -> str:
+            # Replace pipes and newlines to keep table intact
+            return str(text).replace("|", "\\|").replace("\n", " ")
+
+        header = "| Family | Report Name | Description |\n|---|---|---|"
+        lines: list[str] = [header]
+        for name, fs in items:
+            fam = (getattr(fs, "family", None) or "").strip()
+            desc = getattr(fs, "description", "") or ""
+            lines.append(f"| {_esc(fam)} | {_esc(name)} | {_esc(desc)} |")
+        return "\n".join(lines)
+
+    if rk in ("records", "dicts"):
+        records: list[dict] = []
+        for name, fs in items:
+            records.append({
+                "family": getattr(fs, "family", None),
+                "name": name,
+                "description": getattr(fs, "description", "") or "",
+            })
+        return records
+
+    # Default: strings
+    if show_family:
+        out: list[str] = []
+        for name, fs in items:
+            fam = getattr(fs, "family", None)
+            if fam and str(fam).strip():
+                out.append(f"{name} [{fam}]")
+            else:
+                out.append(name)
+        return out
+    else:
+        # Names only
+        return [name for name, _ in items]
 
 
 def list_mcp_format_sets() -> dict:
@@ -2789,16 +1768,16 @@ except Exception as e:
         if not format_set.formats:
             logger.warning(f"FormatSet {key} has no formats defined.")
 
-
 # =============================
 # Report format dynamic registry and new API (backward-compatible)
 # =============================
 
-from typing import Optional, Callable
+from typing import Optional
 
 # Runtime and config-loaded registries (do not mutate built-ins)
 _RUNTIME_REPORT_FORMATS = FormatSetDict()
 _CONFIG_REPORT_FORMATS = FormatSetDict()
+
 
 class ReportFormatCollision(ValueError):
     pass
@@ -2968,6 +1947,7 @@ def get_report_format_description(fmt_name: str) -> Optional[str]:
                 return v.description
         return None
     return fs.description
+
 
 # Legacy names remain available (no change to behavior) and can be deprecated later.
 # Temporary aliases for backwards compatibility during migration
