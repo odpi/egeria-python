@@ -5,6 +5,7 @@
     "description": "Auto-generated format for Comment (Create).",
     "aliases": [],
     "annotations": {},
+    "family": "Feedback Manager",
     "formats": [
       {
         "types": [
@@ -78,6 +79,7 @@
     "description": "Auto-generated format for NoteLog (Create).",
     "aliases": [],
     "annotations": {},
+    "family": "Feedback Manager",
     "formats": [
       {
         "types": [
@@ -138,6 +140,7 @@
     "description": "Auto-generated format for Informal Tag (Create).",
     "aliases": [],
     "annotations": {},
+    "family": "Feedback Manager",
     "formats": [
       {
         "types": [
@@ -178,6 +181,7 @@
     "description": "Auto-generated format for External Reference (Create).",
     "aliases": [],
     "annotations": {},
+    "family": "External Reference",
     "formats": [
       {
         "types": [
@@ -415,6 +419,7 @@
     "description": "Auto-generated format for External Data Source (Create).",
     "aliases": [],
     "annotations": {},
+    "family": "External Reference",
     "formats": [
       {
         "types": [
@@ -552,6 +557,7 @@
     "description": "Auto-generated format for Collection (Create).",
     "aliases": [],
     "annotations": {},
+    "family": "Digital Product Manager",
     "formats": [
       {
         "types": [
@@ -605,6 +611,7 @@
     "description": "Auto-generated format for Digital Product Catalog (Create).",
     "aliases": [],
     "annotations": {},
+    "family": "Digital Product Manager",
     "formats": [
       {
         "types": [
@@ -645,6 +652,7 @@
     "description": "Auto-generated format for Digital Product (Create).",
     "aliases": [],
     "annotations": {},
+    "family": "Digital Product Manager",
     "formats": [
       {
         "types": [
@@ -792,6 +800,7 @@
     "description": "Auto-generated format for Agreement (Create).",
     "aliases": [],
     "annotations": {},
+    "family": "Digital Product Manager",
     "formats": [
       {
         "types": [
@@ -869,6 +878,7 @@
     "description": "Auto-generated format for Data Sharing Agreement (Create).",
     "aliases": [],
     "annotations": {},
+    "family": "Digital Product Manager",
     "formats": [
       {
         "types": [
@@ -946,6 +956,7 @@
     "description": "Auto-generated format for Digital Subscription (Create).",
     "aliases": [],
     "annotations": {},
+    "family": "Digital Product Manager",
     "formats": [
       {
         "types": [
@@ -1033,6 +1044,7 @@
     "description": "Auto-generated format for CSV File (Create).",
     "aliases": [],
     "annotations": {},
+    "family": "Digital Product Manager",
     "formats": [
       {
         "types": [
@@ -1113,6 +1125,7 @@
     "description": "Auto-generated format for Data Dictionary (Create).",
     "aliases": [],
     "annotations": {},
+    "family": "Data Designer",
     "formats": [
       {
         "types": [
@@ -1170,6 +1183,7 @@
     "description": "Auto-generated format for Data Specification (Create).",
     "aliases": [],
     "annotations": {},
+    "family": "Data Designer",
     "formats": [
       {
         "types": [
@@ -1227,6 +1241,7 @@
     "description": "Auto-generated format for Data Structure (Create).",
     "aliases": [],
     "annotations": {},
+    "family": "Data Designer",
     "formats": [
       {
         "types": [
@@ -1300,6 +1315,7 @@
     "description": "Auto-generated format for Data Field (Create).",
     "aliases": [],
     "annotations": {},
+    "family": "Data Designer",
     "formats": [
       {
         "types": [
@@ -1493,6 +1509,7 @@
     "description": "Auto-generated format for Data Class (Create).",
     "aliases": [],
     "annotations": {},
+    "family": "Data Designer",
     "formats": [
       {
         "types": [
@@ -1716,6 +1733,7 @@
     "description": "Auto-generated format for Information Supply Chain (Create).",
     "aliases": [],
     "annotations": {},
+    "family": "Solution Architect",
     "formats": [
       {
         "types": [
@@ -1809,6 +1827,7 @@
     "description": "Auto-generated format for Solution Blueprint (Create).",
     "aliases": [],
     "annotations": {},
+    "family": "Solution Architect",
     "formats": [
       {
         "types": [
@@ -1872,6 +1891,7 @@
     "description": "Auto-generated format for Solution Component (Create).",
     "aliases": [],
     "annotations": {},
+    "family": "Solution Architect",
     "formats": [
       {
         "types": [
@@ -1985,6 +2005,7 @@
     "description": "Auto-generated format for Solution Role (Create).",
     "aliases": [],
     "annotations": {},
+    "family": "Solution Architect",
     "formats": [
       {
         "types": [
@@ -2078,6 +2099,7 @@
     "description": "Auto-generated format for Glossary (Create).",
     "aliases": [],
     "annotations": {},
+    "family": "Glossary",
     "formats": [
       {
         "types": [
@@ -2145,6 +2167,7 @@
     "description": "Auto-generated format for Glossary Term (Create).",
     "aliases": [],
     "annotations": {},
+    "family": "Glossary",
     "formats": [
       {
         "types": [
@@ -2258,6 +2281,7 @@
     "description": "Auto-generated format for Project (Create).",
     "aliases": [],
     "annotations": {},
+    "family": "Project",
     "formats": [
       {
         "types": [
@@ -2411,6 +2435,7 @@
     "description": "Auto-generated format for Campaign (Create).",
     "aliases": [],
     "annotations": {},
+    "family": "Project",
     "formats": [
       {
         "types": [
@@ -2568,6 +2593,7 @@
     "description": "Auto-generated format for Task (Create).",
     "aliases": [],
     "annotations": {},
+    "family": "Project",
     "formats": [
       {
         "types": [
@@ -2725,6 +2751,7 @@
     "description": "Auto-generated format for Personal Project (Create).",
     "aliases": [],
     "annotations": {},
+    "family": "Project",
     "formats": [
       {
         "types": [
@@ -2882,6 +2909,7 @@
     "description": "Auto-generated format for Study Project (Create).",
     "aliases": [],
     "annotations": {},
+    "family": "Project",
     "formats": [
       {
         "types": [
@@ -3039,6 +3067,7 @@
     "description": "Auto-generated format for Governance Driver (Create).",
     "aliases": [],
     "annotations": {},
+    "family": "Governance Officer",
     "formats": [
       {
         "types": [
@@ -3156,6 +3185,7 @@
     "description": "Auto-generated format for Governance Strategy (Create).",
     "aliases": [],
     "annotations": {},
+    "family": "Governance Officer",
     "formats": [
       {
         "types": [
@@ -3303,6 +3333,7 @@
     "description": "Auto-generated format for Business Imperative (Create).",
     "aliases": [],
     "annotations": {},
+    "family": "Governance Officer",
     "formats": [
       {
         "types": [
@@ -3450,6 +3481,7 @@
     "description": "Auto-generated format for Regulation (Create).",
     "aliases": [],
     "annotations": {},
+    "family": "Governance Officer",
     "formats": [
       {
         "types": [
@@ -3617,6 +3649,7 @@
     "description": "Auto-generated format for Regulation Article (Create).",
     "aliases": [],
     "annotations": {},
+    "family": "Governance Officer",
     "formats": [
       {
         "types": [
@@ -3764,6 +3797,7 @@
     "description": "Auto-generated format for Threat Definition (Create).",
     "aliases": [],
     "annotations": {},
+    "family": "Governance Officer",
     "formats": [
       {
         "types": [
@@ -3911,6 +3945,7 @@
     "description": "Auto-generated format for Governance Policy (Create).",
     "aliases": [],
     "annotations": {},
+    "family": "Governance Officer",
     "formats": [
       {
         "types": [
@@ -4058,6 +4093,7 @@
     "description": "Auto-generated format for Governance Principle (Create).",
     "aliases": [],
     "annotations": {},
+    "family": "Governance Officer",
     "formats": [
       {
         "types": [
@@ -4205,6 +4241,7 @@
     "description": "Auto-generated format for Governance Obligation (Create).",
     "aliases": [],
     "annotations": {},
+    "family": "Governance Officer",
     "formats": [
       {
         "types": [
@@ -4352,6 +4389,7 @@
     "description": "Auto-generated format for Governance Approach (Create).",
     "aliases": [],
     "annotations": {},
+    "family": "Governance Officer",
     "formats": [
       {
         "types": [
@@ -4499,6 +4537,7 @@
     "description": "Auto-generated format for Governance Control (Create).",
     "aliases": [],
     "annotations": {},
+    "family": "Governance Officer",
     "formats": [
       {
         "types": [
@@ -4666,6 +4705,7 @@
     "description": "Auto-generated format for Governance Action (Create).",
     "aliases": [],
     "annotations": {},
+    "family": "Governance Officer",
     "formats": [
       {
         "types": [
@@ -4813,6 +4853,7 @@
     "description": "Auto-generated format for Data Processing Purpose (Create).",
     "aliases": [],
     "annotations": {},
+    "family": "Governance Officer",
     "formats": [
       {
         "types": [
@@ -4960,6 +5001,7 @@
     "description": "Auto-generated format for Governance Rule (Create).",
     "aliases": [],
     "annotations": {},
+    "family": "Governance Officer",
     "formats": [
       {
         "types": [
@@ -5117,6 +5159,7 @@
     "description": "Auto-generated format for Service Level Objectives (Create).",
     "aliases": [],
     "annotations": {},
+    "family": "Governance Officer",
     "formats": [
       {
         "types": [
@@ -5274,6 +5317,7 @@
     "description": "Auto-generated format for Governance Responsibility (Create).",
     "aliases": [],
     "annotations": {},
+    "family": "Governance Officer",
     "formats": [
       {
         "types": [
@@ -5431,6 +5475,7 @@
     "description": "Auto-generated format for Governance Procedure (Create).",
     "aliases": [],
     "annotations": {},
+    "family": "Governance Officer",
     "formats": [
       {
         "types": [
@@ -5588,6 +5633,7 @@
     "description": "Auto-generated format for Security Access Control (Create).",
     "aliases": [],
     "annotations": {},
+    "family": "Governance Officer",
     "formats": [
       {
         "types": [
@@ -5735,6 +5781,7 @@
     "description": "Auto-generated format for security_access_control (Create).",
     "aliases": [],
     "annotations": {},
+    "family": "Governance Officer",
     "formats": [
       {
         "types": [
@@ -5892,6 +5939,7 @@
     "description": "Auto-generated format for Security Group (Create).",
     "aliases": [],
     "annotations": {},
+    "family": "Governance Officer",
     "formats": [
       {
         "types": [
@@ -6039,6 +6087,7 @@
     "description": "Auto-generated format for Naming Standard Rule (Create).",
     "aliases": [],
     "annotations": {},
+    "family": "Governance Officer",
     "formats": [
       {
         "types": [
@@ -6196,6 +6245,7 @@
     "description": "Auto-generated format for Certification Type (Create).",
     "aliases": [],
     "annotations": {},
+    "family": "Governance Officer",
     "formats": [
       {
         "types": [
@@ -6366,6 +6416,7 @@
     "description": "Auto-generated format for License Type (Create).",
     "aliases": [],
     "annotations": {},
+    "family": "Governance Officer",
     "formats": [
       {
         "types": [

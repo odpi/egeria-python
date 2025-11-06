@@ -63,7 +63,7 @@ def tech_details_viewer(
         a_client: AutomatedCuration, root_collection_name: str, tree: Tree
     ) -> Tree:
         l2: Tree = None
-        tech_details = a_client.get_technology_type_detail(tech)
+        tech_details = a_client.get_tech_type_detail(tech)
         if (type(tech_details) is dict) and (len(tech_details) > 0):
             name = tech_details.get("name", "---")
             qualified_name = tech_details.get("qualifiedName", "---")

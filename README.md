@@ -8,6 +8,8 @@
 
 # pyegeria: a python client for Egeria
 
+A lightweight Python 3.12+ client and CLI for the Egeria open metadata and governance platform. It helps you configure and operate Egeria services and work with metadata (assets, glossaries, lineage, etc.) from Python, with examples, tests, and documented report formats.
+
 This is a package for easily using the Egeria
 open metadata environment from python. Details about the
 open source Egeria project can be found at [Egeria Project](https://egeria-project.org).
@@ -23,8 +25,33 @@ to visualize and use Egeria. The commands also serve as useful examples.
 
 An examples folder holds some useful examples showing different facets of using pyegeria.
 
-For detailed guidance on report formats (selection, dynamic loading, runtime registration, and migration from columns→attributes), see:
+For detailed guidance on report formats (selection and migration from columns→attributes), see:
 - examples/doc_samples/report_formats.md
+
+### Report specs: families and filtering
+
+Report specs (aka format sets) can be tagged with an optional `family` string to help organize and discover related specs.
+
+- Show names with family and sort by family, then name:
+
+```python
+from pyegeria.base_report_formats import report_spec_list
+
+names = report_spec_list(show_family=True, sort_by_family=True)
+for n in names:
+    print(n)
+```
+
+- Filter specs by family programmatically:
+
+```python
+from pyegeria.base_report_formats import report_specs
+
+# Exact family match (case-insensitive)
+security_specs = report_specs.filter_by_family("Security")
+# Specs with no family assigned
+no_family_specs = report_specs.filter_by_family("")
+```
 
 WARNING: files that start with "X" are in-progress placeholders that are not meant to be used..they will mature and 
 evolve.

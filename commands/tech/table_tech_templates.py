@@ -122,7 +122,7 @@ def display_templates_spec(
 
                 name = item.get("name", "none")
 
-                details = a_client.get_technology_type_detail(name)
+                details = a_client.get_tech_type_detail(name)
                 if type(details) is str:
                     console.log(f"Missing details for - {name}: {details}")
                     continue
