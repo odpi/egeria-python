@@ -90,12 +90,12 @@ def create_glossary(
             )
             for glossary in existing_glossary:
                 if (
-                    glossary["glossaryProperties"]["qualifiedName"]
+                    glossary["properties"]["qualifiedName"]
                     == "Glossary:" + name
                 ):
                     click.echo(
                         (
-                            f"\tFound existing glossary: {glossary['glossaryProperties']['qualifiedName']} with id of {glossary['elementHeader']['guid']}\n"
+                            f"\tFound existing glossary: {glossary['properties']['qualifiedName']} with id of {glossary['elementHeader']['guid']}\n"
                             "Exiting\n"
                         )
                     )
@@ -202,7 +202,7 @@ def create_term(server, url, userid, password, glossary_name, term_name, summary
         glossary_info = m_client.find_glossaries(glossary_name)
         if type(glossary_info) is list:
             for glossary in glossary_info:
-                if glossary["glossaryProperties"]["displayName"] == glossary_name:
+                if glossary["properties"]["displayName"] == glossary_name:
                     exists = True
                     glossary_guid = glossary["elementHeader"]["guid"]
 
@@ -451,7 +451,7 @@ def create_category(
             click.echo(existing_glossary)
             sys.exit(0)
         if type(existing_glossary) is list and len(existing_glossary) == 1:
-            q_name = existing_glossary["glossaryProperties"]["qualifiedName"]
+            q_name = existing_glossary["properties"]["qualifiedName"]
             glossary_guid = existing_glossary["elementHeader"]["guid"]
         category_guid = m_client.create_category(glossary_guid,name,description, is_root)
         print(f"New categry \'{name}\' created with id of \'{category_guid}\'")

@@ -3,7 +3,7 @@
 
 [project]
 name = "pyegeria"
-version = "5.4.8.12"
+version = "5.4.8.14"
 license = 'Apache-2.0'
 license-files = ["LICENSE"]
 authors = [{name = "Dan Wolfson", email = "dan.wolfson@pdr-associates.com"},]
@@ -163,7 +163,7 @@ dependencies = [
     list_solution_components = "commands.tech.list_solution_components:main"
     delete_element = "commands.tech.generic_actions:delete_element"
 
-    gen_report_specs = "md_processing.md_processing_utils.gen_report_specs"
+    gen_report_specs = "md_processing.md_processing_utils.gen_report_specs:main"
 
 
 
