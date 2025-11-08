@@ -3334,15 +3334,14 @@ class AutomatedCuration(Client2):
         )
         return response
 
-    async def _async_get_tech_type_detail(self, type_name: str,
-                                          body: dict | FilterRequestBody = None,
-                                          output_format: str = "JSON",
-                                          report_spec: str | dict = "TechType") -> list | str:
+    async def _async_get_tech_type_detail(self, filter: str = None, body: dict | FilterRequestBody = None,
+                                          output_format: str = "JSON", report_spec: str | dict = "TechType",
+                                          **kwargs) -> list | str:
         """Retrieve the details of the named technology type. This name should be the name of the technology type
             and contain no wild cards. Async version.
         Parameters
         ----------
-        type_name : str
+        filter : str
             The name of the technology type to retrieve detailed information for.
         body: dict | FilterRequestBody
             If provided, the information in the body supersedes the other parameters and allows more advanced requests.
@@ -3382,7 +3381,7 @@ class AutomatedCuration(Client2):
         if body is None:
             body = {
                 "class": "FilterRequestBody",
-                "filter": type_name
+                "filter": filter
             }
 
         response = await self._async_make_request("POST", url, body)
@@ -3393,19 +3392,17 @@ class AutomatedCuration(Client2):
 
         if output_format != 'JSON':  # return a simplified markdown representation
             logger.info(f"Found elements, output format: {output_format} and report_spec: {report_spec}")
-            return self._generate_tech_type_output(element, type_name, "ValidMetadataValue",
-                               output_format, report_spec)
+            return self._generate_tech_type_output(element, filter, "ValidMetadataValue",
+                                                   output_format, report_spec)
         return element
 
-    def get_tech_type_detail(self, type_name: str,
-                             body: dict | FilterRequestBody = None,
-                             output_format: str = "JSON",
-                             report_spec: str | dict = "TechType") -> list | str:
+    def get_tech_type_detail(self, filter: str = None, body: dict | FilterRequestBody = None,
+                             output_format: str = "JSON", report_spec: str | dict = "TechType", **kwargs) -> list | str:
         """Retrieve the details of the named technology type. This name should be the name of the technology type
                  and contain no wild cards.
              Parameters
              ----------
-             type_name : str
+             filter : str
                  The name of the technology type to retrieve detailed information for.
              body: dict | FilterRequestBody
                  If provided, the information in the body supersedes the other parameters and allows more advanced requests.
@@ -3442,9 +3439,7 @@ class AutomatedCuration(Client2):
 
         loop = asyncio.get_event_loop()
         response = loop.run_until_complete(
-            self._async_get_tech_type_detail(type_name, body=body,
-                                             output_format=output_format,
-                                             report_spec=report_spec)
+            self._async_get_tech_type_detail(filter, body=body, output_format=output_format, report_spec=report_spec)
         )
         return response
 

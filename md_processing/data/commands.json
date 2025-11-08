@@ -1,6 +1,6 @@
 {
   "Command Specifications": {
-    "exported": "Nov 5, 2025 at 4:04:56 PM",
+    "exported": "Nov 6, 2025 at 9:11:49 AM",
     "Create Comment": {
       "display_name": "Comment",
       "qn_prefix": "Comment",
@@ -17185,17 +17185,17 @@
           }
         },
         {
-          "Output Format Set": {
-            "variable_name": "output_foprmat_set",
+          "Report Spec": {
+            "variable_name": "report_spec",
             "inUpdate": true,
-            "attr_labels": "OUTPUT SET",
+            "attr_labels": "Output Format Set; Report",
             "examples": "Collections, Agreements",
             "default_value": "Referenceable",
             "valid_values": "",
             "existing_element": "",
-            "description": "Optional specification of an output format set that defines the attributes/columns that will be returned.",
+            "description": "Optional specification of an report  that defines the attributes/columns that will be returned.",
             "generated": false,
-            "style": "Valid Value",
+            "style": "Simple",
             "user_specified": true,
             "unique": false,
             "input_required": true,
@@ -17348,7 +17348,7 @@
             "input_required": false,
             "min_cardinality": 0,
             "max_cardinality": 1,
-            "level": "Basic",
+            "level": "Advanced",
             "Journal Entry": ""
           }
         },
@@ -17369,7 +17369,7 @@
             "input_required": false,
             "min_cardinality": 0,
             "max_cardinality": 1,
-            "level": "Basic",
+            "level": "Advanced",
             "Journal Entry": ""
           }
         },
@@ -17432,7 +17432,7 @@
             "input_required": false,
             "min_cardinality": 0,
             "max_cardinality": 1,
-            "level": "Basic",
+            "level": "Advanced",
             "Journal Entry": ""
           }
         },
@@ -17453,7 +17453,7 @@
             "input_required": false,
             "min_cardinality": 0,
             "max_cardinality": 1,
-            "level": "Basic",
+            "level": "Advanced",
             "Journal Entry": ""
           }
         },
@@ -17517,27 +17517,6 @@
             "min_cardinality": 0,
             "max_cardinality": 1,
             "level": "Basic",
-            "Journal Entry": ""
-          }
-        },
-        {
-          "Limit Result by Status": {
-            "variable_name": "limit_results_by_status",
-            "inUpdate": false,
-            "attr_labels": "",
-            "examples": "",
-            "default_value": "",
-            "valid_values": " ACTIVE; DELETED; ",
-            "existing_element": "",
-            "description": "One of the status values from a list of valid values.",
-            "generated": false,
-            "style": "Valid Value",
-            "user_specified": true,
-            "unique": false,
-            "input_required": false,
-            "min_cardinality": 0,
-            "max_cardinality": 1,
-            "level": "Advanced",
             "Journal Entry": ""
           }
         },

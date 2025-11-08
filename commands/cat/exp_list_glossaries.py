@@ -19,7 +19,7 @@ from rich.markdown import Markdown
 from rich.prompt import Prompt
 from rich.table import Table
 from rich.text import Text
-from rich_pixels import Pixels
+
 
 from pyegeria import (
     EgeriaTech,
@@ -99,16 +99,17 @@ def display_glossaries(
         glossaries = m_client.find_glossaries(search_string)
         if type(glossaries) is list:
             sorted_glossary_list = sorted(
-                glossaries, key=lambda k: k["glossaryProperties"]["displayName"]
+                glossaries, key=lambda k: k["properties"]["displayName"]
             )
             for glossary in sorted_glossary_list:
-                display_name = glossary["glossaryProperties"]["displayName"]
-                qualified_name = glossary["glossaryProperties"]["qualifiedName"]
+
+                display_name = glossary["properties"]["displayName"]
+                qualified_name = glossary["properties"]["qualifiedName"]
                 guid = glossary["elementHeader"]["guid"]
                 q_name = Text(f"{qualified_name}\n&\n{guid}", justify="center")
-                language = glossary["glossaryProperties"]["language"]
-                description = glossary["glossaryProperties"]["description"]
-                usage = glossary["glossaryProperties"]["usage"]
+                language = glossary["properties"]["language"]
+                description = glossary["properties"]["description"]
+                usage = glossary["properties"]["usage"]
                 text = "http://100.83.199.62:8088/superset/dashboard/p/xOgE56dLNaY/"
 
                 table.add_row(display_name, q_name, language, text)
