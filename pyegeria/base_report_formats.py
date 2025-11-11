@@ -1424,10 +1424,8 @@ def select_report_spec(kind: str, output_type: str) -> dict | None:
     return None
 
 
-def report_spec_list(*, show_family: bool = False, sort_by_family: bool = False, return_kind: str = "strings") -> list[
-                                                                                                                      str] | str | \
-                                                                                                                  list[
-                                                                                                                      dict]:
+def report_spec_list(*, show_family: bool = False, sort_by_family: bool = False, return_kind: str = "strings") \
+        -> list[str] | str | list[dict]:
     """
     Return the available report specs in one of three forms: strings (default), a Markdown table, or records.
 

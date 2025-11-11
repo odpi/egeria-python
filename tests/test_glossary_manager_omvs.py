@@ -294,7 +294,7 @@ class TestGlossaryManager:
             token = g_client.create_egeria_bearer_token(self.good_user_2, "secret")
             start_time = time.perf_counter()
             response = g_client.find_glossaries(
-                "*",
+                "Coco Pharmaceuticals Clinical",
                 starts_with=False,
                 ends_with=False,
                 ignore_case=True,

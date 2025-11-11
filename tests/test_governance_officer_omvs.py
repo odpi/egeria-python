@@ -333,7 +333,7 @@ class TestGovernanceOfficer:
             print(f"Deleted {item['GUID']}")
 
     def test_find_governance_definitions(self):
-        filter = "CC"
+        filter = "*"
         try:
             s_client = GovernanceOfficer(
                 self.view_server, self.platform_url, self.user, self.password
@@ -348,7 +348,8 @@ class TestGovernanceOfficer:
                 # "metadataElementTypeName": ["BusinessImperative", "Regulation", "LicenseType", "GovernanceResponsibility",
                 #                             "GovernanceApproach", "Certification Type", "Governance Principle"],
                 # "metadataElementSubtypeNames": ["GovernancePrinciple","GovernanceStrategy","Regulation", "BusinessImperative"],
-                "metadataElementSubtypeNames": ["GovernanceDriver"],
+                # "metadataElementTypeName": "GovernanceActionProcess",
+                "metadataElementSubtypeNames": ["GovernanceActionProcess"],
                 "sequencingOrder": None,
                 "sequencingProperty": None,
                 "searchString": filter

@@ -78,7 +78,7 @@ def display_gov_processes(
         )
         table.add_column("Description")
 
-        process_list = p_client.find_gov_action_processes(type_name)
+        process_list = p_client.find_governance_definitions(search_string = type_name, metadata_element_types=["GovernanceActionProcess"])
 
         if type(process_list) is str:
             print("No Governance Processes found matching the type name\n")
@@ -86,7 +86,7 @@ def display_gov_processes(
 
         for proc in process_list:
             guid = proc["elementHeader"]["guid"]
-            props = proc["processProperties"]
+            props = proc["properties"]
             name = props[("displayName" "")]
             qualified_name = props["qualifiedName"]
             description = props.get("description", "---")
