@@ -70,6 +70,32 @@ class AutomatedCuration(Client2):
         self.ENGINE_ACTION_LABEL = "EngineAction"
         self.GOV_ACTION_PROCESS_LABEL = "GovActionProcess"
 
+
+    def _extract_tech_type_element_properties(self, element: dict, columns_struct: dict) -> dict:
+        """
+        Extract properties from a technology type element and populate the provided columns_struct.
+        Tolerant to missing fields.
+        """
+        # Populate direct properties first
+        col_data = populate_columns_from_properties(element, columns_struct)
+        columns_list = col_data.get("formats", {}).get("columns", [])
+
+        # Referenceable header extraction (GUID, qualifiedName, displayName, etc.)
+        header_props = _extract_referenceable_properties(element)
+        for column in columns_list:
+            key = column.get("key")
+            if key in header_props:
+                column["value"] = header_props.get(key)
+            elif isinstance(key, str) and key.lower() == "guid":
+                column["value"] = header_props.get("GUID")
+            elif key == "mermaidGraph":
+                column["value"] = element.get("mermaidGraph","")
+            elif key == "specificationMermaidGraph":
+                column["value"] = element.get("specificationMermaidGraph","")
+
+        return col_data
+        # return columns_struct
+
     def _extract_tech_type_properties(self, element: dict, columns_struct: dict) -> dict:
         """
         Extract properties from a technology type element and populate the provided columns_struct.
@@ -187,6 +213,55 @@ class AutomatedCuration(Client2):
             entity_type,
             output_format,
             self._extract_tech_type_properties,
+            get_additional_props_func,
+            output_formats,
+        )
+
+    def _generate_tech_type_element_output(
+        self,
+        elements: dict | list[dict],
+        filter: str | None,
+        element_type_name: str | None,
+        output_format: str = "DICT",
+        report_spec: dict | str | None = None,
+        **kwargs,
+    ) -> str | list[dict]:
+        """Generate output for technology type elements in the specified format."""
+        entity_type = element_type_name or self.TECH_TYPE_ENTITY_LABEL
+
+        # Resolve report format (with backward-compatible legacy kwarg)
+        get_additional_props_func = None
+        if report_spec is None and isinstance(kwargs, dict) and 'report_spec' in kwargs:
+            report_spec = kwargs.get('report_spec')
+        if report_spec:
+            if isinstance(report_spec, str):
+                output_formats = select_report_format(report_spec, output_format)
+            else:
+                output_formats = get_report_spec_match(report_spec, output_format)
+        elif element_type_name:
+            output_formats = select_report_format(element_type_name, output_format)
+        else:
+            output_formats = select_report_format(entity_type, output_format)
+
+        if output_formats is None:
+            output_formats = select_report_format("Default", output_format)
+
+        # Optional hook for extra server calls to enrich rows
+        get_additional_props_name = (
+            output_formats.get("get_additional_props", {}).get("function") if output_formats else None
+        )
+        if isinstance(get_additional_props_name, str):
+            parts = get_additional_props_name.split(".")
+            method_name = parts[-1] if parts else None
+            if method_name and hasattr(self, method_name):
+                get_additional_props_func = getattr(self, method_name)
+
+        return generate_output(
+            elements,
+            filter,
+            entity_type,
+            output_format,
+            self._extract_tech_type_element_properties,
             get_additional_props_func,
             output_formats,
         )
@@ -3662,10 +3737,17 @@ class AutomatedCuration(Client2):
             starts_with: bool = False,
             ends_with: bool = False,
             ignore_case: bool = True,
+            output_format: str = "JSON",
+            report_spec: str = "TechType",
+            body: dict | SearchStringRequestBody = None
+
     ) -> list | str:
         """Retrieve the list of technology types that contain the search string. Async version.
 
         Parameters:
+            output_format ():
+            report_spec ():
+            body ():
         ----------
         type_name: str
             The technology type we are looking for.
@@ -3695,6 +3777,9 @@ class AutomatedCuration(Client2):
                 starts_with,
                 ends_with,
                 ignore_case,
+                output_format,
+                report_spec,
+                body
             )
         )
         return response
@@ -3781,11 +3866,16 @@ class AutomatedCuration(Client2):
             start_from: int = 0,
             page_size: int = 0,
             get_templates: bool = False,
+            output_format: str = "JSON", report_spec: str = "Tech-Type-Elements",
+            body: dict | FilterRequestBody = None,
     ) -> list | str:
         """Retrieve the elements for the requested deployed implementation type. There are no wildcards allowed
         in the name. Async version.
 
         Parameters:
+            output_format ():
+            report_spec ():
+            body ():
         ----------
         filter: str
             The name of the deployed technology implementation type to retrieve elements for.
@@ -3815,16 +3905,25 @@ class AutomatedCuration(Client2):
         For more information see: https://egeria-project.org/concepts/deployed-implementation-type
         """
 
-        get_templates_s = str(get_templates).lower()
+        skip_templates = "Template" if not get_templates else ""
         validate_name(filter)
 
         url = (
             f"{self.curation_command_root}/technology-types/elements"
         )
-        body = {"filter": filter, "effective_time": effective_time}
+        if body is None:
+            body = {
+                    "class" : "FilterRequestBody",
+                    "filter": filter,
+                    "effective_time": effective_time,
+                    "skipClassifiedElements": [skip_templates],
+                    "startFrom": start_from,
+                    "pageSize": page_size
+                    }
 
-        response = await self._async_make_request("POST", url, body)
-        return response.json().get("elements", "no tech found")
+        response = await self._async_get_name_request(url, "TechTypeElement",  self._generate_tech_type_element_output, filter, None, start_from, page_size, output_format, report_spec, body)
+        return response
+
 
     def get_technology_type_elements(
             self,
@@ -3833,11 +3932,16 @@ class AutomatedCuration(Client2):
             start_from: int = 0,
             page_size: int = 0,
             get_templates: bool = False,
+            output_format: str = "JSON", report_spec: str = "Tech-Type-Elements",
+            body: dict | FilterRequestBody = None,
     ) -> list | str:
         """Retrieve the elements for the requested deployed implementation type. There are no wildcards allowed
         in the name.
 
         Parameters:
+            output_format ():
+            report_spec ():
+            body ():
         ----------
         filter: str
             The name of the deployed technology implementation type to retrieve elements for.
@@ -3869,9 +3973,8 @@ class AutomatedCuration(Client2):
 
         loop = asyncio.get_event_loop()
         response = loop.run_until_complete(
-            self._async_get_technology_type_elements(
-                filter, effective_time, start_from, page_size, get_templates
-            )
+            self._async_get_technology_type_elements(filter, effective_time, start_from, page_size, get_templates, output_format,
+                                                     report_spec, body)
         )
         return response
 

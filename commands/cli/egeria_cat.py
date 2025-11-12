@@ -18,7 +18,7 @@ from loguru import logger
 
 from commands.cat.run_report import execute_format_set_action
 from commands.cat.dr_egeria_md import process_markdown_file
-from commands.cat.get_asset_graph import asset_viewer
+from commands.cat.old_get_asset_graph import asset_viewer
 from commands.cat.get_collection import collection_viewer
 from commands.cat.get_project_dependencies import project_dependency_viewer
 from commands.cat.get_project_structure import project_structure_viewer

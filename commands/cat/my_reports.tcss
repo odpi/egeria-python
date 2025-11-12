@@ -1,0 +1,107 @@
+/* *********************************************************************************************** */
+/*   PDX-License-Identifier: Apache-2.0                                                            */
+/*   Copyright Contributors to the ODPi Egeria project.                                            */
+/*                                                                                                 */
+/*   This file provides a set of report specification related functions for my_egeria.             */
+/*                                                                                                 */
+/*    Unless you are running Microsoft's Studio Product with the Textual Extension installed       */
+/*    the file will show multiple errors, for example I use the PyCharm IDE for whoich there are   */
+/* no extensions for Textual, regarless of the errors the file will run correctly with Textual.    */
+/* *********************************************************************************************** */
+
+Screen {
+    layout: grid;
+    grid-size: 2 3;
+    grid-columns: 1fr 1fr;
+}
+Button {
+    width: auto;
+    height: auto;
+    border: solid white;
+}
+Static {
+    width: 50%;
+}
+Input {
+    width: 50%;
+    height: auto;
+}
+Text {}
+.box {
+    height: 100%;
+    width: 100%;
+    border: solid green;
+}
+#container1 {
+    width: 100%;
+    height: 1fr;
+    padding: 1;
+}
+#container2 {
+    width: 100%;
+    height: 1fr;
+    padding: 1;
+}
+#container3 {
+    column-span: 2;
+    width: 100%;
+    height: 1fr;
+    padding: 1;
+}
+#container4 {
+    column-span: 2;
+    width: 100%;
+    height: 1fr;
+    padding: 1;
+}
+#one_start {
+    width: 100%;
+    height: auto;
+}
+#two_start {
+    width: 100%;
+    height: auto;
+}
+#three_start {
+    width: 100%;
+    height: auto;
+}
+#four_start {
+    width: 100%;
+    height: auto;
+}
+#one_end {
+    width: 100%;
+    height: auto;
+}
+#two_end {
+    width: 100%;
+    height: auto;
+}
+#three_end {
+    width: 100%;
+    height: auto;
+}
+#four_end {
+    width: 100%;
+    height: auto;
+}
+#spec_datatable {
+    width: 100%;
+    height: auto;
+}
+#spec_extracted_datatable {
+    width: 100%;
+    height: auto;
+}
+#specoutput_datatable {
+    width: 100%;
+    height: auto;
+}
+#spec_datagrid {
+    width: 100%
+}
+#input_fields {
+    width: 100%;
+    height: auto;
+}

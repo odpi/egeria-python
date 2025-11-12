@@ -13,6 +13,13 @@ import asyncio
 import json
 
 from httpx import Response
+from loguru import logger
+
+from pyegeria import Client2
+from pyegeria.base_report_formats import select_report_format, get_report_spec_match
+from pyegeria.models import NewElementRequestBody, TemplateRequestBody, SearchStringRequestBody, ResultsRequestBody
+from pyegeria.output_formatter import populate_columns_from_properties, _extract_referenceable_properties, \
+    get_required_relationships, generate_output
 from pyegeria.utils import body_slimmer
 from pyegeria._client import Client
 from pyegeria._globals import TEMPLATE_GUIDS, max_paging_size
@@ -21,7 +28,7 @@ from pyegeria._globals import NO_ELEMENTS_FOUND, NO_ASSETS_FOUND
 from ._validators import validate_search_string
 
 
-class AssetCatalog(Client):
+class AssetCatalog(Client2):
     """Set up and maintain automation services in Egeria.
 
     Attributes:
@@ -37,282 +44,86 @@ class AssetCatalog(Client):
 
     """
 
-    def __init__(
-        self,
-        view_server: str,
-        platform_url: str,
-        user_id: str,
-        user_pwd: str = None,
-        token: str = None,
-    ):
+    def __init__(self, view_server: str, platform_url: str, user_id: str, user_pwd: str = None,
+                 token: str = None):
+        super().__init__(view_server, platform_url, user_id, user_pwd, token)
         self.view_server = view_server
         self.platform_url = platform_url
         self.user_id = user_id
         self.user_pwd = user_pwd
         Client.__init__(self, view_server, platform_url, user_id, user_pwd, token=token)
 
-    async def _async_create_element_from_template(self, body: dict) -> str:
-        """Create a new metadata element from a template.  Async version.
-        Parameters
-        ----------
-        body : str
-            The json body used to instantiate the template.
-
-        Returns
-        -------
-        Response
-           The guid of the resulting element
-
-        Raises
-        ------
-        InvalidParameterException
-        PropertyServerException
-        UserNotAuthorizedException
-
-        Notes
-        -----
-        See also: https://egeria-project.org/features/templated-cataloguing/overview/
-        The full description of the body is shown below:
-           {
-             "typeName" : "",
-             "initialStatus" : "",
-             "initialClassifications" : "",
-             "anchorGUID" : "",
-             "isOwnAnchor" : "",
-             "effectiveFrom" : "",
-             "effectiveTo" : "",
-             "templateGUID" : "",
-             "templateProperties" : {},
-             "placeholderPropertyValues" : {
-               "placeholderPropertyName1" : "placeholderPropertyValue1",
-               "placeholderPropertyName2" : "placeholderPropertyValue2"
-             },
-             "parentGUID" : "",
-             "parentRelationshipTypeName" : "",
-             "parentRelationshipProperties" : "",
-             "parentAtEnd1" : "",
-             "effectiveTime" : ""
-           }
-        """
-
-        url = f"{self.platform_url}/servers/{self.view_server}/api/open-metadata/automated-curation/catalog-templates/new-element"
-        response = await self._async_make_request("POST", url, body)
-        return response.json().get("guid", "GUID failed to be returned")
-
-    def create_element_from_template(self, body: dict) -> str:
-        """Create a new metadata element from a template.  Async version.
-        Parameters
-        ----------
-        body : str
-             The json body used to instantiate the template.
-        server : str, optional
-            The name of the view server to use. If not provided, the default server name will be used.
-
-        Returns
-        -------
-        Response
-            The guid of the resulting element
-
-         Raises
-         ------
-         InvalidParameterException
-         PropertyServerException
-         UserNotAuthorizedException
-
-         Notes
-         -----
-         See also: https://egeria-project.org/features/templated-cataloguing/overview/
-         The full description of the body is shown below:
-             {
-               "typeName" : "",
-               "initialStatus" : "",
-               "initialClassifications" : "",
-               "anchorGUID" : "",
-               "isOwnAnchor" : "",
-               "effectiveFrom" : "",
-               "effectiveTo" : "",
-               "templateGUID" : "",
-               "templateProperties" : {},
-               "placeholderPropertyValues" : {
-                 "placeholderPropertyName1" : "placeholderPropertyValue1",
-                 "placeholderPropertyName2" : "placeholderPropertyValue2"
-               },
-               "parentGUID" : "",
-               "parentRelationshipTypeName" : "",
-               "parentRelationshipProperties" : "",
-               "parentAtEnd1" : "",
-               "effectiveTime" : ""
-             }
-        """
-        loop = asyncio.get_event_loop()
-        response = loop.run_until_complete(
-            self._async_create_element_from_template(body)
-        )
-        return response
-
-    async def _async_create_kafka_server_element_from_template(
-        self, kafka_server: str, host_name: str, port: str
-    ) -> str:
-        """Create a Kafka server element from a template. Async version.
-
-        Parameters
-        ----------
-        kafka_server : str
-            The name of the Kafka server.
-
-        host_name : str
-            The host name of the Kafka server.
-
-        port : str
-            The port number of the Kafka server.
-
-        Returns
-        -------
-        str
-            The GUID of the Kafka server element.
-        """
-
-        body = {
-            "templateGUID": TEMPLATE_GUIDS["Apache Kafka Server"],
-            "isOwnAnchor": "true",
-            "placeholderPropertyValues": {
-                "serverName": kafka_server,
-                "hostIdentifier": host_name,
-                "portNumber": port,
-            },
-        }
-        response = await self._async_create_element_from_template(body)
-        return response
-
-    def create_kafka_server_element_from_template(
-        self, kafka_server: str, host_name: str, port: str
-    ) -> str:
-        """Create a Kafka server element from a template.
-
-        Parameters
-        ----------
-        kafka_server : str
-            The name of the Kafka server.
-
-        host_name : str
-            The host name of the Kafka server.
-
-        port : str
-            The port number of the Kafka server.
-
-        Returns
-        -------
-        str
-            The GUID of the Kafka server element.
-        """
-        loop = asyncio.get_event_loop()
-        response = loop.run_until_complete(
-            self._async_create_kafka_server_element_from_template(
-                kafka_server, host_name, port
-            )
-        )
-        return response
-
-    async def _async_create_postgres_server_element_from_template(
-        self,
-        postgres_server: str,
-        host_name: str,
-        port: str,
-        db_user: str,
-        db_pwd: str,
-    ) -> str:
-        """Create a Postgres server element from a template. Async version.
-
-        Parameters
-        ----------
-        postgres_server : str
-            The name of the Postgres server.
-
-        host_name : str
-            The host name of the Postgres server.
-
-        port : str
-            The port number of the Postgres server.
-
-        db_user: str
-            User name to connect to the database
-
-        db_pwd: str
-            User password to connect to the database
-
-        Returns
-        -------
-        str
-            The GUID of the Kafka server element.
-        """
-        body = {
-            "templateGUID": TEMPLATE_GUIDS["PostgreSQL Server"],
-            "isOwnAnchor": "true",
-            "placeholderPropertyValues": {
-                "serverName": postgres_server,
-                "hostIdentifier": host_name,
-                "portNumber": port,
-                "databaseUserId": db_user,
-                "databasePassword": db_pwd,
-            },
-        }
-        response = await self._async_create_element_from_template(body)
-        return response
-
-    def create_postgres_server_element_from_template(
-        self,
-        postgres_server: str,
-        host_name: str,
-        port: str,
-        db_user: str,
-        db_pwd: str,
-    ) -> str:
-        """Create a Postgres server element from a template.
-
-        Parameters
-        ----------
-        postgres_server : str
-            The name of the Postgres server.
-
-        host_name : str
-            The host name of the Postgres server.
-
-        port : str
-            The port number of the Postgres server.
-
-        db_user: str
-            User name to connect to the database
-
-        db_pwd: str
-            User password to connect to the database
-
-        Returns
-        -------
-        str
-            The GUID of the Postgres server element.
-        """
-        loop = asyncio.get_event_loop()
-        response = loop.run_until_complete(
-            self._async_create_postgres_server_element_from_template(
-                postgres_server, host_name, port, db_user, db_pwd
-            )
-        )
-        return response
-
     #
-    # Engine Actions
+    # Output helpers
     #
 
-    async def _async_find_in_asset_domain(
-        self,
-        search_string: str,
-        start_from: int = 0,
-        page_size: int = max_paging_size,
-        starts_with: bool = True,
-        ends_with: bool = False,
-        ignore_case: bool = True,
-        time_out: int = 60,
-    ) -> list | str:
+    def _extract_asset_properties(self, element: dict, columns_struct: dict) -> dict:
+        col_data = populate_columns_from_properties(element, columns_struct)
+        columns_list = col_data.get("formats", {}).get("attributes", [])
+        header_props = _extract_referenceable_properties(element)
+        for col in columns_list:
+            key = col.get("key")
+            if key in header_props:
+                col["value"] = header_props.get(key)
+            elif isinstance(key, str) and key.lower() == "guid":
+                col["value"] = header_props.get("GUID")
+        # GAP specifics: processStatus, elementTypeName, stepCount
+        proc_status = (
+            element.get("properties", {}).get("processStatus")
+            or element.get("elementProperties", {}).get("processStatus")
+            or element.get("processStatus")
+        )
+        step_count = (
+            element.get("properties", {}).get("stepCount")
+            or element.get("elementProperties", {}).get("stepCount")
+            or element.get("stepCount")
+        )
+        for col in columns_list:
+            key = col.get("key")
+            if key in ("process_status", "processStatus"):
+                col["value"] = proc_status
+            elif key == "stepCount":
+                col["value"] = step_count
+        col_data = get_required_relationships(element, col_data)
+        mermaid_val = element.get("mermaidGraph", "") or ""
+        for col in columns_list:
+            if col.get("key") == "mermaid":
+                col["value"] = mermaid_val
+                break
+        return col_data
+
+    def _generate_asset_output(self, elements: dict | list[dict], filter: str | None,
+                                            element_type_name: str | None, output_format: str = "DICT",
+                                            report_spec: dict | str | None = None) -> str | list[dict]:
+        entity_type = element_type_name
+        get_additional_props_func = None
+        if report_spec:
+            if isinstance(report_spec, str):
+                output_formats = select_report_format(report_spec, output_format)
+            else:
+                output_formats = get_report_spec_match(report_spec, output_format)
+        elif element_type_name:
+            output_formats = select_report_format(element_type_name, output_format)
+        else:
+            output_formats = select_report_format(entity_type, output_format)
+        if output_formats is None:
+            output_formats = select_report_format("Default", output_format)
+        return generate_output(
+            elements,
+            filter,
+            entity_type,
+            output_format,
+            self._extract_asset_properties,
+            None,
+            output_formats,
+        )
+
+    async def _async_find_in_asset_domain(self, search_string: str, classification_names: list[str] = None,
+                                          metadata_element_types: list[str] = None, start_from: int = 0,
+                                          page_size: int = max_paging_size, starts_with: bool = True,
+                                          ends_with: bool = False, ignore_case: bool = True, output_format: str="JSON",
+                                          report_spec:str="Referenceable",
+                                          body: dict | SearchStringRequestBody = None) -> list | str:
         """Locate string value in elements that are anchored to assets.  Async Version.
         Asset: https: // egeria - project.org / concepts / asset /
 
@@ -335,6 +146,13 @@ class AssetCatalog(Client):
 
         page_size : int, optional
             The maximum number of engine actions to fetch in a single request. Default is `max_paging_size`.
+        output_format: str, default = "JSON"
+            - one of "MD", "LIST", "FORM", "REPORT", "DICT", "MERMAID" or "JSON"
+        report_spec: str | dict , optional, default = None
+            - The desired output columns/fields to include.
+        body: dict | SearchStringRequestBody, optional, default = None
+            - if provided, the search parameters in the body will supercede other attributes, such as "search_string"
+
 
         Returns
         -------
@@ -342,42 +160,42 @@ class AssetCatalog(Client):
             A list of dictionaries representing the engine actions found based on the search query.
             If no actions are found, returns the string "no actions".
 
+        Args:
+            classification_names ():
+            output_format ():
+            report_spec ():
+
         Raises:
         ------
-        InvalidParameterException
-        PropertyServerException
-        UserNotAuthorizedException
+        PyegeriaException
 
         Notes
         -----
-        For more information see: https://egeria-project.org/concepts/engine-action
+
         """
-
-        validate_search_string(search_string)
-
-        starts_with_s = str(starts_with).lower()
-        ends_with_s = str(ends_with).lower()
-        ignore_case_s = str(ignore_case).lower()
 
         url = (
             f"{self.platform_url}/servers/{self.view_server}/api/open-metadata/asset-catalog/assets/in-domain/"
-            f"by-search-string?startFrom={start_from}&pageSize={page_size}&startsWith={starts_with_s}&"
-            f"endWith={ends_with_s}&ignoreCase={ignore_case_s}"
+            f"by-search-string"
         )
-        body = {"filter": search_string}
-        response = await self._async_make_request("POST", url, body, time_out=time_out)
-        return response.json().get("searchMatches", "NO_ASSETS_FOUND")
+        response = await self._async_find_request(url, _type="ExternalReference", search_string=search_string,
+                                                  _gen_output=self._generate_asset_output,
+                                                  classification_names=classification_names,
+                                                  metadata_element_types=metadata_element_types,
+                                                  starts_with=starts_with, ends_with=ends_with, ignore_case=ignore_case,
+                                                  start_from=start_from, page_size=page_size,
+                                                  output_format=output_format, report_spec=report_spec,
+                                                  body=body)
 
-    def find_in_asset_domain(
-        self,
-        search_string: str,
-        start_from: int = 0,
-        page_size: int = max_paging_size,
-        starts_with: bool = True,
-        ends_with: bool = False,
-        ignore_case: bool = True,
-        time_out: int = 60,
-    ) -> list | str:
+        return response
+
+    def find_in_asset_domain(self, search_string: str, classification_names: list[str] = None,
+                                          metadata_element_types: list[str] = None, start_from: int = 0,
+                                          page_size: int = max_paging_size, starts_with: bool = True,
+                                          ends_with: bool = False, ignore_case: bool = True, output_format: str="JSON",
+                                          report_spec:str="Referenceable",
+                                          body: dict | SearchStringRequestBody = None)-> list | str:
+
         """Retrieve the list of engine action metadata elements that contain the search string. Async Version.
         Parameters
         ----------
@@ -398,6 +216,12 @@ class AssetCatalog(Client):
 
         page_size : int, optional
             The maximum number of engine actions to fetch in a single request. Default is `max_paging_size`.
+        output_format: str, default = "JSON"
+            - one of "MD", "LIST", "FORM", "REPORT", "DICT", "MERMAID" or "JSON"
+        report_spec: str | dict , optional, default = None
+            - The desired output columns/fields to include.
+        body: dict | SearchStringRequestBody, optional, default = None
+            - if provided, the search parameters in the body will supercede other attributes, such as "search_string"
 
         Returns
         -------
@@ -417,15 +241,10 @@ class AssetCatalog(Client):
         """
         loop = asyncio.get_event_loop()
         response = loop.run_until_complete(
-            self._async_find_in_asset_domain(
-                search_string,
-                start_from,
-                page_size,
-                starts_with,
-                ends_with,
-                ignore_case,
-                time_out,
-            )
+            self._async_find_in_asset_domain(search_string, classification_names,
+                                             metadata_element_types, start_from, page_size,
+                                             starts_with, ends_with, ignore_case,
+                                             output_format, report_spec, body)
         )
         return response
 
@@ -433,7 +252,10 @@ class AssetCatalog(Client):
         self,
         asset_guid: str,
         start_from: int = 0,
-        page_size: int = max_paging_size,
+        page_size: int = 0,
+        output_format: str = "MERMAID",
+        report_spec: str = "Common-Mermaid",
+        body: dict | ResultsRequestBody = None
     ) -> str | dict:
         """Return all the elements that are anchored to an asset plus relationships between these elements and to
           other elements. Async Version.
@@ -447,6 +269,11 @@ class AssetCatalog(Client):
 
          page_size : int, optional
              The maximum number of engine actions to fetch in a single request. Default is `max_paging_size`.
+
+        output_format: str, default = "JSON"
+            - one of "MD", "LIST", "FORM", "REPORT", "DICT", "MERMAID" or "JSON"
+        report_spec: str | dict , optional, default = None
+            - The desired output columns/fields to include.
 
          Returns
          -------
@@ -463,17 +290,20 @@ class AssetCatalog(Client):
 
         url = (
             f"{self.platform_url}/servers/{self.view_server}/api/open-metadata/asset-catalog/assets/{asset_guid}/"
-            f"as-graph?startFrom={start_from}&pageSize={page_size}"
+            f"as-graph"
         )
-
-        response = await self._async_make_request("POST", url)
-        return response.json().get("assetGraph", NO_ASSETS_FOUND)
+        response = await self._async_get_results_body_request(url, "Asset", self._generate_asset_output,
+                                                        start_from, page_size, output_format, report_spec, body)
+        return response
 
     def get_asset_graph(
         self,
         asset_guid: str,
         start_from: int = 0,
-        page_size: int = max_paging_size,
+        page_size: int = 0,
+        output_format: str = "MERMAID",
+        report_spec: str = "Common-Mermaid",
+        body: dict | ResultsRequestBody = None
     ) -> str | dict:
         """Return all the elements that are anchored to an asset plus relationships between these elements and to
           other elements.
@@ -487,11 +317,18 @@ class AssetCatalog(Client):
 
          page_size : int, optional
              The maximum number of engine actions to fetch in a single request. Default is `max_paging_size`.
+        output_format: str, default = "JSON"
+            one of "MD", "LIST", "FORM", "REPORT", "DICT", "MERMAID" or "JSON"
+        report_spec: str | dict , optional, default = None
+            The desired output columns/fields to include.
 
          Returns
          -------
         dict or str
              A dictionary of the asset graph.
+
+         Args:
+             body ():
 
          Raises:
          ------
@@ -503,7 +340,8 @@ class AssetCatalog(Client):
 
         loop = asyncio.get_event_loop()
         response = loop.run_until_complete(
-            self._async_get_asset_graph(asset_guid, start_from, page_size)
+            self._async_get_asset_graph(asset_guid, start_from, page_size, output_format,
+                                        report_spec, body)
         )
         return response
 
@@ -511,7 +349,7 @@ class AssetCatalog(Client):
         self,
         asset_guid: str,
         start_from: int = 0,
-        page_size: int = max_paging_size,
+        page_size: int = 0,
     ) -> str:
         """Return the asset graph as mermaid markdown string.
          Parameters
@@ -539,7 +377,7 @@ class AssetCatalog(Client):
         """
 
         asset_graph = self.get_asset_graph(asset_guid, start_from, page_size)
-        return asset_graph.get("mermaidGraph")
+        return asset_graph[0]
 
     async def _async_get_asset_lineage_graph(
         self,
@@ -549,8 +387,12 @@ class AssetCatalog(Client):
         relationship_types: [str] = None,
         limit_to_isc_q_name: str = None,
         hilight_isc_q_name: str = None,
+        all_anchors: bool = False,
         start_from: int = 0,
-        page_size: int = max_paging_size,
+        page_size: int =0,
+        output_format: str = "DICT",
+        report_spec: str = "Common-Mermaid",
+
     ) -> str | dict:
         """Return the asset lineage including a mermaid markdown string. Async Version.
          Parameters
@@ -589,17 +431,32 @@ class AssetCatalog(Client):
 
         url = (
             f"{self.platform_url}/servers/{self.view_server}/api/open-metadata/asset-catalog/assets/{asset_guid}/"
-            f"as-lineage-graph?startFrom={start_from}&pageSize={page_size}"
+            f"as-lineage-graph"
         )
         body = {
+            "class": "AssetLineageGraphRequestBody",
             "effectiveTime": effective_time,
             "asOfTime": as_of_time,
             "relationshipTypes": relationship_types,
             "limitToISCQualifiedName": limit_to_isc_q_name,
             "highlightISCQualifiedName": hilight_isc_q_name,
+            "allAnchors": all_anchors,
+            "startFrom": start_from,
+            "pageSize": page_size
             }
+
         response = await self._async_make_request("POST", url, body_slimmer(body))
-        return response.json().get("assetLineageGraph", NO_ASSETS_FOUND)
+        element = response.json().get("element",NO_ASSETS_FOUND)
+        if type(element) is str:
+            logger.info(NO_ELEMENTS_FOUND)
+            return NO_ELEMENTS_FOUND
+
+        if output_format != 'JSON':  # return a simplified markdown representation
+            logger.info(f"Found elements, output format: {output_format} and report_spec: {report_spec}")
+            return self._generate_asset_output(element, None, "Asset",
+                               output_format, report_spec)
+        return element
+
 
     def get_asset_lineage_graph(
         self,
@@ -609,8 +466,11 @@ class AssetCatalog(Client):
         relationship_types: [str] = None,
         limit_to_isc_q_name: str = None,
         hilight_isc_q_name: str = None,
+        all_anchors: bool = False,
         start_from: int = 0,
-        page_size: int = max_paging_size,
+        page_size: int = 0,
+        output_format: str = "DICT",
+        report_spec: str = "Common-Mermaid",
         ) -> str | dict:
         """Return the asset lineage including a mermaid markdown string. Async Version.
          Parameters
@@ -650,7 +510,8 @@ class AssetCatalog(Client):
         loop = asyncio.get_event_loop()
         response = loop.run_until_complete(
             self._async_get_asset_lineage_graph(asset_guid, effective_time, as_of_time, relationship_types,
-                                                limit_to_isc_q_name, hilight_isc_q_name, start_from, page_size)
+                                                limit_to_isc_q_name, hilight_isc_q_name, all_anchors,
+                                                start_from, page_size, output_format, report_spec)
         )
         return response
 
@@ -704,8 +565,9 @@ class AssetCatalog(Client):
         asset_graph = self.get_asset_lineage_graph(asset_guid, effective_time,
                                                    as_of_time, relationship_types,
                                                    limit_to_isc_q_name, hilight_isc_q_name,
-                                                   start_from, page_size)
+                                                   start_from, page_size, "JSON")
         return asset_graph.get("mermaidGraph")
+
 
     async def _async_get_assets_by_metadata_collection_id(
         self,
@@ -713,7 +575,9 @@ class AssetCatalog(Client):
         type_name: str = None,
         effective_time: str = None,
         start_from: int = 0,
-        page_size: int = max_paging_size,
+        page_size: int = 0,
+        output_format: str = "JSON",
+        report_spec: str = "Referenceable",
     ) -> str | list:
         """Return a list of assets that come from the requested metadata collection. Can optionally
          specify an type name as a filter and an effective time. Async Version.
@@ -750,13 +614,26 @@ class AssetCatalog(Client):
 
         url = (
             f"{self.platform_url}/servers/{self.view_server}/api/open-metadata/asset-catalog/assets/by-metadata-collection-id/"
-            f"{metadata_collection_id}?startFrom={start_from}&pageSize={page_size}"
+            f"{metadata_collection_id}"
         )
 
-        body = {"filter": type_name, "effectiveTime": effective_time}
+        body = {"filter": type_name,
+                "effectiveTime": effective_time,
+                "startFrom": start_from,
+                "pageSize": page_size,
+                }
         body_s = body_slimmer(body)
         response = await self._async_make_request("POST", url, body_s)
-        return response.json().get("assets", "NO_ASSETS_FOUND")
+        elements =  response.json().get("elements", "NO_ASSETS_FOUND")
+        if type(elements) is str:
+            logger.info(NO_ELEMENTS_FOUND)
+            return NO_ELEMENTS_FOUND
+
+        if output_format != 'JSON':  # return a simplified markdown representation
+            logger.info(f"Found elements, output format: {output_format} and report_spec: {report_spec}")
+            return self._generate_asset_output(elements, None, "Asset",
+                                               output_format, report_spec)
+        return elements
 
     def get_assets_by_metadata_collection_id(
         self,
@@ -765,6 +642,8 @@ class AssetCatalog(Client):
         effective_time: str = None,
         start_from: int = 0,
         page_size: int = max_paging_size,
+        output_format: str = "JSON",
+        report_spec: str = "Referenceable",
     ) -> str | list:
         """Return a list of assets that come from the requested metadata collection. Can optionally
          specify an type name as a filter and an effective time. Async Version.
@@ -807,9 +686,14 @@ class AssetCatalog(Client):
                 effective_time,
                 start_from,
                 page_size,
+                output_format,
+                report_spec,
             )
         )
         return response
+
+
+
 
     async def _async_get_asset_types(self) -> str | dict:
         """Return all the elements that are anchored to an asset plus relationships between these elements and to

@@ -79,7 +79,7 @@ try:
     from pyegeria.dr_egeria_reports import generated_format_sets
 
     logger.debug(f"Loaded {len(generated_format_sets)} generated format sets from pyegeria.dr_egeria_reports")
-except (ImportError, ModuleNotFoundError) as e:
+except (ImportError) as e:
     logger.debug(f"No pyegeria.dr_egeria_reports module found, using empty set: {e}")
     generated_format_sets = FormatSetDict()
 
@@ -308,6 +308,36 @@ base_report_specs = FormatSetDict({
             )
         ],
     ),
+"Asset-Graph": FormatSet(
+        target_type="Asset",
+        heading="Asset Graph",
+        description="Attributes that apply to all Assets",
+        annotations={},  # No specific annotations
+        family="AssetCatalog",
+        formats=[
+            Format(
+                types=["ALL"],
+                attributes=COMMON_COLUMNS + COMMON_METADATA_COLUMNS + [
+                    Column(name="Classifications", key='classifications'),
+                    Column(name="Created By", key='created_by'),
+                    Column(name="Create Time", key='create_time'),
+                    Column(name="Updated By", key='updated_by'),
+                    Column(name="Update Time", key='update_time'),
+                    Column(name="Version", key='version'),
+                    Column(name="Open Metadata Type Name", key='type_name'),
+                    Column(name="Mermaid Graph", key='mermaidGraph'),
+                    Column(name="Anchor Graph", key='anchorMermaidGRaph'),
+                    Column(name="Field Level Lineage Graph", key='fieldLevelLineageGraph'),
+                ],
+            )
+        ],
+    action=ActionParameter(
+        function="Client2.get_asset_graph",
+        optional_params=OPTIONAL_PARAMS ,
+        required_params=["asset_guid"],
+        spec_params={},
+    )
+    ),
     "Common-Mermaid": FormatSet(
         target_type="Referenceable",
         heading="Common Attributes with Mermaid",
@@ -322,7 +352,7 @@ base_report_specs = FormatSetDict({
                     Column(name="Qualified Name", key='qualified_name'),
                     Column(name="Description", key='description'),
                     Column(name="GUID", key='guid'),
-                    Column(name="Mermaid Graph", key='mermaid_graph'),
+                    Column(name="Mermaid Graph", key='mermaidGraph'),
                     Column(name="Anchor Mermaid Graph", key='anchorMermaidGraph'),
                     Column(name="Information Supply Chain Mermaid Graph", key='informationSupplyChainMermaidGraph'),
                     Column(name="Field Level Lineage Graph", key='fieldLevelLineageGraph'),
@@ -337,6 +367,44 @@ base_report_specs = FormatSetDict({
                 ],
             )
         ],
+
+    ),
+    "Tech-Type-Elements": FormatSet(
+        target_type="TechTypeElements",
+        heading="Technology Type Elements",
+        description="Elements of a Technology",
+        annotations={},  # No specific annotations
+        family="Automated Curation",
+        formats=[
+            Format(
+                types=["DICT", "MD", "LIST", "FORM"],
+                attributes=[
+                    Column(name='Display Name', key='display_name'),
+                    Column(name="Qualified Name", key='qualified_name'),
+                    Column(name="GUID", key='guid'),
+                    Column(name="Description", key='description'),
+                    Column(name="Deployed Implementation", key='deployedImplementationType')
+                ],
+            ),
+            Format(
+                types=["REPORT", "MERMAID","HTML"],
+                attributes=[
+                    Column(name='Display Name', key='display_name'),
+                    Column(name="Qualified Name", key='qualified_name'),
+                    Column(name="GUID", key='guid'),
+                    Column(name="Description", key='description'),
+                    Column(name="Deployed Implementation", key='deployedImplementationType'),
+                    Column(name="Mermaid Graph", key='mermaidGraph'),
+                    Column(name="Specification Mermaid Graph", key='specificationMermaidGraph')
+                ]
+            )
+        ],
+        action=ActionParameter(
+            function="Client2.get_technology_type_elements",
+            optional_params=OPTIONAL_PARAMS + ["get_templates"],
+            required_params=["filter"],
+            spec_params={},
+        )
     ),
     "Search-Keywords": FormatSet(
         heading="Search Keyword Report",
@@ -1424,10 +1492,8 @@ def select_report_spec(kind: str, output_type: str) -> dict | None:
     return None
 
 
-def report_spec_list(*, show_family: bool = False, sort_by_family: bool = False, return_kind: str = "strings") -> list[
-                                                                                                                      str] | str | \
-                                                                                                                  list[
-                                                                                                                      dict]:
+def report_spec_list(*, show_family: bool = False, sort_by_family: bool = False, return_kind: str = "strings") \
+        -> list[str] | str | list[dict]:
     """
     Return the available report specs in one of three forms: strings (default), a Markdown table, or records.
 

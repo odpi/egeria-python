@@ -154,8 +154,8 @@ def display_glossary_terms(
         table.add_column("Summary")
         table.add_column("Description")
         table.add_column("Glossary")
+        table.add_column("Collection Folder")
         table.add_column("Status")
-        table.add_column("Categories")
         table.add_column("Example/Usage", min_width=50)
 
         terms = g_client.find_glossary_terms(
@@ -200,10 +200,9 @@ def display_glossary_terms(
                 parent_q_name = parent.get('relatedElement',{}).get('properties',{}).get('qualifiedName','---')
                 parent_type = parent.get('relatedElement',{}).get('elementHeader',{}).get('type',{}).get('typeName','---')
                 if parent_type == 'Glossary':
-                    glossary_list_md += f"* {parent_q_name}\n"
-                elif parent_type == 'GlossaryCategory':
-                    category_list_md += f"* {parent_q_name}\n"
-
+                    glossary_list_md += f"{parent_q_name}\n"
+                elif parent_type == 'CollectionFolder':
+                    category_list_md += f"{parent_q_name}\n"
 
 
             term_abb_ver_out = Markdown(f"{display_name}\n---\n{abbrev}\n---\n{version}")
@@ -216,8 +215,8 @@ def display_glossary_terms(
                 summary,
                 description,
                 glossary_list_md,
-                term_status,
                 category_list_out,
+                term_status,
                 ex_us_out,
                 style="bold white on black",
             )

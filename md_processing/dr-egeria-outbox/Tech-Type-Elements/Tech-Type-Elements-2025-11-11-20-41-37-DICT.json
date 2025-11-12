@@ -1,0 +1,65 @@
+[
+  {
+    "Display Name": "content-packs",
+    "Qualified Name": "File System Directory::ContentPacksCataloguer:/deployments/content-packs",
+    "GUID": "63570d51-5377-4107-af96-dd38b70c197d",
+    "Description": null,
+    "Deployed Implementation": "File System Directory"
+  },
+  {
+    "Display Name": "deployments/loading-bay/sample-data/oak-dene-drop-foot-weekly-measurements",
+    "Qualified Name": "FileFolder::/deployments/loading-bay/sample-data/oak-dene-drop-foot-weekly-measurements",
+    "GUID": "b0eb97fb-f10f-43ef-9f62-d34780173328",
+    "Description": null,
+    "Deployed Implementation": "File System Directory"
+  },
+  {
+    "Display Name": "sample-data",
+    "Qualified Name": "File System Directory::SampleDataCataloguer:/deployments/loading-bay/sample-data",
+    "GUID": "f5d3d242-85e6-4b24-911b-c5c854458fdb",
+    "Description": null,
+    "Deployed Implementation": "File System Directory"
+  },
+  {
+    "Display Name": "deployments",
+    "Qualified Name": "FileFolder::/deployments",
+    "GUID": "400796c6-8cd9-4694-92c5-cdf5c3dc5392",
+    "Description": null,
+    "Deployed Implementation": "File System Directory"
+  },
+  {
+    "Display Name": "deployments",
+    "Qualified Name": "FileFolder::/deployments",
+    "GUID": "5545ecc8-9050-47ee-aead-b35d00d6f8d0",
+    "Description": null,
+    "Deployed Implementation": "File System Directory"
+  },
+  {
+    "Display Name": "loading-bay",
+    "Qualified Name": "File System Directory::laz.local:/deployments/loading-bay",
+    "GUID": "d35436ee-ba92-46d2-a733-bdb21d337902",
+    "Description": "Loading bay folder",
+    "Deployed Implementation": "File System Directory"
+  },
+  {
+    "Display Name": "deployments/loading-bay/sample-data/old-market-drop-foot-weekly-measurements",
+    "Qualified Name": "FileFolder::/deployments/loading-bay/sample-data/old-market-drop-foot-weekly-measurements",
+    "GUID": "24427f01-24c2-4860-a9e4-e164ea3c1ee8",
+    "Description": null,
+    "Deployed Implementation": "File System Directory"
+  },
+  {
+    "Display Name": "deployments/loading-bay/sample-data/hampton-drop-foot-weekly-measurements",
+    "Qualified Name": "FileFolder::/deployments/loading-bay/sample-data/hampton-drop-foot-weekly-measurements",
+    "GUID": "0e0b2d63-eaaf-4c68-a502-9e5ac220c7a2",
+    "Description": null,
+    "Deployed Implementation": "File System Directory"
+  },
+  {
+    "Display Name": "deployments/loading-bay",
+    "Qualified Name": "FileFolder::/deployments/loading-bay",
+    "GUID": "fc1f94e4-54f7-4c08-87f9-67d842003a04",
+    "Description": null,
+    "Deployed Implementation": "File System Directory"
+  }
+]

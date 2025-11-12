@@ -78,9 +78,8 @@ def template_viewer(
         a_client = AutomatedCuration(server_name, platform_url, user_id=user)
 
         token = a_client.create_egeria_bearer_token(user, user_pass)
-        tech_elements = a_client.get_technology_type_elements(
-            tech_name, get_templates=True
-        )
+        tech_elements = a_client.get_technology_type_elements(tech_name, get_templates=True, output_format=JSON,
+                                                              report_spec=Tech - Type - Elements)
         if (len(tech_elements) >= 1) and (type(tech_elements) is list):
             tree = Tree(
                 f"Deployed Technology Type: {tech_name}",

@@ -18,7 +18,7 @@ from contextlib import nullcontext as does_not_raise
 
 import pytest
 
-
+from pyegeria import PyegeriaException, print_basic_exception, PyegeriaInvalidParameterException
 from pyegeria._exceptions import (
     InvalidParameterException,
     PropertyServerException,
@@ -64,16 +64,16 @@ class TestAssetCatalog:
     def test_find_in_asset_domain(self):
         try:
             g_client = AssetCatalog(
-                self.good_view_server_1,
+                self.good_view_server_2,
                 self.good_platform1_url,
                 user_id=self.good_user_2,
             )
 
             token = g_client.create_egeria_bearer_token(self.good_user_2, "secret")
             start_time = time.perf_counter()
-            search_string = "Unity"
+            search_string = "measurements"
             response = g_client.find_in_asset_domain(
-                search_string, starts_with=True, ends_with=False, ignore_case=True
+                search_string, starts_with=True, ends_with=False, ignore_case=True, output_format="DICT",report_spec="Referenceable"
             )
             duration = time.perf_counter() - start_time
             # resp_str = json.loads(response)
@@ -90,11 +90,9 @@ class TestAssetCatalog:
             assert True
 
         except (
-            InvalidParameterException,
-            PropertyServerException,
-            UserNotAuthorizedException,
+            PyegeriaException, PyegeriaInvalidParameterException,
         ) as e:
-            print_exception_response(e)
+            print_basic_exception(e)
             assert False, "Invalid request"
         finally:
             g_client.close_session()
@@ -142,19 +140,19 @@ class TestAssetCatalog:
         finally:
             g_client.close_session()
 
-    def test_get_asset_graph(self, server: str = good_view_server_1):
+    def test_get_asset_graph(self, server: str = good_view_server_2):
         try:
             server_name = server
-            asset_guid = "8a578f0d-f7ae-4255-b4a5-236241fa5449"
+            asset_guid = "b0eb97fb-f10f-43ef-9f62-d34780173328"
             a_client = AssetCatalog(
                 server_name, self.good_platform1_url, user_id=self.good_user_2
             )
 
             token = a_client.create_egeria_bearer_token(self.good_user_2, "secret")
 
-            response = a_client.get_asset_graph(asset_guid)
+            response = a_client.get_asset_graph(asset_guid, output_format="JSON", report_spec="Asset-Graph")
             print(f"type is {type(response)}")
-            if type(response) is dict:
+            if isinstance(response, dict | list):
                 print("\n\n" + json.dumps(response, indent=4))
                 count = len(response)
                 print(f"Found {count} assets")
@@ -162,20 +160,18 @@ class TestAssetCatalog:
                 print("\n\n" + response)
             assert True
         except (
-            InvalidParameterException,
-            PropertyServerException,
-            UserNotAuthorizedException,
+            PyegeriaException, PyegeriaInvalidParameterException,
         ) as e:
-            print_exception_response(e)
+            print_basic_exception(e)
             assert False, "Invalid request"
 
         finally:
             a_client.close_session()
 
-    def test_get_asset_mermaid_graph(self, server: str = good_view_server_1):
+    def test_get_asset_mermaid_graph(self, server: str = good_view_server_2):
         try:
             server_name = server
-            asset_guid = "8a578f0d-f7ae-4255-b4a5-236241fa5449"
+            asset_guid = "525733dc-76f0-4b38-8e64-9677397b92d1"
             a_client = AssetCatalog(
                 server_name, self.good_platform1_url, user_id=self.good_user_2
             )
@@ -192,11 +188,9 @@ class TestAssetCatalog:
                 print("\n\n" + response)
             assert True
         except (
-            InvalidParameterException,
-            PropertyServerException,
-            UserNotAuthorizedException,
+            PyegeriaException, PyegeriaInvalidParameterException,
         ) as e:
-            print_exception_response(e)
+            print_basic_exception(e)
             assert False, "Invalid request"
 
         finally:
@@ -205,7 +199,7 @@ class TestAssetCatalog:
     def test_get_asset_lineage_graph(self, server: str = good_view_server_2):
         try:
             server_name = server
-            asset_guid = "8a578f0d-f7ae-4255-b4a5-236241fa5449"
+            asset_guid = "525733dc-76f0-4b38-8e64-9677397b92d1"
             a_client = AssetCatalog(
                 server_name, self.good_platform1_url, user_id=self.good_user_2
             )
@@ -215,15 +209,18 @@ class TestAssetCatalog:
             effective_time = None
             as_of_time = None
             relationship_types = None
-            limit_to_isc_q_name = "InformationSupplyChain:Sustainability Reporting"
+            limit_to_isc_q_name = None
             hilight_isc_q_name = None
 
             response = a_client.get_asset_lineage_graph(asset_guid, effective_time,
                                                         as_of_time, relationship_types,
                                                         limit_to_isc_q_name, hilight_isc_q_name,
+                                                        all_anchors = False, start_from = 0, page_size = 0, output_format="REPORT",
+                                                        report_spec = "Common-Mermaid"
+
                                                         )
             print(f"type is {type(response)}")
-            if type(response) is dict:
+            if isinstance(response, dict | list):
                 print("\n\n" + json.dumps(response, indent=4))
                 count = len(response)
                 print(f"Found {count} pieces")
@@ -231,11 +228,9 @@ class TestAssetCatalog:
                 print("\n\n" + response)
             assert True
         except (
-            InvalidParameterException,
-            PropertyServerException,
-            UserNotAuthorizedException,
+            PyegeriaException, PyegeriaInvalidParameterException,
         ) as e:
-            print_exception_response(e)
+            print_basic_exception(e)
             assert False, "Invalid request"
 
         finally:
@@ -272,21 +267,22 @@ class TestAssetCatalog:
             a_client.close_session()
 
     def test_get_assets_by_metadata_collection_id(
-        self, server: str = good_view_server_1
+        self, server: str = good_view_server_2
     ):
         try:
             server_name = server
             metadata_collection_id = (
-                "74a786b2-d6d7-401d-b8c1-7d798f752c55"  # Coco Template Archive
+                "9905c3cb-94c5-4494-9229-0d6f69c0b842"  # Coco Template Archive
             )
             a_client = AssetCatalog(
                 server_name, self.good_platform1_url, user_id=self.good_user_2
             )
-
+            # type_name = "SoftwareServer"
+            type_name = "FileFolder"
             token = a_client.create_egeria_bearer_token(self.good_user_2, "secret")
 
             response = a_client.get_assets_by_metadata_collection_id(
-                metadata_collection_id, "SoftwareServer"
+                metadata_collection_id, type_name, output_format="DICT",report_spec="Referenceable"
             )
             print(f"type is {type(response)}")
             if type(response) is list:
@@ -307,7 +303,7 @@ class TestAssetCatalog:
         finally:
             a_client.close_session()
 
-    def test_get_asset_catalog_types(self, server: str = good_view_server_1):
+    def test_get_asset_catalog_types(self, server: str = good_view_server_2):
         try:
             server_name = server
             a_client = AssetCatalog(

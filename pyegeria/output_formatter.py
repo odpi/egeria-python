@@ -119,6 +119,10 @@ def markdown_to_html(markdown_text: str) -> str:
         <meta charset="UTF-8">
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
         <title>Egeria Report</title>
+        <script src="https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.min.js"></script>
+        <script>
+            mermaid.initialize({{ startOnLoad: true }});
+        </script>
         <style>
             body {{ font-family: Arial, sans-serif; line-height: 1.6; padding: 20px; }}
             h1 {{ color: #2c3e50; }}

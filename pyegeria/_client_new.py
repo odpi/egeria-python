@@ -5007,7 +5007,7 @@ class Client2(BaseClient):
             logger.info(NO_ELEMENTS_FOUND)
             return NO_ELEMENTS_FOUND
 
-        if output_format != 'JSON':  # return a simplified markdown representation
+        if output_format.upper() != 'JSON':  # return a simplified markdown representation
             logger.info(f"Found elements, output format: {output_format} and report_spec: {report_spec}")
             return _gen_output(elements, "Members", _type,
                                output_format, report_spec)

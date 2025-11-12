@@ -149,7 +149,9 @@ def display_glossaries(
                 cat_md = ''
                 if type(members) is list:
                     for member in members:
-                        cat_md += f'* {member.get("relatedElement",{}).get("properties",{}).get("qualifiedName","")}\n'
+                        if member['relatedElement'
+                        ]["elementHeader"]["type"]['typeName'] == "CollectionFolder":
+                            cat_md += f'* {member.get("relatedElement",{}).get("properties",{}).get("qualifiedName","")}\n'
                     cat_md = cat_md.strip()
 
                 table.add_row(display_name, q_name, language, description, usage, Markdown(cat_md))

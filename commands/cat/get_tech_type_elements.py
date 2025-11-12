@@ -19,6 +19,7 @@ from rich.prompt import Prompt
 from rich.table import Table
 from rich.text import Text
 from rich.tree import Tree
+from commands.cat.list_generic import list_generic
 
 from pyegeria import (
     AutomatedCuration,
@@ -59,91 +60,10 @@ def tech_viewer(
     jupyter: bool = EGERIA_JUPYTER,
     width: int = EGERIA_WIDTH,
 ):
-    def build_classifications(classification: dict) -> Markdown:
-        class_md = "\n"
-        for c in classification:
-            c_type = c["classificationName"]
-            if c_type == "Anchors":
-                continue
-            class_md += f"* Classification: {c_type}\n"
-            class_props = c.get("classificationProperties", None)
-            if class_props is None:
-                continue
-            for prop in class_props.keys():
-                class_md += f"\t* {prop}: {class_props[prop]}\n"
-        if class_md == "-":
-            output = None
-        else:
-            output = class_md
-        return output
+    list_generic(report_spec = "Tech-Type-Elements", output_format = "TABLE", view_server = server_name,
+                 view_url= platform_url, user = user, user_pass = user_pass, params = {"filter": tech_name},
+                 render_table=True, table_caption="Tech Type Elements", use_pager=True, width=width, jupyter=jupyter)
 
-    try:
-        console = Console(width=width, force_terminal=not jupyter)
-
-        a_client = AutomatedCuration(server_name, platform_url, user_id=user)
-
-        token = a_client.create_egeria_bearer_token(user, user_pass)
-        tech_elements = a_client.get_technology_type_elements(
-            tech_name, get_templates=False
-        )
-        if type(tech_elements) is str:
-            console.print(f"No elements found for {tech_name}")
-            sys.exit(1)
-
-        tree = Tree(
-            f"Deployed Technology Type: {tech_name}",
-            style="bold bright_white on black",
-            guide_style="bold bright_blue",
-        )
-        note: str = " "
-        for element in tech_elements:
-            header = element["elementHeader"]
-            tech_type = header["type"]["typeName"]
-            tech_collection = header["origin"]["homeMetadataCollectionName"]
-            tech_created_by = header["versions"]["createdBy"]
-            tech_created_at = header["versions"]["createTime"]
-            tech_guid = header["guid"]
-            tech_classifications = header["classifications"]
-            class_md = build_classifications(tech_classifications)
-
-            referenceables = element["referenceableProperties"]
-            tech_qualified_name = referenceables["qualifiedName"]
-            extended = referenceables["extendedProperties"]
-            ex_md: str = ""
-            for key, value in extended.items():
-                ex_md += f"* {key}: {value}\n"
-
-            note = (
-                f"* Qualified Name: {tech_qualified_name}\n"
-                f"* GUID: {tech_guid}\n"
-                f"* Created by: {tech_created_by}\n"
-                f"* Created at: {tech_created_at}\n"
-                f"* Home Collection: {tech_collection}\n"
-                f"{class_md}\n"
-                f"{ex_md}\n"
-            )
-
-            interfaces = extended.get("connectorInterfaces", None)
-            if interfaces is not None:
-                interface_type_name = interfaces["typeName"]
-                interface_array_cnt = interfaces["arrayCount"]
-                note += f"* Interface Type: {interface_type_name}\n"
-                for i in range(0, int(interface_array_cnt)):
-                    note += (
-                        f"\t* Type: {interfaces['arrayValues']['propertyValueMap'][str(i)]['typeName']}"
-                        f"\tName: {interfaces['arrayValues']['propertiesAsStrings'][str(i)]}\n"
-                    )
-            note_md = Panel.fit(Markdown(note), style="bold bright_white")
-            t = tree.add(note_md)
-
-        print(tree)
-
-    except (
-        InvalidParameterException,
-        PropertyServerException,
-        UserNotAuthorizedException,
-    ) as e:
-        print_exception_response(e)
 
 
 def main():
