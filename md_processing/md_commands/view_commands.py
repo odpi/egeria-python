@@ -97,7 +97,9 @@ def process_format_set_action(
         return
 
     # put the search string in kwargs
+
     kwargs['search_string'] = search_string
+
 
     # Extract the function and parameters from the action property (now a dict)
     action = format_set["action"]
@@ -105,6 +107,8 @@ def process_format_set_action(
     required_params = action.get("required_params", action.get("user_params", []))
     optional_params = action.get("optional_params", [])
     spec_params = action.get("spec_params", {})
+
+
 
     # Create a params dictionary from required/optional and spec_params
     params = {}
@@ -251,11 +255,17 @@ def process_output_command(egeria_client: EgeriaTech, txt: str, directive: str =
         return valid
 
     elif directive == "process":
-        attributes = parsed_output['attributes']
         search_string = attributes.get('Search String', {}).get('value', '*')
         output_format = attributes.get('Output Format', {}).get('value', 'LIST')
-        report_spec = attributes.get('Output Format Set', {}).get('value', object_type)
+        report_spec = attributes.get('Report Spec', {}).get('value', object_type)
+        filter = attributes.get('Filter', {}).get('value', None)
         kwargs = parsed_output.get("kwargs", {})
+
+
+        kwargs['filter'] = search_string
+
+
+
         for key, value in attributes.items():
             kwargs[key] = value.get('value', None) if key not in ["Search String", "Output Format", "Output Format Set"] else None
         kwargs = body_slimmer(kwargs)

@@ -459,7 +459,7 @@ base_report_specs = FormatSetDict({
         action=ActionParameter(
             function="Client2.get_tech_type_detail",
             optional_params=OPTIONAL_PARAMS,
-            required_params=["type_name"],
+            required_params=["filter"],
             spec_params={},
         )
     ),
