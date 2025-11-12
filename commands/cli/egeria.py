@@ -18,8 +18,9 @@ from loguru import logger
 
 from pyegeria import config_logging,  settings
 
+from commands.cat.my_reports import start_exp2
 from commands.cat.run_report import execute_format_set_action
-from commands.cat.get_asset_graph import asset_viewer
+from commands.cat.old_get_asset_graph import asset_viewer
 from commands.cat.get_collection import collection_viewer
 from commands.cat.get_project_dependencies import project_dependency_viewer
 from commands.cat.get_project_structure import project_structure_viewer
@@ -302,6 +303,19 @@ def my_show(ctx):
     """Display an Egeria Object"""
     pass
 
+
+@my_show.command("my-reports")
+@click.pass_context
+def show_my_reports(ctx):
+    """Display my profiles
+
+    Usage: show my-profile
+
+    """
+    c = ctx.obj
+    start_exp2(
+        # c.view_server, c.view_server_url, c.userid, c.password, c.jupyter, c.width
+    )
 
 @my_show.command("my-profile")
 @click.pass_context
@@ -1190,28 +1204,7 @@ def show_terms(ctx, search_string, glossary_guid, glossary_name, output_format):
         output_format,
     )
 
-@glossary_group.command("glossary-categories")
-@click.option("--search_string", default="*", help="Name to search for categories")
-@click.option(
-    "--output-format",
-    type=click.Choice(["FORM", "REPORT", "TABLE"]),
-    default="TABLE",
-    help="Display on screen as table, or as FORM or REPORT file",
-    )
-@click.pass_context
-def categories(ctx, search_string, output_format):
-    """Display a list of categories"""
-    c = ctx.obj
-    display_categories(
-        search_string,
-        c.view_server,
-        c.view_server_url,
-        c.userid,
-        c.password,
-        c.jupyter,
-        c.width,
-        output_format,
-    )
+
 
 @glossary_group.command("glossaries")
 @click.option("--search_string", default="*", help="Name to search for glossaries")

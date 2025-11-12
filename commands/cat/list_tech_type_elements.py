@@ -99,9 +99,8 @@ def list_tech_elements(
         table.add_column("Properties", width=40)
         table.add_column("Classifications", width=50)
 
-        tech_elements = a_client.get_technology_type_elements(
-            tech_name, get_templates=False
-        )
+        tech_elements = a_client.get_technology_type_elements(tech_name, get_templates=False, output_format=JSON,
+                                                              report_spec=Tech - Type - Elements)
         if type(tech_elements) is str:
             console.print(f"No elements found for {tech_name}")
             sys.exit(1)

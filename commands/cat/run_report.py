@@ -153,8 +153,84 @@ def execute_format_set_action(
     # Add spec_params to params
     params.update(spec_params)
 
-    params['output_format'] = output_format
-    params['report_spec'] = format_set_name
+    # Delegate execution to exec_report_spec for canonical behavior
+    from pyegeria.format_set_executor import exec_report_spec
+    ofmt = (output_format or "TABLE").upper()
+    mapped = "DICT" if ofmt == "TABLE" else ofmt
+    res = exec_report_spec(
+        format_set_name,
+        output_format=mapped,
+        params=params,
+        view_server=view_server,
+        view_url=view_url,
+        user=user,
+        user_pass=user_pass,
+    )
+
+    # Handle TABLE rendering locally
+    if ofmt == "TABLE":
+        if res.get("kind") != "json":
+            print("No results or unexpected response:", res)
+            return
+        data = res.get("data")
+        # Render basic table
+        table = Table(
+            title=f"{format_set_name} @ {time.asctime()}",
+            style="bright_white on black",
+            header_style="bright_white on dark_blue",
+            title_style="bold white on black",
+            caption_style="white on black",
+            show_lines=True,
+            box=box.ROUNDED,
+            caption=f"View Server '{view_server}' @ Platform - {view_url}",
+            expand=True,
+        )
+        rows = data if isinstance(data, list) else [data]
+        if rows and isinstance(rows[0], dict):
+            cols = list(rows[0].keys())
+            for c in cols:
+                table.add_column(str(c), justify="left", style="cyan")
+            for r in rows:
+                table.add_row(*[str(r.get(c, "")) for c in cols])
+        else:
+            table.add_column("Value")
+            for r in rows:
+                table.add_row(str(r))
+        # Optional header
+        from pyegeria.base_report_formats import get_report_format_heading, get_report_format_description
+        heading = get_report_format_heading(format_set_name)
+        desc = get_report_format_description(format_set_name)
+        if heading and desc:
+            console.print(Markdown(f"# {heading}\n{desc}\n"))
+        console.print(table)
+        return
+
+    # For non-table formats, write to file based on MIME/kind
+    kind = res.get("kind")
+    mime = res.get("mime")
+    out_dir = os.path.join(app_config.pyegeria_root, app_config.dr_egeria_outbox)
+    ts = time.strftime('%Y-%m-%d-%H-%M-%S')
+    safe_name = "".join(c for c in format_set_name if c.isalnum() or c in ("-","_","+","."," ")).strip().replace(" ", "_")
+
+    if kind == "text":
+        content = res.get("content", "")
+        ext = ".html" if mime == "text/html" else ".md"
+    elif kind == "json":
+        content = json.dumps(res.get("data"), indent=2)
+        ext = ".json"
+    else:
+        content = json.dumps(res, indent=2, default=str)
+        ext = ".txt"
+
+    file_name = f"{safe_name}-{ts}{ext}"
+    full_file_path = os.path.join(out_dir, file_name)
+    os.makedirs(os.path.dirname(full_file_path), exist_ok=True)
+    with open(full_file_path, "w", encoding="utf-8") as f:
+        f.write(content)
+    print(f"\n==> Output written to {full_file_path}")
+    if ext == ".html":
+        print(f"\n==> Web link: [{file_name}]({app_config.pyegeria_publishing_root}/{file_name})")
+    return
 
     # Determine the appropriate client class based on the format set name or function
     client_class = None
@@ -361,7 +437,7 @@ def main():
     # First, parse just the format-set argument to determine which other arguments to add
     logger.enable("pyegeria")
     initial_parser = argparse.ArgumentParser(add_help=False)
-    initial_parser.add_argument("--report", help="Name of the output format set", required=True)
+    initial_parser.add_argument("--report", help="Name of the report spec", required=True)
     initial_args, _ = initial_parser.parse_known_args()
 
     # Get the format set to determine parameters
@@ -370,16 +446,16 @@ def main():
 
     # Check if the format set exists
     if not format_set:
-        print(f"Error: Format set for '{format_set_name}' not found.")
-        print("Available format sets:")
+        print(f"Error: Report Spec for '{format_set_name}' not found.")
+        print("Available Report Specs:")
         from pyegeria.base_report_formats import report_spec_list
         for name in report_spec_list():
             print(f"  - {name}")
         return
     
     # Create the full parser with all arguments
-    parser = argparse.ArgumentParser(description="Execute an action from an output format set")
-    parser.add_argument("--report", help="Name of the output format set", required=True)
+    parser = argparse.ArgumentParser(description="Execute an action from Report Spec")
+    parser.add_argument("--report", help="Name of the report spec", required=True)
     parser.add_argument("--server", help="Name of the server to connect to")
     parser.add_argument("--url", help="URL Platform to connect to")
     parser.add_argument("--userid", help="User Id")
@@ -400,7 +476,7 @@ def main():
         for param in sorted(set(required_params + optional_params)):
             parser.add_argument(f"--{param.replace('_', '-')}", help=f"{param.replace('_', ' ')} parameter")
     else:
-        print(f"Error: Format set '{format_set_name}' does not have an action property.")
+        print(f"Error: Report Spec '{format_set_name}' does not have an action property.")
         return
     
     args = parser.parse_args()
@@ -435,7 +511,7 @@ def main():
                     prompt_text += f" (default: {default_value})"
                 value = Prompt.ask(prompt_text, default=default_value).strip()
                 kwargs[param] = value
-        print(f"Using format set {format_set_name} and output format {output_format} with parameters: {kwargs} ")
+        print(f"Using Report Spec {format_set_name} and output format {output_format} with parameters: {kwargs} ")
         execute_format_set_action(
             format_set_name=format_set_name,
             view_server=server,

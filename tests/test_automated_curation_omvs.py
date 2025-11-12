@@ -1317,10 +1317,10 @@ class TestAutomatedCuration:
 
             start_time = time.perf_counter()
             # filter = "CSV Data File"
-            filter = "PostgreSQL Server"
-            response = a_client.get_technology_type_elements(
-                filter, get_templates=False
-            )
+            filter = "File System Directory"
+            response = a_client.get_technology_type_elements(filter, get_templates=True, output_format="DICT",
+                                                             report_spec="Tech-Type-Elements")
+                                                             # report_spec="Common-Mermaid")
             duration = time.perf_counter() - start_time
             print(f"\n\tDuration was {duration} seconds")
             if type(response) is list:
@@ -1332,11 +1332,11 @@ class TestAutomatedCuration:
                 console.log("\n\n" + response)
             assert True
 
-        except (
-            PyegeriaException
-        ) as e:
+        except (PyegeriaException) as e:
             print_basic_exception(e)
             assert False, "Invalid request"
-
+        except ValidationError as e:
+            print_validation_error(e)
+            assert False, "Invalid request"
         finally:
             a_client.close_session()

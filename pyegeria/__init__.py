@@ -70,7 +70,7 @@ from .template_manager_omvs import TemplateManager
 from .data_designer import DataDesigner
 from ._output_formats import select_report_spec
 from .mcp_adapter import list_reports, describe_report, run_report, _async_run_report, _execute_egeria_call_blocking
-
+from .base_report_formats import report_spec_list, select_report_spec, get_report_format_description
 #
 # 2/12/25
 

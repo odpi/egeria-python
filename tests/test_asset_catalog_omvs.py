@@ -143,18 +143,16 @@ class TestAssetCatalog:
     def test_get_asset_graph(self, server: str = good_view_server_2):
         try:
             server_name = server
-            asset_guid = "525733dc-76f0-4b38-8e64-9677397b92d1"
+            asset_guid = "b0eb97fb-f10f-43ef-9f62-d34780173328"
             a_client = AssetCatalog(
                 server_name, self.good_platform1_url, user_id=self.good_user_2
             )
 
             token = a_client.create_egeria_bearer_token(self.good_user_2, "secret")
 
-            response = a_client.get_asset_graph(asset_guid, output_format="JSON", report_spec="Common-Mermaid")
+            response = a_client.get_asset_graph(asset_guid, output_format="JSON", report_spec="Asset-Graph")
             print(f"type is {type(response)}")
-            print(f"type is {type(response)}")
-            print(f"type is {type(response)}")
-            if type(response) is dict:
+            if isinstance(response, dict | list):
                 print("\n\n" + json.dumps(response, indent=4))
                 count = len(response)
                 print(f"Found {count} assets")
@@ -190,11 +188,9 @@ class TestAssetCatalog:
                 print("\n\n" + response)
             assert True
         except (
-            InvalidParameterException,
-            PropertyServerException,
-            UserNotAuthorizedException,
+            PyegeriaException, PyegeriaInvalidParameterException,
         ) as e:
-            print_exception_response(e)
+            print_basic_exception(e)
             assert False, "Invalid request"
 
         finally:
@@ -219,9 +215,12 @@ class TestAssetCatalog:
             response = a_client.get_asset_lineage_graph(asset_guid, effective_time,
                                                         as_of_time, relationship_types,
                                                         limit_to_isc_q_name, hilight_isc_q_name,
+                                                        all_anchors = False, start_from = 0, page_size = 0, output_format="REPORT",
+                                                        report_spec = "Common-Mermaid"
+
                                                         )
             print(f"type is {type(response)}")
-            if type(response) is dict:
+            if isinstance(response, dict | list):
                 print("\n\n" + json.dumps(response, indent=4))
                 count = len(response)
                 print(f"Found {count} pieces")
@@ -229,11 +228,9 @@ class TestAssetCatalog:
                 print("\n\n" + response)
             assert True
         except (
-            InvalidParameterException,
-            PropertyServerException,
-            UserNotAuthorizedException,
+            PyegeriaException, PyegeriaInvalidParameterException,
         ) as e:
-            print_exception_response(e)
+            print_basic_exception(e)
             assert False, "Invalid request"
 
         finally:

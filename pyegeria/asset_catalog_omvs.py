@@ -17,7 +17,7 @@ from loguru import logger
 
 from pyegeria import Client2
 from pyegeria.base_report_formats import select_report_format, get_report_spec_match
-from pyegeria.models import NewElementRequestBody, TemplateRequestBody, SearchStringRequestBody
+from pyegeria.models import NewElementRequestBody, TemplateRequestBody, SearchStringRequestBody, ResultsRequestBody
 from pyegeria.output_formatter import populate_columns_from_properties, _extract_referenceable_properties, \
     get_required_relationships, generate_output
 from pyegeria.utils import body_slimmer
@@ -255,6 +255,7 @@ class AssetCatalog(Client2):
         page_size: int = 0,
         output_format: str = "MERMAID",
         report_spec: str = "Common-Mermaid",
+        body: dict | ResultsRequestBody = None
     ) -> str | dict:
         """Return all the elements that are anchored to an asset plus relationships between these elements and to
           other elements. Async Version.
@@ -291,18 +292,9 @@ class AssetCatalog(Client2):
             f"{self.platform_url}/servers/{self.view_server}/api/open-metadata/asset-catalog/assets/{asset_guid}/"
             f"as-graph"
         )
-
-        response = await self._async_make_request("POST", url)
-        element = response.json().get('element', NO_ASSETS_FOUND)
-        if type(element) is str:
-            logger.info(NO_ELEMENTS_FOUND)
-            return NO_ELEMENTS_FOUND
-
-        if output_format != 'JSON':  # return a simplified markdown representation
-            logger.info(f"Found elements, output format: {output_format} and report_spec: {report_spec}")
-            return self._generate_asset_output(element, None, "Asset",
-                               output_format, report_spec)
-        return element
+        response = await self._async_get_results_body_request(url, "Asset", self._generate_asset_output,
+                                                        start_from, page_size, output_format, report_spec, body)
+        return response
 
     def get_asset_graph(
         self,
@@ -311,6 +303,7 @@ class AssetCatalog(Client2):
         page_size: int = 0,
         output_format: str = "MERMAID",
         report_spec: str = "Common-Mermaid",
+        body: dict | ResultsRequestBody = None
     ) -> str | dict:
         """Return all the elements that are anchored to an asset plus relationships between these elements and to
           other elements.
@@ -334,6 +327,9 @@ class AssetCatalog(Client2):
         dict or str
              A dictionary of the asset graph.
 
+         Args:
+             body ():
+
          Raises:
          ------
          InvalidParameterException
@@ -344,7 +340,8 @@ class AssetCatalog(Client2):
 
         loop = asyncio.get_event_loop()
         response = loop.run_until_complete(
-            self._async_get_asset_graph(asset_guid, start_from, page_size, output_format, report_spec)
+            self._async_get_asset_graph(asset_guid, start_from, page_size, output_format,
+                                        report_spec, body)
         )
         return response
 
@@ -380,7 +377,7 @@ class AssetCatalog(Client2):
         """
 
         asset_graph = self.get_asset_graph(asset_guid, start_from, page_size)
-        return asset_graph.get("mermaidGraph")
+        return asset_graph[0]
 
     async def _async_get_asset_lineage_graph(
         self,
@@ -447,6 +444,7 @@ class AssetCatalog(Client2):
             "startFrom": start_from,
             "pageSize": page_size
             }
+
         response = await self._async_make_request("POST", url, body_slimmer(body))
         element = response.json().get("element",NO_ASSETS_FOUND)
         if type(element) is str:
@@ -468,6 +466,7 @@ class AssetCatalog(Client2):
         relationship_types: [str] = None,
         limit_to_isc_q_name: str = None,
         hilight_isc_q_name: str = None,
+        all_anchors: bool = False,
         start_from: int = 0,
         page_size: int = 0,
         output_format: str = "DICT",
@@ -511,7 +510,7 @@ class AssetCatalog(Client2):
         loop = asyncio.get_event_loop()
         response = loop.run_until_complete(
             self._async_get_asset_lineage_graph(asset_guid, effective_time, as_of_time, relationship_types,
-                                                limit_to_isc_q_name, hilight_isc_q_name,
+                                                limit_to_isc_q_name, hilight_isc_q_name, all_anchors,
                                                 start_from, page_size, output_format, report_spec)
         )
         return response

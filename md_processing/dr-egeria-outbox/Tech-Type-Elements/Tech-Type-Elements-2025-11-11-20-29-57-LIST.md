@@ -1,0 +1,18 @@
+# Technology Type Elements
+Elements of a Technology
+
+# TechTypeElementss Table
+
+TechTypeElementss found from the search string: `File System Directory`
+
+| Display Name | Qualified Name | GUID | Description | Deployed Implementation | 
+|-------------|-------------|-------------|-------------|-------------|
+| content-packs | File System Directory::ContentPacksCataloguer:/deployments/content-packs | 63570d51-5377-4107-af96-dd38b70c197d | None | File System Directory | 
+| deployments/loading-bay/sample-data/oak-dene-drop-foot-weekly-measurements | FileFolder::/deployments/loading-bay/sample-data/oak-dene-drop-foot-weekly-measurements | b0eb97fb-f10f-43ef-9f62-d34780173328 | None | File System Directory | 
+| sample-data | File System Directory::SampleDataCataloguer:/deployments/loading-bay/sample-data | f5d3d242-85e6-4b24-911b-c5c854458fdb | None | File System Directory | 
+| deployments | FileFolder::/deployments | 400796c6-8cd9-4694-92c5-cdf5c3dc5392 | None | File System Directory | 
+| deployments | FileFolder::/deployments | 5545ecc8-9050-47ee-aead-b35d00d6f8d0 | None | File System Directory | 
+| loading-bay | File System Directory::laz.local:/deployments/loading-bay | d35436ee-ba92-46d2-a733-bdb21d337902 | Loading bay folder | File System Directory | 
+| deployments/loading-bay/sample-data/old-market-drop-foot-weekly-measurements | FileFolder::/deployments/loading-bay/sample-data/old-market-drop-foot-weekly-measurements | 24427f01-24c2-4860-a9e4-e164ea3c1ee8 | Loading bay folder | File System Directory | 
+| deployments/loading-bay/sample-data/hampton-drop-foot-weekly-measurements | FileFolder::/deployments/loading-bay/sample-data/hampton-drop-foot-weekly-measurements | 0e0b2d63-eaaf-4c68-a502-9e5ac220c7a2 | Loading bay folder | File System Directory | 
+| deployments/loading-bay | FileFolder::/deployments/loading-bay | fc1f94e4-54f7-4c08-87f9-67d842003a04 | Loading bay folder | File System Directory | 

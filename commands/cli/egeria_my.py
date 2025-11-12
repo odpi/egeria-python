@@ -14,6 +14,7 @@ import os
 import click
 from trogon import tui
 
+from commands.cat.my_reports import start_exp2
 from commands.cli.ops_config import Config
 from commands.my.list_my_profile import display_my_profile
 from commands.my.list_my_roles import display_my_roles
@@ -178,6 +179,18 @@ def show(ctx):
     """Display an Egeria Object"""
     pass
 
+@show.command("my-reports")
+@click.pass_context
+def show_my_reports(ctx):
+    """Display my profiles
+
+    Usage: show my-profile
+
+    """
+    c = ctx.obj
+    start_exp2(
+        # c.view_server, c.view_server_url, c.userid, c.password, c.jupyter, c.width
+    )
 
 @show.command("my-profile")
 @click.pass_context
