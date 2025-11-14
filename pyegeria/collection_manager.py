@@ -1016,7 +1016,7 @@ class CollectionManager(Client2):
 
     @dynamic_catch
     async def _async_create_collection(self, display_name: str = None, description: str = None,
-                                       category: str = None, initial_classifications: list[str] = None, prop: list[str] = "Collection",
+                                       category: str = None, initial_classifications: list[str] = None, prop: list[str] = ["Collection"],
                                        body: dict | NewElementRequestBody = None) -> str:
         """ Create a new generic collection. If the body is not present, the display_name, description, category
             and classification will be used to create a simple, self-anchored collection.
@@ -5051,6 +5051,9 @@ class CollectionManager(Client2):
 
 
         """
+        if body is None:
+            body = {"class": "DeleteElementRequestBody"}
+        loop = asyncio.get_event_loop()
         url = f"{self.collection_command_root}/{collection_guid}/delete"
         await self._async_delete_element_request(url, body, cascade)
         logger.info(f"Deleted collection {collection_guid} with cascade {cascade}")
@@ -5216,7 +5219,7 @@ class CollectionManager(Client2):
 
         """
         loop = asyncio.get_event_loop()
-        loop.run_until_complete(self._async_add_to_collection(collection_guid, element_guid, body))
+        loop.run_until_complete(self._async_add_to_collection(element_guid, collection_guid, body))
 
     def add_term_to_folder(self, folder_guid: str, term_guid: str,
                              body: dict | NewRelationshipRequestBody = None) -> None:
@@ -5375,14 +5378,7 @@ class CollectionManager(Client2):
 
         Raises
         ------
-
-        InvalidParameterException
-          If the client passes incorrect parameters on the request - such as bad URLs or invalid values
-        PropertyServerException
-          Raised by the server when an issue arises in processing a valid request
-        NotAuthorizedException
-          The principle specified by the user_id does not have authorization for the requested action
-
+        PyegeriaException
         Notes
         -----
         {
@@ -5396,8 +5392,7 @@ class CollectionManager(Client2):
 
         """
 
-        url = (f"{self.collection_command_root}/{collection_guid}/members/"
-               f"{element_guid}/detach")
+        url = f"{self.collection_command_root}/{collection_guid}/members/{element_guid}/detach"
         await self._async_delete_relationship_request(url, body)
         logger.info(f"Removed member {element_guid} from collection {collection_guid}")
 

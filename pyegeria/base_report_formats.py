@@ -250,7 +250,7 @@ GOVERNANCE_DEFINITIONS_COLUMNS = COMMON_COLUMNS + [
 GOVERNANCE_DEFINITIONS_BASIC = [
     Column(name="Type", key='type_name'),
     Column(name="Summary", key='summary'),
-    Column(name='Qualified Name', key='qualified_name', format=True),
+    Column(name='Qualified Name', key='qualified_name', format=False),
     Column(name="GUID", key='guid', format=True),
 ]
 COMMON_ANNOTATIONS = {

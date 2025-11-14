@@ -12,7 +12,7 @@ for all use cases..using the more role based clients is often appropriate:
 
 """
 # from pyegeria.x_action_author_omvs import ActionAuthor
-from pyegeria.asset_catalog_omvs import AssetCatalog
+from pyegeria.asset_catalog import AssetCatalog
 # from pyegeria.collection_manager import CollectionManager
 from pyegeria.glossary_manager import GlossaryManager
 from pyegeria.project_manager import ProjectManager

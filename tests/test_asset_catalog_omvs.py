@@ -25,7 +25,7 @@ from pyegeria._exceptions import (
     UserNotAuthorizedException,
     print_exception_response,
 )
-from pyegeria.asset_catalog_omvs import AssetCatalog
+from pyegeria.asset_catalog import AssetCatalog
 from pyegeria.automated_curation import AutomatedCuration
 # from pyegeria.md_processing_utils import print_json_list_as_table
 

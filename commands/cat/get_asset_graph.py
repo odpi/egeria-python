@@ -50,9 +50,10 @@ def asset_viewer(
     use_pager: bool = True,
 ):
     try:
-        list_generic(report_spec="Asset-Graph", output_format="TABLE", view_server=view_server,
-                 view_url=view_url, user=user, user_pass=user_pass, params={"asset_guid": filter},
-                 render_table=True, table_caption="Asset Graph", use_pager=True, width=width, jupyter=jupyter)
+        list_generic(report_spec="Asset-Graph", output_format=output_format, view_server=view_server,
+                 view_url=view_url, user=user, user_pass=user_pass, params={"asset_guid": asset_guid},
+                 render_table=render_table, write_file = write_file, table_caption=table_caption, use_pager=use_pager,
+                     width=width, jupyter=jupyter, prompt_missing=prompt_missing)
 
     except PyegeriaException as e:
         print_basic_exception(e)
@@ -74,7 +75,9 @@ def main():
     try:
         asset_guid = Prompt.ask("Enter the Asset GUID to view:", default="")
         output_format = Prompt.ask("Enter the output format:", default="TABLE")
-        asset_viewer(output_format, asset_guid, server, url, userid, user_pass)
+        asset_viewer(output_format, asset_guid, server, url, userid,
+                     user_pass, prompt_missing=True, write_file=True, render_table=True,
+                     table_caption="Asset Graph")
     except KeyboardInterrupt as e:
         # console.print_exception()
         pass

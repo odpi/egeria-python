@@ -890,6 +890,7 @@ class GlossaryManager(CollectionManager):
 
         return response
 
+    @dynamic_catch
     async def _async_update_glossary_term(
             self,
             glossary_term_guid: str,
@@ -931,7 +932,7 @@ class GlossaryManager(CollectionManager):
         )
         await self._async_update_element_body_request(url, ["GlossaryTermProperties"], body)
         logger.info(f"Updated digital subscription {glossary_term_guid}")
-
+    @dynamic_catch
     def update_glossary_term(
             self,
             glossary_term_guid: str,
@@ -987,10 +988,99 @@ class GlossaryManager(CollectionManager):
                 )
             )
 
+    @dynamic_catch
+    async def _async_update_glossary_term_status(
+            self,
+            glossary_term_guid: str,
+            term_status: str = "DRAFT",
+            body: dict | UpdateStatusRequestBody = None,
+    ) -> None:
+        """Update the status of a term. Async version.
+
+        Parameters
+        ----------
+            glossary_term_guid: str
+                Unique identifier for the source glossary term.
+            term_status: str
+                new status of the term.
+            body: dict | UpdateStatusRequestBody
+                Body containing information about the status change. Supersedes other parameters.
+
+        Returns
+        -------
+        None
+
+        Raises
+        ------
+         PyegeriaException
+
+        """
+
+        validate_guid(glossary_term_guid)
+
+        url = (
+            f"{self.platform_url}/servers/{self.view_server}/api/open-metadata/glossary-manager/glossaries/terms/"
+            f"{glossary_term_guid}/status"
+        )
+        if body is None:
+            body = {
+             "class": "UpdateStatusRequestBody",
+             "newStatus": term_status,
+            }
+        await self._async_update_status_request(url, term_status, body)
+        logger.info(f"Updated term status {glossary_term_guid}")
+
 
     @dynamic_catch
+    def update_glossary_term_status(
+            self,
+            glossary_term_guid: str, term_status: str = "DRAFT",
+            body: dict | UpdateStatusRequestBody = None,
+            ) -> None:
+        """Add the data field values classification to a glossary term
 
+            Async Version.
 
+        Parameters
+        ----------
+            glossary_term_guid: str
+                Unique identifier for the source glossary term.
+            term_status: str
+                new status of the term.
+            body: dict | UpdateStatusRequestBody
+                Body containing information about the status change. Supersedes other parameters.
+
+        Returns
+        -------
+        None
+
+        Raises
+        ------
+         PyegeriaException
+             If the client passes incorrect parameters on the request - such as bad URLs or invalid values.
+         PropertyServerException
+             Raised by the server when an issue arises in processing a valid request.
+         NotAuthorizedException
+             The principle specified by the user_id does not have authorization for the requested action.
+        Notes
+        -----
+        An example body is:
+
+        {
+            "class" : "UpdateStatusRequestBody",
+            "newStatus" : "DRAFT"
+        }
+
+        """
+        loop = asyncio.get_event_loop()
+        loop.run_until_complete(
+            self._async_update_glossary_term_status(
+                glossary_term_guid,
+                body,
+                )
+            )
+
+    @dynamic_catch
     async def _async_delete_term(
             self,
             term_guid: str,

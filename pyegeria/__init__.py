@@ -15,7 +15,8 @@ the server platform and servers.
 from ._globals import (default_time_out, disable_ssl_warnings, enable_ssl_check,
                        is_debug, max_paging_size, NO_ELEMENTS_FOUND, NO_ASSETS_FOUND, NO_SERVERS_FOUND,
                        NO_CATALOGS_FOUND, NO_GLOSSARIES_FOUND, NO_TERMS_FOUND, NO_CATEGORIES_FOUND, NO_ELEMENT_FOUND,
-                       NO_PROJECTS_FOUND, DEBUG_LEVEL, NO_COLLECTION_FOUND, NO_GUID_RETURNED, COMMENT_TYPES
+                       NO_PROJECTS_FOUND, DEBUG_LEVEL, NO_COLLECTION_FOUND, NO_GUID_RETURNED, COMMENT_TYPES,
+                       TERM_STATUS
                        )
 
 
@@ -38,7 +39,7 @@ from ._exceptions import (InvalidParameterException, PropertyServerException, Us
                           print_exception_response, )
 from ._validators import (is_json, validate_guid, validate_name, validate_public, validate_search_string,
                           validate_server_name, validate_url, validate_user_id, )
-from .asset_catalog_omvs import AssetCatalog
+from .asset_catalog import AssetCatalog
 from .automated_curation import AutomatedCuration
 from .classification_manager_omvs import ClassificationManager
 from .collection_manager import CollectionManager

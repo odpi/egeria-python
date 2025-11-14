@@ -20,7 +20,7 @@ from pyegeria import config_logging,  settings
 
 from commands.cat.my_reports import start_exp2
 from commands.cat.run_report import list_generic
-from commands.cat.old_get_asset_graph import asset_viewer
+from commands.cat.get_asset_graph import asset_viewer
 from commands.cat.get_collection_tree import collection_viewer
 from commands.cat.get_project_dependencies import project_dependency_viewer
 from commands.cat.get_project_structure import project_structure_viewer
@@ -32,13 +32,17 @@ from commands.cat.glossary_actions import (
     delete_term,
     export_terms_csv,
     import_terms_csv,
-    create_category,
-    update_category,
-    delete_category,
-    add_term_to_category,
-    remove_term_from_category
+    update_term,
+    update_term_status,
 )
 
+from commands.cat.collection_actions import (
+    create_collection,
+    delete_collection,
+    update_collection,
+    add_element_to_collection,
+    remove_element_from_collection
+)
 
 from commands.cat.list_assets import display_assets
 from commands.cat.list_cert_types import display_certifications
@@ -1565,11 +1569,21 @@ tell_glossary.add_command(delete_term)
 tell_glossary.add_command(create_term)
 tell_glossary.add_command(import_terms_csv)
 tell_glossary.add_command(export_terms_csv)
-tell_glossary.add_command(create_category)
-tell_glossary.add_command(delete_category)
-tell_glossary.add_command(update_category)
-tell_glossary.add_command(add_term_to_category)
-tell_glossary.add_command(remove_term_from_category)
+tell_glossary.add_command(update_term)
+tell_glossary.add_command(update_term_status )
+
+@tell_cat.group("collection")
+@click.pass_context
+def tell_collections(ctx):
+    """Perform actions on collections"""
+    pass
+
+tell_collections.add_command(create_collection)
+tell_collections.add_command(delete_collection)
+tell_collections.add_command(update_collection)
+tell_collections.add_command(add_element_to_collection)
+tell_collections.add_command(remove_element_from_collection)
+
 
 @tell_cat.group("todo")
 @click.pass_context

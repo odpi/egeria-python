@@ -8,86 +8,55 @@ Execute Glossary actions.
 
 """
 
-import csv
 import json
 import os
 import sys
-import time
-from datetime import datetime
 
 import click
 
-
-from pyegeria import EgeriaTech, body_slimmer, settings
+from pyegeria import EgeriaTech, body_slimmer, settings, NO_ELEMENTS_FOUND, TERM_STATUS
 from pyegeria._exceptions_new import (
     PyegeriaException, print_basic_exception
 )
+
 app_config = settings.Environment
 
 EGERIA_USER = os.environ.get("EGERIA_USER", "erinoverview")
 EGERIA_USER_PASSWORD = os.environ.get("EGERIA_USER_PASSWORD", "secret")
 
+
+
 @click.command("create-glossary")
 @click.option("--name", help="Name of Glossary", required=True)
 @click.option("--language", help="Language of Glossary", default="English")
-@click.option(
-    "--description",
-    help="Description of Glossary",
-    default="A description goes here",
-)
-@click.option(
-    "--usage",
-    help="Purpose of glossary",
-    default="Definitions",
-)
-@click.option("--server", default=app_config.app_config.egeria_view_server, help="Egeria view server to use.")
-@click.option(
-    "--url", default=app_config.app_config.app_config.egeria_view_server_URL, help="URL of Egeria platform to connect to"
-)
+@click.option("--description", help="Description of Glossary", default="A description goes here")
+@click.option("--usage", help="Purpose of glossary", default="Definitions")
+@click.option("--category", help="Category of glossary")
+@click.option("--server", default=app_config.egeria_view_server, help="Egeria view server to use.")
+@click.option("--url", default=app_config.egeria_view_server_url, help="URL of view server to connect to")
 @click.option("--userid", default=EGERIA_USER, help="Egeria user")
 @click.option("--password", default=EGERIA_USER_PASSWORD, help="Egeria user password")
 @click.option("--timeout", default=60, help="Number of seconds to wait")
 def create_glossary(
-    server: str,
-    url: str,
-    userid: str,
-    password: str,
-    timeout: int,
-    name: str,
-    language: str,
-    description: str,
-    usage: str,
+        server: str,
+        url: str,
+        userid: str,
+        password: str,
+        timeout: int,
+        name: str,
+        language: str,
+        description: str,
+        usage: str,
+        category: str,
 ) -> None:
-    """Create a new Glossary"""
+    """Create a new Glossary """
 
     try:
         m_client = EgeriaTech(server, url, userid, password)
         token = m_client.create_egeria_bearer_token()
 
-        existing_glossary = m_client.find_glossaries(name)
-        if type(existing_glossary) is list:
-            click.echo(
-                f"\nFound {len(existing_glossary)} existing Glossaries with a similar name!\n"
-            )
-            for glossary in existing_glossary:
-                if (
-                    glossary["properties"]["qualifiedName"]
-                    == "Glossary:" + name
-                ):
-                    click.echo(
-                        (
-                            f"\tFound existing glossary: {glossary['properties']['qualifiedName']} with id of {glossary['elementHeader']['guid']}\n"
-                            "Exiting\n"
-                        )
-                    )
-                    sys.exit(0)
-                else:
-                    click.echo(
-                        "Found glossaries with similar names but different qualifiedNames...proceeding\n"
-                    )
-
-        glossary_guid = m_client.create_glossary(name, description, language, usage)
-        print(f"New glossary {name} created with id of {glossary_guid}")
+        glossary_guid = m_client.create_glossary(name, description, language, usage, category)
+        print(f"New glossary `{name}` created with id of `{glossary_guid}`")
 
     except PyegeriaException as e:
         print_basic_exception(e)
@@ -98,7 +67,7 @@ def create_glossary(
 @click.command("delete-glossary")
 @click.option("--server", default=app_config.egeria_view_server, help="Egeria view server to use")
 @click.option(
-    "--url", default=app_config.app_config.egeria_view_server_URL, help="URL of Egeria platform to connect to"
+    "--url", default=app_config.egeria_view_server_url, help="URL of Egeria platform to connect to"
 )
 @click.option("--userid", default=EGERIA_USER, help="Egeria user")
 @click.option("--password", default=EGERIA_USER_PASSWORD, help="Egeria user password")
@@ -109,9 +78,9 @@ def delete_glossary(server, url, userid, password, timeout, glossary_guid):
     m_client = EgeriaTech(server, url, user_id=userid, user_pwd=password)
     token = m_client.create_egeria_bearer_token()
     try:
-        m_client.delete_glossary(glossary_guid, cascade = True)
+        m_client.delete_glossary(glossary_guid, cascade=False)
 
-        click.echo(f"Deleted glossary: {glossary_guid}")
+        click.echo(f"Deleted glossary: `{glossary_guid}`")
 
     except PyegeriaException as e:
         print_basic_exception(e)
@@ -122,50 +91,43 @@ def delete_glossary(server, url, userid, password, timeout, glossary_guid):
 @click.command("create-term")
 @click.option("--glossary-name", help="Name of Glossary", required=True)
 @click.option("--term-name", help="Name of Term", required=True)
-@click.option("--qualified-name",  help="Qualified name of Term", default=None)
-@click.option(
-    "--summary",
-    help="Summary definition",
-    default="Summary goes here",
-)
-@click.option(
-    "--description",
-    help="Full description",
-    default="Description goes here",
-)
+@click.option("--qualified-name", help="Qualified name of Term", default=None)
+@click.option("--summary", help="Summary definition", default="Summary goes here")
+@click.option("--description", help="Full description", default="Description goes here")
 @click.option("--abbrev", help="Abbreviation", default=None)
 @click.option("--examples", help="Example usage", default=None)
 @click.option("--usage", help="Usage notes", default=None)
 @click.option("--version", help="Version", default="1.0")
-@click.option(
-    "--status",
-    help="Status",
-    type=click.Choice(
-        ["DRAFT", "ACTIVE", "DEPRECATED", "OBSOLETE", "OTHER"], case_sensitive=False
-    ),
-    default="DRAFT",
-)
+@click.option("--status", help="Status",
+              type=click.Choice(TERM_STATUS, case_sensitive=False
+            ), default="DRAFT")
 @click.option("--server", default=app_config.egeria_view_server, help="Egeria view server to use.")
-@click.option(
-    "--url", default=app_config.app_config.egeria_view_server_URL, help="URL of Egeria platform to connect to"
-)
+@click.option("--url", default=app_config.egeria_view_server_url,
+              help="URL of Egeria platform to connect to")
 @click.option("--userid", default=EGERIA_USER, help="Egeria user")
 @click.option("--password", default=EGERIA_USER_PASSWORD, help="Egeria user password")
 @click.option("--timeout", default=60, help="Number of seconds to wait")
 def create_term(server, url, userid, password, glossary_name, term_name, summary, description, abbrev, examples, usage,
                 version, status, timeout: int = 120, qualified_name=None) -> str:
-    """Create a new term
-
-    Args:
-        qualified_name:
-    """
+    """Create a new term """
     m_client = EgeriaTech(server, url, user_id=userid, user_pwd=password)
     token = m_client.create_egeria_bearer_token()
     if qualified_name is None:
-        qualified_name = m_client.__create_qualified_name__('Term', term_name)
+        qualified_name = m_client.__create_qualified_name__('Term', term_name,
+                                                            settings.User_Profile.egeria_local_qualifier)
     try:
+        glossary_guid = m_client.__get_guid__(display_name = glossary_name, property_name = "displayName")
+        if glossary_guid == NO_ELEMENTS_FOUND:
+            click.echo(f"The glossary name {glossary_name} was not found..exiting\n")
+            sys.exit(0)
+
         body = {
-            "class": "ReferenceableRequestBody",
+            "class": "NewElementRequestBody",
+            "parentGUID" : glossary_guid,
+            "parentRelationshipTypeName" : "CollectionMembership",
+            "anchorScopeGUID" : glossary_guid,
+            "isOwnAnchor": True,
+            "parentAtEnd1": True,
             "elementProperties": {
                 "class": "GlossaryTermProperties",
                 "qualifiedName": qualified_name,
@@ -179,26 +141,92 @@ def create_term(server, url, userid, password, glossary_name, term_name, summary
             },
             "initialStatus": status,
         }
-        exists = False
-        glossary_info = m_client.find_glossaries(glossary_name)
-        if type(glossary_info) is list:
-            for glossary in glossary_info:
-                if glossary["properties"]["displayName"] == glossary_name:
-                    exists = True
-                    glossary_guid = glossary["elementHeader"]["guid"]
 
-        if not exists:
-            click.echo(f"The glossary name {glossary_name} was not found..exiting\n")
-            sys.exit(0)
-
-        term_guid = m_client.create_controlled_glossary_term(
-            glossary_guid, body_slimmer(body)
+        term_guid = m_client.create_glossary_term(body_slimmer(body)
         )
 
         click.echo(
-            f"Successfully created term {term_name} with GUID {term_guid}, in glossary {glossary_name}.\n"
+            f"Successfully created term `{term_name}` with GUID `{term_guid}`, in glossary `{glossary_name}`.\n"
         )
         return term_guid
+    except PyegeriaException as e:
+        print_basic_exception(e)
+    finally:
+        m_client.close_session()
+
+
+@click.command("update-term")
+@click.option("--term-guid", help="GUID of the Term", required=True)
+@click.option("--summary", help="Summary definition", default="Summary goes here")
+@click.option("--description", help="Full description", default="Description goes here")
+@click.option("--abbrev", help="Abbreviation", default=None)
+@click.option("--examples", help="Example usage", default=None)
+@click.option("--usage", help="Usage notes", default=None)
+@click.option("--version", help="Version", default="1.0")
+@click.option("--server", default=app_config.egeria_view_server, help="Egeria view server to use.")
+@click.option("--url", default=app_config.egeria_view_server_url,
+              help="URL of Egeria platform to connect to")
+@click.option("--userid", default=EGERIA_USER, help="Egeria user")
+@click.option("--password", default=EGERIA_USER_PASSWORD, help="Egeria user password")
+@click.option("--timeout", default=60, help="Number of seconds to wait")
+def update_term(server, url, userid, password, term_name, summary, description, abbrev, examples, usage,
+                version, timeout: int = 120) -> None:
+    """Update a term """
+    m_client = EgeriaTech(server, url, user_id=userid, user_pwd=password)
+    token = m_client.create_egeria_bearer_token()
+
+    try:
+        body = {
+            "class": "UpdateElementRequestBody",
+            "mergeUpdate": True,
+            "elementProperties": {
+                "class": "GlossaryTermProperties",
+                "displayName": term_name,
+                "summary": summary,
+                "description": description,
+                "abbreviation": abbrev,
+                "examples": examples,
+                "usage": usage,
+                "publishVersionIdentifier": version,
+            },
+        }
+
+        term_guid = m_client.update_glossary_term(body_slimmer(body)
+        )
+
+        click.echo(
+            f"Successfully updated term `{term_name}` with GUID `{term_guid}`.\n"
+        )
+
+    except PyegeriaException as e:
+        print_basic_exception(e)
+    finally:
+        m_client.close_session()
+
+
+@click.command("update-term-status")
+@click.option("--term-guid", help="GUID of the Term", required=True)
+@click.option("--status", help="Status",
+              type=click.Choice(TERM_STATUS, case_sensitive=False), default="DRAFT")
+@click.option("--server", default=app_config.egeria_view_server, help="Egeria view server to use.")
+@click.option("--url", default=app_config.egeria_view_server_url,
+              help="URL of Egeria platform to connect to")
+@click.option("--userid", default=EGERIA_USER, help="Egeria user")
+@click.option("--password", default=EGERIA_USER_PASSWORD, help="Egeria user password")
+@click.option("--timeout", default=60, help="Number of seconds to wait")
+def update_term_status(server, url, userid, password, term_guid, status, timeout: int = 120) -> None:
+    """Update a term """
+    m_client = EgeriaTech(server, url, user_id=userid, user_pwd=password)
+    token = m_client.create_egeria_bearer_token()
+
+    try:
+
+        term_guid = m_client.update_glossary_term_status(term_guid, status)
+
+        click.echo(
+            f"Successfully updated term {term_guid} with status `{status}`.\n"
+        )
+
     except PyegeriaException as e:
         print_basic_exception(e)
     finally:
@@ -208,7 +236,7 @@ def create_term(server, url, userid, password, glossary_name, term_name, summary
 @click.command("delete-term")
 @click.option("--server", default=app_config.egeria_view_server, help="Egeria view server to use")
 @click.option(
-    "--url", default=app_config.app_config.egeria_view_server_URL, help="URL of Egeria platform to connect to"
+    "--url", default=app_config.egeria_view_server_url, help="URL of Egeria View Server to connect to"
 )
 @click.option("--userid", default=EGERIA_USER, help="Egeria user")
 @click.option("--password", default=EGERIA_USER_PASSWORD, help="Egeria user password")
@@ -233,65 +261,6 @@ def delete_term(server, url, userid, password, timeout, term_guid):
     finally:
         m_client.close_session()
 
-@click.command("add-term-to-category")
-@click.option("--server", default=app_config.egeria_view_server, help="Egeria view server to use")
-@click.option(
-    "--url", default=app_config.app_config.egeria_view_server_URL, help="URL of Egeria platform to connect to"
-)
-@click.option("--userid", default=EGERIA_USER, help="Egeria user")
-@click.option("--password", default=EGERIA_USER_PASSWORD, help="Egeria user password")
-@click.option("--timeout", default=60, help="Number of seconds to wait")
-@click.option("--term-guid", required=True, help="GUID of term to add to a category")
-@click.option("--category-guid", required=True, help="GUID of category to add term to")
-
-def add_term_to_category(server, url, userid, password, timeout, term_guid, category_guid):
-    """Add a glossary term to a category"""
-    m_client = EgeriaTech(server, url, user_id=userid, user_pwd=password)
-    token = m_client.create_egeria_bearer_token()
-    try:
-        term_guid = term_guid.strip()
-        category_guid = category_guid.strip()
-        m_client.add_term_to_category(term_guid, category_guid)
-
-        click.echo(
-            f"Added term with GUID: {term_guid} to category with GUID: {category_guid}\n"
-        )
-
-    except PyegeriaException as e:
-        print_basic_exception(e)
-    finally:
-        m_client.close_session()
-
-@click.command("remove-term-from-category")
-@click.option("--server", default=app_config.egeria_view_server, help="Egeria view server to use")
-@click.option(
-    "--url", default=app_config.app_config.egeria_view_server_URL, help="URL of Egeria platform to connect to"
-)
-@click.option("--userid", default=EGERIA_USER, help="Egeria user")
-@click.option("--password", default=EGERIA_USER_PASSWORD, help="Egeria user password")
-@click.option("--timeout", default=60, help="Number of seconds to wait")
-@click.option("--term-guid", required=True, help="GUID of term to add to a category")
-@click.option("--category-guid", required=True, help="GUID of category to add term to")
-
-def remove_term_from_category(server, url, userid, password, timeout, term_guid, category_guid):
-    """Add a glossary term to a category"""
-    m_client = EgeriaTech(server, url, user_id=userid, user_pwd=password)
-    token = m_client.create_egeria_bearer_token()
-    try:
-        term_guid = term_guid.strip()
-        category_guid = category_guid.strip()
-        m_client.remove_term_from_category(term_guid, category_guid)
-
-        click.echo(
-            f"Removed term with GUID: {term_guid} from category with GUID: {category_guid}\n"
-        )
-
-    except PyegeriaException as e:
-        print_basic_exception(e)
-    finally:
-        m_client.close_session()
-
-
 @click.command("import-terms-from-csv")
 @click.option("--glossary_name", help="Name of Glossary", required=True)
 @click.option("--file_name", help="Name of CSV file", required=True)
@@ -312,22 +281,22 @@ def remove_term_from_category(server, url, userid, password, timeout, term_guid,
 )
 @click.option("--server", default=app_config.egeria_view_server, help="Egeria view server to use")
 @click.option(
-    "--url", default=app_config.app_config.egeria_view_server_URL, help="URL of Egeria platform to connect to"
+    "--url", default=app_config.egeria_view_server_url, help="URL of Egeria platform to connect to"
 )
 @click.option("--userid", default=EGERIA_USER, help="Egeria user")
 @click.option("--password", default=EGERIA_USER_PASSWORD, help="Egeria user password")
 @click.option("--timeout", default=60, help="Number of seconds to wait")
 def import_terms_csv(
-    glossary_name: str,
-    file_path: str,
-    file_name: str,
-    verbose: bool,
-    upsert: bool,
-    server: str,
-    url: str,
-    userid: str,
-    password: str,
-    timeout: int,
+        glossary_name: str,
+        file_path: str,
+        file_name: str,
+        verbose: bool,
+        upsert: bool,
+        server: str,
+        url: str,
+        userid: str,
+        password: str,
+        timeout: int,
 ):
     """Load terms from file into the glossary specified"""
     m_client = EgeriaTech(server, url, user_id=userid, user_pwd=password)
@@ -345,7 +314,7 @@ def import_terms_csv(
             f"Loaded terms from  into glossary: {glossary_name} from {file_name}"
         )
         if verbose:
-            print(f"\n Verbose output:\n{json.dumps(result, indent = 2)}")
+            print(f"\n Verbose output:\n{json.dumps(result, indent=2)}")
 
     except PyegeriaException as e:
         print_basic_exception(e)
@@ -365,13 +334,13 @@ def import_terms_csv(
 )
 @click.option("--server", default=app_config.egeria_view_server, help="Egeria view server to use")
 @click.option(
-    "--url", default=app_config.app_config.egeria_view_server_URL, help="URL of Egeria platform to connect to"
+    "--url", default=app_config.egeria_view_server_url, help="URL of Egeria platform to connect to"
 )
 @click.option("--userid", default=EGERIA_USER, help="Egeria user")
 @click.option("--password", default=EGERIA_USER_PASSWORD, help="Egeria user password")
 @click.option("--timeout", default=60, help="Number of seconds to wait")
 def export_terms_csv(
-    glossary_guid: str, file_name, file_path, server, url, userid, password, timeout
+        glossary_guid: str, file_name, file_path, server, url, userid, password, timeout
 ):
     """Export the glossary specified"""
     m_client = EgeriaTech(server, url, user_id=userid, user_pwd=password)
@@ -388,106 +357,3 @@ def export_terms_csv(
     finally:
         m_client.close_session()
 
-
-@click.command("create-category")
-@click.option("--name", help="Name of glossary Category", required=True)
-@click.option("--glossary_name", help="Glossary name", required=True)
-@click.option(
-    "--description",
-    help="Description of Category",
-    default="A description goes here",
-)
-@click.option(
-    "--is_root",
-    help="Is this a root category?",
-    default=True,
-    is_flag=True,
-)
-@click.option("--server", default=app_config.egeria_view_server, help="Egeria view server to use.")
-@click.option(
-    "--url", default=app_config.app_config.egeria_view_server_URL, help="URL of Egeria platform to connect to"
-)
-@click.option("--userid", default=EGERIA_USER, help="Egeria user")
-@click.option("--password", default=EGERIA_USER_PASSWORD, help="Egeria user password")
-@click.option("--timeout", default=60, help="Number of seconds to wait")
-def create_category(
-    server: str,
-    url: str,
-    userid: str,
-    password: str,
-    timeout: int,
-    name: str,
-    glossary_name: str,
-    description: str,
-    is_root: bool,
-) -> None:
-    """Create a new Glossary Category"""
-
-    try:
-        m_client = EgeriaTech(server, url, userid, password)
-        token = m_client.create_egeria_bearer_token()
-
-        existing_glossary = m_client.find_glossaries(glossary_name)
-        if type(existing_glossary) is str:
-            click.echo(existing_glossary)
-            sys.exit(0)
-        if type(existing_glossary) is list and len(existing_glossary) == 1:
-            q_name = existing_glossary["properties"]["qualifiedName"]
-            glossary_guid = existing_glossary["elementHeader"]["guid"]
-        category_guid = m_client.create_category(glossary_guid,name,description, is_root)
-        print(f"New categry \'{name}\' created with id of \'{category_guid}\'")
-
-    except PyegeriaException as e:
-        print_basic_exception(e)
-    finally:
-        m_client.close_session()
-
-
-@click.command("update-category")
-@click.option("--server", default=app_config.egeria_view_server, help="Egeria view server to use")
-@click.option(
-    "--url", default=app_config.app_config.egeria_view_server_URL, help="URL of Egeria platform to connect to"
-)
-@click.option("--userid", default=EGERIA_USER, help="Egeria user")
-@click.option("--password", default=EGERIA_USER_PASSWORD, help="Egeria user password")
-@click.option("--timeout", default=60, help="Number of seconds to wait")
-@click.argument("category-guid")
-@click.option("--name", help="Name of glossary Category", required=True)
-@click.option("--glossary_name", help="Glossary name", required=True)
-@click.option("--description", help="Description of Category", default="A description goes here")
-def update_category(category_guid, name, description, server, url, userid, password, timeout, ):
-    """Delete the glossary specified"""
-    m_client = EgeriaTech(server, url, user_id=userid, user_pwd=password)
-    token = m_client.create_egeria_bearer_token()
-    try:
-        m_client.update_category(category_guid, name, description)
-
-        click.echo(f"Updated glossary: {category_guid}")
-
-    except PyegeriaException as e:
-        print_basic_exception(e)
-    finally:
-        m_client.close_session()
-
-@click.command("delete-category")
-@click.option("--server", default=app_config.egeria_view_server, help="Egeria view server to use")
-@click.option(
-    "--url", default=app_config.app_config.egeria_view_server_URL, help="URL of Egeria platform to connect to"
-)
-@click.option("--userid", default=EGERIA_USER, help="Egeria user")
-@click.option("--password", default=EGERIA_USER_PASSWORD, help="Egeria user password")
-@click.option("--timeout", default=60, help="Number of seconds to wait")
-@click.argument("category-guid")
-def delete_category(server, url, userid, password, timeout, category_guid):
-    """Delete the glossary specified"""
-    m_client = EgeriaTech(server, url, user_id=userid, user_pwd=password)
-    token = m_client.create_egeria_bearer_token()
-    try:
-        m_client.delete_category(category_guid)
-
-        click.echo(f"Deleted glossary: {category_guid}")
-
-    except PyegeriaException as e:
-        print_basic_exception(e)
-    finally:
-        m_client.close_session()
