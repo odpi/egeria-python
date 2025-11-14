@@ -361,6 +361,104 @@ class ProjectManager(Client2):
         )
         return resp
 
+    async def _async_get_project_team(
+            self,
+            project_guid: str,
+            team_role: str = "",
+            start_from: int = 0,
+            page_size: int = 0,
+            output_format: str = 'JSON',
+            report_spec: str | dict = None,
+            body: dict | FilterRequestBody = None,) -> str | dict:
+
+        """Returns the list of actors that are linked off of the project.  This includes the project managers.
+           The optional request body allows a teamRole to be specified as a filter.  To filter out the project managers,
+           specify "ProjectManagement" as the team role. Async version.
+
+        Parameters
+        ----------
+        project_guid: str
+            Identifier of the project to return information for.
+        team_role: str, [default=None]
+            The team role to filter by.  If None, all team members will be returned.
+        start_from: int, [default=0], optional
+                    When multiple pages of results are available, the page number to start from.
+        page_size: int, [default=None]
+            The number of items to return in a single page. If not specified, the default will be taken from
+            the class instance.
+        Returns
+        -------
+        List | str
+
+        A list of projects filtered by project classification, and effective time.
+
+        Raises
+        ------
+
+        PyegeriaException
+
+        """
+        if body is None:
+            body = { "class": "FilterRequestBody","filter": team_role }
+
+        url = (
+            f"{self.platform_url}/servers/{self.view_server}/api/open-metadata/project-manager/"
+            f"projects/{project_guid}/team"
+        )
+        response = await self._async_get_name_request(url, "ProjectMembers", self._extract_project_properties,
+                                                      filter_string = team_role, start_from=start_from,
+                                                      page_size=page_size, body=body,
+                                                      output_format=output_format,
+                                                      report_spec=report_spec)
+        return response
+
+    @dynamic_catch
+    def get_project_team(
+            self,
+            project_guid: str,
+            team_role: str = None,
+            start_from: int = 0,
+            page_size: int = 0,
+            output_format: str = 'JSON',
+            report_spec: str | dict = None,
+            body: dict | FilterRequestBody = None,
+    ) -> str | dict:
+        """Returns the list of actors that are linked off of the project.  This includes the project managers.
+           The optional request body allows a teamRole to be specified as a filter.  To filter out the project managers,
+           specify "ProjectManagement" as the team role.
+
+        Parameters
+        ----------
+        project_guid: str
+            Identifier of the project to return information for.
+        team_role: str, [default=None]
+            The team role to filter by.  If None, all team members will be returned.
+        start_from: int, [default=0], optional
+                    When multiple pages of results are available, the page number to start from.
+        page_size: int, [default=None]
+            The number of items to return in a single page. If not specified, the default will be taken from
+            the class instance.
+        Returns
+        -------
+        List | str
+
+        A list of projects filtered by project classification, and effective time.
+
+        Raises
+        ------
+
+        PyegeriaException
+
+        """
+        loop = asyncio.get_event_loop()
+        resp = loop.run_until_complete(
+            self._async_get_project_team(project_guid, team_role, start_from, page_size,
+                                         output_format,report_spec, body  )
+        )
+        return resp
+
+
+
     @dynamic_catch
     async def _async_find_projects(
             self,

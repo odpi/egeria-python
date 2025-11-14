@@ -23,7 +23,7 @@ from pyegeria import (
     InvalidParameterException,
     PropertyServerException,
     UserNotAuthorizedException,
-    print_exception_response,
+    print_exception_response, PyegeriaException, print_basic_exception,
 )
 
 EGERIA_METADATA_STORE = os.environ.get("EGERIA_METADATA_STORE", "active-metadata-store")
@@ -99,8 +99,8 @@ def list_tech_elements(
         table.add_column("Properties", width=40)
         table.add_column("Classifications", width=50)
 
-        tech_elements = a_client.get_technology_type_elements(tech_name, get_templates=False, output_format=JSON,
-                                                              report_spec=Tech - Type - Elements)
+        tech_elements = a_client.get_technology_type_elements(tech_name, get_templates=False, output_format="JSON",
+                                                              report_spec="Tech-Type-Elements")
         if type(tech_elements) is str:
             console.print(f"No elements found for {tech_name}")
             sys.exit(1)
@@ -113,10 +113,10 @@ def list_tech_elements(
             tech_created_by = header["versions"]["createdBy"]
             tech_created_at = header["versions"]["createTime"]
             tech_guid = header["guid"]
-            tech_classifications = header["classifications"]
+            tech_classifications = header["otherClassifications"]
             class_md = build_classifications(tech_classifications)
 
-            referenceables = element["referenceableProperties"]
+            referenceables = element["properties"]
             tech_qualified_name = referenceables["qualifiedName"]
             extended = referenceables["extendedProperties"]
             ex_md: str = ""
@@ -152,13 +152,12 @@ def list_tech_elements(
         with console.pager(styles=True):
             console.print(generate_table())
 
-    except (
-        InvalidParameterException,
-        PropertyServerException,
-        UserNotAuthorizedException,
-    ) as e:
-        print_exception_response(e)
+    except PyegeriaException as e:
+        print_basic_exception(e)
         print("\n\nPerhaps the type name isn't known")
+    except Exception as e:
+        console.print(e)
+
     finally:
         a_client.close_session()
 
@@ -183,6 +182,8 @@ def main():
         list_tech_elements(tech_name, server, url, userid, user_pass)
     except KeyboardInterrupt:
         pass
+    except Exception as e:
+        print(f"An error occurred: {e}")
 
 
 if __name__ == "__main__":

@@ -74,9 +74,9 @@ def collection_viewer(
                 )
                 text_guid = Text(f"* GUID: {member['guid']}", "green")
                 text_collection_type = Text(
-                    f"* Collection Type: {member['collectionType']}"
+                    f"* Collection Type: {member.get('typeName','')}"
                 )
-                text_description = Text(f"* Description: {member['description']}")
+                text_description = Text(f"* Description: {member.get('description','')}")
                 p = Panel.fit(
                     f"{text_collection_name}[green]\n{text_qualified_name}\n{text_guid}\n"
                     f"{text_collection_type}\n{text_description}"
@@ -94,9 +94,7 @@ def collection_viewer(
                     )
                     walk_collection_hierarchy(branch, collection_client, member["guid"])
         else:
-            tt = tree.add(
-                f"[bold magenta on black]No collections found in {root_collection_name}"
-            )
+            tt = tree.add("[bold magenta on black]No Members found")
 
     try:
         tree = Tree(f"[bold bright green]{root}", guide_style="bold bright_blue")

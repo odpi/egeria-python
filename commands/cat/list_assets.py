@@ -89,7 +89,6 @@ def display_assets(
             ends_with=False,
             ignore_case=True,
             page_size=100,
-            time_out=time_out,
         )
         if type(assets) is str:
             return table

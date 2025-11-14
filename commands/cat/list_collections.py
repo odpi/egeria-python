@@ -19,18 +19,16 @@ from rich.table import Table
 from rich.text import Text
 from loguru import logger
 from pyegeria import (
-    CollectionManager,
+    CollectionManager, settings,
     NO_ELEMENTS_FOUND, config_logging, load_app_config, get_app_config, init_logging, config_logging, PyegeriaException,
     print_basic_exception,PyegeriaException, )
 from pyegeria._exceptions_new import print_validation_error
-
-# from pyegeria._exceptions_new import PyegeriaException, print_exception_response
+app_config = settings.Environment
 
 EGERIA_USER = os.environ.get("EGERIA_USER", "erinoverview")
 EGERIA_USER_PASSWORD = os.environ.get("EGERIA_USER_PASSWORD", "secret")
-PYEGERIA_ROOT_PATH= os.environ.get("PYEGERIA_ROOT_PATH", "/Users/dwolfson/localGit/egeria-v5-3/egeria-python")
-app_settings = get_app_config(PYEGERIA_ROOT_PATH+"./.env")
-app_config = app_settings.Environment
+app_settings = get_app_config(app_config.pyegeria_root+"/.env")
+
 config_logging()
 
 out_struct = {
@@ -133,7 +131,7 @@ def display_collections(
             "Qualified Name & GUID", width=38, no_wrap=True, justify="center"
         )
         table.add_column("Description")
-        table.add_column("Collection Type")
+        table.add_column("Category")
         table.add_column("Classifications")
         table.add_column("Members")
 
@@ -153,7 +151,7 @@ def display_collections(
                 guid = collection["GUID"]
                 q_name = Text(f"{qualified_name}\n&\n{guid}", justify="center")
                 description = collection.get("description",'---')
-                collection_type = collection.get("collectionType", "---")
+                collection_type = collection.get("category", "---")
                 classifications = collection.get("classifications", "---")
 
                 classifications_md = Markdown(classifications) if classifications else ""
@@ -201,8 +199,6 @@ def main():
     parser.add_argument("--password", help="User Password")
 
     args = parser.parse_args()
-    # app_settings = get_app_config(PYEGERIA_ROOT_PATH + "/.env")
-    # app_config = app_settings.Environment
 
     server = args.server if args.server is not None else app_config.egeria_view_server
     url = args.url if args.url is not None else app_config.egeria_view_server_url

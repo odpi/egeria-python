@@ -138,7 +138,7 @@ def display_servers_by_dep_imp(
 def main():
     parser = argparse.ArgumentParser()
 
-    parser.add_argument("--server", help="Name of the server to display status for")
+    parser.add_argument("--server", help="Name of the view server")
     parser.add_argument("--url", help="URL Platform to connect to")
     parser.add_argument("--userid", help="User Id")
     parser.add_argument("--password", help="User Password")
@@ -149,7 +149,7 @@ def main():
     userid = args.userid if args.userid is not None else EGERIA_ADMIN_USER
     user_pass = args.password if args.password is not None else EGERIA_USER_PASSWORD
     filter = Prompt.ask(
-        "Filter deployed for deployed implementation type by search string", default="*"
+        "Name of deployed server type", default="View Server"
     )
     display_servers_by_dep_imp(filter, server, url, userid, user_pass)
 

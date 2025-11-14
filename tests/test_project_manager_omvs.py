@@ -181,7 +181,7 @@ class TestProjectManager:
             token = p_client.create_egeria_bearer_token(self.good_user_2, "secret")
             start_time = time.perf_counter()
             # project_name = "Teddy Bear Drop Foot Clinical Trial IT Setup"
-            project_name = "Second Task"
+            project_name = "Clinical"
             response = p_client.get_projects_by_name(project_name)
             duration = time.perf_counter() - start_time
 
@@ -218,6 +218,42 @@ class TestProjectManager:
             project_classification = "Campaign"
 
             response = p_client.get_classified_projects(project_classification)
+            duration = time.perf_counter() - start_time
+
+            print(f"\n\tDuration was {duration} seconds")
+            if type(response) is list:
+                print(f"Type was list - found {len(response)} elements\n")
+                print(json.dumps(response, indent=4))
+            elif type(response) is tuple:
+                print(f"Type is {type(response)}")
+                print("\n\n" + json.dumps(response, indent=4))
+            elif type(response) is str:
+                print("\n\nGUID is: " + response)
+            assert True
+
+        except (
+            PyegeriaException
+        ) as e:
+            print_basic_exception( e)
+            assert False, "Invalid request"
+        except ValidationError as e:
+            print_validation_error(e)
+        finally:
+            p_client.close_session()
+
+    def test_get_project_team(self):
+        try:
+            p_client = ProjectManager(
+                self.good_view_server_2,
+                self.good_platform1_url,
+                user_id=self.good_user_2,
+            )
+            token = p_client.create_egeria_bearer_token(self.good_user_2, "secret")
+            start_time = time.perf_counter()
+            team_role = "ProjectManagement"
+            project_guid = "2d86e375-c31b-494d-9e73-a03af1370d81"
+            response = p_client.get_project_team(project_guid, team_role)
+
             duration = time.perf_counter() - start_time
 
             print(f"\n\tDuration was {duration} seconds")
@@ -498,40 +534,7 @@ class TestProjectManager:
         finally:
             p_client.close_session()
 
-    def test_get_project_team(self):
-        try:
-            p_client = ProjectManager(
-                self.good_view_server_1,
-                self.good_platform1_url,
-                user_id=self.good_user_2,
-            )
 
-            token = p_client.create_egeria_bearer_token(self.good_user_2, "secret")
-            start_time = time.perf_counter()
-            project_guid = "456cacde-a891-4e5a-bd3f-9fa0eeaa792c"
-
-            response = p_client.get_project_team(project_guid)
-            duration = time.perf_counter() - start_time
-            # resp_str = json.loads(response)
-            print(f"\n\tDuration was {duration} seconds\n")
-            print(f"Result type is: {type(response)}")
-            if type(response) is list:
-                print(json.dumps(response, indent=4))
-            elif type(response) is tuple:
-                print(json.dumps(response, indent=4))
-            elif type(response) is str:
-                print("\n\nGUID is: " + response)
-            assert True
-
-        except (
-            InvalidParameterException,
-            PropertyServerException,
-            UserNotAuthorizedException,
-        ) as e:
-            print_exception_response(e)
-            assert False, "Invalid request"
-        finally:
-            p_client.close_session()
 
     def test_add_to_project_team(self):
         try:

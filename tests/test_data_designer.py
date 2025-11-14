@@ -94,7 +94,7 @@ class TestDataDesigner:
           "initialStatus" : "ACTIVE",
           "parentAtEnd1" : True,
           "properties" : {
-            "class" : "DataSpecProperties",
+            "class" : "DataStructureProperties",
             "displayName" : "Data Specification for the Teddy Bear Drop Foot Clinical Trial",
             "qualifiedName" : "DataSpec::Data Specification for the Teddy Bear Drop Foot Clinical Trial",
             "description" : "Principle data requirements for this clinical trial."
@@ -251,7 +251,7 @@ class TestDataDesigner:
 
             m_client.create_egeria_bearer_token(self.user, self.password)
             start_time = time.perf_counter()
-            response = m_client.find_all_data_structures(output_format="REPORT", report_spec = "Data Structures")
+            response = m_client.find_all_data_structures(output_format="DICT", report_spec = "Data Structures")
             duration = time.perf_counter() - start_time
             print(
                 f"\n\tDuration was {duration:.2f} seconds, Type: {type(response)}"
@@ -468,7 +468,7 @@ class TestDataDesigner:
 
             m_client.create_egeria_bearer_token(self.user, self.password)
             start_time = time.perf_counter()
-            response = m_client.find_all_data_fields(output_format="REPORT", report_spec="DataFields")
+            response = m_client.find_all_data_fields(output_format="DICT", report_spec="DataFields")
             duration = time.perf_counter() - start_time
             print(
                 f"\n\tDuration was {duration:.2f} seconds, Type: {type(response)}"
@@ -489,7 +489,7 @@ class TestDataDesigner:
             m_client.close_session()
 
     def test_get_data_field_by_name(self):
-        name = "AngleRight"
+        name = "Right Angle"
         try:
             m_client = DataDesigner(self.view_server, self.platform_url)
 

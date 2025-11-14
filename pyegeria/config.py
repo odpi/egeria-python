@@ -99,6 +99,7 @@ class EnvironmentConfig(BaseModel):
     """Runtime environment parameters that influence formatting and behavior."""
     """Environment configuration settings"""
     console_width: int = Field(default=200, alias="Console Width")
+    egeria_outbox: str = Field(default="egeria-outbox", alias="Egeria Outbox")
     dr_egeria_inbox: str = Field(default="md_processing/dr-egeria-inbox", alias="Dr.Egeria Inbox")
     dr_egeria_outbox: str = Field(default="md_processing/dr-egeria-outbox", alias="Dr.Egeria Outbox")
     egeria_engine_host_url: str = Field(default="", alias="Egeria Engine Host URL")
@@ -299,7 +300,6 @@ def load_app_config(env_file: str | None = None):
     env_config_dir = os.getenv("PYEGERIA_CONFIG_DIRECTORY", env_settings.pyegeria_config_directory or "")
     env_root = os.getenv("PYEGERIA_ROOT_PATH", env_settings.pyegeria_root_path or default_root)
     env_config_file = os.getenv("PYEGERIA_CONFIG_FILE", env_settings.pyegeria_config_file or "config.json")
-
     env["Pyegeria Config Directory"] = env_config_dir
     env["pyegeria_config_directory"] = env_config_dir
     env["Pyegeria Root"] = env_root
@@ -309,6 +309,9 @@ def load_app_config(env_file: str | None = None):
 
     env["Console Width"] = int(os.getenv("PYEGERIA_CONSOLE_WIDTH", env.get("Console Width", env_settings.pyegeria_console_width)))
     env["console_width"] = env["Console Width"]
+    # Egeria Outbox (new)
+    env["Egeria Outbox"] = os.getenv("EGERIA_OUTBOX", env.get("Egeria Outbox", "egeria-outbox"))
+    env["egeria_outbox"] = env["Egeria Outbox"]
     env["Dr.Egeria Inbox"] = os.getenv("DR_EGERIA_INBOX_PATH", env.get("Dr.Egeria Inbox", "md_processing/dr-egeria-inbox"))
     env["Dr.Egeria Outbox"] = os.getenv("DR_EGERIA_OUTBOX_PATH", env.get("Dr.Egeria Outbox", "md_processing/dr-egeria-outbox"))
     env["Egeria Engine Host"] = os.getenv("EGERIA_ENGINE_HOST", env.get("Egeria Engine Host", "qs-engine-host"))
@@ -512,6 +515,7 @@ def pretty_print_config(env_file: str | None = None, safe: bool = True, to_conso
         ("Debug", "timeout_seconds"): "PYEGERIA_TIMEOUT_SECONDS",
         # Environment
         ("Environment", "Console Width"): "PYEGERIA_CONSOLE_WIDTH",
+        ("Environment", "Egeria Outbox"): "EGERIA_OUTBOX",
         ("Environment", "Dr.Egeria Inbox"): "DR_EGERIA_INBOX_PATH",
         ("Environment", "Dr.Egeria Outbox"): "DR_EGERIA_OUTBOX_PATH",
         ("Environment", "Egeria Engine Host"): "EGERIA_ENGINE_HOST",

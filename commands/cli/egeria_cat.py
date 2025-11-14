@@ -16,10 +16,10 @@ from trogon import tui
 from pyegeria import settings
 from loguru import logger
 
-from commands.cat.run_report import execute_format_set_action
+from commands.cat.run_report_orig import execute_format_set_action
 from commands.cat.dr_egeria_md import process_markdown_file
 from commands.cat.old_get_asset_graph import asset_viewer
-from commands.cat.get_collection import collection_viewer
+from commands.cat.get_collection_tree import collection_viewer
 from commands.cat.get_project_dependencies import project_dependency_viewer
 from commands.cat.get_project_structure import project_structure_viewer
 from commands.cat.get_tech_type_elements import tech_viewer
@@ -252,9 +252,7 @@ def show_format_set(ctx, report, output_format, search_string):
 def show_tech_types(ctx, tech_type):
     """List deployed technology types"""
     c = ctx.obj
-    display_tech_types(
-        tech_type, c.view_server, c.view_server_url, c.userid, c.password
-    )
+    display_tech_types(tech_type, c.view_server, c.view_server_url, c.userid, c.password)
 
 
 @info.command("collections")
@@ -382,18 +380,8 @@ def glossary_group(ctx):
 def show_terms(ctx, search_string, glossary_guid, glossary_name, output_format):
     """Find and display glossary terms"""
     c = ctx.obj
-    display_glossary_terms(
-        search_string,
-        glossary_guid,
-        glossary_name,
-        c.view_server,
-        c.view_server_url,
-        c.userid,
-        c.password,
-        c.jupyter,
-        c.width,
-        output_format,
-    )
+    display_glossary_terms(search_string, glossary_guid, glossary_name, c.view_server, c.view_server_url, c.userid,
+                           c.password, c.jupyter, c.width, output_format)
 
 @glossary_group.command("glossaries")
 @click.option("--search_string", default="*", help="Name to search for glossaries")
@@ -495,16 +483,7 @@ def show_projects(ctx, search_string):
 def show_certification_types(ctx, search_string):
     """Show certification types"""
     c = ctx.obj
-    display_certifications(
-        search_string,
-        c.view_server,
-        c.view_server_url,
-        c.userid,
-        c.password,
-        c.timeout,
-        c.jupyter,
-        c.width,
-    )
+    display_certifications(search_string, c.view_server, c.view_server_url, c.userid, c.password, c.timeout, c.jupyter)
 
 
 @projects.command("project-structure")

@@ -105,10 +105,10 @@ class TestCollectionManager:
             c_client = EgeriaTech(self.good_server_2, self.good_platform1_url, user_id=self.good_user_2, )
             token = c_client.create_egeria_bearer_token(self.good_user_2, "secret")
             start_time = time.perf_counter()
-            search_string = "*"
+            search_string = "Coco"
             classification_name = None
             element_type = []
-            output_format = "DICT"
+            output_format = "JSON"
             report_spec = "BasicCollections"
 
             response = c_client.find_collections(search_string = search_string, classification_names = classification_name

@@ -17,7 +17,7 @@ from rich.console import Console
 from rich.table import Table
 from rich.prompt import Prompt
 
-from commands.cat.list_generic import list_generic
+from commands.cat.run_report import list_generic
 from pyegeria import config_logging
 from pyegeria.config import settings
 from pyegeria._exceptions_new import PyegeriaException, print_exception_response, print_basic_exception

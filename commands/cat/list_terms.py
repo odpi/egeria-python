@@ -19,46 +19,30 @@ from rich.table import Table
 from rich.text import Text
 
 from pyegeria import (
-    EgeriaTech,
-    InvalidParameterException,
-    PropertyServerException,
-    UserNotAuthorizedException, NO_CATEGORIES_FOUND,
+    EgeriaTech, settings,
+    PyegeriaException, print_basic_exception, NO_CATEGORIES_FOUND,
     )
 from commands.cat.glossary_actions import EGERIA_HOME_GLOSSARY_GUID
 from pyegeria._globals import NO_GLOSSARIES_FOUND
-
+app_config = settings.Environment
+# config_logging()
 disable_ssl_warnings = True
 
-EGERIA_METADATA_STORE = os.environ.get("EGERIA_METADATA_STORE", "active-metadata-store")
-EGERIA_KAFKA_ENDPOINT = os.environ.get("KAFKA_ENDPOINT", "localhost:9092")
-EGERIA_PLATFORM_URL = os.environ.get("EGERIA_PLATFORM_URL", "https://localhost:9443")
-EGERIA_VIEW_SERVER = os.environ.get("EGERIA_VIEW_SERVER", "view-server")
-EGERIA_VIEW_SERVER_URL = os.environ.get(
-    "EGERIA_VIEW_SERVER_URL", "https://localhost:9443"
-)
-EGERIA_INTEGRATION_DAEMON = os.environ.get("EGERIA_INTEGRATION_DAEMON", "integration-daemon")
-EGERIA_ADMIN_USER = os.environ.get("ADMIN_USER", "garygeeke")
-EGERIA_ADMIN_PASSWORD = os.environ.get("ADMIN_PASSWORD", "secret")
+
 EGERIA_USER = os.environ.get("EGERIA_USER", "erinoverview")
 EGERIA_USER_PASSWORD = os.environ.get("EGERIA_USER_PASSWORD", "secret")
-EGERIA_JUPYTER = bool(os.environ.get("EGERIA_JUPYTER", "False"))
-EGERIA_WIDTH = int(os.environ.get("EGERIA_WIDTH", "250"))
-EGERIA_GLOSSARY_PATH = os.environ.get("EGERIA_GLOSSARY_PATH", None)
-EGERIA_ROOT_PATH = os.environ.get("EGERIA_ROOT_PATH", "../../")
-EGERIA_INBOX_PATH = os.environ.get("EGERIA_INBOX_PATH", "md_processing/dr_egeria_inbox")
-EGERIA_OUTBOX_PATH = os.environ.get("EGERIA_OUTBOX_PATH", "md_processing/dr_egeria_outbox")
 
 
 def display_glossary_terms(
     search_string: str = "*",
-    glossary_guid: str = EGERIA_HOME_GLOSSARY_GUID,
+    glossary_guid: str = settings.User_Profile.egeria_home_glossary_name,
     glossary_name: str = None,
-    view_server: str = EGERIA_VIEW_SERVER,
-    view_url: str = EGERIA_VIEW_SERVER_URL,
+    view_server: str = app_config.egeria_view_server,
+    view_url: str = app_config.egeria_view_server_url,
     user_id: str = EGERIA_USER,
     user_pass: str = EGERIA_USER_PASSWORD,
-    jupyter: bool = EGERIA_JUPYTER,
-    width: int = EGERIA_WIDTH,
+    jupyter: bool = app_config.egeria_jupyter,
+    width: int = app_config.console_width,
     output_format: str = "TABLE",
 ):
     """Display a table of glossary terms filtered by search_string and glossary, if specified. If no
@@ -113,7 +97,7 @@ def display_glossary_terms(
         elif output_format == "REPORT":
             action = "Report"
         if output_format != "TABLE":
-            file_path = os.path.join(EGERIA_ROOT_PATH, EGERIA_OUTBOX_PATH)
+            file_path = os.path.join(app_config.pyegeria_root, app_config.egeria_outbox)
             file_name = f"Terms-{time.strftime('%Y-%m-%d-%H-%M-%S')}-{action}.md"
             full_file_path = os.path.join(file_path, file_name)
             os.makedirs(os.path.dirname(full_file_path), exist_ok=True)
@@ -127,11 +111,9 @@ def display_glossary_terms(
             return
 
     except (
-        InvalidParameterException,
-        PropertyServerException,
-        UserNotAuthorizedException,
+        PyegeriaException
         ) as e:
-        console.print_exception()
+        print_basic_exception(e)
 
 
 
@@ -229,11 +211,9 @@ def display_glossary_terms(
             console.print(generate_table(search_string, glossary_guid))
 
     except (
-        InvalidParameterException,
-        PropertyServerException,
-        UserNotAuthorizedException,
+        PyegeriaException
     ) as e:
-        console.print_exception()
+        print_basic_exception(e)
 
 
 def main():
@@ -248,12 +228,12 @@ def main():
     args = parser.parse_args()
 
     # server = args.server if args.server is not None else EGERIA_VIEW_SERVER
-    server = args.server if args.server is not None else EGERIA_VIEW_SERVER
+    server = args.server if args.server is not None else app_config.egeria_view_server
 
-    url = args.url if args.url is not None else EGERIA_PLATFORM_URL
+    url = args.url if args.url is not None else app_config.egeria_view_server_url
     userid = args.userid if args.userid is not None else EGERIA_USER
     user_pass = args.password if args.password is not None else EGERIA_USER_PASSWORD
-    guid = args.guid if args.guid is not None else EGERIA_HOME_GLOSSARY_GUID
+    guid = args.guid if args.guid is not None else settings.User_Profile.egeria_home_glossary_name
 
     try:
         search_string = Prompt.ask("Enter the term you are searching for:", default="*")
@@ -263,10 +243,8 @@ def main():
         )
         output_format = Prompt.ask("What output format do you want?", choices=["TABLE", "FORM", "REPORT"], default="TABLE")
 
-        display_glossary_terms(
-        search_string, guid, glossary_name, server, url,
-            userid, user_pass, output_format= output_format
-        )
+        display_glossary_terms(search_string, guid, glossary_name, server, url, userid, user_pass,
+                               output_format=output_format)
 
     except KeyboardInterrupt:
         pass

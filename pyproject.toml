@@ -3,7 +3,7 @@
 
 [project]
 name = "pyegeria"
-version = "5.4.9.1"
+version = "5.4.9.2"
 license = 'Apache-2.0'
 license-files = ["LICENSE"]
 authors = [{name = "Dan Wolfson", email = "dan.wolfson@pdr-associates.com"},]
@@ -44,10 +44,13 @@ dependencies = [
 [project.scripts]
     pyegeria-mcp = "pyegeria.mcp_server:main"
     run_report = "commands.cat.run_report:main"
+    run_report_orig = "Commands.cat.run_report_orig:main"
+    my_reports = "Commands.cat.my_reports:start_exp2"
+
     list_assets = "commands.cat.list_assets:main"
     list_tech_types = "commands.cat.list_tech_types:main"
     get_asset_graph = "commands.cat.get_asset_graph:main"
-    get_collection = "commands.cat.get_collection:main"
+    get_collection_tree = "commands.cat.get_collection_tree:main"
     list_terms = "commands.cat.list_terms:main"
     get_tech_type_elements = "commands.cat.get_tech_type_elements:main"
     list_tech_type_elements = "commands.cat.list_tech_type_elements:main"
@@ -60,7 +63,6 @@ dependencies = [
     list_deployed_catalogs = "commands.cat.list_deployed_catalogs:main"
     list_deployed_databases = "commands.cat.list_deployed_databases:main"
     list_deployed_schemas = "commands.cat.list_deployed_database_schemas:main"
-    # CORRECTED: Removed the unnecessary '.py' from the module path
     list_deployed_servers = "commands.cat.list_deployed_servers:main"
     create_glossary = "commands.cat.glossary_actions:create_glossary"
     delete_glossary = "commands.cat.glossary_actions:delete_glossary"
@@ -81,10 +83,10 @@ dependencies = [
     dr_egeria_jupyter = "commands.cat.dr_egeria_jupyter:process_jupyter_notebook"
     dr_egeria_help = "commands.cat.dr_egeria_command_help:main"
 
-    list_data_structures_full = "commands.cat.list_data_structures_full:main"
-    list_data_structures = "commands.cat.list_data_designer:main_structs"
-    list_data_fields = "commands.cat.list_data_designer:main_fields"
-    list_data_classes = "commands.cat.list_data_designer:main_classes"
+#    list_data_structures_full = "commands.cat.list_data_structures_full:main"
+#    list_data_structures = "commands.cat.list_data_designer:main_structs"
+#    list_data_fields = "commands.cat.list_data_designer:main_fields"
+#    list_data_classes = "commands.cat.list_data_designer:main_classes"
 
 
     list_collections = "commands.cat.list_collections:main"
@@ -92,9 +94,9 @@ dependencies = [
     monitor_asset_events = "commands.ops.monitor_asset_events:main"
     monitor_coco_status = "commands.ops.monitor_coco_status:main"
     monitor_engine_activity = "commands.ops.monitor_engine_activity:main_live"
-    # CORRECTED: Removed trailing space
+
     list_engine_activity = "commands.ops.monitor_engine_activity:main_paging"
-    # CORRECTED: Removed trailing space
+
     list_engine_activity_compressed = "commands.ops.monitor_engine_activity_c:main_paging"
     monitor_engine_activity_compressed = "commands.ops.monitor_engine_activity_c:main_live"
     refresh_gov_eng_config = "commands.ops.gov_server_actions:refresh_gov_eng_config"

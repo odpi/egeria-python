@@ -5527,7 +5527,8 @@ class CollectionManager(Client2):
         # finally, construct a list of  member information
         for member_rel in members:
             member_guid = member_rel["elementHeader"]["guid"]
-            member = await self._async_get_element_by_guid_(member_guid)
+            # member = await self._async_get_element_by_guid_(member_guid)
+            member = member_rel
             if isinstance(member, dict):
                 member_instance = {
                     "name": member["properties"].get('displayName', ''),

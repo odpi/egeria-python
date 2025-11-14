@@ -4962,7 +4962,7 @@ class DataDesigner(Client2):
         Returns:
             Formatted output as a string or list of dictionaries
         """
-        entity_type = "Data Field"
+        entity_type = "Data-Fields"
         if report_spec is None:
             report_spec = select_report_spec(entity_type, output_format)
 

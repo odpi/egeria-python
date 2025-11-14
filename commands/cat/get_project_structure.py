@@ -72,7 +72,7 @@ def project_structure_viewer(
             proj_type = proj_props.get("typeName", "---")
             proj_unique = proj_props.get("qualifiedName", "---")
             proj_identifier = proj_props.get("identifier", "---")
-            proj_name = proj_props.get("name", "---")
+            proj_name = proj_props.get("displayName", "---")
             proj_desc = proj_props.get("description", "---")
             proj_status = proj_props.get("projectStatus", "---")
             proj_priority = proj_props.get("priority", "---")
@@ -90,7 +90,7 @@ def project_structure_viewer(
         else:
             return
 
-        team = project_client.get_project_team(proj_guid)
+        team = project_client.get_project_team(proj_guid,"")
         member_md = ""
         if type(team) is list:
             for member in team:

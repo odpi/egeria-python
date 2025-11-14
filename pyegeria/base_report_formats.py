@@ -377,18 +377,21 @@ base_report_specs = FormatSetDict({
         family="Automated Curation",
         formats=[
             Format(
-                types=["DICT", "MD", "LIST", "FORM"],
-                attributes=[
+                types=["DICT", "MD", "LIST", "FORM", "REPORT"],
+                attributes= COMMON_HEADER_COLUMNS + [
                     Column(name='Display Name', key='display_name'),
                     Column(name="Qualified Name", key='qualified_name'),
                     Column(name="GUID", key='guid'),
                     Column(name="Description", key='description'),
-                    Column(name="Deployed Implementation", key='deployedImplementationType')
+                    Column(name='Metadata Collection Name', key='metadata_collection_name', format=True),
+                    Column(name="Deployed Implementation", key='deployedImplementationType'),
+                    Column(name="Mermaid Graph", key='mermaidGraph'),
+                    Column(name="Specification Mermaid Graph", key='specificationMermaidGraph')
                 ],
             ),
             Format(
-                types=["REPORT", "MERMAID","HTML"],
-                attributes=[
+                types=[ "MERMAID","HTML"],
+                attributes= COMMON_HEADER_COLUMNS + [
                     Column(name='Display Name', key='display_name'),
                     Column(name="Qualified Name", key='qualified_name'),
                     Column(name="GUID", key='guid'),
@@ -1013,10 +1016,10 @@ base_report_specs = FormatSetDict({
         ),
     ),
 
-    "Data Dictionary": FormatSet(
+    "Data-Dictionaries": FormatSet(
         target_type="Data Dictionary",
         heading="Data Dictionary Information",
-        description="Attributes useful to Data Dictionary.",
+        description="Attributes about Data Dictionary.",
         aliases=["Data Dict", "Data Dictionary"],
         annotations={"wikilinks": ["[[Data Dictionary]]"]},
         family="Data Designer",
@@ -1028,10 +1031,10 @@ base_report_specs = FormatSetDict({
         )
     ),
 
-    "Data Specification": FormatSet(
+    "Data-Specifications": FormatSet(
         target_type="Data Specification",
         heading="Data Specification Information",
-        description="Attributes useful to Data Specification.",
+        description="Attributes about Data Specification.",
         aliases=["Data Spec", "DataSpec", "DataSpecification"],
         annotations={"wikilinks": ["[[Data Specification]]"]},
         family="Data Designer",
@@ -1049,10 +1052,10 @@ base_report_specs = FormatSetDict({
         )
     ),
 
-    "Data Structures": FormatSet(
+    "Data-Structures": FormatSet(
         target_type="Data Structure",
         heading="Data Structure Information",
-        description="Attributes useful to Data Structures.",
+        description="Attributes about Data Structures.",
         aliases=["Data Structure", "DataStructures", "Data Structures", "Data Struct", "DataStructure"],
         annotations={"wikilinks": ["[[Data Structure]]"]},
         family="Data Designer",
@@ -1080,27 +1083,56 @@ base_report_specs = FormatSetDict({
         )
     ),
 
-    "Data Fields": FormatSet(
+    "Data-Fields": FormatSet(
         target_type="Data Field",
-        heading="Data Structure Information",
-        description="Attributes useful to Data Structures.",
+        heading="Data Field Information",
+        description="Attributes about Data Fields.",
         aliases=["Data Field", "Data Fields", "DataFields"],
         annotations={"wikilinks": ["[[Data Field]]"]},
         family="Data Designer",
-        formats=[Format(types=["MD", "FORM", "DICT"], attributes=COMMON_COLUMNS + [
-            Column(name="In Data Dictionaries", key='in_data_dictionary'),
-            Column(name="In Data Structure", key='in_data_structure')]),
+        formats=[Format(types=["MD", "FORM", "DICT", "LIST"], attributes=COMMON_COLUMNS + [
+                            Column(name="In Data Dictionaries", key='in_data_dictionary'),
+                            Column(name="In Data Structure", key='in_data_structure')]),
                  Format(types=["REPORT"], attributes=COMMON_COLUMNS +
-                                                     [
-                                                         Column(name="In Data Structure", key='in_data_structure'),
-                                                         Column(name="In Data Dictionaries", key='in_data_dictionary'),
-                                                         Column(name="Member Data Fields", key='member_data_fields'),
-                                                         Column(name="Mermaid", key='mermaid')
-                                                     ]
+                         [
+                             Column(name="In Data Structure", key='in_data_structure'),
+                             Column(name="In Data Dictionaries", key='in_data_dictionary'),
+                             Column(name="Member Data Fields", key='member_data_fields'),
+                             Column(name="Mermaid", key='mermaid')
+                         ]
                         )],
 
         action=ActionParameter(
             function="DataDesigner.find_data_fields",
+            required_params=["search_string"],
+            spec_params={},
+        )
+    ),
+    "Data-Classes": FormatSet(
+        target_type="Data Class",
+        heading="Data Class Information",
+        description="Attributes about Data Classes",
+        aliases=["Data Field", "Data Fields", "DataFields"],
+        annotations={"wikilinks": ["[[Data Field]]"]},
+        family="Data Designer",
+        formats=[Format(types=["MD", "FORM", "DICT", "LIST"], attributes=COMMON_COLUMNS + [
+                        Column(name="Data Type", key='data_type'),
+                        Column(name="Specification", key='specification'),
+                        Column(name="In Data Dictionaries", key='in_data_dictionary'),
+                        Column(name="In Data Structure", key='in_data_structure')]),
+                 Format(types=["REPORT"], attributes=COMMON_COLUMNS +
+                     [
+                         Column(name="Data Type", key='data_type'),
+                         Column(name="Specification", key='specification'),
+                         Column(name="In Data Dictionaries", key='in_data_dictionary'),
+                         Column(name="Containing Data Class", key='containing_data_class'),
+                         Column(name="Specializes", key='specializes_data_class'),
+                         Column(name="Mermaid", key='mermaid')
+                     ]
+                        )],
+
+        action=ActionParameter(
+            function="DataDesigner.find_data_classes",
             required_params=["search_string"],
             spec_params={},
         )
