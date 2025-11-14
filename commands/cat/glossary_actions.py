@@ -18,33 +18,14 @@ from datetime import datetime
 import click
 
 
-from pyegeria import EgeriaTech, body_slimmer
-from pyegeria._exceptions import (
-    InvalidParameterException,
-    PropertyServerException,
-    print_exception_response,
+from pyegeria import EgeriaTech, body_slimmer, settings
+from pyegeria._exceptions_new import (
+    PyegeriaException, print_basic_exception
 )
+app_config = settings.Environment
 
-EGERIA_METADATA_STORE = os.environ.get("EGERIA_METADATA_STORE", "active-metadata-store")
-EGERIA_KAFKA_ENDPOINT = os.environ.get("KAFKA_ENDPOINT", "localhost:9092")
-EGERIA_PLATFORM_URL = os.environ.get("EGERIA_PLATFORM_URL", "https://localhost:9443")
-EGERIA_VIEW_SERVER = os.environ.get("EGERIA_VIEW_SERVER", "view-server")
-EGERIA_VIEW_SERVER_URL = os.environ.get(
-    "EGERIA_VIEW_SERVER_URL", "https://localhost:9443"
-)
-EGERIA_INTEGRATION_DAEMON = os.environ.get("EGERIA_INTEGRATION_DAEMON", "integration-daemon")
-EGERIA_INTEGRATION_DAEMON_URL = os.environ.get(
-    "EGERIA_INTEGRATION_DAEMON_URL", "https://localhost:9443"
-)
-EGERIA_ADMIN_USER = os.environ.get("ADMIN_USER", "garygeeke")
-EGERIA_ADMIN_PASSWORD = os.environ.get("ADMIN_PASSWORD", "secret")
 EGERIA_USER = os.environ.get("EGERIA_USER", "erinoverview")
 EGERIA_USER_PASSWORD = os.environ.get("EGERIA_USER_PASSWORD", "secret")
-EGERIA_WIDTH = os.environ.get("EGERIA_WIDTH", 200)
-EGERIA_JUPYTER = os.environ.get("EGERIA_JUPYTER", False)
-EGERIA_HOME_GLOSSARY_GUID = os.environ.get("EGERIA_HOME_GLOSSARY_GUID", None)
-EGERIA_GLOSSARY_PATH = os.environ.get("EGERIA_GLOSSARY_PATH", None)
-
 
 @click.command("create-glossary")
 @click.option("--name", help="Name of Glossary", required=True)
@@ -59,9 +40,9 @@ EGERIA_GLOSSARY_PATH = os.environ.get("EGERIA_GLOSSARY_PATH", None)
     help="Purpose of glossary",
     default="Definitions",
 )
-@click.option("--server", default=EGERIA_VIEW_SERVER, help="Egeria view server to use.")
+@click.option("--server", default=app_config.app_config.egeria_view_server, help="Egeria view server to use.")
 @click.option(
-    "--url", default=EGERIA_VIEW_SERVER_URL, help="URL of Egeria platform to connect to"
+    "--url", default=app_config.app_config.app_config.egeria_view_server_URL, help="URL of Egeria platform to connect to"
 )
 @click.option("--userid", default=EGERIA_USER, help="Egeria user")
 @click.option("--password", default=EGERIA_USER_PASSWORD, help="Egeria user password")
@@ -108,16 +89,16 @@ def create_glossary(
         glossary_guid = m_client.create_glossary(name, description, language, usage)
         print(f"New glossary {name} created with id of {glossary_guid}")
 
-    except (InvalidParameterException, PropertyServerException) as e:
-        print_exception_response(e)
+    except PyegeriaException as e:
+        print_basic_exception(e)
     finally:
         m_client.close_session()
 
 
 @click.command("delete-glossary")
-@click.option("--server", default=EGERIA_VIEW_SERVER, help="Egeria view server to use")
+@click.option("--server", default=app_config.egeria_view_server, help="Egeria view server to use")
 @click.option(
-    "--url", default=EGERIA_VIEW_SERVER_URL, help="URL of Egeria platform to connect to"
+    "--url", default=app_config.app_config.egeria_view_server_URL, help="URL of Egeria platform to connect to"
 )
 @click.option("--userid", default=EGERIA_USER, help="Egeria user")
 @click.option("--password", default=EGERIA_USER_PASSWORD, help="Egeria user password")
@@ -132,8 +113,8 @@ def delete_glossary(server, url, userid, password, timeout, glossary_guid):
 
         click.echo(f"Deleted glossary: {glossary_guid}")
 
-    except (InvalidParameterException, PropertyServerException) as e:
-        print_exception_response(e)
+    except PyegeriaException as e:
+        print_basic_exception(e)
     finally:
         m_client.close_session()
 
@@ -164,9 +145,9 @@ def delete_glossary(server, url, userid, password, timeout, glossary_guid):
     ),
     default="DRAFT",
 )
-@click.option("--server", default=EGERIA_VIEW_SERVER, help="Egeria view server to use.")
+@click.option("--server", default=app_config.egeria_view_server, help="Egeria view server to use.")
 @click.option(
-    "--url", default=EGERIA_VIEW_SERVER_URL, help="URL of Egeria platform to connect to"
+    "--url", default=app_config.app_config.egeria_view_server_URL, help="URL of Egeria platform to connect to"
 )
 @click.option("--userid", default=EGERIA_USER, help="Egeria user")
 @click.option("--password", default=EGERIA_USER_PASSWORD, help="Egeria user password")
@@ -218,16 +199,16 @@ def create_term(server, url, userid, password, glossary_name, term_name, summary
             f"Successfully created term {term_name} with GUID {term_guid}, in glossary {glossary_name}.\n"
         )
         return term_guid
-    except (InvalidParameterException, PropertyServerException) as e:
-        print_exception_response(e)
+    except PyegeriaException as e:
+        print_basic_exception(e)
     finally:
         m_client.close_session()
 
 
 @click.command("delete-term")
-@click.option("--server", default=EGERIA_VIEW_SERVER, help="Egeria view server to use")
+@click.option("--server", default=app_config.egeria_view_server, help="Egeria view server to use")
 @click.option(
-    "--url", default=EGERIA_VIEW_SERVER_URL, help="URL of Egeria platform to connect to"
+    "--url", default=app_config.app_config.egeria_view_server_URL, help="URL of Egeria platform to connect to"
 )
 @click.option("--userid", default=EGERIA_USER, help="Egeria user")
 @click.option("--password", default=EGERIA_USER_PASSWORD, help="Egeria user password")
@@ -247,15 +228,15 @@ def delete_term(server, url, userid, password, timeout, term_guid):
             f"Deleted term with GUID: {term_guid} and Display Name: {term_info['glossaryTermProperties']['displayName']}"
         )
 
-    except (InvalidParameterException, PropertyServerException) as e:
-        print_exception_response(e)
+    except PyegeriaException as e:
+        print_basic_exception(e)
     finally:
         m_client.close_session()
 
 @click.command("add-term-to-category")
-@click.option("--server", default=EGERIA_VIEW_SERVER, help="Egeria view server to use")
+@click.option("--server", default=app_config.egeria_view_server, help="Egeria view server to use")
 @click.option(
-    "--url", default=EGERIA_VIEW_SERVER_URL, help="URL of Egeria platform to connect to"
+    "--url", default=app_config.app_config.egeria_view_server_URL, help="URL of Egeria platform to connect to"
 )
 @click.option("--userid", default=EGERIA_USER, help="Egeria user")
 @click.option("--password", default=EGERIA_USER_PASSWORD, help="Egeria user password")
@@ -276,15 +257,15 @@ def add_term_to_category(server, url, userid, password, timeout, term_guid, cate
             f"Added term with GUID: {term_guid} to category with GUID: {category_guid}\n"
         )
 
-    except (InvalidParameterException, PropertyServerException) as e:
-        print_exception_response(e)
+    except PyegeriaException as e:
+        print_basic_exception(e)
     finally:
         m_client.close_session()
 
 @click.command("remove-term-from-category")
-@click.option("--server", default=EGERIA_VIEW_SERVER, help="Egeria view server to use")
+@click.option("--server", default=app_config.egeria_view_server, help="Egeria view server to use")
 @click.option(
-    "--url", default=EGERIA_VIEW_SERVER_URL, help="URL of Egeria platform to connect to"
+    "--url", default=app_config.app_config.egeria_view_server_URL, help="URL of Egeria platform to connect to"
 )
 @click.option("--userid", default=EGERIA_USER, help="Egeria user")
 @click.option("--password", default=EGERIA_USER_PASSWORD, help="Egeria user password")
@@ -305,8 +286,8 @@ def remove_term_from_category(server, url, userid, password, timeout, term_guid,
             f"Removed term with GUID: {term_guid} from category with GUID: {category_guid}\n"
         )
 
-    except (InvalidParameterException, PropertyServerException) as e:
-        print_exception_response(e)
+    except PyegeriaException as e:
+        print_basic_exception(e)
     finally:
         m_client.close_session()
 
@@ -315,7 +296,7 @@ def remove_term_from_category(server, url, userid, password, timeout, term_guid,
 @click.option("--glossary_name", help="Name of Glossary", required=True)
 @click.option("--file_name", help="Name of CSV file", required=True)
 @click.option(
-    "--input_file", help="Path of CSV file", default=EGERIA_GLOSSARY_PATH, required=False
+    "--input_file", help="Path of CSV file", default=app_config.egeria_glossary_path, required=False
 )
 @click.option(
     "--verbose",
@@ -329,9 +310,9 @@ def remove_term_from_category(server, url, userid, password, timeout, term_guid,
     default=True,
     help="If set, terms will be updated if they exist; otherwise they would be appended",
 )
-@click.option("--server", default=EGERIA_VIEW_SERVER, help="Egeria view server to use")
+@click.option("--server", default=app_config.egeria_view_server, help="Egeria view server to use")
 @click.option(
-    "--url", default=EGERIA_VIEW_SERVER_URL, help="URL of Egeria platform to connect to"
+    "--url", default=app_config.app_config.egeria_view_server_URL, help="URL of Egeria platform to connect to"
 )
 @click.option("--userid", default=EGERIA_USER, help="Egeria user")
 @click.option("--password", default=EGERIA_USER_PASSWORD, help="Egeria user password")
@@ -366,8 +347,8 @@ def import_terms_csv(
         if verbose:
             print(f"\n Verbose output:\n{json.dumps(result, indent = 2)}")
 
-    except (InvalidParameterException, PropertyServerException) as e:
-        print_exception_response(e)
+    except PyegeriaException as e:
+        print_basic_exception(e)
     finally:
         m_client.close_session()
 
@@ -380,11 +361,11 @@ def import_terms_csv(
 )
 @click.option("--file_name", help="Name of CSV file", required=True)
 @click.option(
-    "--input_file", help="Path of CSV file", default=EGERIA_GLOSSARY_PATH, required=False
+    "--input_file", help="Path of CSV file", default=app_config.egeria_glossary_path, required=False
 )
-@click.option("--server", default=EGERIA_VIEW_SERVER, help="Egeria view server to use")
+@click.option("--server", default=app_config.egeria_view_server, help="Egeria view server to use")
 @click.option(
-    "--url", default=EGERIA_VIEW_SERVER_URL, help="URL of Egeria platform to connect to"
+    "--url", default=app_config.app_config.egeria_view_server_URL, help="URL of Egeria platform to connect to"
 )
 @click.option("--userid", default=EGERIA_USER, help="Egeria user")
 @click.option("--password", default=EGERIA_USER_PASSWORD, help="Egeria user password")
@@ -402,8 +383,8 @@ def export_terms_csv(
             f"Exported {result} terms  from glossary: {glossary_guid} into {file_name}"
         )
 
-    except (InvalidParameterException, PropertyServerException) as e:
-        print_exception_response(e)
+    except PyegeriaException as e:
+        print_basic_exception(e)
     finally:
         m_client.close_session()
 
@@ -422,9 +403,9 @@ def export_terms_csv(
     default=True,
     is_flag=True,
 )
-@click.option("--server", default=EGERIA_VIEW_SERVER, help="Egeria view server to use.")
+@click.option("--server", default=app_config.egeria_view_server, help="Egeria view server to use.")
 @click.option(
-    "--url", default=EGERIA_VIEW_SERVER_URL, help="URL of Egeria platform to connect to"
+    "--url", default=app_config.app_config.egeria_view_server_URL, help="URL of Egeria platform to connect to"
 )
 @click.option("--userid", default=EGERIA_USER, help="Egeria user")
 @click.option("--password", default=EGERIA_USER_PASSWORD, help="Egeria user password")
@@ -456,16 +437,16 @@ def create_category(
         category_guid = m_client.create_category(glossary_guid,name,description, is_root)
         print(f"New categry \'{name}\' created with id of \'{category_guid}\'")
 
-    except (InvalidParameterException, PropertyServerException) as e:
-        print_exception_response(e)
+    except PyegeriaException as e:
+        print_basic_exception(e)
     finally:
         m_client.close_session()
 
 
 @click.command("update-category")
-@click.option("--server", default=EGERIA_VIEW_SERVER, help="Egeria view server to use")
+@click.option("--server", default=app_config.egeria_view_server, help="Egeria view server to use")
 @click.option(
-    "--url", default=EGERIA_VIEW_SERVER_URL, help="URL of Egeria platform to connect to"
+    "--url", default=app_config.app_config.egeria_view_server_URL, help="URL of Egeria platform to connect to"
 )
 @click.option("--userid", default=EGERIA_USER, help="Egeria user")
 @click.option("--password", default=EGERIA_USER_PASSWORD, help="Egeria user password")
@@ -483,15 +464,15 @@ def update_category(category_guid, name, description, server, url, userid, passw
 
         click.echo(f"Updated glossary: {category_guid}")
 
-    except (InvalidParameterException, PropertyServerException) as e:
-        print_exception_response(e)
+    except PyegeriaException as e:
+        print_basic_exception(e)
     finally:
         m_client.close_session()
 
 @click.command("delete-category")
-@click.option("--server", default=EGERIA_VIEW_SERVER, help="Egeria view server to use")
+@click.option("--server", default=app_config.egeria_view_server, help="Egeria view server to use")
 @click.option(
-    "--url", default=EGERIA_VIEW_SERVER_URL, help="URL of Egeria platform to connect to"
+    "--url", default=app_config.app_config.egeria_view_server_URL, help="URL of Egeria platform to connect to"
 )
 @click.option("--userid", default=EGERIA_USER, help="Egeria user")
 @click.option("--password", default=EGERIA_USER_PASSWORD, help="Egeria user password")
@@ -506,7 +487,7 @@ def delete_category(server, url, userid, password, timeout, category_guid):
 
         click.echo(f"Deleted glossary: {category_guid}")
 
-    except (InvalidParameterException, PropertyServerException) as e:
-        print_exception_response(e)
+    except PyegeriaException as e:
+        print_basic_exception(e)
     finally:
         m_client.close_session()

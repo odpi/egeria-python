@@ -19,9 +19,9 @@ from loguru import logger
 from pyegeria import config_logging,  settings
 
 from commands.cat.my_reports import start_exp2
-from commands.cat.run_report import execute_format_set_action
+from commands.cat.run_report import list_generic
 from commands.cat.old_get_asset_graph import asset_viewer
-from commands.cat.get_collection import collection_viewer
+from commands.cat.get_collection_tree import collection_viewer
 from commands.cat.get_project_dependencies import project_dependency_viewer
 from commands.cat.get_project_structure import project_structure_viewer
 from commands.cat.get_tech_type_elements import tech_viewer
@@ -136,11 +136,29 @@ from commands.tech.list_tech_templates import display_templates_spec
 from commands.tech.list_valid_metadata_values import display_metadata_values
 from commands.tech.generic_actions import delete_element
 
+import sys
+
+# Enable remote debugging (set to True when debugging)
+ENABLE_DEBUG = False
+#
+# if ENABLE_DEBUG:
+#     try:
+#         import pydevd_pycharm
+#
+#         pydevd_pycharm.settrace('localhost', port=5678, stdout_to_server=True, stderr_to_server=True)
+#     except ImportError:
+#         print("pydevd-pycharm not installed. Install with: pip install pydevd-pycharm")
+#     except Exception as e:
+#         print(f"Could not connect to debugger: {e}")
+
+
 EGERIA_USER = os.environ.get("EGERIA_USER", "erinoverview")
 EGERIA_USER_PASSWORD = os.environ.get("EGERIA_USER_PASSWORD", "secret")
 app_settings = settings
 app_config = app_settings.Environment
-config_logging()
+# config_logging()
+
+
 
 
 @tui()
@@ -709,9 +727,7 @@ def show_tech_types(ctx, search_string):
     """
 
     c = ctx.obj
-    display_tech_types(
-        search_string, c.view_server, c.view_server_url, c.userid, c.password
-    )
+    display_tech_types(search_string, c.view_server, c.view_server_url, c.userid, c.password)
 
 
 @show_tech_type.command("details")
@@ -1048,6 +1064,81 @@ def show_cat(ctx):
     """Display an Egeria Object"""
     pass
 
+@show_cat.group("data_designer")
+@click.pass_context
+def show_cat_design(ctx):
+    """Group of commands for Egeria Data Designer"""
+    pass
+
+
+@show_cat_design.command("data-fields")
+@click.option("--output-format", default = "TABLE", help="Output format type")
+@click.option('--search-string', default="*", help="Search string")
+@click.pass_context
+def show_data_fields(ctx, output_format, search_string):
+    """Report on Data Fields"""
+    c = ctx.obj
+    logger.info(f"Hey Egeria: view server @ {c.view_server_url}")
+    list_generic(
+        "Data-Fields", output_format = output_format, view_server = c.view_server, view_url= c.view_server_url,
+        user = c.userid, user_pass = c.password, params = {"search_string": search_string}, render_table = True
+    )
+
+
+@show_cat_design.command("data-structures")
+@click.option("--output-format", default = "TABLE", help="Output format type")
+@click.option('--search-string', default="*", help="Search string")
+@click.pass_context
+def show_data_structures(ctx, output_format, search_string):
+    """Reporton Data Structures"""
+    c = ctx.obj
+    logger.info(f"Hey Egeria: view server @ {c.view_server_url}")
+    list_generic(
+        "Data-Structures", output_format = output_format, view_server = c.view_server, view_url= c.view_server_url,
+        user = c.userid, user_pass = c.password, params = {"search_string": search_string}, render_table = True
+    )
+
+@show_cat_design.command("data-classes")
+@click.option("--output-format", default = "TABLE", help="Output format type")
+@click.option('--search-string', default="*", help="Search string")
+@click.pass_context
+def show_data_classes(ctx, output_format, search_string):
+    """Dynamically generate output based on a format set"""
+    c = ctx.obj
+    logger.info(f"Hey Egeria: view server @ {c.view_server_url}")
+    list_generic(
+        "Data-Classes", output_format = output_format, view_server = c.view_server, view_url= c.view_server_url,
+        user = c.userid, user_pass = c.password, params = {"search_string": search_string}, render_table = True
+    )
+
+@show_cat_design.command("data-dictionaries")
+@click.option("--output-format", default = "TABLE", help="Output format type")
+@click.option('--search-string', default="*", help="Search string")
+@click.pass_context
+def show_data_dictionaries(ctx, output_format, search_string):
+    """Report on Data Dictionaries"""
+    c = ctx.obj
+    logger.info(f"Hey Egeria: view server @ {c.view_server_url}")
+    list_generic(
+        "Data-Dictionaries", output_format = output_format, view_server = c.view_server, view_url= c.view_server_url,
+        user = c.userid, user_pass = c.password, params = {"search_string": search_string}, render_table = True
+    )
+
+@show_cat_design.command("data-specifications")
+@click.option("--output-format", default = "TABLE", help="Output format type")
+@click.option('--search-string', default="*", help="Search string")
+@click.pass_context
+def show_data_specs(ctx, output_format, search_string):
+    """Report on Data Specifications"""
+    c = ctx.obj
+    logger.info(f"Hey Egeria: view server @ {c.view_server_url}")
+    list_generic(
+        "Data-Specifications", output_format = output_format, view_server = c.view_server, view_url= c.view_server_url,
+        user = c.userid, user_pass = c.password, params = {"search_string": search_string}, render_table = True
+    )
+
+
+
 
 @show_cat.group("info")
 @click.pass_context
@@ -1064,9 +1155,9 @@ def show_format_set(ctx, report, output_format, search_string):
     """Dynamically generate output based on a format set"""
     c = ctx.obj
     logger.info(f"Hey Egeria: view server @ {c.view_server_url}")
-    execute_format_set_action(
-        report, c.view_server, c.view_server_url,
-        c.userid, c.password, output_format, search_string = search_string
+    list_generic(
+        report, output_format = output_format, view_server = c.view_server, view_url = c.view_server_url,
+        user = c.userid, user_pass = c.password, params = {"search_string": search_string},render_table = True
     )
 
 
@@ -1076,9 +1167,7 @@ def show_format_set(ctx, report, output_format, search_string):
 def show_tech_types(ctx, tech_type):
     """List deployed technology types"""
     c = ctx.obj
-    display_tech_types(
-        tech_type, c.view_server, c.view_server_url, c.userid, c.password
-    )
+    display_tech_types(tech_type, c.view_server, c.view_server_url, c.userid, c.password)
 
 
 @show_cat_info.command("collections")
@@ -1191,18 +1280,8 @@ def glossary_group(ctx):
 def show_terms(ctx, search_string, glossary_guid, glossary_name, output_format):
     """Find and display glossary terms"""
     c = ctx.obj
-    display_glossary_terms(
-        search_string,
-        glossary_guid,
-        glossary_name,
-        c.view_server,
-        c.view_server_url,
-        c.userid,
-        c.password,
-        c.jupyter,
-        c.width,
-        output_format,
-    )
+    display_glossary_terms(search_string, glossary_guid, glossary_name, c.view_server, c.view_server_url, c.userid,
+                           c.password, c.jupyter, c.width, output_format)
 
 
 
@@ -1282,16 +1361,7 @@ def show_projects(ctx, search_string):
 def show_certification_types(ctx, search_string):
     """Show certification types"""
     c = ctx.obj
-    display_certifications(
-        search_string,
-        c.view_server,
-        c.view_server_url,
-        c.userid,
-        c.password,
-        c.timeout,
-        c.jupyter,
-        c.width,
-    )
+    display_certifications(search_string, c.view_server, c.view_server_url, c.userid, c.password, c.timeout, c.jupyter)
 
 
 @show_cat_info.command("asset-types")
@@ -1520,9 +1590,7 @@ tell_cat_todo.add_command(create_todo)
 def show_tech_types(ctx, tech_type):
     """List deployed technology types"""
     c = ctx.obj
-    display_tech_types(
-        tech_type, c.view_server, c.view_server_url, c.userid, c.password
-    )
+    display_tech_types(tech_type, c.view_server, c.view_server_url, c.userid, c.password)
 
 
 @show_cat_info.command("certification-types")
@@ -1531,16 +1599,7 @@ def show_tech_types(ctx, tech_type):
 def show_certification_types(ctx, search_string):
     """Show certification types"""
     c = ctx.obj
-    display_certifications(
-        search_string,
-        c.view_server,
-        c.view_server_url,
-        c.userid,
-        c.password,
-        c.timeout,
-        c.jupyter,
-        c.width,
-    )
+    display_certifications(search_string, c.view_server, c.view_server_url, c.userid, c.password, c.timeout, c.jupyter)
 
 
 @show_project_group.command("project-structure")

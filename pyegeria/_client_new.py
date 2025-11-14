@@ -4897,7 +4897,7 @@ class Client2(BaseClient):
 
         json_body = validated_body.model_dump_json(indent=2, exclude_none=True)
 
-        response = await self._async_make_request("POST", url, json_body)
+        response = await self._async_make_request("POST", url, json_body, time_out = 90)
         elements = response.json().get("elements", NO_ELEMENTS_FOUND)
         if type(elements) is str:
             logger.info(NO_ELEMENTS_FOUND)
@@ -4939,7 +4939,7 @@ class Client2(BaseClient):
 
         response = await self._async_make_request("POST", url, json_body)
         elements = response.json().get("elements", NO_ELEMENTS_FOUND)
-        if type(elements) is str:
+        if type(elements) is str or len(elements) == 0:
             logger.info(NO_ELEMENTS_FOUND)
             return NO_ELEMENTS_FOUND
 

@@ -10,6 +10,7 @@ A simple viewer for project dependencies - provide the root and we display the d
 import argparse
 import os
 
+from pydantic import ValidationError
 from rich import print
 from rich.console import Console
 from rich.markdown import Markdown
@@ -21,7 +22,7 @@ from pyegeria import (
     InvalidParameterException,
     ProjectManager,
     PropertyServerException,
-    UserNotAuthorizedException,
+    UserNotAuthorizedException, PyegeriaException, print_basic_exception, print_validation_error,
 )
 from pyegeria._exceptions import print_exception_response
 
@@ -72,7 +73,7 @@ def project_dependency_viewer(
             proj_type = proj_props.get("typeName", "---")
             proj_unique = proj_props.get("qualifiedName", "---")
             proj_identifier = proj_props.get("identifier", "---")
-            proj_name = proj_props.get("name", "---")
+            proj_name = proj_props.get("displayName", "---")
             proj_desc = proj_props.get("description", "---")
             proj_status = proj_props.get("projectStatus", "---")
             proj_priority = proj_props.get("priority", "---")
@@ -90,7 +91,7 @@ def project_dependency_viewer(
         else:
             return
 
-        team = project_client.get_project_team(proj_guid)
+        team = project_client.get_project_team(proj_guid,"")
         member_md = ""
         if type(team) is list:
             for member in team:
@@ -131,12 +132,12 @@ def project_dependency_viewer(
         walk_project_hierarchy(p_client, root, tree, root=True)
         print(tree)
 
-    except (
-        InvalidParameterException,
-        PropertyServerException,
-        UserNotAuthorizedException,
-    ) as e:
-        print_exception_response(e)
+    except PyegeriaException as e:
+        print_basic_exception(e)
+    except ValidationError as e:
+        print_validation_error(e)
+    except Exception as e:
+        print_basic_exception(e)
 
 
 def main():

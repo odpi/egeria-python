@@ -19,7 +19,7 @@ from rich.prompt import Prompt
 from rich.table import Table
 from rich.text import Text
 from rich.tree import Tree
-from commands.cat.list_generic import list_generic
+from commands.cat.run_report import list_generic
 
 from pyegeria import (
     AutomatedCuration,

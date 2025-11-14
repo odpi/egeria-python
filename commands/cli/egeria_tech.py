@@ -491,9 +491,7 @@ def show_tech_types(ctx, search_string):
     """
 
     c = ctx.obj
-    display_tech_types(
-        search_string, c.view_server, c.view_server_url, c.userid, c.password
-    )
+    display_tech_types(search_string, c.view_server, c.view_server_url, c.userid, c.password)
 
 
 @show_tech.command("tech-details")

@@ -2085,10 +2085,7 @@ class RuntimeManager(Client2):
         if filter == "*":
             filter = None
 
-        url = (
-            f"{self.runtime_command_root}/software-servers/"
-            f"by-deployed-implementation-type?startFrom={start_from}&pageSize={page_size}"
-        )
+        url = f"{self.runtime_command_root}/software-servers/by-deployed-implementation-type"
 
         body = body_slimmer({"filter": filter, "effective_time": effective_time})
 

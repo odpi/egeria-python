@@ -110,7 +110,7 @@ def display_project_list(
                 classification = ""
                 guid = project["elementHeader"]["guid"]
                 props = project["properties"]
-                name = props.get("name", "None")
+                name = props.get("displayName", "---")
                 p_class = project["elementHeader"].get("classifications")
                 if p_class:
                     for classif in p_class:
@@ -141,9 +141,10 @@ def display_project_list(
                         if type(certified) is list:
                             for rel_elem in certified:
                                 p_name = rel_elem["relatedElement"]["properties"][
-                                    "name"
+                                    "displayName"
                                 ]
                                 certified_partner += f"* {p_name}\n"
+
                 else:
                     certified_partner = "---"
 
