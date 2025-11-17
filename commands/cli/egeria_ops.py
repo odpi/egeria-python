@@ -13,6 +13,8 @@ import os
 
 import click
 from trogon import tui
+from loguru import logger
+from pyegeria import config_logging,  settings
 
 # from pyegeria import ServerOps
 from commands.cli.ops_config import Config
@@ -27,10 +29,10 @@ from commands.ops.gov_server_actions import (
 from commands.ops.list_archives import display_archive_list
 from commands.ops.list_catalog_targets import display_catalog_targets
 from commands.ops.load_archive import load_archive
-from commands.ops.monitor_engine_activity import display_engine_activity
-from commands.ops.monitor_engine_activity_c import display_engine_activity_c
-from commands.ops.monitor_gov_eng_status import display_gov_eng_status
-from commands.ops.monitor_integ_daemon_status import (
+from commands.ops.monitor_active_engine_activity import display_engine_activity
+from commands.ops.monitor_engine_activity import display_engine_activity_c
+from commands.ops.monitor_engine_status import display_gov_eng_status
+from commands.ops.monitor_daemon_status import (
     display_integration_daemon_status,
 )
 from commands.ops.monitor_platform_status import (
@@ -43,106 +45,109 @@ from commands.ops.monitor_server_status import (
 from commands.ops.refresh_integration_daemon import refresh_connector
 from commands.ops.restart_integration_daemon import restart_connector
 
-# class Config(object):
-#     def __init__(self, server: str = None, url: str = None, userid:str = None, password:str = None,
-#                  timeout:int = 30, paging: bool = False):
-#         self.server = server
-#         self.url = url
-#         self.userid = userid
-#         self.password = password
-#         self.timeout = timeout
-#         self.paging = paging
-#
-#
-# pass_config = click.make_pass_decorator(Config)
-
+EGERIA_USER = os.environ.get("EGERIA_USER", "erinoverview")
+EGERIA_USER_PASSWORD = os.environ.get("EGERIA_USER_PASSWORD", "secret")
+app_settings = settings
+app_config = app_settings.Environment
+# config_logging()
 
 @tui()
 # @tui('menu', 'menu', 'A textual object_action line interface')
-@click.version_option("0.0.1", prog_name="egeria_ops")
+@click.version_option("5.4 ", prog_name="hey_egeria")
 @click.group()
 @click.option(
     "--server",
-    default=os.environ.get("EGERIA_METADATA_STORE", "qs-metadata-store"),
+    default=app_config.egeria_metadata_store,
     help="Egeria metadata store to work with",
 )
 @click.option(
     "--url",
-    default=os.environ.get("EGERIA_PLATFORM_URL", "https://localhost:9443"),
+    default=app_config.egeria_platform_url,
     help="URL of Egeria metadata store platform to connect to",
 )
 @click.option(
     "--integration_daemon",
-    default=os.environ.get("EGERIA_INTEGRATION_DAEMON", "qs-integration-daemon"),
+    default=app_config.egeria_integration_daemon,
     help="Egeria integration daemon to work with",
 )
 @click.option(
     "--integration_daemon_url",
-    default=os.environ.get("EGERIA_INTEGRATION_DAEMON_URL", "https://localhost:9443"),
+    default=app_config.egeria_integration_daemon_url,
     help="URL of Egeria integration daemon platform to connect to",
 )
 @click.option(
     "--view_server",
-    default=os.environ.get("EGERIA_VIEW_SERVER", "qs-view-server"),
+    default=app_config.egeria_view_server,
     help="Egeria view server to work with",
 )
 @click.option(
     "--view_server_url",
-    default=os.environ.get("EGERIA_VIEW_SERVER_URL", "https://localhost:9443"),
+    default=app_config.egeria_view_server_url,
     help="URL of Egeria view server platform to connect to",
 )
 @click.option(
     "--engine_host",
-    default=os.environ.get("EGERIA_ENGINE_HOST", "qs-engine-host"),
+    default=app_config.egeria_engine_host,
     help="Egeria engine host to work with",
 )
 @click.option(
     "--engine_host_url",
-    default=os.environ.get("EGERIA_ENGINE_HOST_URL", "https://localhost:9443"),
+    default=app_config.egeria_engine_host_url,
     help="URL of Egeria engine host platform to connect to",
 )
-@click.option(
-    "--admin_user",
-    default=os.environ.get("EGERIA_ADMIN_USER", "garygeeke"),
-    help="Egeria admin user",
-)
-@click.option(
-    "--admin_user_password",
-    default=os.environ.get("EGERIA_ADMIN_PASSWORD", "secret"),
-    help="Egeria admin password",
-)
+
 @click.option(
     "--userid",
-    default=os.environ.get("EGERIA_USER", "peterprofile"),
+    default=EGERIA_USER,
     help="Egeria user",
 )
 @click.option(
     "--password",
-    default=os.environ.get("EGERIA_USER_PASSWORD", "secret"),
+    default=EGERIA_USER_PASSWORD,
     help="Egeria user password",
 )
 @click.option("--timeout", default=60, help="Number of seconds to wait")
 @click.option(
     "--jupyter",
     is_flag=True,
-    default=os.environ.get("EGERIA_JUPYTER", "False"),
+    type=bool,
+    default=app_config.egeria_jupyter,
     help="Enable for rendering in a Jupyter terminal",
 )
 @click.option(
     "--width",
-    default=os.environ.get("EGERIA_WIDTH", "200"),
+    default=app_config.console_width,
+    type=int,
     help="Screen width, in characters, to use",
 )
 @click.option(
-    "--home_glossary_guid",
-    default=os.environ.get("EGERIA_HOME_GLOSSARY_GUID", None),
-    help="Glossary guid to use as the home glossary",
+    "--home_glossary_name",
+    default=app_settings.User_Profile.egeria_home_glossary_name,
+    help="Glossary name to use as the home glossary",
 )
 @click.option(
     "--glossary_path",
-    default=os.environ.get("EGERIA_GLOSSARY_PATH", "/home/jovyan/loading-bay/glossary"),
+    default=app_config.egeria_glossary_path,
     help="Path to glossary import/export files",
 )
+
+@click.option(
+    "--root_path",
+    default=app_config.pyegeria_root,
+    help="Root path to use for file operations",
+)
+
+@click.option(
+    "--inbox_path",
+    default=app_config.dr_egeria_inbox,
+    help="Path to inbox files",
+)
+@click.option(
+    "--outbox_path",
+    default=app_config.dr_egeria_outbox,
+    help="Path to outbox files",
+)
+
 @click.pass_context
 def cli(
     ctx,
@@ -154,15 +159,16 @@ def cli(
     integration_daemon_url,
     engine_host,
     engine_host_url,
-    admin_user,
-    admin_user_password,
     userid,
     password,
     timeout,
     jupyter,
     width,
-    home_glossary_guid,
+    home_glossary_name,
     glossary_path,
+    root_path,
+    inbox_path,
+    outbox_path,
 ):
     """An Egeria Command Line interface for Operations"""
     ctx.obj = Config(
@@ -174,18 +180,20 @@ def cli(
         integration_daemon_url,
         engine_host,
         engine_host_url,
-        admin_user,
-        admin_user_password,
         userid,
         password,
         timeout,
         jupyter,
         width,
-        home_glossary_guid,
+        home_glossary_name,
         glossary_path,
+        root_path,
+        inbox_path,
+        outbox_path
     )
-    ctx.max_content_width = 200
+    ctx.max_content_width = 300
     ctx.ensure_object(Config)
+
 
 
 @cli.group("show")
@@ -208,7 +216,7 @@ def show_platform_status(ctx):
     """Display a live status view of known platforms"""
     c = ctx.obj
     p_display_status(
-        c.view_server, c.view_server_url, c.admin_user, c.admin_user_password
+        c.view_server, c.view_server_url, c.userid, c.password
     )
 
 
@@ -311,7 +319,7 @@ def gov_eng_status(ctx, engine_list, list):
     )
 
 
-@engine_host.command("activity")
+@engine_host.command("current-activity")
 @click.option(
     "--rowlimit",
     default=0,
@@ -319,13 +327,7 @@ def gov_eng_status(ctx, engine_list, list):
     show_default=True,
     help="If non-zero, limit the number of rows returned",
 )
-@click.option(
-    "--compressed",
-    is_flag=True,
-    default=False,
-    show_default=True,
-    help="Compressed combines some attributes into a single column",
-)
+
 @click.option(
     "--list",
     is_flag=True,
@@ -334,16 +336,17 @@ def gov_eng_status(ctx, engine_list, list):
     help="If True, a paged list will be shown",
 )
 @click.pass_context
-def eng_activity_status(ctx, rowlimit: int, list: bool, compressed: bool):
+def current_eng_activity_status(ctx, rowlimit: int, list: bool):
     """Show Governance Activity in engine-host"""
     c = ctx.obj
+    compressed = False
     if compressed:
         display_engine_activity_c(
             rowlimit,
             c.view_server,
             c.view_server_url,
-            c.admin_user,
-            c.admin_user_password,
+            c.userid,
+            c.password,
             list,
             c.jupyter,
             c.width,
@@ -353,8 +356,8 @@ def eng_activity_status(ctx, rowlimit: int, list: bool, compressed: bool):
             rowlimit,
             c.view_server,
             c.view_server_url,
-            c.admin_user,
-            c.admin_user_password,
+            c.userid,
+            c.password,
             list,
             c.jupyter,
             c.width,
@@ -401,15 +404,7 @@ def integrations_status(ctx, connector_list, list):
 def integrations_status(ctx, connector):
     """Display Catalog Targets for a connector"""
     c = ctx.obj
-    display_catalog_targets(
-        connector,
-        c.view_server,
-        c.view_server_url,
-        c.userid,
-        c.password,
-        c.jupyter,
-        c.width,
-    )
+    display_catalog_targets(connector, c.view_server, c.view_server_url, c.userid, c.password, c.jupyter, c.width)
 
 
 #

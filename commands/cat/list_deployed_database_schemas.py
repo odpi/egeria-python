@@ -13,37 +13,27 @@ from rich.table import Table
 
 from pyegeria import (
     EgeriaTech,
-    InvalidParameterException,
-    PropertyServerException,
-    UserNotAuthorizedException,
-    print_exception_response,
+    PyegeriaException,
+    print_basic_exception,
+    settings,
+    config_logging
 )
 
-console = Console()
-EGERIA_METADATA_STORE = os.environ.get("EGERIA_METADATA_STORE", "active-metadata-store")
-EGERIA_KAFKA_ENDPOINT = os.environ.get("KAFKA_ENDPOINT", "localhost:9092")
-EGERIA_PLATFORM_URL = os.environ.get("EGERIA_PLATFORM_URL", "https://localhost:9443")
-EGERIA_VIEW_SERVER = os.environ.get("EGERIA_VIEW_SERVER", "view-server")
-EGERIA_VIEW_SERVER_URL = os.environ.get(
-    "EGERIA_VIEW_SERVER_URL", "https://localhost:9443"
-)
-EGERIA_INTEGRATION_DAEMON = os.environ.get("EGERIA_INTEGRATION_DAEMON", "integration-daemon")
-EGERIA_ADMIN_USER = os.environ.get("ADMIN_USER", "garygeeke")
-EGERIA_ADMIN_PASSWORD = os.environ.get("ADMIN_PASSWORD", "secret")
+
 EGERIA_USER = os.environ.get("EGERIA_USER", "erinoverview")
 EGERIA_USER_PASSWORD = os.environ.get("EGERIA_USER_PASSWORD", "secret")
-EGERIA_JUPYTER = bool(os.environ.get("EGERIA_JUPYTER", "False"))
-EGERIA_WIDTH = int(os.environ.get("EGERIA_WIDTH", "200"))
 
+app_config = settings.Environment
+config_logging()
+console = Console(width = app_config.console_width)
 
 def check_if_template(header: dict) -> bool:
     """Check if the the template classification is set"""
-    classifications = header.get("classifications", None)
-    if classifications is None:
+    template = header.get("template", None)
+    if template is None:
         return False
-    for c in classifications:
-        if c["type"]["typeName"] == "Template":
-            return True
+    if template["type"]["typeName"] == "Template":
+        return True
     return False
 
 
@@ -57,12 +47,12 @@ def make_prop_md(props: dict) -> str:
 
 def list_deployed_database_schemas(
     db_name: str = "*",
-    view_server: str = EGERIA_VIEW_SERVER,
-    view_url: str = EGERIA_VIEW_SERVER_URL,
+    view_server: str = app_config.egeria_view_server,
+    view_url: str = app_config.egeria_view_server_url,
     user: str = EGERIA_USER,
     user_pass: str = EGERIA_USER_PASSWORD,
-    jupyter: bool = EGERIA_JUPYTER,
-    width: int = EGERIA_WIDTH,
+    jupyter: bool = app_config.egeria_jupyter,
+    width: int = app_config.console_width,
 ):
     """List schemas that have been deployed in database catalogs or databases.
     Parameters
@@ -133,17 +123,13 @@ def list_deployed_database_schemas(
             el_guid = header["guid"]
 
             # get the information about the catalog we are part of
-            el_classification = header["classifications"]
-            for c in el_classification:
-                el_cat_guid = "---"
-                if c["type"]["typeName"] == "Anchors":
-                    el_anchor_guid = c["classificationProperties"].get("anchorGUID",'---')
-                    el_anchor_type_name = c["classificationProperties"][
-                        "anchorTypeName"
-                    ]
-                    el_anchor_domain_name = c["classificationProperties"][
-                        "anchorDomainName"
-                    ]
+            el_anchor = header["anchor"]
+            el_cat_guid = "---"
+            if el_anchor:
+                if el_anchor["type"]["typeName"] == "Anchors":
+                    el_anchor_guid = el_anchor["classificationProperties"].get("anchorGUID",'---')
+                    el_anchor_type_name = el_anchor["classificationProperties"]["anchorTypeName"]
+                    el_anchor_domain_name = el_anchor["classificationProperties"]["anchorDomainName"]
                     el_cat_name = "---"
                     if el_anchor_domain_name == "SoftwareCapability":
                         el_cat = c_client.get_element_by_guid(el_anchor_guid)
@@ -215,11 +201,9 @@ def list_deployed_database_schemas(
             console.print(generate_table())
 
     except (
-        InvalidParameterException,
-        PropertyServerException,
-        UserNotAuthorizedException,
+        PyegeriaException
     ) as e:
-        print_exception_response(e)
+        print_basic_exception(e)
         print("\n\nPerhaps the type name isn't known")
     finally:
         c_client.close_session()
@@ -234,8 +218,8 @@ def main():
 
     args = parser.parse_args()
 
-    server = args.server if args.server is not None else EGERIA_VIEW_SERVER
-    url = args.url if args.url is not None else EGERIA_PLATFORM_URL
+    server = args.server if args.server is not None else app_config.egeria_view_server
+    url = args.url if args.url is not None else app_config.egeria_view_server_url
     userid = args.userid if args.userid is not None else EGERIA_USER
     password = args.password if args.password is not None else EGERIA_USER_PASSWORD
 

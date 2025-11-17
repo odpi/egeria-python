@@ -71,7 +71,7 @@ class TestAssetCatalog:
 
             token = g_client.create_egeria_bearer_token(self.good_user_2, "secret")
             start_time = time.perf_counter()
-            search_string = "measurements"
+            search_string = "Postgres"
             response = g_client.find_in_asset_domain(
                 search_string, starts_with=True, ends_with=False, ignore_case=True, output_format="DICT",report_spec="Referenceable"
             )

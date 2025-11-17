@@ -1846,7 +1846,7 @@ class ClassificationManager(Client2):
 
         loop = asyncio.get_event_loop()
         response = loop.run_until_complete(
-            self._async_get_scoped_elements(scope_guid, body, output_format, report_spec, start_from, page_size)
+            self._async_get_scoped_elements(scope_guid,body, output_format, report_spec, start_from, page_size)
         )
         return response
 
@@ -2368,6 +2368,8 @@ class ClassificationManager(Client2):
             start_from: int = 0,
             page_size: int = 0,
             time_out: int = default_time_out,
+            output_format: str = "JSON",
+            report_spec: dict | str = None,
     ) -> list | str:
         """
         Retrieve elements of the requested type name. If no type name is specified, then any type of element may
@@ -2402,6 +2404,10 @@ class ClassificationManager(Client2):
         Raises
         ------
         PyegeriaException
+
+        Args:
+            output_format ():
+            report_spec ():
         """
 
         body = {
@@ -2421,7 +2427,12 @@ class ClassificationManager(Client2):
         elements = response.json().get("elements", NO_ELEMENTS_FOUND)
         if type(elements) is list and len(elements) == 0:
             return NO_ELEMENTS_FOUND
+        if output_format != 'JSON':  # return a simplified markdown representation
+            logger.info(f"Found elements, output format: {output_format} and report_spec: {report_spec}")
+            return self._generate_referenceable_output(elements, "Referenceable",
+                                                       output_format, report_spec)
         return elements
+
 
     def get_elements(
             self,
@@ -2474,19 +2485,10 @@ class ClassificationManager(Client2):
 
         loop = asyncio.get_event_loop()
         response = loop.run_until_complete(
-            self._async_get_elements(
-                metadata_element_type_name,
-                effective_time,
-                for_lineage,
-                for_duplicate_processing,
-                start_from,
-                page_size,
-                time_out,
-            )
+            self._async_get_elements(metadata_element_type_name, effective_time, for_lineage, for_duplicate_processing,
+                                     start_from, page_size, time_out, output_format, report_spec)
         )
-        if isinstance(response, list) and output_format != "JSON":
-            return self._generate_referenceable_output(response, None, self.REFERENCEABLE_LABEL,
-                                                       output_format=output_format, report_spec=report_spec)
+
         return response
 
     async def _async_get_elements_by_property_value(self, property_value: str, property_names: list[str],
@@ -2562,13 +2564,11 @@ class ClassificationManager(Client2):
         if type(elements) is list and len(elements) == 0:
             return NO_ELEMENTS_FOUND
 
-        return self._generate_referenceable_output(
-            elements=elements,
-            filter=property_value,
-            element_type_name=metadata_element_type_name,
-            output_format=output_format,
-            report_spec=report_spec,
-        )
+        if output_format != 'JSON':  # return a simplified markdown representation
+            logger.info(f"Found elements, output format: {output_format} and report_spec: {report_spec}")
+            return self._generate_referenceable_output(elements, "Referenceable",
+                                                       output_format, report_spec)
+        return elements
 
     def get_elements_by_property_value(self, property_value: str, property_names: list[str],
                                        metadata_element_type_name: str = None, effective_time: str = None,
@@ -2714,13 +2714,10 @@ class ClassificationManager(Client2):
         if output_format == "JSON":
             return elements
         else:
-            return self._generate_referenceable_output(
-                elements=elements,
-                filter=property_value,
-                element_type_name=metadata_element_type_name,
-                output_format=output_format,
-                report_spec=report_spec,
-            )
+            logger.info(f"Found element, output format: {output_format} and report_spec: {report_spec}")
+            return self._generate_referenceable_output(elements,  "Referenceable", output_format,
+                                                       report_spec)
+
 
     def find_elements_by_property_value(
             self,
@@ -3168,6 +3165,8 @@ class ClassificationManager(Client2):
             start_from: int = 0,
             page_size: int = 0,
             time_out: int = default_time_out,
+            output_format: str = "JSON",
+            report_spec: str | dict = None,
     ) -> list | str:
         """
          Retrieve elements with the requested classification name. It is also possible to limit the results
@@ -3205,6 +3204,10 @@ class ClassificationManager(Client2):
         Raises
         ------
         PyegeriaException
+
+        Args:
+            output_format ():
+            report_spec ():
         """
 
         body = {
@@ -3225,6 +3228,10 @@ class ClassificationManager(Client2):
         elements = response.json().get("elements", NO_ELEMENTS_FOUND)
         if type(elements) is list and len(elements) == 0:
             return NO_ELEMENTS_FOUND
+        if output_format != 'JSON':  # return a simplified markdown representation
+            logger.info(f"Found elements, output format: {output_format} and report_spec: {report_spec}")
+            return self._generate_referenceable_output(elements, "", "Referenceable",
+                                                       output_format, report_spec)
         return elements
 
     def get_elements_by_classification(
@@ -3282,24 +3289,12 @@ class ClassificationManager(Client2):
 
         loop = asyncio.get_event_loop()
         response = loop.run_until_complete(
-            self._async_get_elements_by_classification(
-                classification_name,
-                metadata_element_type_name,
-                effective_time,
-                for_lineage,
-                for_duplicate_processing,
-                start_from,
-                page_size,
-                time_out,
-            )
+            self._async_get_elements_by_classification(classification_name, metadata_element_type_name, effective_time,
+                                                       for_lineage, for_duplicate_processing, start_from, page_size,
+                                                       time_out, output_format, report_spec)
         )
-        return self._generate_referenceable_output(
-            elements=response,
-            filter=classification_name,
-            element_type_name=metadata_element_type_name,
-            output_format=output_format,
-            report_spec=report_spec,
-        )
+        return response
+
 
     async def _async_get_elements_by_classification_with_property_value(
             self,
@@ -3313,6 +3308,8 @@ class ClassificationManager(Client2):
             start_from: int = 0,
             page_size: int = 0,
             time_out: int = default_time_out,
+            output_format: str = "JSON",
+            report_spec: dict | str = None,
     ) -> list | str:
         """
         Retrieve elements with the requested classification name and with the requested a value found in one of the
@@ -3359,6 +3356,10 @@ class ClassificationManager(Client2):
              There is a problem adding the element properties to the metadata repository or
          UserNotAuthorizedException
              the requesting user is not authorized to issue this request.
+
+        Args:
+            output_format ():
+            report_spec ():
         """
 
         body = {
@@ -3383,6 +3384,10 @@ class ClassificationManager(Client2):
         elements = response.json().get("elements", NO_ELEMENTS_FOUND)
         if type(elements) is list and len(elements) == 0:
             return NO_ELEMENTS_FOUND
+        if output_format != 'JSON':  # return a simplified markdown representation
+            logger.info(f"Found elements, output format: {output_format} and report_spec: {report_spec}")
+            return self._generate_referenceable_output(elements,  "Referenceable",
+                                                       output_format, report_spec)
         return elements
 
     def get_elements_by_classification_with_property_value(
@@ -3445,26 +3450,13 @@ class ClassificationManager(Client2):
 
         loop = asyncio.get_event_loop()
         response = loop.run_until_complete(
-            self._async_get_elements_by_classification_with_property_value(
-                classification_name,
-                property_value,
-                property_names,
-                metadata_element_type_name,
-                effective_time,
-                for_lineage,
-                for_duplicate_processing,
-                start_from,
-                page_size,
-                time_out,
-            )
+            self._async_get_elements_by_classification_with_property_value(classification_name, property_value,
+                                                                           property_names, metadata_element_type_name,
+                                                                           effective_time, for_lineage,
+                                                                           for_duplicate_processing, start_from,
+                                                                           page_size, time_out, output_format, report_spec)
         )
-        return self._generate_referenceable_output(
-            elements=response,
-            filter=property_value,
-            element_type_name=metadata_element_type_name,
-            output_format=output_format,
-            report_spec=report_spec,
-        )
+        return response
 
     async def _async_find_elements_by_classification_with_property_value(
             self,
@@ -3550,13 +3542,11 @@ class ClassificationManager(Client2):
         elements = response.json().get("elements", NO_ELEMENTS_FOUND)
         if type(elements) is list and len(elements) == 0 and property_value is not None:
             return NO_ELEMENTS_FOUND
-        return self._generate_referenceable_output(
-            elements=elements,
-            filter=property_value,
-            element_type_name=metadata_element_type_name,
-            output_format=output_format,
-            report_spec=report_spec,
-        )
+        if output_format != 'JSON':  # return a simplified markdown representation
+            logger.info(f"Found elements, output format: {output_format} and report_spec: {report_spec}")
+            return self._generate_referenceable_output(elements, "Referenceable",
+                                                       output_format, report_spec)
+        return elements
 
     def find_elements_by_classification_with_property_value(
             self,
@@ -3652,6 +3642,8 @@ class ClassificationManager(Client2):
             start_from: int = 0,
             page_size: int = 0,
             time_out: int = default_time_out,
+            output_format: str = "JSON",
+            report_spec: dict | str = None
     ) -> list | str:
         """
         Retrieve elements linked by relationship type name. If the relationship type is None, then all related elements
@@ -3694,6 +3686,10 @@ class ClassificationManager(Client2):
         Raises
         ------
         PyegeriaException
+
+        Args:
+            output_format ():
+            report_spec ():
         """
 
         body = {
@@ -3722,6 +3718,10 @@ class ClassificationManager(Client2):
         elements = response.json().get("elements", NO_ELEMENTS_FOUND)
         if type(elements) is list and len(elements) == 0:
             return NO_ELEMENTS_FOUND
+        if output_format != 'JSON':  # return a simplified markdown representation
+            logger.info(f"Found elements, output format: {output_format} and report_spec: {report_spec}")
+            return self._generate_referenceable_output(elements, "Referenceable",
+                                                       output_format, report_spec)
         return elements
 
     def get_related_elements(
@@ -3785,26 +3785,11 @@ class ClassificationManager(Client2):
 
         loop = asyncio.get_event_loop()
         response = loop.run_until_complete(
-            self._async_get_related_elements(
-                element_guid,
-                relationship_type,
-                metadata_element_type_name,
-                start_at_end,
-                effective_time,
-                for_lineage,
-                for_duplicate_processing,
-                start_from,
-                page_size,
-                time_out,
-            )
+            self._async_get_related_elements(element_guid, relationship_type, metadata_element_type_name, start_at_end,
+                                             effective_time, for_lineage, for_duplicate_processing, start_from,
+                                             page_size, time_out, output_format, report_spec)
         )
-        return self._generate_referenceable_output(
-            elements=response,
-            filter=(relationship_type or "AllRelationships"),
-            element_type_name=metadata_element_type_name,
-            output_format=output_format,
-            report_spec=report_spec,
-        )
+        return response
 
     async def _async_get_related_elements_with_property_value(
             self,
@@ -3820,6 +3805,8 @@ class ClassificationManager(Client2):
             start_from: int = 0,
             page_size: int = 0,
             time_out: int = default_time_out,
+            output_format: str = "JSON",
+            report_spec: dict | str = None,
     ) -> list | str:
         """
         Retrieve elements linked via the requested relationship type name and with the requested a value found in one of
@@ -3865,6 +3852,10 @@ class ClassificationManager(Client2):
         Raises
         ------
         PyegeriaException
+
+        Args:
+            output_format ():
+            report_spec ():
         """
 
         body = {
@@ -3890,6 +3881,10 @@ class ClassificationManager(Client2):
         elements = response.json().get("elements", NO_ELEMENTS_FOUND)
         if type(elements) is list and len(elements) == 0:
             return NO_ELEMENTS_FOUND
+        if output_format != 'JSON':  # return a simplified markdown representation
+            logger.info(f"Found elements, output format: {output_format} and report_spec: {report_spec}")
+            return self._generate_referenceable_output(elements, "Referenceable",
+                                                       output_format, report_spec)
         return elements
 
     def get_related_elements_with_property_value(
@@ -3959,28 +3954,14 @@ class ClassificationManager(Client2):
 
         loop = asyncio.get_event_loop()
         response = loop.run_until_complete(
-            self._async_get_related_elements_with_property_value(
-                element_guid,
-                relationship_type,
-                property_value,
-                property_names,
-                metadata_element_type_name,
-                start_at_end,
-                effective_time,
-                for_lineage,
-                for_duplicate_processing,
-                start_from,
-                page_size,
-                time_out,
-            )
+            self._async_get_related_elements_with_property_value(element_guid, relationship_type, property_value,
+                                                                 property_names, metadata_element_type_name,
+                                                                 start_at_end, effective_time, for_lineage,
+                                                                 for_duplicate_processing, start_from, page_size,
+                                                                 time_out, output_format, report_spec)
         )
-        return self._generate_referenceable_output(
-            elements=response,
-            filter=property_value,
-            element_type_name=metadata_element_type_name,
-            output_format=output_format,
-            report_spec=report_spec,
-        )
+        return response
+
 
     async def _async_find_related_elements_with_property_value(
             self,
@@ -3996,6 +3977,8 @@ class ClassificationManager(Client2):
             start_from: int = 0,
             page_size: int = 0,
             time_out: int = default_time_out,
+            output_format: str = "JSON",
+            report_spec: dict | str = None
     ) -> list | str:
         """
         Retrieve elements linked via the requested relationship type name and with the requested a value found in one of
@@ -4042,6 +4025,10 @@ class ClassificationManager(Client2):
         Raises
         ------
         PyegeriaException
+
+        Args:
+            output_format ():
+            report_spec ():
         """
 
         body = {
@@ -4053,7 +4040,7 @@ class ClassificationManager(Client2):
             "forLineage": for_lineage,
             "forDuplicateProcessing": for_duplicate_processing,
             "startFrom": start_from,
-            "pageSize": page_size
+            "pageSize": page_size,
         }
 
         url = (
@@ -4069,6 +4056,11 @@ class ClassificationManager(Client2):
         if type(elements) is list:
             if len(elements) == 0:
                 return NO_ELEMENTS_FOUND
+        if output_format != 'JSON':  # return a simplified markdown representation
+            logger.info(f"Found elements, output format: {output_format} and report_spec: {report_spec}")
+            return self._generate_referenceable_output(elements, "Referenceable",
+                                                       output_format, report_spec)
+
         return elements
 
     def find_related_elements_with_property_value(
@@ -4139,28 +4131,13 @@ class ClassificationManager(Client2):
 
         loop = asyncio.get_event_loop()
         response = loop.run_until_complete(
-            self._async_find_related_elements_with_property_value(
-                element_guid,
-                relationship_type,
-                property_value,
-                property_names,
-                metadata_element_type_name,
-                start_at_end,
-                effective_time,
-                for_lineage,
-                for_duplicate_processing,
-                start_from,
-                page_size,
-                time_out,
-            )
+            self._async_find_related_elements_with_property_value(element_guid, relationship_type, property_value,
+                                                                  property_names, metadata_element_type_name,
+                                                                  start_at_end, effective_time, for_lineage,
+                                                                  for_duplicate_processing, start_from, page_size,
+                                                                  time_out, output_format, report_spec)
         )
-        return self._generate_referenceable_output(
-            elements=response,
-            filter=property_value,
-            element_type_name=metadata_element_type_name,
-            output_format=output_format,
-            report_spec=report_spec,
-        )
+        return response
 
     #
     #   relationships
@@ -4174,6 +4151,8 @@ class ClassificationManager(Client2):
             start_from: int = 0,
             page_size: int = 0,
             time_out: int = default_time_out,
+            output_format: str = "JSON",
+            report_spec: dict | str = None,
     ) -> list | str:
         """
         Retrieve relationships of the requested relationship type name. Async version.
@@ -4205,6 +4184,10 @@ class ClassificationManager(Client2):
         Raises
         ------
         PyegeriaException
+
+        Args:
+            output_format ():
+            report_spec ():
         """
 
         body = {
@@ -4225,6 +4208,11 @@ class ClassificationManager(Client2):
 
         if type(rels) is list and len(rels) == 0:
             return NO_ELEMENTS_FOUND
+        if output_format != 'JSON':  # return a simplified markdown representation
+            logger.info(f"Found elements, output format: {output_format} and report_spec: {report_spec}")
+            return self._generate_referenceable_output(rels, "Referenceable",
+                                                       output_format, report_spec)
+
         return rels
 
     def get_relationships(
@@ -4236,6 +4224,8 @@ class ClassificationManager(Client2):
             start_from: int = 0,
             page_size: int = 0,
             time_out: int = default_time_out,
+            output_format: str = "JSON",
+            report_spec: dict | str = None,
     ) -> list | str:
         """
         Retrieve relationships of the requested relationship type name.
@@ -4267,19 +4257,16 @@ class ClassificationManager(Client2):
         Raises
         ------
         PyegeriaException
+
+        Args:
+            output_format ():
+            report_spec ():
         """
 
         loop = asyncio.get_event_loop()
         response = loop.run_until_complete(
-            self._async_get_relationships(
-                relationship_type,
-                effective_time,
-                for_lineage,
-                for_duplicate_processing,
-                start_from,
-                page_size,
-                time_out,
-            )
+            self._async_get_relationships(relationship_type, effective_time, for_lineage, for_duplicate_processing,
+                                          start_from, page_size, time_out, output_format, report_spec)
         )
         return response
 
@@ -4294,6 +4281,7 @@ class ClassificationManager(Client2):
             start_from: int = 0,
             page_size: int = 0,
             time_out: int = default_time_out,
+            output_format: str = "JSON", report_spec: dict | str = None,
     ) -> list | str:
         """
         Retrieve relationships of the requested relationship type name and with the requested a value found in
@@ -4332,6 +4320,10 @@ class ClassificationManager(Client2):
         Raises
         ------
         PyegeriaException
+
+        Args:
+            output_format ():
+            report_spec ():
         """
 
         body = {
@@ -4357,6 +4349,11 @@ class ClassificationManager(Client2):
         rels = response.json().get("relationships", NO_ELEMENTS_FOUND)
         if type(rels) is list and len(rels) == 0:
             return NO_ELEMENTS_FOUND
+        if output_format != 'JSON':  # return a simplified markdown representation
+            logger.info(f"Found elements, output format: {output_format} and report_spec: {report_spec}")
+            return self._generate_referenceable_output(rels, "Referenceable",
+                                                       output_format, report_spec)
+
         return rels
 
     def get_relationships_with_property_value(
@@ -4370,6 +4367,8 @@ class ClassificationManager(Client2):
             start_from: int = 0,
             page_size: int = 0,
             time_out: int = default_time_out,
+            output_format: str = "JSON",
+            report_spec: dict | str = None,
     ) -> list | str:
         """
         Retrieve relationships of the requested relationship type name and with the requested a value found in
@@ -4406,21 +4405,17 @@ class ClassificationManager(Client2):
         Raises
         ------
         PyegeriaException
+
+        Args:
+            output_format ():
+            report_spec ():
         """
 
         loop = asyncio.get_event_loop()
         response = loop.run_until_complete(
-            self._async_get_relationships_with_property_value(
-                relationship_type,
-                property_value,
-                property_names,
-                effective_time,
-                for_lineage,
-                for_duplicate_processing,
-                start_from,
-                page_size,
-                time_out,
-            )
+            self._async_get_relationships_with_property_value(relationship_type, property_value, property_names,
+                                                              effective_time, for_lineage, for_duplicate_processing,
+                                                              start_from, page_size, time_out, output_format, report_spec)
         )
         return response
 
@@ -4435,6 +4430,9 @@ class ClassificationManager(Client2):
             for_lineage: bool = None,
             for_duplicate_processing: bool = None,
             time_out: int = default_time_out,
+            output_format: str = "JSON",
+            report_spec: dict | str = None
+
     ) -> list | str:
         """
          Retrieve the header for the instance identified by the supplied unique identifier.
@@ -4463,6 +4461,10 @@ class ClassificationManager(Client2):
         Raises
         ------
         PyegeriaException
+
+        Args:
+            output_format ():
+            report_spec ():
         """
 
         body = {
@@ -4477,6 +4479,11 @@ class ClassificationManager(Client2):
             "POST", url, body_slimmer(body), time_out=time_out
         )
         element = response.json().get("element", NO_ELEMENTS_FOUND)
+        if output_format != 'JSON':  # return a simplified markdown representation
+            logger.info(f"Found elements, output format: {output_format} and report_spec: {report_spec}")
+            return self._generate_referenceable_output(element, "Referenceable",
+                                                       output_format, report_spec)
+
         return element
 
     def retrieve_instance_for_guid(
@@ -4486,6 +4493,8 @@ class ClassificationManager(Client2):
             for_lineage: bool = None,
             for_duplicate_processing: bool = None,
             time_out: int = default_time_out,
+            output_format: str = "JSON",
+            report_spec: dict | str = None
     ) -> list | str:
         """
          Retrieve the header for the instance identified by the supplied unique identifier.
@@ -4514,17 +4523,16 @@ class ClassificationManager(Client2):
         Raises
         ------
         PyegeriaException
+
+        Args:
+            output_format ():
+            report_spec ():
         """
 
         loop = asyncio.get_event_loop()
         response = loop.run_until_complete(
-            self._async_retrieve_instance_for_guid(
-                guid,
-                effective_time,
-                for_lineage,
-                for_duplicate_processing,
-                time_out,
-            )
+            self._async_retrieve_instance_for_guid(guid, effective_time, for_lineage, for_duplicate_processing,
+                                                   time_out, output_format, report_spec)
         )
         return response
 
@@ -6984,12 +6992,6 @@ class ClassificationManager(Client2):
         loop.run_until_complete(
             self._async_clear_zone_membership(element_guid, body)
         )
-
-
-
-
-
-
 
 
     async def _async_set_retention_classification(

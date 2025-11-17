@@ -22,40 +22,27 @@ from rich.table import Table
 
 from pyegeria import (
     ClassificationManager,
-    InvalidParameterException,
-    ProjectManager,
-    PropertyServerException,
-    UserNotAuthorizedException,
-    print_exception_response,
+    PyegeriaException,
+    print_basic_exception,
+    settings,
+    config_logging
 )
 
-EGERIA_METADATA_STORE = os.environ.get("EGERIA_METADATA_STORE", "active-metadata-store")
-EGERIA_KAFKA_ENDPOINT = os.environ.get("KAFKA_ENDPOINT", "localhost:9092")
-EGERIA_PLATFORM_URL = os.environ.get("EGERIA_PLATFORM_URL", "https://localhost:9443")
-EGERIA_VIEW_SERVER = os.environ.get("EGERIA_VIEW_SERVER", "view-server")
-EGERIA_VIEW_SERVER_URL = os.environ.get(
-    "EGERIA_VIEW_SERVER_URL", "https://localhost:9443"
-)
-EGERIA_INTEGRATION_DAEMON = os.environ.get("EGERIA_INTEGRATION_DAEMON", "integration-daemon")
-EGERIA_INTEGRATION_DAEMON_URL = os.environ.get(
-    "EGERIA_INTEGRATION_DAEMON_URL", "https://localhost:9443"
-)
-EGERIA_ADMIN_USER = os.environ.get("ADMIN_USER", "garygeeke")
-EGERIA_ADMIN_PASSWORD = os.environ.get("ADMIN_PASSWORD", "secret")
 EGERIA_USER = os.environ.get("EGERIA_USER", "erinoverview")
 EGERIA_USER_PASSWORD = os.environ.get("EGERIA_USER_PASSWORD", "secret")
-EGERIA_JUPYTER = bool(os.environ.get("EGERIA_JUPYTER", "False"))
-EGERIA_WIDTH = int(os.environ.get("EGERIA_WIDTH", "200"))
 
+app_config = settings.Environment
+config_logging()
+console = Console(width = app_config.console_width)
 
 def display_archive_list(
     server: str,
     url: str,
     username: str,
     user_pass: str,
-    save_output: bool,
-    jupyter: bool = EGERIA_JUPYTER,
-    width: int = EGERIA_WIDTH,
+    save_output: bool = False,
+    jupyter: bool = app_config.egeria_jupyter,
+    width: int = app_config.console_width
 ) -> object:
     c_client = ClassificationManager(server, url, user_id=username)
     token = c_client.create_egeria_bearer_token(username, user_pass)
@@ -91,7 +78,7 @@ def display_archive_list(
             )
 
             for archive in sorted_archives:
-                name = archive["properties"].get("name", "---")
+                name = archive["properties"].get("displayName", "---")
                 path_name = archive["properties"].get("pathName", "---")
                 description = archive["properties"].get("description", "---")
                 creation_date_epoch = (
@@ -105,10 +92,6 @@ def display_archive_list(
         return table
 
     try:
-        # with Live(generate_table(), refresh_per_second=4, screen=True) as live:
-        #     while True:
-        #         time.sleep(2)
-        #         live.update(generate_table())
         console = Console(
             record=True, width=width, force_terminal=not jupyter, soft_wrap=True
         )
@@ -118,15 +101,13 @@ def display_archive_list(
             console.save_html("archives.html")
 
     except (
-        InvalidParameterException,
-        PropertyServerException,
-        UserNotAuthorizedException,
+        PyegeriaException,
         ValueError,
     ) as e:
         if type(e) is str:
             print(e)
         else:
-            print_exception_response(e)
+            console.print_exception(show_locals=True)
     except KeyboardInterrupt:
         pass
     finally:
@@ -143,8 +124,8 @@ def main():
     # parser.add_argument("--sponsor", help="Name of sponsor to search")
     args = parser.parse_args()
 
-    server = args.server if args.server is not None else EGERIA_VIEW_SERVER
-    url = args.url if args.url is not None else EGERIA_PLATFORM_URL
+    server = args.server if args.server is not None else app_config.egeria_view_server
+    url = args.url if args.url is not None else app_config.egeria_view_server_url
     userid = args.userid if args.userid is not None else EGERIA_USER
     user_pass = args.password if args.password is not None else EGERIA_USER_PASSWORD
 

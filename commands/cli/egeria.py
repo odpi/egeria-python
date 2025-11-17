@@ -86,10 +86,10 @@ from commands.ops.gov_server_actions import (
 from commands.ops.list_archives import display_archive_list
 from commands.ops.list_catalog_targets import display_catalog_targets
 from commands.ops.load_archive import load_archive
-from commands.ops.monitor_engine_activity import display_engine_activity
-from commands.ops.monitor_engine_activity_c import display_engine_activity_c
-from commands.ops.monitor_gov_eng_status import display_gov_eng_status
-from commands.ops.monitor_integ_daemon_status import (
+from commands.ops.monitor_active_engine_activity import display_engine_activity
+from commands.ops.monitor_engine_activity import display_engine_activity_c
+from commands.ops.monitor_engine_status import display_gov_eng_status
+from commands.ops.monitor_daemon_status import (
     display_integration_daemon_status,
 )
 from commands.ops.monitor_platform_status import (
@@ -161,9 +161,6 @@ EGERIA_USER_PASSWORD = os.environ.get("EGERIA_USER_PASSWORD", "secret")
 app_settings = settings
 app_config = app_settings.Environment
 # config_logging()
-
-
-
 
 @tui()
 # @tui('menu', 'menu', 'A textual object_action line interface')
@@ -305,7 +302,7 @@ def cli(
         inbox_path,
         outbox_path
     )
-    ctx.max_content_width = 250
+    ctx.max_content_width = 300
     ctx.ensure_object(Config)
 
 
@@ -1477,15 +1474,8 @@ def deployed_data(ctx):
 def show_deployed_servers(ctx, search_string):
     """Display deployed servers"""
     c = ctx.obj
-    display_servers_by_dep_imp(
-        search_string,
-        c.view_server,
-        c.view_server_url,
-        c.userid,
-        c.password,
-        c.jupyter,
-        c.width,
-    )
+    display_servers_by_dep_imp(search_string, c.view_server, c.view_server_url, c.userid, c.password, c.jupyter,
+                               c.width)
 
 
 @deployed_data.command("deployed-schemas")
@@ -1527,9 +1517,7 @@ def list_catalogs(ctx, search_server):
 def list_databases(ctx):
     """Display deployed databases"""
     c = ctx.obj
-    list_deployed_databases(
-        c.view_server, c.view_server_url, c.userid, c.password, c.jupyter, c.width
-    )
+    list_deployed_databases(c.view_server, c.view_server_url, c.userid, c.password, c.jupyter, c.width)
 
 
 #
@@ -1765,15 +1753,8 @@ def show_user_ids(ctx):
 def show_deployed_servers(ctx, search_string):
     """Show list of deployed servers"""
     c = ctx.obj
-    display_servers_by_dep_imp(
-        search_string,
-        c.view_server,
-        c.view_server_url,
-        c.userid,
-        c.password,
-        c.jupyter,
-        c.width,
-    )
+    display_servers_by_dep_imp(search_string, c.view_server, c.view_server_url, c.userid, c.password, c.jupyter,
+                               c.width)
 
 
 @deployed_data.command("deployed-schemas")
@@ -1817,9 +1798,7 @@ def catalogs(ctx, search_server):
 def databases(ctx):
     """Display a list of deployed databases"""
     c = ctx.obj
-    list_deployed_databases(
-        c.view_server, c.view_server_url, c.userid, c.password, c.jupyter, c.width
-    )
+    list_deployed_databases(c.view_server, c.view_server_url, c.userid, c.password, c.jupyter, c.width)
 
 
 # @tell_cat.group("survey")
@@ -1899,7 +1878,7 @@ def show_platform_status(ctx):
     """Display a live status view of known platforms"""
     c = ctx.obj
     p_display_status(
-        c.view_server, c.view_server_url, c.admin_user, c.admin_user_password
+        c.view_server, c.view_server_url, c.userid, c.password
     )
 
 
@@ -2007,8 +1986,8 @@ def eng_activity_status(ctx, rowlimit: int, list: bool, compressed: bool):
             rowlimit,
             c.view_server,
             c.view_server_url,
-            c.admin_user,
-            c.admin_user_password,
+            c.userid,
+            c.password,
             list,
             c.jupyter,
             c.width,
@@ -2018,8 +1997,8 @@ def eng_activity_status(ctx, rowlimit: int, list: bool, compressed: bool):
             rowlimit,
             c.view_server,
             c.view_server_url,
-            c.admin_user,
-            c.admin_user_password,
+            c.userid,
+            c.password,
             list,
             c.jupyter,
             c.width,
@@ -2070,15 +2049,7 @@ def integrations_status(ctx, connector_list, list, sorted):
 def integrations_status(ctx, connector):
     """Display Catalog Targets for a connector"""
     c = ctx.obj
-    display_catalog_targets(
-        connector,
-        c.view_server,
-        c.view_server_url,
-        c.userid,
-        c.password,
-        c.jupyter,
-        c.width,
-    )
+    display_catalog_targets(connector, c.view_server, c.view_server_url, c.userid, c.password, c.jupyter, c.width)
 
 
 #

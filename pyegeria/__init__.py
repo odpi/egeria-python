@@ -41,7 +41,7 @@ from ._validators import (is_json, validate_guid, validate_name, validate_public
                           validate_server_name, validate_url, validate_user_id, )
 from .asset_catalog import AssetCatalog
 from .automated_curation import AutomatedCuration
-from .classification_manager_omvs import ClassificationManager
+from .classification_manager import ClassificationManager
 from .collection_manager import CollectionManager
 from .core_omag_server_config import CoreServerConfig
 from .create_tech_guid_lists import build_global_guid_lists
@@ -69,7 +69,7 @@ from .valid_metadata_omvs import ValidMetadataManager
 from .x_action_author_omvs import ActionAuthor
 from .template_manager_omvs import TemplateManager
 from .data_designer import DataDesigner
-from ._output_formats import select_report_spec
+from .base_report_formats import select_report_spec
 from .mcp_adapter import list_reports, describe_report, run_report, _async_run_report, _execute_egeria_call_blocking
 from .base_report_formats import report_spec_list, select_report_spec, get_report_format_description
 #

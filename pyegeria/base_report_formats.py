@@ -121,7 +121,8 @@ USER_FORMAT_SETS_DIR = os.getenv("PYEGERIA_USER_FORMAT_SETS_DIR", "./")
 MD_SEPARATOR = "\n---\n\n"
 
 # Standard optional parameters for search functions
-OPTIONAL_PARAMS = ["page_size", "start_from", "starts_with", "ends_with", "ignore_case"]
+OPTIONAL_SEARCH_PARAMS= ["page_size", "start_from", "starts_with", "ends_with", "ignore_case"]
+OPTIONAL_FILTER_PARAMS= ["page_size", "start_from"]
 
 # Define shared elements
 COMMON_COLUMNS = [
@@ -308,6 +309,31 @@ base_report_specs = FormatSetDict({
             )
         ],
     ),
+"Engine-Actions": FormatSet(
+        target_type="Referenceable",
+        heading="Engine Actions",
+        description="A Display of Engine Actions",
+        annotations={},  # No specific annotations
+        family="AutomatedCuration",
+        formats=[
+            Format(
+                types=["ALL"],
+                attributes=COMMON_COLUMNS + COMMON_METADATA_COLUMNS + [
+                    Column(name='Version Identifier', key='version_identifier'),
+                    Column(name="Classifications", key='classifications'),
+                    Column(name="Additional Properties", key='additional_properties'),
+                    Column(name="Created By", key='created_by'),
+                    Column(name="Create Time", key='create_time'),
+                    Column(name="Updated By", key='updated_by'),
+                    Column(name="Update Time", key='update_time'),
+                    Column(name="Effective From", key='effective_from'),
+                    Column(name="Effective To", key='effective_to'),
+                    Column(name="Version", key='version'),
+                    Column(name="Open Metadata Type Name", key='type_name'),
+                ],
+            )
+        ],
+    ),
 "Asset-Graph": FormatSet(
         target_type="Asset",
         heading="Asset Graph",
@@ -333,7 +359,7 @@ base_report_specs = FormatSetDict({
         ],
     action=ActionParameter(
         function="Client2.get_asset_graph",
-        optional_params=OPTIONAL_PARAMS ,
+        optional_params=OPTIONAL_FILTER_PARAMS ,
         required_params=["asset_guid"],
         spec_params={},
     )
@@ -404,7 +430,7 @@ base_report_specs = FormatSetDict({
         ],
         action=ActionParameter(
             function="Client2.get_technology_type_elements",
-            optional_params=OPTIONAL_PARAMS + ["get_templates"],
+            optional_params=OPTIONAL_FILTER_PARAMS + ["get_templates"],
             required_params=["filter"],
             spec_params={},
         )
@@ -430,7 +456,7 @@ base_report_specs = FormatSetDict({
         ],
         action=ActionParameter(
             function="_client_new.find_search_keywords",
-            optional_params=OPTIONAL_PARAMS,
+            optional_params=OPTIONAL_SEARCH_PARAMS,
             required_params=["search_string"],
             spec_params={},
         ),
@@ -461,7 +487,7 @@ base_report_specs = FormatSetDict({
         ],
         action=ActionParameter(
             function="Client2.get_tech_type_detail",
-            optional_params=OPTIONAL_PARAMS,
+            optional_params=OPTIONAL_FILTER_PARAMS,
             required_params=["filter"],
             spec_params={},
         )
@@ -486,7 +512,7 @@ base_report_specs = FormatSetDict({
         ],
         action=ActionParameter(
             function="Client2.find_technology_types",
-            optional_params=OPTIONAL_PARAMS,
+            optional_params=OPTIONAL_SEARCH_PARAMS,
             required_params=["search_string"],
             spec_params={},
         )
@@ -512,7 +538,7 @@ base_report_specs = FormatSetDict({
         ],
         action=ActionParameter(
             function="Client2.find_notes",
-            optional_params=OPTIONAL_PARAMS,
+            optional_params=OPTIONAL_SEARCH_PARAMS,
             required_params=["search_string"],
             spec_params={},
         )
@@ -537,7 +563,7 @@ base_report_specs = FormatSetDict({
         ],
         action=ActionParameter(
             function="Client2.find_tags",
-            optional_params=OPTIONAL_PARAMS,
+            optional_params=OPTIONAL_SEARCH_PARAMS,
             required_params=["search_string"],
             spec_params={},
         )
@@ -558,7 +584,7 @@ base_report_specs = FormatSetDict({
         ],
         action=ActionParameter(
             function="ExternalReference.find_external_references",
-            optional_params=OPTIONAL_PARAMS,
+            optional_params=OPTIONAL_SEARCH_PARAMS,
             required_params=["search_string"],
             spec_params={},
         )
@@ -582,7 +608,7 @@ base_report_specs = FormatSetDict({
         ],
         action=ActionParameter(
             function="ExternalReference.find_external_references",
-            optional_params=OPTIONAL_PARAMS,
+            optional_params=OPTIONAL_SEARCH_PARAMS,
             required_params=["search_string"],
             spec_params={"metadata_element_types": ["RelatedMedia"]},
         )
@@ -614,7 +640,7 @@ base_report_specs = FormatSetDict({
         ],
         action=ActionParameter(
             function="ExternalReference.find_external_references",
-            optional_params=OPTIONAL_PARAMS,
+            optional_params=OPTIONAL_SEARCH_PARAMS,
             required_params=["search_string"],
             spec_params={"metadata_element_types": ["CitedDocument"]},
         )
@@ -634,7 +660,7 @@ base_report_specs = FormatSetDict({
         ],
         action=ActionParameter(
             function="ProjectManager.find_projects",
-            optional_params=OPTIONAL_PARAMS,
+            optional_params=OPTIONAL_SEARCH_PARAMS,
             required_params=["search_string"],
             spec_params={},
         )
@@ -654,7 +680,7 @@ base_report_specs = FormatSetDict({
         ],
         action=ActionParameter(
             function="GlossaryManager.find_glossaries",
-            optional_params=OPTIONAL_PARAMS,
+            optional_params=OPTIONAL_SEARCH_PARAMS,
             required_params=["search_string"],
             spec_params={},
         )
@@ -689,7 +715,7 @@ base_report_specs = FormatSetDict({
         action=ActionParameter(
             function="GlossaryManager.find_glossary_terms",
             required_params=["search_string"],
-            optional_params=OPTIONAL_PARAMS,
+            optional_params=OPTIONAL_SEARCH_PARAMS,
             spec_params={},
         )
     ),
@@ -715,7 +741,7 @@ base_report_specs = FormatSetDict({
         action=ActionParameter(
             function="GlossaryManager.find_glossary_terms",
             required_params=["search_string"],
-            optional_params=OPTIONAL_PARAMS,
+            optional_params=OPTIONAL_SEARCH_PARAMS,
             spec_params={},
         )
     ),
@@ -733,7 +759,7 @@ base_report_specs = FormatSetDict({
         action=ActionParameter(
             function="CollectionManager.find_collections",
             required_params=["search_string"],
-            optional_params=OPTIONAL_PARAMS,
+            optional_params=OPTIONAL_SEARCH_PARAMS,
             spec_params={},
         )
     ),
@@ -751,7 +777,7 @@ base_report_specs = FormatSetDict({
         action=ActionParameter(
             function="CollectionManager.find_collections",
             required_params=["search_string"],
-            optional_params=OPTIONAL_PARAMS,
+            optional_params=OPTIONAL_SEARCH_PARAMS,
             spec_params={},
         )
     ),
@@ -769,7 +795,7 @@ base_report_specs = FormatSetDict({
         action=ActionParameter(
             function="CollectionManager.find_collections",
             required_params=["search_string"],
-            optional_params=OPTIONAL_PARAMS,
+            optional_params=OPTIONAL_SEARCH_PARAMS,
             spec_params={"metadata_element_typs": ["FolderCollection"]},
         )
     ),
@@ -785,7 +811,7 @@ base_report_specs = FormatSetDict({
         action=ActionParameter(
             function="CollectionManager.get_collection_members",
             required_params=["collection_guid"],
-            optional_params=OPTIONAL_PARAMS,
+            optional_params=OPTIONAL_FILTER_PARAMS,
             spec_params={"output_format": "DICT"},
         )
     ),
@@ -818,7 +844,7 @@ base_report_specs = FormatSetDict({
         action=ActionParameter(
             function="SolutionArchitect.find_solution_blueprints",
             required_params=["search_string"],
-            optional_params=OPTIONAL_PARAMS,
+            optional_params=OPTIONAL_SEARCH_PARAMS,
             spec_params={},
         ),
     ),
@@ -849,7 +875,7 @@ base_report_specs = FormatSetDict({
         action=ActionParameter(
             function="CollectionManager.find_collections",
             required_params=["search_string"],
-            optional_params=OPTIONAL_PARAMS,
+            optional_params=OPTIONAL_SEARCH_PARAMS,
             spec_params={"metadata_element_types": ["DigitalProductCatalog"]},
         ),
     ),
@@ -873,7 +899,7 @@ base_report_specs = FormatSetDict({
         action=ActionParameter(
             function="CollectionManager.find_collections",
             required_params=["search_string"],
-            optional_params=OPTIONAL_PARAMS,
+            optional_params=OPTIONAL_SEARCH_PARAMS,
             spec_params={"metadata_element_types": ["DigitalProductCatalog"]},
         ),
     ),
@@ -926,7 +952,7 @@ base_report_specs = FormatSetDict({
         action=ActionParameter(
             function="CollectionManager.find_collections",
             required_params=["search_string"],
-            optional_params=OPTIONAL_PARAMS,
+            optional_params=OPTIONAL_SEARCH_PARAMS,
             spec_params={"metadata_element_types": ["DigitalProduct"]},
         ),
         get_additional_props=ActionParameter(
@@ -974,7 +1000,7 @@ base_report_specs = FormatSetDict({
         action=ActionParameter(
             function="CollectionManager.find_collections",
             required_params=["search_string"],
-            optional_params=OPTIONAL_PARAMS,
+            optional_params=OPTIONAL_SEARCH_PARAMS,
             spec_params={"metadata_element_types": ["DigitalProduct"]},
         ),
         get_additional_props=ActionParameter(
@@ -1285,10 +1311,37 @@ base_report_specs = FormatSetDict({
                                     action=ActionParameter(
                                         function="GovernanceOfficer.find_governance_definitions",
                                         required_params=["search_string"],
-                                        optional_params=OPTIONAL_PARAMS,
+                                        optional_params=OPTIONAL_SEARCH_PARAMS,
                                         spec_params={"metadata_element_types": ["GovernanceControl"]},
                                     )
-                                    ),
+        ),
+'Governance-Process': FormatSet(target_type='Governance Process',
+                                    heading='Governance Process Attributes',
+                                    description='Governance Process Attributes.',
+                                    family="Governance Officer",
+                                    formats=[
+                                        Format(types=['TABLE','LIST', 'MD', 'FORM', 'REPORT'],
+                                               attributes=[Column(name='Display Name', key='display_name'),
+                                                           Column(name='Description', key='description'),
+                                                           Column(name='Category', key='category'),
+                                                           Column(name='Qualified Name', key='qualified_name'),
+                                                           Column(name='GUID', key='guid')
+                                                           ]),
+                                        Format(types=['DICT'],
+                                               attributes=[Column(name='Display Name', key='display_name'),
+                                                           Column(name='Summary', key='summary'),
+                                                           Column(name='Category', key='category'),
+                                                           Column(name='Status', key='element_status'),
+                                                           Column(name='Qualified Name', key='qualified_name'),
+                                                           ])
+                                    ],
+                                    action=ActionParameter(
+                                        function="GovernanceOfficer.find_governance_definitions",
+                                        required_params=["search_string"],
+                                        optional_params=OPTIONAL_SEARCH_PARAMS,
+                                        spec_params={"metadata_element_types": ["GovernanceActionProcess"]},
+                                    )
+                     ),
     "Valid-Value-Def": FormatSet(
         target_type="Valid Value Definition",
         heading="Valid Value Definitions Information",
@@ -1349,7 +1402,7 @@ base_report_specs = FormatSetDict({
                               action=ActionParameter(
                                   function="GovernanceOfficer.find_governance_definitions",
                                   required_params=["search_string"],
-                                  optional_params=OPTIONAL_PARAMS,
+                                  optional_params=OPTIONAL_SEARCH_PARAMS,
                                   spec_params={"metadata_element_types": ["LicenseType"]},
                               )
                               ),
@@ -1365,7 +1418,7 @@ base_report_specs = FormatSetDict({
         action=ActionParameter(
             function="GovernanceOfficer.find_governance_definitions",
             required_params=["search_string"],
-            optional_params=OPTIONAL_PARAMS,
+            optional_params=OPTIONAL_SEARCH_PARAMS,
             spec_params={"metadata_element_types": ["GovernancePolicy"]},
         )
     )

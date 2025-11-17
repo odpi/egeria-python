@@ -1899,8 +1899,7 @@ class AutomatedCuration(Client2):
 
     async def _async_get_active_engine_actions(
             self, start_from: int = 0, page_size: int = 0,
-            output_format: str = "JSON", report_spec: str | dict = "EngineAction",
-    ) -> list | str:
+            output_format: str = "JSON", report_spec: str | dict = "Engine-Actions") -> list | str:
         """Retrieve the engine actions that are still in process. Async Version.
 
         Parameters:
@@ -1971,8 +1970,8 @@ class AutomatedCuration(Client2):
         """
         loop = asyncio.get_event_loop()
         response = loop.run_until_complete(
-            self._async_get_active_engine_actions(start_from, page_size,
-                                                  output_format=output_format, report_spec=report_spec)
+            self._async_get_active_engine_actions(start_from, page_size, output_format=output_format,
+                                                  report_spec=report_spec)
         )
         return response
 
@@ -3518,6 +3517,123 @@ class AutomatedCuration(Client2):
         )
         return response
 
+
+    async def _async_get_tech_type_hierarchy(self, filter: str = None, body: dict | FilterRequestBody = None,
+                                          output_format: str = "JSON", report_spec: str | dict = "TechType",
+                                          **kwargs) -> list | str:
+        """Retrieve the details of the named technology type. This name should be the name of the technology type
+            and contain no wild cards. Async version.
+        Parameters
+        ----------
+        filter : str
+            The name of the technology type to retrieve detailed information for.
+        body: dict | FilterRequestBody
+            If provided, the information in the body supersedes the other parameters and allows more advanced requests.
+
+        Returns
+        -------
+        list[dict] | str
+            A list of dictionaries containing the detailed information for the specified technology type.
+            If the technology type is not found, returns the string "no type found".
+        Raises
+        ------
+                PyegeriaException
+        ValidationError
+
+        Notes
+        -----
+        More information can be found at: https://egeria-project.org/concepts/deployed-implementation-type
+        Sample body:
+        {
+          "class" : "FilterRequestBody",
+          "filter" : "Root Technology Type",
+          "startFrom": 0,
+          "pageSize": 10,
+          "asOfTime" : "{{$isoTimestamp}}",
+          "effectiveTime" : "{{$isoTimestamp}}",
+          "includeOnlyClassifiedElements" : ["Template"]
+          "forLineage" : false,
+          "forDuplicateProcessing" : false,
+          "limitResultsByStatus" : ["ACTIVE"],
+          "sequencingOrder" : "PROPERTY_ASCENDING",
+          "sequencingProperty" : "qualifiedName"
+        }
+        """
+
+        # validate_name(type_name)
+        if filter == "*":
+            filter = "Root Technology Type"
+
+        url = str(HttpUrl(f"{self.curation_command_root}/technology-types/hierarchy"))
+        if body is None:
+            body = {
+                "class": "FilterRequestBody",
+                "filter": filter
+            }
+        body_s = body_slimmer(body)
+        response = await self._async_make_request("POST", url, body_s)
+        element = response.json().get("element", NO_ELEMENTS_FOUND)
+        if type(element) is str:
+            logger.info(NO_ELEMENTS_FOUND)
+            return NO_ELEMENTS_FOUND
+
+        if output_format != 'JSON':  # return a simplified markdown representation
+            logger.info(f"Found elements, output format: {output_format} and report_spec: {report_spec}")
+            return self._generate_tech_type_output(element, filter, "ValidMetadataValue",
+                                                   output_format, report_spec)
+        return element
+
+    def get_tech_type_hierarchy(self, filter: str = None, body: dict | FilterRequestBody = None,
+                             output_format: str = "JSON", report_spec: str | dict = "TechType", **kwargs) -> list | str:
+        """Retrieve the details of the named technology type. This name should be the name of the technology type
+                 and contain no wild cards.
+             Parameters
+             ----------
+             filter : str
+                 The name of the technology type to retrieve detailed information for.
+             body: dict | FilterRequestBody
+                 If provided, the information in the body supersedes the other parameters and allows more advanced requests.
+
+             Returns
+             -------
+             list[dict] | str
+                 A list of dictionaries containing the detailed information for the specified technology type.
+                 If the technology type is not found, returns the string "no type found".
+             Raises
+             ------
+                     PyegeriaException
+             ValidationError
+
+             Notes
+             -----
+             More information can be found at: https://egeria-project.org/concepts/deployed-implementation-type
+             Sample body:
+             {
+               "class" : "FilterRequestBody",
+               "filter" : "Root Technology Type",
+               "startFrom": 0,
+               "pageSize": 10,
+               "asOfTime" : "{{$isoTimestamp}}",
+               "effectiveTime" : "{{$isoTimestamp}}",
+               "includeOnlyClassifiedElements" : ["Template"]
+               "forLineage" : false,
+               "forDuplicateProcessing" : false,
+               "limitResultsByStatus" : ["ACTIVE"],
+               "sequencingOrder" : "PROPERTY_ASCENDING",
+               "sequencingProperty" : "qualifiedName"
+             }
+             """
+
+        loop = asyncio.get_event_loop()
+        response = loop.run_until_complete(
+            self._async_get_tech_type_hierarchy(filter, body=body, output_format=output_format, report_spec=report_spec)
+        )
+        return response
+
+
+
+
+
     async def _async_get_template_guid_for_technology_type(self, type_name: str) -> str:
         details = await self._async_get_tech_type_detail(type_name)
         if isinstance(details, dict):
@@ -3590,11 +3706,11 @@ class AutomatedCuration(Client2):
         body = {
             "class": "SearchStringRequestBody",
             "searchString": search_string,
-            "startsWith": True,
-            "endsWith": False,
-            "ignoreCase": True,
-            "startFrom": 0,
-            "pageSize": 0,
+            "startsWith": starts_with,
+            "endsWith": ends_with,
+            "ignoreCase": ignore_case,
+            "startFrom": start_from,
+            "pageSize": page_size,
             "limitResultsByStatus": ["ACTIVE"],
             "sequencingOrder": "PROPERTY_ASCENDING",
             "sequencingProperty": "qualifiedName"
