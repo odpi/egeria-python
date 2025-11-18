@@ -12,7 +12,7 @@ This client combines methods from:
 
 to provide a single, convenient surface for catalog users.
 """
-from pyegeria.asset_catalog_omvs import AssetCatalog
+from pyegeria.asset_catalog import AssetCatalog
 from pyegeria.glossary_manager import GlossaryManager
 from pyegeria.project_manager import ProjectManager
 from pyegeria.my_profile_omvs import MyProfile

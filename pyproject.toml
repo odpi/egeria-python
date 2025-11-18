@@ -93,17 +93,17 @@ dependencies = [
 
     monitor_asset_events = "commands.ops.monitor_asset_events:main"
     monitor_coco_status = "commands.ops.monitor_coco_status:main"
-    monitor_engine_activity = "commands.ops.monitor_engine_activity:main_live"
+    monitor_active_engine_activity = "commands.ops.monitor_active_engine_activity:main_live"
+
+    list_active_engine_activity = "commands.ops.monitor_active_engine_activity:main_paging"
 
     list_engine_activity = "commands.ops.monitor_engine_activity:main_paging"
-
-    list_engine_activity_compressed = "commands.ops.monitor_engine_activity_c:main_paging"
-    monitor_engine_activity_compressed = "commands.ops.monitor_engine_activity_c:main_live"
+    monitor_engine_activity = "commands.ops.monitor_engine_activity:main_live"
     refresh_gov_eng_config = "commands.ops.gov_server_actions:refresh_gov_eng_config"
     monitor_gov_eng_status = "commands.ops.monitor_gov_eng_status:main_live"
-    list_gov_eng_status = "commands.ops.monitor_gov_eng_status:main_paging"
-    monitor_integ_daemon_status = "commands.ops.monitor_integ_daemon_status:main_live"
-    list_integ_daemon_status = "commands.ops.monitor_integ_daemon_status:main_paging"
+    list_engine_status = "commands.ops.monitor_engine_status:main_paging"
+    monitor_daemon_status = "commands.ops.monitor_daemon_status:main_live"
+    list_daemon_status = "commands.ops.monitor_daemon_status:main_paging"
     monitor_platform_status = "commands.ops.monitor_platform_status:main"
     monitor_server_list = "commands.ops.orig_monitor_server_list:main"
     monitor_server_startup = "commands.ops.monitor_server_startup:main"

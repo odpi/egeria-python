@@ -22,8 +22,8 @@ from rich import print, print_json
 from rich.console import Console
 from rich.pretty import pprint
 
-from pyegeria import  AutomatedCuration, PyegeriaException, print_basic_exception, \
-    print_validation_error, PyegeriaAPIException
+from pyegeria import AutomatedCuration, PyegeriaException, print_basic_exception, \
+    print_validation_error, PyegeriaAPIException, EgeriaTech
 from pyegeria._exceptions import (
     InvalidParameterException,
     PropertyServerException,
@@ -290,7 +290,7 @@ class TestAutomatedCuration:
             start_time = time.perf_counter()
             response = a_client.create_postgres_database_element_from_template(
                 "egeria",
-                "LocalPostgreSQL1",
+                "LocalPostgreSQL",
                 "host.docker.internal",
                 "5442",
                 db_user="egeria_user",
@@ -841,6 +841,52 @@ class TestAutomatedCuration:
         finally:
             a_client.close_session()
 
+    def test_get_tech_type_hierarchy(self):
+        try:
+            a_client = AutomatedCuration(
+                self.good_view_server_2,
+                self.good_platform1_url,
+                user_id=self.good_user_2,
+                user_pwd="secret",
+            )
+            token = a_client.create_egeria_bearer_token()
+            # tech_type = "PostgreSQL Server"
+            tech_type = "*"
+            start_time = time.perf_counter()
+            response = a_client.get_tech_type_hierarchy(tech_type, output_format="JSON",
+                                                     report_spec="Tech-Type-Details")
+            duration = time.perf_counter() - start_time
+            print(f"\n\tDuration was {duration} seconds")
+            if isinstance(response, list | dict):
+                out = "\n\n" + json.dumps(response, indent=4)
+                count = len(response)
+                console.log(f"Found {count} elements")
+                print_json(out)
+            elif type(response) is str:
+                console.log("\n\n" + response)
+
+            duration = time.perf_counter() - start_time
+            print(f"\n\tDuration was {duration} seconds")
+            if type(response) is dict:
+                out = "\n\n" + json.dumps(response, indent=4)
+                count = len(response)
+                console.log(f"Found {count} elements")
+                print_json(out)
+            elif type(response) is str:
+                console.log("\n\n" + response)
+            assert True
+
+        except (
+            InvalidParameterException,
+            PropertyServerException,
+            UserNotAuthorizedException,
+        ) as e:
+            print_exception_response(e)
+            assert False, "Invalid request"
+
+        finally:
+            a_client.close_session()
+
     def test_get_template_guid_for_technology_type(self):
         try:
             a_client = AutomatedCuration(
@@ -962,7 +1008,7 @@ class TestAutomatedCuration:
                 user_pwd="secret",
             )
             token = a_client.create_egeria_bearer_token()
-            postgres_server_connector_guid = a_client.get_connector_guid('PostgreSQL Server')
+            postgres_server_connector_guid = a_client.get_connector_guid('PostgreSQLServerCataloguer')
 
             element_guid = "061a4fb3-7d41-4e52-9080-65e9c61084d2"
             relationship_guid = "6be6e470-7aa2-4f50-8142-246866037523"
@@ -1126,16 +1172,16 @@ class TestAutomatedCuration:
 
     def test_initiate_postgres_server_survey(self):
         try:
-            a_client = AutomatedCuration(
+            a_client = EgeriaTech(
                 self.good_view_server_2,
                 self.good_platform1_url,
                 user_id=self.good_user_2,
                 user_pwd="secret",
             )
             token = a_client.create_egeria_bearer_token()
-            a_postgres_server_guid = "d34544cd-7cc0-4258-ad19-2c32f1f1ffed "
+            a_postgres_server_guid = "c8638b61-09b9-48d3-9dea-5dddfb9f01f1"
             start_time = time.perf_counter()
-
+            g1 = a_client.get_element_guid_by_unique_name("PostgreSQLServer:CreateAndSurveyGovernanceActionProcess")
             response = a_client.initiate_postgres_server_survey(a_postgres_server_guid)
             duration = time.perf_counter() - start_time
             print(f"\n\tDuration was {duration} seconds")
@@ -1149,13 +1195,13 @@ class TestAutomatedCuration:
             assert True
 
         except (
-            InvalidParameterException,
-            PropertyServerException,
-            UserNotAuthorizedException,
+            PyegeriaException
         ) as e:
-            print_exception_response(e)
+            print_basic_exception(e)
             assert False, "Invalid request"
-
+        except Exception as e:
+            print_basic_exception(e)
+            assert False, "Invalid request"
         finally:
             a_client.close_session()
 

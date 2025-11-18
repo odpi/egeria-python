@@ -12,12 +12,12 @@ for all use cases..using the more role based clients is often appropriate:
 
 """
 # from pyegeria.x_action_author_omvs import ActionAuthor
-from pyegeria.asset_catalog_omvs import AssetCatalog
+from pyegeria.asset_catalog import AssetCatalog
 # from pyegeria.collection_manager import CollectionManager
 from pyegeria.glossary_manager import GlossaryManager
 from pyegeria.project_manager import ProjectManager
 from pyegeria.automated_curation import AutomatedCuration
-from pyegeria.classification_manager_omvs import ClassificationManager
+from pyegeria.classification_manager import ClassificationManager
 from pyegeria.template_manager_omvs import TemplateManager
 from pyegeria.runtime_manager_omvs import RuntimeManager
 from pyegeria.full_omag_server_config import FullServerConfig

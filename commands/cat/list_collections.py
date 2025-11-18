@@ -22,6 +22,7 @@ from pyegeria import (
     CollectionManager, settings,
     NO_ELEMENTS_FOUND, config_logging, load_app_config, get_app_config, init_logging, config_logging, PyegeriaException,
     print_basic_exception,PyegeriaException, )
+from commands.cat.run_report import list_generic
 from pyegeria._exceptions_new import print_validation_error
 app_config = settings.Environment
 
@@ -31,21 +32,7 @@ app_settings = get_app_config(app_config.pyegeria_root+"/.env")
 
 config_logging()
 
-out_struct = {
-            "formats": {
-                "types": ["ALL"],
-                "attributes": [
-                    {'name': 'display_name', 'key': 'display_name'},
-                    {'name': 'qualified_name', 'key': 'qualified_name', 'format': True},
-                    {'name': 'description', 'key': 'description', 'format': True},
-                    {'name': "classifications", 'key': 'classifications'},
-                    {'name': 'members', 'key': 'members', 'format': True},
-                    {'name': 'category', 'key': 'category', 'format': True},
-                    {'name': 'GUID', 'key': 'GUID'},
-                ],
-            },
-
-        }
+console = Console(width=app_config.console_width, force_terminal=(not app_config.egeria_jupyter))
 
 def display_collections(
     search_string: str = "*",
@@ -77,109 +64,14 @@ def display_collections(
     output_format : str, optional
         Format of the output. Default is TABLE.
     """
-    m_client = CollectionManager(view_server, view_url, user_id=user, user_pwd=user_pass)
-    m_client.create_egeria_bearer_token()
+
     try:
+        table_caption = "Basic Collection List"
+        list_generic(report_spec="BasicCollections", output_format=output_format, view_server=view_server,
+                     view_url=view_url, user=user, user_pass=user_pass, params={"search_string": search_string},
+                     render_table=True, write_file=True, table_caption=table_caption, use_pager=True,
+                     width=width, jupyter=jupyter, prompt_missing=True)
 
-        if output_format == "FORM":
-            action = "Update-Form"
-        elif output_format == "REPORT":
-            action = "Report"
-        elif output_format == "DICT":
-            action = "Dict"
-        elif output_format == "HTML":
-            action = "html"
-        elif output_format == "LIST":
-            action = "List"
-
-        if output_format != "TABLE":
-            file_path = os.path.join(app_config['Pyegeria Root'], app_config['Dr.Egeria Outbox'])
-            if output_format == "HTML":
-                file_name = f"Collections-{time.strftime('%Y-%m-%d-%H-%M-%S')}-{action}.html"
-            else:
-                file_name = f"Collections-{time.strftime('%Y-%m-%d-%H-%M-%S')}-{action}.md"
-            full_file_path = os.path.join(file_path, file_name)
-            os.makedirs(os.path.dirname(full_file_path), exist_ok=True)
-            output = m_client.find_collections(
-                search_string.strip(), None, True, False, ignore_case=True,
-                output_format=output_format
-                )
-            if output == NO_ELEMENTS_FOUND:
-                print(f"\n==> No collections found for search string '{search_string}'")
-                return
-            elif isinstance(output, str | list) and output_format == "DICT":
-                output = json.dumps(output, indent=4)
-
-            with open(full_file_path, 'w') as f:
-                f.write(output)
-            print(f"\n==> Collections output written to {full_file_path}")
-            return
-
-        table = Table(
-            title=f"Collection List @ {time.asctime()}",
-            style="bright_white on black",
-            header_style="bright_white on dark_blue",
-            title_style="bold white on black",
-            caption_style="white on black",
-            show_lines=True,
-            box=box.ROUNDED,
-            caption=f"View Server '{view_server}' @ Platform - {view_url}",
-            expand=True,
-        )
-        table.add_column("Collection Name")
-        table.add_column(
-            "Qualified Name & GUID", width=38, no_wrap=True, justify="center"
-        )
-        table.add_column("Description")
-        table.add_column("Category")
-        table.add_column("Classifications")
-        table.add_column("Members")
-
-        collections = m_client.find_collections(
-            search_string.strip(), None, ["Collection"],True, False, ignore_case=True,
-            output_format = "DICT", report_spec=out_struct
-        )
-        if type(collections) is list:
-
-            sorted_collection_list = sorted(
-                collections, key=lambda k: k["display_name"]
-            )
-            for collection in sorted_collection_list:
-
-                display_name = collection["display_name"]
-                qualified_name = collection["qualified_name"]
-                guid = collection["GUID"]
-                q_name = Text(f"{qualified_name}\n&\n{guid}", justify="center")
-                description = collection.get("description",'---')
-                collection_type = collection.get("category", "---")
-                classifications = collection.get("classifications", "---")
-
-                classifications_md = Markdown(classifications) if classifications else ""
-                members_struct = m_client.get_member_list(collection_guid=guid)
-                member_list = ""
-                if isinstance(members_struct, list):
-                    for member in members_struct:
-                        member_list = member_list + f"- {member.get('qualifiedName','---')}\n"
-
-                # members = "\n* ".join(collection.get("members", []))
-                members_md = Markdown(member_list) if member_list else ""
-
-                table.add_row(
-                    display_name,
-                    q_name,
-                    description,
-                    collection_type,
-                    classifications_md,
-                    members_md,
-                )
-            console = Console(
-                style="bold bright_white on black",
-                width=width,
-                force_terminal=not jupyter,
-            )
-            console.print(table)
-        else:
-            print("==> No collections with that name found")
 
     except (PyegeriaException) as e:
         print_basic_exception(e)
@@ -187,8 +79,6 @@ def display_collections(
         print_validation_error(e)
     except Exception as e:
         print(f"An unexpected error occurred: {e}")
-    finally:
-        m_client.close_session()
 
 
 def main():

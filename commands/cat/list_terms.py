@@ -22,7 +22,6 @@ from pyegeria import (
     EgeriaTech, settings,
     PyegeriaException, print_basic_exception, NO_CATEGORIES_FOUND,
     )
-from commands.cat.glossary_actions import EGERIA_HOME_GLOSSARY_GUID
 from pyegeria._globals import NO_GLOSSARIES_FOUND
 app_config = settings.Environment
 # config_logging()

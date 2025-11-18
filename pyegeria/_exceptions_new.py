@@ -19,7 +19,7 @@ from rich import print, box
 from rich.console import Console
 
 
-EGERIA_WIDTH = os.getenv("PYEGERIA_CONSOLE_WIDTH", 200)
+EGERIA_WIDTH = os.getenv("PYEGERIA_CONSOLE_WIDTH", 250)
 console = Console(width=EGERIA_WIDTH)
 
 """
@@ -414,8 +414,6 @@ def print_basic_exception(e: PyegeriaException):
         table.add_row("Pyegeria Message", e.message)
         console.print(table)
 
-
-        console.print(table)
     else:
         print(f"\n\n\t  Not an Pyegeria exception {e}")
 

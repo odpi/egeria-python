@@ -656,7 +656,7 @@ def test_get_relationships():
 
     bearer_token = c_client.create_egeria_bearer_token(user, password)
     relationship_type = "Certification"
-    response = c_client.get_relationships(relationship_type)
+    response = c_client.get_relationships(relationship_type, output_format=JSON)
 
     if type(response) is list:
         print(f"\n\tElement count is: {len(response)}")
@@ -674,9 +674,8 @@ def test_get_relationships_with_property_value():
         c_client = ClassificationManager(view_server, platform_url)
 
         bearer_token = c_client.create_egeria_bearer_token(user, password)
-        result = c_client.get_relationships_with_property_value(
-            relationship_type, property_value, property_names
-        )
+        result = c_client.get_relationships_with_property_value(relationship_type, property_value, property_names,
+                                                                output_format=JSON)
 
         if type(result) is list:
             print_json(data=result)
@@ -719,7 +718,7 @@ def test_retrieve_instance_for_guid():
 
     bearer_token = c_client.create_egeria_bearer_token(user, password)
     element_guid = "bda24e8a-4798-4cc0-b693-b09c688d5a6f"
-    response = c_client.retrieve_instance_for_guid(element_guid)
+    response = c_client.retrieve_instance_for_guid(element_guid, output_format=JSON)
 
     if type(response) is dict:
         print_json(data=response)

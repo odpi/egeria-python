@@ -595,15 +595,8 @@ def deployed_data(ctx):
 def show_deployed_servers(ctx, search_string):
     """Display deployed servers"""
     c = ctx.obj
-    display_servers_by_dep_imp(
-        search_string,
-        c.view_server,
-        c.view_server_url,
-        c.userid,
-        c.password,
-        c.jupyter,
-        c.width,
-    )
+    display_servers_by_dep_imp(search_string, c.view_server, c.view_server_url, c.userid, c.password, c.jupyter,
+                               c.width)
 
 
 @deployed_data.command("deployed-schemas")
@@ -645,9 +638,7 @@ def list_catalogs(ctx, search_server):
 def list_databases(ctx):
     """Display deployed databases"""
     c = ctx.obj
-    list_deployed_databases(
-        c.view_server, c.view_server_url, c.userid, c.password, c.jupyter, c.width
-    )
+    list_deployed_databases(c.view_server, c.view_server_url, c.userid, c.password, c.jupyter, c.width)
 
 
 #

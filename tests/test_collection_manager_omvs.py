@@ -105,10 +105,10 @@ class TestCollectionManager:
             c_client = EgeriaTech(self.good_server_2, self.good_platform1_url, user_id=self.good_user_2, )
             token = c_client.create_egeria_bearer_token(self.good_user_2, "secret")
             start_time = time.perf_counter()
-            search_string = "Coco"
+            search_string = "Pets"
             classification_name = None
             element_type = []
-            output_format = "JSON"
+            output_format = "DICT"
             report_spec = "BasicCollections"
 
             response = c_client.find_collections(search_string = search_string, classification_names = classification_name
@@ -1400,10 +1400,12 @@ class TestCollectionManager:
 
             token = c_client.create_egeria_bearer_token(self.good_user_2, "secret")
             start_time = time.perf_counter()
-            collection_guid = "dca6f6d0-ad6a-4c75-a8b3-b1ce465af02a"
-            element_guid = "32b53e8e-7b2f-467b-a3a9-3f55852f4919"
-
-            c_client.remove_from_collection(collection_guid, element_guid, None)
+            collection_guid = "88cc4aa5-4741-448a-a026-69da51fc2cb1"
+            element_guid = "c646820d-4044-431f-8452-a2c7c61d3752"
+            body = {
+                "class": "DeleteRelationshipRequestBody"
+            }
+            c_client.remove_from_collection(collection_guid, element_guid, body)
 
             duration = time.perf_counter() - start_time
             # resp_str = json.loads(response)
@@ -1412,7 +1414,7 @@ class TestCollectionManager:
             assert True
 
         except (PyegeriaInvalidParameterException,  PyegeriaConnectionException, PyegeriaAPIException, PyegeriaUnknownException,) as e:
-            print_exception_table(e)
+            print_basic_exception(e)
             assert False, "Invalid request"
         finally:
             c_client.close_session()
