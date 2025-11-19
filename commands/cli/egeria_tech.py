@@ -505,15 +505,7 @@ def show_tech_details(ctx, tech_name):
            tech-name is a valid technology name (see 'show tech-types')
     """
     c = ctx.obj
-    tech_details_viewer(
-        tech_name,
-        c.view_server,
-        c.view_server_url,
-        c.userid,
-        c.password,
-        c.jupyter,
-        c.width,
-    )
+    tech_details_viewer(tech_name, c.view_server, c.view_server_url, c.userid, c.password, c.jupyter, c.width)
 
 
 @show_tech.command("tech-type-templates")

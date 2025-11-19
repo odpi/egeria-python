@@ -2715,7 +2715,7 @@ class ClassificationManager(Client2):
             return elements
         else:
             logger.info(f"Found element, output format: {output_format} and report_spec: {report_spec}")
-            return self._generate_referenceable_output(elements,  "Referenceable", output_format,
+            return self._generate_referenceable_output(elements,  property_value, metadata_element_type_name, output_format,
                                                        report_spec)
 
 
@@ -2796,7 +2796,7 @@ class ClassificationManager(Client2):
                 time_out,
                 output_format,
                 report_spec,
-                body,
+                body
             )
         )
         return response

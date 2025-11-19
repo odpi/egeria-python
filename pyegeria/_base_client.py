@@ -421,6 +421,7 @@ class BaseClient:
             # No running loop exists; run the coroutine
             return asyncio.run(self._async_make_request(request_type, endpoint, payload, time_out, is_json))
 
+
     async def _async_make_request(
             self,
             request_type: str,
@@ -447,7 +448,7 @@ class BaseClient:
         context: dict = {}
         context['class name'] = __class__.__name__
         context['caller method'] = inspect.currentframe().f_back.f_code.co_name
-        response: Response
+        response: Response = None  # Initialize to None to avoid UnboundLocalError
 
         try:
             if request_type == "GET":
@@ -465,11 +466,6 @@ class BaseClient:
                         endpoint, json=payload, headers=self.headers, timeout=time_out
                     )
                 elif type(payload) is str:
-                    # if is_json:
-                    #     response = await self.session.post(
-                    #         endpoint, json=payload, headers=self.headers, timeout=time_out
-                    #         )
-                    # else:
                     response = await self.session.post(
                         endpoint,
                         headers=self.headers,
@@ -477,8 +473,6 @@ class BaseClient:
                         timeout=time_out,
                     )
                 else:
-                    # response = await self.session.post(
-                    #     endpoint, headers=self.headers, json=payload, timeout=time_out)
                     raise TypeError(f"Invalid payload type {type(payload)}")
 
 
@@ -501,28 +495,19 @@ class BaseClient:
             raise PyegeriaConnectionException(context, additional_info, e)
 
         except (HTTPStatusError, httpx.HTTPStatusError, httpx.RequestError) as e:
-            # context["caught_exception"] = e
-            # context['HTTPStatusCode'] = e.response.status_code
-            additional_info = {"userid": self.user_id, "reason": response.text}
+            additional_info = {"userid": self.user_id}
+            if response is not None:
+                additional_info["reason"] = response.text
 
             raise PyegeriaClientException(response, context, additional_info, e)
-        #
-        # except json.JSONDecodeError as e:
-        #     # context["caught_exception"] = e
-        #     # context['HTTPStatusCode'] = e.response.status_code
-        #     additional_info = {"userid": self.user_id}
-        #     raise PyegeriaClientException(response, context, additional_info )
-        #
-        # except PyegeriaAPIException as e:
-        #     raise PyegeriaAPIException(response, context, additional_info=None)
 
         except Exception as e:
             additional_info = {"userid": self.user_id}
-            if 'response' in locals() and response is not None:
+            if response is not None:
                 logger.error(f"Response error with code {response.status_code}")
             else:
                 logger.error("Response object not available due to error")
-            raise PyegeriaUnknownException(None, context, additional_info, e)
+            raise PyegeriaUnknownException(response, context, additional_info, e)
 
         if status_code in (200, 201):
             try:
@@ -545,4 +530,3 @@ class BaseClient:
                 raise PyegeriaInvalidParameterException(
                     response, context, e=e
                 )
-

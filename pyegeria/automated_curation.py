@@ -22,6 +22,7 @@ from pyegeria._validators import validate_guid, validate_name, validate_search_s
 # )
 from pyegeria.models import GetRequestBody, FilterRequestBody, SearchStringRequestBody
 from pyegeria.utils import body_slimmer
+from pyegeria.config import settings
 from pyegeria.base_report_formats import select_report_format, get_report_spec_match
 from pyegeria.output_formatter import (
     generate_output,
@@ -29,6 +30,7 @@ from pyegeria.output_formatter import (
     populate_columns_from_properties,
     get_required_relationships,
 )
+settings.Logging.console_logging_level = "ERROR"
 
 
 class AutomatedCuration(Client2):
@@ -2911,18 +2913,19 @@ class AutomatedCuration(Client2):
 
         validate_guid(integ_connector_guid)
 
-        url = (
-            f"{self.curation_command_root}/integration-connectors/"
-            f"{integ_connector_guid}/catalog-targets"
-        )
+        url = f"{self.curation_command_root}/integration-connectors/{integ_connector_guid}/catalog-targets"
+
 
         response = await self._async_make_request("GET", url)
         elements = response.json().get("elements", "no targets")
         if isinstance(elements, str):
+            logger.info("No catalog targets found for this integration connector.")
             return elements
-        return self._generate_catalog_target_output(elements, None, self.CATALOG_TARGET_LABEL,
-                                                    output_format=output_format,
-                                                    report_spec=report_spec)
+        if output_format != "JSON":
+            logger.info(f"Found targets, output_format: {output_format}, and report_spec: {report_spec}")
+            return self._generate_catalog_target_output(elements, None, self.CATALOG_TARGET_LABEL,
+                                                    output_format=output_format,report_spec=report_spec)
+        return elements
 
     def get_catalog_targets(
             self,

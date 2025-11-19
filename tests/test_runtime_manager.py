@@ -223,7 +223,7 @@ class TestRuntimeManager:
             token = r_client.create_egeria_bearer_token()
 
             start_time = time.perf_counter()
-            response = r_client.get_platforms_by_type()
+            response = r_client.get_platforms_by_type("OMAG Server Platform")
             duration = time.perf_counter() - start_time
             print(f"Type of response: {type(response)}")
             print(f"\n\tDuration was {duration} seconds")
@@ -430,7 +430,7 @@ class TestRuntimeManager:
                 user_pwd="secret",
             )
             token = r_client.create_egeria_bearer_token()
-            name = "qs-metadata-server"
+            name = "qs-integration-daemon"
 
             start_time = time.perf_counter()
             server_guid = None

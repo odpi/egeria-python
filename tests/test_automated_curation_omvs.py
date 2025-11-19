@@ -738,7 +738,7 @@ class TestAutomatedCuration:
 
             start_time = time.perf_counter()
             response = a_client.find_technology_types(
-                "File", starts_with=True, ignore_case=True, output_format = "DICT", report_spec = "Tech-Types"
+                "PostgreSQL", starts_with=True, ignore_case=True, output_format = "DICT", report_spec = "Tech-Types"
             )
             duration = time.perf_counter() - start_time
             print(f"\n\t# Elements was {len(response)} with {duration:.2f} seconds")
@@ -807,7 +807,7 @@ class TestAutomatedCuration:
 
             start_time = time.perf_counter()
             # response = a_client.get_tech_type_detail("CSV Data File", True)
-            response = a_client.get_tech_type_detail("File System", output_format="DICT",
+            response = a_client.get_tech_type_detail("PostgreSQL Server", output_format="JSON",
                                                      report_spec="Tech-Type-Details")
             duration = time.perf_counter() - start_time
             print(f"\n\tDuration was {duration} seconds")
@@ -962,20 +962,21 @@ class TestAutomatedCuration:
     def test_get_catalog_target(self):
         try:
             a_client = AutomatedCuration(
-                self.good_view_server_1,
+                self.good_view_server_2,
                 self.good_platform1_url,
                 user_id=self.good_user_2,
                 user_pwd="secret",
             )
             token = a_client.create_egeria_bearer_token()
-            postgres_server_connector_guid = "36f69fd0-54ba-4f59-8a44-11ccf2687a34"
+
             unity_sync_guid = "06d068d9-9e08-4e67-8c59-073bbf1013af"
             u2 = "ec069de6-5755-45cd-8b78-9c76452a060f"
             element_guid = "731eb432-e9e9-482a-86fc-0a7407ea78e6"
             rel_guid = "19a5fc39-f928-4a78-8637-ade37e0c5598"
             start_time = time.perf_counter()
-
-            response = a_client.get_catalog_target(u2)
+            target_relationship = ""
+            response = a_client.get_catalog_target(target_relationship)
+            duration = time.perf_counter() - start_time
             duration = time.perf_counter() - start_time
             print(f"Type of response was {type(response)}")
             print(f"\n\tDuration was {duration} seconds")
@@ -989,15 +990,15 @@ class TestAutomatedCuration:
             assert True
 
         except (
-            InvalidParameterException,
-            PropertyServerException,
-            UserNotAuthorizedException,
+            PyegeriaException, PyegeriaAPIException,
         ) as e:
             print_exception_response(e)
             assert False, "Invalid request"
 
         finally:
             a_client.close_session()
+
+
 
     def test_get_catalog_targets(self):
         try:

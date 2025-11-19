@@ -61,7 +61,7 @@ from .my_profile_omvs import MyProfile
 from .platform_services import Platform
 from .project_manager import ProjectManager
 from .registered_info import RegisteredInfo
-from .runtime_manager_omvs import RuntimeManager
+from .runtime_manager import RuntimeManager
 from .server_operations import ServerOps
 from .solution_architect import SolutionArchitect
 from .utils import body_slimmer,to_pascal_case, to_camel_case, camel_to_title_case

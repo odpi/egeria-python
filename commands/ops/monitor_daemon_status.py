@@ -21,7 +21,9 @@ from rich.prompt import Prompt
 from rich.table import Table
 from textual.widgets import DataTable
 
-from pyegeria import AutomatedCuration, EgeriaTech
+from pyegeria import AutomatedCuration, EgeriaTech, PyegeriaException, settings, config_logging, \
+    PyegeriaClientException, print_basic_exception
+
 from pyegeria._exceptions import (
     InvalidParameterException,
     PropertyServerException,
@@ -48,7 +50,9 @@ EGERIA_JUPYTER = bool(os.environ.get("EGERIA_JUPYTER", "False"))
 EGERIA_WIDTH = int(os.environ.get("EGERIA_WIDTH", 200))
 
 disable_ssl_warnings = True
-
+app_config = settings.Environment
+settings.Logging.console_logging_level = "ERROR"
+config_logging()
 
 def display_integration_daemon_status(
     search_list: list[str] = ["*"],
@@ -134,7 +138,6 @@ def display_integration_daemon_status(
         table.add_column("Target Element", min_width=20)
         table.add_column("Exception Message", min_width=10)
 
-        # server_guid = s_client.get_guid_for_name(integ_server)
 
         token = s_client.refresh_egeria_bearer_token()
         daemon_status = s_client.get_server_report(None, integ_server)
@@ -169,10 +172,13 @@ def display_integration_daemon_status(
                 if type(targets) == list:
                     targets_md = True
                     for target in targets:
-                        t_name = target["catalogTargetName"]
+                        t_name = target.get("catalogTargetName",None)
                         # t_sync = target["permittedSynchronization"]
-                        t_unique_name = target["catalogTargetElement"]["uniqueName"]
-                        t_rel_guid = target["relationshipGUID"]
+                        if t_name:
+                            t_unique_name = target["catalogTargetElement"]["uniqueName"]
+                        else:
+                            t_unique_name = "---"
+                        t_rel_guid = target.get("relationshipGUID","---")
                         # targets_m += f"* Target Name: __{t_name}__\n* Sync: {t_sync}\n* Unique Name: {t_unique_name}\n\n"
                         tgt_tab.add_row(t_name, t_unique_name, t_rel_guid)
                     # targets_md = Markdown(targets_m)
@@ -220,13 +226,11 @@ def display_integration_daemon_status(
                     live.update(generate_table(search_list))
 
     except (
-        InvalidParameterException,
-        PropertyServerException,
-        UserNotAuthorizedException,
+        PyegeriaException, PyegeriaClientException,
     ) as e:
-        print_exception_response(e)
+        print_basic_exception(e)
 
-    except KeyboardInterrupt:
+    except KeyboardInterrupt as e:
         pass
 
     finally:

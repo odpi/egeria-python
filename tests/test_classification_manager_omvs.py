@@ -18,6 +18,7 @@ from pydantic import ValidationError
 from rich import print, print_json
 from rich.console import Console
 
+from pyegeria import EgeriaTech
 from pyegeria._exceptions_new import PyegeriaException, print_basic_exception, print_validation_error, \
     PyegeriaConnectionException
 from pyegeria.classification_manager import ClassificationManager
@@ -270,21 +271,21 @@ def test_find_elements_by_property_value():
     # metadata_element_type_name = "ValidValueDefinition"
     # metadata_element_type_name = None
     # metadata_element_type_name = "ArchiveFile"
-    open_metadata_type_name = "UserIdentity"
+    open_metadata_type_name = "GovernanceActionProcess"
     # metadata_element_type_name = None
     # property_names = ["name"]
     # property_value = "Set up new clinical trial"
-    property_names = ["userId"]
-    property_value = "erinoverview"
+    property_names = ["displayName"]
+    property_value = "FileDirectory"
 
     try:
-        c_client = ClassificationManager(view_server, platform_url)
+        c_client = EgeriaTech(view_server, platform_url, user, password)
 
         bearer_token = c_client.create_egeria_bearer_token(user, password)
         start_time = time.perf_counter()
         result = c_client.find_elements_by_property_value(
             property_value, property_names, open_metadata_type_name,
-            output_format="JSON", report_spec="Referenceable"
+            output_format="DICT", report_spec="Referenceable"
         )
         duration = time.perf_counter() - start_time
         print(f"\n\tDuration was {duration} seconds")

@@ -13,7 +13,7 @@ from pyegeria.external_links import ExternalReferences
 from pyegeria.logging_configuration import config_logging
 
 from pyegeria._exceptions_new import PyegeriaException, print_exception_response, print_basic_exception, \
-    print_validation_error
+    print_validation_error, PyegeriaAPIException
 
 EGERIA_USER = os.environ.get("EGERIA_USER", "peterprofile")
 EGERIA_USER_PASSWORD = os.environ.get("EGERIA_USER_PASSWORD", "secret")
@@ -40,6 +40,20 @@ def test_add_archive_file():
         print_basic_exception(e)
         assert False
 
+def test_get_guid_for_name():
+    name = "PostgreSQL Server"
+
+
+    try:
+        client = Client2(view_server, view_url, user, user_pass)
+        client.create_egeria_bearer_token()
+
+        response = client.get_guid_for_name(name)
+        print(f"\n\nGUID is {response}\n\n")
+        assert True
+    except (PyegeriaException, PyegeriaAPIException) as e:
+        print_basic_exception(e)
+        assert False
 
 
 def test_add_search_keyword():

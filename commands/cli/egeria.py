@@ -737,15 +737,7 @@ def show_tech_types(ctx, search_string):
 def show_tech_details(ctx, tech_name):
     """Show technology type details"""
     c = ctx.obj
-    tech_details_viewer(
-        tech_name,
-        c.view_server,
-        c.view_server_url,
-        c.userid,
-        c.password,
-        c.jupyter,
-        c.width,
-    )
+    tech_details_viewer(tech_name, c.view_server, c.view_server_url, c.userid, c.password, c.jupyter, c.width)
 
 
 @show_tech_type.command("templates")
