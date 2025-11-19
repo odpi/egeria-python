@@ -43,7 +43,7 @@ def display_status(
         jupyter: bool = app_config.egeria_jupyter,
         width: int = app_config.console_width,
 ):
-    r_client = RuntimeManager(view_server, view_url, user)
+    r_client = RuntimeManager(view_server, view_url, user, user_pass)
     token = r_client.create_egeria_bearer_token(user, user_pass)
 
     def generate_table() -> Table:
@@ -59,10 +59,10 @@ def display_status(
             show_lines=True,
             # expand=True
         )
-        table.add_column("Platform Name & GUID")
+        table.add_column("Platform Name & GUID", width = 36)
         # table.add_column("Platform GUID")
-        table.add_column("Platform URL")
-        table.add_column("Platform Origin")
+        # table.add_column("Platform URL")
+        # table.add_column("Platform Origin")
         table.add_column("Description")
         table.add_column("Platform Started")
         table.add_column("Servers")
@@ -82,7 +82,7 @@ def display_status(
             for platform in platform_list:
                 platform_name = platform["properties"].get("displayName", "---")
                 platform_guid = platform["elementHeader"]["guid"]
-                platform_desc = platform["properties"].get("resourceDescription", "---")
+                platform_desc = platform["properties"].get("description", "---")
                 server_list = ""
 
                 platform_report = r_client.get_platform_report(platform_guid)
@@ -98,9 +98,9 @@ def display_status(
                     platform_build_out = Markdown(platform_build_md)
                 else:
                     platform_build_out = platform_origin
-                platform_desc = f"{platform_desc}\n\n\t\t&\n\n{platform_build}"
+                platform_desc = f"{platform_desc}\n\n\t\t---\n\n{platform_build_md}"
                 platform_started = platform_report.get("platformStartTime", " ")
-                platform_id = f"{platform_name}\n\n\t\t&\n\n{platform_guid}"
+                platform_id = f"{platform_name}\n\n\t\t---\n\n{platform_guid}\n\n\t\t---\n\n{platform_url}"
 
                 servers = platform_report.get("omagservers", None)
 
@@ -123,8 +123,8 @@ def display_status(
 
                     table.add_row(
                         platform_id,
-                        platform_url,
-                        platform_build_out,
+                        # platform_url,
+                        # platform_build_out,
                         platform_desc,
                         platform_started,
                         server_list,
@@ -136,7 +136,7 @@ def display_status(
             platform_url = " "
             platform_origin = " "
             platform_started = " "
-        token = r_client.refresh_egeria_bearer_token()
+        r_client.refresh_egeria_bearer_token()
         return table
 
     try:
@@ -148,7 +148,8 @@ def display_status(
     except (
         PyegeriaException
     ) as e:
-        print_basic_exception(e)
+        # print_basic_exception(e)
+        console.print_exception()
 
     except KeyboardInterrupt:
         pass

@@ -11,7 +11,7 @@ from pyegeria.data_designer import DataDesigner
 from pyegeria.egeria_cat_client import EgeriaCat
 from pyegeria.metadata_explorer_omvs import MetadataExplorer
 from pyegeria.registered_info import RegisteredInfo
-from pyegeria.runtime_manager_omvs import RuntimeManager
+from pyegeria.runtime_manager import RuntimeManager
 from pyegeria.solution_architect import SolutionArchitect
 from pyegeria.template_manager_omvs import TemplateManager
 from pyegeria.valid_metadata_omvs import ValidMetadataManager

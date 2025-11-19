@@ -403,11 +403,11 @@ base_report_specs = FormatSetDict({
         family="Automated Curation",
         formats=[
             Format(
-                types=["DICT", "MD", "LIST", "FORM", "REPORT"],
+                types=[ "MD", "FORM", ],
                 attributes= COMMON_HEADER_COLUMNS + [
                     Column(name='Display Name', key='display_name'),
                     Column(name="Qualified Name", key='qualified_name'),
-                    Column(name="GUID", key='guid'),
+                    Column(name="GUID", key='guid', format=True),
                     Column(name="Description", key='description'),
                     Column(name='Metadata Collection Name', key='metadata_collection_name', format=True),
                     Column(name="Deployed Implementation", key='deployedImplementationType'),
@@ -416,20 +416,30 @@ base_report_specs = FormatSetDict({
                 ],
             ),
             Format(
-                types=[ "MERMAID","HTML"],
+                types=[ "MERMAID","HTML", "REPORT"],
                 attributes= COMMON_HEADER_COLUMNS + [
                     Column(name='Display Name', key='display_name'),
                     Column(name="Qualified Name", key='qualified_name'),
-                    Column(name="GUID", key='guid'),
+                    Column(name="GUID", key='guid', Format = True),
                     Column(name="Description", key='description'),
                     Column(name="Deployed Implementation", key='deployedImplementationType'),
                     Column(name="Mermaid Graph", key='mermaidGraph'),
                     Column(name="Specification Mermaid Graph", key='specificationMermaidGraph')
                 ]
+            ),
+            Format(
+                types=[ "DICT","TABLE", "LIST"],
+                attributes= [
+                    Column(name='Display Name', key='display_name'),
+                    Column(name="Qualified Name", key='qualified_name'),
+                    Column(name="GUID", key='guid', Format = True),
+                    Column(name="Description", key='description'),
+                    Column(name="Deployed Implementation", key='deployedImplementationType'),
+                ]
             )
         ],
         action=ActionParameter(
-            function="Client2.get_technology_type_elements",
+            function="EgeriaTech.get_technology_type_elements",
             optional_params=OPTIONAL_FILTER_PARAMS + ["get_templates"],
             required_params=["filter"],
             spec_params={},

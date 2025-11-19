@@ -20,30 +20,19 @@ from rich.tree import Tree
 
 from pyegeria import (
     AutomatedCuration,
-    InvalidParameterException,
-    PropertyServerException,
-    UserNotAuthorizedException,
+    PyegeriaException,
+    print_basic_exception,
+    settings,
+    config_logging
 )
-from pyegeria._exceptions import print_exception_response
 
-EGERIA_METADATA_STORE = os.environ.get("EGERIA_METADATA_STORE", "active-metadata-store")
-EGERIA_KAFKA_ENDPOINT = os.environ.get("KAFKA_ENDPOINT", "localhost:9092")
-EGERIA_PLATFORM_URL = os.environ.get("EGERIA_PLATFORM_URL", "https://localhost:9443")
-EGERIA_VIEW_SERVER = os.environ.get("EGERIA_VIEW_SERVER", "view-server")
-EGERIA_VIEW_SERVER_URL = os.environ.get(
-    "EGERIA_VIEW_SERVER_URL", "https://localhost:9443"
-)
-EGERIA_INTEGRATION_DAEMON = os.environ.get("EGERIA_INTEGRATION_DAEMON", "integration-daemon")
-EGERIA_ADMIN_USER = os.environ.get("ADMIN_USER", "garygeeke")
-EGERIA_ADMIN_PASSWORD = os.environ.get("ADMIN_PASSWORD", "secret")
 EGERIA_USER = os.environ.get("EGERIA_USER", "erinoverview")
 EGERIA_USER_PASSWORD = os.environ.get("EGERIA_USER_PASSWORD", "secret")
-EGERIA_JUPYTER = bool(os.environ.get("EGERIA_JUPYTER", "False"))
-EGERIA_WIDTH = int(os.environ.get("EGERIA_WIDTH", "200"))
 
-# nest_asyncio.apply()
+app_config = settings.Environment
+config_logging()
+console = Console(width = app_config.console_width)
 
-disable_ssl_warnings = True
 
 
 def tech_details_viewer(
@@ -52,20 +41,18 @@ def tech_details_viewer(
     platform_url: str,
     user: str,
     user_password: str,
-    jupyter: bool = EGERIA_JUPYTER,
-    width: int = EGERIA_WIDTH,
+    jupyter: bool = app_config.egeria_jupyter,
+    width: int = app_config.console_width,
 ):
     console = Console(width=width, force_terminal=not jupyter)
 
-    # print(f"tech is {tech} of type {type(tech)}")
-    # sys.exit(0)
     def view_tech_details(
         a_client: AutomatedCuration, root_collection_name: str, tree: Tree
     ) -> Tree:
         l2: Tree = None
         tech_details = a_client.get_tech_type_detail(tech)
         if (type(tech_details) is dict) and (len(tech_details) > 0):
-            name = tech_details.get("name", "---")
+            name = tech_details.get("displayName", "---")
             qualified_name = tech_details.get("qualifiedName", "---")
             category = tech_details.get("category", "---")
             description = tech_details.get("description", "---")
@@ -95,16 +82,16 @@ def tech_details_viewer(
                         f"[bold bright_white]{resource.get('resourceUse', '---')}"
                     )
                     resource_use_description = Text(
-                        f"[bold bright_white]{resource.get('resourceUseDescription', '---')}"
+                        f"[bold bright_white]{resource.get('description', '---')}"
                     )
                     type_name = Text(
-                        f"[bold bright_white]{resource['relatedElement']['type'].get('typeName', '---')}"
+                        f"[bold bright_white]{resource['relatedElement']['elementHeader']['type'].get('typeName', '---')}"
                     )
                     unique_name = Text(
-                        f"[bold bright_white]{resource['relatedElement'].get('uniqueName', '---')}"
+                        f"[bold bright_white]{resource['relatedElement']['properties'].get('qualifiedName', '---')}"
                     )
                     related_guid = Text(
-                        f"[bold bright_white]{resource['relatedElement'].get('guid', '---')}"
+                        f"[bold bright_white]{resource['relatedElement']['elementHeader'].get('guid', '---')}"
                     )
                     resource_text = (
                         f"[bold red]Resource\n"
@@ -139,11 +126,9 @@ def tech_details_viewer(
         print(tree)
 
     except (
-        InvalidParameterException,
-        PropertyServerException,
-        UserNotAuthorizedException,
+        PyegeriaException,
     ) as e:
-        print_exception_response(e)
+        print_basic_exception(e)
 
 
 def main():
@@ -155,8 +140,8 @@ def main():
     parser.add_argument("--password", help="User Password")
     args = parser.parse_args()
 
-    server = args.server if args.server is not None else EGERIA_VIEW_SERVER
-    url = args.url if args.url is not None else EGERIA_PLATFORM_URL
+    server = args.server if args.server is not None else app_config.egeria_view_server
+    url = args.url if args.url is not None else app_config.egeria_view_server_url
     userid = args.userid if args.userid is not None else EGERIA_USER
     user_pass = args.password if args.password is not None else EGERIA_USER_PASSWORD
     try:

@@ -181,7 +181,7 @@ class TestProjectManager:
             token = p_client.create_egeria_bearer_token(self.good_user_2, "secret")
             start_time = time.perf_counter()
             # project_name = "Teddy Bear Drop Foot Clinical Trial IT Setup"
-            project_name = "Clinical"
+            project_name = "Clinical Trials Management"
             response = p_client.get_projects_by_name(project_name)
             duration = time.perf_counter() - start_time
 
@@ -250,9 +250,10 @@ class TestProjectManager:
             )
             token = p_client.create_egeria_bearer_token(self.good_user_2, "secret")
             start_time = time.perf_counter()
-            team_role = "ProjectManagement"
+            # team_role = "ProjectManagement"
+            team_role = None
             project_guid = "2d86e375-c31b-494d-9e73-a03af1370d81"
-            response = p_client.get_project_team(project_guid, team_role)
+            response = p_client.get_project_team(project_guid, team_role, output_format="DICT", report_spec = "Referenceable")
 
             duration = time.perf_counter() - start_time
 

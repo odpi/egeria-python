@@ -93,7 +93,7 @@ def display_catalog_targets(
 
         if type(cat_targets) is list:
             for target in cat_targets:
-                target_name = target.get("catalogTargetName", "---")
+                target_name = target['properties'].get("catalogTargetName", "---")
                 target_source = target.get("metadataSourceQualifiedName", "---")
                 target_rel = target.get("relationshipGUID", "---")
                 target_sync = target.get("permittedSynchronization")

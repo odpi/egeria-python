@@ -24,7 +24,6 @@ EGERIA_USER = os.environ.get("EGERIA_USER", "erinoverview")
 EGERIA_USER_PASSWORD = os.environ.get("EGERIA_USER_PASSWORD", "secret")
 
 app_config = settings.Environment
-config_logging()
 console = Console(width = app_config.console_width)
 
 def check_if_template(header: dict) -> bool:

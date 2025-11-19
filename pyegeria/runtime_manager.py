@@ -1623,14 +1623,14 @@ class RuntimeManager(Client2):
 
         url = (
             f"{self.runtime_command_root}/platforms/"
-            f"by-deployed-implementation-type?startFrom={start_from}&pageSize={page_size}"
+            f"by-deployed-implementation-type"
         )
 
         if effective_time is not None:
             body = {
-                "searchString": filter, "effectiveTime": effective_time}
+                "filter": filter, "effectiveTime": effective_time}
         else:
-            body = {"searchString": filter}
+            body = {"filter": filter}
 
         response = await self._async_make_request("POST", url, body)
         return response.json().get("elements", "No platforms found")

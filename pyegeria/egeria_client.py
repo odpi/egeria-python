@@ -19,7 +19,7 @@ from pyegeria.project_manager import ProjectManager
 from pyegeria.automated_curation import AutomatedCuration
 from pyegeria.classification_manager import ClassificationManager
 from pyegeria.template_manager_omvs import TemplateManager
-from pyegeria.runtime_manager_omvs import RuntimeManager
+from pyegeria.runtime_manager import RuntimeManager
 from pyegeria.full_omag_server_config import FullServerConfig
 from pyegeria.metadata_explorer_omvs import MetadataExplorer
 from pyegeria.my_profile_omvs import MyProfile

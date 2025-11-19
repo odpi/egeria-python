@@ -30,7 +30,7 @@ import pytest
 # def _ensure_server():
 #     require_local_server()
 
-from pyegeria import GovernanceOfficer, PyegeriaException, print_basic_exception, settings
+from pyegeria import  EgeriaTech, PyegeriaException, print_basic_exception, settings
 from pyegeria._exceptions import (
     InvalidParameterException,
     PropertyServerException,
@@ -329,7 +329,7 @@ class TestGovernanceOfficer:
             print(f"Deleted {item['GUID']}")
 
     def test_find_governance_definitions(self):
-        filter = "PostgreSQLDatabase:CreateAndSurvey"
+        filter = "PostgreSQLServer:CreateAndSurveyGovernanceActionProcess"
         try:
             s_client = GovernanceOfficer(
                 self.view_server, self.platform_url, self.user, self.password
@@ -357,7 +357,7 @@ class TestGovernanceOfficer:
 
                 )
             start_time = time.perf_counter()
-            response = s_client.find_governance_definitions(search_string=filter, body=body, output_format="JSON", report_spec="Governance Definitions")
+            response = s_client.find_governance_definitions(search_string=filter, body=body, output_format="MERMAID", report_spec="Common-Mermaid")
             duration = time.perf_counter() - start_time
             print(
                 f"\n\tDuration was {duration:.2f} seconds, Type: {type(response)}, Element count is {len(response)}"
@@ -447,7 +447,7 @@ class TestGovernanceOfficer:
 
 
     def test_get_gov_def_by_name(self):
-        name = "A Regulation"
+        name = "PostgreSQLServer:CreateAndSurveyGovernanceActionProcess"
         try:
             s_client = GovernanceOfficer(
                 self.view_server, self.platform_url, self.user, self.password
@@ -456,6 +456,42 @@ class TestGovernanceOfficer:
             s_client.create_egeria_bearer_token()
             start_time = time.perf_counter()
             response = s_client.get_governance_definitions_by_name(name, output_format='DICT')
+            duration = time.perf_counter() - start_time
+            duration = time.perf_counter() - start_time
+            print(
+                f"\n\tDuration was {duration:.2f} seconds, Type: {type(response)}, Element count is {len(response)}"
+            )
+            if isinstance(response, (list, dict)):
+                print_json(data=response)
+
+            elif type(response) is str:
+                print("\n\n\t Response is: " + response)
+
+            assert True
+        except (
+            InvalidParameterException,
+            PropertyServerException,
+            UserNotAuthorizedException,
+        ) as e:
+            print_exception_response(e)
+            assert False, "Invalid request"
+
+        finally:
+            s_client.close_session()
+
+    def test_get_gov_process_graph(self):
+        name = "PostgreSQLServer:CreateAndSurveyGovernanceActionProcess"
+
+        try:
+            s_client = EgeriaTech(
+                self.view_server, self.platform_url, self.user, self.password
+            )
+
+            s_client.create_egeria_bearer_token()
+            start_time = time.perf_counter()
+            process_guid = s_client.get_element_guid_by_unique_name(name)
+            response = s_client.get_governance_process_graph(process_guid, output_format='JSON')
+
             duration = time.perf_counter() - start_time
             duration = time.perf_counter() - start_time
             print(

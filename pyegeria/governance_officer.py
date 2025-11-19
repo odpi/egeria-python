@@ -1949,21 +1949,157 @@ class GovernanceOfficer(Client2):
             self._async_get_governance_definitions_by_name(filter_string, classification_names, body,
                                                            start_from, page_size, output_format, report_spec))
         return response
+    # @dynamic_catch
+    # async def _async_get_governance_process_graph(self, filter_string: str,
+    #                                                     classification_names: list[str] = None,
+    #                                                     body: dict | FilterRequestBody = None,
+    #                                                     start_from: int = 0, page_size: int = 0,
+    #                                                     output_format: str = "JSON",
+    #                                                     report_spec: dict = None) -> list | str:
+    #     """ Retrieve the governance action process metadata element with the supplied unique identifier
+    #         along with the flow definition describing its implementation. Async Version.
+    #
+    #         Parameters
+    #         ----------
+    #         filter_string: str
+    #             name of the information governance definition to retrieve.
+    #         body: dict, optional
+    #             A dictionary containing parameters of the retrieval.
+    #         output_format: str, default = 'JSON'
+    #             Type of output to produce include:
+    #             JSON - output standard json
+    #             MD - output standard markdown with no preamble
+    #             FORM - output markdown with a preamble for a form
+    #             REPORT - output markdown with a preamble for a report
+    #             MERMAID - output mermaid markdown
+    #
+    #         Returns
+    #         -------
+    #         [dict] | str
+    #             A list of information governance definitions matching the name.
+    #
+    #         Raises
+    #         ------
+    #         InvalidParameterException
+    #             one of the parameters is null or invalid or
+    #         PropertyServerException
+    #             There is a problem adding the element properties to the metadata repository or
+    #         UserNotAuthorizedException
+    #             the requesting user is not authorized to issue this request.
+    #
+    #         Notes
+    #         -----
+    #         If a body is provided it overrides the filter_string parameter.
+    #         Body structure:
+    #         {
+    #           "class": "FilterRequestBody",
+    #           "asOfTime": {{isotime}},
+    #           "effectiveTime": {{isotime}},
+    #           "forLineage": false,
+    #           "forDuplicateProcessing": false,
+    #           "limitResultsByStatus": ["ACTIVE"],
+    #           "sequencingOrder": "PROPERTY_ASCENDING",
+    #           "sequencingProperty": "qualifiedName",
+    #           "filter": "Add name here",
+    #           "templateFilter": "NO_TEMPLATES"
+    #         }
+    #
+    #     """
+    #
+    #     url = (
+    #         f"{self.platform_url}/servers/{self.view_server}/api/open-metadata/"
+    #         f"{self.url_marker}/governance-action-processes/{guid}/graph")
+    #     response = await self._async_get_name_request(url, _type="GovernanceDefinition",
+    #                                                   _gen_output=self._generate_governance_definition_output,
+    #                                                   filter_string=filter_string,
+    #                                                   classification_names=classification_names,
+    #                                                   start_from=start_from, page_size=page_size,
+    #                                                   output_format=output_format, report_spec=report_spec,
+    #                                                   body=body)
+    #
+    #     return response
+    #
+    # @dynamic_catch
+    # def get_governance_process_graph(self, filter_string: str, classification_names: list[str] = None,
+    #                                        body: dict | FilterRequestBody = None,
+    #                                        start_from: int = 0, page_size: int = 0,
+    #                                        output_format: str = "JSON",
+    #                                        report_spec: dict = None) -> list | str:
+    #     """ Retrieve the governance action process metadata element with the supplied unique identifier
+    #         along with the flow definition describing its implementation.
+    #
+    #         Parameters
+    #         ----------
+    #         filter_string: str
+    #             name of the information governance definition to retrieve.
+    #         body: dict, optional
+    #             A dictionary containing parameters of the retrieval.
+    #         add_implementation: bool, optional
+    #             Whether to add the implementation details to the response.
+    #         start_from: int, [default=0], optional
+    #             When multiple pages of results are available, the page number to start from.
+    #         page_size: int, [default=0], optional
+    #             The number of items to return in a single page. If not specified, the default will be taken from
+    #             the class instance.
+    #         output_format: str, default = 'JSON'
+    #             Type of output to produce:
+    #             JSON - output standard json
+    #             MD - output standard markdown with no preamble
+    #             FORM - output markdown with a preamble for a form
+    #             REPORT - output markdown with a preamble for a report
+    #             MERMAID - output mermaid markdown
+    #
+    #         Returns
+    #         -------
+    #         [dict] | str
+    #             A list of information governance definitions matching the name.
+    #
+    #         Raises
+    #         ------
+    #         InvalidParameterException
+    #             one of the parameters is null or invalid or
+    #         PropertyServerException
+    #             There is a problem adding the element properties to the metadata repository or
+    #         UserNotAuthorizedException
+    #             the requesting user is not authorized to issue this request.
+    #
+    #         Notes
+    #         -----
+    #         Body structure:
+    #         {
+    #           "class": "FilterRequestBody",
+    #           "asOfTime": {{isotime}},
+    #           "effectiveTime": {{isotime}},
+    #           "forLineage": false,
+    #           "forDuplicateProcessing": false,
+    #           "limitResultsByStatus": ["ACTIVE"],
+    #           "sequencingOrder": "PROPERTY_ASCENDING",
+    #           "sequencingProperty": "qualifiedName",
+    #           "filter": "Add name here",
+    #           "templateFilter": "NO_TEMPLATES"
+    #         }
+    #
+    #     """
+    #     loop = asyncio.get_event_loop()
+    #     response = loop.run_until_complete(
+    #         self._async_get_governance_process_graph(filter_string, classification_names, body,
+    #                                                        start_from, page_size, output_format, report_spec))
+    #     return response
 
     @dynamic_catch
-    async def _async_get_governance_definition_by_guid(self, guid: str, element_type: str = None,
+    async def _async_get_governance_process_graph(self, guid: str, element_type: str = None,
                                                        body: dict | FilterRequestBody = None,
                                                        output_format: str = "JSON",
                                                        report_spec: dict = None) -> dict | str:
 
-        """ Get governance definition by guid.
-            Async version.
+        """ Retrieve the governance action process metadata element with the supplied unique identifier
+            along with the flow definition describing its implementation. Async version.
 
         Parameters
         ----------
         guid: str
             GUID of the governance definition to get.
- 
+
         body: dict, optional
             A dictionary containing the definition of the governance definition to create.
         output_format: str
@@ -2002,8 +2138,7 @@ class GovernanceOfficer(Client2):
 
         url = (
             f"{self.platform_url}/servers/{self.view_server}/api/open-metadata/"
-            f"{self.url_marker}/governance-definitions/"
-            f"{guid}/retrieve")
+            f"{self.url_marker}/governance-action-processes/{guid}/graph")
         type = element_type if element_type else "GovernanceDefinition"
 
         response = await self._async_get_guid_request(url, _type=type,
@@ -2014,17 +2149,18 @@ class GovernanceOfficer(Client2):
         return response
 
     @dynamic_catch
-    def get_governance_definition_by_guid(self, guid: str, element_type: str = None, body: dict = None,
+    def get_governance_process_graph(self, guid: str, element_type: str = None, body: dict = None,
                                           output_format: str = "JSON",
                                           report_spec: dict = None) -> dict | str:
 
-        """ Get governance definition by guid.
+        """ Retrieve the governance action process metadata element with the supplied unique identifier
+            along with the flow definition describing its implementation.
 
         Parameters
         ----------
         guid: str
             GUID of the governance definition to get.
- 
+
         body: dict, optional
             A dictionary containing the definition of the governance definition to create.
         output_format: str, default = "JSON"
@@ -2061,7 +2197,7 @@ class GovernanceOfficer(Client2):
        """
 
         loop = asyncio.get_event_loop()
-        response = loop.run_until_complete(self._async_get_governance_definition_by_guid(guid, element_type, body,
+        response = loop.run_until_complete(self._async_get_governance_process_graph(guid, element_type, body,
                                                                                          output_format,
                                                                                          report_spec))
         return response

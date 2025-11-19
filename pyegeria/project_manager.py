@@ -9,6 +9,7 @@ Copyright Contributors to the ODPi Egeria project.
 
 import asyncio
 
+from pyegeria import NO_ELEMENTS_FOUND
 from pyegeria.base_report_formats import select_report_spec
 from pyegeria._client_new import Client2
 from pyegeria.base_report_formats import get_report_spec_match
@@ -364,7 +365,7 @@ class ProjectManager(Client2):
     async def _async_get_project_team(
             self,
             project_guid: str,
-            team_role: str = "",
+            team_role: str = None,
             start_from: int = 0,
             page_size: int = 0,
             output_format: str = 'JSON',
@@ -398,19 +399,26 @@ class ProjectManager(Client2):
         PyegeriaException
 
         """
-        if body is None:
-            body = { "class": "FilterRequestBody","filter": team_role }
-
         url = (
             f"{self.platform_url}/servers/{self.view_server}/api/open-metadata/project-manager/"
             f"projects/{project_guid}/team"
         )
-        response = await self._async_get_name_request(url, "ProjectMembers", self._extract_project_properties,
-                                                      filter_string = team_role, start_from=start_from,
-                                                      page_size=page_size, body=body,
-                                                      output_format=output_format,
-                                                      report_spec=report_spec)
-        return response
+        if body is None and (team_role is not None and team_role != "*"):
+            body = { "filter" : team_role }
+            response = await self._async_make_request("POST", url, body)
+        else:
+            response = await self._async_make_request("POST", url)
+
+        elements = response.json().get("elements", NO_ELEMENTS_FOUND)
+        if type(elements) is str or len(elements) == 0:
+            logger.info(NO_ELEMENTS_FOUND)
+            return NO_ELEMENTS_FOUND
+
+        if output_format != 'JSON':  # return a simplified markdown representation
+            logger.info(f"Found elements, output format: {output_format} and report_spec: {report_spec}")
+            return self._generate_project_output(elements, team_role, "Project Team",
+                                                 output_format, report_spec)
+        return elements
 
     @dynamic_catch
     def get_project_team(
@@ -518,7 +526,7 @@ class ProjectManager(Client2):
         )
 
         response = await self._async_find_request(url, _type="Project",
-                                                  _gen_output=self._generate_comment_output,
+                                                  _gen_output=self._generate_project_output,
                                                   search_string=search_string,
                                                   classification_names=classification_names,
                                                   metadata_element_types=metadata_element_types,
@@ -610,7 +618,7 @@ class ProjectManager(Client2):
         url = f"{self.project_command_base}/by-name"
 
         response = await self._async_get_name_request(url, _type="Projects",
-                                                      _gen_output=self._generate_comment_output,
+                                                      _gen_output=self._generate_project_output,
                                                       filter_string=filter_string,
                                                       classification_names=classification_names,
                                                       start_from=start_from, page_size=page_size,
@@ -694,7 +702,7 @@ class ProjectManager(Client2):
         type = element_type if element_type else "Collection"
 
         response = await self._async_get_guid_request(url, _type=type,
-                                                      _gen_output=self._generate_comment_output,
+                                                      _gen_output=self._generate_projectt_output,
                                                       output_format=output_format, report_spec=report_spec,
                                                       body=body)
 
@@ -793,7 +801,7 @@ class ProjectManager(Client2):
                f"ojects/{project_guid}/graph")
 
         response = await self._async_get_guid_request(url, _type=element_type,
-                                                      _gen_output=self._generate_comment_output,
+                                                      _gen_output=self._generate_project_output,
                                                       output_format=output_format, report_spec=report_spec,
                                                       body=body)
 

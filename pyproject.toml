@@ -3,7 +3,7 @@
 
 [project]
 name = "pyegeria"
-version = "5.4.9.2"
+version = "5.4.9.5"
 license = 'Apache-2.0'
 license-files = ["LICENSE"]
 authors = [{name = "Dan Wolfson", email = "dan.wolfson@pdr-associates.com"},]
@@ -91,7 +91,6 @@ dependencies = [
 
     list_collections = "commands.cat.list_collections:main"
 
-    monitor_asset_events = "commands.ops.monitor_asset_events:main"
     monitor_coco_status = "commands.ops.monitor_coco_status:main"
     monitor_active_engine_activity = "commands.ops.monitor_active_engine_activity:main_live"
 

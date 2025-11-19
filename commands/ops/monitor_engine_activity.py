@@ -14,7 +14,7 @@ import json
 import os
 import sys
 import time
-
+from datetime import datetime
 from rich import box
 from rich.console import Console
 from rich.live import Live
@@ -110,7 +110,7 @@ def display_engine_activity_c(
         elif type(action_status) is list:
             sorted_action_status = sorted(
                 action_status,
-                key=lambda i: i.get("requestedTime", time.asctime()),
+                key=lambda i: i.get("requestedTime", datetime.now().isoformat()),
                 reverse=True,
             )
             row_count = 0
