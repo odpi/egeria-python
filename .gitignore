@@ -173,3 +173,4 @@ dmypy.json
 /md_processing/dr_egeria_outbox/
 /md_processing/family_docs/
 /debug_log
+/data/
