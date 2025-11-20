@@ -738,7 +738,7 @@ class TestAutomatedCuration:
 
             start_time = time.perf_counter()
             response = a_client.find_technology_types(
-                "PostgreSQL", starts_with=True, ignore_case=True, output_format = "DICT", report_spec = "Tech-Types"
+                "PostgreSQL", starts_with=True, ignore_case=True, output_format = "JSON", report_spec = "Tech-Types"
             )
             duration = time.perf_counter() - start_time
             print(f"\n\t# Elements was {len(response)} with {duration:.2f} seconds")
@@ -807,8 +807,8 @@ class TestAutomatedCuration:
 
             start_time = time.perf_counter()
             # response = a_client.get_tech_type_detail("CSV Data File", True)
-            response = a_client.get_tech_type_detail("PostgreSQL Server", output_format="JSON",
-                                                     report_spec="Tech-Type-Details")
+            response = a_client.get_tech_type_detail("PostgreSQL Relational Database", output_format="DICT",
+                                                     report_spec="Tech-Type-Processes")
             duration = time.perf_counter() - start_time
             print(f"\n\tDuration was {duration} seconds")
             if type(response) is list:
@@ -1365,7 +1365,7 @@ class TestAutomatedCuration:
             start_time = time.perf_counter()
             # filter = "CSV Data File"
             filter = "File System Directory"
-            response = a_client.get_technology_type_elements(filter, get_templates=True, output_format="DICT",
+            response = a_client.get_technology_type_elements(filter, get_templates=True, output_format="JSON",
                                                              report_spec="Tech-Type-Elements")
                                                              # report_spec="Common-Mermaid")
             duration = time.perf_counter() - start_time

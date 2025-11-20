@@ -19,8 +19,12 @@ from rich import print, box
 from rich.console import Console
 
 
-EGERIA_WIDTH = os.getenv("PYEGERIA_CONSOLE_WIDTH", 250)
-console = Console(width=EGERIA_WIDTH)
+# Standardize on CONSOLE_WIDTH with backward-compatible fallback
+try:
+    _width_val = int(os.getenv("CONSOLE_WIDTH", os.getenv("PYEGERIA_CONSOLE_WIDTH", 250)))
+except Exception:
+    _width_val = 250
+console = Console(width=_width_val)
 
 """
 

@@ -115,8 +115,9 @@ def combine_format_set_dicts(dict1: dict, dict2: dict) -> dict:
 
 # Get the configured value for the user format sets directory
 
-# USER_FORMAT_SETS_DIR = os.path.expanduser(settings.Environment.pyegeria_user_format_sets_dir)
-USER_FORMAT_SETS_DIR = os.getenv("PYEGERIA_USER_FORMAT_SETS_DIR", "./")
+# USER_FORMAT_SETS_DIR = os.path.expanduser(settings.Environment.pyegeria_user_report_specs_dir)
+# Prefer new env var, fallback to old for backward compatibility
+USER_FORMAT_SETS_DIR = os.getenv("PYEGERIA_USER_REPORT_SPECS_DIR", os.getenv("PYEGERIA_USER_FORMAT_SETS_DIR", "./"))
 # Constants
 MD_SEPARATOR = "\n---\n\n"
 
@@ -491,7 +492,37 @@ base_report_specs = FormatSetDict({
                     Column(name="GUID", key='guid'),
                     Column(name="Description", key='description'),
                     Column(name="Catalog Template Placeholders", key='catalog_template_specs'),
-                    Column(name="Reference URL", key='ref_url'),
+                ],
+            )
+        ],
+        action=ActionParameter(
+            function="Client2.get_tech_type_detail",
+            optional_params=OPTIONAL_FILTER_PARAMS,
+            required_params=["filter"],
+            spec_params={},
+        )
+    ),
+    "Tech-Type-Processes": FormatSet(
+        target_type="TechTypeDetail",
+        heading="Technology Type Processes",
+        description="Governance Processes for a Tech Type",
+        annotations={},  # No specific annotations
+        family="Automated Curation",
+        formats=[
+            Format(
+                types=["REPORT","LIST","FORM","MD","TABLE"],
+                attributes=[
+                    Column(name='Display Name', key='display_name'),
+                    Column(name="Qualified Name", key='qualified_name'),
+                    Column(name="Governance Processes", key='governance_processes'),
+                ],
+            ),
+            Format(
+                types=["DICT"],
+                attributes=[
+                    Column(name='Display Name', key='display_name'),
+                    Column(name="Qualified Name", key='qualified_name'),
+                    Column(name="Governance Processes", key='governance_processes_d'),
                 ],
             )
         ],

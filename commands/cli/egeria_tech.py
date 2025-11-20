@@ -759,15 +759,7 @@ def list_supply_chains(ctx, search_string):
 def list_blueprints(ctx, search_string):
     """Display solution blueprints"""
     c = ctx.obj
-    blueprint_list(
-        search_string,
-        c.view_server,
-        c.view_server_url,
-        c.userid,
-        c.password,
-        c.jupyter,
-        c.width,
-    )
+    blueprint_list(search_string, c.view_server, c.view_server_url, c.userid, c.password, c.jupyter, c.width)
 
 
 @show_supply_chains.command("solution-roles")
@@ -793,15 +785,7 @@ def list_solution_roles(ctx, search_string):
 def list_solution_components(ctx, search_string):
     """Display solution componentss"""
     c = ctx.obj
-    solution_component_list(
-        search_string,
-        c.view_server,
-        c.view_server_url,
-        c.userid,
-        c.password,
-        c.jupyter,
-        c.width,
-    )
+    solution_component_list(search_string, c.view_server, c.view_server_url, c.userid, c.password, c.jupyter, c.width)
 
 
 #
