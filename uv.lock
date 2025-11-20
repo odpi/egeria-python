@@ -1515,7 +1515,7 @@ sdist = { url = "https://files.pythonhosted.org/packages/3d/74/f19e5eaabada3ae7d
 
 [[package]]
 name = "pyegeria"
-version = "5.4.8.12"
+version = "5.4.9.5"
 source = { editable = "." }
 dependencies = [
     { name = "altair" },
@@ -1532,6 +1532,7 @@ dependencies = [
     { name = "pydantic-settings" },
     { name = "pydevd-pycharm" },
     { name = "pytest-asyncio" },
+    { name = "python-dotenv" },
     { name = "requests" },
     { name = "rich" },
     { name = "trogon" },
@@ -1568,6 +1569,7 @@ requires-dist = [
     { name = "pydevd-pycharm", specifier = ">=253.27642.35" },
     { name = "pytest", marker = "extra == 'test'" },
     { name = "pytest-asyncio", specifier = ">=1.2.0" },
+    { name = "python-dotenv", specifier = ">=1.1.1" },
     { name = "requests" },
     { name = "rich", specifier = ">=14.2" },
     { name = "trogon" },

@@ -130,6 +130,7 @@ class AutomatedCuration(Client2):
         display_name = element.get('displayName',None)
         description = element.get('description',None)
         catalog_templates = element.get('catalogTemplates',None)
+        governance_processes = element.get('governanceActionProcesses',None)
         external_references = element.get('externalReferences',None)
         url = element.get('url',None)
 
@@ -137,7 +138,7 @@ class AutomatedCuration(Client2):
         # Mermaid graph support if present
         mermaid_val = element.get("mermaidGraph", "") or ""
         for column in columns_list:
-            if column.get("key") == "mermaid":
+            if column.get("key") == "mermaidGraph":
                 column["value"] = mermaid_val
                 break
             elif column.get("key") == "catalog_template_specs":
@@ -152,6 +153,50 @@ class AutomatedCuration(Client2):
                 column["value"] = specs
             elif column.get("key") == "catalog_templates":
                 column["value"] =catalog_templates
+            elif column.get("key") == "governance_processes":
+                procs = ""
+                specs = ""
+                if governance_processes:
+                    for proc in governance_processes:
+                        proc_props = proc['relatedElement'].get("properties", {})
+                        proc_qn = proc_props.get("qualifiedName","")
+                        proc_dn = proc_props.get("displayName","")
+                        proc_description = proc_props.get("description","")
+
+                        proc_specs = proc.get("specification",{}).get("supportedRequestParameter",{})
+                        for spec in proc_specs:
+                            name = spec.get("name","")
+                            description = spec.get("description","")
+                            data_type = spec.get("dataType","")
+                            example = spec.get("example","")
+                            required = str(spec.get("required",""))
+                            specs += (f"* Name: {name}\n"
+                                      f"* Description: {description}\n"
+                                      f"* Data Type: {data_type}\n"
+                                      f"* Example: {example}\n"
+                                      f"* Required: {required}\n\t---------\n"
+                                      )
+
+                        procs += (f"* Display Name: {proc_dn}\n"
+                                  f"* Resource Use: {proc.get("resourceUse", "")}\n"
+                                  f"* Description: {proc_description}\n"
+                                  f"* Qualified Name: {proc_qn}\n"
+                                  f"* Parameters:\n\t---------\n{specs}\n\t==========\n\n"
+                                  )
+                column['value'] = procs
+            elif column.get("key") == "governance_processes_d":
+                processes = []
+
+                if governance_processes:
+                    for proc in governance_processes:
+                        procs = {}
+                        proc_props = proc['relatedElement'].get("properties", {})
+                        procs['proc_qualified_name'] = proc_props.get("qualifiedName", "")
+                        procs['proc_display_name'] = proc_props.get("displayName", "")
+                        procs['proc_description'] = proc_props.get("description", "")
+                        procs['proc_params'] = proc.get("specification",{}).get("supportedRequestParameter",{})
+                        processes.append(procs)
+                column['value'] = processes
             elif column.get("key") == "guid":
                 column["value"] = guid
             elif column.get("key") == "qualified_name":

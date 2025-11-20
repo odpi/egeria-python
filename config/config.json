@@ -5,9 +5,11 @@
     "timeout_seconds": 30
   },
   "Environment": {
-    "Console Width": 170,
-    "Dr.Egeria Inbox": "md_processing/dr-egeria-inbox",
-    "Dr.Egeria Outbox": "md_processing/dr-egeria-outbox",
+    "Console Width": 201,
+    "Egeria Inbox": "egeria-inbox",
+    "Egeria Outbox": "egeria-outbox",
+    "Dr.Egeria Inbox": "inbox/dr-egeria-inbox",
+    "Dr.Egeria Outbox": "outbox/dr-egeria-outbox",
     "Egeria Engine Host": "qs-engine-host",
     "Egeria Engine Host URL": "",
     "Egeria Glossary Path": "glossary",
@@ -15,17 +17,17 @@
     "Egeria Integration Daemon URL": "https://localhost:9443",
     "Egeria Jupyter": true,
     "Egeria Kafka Endpoint": "localhost:9192",
-    "Egeria Mermaid Folder": "mermaid_graphs",
+    "Egeria Mermaid Folder": "egeria-outbox/mermaid-graphs",
     "Egeria Metadata Store": "qs-metadata-store",
     "Egeria Platform URL": "https://localhost:9443",
     "Egeria View Server": "qs-view-server2",
     "Egeria View Server URL": "https://localhost:9443",
-    "Pyegeria Root": "/Users/dwolfson/localGit/egeria-v5-3/egeria-python",
-    "Pyegeria Config Directory": "/Users/dwolfson/localGit/egeria-v5-3/egeria-python/config",
-    "Pyegeria Publishing Root": "http://localhost:8085/dr-egeria-outbox",
-    "Pyegeria User Format Sets Dir": "/Users/dwolfson/localGit/egeria-v5-3/egeria-python"
+    "Pyegeria Root": "/Users/dwolfson/localGit/egeria-python/sample-data",
+    "Pyegeria Config Directory": "/Users/dwolfson/localGit/egeria-python/config",
+    "Pyegeria Publishing Root": "http://localhost:8085/outbox",
+    "Pyegeria User Report Specs Dir": "~/.pyegeria/report_specs"
   },
-  "feature_x_enabled": "foo",
+  "feature_x_enabled": false,
   "Logging": {
     "console_filter_levels": [
       "ERROR"

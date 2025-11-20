@@ -58,7 +58,8 @@ class PyegeriaSettings(BaseSettings):
     
     # Additional settings that can be loaded from .env
     pyegeria_console_width: int = 200
-    pyegeria_user_format_sets_dir: str = "~/.pyegeria/format_sets"
+    # Renamed: format_sets -> report_specs
+    pyegeria_user_report_specs_dir: str = "~/.pyegeria/report_specs"
     egeria_user_name: str = ""
     egeria_user_password: str = ""
     
@@ -100,8 +101,9 @@ class EnvironmentConfig(BaseModel):
     """Environment configuration settings"""
     console_width: int = Field(default=200, alias="Console Width")
     egeria_outbox: str = Field(default="egeria-outbox", alias="Egeria Outbox")
-    dr_egeria_inbox: str = Field(default="md_processing/dr-egeria-inbox", alias="Dr.Egeria Inbox")
-    dr_egeria_outbox: str = Field(default="md_processing/dr-egeria-outbox", alias="Dr.Egeria Outbox")
+    egeria_inbox: str = Field(default="egeria-inbox", alias="Egeria Inbox")
+    dr_egeria_inbox: str = Field(default="sample-data/egeria-inbox/dr-egeria-inbox", alias="Dr.Egeria Inbox")
+    dr_egeria_outbox: str = Field(default="sample-data/egeria-outbox/dr-egeria-outbox", alias="Dr.Egeria Outbox")
     egeria_engine_host_url: str = Field(default="", alias="Egeria Engine Host URL")
     egeria_engine_host: str = Field(default="qs-engine-host", alias="Egeria Engine Host")
     egeria_glossary_path: str = Field(default="glossary", alias="Egeria Glossary Path")
@@ -109,16 +111,17 @@ class EnvironmentConfig(BaseModel):
     egeria_integration_daemon: str = Field(default="qs-integration-daemon", alias="Egeria Integration Daemon")
     egeria_jupyter: bool = Field(default=True, alias="Egeria Jupyter")
     egeria_kafka_endpoint: str = Field(default="localhost:9192", alias="Egeria Kafka Endpoint")
-    egeria_mermaid_folder: str = Field(default="mermaid_graphs", alias="Egeria Mermaid Folder")
+    egeria_mermaid_folder: str = Field(default="egeria-outbox/mermaid-graphs", alias="Egeria Mermaid Folder")
     egeria_metadata_store: str = Field(default="qs-metadata-store", alias="Egeria Metadata Store")
     egeria_platform_url: str = Field(default="https://localhost:9443", alias="Egeria Platform URL")
     egeria_view_server_url: str = Field(default="https://localhost:9443", alias="Egeria View Server URL")
     egeria_view_server: str = Field(default="qs-view-server", alias="Egeria View Server")
-    pyegeria_root: str = Field(default="", alias="Pyegeria Root")
+    pyegeria_root: str = Field(default="sample-data", alias="Pyegeria Root")
     pyegeria_config_directory: str = Field(default="", alias="Pyegeria Config Directory")
     pyegeria_config_file: str = Field(default="config.json", alias="Egeria Config File")
     pyegeria_publishing_root: str = Field(default="/dr-egeria-outbox", alias="Pyegeria Publishing Root")
-    pyegeria_user_format_sets_dir: str = Field(default="~/.pyegeria/format_sets", alias="Pyegeria User Format Sets Dir")
+    # Renamed: Format Sets -> Report Specs
+    pyegeria_user_report_specs_dir: str = Field(default="~/.pyegeria/report_specs", alias="Pyegeria User Report Specs Dir")
     
     model_config = ConfigDict(populate_by_name=True, extra='allow')
 
@@ -307,11 +310,11 @@ def load_app_config(env_file: str | None = None):
     env["Egeria Config File"] = env_config_file
     env["pyegeria_config_file"] = env_config_file
 
-    env["Console Width"] = int(os.getenv("PYEGERIA_CONSOLE_WIDTH", env.get("Console Width", env_settings.pyegeria_console_width)))
+    env["Console Width"] = int(os.getenv("CONSOLE_WIDTH", env.get("Console Width", env_settings.pyegeria_console_width)))
     env["console_width"] = env["Console Width"]
     # Egeria Outbox (new)
     env["Egeria Outbox"] = os.getenv("EGERIA_OUTBOX", env.get("Egeria Outbox", "egeria-outbox"))
-    env["egeria_outbox"] = env["Egeria Outbox"]
+    env["Egeria Inbox"] = os.getenv("EGERIA_INBOX", env.get("Egeria Inbox", "egeria-inbox"))
     env["Dr.Egeria Inbox"] = os.getenv("DR_EGERIA_INBOX_PATH", env.get("Dr.Egeria Inbox", "md_processing/dr-egeria-inbox"))
     env["Dr.Egeria Outbox"] = os.getenv("DR_EGERIA_OUTBOX_PATH", env.get("Dr.Egeria Outbox", "md_processing/dr-egeria-outbox"))
     env["Egeria Engine Host"] = os.getenv("EGERIA_ENGINE_HOST", env.get("Egeria Engine Host", "qs-engine-host"))
@@ -321,13 +324,24 @@ def load_app_config(env_file: str | None = None):
     env["Egeria Integration Daemon URL"] = os.getenv("EGERIA_INTEGRATION_DAEMON_URL", env.get("Egeria Integration Daemon URL", "https://localhost:9443"))
     env["Egeria Jupyter"] = _parse_bool_env("EGERIA_JUPYTER", bool(env.get("Egeria Jupyter", True)))
     env["Egeria Kafka Endpoint"] = os.getenv("EGERIA_KAFKA", env.get("Egeria Kafka Endpoint", "localhost:9192"))
-    env["Egeria Mermaid Folder"] = os.getenv("EGERIA_MERMAID_FOLDER", env.get("Egeria Mermaid Folder", "mermaid_graphs"))
+    # Normalize to hyphenated folder name; retain any explicit env override
+    env["Egeria Mermaid Folder"] = os.getenv(
+        "EGERIA_MERMAID_FOLDER",
+        env.get("Egeria Mermaid Folder", "egeria-outbox/mermaid-graphs"),
+    )
     env["Egeria Metadata Store"] = os.getenv("EGERIA_METADATA_STORE", env.get("Egeria Metadata Store", "qs-metadata-store"))
     env["Egeria Platform URL"] = os.getenv("EGERIA_PLATFORM_URL", env.get("Egeria Platform URL", "https://localhost:9443"))
     env["Egeria View Server"] = os.getenv("EGERIA_VIEW_SERVER", env.get("Egeria View Server", "qs-view-server"))
     env["Egeria View Server URL"] = os.getenv("EGERIA_VIEW_SERVER_URL", env.get("Egeria View Server URL", "https://localhost:9443"))
     env["Pyegeria Publishing Root"] = os.getenv("PYEGERIA_PUBLISHING_ROOT", env.get("Pyegeria Publishing Root", "/dr-egeria-outbox"))
-    env["Pyegeria User Format Sets Dir"] = os.getenv("PYEGERIA_USER_FORMAT_SETS_DIR", env.get("Pyegeria User Format Sets Dir", "~/.pyegeria/format_sets"))
+    # New primary env var with fallback to old name for backward compatibility
+    env["Pyegeria User Report Specs Dir"] = (
+        os.getenv("PYEGERIA_USER_REPORT_SPECS_DIR")
+        or os.getenv("PYEGERIA_USER_FORMAT_SETS_DIR")
+        or env.get("Pyegeria User Report Specs Dir")
+        or env.get("Pyegeria User Format Sets Dir")
+        or "~/.pyegeria/report_specs"
+    )
 
     # Logging
     log = config_dict.setdefault("Logging", {})
@@ -514,7 +528,7 @@ def pretty_print_config(env_file: str | None = None, safe: bool = True, to_conso
         ("Debug", "enable_logger_catch"): "PYEGERIA_ENABLE_LOGGER_CATCH",
         ("Debug", "timeout_seconds"): "PYEGERIA_TIMEOUT_SECONDS",
         # Environment
-        ("Environment", "Console Width"): "PYEGERIA_CONSOLE_WIDTH",
+        ("Environment", "Console Width"): "CONSOLE_WIDTH",
         ("Environment", "Egeria Outbox"): "EGERIA_OUTBOX",
         ("Environment", "Dr.Egeria Inbox"): "DR_EGERIA_INBOX_PATH",
         ("Environment", "Dr.Egeria Outbox"): "DR_EGERIA_OUTBOX_PATH",
@@ -531,7 +545,8 @@ def pretty_print_config(env_file: str | None = None, safe: bool = True, to_conso
         ("Environment", "Egeria View Server"): "EGERIA_VIEW_SERVER",
         ("Environment", "Egeria View Server URL"): "EGERIA_VIEW_SERVER_URL",
         ("Environment", "Pyegeria Publishing Root"): "PYEGERIA_PUBLISHING_ROOT",
-        ("Environment", "Pyegeria User Format Sets Dir"): "PYEGERIA_USER_FORMAT_SETS_DIR",
+        # Updated variable name
+        ("Environment", "Pyegeria User Report Specs Dir"): "PYEGERIA_USER_REPORT_SPECS_DIR",
         ("Environment", "Pyegeria Root"): "PYEGERIA_ROOT_PATH",
         ("Environment", "Pyegeria Config Directory"): "PYEGERIA_CONFIG_DIRECTORY",
         ("Environment", "Egeria Config File"): "PYEGERIA_CONFIG_FILE",

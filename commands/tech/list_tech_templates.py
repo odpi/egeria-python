@@ -14,28 +14,26 @@ from rich.table import Table
 from textual.widgets import DataTable
 
 from pyegeria import (
+    PyegeriaException,
+    print_basic_exception,
+    SolutionArchitect,
+    settings, load_app_config, pretty_print_config,
+    config_logging,
     AutomatedCuration,
-    InvalidParameterException,
-    PropertyServerException,
-    UserNotAuthorizedException,
-    print_exception_response,
 )
 
-console = Console()
-EGERIA_METADATA_STORE = os.environ.get("EGERIA_METADATA_STORE", "active-metadata-store")
-EGERIA_KAFKA_ENDPOINT = os.environ.get("KAFKA_ENDPOINT", "localhost:9092")
-EGERIA_PLATFORM_URL = os.environ.get("EGERIA_PLATFORM_URL", "https://localhost:9443")
-EGERIA_VIEW_SERVER = os.environ.get("EGERIA_VIEW_SERVER", "view-server")
-EGERIA_VIEW_SERVER_URL = os.environ.get(
-    "EGERIA_VIEW_SERVER_URL", "https://localhost:9443"
-)
-EGERIA_INTEGRATION_DAEMON = os.environ.get("EGERIA_INTEGRATION_DAEMON", "integration-daemon")
-EGERIA_ADMIN_USER = os.environ.get("ADMIN_USER", "garygeeke")
-EGERIA_ADMIN_PASSWORD = os.environ.get("ADMIN_PASSWORD", "secret")
+
+app_config = settings.Environment
+config_path = os.path.join(app_config.pyegeria_config_directory, app_config.pyegeria_config_file)
+
 EGERIA_USER = os.environ.get("EGERIA_USER", "erinoverview")
 EGERIA_USER_PASSWORD = os.environ.get("EGERIA_USER_PASSWORD", "secret")
-EGERIA_JUPYTER = bool(os.environ.get("EGERIA_JUPYTER", "False"))
-EGERIA_WIDTH = int(os.environ.get("EGERIA_WIDTH", "200"))
+
+conf = load_app_config(config_path)
+# print(f"Loading config from {config_path} and mermaid folder is {EGERIA_MERMAID_FOLDER}")
+console = Console(width = app_config.console_width)
+config_logging()
+
 
 
 def list_templates(
@@ -52,33 +50,33 @@ def list_templates(
             if "deployedImplementationType" not in item["qualifiedName"]:
                 continue
 
-            details = a_client.get_tech_type_detail(item["name"])
-            entry = {details["name"]: {}}
+            details = a_client.get_tech_type_detail(item["displayName"])
+            entry = {details["displayName"]: {}}
             if type(details) is str:
                 tech_info_list.append(entry)
                 continue
             templates = details.get("catalogTemplates", "Not Found")
             if type(templates) is list:
                 t_list = []
-                entry = {details["name"]: {}}
+                entry = {details["displayName"]: {}}
                 for template in templates:
-                    t_list.append({"template": template["name"]})
-                entry[details["name"]] = t_list
+                    t_list.append({"template": template["displayName"]})
+                entry[details["displayName"]] = t_list
                 tech_info_list.append(entry)
     return tech_info_list
 
 
 def add_row(
     table: Union[Table, DataTable],
-    name: str,
+    displayName: str,
     template_name: str,
     template_guid: str,
     placeholder_table: Table,
 ) -> Table | DataTable:
     if isinstance(table, Table):
-        table.add_row(name, template_name, template_guid, placeholder_table)
+        table.add_row(displayName, template_name, template_guid, placeholder_table)
     elif isinstance(table, DataTable):
-        table.add_row(name, template_name, template_guid, placeholder_table)
+        table.add_row(displayName, template_name, template_guid, placeholder_table)
 
     return table
 
@@ -89,8 +87,8 @@ def display_templates_spec(
     url: str,
     username: str,
     password: str,
-    jupyter: bool = EGERIA_JUPYTER,
-    width: int = EGERIA_WIDTH,
+    jupyter: bool = app_config.egeria_jupyter,
+    width: int = app_config.console_width,
     data_table: bool = False,
 ) -> Table | DataTable:
     a_client = AutomatedCuration(server, url, username)
@@ -134,32 +132,32 @@ def display_templates_spec(
                 placeholder_table.add_column("Example", width=20)
                 placeholder_table.add_column("Description", width=40)
 
-                name = item.get("name", "none")
+                displayName = item.get("displayName", "none")
 
-                details = a_client.get_tech_type_detail(name)
+                details = a_client.get_tech_type_detail(displayName)
                 if type(details) is str:
-                    console.log(f"Missing details for - {name}: {details}")
+                    console.log(f"Missing details for - {displayName}: {details}")
                     continue
 
                 templates = details.get("catalogTemplates", "Not Found")
                 if type(templates) is not str:
                     for template in templates:
-                        template_name = template.get("name", None)
+                        template_name = template.get("displayName", None)
 
                         template_name = (
-                            f"{name}_Template"
+                            f"{displayName}_Template"
                             if template_name is None
                             else template_name
                         )
 
                         specification = template["specification"]["placeholderProperty"]
-                        template_guid = template["relatedElement"]["guid"]
+                        template_guid = template["relatedElement"]['elementHeader']["guid"]
 
                         for placeholder in specification:
                             placeholder_data_type = placeholder["dataType"]
                             placeholder_description = placeholder["description"]
-                            placeholder_name = placeholder["placeholderPropertyName"]
-                            placeholder_required = placeholder["required"]
+                            placeholder_name = placeholder["name"]
+                            placeholder_required = str(placeholder["required"])
                             placeholder_example = placeholder.get("example", None)
                             placeholder_table.add_row(
                                 placeholder_name,
@@ -169,9 +167,9 @@ def display_templates_spec(
                                 placeholder_description,
                             )
 
-                        # table.add_row(name, template_name, template_guid, placeholder_table)
+                        # table.add_row(displayName, template_name, template_guid, placeholder_table)
                         table = add_row(
-                            table, name, template_name, template_guid, placeholder_table
+                            table, displayName, template_name, template_guid, placeholder_table
                         )
 
             return table
@@ -189,12 +187,12 @@ def display_templates_spec(
                 console.print(generate_table(data_table))
 
     except (
-        InvalidParameterException,
-        PropertyServerException,
-        UserNotAuthorizedException,
+        PyegeriaException
     ) as e:
-        print_exception_response(e)
+        print_basic_exception(e)
         assert e.related_http_code != "200", "Invalid parameters"
+    except Exception as e:
+        console.print_exception(show_locals=True)
     finally:
         a_client.close_session()
 
@@ -208,8 +206,8 @@ def main():
 
     args = parser.parse_args()
 
-    server = args.server if args.server is not None else EGERIA_VIEW_SERVER
-    url = args.url if args.url is not None else EGERIA_PLATFORM_URL
+    server = args.server if args.server is not None else app_config.egeria_view_server
+    url = args.url if args.url is not None else app_config.egeria_view_server_url
     userid = args.userid if args.userid is not None else EGERIA_USER
     password = args.password if args.password is not None else EGERIA_USER_PASSWORD
     guid = None
@@ -270,20 +268,20 @@ def main():
 #                 placeholder_table.add_column("Example", width=20)
 #                 placeholder_table.add_column("Description", width=40)
 #
-#                 name = item.get("name", "none")
+#                 displayName = item.get("displayName", "none")
 #
-#                 details = a_client.get_tech_type_detail(name)
+#                 details = a_client.get_tech_type_detail(displayName)
 #                 if type(details) is str:
-#                     console.log(f"Missing details for - {name}: {details}")
+#                     console.log(f"Missing details for - {displayName}: {details}")
 #                     continue
 #
 #                 templates = details.get("catalogTemplates", "Not Found")
 #                 if type(templates) is not str:
 #                     for template in templates:
-#                         template_name = template.get("name", None)
+#                         template_name = template.get("displayName", None)
 #
 #                         template_name = (
-#                             f"{name}_Template"
+#                             f"{displayName}_Template"
 #                             if template_name is None
 #                             else template_name
 #                         )
@@ -306,7 +304,7 @@ def main():
 #                             )
 #
 #                         table.add_row(
-#                             name, template_name, template_guid, placeholder_table
+#                             displayName, template_name, template_guid, placeholder_table
 #                         )
 #
 #             return table
@@ -356,5 +354,5 @@ def main():
 #         pass
 #
 #
-# if __name__ == "__main__":
-#     main()
+if __name__ == "__main__":
+    main()

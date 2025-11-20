@@ -19,8 +19,12 @@ from rich import print, box
 from rich.console import Console
 
 
-EGERIA_WIDTH = os.getenv("PYEGERIA_CONSOLE_WIDTH", 250)
-console = Console(width=EGERIA_WIDTH)
+# Standardize on CONSOLE_WIDTH with backward-compatible fallback
+try:
+    _width_val = int(os.getenv("CONSOLE_WIDTH", os.getenv("PYEGERIA_CONSOLE_WIDTH", 250)))
+except Exception:
+    _width_val = 250
+console = Console(width=_width_val)
 
 """
 
@@ -158,10 +162,14 @@ class PyegeriaException(Exception):
             self.response = response
             self.response_url = getattr(response, "url", "unknown URL") if response else additional_info.get("endpoint",                                                                                             "")
             self.response_code = getattr(response, "status_code", "unknown status code") if response else ""
+            self.response_egeria_msg_id = response.json().get("exceptionErrorMessageId", "")
+            self.response_egeria_msg = response.json().get("exceptionErrorMessage", "")
         else:
             self.response = None
             self.response_url = ""
             self.response_code = ""
+            self.response_egeria_msg_id = ""
+            self.response_egeria_msg = ""
         self.error_code = error_code
         self.error_details = error_code.value
         self.pyegeria_code = self.error_details.get("message_id", "UNKNOWN_ERROR")
@@ -205,7 +213,7 @@ class PyegeriaConnectionException(PyegeriaException):
         super().__init__(None, PyegeriaErrorCode.CONNECTION_ERROR,
                  context, additional_info, e)
         self.message = self.error_details["message_template"].format(self.response_url)
-        logger.error(self.__str__())
+        logger.info(self.__str__())
 
 class PyegeriaInvalidParameterException(PyegeriaException):
     """Raised for invalid parameters - parameters that might be missing or incorrect."""
@@ -214,7 +222,7 @@ class PyegeriaInvalidParameterException(PyegeriaException):
         super().__init__(response, PyegeriaErrorCode.VALIDATION_ERROR,
                          context, additional_info, e)
         self.message = self.error_details["message_template"].format(self.additional_info.get('reason', ''))
-        logger.error(self.__str__(), ip=self.response_url, http_code=self.response_code, pyegeria_code=self.pyegeria_code)
+        logger.info(self.__str__(), ip=self.response_url, http_code=self.response_code, pyegeria_code=self.pyegeria_code)
 
 class PyegeriaClientException(PyegeriaException):
     """Raised for invalid parameters - parameters that might be missing or incorrect."""
@@ -223,7 +231,7 @@ class PyegeriaClientException(PyegeriaException):
         # base_exception = context.get('caught_exception', None)
         super().__init__(response, PyegeriaErrorCode.CLIENT_ERROR,
                          context, additional_info, e)
-        logger.error(self.__str__(), ip=self.response_url, http_code=self.response_code, pyegeria_code=self.pyegeria_code)
+        logger.info(self.__str__(), ip=self.response_url, http_code=self.response_code, pyegeria_code=self.pyegeria_code)
 
 
 class PyegeriaAPIException(PyegeriaException):
@@ -242,7 +250,7 @@ class PyegeriaAPIException(PyegeriaException):
             for key, value in related_response.items():
                 msg += f"\t\t* {key} = {format_dict_to_string(value)}\n"
 
-        logger.error(msg, ip=self.response_url, http_code=self.response_code, pyegeria_code=self.pyegeria_code)
+        logger.info(msg, ip=self.response_url, http_code=self.response_code, pyegeria_code=self.pyegeria_code)
 
 
 
@@ -254,7 +262,7 @@ class PyegeriaAPIException(PyegeriaException):
 #         super().__init__(response,  PyegeriaErrorCode.AUTHENTICATION_ERROR,
 #                          context, additional_info)
 #         self.message = self.error_details["message_template"].format(additional_info.get("userid",""))
-#         logger.error(self.__str__(), ip=self.response_url, http_code=self.response_code, pyegeria_code=self.pyegeria_code)
+#         logger.info(self.__str__(), ip=self.response_url, http_code=self.response_code, pyegeria_code=self.pyegeria_code)
 
 class PyegeriaUnauthorizedException(PyegeriaException):
     """Raised for 403 authorization errors."""
@@ -263,7 +271,7 @@ class PyegeriaUnauthorizedException(PyegeriaException):
         super().__init__(response, PyegeriaErrorCode.AUTHORIZATION_ERROR,
                          context, additional_info, e)
         self.message = self.error_details["message_template"].format(additional_info.get("userid", ""))
-        logger.error(self.__str__(), ip=self.response_url, http_code=self.response_code, pyegeria_code=self.pyegeria_code)
+        logger.info(self.__str__(), ip=self.response_url, http_code=self.response_code, pyegeria_code=self.pyegeria_code)
 
 
 
@@ -273,7 +281,7 @@ class PyegeriaNotFoundException(PyegeriaException):
                  context: dict = None, additional_info: dict = None, e: Exception = None) -> None:
         super().__init__(response, PyegeriaErrorCode.CLIENT_ERROR,
                          context, additional_info, e)
-        logger.error(self.__str__(), ip=self.response_url, http_code=self.response_code, pyegeria_code=self.pyegeria_code)
+        logger.info(self.__str__(), ip=self.response_url, http_code=self.response_code, pyegeria_code=self.pyegeria_code)
 
 
 # class PyegeriaInvalidResponseException(PyegeriaException):
@@ -282,7 +290,7 @@ class PyegeriaNotFoundException(PyegeriaException):
 #                  context: dict = None, additional_info: dict = None) -> None:
 #         super().__init__(response, PyegeriaErrorCode.CLIENT_ERROR,
 #                          context, additional_info)
-#         logger.error(self.__str__(), ip=self.response_url, http_code=self.response_code, pyegeria_code=self.pyegeria_code)
+#         logger.info(self.__str__(), ip=self.response_url, http_code=self.response_code, pyegeria_code=self.pyegeria_code)
 #
 #
 # class PyegeriaValidationException(PyegeriaException):
@@ -295,7 +303,7 @@ class PyegeriaNotFoundException(PyegeriaException):
 #         reason = additional_info.get("reason","")
 #         input_parameters = additional_info.get("input_parameters","")
 #         self.message = self.error_details["message_template"].format(reason, input_parameters)
-#         logger.error(self.__str__(), ip=self.response_url, http_code=self.response_code, pyegeria_code=self.pyegeria_code)
+#         logger.info(self.__str__(), ip=self.response_url, http_code=self.response_code, pyegeria_code=self.pyegeria_code)
 #
 # class PyegeriaRequestException(PyegeriaException):
 #     """Raised when data sent to the API fails validation, or received data fails Pydantic validation."""
@@ -303,7 +311,7 @@ class PyegeriaNotFoundException(PyegeriaException):
 #                  context: dict = None, additional_info: dict = None) -> None:
 #         super().__init__(response, PyegeriaErrorCode.CLIENT_ERROR,
 #                          context, additional_info)
-#         logger.error(self.__str__(), ip=self.response_url, http_code=self.response_code, pyegeria_code=self.pyegeria_code)
+#         logger.info(self.__str__(), ip=self.response_url, http_code=self.response_code, pyegeria_code=self.pyegeria_code)
 
 
 class PyegeriaUnknownException(PyegeriaException):
@@ -312,7 +320,7 @@ class PyegeriaUnknownException(PyegeriaException):
                  context: dict = None, additional_info: dict = None, e: Exception = None) -> None:
         super().__init__(response, PyegeriaErrorCode.CLIENT_ERROR,
                          context, additional_info, e)
-        logger.error(self.__str__(), ip=self.response_url, http_code=self.response_code, pyegeria_code=self.pyegeria_code)
+        logger.info(self.__str__(), ip=self.response_url, http_code=self.response_code, pyegeria_code=self.pyegeria_code)
 
 
 
@@ -410,7 +418,7 @@ def print_basic_exception(e: PyegeriaException):
                           format_dict_to_string(related_response.get('exceptionUserAction',"")) if isinstance(related_response,dict) else related_response)
 
             exception_msg_id = related_response.get("exceptionErrorMessageId", None) if isinstance(related_response,dict) else related_response
-        table.add_row("Pyegeria Exception", exception_msg_id)
+        table.add_row("Egeria Exception", exception_msg_id)
         table.add_row("Pyegeria Message", e.message)
         console.print(table)
 

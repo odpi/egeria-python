@@ -1,44 +1,52 @@
 #
 # This file contains default Environment variable settings
 
-# PYEGERIA_CONFIG_DIRECTORY=
-# PYEGERIA_ROOT_PATH=
-# PYEGERIA_CONFIG_FILE=
+PYEGERIA_CONFIG_DIRECTORY="/Users/dwolfson/localGit/egeria-python/config"
+PYEGERIA_ROOT_PATH="/Users/dwolfson/localGit/egeria-python/sample-data"
+PYEGERIA_CONFIG_FILE="config.json"
+EGERIA_INBOX="egeria-inbox"
+EGERIA_OUTBOX="egeria-outbox"
+DR_EGERIA_INBOX_PATH="inbox/dr-egeria-inbox"
+DR_EGERIA_OUTBOX_PATH="outbox/dr-egeria-outbox"
+EGERIA_ENGINE_HOST="qs-engine-host"
+EGERIA_ENGINE_HOST_URL="https://localhost:9443"
+EGERIA_GLOSSARY_PATH="glossary"
+EGERIA_INTEGRATION_DAEMON="qs-integration-daemon"
+EGERIA_INTEGRATION_DAEMON_URL="https://localhost:9443"
+EGERIA_JUPYTER="True"
+EGERIA_KAFKA="localhost:9192"
+EGERIA_MERMAID_FOLDER="egeria-outbox/mermaid-graphs"
+EGERIA_METADATA_STORE="qs-metadata-store"
+EGERIA_PLATFORM_URL="https://localhost:9443"
+EGERIA_VIEW_SERVER="qs-view-server"
+EGERIA_VIEW_SERVER_URL="https://localhost:9443"
+PYEGERIA_PUBLISHING_ROOT="http://localhost:8085/outbox"
+PYEGERIA_ROOT_PATH="~/localGit/egeria-python/sample-data"
+# New variable name replacing PYEGERIA_USER_FORMAT_SETS_DIR
+PYEGERIA_USER_REPORT_SPECS_DIR="~/.pyegeria/report_specs"
+# Deprecated: kept for backward compatibility if set in external environments
+# PYEGERIA_USER_FORMAT_SETS_DIR="~/.pyegeria/format_sets"
+CONSOLE_WIDTH=282
 
-# DR_EGERIA_INBOX_PATH="md_processing/dr-egeria-inbox"
-# DR_EGERIA_OUTBOX_PATH="md_processing/dr-egeria-outbox"
-# EGERIA_ENGINE_HOST="qs-engine-host"
-# EGERIA_ENGINE_HOST_URL="https://localhost:9443"
-# EGERIA_GLOSSARY_PATH="glossary"
-# EGERIA_INTEGRATION_DAEMON="qs-integration-daemon"
-# EGERIA_INTEGRATION_DAEMON_URL="https://localhost:9443"
-# EGERIA_JUPYTER="True"
-# EGERIA_KAFKA="localhost:9192"
-# EGERIA_MERMAID_FOLDER="mermaid_graphs"
-# EGERIA_METADATA_STORE="qs-metadata-store"
-# EGERIA_PLATFORM_URL="https://localhost:9443"
-# EGERIA_VIEW_SERVER="qs-view-server"
-# EGERIA_VIEW_SERVER_URL="https://localhost:9443"
-# PYEGERIA_PUBLISHING_ROOT="/dr-egeria-outbox"
-# PYEGERIA_ROOT_PATH="~/localGit/egeria-v5-3/egeria-python"
-# PYEGERIA_CONSOLE_WIDTH=280
-
-# EGERIA_USER_NAME=
-# EGERIA_USER_PASSWORD=
-# EGERIA_HOME_COLLECTION="myHome"
-# EGERIA_HOME_GLOSSARY_NAME="Egeria-Markdown"
-# EGERIA_LOCAL_QUALIFIER="myLocal"
+# Preferred variable name
+EGERIA_USER=erinoverview
+# Deprecated alias kept for external environments; not used by loader
+# EGERIA_USER_NAME=erinoverview
+EGERIA_USER_PASSWORD=secret
+EGERIA_HOME_COLLECTION="myHome"
+EGERIA_HOME_GLOSSARY_NAME="Egeria-Markdown"
+EGERIA_LOCAL_QUALIFIER="myLocal"
 
 
-# PYEGERIA_CONSOLE_FILTER_LEVELS="ERROR"
-# PYEGERIA_CONSOLE_LOGGING_ENABLED="pyegeria"
-# PYEGERIA_CONSOLE_LOG_LVL="INFO"
-# PYEGERIA_ENABLE_LOGGING="False"
-# PYEGERIA_FILE_LOG_LVL="INFO"
-# PYEGERIA_LOG_DIRECTORY='logs'
-# PYEGERIA_LOGGING_CONSOLE_FORMAT=
-# PYEGERIA_LOGGING_FILE_FORMAT=
+PYEGERIA_CONSOLE_FILTER_LEVELS="ERROR"
+PYEGERIA_CONSOLE_LOGGING_ENABLED="pyegeria"
+PYEGERIA_CONSOLE_LOG_LVL="ERROR"
+PYEGERIA_ENABLE_LOGGING="False"
+PYEGERIA_FILE_LOG_LVL="INFO"
+PYEGERIA_LOG_DIRECTORY='logs'
+PYEGERIA_LOGGING_CONSOLE_FORMAT=
+PYEGERIA_LOGGING_FILE_FORMAT=
 
-# PYEGERIA_DEBUG_MODE="False"
-# PYEGERIA_ENABLE_LOGGER_CATCH="False"
-# PYEGERIA_TIMEOUT_SECONDS=30
+PYEGERIA_DEBUG_MODE="False"
+PYEGERIA_ENABLE_LOGGER_CATCH="False"
+PYEGERIA_TIMEOUT_SECONDS=30

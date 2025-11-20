@@ -1096,8 +1096,8 @@ def generate_output(elements: Union[Dict, List[Dict]],
         search_string = "All"
 
     # Set the output format to DICT to return values to table display
-    if output_format == "TABLE":
-        output_format = "DICT"
+    # if output_format == "TABLE":
+    #     output_format = "DICT"
 
     # Generate output based on format
     if output_format == 'MERMAID':
@@ -1118,7 +1118,7 @@ def generate_output(elements: Union[Dict, List[Dict]],
         # Convert the markdown to HTML
         return markdown_to_html(report_output)
 
-    elif output_format == 'DICT':
+    elif output_format in ['DICT','TABLE']:
         return generate_entity_dict(
             elements=elements,
             extract_properties_func=extract_properties_func,

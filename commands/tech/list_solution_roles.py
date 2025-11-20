@@ -18,35 +18,26 @@ from rich.panel import Panel
 from rich.prompt import Prompt
 from rich.table import Table
 from rich.text import Text
-from rich.tree import Tree
-
 from pyegeria import (
-    InvalidParameterException,
-    ProjectManager,
-    PropertyServerException,
-    UserNotAuthorizedException,
+    PyegeriaException,
+    print_basic_exception,
+    SolutionArchitect,
+    settings, load_app_config, pretty_print_config,
+    config_logging,
     save_mermaid_html,
 )
-from pyegeria._exceptions import print_exception_response
-from pyegeria.mermaid_utilities import EGERIA_MERMAID_FOLDER
-from pyegeria.solution_architect import SolutionArchitect
 
-disable_ssl_warnings = True
-EGERIA_METADATA_STORE = os.environ.get("EGERIA_METADATA_STORE", "active-metadata-store")
-EGERIA_KAFKA_ENDPOINT = os.environ.get("KAFKA_ENDPOINT", "localhost:9092")
-EGERIA_PLATFORM_URL = os.environ.get("EGERIA_PLATFORM_URL", "https://localhost:9443")
-EGERIA_VIEW_SERVER = os.environ.get("EGERIA_VIEW_SERVER", "qs-view-server")
-EGERIA_VIEW_SERVER_URL = os.environ.get(
-    "EGERIA_VIEW_SERVER_URL", "https://localhost:9443"
-)
-EGERIA_INTEGRATION_DAEMON = os.environ.get("EGERIA_INTEGRATION_DAEMON", "integration-daemon")
-EGERIA_ADMIN_USER = os.environ.get("ADMIN_USER", "garygeeke")
-EGERIA_ADMIN_PASSWORD = os.environ.get("ADMIN_PASSWORD", "secret")
+
+app_config = settings.Environment
+config_path = os.path.join(app_config.pyegeria_config_directory, app_config.pyegeria_config_file)
+
 EGERIA_USER = os.environ.get("EGERIA_USER", "erinoverview")
 EGERIA_USER_PASSWORD = os.environ.get("EGERIA_USER_PASSWORD", "secret")
-EGERIA_JUPYTER = bool(os.environ.get("EGERIA_JUPYTER", "False"))
-EGERIA_WIDTH = int(os.environ.get("EGERIA_WIDTH", "150"))
-EGERIA_MERMAID_FOLDER = os.environ.get("EGERIA_MERMAID_FOLDER", "work/mermaid_graphs")
+EGERIA_MERMAID_FOLDER = os.path.join(app_config.pyegeria_root, app_config.egeria_mermaid_folder)
+conf = load_app_config(config_path)
+# print(f"Loading config from {config_path} and mermaid folder is {EGERIA_MERMAID_FOLDER}")
+console = Console(width = app_config.console_width)
+config_logging()
 
 
 def solution_role_list(
@@ -55,8 +46,8 @@ def solution_role_list(
     platform_url: str,
     user: str,
     user_password: str,
-    jupyter: bool = EGERIA_JUPYTER,
-    width: int = EGERIA_WIDTH,
+    jupyter: bool = app_config.egeria_jupyter,
+    width: int = app_config.console_width,
     timeout: int = 30,
 ):
     """A Supply Chain viewer"""
@@ -152,11 +143,9 @@ def solution_role_list(
             console.print(generate_table())
 
     except (
-        InvalidParameterException,
-        PropertyServerException,
-        UserNotAuthorizedException,
+        PyegeriaException
     ) as e:
-        print_exception_response(e)
+        print_basic_exception(e)
 
 
 def main():
@@ -168,8 +157,8 @@ def main():
     parser.add_argument("--password", help="User Password")
     args = parser.parse_args()
 
-    server = args.server if args.server is not None else EGERIA_VIEW_SERVER
-    url = args.url if args.url is not None else EGERIA_PLATFORM_URL
+    server = args.server if args.server is not None else app_config.egeria_view_server
+    url = args.url if args.url is not None else app_config.egeria_view_server_url
     userid = args.userid if args.userid is not None else EGERIA_USER
     user_pass = args.password if args.password is not None else EGERIA_USER_PASSWORD
 

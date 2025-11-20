@@ -53,7 +53,7 @@ from commands.tech.list_solution_components import solution_component_list
 from commands.tech.list_solution_roles import solution_role_list
 from commands.tech.list_tech_templates import display_templates_spec
 from commands.tech.list_valid_metadata_values import display_metadata_values
-from commands.tech.generic_actions import delete_element
+from commands.tech.element_actions import delete_element
 
 @tui()
 @click.version_option("0.0.1", prog_name="egeria_ops")
@@ -691,15 +691,7 @@ def list_element_info(ctx):
 def get_element_info(ctx, om_type):
     """Display graph of elements for an Open Metadata Type"""
     c = ctx.obj
-    display_elements(
-        om_type,
-        c.view_server,
-        c.view_server_url,
-        c.userid,
-        c.password,
-        c.jupyter,
-        c.width,
-    )
+    display_elements(om_type, c.view_server, c.view_server_url, c.userid, c.password, c.jupyter, c.width)
 
 
 @show_elements.command("elements")
@@ -759,15 +751,7 @@ def list_supply_chains(ctx, search_string):
 def list_blueprints(ctx, search_string):
     """Display solution blueprints"""
     c = ctx.obj
-    blueprint_list(
-        search_string,
-        c.view_server,
-        c.view_server_url,
-        c.userid,
-        c.password,
-        c.jupyter,
-        c.width,
-    )
+    blueprint_list(search_string, c.view_server, c.view_server_url, c.userid, c.password, c.jupyter, c.width)
 
 
 @show_supply_chains.command("solution-roles")
@@ -793,15 +777,7 @@ def list_solution_roles(ctx, search_string):
 def list_solution_components(ctx, search_string):
     """Display solution componentss"""
     c = ctx.obj
-    solution_component_list(
-        search_string,
-        c.view_server,
-        c.view_server_url,
-        c.userid,
-        c.password,
-        c.jupyter,
-        c.width,
-    )
+    solution_component_list(search_string, c.view_server, c.view_server_url, c.userid, c.password, c.jupyter, c.width)
 
 
 #

@@ -10,8 +10,8 @@ The first capabilities are around Egeria's platform services used to start and s
 the server platform and servers.
 
 """
-# from .load_config import load_app_config, get_app_config
-# from .logging_configuration import config_logging, init_logging
+from .config import load_app_config, get_app_config,pretty_print_config
+from .logging_configuration import config_logging, init_logging
 from ._globals import (default_time_out, disable_ssl_warnings, enable_ssl_check,
                        is_debug, max_paging_size, NO_ELEMENTS_FOUND, NO_ASSETS_FOUND, NO_SERVERS_FOUND,
                        NO_CATALOGS_FOUND, NO_GLOSSARIES_FOUND, NO_TERMS_FOUND, NO_CATEGORIES_FOUND, NO_ELEMENT_FOUND,

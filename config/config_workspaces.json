@@ -1,6 +1,6 @@
 {
         "Environment": {
-                "Pyegeria Root": "~/localGit/egeria-v5-3/egeria-python",
+                "Pyegeria Root": "/home/jovyan",
                 "Egeria Kafka Endpoint": "host.docker.internal:9192",
                 "Egeria Jupyter": true,
                 "Dr.Egeria Outbox": "distribution-hub/dr-egeria-outbox",

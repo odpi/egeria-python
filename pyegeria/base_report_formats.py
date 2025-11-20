@@ -115,8 +115,9 @@ def combine_format_set_dicts(dict1: dict, dict2: dict) -> dict:
 
 # Get the configured value for the user format sets directory
 
-# USER_FORMAT_SETS_DIR = os.path.expanduser(settings.Environment.pyegeria_user_format_sets_dir)
-USER_FORMAT_SETS_DIR = os.getenv("PYEGERIA_USER_FORMAT_SETS_DIR", "./")
+# USER_FORMAT_SETS_DIR = os.path.expanduser(settings.Environment.pyegeria_user_report_specs_dir)
+# Prefer new env var, fallback to old for backward compatibility
+USER_FORMAT_SETS_DIR = os.getenv("PYEGERIA_USER_REPORT_SPECS_DIR", os.getenv("PYEGERIA_USER_FORMAT_SETS_DIR", "./"))
 # Constants
 MD_SEPARATOR = "\n---\n\n"
 
@@ -167,7 +168,7 @@ COMMON_FORMATS_ALL = Format(
 
 MERMAID_FORMAT = Format(
     types=["MERMAID"],
-    attributes=[Attribute(name='Mermaid', key='mermaid')]
+    attributes=[Attribute(name='Mermaid', key='mermaidGraph')]
 )
 
 EXT_REF_COLUMNS = COMMON_COLUMNS + [
@@ -232,7 +233,7 @@ COLLECTION_REPORT = Format(
     types=["REPORT"],
     attributes=COLLECTIONS_MEMBERS_COLUMNS + [
         Column(name="GUID", key='GUID'),
-        Column(name="Mermaid", key='mermaid'),
+        Column(name="Mermaid", key='mermaidGraph'),
     ],
 )
 
@@ -491,7 +492,46 @@ base_report_specs = FormatSetDict({
                     Column(name="GUID", key='guid'),
                     Column(name="Description", key='description'),
                     Column(name="Catalog Template Placeholders", key='catalog_template_specs'),
-                    Column(name="Reference URL", key='ref_url'),
+                ],
+            )
+        ],
+        action=ActionParameter(
+            function="Client2.get_tech_type_detail",
+            optional_params=OPTIONAL_FILTER_PARAMS,
+            required_params=["filter"],
+            spec_params={},
+        )
+    ),
+    "Tech-Type-Processes": FormatSet(
+        target_type="TechTypeDetail",
+        heading="Technology Type Processes",
+        description="Governance Processes for a Tech Type",
+        annotations={},  # No specific annotations
+        family="Automated Curation",
+        formats=[
+            Format(
+                types=["REPORT","LIST","FORM","MD", "TABLE"],
+                attributes=[
+                    Column(name='Display Name', key='display_name'),
+                    Column(name="Qualified Name", key='qualified_name'),
+                    Column(name="Governance Processes", key='governance_processes'),
+                ],
+            ),
+            Format(
+                types=["DICT"],
+                attributes=[
+                    Column(name='Display Name', key='display_name'),
+                    Column(name="Qualified Name", key='qualified_name'),
+                    Column(name="Governance Processes", key='governance_processes_d'),
+                    Column(name="Mermaid", key='mermaidGraph'),
+                    Column(name="Mermaid Specification", key='specificationMermaidGraph'),
+                ],
+            ),
+            Format(
+                types=["MERMAID"],
+                attributes=[
+                    Column(name="Mermaid", key='mermaidGraph'),
+                    Column(name="Mermaid Specification", key='specificationMermaidGraph'),
                 ],
             )
         ],
@@ -841,13 +881,13 @@ base_report_specs = FormatSetDict({
                 types=["REPORT", "HTML"],
                 attributes=COLLECTIONS_MEMBERS_COLUMNS + [
                     Column(name="GUID", key='GUID'),
-                    Column(name="Mermaid", key='mermaid'),
+                    Column(name="Mermaid", key='mermaidGraph'),
                     Column(name="Solution Blueprint Mermaid Graph", key='solutionBlueprintMermaidGraph'),
                 ]),
             Format(
                 types=["MERMAID"],
                 attributes=[
-                    Column(name="Mermaid", key='mermaid'),
+                    Column(name="Mermaid", key='mermaidGraph'),
                     Column(name="Solution Blueprint Mermaid Graph", key='solutionBlueprintMermaidGraph'),
                 ])
         ],
@@ -874,12 +914,12 @@ base_report_specs = FormatSetDict({
                 types=["REPORT", "HTML"],
                 attributes=COLLECTIONS_MEMBERS_COLUMNS + [
                     Column(name="GUID", key='GUID'),
-                    Column(name="Mermaid", key='mermaid'),
+                    Column(name="Mermaid", key='mermaidGraph'),
                 ]),
             Format(
                 types=["MERMAID"],
                 attributes=[
-                    Column(name="Mermaid", key='mermaid'),
+                    Column(name="Mermaid", key='mermaidGraph'),
                 ])
         ],
         action=ActionParameter(
@@ -1075,10 +1115,10 @@ base_report_specs = FormatSetDict({
         annotations={"wikilinks": ["[[Data Specification]]"]},
         family="Data Designer",
         formats=[
-            Format(types=["REPORT", "HTML"], attributes=COMMON_COLUMNS + [Column(name="Mermaid", key='mermaid'), ]),
+            Format(types=["REPORT", "HTML"], attributes=COMMON_COLUMNS + [Column(name="Mermaid", key='mermaidGraph'), ]),
             Format(types=["MERMAID"], attributes=[
                 Column(name="Display Name", key='display_name'),
-                Column(name="Mermaid", key='mermaid'),
+                Column(name="Mermaid", key='mermaidGraph'),
             ]),
             Format(types=["ALL"], attributes=COMMON_COLUMNS)],  # Reusing common formats and columns
         action=ActionParameter(
@@ -1109,7 +1149,7 @@ base_report_specs = FormatSetDict({
                                                          Column(name="In Data Specifications", key='in_data_spec'),
                                                          Column(name="In Data Dictionaries", key='in_data_dictionary'),
                                                          Column(name="Member Data Fields", key='member_data_fields'),
-                                                         Column(name="Mermaid", key='mermaid')
+                                                         Column(name="Mermaid", key='mermaidGraph')
                                                      ]
                         )],
         action=ActionParameter(
@@ -1134,7 +1174,7 @@ base_report_specs = FormatSetDict({
                              Column(name="In Data Structure", key='in_data_structure'),
                              Column(name="In Data Dictionaries", key='in_data_dictionary'),
                              Column(name="Member Data Fields", key='member_data_fields'),
-                             Column(name="Mermaid", key='mermaid')
+                             Column(name="Mermaid", key='mermaidGraph')
                          ]
                         )],
 
@@ -1163,7 +1203,7 @@ base_report_specs = FormatSetDict({
                          Column(name="In Data Dictionaries", key='in_data_dictionary'),
                          Column(name="Containing Data Class", key='containing_data_class'),
                          Column(name="Specializes", key='specializes_data_class'),
-                         Column(name="Mermaid", key='mermaid')
+                         Column(name="Mermaid", key='mermaidGraph')
                      ]
                         )],
 
@@ -1226,10 +1266,10 @@ base_report_specs = FormatSetDict({
                                                             Column(name='Sources', key='reference_sources'),
                                                             Column(name='License', key='license'),
                                                             Column(name='Qualified Name', key='qualified_name'),
-                                                            Column(name='Mermaid', key='mermaid'),
+                                                            Column(name='Mermaid', key='mermaidGraph'),
                                                             ]),
 
-                                         Format(types=["MERMAID"], attributes=[Column(name='Mermaid', key='mermaid')]),
+                                         Format(types=["MERMAID"], attributes=[Column(name='Mermaid', key='mermaidGraph')]),
                                      ],
                                      action=ActionParameter(function='ExternalReference.find_external_references',
                                                             required_params=['search_string'],
