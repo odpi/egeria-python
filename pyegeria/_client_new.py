@@ -646,6 +646,39 @@ class Client2(BaseClient):
 
         return elements
 
+    def _get_element_by_guid_(self, element_guid: str) -> dict | str:
+        """
+            Simplified, internal version of get_element_by_guid found in Classification Manager.
+            Retrieve an element by its guid.
+
+        Parameters
+        ----------
+        element_guid: str
+            - unique identifier for the element
+
+        Returns
+        -------
+        dict | str
+            Returns a string if no element found; otherwise a dict of the element.
+
+        Raises
+        ------
+        InvalidParameterException
+            one of the parameters is null or invalid or
+        PropertyServerException
+            There is a problem adding the element properties to the metadata repository or
+        UserNotAuthorizedException
+            the requesting user is not authorized to issue this request.
+        """
+        loop = asyncio.get_event_loop()
+        result = loop.run_until_complete(
+            self._async_get_element_by_guid_(
+                element_guid
+            )
+        )
+        return result
+
+
     async def _async_get_related_elements_with_property_value(
             self,
             element_guid: str,

@@ -138,7 +138,7 @@ class AutomatedCuration(Client2):
         # Mermaid graph support if present
         mermaid_val = element.get("mermaidGraph", "") or ""
         for column in columns_list:
-            if column.get("key") == "mermaid":
+            if column.get("key") == "mermaidGraph":
                 column["value"] = mermaid_val
                 break
             elif column.get("key") == "catalog_template_specs":

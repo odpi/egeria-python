@@ -21,27 +21,19 @@ from rich.text import Text
 from rich.tree import Tree
 
 from pyegeria import (
-    ClassificationManager,
-    Client,
-    InvalidParameterException,
-    PropertyServerException,
-    UserNotAuthorizedException,
+    Client2,
+    PyegeriaException,
+    print_basic_exception,
+    settings,
+    config_logging
 )
 
-EGERIA_METADATA_STORE = os.environ.get("EGERIA_METADATA_STORE", "active-metadata-store")
-EGERIA_KAFKA_ENDPOINT = os.environ.get("KAFKA_ENDPOINT", "localhost:9092")
-EGERIA_PLATFORM_URL = os.environ.get("EGERIA_PLATFORM_URL", "https://localhost:9443")
-EGERIA_VIEW_SERVER = os.environ.get("EGERIA_VIEW_SERVER", "view-server")
-EGERIA_VIEW_SERVER_URL = os.environ.get(
-    "EGERIA_VIEW_SERVER_URL", "https://localhost:9443"
-)
-EGERIA_INTEGRATION_DAEMON = os.environ.get("EGERIA_INTEGRATION_DAEMON", "integration-daemon")
-EGERIA_ADMIN_USER = os.environ.get("ADMIN_USER", "garygeeke")
-EGERIA_ADMIN_PASSWORD = os.environ.get("ADMIN_PASSWORD", "secret")
 EGERIA_USER = os.environ.get("EGERIA_USER", "erinoverview")
 EGERIA_USER_PASSWORD = os.environ.get("EGERIA_USER_PASSWORD", "secret")
-EGERIA_JUPYTER = bool(os.environ.get("EGERIA_JUPYTER", "False"))
-EGERIA_WIDTH = int(os.environ.get("EGERIA_WIDTH", "200"))
+
+app_config = settings.Environment
+config_logging()
+console = Console(width=app_config.console_width)
 
 
 def display_guid(
@@ -50,34 +42,25 @@ def display_guid(
     url: str,
     username: str,
     user_password: str,
-    jupyter: bool = EGERIA_JUPYTER,
-    width: int = EGERIA_WIDTH,
+    jupyter: bool = app_config.egeria_jupyter,
+    width: int = app_config.console_width,
 ):
-    c = Client(server, url, user_id=username)
-    url = (
-        f"{url}/servers/{server}/open-metadata/repository-services/users/{username}/"
-        f"instances/entity/{guid}"
-    )
-    # c =  ClassificationManager(server, url)
-
+    c = Client2(server, url, user_id=username)
     bearer_token = c.create_egeria_bearer_token(username, user_password)
 
     try:
         console = Console(
             width=width, force_terminal=not jupyter, style="bold white on black"
         )
-        r = c.make_request("GET", url)
-        if r.status_code == 200:
-            pass
-        # r = c.retrieve_instance_for_guid(guid)
-        e = r.json()["entity"]
-        p = e["properties"]["instanceProperties"]
+        r = c._get_element_by_guid_(guid)
+        el = r["elementHeader"]
+        p = r["properties"]
 
-        type_name = Text(f"Type is: {e['type']['typeDefName']}")
+        type_name = Text(f"Type is: {el['type']['typeName']}")
         metadataCollection = Text(
-            f"Metadadata Collection: {e['metadataCollectionName']}"
+            f"Metadadata Collection: {el['origin']['homeMetadataCollectionName']}"
         )
-        created = Text(f"Created at: {e['createTime']}")
+        created = Text(f"Created at: {el['versions']['createTime']}")
         details = Text(f"Details: {json.dumps(p, indent=2)}")
 
         tree = Tree(
@@ -95,9 +78,7 @@ def display_guid(
         c.close_session()
 
     except (
-        InvalidParameterException,
-        PropertyServerException,
-        UserNotAuthorizedException,
+        PyegeriaException,
         ValueError,
     ) as e:
         if type(e) is str:
@@ -117,14 +98,14 @@ def main():
     # parser.add_argument("--sponsor", help="Name of sponsor to search")
     args = parser.parse_args()
 
-    server = args.server if args.server is not None else EGERIA_METADATA_STORE
-    url = args.url if args.url is not None else EGERIA_PLATFORM_URL
+    server = args.server if args.server is not None else app_config.egeria_view_server
+    url = args.url if args.url is not None else app_config.egeria_view_server_url
     userid = args.userid if args.userid is not None else EGERIA_USER
     user_pass = args.password if args.password is not None else EGERIA_USER_PASSWORD
 
     try:
         guid = Prompt.ask("Enter the GUID to retrieve", default=None)
-        display_guid(guid, server, url, userid, user_pass)
+        display_guid(guid.strip(), server, url, userid, user_pass)
     except KeyboardInterrupt:
         pass
 

@@ -330,7 +330,7 @@ def exec_report_spec(
         desc = get_report_spec_description(format_set_name)
         preamble = f"# {heading}\n{desc}\n\n" if heading and desc else ""
 
-        if output_format in {"DICT", "JSON", "ALL"}:
+        if output_format in {"DICT", "JSON", "ALL", "TABLE"}:
             # Return raw data (list/dict/any) — do not stringify here
             return {"kind": "json", "data": result}
         elif output_format in {"REPORT", "MD", "FORM"}:

@@ -110,8 +110,8 @@ def list_generic(
             raise ValueError(f"Missing required parameter(s): {', '.join(missing)}")
 
     # Map only TABLE to DICT for data retrieval; pass through other formats
-    mapped_format = "DICT" if ofmt == "TABLE" else ofmt
-
+    # mapped_format = "DICT" if ofmt == "TABLE" else ofmt
+    mapped_format = ofmt
     try:
     # Execute
         result = exec_report_spec(
