@@ -14,7 +14,7 @@ from pyegeria.registered_info import RegisteredInfo
 from pyegeria.runtime_manager import RuntimeManager
 from pyegeria.solution_architect import SolutionArchitect
 from pyegeria.template_manager_omvs import TemplateManager
-from pyegeria.valid_metadata_omvs import ValidMetadataManager
+from pyegeria.valid_metadata import ValidMetadataManager
 from pyegeria.governance_officer import GovernanceOfficer
 from pyegeria.collection_manager import CollectionManager
 from pyegeria.external_links import ExternalReferences

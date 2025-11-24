@@ -19,12 +19,6 @@ from .ops.monitor_daemon_status import display_integration_daemon_status
 from .ops.table_integ_daemon_status import (
     display_integration_daemon_status as table_integ_daemon_status,
 )
-from .tech.list_elements_by_property_value import EGERIA_WIDTH
 
 
-def list_integration_daemon_status(
-    search_list: str, width: int = EGERIA_WIDTH, sort: bool = True
-):
-    table_integ_daemon_status(
-        search_list=search_list, paging=True, width=width, sort=sort
-    )
+

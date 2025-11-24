@@ -65,7 +65,7 @@ from .runtime_manager import RuntimeManager
 from .server_operations import ServerOps
 from .solution_architect import SolutionArchitect
 from .utils import body_slimmer,to_pascal_case, to_camel_case, camel_to_title_case
-from .valid_metadata_omvs import ValidMetadataManager
+from .valid_metadata import ValidMetadataManager
 from .x_action_author_omvs import ActionAuthor
 from .template_manager_omvs import TemplateManager
 from .data_designer import DataDesigner

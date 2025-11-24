@@ -17,27 +17,24 @@ from rich.console import Console
 from rich.table import Table
 
 from pyegeria import (
-    InvalidParameterException,
-    PropertyServerException,
     RegisteredInfo,
-    UserNotAuthorizedException,
-    print_exception_response,
+    print_basic_exception,
+    PyegeriaException,
+    settings, load_app_config, pretty_print_config,
+    config_logging,
+    save_mermaid_html,
 )
 
-EGERIA_METADATA_STORE = os.environ.get("EGERIA_METADATA_STORE", "active-metadata-store")
-EGERIA_KAFKA_ENDPOINT = os.environ.get("KAFKA_ENDPOINT", "localhost:9092")
-EGERIA_PLATFORM_URL = os.environ.get("EGERIA_PLATFORM_URL", "https://localhost:9443")
-EGERIA_VIEW_SERVER = os.environ.get("EGERIA_VIEW_SERVER", "view-server")
-EGERIA_VIEW_SERVER_URL = os.environ.get(
-    "EGERIA_VIEW_SERVER_URL", "https://localhost:9443"
-)
-EGERIA_INTEGRATION_DAEMON = os.environ.get("EGERIA_INTEGRATION_DAEMON", "integration-daemon")
-EGERIA_ADMIN_USER = os.environ.get("ADMIN_USER", "garygeeke")
-EGERIA_ADMIN_PASSWORD = os.environ.get("ADMIN_PASSWORD", "secret")
+app_config = settings.Environment
+config_path = os.path.join(app_config.pyegeria_config_directory, app_config.pyegeria_config_file)
+
 EGERIA_USER = os.environ.get("EGERIA_USER", "erinoverview")
 EGERIA_USER_PASSWORD = os.environ.get("EGERIA_USER_PASSWORD", "secret")
-EGERIA_JUPYTER = bool(os.environ.get("EGERIA_JUPYTER", "False"))
-EGERIA_WIDTH = int(os.environ.get("EGERIA_WIDTH", "200"))
+EGERIA_MERMAID_FOLDER = os.path.join(app_config.pyegeria_root, app_config.egeria_mermaid_folder)
+conf = load_app_config(config_path)
+# print(f"Loading config from {config_path} and mermaid folder is {EGERIA_MERMAID_FOLDER}")
+console = Console(width=app_config.console_width)
+config_logging()
 
 
 def display_asset_types(
@@ -45,8 +42,8 @@ def display_asset_types(
     url: str,
     username: str,
     user_password: str,
-    jupyter: bool = EGERIA_JUPYTER,
-    width: int = EGERIA_WIDTH,
+    jupyter: bool = app_config.egeria_jupyter,
+    width: int = app_config.console_width,
 ):
     r_client = RegisteredInfo(server, url, username)
     token = r_client.create_egeria_bearer_token(username, user_password)
@@ -90,11 +87,9 @@ def display_asset_types(
             console.print(generate_table())
 
     except (
-        InvalidParameterException,
-        PropertyServerException,
-        UserNotAuthorizedException,
+        PyegeriaException
     ) as e:
-        print_exception_response(e)
+        print_basic_exception(e)
         assert e.related_http_code != "200", "Invalid parameters"
     finally:
         r_client.close_session()
@@ -109,8 +104,8 @@ def main():
 
     args = parser.parse_args()
 
-    server = args.server if args.server is not None else EGERIA_VIEW_SERVER
-    url = args.url if args.url is not None else EGERIA_PLATFORM_URL
+    server = args.server if args.server is not None else app_config.egeria_view_server
+    url = args.url if args.url is not None else app_config.egeria_platform_url
     userid = args.userid if args.userid is not None else EGERIA_USER
     user_pass = args.password if args.password is not None else EGERIA_USER_PASSWORD
     # guid = args.guid if args.guid is not None else None

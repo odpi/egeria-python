@@ -5053,7 +5053,6 @@ class CollectionManager(Client2):
         """
         if body is None:
             body = {"class": "DeleteElementRequestBody"}
-        loop = asyncio.get_event_loop()
         url = f"{self.collection_command_root}/{collection_guid}/delete"
         await self._async_delete_element_request(url, body, cascade)
         logger.info(f"Deleted collection {collection_guid} with cascade {cascade}")

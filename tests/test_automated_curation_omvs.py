@@ -974,7 +974,7 @@ class TestAutomatedCuration:
             element_guid = "731eb432-e9e9-482a-86fc-0a7407ea78e6"
             rel_guid = "19a5fc39-f928-4a78-8637-ade37e0c5598"
             start_time = time.perf_counter()
-            target_relationship = ""
+            target_relationship = "8f730d8e-96a4-44ca-ad6f-2888c181ec3b"
             response = a_client.get_catalog_target(target_relationship)
             duration = time.perf_counter() - start_time
             duration = time.perf_counter() - start_time

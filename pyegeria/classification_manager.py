@@ -2429,8 +2429,10 @@ class ClassificationManager(Client2):
             return NO_ELEMENTS_FOUND
         if output_format != 'JSON':  # return a simplified markdown representation
             logger.info(f"Found elements, output format: {output_format} and report_spec: {report_spec}")
-            return self._generate_referenceable_output(elements, "Referenceable",
-                                                       output_format, report_spec)
+            return self._generate_referenceable_output(elements = elements, filter = metadata_element_type_name,
+                                                       element_type_name = "Referenceable", output_format=output_format,
+                                                       report_spec=report_spec,
+                                                       )
         return elements
 
 
@@ -3540,7 +3542,7 @@ class ClassificationManager(Client2):
             "POST", url, body_slimmer(body), time_out=time_out
         )
         elements = response.json().get("elements", NO_ELEMENTS_FOUND)
-        if type(elements) is list and len(elements) == 0 and property_value is not None:
+        if (type(elements) is list and len(elements) == 0 and property_value is not None) or type(elements) is str:
             return NO_ELEMENTS_FOUND
         if output_format != 'JSON':  # return a simplified markdown representation
             logger.info(f"Found elements, output format: {output_format} and report_spec: {report_spec}")

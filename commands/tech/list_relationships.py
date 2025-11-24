@@ -21,29 +21,18 @@ from rich.table import Table
 
 from pyegeria import (
     ClassificationManager,
-    InvalidParameterException,
-    PropertyServerException,
-    UserNotAuthorizedException,
-    max_paging_size,
+    PyegeriaException,
+    print_basic_exception,
+    settings,
+    config_logging
 )
 
-EGERIA_METADATA_STORE = os.environ.get("EGERIA_METADATA_STORE", "active-metadata-store")
-EGERIA_KAFKA_ENDPOINT = os.environ.get("KAFKA_ENDPOINT", "localhost:9092")
-EGERIA_PLATFORM_URL = os.environ.get("EGERIA_PLATFORM_URL", "https://localhost:9443")
-EGERIA_VIEW_SERVER = os.environ.get("EGERIA_VIEW_SERVER", "view-server")
-EGERIA_VIEW_SERVER_URL = os.environ.get(
-    "EGERIA_VIEW_SERVER_URL", "https://localhost:9443"
-)
-EGERIA_INTEGRATION_DAEMON = os.environ.get("EGERIA_INTEGRATION_DAEMON", "integration-daemon")
-EGERIA_ADMIN_USER = os.environ.get("ADMIN_USER", "garygeeke")
-EGERIA_ADMIN_PASSWORD = os.environ.get("ADMIN_PASSWORD", "secret")
 EGERIA_USER = os.environ.get("EGERIA_USER", "erinoverview")
 EGERIA_USER_PASSWORD = os.environ.get("EGERIA_USER_PASSWORD", "secret")
-EGERIA_JUPYTER = bool(os.environ.get("EGERIA_JUPYTER", "False"))
-EGERIA_WIDTH = int(os.environ.get("EGERIA_WIDTH", "200"))
 
-
-disable_ssl_warnings = True
+app_config = settings.Environment
+config_logging()
+console = Console(width=app_config.console_width)
 
 
 def list_relationships(
@@ -53,11 +42,11 @@ def list_relationships(
     username: str,
     user_password: str,
     time_out: int = 60,
-    jupyter: bool = EGERIA_JUPYTER,
-    width: int = EGERIA_WIDTH,
+    jupyter: bool = app_config.egeria_jupyter,
+    width: int = app_config.console_width,
 ):
     console = Console(width=width, force_terminal=not jupyter, soft_wrap=True)
-    if (search_string is None) or ((len(search_string) < 3)) and (search_string != "*"):
+    if (search_string is None) or (len(search_string) < 3) and (search_string != "*"):
         raise ValueError(
             "Invalid Search String - must be greater than four characters long"
         )
@@ -88,8 +77,8 @@ def list_relationships(
         table.add_column("End 2 Type")
         table.add_column("Properties", min_width=40)
 
-        rel_list = g_client.get_relationships(search_string, page_size=max_paging_size, time_out=time_out,
-                                              output_format=JSON)
+        rel_list = g_client.get_relationships(search_string, page_size=0, time_out=time_out,
+                                              output_format="JSON")
         if type(rel_list) is str:
             return table
 
@@ -126,21 +115,17 @@ def list_relationships(
         return table
 
     try:
-        # with Live(generate_table(), refresh_per_second=4, screen=True) as live:
-        #     while True:
-        #         time.sleep(2)
-        #         live.update(generate_table())
-
         with console.pager(styles=True):
             console.print(generate_table(search_string), soft_wrap=True)
 
     except (
-        InvalidParameterException,
-        PropertyServerException,
-        UserNotAuthorizedException,
+        PyegeriaException
     ) as e:
-        console.print_exception()
-        sys.exit(1)
+        if e.response_egeria_msg_id == "OMAG-COMMON-400-018":
+            print("\n\n==>Invalid Relationship Type\n\n")
+        else:
+            print_basic_exception(e)
+            assert False, "Invalid request"
 
     except ValueError as e:
         console.print(
@@ -159,8 +144,8 @@ def main():
 
     args = parser.parse_args()
 
-    server = args.server if args.server is not None else EGERIA_VIEW_SERVER
-    url = args.url if args.url is not None else EGERIA_PLATFORM_URL
+    server = args.server if args.server is not None else app_config.egeria_view_server
+    url = args.url if args.url is not None else app_config.egeria_platform_url
     userid = args.userid if args.userid is not None else EGERIA_USER
     user_pass = args.password if args.password is not None else EGERIA_USER_PASSWORD
     time_out = args.time_out if args.time_out is not None else 60
