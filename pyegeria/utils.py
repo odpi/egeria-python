@@ -181,6 +181,36 @@ def flatten_dict_to_string(d: dict) -> str:
         raise Exception("Error flattening dictionary") from e
 # The decorator logic, which applies @logger.catch dynamically
 
+def dict_to_markdown_list(data: dict, level: int = 0) -> str:
+    """
+    Recursively converts a dictionary into a nested markdown bullet list string.
+
+    Args:
+        data (dict): The dictionary to convert.
+        level (int): The current indentation level (default is 0).
+
+    Returns:
+        str: The markdown formatted string.
+    """
+    markdown_str = ""
+    # Standard markdown indent is often 2 or 4 spaces. Using 2 for compactness in recursion.
+    indent = "  " * level
+
+    for key, value in data.items():
+        if isinstance(value, dict):
+            markdown_str += f"{indent}* **{key}**:\n{dict_to_markdown_list(value, level + 1)}"
+        elif isinstance(value, list):
+            markdown_str += f"{indent}* **{key}**:\n"
+            for item in value:
+                if isinstance(item, dict):
+                    markdown_str += f"{indent}  * \n{dict_to_markdown_list(item, level + 2)}"
+                else:
+                    markdown_str += f"{indent}  * {item}\n"
+        else:
+            markdown_str += f"{indent}* **{key}**: {value}\n"
+
+    return markdown_str
+
 
 import json
 import re

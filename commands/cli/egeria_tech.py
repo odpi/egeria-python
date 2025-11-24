@@ -360,17 +360,8 @@ def show_elements_by_classification_by_prop(
     """Show elements by classification and property value"""
     c = ctx.obj
     if extended:
-        find_elements_by_prop_value_x(
-            om_type,
-            property_value,
-            [property_names],
-            c.view_server,
-            c.view_server_url,
-            c.userid,
-            c.password,
-            c.jupyter,
-            c.width,
-        )
+        find_elements_by_prop_value_x(om_type, property_value, [property_names], c.view_server, c.view_server_url,
+                                      c.userid, c.password, c.jupyter, c.width)
     else:
         find_elements_by_prop_value(
             om_type,
@@ -404,17 +395,8 @@ def show_elements_by_classification_by_prop(
 def show_related_elements(ctx, element_guid, om_type, rel_type):
     """Show all elements related to specified guid"""
     c = ctx.obj
-    list_related_elements(
-        element_guid,
-        om_type,
-        rel_type,
-        c.view_server,
-        c.view_server_url,
-        c.userid,
-        c.password,
-        c.jupyter,
-        c.width,
-    )
+    list_related_elements(element_guid, om_type, rel_type, c.view_server, c.view_server_url, c.userid, c.password,
+                          c.jupyter, c.width)
 
 
 @show_elements.command("related-elements_by_prop")
@@ -561,15 +543,7 @@ def show_asset_types(ctx):
 def show_registered_services(ctx, services):
     """Show information about a registered services"""
     c = ctx.obj
-    display_registered_svcs(
-        services,
-        c.view_server,
-        c.view_server_url,
-        c.userid,
-        c.password,
-        c.jupyter,
-        c.width,
-    )
+    display_registered_svcs(services, c.view_server, c.view_server_url, c.userid, c.password, c.jupyter, c.width)
 
 
 @show_info.command("relationship-types")
@@ -582,16 +556,8 @@ def show_registered_services(ctx, services):
 def show_relationship_types(ctx, rel_type):
     """Show information about the specified relationship type"""
     c = ctx.obj
-    display_relationship_types(
-        rel_type,
-        c.view_server,
-        c.view_server_url,
-        c.userid,
-        c.password,
-        False,
-        c.jupyter,
-        c.width,
-    )
+    display_relationship_types(rel_type, c.view_server, c.view_server_url, c.userid, c.password, False, c.jupyter,
+                               c.width)
 
 
 @show_tech.command("tech-templates")
@@ -734,15 +700,7 @@ def list_all_om_type_elements(ctx, om_type, extended):
 def list_supply_chains(ctx, search_string):
     """Display supply chains"""
     c = ctx.obj
-    supply_chain_viewer(
-        search_string,
-        c.view_server,
-        c.view_server_url,
-        c.userid,
-        c.password,
-        c.jupyter,
-        c.width,
-    )
+    supply_chain_viewer(search_string, c.view_server, c.view_server_url, c.userid, c.password, c.jupyter, c.width)
 
 
 @show_supply_chains.command("blueprints")

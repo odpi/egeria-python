@@ -18,27 +18,19 @@ from rich.prompt import Prompt
 from rich.table import Table
 
 from pyegeria import (
-    InvalidParameterException,
-    PropertyServerException,
-    UserNotAuthorizedException,
+    PyegeriaException,
     ValidMetadataManager,
-    print_exception_response,
+    print_basic_exception,
+    settings,
+    config_logging
 )
 
-EGERIA_METADATA_STORE = os.environ.get("EGERIA_METADATA_STORE", "active-metadata-store")
-EGERIA_KAFKA_ENDPOINT = os.environ.get("KAFKA_ENDPOINT", "localhost:9092")
-EGERIA_PLATFORM_URL = os.environ.get("EGERIA_PLATFORM_URL", "https://localhost:9443")
-EGERIA_VIEW_SERVER = os.environ.get("EGERIA_VIEW_SERVER", "view-server")
-EGERIA_VIEW_SERVER_URL = os.environ.get(
-    "EGERIA_VIEW_SERVER_URL", "https://localhost:9443"
-)
-EGERIA_INTEGRATION_DAEMON = os.environ.get("EGERIA_INTEGRATION_DAEMON", "integration-daemon")
-EGERIA_ADMIN_USER = os.environ.get("ADMIN_USER", "garygeeke")
-EGERIA_ADMIN_PASSWORD = os.environ.get("ADMIN_PASSWORD", "secret")
 EGERIA_USER = os.environ.get("EGERIA_USER", "erinoverview")
 EGERIA_USER_PASSWORD = os.environ.get("EGERIA_USER_PASSWORD", "secret")
-EGERIA_JUPYTER = bool(os.environ.get("EGERIA_JUPYTER", "False"))
-EGERIA_WIDTH = int(os.environ.get("EGERIA_WIDTH", "200"))
+
+app_config = settings.Environment
+config_logging()
+console = Console(width=app_config.console_width)
 
 
 def display_relationship_types(
@@ -48,10 +40,10 @@ def display_relationship_types(
     username: str,
     user_pass: str,
     save_output: bool = False,
-    jupyter: bool = EGERIA_JUPYTER,
-    width: int = EGERIA_WIDTH,
+    jupyter: bool = app_config.egeria_jupyter,
+    width: int = app_config.console_width,
 ):
-    p_client = ValidMetadataManager(server, url, user_id=username)
+    p_client = ValidMetadataManager(server, url, user_id=username, user_pwd=user_pass)
     token = p_client.create_egeria_bearer_token(username, user_pass)
 
     def generate_table(type_name: str) -> Table:
@@ -126,15 +118,13 @@ def display_relationship_types(
             console.save_html("projects.html")
 
     except (
-        InvalidParameterException,
-        PropertyServerException,
-        UserNotAuthorizedException,
+        PyegeriaException,
         ValueError,
     ) as e:
         if type(e) is str:
             print(e)
         else:
-            print_exception_response(e)
+            print_basic_exception(e)
 
 
 def main():
@@ -147,8 +137,8 @@ def main():
 
     args = parser.parse_args()
 
-    server = args.server if args.server is not None else EGERIA_VIEW_SERVER
-    url = args.url if args.url is not None else EGERIA_PLATFORM_URL
+    server = args.server if args.server is not None else app_config.egeria_view_server
+    url = args.url if args.url is not None else app_config.egeria_platform_url
     userid = args.userid if args.userid is not None else EGERIA_USER
     user_pass = args.password if args.password is not None else EGERIA_USER_PASSWORD
     save_output = args.save_output if args.save_output is not None else False

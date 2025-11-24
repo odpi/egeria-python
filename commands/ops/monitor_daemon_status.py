@@ -31,23 +31,8 @@ from pyegeria._exceptions import (
     print_exception_response,
 )
 
-EGERIA_METADATA_STORE = os.environ.get("EGERIA_METADATA_STORE", "active-metadata-store")
-EGERIA_KAFKA_ENDPOINT = os.environ.get("KAFKA_ENDPOINT", "localhost:9092")
-EGERIA_PLATFORM_URL = os.environ.get("EGERIA_PLATFORM_URL", "https://localhost:9443")
-EGERIA_VIEW_SERVER = os.environ.get("EGERIA_VIEW_SERVER", "view-server")
-EGERIA_VIEW_SERVER_URL = os.environ.get(
-    "EGERIA_VIEW_SERVER_URL", "https://localhost:9443"
-)
-EGERIA_INTEGRATION_DAEMON = os.environ.get(
-    "EGERIA_INTEGRATION_DAEMON", "integration-daemon"
-)
-EGERIA_INTEGRATION_DAEMON_URL = os.environ.get(
-    "EGERIA_INTEGRATION_DAEMON_URL", "https://localhost:9443"
-)
 EGERIA_USER = os.environ.get("EGERIA_USER", "erinoverview")
 EGERIA_USER_PASSWORD = os.environ.get("EGERIA_USER_PASSWORD", "secret")
-EGERIA_JUPYTER = bool(os.environ.get("EGERIA_JUPYTER", "False"))
-EGERIA_WIDTH = int(os.environ.get("EGERIA_WIDTH", 200))
 
 disable_ssl_warnings = True
 app_config = settings.Environment
@@ -62,13 +47,15 @@ def display_integration_daemon_status(
     integ_url: str = os.environ.get(
         "EGERIA_INTEGRATION_DAEMON_URL", "https://localhost:9443"
     ),
-    view_server: str = os.environ.get("EGERIA_VIEW_SERVER", "view-server"),
-    view_url: str = os.environ.get("EGERIA_VIEW_SERVER_URL", "https://localhost:9443"),
-    user: str = os.environ.get("EGERIA_USER"),
-    user_pass: str = os.environ.get("EGERIA_USER_PASSWORD"),
+    view_server: str = app_config.egeria_view_server,
+    view_url: str = app_config.egeria_view_server_url,
+    user: str = EGERIA_USER,
+    user_pass: str = EGERIA_USER_PASSWORD,
+
+    width: int = app_config.console_width,
     paging: bool = False,
-    jupyter: bool = os.environ.get("EGERIA_JUPYTER", "False"),
-    width: int = EGERIA_WIDTH,
+
+    jupyter: bool = app_config.egeria_jupyter,
     sort: bool = True,
 ) -> None:
     """Display the status of connectors running on the specified Integration Daemon OMAG Server.
@@ -253,15 +240,15 @@ def main_live(paging: bool = False) -> None:
     integ_server = (
         args.integ_server
         if args.integ_server is not None
-        else EGERIA_INTEGRATION_DAEMON
+        else app_config.egeria_integration_daemon
     )
     integ_url = (
-        args.integ_url if args.integ_url is not None else EGERIA_INTEGRATION_DAEMON_URL
+        args.integ_url if args.integ_url is not None else app_config.egeria_integration_daemon_url
     )
     view_server = (
-        args.view_server if args.view_server is not None else EGERIA_VIEW_SERVER
+        args.view_server if args.view_server is not None else app_config.egeria_view_server
     )
-    view_url = args.view_url if args.view_url is not None else EGERIA_VIEW_SERVER_URL
+    view_url = args.view_url if args.view_url is not None else app_config.egeria_view_server_url
     userid = args.userid if args.userid is not None else EGERIA_USER
     user_pass = args.password if args.password is not None else EGERIA_USER_PASSWORD
 
@@ -297,15 +284,15 @@ def main_paging(paging: bool = True) -> None:
     integ_server = (
         args.integ_server
         if args.integ_server is not None
-        else EGERIA_INTEGRATION_DAEMON
+        else app_config.egeria_integration_daemon
     )
     integ_url = (
-        args.integ_url if args.integ_url is not None else EGERIA_INTEGRATION_DAEMON_URL
+        args.integ_url if args.integ_url is not None else app_config.egeria_integration_daemon_url
     )
     view_server = (
-        args.view_server if args.view_server is not None else EGERIA_VIEW_SERVER
+        args.view_server if args.view_server is not None else app_config.egeria_view_server
     )
-    view_url = args.view_url if args.view_url is not None else EGERIA_VIEW_SERVER_URL
+    view_url = args.view_url if args.view_url is not None else app_config.egeria_view_server_url
     userid = args.userid if args.userid is not None else EGERIA_USER
     user_pass = args.password if args.password is not None else EGERIA_USER_PASSWORD
     search_list = Prompt.ask(

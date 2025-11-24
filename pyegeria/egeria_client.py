@@ -13,7 +13,7 @@ for all use cases..using the more role based clients is often appropriate:
 """
 # from pyegeria.x_action_author_omvs import ActionAuthor
 from pyegeria.asset_catalog import AssetCatalog
-# from pyegeria.collection_manager import CollectionManager
+from pyegeria.collection_manager import CollectionManager
 from pyegeria.glossary_manager import GlossaryManager
 from pyegeria.project_manager import ProjectManager
 from pyegeria.automated_curation import AutomatedCuration
@@ -23,11 +23,11 @@ from pyegeria.runtime_manager import RuntimeManager
 from pyegeria.full_omag_server_config import FullServerConfig
 from pyegeria.metadata_explorer_omvs import MetadataExplorer
 from pyegeria.my_profile_omvs import MyProfile
-# from pyegeria.feedback_manager_omvs import FeedbackManager
+from pyegeria.feedback_manager import FeedbackManager
 from pyegeria.solution_architect import SolutionArchitect
 from pyegeria.server_operations import ServerOps
 from pyegeria.registered_info import RegisteredInfo
-from pyegeria.valid_metadata_omvs import ValidMetadataManager
+from pyegeria.valid_metadata import ValidMetadataManager
 from pyegeria.egeria_config_client import EgeriaConfig
 from pyegeria.data_designer import DataDesigner
 from pyegeria.governance_officer import GovernanceOfficer
@@ -66,7 +66,7 @@ class Egeria:
         # Compose major umbrella and service clients
         self._asset_catalog = AssetCatalog(view_server, platform_url, user_id, user_pwd, token)
         self._my_profile = MyProfile(view_server, platform_url, user_id, user_pwd, token)
-        # self._feedback = FeedbackManager(view_server, platform_url, user_id, user_pwd, token)
+        self._feedback = FeedbackManager(view_server, platform_url, user_id, user_pwd, token)
         self._glossary = GlossaryManager(view_server, platform_url, user_id, user_pwd, token)
         self._projects = ProjectManager(view_server, platform_url, user_id, user_pwd, token)
         self._runtime = RuntimeManager(view_server, platform_url, user_id, user_pwd, token)

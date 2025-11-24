@@ -18,8 +18,6 @@ from pyegeria import (
     config_logging
 )
 
-
-
 EGERIA_USER = os.environ.get("EGERIA_USER", "erinoverview")
 EGERIA_USER_PASSWORD = os.environ.get("EGERIA_USER_PASSWORD", "secret")
 

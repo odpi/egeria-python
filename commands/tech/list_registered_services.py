@@ -18,36 +18,26 @@ from rich.prompt import Prompt
 from rich.table import Table
 
 from pyegeria import (
-    InvalidParameterException,
-    PropertyServerException,
     RegisteredInfo,
-    UserNotAuthorizedException,
+    PyegeriaException,
+    print_basic_exception,
+    settings,
+    config_logging
 )
-
-EGERIA_METADATA_STORE = os.environ.get("EGERIA_METADATA_STORE", "active-metadata-store")
-EGERIA_KAFKA_ENDPOINT = os.environ.get("KAFKA_ENDPOINT", "localhost:9092")
-EGERIA_PLATFORM_URL = os.environ.get("EGERIA_PLATFORM_URL", "https://localhost:9443")
-EGERIA_VIEW_SERVER = os.environ.get("EGERIA_VIEW_SERVER", "view-server")
-EGERIA_VIEW_SERVER_URL = os.environ.get(
-    "EGERIA_VIEW_SERVER_URL", "https://localhost:9443"
-)
-EGERIA_INTEGRATION_DAEMON = os.environ.get("EGERIA_INTEGRATION_DAEMON", "integration-daemon")
-EGERIA_ADMIN_USER = os.environ.get("ADMIN_USER", "garygeeke")
-EGERIA_ADMIN_PASSWORD = os.environ.get("ADMIN_PASSWORD", "secret")
 EGERIA_USER = os.environ.get("EGERIA_USER", "erinoverview")
 EGERIA_USER_PASSWORD = os.environ.get("EGERIA_USER_PASSWORD", "secret")
-EGERIA_JUPYTER = bool(os.environ.get("EGERIA_JUPYTER", "False"))
-EGERIA_WIDTH = int(os.environ.get("EGERIA_WIDTH", "200"))
 
-
+app_config = settings.Environment
+config_logging()
+console = Console(width = app_config.console_width)
 def display_registered_svcs(
     service: str,
     server: str,
     url: str,
     username: str,
     password: str,
-    jupyter: bool = EGERIA_JUPYTER,
-    width: int = EGERIA_WIDTH,
+    jupyter: bool = app_config.egeria_jupyter,
+    width: int = app_config.console_width,
 ):
     """Display the registered services list
     Parameters
@@ -144,11 +134,9 @@ def display_registered_svcs(
             console.print(generate_table(svc_list))
 
     except (
-        InvalidParameterException,
-        PropertyServerException,
-        UserNotAuthorizedException,
+        PyegeriaException
     ) as e:
-        console.print_exception(show_locals=True)
+        print_basic_exception(e)
     finally:
         a_client.close_session()
 
@@ -162,9 +150,9 @@ def main():
 
     args = parser.parse_args()
 
-    server = args.server if args.server is not None else EGERIA_METADATA_STORE
-    url = args.url if args.url is not None else EGERIA_PLATFORM_URL
-    userid = args.userid if args.userid is not None else EGERIA_ADMIN_USER
+    server = args.server if args.server is not None else app_config.egeria_metadata_store
+    url = args.url if args.url is not None else app_config.egeria_platform_url
+    userid = args.userid if args.userid is not None else EGERIA_USER
     password = args.password if args.password is not None else EGERIA_USER_PASSWORD
 
     try:

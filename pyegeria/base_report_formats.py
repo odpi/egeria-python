@@ -310,6 +310,29 @@ base_report_specs = FormatSetDict({
             )
         ],
     ),
+    "Valid-Values": FormatSet(
+        target_type="Valid-Values",
+        heading="Valid Values",
+        description="Attributes that describe valid values",
+        annotations={},  # No specific annotations
+        family="Valid-Values",
+        formats=[
+            Format(
+                types=["ALL"],
+                attributes= [
+                    Column(name='Name', key='display_name'),
+                    Column(name="Category", key='category'),
+                    Column(name="Property Name", key='property_name'),
+                    Column(name="Description", key='description'),
+                    Column(name="Preferred Value", key='preferred_value'),
+                    Column(name="Data Type", key='dataType'),
+                    Column(name="Is Case Sensitive", key='is_case_sensitive'),
+                    Column(name="Additional Properties", key='additional_properties'),
+
+                ],
+            )
+        ],
+    ),
 "Engine-Actions": FormatSet(
         target_type="Referenceable",
         heading="Engine Actions",

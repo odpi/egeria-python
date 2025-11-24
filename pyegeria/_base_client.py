@@ -406,7 +406,8 @@ class BaseClient:
             endpoint: str,
             payload: str | dict = None,
             time_out: int = 30,
-            is_json: bool = True
+            is_json: bool = True,
+            params: dict | None = None
     ) -> Response | str:
         """Make a request to the Egeria API."""
         try:
@@ -428,7 +429,8 @@ class BaseClient:
             endpoint: str,
             payload: str | dict = None,
             time_out: int = 30,
-            is_json: bool = True
+            is_json: bool = True,
+            params: dict | None = None
     ) -> Response | str:
         """Make a request to the Egeria API - Async Version
         Function to make an API call via the self.session Library. Raise an exception if the HTTP response code
@@ -442,6 +444,8 @@ class BaseClient:
                Type - String or Dict
         :param time_out: Timeout in seconds. Type - Integer
         :param is_json: Whether the payload is JSON or not. Type - Boolean
+        :param params: Query parameters to be included in the request. Type - Dict
+
         :return: Response. Type - JSON Formatted String
 
         """
@@ -453,13 +457,13 @@ class BaseClient:
         try:
             if request_type == "GET":
                 response = await self.session.get(
-                    endpoint, params=payload, headers=self.headers, timeout=time_out
+                    endpoint, params=params, headers=self.headers, timeout=time_out,
                 )
 
             elif request_type == "POST":
                 if payload is None:
                     response = await self.session.post(
-                        endpoint, headers=self.headers, timeout=time_out
+                        endpoint, headers=self.headers, timeout=time_out, params = params
                     )
                 elif type(payload) is dict:
                     response = await self.session.post(
@@ -471,6 +475,7 @@ class BaseClient:
                         headers=self.headers,
                         content=payload,
                         timeout=time_out,
+                        params=params
                     )
                 else:
                     raise TypeError(f"Invalid payload type {type(payload)}")

@@ -16,7 +16,6 @@ from textual.widgets import DataTable
 from pyegeria import (
     PyegeriaException,
     print_basic_exception,
-    SolutionArchitect,
     settings, load_app_config, pretty_print_config,
     config_logging,
     AutomatedCuration,

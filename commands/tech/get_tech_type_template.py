@@ -17,42 +17,34 @@ from rich.tree import Tree
 
 from pyegeria import (
     AutomatedCuration,
-    InvalidParameterException,
-    PropertyServerException,
-    UserNotAuthorizedException,
-    print_exception_response,
+    print_basic_exception,
+    PyegeriaException,
+    settings, load_app_config, config_logging,
+
 )
 
-EGERIA_METADATA_STORE = os.environ.get("EGERIA_METADATA_STORE", "active-metadata-store")
-EGERIA_KAFKA_ENDPOINT = os.environ.get("KAFKA_ENDPOINT", "localhost:9092")
-EGERIA_PLATFORM_URL = os.environ.get("EGERIA_PLATFORM_URL", "https://localhost:9443")
-EGERIA_VIEW_SERVER = os.environ.get("EGERIA_VIEW_SERVER", "view-server")
-EGERIA_VIEW_SERVER_URL = os.environ.get(
-    "EGERIA_VIEW_SERVER_URL", "https://localhost:9443"
-)
-EGERIA_INTEGRATION_DAEMON = os.environ.get("EGERIA_INTEGRATION_DAEMON", "integration-daemon")
-EGERIA_ADMIN_USER = os.environ.get("ADMIN_USER", "garygeeke")
-EGERIA_ADMIN_PASSWORD = os.environ.get("ADMIN_PASSWORD", "secret")
+app_config = settings.Environment
+config_path = os.path.join(app_config.pyegeria_config_directory, app_config.pyegeria_config_file)
+
 EGERIA_USER = os.environ.get("EGERIA_USER", "erinoverview")
 EGERIA_USER_PASSWORD = os.environ.get("EGERIA_USER_PASSWORD", "secret")
-EGERIA_JUPYTER = bool(os.environ.get("EGERIA_JUPYTER", "False"))
-EGERIA_WIDTH = int(os.environ.get("EGERIA_WIDTH", "200"))
-
-
-disable_ssl_warnings = True
-console = Console(width=200)
+EGERIA_MERMAID_FOLDER = os.path.join(app_config.pyegeria_root, app_config.egeria_mermaid_folder)
+conf = load_app_config(config_path)
+# print(f"Loading config from {config_path} and mermaid folder is {EGERIA_MERMAID_FOLDER}")
+console = Console(width=app_config.console_width)
+config_logging()
 
 guid_list = []
 
 
 def template_viewer(
-    tech_name: str,
-    server_name: str,
-    platform_url: str,
-    user: str,
-    user_pass: str,
-    jupyter: bool = EGERIA_JUPYTER,
-    width: int = EGERIA_WIDTH,
+        tech_name: str,
+        server_name: str,
+        platform_url: str,
+        user: str,
+        user_pass: str,
+        jupyter: bool = app_config.egeria_jupyter,
+        width: int = app_config.console_width,
 ):
     def build_classifications(classification: dict) -> Markdown:
         class_md = "\n"
@@ -94,7 +86,7 @@ def template_viewer(
                 tech_created_by = header["versions"]["createdBy"]
                 tech_created_at = header["versions"]["createTime"]
                 tech_guid = header["guid"]
-                tech_classifications = element.get("otherClassifications",{})
+                tech_classifications = element.get("otherClassifications", {})
                 class_md = build_classifications(tech_classifications)
 
                 referenceables = element["properties"]
@@ -131,11 +123,9 @@ def template_viewer(
             tree = Tree(f"No elements found for {tech_name}", style="red")
         print(tree)
     except (
-        InvalidParameterException,
-        PropertyServerException,
-        UserNotAuthorizedException,
+            PyegeriaException
     ) as e:
-        print_exception_response(e)
+        print_basic_exception(e)
 
 
 def main():
@@ -147,8 +137,8 @@ def main():
     parser.add_argument("--password", help="User Password")
     args = parser.parse_args()
 
-    server = args.server if args.server is not None else EGERIA_VIEW_SERVER
-    url = args.url if args.url is not None else EGERIA_PLATFORM_URL
+    server = args.server if args.server is not None else app_config.egeria_view_server
+    url = args.url if args.url is not None else app_config.egeria_platform_url
     userid = args.userid if args.userid is not None else EGERIA_USER
     user_pass = args.password if args.password is not None else EGERIA_USER_PASSWORD
 

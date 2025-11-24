@@ -20,7 +20,7 @@ from rich.console import Console
 
 from pyegeria import EgeriaTech
 from pyegeria._exceptions_new import PyegeriaException, print_basic_exception, print_validation_error, \
-    PyegeriaConnectionException
+    PyegeriaConnectionException, PyegeriaAPIException
 from pyegeria.classification_manager import ClassificationManager
 
 # from pyegeria.output_formatter import make_preamble, make_md_attribute
@@ -203,12 +203,13 @@ def test_get_elements():
     # metadata_element_type_name = 'CertificationType'
     #
     # metadata_element_type_name = "DeployedDatabaseSchema"
-    open_metadata_type_name = "UserIdentity"
+    open_metadata_type_name = "ArchiveFile"
     try:
         c_client = ClassificationManager(view_server, platform_url)
 
         bearer_token = c_client.create_egeria_bearer_token(user, password)
-        response = c_client.get_elements(open_metadata_type_name, output_format="DICT", report_spec="Referenceable")
+        response = c_client.get_elements(open_metadata_type_name, output_format="DICT",
+                                         report_spec="Referenceable")
 
         if type(response) is list:
             print(f"\n\tElement count is: {len(response)}")
@@ -216,9 +217,12 @@ def test_get_elements():
         elif type(response) is str:
             console.print("\n\n\t Response is" + response)
         assert True
-    except PyegeriaException as e:
-        print_basic_exception(e)
-        assert False, "Invalid request"
+    except (PyegeriaException, PyegeriaAPIException) as e:
+        if e.response_egeria_msg_id == "OMAG-COMMON-400-018":
+            print("\n\n==>Invalid OM Type\n\n")
+        else:
+            print_basic_exception(e)
+            assert False, "Invalid request"
     except Exception as e:
         console.print_exception(show_locals=True)
         assert False, "Invalid request"
