@@ -333,6 +333,7 @@ base_report_specs = FormatSetDict({
             )
         ],
     ),
+
 "Engine-Actions": FormatSet(
         target_type="Referenceable",
         heading="Engine Actions",
@@ -415,7 +416,12 @@ base_report_specs = FormatSetDict({
                     Column(name="Solution Subcomponent Mermaid Graph", key='solutionSubcomponentMermaidGraph'),
 
                 ],
-            )
+            ),
+        Format(
+            types=["MERMAID"],
+            attributes = [
+                   Column(name="Mermaid Graph", key='mermaidGraph')
+            ])
         ],
 
     ),

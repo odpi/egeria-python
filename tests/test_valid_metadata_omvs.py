@@ -374,13 +374,19 @@ class TestValidMetadataOMVs:
             )
             token = m_client.create_egeria_bearer_token(self.good_user_2, "secret")
             start_time = time.perf_counter()
-            category = "clinical-trial" # preferred-value1
-            type_name1 = "Project"
-            property_name = "purposes"
+
+            property_name1 = "category"
+            property_name2 = "purposes"
+            type_name1 = None
             type_name2 = "Project"
+            map_name1 = None
+            map_name2 = None
+            preferred_value1 = "clinical-trial"
             preferred_value2 = "product-verification"
 
-            response = m_client.validate_metadata_value(property_name, type_name, actual_value=actual_value)
+
+            response = m_client.set_consistent_metadata_values(property_name1, type_name1, map_name1, preferred_value1,
+                                                               property_name2, type_name2, map_name2, preferred_value2)
             duration = time.perf_counter() - start_time
 
             print(f"\n\tDuration was {duration} seconds")
@@ -401,6 +407,49 @@ class TestValidMetadataOMVs:
 
         finally:
             m_client.close_session()
+
+    def test_get_consistent_metadata_values(self):
+        try:
+            m_client = ValidMetadataManager(
+                self.good_view_server_2,
+                self.good_platform1_url,
+                user_id=self.good_user_2,
+            )
+            token = m_client.create_egeria_bearer_token(self.good_user_2, "secret")
+            start_time = time.perf_counter()
+
+            # property_name = "category"
+            # type_name = "Project"
+            # map_name = None
+            # preferred_value = "clinical-trial"
+            property_name = 'fileType'
+            type_name = 'CSVFile'
+            map_name = None
+            preferred_value = None
+
+
+            response = m_client.get_consistent_metadata_values(property_name, type_name, map_name, preferred_value)
+            duration = time.perf_counter() - start_time
+
+            print(f"\n\tDuration was {duration} seconds")
+            if isinstance(response, list | dict):
+                print_json("\n\n" + json.dumps(response, indent=4))
+            elif type(response) is tuple:
+                print(f"Type is {type(response)}")
+                print_json("\n\n" + json.dumps(response, indent=4))
+            elif type(response) is str:
+                print("\n\nOutput is: " + response)
+            else:
+                print(response)
+            assert True
+
+        except PyegeriaException as e:
+            print_basic_exception(e)
+            assert False, "Invalid request"
+
+        finally:
+            m_client.close_session()
+
 
     def test_find_spec_property(self):
         try:
@@ -568,8 +617,8 @@ class TestValidMetadataOMVs:
             )
             token = m_client.create_egeria_bearer_token(self.good_user_2, "secret")
             start_time = time.perf_counter()
-            type_name = "DataStore"
-            response = m_client.get_sub_types(type_name)
+            type_name = "Collection"
+            response = m_client.get_sub_types(type_name, output_format="MERMAID",report_spec="Common-Mermaid")
             duration = time.perf_counter() - start_time
 
             print(f"\n\tDuration was {duration} seconds")
@@ -664,10 +713,42 @@ class TestValidMetadataOMVs:
                 user_id=self.good_user_2,
             )
             token = m_client.create_egeria_bearer_token(self.good_user_2, "secret")
+
             start_time = time.perf_counter()
-            entity_type = "Asset"
+            entity_type = "Project"
 
             response = m_client.get_typedef_by_name(entity_type)
+            duration = time.perf_counter() - start_time
+
+            print(f"\n\tDuration was {duration} seconds")
+            if type(response) is dict:
+                print_json("\n\n" + json.dumps(response, indent=4))
+            elif type(response) is tuple:
+                print(f"Type is {type(response)}")
+                print_json("\n\n" + json.dumps(response, indent=4))
+            elif type(response) is str:
+                print("\n\nGUID is: " + response)
+            assert True
+
+        except PyegeriaException as e:
+            print_basic_exception(e)
+            assert False, "Invalid request"
+
+        finally:
+            m_client.close_session()
+
+    def test_get_specification_property_types(self):
+        try:
+            m_client = ValidMetadataManager(
+                self.good_view_server_2,
+                self.good_platform1_url,
+                user_id=self.good_user_2,
+            )
+            token = m_client.create_egeria_bearer_token(self.good_user_2, "secret")
+
+            start_time = time.perf_counter()
+
+            response = m_client.get_specification_property_types()
             duration = time.perf_counter() - start_time
 
             print(f"\n\tDuration was {duration} seconds")
