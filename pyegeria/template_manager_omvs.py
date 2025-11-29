@@ -8,12 +8,12 @@ Template manager is a view service that supports managing metadata elements usin
 
 import asyncio
 
-from pyegeria._client import Client
+from pyegeria._client_new import Client2
 from pyegeria._globals import default_time_out, NO_ELEMENTS_FOUND
 from pyegeria.utils import body_slimmer
 
 
-class TemplateManager(Client):
+class TemplateManager(Client2):
     """Client to issue Template Manager requests.
 
     Attributes:
@@ -45,7 +45,7 @@ class TemplateManager(Client):
     ):
         self.view_server = view_server
         self.time_out = time_out
-        Client.__init__(self, view_server, platform_url, user_id, user_pwd, token=token)
+        Client2.__init__(self, view_server, platform_url, user_id, user_pwd, token=token)
         self.command_root = f"{self.platform_url}/servers/{self.view_server}/api/open-metadata/template-manager"
 
     #

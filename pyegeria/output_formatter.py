@@ -242,7 +242,11 @@ def populate_columns_from_properties(element: dict, columns_struct: dict) -> dic
     """
     Populate a columns_struct with values from the element's properties.
 
-    The element dict is expected to have a nested 'properties' dict whose keys are in camelCase.
+    The element can be either:
+      - a full element dict that contains a nested 'properties' dict (preferred), or
+      - a dict that itself represents the set of properties.
+
+    In both cases, the effective properties are expected to use camelCase keys.
     The columns_struct is expected to follow the format returned by select_report_spec, where
     columns are located at columns_struct['formats']['columns'] and each column is a dict containing
     at least a 'key' field expressed in snake_case. For each column whose snake_case key corresponds
@@ -250,7 +254,8 @@ def populate_columns_from_properties(element: dict, columns_struct: dict) -> dic
     entry to the column with the matching property's value.
 
     Args:
-        element: The element containing a 'properties' dict with camelCase keys.
+        element: Either a dict with a nested 'properties' dict using camelCase keys, or
+                 a dict that itself is the set of properties.
         columns_struct: The columns structure whose columns have snake_case 'key' fields.
 
     Returns:
@@ -259,8 +264,14 @@ def populate_columns_from_properties(element: dict, columns_struct: dict) -> dic
     if not isinstance(columns_struct, dict):
         return columns_struct
 
-    props = (element or {}).get('properties') or {}
-    # If properties is not a dict, do nothing
+    # Determine the effective properties:
+    # 1) Prefer element['properties'] if present and a dict
+    # 2) Otherwise, if element itself is a dict, treat it as the properties dict
+    # 3) Otherwise, nothing to do
+    props: dict | None = None
+    if isinstance(element, dict):
+        maybe_props = element.get('properties')
+        props = maybe_props if isinstance(maybe_props, dict) else element
     if not isinstance(props, dict):
         return columns_struct
 

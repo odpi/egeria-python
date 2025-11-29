@@ -11,10 +11,17 @@ make sure the companion service is also configured and running.
 
 """
 
-from pyegeria._client import Client
+from typing import Optional
+
+from pyegeria._client_new import Client2
+from pyegeria.base_report_formats import select_report_spec, get_report_spec_match
+from pyegeria.output_formatter import (
+    generate_output,
+    populate_columns_from_properties,
+)
 
 
-class RegisteredInfo(Client):
+class RegisteredInfo(Client2):
     """Client to discover Egeria services and capabilities
 
     Parameters:
@@ -55,7 +62,7 @@ class RegisteredInfo(Client):
     ):
         if view_server is None:
             server_name = "NA"
-        Client.__init__(self, view_server, platform_url, user_id, user_pwd)
+        Client2.__init__(self, view_server, platform_url, user_id, user_pwd)
         self.view_server = view_server
         self.platform_url = platform_url
         self.user_id = user_id
@@ -65,7 +72,13 @@ class RegisteredInfo(Client):
             f"{self.user_id}/server-platform/registered-services"
         )
 
-    def list_registered_svcs(self, kind: str = None) -> list | str:
+    def list_registered_svcs(
+        self,
+        kind: str = None,
+        *,
+        output_format: str = "DICT",
+        report_spec: str | dict = None,
+    ) -> list | str:
         """Get the registered services for the OMAG Server Platform
 
         Parameters
@@ -106,10 +119,37 @@ class RegisteredInfo(Client):
         else:
             url = f"{self.reg_command_root}/{kind}"
         response = self.make_request("GET", url)
+        elements = response.json().get("services", [])
+        # Fallback to raw if no elements or output not requested
+        if output_format in (None, "JSON") and report_spec is None:
+            return elements or "No services found"
 
-        return response.json().get("services", "No services found")
+        # Choose a report spec
+        columns_struct = None
+        if isinstance(report_spec, str):
+            columns_struct = select_report_spec(report_spec, output_format)
+        elif isinstance(report_spec, dict):
+            columns_struct = get_report_spec_match(report_spec, output_format)
+        else:
+            columns_struct = select_report_spec("Registered-Services", output_format)
+        if columns_struct is None:
+            columns_struct = select_report_spec("Default", output_format)
 
-    def list_severity_definitions(self) -> list | str:
+        return self._generate_registered_info_output(
+            elements=elements,
+            filter=kind,
+            entity_type_name="Registered-Services",
+            output_format=output_format,
+            report_spec=columns_struct,
+            extract_func=self._extract_registered_service_properties,
+        )
+
+    def list_severity_definitions(
+        self,
+        *,
+        output_format: str = "DICT",
+        report_spec: str | dict = None,
+    ) -> list | str:
         """Get the registered severities for the OMAG Server
 
         Parameters
@@ -134,9 +174,36 @@ class RegisteredInfo(Client):
             f"/users/{self.user_id}/audit-log/severity-definitions"
         )
         response = self.make_request("GET", url)
-        return response.json().get("severities", "No severities found")
+        elements = response.json().get("severities", [])
 
-    def list_asset_types(self) -> list | str:
+        if output_format in (None, "JSON") and report_spec is None:
+            return elements or "No severities found"
+
+        columns_struct = None
+        if isinstance(report_spec, str):
+            columns_struct = select_report_spec(report_spec, output_format)
+        elif isinstance(report_spec, dict):
+            columns_struct = get_report_spec_match(report_spec, output_format)
+        else:
+            columns_struct = select_report_spec("Severity-Definitions", output_format)
+        if columns_struct is None:
+            columns_struct = select_report_spec("Default", output_format)
+
+        return self._generate_registered_info_output(
+            elements=elements,
+            filter=None,
+            entity_type_name="Severity-Definitions",
+            output_format=output_format,
+            report_spec=columns_struct,
+            extract_func=self._extract_severity_properties,
+        )
+
+    def list_asset_types(
+        self,
+        *,
+        output_format: str = "DICT",
+        report_spec: str | dict = None,
+    ) -> list | str:
         """Get the registered severities for the OMAG Server
 
         Parameters
@@ -160,7 +227,107 @@ class RegisteredInfo(Client):
         url = f"{self.platform_url}/servers/{self.view_server}/api/open-metadata/asset-catalog/assets/types"
 
         response = self.make_request("GET", url)
-        return response.json().get("types", "no types found")
+        elements = response.json().get("types", [])
+
+        if output_format in (None, "JSON") and report_spec is None:
+            return elements or "no types found"
+
+        columns_struct = None
+        if isinstance(report_spec, str):
+            columns_struct = select_report_spec(report_spec, output_format)
+        elif isinstance(report_spec, dict):
+            columns_struct = get_report_spec_match(report_spec, output_format)
+        else:
+            columns_struct = select_report_spec("Asset-Types", output_format)
+        if columns_struct is None:
+            columns_struct = select_report_spec("Default", output_format)
+
+        return self._generate_registered_info_output(
+            elements=elements,
+            filter=None,
+            entity_type_name="Asset-Types",
+            output_format=output_format,
+            report_spec=columns_struct,
+            extract_func=self._extract_asset_type_properties,
+        )
+
+    # -------------------------------
+    # Helpers for report generation
+    # -------------------------------
+    def _extract_registered_service_properties(self, element: dict, columns_struct: dict) -> dict:
+        """Populate values for a registered service element using the column spec keys.
+
+        The registered services payload is typically a flat dict of camelCase keys, so we can
+        rely on populate_columns_from_properties which maps our snake_case keys to camelCase.
+        """
+        return populate_columns_from_properties(element, columns_struct)
+
+    def _extract_severity_properties(self, element: dict, columns_struct: dict) -> dict:
+        """Populate values for a severity definition element."""
+        return populate_columns_from_properties(element, columns_struct)
+
+    def _extract_asset_type_properties(self, element: dict, columns_struct: dict) -> dict:
+        """Populate values for an asset type listing element."""
+        # API may return simple strings (type names) or dicts; support both
+        if isinstance(element, str):
+            # Ensure the first attribute key named 'type_name' (snake) is populated
+            formats = columns_struct.get('formats') or {}
+            cols = formats.get('attributes') or []
+            for col in cols:
+                if isinstance(col, dict) and col.get('key') == 'type_name':
+                    col['value'] = element
+            return columns_struct
+        return populate_columns_from_properties(element, columns_struct)
+
+    def _generate_registered_info_output(
+        self,
+        *,
+        elements: list[dict] | dict,
+        filter: Optional[str],
+        entity_type_name: Optional[str],
+        output_format: str = "DICT",
+        report_spec: dict | str | None = None,
+        extract_func=None,
+    ) -> str | list[dict]:
+        """Generate output for RegisteredInfo endpoints using the common formatter.
+
+        Args:
+            elements: list or dict of items returned from the endpoint
+            filter: optional filter string used in the request (for headings)
+            entity_type_name: logical report spec target name
+            output_format: desired output format (MD, FORM, REPORT, LIST, DICT, MERMAID, HTML)
+            report_spec: a FormatSet dict or name resolved beforehand
+            extract_func: callable used to map element -> columns_struct values
+        """
+        if entity_type_name is None:
+            entity_type = "Referenceable"
+        else:
+            entity_type = entity_type_name
+
+        columns_struct = None
+        if isinstance(report_spec, dict):
+            columns_struct = report_spec
+        elif isinstance(report_spec, str):
+            columns_struct = select_report_spec(report_spec, output_format)
+        else:
+            columns_struct = select_report_spec(entity_type, output_format)
+
+        if columns_struct is None:
+            columns_struct = select_report_spec("Default", output_format)
+
+        # Default extract function just maps columns by key
+        if extract_func is None:
+            extract_func = populate_columns_from_properties
+
+        return generate_output(
+            elements=elements,
+            search_string=filter or "All",
+            entity_type=entity_type,
+            output_format=output_format,
+            extract_properties_func=lambda e, cs=columns_struct: extract_func(e, cs),
+            get_additional_props_func=None,
+            columns_struct=columns_struct,
+        )
 
 
 if __name__ == "__main__":

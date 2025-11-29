@@ -143,7 +143,7 @@ class TestAssetCatalog:
     def test_get_asset_graph(self, server: str = good_view_server_2):
         try:
             server_name = server
-            asset_guid = "315ffa25-fa2e-4e20-a11c-df57f093db1b"
+            asset_guid = "890d26a8-a740-42c0-8585-801274bbf8f1"
             a_client = AssetCatalog(
                 server_name, self.good_platform1_url, user_id=self.good_user_2
             )
@@ -171,7 +171,7 @@ class TestAssetCatalog:
     def test_get_asset_mermaid_graph(self, server: str = good_view_server_2):
         try:
             server_name = server
-            asset_guid = "525733dc-76f0-4b38-8e64-9677397b92d1"
+            asset_guid = "890d26a8-a740-42c0-8585-801274bbf8f1"
             a_client = AssetCatalog(
                 server_name, self.good_platform1_url, user_id=self.good_user_2
             )

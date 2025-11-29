@@ -146,6 +146,9 @@ class ValidMetadataManager(Client2):
         is_case_sensitive = element.get("isCaseSensitive", "---")
         additional_properties = element.get("additionalProperties", "---")
         property_name = element.get("propertyName", "---")
+        map_name = element.get("mapName", "---")
+        type_name = element.get("typeName", "---")
+
 
         for column in columns_list:
             key = column.get("key")
@@ -206,7 +209,8 @@ class ValidMetadataManager(Client2):
             filter,
             entity_type,
             output_format,
-            self._extract_valid_value_output_properties,
+            # self._extract_valid_value_output_properties,
+            populate_columns_from_properties,
             None,
             output_formats,
         )

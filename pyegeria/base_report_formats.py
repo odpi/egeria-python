@@ -927,6 +927,64 @@ base_report_specs = FormatSetDict({
             spec_params={},
         ),
     ),
+    "Registered-Services": FormatSet(
+        target_type="Registered-Services",
+        heading="Registered Services",
+        description="Registered services on the OMAG Server Platform.",
+        annotations={},
+        family="Platform",
+        formats=[
+            Format(
+                types=["ALL"],
+                attributes=[
+                    Column(name="Service Name", key='service_name'),
+                    Column(name="Description", key='service_description'),
+                    Column(name="URL Marker", key='service_url_marker'),
+                    Column(name="Service Type", key='service_type'),
+                    Column(name="Wiki", key='service_wiki'),
+                    Column(name="Conformance Profile", key='conformance_profile'),
+                ],
+            )
+        ],
+    ),
+    "Severity-Definitions": FormatSet(
+        target_type="Severity-Definitions",
+        heading="Audit Log Severity Definitions",
+        description="Severity definitions available in the OMAG Server.",
+        annotations={},
+        family="Platform",
+        formats=[
+            Format(
+                types=["ALL"],
+                attributes=[
+                    Column(name="Name", key='name'),
+                    Column(name="Ordinal", key='ordinal'),
+                    Column(name="Description", key='description'),
+                    Column(name="Severity Code", key='severity_code'),
+                    Column(name="System Action", key='system_action'),
+                    Column(name="User Action", key='user_action'),
+                ],
+            )
+        ],
+    ),
+    "Asset-Types": FormatSet(
+        target_type="Asset-Types",
+        heading="Asset Types",
+        description="Types of assets available in the catalog.",
+        annotations={},
+        family="AssetCatalog",
+        formats=[
+            Format(
+                types=["ALL"],
+                attributes=[
+                    Column(name="Type Name", key='type_name'),
+                    Column(name="Display Name", key='display_name'),
+                    Column(name="Description", key='description'),
+                    Column(name="Super Type", key='super_type'),
+                ],
+            )
+        ],
+    ),
     "Digital-Product-Catalog": FormatSet(
         target_type="DigitalProductCatalog",
         heading="Catalogs for Digital Products",

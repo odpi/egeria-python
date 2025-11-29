@@ -95,8 +95,8 @@ def main() -> None:
     async def run_report_tool(
             report_name: str,
             search_string: str = "*",
-            page_size: Optional[int] = None,
-            start_from: Optional[int] = None,
+            page_size: Optional[int] = 0,
+            start_from: Optional[int] = 0,
             starts_with: Optional[bool] = None,
             ends_with: Optional[bool] = None,
             ignore_case: Optional[bool] = None,
@@ -184,17 +184,11 @@ def main() -> None:
                             file=sys.stderr)
 
                         # AWAIT the async function call
-                        return await run_report_tool(
-                            report_name=report_name,
-                            page_size=page_size,
-                            search_string=search_string
-                        )
+                        return await run_report_tool(report_name=report_name, search_string=search_string,
+                                                     page_size=page_size)
 
                 # AWAIT the async function call
-                return await run_report_tool(
-                    report_name=report_name,
-                    page_size=page_size
-                )
+                return await run_report_tool(report_name=report_name, page_size=page_size)
 
         return {
             "response": f"Acknowledged natural language query: '{prompt}'. This would be sent to an LLM."

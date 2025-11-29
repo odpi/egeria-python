@@ -16,6 +16,7 @@ import json
 import pytest
 from rich import print as rprint
 from rich.console import Console
+from rich.markdown import Markdown
 from rich.table import Table
 
 from pyegeria._exceptions import (
@@ -79,7 +80,7 @@ class TestRegisteredInfoServices:
                 self.good_server_1, self.good_platform1_url, self.good_user_1
             )
             service_kind = "all"
-            response = r_client.list_registered_svcs(service_kind)
+            response = r_client.list_registered_svcs(service_kind, output_format="LIST", report_spec = "Registered-Services")
 
             assert (type(response) is list) or (
                 type(response) is str
@@ -104,27 +105,16 @@ class TestRegisteredInfoServices:
             r_client = RegisteredInfo(
                 self.good_server_3, self.good_platform1_url, user_id=self.good_user_1
             )
+            output_format = "LIST"
+            response = r_client.list_severity_definitions(output_format=output_format, report_spec = "Severity-Definitions")
+            console = Console(width = 130)
 
-            response = r_client.list_severity_definitions()
-            console = Console()
-
-            table = Table(
-                title="Severity Codes",
-                style="black on grey66",
-                header_style="white on dark_blue",
-            )
-            table.add_column("Number")
-            table.add_column("Name", width=30)
-            table.add_column("Description")
-
-            for code in response:
-                ordinal, name, description = (
-                    str(code["ordinal"]),
-                    code["name"],
-                    code["description"],
-                )
-                table.add_row(ordinal, name, description)
-            console.print(table)
+            if isinstance(response, list | dict):
+                console.print(json.dumps(response, indent=4))
+            elif output_format in ["REPORT","LIST","FORM","MD"]:
+                console.print(Markdown(response))
+            else:
+                console.print(f"\n\n{response}: \n\n")
             assert True
 
         except (

@@ -270,7 +270,7 @@ class TestValidMetadataOMVs:
             # property_name = "stewardTypeName"
 
             response = m_client.get_valid_metadata_map_value(property_name, type_name, preferred_value, map_name,
-                                                             output_format="JSON", report_spec='Valid-Values')
+                                                             output_format="DICT", report_spec='Valid-Values')
             duration = time.perf_counter() - start_time
 
             print(f"\n\tDuration was {duration} seconds")
@@ -308,7 +308,7 @@ class TestValidMetadataOMVs:
             # property_name = "stewardTypeName"
 
             response = m_client.get_valid_metadata_values(property_name, type_name,
-                                                             output_format="JSON", report_spec='Valid-Values')
+                                                             output_format="DICT", report_spec='Valid-Values')
             duration = time.perf_counter() - start_time
 
             print(f"\n\tDuration was {duration} seconds")
@@ -426,9 +426,12 @@ class TestValidMetadataOMVs:
             type_name = 'CSVFile'
             map_name = None
             preferred_value = None
+            response = m_client.get_consistent_metadata_values(property_name='fileType',
+                                                           type_name='CSVFile',
+                                                           map_name=None,
+                                                           preferred_value="CSV File")
 
-
-            response = m_client.get_consistent_metadata_values(property_name, type_name, map_name, preferred_value)
+            # response = m_client.get_consistent_metadata_values(property_name, type_name, map_name, preferred_value)
             duration = time.perf_counter() - start_time
 
             print(f"\n\tDuration was {duration} seconds")
