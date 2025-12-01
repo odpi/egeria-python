@@ -19,6 +19,7 @@ from pyegeria.governance_officer import GovernanceOfficer
 from pyegeria.collection_manager import CollectionManager
 from pyegeria.external_links import ExternalReferences
 from pyegeria._globals import NO_ELEMENTS_FOUND
+from pyegeria.actor_manager import ActorManager
 
 class EgeriaTech:
     """
@@ -68,7 +69,7 @@ class EgeriaTech:
         self._collections = CollectionManager(view_server, platform_url, user_id, user_pwd, token)
         self._external_references = ExternalReferences(view_server, platform_url, user_id, user_pwd, token)
         self._classification_manager = ClassificationManager(view_server, platform_url, user_id, user_pwd, token)
-
+        self._actor_manager = ActorManager(view_server, platform_url, user_id, user_pwd, token)
 
         self._subclients = [
             self._auto_curate,
@@ -84,7 +85,8 @@ class EgeriaTech:
             self._gov_officer,
             self._collections,
             self._external_references,
-            self._classification_manager
+            self._classification_manager,
+            self._actor_manager
         ]
         self.NO_ELEMENTS_FOUND = NO_ELEMENTS_FOUND
 

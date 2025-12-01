@@ -5,19 +5,21 @@ Copyright Contributors to the ODPi Egeria project.
     Manage external references to a variety of artifacts.
 
 """
+from pyegeria.utils import dynamic_catch
 
-    @dynamic_catch
-    async def _async_create_actor_profile(self, body: dict | NewElementRequestBody = None) -> str:
-        """ Create a new actor profile. Async version.
+
+@dynamic_catch
+    async def _async_create_$el_type$_profile(self, body: dict | NewElementRequestBody = None) -> str:
+        """ Create a new $el_name$. Async version.
 
         Parameters
         ----------
 
         body: dict | NewElementRequestBody, optional
-            A dict or NewElementRequestBody representing the details of the actor profile to create.
+            A dict or NewElementRequestBody representing the details of the $el_name$ to create.
         Returns
         -------
-        str - the guid of the created actor profile
+        str - the guid of the created $el_name$
 
         Raises
         ------
@@ -59,16 +61,16 @@ Copyright Contributors to the ODPi Egeria project.
         return await self._async_create_element_body_request(url, ["ActorProfileProperties"], body)
 
     @dynamic_catch
-    def create_actor_profile(self, body: dict | NewElementRequestBody = None) -> str:
-        """ Create a new actor profile.
+    def create$el_type$_profile(self, body: dict | NewElementRequestBody = None) -> str:
+        """ Create a new $el_name$.
 
                Parameters
                ----------
                body: dict | NewElementRequestBody, optional
-                   A dict or NewElementRequestBody representing the details of the actor profile to create.
+                   A dict or NewElementRequestBody representing the details of the $el_name$ to create.
                Returns
                -------
-               str - the guid of the created actor profile
+               str - the guid of the created $el_name$
 
                Raises
                ------
@@ -106,24 +108,24 @@ Copyright Contributors to the ODPi Egeria project.
 
            """
 
-        return asyncio.get_event_loop().run_until_complete(self._async_create_actor_profilee(body))
+        return asyncio.get_event_loop().run_until_complete(self._async_$el_type$_profilee(body))
 
     #######
 
     @dynamic_catch
-    async def _async_create_actor_profile_from_template(self, body: TemplateRequestBody | dict) -> str:
-        """ Create a new metadata element to represent a actor profile using an existing metadata element as a template.
+    async def create_async_$el_type$_profile_from_template(self, body: TemplateRequestBody | dict) -> str:
+        """ Create a new metadata element to represent a $el_name$ using an existing metadata element as a template.
             The template defines additional classifications and relationships that should be added to the new element.
             Async version.
     
         Parameters
         ----------
         body: dict
-            A dict representing the details of the actor profile to create.
+            A dict representing the details of the $el_name$ to create.
     
         Returns
         -------
-        str - the guid of the created actor profile
+        str - the guid of the created $el_name$
     
         Raises
         ------
@@ -170,19 +172,19 @@ Copyright Contributors to the ODPi Egeria project.
 
 
     @dynamic_catch
-    def create_actor_profile_from_template(self, body: dict) -> str:
-        """ Create a new metadata element to represent a actor profile using an existing metadata element as a template.
+    def create_$el_type$_profile_from_template(self, body: dict) -> str:
+        """ Create a new metadata element to represent a $el_name$ using an existing metadata element as a template.
             The template defines additional classifications and relationships that should be added to the new element.
             Async version.
 
         Parameters
         ----------
         body: dict
-            A dict representing the details of the actor profile to create.
+            A dict representing the details of the $el_name$ to create.
 
         Returns
         -------
-        str - the guid of the created actor profile
+        str - the guid of the created $el_name$
 
         Raises
         ------
@@ -224,24 +226,24 @@ Copyright Contributors to the ODPi Egeria project.
 
         """
         loop = asyncio.get_event_loop()
-        resp = loop.run_until_complete(self._async_create_actor_profile_from_template(body))
+        resp = loop.run_until_complete(self._async_$el_type$_profile_from_template(body))
         return resp
 
 
     @dynamic_catch
     async def _async_update_actor_profile(self, actor_profile_guid: str,
                                                body: dict | UpdateElementRequestBody) -> None:
-        """ Update the properties of an actor profile.
+        """ Update the properties of an $el_name$.
             Collections: https://egeria-project.org/concepts/actor_profile
     
             Async version.
         Parameters
         ----------
         actor_profile_guid: str
-            The guid of the actor profile to update.
+            The guid of the $el_name$ to update.
     
         body: dict | UpdateElementRequestBody, optional
-            A dict or NewElementRequestBody representing the details of the actor profile to create.
+            A dict or NewElementRequestBody representing the details of the $el_name$ to create.
 
         Returns
         -------
@@ -266,7 +268,7 @@ Copyright Contributors to the ODPi Egeria project.
             "class" : "CollectionProperties",
             "qualifiedName": "Must provide a unique name here",
             "name" : "Add display name here",
-            "description" : "Add description of the actor profile here",
+            "description" : "Add description of the $el_name$ here",
             "category": "Add appropriate valid value for type"
           },
           "externalSourceGUID": "add guid here",
@@ -282,16 +284,16 @@ Copyright Contributors to the ODPi Egeria project.
 
     @dynamic_catch
     def update_actor_profile(self, actor_profile_guid: str, body: dict | UpdateElementRequestBody) -> None:
-        """ Update the properties of an actor profile.
+        """ Update the properties of an $el_name$.
             Collections: https://egeria-project.org/concepts/actor_profile
 
         Parameters
         ----------
         actor_profile_guid: str
-            The guid of the actor profile to update.
+            The guid of the $el_name$ to update.
 
         body: dict | UpdateElementRequestBody, optional
-            A dict or NewElementRequestBody representing the details of the actor profile to create.
+            A dict or NewElementRequestBody representing the details of the $el_name$ to create.
 
         Returns
         -------
@@ -316,7 +318,7 @@ Copyright Contributors to the ODPi Egeria project.
             "class" : "CollectionProperties",
             "qualifiedName": "Must provide a unique name here",
             "name" : "Add display name here",
-            "description" : "Add description of the actor profile here",
+            "description" : "Add description of the $el_name$ here",
             "category": "Add appropriate valid value for type"
           },
           "externalSourceGUID": "add guid here",
@@ -738,10 +740,9 @@ Copyright Contributors to the ODPi Egeria project.
 
         """
         return asyncio.get_event_loop().run_until_complete(
-            self._async_find_actor_profiles(search_string, classification_names, metadata_element_types,
-                                                 starts_with, ends_with, ignore_case,
-                                                 start_from, page_size, output_format,
-                                                 report_spec, body))
+            self._async_find_actor_profiles(search_string, classification_names, metadata_element_types, starts_with,
+                                            ends_with, ignore_case, start_from, page_size, output_format, report_spec,
+                                            body))
 
     @dynamic_catch
     async def _async_get_actor_profiles_by_name(self, filter_string: str = None,

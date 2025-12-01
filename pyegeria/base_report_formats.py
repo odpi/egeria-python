@@ -285,31 +285,76 @@ base_report_specs = FormatSetDict({
             )
         ],
     ),
-    "Referenceable": FormatSet(
-        target_type="Referenceable",
-        heading="Common Attributes",
-        description="Attributes that apply to all Referenceables.",
+
+    "Actor-Profiles": FormatSet(
+        target_type="Actor Profile",
+        heading="Actor Profile",
+        description="Actor Profile Information",
         annotations={},  # No specific annotations
-        family="General",
+        family="ActorManager",
         formats=[
             Format(
                 types=["ALL"],
-                attributes=COMMON_COLUMNS + COMMON_METADATA_COLUMNS + [
-                    Column(name='Version Identifier', key='version_identifier'),
-                    Column(name="Classifications", key='classifications'),
-                    Column(name="Additional Properties", key='additional_properties'),
-                    Column(name="Created By", key='created_by'),
-                    Column(name="Create Time", key='create_time'),
-                    Column(name="Updated By", key='updated_by'),
-                    Column(name="Update Time", key='update_time'),
-                    Column(name="Effective From", key='effective_from'),
-                    Column(name="Effective To", key='effective_to'),
-                    Column(name="Version", key='version'),
+                attributes=COMMON_COLUMNS  + COMMON_METADATA_COLUMNS + [
                     Column(name="Open Metadata Type Name", key='type_name'),
                 ],
             )
         ],
+        action=ActionParameter(
+            function="ActorManager.find_actor_profiles",
+            optional_params=OPTIONAL_FILTER_PARAMS,
+            required_params=["search_string"],
+            spec_params={},
+        )
     ),
+    "Actor-Roles": FormatSet(
+        target_type="Actor Profile",
+        heading="Actor Profile",
+        description="Actor Profile Information",
+        annotations={},  # No specific annotations
+        family="ActorManager",
+        formats=[
+            Format(
+                types=["ALL"],
+                attributes=COMMON_COLUMNS + COMMON_METADATA_COLUMNS + [
+                    Column(name="Scope", key='scope'),
+                ],
+            )
+        ],
+        action=ActionParameter(
+            function="ActorManager.find_roles_profiles",
+            optional_params=OPTIONAL_FILTER_PARAMS,
+            required_params=["search_string"],
+            spec_params={},
+        )
+    ),
+
+    "User-Identities": FormatSet(
+        target_type="User-Identity",
+        heading="User Identity Information",
+        description="User Identity Information",
+        annotations={},  # No specific annotations
+        family="ActorManager",
+        formats=[
+            Format(
+                types=["ALL"],
+                attributes=COMMON_COLUMNS + COMMON_METADATA_COLUMNS + [
+                    Column(name="User ID", key='user_id'),
+                    Column(name="Distinguished Name", key='distinguished_name')
+                ],
+            )
+        ],
+        action=ActionParameter(
+            function="ActorManager.find_user_identities",
+            optional_params=OPTIONAL_FILTER_PARAMS,
+            required_params=["search_string"],
+            spec_params={},
+        )
+    ),
+
+
+
+
     "Valid-Values": FormatSet(
         target_type="Valid-Values",
         heading="Valid Values",
