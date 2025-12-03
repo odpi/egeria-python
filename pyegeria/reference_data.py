@@ -102,7 +102,7 @@ class ReferenceDataManager(Client2):
         # Common population pipeline
         col_data = populate_common_columns(element, columns_struct)
         columns_list = col_data.get('formats', {}).get('attributes', [])
-        # Overlay extras (project roles) only where empty
+        # Overlay extras (project perspectives) only where empty
 
         # extra = self._extract_additional_project_properties(element, columns_struct)
 
@@ -398,9 +398,9 @@ class ReferenceDataManager(Client2):
             Raises
             ------
 
-            InvalidParameterException
+            PyegeriaInvalidParameterException
               If the client passes incorrect parameters on the request - such as bad URLs or invalid values
-            PropertyServerException
+            PyegeriaAPIException
               Raised by the server when an issue arises in processing a valid request
             NotAuthorizedException
               The principle specified by the user_id does not have authorization for the requested action

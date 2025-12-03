@@ -24,7 +24,7 @@ from pyegeria import (
     EgeriaTech,
 )
 from pyegeria._exceptions_new import (
-    PyegeriaInvalidParameterException as InvalidParameterException,
+    PyegeriaInvalidParameterException,
     PyegeriaAPIException as PropertyServerException,
     PyegeriaUnauthorizedException as UserNotAuthorizedException,
     print_basic_exception as print_exception_response,
@@ -160,7 +160,7 @@ def display_glossaries(
 
             console.print(table)
 
-    except (InvalidParameterException, PropertyServerException) as e:
+    except (PyegeriaInvalidParameterException, PropertyServerException) as e:
         print_exception_response(e)
     finally:
         m_client.close_session()

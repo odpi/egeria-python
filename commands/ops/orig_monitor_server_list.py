@@ -16,7 +16,7 @@ from rich.live import Live
 from rich.table import Table
 
 from pyegeria._exceptions_new import (
-    PyegeriaInvalidParameterException as InvalidParameterException,
+    PyegeriaInvalidParameterException,
     PyegeriaAPIException as PropertyServerException,
     PyegeriaUnauthorizedException as UserNotAuthorizedException,
     print_basic_exception as print_exception_response,
@@ -107,7 +107,7 @@ def display_status(
                 live.update(generate_table())
 
     except (
-        InvalidParameterException,
+        PyegeriaInvalidParameterException,
         PropertyServerException,
         UserNotAuthorizedException,
     ) as e:

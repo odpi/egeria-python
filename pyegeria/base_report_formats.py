@@ -64,6 +64,19 @@ format_set = FormatSet(
 # Add the format set to the report_specs dictionary
 report_specs["Example"] = format_set
 ```
+
+Exceptions
+----------
+This module may raise the following exceptions:
+- ReportFormatCollision: Raised when duplicate report spec labels are detected while
+  combining built-in, generated, config-loaded, or runtime format sets.
+- FileNotFoundError: Raised when a configured JSON file containing report specs cannot be found.
+- ImportError | AttributeError: Raised when a configured module function for loading
+  report specs cannot be imported or resolved.
+- KeyError: Raised when accessing a non-existent report spec label (e.g., direct dict access).
+- ValueError: Raised for invalid or unsupported output types, or malformed structures.
+- pydantic.ValidationError: Raised when constructing `FormatSet`/`Format`/`Attribute`
+  instances with invalid data.
 """
 
 import os
@@ -72,7 +85,14 @@ from typing import List, Union
 
 from loguru import logger
 
-from pyegeria._output_format_models import (Attribute, Column, Format, ActionParameter, FormatSet, FormatSetDict)
+from pyegeria._output_format_models import (
+    Attribute,
+    Column,
+    Format,
+    ActionParameter,
+    FormatSet,
+    FormatSetDict
+)
 
 # Import generated format sets from within pyegeria package
 try:
@@ -259,6 +279,31 @@ COMMON_ANNOTATIONS = {
     "wikilinks": ["[[Commons]]"]
 }
 
+WHO = [
+    "Who created this?", # header
+    "Who last updated this?", # header
+    "Who owns this?", # ownership classification
+    "Who has been working on this?"  # header - modified_users
+]
+WHAT = [
+    "What is this?", # description
+    "What is the source of this?", # metadata_collection_id/name
+    "What type is this?" # type
+    "What zone is this?" # Anchors classification - zone membership
+]
+
+WHEN = [
+    "When was this created?",
+    "When was this last updated?",
+    "When did this become effective?",
+    "When will this no longer be effective?",
+    "Is this effective?",
+    "What was the value last week?",
+    "What was the value last month?",
+    "What was the value last quarter?",
+    "What was the value last year?"
+]
+
 # Modularized report_specs
 base_report_specs = FormatSetDict({
     "Default": FormatSet(
@@ -266,6 +311,7 @@ base_report_specs = FormatSetDict({
         description="Was a valid combination of report_spec and output_format provided?",
         annotations={},  # No specific annotations
         family="General",
+        question_spec=[{'perspectives':["ALL"], 'questions': WHO + WHAT + WHEN}],
         formats=[
             Format(
                 types=["ALL"],
@@ -284,6 +330,12 @@ base_report_specs = FormatSetDict({
                 ],
             )
         ],
+        action=ActionParameter(
+            function="ClassificationManager.get_elements_by_property_value",
+            optional_params=OPTIONAL_FILTER_PARAMS,
+            required_params=["search_string"],
+            spec_params={},
+        )
     ),
 
     "Actor-Profiles": FormatSet(
@@ -1757,7 +1809,7 @@ def select_report_spec(kind: str, output_type: str) -> dict | None:
         output_struct["target_type"] = element.target_type
         if element.action:
             # Convert ActionParameter to dictionary for backward compatibility
-            output_struct["action"] = element.action.dict()
+            output_struct["action"] = element.action.model_dump()
         if element.get_additional_props:
             output_struct["get_additional_props"] = element.get_additional_props.dict()
 
@@ -2206,6 +2258,90 @@ def get_report_registry() -> FormatSetDict:
     _add_with_collision_check(combined, _CONFIG_REPORT_FORMATS, source="CONFIG")
     _add_with_collision_check(combined, _RUNTIME_REPORT_FORMATS, source="RUNTIME")
     return combined
+
+
+def find_report_specs_by_perspective(perspective: str, *, case_insensitive: bool = True) -> list[str]:
+    """
+    Return a list of report spec labels whose `question_spec` includes the given role.
+
+    Args:
+        perspective: The role to search for (e.g., "Data Steward").
+        case_insensitive: If True, compare perspectives case-insensitively.
+
+    Returns:
+        List of matching report spec labels.
+    """
+    if not perspective:
+        return []
+    needle = perspective.strip()
+    if case_insensitive:
+        needle = needle.lower()
+
+    matches: list[str] = []
+    for label, fs in get_report_registry().items():
+        qspec = getattr(fs, "question_spec", None)
+        if not qspec:
+            continue
+        for item in qspec:
+            roles = getattr(item, "perspectives", []) or []
+            if case_insensitive:
+                if any((r or "").strip().lower() == needle for r in roles):
+                    matches.append(label)
+                    break
+            else:
+                if any((r or "").strip() == needle for r in roles):
+                    matches.append(label)
+                    break
+    return sorted(set(matches))
+
+
+def find_report_specs_by_question(
+    question: str,
+    *,
+    case_insensitive: bool = True,
+    substring: bool = True,
+) -> list[str]:
+    """
+    Return a list of report spec labels whose `question_spec` includes a matching example question.
+
+    Args:
+        question: The question to search for.
+        case_insensitive: If True, compare questions case-insensitively.
+        substring: If True, treat `question` as a substring to match within example questions;
+                   otherwise require exact match.
+
+    Returns:
+        List of matching report spec labels.
+    """
+    if not question:
+        return []
+    needle = question.strip()
+    haystack_norm = (lambda s: (s or "").strip().lower()) if case_insensitive else (lambda s: (s or "").strip())
+    needle_cmp = haystack_norm(needle)
+
+    matches: list[str] = []
+    for label, fs in get_report_registry().items():
+        qspec = getattr(fs, "question_spec", None)
+        if not qspec:
+            continue
+        found = False
+        for item in qspec:
+            questions = getattr(item, "questions", []) or []
+            for q in questions:
+                qn = haystack_norm(q)
+                if substring:
+                    if needle_cmp in qn:
+                        found = True
+                        break
+                else:
+                    if needle_cmp == qn:
+                        found = True
+                        break
+            if found:
+                break
+        if found:
+            matches.append(label)
+    return sorted(set(matches))
 
 
 def register_report_specs(new_formats: Union[FormatSetDict, dict], *, source: str = "runtime") -> None:

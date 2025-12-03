@@ -106,7 +106,7 @@ class ProjectManager(Client2):
         # Common population pipeline
         col_data = populate_common_columns(element, columns_struct)
         columns_list = col_data.get('formats', {}).get('attributes', [])
-        # Overlay extras (project roles) only where empty
+        # Overlay extras (project perspectives) only where empty
         extra = self._extract_additional_project_properties(element, columns_struct)
         col_data = overlay_additional_values(col_data, extra)
         return col_data
@@ -177,9 +177,9 @@ class ProjectManager(Client2):
         Raises
         ------
 
-        InvalidParameterException
+        PyegeriaInvalidParameterException
           If the client passes incorrect parameters on the request - such as bad URLs or invalid values
-        PropertyServerException
+        PyegeriaAPIException
           Raised by the server when an issue arises in processing a valid request
         NotAuthorizedException
           The principle specified by the user_id does not have authorization for the requested action
@@ -235,9 +235,9 @@ class ProjectManager(Client2):
         Raises
         ------
 
-        InvalidParameterException
+        PyegeriaInvalidParameterException
           If the client passes incorrect parameters on the request - such as bad URLs or invalid values
-        PropertyServerException
+        PyegeriaAPIException
           Raised by the server when an issue arises in processing a valid request
         NotAuthorizedException
           The principle specified by the user_id does not have authorization for the requested action
@@ -286,9 +286,9 @@ class ProjectManager(Client2):
         Raises
         ------
 
-        InvalidParameterException
+        PyegeriaInvalidParameterException
           If the client passes incorrect parameters on the request - such as bad URLs or invalid values
-        PropertyServerException
+        PyegeriaAPIException
           Raised by the server when an issue arises in processing a valid request
         NotAuthorizedException
           The principle specified by the user_id does not have authorization for the requested action
@@ -342,9 +342,9 @@ class ProjectManager(Client2):
         Raises
         ------
 
-        InvalidParameterException
+        PyegeriaInvalidParameterException
           If the client passes incorrect parameters on the request - such as bad URLs or invalid values
-        PropertyServerException
+        PyegeriaAPIException
           Raised by the server when an issue arises in processing a valid request
         NotAuthorizedException
           The principle specified by the user_id does not have authorization for the requested action
@@ -433,14 +433,14 @@ class ProjectManager(Client2):
     ) -> str | dict:
         """Returns the list of actors that are linked off of the project.  This includes the project managers.
            The optional request body allows a teamRole to be specified as a filter.  To filter out the project managers,
-           specify "ProjectManagement" as the team role.
+           specify "ProjectManagement" as the team perspective.
 
         Parameters
         ----------
         project_guid: str
             Identifier of the project to return information for.
         team_role: str, [default=None]
-            The team role to filter by.  If None, all team members will be returned.
+            The team perspective to filter by.  If None, all team members will be returned.
         start_from: int, [default=0], optional
                     When multiple pages of results are available, the page number to start from.
         page_size: int, [default=None]
@@ -511,9 +511,9 @@ class ProjectManager(Client2):
         Raises
         ------
 
-        InvalidParameterException
+        PyegeriaInvalidParameterException
           If the client passes incorrect parameters on the request - such as bad URLs or invalid values
-        PropertyServerException
+        PyegeriaAPIException
           Raised by the server when an issue arises in processing a valid request
         NotAuthorizedException
           The principle specified by the user_id does not have authorization for the requested action
@@ -581,9 +581,9 @@ class ProjectManager(Client2):
         Raises
         ------
 
-        InvalidParameterException
+        PyegeriaInvalidParameterException
           If the client passes incorrect parameters on the request - such as bad URLs or invalid values
-        PropertyServerException
+        PyegeriaAPIException
           Raised by the server when an issue arises in processing a valid request
         NotAuthorizedException
           The principle specified by the user_id does not have authorization for the requested action
@@ -678,9 +678,9 @@ class ProjectManager(Client2):
             Raises
             ------
 
-            InvalidParameterException
+            PyegeriaInvalidParameterException
               If the client passes incorrect parameters on the request - such as bad URLs or invalid values
-            PropertyServerException
+            PyegeriaAPIException
               Raised by the server when an issue arises in processing a valid request
             NotAuthorizedException
               The principle specified by the user_id does not have authorization for the requested action
@@ -737,9 +737,9 @@ class ProjectManager(Client2):
             Raises
             ------
 
-            InvalidParameterException
+            PyegeriaInvalidParameterException
               If the client passes incorrect parameters on the request - such as bad URLs or invalid values
-            PropertyServerException
+            PyegeriaAPIException
               Raised by the server when an issue arises in processing a valid request
             NotAuthorizedException
               The principle specified by the user_id does not have authorization for the requested action
@@ -788,9 +788,9 @@ class ProjectManager(Client2):
         Raises
         ------
 
-        InvalidParameterException
+        PyegeriaInvalidParameterException
           If the client passes incorrect parameters on the request - such as bad URLs or invalid values
-        PropertyServerException
+        PyegeriaAPIException
           Raised by the server when an issue arises in processing a valid request
         NotAuthorizedException
           The principle specified by the user_id does not have authorization for the requested action
@@ -833,9 +833,9 @@ class ProjectManager(Client2):
         Raises
         ------
 
-        InvalidParameterException
+        PyegeriaInvalidParameterException
           If the client passes incorrect parameters on the request - such as bad URLs or invalid values
-        PropertyServerException
+        PyegeriaAPIException
           Raised by the server when an issue arises in processing a valid request
         NotAuthorizedException
           The principle specified by the user_id does not have authorization for the requested action
@@ -871,9 +871,9 @@ class ProjectManager(Client2):
 
         Raises
         ------
-        InvalidParameterException
+        PyegeriaInvalidParameterException
           If the client passes incorrect parameters on the request - such as bad URLs or invalid values
-        PropertyServerException
+        PyegeriaAPIException
           Raised by the server when an issue arises in processing a valid request
         NotAuthorizedException
           The principle specified by the user_id does not have authorization for the requested action
@@ -931,9 +931,9 @@ class ProjectManager(Client2):
 
         Raises
         ------
-        InvalidParameterException
+        PyegeriaInvalidParameterException
           If the client passes incorrect parameters on the request - such as bad URLs or invalid values
-        PropertyServerException
+        PyegeriaAPIException
           Raised by the server when an issue arises in processing a valid request
         NotAuthorizedException
           The principle specified by the user_id does not have authorization for the requested action
@@ -990,9 +990,9 @@ class ProjectManager(Client2):
 
         Raises
         ------
-        InvalidParameterException
+        PyegeriaInvalidParameterException
           If the client passes incorrect parameters on the request - such as bad URLs or invalid values
-        PropertyServerException
+        PyegeriaAPIException
           Raised by the server when an issue arises in processing a valid request
         NotAuthorizedException
           The principle specified by the user_id does not have authorization for the requested action
@@ -1052,9 +1052,9 @@ class ProjectManager(Client2):
 
         Raises
         ------
-        InvalidParameterException
+        PyegeriaInvalidParameterException
           If the client passes incorrect parameters on the request - such as bad URLs or invalid values
-        PropertyServerException
+        PyegeriaAPIException
           Raised by the server when an issue arises in processing a valid request
         NotAuthorizedException
           The principle specified by the user_id does not have authorization for the requested action
@@ -1134,9 +1134,9 @@ class ProjectManager(Client2):
 
         Raises
         ------
-        InvalidParameterException
+        PyegeriaInvalidParameterException
           If the client passes incorrect parameters on the request - such as bad URLs or invalid values
-        PropertyServerException
+        PyegeriaAPIException
           Raised by the server when an issue arises in processing a valid request
         NotAuthorizedException
           The principle specified by the user_id does not have authorization for the requested action
@@ -1189,9 +1189,9 @@ class ProjectManager(Client2):
 
         Raises
         ------
-        InvalidParameterException
+        PyegeriaInvalidParameterException
           If the client passes incorrect parameters on the request - such as bad URLs or invalid values
-        PropertyServerException
+        PyegeriaAPIException
           Raised by the server when an issue arises in processing a valid request
         NotAuthorizedException
           The principle specified by the user_id does not have authorization for the requested action
@@ -1219,9 +1219,9 @@ class ProjectManager(Client2):
 
         Raises
         ------
-        InvalidParameterException
+        PyegeriaInvalidParameterException
           If the client passes incorrect parameters on the request - such as bad URLs or invalid values
-        PropertyServerException
+        PyegeriaAPIException
           Raised by the server when an issue arises in processing a valid request
         NotAuthorizedException
           The principle specified by the user_id does not have authorization for the requested action
@@ -1259,9 +1259,9 @@ class ProjectManager(Client2):
         Raises
         ------
 
-        InvalidParameterException
+        PyegeriaInvalidParameterException
           If the client passes incorrect parameters on the request - such as bad URLs or invalid values
-        PropertyServerException
+        PyegeriaAPIException
           Raised by the server when an issue arises in processing a valid request
         NotAuthorizedException
           The principle specified by the user_id does not have authorization for the requested action
@@ -1292,9 +1292,9 @@ class ProjectManager(Client2):
 
         Raises
         ------
-        InvalidParameterException
+        PyegeriaInvalidParameterException
           If the client passes incorrect parameters on the request - such as bad URLs or invalid values
-        PropertyServerException
+        PyegeriaAPIException
           Raised by the server when an issue arises in processing a valid request
         NotAuthorizedException
           The principle specified by the user_id does not have authorization for the requested action
@@ -1331,9 +1331,9 @@ class ProjectManager(Client2):
 
             Raises
             ------
-            InvalidParameterException
+            PyegeriaInvalidParameterException
               If the client passes incorrect parameters on the request - such as bad URLs or invalid values
-            PropertyServerException
+            PyegeriaAPIException
               Raised by the server when an issue arises in processing a valid request
             NotAuthorizedException
               The principle specified by the user_id does not have authorization for the requested action
@@ -1368,9 +1368,9 @@ class ProjectManager(Client2):
 
         Raises
         ------
-        InvalidParameterException
+        PyegeriaInvalidParameterException
           If the client passes incorrect parameters on the request - such as bad URLs or invalid values
-        PropertyServerException
+        PyegeriaAPIException
           Raised by the server when an issue arises in processing a valid request
         NotAuthorizedException
           The principle specified by the user_id does not have authorization for the requested action
@@ -1415,9 +1415,9 @@ class ProjectManager(Client2):
 
         Raises
         ------
-        InvalidParameterException
+        PyegeriaInvalidParameterException
           If the client passes incorrect parameters on the request - such as bad URLs or invalid values
-        PropertyServerException
+        PyegeriaAPIException
           Raised by the server when an issue arises in processing a valid request
         NotAuthorizedException
           The principle specified by the user_id does not have authorization for the requested action
@@ -1461,9 +1461,9 @@ class ProjectManager(Client2):
 
         Raises
         ------
-        InvalidParameterException
+        PyegeriaInvalidParameterException
           If the client passes incorrect parameters on the request - such as bad URLs or invalid values
-        PropertyServerException
+        PyegeriaAPIException
           Raised by the server when an issue arises in processing a valid request
         NotAuthorizedException
           The principle specified by the user_id does not have authorization for the requested action
@@ -1500,9 +1500,9 @@ class ProjectManager(Client2):
 
             Raises
             ------
-            InvalidParameterException
+            PyegeriaInvalidParameterException
               If the client passes incorrect parameters on the request - such as bad URLs or invalid values
-            PropertyServerException
+            PyegeriaAPIException
               Raised by the server when an issue arises in processing a valid request
             NotAuthorizedException
               The principle specified by the user_id does not have authorization for the requested action
@@ -1537,9 +1537,9 @@ class ProjectManager(Client2):
 
         Raises
         ------
-        InvalidParameterException
+        PyegeriaInvalidParameterException
           If the client passes incorrect parameters on the request - such as bad URLs or invalid values
-        PropertyServerException
+        PyegeriaAPIException
           Raised by the server when an issue arises in processing a valid request
         NotAuthorizedException
           The principle specified by the user_id does not have authorization for the requested action
@@ -1584,9 +1584,9 @@ class ProjectManager(Client2):
 
         Raises
         ------
-        InvalidParameterException
+        PyegeriaInvalidParameterException
           If the client passes incorrect parameters on the request - such as bad URLs or invalid values
-        PropertyServerException
+        PyegeriaAPIException
           Raised by the server when an issue arises in processing a valid request
         NotAuthorizedException
           The principle specified by the user_id does not have authorization for the requested action
@@ -1616,7 +1616,7 @@ class ProjectManager(Client2):
             description: str = None,
             body: dict | NewRelationshipRequestBody = None
     ) -> None:
-        """Add an actor to a project. The request body is optional.  If supplied, it contains the name of the role that
+        """Add an actor to a project. The request body is optional.  If supplied, it contains the name of the perspective that
         the actor plays in the project. Async version.
 
         Parameters
@@ -1626,7 +1626,7 @@ class ProjectManager(Client2):
         actor_guid: str
             identity of the actor to add.
         team_role: str, optional, defaults to None
-            Name of the role the actor plays in the project.
+            Name of the perspective the actor plays in the project.
         effective_from: str, optional, defaults to None
             Date at which the actor becomes active in the project. Date format is ISO 8601 string format.
         effective_to: str, optional, defaults to None
@@ -1639,9 +1639,9 @@ class ProjectManager(Client2):
         Raises
         ------
 
-        InvalidParameterException
+        PyegeriaInvalidParameterException
           If the client passes incorrect parameters on the request - such as bad URLs or invalid values
-        PropertyServerException
+        PyegeriaAPIException
           Raised by the server when an issue arises in processing a valid request
         NotAuthorizedException
           The principle specified by the user_id does not have authorization for the requested action
@@ -1675,7 +1675,7 @@ class ProjectManager(Client2):
             description: str = None,
             body: dict | NewRelationshipRequestBody = None
     ) -> None:
-        """Add an actor to a project. The request body is optional.  If supplied, it contains the name of the role that
+        """Add an actor to a project. The request body is optional.  If supplied, it contains the name of the perspective that
         the actor plays in the project.
 
         Parameters
@@ -1685,7 +1685,7 @@ class ProjectManager(Client2):
         actor_guid: str
             identity of the actor to add.
         team_role: str, optional, defaults to None
-            Name of the role the actor plays in the project.
+            Name of the perspective the actor plays in the project.
         effective_from: str, optional, defaults to None
             Date at which the actor becomes active in the project. Date format is ISO 8601 string format.
         effective_to: str, optional, defaults to None
@@ -1698,9 +1698,9 @@ class ProjectManager(Client2):
         Raises
         ------
 
-        InvalidParameterException
+        PyegeriaInvalidParameterException
           If the client passes incorrect parameters on the request - such as bad URLs or invalid values
-        PropertyServerException
+        PyegeriaAPIException
           Raised by the server when an issue arises in processing a valid request
         NotAuthorizedException
           The principle specified by the user_id does not have authorization for the requested action
@@ -1740,9 +1740,9 @@ class ProjectManager(Client2):
         Raises
         ------
 
-        InvalidParameterException
+        PyegeriaInvalidParameterException
           If the client passes incorrect parameters on the request - such as bad URLs or invalid values
-        PropertyServerException
+        PyegeriaAPIException
           Raised by the server when an issue arises in processing a valid request
         NotAuthorizedException
           The principle specified by the user_id does not have authorization for the requested action
@@ -1780,9 +1780,9 @@ class ProjectManager(Client2):
         Raises
         ------
 
-        InvalidParameterException
+        PyegeriaInvalidParameterException
           If the client passes incorrect parameters on the request - such as bad URLs or invalid values
-        PropertyServerException
+        PyegeriaAPIException
           Raised by the server when an issue arises in processing a valid request
         NotAuthorizedException
           The principle specified by the user_id does not have authorization for the requested action

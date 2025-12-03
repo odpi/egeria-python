@@ -23,7 +23,7 @@ from pyegeria import (
     EgeriaTech,
 )
 from pyegeria._exceptions_new import (
-    PyegeriaInvalidParameterException as InvalidParameterException,
+    PyegeriaInvalidParameterException,
     PyegeriaAPIException as PropertyServerException,
     PyegeriaUnauthorizedException as UserNotAuthorizedException,
     print_basic_exception as print_exception_response,
@@ -188,7 +188,7 @@ def display_gov_eng_status(
                     live.update(generate_table(search_list))
 
     except (
-        InvalidParameterException,
+        PyegeriaInvalidParameterException,
         PropertyServerException,
         UserNotAuthorizedException,
     ) as e:

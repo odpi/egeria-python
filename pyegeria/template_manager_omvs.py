@@ -68,9 +68,9 @@ class TemplateManager(Client2):
 
         Raises
         ------
-        InvalidParameterException
-        PropertyServerException
-        UserNotAuthorizedException
+        PyegeriaInvalidParameterException
+        PyegeriaAPIException
+        PyegeriaUnauthorizedException
 
         Notes
         =====
@@ -120,9 +120,9 @@ class TemplateManager(Client2):
 
         Raises
         ------
-        InvalidParameterException
-        PropertyServerException
-        UserNotAuthorizedException
+        PyegeriaInvalidParameterException
+        PyegeriaAPIException
+        PyegeriaUnauthorizedException
 
         Notes
         =====
@@ -171,9 +171,9 @@ class TemplateManager(Client2):
 
         Raises
         ------
-        InvalidParameterException
-        PropertyServerException
-        UserNotAuthorizedException
+        PyegeriaInvalidParameterException
+        PyegeriaAPIException
+        PyegeriaUnauthorizedException
 
         Notes
         -----
@@ -223,9 +223,9 @@ class TemplateManager(Client2):
 
         Raises
         ------
-        InvalidParameterException
-        PropertyServerException
-        UserNotAuthorizedException
+        PyegeriaInvalidParameterException
+        PyegeriaAPIException
+        PyegeriaUnauthorizedException
 
         Notes
         -----
@@ -268,9 +268,9 @@ class TemplateManager(Client2):
 
         Raises
         ------
-        InvalidParameterException
-        PropertyServerException
-        UserNotAuthorizedException
+        PyegeriaInvalidParameterException
+        PyegeriaAPIException
+        PyegeriaUnauthorizedException
 
         Notes
         -----
@@ -321,9 +321,9 @@ class TemplateManager(Client2):
 
         Raises
         ------
-        InvalidParameterException
-        PropertyServerException
-        UserNotAuthorizedException
+        PyegeriaInvalidParameterException
+        PyegeriaAPIException
+        PyegeriaUnauthorizedException
 
         Notes
         -----
@@ -377,9 +377,9 @@ class TemplateManager(Client2):
 
         Raises
         ------
-        InvalidParameterException
-        PropertyServerException
-        UserNotAuthorizedException
+        PyegeriaInvalidParameterException
+        PyegeriaAPIException
+        PyegeriaUnauthorizedException
 
         Notes
         -----
@@ -418,9 +418,9 @@ class TemplateManager(Client2):
 
         Raises
         ------
-        InvalidParameterException
-        PropertyServerException
-        UserNotAuthorizedException
+        PyegeriaInvalidParameterException
+        PyegeriaAPIException
+        PyegeriaUnauthorizedException
 
         Notes
         -----
@@ -461,9 +461,9 @@ class TemplateManager(Client2):
 
         Raises
         ------
-        InvalidParameterException
-        PropertyServerException
-        UserNotAuthorizedException
+        PyegeriaInvalidParameterException
+        PyegeriaAPIException
+        PyegeriaUnauthorizedException
 
         Notes
         -----
@@ -504,9 +504,9 @@ class TemplateManager(Client2):
 
         Raises
         ------
-        InvalidParameterException
-        PropertyServerException
-        UserNotAuthorizedException
+        PyegeriaInvalidParameterException
+        PyegeriaAPIException
+        PyegeriaUnauthorizedException
 
         Notes
         -----
@@ -551,9 +551,9 @@ class TemplateManager(Client2):
 
         Raises
         ------
-        InvalidParameterException
-        PropertyServerException
-        UserNotAuthorizedException
+        PyegeriaInvalidParameterException
+        PyegeriaAPIException
+        PyegeriaUnauthorizedException
 
         Notes
         -----
@@ -592,9 +592,9 @@ class TemplateManager(Client2):
 
         Raises
         ------
-        InvalidParameterException
-        PropertyServerException
-        UserNotAuthorizedException
+        PyegeriaInvalidParameterException
+        PyegeriaAPIException
+        PyegeriaUnauthorizedException
 
         Notes
         -----
@@ -635,9 +635,9 @@ class TemplateManager(Client2):
 
         Raises
         ------
-        InvalidParameterException
-        PropertyServerException
-        UserNotAuthorizedException
+        PyegeriaInvalidParameterException
+        PyegeriaAPIException
+        PyegeriaUnauthorizedException
 
         Notes
         -----
@@ -681,9 +681,9 @@ class TemplateManager(Client2):
 
         Raises
         ------
-        InvalidParameterException
-        PropertyServerException
-        UserNotAuthorizedException
+        PyegeriaInvalidParameterException
+        PyegeriaAPIException
+        PyegeriaUnauthorizedException
 
         Notes
         -----
@@ -733,9 +733,9 @@ class TemplateManager(Client2):
 
         Raises
         ------
-        InvalidParameterException
-        PropertyServerException
-        UserNotAuthorizedException
+        PyegeriaInvalidParameterException
+        PyegeriaAPIException
+        PyegeriaUnauthorizedException
 
         Notes
         -----
@@ -776,9 +776,9 @@ class TemplateManager(Client2):
 
         Raises
         ------
-        InvalidParameterException
-        PropertyServerException
-        UserNotAuthorizedException
+        PyegeriaInvalidParameterException
+        PyegeriaAPIException
+        PyegeriaUnauthorizedException
 
         Notes
         -----
@@ -823,9 +823,9 @@ class TemplateManager(Client2):
 
         Raises
         ------
-        InvalidParameterException
-        PropertyServerException
-        UserNotAuthorizedException
+        PyegeriaInvalidParameterException
+        PyegeriaAPIException
+        PyegeriaUnauthorizedException
 
         Notes
         -----
@@ -865,9 +865,9 @@ class TemplateManager(Client2):
 
         Raises
         ------
-        InvalidParameterException
-        PropertyServerException
-        UserNotAuthorizedException
+        PyegeriaInvalidParameterException
+        PyegeriaAPIException
+        PyegeriaUnauthorizedException
 
         Notes
         -----
@@ -913,9 +913,9 @@ class TemplateManager(Client2):
 
         Raises
         ------
-        InvalidParameterException
-        PropertyServerException
-        UserNotAuthorizedException
+        PyegeriaInvalidParameterException
+        PyegeriaAPIException
+        PyegeriaUnauthorizedException
 
         Notes
         -----
@@ -958,9 +958,9 @@ class TemplateManager(Client2):
 
         Raises
         ------
-        InvalidParameterException
-        PropertyServerException
-        UserNotAuthorizedException
+        PyegeriaInvalidParameterException
+        PyegeriaAPIException
+        PyegeriaUnauthorizedException
 
         Notes
         -----
@@ -1005,9 +1005,9 @@ class TemplateManager(Client2):
 
         Raises
         ------
-        InvalidParameterException
-        PropertyServerException
-        UserNotAuthorizedException
+        PyegeriaInvalidParameterException
+        PyegeriaAPIException
+        PyegeriaUnauthorizedException
 
         Notes
         -----
@@ -1046,9 +1046,9 @@ class TemplateManager(Client2):
 
         Raises
         ------
-        InvalidParameterException
-        PropertyServerException
-        UserNotAuthorizedException
+        PyegeriaInvalidParameterException
+        PyegeriaAPIException
+        PyegeriaUnauthorizedException
 
         Notes
         -----
@@ -1087,9 +1087,9 @@ class TemplateManager(Client2):
 
         Raises
         ------
-        InvalidParameterException
-        PropertyServerException
-        UserNotAuthorizedException
+        PyegeriaInvalidParameterException
+        PyegeriaAPIException
+        PyegeriaUnauthorizedException
 
         Notes
         -----
@@ -1128,9 +1128,9 @@ class TemplateManager(Client2):
 
         Raises
         ------
-        InvalidParameterException
-        PropertyServerException
-        UserNotAuthorizedException
+        PyegeriaInvalidParameterException
+        PyegeriaAPIException
+        PyegeriaUnauthorizedException
 
         Notes
         -----
@@ -1172,9 +1172,9 @@ class TemplateManager(Client2):
 
         Raises
         ------
-        InvalidParameterException
-        PropertyServerException
-        UserNotAuthorizedException
+        PyegeriaInvalidParameterException
+        PyegeriaAPIException
+        PyegeriaUnauthorizedException
 
         Notes
         -----
@@ -1214,9 +1214,9 @@ class TemplateManager(Client2):
 
         Raises
         ------
-        InvalidParameterException
-        PropertyServerException
-        UserNotAuthorizedException
+        PyegeriaInvalidParameterException
+        PyegeriaAPIException
+        PyegeriaUnauthorizedException
 
         Notes
         -----
@@ -1260,9 +1260,9 @@ class TemplateManager(Client2):
 
         Raises
         ------
-        InvalidParameterException
-        PropertyServerException
-        UserNotAuthorizedException
+        PyegeriaInvalidParameterException
+        PyegeriaAPIException
+        PyegeriaUnauthorizedException
 
         Notes
         -----
@@ -1302,9 +1302,9 @@ class TemplateManager(Client2):
 
         Raises
         ------
-        InvalidParameterException
-        PropertyServerException
-        UserNotAuthorizedException
+        PyegeriaInvalidParameterException
+        PyegeriaAPIException
+        PyegeriaUnauthorizedException
 
         Notes
         -----
@@ -1347,9 +1347,9 @@ class TemplateManager(Client2):
 
         Raises
         ------
-        InvalidParameterException
-        PropertyServerException
-        UserNotAuthorizedException
+        PyegeriaInvalidParameterException
+        PyegeriaAPIException
+        PyegeriaUnauthorizedException
 
         Notes
         -----
@@ -1386,9 +1386,9 @@ class TemplateManager(Client2):
 
         Raises
         ------
-        InvalidParameterException
-        PropertyServerException
-        UserNotAuthorizedException
+        PyegeriaInvalidParameterException
+        PyegeriaAPIException
+        PyegeriaUnauthorizedException
 
         Notes
         -----

@@ -567,9 +567,9 @@ class AssetCatalog(Client2):
 
          Raises:
          ------
-         InvalidParameterException
-         PropertyServerException
-         UserNotAuthorizedException
+         PyegeriaInvalidParameterException
+         PyegeriaAPIException
+         PyegeriaUnauthorizedException
 
     """
 
@@ -617,9 +617,9 @@ class AssetCatalog(Client2):
 
          Raises:
          ------
-         InvalidParameterException
-         PropertyServerException
-         UserNotAuthorizedException
+         PyegeriaInvalidParameterException
+         PyegeriaAPIException
+         PyegeriaUnauthorizedException
 
         """
 
@@ -683,9 +683,9 @@ class AssetCatalog(Client2):
 
          Raises:
          ------
-         InvalidParameterException
-         PropertyServerException
-         UserNotAuthorizedException
+         PyegeriaInvalidParameterException
+         PyegeriaAPIException
+         PyegeriaUnauthorizedException
 
         """
 

@@ -3352,11 +3352,11 @@ class ClassificationManager(Client2):
 
          Raises
          ------
-         InvalidParameterException
+         PyegeriaInvalidParameterException
              one of the parameters is null or invalid or
-         PropertyServerException
+         PyegeriaAPIException
              There is a problem adding the element properties to the metadata repository or
-         UserNotAuthorizedException
+         PyegeriaUnauthorizedException
              the requesting user is not authorized to issue this request.
 
         Args:
@@ -8192,11 +8192,11 @@ class ClassificationManager(Client2):
 
          Raises
          ------
-         InvalidParameterException
+         PyegeriaInvalidParameterException
              one of the parameters is null or invalid or
-         PropertyServerException
+         PyegeriaAPIException
              There is a problem adding the element properties to the metadata repository or
-         UserNotAuthorizedException
+         PyegeriaUnauthorizedException
              the requesting user is not authorized to issue this request.
 
 
@@ -8248,11 +8248,11 @@ class ClassificationManager(Client2):
 
          Raises
          ------
-         InvalidParameterException
+         PyegeriaInvalidParameterException
              one of the parameters is null or invalid or
-         PropertyServerException
+         PyegeriaAPIException
              There is a problem adding the element properties to the metadata repository or
-         UserNotAuthorizedException
+         PyegeriaUnauthorizedException
              the requesting user is not authorized to issue this request.
 
 

@@ -1641,9 +1641,9 @@ class TestCoreAdminServices:
     #         print("\n\nEngine List: \n" + json.dumps(response, indent=4))
     #
     #     except (
-    #             InvalidParameterException,
-    #             PropertyServerException,
-    #             UserNotAuthorizedException
+    #             PyegeriaInvalidParameterException,
+    #             PyegeriaAPIException,
+    #             PyegeriaUnauthorizedException
     #     ) as e:
     #         print_exception_response(e)
     #         assert False, "Invalid request"

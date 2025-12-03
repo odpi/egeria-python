@@ -16,9 +16,9 @@ from pyegeria._globals import NO_ELEMENTS_FOUND
 from pyegeria._client_new import Client2
 from pyegeria._validators import validate_guid, validate_name, validate_search_string
 # from pyegeria._exceptions import (
-#     InvalidParameterException,
-#     PropertyServerException,
-#     UserNotAuthorizedException,
+#     PyegeriaInvalidParameterException,
+#     PyegeriaAPIException,
+#     PyegeriaUnauthorizedException,
 # )
 from pyegeria.models import GetRequestBody, FilterRequestBody, SearchStringRequestBody
 from pyegeria.utils import body_slimmer
@@ -616,9 +616,9 @@ class AutomatedCuration(Client2):
 
          Raises
          ------
-         InvalidParameterException
-         PropertyServerException
-         UserNotAuthorizedException
+         PyegeriaInvalidParameterException
+         PyegeriaAPIException
+         PyegeriaUnauthorizedException
 
          Notes
          -----
@@ -1963,7 +1963,7 @@ class AutomatedCuration(Client2):
 
         Raises:
         ------
-            InvalidParameterException: If the API response indicates an error (non-200 status code),
+            PyegeriaInvalidParameterException: If the API response indicates an error (non-200 status code),
             this exception is raised with details from the response content.
 
         Notes
@@ -2008,7 +2008,7 @@ class AutomatedCuration(Client2):
 
         Raises
         ------
-            InvalidParameterException: If the API response indicates an error (non-200 status code),
+            PyegeriaInvalidParameterException: If the API response indicates an error (non-200 status code),
             this exception is raised with details from the response content.
         Notes
         -----
@@ -2533,10 +2533,10 @@ class AutomatedCuration(Client2):
 
         Raises:
         ------
-            InvalidParameterException: If the API response indicates an error (non-200 status code),
+            PyegeriaInvalidParameterException: If the API response indicates an error (non-200 status code),
                                        this exception is raised with details from the response content.
-            PropertyServerException: If the API response indicates a server side error.
-            UserNotAuthorizedException:
+            PyegeriaAPIException: If the API response indicates a server side error.
+            PyegeriaUnauthorizedException:
 
         Notes:
             There are multiple kinds of file folder surveys available, each with their own purpose. They are described
@@ -2820,7 +2820,7 @@ class AutomatedCuration(Client2):
 
         Raises
         ------
-            InvalidParameterException: If the API response indicates an error (non-200 status code),
+            PyegeriaInvalidParameterException: If the API response indicates an error (non-200 status code),
             this exception is raised with details from the response content.
 
         Note
@@ -2900,7 +2900,7 @@ class AutomatedCuration(Client2):
 
         Raises
         ------
-            InvalidParameterException: If the API response indicates an error (non-200 status code),
+            PyegeriaInvalidParameterException: If the API response indicates an error (non-200 status code),
             this exception is raised with details from the response content.
 
         Note
@@ -2950,10 +2950,10 @@ class AutomatedCuration(Client2):
 
         Raises:
         ------
-            InvalidParameterException: If the API response indicates an error (non-200 status code),
+            PyegeriaInvalidParameterException: If the API response indicates an error (non-200 status code),
                                        this exception is raised with details from the response content.
-            PropertyServerException: If the API response indicates a server side error.
-            UserNotAuthorizedException:
+            PyegeriaAPIException: If the API response indicates a server side error.
+            PyegeriaUnauthorizedException:
         """
 
         validate_guid(integ_connector_guid)
@@ -2992,10 +2992,10 @@ class AutomatedCuration(Client2):
 
         Raises:
         ------
-            InvalidParameterException: If the API response indicates an error (non-200 status code),
+            PyegeriaInvalidParameterException: If the API response indicates an error (non-200 status code),
                                        this exception is raised with details from the response content.
-            PropertyServerException: If the API response indicates a server side error.
-            UserNotAuthorizedException:
+            PyegeriaAPIException: If the API response indicates a server side error.
+            PyegeriaUnauthorizedException:
         """
 
         loop = asyncio.get_event_loop()
@@ -3024,10 +3024,10 @@ class AutomatedCuration(Client2):
 
         Raises:
         ------
-            InvalidParameterException: If the API response indicates an error (non-200 status code),
+            PyegeriaInvalidParameterException: If the API response indicates an error (non-200 status code),
                                        this exception is raised with details from the response content.
-            PropertyServerException: If the API response indicates a server side error.
-            UserNotAuthorizedException:
+            PyegeriaAPIException: If the API response indicates a server side error.
+            PyegeriaUnauthorizedException:
         """
 
         validate_guid(relationship_guid)
@@ -3061,10 +3061,10 @@ class AutomatedCuration(Client2):
 
         Raises:
         ------
-            InvalidParameterException: If the API response indicates an error (non-200 status code),
+            PyegeriaInvalidParameterException: If the API response indicates an error (non-200 status code),
                                        this exception is raised with details from the response content.
-            PropertyServerException: If the API response indicates a server side error.
-            UserNotAuthorizedException:
+            PyegeriaAPIException: If the API response indicates a server side error.
+            PyegeriaUnauthorizedException:
         """
 
         loop = asyncio.get_event_loop()
@@ -3117,10 +3117,10 @@ class AutomatedCuration(Client2):
 
         Raises:
         ------
-        InvalidParameterException: If the API response indicates an error (non-200 status code),
+        PyegeriaInvalidParameterException: If the API response indicates an error (non-200 status code),
                                    this exception is raised with details from the response content.
-        PropertyServerException: If the API response indicates a server side error.
-        UserNotAuthorizedException:
+        PyegeriaAPIException: If the API response indicates a server side error.
+        PyegeriaUnauthorizedException:
         """
 
         validate_guid(integ_connector_guid)
@@ -3183,10 +3183,10 @@ class AutomatedCuration(Client2):
 
         Raises:
         ------
-        InvalidParameterException: If the API response indicates an error (non-200 status code),
+        PyegeriaInvalidParameterException: If the API response indicates an error (non-200 status code),
                                    this exception is raised with details from the response content.
-        PropertyServerException: If the API response indicates a server side error.
-        UserNotAuthorizedException:
+        PyegeriaAPIException: If the API response indicates a server side error.
+        PyegeriaUnauthorizedException:
         """
         loop = asyncio.get_event_loop()
         response = loop.run_until_complete(
@@ -3242,10 +3242,10 @@ class AutomatedCuration(Client2):
 
         Raises:
         ------
-        InvalidParameterException: If the API response indicates an error (non-200 status code),
+        PyegeriaInvalidParameterException: If the API response indicates an error (non-200 status code),
                                    this exception is raised with details from the response content.
-        PropertyServerException: If the API response indicates a server side error.
-        UserNotAuthorizedException:
+        PyegeriaAPIException: If the API response indicates a server side error.
+        PyegeriaUnauthorizedException:
         """
 
         validate_guid(relationship_guid)
@@ -3329,10 +3329,10 @@ class AutomatedCuration(Client2):
 
         Raises:
         ------
-        InvalidParameterException: If the API response indicates an error (non-200 status code),
+        PyegeriaInvalidParameterException: If the API response indicates an error (non-200 status code),
                                    this exception is raised with details from the response content.
-        PropertyServerException: If the API response indicates a server side error.
-        UserNotAuthorizedException:
+        PyegeriaAPIException: If the API response indicates a server side error.
+        PyegeriaUnauthorizedException:
         """
 
         validate_guid(relationship_guid)
@@ -3359,10 +3359,10 @@ class AutomatedCuration(Client2):
 
         Raises:
         ------
-        InvalidParameterException: If the API response indicates an error (non-200 status code),
+        PyegeriaInvalidParameterException: If the API response indicates an error (non-200 status code),
                                    this exception is raised with details from the response content.
-        PropertyServerException: If the API response indicates a server side error.
-        UserNotAuthorizedException:
+        PyegeriaAPIException: If the API response indicates a server side error.
+        PyegeriaUnauthorizedException:
         """
 
         loop = asyncio.get_event_loop()
@@ -3396,10 +3396,10 @@ class AutomatedCuration(Client2):
 
         Raises:
         ------
-        InvalidParameterException: If the API response indicates an error (non-200 status code),
+        PyegeriaInvalidParameterException: If the API response indicates an error (non-200 status code),
                                    this exception is raised with details from the response content.
-        PropertyServerException: If the API response indicates a server side error.
-        UserNotAuthorizedException:
+        PyegeriaAPIException: If the API response indicates a server side error.
+        PyegeriaUnauthorizedException:
 
         Notes
         -----
@@ -3439,10 +3439,10 @@ class AutomatedCuration(Client2):
 
         Raises:
         ------
-        InvalidParameterException: If the API response indicates an error (non-200 status code),
+        PyegeriaInvalidParameterException: If the API response indicates an error (non-200 status code),
                                    this exception is raised with details from the response content.
-        PropertyServerException: If the API response indicates a server side error.
-        UserNotAuthorizedException:
+        PyegeriaAPIException: If the API response indicates a server side error.
+        PyegeriaUnauthorizedException:
 
         Notes
         -----
@@ -3734,10 +3734,10 @@ class AutomatedCuration(Client2):
 
         Raises:
         ------
-        InvalidParameterException: If the API response indicates an error (non-200 status code),
+        PyegeriaInvalidParameterException: If the API response indicates an error (non-200 status code),
                                    this exception is raised with details from the response content.
-        PropertyServerException: If the API response indicates a server side error.
-        UserNotAuthorizedException:
+        PyegeriaAPIException: If the API response indicates a server side error.
+        PyegeriaUnauthorizedException:
 
         Notes
         -----
@@ -3801,10 +3801,10 @@ class AutomatedCuration(Client2):
 
         Raises:
         ------
-        InvalidParameterException: If the API response indicates an error (non-200 status code),
+        PyegeriaInvalidParameterException: If the API response indicates an error (non-200 status code),
                                    this exception is raised with details from the response content.
-        PropertyServerException: If the API response indicates a server side error.
-        UserNotAuthorizedException:
+        PyegeriaAPIException: If the API response indicates a server side error.
+        PyegeriaUnauthorizedException:
 
         Notes
         -----
@@ -3867,10 +3867,10 @@ class AutomatedCuration(Client2):
 
         Raises:
         ------
-        InvalidParameterException: If the API response indicates an error (non-200 status code),
+        PyegeriaInvalidParameterException: If the API response indicates an error (non-200 status code),
                                    this exception is raised with details from the response content.
-        PropertyServerException: If the API response indicates a server side error.
-        UserNotAuthorizedException:
+        PyegeriaAPIException: If the API response indicates a server side error.
+        PyegeriaUnauthorizedException:
 
         Notes
         -----
@@ -3922,10 +3922,10 @@ class AutomatedCuration(Client2):
 
         Raises:
         ------
-        InvalidParameterException: If the API response indicates an error (non-200 status code),
+        PyegeriaInvalidParameterException: If the API response indicates an error (non-200 status code),
                                    this exception is raised with details from the response content.
-        PropertyServerException: If the API response indicates a server side error.
-        UserNotAuthorizedException:
+        PyegeriaAPIException: If the API response indicates a server side error.
+        PyegeriaUnauthorizedException:
 
         Notes
         -----
@@ -4059,10 +4059,10 @@ class AutomatedCuration(Client2):
 
         Raises:
         ------
-        InvalidParameterException: If the API response indicates an error (non-200 status code),
+        PyegeriaInvalidParameterException: If the API response indicates an error (non-200 status code),
                                    this exception is raised with details from the response content.
-        PropertyServerException: If the API response indicates a server side error.
-        UserNotAuthorizedException:
+        PyegeriaAPIException: If the API response indicates a server side error.
+        PyegeriaUnauthorizedException:
 
         Notes
         -----
@@ -4125,10 +4125,10 @@ class AutomatedCuration(Client2):
 
         Raises:
         ------
-        InvalidParameterException: If the API response indicates an error (non-200 status code),
+        PyegeriaInvalidParameterException: If the API response indicates an error (non-200 status code),
                                    this exception is raised with details from the response content.
-        PropertyServerException: If the API response indicates a server side error.
-        UserNotAuthorizedException:
+        PyegeriaAPIException: If the API response indicates a server side error.
+        PyegeriaUnauthorizedException:
 
         Notes
         -----

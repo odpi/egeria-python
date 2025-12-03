@@ -1,3 +1,20 @@
+"""
+SPDX-License-Identifier: Apache-2.0
+Copyright Contributors to the ODPi Egeria project.
+
+Utilities for rendering Egeria elements into various output formats
+such as DICT, LIST, Markdown (including Mermaid), and basic HTML.
+
+Exceptions
+----------
+Functions in this module may raise the following exceptions:
+- ValueError: Unsupported or inconsistent output format requests (e.g., LIST/TABLE
+  without the required columns); invalid option combinations.
+- KeyError: Missing expected keys from provided elements or report specifications.
+- TypeError: Incorrect input types (e.g., non-list where a list of dicts is required).
+- RuntimeError: Failures in Markdown/HTML conversion or Mermaid rendering helpers.
+"""
+
 import copy
 from datetime import datetime
 import re
@@ -840,8 +857,9 @@ def resolve_output_formats(entity_type: str,
     Resolve a report format structure given an entity type, the desired output format
     (e.g., DICT, LIST, MD, REPORT, FORM), and either a label (str) or a dict of format sets.
 
-    Backward compatibility:
-    - Accepts legacy kwarg 'report_spec' and treats it as report_spec.
+    Notes:
+    - Preferred naming is report_spec (formerly output_format); compatibility for the
+      old 'output_format_spec' terminology has been removed.
 
     Selection order:
     - If report_spec is a str: select by label.
@@ -855,9 +873,8 @@ def resolve_output_formats(entity_type: str,
         if 'report_spec' in kwargs:
             report_spec = kwargs.get('report_spec')
         elif 'report_format' in kwargs:
+            # Still accept 'report_format' as a synonym for report_spec
             report_spec = kwargs.get('report_format')
-        elif 'output_format_spec' in kwargs:
-            report_spec = kwargs.get('output_format_spec')
 
     if isinstance(report_spec, str):
         return select_report_format(report_spec, output_format)

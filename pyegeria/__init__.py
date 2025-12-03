@@ -35,7 +35,7 @@ from ._exceptions_new import (PyegeriaInvalidParameterException,PyegeriaAPIExcep
                               print_exception_table, print_basic_exception, print_validation_error)
 from .config import load_app_config, get_app_config, settings
 from .logging_configuration import config_logging, console_log_filter, init_logging
-# from ._exceptions import (InvalidParameterException, PropertyServerException, UserNotAuthorizedException,
+# from ._exceptions import (PyegeriaInvalidParameterException, PyegeriaAPIException, PyegeriaUnauthorizedException,
 #                           print_exception_response, )
 from ._validators import (is_json, validate_guid, validate_name, validate_public, validate_search_string,
                           validate_server_name, validate_url, validate_user_id, )

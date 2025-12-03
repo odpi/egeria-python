@@ -13,7 +13,7 @@ import os
 
 from pyegeria import EgeriaTech
 from pyegeria._exceptions_new import (
-    PyegeriaInvalidParameterException as InvalidParameterException,
+    PyegeriaInvalidParameterException,
     PyegeriaAPIException as PropertyServerException,
     print_basic_exception as print_exception_response,
 )
@@ -52,7 +52,7 @@ def refresh_connector(
 
         print(f"\n===> Integration Daemon '{server}' refreshed {statement}.")
 
-    except (InvalidParameterException, PropertyServerException) as e:
+    except (PyegeriaInvalidParameterException, PropertyServerException) as e:
         print_exception_response(e)
 
 

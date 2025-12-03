@@ -30,7 +30,7 @@ from pyegeria import (
     NO_CATEGORIES_FOUND, PyegeriaException, print_basic_exception, print_validation_error,
 )
 from pyegeria._exceptions_new import (
-    PyegeriaInvalidParameterException as InvalidParameterException,
+    PyegeriaInvalidParameterException,
     PyegeriaAPIException as PropertyServerException,
     PyegeriaUnauthorizedException as UserNotAuthorizedException,
 )
@@ -321,7 +321,7 @@ def display_command_terms(
             console.print(generate_table(search_string, glossary_guid))
 
     except (
-        InvalidParameterException,
+        PyegeriaInvalidParameterException,
         PropertyServerException,
         UserNotAuthorizedException,
     ) as e:

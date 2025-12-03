@@ -624,11 +624,11 @@ class Client2(BaseClient):
 
         Raises
         ------
-        InvalidParameterException
+        PyegeriaInvalidParameterException
             one of the parameters is null or invalid or
-        PropertyServerException
+        PyegeriaAPIException
             There is a problem adding the element properties to the metadata repository or
-        UserNotAuthorizedException
+        PyegeriaUnauthorizedException
             the requesting user is not authorized to issue this request.
         """
 
@@ -663,11 +663,11 @@ class Client2(BaseClient):
 
         Raises
         ------
-        InvalidParameterException
+        PyegeriaInvalidParameterException
             one of the parameters is null or invalid or
-        PropertyServerException
+        PyegeriaAPIException
             There is a problem adding the element properties to the metadata repository or
-        UserNotAuthorizedException
+        PyegeriaUnauthorizedException
             the requesting user is not authorized to issue this request.
         """
         loop = asyncio.get_event_loop()
@@ -842,8 +842,8 @@ class Client2(BaseClient):
         Raises
         ------
         PyegeriaInvalidParameterException
-        PropertyServerException
-        UserNotAuthorizedException
+        PyegeriaAPIException
+        PyegeriaUnauthorizedException
 
         """
         server_guid = self.__get_guid__(
@@ -895,8 +895,8 @@ class Client2(BaseClient):
         Raises
         ------
         PyegeriaInvalidParameterException
-        PropertyServerException
-        UserNotAuthorizedException
+        PyegeriaAPIException
+        PyegeriaUnauthorizedException
 
         """
 
@@ -1316,11 +1316,11 @@ class Client2(BaseClient):
 
         Raises
         ------
-        InvalidParameterException
+        PyegeriaInvalidParameterException
             one of the parameters is null or invalid or
-        PropertyServerException
+        PyegeriaAPIException
             There is a problem adding the element properties to the metadata repository or
-        UserNotAuthorizedException
+        PyegeriaUnauthorizedException
             the requesting user is not authorized to issue this request.
 
         """
@@ -1362,11 +1362,11 @@ class Client2(BaseClient):
 
         Raises
         ------
-        InvalidParameterException
+        PyegeriaInvalidParameterException
             one of the parameters is null or invalid or
-        PropertyServerException
+        PyegeriaAPIException
             There is a problem adding the element properties to the metadata repository or
-        UserNotAuthorizedException
+        PyegeriaUnauthorizedException
             the requesting user is not authorized to issue this request.
 
         Args:
@@ -1460,11 +1460,11 @@ class Client2(BaseClient):
 
         Raises
         ------
-        InvalidParameterException
+        PyegeriaInvalidParameterException
             one of the parameters is null or invalid or
-        PropertyServerException
+        PyegeriaAPIException
             There is a problem adding the element properties to the metadata repository or
-        UserNotAuthorizedException
+        PyegeriaUnauthorizedException
             the requesting user is not authorized to issue this request.
 
         Args:
@@ -2360,11 +2360,11 @@ class Client2(BaseClient):
 
         Raises
         ------
-        InvalidParameterException
+        PyegeriaInvalidParameterException
             one of the parameters is null or invalid or
-        PropertyServerException
+        PyegeriaAPIException
             There is a problem adding the element properties to the metadata repository or
-        UserNotAuthorizedException
+        PyegeriaUnauthorizedException
             the requesting user is not authorized to issue this request.
 
         Args:
@@ -3761,11 +3761,11 @@ class Client2(BaseClient):
 
         Raises
         ------
-        InvalidParameterException
+        PyegeriaInvalidParameterException
             one of the parameters is null or invalid or
-        PropertyServerException
+        PyegeriaAPIException
             There is a problem adding the element properties to the metadata repository or
-        UserNotAuthorizedException
+        PyegeriaUnauthorizedException
             the requesting user is not authorized to issue this request.
         """
         loop = asyncio.get_event_loop()
@@ -3889,11 +3889,11 @@ class Client2(BaseClient):
 
         Raises
         ------
-        InvalidParameterException
+        PyegeriaInvalidParameterException
             one of the parameters is null or invalid or
-        PropertyServerException
+        PyegeriaAPIException
             There is a problem adding the element properties to the metadata repository or
-        UserNotAuthorizedException
+        PyegeriaUnauthorizedException
             the requesting user is not authorized to issue this request.
         """
         # Todo - fix the output format here when ready
@@ -3930,11 +3930,11 @@ class Client2(BaseClient):
 
         Raises
         ------
-        InvalidParameterException
+        PyegeriaInvalidParameterException
             one of the parameters is null or invalid or
-        PropertyServerException
+        PyegeriaAPIException
             There is a problem adding the element properties to the metadata repository or
-        UserNotAuthorizedException
+        PyegeriaUnauthorizedException
             the requesting user is not authorized to issue this request.
         """
         loop = asyncio.get_event_loop()
@@ -4010,11 +4010,11 @@ class Client2(BaseClient):
 
         Raises
         ------
-        InvalidParameterException
+        PyegeriaInvalidParameterException
             one of the parameters is null or invalid or
-        PropertyServerException
+        PyegeriaAPIException
             There is a problem adding the element properties to the metadata repository or
-        UserNotAuthorizedException
+        PyegeriaUnauthorizedException
             the requesting user is not authorized to issue this request.
         """
         loop = asyncio.get_event_loop()
@@ -4056,11 +4056,11 @@ class Client2(BaseClient):
 
         Raises
         ------
-        InvalidParameterException
+        PyegeriaInvalidParameterException
             one of the parameters is null or invalid or
-        PropertyServerException
+        PyegeriaAPIException
             There is a problem adding the element properties to the metadata repository or
-        UserNotAuthorizedException
+        PyegeriaUnauthorizedException
             the requesting user is not authorized to issue this request.
         """
 
@@ -4098,11 +4098,11 @@ class Client2(BaseClient):
 
         Raises
         ------
-        InvalidParameterException
+        PyegeriaInvalidParameterException
             one of the parameters is null or invalid or
-        PropertyServerException
+        PyegeriaAPIException
             There is a problem adding the element properties to the metadata repository or
-        UserNotAuthorizedException
+        PyegeriaUnauthorizedException
             the requesting user is not authorized to issue this request.
         """
         loop = asyncio.get_event_loop()

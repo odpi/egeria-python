@@ -304,9 +304,9 @@ class ExternalReferences(Client2):
     
         Raises
         ------
-        InvalidParameterException
+        PyegeriaInvalidParameterException
           If the client passes incorrect parameters on the request - such as bad URLs or invalid values
-        PropertyServerException
+        PyegeriaAPIException
           Raised by the server when an issue arises in processing a valid request
         NotAuthorizedException
           The principle specified by the user_id does not have authorization for the requested action
@@ -371,9 +371,9 @@ class ExternalReferences(Client2):
     
         Raises
         ------
-        InvalidParameterException
+        PyegeriaInvalidParameterException
           If the client passes incorrect parameters on the request - such as bad URLs or invalid values
-        PropertyServerException
+        PyegeriaAPIException
           Raised by the server when an issue arises in processing a valid request
         NotAuthorizedException
           The principle specified by the user_id does not have authorization for the requested action
@@ -552,9 +552,9 @@ class ExternalReferences(Client2):
     
         Raises
         ------
-        InvalidParameterException
+        PyegeriaInvalidParameterException
           If the client passes incorrect parameters on the request - such as bad URLs or invalid values
-        PropertyServerException
+        PyegeriaAPIException
           Raised by the server when an issue arises in processing a valid request
         NotAuthorizedException
           The principle specified by the user_id does not have authorization for the requested action
@@ -604,9 +604,9 @@ class ExternalReferences(Client2):
     
             Raises
             ------
-            InvalidParameterException
+            PyegeriaInvalidParameterException
               If the client passes incorrect parameters on the request - such as bad URLs or invalid values
-            PropertyServerException
+            PyegeriaAPIException
               Raised by the server when an issue arises in processing a valid request
             NotAuthorizedException
               The principle specified by the user_id does not have authorization for the requested action
@@ -653,9 +653,9 @@ class ExternalReferences(Client2):
     
         Raises
         ------
-        InvalidParameterException
+        PyegeriaInvalidParameterException
           If the client passes incorrect parameters on the request - such as bad URLs or invalid values
-        PropertyServerException
+        PyegeriaAPIException
           Raised by the server when an issue arises in processing a valid request
         NotAuthorizedException
           The principle specified by the user_id does not have authorization for the requested action
@@ -695,9 +695,9 @@ class ExternalReferences(Client2):
     
         Raises
         ------
-        InvalidParameterException
+        PyegeriaInvalidParameterException
           If the client passes incorrect parameters on the request - such as bad URLs or invalid values
-        PropertyServerException
+        PyegeriaAPIException
           Raised by the server when an issue arises in processing a valid request
         NotAuthorizedException
           The principle specified by the user_id does not have authorization for the requested action
@@ -738,9 +738,9 @@ class ExternalReferences(Client2):
     
         Raises
         ------
-        InvalidParameterException
+        PyegeriaInvalidParameterException
           If the client passes incorrect parameters on the request - such as bad URLs or invalid values
-        PropertyServerException
+        PyegeriaAPIException
           Raised by the server when an issue arises in processing a valid request
         NotAuthorizedException
           The principle specified by the user_id does not have authorization for the requested action
@@ -809,9 +809,9 @@ class ExternalReferences(Client2):
     
             Raises
             ------
-            InvalidParameterException
+            PyegeriaInvalidParameterException
               If the client passes incorrect parameters on the request - such as bad URLs or invalid values
-            PropertyServerException
+            PyegeriaAPIException
               Raised by the server when an issue arises in processing a valid request
             NotAuthorizedException
               The principle specified by the user_id does not have authorization for the requested action
@@ -879,9 +879,9 @@ class ExternalReferences(Client2):
     
         Raises
         ------
-        InvalidParameterException
+        PyegeriaInvalidParameterException
           If the client passes incorrect parameters on the request - such as bad URLs or invalid values
-        PropertyServerException
+        PyegeriaAPIException
           Raised by the server when an issue arises in processing a valid request
         NotAuthorizedException
           The principle specified by the user_id does not have authorization for the requested action
@@ -923,9 +923,9 @@ class ExternalReferences(Client2):
     
         Raises
         ------
-        InvalidParameterException
+        PyegeriaInvalidParameterException
           If the client passes incorrect parameters on the request - such as bad URLs or invalid values
-        PropertyServerException
+        PyegeriaAPIException
           Raised by the server when an issue arises in processing a valid request
         NotAuthorizedException
           The principle specified by the user_id does not have authorization for the requested action
@@ -966,9 +966,9 @@ class ExternalReferences(Client2):
     
         Raises
         ------
-        InvalidParameterException
+        PyegeriaInvalidParameterException
           If the client passes incorrect parameters on the request - such as bad URLs or invalid values
-        PropertyServerException
+        PyegeriaAPIException
           Raised by the server when an issue arises in processing a valid request
         NotAuthorizedException
           The principle specified by the user_id does not have authorization for the requested action
@@ -1015,9 +1015,9 @@ class ExternalReferences(Client2):
     
             Raises
             ------
-            InvalidParameterException
+            PyegeriaInvalidParameterException
               If the client passes incorrect parameters on the request - such as bad URLs or invalid values
-            PropertyServerException
+            PyegeriaAPIException
               Raised by the server when an issue arises in processing a valid request
             NotAuthorizedException
               The principle specified by the user_id does not have authorization for the requested action
@@ -1063,9 +1063,9 @@ class ExternalReferences(Client2):
     
         Raises
         ------
-        InvalidParameterException
+        PyegeriaInvalidParameterException
           If the client passes incorrect parameters on the request - such as bad URLs or invalid values
-        PropertyServerException
+        PyegeriaAPIException
           Raised by the server when an issue arises in processing a valid request
         NotAuthorizedException
           The principle specified by the user_id does not have authorization for the requested action
@@ -1106,9 +1106,9 @@ class ExternalReferences(Client2):
     
         Raises
         ------
-        InvalidParameterException
+        PyegeriaInvalidParameterException
           If the client passes incorrect parameters on the request - such as bad URLs or invalid values
-        PropertyServerException
+        PyegeriaAPIException
           Raised by the server when an issue arises in processing a valid request
         NotAuthorizedException
           The principle specified by the user_id does not have authorization for the requested action
@@ -1394,9 +1394,9 @@ class ExternalReferences(Client2):
             Raises
             ------
 
-            InvalidParameterException
+            PyegeriaInvalidParameterException
               If the client passes incorrect parameters on the request - such as bad URLs or invalid values
-            PropertyServerException
+            PyegeriaAPIException
               Raised by the server when an issue arises in processing a valid request
             NotAuthorizedException
               The principle specified by the user_id does not have authorization for the requested action
@@ -1483,9 +1483,9 @@ class ExternalReferences(Client2):
         Raises
         ------
 
-        InvalidParameterException
+        PyegeriaInvalidParameterException
           If the client passes incorrect parameters on the request - such as bad URLs or invalid values
-        PropertyServerException
+        PyegeriaAPIException
           Raised by the server when an issue arises in processing a valid request
         NotAuthorizedException
           The principle specified by the user_id does not have authorization for the requested action
@@ -1542,9 +1542,9 @@ class ExternalReferences(Client2):
             Raises
             ------
 
-            InvalidParameterException
+            PyegeriaInvalidParameterException
               If the client passes incorrect parameters on the request - such as bad URLs or invalid values
-            PropertyServerException
+            PyegeriaAPIException
               Raised by the server when an issue arises in processing a valid request
             NotAuthorizedException
               The principle specified by the user_id does not have authorization for the requested action

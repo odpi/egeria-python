@@ -21,7 +21,7 @@ from pyegeria import (
     NO_ELEMENTS_FOUND,
 )
 from pyegeria._exceptions_new import (
-    PyegeriaInvalidParameterException as InvalidParameterException,
+    PyegeriaInvalidParameterException,
     PyegeriaAPIException as PropertyServerException,
     PyegeriaUnauthorizedException as UserNotAuthorizedException,
     print_basic_exception as print_exception_response,
@@ -108,7 +108,7 @@ def collection_viewer(
         print(tree)
 
     except (
-        InvalidParameterException,
+        PyegeriaInvalidParameterException,
         PropertyServerException,
         UserNotAuthorizedException,
     ) as e:

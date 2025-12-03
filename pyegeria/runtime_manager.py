@@ -88,8 +88,8 @@ class RuntimeManager(Client2):
         Raises
         ------
         PyegeriaInvalidParameterException
-        PropertyServerException
-        UserNotAuthorizedException
+        PyegeriaAPIException
+        PyegeriaUnauthorizedException
 
         """
         server_guid = self.__get_guid__(server_guid, qualified_name=qualified_name)
@@ -129,8 +129,8 @@ class RuntimeManager(Client2):
         Raises
         ------
         PyegeriaInvalidParameterException
-        PropertyServerException
-        UserNotAuthorizedException
+        PyegeriaAPIException
+        PyegeriaUnauthorizedException
 
         """
         loop = asyncio.get_event_loop()
@@ -165,8 +165,8 @@ class RuntimeManager(Client2):
         Raises
         ------
         PyegeriaInvalidParameterException
-        PropertyServerException
-        UserNotAuthorizedException
+        PyegeriaAPIException
+        PyegeriaUnauthorizedException
 
         """
         server_guid = self.__get_guid__(server_guid, qualified_name=qualified_name)
@@ -203,8 +203,8 @@ class RuntimeManager(Client2):
         Raises
         ------
         PyegeriaInvalidParameterException
-        PropertyServerException
-        UserNotAuthorizedException
+        PyegeriaAPIException
+        PyegeriaUnauthorizedException
 
         """
         loop = asyncio.get_event_loop()
@@ -239,8 +239,8 @@ class RuntimeManager(Client2):
         Raises
         ------
         PyegeriaInvalidParameterException
-        PropertyServerException
-        UserNotAuthorizedException
+        PyegeriaAPIException
+        PyegeriaUnauthorizedException
 
         """
         server_guid = self.__get_guid__(server_guid, qualified_name=qualified_name)
@@ -276,8 +276,8 @@ class RuntimeManager(Client2):
         Raises
         ------
         PyegeriaInvalidParameterException
-        PropertyServerException
-        UserNotAuthorizedException
+        PyegeriaAPIException
+        PyegeriaUnauthorizedException
 
         """
         loop = asyncio.get_event_loop()
@@ -324,8 +324,8 @@ class RuntimeManager(Client2):
         Raises
         ------
         PyegeriaInvalidParameterException
-        PropertyServerException
-        UserNotAuthorizedException
+        PyegeriaAPIException
+        PyegeriaUnauthorizedException
 
         """
         server_guid = self.__get_guid__(
@@ -378,8 +378,8 @@ class RuntimeManager(Client2):
         Raises
         ------
         PyegeriaInvalidParameterException
-        PropertyServerException
-        UserNotAuthorizedException
+        PyegeriaAPIException
+        PyegeriaUnauthorizedException
 
         """
         loop = asyncio.get_event_loop()
@@ -423,8 +423,8 @@ class RuntimeManager(Client2):
         Raises
         ------
         PyegeriaInvalidParameterException
-        PropertyServerException
-        UserNotAuthorizedException
+        PyegeriaAPIException
+        PyegeriaUnauthorizedException
 
         """
         server_guid = self.__get_guid__(
@@ -470,8 +470,8 @@ class RuntimeManager(Client2):
         Raises
         ------
         PyegeriaInvalidParameterException
-        PropertyServerException
-        UserNotAuthorizedException
+        PyegeriaAPIException
+        PyegeriaUnauthorizedException
 
         """
         loop = asyncio.get_event_loop()
@@ -521,8 +521,8 @@ class RuntimeManager(Client2):
         Raises
         ------
         PyegeriaInvalidParameterException
-        PropertyServerException
-        UserNotAuthorizedException
+        PyegeriaAPIException
+        PyegeriaUnauthorizedException
 
         """
         server_guid = self.__get_guid__(
@@ -583,8 +583,8 @@ class RuntimeManager(Client2):
         Raises
         ------
         PyegeriaInvalidParameterException
-        PropertyServerException
-        UserNotAuthorizedException
+        PyegeriaAPIException
+        PyegeriaUnauthorizedException
 
         """
         loop = asyncio.get_event_loop()
@@ -634,8 +634,8 @@ class RuntimeManager(Client2):
         Raises
         ------
         PyegeriaInvalidParameterException
-        PropertyServerException
-        UserNotAuthorizedException
+        PyegeriaAPIException
+        PyegeriaUnauthorizedException
 
         """
         server_guid = self.__get_guid__(
@@ -687,8 +687,8 @@ class RuntimeManager(Client2):
         Raises
         ------
         PyegeriaInvalidParameterException
-        PropertyServerException
-        UserNotAuthorizedException
+        PyegeriaAPIException
+        PyegeriaUnauthorizedException
 
         """
         loop = asyncio.get_event_loop()
@@ -733,8 +733,8 @@ class RuntimeManager(Client2):
         Raises
         ------
         PyegeriaInvalidParameterException
-        PropertyServerException
-        UserNotAuthorizedException
+        PyegeriaAPIException
+        PyegeriaUnauthorizedException
 
         """
         server_guid = self.__get_guid__(
@@ -786,8 +786,8 @@ class RuntimeManager(Client2):
         Raises
         ------
         PyegeriaInvalidParameterException
-        PropertyServerException
-        UserNotAuthorizedException
+        PyegeriaAPIException
+        PyegeriaUnauthorizedException
 
         """
         loop = asyncio.get_event_loop()
@@ -828,8 +828,8 @@ class RuntimeManager(Client2):
         Raises
         ------
         PyegeriaInvalidParameterException
-        PropertyServerException
-        UserNotAuthorizedException
+        PyegeriaAPIException
+        PyegeriaUnauthorizedException
 
         """
         server_guid = self.__get_guid__(
@@ -881,8 +881,8 @@ class RuntimeManager(Client2):
         Raises
         ------
         PyegeriaInvalidParameterException
-        PropertyServerException
-        UserNotAuthorizedException
+        PyegeriaAPIException
+        PyegeriaUnauthorizedException
 
         """
         loop = asyncio.get_event_loop()
@@ -925,8 +925,8 @@ class RuntimeManager(Client2):
         Raises
         ------
         PyegeriaInvalidParameterException
-        PropertyServerException
-        UserNotAuthorizedException
+        PyegeriaAPIException
+        PyegeriaUnauthorizedException
 
         """
         server_guid = self.__get_guid__(
@@ -976,8 +976,8 @@ class RuntimeManager(Client2):
         Raises
         ------
         PyegeriaInvalidParameterException
-        PropertyServerException
-        UserNotAuthorizedException
+        PyegeriaAPIException
+        PyegeriaUnauthorizedException
 
         """
         loop = asyncio.get_event_loop()
@@ -1021,8 +1021,8 @@ class RuntimeManager(Client2):
         Raises
         ------
         PyegeriaInvalidParameterException
-        PropertyServerException
-        UserNotAuthorizedException
+        PyegeriaAPIException
+        PyegeriaUnauthorizedException
 
         """
         server_guid = self.__get_guid__(
@@ -1069,8 +1069,8 @@ class RuntimeManager(Client2):
         Raises
         ------
         PyegeriaInvalidParameterException
-        PropertyServerException
-        UserNotAuthorizedException
+        PyegeriaAPIException
+        PyegeriaUnauthorizedException
 
         """
         loop = asyncio.get_event_loop()
@@ -1113,8 +1113,8 @@ class RuntimeManager(Client2):
         Raises
         ------
         PyegeriaInvalidParameterException
-        PropertyServerException
-        UserNotAuthorizedException
+        PyegeriaAPIException
+        PyegeriaUnauthorizedException
 
         """
         server_guid = self.__get_guid__(
@@ -1166,8 +1166,8 @@ class RuntimeManager(Client2):
         Raises
         ------
         PyegeriaInvalidParameterException
-        PropertyServerException
-        UserNotAuthorizedException
+        PyegeriaAPIException
+        PyegeriaUnauthorizedException
 
         """
         loop = asyncio.get_event_loop()
@@ -1214,8 +1214,8 @@ class RuntimeManager(Client2):
         Raises
         ------
         PyegeriaInvalidParameterException
-        PropertyServerException
-        UserNotAuthorizedException
+        PyegeriaAPIException
+        PyegeriaUnauthorizedException
 
         """
         server_guid = self.__get_guid__(
@@ -1266,8 +1266,8 @@ class RuntimeManager(Client2):
         Raises
         ------
         PyegeriaInvalidParameterException
-        PropertyServerException
-        UserNotAuthorizedException
+        PyegeriaAPIException
+        PyegeriaUnauthorizedException
 
         """
 
@@ -1305,8 +1305,8 @@ class RuntimeManager(Client2):
         Raises
         ------
         PyegeriaInvalidParameterException
-        PropertyServerException
-        UserNotAuthorizedException
+        PyegeriaAPIException
+        PyegeriaUnauthorizedException
 
         """
         server_guid = self.__get_guid__(
@@ -1338,8 +1338,8 @@ class RuntimeManager(Client2):
         Raises
         ------
         PyegeriaInvalidParameterException
-        PropertyServerException
-        UserNotAuthorizedException
+        PyegeriaAPIException
+        PyegeriaUnauthorizedException
 
         """
         loop = asyncio.get_event_loop()
@@ -1377,8 +1377,8 @@ class RuntimeManager(Client2):
         Raises
         ------
         PyegeriaInvalidParameterException
-        PropertyServerException
-        UserNotAuthorizedException
+        PyegeriaAPIException
+        PyegeriaUnauthorizedException
 
         """
         server_guid = self.__get_guid__(
@@ -1417,8 +1417,8 @@ class RuntimeManager(Client2):
         Raises
         ------
         PyegeriaInvalidParameterException
-        PropertyServerException
-        UserNotAuthorizedException
+        PyegeriaAPIException
+        PyegeriaUnauthorizedException
 
         """
         loop = asyncio.get_event_loop()
@@ -1449,8 +1449,8 @@ class RuntimeManager(Client2):
         Raises
         ------
         PyegeriaInvalidParameterException
-        PropertyServerException
-        UserNotAuthorizedException
+        PyegeriaAPIException
+        PyegeriaUnauthorizedException
 
         """
         server_guid = self.__get_guid__(
@@ -1482,8 +1482,8 @@ class RuntimeManager(Client2):
         Raises
         ------
         PyegeriaInvalidParameterException
-        PropertyServerException
-        UserNotAuthorizedException
+        PyegeriaAPIException
+        PyegeriaUnauthorizedException
 
         """
         loop = asyncio.get_event_loop()
@@ -1521,8 +1521,8 @@ class RuntimeManager(Client2):
         Raises
         ------
         PyegeriaInvalidParameterException
-        PropertyServerException
-        UserNotAuthorizedException
+        PyegeriaAPIException
+        PyegeriaUnauthorizedException
         """
         loop = asyncio.get_event_loop()
         response = loop.run_until_complete(
@@ -1562,8 +1562,8 @@ class RuntimeManager(Client2):
         Raises
         ------
         PyegeriaInvalidParameterException
-        PropertyServerException
-        UserNotAuthorizedException
+        PyegeriaAPIException
+        PyegeriaUnauthorizedException
 
         """
 
@@ -1613,8 +1613,8 @@ class RuntimeManager(Client2):
         Raises
         ------
         PyegeriaInvalidParameterException
-        PropertyServerException
-        UserNotAuthorizedException
+        PyegeriaAPIException
+        PyegeriaUnauthorizedException
 
         """
 
@@ -1665,8 +1665,8 @@ class RuntimeManager(Client2):
         Raises
         ------
         PyegeriaInvalidParameterException
-        PropertyServerException
-        UserNotAuthorizedException
+        PyegeriaAPIException
+        PyegeriaUnauthorizedException
 
         """
         loop = asyncio.get_event_loop()
@@ -1708,8 +1708,8 @@ class RuntimeManager(Client2):
         Raises
         ------
         PyegeriaInvalidParameterException
-        PropertyServerException
-        UserNotAuthorizedException
+        PyegeriaAPIException
+        PyegeriaUnauthorizedException
 
         """
 
@@ -1759,8 +1759,8 @@ class RuntimeManager(Client2):
         Raises
         ------
         PyegeriaInvalidParameterException
-        PropertyServerException
-        UserNotAuthorizedException
+        PyegeriaAPIException
+        PyegeriaUnauthorizedException
 
         """
         loop = asyncio.get_event_loop()
@@ -1791,8 +1791,8 @@ class RuntimeManager(Client2):
         Raises
         ------
         PyegeriaInvalidParameterException
-        PropertyServerException
-        UserNotAuthorizedException
+        PyegeriaAPIException
+        PyegeriaUnauthorizedException
 
         """
         platform_guid = self.__get_guid__(platform_guid, platform_name, "displayName")
@@ -1821,8 +1821,8 @@ class RuntimeManager(Client2):
         Raises
         ------
         PyegeriaInvalidParameterException
-        PropertyServerException
-        UserNotAuthorizedException
+        PyegeriaAPIException
+        PyegeriaUnauthorizedException
 
         """
         loop = asyncio.get_event_loop()
@@ -1886,8 +1886,8 @@ class RuntimeManager(Client2):
         Raises
         ------
         PyegeriaInvalidParameterException
-        PropertyServerException
-        UserNotAuthorizedException
+        PyegeriaAPIException
+        PyegeriaUnauthorizedException
 
         """
         loop = asyncio.get_event_loop()
@@ -1918,8 +1918,8 @@ class RuntimeManager(Client2):
         Raises
         ------
         PyegeriaInvalidParameterException
-        PropertyServerException
-        UserNotAuthorizedException
+        PyegeriaAPIException
+        PyegeriaUnauthorizedException
 
         """
 
@@ -1956,8 +1956,8 @@ class RuntimeManager(Client2):
         Raises
         ------
         PyegeriaInvalidParameterException
-        PropertyServerException
-        UserNotAuthorizedException
+        PyegeriaAPIException
+        PyegeriaUnauthorizedException
 
         """
         loop = asyncio.get_event_loop()
@@ -1995,8 +1995,8 @@ class RuntimeManager(Client2):
         Raises
         ------
         PyegeriaInvalidParameterException
-        PropertyServerException
-        UserNotAuthorizedException
+        PyegeriaAPIException
+        PyegeriaUnauthorizedException
 
         """
 
@@ -2036,8 +2036,8 @@ class RuntimeManager(Client2):
         Raises
         ------
         PyegeriaInvalidParameterException
-        PropertyServerException
-        UserNotAuthorizedException
+        PyegeriaAPIException
+        PyegeriaUnauthorizedException
 
         """
         loop = asyncio.get_event_loop()
@@ -2072,8 +2072,8 @@ class RuntimeManager(Client2):
         Raises
         ------
         PyegeriaInvalidParameterException
-        PropertyServerException
-        UserNotAuthorizedException
+        PyegeriaAPIException
+        PyegeriaUnauthorizedException
 
         """
 
@@ -2114,8 +2114,8 @@ class RuntimeManager(Client2):
         Raises
         ------
         PyegeriaInvalidParameterException
-        PropertyServerException
-        UserNotAuthorizedException
+        PyegeriaAPIException
+        PyegeriaUnauthorizedException
 
         """
         loop = asyncio.get_event_loop()
@@ -2155,8 +2155,8 @@ class RuntimeManager(Client2):
         Raises
         ------
         PyegeriaInvalidParameterException
-        PropertyServerException
-        UserNotAuthorizedException
+        PyegeriaAPIException
+        PyegeriaUnauthorizedException
 
         """
 
@@ -2205,8 +2205,8 @@ class RuntimeManager(Client2):
         Raises
         ------
         PyegeriaInvalidParameterException
-        PropertyServerException
-        UserNotAuthorizedException
+        PyegeriaAPIException
+        PyegeriaUnauthorizedException
 
         """
         loop = asyncio.get_event_loop()
@@ -2237,8 +2237,8 @@ class RuntimeManager(Client2):
         Raises
         ------
         PyegeriaInvalidParameterException
-        PropertyServerException
-        UserNotAuthorizedException
+        PyegeriaAPIException
+        PyegeriaUnauthorizedException
 
         """
         server_guid = self.__get_guid__(
@@ -2270,8 +2270,8 @@ class RuntimeManager(Client2):
         Raises
         ------
         PyegeriaInvalidParameterException
-        PropertyServerException
-        UserNotAuthorizedException
+        PyegeriaAPIException
+        PyegeriaUnauthorizedException
 
         """
         loop = asyncio.get_event_loop()

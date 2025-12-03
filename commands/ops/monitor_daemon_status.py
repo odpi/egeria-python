@@ -25,7 +25,7 @@ from pyegeria import AutomatedCuration, EgeriaTech, PyegeriaException, settings,
     PyegeriaClientException, print_basic_exception
 
 from pyegeria._exceptions_new import (
-    PyegeriaInvalidParameterException as InvalidParameterException,
+    PyegeriaInvalidParameterException,
     PyegeriaAPIException as PropertyServerException,
     PyegeriaUnauthorizedException as UserNotAuthorizedException,
     print_basic_exception as print_exception_response,

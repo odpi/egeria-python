@@ -92,9 +92,9 @@ class RegisteredInfo(Client2):
             Returns JSON dict of the requested information or a help string if input is 'help'.
         Raises
         ------
-        InvalidParameterException
+        PyegeriaInvalidParameterException
             If the response code is not 200.
-        PropertyServerException:
+        PyegeriaAPIException:
             Raised by the server when an issue arises in processing a valid request
         NotAuthorizedException:
             The principle specified by the user_id does not have authorization for the requested action
@@ -161,9 +161,9 @@ class RegisteredInfo(Client2):
             Return a dictionary containing the registered services for the specified platform.
         Raises
         ------
-        InvalidParameterException
+        PyegeriaInvalidParameterException
             If the response code is not 200.
-        PropertyServerException:
+        PyegeriaAPIException:
             Raised by the server when an issue arises in processing a valid request
         NotAuthorizedException:
             The principle specified by the user_id does not have authorization for the requested action
@@ -216,9 +216,9 @@ class RegisteredInfo(Client2):
 
         Raises
         ------
-        InvalidParameterException
+        PyegeriaInvalidParameterException
             If the response code is not 200.
-        PropertyServerException:
+        PyegeriaAPIException:
             Raised by the server when an issue arises in processing a valid request
         NotAuthorizedException:
             The principle specified by the user_id does not have authorization for the requested action

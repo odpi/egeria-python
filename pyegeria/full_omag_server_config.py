@@ -203,9 +203,9 @@ class FullServerConfig(CoreServerConfig):
         Raises
         ------
 
-        InvalidParameterException
+        PyegeriaInvalidParameterException
             If the client passes incorrect parameters on the request - such as bad URLs or invalid values
-        PropertyServerException
+        PyegeriaAPIException
             Raised by the server when an issue arises in processing a valid request
         NotAuthorizedException
             The principle specified by the user_id does not have authorization for the requested action
@@ -243,7 +243,7 @@ class FullServerConfig(CoreServerConfig):
 
         Raises
         ------
-        InvalidParameterException
+        PyegeriaInvalidParameterException
             If the response status code is not 200 and the related HTTP code is not 200.
 
         """
@@ -280,9 +280,9 @@ class FullServerConfig(CoreServerConfig):
 
         Raises
         ------
-        InvalidParameterException:
+        PyegeriaInvalidParameterException:
             If the client passes incorrect parameters on the request - such as bad URLs or invalid values
-        PropertyServerException:
+        PyegeriaAPIException:
             Raised by the server when an issue arises in processing a valid request
         NotAuthorizedException:
             The principle specified by the user_id does not have authorization for the requested action
@@ -363,9 +363,9 @@ class FullServerConfig(CoreServerConfig):
 
         Raises
         ------
-         InvalidParameterException
+         PyegeriaInvalidParameterException
              If the client passes incorrect parameters on the request - such as bad URLs or invalid values
-         PropertyServerException
+         PyegeriaAPIException
              Raised by the server when an issue arises in processing a valid request
          NotAuthorizedException
              The principle specified by the user_id does not have authorization for the requested action
@@ -431,7 +431,7 @@ class FullServerConfig(CoreServerConfig):
 
         Raises
         ------
-        InvalidParameterException
+        PyegeriaInvalidParameterException
             If the request to retrieve the topic name fails or returns an invalid parameter code.
 
         """
@@ -562,7 +562,7 @@ class FullServerConfig(CoreServerConfig):
 
         Raises
         ------
-        InvalidParameterException
+        PyegeriaInvalidParameterException
             If the response from the server has a relatedHTTPCode other than 200.
 
         """
@@ -611,7 +611,7 @@ class FullServerConfig(CoreServerConfig):
 
         Raises
         ------
-        InvalidParameterException
+        PyegeriaInvalidParameterException
             If the response code is not 200 after making the POST request.
 
         """
@@ -636,9 +636,9 @@ class FullServerConfig(CoreServerConfig):
 
         Raises
         ------
-         InvalidParameterException
+         PyegeriaInvalidParameterException
              If the client passes incorrect parameters on the request - such as bad URLs or invalid values
-         PropertyServerException
+         PyegeriaAPIException
              Raised by the server when an issue arises in processing a valid request
          NotAuthorizedException
              The principle specified by the user_id does not have authorization for the requested action
@@ -674,9 +674,9 @@ class FullServerConfig(CoreServerConfig):
 
         Raises
         ------
-         InvalidParameterException
+         PyegeriaInvalidParameterException
              If the client passes incorrect parameters on the request - such as bad URLs or invalid values
-         PropertyServerException
+         PyegeriaAPIException
              Raised by the server when an issue arises in processing a valid request
          NotAuthorizedException
              The principle specified by the user_id does not have authorization for the requested action
@@ -865,9 +865,9 @@ class FullServerConfig(CoreServerConfig):
 
         Raises
         ------
-        InvalidParameterException
+        PyegeriaInvalidParameterException
             If the response code is not 200.
-        PropertyServerException:
+        PyegeriaAPIException:
             Raised by the server when an issue arises in processing a valid request
         NotAuthorizedException:
             The principle specified by the user_id does not have authorization for the requested action
@@ -959,9 +959,9 @@ class FullServerConfig(CoreServerConfig):
 
         Raises
         ------
-        InvalidParameterException
+        PyegeriaInvalidParameterException
             If the response code is not 200.
-        PropertyServerException:
+        PyegeriaAPIException:
             Raised by the server when an issue arises in processing a valid request
         NotAuthorizedException:
             The principle specified by the user_id does not have authorization for the requested action
@@ -1008,9 +1008,9 @@ class FullServerConfig(CoreServerConfig):
 
         Raises
         ------
-        InvalidParameterException
+        PyegeriaInvalidParameterException
             If the response code is not 200.
-        PropertyServerException:
+        PyegeriaAPIException:
             Raised by the server when an issue arises in processing a valid request
         NotAuthorizedException:
             The principle specified by the user_id does not have authorization for the requested action
@@ -1051,9 +1051,9 @@ class FullServerConfig(CoreServerConfig):
 
         Raises
         ------
-        InvalidParameterException
+        PyegeriaInvalidParameterException
             If the response code is not 200.
-        PropertyServerException:
+        PyegeriaAPIException:
             Raised by the server when an issue arises in processing a valid request
         NotAuthorizedException:
             The principle specified by the user_id does not have authorization for the requested action
@@ -1087,9 +1087,9 @@ class FullServerConfig(CoreServerConfig):
 
             Raises
             ------
-            InvalidParameterException
+            PyegeriaInvalidParameterException
                 If the response code is not 200.
-            PropertyServerException:
+            PyegeriaAPIException:
                 Raised by the server when an issue arises in processing a valid request
             NotAuthorizedException:
                 The principle specified by the user_id does not have authorization for the requested action
@@ -1123,9 +1123,9 @@ class FullServerConfig(CoreServerConfig):
 
         Raises
         ------
-        InvalidParameterException
+        PyegeriaInvalidParameterException
             If the response code is not 200.
-        PropertyServerException:
+        PyegeriaAPIException:
             Raised by the server when an issue arises in processing a valid request
         NotAuthorizedException:
             The principle specified by the user_id does not have authorization for the requested action
@@ -1166,9 +1166,9 @@ class FullServerConfig(CoreServerConfig):
 
         Raises
         ------
-        InvalidParameterException
+        PyegeriaInvalidParameterException
             If the response code is not 200.
-        PropertyServerException:
+        PyegeriaAPIException:
             Raised by the server when an issue arises in processing a valid request
         NotAuthorizedException:
             The principle specified by the user_id does not have authorization for the requested action
@@ -1204,9 +1204,9 @@ class FullServerConfig(CoreServerConfig):
 
         Raises
         ------
-        InvalidParameterException
+        PyegeriaInvalidParameterException
             If the response code is not 200.
-        PropertyServerException:
+        PyegeriaAPIException:
             Raised by the server when an issue arises in processing a valid request
         NotAuthorizedException:
             The principle specified by the user_id does not have authorization for the requested action

@@ -78,7 +78,7 @@ class GovEng(Client):
             List[str]: A list of JSON representations of governance action processes matching the provided name.
 
         Raises:
-            InvalidParameterException: If the API response indicates an error (non-200 status code),
+            PyegeriaInvalidParameterException: If the API response indicates an error (non-200 status code),
             this exception is raised with details from the response content.
 
         Note:
@@ -110,9 +110,9 @@ class GovEng(Client):
 
         Raises
         ------
-        InvalidParameterException
-        PropertyServerException
-        UserNotAuthorizedException
+        PyegeriaInvalidParameterException
+        PyegeriaAPIException
+        PyegeriaUnauthorizedException
         """
 
         url = self.engine_command_root + "/engine-actions/" + engine_action_guid
@@ -134,7 +134,7 @@ class GovEng(Client):
             List[str]: A list of JSON representations of governance action processes matching the provided name.
 
         Raises:
-            InvalidParameterException: If the API response indicates an error (non-200 status code),
+            PyegeriaInvalidParameterException: If the API response indicates an error (non-200 status code),
             this exception is raised with details from the response content.
 
         Note:
@@ -165,7 +165,7 @@ class GovEng(Client):
             List[str]: A list of JSON representations of governance action processes matching the provided name.
 
         Raises:
-            InvalidParameterException: If the API response indicates an error (non-200 status code),
+            PyegeriaInvalidParameterException: If the API response indicates an error (non-200 status code),
             this exception is raised with details from the response content.
 
         Note:
@@ -199,7 +199,7 @@ class GovEng(Client):
             List[str]: A list of JSON representations of governance action processes matching the provided name.
 
         Raises:
-            InvalidParameterException: If the API response indicates an error (non-200 status code),
+            PyegeriaInvalidParameterException: If the API response indicates an error (non-200 status code),
             this exception is raised with details from the response content.
 
         Note:
@@ -229,10 +229,10 @@ class GovEng(Client):
             str: The JSON representation of the governance action process element.
 
         Raises:
-            InvalidParameterException: If the API response indicates an error (non-200 status code),
+            PyegeriaInvalidParameterException: If the API response indicates an error (non-200 status code),
             this exception is raised with details from the response content.
-            PropertyServerException: If the API response indicates a server side error.
-            UserNotAuthorizedException:
+            PyegeriaAPIException: If the API response indicates a server side error.
+            PyegeriaUnauthorizedException:
 
         Note:
             This method assumes that the provided GUID is valid and corresponds to an existing
@@ -263,7 +263,7 @@ class GovEng(Client):
             List[str]: A list of JSON representations of governance action processes matching the provided name.
 
         Raises:
-            InvalidParameterException: If the API response indicates an error (non-200 status code),
+            PyegeriaInvalidParameterException: If the API response indicates an error (non-200 status code),
             this exception is raised with details from the response content.
 
         Note:
@@ -296,7 +296,7 @@ class GovEng(Client):
             List[str]: A list of JSON representations of governance action processes matching the provided name.
 
         Raises:
-            InvalidParameterException: If the API response indicates an error (non-200 status code),
+            PyegeriaInvalidParameterException: If the API response indicates an error (non-200 status code),
             this exception is raised with details from the response content.
 
         Note:
@@ -353,9 +353,9 @@ class GovEng(Client):
 
         Raises
         ------
-        InvalidParameterException
-        PropertyServerException
-        UserNotAuthorizedException
+        PyegeriaInvalidParameterException
+        PyegeriaAPIException
+        PyegeriaUnauthorizedException
 
         """
         url = self.engine_command_root + "/governance-action-processes/initiate"
@@ -416,7 +416,7 @@ class GovEng(Client):
             str: The GUID (Globally Unique Identifier) of the initiated governance action.
 
         Raises:
-            InvalidParameterException: If the API response indicates an error (non-200 status code),
+            PyegeriaInvalidParameterException: If the API response indicates an error (non-200 status code),
             this exception is raised with details from the response content.
 
         Note:

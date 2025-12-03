@@ -212,9 +212,9 @@ class BaseClient:
 
         Raises
         ------
-        InvalidParameterException
+        PyegeriaInvalidParameterException
           If the client passes incorrect parameters on the request - such as bad URLs or invalid values
-        PropertyServerException
+        PyegeriaAPIException
           Raised by the server when an issue arises in processing a valid request
         NotAuthorizedException
           The principle specified by the user_id does not have authorization for the requested action
@@ -267,9 +267,9 @@ class BaseClient:
 
         Raises
         ------
-        InvalidParameterException
+        PyegeriaInvalidParameterException
           If the client passes incorrect parameters on the request - such as bad URLs or invalid values
-        PropertyServerException
+        PyegeriaAPIException
           Raised by the server when an issue arises in processing a valid request
         NotAuthorizedException
           The principle specified by the user_id does not have authorization for the requested action
@@ -293,7 +293,7 @@ class BaseClient:
         This method is used to refresh the bearer token used for authentication with Egeria. It checks if the token
         source is 'Egeria', and if the user ID and password are valid. If all conditions are met, it calls the
         `create_egeria_bearer_token` method to create a new bearer token. Otherwise,
-        it raises an `InvalidParameterException`.
+        it raises an `PyegeriaInvalidParameterException`.
 
         Parameters:
 
@@ -301,7 +301,7 @@ class BaseClient:
             None
 
         Raises:
-            InvalidParameterException: If the token source is invalid.
+            PyegeriaInvalidParameterException: If the token source is invalid.
         """
         if (
                 (self.token_src == "Egeria")
@@ -323,7 +323,7 @@ class BaseClient:
         This method is used to refresh the bearer token used for authentication with Egeria. It checks if the token
         source is 'Egeria', and if the user ID and password are valid. If all conditions are met, it calls the
         `create_egeria_bearer_token` method to create a new bearer token. Otherwise,
-        it raises an `InvalidParameterException`.
+        it raises an `PyegeriaInvalidParameterException`.
 
         Parameters:
 
@@ -331,8 +331,8 @@ class BaseClient:
             None
 
         Raises:
-            InvalidParameterException: If the token source is invalid.
-            PropertyServerException
+            PyegeriaInvalidParameterException: If the token source is invalid.
+            PyegeriaAPIException
                 Raised by the server when an issue arises in processing a valid request
             NotAuthorizedException
                 The principle specified by the user_id does not have authorization for the requested action
@@ -355,9 +355,9 @@ class BaseClient:
 
         Raises
         ------
-        InvalidParameterException
+        PyegeriaInvalidParameterException
           If the client passes incorrect parameters on the request - such as bad URLs or invalid values
-        PropertyServerException
+        PyegeriaAPIException
           Raised by the server when an issue arises in processing a valid request
         NotAuthorizedException
           The principle specified by the user_id does not have authorization for the requested action
@@ -434,7 +434,7 @@ class BaseClient:
     ) -> Response | str:
         """Make a request to the Egeria API - Async Version
         Function to make an API call via the self.session Library. Raise an exception if the HTTP response code
-        is not 200/201. IF there is a REST communication exception, raise InvalidParameterException.
+        is not 200/201. IF there is a REST communication exception, raise PyegeriaInvalidParameterException.
 
         :param request_type: Type of Request.
                Supported Values - GET, POST, (not PUT, PATCH, DELETE).

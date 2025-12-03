@@ -16,9 +16,9 @@ from rich.console import Console
 
 from pyegeria import AutomatedCuration, EgeriaTech
 from pyegeria._exceptions_new import (
-    PyegeriaInvalidParameterException as InvalidParameterException,
-    PyegeriaAPIException as PropertyServerException,
-    PyegeriaUnauthorizedException as UserNotAuthorizedException,
+    PyegeriaInvalidParameterException as PyegeriaInvalidParameterException,
+    PyegeriaAPIException as PyegeriaAPIException,
+    PyegeriaUnauthorizedException as PyegeriaUnauthorizedException,
     print_basic_exception as print_exception_response,
 )
 
@@ -44,7 +44,7 @@ def add_catalog_target(
 
         integ_connector_guid = a_client.get_connector_guid(integration_connector)
         if not integ_connector_guid or c.catalog_targets == 'No connector found':
-            raise InvalidParameterException('No Connector found')
+            raise PyegeriaInvalidParameterException('No Connector found')
 
         guid = a_client.add_catalog_target(
             integ_connector_guid,
@@ -56,7 +56,7 @@ def add_catalog_target(
             f"Added catalog target to {integration_connector} with a return guid of {guid}"
         )
 
-    except (InvalidParameterException, PropertyServerException) as e:
+    except (PyegeriaInvalidParameterException, PyegeriaAPIException) as e:
         print_exception_response(e)
 
 
@@ -78,7 +78,7 @@ def remove_catalog_target(ctx, relationship_guid: str):
             f"Removed catalog target with relationship guid of {relationship_guid}"
         )
 
-    except (InvalidParameterException, PropertyServerException) as e:
+    except (PyegeriaInvalidParameterException, PyegeriaAPIException) as e:
         print_exception_response(e)
 
 
@@ -102,7 +102,7 @@ def update_catalog_target(ctx, relationship_guid: str, catalog_target_name: str)
             f"{catalog_target_name} with a return guid of {guid}"
         )
 
-    except (InvalidParameterException, PropertyServerException) as e:
+    except (PyegeriaInvalidParameterException, PyegeriaAPIException) as e:
         print_exception_response(e)
 
 
@@ -122,7 +122,7 @@ def refresh_gov_eng_config(ctx, engine_host_guid: str):
 
         click.echo(f"Refreshed server {c.engine_host}")
 
-    except (InvalidParameterException, PropertyServerException) as e:
+    except (PyegeriaInvalidParameterException, PyegeriaAPIException) as e:
         print_exception_response(e)
     finally:
         p_client.close_session()
@@ -143,7 +143,7 @@ def start_server(ctx, server):
 
         click.echo(f"Started server {server}")
 
-    except (InvalidParameterException, PropertyServerException) as e:
+    except (PyegeriaInvalidParameterException, PyegeriaAPIException) as e:
         print_exception_response(e)
     finally:
         p_client.close_session()
@@ -173,7 +173,7 @@ def stop_server(ctx, server):
     try:
         p_client.shutdown_server(None, server)
         click.echo(f"Stopped server {server}")
-    except (InvalidParameterException, PropertyServerException) as e:
+    except (PyegeriaInvalidParameterException, PyegeriaAPIException) as e:
         print_exception_response(e)
     finally:
         p_client.close_session()
