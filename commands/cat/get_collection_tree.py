@@ -18,11 +18,14 @@ from rich.tree import Tree
 
 from pyegeria import (
     CollectionManager,
-    InvalidParameterException,
-    PropertyServerException,
-    UserNotAuthorizedException, NO_ELEMENTS_FOUND,
-    )
-from pyegeria._exceptions import print_exception_response
+    NO_ELEMENTS_FOUND,
+)
+from pyegeria._exceptions_new import (
+    PyegeriaInvalidParameterException as InvalidParameterException,
+    PyegeriaAPIException as PropertyServerException,
+    PyegeriaUnauthorizedException as UserNotAuthorizedException,
+    print_basic_exception as print_exception_response,
+)
 
 disable_ssl_warnings = True
 EGERIA_METADATA_STORE = os.environ.get("EGERIA_METADATA_STORE", "active-metadata-store")

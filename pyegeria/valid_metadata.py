@@ -255,7 +255,10 @@ class ValidMetadataManager(Client2):
 
         This aligns with the formatting workflow used by classification_manager and automated_curation.
         """
-        entity_type = element_type_name or self.REFERENCEABLE_LABEL
+        entity_type = element_type_name if element_type_name is not None else self.REFERENCEABLE_LABEL
+        # Remove a layer of nesting in the JSON if the output_format is not MERMAID
+        if output_format != "MERMAID":
+            elements = elements["typeDefs"] if output_format != "MERMAID" else elements
 
         # Resolve output format set
         if report_spec:

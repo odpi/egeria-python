@@ -15,11 +15,11 @@ import time
 from rich.live import Live
 from rich.table import Table
 
-from pyegeria._exceptions import (
-    InvalidParameterException,
-    PropertyServerException,
-    UserNotAuthorizedException,
-    print_exception_response,
+from pyegeria._exceptions_new import (
+    PyegeriaInvalidParameterException as InvalidParameterException,
+    PyegeriaAPIException as PropertyServerException,
+    PyegeriaUnauthorizedException as UserNotAuthorizedException,
+    print_basic_exception as print_exception_response,
 )
 from pyegeria.core_omag_server_config import CoreServerConfig
 from pyegeria.server_operations import ServerOps

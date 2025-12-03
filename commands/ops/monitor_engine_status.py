@@ -21,9 +21,12 @@ from rich.table import Table
 
 from pyegeria import (
     EgeriaTech,
-    InvalidParameterException,
-    PropertyServerException,
-    UserNotAuthorizedException,
+)
+from pyegeria._exceptions_new import (
+    PyegeriaInvalidParameterException as InvalidParameterException,
+    PyegeriaAPIException as PropertyServerException,
+    PyegeriaUnauthorizedException as UserNotAuthorizedException,
+    print_basic_exception as print_exception_response,
 )
 
 EGERIA_METADATA_STORE = os.environ.get("EGERIA_METADATA_STORE", "active-metadata-store")

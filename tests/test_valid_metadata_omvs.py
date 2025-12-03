@@ -18,26 +18,21 @@ from rich import print, print_json
 from rich.console import Console
 from pyegeria import (
     ValidMetadataManager,
-    InvalidParameterException,
-    PropertyServerException,
-    UserNotAuthorizedException,
-    ValidMetadataManager,
-    print_basic_exception, PyegeriaException, print_basic_exception,
+    print_basic_exception,
+    PyegeriaException,
 )
 
 # from pyegeria.admin_services import FullServerConfig
 
 disable_ssl_warnings = True
-console = Console(width = 200)
+console = Console(width = 300)
 
 class TestValidMetadataOMVs:
     good_platform1_url = "https://127.0.0.1:9443"
-    good_platform2_url = "https://oak.local:9443"
-    bad_platform1_url = "https://localhost:9443"
-
-    # good_platform1_url = "https://127.0.0.1:30080"
-    # good_platform2_url = "https://127.0.0.1:30081"
+    # good_platform2_url = "https://oak.local:9443"
     # bad_platform1_url = "https://localhost:9443"
+
+
 
     good_user_1 = "garygeeke"
     good_user_2 = "erinoverview"
@@ -591,7 +586,8 @@ class TestValidMetadataOMVs:
             token = m_client.create_egeria_bearer_token(self.good_user_2, "secret")
             start_time = time.perf_counter()
 
-            response = m_client.get_all_classification_defs()
+            response = m_client.get_all_classification_defs(output_format="LIST", report_spec="TypeDef")
+            duration = time.perf_counter() - start_time
             duration = time.perf_counter() - start_time
 
             print(f"\n\tDuration was {duration} seconds")
@@ -601,7 +597,7 @@ class TestValidMetadataOMVs:
                 print(f"Type is {type(response)}")
                 print_json("\n\n" + json.dumps(response, indent=4))
             elif type(response) is str:
-                print("\n\nGUID is: " + response)
+                console.print("\n\nGUID is: " + response)
             assert True
 
         except PyegeriaException as e:

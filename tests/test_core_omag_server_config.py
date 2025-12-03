@@ -16,11 +16,11 @@ from contextlib import nullcontext as does_not_raise
 
 import pytest
 
-from pyegeria._exceptions import (
-    InvalidParameterException,
-    PropertyServerException,
-    UserNotAuthorizedException,
-    print_exception_response,
+from pyegeria._exceptions_new import (
+    PyegeriaInvalidParameterException as InvalidParameterException,
+    PyegeriaAPIException as PropertyServerException,
+    PyegeriaUnauthorizedException as UserNotAuthorizedException,
+    print_basic_exception as print_exception_response,
 )
 from pyegeria.core_omag_server_config import CoreServerConfig
 

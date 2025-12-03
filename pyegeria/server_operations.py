@@ -40,7 +40,8 @@ class ServerOps(Platform):
     ):
         Platform.__init__(self, server_name, platform_url, user_id, user_pwd)
         self.ops_command_root = (
-            f"{self.platform_url}/open-metadata/server-operations/users/{user_id}"
+            # f"{self.platform_url}/open-metadata/server-operations/users/{user_id}"
+            f"{self.platform_url}/open-metadata/server-operations/"
         )
 
     async def _async_get_active_configuration(self, server: str = None) -> dict | str:

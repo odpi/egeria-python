@@ -22,11 +22,18 @@ from pyegeria.collection_manager import CollectionManager, CollectionProperties
 from pyegeria.egeria_tech_client import EgeriaTech
 from pyegeria.logging_configuration import config_logging, init_logging
 from pyegeria._exceptions_new import (
-    PyegeriaInvalidParameterException, PyegeriaException, PyegeriaConnectionException, PyegeriaClientException,
-    PyegeriaAPIException, PyegeriaUnknownException, PyegeriaNotFoundException,
-    PyegeriaUnauthorizedException,  print_exception_table, print_basic_exception,
-    print_validation_error
-    )
+    PyegeriaInvalidParameterException,
+    PyegeriaException,
+    PyegeriaConnectionException,
+    PyegeriaClientException,
+    PyegeriaAPIException,
+    PyegeriaUnknownException,
+    PyegeriaNotFoundException,
+    PyegeriaUnauthorizedException,
+    print_basic_exception,
+    print_exception_table,
+    print_validation_error,
+)
 from pydantic import ValidationError
 from pyegeria.models import (SearchStringRequestBody, SequencingOrder, FilterRequestBody,
                              NewElementRequestBody, InitialClassifications)
@@ -164,7 +171,7 @@ class TestCollectionManager:
                         ],
                     "annotations": {"wikilinks": ["[[Agreements]]", "[[Egeria]]"]}
                 }
-            search_string = "NAICS"
+            search_string = "*"
             body = {
                 "class": "SearchStringRequestBody",
                 "searchString": search_string,
@@ -381,7 +388,7 @@ class TestCollectionManager:
 
         except (PyegeriaException, AssertionError) as e:
            # pass
-            print_exception_table(e)
+            print_basic_exception(e)
             # assert False, "Invalid request"
         except ValidationError as e:
             print_validation_error(e)
@@ -414,7 +421,7 @@ class TestCollectionManager:
             assert True
 
         except ( PyegeriaException) as e:
-            print_exception_table(e)
+            print_basic_exception(e)
             # assert False, "Invalid request"
 
         finally:
@@ -450,7 +457,7 @@ class TestCollectionManager:
             assert True
 
         except PyegeriaException as e:
-            print_exception_table(e)
+            print_basic_exception(e)
             # assert False, "Invalid request"
 
         finally:
@@ -481,7 +488,7 @@ class TestCollectionManager:
             assert True
 
         except (PyegeriaInvalidParameterException,  PyegeriaConnectionException, PyegeriaAPIException, PyegeriaUnknownException,) as e:
-            print_exception_table(e)
+            print_basic_exception(e)
             # assert False, "Invalid request"
         except ValidationError as e:
             print_validation_error(e)
@@ -517,7 +524,7 @@ class TestCollectionManager:
             assert True
 
         except (PyegeriaInvalidParameterException,  PyegeriaConnectionException, PyegeriaAPIException, PyegeriaUnknownException,) as e:
-            print_exception_table(e)
+            print_basic_exception(e)
             # assert False, "Invalid request"
         except ValidationError as e:
             print_validation_error(e)
@@ -713,7 +720,7 @@ class TestCollectionManager:
             assert True
 
         except (PyegeriaInvalidParameterException,  PyegeriaConnectionException, PyegeriaAPIException, PyegeriaUnknownException,) as e:
-            print_exception_table(e)
+            print_basic_exception(e)
             assert False, "Invalid request"
         finally:
             c_client.close_session()
@@ -830,7 +837,7 @@ class TestCollectionManager:
             assert True
 
         except (PyegeriaInvalidParameterException,  PyegeriaConnectionException, PyegeriaAPIException, PyegeriaUnknownException,) as e:
-            # print_exception_table(e)
+            # print_basic_exception(e)
             print_basic_exception(e)
             assert False, "Invalid request"
         finally:
@@ -871,7 +878,7 @@ class TestCollectionManager:
             assert True
 
         except (PyegeriaInvalidParameterException,  PyegeriaConnectionException, PyegeriaAPIException, PyegeriaUnknownException,) as e:
-            print_exception_table(e)
+            print_basic_exception(e)
             assert False, "Invalid request"
         finally:
             c_client.close_session()
@@ -917,7 +924,7 @@ class TestCollectionManager:
             assert True
 
         except (PyegeriaInvalidParameterException,  PyegeriaConnectionException, PyegeriaAPIException, PyegeriaUnknownException,) as e:
-            print_exception_table(e)
+            print_basic_exception(e)
             assert False, "Invalid request"
         except ValidationError as e:
             print_validation_error(e)
@@ -959,7 +966,7 @@ class TestCollectionManager:
     #         assert True
     #
     #     except (PyegeriaInvalidParameterException,  PyegeriaConnectionException, PyegeriaAPIException, PyegeriaUnknownException,) as e:
-    #         print_exception_table(e)
+    #         print_basic_exception(e)
     #         assert False, "Invalid request"
     #     finally:
     #         c_client.close_session()
@@ -997,7 +1004,7 @@ class TestCollectionManager:
     #         assert True
     #
     #     except (PyegeriaInvalidParameterException,  PyegeriaConnectionException, PyegeriaAPIException, PyegeriaUnknownException,) as e:
-    #         print_exception_table(e)
+    #         print_basic_exception(e)
     #         assert False, "Invalid request"
     #     finally:
     #         c_client.close_session()
@@ -1035,7 +1042,7 @@ class TestCollectionManager:
     #         assert True
     #
     #     except (PyegeriaInvalidParameterException,  PyegeriaConnectionException, PyegeriaAPIException, PyegeriaUnknownException,) as e:
-    #         print_exception_table(e)
+    #         print_basic_exception(e)
     #         assert False, "Invalid request"
     #     finally:
     #         c_client.close_session()
@@ -1074,7 +1081,7 @@ class TestCollectionManager:
     #         assert True
     #
     #     except (PyegeriaInvalidParameterException,  PyegeriaConnectionException, PyegeriaAPIException, PyegeriaUnknownException,) as e:
-    #         print_exception_table(e)
+    #         print_basic_exception(e)
     #         assert False, "Invalid request"
     #     finally:
     #         c_client.close_session()
@@ -1125,7 +1132,7 @@ class TestCollectionManager:
             assert True
 
         except (PyegeriaInvalidParameterException,  PyegeriaConnectionException, PyegeriaAPIException, PyegeriaUnknownException,) as e:
-            # print_exception_table(e)
+            # print_basic_exception(e)
             print_basic_exception(e)
             assert False, "Invalid request"
         except ValidationError as e:
@@ -1176,7 +1183,7 @@ class TestCollectionManager:
             assert True
 
         except (PyegeriaAPIException,PyegeriaInvalidParameterException, PyegeriaUnauthorizedException,) as e:
-            print_exception_table(e)
+            print_basic_exception(e)
             assert False, "Invalid request"
         except ValidationError as e:
             print_validation_error(e)

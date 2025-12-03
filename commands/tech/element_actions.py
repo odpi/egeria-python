@@ -19,10 +19,10 @@ import click
 
 
 from pyegeria import EgeriaTech, body_slimmer
-from pyegeria._exceptions import (
-    InvalidParameterException,
-    PropertyServerException,
-    print_exception_response,
+from pyegeria._exceptions_new import (
+    PyegeriaInvalidParameterException as InvalidParameterException,
+    PyegeriaAPIException as PropertyServerException,
+    print_basic_exception as print_exception_response,
 )
 
 EGERIA_METADATA_STORE = os.environ.get("EGERIA_METADATA_STORE", "active-metadata-store")

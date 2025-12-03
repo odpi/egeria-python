@@ -19,14 +19,23 @@ from contextlib import nullcontext as does_not_raise
 import pytest
 from pydantic import ValidationError
 
-from pyegeria import PyegeriaException, print_exception_table, print_validation_error, \
-    PyegeriaInvalidParameterException, print_basic_exception
-from pyegeria._exceptions import (
-    InvalidParameterException,
-    PropertyServerException,
-    UserNotAuthorizedException,
-    print_exception_response,
+from pyegeria import (
+    PyegeriaException,
+    print_exception_table,
+    print_validation_error,
+    PyegeriaInvalidParameterException,
+    print_basic_exception,
 )
+from pyegeria._exceptions_new import (
+    PyegeriaInvalidParameterException as _PyInv,
+    PyegeriaAPIException as _PyAPI,
+    PyegeriaUnauthorizedException as _PyUnauth,
+)
+# Standardize this test file on new exceptions while keeping the existing names local to the file
+InvalidParameterException = _PyInv
+PropertyServerException = _PyAPI
+UserNotAuthorizedException = _PyUnauth
+print_exception_response = print_basic_exception
 from pyegeria.glossary_manager import GlossaryManager, GlossaryTermProperties
 from pyegeria.core_omag_server_config import CoreServerConfig
 from pyegeria.models import NewElementRequestBody

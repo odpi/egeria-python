@@ -9,7 +9,6 @@ from json import JSONDecodeError
 
 import validators
 
-from pyegeria._exceptions import InvalidParameterException, OMAGCommonErrorCode
 from pyegeria._exceptions_new import PyegeriaInvalidParameterException
 
 """

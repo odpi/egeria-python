@@ -27,11 +27,15 @@ except Exception:
 
 from pyegeria import (
     EgeriaTech,
-    InvalidParameterException,
-    PropertyServerException,
-    UserNotAuthorizedException, NO_CATEGORIES_FOUND, PyegeriaException, print_basic_exception, print_validation_error,
+    NO_CATEGORIES_FOUND, PyegeriaException, print_basic_exception, print_validation_error,
 )
-from commands.cat.glossary_actions import EGERIA_HOME_GLOSSARY_GUID
+from pyegeria._exceptions_new import (
+    PyegeriaInvalidParameterException as InvalidParameterException,
+    PyegeriaAPIException as PropertyServerException,
+    PyegeriaUnauthorizedException as UserNotAuthorizedException,
+)
+# Default glossary GUID can be provided via environment; fall back to None
+EGERIA_HOME_GLOSSARY_GUID = os.environ.get("EGERIA_HOME_GLOSSARY_GUID", None)
 from pyegeria._globals import NO_GLOSSARIES_FOUND
 
 disable_ssl_warnings = True

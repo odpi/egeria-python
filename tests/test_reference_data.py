@@ -16,14 +16,16 @@ import time
 from pydantic import ValidationError
 from pyegeria.reference_data import ReferenceDataManager
 
-from pyegeria._exceptions_new import PyegeriaException, print_basic_exception, print_exception_table, \
-    print_validation_error, PyegeriaAPIException
-
-from pyegeria import (
-    InvalidParameterException,
-    PropertyServerException,
-    UserNotAuthorizedException,
-    print_exception_response,
+from pyegeria._exceptions_new import (
+    PyegeriaException,
+    print_basic_exception,
+    print_exception_table,
+    print_validation_error,
+    PyegeriaAPIException,
+    PyegeriaInvalidParameterException as InvalidParameterException,
+    PyegeriaAPIException as PropertyServerException,
+    PyegeriaUnauthorizedException as UserNotAuthorizedException,
+    print_basic_exception as print_exception_response,
 )
 
 
@@ -81,7 +83,7 @@ class TestReferenceDataManager:
         except (
             PyegeriaException
         ) as e:
-            print_basic_exception()
+            print_basic_exception(e)
             assert False, "Invalid request"
         except ValidationError as e:
             print_validation_error(e)

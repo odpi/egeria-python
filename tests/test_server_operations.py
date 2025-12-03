@@ -18,10 +18,10 @@ import json
 import pytest
 from rich import print, print_json
 
-from pyegeria._exceptions import (
-    InvalidParameterException,
-    PropertyServerException,
-    print_exception_response,
+from pyegeria._exceptions_new import (
+    PyegeriaInvalidParameterException as InvalidParameterException,
+    PyegeriaAPIException as PropertyServerException,
+    print_basic_exception as print_exception_response,
 )
 from pyegeria.server_operations import ServerOps
 
@@ -42,7 +42,7 @@ class TestServerOperations:
     bad_user_1 = "eviledna"
     bad_user_2 = ""
 
-    good_server_1 = "active-metadata-store"
+    good_server_1 = "qs-metadata-store"
     good_server_2 = "qs-integration-daemon"
     good_server_3 = "exchangeDL01"
     good_server_4 = "engine-host"
@@ -54,12 +54,12 @@ class TestServerOperations:
         try:
             s_client = ServerOps(server_name, self.good_platform1_url, self.good_user_1)
             response = s_client.get_active_configuration(server)
-            print(f"\n\n\tThe active configuration of {server} is \n{response}")
+            print(f"\n\n\tThe active configuration of {server} is \n{json.dumps(response, indent=4)}")
             assert True
 
         except (InvalidParameterException, PropertyServerException) as e:
             print_exception_response(e)
-            assert e.related_http_code != "404", "Invalid parameters"
+            assert e.related_http_code != "404", f"Invalid parameters: {e.message}"
 
     def test_add_archive_files(self):
         # Todo - the base function doesn't seem to validate the file or to actually load? Check

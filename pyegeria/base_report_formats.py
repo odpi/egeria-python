@@ -352,8 +352,27 @@ base_report_specs = FormatSetDict({
         )
     ),
 
+    "TypeDef": FormatSet(
+        target_type="TypeDef",
+        heading="TypeDef",
+        description="Attributes that describe TypeDefs",
+        annotations={},  # No specific annotations
+        family="TypeDef",
+        formats=[
+            Format(
+                types=["ALL"],
+                attributes=[
+                    Column(name='Type Name', key='name'),
+                    Column(name="Category", key='category'),
+                    Column(name="Description", key='description'),
+                    Column(name="Bean Class", key='beanClassName'),
+                    Column(name="Initial Status", key='initialStatus'),
+                    Column(name="Description Wiki", key='descriptionWiki'),
 
-
+                ],
+            )
+        ],
+    ),
 
     "Valid-Values": FormatSet(
         target_type="Valid-Values",
@@ -377,6 +396,12 @@ base_report_specs = FormatSetDict({
                 ],
             )
         ],
+        action=ActionParameter(
+            function="ValidValueManager.find_valid_values",
+            optional_params=OPTIONAL_FILTER_PARAMS + ["type_name"],
+            required_params=["property_name"],
+            spec_params={},
+        )
     ),
 
 "Engine-Actions": FormatSet(
@@ -2211,6 +2236,7 @@ def list_report_specs() -> list[str]:
 
 def _select_from_registry(registry: FormatSetDict, kind: str, output_type: str) -> dict | None:
     # Normalize
+
     output_type = output_type.upper()
     element: Optional[FormatSet] = registry.get(kind)
     if element is None:

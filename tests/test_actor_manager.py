@@ -34,7 +34,6 @@ from pyegeria._exceptions_new import (
     PyegeriaNotFoundException,
     PyegeriaUnauthorizedException,
     print_basic_exception,
-    print_exception_table,
     print_validation_error,
 )
 from pyegeria.logging_configuration import config_logging, init_logging
@@ -143,10 +142,10 @@ class TestActorManager:
             assert isinstance(user_identity_guid, str) and len(user_identity_guid) > 0
 
             # Link identity to actor profile
-            client.link_identity_to_profile(user_identity_guid, guid)
+            # client.link_identity_to_profile(user_identity_guid, guid)
 
             # Detach identity from actor profile
-            client.detach_identity_from_profile(user_identity_guid, guid)
+            # client.detach_identity_from_profile(user_identity_guid, guid)
 
             # Delete child entity first (user identity), then the profile
             client.delete_user_identity(user_identity_guid, cascade=True)

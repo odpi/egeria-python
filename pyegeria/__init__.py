@@ -27,7 +27,7 @@ if disable_ssl_warnings:
 
     disable_warnings(InsecureRequestWarning)
 
-from ._client import Client
+# from ._client import Client
 from ._client_new import Client2
 from ._exceptions_new import (PyegeriaInvalidParameterException,PyegeriaAPIException, PyegeriaException,
                               PyegeriaUnauthorizedException, PyegeriaClientException, PyegeriaUnknownException,
@@ -35,8 +35,8 @@ from ._exceptions_new import (PyegeriaInvalidParameterException,PyegeriaAPIExcep
                               print_exception_table, print_basic_exception, print_validation_error)
 from .config import load_app_config, get_app_config, settings
 from .logging_configuration import config_logging, console_log_filter, init_logging
-from ._exceptions import (InvalidParameterException, PropertyServerException, UserNotAuthorizedException,
-                          print_exception_response, )
+# from ._exceptions import (InvalidParameterException, PropertyServerException, UserNotAuthorizedException,
+#                           print_exception_response, )
 from ._validators import (is_json, validate_guid, validate_name, validate_public, validate_search_string,
                           validate_server_name, validate_url, validate_user_id, )
 from .asset_catalog import AssetCatalog

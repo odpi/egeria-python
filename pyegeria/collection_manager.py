@@ -1996,12 +1996,13 @@ class CollectionManager(Client2):
 
         Raises
         ------
-        InvalidParameterException
-          If the client passes incorrect parameters on the request - such as bad URLs or invalid values
-        PropertyServerException
-          Raised by the server when an issue arises in processing a valid request
-        NotAuthorizedException
-          The principle specified by the user_id does not have authorization for the requested action
+        PyegeriaException
+            One of the pyegeria exceptions will be raised if there are issues in communications, message format, or
+            Egeria errors.
+        ValidationError
+            Pydantic validation errors are raised if the body does not conform to the DeleteElementRequestBody.
+        PyegeriaNotAuthorizedException
+            The principle specified by the user_id does not have authorization for the requested action
 
         Notes
         -----
@@ -5071,7 +5072,7 @@ class CollectionManager(Client2):
         cascade: bool, optional, defaults to True
             If true, a cascade delete is performed.
 
-        body: dict DeleteElementRequestBodyt, optional, default = None
+        body: dict | DeleteElementRequestBody, optional, default = None
             A dict representing the details of the relationship.
 
         Returns
@@ -5080,12 +5081,13 @@ class CollectionManager(Client2):
 
         Raises
         ------
-        InvalidParameterException
-          If the client passes incorrect parameters on the request - such as bad URLs or invalid values
-        PropertyServerException
-          Raised by the server when an issue arises in processing a valid request
-        NotAuthorizedException
-          The principle specified by the user_id does not have authorization for the requested action
+        PyegeriaException
+            One of the pyegeria exceptions will be raised if there are issues in communications, message format, or
+            Egeria errors.
+        ValidationError
+            Pydantic validation errors are raised if the body does not conform to the DeleteElementRequestBody.
+        PyegeriaNotAuthorizedException
+            The principle specified by the user_id does not have authorization for the requested action
 
         Notes
         _____
@@ -5118,13 +5120,13 @@ class CollectionManager(Client2):
 
         Raises
         ------
-
-        InvalidParameterException
-          If the client passes incorrect parameters on the request - such as bad URLs or invalid values
-        PropertyServerException
-          Raised by the server when an issue arises in processing a valid request
-        NotAuthorizedException
-          The principle specified by the user_id does not have authorization for the requested action
+        PyegeriaException
+            One of the pyegeria exceptions will be raised if there are issues in communications, message format, or
+            Egeria errors.
+        ValidationError
+            Pydantic validation errors are raised if the body does not conform to the NewRelationshipRequestBody.
+        PyegeriaNotAuthorizedException
+            The principle specified by the user_id does not have authorization for the requested action
 
         Notes
         -----

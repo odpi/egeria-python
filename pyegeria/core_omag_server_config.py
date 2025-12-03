@@ -15,13 +15,12 @@ import psycopg2
 from psycopg2 import sql
 from psycopg2.extensions import ISOLATION_LEVEL_AUTOCOMMIT
 
-# import json
-from pyegeria._client import Client
+from pyegeria._client_new import Client2
 from pyegeria._globals import enable_ssl_check
 from pyegeria._validators import validate_guid, validate_name, validate_url
 
 
-class CoreServerConfig(Client):
+class CoreServerConfig(Client2):
     """
     CoreServerConfig is a class that extends the Client class. It provides methods to configure and interact with access
     services in the OMAG server.
@@ -49,9 +48,10 @@ class CoreServerConfig(Client):
         verify_flag: bool = enable_ssl_check,
     ):
         self.core_command_root: str
-        Client.__init__(self, server_name, platform_url, user_id, user_pwd)
+        Client2.__init__(self, server_name, platform_url, user_id, user_pwd)
         self.core_command_root = (
-            self.platform_url + "/open-metadata/admin-services/users/" + user_id
+            # self.platform_url + "/open-metadata/admin-services/users/" + user_id
+            self.platform_url + "/open-metadata/admin-services/"
         )
 
     #
@@ -1492,7 +1492,7 @@ class CoreServerConfig(Client):
 
         # If the database does not exist, create it
         if not database_exists:
-            cursor.execute(sql.SQL("CREATE DATABASE { }").format(sql.Identifier(pg_db)))
+            cursor.execute(sql.SQL("CREATE DATABASE{ }").format(sql.Identifier(pg_db)))
             print(f"Database '{pg_db}' created.")
         else:
             print(f"Database '{pg_db}' already exists.")

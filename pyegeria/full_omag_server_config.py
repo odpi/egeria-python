@@ -8,9 +8,14 @@ Copyright Contributors to the ODPi Egeria project.
 
 import json
 from pyegeria.utils import body_slimmer
-from pyegeria._client import Client
+from pyegeria._client_new import Client2
 from pyegeria._globals import max_paging_size
-from pyegeria._exceptions import  InvalidParameterException
+from pyegeria._exceptions_new import (
+    PyegeriaInvalidParameterException,
+    PyegeriaAPIException,
+    PyegeriaUnauthorizedException,
+    PyegeriaException,
+)
 from pyegeria._globals import enable_ssl_check
 from pyegeria._validators import validate_name, validate_url
 
@@ -318,15 +323,19 @@ class FullServerConfig(CoreServerConfig):
 
         Raises
         ------
-        InvalidParameterException
-            If the cohort_config_body is None.
+        PyegeriaInvalidParameterException
+            If the `cohort_config_body` is None.
 
         """
         if server_name is None:
             server_name = self.server_name
         validate_name(cohort_name)
         if cohort_config_body is None:
-            raise InvalidParameterException(cohort_config_body)
+            raise PyegeriaInvalidParameterException(
+                None,
+                context={"caller_method": "set_cohort_config"},
+                additional_info={"reason": "cohort_config_body is None"},
+            )
 
         url = (
             self.full_config_command_root
@@ -651,7 +660,7 @@ class FullServerConfig(CoreServerConfig):
         if related_code == 200:
             return
         else:
-            raise InvalidParameterException(response.content)
+            raise PyegeriaAPIException(response)
 
     def clear_stored_configuration(self, server_name: str = None) -> None | str:
         """Retrieves the stored configurations for a server
@@ -689,7 +698,7 @@ class FullServerConfig(CoreServerConfig):
         if related_code == 200:
             return
         else:
-            raise InvalidParameterException(response.content)
+            raise PyegeriaAPIException(response)
 
     def deploy_stored_configurations(
         self, target_url_root: str, server_name: str = None
@@ -705,12 +714,12 @@ class FullServerConfig(CoreServerConfig):
 
         Raises
         ------
-        InvalidParameterException
-            If the response status code is not 200 and the related HTTP code is also not 200.
-        PropertyServerException:
-            Raised by the server when an issue arises in processing a valid request
-        NotAuthorizedException:
-            The principle specified by the user_id does not have authorization for the requested action
+        PyegeriaInvalidParameterException
+            If the client passes incorrect parameters on the request — such as bad URLs or invalid values.
+        PyegeriaAPIException
+            Raised by the server when an issue arises in processing a valid request.
+        PyegeriaUnauthorizedException
+            The principal specified by the `user_id` does not have authorization for the requested action.
 
         """
         if server_name is None:
@@ -735,12 +744,12 @@ class FullServerConfig(CoreServerConfig):
 
         Raises
         ------
-        InvalidParameterException
-            If the response status code is not 200 and the related HTTP code is also not 200.
-        PropertyServerException:
-            Raised by the server when an issue arises in processing a valid request
-        NotAuthorizedException:
-            The principle specified by the user_id does not have authorization for the requested action
+        PyegeriaInvalidParameterException
+            If the client passes incorrect parameters on the request — such as bad URLs or invalid values.
+        PyegeriaAPIException
+            Raised by the server when an issue arises in processing a valid request.
+        PyegeriaUnauthorizedException
+            The principal specified by the `user_id` does not have authorization for the requested action.
 
         """
         if server_name is None:
@@ -773,8 +782,8 @@ class FullServerConfig(CoreServerConfig):
 
         Raises
         ------
-        InvalidParameterException
-            If the response status code is not 200 and the related HTTP code is also not 200.
+        PyegeriaInvalidParameterException
+            If the client passes incorrect parameters on the request — such as bad URLs or invalid values.
 
         Description
         -----------
@@ -810,8 +819,8 @@ class FullServerConfig(CoreServerConfig):
 
         Raises
         ------
-        InvalidParameterException
-            If the response status code is not 200 and the related HTTP code is also not 200.
+        PyegeriaInvalidParameterException
+            If the client passes incorrect parameters on the request — such as bad URLs or invalid values.
 
         Description
         -----------
@@ -833,7 +842,7 @@ class FullServerConfig(CoreServerConfig):
         response = self.make_request("POST", url, payload=body)
         related_code = response.json().get("relatedHTTPCode")
         if related_code != 200:
-            raise InvalidParameterException(response.content)
+            raise PyegeriaAPIException(response)
         else:
             return
 
@@ -877,7 +886,7 @@ class FullServerConfig(CoreServerConfig):
         response = self.make_request("POST", url)
         related_code = response.json().get("relatedHTTPCode")
         if related_code != 200:
-            raise InvalidParameterException(response.content)
+            raise PyegeriaAPIException(response)
         else:
             return
 
@@ -890,7 +899,7 @@ class FullServerConfig(CoreServerConfig):
         response = self.make_request("POST", url)
         related_code = response.json().get("relatedHTTPCode")
         if related_code != 200:
-            raise InvalidParameterException(response.content)
+            raise PyegeriaAPIException(response)
         else:
             return
 
@@ -901,7 +910,7 @@ class FullServerConfig(CoreServerConfig):
         response = self.make_request("POST", url)
         related_code = response.json().get("relatedHTTPCode")
         if related_code != 200:
-            raise InvalidParameterException(response.content)
+            raise PyegeriaAPIException(response)
         else:
             return
 
@@ -919,7 +928,7 @@ class FullServerConfig(CoreServerConfig):
         response = self.make_request("POST", url, payload=repository_body)
         related_code = response.json().get("relatedHTTPCode")
         if related_code != 200:
-            raise InvalidParameterException(response.content)
+            raise PyegeriaAPIException(response)
         else:
             return
 
@@ -975,7 +984,7 @@ class FullServerConfig(CoreServerConfig):
         response = self.make_request("POST", url, payload=archives_list_body)
         related_code = response.json().get("relatedHTTPCode")
         if related_code != 200:
-            raise InvalidParameterException(response.content)
+            raise PyegeriaAPIException(response)
         else:
             return
 
@@ -1021,7 +1030,7 @@ class FullServerConfig(CoreServerConfig):
         response = self.make_request("POST", url, server_desc)
         related_code = response.json().get("relatedHTTPCode")
         if related_code != 200:
-            raise InvalidParameterException(response.content)
+            raise PyegeriaAPIException(response)
         else:
             return
 

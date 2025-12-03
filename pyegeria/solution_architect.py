@@ -25,7 +25,16 @@ from pyegeria.governance_officer import GovernanceOfficer
 from pyegeria._client_new import Client2, max_paging_size
 from pyegeria._globals import NO_ELEMENTS_FOUND, NO_GUID_RETURNED
 from pyegeria.utils import body_slimmer, dynamic_catch
-from pyegeria._exceptions import (InvalidParameterException)
+from pyegeria._exceptions_new import (
+    PyegeriaException,
+    PyegeriaInvalidParameterException,
+    PyegeriaAPIException,
+    PyegeriaUnauthorizedException,
+    PyegeriaNotFoundException,
+    PyegeriaConnectionException,
+    print_basic_exception,
+    print_exception_response,
+)
 
 sys.path.insert(0, os.path.abspath(os.path.dirname(__file__)))
 

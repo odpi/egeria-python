@@ -18,13 +18,13 @@ from rich import print, print_json
 from rich.console import Console
 
 from pyegeria import PyegeriaAPIException
-from pyegeria._deprecated_gov_engine import body_slimmer
-from pyegeria._exceptions import (
-    InvalidParameterException,
-    PropertyServerException,
-    UserNotAuthorizedException,
-    print_exception_response,
-    )
+from pyegeria.utils import body_slimmer
+from pyegeria._exceptions_new import (
+    PyegeriaInvalidParameterException as InvalidParameterException,
+    PyegeriaAPIException as PropertyServerException,
+    PyegeriaUnauthorizedException as UserNotAuthorizedException,
+    print_basic_exception as print_exception_response,
+)
 from pyegeria._exceptions_new import PyegeriaException, print_basic_exception, print_exception_table
 from pyegeria.data_designer import DataDesigner
 from pyegeria.config import settings

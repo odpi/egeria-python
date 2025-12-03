@@ -21,11 +21,11 @@ import pytest
 from pydantic import ValidationError
 
 from pyegeria import Client2, PyegeriaException, print_basic_exception, print_validation_error
-from pyegeria._exceptions import (
-    InvalidParameterException,
-    PropertyServerException,
-    UserNotAuthorizedException,
-    print_exception_response,
+from pyegeria._exceptions_new import (
+    PyegeriaInvalidParameterException as InvalidParameterException,
+    PyegeriaAPIException as PropertyServerException,
+    PyegeriaUnauthorizedException as UserNotAuthorizedException,
+    print_basic_exception as print_exception_response,
 )
 from pyegeria.core_omag_server_config import CoreServerConfig
 # from pyegeria.feedback_manager_omvs import FeedbackManager

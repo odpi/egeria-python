@@ -24,11 +24,11 @@ from textual.widgets import DataTable
 from pyegeria import AutomatedCuration, EgeriaTech, PyegeriaException, settings, config_logging, \
     PyegeriaClientException, print_basic_exception
 
-from pyegeria._exceptions import (
-    InvalidParameterException,
-    PropertyServerException,
-    UserNotAuthorizedException,
-    print_exception_response,
+from pyegeria._exceptions_new import (
+    PyegeriaInvalidParameterException as InvalidParameterException,
+    PyegeriaAPIException as PropertyServerException,
+    PyegeriaUnauthorizedException as UserNotAuthorizedException,
+    print_basic_exception as print_exception_response,
 )
 
 EGERIA_USER = os.environ.get("EGERIA_USER", "erinoverview")

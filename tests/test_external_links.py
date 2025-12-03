@@ -18,11 +18,11 @@ from pyegeria.external_links import ExternalReferences
 from pyegeria._exceptions_new import PyegeriaException, print_basic_exception, print_exception_table, \
     print_validation_error, PyegeriaAPIException
 
-from pyegeria import (
-    InvalidParameterException,
-    PropertyServerException,
-    UserNotAuthorizedException,
-    print_exception_response,
+from pyegeria._exceptions_new import (
+    PyegeriaInvalidParameterException as InvalidParameterException,
+    PyegeriaAPIException as PropertyServerException,
+    PyegeriaUnauthorizedException as UserNotAuthorizedException,
+    print_basic_exception as print_exception_response,
 )
 
 # from pyegeria.admin_services import FullServerConfig

@@ -17,7 +17,6 @@ from loguru import logger
 from pydantic import Field
 
 from pyegeria._client_new import Client2
-from pyegeria._exceptions import InvalidParameterException
 from pyegeria._exceptions_new import PyegeriaInvalidParameterException
 from pyegeria._globals import NO_GUID_RETURNED
 from pyegeria._validators import validate_guid
@@ -496,7 +495,11 @@ class GlossaryManager(CollectionManager):
             term_info = []
             # check that the column headers are known
             if all(header in term_properties for header in headers) is False:
-                raise InvalidParameterException("Invalid headers in CSV File")
+                raise PyegeriaInvalidParameterException(
+                    None,
+                    context={"caller_method": "load_terms_from_csv"},
+                    additional_info={"reason": "Invalid headers in CSV File"},
+                )
 
             # process each row and validate values
             for row in csv_reader:

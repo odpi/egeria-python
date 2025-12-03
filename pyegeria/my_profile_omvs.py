@@ -8,11 +8,11 @@ import asyncio
 import json
 
 from pyegeria.utils import body_slimmer
-from pyegeria._client import Client
+from pyegeria._client_new import Client2
 from pyegeria._validators import validate_name, validate_search_string
 from pyegeria._globals import NO_ELEMENTS_FOUND
 
-class MyProfile(Client):
+class MyProfile(Client2):
     """A class representing the profile of a user.
 
     This class provides methods for retrieving the profile details
@@ -41,7 +41,7 @@ class MyProfile(Client):
         user_pwd: str = None,
         token: str = None,
     ):
-        Client.__init__(
+        Client2.__init__(
             self,
             view_server,
             platform_url,
@@ -539,12 +539,12 @@ class MyProfile(Client):
 
         Raises
         ------
-        InvalidParameterException
-        If the client passes incorrect parameters on the request - such as bad URLs or invalid values
-        PropertyServerException
-        Raised by the server when an issue arises in processing a valid request
-        NotAuthorizedException
-        The principle specified by the user_id does not have authorization for the requested action
+        PyegeriaInvalidParameterException
+            One of the parameters is null or invalid (for example, bad URL or invalid values).
+        PyegeriaAPIException
+            The server reported an error while processing a valid request.
+        PyegeriaUnauthorizedException
+            The requesting user is not authorized to issue this request.
         """
 
         is_merge_update_t = str(is_merge_update).lower()
@@ -960,12 +960,12 @@ class MyProfile(Client):
 
         Raises
         ------
-         InvalidParameterException
-             If the client passes incorrect parameters on the request - such as bad URLs or invalid values
-         PropertyServerException
-             Raised by the server when an issue arises in processing a valid request
-         NotAuthorizedException
-             The principle specified by the user_id does not have authorization for the requested action
+        PyegeriaInvalidParameterException
+            One of the parameters is null or invalid (for example, bad URL or invalid values).
+        PyegeriaAPIException
+            The server reported an error while processing a valid request.
+        PyegeriaUnauthorizedException
+            The requesting user is not authorized to issue this request.
         """
 
         is_merge_update_t = str(is_merge_update).lower()

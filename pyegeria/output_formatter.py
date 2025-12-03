@@ -1,3 +1,4 @@
+import copy
 from datetime import datetime
 import re
 from typing import Any, Callable, Dict, List, Optional, Tuple, Union
@@ -512,7 +513,7 @@ def generate_entity_md(elements: List[Dict],
         else:
             display_name = props.get('display_name') or props.get('title') or props.get('keyword')
 
-        if display_name is None and (keyword:= element['properties'].get('keyword',None)) is not None:
+        if display_name is None and (keyword:= element.get('properties',{}).get('keyword',None)) is not None:
             display_name = keyword
         elif display_name is None:
             display_name = "NO DISPLAY NAME"
@@ -624,13 +625,15 @@ def generate_entity_md_table(elements: List[Dict],
     elements_md += header_row + "\n"
     elements_md += separator_row + "\n"
 
-    # Add rows
+
     for element in elements:
         guid = element.get('elementHeader', {}).get('guid', None)
 
         # Extractor returns columns_struct with values when possible
+        # Use a local copy of columns_struct to prevent data leakage between rows
+        local_columns_struct = copy.deepcopy(columns_struct)
         try:
-            returned_struct = extract_properties_func(element, columns_struct)
+            returned_struct = extract_properties_func(element, local_columns_struct)
         except TypeError:
             returned_struct = None
 
@@ -651,27 +654,42 @@ def generate_entity_md_table(elements: List[Dict],
                 value = column.get('value')
                 if (value in (None, "")) and key in additional_props:
                     value = additional_props[key]
+
+                if value in (None, ""):
+                    value = " --- "
+
                 if column.get('format'):
                     value = format_for_markdown_table(value, guid)
+                elif isinstance(value, str):
+                    value = value.replace("\n", " ").replace("|", "\\|")
+
                 row += f"{value} | "
         else:
             # Legacy fallback: read from props dict
             props = extract_properties_func(element)
             for column in columns:
                 key = column['key']
-                value = ""
+                value = " "
                 if key in props:
                     value = props[key]
                 elif key in additional_props:
                     value = additional_props[key]
+
+                if value in (None, "", " "):
+                    value = " --- "
+
                 if column.get('format'):
                     value = format_for_markdown_table(value, guid or props.get('GUID'))
+                elif isinstance(value, str):
+                    value = value.replace("\n", " ").replace("|", "\\|")
+
                 row += f"{value} | "
 
         elements_md += row + "\n"
         # if wk := columns_struct.get("annotations",{}).get("wikilinks", None):
         #     elements_md += ", ".join(wk)
     return elements_md
+
 
 def generate_entity_dict(elements: List[Dict], 
                         extract_properties_func: Callable, 
