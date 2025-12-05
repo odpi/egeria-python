@@ -736,7 +736,7 @@ def generate_entity_dict(elements: List[Dict],
     # Add attributes based on column spec if available, otherwise, add all
     import copy
     for element in elements:
-        if element is None:
+        if not isinstance(element, dict):
             continue
 
         guid = element.get('elementHeader', {}).get('guid')

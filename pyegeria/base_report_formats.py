@@ -293,7 +293,7 @@ WHAT = [
 ]
 
 WHEN = [
-    "When was this created?",
+    "When was this created?", # create
     "When was this last updated?",
     "When did this become effective?",
     "When will this no longer be effective?",
@@ -304,6 +304,8 @@ WHEN = [
     "What was the value last year?"
 ]
 
+TIME_PARAMETERS = ["as_of_time", "effective_time"]
+
 # Modularized report_specs
 base_report_specs = FormatSetDict({
     "Default": FormatSet(
@@ -311,10 +313,10 @@ base_report_specs = FormatSetDict({
         description="Was a valid combination of report_spec and output_format provided?",
         annotations={},  # No specific annotations
         family="General",
-        question_spec=[{'perspectives':["ALL"], 'questions': WHO + WHAT + WHEN}],
+        question_spec=[{'perspectives':["ANY"], 'questions': WHO + WHAT + WHEN}],
         formats=[
             Format(
-                types=["ALL"],
+                types=["ALL", "TABLE", "DICT"],
                 attributes=COMMON_COLUMNS + COMMON_METADATA_COLUMNS + [
                     Column(name='Version Identifier', key='version_identifier'),
                     Column(name="Classifications", key='classifications'),
@@ -332,12 +334,42 @@ base_report_specs = FormatSetDict({
         ],
         action=ActionParameter(
             function="ClassificationManager.get_elements_by_property_value",
-            optional_params=OPTIONAL_FILTER_PARAMS,
-            required_params=["search_string"],
+            optional_params=OPTIONAL_FILTER_PARAMS + ["metadata_element_type_name"] + TIME_PARAMETERS,
+            required_params=["property_value"],
+            spec_params={"property_names":["displayName", "qualifiedName"]},
+        )
+    ),
+"Element-By-Owner": FormatSet(
+        heading="Elements by Owner",
+        description="Return elements for the specified owner",
+        annotations={},  # No specific annotations
+        family="General",
+        question_spec=[{'perspectives':["ANY"], 'questions': WHO + WHAT + WHEN}],
+        formats=[
+            Format(
+                types=["ALL", "TABLE","DICT"],
+                attributes=COMMON_COLUMNS + COMMON_METADATA_COLUMNS + [
+                    Column(name='Version Identifier', key='version_identifier'),
+                    Column(name="Classifications", key='classifications'),
+                    Column(name="Additional Properties", key='additional_properties'),
+                    Column(name="Created By", key='created_by'),
+                    Column(name="Create Time", key='create_time'),
+                    Column(name="Updated By", key='updated_by'),
+                    Column(name="Update Time", key='update_time'),
+                    Column(name="Effective From", key='effective_from'),
+                    Column(name="Effective To", key='effective_to'),
+                    Column(name="Version", key='version'),
+                    Column(name="Open Metadata Type Name", key='type_name'),
+                ],
+            )
+        ],
+        action=ActionParameter(
+            function="ClassificationManager.get_owners_elements",
+            optional_params=['body'],
+            required_params=["owner_name"],
             spec_params={},
         )
     ),
-
     "Actor-Profiles": FormatSet(
         target_type="Actor Profile",
         heading="Actor Profile",
@@ -354,7 +386,7 @@ base_report_specs = FormatSetDict({
         ],
         action=ActionParameter(
             function="ActorManager.find_actor_profiles",
-            optional_params=OPTIONAL_FILTER_PARAMS,
+            optional_params=   OPTIONAL_FILTER_PARAMS + TIME_PARAMETERS,
             required_params=["search_string"],
             spec_params={},
         )
@@ -375,7 +407,7 @@ base_report_specs = FormatSetDict({
         ],
         action=ActionParameter(
             function="ActorManager.find_roles_profiles",
-            optional_params=OPTIONAL_FILTER_PARAMS,
+            optional_params=   OPTIONAL_FILTER_PARAMS + TIME_PARAMETERS,
             required_params=["search_string"],
             spec_params={},
         )
@@ -398,7 +430,7 @@ base_report_specs = FormatSetDict({
         ],
         action=ActionParameter(
             function="ActorManager.find_user_identities",
-            optional_params=OPTIONAL_FILTER_PARAMS,
+            optional_params=   OPTIONAL_FILTER_PARAMS + TIME_PARAMETERS,
             required_params=["search_string"],
             spec_params={},
         )
@@ -450,7 +482,7 @@ base_report_specs = FormatSetDict({
         ],
         action=ActionParameter(
             function="ValidValueManager.find_valid_values",
-            optional_params=OPTIONAL_FILTER_PARAMS + ["type_name"],
+            optional_params=   OPTIONAL_FILTER_PARAMS + TIME_PARAMETERS + ["type_name"],
             required_params=["property_name"],
             spec_params={},
         )
@@ -506,7 +538,7 @@ base_report_specs = FormatSetDict({
         ],
     action=ActionParameter(
         function="Client2.get_asset_graph",
-        optional_params=OPTIONAL_FILTER_PARAMS ,
+        optional_params=   OPTIONAL_FILTER_PARAMS + TIME_PARAMETERS ,
         required_params=["asset_guid"],
         spec_params={},
     )
@@ -592,7 +624,7 @@ base_report_specs = FormatSetDict({
         ],
         action=ActionParameter(
             function="EgeriaTech.get_technology_type_elements",
-            optional_params=OPTIONAL_FILTER_PARAMS + ["get_templates"],
+            optional_params=   OPTIONAL_FILTER_PARAMS + TIME_PARAMETERS + ["get_templates"],
             required_params=["filter"],
             spec_params={},
         )
@@ -648,7 +680,7 @@ base_report_specs = FormatSetDict({
         ],
         action=ActionParameter(
             function="Client2.get_tech_type_detail",
-            optional_params=OPTIONAL_FILTER_PARAMS,
+            optional_params=   OPTIONAL_FILTER_PARAMS + TIME_PARAMETERS,
             required_params=["filter"],
             spec_params={},
         )
@@ -688,7 +720,7 @@ base_report_specs = FormatSetDict({
         ],
         action=ActionParameter(
             function="Client2.get_tech_type_detail",
-            optional_params=OPTIONAL_FILTER_PARAMS,
+            optional_params=   OPTIONAL_FILTER_PARAMS + TIME_PARAMETERS,
             required_params=["filter"],
             spec_params={},
         )
@@ -1012,7 +1044,7 @@ base_report_specs = FormatSetDict({
         action=ActionParameter(
             function="CollectionManager.get_collection_members",
             required_params=["collection_guid"],
-            optional_params=OPTIONAL_FILTER_PARAMS,
+            optional_params= OPTIONAL_FILTER_PARAMS + TIME_PARAMETERS,
             spec_params={"output_format": "DICT"},
         )
     ),
@@ -1114,6 +1146,7 @@ base_report_specs = FormatSetDict({
         aliases=["Product Catalog", "DataProductCatalog"],
         annotations={"Wikilinks": ["[[Digital Products]]"]},
         family="Product Manager",
+        question_spec=[{'perspectives':["ANY"], 'questions': WHO + WHAT + WHEN}],
         formats=[
             Format(
                 types=["DICT", "TABLE", "LIST", "MD", "FORM"],
@@ -1134,7 +1167,7 @@ base_report_specs = FormatSetDict({
         action=ActionParameter(
             function="CollectionManager.find_collections",
             required_params=["search_string"],
-            optional_params=OPTIONAL_SEARCH_PARAMS,
+            optional_params=OPTIONAL_SEARCH_PARAMS + ['body'],
             spec_params={"metadata_element_types": ["DigitalProductCatalog"]},
         ),
     ),
@@ -1170,6 +1203,7 @@ base_report_specs = FormatSetDict({
         aliases=["DigitalProduct", "DataProducts"],
         annotations={},
         family="Product Manager",
+        question_spec=[{'perspectives':["ANY"], 'questions': WHO + WHAT + WHEN}],
         formats=[
             Format(
                 types=["FORM", "DICT", "TABLE", "LIST"],
@@ -1509,6 +1543,7 @@ base_report_specs = FormatSetDict({
         aliases=["GovernanceDefinitions"],
         annotations={"wikilinks": ["[[Governance]]"]},
         family="Governance Officer",
+        question_spec=[{'perspectives':["ANY"], 'questions': WHO + WHAT + WHEN}],
         formats=[Format(types=["ALL"], attributes=GOVERNANCE_DEFINITIONS_COLUMNS)],
         action=ActionParameter(
             function="GovernanceOfficer.find_governance_definitions",
@@ -1530,10 +1565,16 @@ base_report_specs = FormatSetDict({
             spec_params={"metadata_element_types": ["GovernancePrinciple", "GovernanceStrategy", "GovernanceResponse"]},
         )
     ),
-    'Governance-Control': FormatSet(target_type='Governance Control',
+    'Governance-Controls': FormatSet(target_type='Governance Control',
                                     heading='Control Attributes',
                                     description='Governance Control (Create).',
                                     family="Governance Officer",
+                                    question_spec=[{'perspectives':["Governance"], 'questions': WHO + WHAT + WHEN + [
+                                        "What governance controls have been defined?",
+                                        "What measurements and measurement targets have been defined for governance controls?",
+                                        "What are the implications of the governance controls?",
+                                        "What are the risks associated with the governance controls?",
+                                    ]}],
                                     formats=[
                                         Format(types=['DICT', 'MD', 'FORM', 'REPORT'],
                                                attributes=[Column(name='Display Name', key='display_name'),
@@ -1918,18 +1959,7 @@ def list_mcp_format_sets() -> dict:
 
     This allows MCP to prefer machine-consumable outputs and avoid side effects.
     """
-    # eligible: list[str] = []
-    # for name, fs in report_specs.items():
-    #     try:
-    #         # fs is a FormatSet
-    #         has_dict = any("DICT" in f.types for f in fs.formats)
-    #         has_all = any("ALL" in f.types for f in fs.formats)
-    #         if has_dict or has_all:
-    #             eligible.append(name)
-    #     except Exception:
-    #         # Defensive: skip malformed entries
-    #         continue
-    # return sorted(eligible)
+
     return {
         name: {
             "description": fs.description,
@@ -2260,39 +2290,41 @@ def get_report_registry() -> FormatSetDict:
     return combined
 
 
-def find_report_specs_by_perspective(perspective: str, *, case_insensitive: bool = True) -> list[str]:
+def find_report_specs_by_perspective(perspective: str, *, case_insensitive: bool = True) -> list[dict]:
     """
-    Return a list of report spec labels whose `question_spec` includes the given role.
+    Return a list of dicts for report specs whose `question_spec` includes the given perspective.
+
+    Each dict has the shape:
+      { 'perspective': <perspective>, 'report_spec': <label>, 'questions': [..questions..] }
 
     Args:
-        perspective: The role to search for (e.g., "Data Steward").
+        perspective: The perspective to search for (e.g., "Data Steward").
         case_insensitive: If True, compare perspectives case-insensitively.
 
     Returns:
-        List of matching report spec labels.
+        List of dictionaries, one per matching question_spec item, sorted by 'report_spec'.
     """
     if not perspective:
         return []
     needle = perspective.strip()
-    if case_insensitive:
-        needle = needle.lower()
+    norm = (lambda s: (s or "").strip().lower()) if case_insensitive else (lambda s: (s or "").strip())
+    needle_cmp = norm(needle)
 
-    matches: list[str] = []
+    results: list[dict] = []
     for label, fs in get_report_registry().items():
         qspec = getattr(fs, "question_spec", None)
         if not qspec:
             continue
         for item in qspec:
-            roles = getattr(item, "perspectives", []) or []
-            if case_insensitive:
-                if any((r or "").strip().lower() == needle for r in roles):
-                    matches.append(label)
-                    break
-            else:
-                if any((r or "").strip() == needle for r in roles):
-                    matches.append(label)
-                    break
-    return sorted(set(matches))
+            perspectives = getattr(item, "perspectives", []) or []
+            if any(norm(p) == needle_cmp for p in perspectives):
+                questions = getattr(item, "questions", []) or []
+                results.append({
+                    "perspective": perspective,
+                    "report_spec": label,
+                    "questions": questions,
+                })
+    return sorted(results, key=lambda d: d.get("report_spec", ""))
 
 
 def find_report_specs_by_question(
@@ -2300,9 +2332,12 @@ def find_report_specs_by_question(
     *,
     case_insensitive: bool = True,
     substring: bool = True,
-) -> list[str]:
+) -> list[dict]:
     """
-    Return a list of report spec labels whose `question_spec` includes a matching example question.
+    Return a list of dicts for report specs whose `question_spec` includes a matching example question.
+
+    Each dict has the shape:
+      { 'question': <input question>, 'report_spec': <label>, 'perspectives': [..perspectives..] }
 
     Args:
         question: The question to search for.
@@ -2311,37 +2346,116 @@ def find_report_specs_by_question(
                    otherwise require exact match.
 
     Returns:
-        List of matching report spec labels.
+        List of dictionaries, one per matching question_spec item, sorted by 'report_spec'.
     """
     if not question:
         return []
     needle = question.strip()
-    haystack_norm = (lambda s: (s or "").strip().lower()) if case_insensitive else (lambda s: (s or "").strip())
-    needle_cmp = haystack_norm(needle)
+    norm = (lambda s: (s or "").strip().lower()) if case_insensitive else (lambda s: (s or "").strip())
+    needle_cmp = norm(needle)
 
-    matches: list[str] = []
+    results: list[dict] = []
     for label, fs in get_report_registry().items():
         qspec = getattr(fs, "question_spec", None)
         if not qspec:
             continue
-        found = False
         for item in qspec:
             questions = getattr(item, "questions", []) or []
+            hit = False
             for q in questions:
-                qn = haystack_norm(q)
+                qn = norm(q)
                 if substring:
                     if needle_cmp in qn:
-                        found = True
+                        hit = True
                         break
                 else:
                     if needle_cmp == qn:
-                        found = True
+                        hit = True
                         break
-            if found:
-                break
-        if found:
-            matches.append(label)
-    return sorted(set(matches))
+            if hit:
+                perspectives = getattr(item, "perspectives", []) or []
+                results.append({
+                    "question": question,
+                    "report_spec": label,
+                    "perspectives": perspectives,
+                })
+    return sorted(results, key=lambda d: d.get("report_spec", ""))
+
+
+def find_report_specs(
+    *,
+    perspective: str | None = None,
+    question: str | None = None,
+    report_spec: str | None = None,
+    case_insensitive: bool = True,
+    substring: bool = True,
+) -> list[dict]:
+    """
+    Flexible finder that accepts optional filters and returns matching report_spec dicts.
+
+    Logical semantics: provided filters are ANDed; any filter not provided is treated as ANY.
+
+    Returned dict shape (one per matching question_spec item):
+      { 'report_spec': <label>, 'perspectives': [...], 'questions': [...] }
+
+    The result list is sorted by 'report_spec'.
+    """
+    norm = (lambda s: (s or "").strip().lower()) if case_insensitive else (lambda s: (s or "").strip())
+    persp_cmp = norm(perspective) if perspective else None
+    quest_cmp = norm(question) if question else None
+    rs_cmp = norm(report_spec) if report_spec else None
+
+    results: list[dict] = []
+    for label, fs in get_report_registry().items():
+        # filter on report_spec by label or alias
+        if rs_cmp is not None:
+            label_match = norm(label) == rs_cmp
+            alias_match = any(norm(a) == rs_cmp for a in getattr(fs, "aliases", []) or [])
+            if not (label_match or alias_match):
+                continue
+
+        qspec = getattr(fs, "question_spec", None)
+        if not qspec:
+            # If there are no question specs, it cannot match perspective/question filters
+            if persp_cmp is None and quest_cmp is None:
+                # Only report_spec filter was provided and matched; emit a single entry with empty lists
+                results.append({
+                    "report_spec": label,
+                    "perspectives": [],
+                    "questions": [],
+                })
+            continue
+
+        for item in qspec:
+            perspectives = getattr(item, "perspectives", []) or []
+            questions = getattr(item, "questions", []) or []
+
+            if persp_cmp is not None:
+                if not any(norm(p) == persp_cmp for p in perspectives):
+                    continue
+
+            if quest_cmp is not None:
+                q_hit = False
+                for q in questions:
+                    qn = norm(q)
+                    if substring:
+                        if quest_cmp in qn:
+                            q_hit = True
+                            break
+                    else:
+                        if quest_cmp == qn:
+                            q_hit = True
+                            break
+                if not q_hit:
+                    continue
+
+            results.append({
+                "report_spec": label,
+                "perspectives": perspectives,
+                "questions": questions,
+            })
+
+    return sorted(results, key=lambda d: d.get("report_spec", ""))
 
 
 def register_report_specs(new_formats: Union[FormatSetDict, dict], *, source: str = "runtime") -> None:
@@ -2389,6 +2503,7 @@ def _select_from_registry(registry: FormatSetDict, kind: str, output_type: str) 
         "aliases": element.aliases,
         "heading": element.heading,
         "description": element.description,
+        "question_spec": element.question_spec,
         "annotations": element.annotations,
         "target_type": element.target_type,
     }

@@ -148,8 +148,7 @@ def test_get_owners_elements():
             "class": "FilterRequestBody",
             "filter": owner_name
         }
-        response = c_client.get_owners_elements(owner_name, body, output_format="DICT",
-                                                report_spec="Referenceable")
+        response = c_client.get_owners_elements(owner_name, body, output_format="DICT", report_spec="Referenceable")
 
         if type(response) is list:
             print(f"\n\tElement count is: {len(response)}")
@@ -234,7 +233,7 @@ def test_get_elements_by_property_value():
     # metadata_element_type_name = 'Project'
     # property_value = "Campaign:Clinical Trials Management"
     # metadata_element_type_name = "ValidValueDefinition"
-    metadata_element_type_name = "Collection"
+    metadata_element_type_name = None
     # property_value = "Unity Catalog Catalog"
     # property_names = ["name", "qualifiedName"]
     # metadata_element_type_name = "Asset"
@@ -242,14 +241,14 @@ def test_get_elements_by_property_value():
     # property_value = "default"
     # property_names = ["name", "qualifiedName"]
     property_names = ["name", "displayName", 'qualifiedName']
-    property_value = "Clinical"
+    property_value = "BusinessArea::RES"
     # property_names = ["anchorGUID"]
     try:
         c_client = ClassificationManager(view_server, platform_url)
 
         bearer_token = c_client.create_egeria_bearer_token(user, password)
         start_time = time.perf_counter()
-        result = c_client.get_elements_by_property_value(property_value, property_names, metadata_element_type_name)
+        result = c_client.get_elements_by_property_value(property_value, property_names, metadata_element_type_name, as_of_time = "2025-12-01")
         duration = time.perf_counter() - start_time
         print(f"\n\tDuration was {duration} seconds")
         if type(result) is list:

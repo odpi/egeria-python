@@ -17,7 +17,7 @@ from loguru import logger
 
 from pyegeria.base_report_formats import (
     list_mcp_format_sets,
-    select_report_spec,
+    select_report_spec, find_report_specs,
 )
 from pyegeria.egeria_tech_client import EgeriaTech
 from pyegeria.format_set_executor import exec_report_spec, _async_run_report
@@ -27,6 +27,26 @@ def list_reports() -> dict:
     """List eligible format sets as MCP tools (support DICT or ALL)."""
     return  list_mcp_format_sets()
 
+def run_find_report_specs(perspective: str= None, question: str= None, report_spec:str= None) -> Dict[str, Any]:
+    """
+    Find report specs that match the given perspective and question.
+
+    Args:
+        perspective (str): The perspective to search for (e.g., "Data Steward").
+        question (str): The question to search for (e.g., "What is the current status of the project?").
+        report_spec (str): The report spec to search for (e.g., "ProjectStatusReport").
+
+    Returns:
+        list[dict]: A list of dictionaries, each representing a matching report spec item.
+    """
+    perspective = None if perspective == "*" else perspective
+    question = None if question == "*" else question
+    report_spec = None if report_spec == "*" else report_spec
+
+    report_specs = find_report_specs(perspective=perspective, question=question, report_spec=report_spec)
+    if not report_specs:
+        raise ValueError(f"No report specs found for perspective '{perspective}' and question '{question}'")
+    return {"Matching Report Specs" : report_specs}
 
 def describe_report(name: str, output_type: str = "DICT") -> Dict[str, Any]:
     """

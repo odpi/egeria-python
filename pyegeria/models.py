@@ -371,7 +371,7 @@ class GetRequestBody(PyegeriaModel):
 
 class ResultsRequestBody(GetRequestBody):
     class_: Annotated[Literal["ResultsRequestBody"], Field(alias="class")]
-    limit_results_by_status: list[ValidStatusValues] | None= None
+    limit_results_by_status: list[ValidStatusValues] | None= None # header status
     relationships_page_size: int = 0
     anchor_guid: str | None = None
     sequencing_order: SequencingOrder | None = None

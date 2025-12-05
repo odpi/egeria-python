@@ -22,7 +22,7 @@ from pyegeria._exceptions_new import (
     PyegeriaUnauthorizedException as UserNotAuthorizedException,
     print_basic_exception as print_exception_response,
 )
-from pyegeria.my_profile_omvs import MyProfile
+from pyegeria.my_profile import MyProfile
 
 disable_ssl_warnings = True
 
@@ -51,7 +51,7 @@ class TestMyProfile:
     good_server_5 = "fluffy_kv"
     good_server_6 = "cocoVIew1"
     good_engine_host_1 = "governDL01"
-    good_view_server_1 = "view-server"
+    good_view_server_1 = "qs-view-server"
     good_view_server_2 = "fluffy_view"
     bad_server_1 = "coco"
     bad_server_2 = ""

@@ -20,6 +20,8 @@ from typing import Any, Dict, Optional
 
 from loguru import logger
 
+from pyegeria.classification_manager import ClassificationManager
+from pyegeria.actor_manager import ActorManager
 from pyegeria.egeria_tech_client import EgeriaTech
 from pyegeria.collection_manager import CollectionManager
 from pyegeria.governance_officer import GovernanceOfficer
@@ -40,6 +42,8 @@ _CLIENT_CLASS_MAP = {
     "GovernanceOfficer": GovernanceOfficer,
     "GlossaryManager": GlossaryManager,
     "ExternalReference": ExternalReferences,
+    "ClassificationManager": ClassificationManager,
+    "ActorManager": ActorManager,
 }
 
 
@@ -51,6 +55,12 @@ def _resolve_client_and_method(func_decl: str):
     client_class = _CLIENT_CLASS_MAP.get(class_name, EgeriaTech)
     return (client_class, method_name)
 
+
+def _validate_report_spec_params(report_spec, params):
+    """Validate that required parameters are present in the provided params dictionary."""
+    missing_params = [param for param in report_spec.required_params if param not in params]
+    if missing_params:
+        raise PyegeriaException(f"Missing required parameters: {', '.join(missing_params)}")
 
 
 async def safe_call_tool(func, **call_params):

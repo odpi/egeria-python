@@ -6,11 +6,12 @@ This module provides access to the classification_manager_omvs module.
 """
 
 import asyncio
+from datetime import datetime
 
 from httpx import Response
 from loguru import logger
 
-from pyegeria import PyegeriaException
+from pyegeria._exceptions_new import PyegeriaException, PyegeriaInvalidParameterException
 from pyegeria._client_new import Client2
 from pyegeria._globals import default_time_out, NO_ELEMENTS_FOUND
 from pyegeria.base_report_formats import select_report_spec, get_report_spec_match
@@ -428,7 +429,7 @@ class ClassificationManager(Client2):
     async def _async_get_owners_elements(
             self,
             owner_name: str,
-            body: dict | FilterRequestBody,
+            body: dict | FilterRequestBody = None,
             output_format: str = "JSON",
             report_spec: dict | str = None
     ) -> list | str:
@@ -488,7 +489,7 @@ class ClassificationManager(Client2):
     def get_owners_elements(
             self,
             owner_name: str,
-            body: dict | FilterRequestBody,
+body: dict | FilterRequestBody = None,
             output_format: str = "JSON",
             report_spec: dict | str = None
     ) -> list | str:
@@ -537,9 +538,7 @@ class ClassificationManager(Client2):
 
         loop = asyncio.get_event_loop()
         response = loop.run_until_complete(
-            self._async_get_owners_elements(
-                owner_name, body, output_format, report_spec
-            )
+            self._async_get_owners_elements(owner_name, body, output_format, report_spec)
         )
         return response
 
@@ -2495,7 +2494,8 @@ class ClassificationManager(Client2):
 
     async def _async_get_elements_by_property_value(self, property_value: str, property_names: list[str],
                                                     metadata_element_type_name: str = None, effective_time: str = None,
-                                                    for_lineage: bool = None, for_duplicate_processing: bool = None,
+                                                    as_of_time: str = None, for_lineage: bool = None,
+                                                     for_duplicate_processing: bool = None,
                                                     start_from: int = 0, page_size: int = 0,
                                                     time_out: int = default_time_out, output_format: str = "JSON",
                                                     report_spec: str | dict = None) -> list | str:
@@ -2515,6 +2515,8 @@ class ClassificationManager(Client2):
             - open metadata type to be used to restrict the search
         effective_time: str, default = None
             - Time format is "YYYY-MM-DDTHH:MM:SS" (ISO 8601)
+        as_of_time: str, default = None
+           - Time format is "YYYY-MM-DDTHH:MM:SS" (ISO 8601)
         for_lineage: bool, default is set by server
             - determines if elements classified as Memento should be returned - normally false
         for_duplicate_processing: bool, default is set by server
@@ -2543,6 +2545,11 @@ class ClassificationManager(Client2):
         Args:
             report_spec ():
         """
+        if property_value in ["","*"] or property_value is None:
+            context: dict = {}
+            context['method'] = "_async_get_elements_by_property_value"
+            context['reason'] = "Invalid property value"
+            raise PyegeriaInvalidParameterException(context=context)
 
         body = {
             "class": "FindPropertyNamesProperties",
@@ -2550,6 +2557,7 @@ class ClassificationManager(Client2):
             "propertyValue": property_value,
             "propertyNames": property_names,
             "effectiveTime": effective_time,
+            "asOfTime": as_of_time,
             "startFrom": start_from,
             "pageSize": page_size,
             "forLineage": for_lineage,
@@ -2568,13 +2576,14 @@ class ClassificationManager(Client2):
 
         if output_format != 'JSON':  # return a simplified markdown representation
             logger.info(f"Found elements, output format: {output_format} and report_spec: {report_spec}")
-            return self._generate_referenceable_output(elements, "Referenceable",
-                                                       output_format, report_spec)
+            return self._generate_referenceable_output(elements = elements, filter=property_value,
+                                                       element_type_name = "Referenceable",
+                                                       output_format = output_format, report_spec = report_spec)
         return elements
 
     def get_elements_by_property_value(self, property_value: str, property_names: list[str],
                                        metadata_element_type_name: str = None, effective_time: str = None,
-                                       for_lineage: bool = None, for_duplicate_processing: bool = None,
+                                       as_of_time: str = None, for_lineage: bool = None, for_duplicate_processing: bool = None,
                                        start_from: int = 0, page_size: int = 0,
                                        time_out: int = default_time_out, output_format: str = "JSON",
                                        report_spec: str | dict = None) -> list | str:
@@ -2594,6 +2603,8 @@ class ClassificationManager(Client2):
             - open metadata type to be used to restrict the search
         effective_time: str, default = None
             - Time format is "YYYY-MM-DDTHH:MM:SS" (ISO 8601)
+        as_of_time: str, default = None
+           - Time format is "YYYY-MM-DDTHH:MM:SS" (ISO 8601)
         for_lineage: bool, default is set by server
             - determines if elements classified as Memento should be returned - normally false
         for_duplicate_processing: bool, default is set by server
@@ -2622,7 +2633,7 @@ class ClassificationManager(Client2):
         loop = asyncio.get_event_loop()
         response = loop.run_until_complete(
             self._async_get_elements_by_property_value(property_value, property_names, metadata_element_type_name,
-                                                       effective_time, for_lineage, for_duplicate_processing,
+                                                       effective_time, as_of_time, for_lineage, for_duplicate_processing,
                                                        start_from, page_size, time_out, output_format, report_spec)
         )
         return response
