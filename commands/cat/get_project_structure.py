@@ -20,7 +20,7 @@ from rich.tree import Tree
 from pyegeria import (
     ProjectManager,
 )
-from pyegeria._exceptions_new import (
+from pyegeria._exceptions import (
     PyegeriaInvalidParameterException,
     PyegeriaAPIException,
     PyegeriaUnauthorizedException,

@@ -34,7 +34,7 @@ disable_ssl_warnings = True
 from rich.live import Live
 from rich.table import Table
 
-from pyegeria._exceptions_new import (
+from pyegeria._exceptions import (
     PyegeriaException,
     PyegeriaAPIException,
     PyegeriaUnauthorizedException,

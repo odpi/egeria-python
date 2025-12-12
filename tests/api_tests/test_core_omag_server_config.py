@@ -16,7 +16,7 @@ from contextlib import nullcontext as does_not_raise
 
 import pytest
 
-from pyegeria._exceptions_new import (
+from pyegeria._exceptions import (
     PyegeriaInvalidParameterException,
     PyegeriaAPIException,
     PyegeriaUnauthorizedException,

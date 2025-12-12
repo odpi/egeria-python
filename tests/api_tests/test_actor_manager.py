@@ -24,7 +24,7 @@ from loguru import logger
 from pydantic import ValidationError
 
 from pyegeria.actor_manager import ActorManager
-from pyegeria._exceptions_new import (
+from pyegeria._exceptions import (
     PyegeriaInvalidParameterException,
     PyegeriaException,
     PyegeriaConnectionException,

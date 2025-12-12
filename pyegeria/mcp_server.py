@@ -12,7 +12,7 @@ from typing import Any, Dict, Optional
 from mcp.server.fastmcp.exceptions import ValidationError
 
 from pyegeria.egeria_tech_client import EgeriaTech
-from pyegeria._exceptions_new import print_validation_error
+from pyegeria._exceptions import print_validation_error
 # from pyegeria.base_report_formats import find_report_specs
 
 GLOBAL_EGERIA_CLIENT: Optional[EgeriaTech] = None

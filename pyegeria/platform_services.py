@@ -14,7 +14,7 @@ import httpx
 
 from pyegeria._base_platform_client import BasePlatformClient
 from pyegeria._globals import enable_ssl_check
-from pyegeria._exceptions_new import (
+from pyegeria._exceptions import (
     PyegeriaInvalidParameterException,
     PyegeriaAPIException,
     PyegeriaConnectionException,

@@ -25,7 +25,7 @@ from pyegeria.governance_officer import GovernanceOfficer
 from pyegeria._server_client import ServerClient, max_paging_size
 from pyegeria._globals import NO_ELEMENTS_FOUND, NO_GUID_RETURNED
 from pyegeria.utils import body_slimmer, dynamic_catch
-from pyegeria._exceptions_new import (
+from pyegeria._exceptions import (
     PyegeriaException,
     PyegeriaInvalidParameterException,
     PyegeriaAPIException,

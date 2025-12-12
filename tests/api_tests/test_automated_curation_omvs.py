@@ -24,7 +24,7 @@ from rich.pretty import pprint
 
 from pyegeria import AutomatedCuration, PyegeriaException, print_basic_exception, \
     print_validation_error, PyegeriaAPIException, EgeriaTech
-from pyegeria._exceptions_new import (
+from pyegeria._exceptions import (
     PyegeriaInvalidParameterException,
     PyegeriaAPIException,
     PyegeriaUnauthorizedException,

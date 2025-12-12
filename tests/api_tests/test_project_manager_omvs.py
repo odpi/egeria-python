@@ -16,7 +16,7 @@ import time
 from pydantic import ValidationError
 from pyegeria.project_manager import ProjectManager
 from pyegeria.glossary_manager import GlossaryManager
-from pyegeria._exceptions_new import (
+from pyegeria._exceptions import (
     PyegeriaException,
     print_basic_exception,
     print_exception_table,
@@ -25,7 +25,7 @@ from pyegeria._exceptions_new import (
 )
 from rich.console import Console
 from rich import print
-from pyegeria._exceptions_new import (
+from pyegeria._exceptions import (
     PyegeriaInvalidParameterException,
     PyegeriaAPIException,
     PyegeriaUnauthorizedException,

@@ -20,7 +20,7 @@ from rich.markdown import Markdown
 from rich.table import Table
 
 from pyegeria import EgeriaTech
-from pyegeria._exceptions_new import (
+from pyegeria._exceptions import (
     PyegeriaInvalidParameterException,
     PyegeriaAPIException as PropertyServerException,
     PyegeriaUnauthorizedException as UserNotAuthorizedException,

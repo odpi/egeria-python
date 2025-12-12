@@ -26,7 +26,7 @@ from pyegeria import (
     PyegeriaInvalidParameterException,
     print_basic_exception,
 )
-from pyegeria._exceptions_new import (
+from pyegeria._exceptions import (
     PyegeriaInvalidParameterException,
     PyegeriaAPIException,
     PyegeriaUnauthorizedException,

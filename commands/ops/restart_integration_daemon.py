@@ -12,7 +12,7 @@ import argparse
 import os
 
 from pyegeria import EgeriaTech
-from pyegeria._exceptions_new import (
+from pyegeria._exceptions import (
     PyegeriaInvalidParameterException,
     PyegeriaAPIException as PropertyServerException,
     print_basic_exception as print_exception_response,

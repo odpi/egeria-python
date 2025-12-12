@@ -8,7 +8,7 @@ import tempfile
 import shutil
 from pathlib import Path
 from pyegeria.load_config import load_app_config, get_app_config, PyegeriaSettings
-from pyegeria._exceptions_new import PyegeriaInvalidParameterException
+from pyegeria._exceptions import PyegeriaInvalidParameterException
 
 def reset_config():
     """Reset the loaded configuration to force reloading."""

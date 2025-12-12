@@ -19,13 +19,13 @@ from rich.console import Console
 
 from pyegeria import PyegeriaAPIException
 from pyegeria.utils import body_slimmer
-from pyegeria._exceptions_new import (
+from pyegeria._exceptions import (
     PyegeriaInvalidParameterException,
     PyegeriaAPIException,
     PyegeriaUnauthorizedException,
     print_basic_exception as print_exception_response,
 )
-from pyegeria._exceptions_new import (
+from pyegeria._exceptions import (
     PyegeriaException,
     print_basic_exception,
     print_exception_table,

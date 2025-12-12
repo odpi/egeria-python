@@ -31,7 +31,7 @@ from loguru import logger
 from pydantic import BaseModel, Field, validator, ConfigDict
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
-from pyegeria._exceptions_new import PyegeriaInvalidParameterException, PyegeriaException
+from pyegeria._exceptions import PyegeriaInvalidParameterException, PyegeriaException
 
 logger.disable("pyegeria")
 # --- Pydantic Settings for Environment Variables ---

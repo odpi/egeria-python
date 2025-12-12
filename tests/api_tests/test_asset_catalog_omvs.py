@@ -22,7 +22,7 @@ from rich import print
 
 
 from pyegeria import PyegeriaException, print_basic_exception, PyegeriaInvalidParameterException
-from pyegeria._exceptions_new import (
+from pyegeria._exceptions import (
     PyegeriaInvalidParameterException,
     PyegeriaAPIException,
     PyegeriaClientException,

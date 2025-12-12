@@ -18,7 +18,7 @@ import json
 import pytest
 from rich import print, print_json
 
-from pyegeria._exceptions_new import (
+from pyegeria._exceptions import (
     PyegeriaInvalidParameterException,
     PyegeriaAPIException,
     PyegeriaException,

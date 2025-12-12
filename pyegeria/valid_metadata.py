@@ -12,7 +12,7 @@ from pyegeria._server_client import ServerClient
 from pyegeria.models import SearchStringRequestBody, ResultsRequestBody, FilterRequestBody, GetRequestBody, \
     DeleteElementRequestBody
 from pyegeria.utils import dict_to_markdown_list, dynamic_catch, body_slimmer
-from pyegeria._exceptions_new import (PyegeriaException)
+from pyegeria._exceptions import (PyegeriaException)
 from pyegeria._globals import max_paging_size, NO_ELEMENTS_FOUND
 from pyegeria.base_report_formats import select_report_spec, get_report_spec_match
 from pyegeria.output_formatter import (

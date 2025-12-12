@@ -18,7 +18,7 @@ from rich import print, print_json
 from rich.console import Console
 
 from pyegeria import MetadataExplorer
-from pyegeria._exceptions_new import (
+from pyegeria._exceptions import (
     PyegeriaInvalidParameterException,
     PyegeriaAPIException,
     PyegeriaUnauthorizedException,

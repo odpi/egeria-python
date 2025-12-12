@@ -27,7 +27,7 @@ from pyegeria.output_formatter import (
 from pyegeria.base_report_formats import select_report_spec, get_report_spec_match
 
 sys.path.insert(0, os.path.abspath(os.path.dirname(__file__)))
-from pyegeria._exceptions_new import PyegeriaInvalidParameterException
+from pyegeria._exceptions import PyegeriaInvalidParameterException
 from pyegeria._globals import NO_GUID_RETURNED
 from pyegeria.config import settings as app_settings
 from pyegeria.models import (SearchStringRequestBody, FilterRequestBody, NewElementRequestBody,

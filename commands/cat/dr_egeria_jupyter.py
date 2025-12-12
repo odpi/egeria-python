@@ -13,8 +13,8 @@ from pyegeria.md_processing_utils import (extract_command, process_glossary_upse
                                           )
 import click
 
-from pyegeria._exceptions_new import (
-    print_basic_exception as print_exception_response,
+from pyegeria._exceptions import (
+    print_basic_exception, PyegeriaException,
 )
 
 EGERIA_METADATA_STORE = os.environ.get("EGERIA_METADATA_STORE", "active-metadata-store")
@@ -113,8 +113,8 @@ def process_jupyter_notebook(
         else:
             click.echo("\nNo updates detected. New file not created.")
 
-    except Exception as e:
-        print_exception_response(e)
+    except PyegeriaException as e:
+        print_basic_exception(e)
         return
 
 

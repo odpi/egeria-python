@@ -15,10 +15,10 @@ import json
 import time
 from pydantic import ValidationError
 from pyegeria.external_links import ExternalReferences
-from pyegeria._exceptions_new import PyegeriaException, print_basic_exception, print_exception_table, \
+from pyegeria._exceptions import PyegeriaException, print_basic_exception, print_exception_table, \
     print_validation_error, PyegeriaAPIException
 
-from pyegeria._exceptions_new import (
+from pyegeria._exceptions import (
     PyegeriaInvalidParameterException,
     PyegeriaAPIException,
     PyegeriaUnauthorizedException,

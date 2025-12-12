@@ -76,8 +76,9 @@ Printing exceptions
 - For Pydantic validation failures, catch `pydantic_core.ValidationError` and use `print_validation_error(e)` to render the error details clearly.
 
 Examples
+
 ```python
-from pyegeria._exceptions_new import (
+from pyegeria._exceptions import (
     PyegeriaException,
     PyegeriaAPIException,
     PyegeriaInvalidParameterException,
