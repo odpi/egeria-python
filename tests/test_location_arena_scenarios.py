@@ -223,7 +223,12 @@ class LocationScenarioTester:
                 console.print(f"  ✓ Created {loc.display_name}")
             
             # Create nested relationships
-            link_body = {"class": "NewRelationshipRequestBody"}
+            link_body = {
+                "class": "NewRelationshipRequestBody",
+                "properties": {
+                    "class": "NestedLocationProperties",
+                }
+            }
             
             # Link regions to HQ
             self.client.link_nested_location(locations["hq"].guid, locations["na_region"].guid, link_body)
@@ -306,7 +311,12 @@ class LocationScenarioTester:
                 console.print(f"  ✓ Created {loc.display_name}")
             
             # Create peer relationships (full mesh)
-            link_body = {"class": "NewRelationshipRequestBody"}
+            link_body = {
+                "class": "NewRelationshipRequestBody",
+                "properties": {
+                    "class": "PeerLocationProperties",
+                }
+            }
             
             self.client.link_peer_locations(
                 data_centers["us_east"].guid,

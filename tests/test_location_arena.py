@@ -9,41 +9,29 @@ This module tests the Location class and methods from location_arena.py
 A running Egeria environment is needed to run these tests.
 
 """
-import asyncio
 import json
 import time
 from datetime import datetime
-from loguru import logger
 
 from rich import print, print_json
 from rich.console import Console
-from pyegeria.location_arena import Location
-from pyegeria.egeria_tech_client import EgeriaTech
-from pyegeria.logging_configuration import config_logging, init_logging
+
 from pyegeria._exceptions_new import (
     PyegeriaInvalidParameterException,
-    PyegeriaException,
     PyegeriaConnectionException,
-    PyegeriaClientException,
     PyegeriaAPIException,
-    PyegeriaUnknownException,
     PyegeriaNotFoundException,
     PyegeriaUnauthorizedException,
     print_basic_exception,
     print_exception_table,
-    print_validation_error,
 )
-from pydantic import ValidationError
-from pyegeria.models import (SearchStringRequestBody, SequencingOrder, FilterRequestBody,
-                             NewElementRequestBody, InitialClassifications, UpdateElementRequestBody,
-                             NewRelationshipRequestBody, DeleteElementRequestBody, DeleteRelationshipRequestBody)
-
+from pyegeria.location_arena import Location
+from pyegeria.logging_configuration import config_logging, init_logging
+from pyegeria.models import (NewElementRequestBody)
 
 disable_ssl_warnings = True
 
 console = Console(width=250)
-
-from loguru import logger
 
 config_logging()
 init_logging(True)
@@ -487,7 +475,10 @@ class TestLocationArena:
 
             # Link them as peers
             link_body = {
-                "class": "NewRelationshipRequestBody"
+                "class": "NewRelationshipRequestBody",
+                "properties": {
+                    "class": "PeerLocationProperties",
+                }
             }
             l_client.link_peer_locations(location1_guid, location2_guid, link_body)
             
@@ -549,7 +540,10 @@ class TestLocationArena:
 
             # Link them
             link_body = {
-                "class": "NewRelationshipRequestBody"
+                "class": "NewRelationshipRequestBody",
+                "properties": {
+                    "class": "PeerLocationProperties",
+                }
             }
             l_client.link_peer_locations(location1_guid, location2_guid, link_body)
             print(f"\n\nLinked locations: {location1_guid} and {location2_guid}")
@@ -621,7 +615,10 @@ class TestLocationArena:
 
             # Link nested location
             link_body = {
-                "class": "NewRelationshipRequestBody"
+                "class": "NewRelationshipRequestBody",
+                "properties": {
+                    "class": "NestedLocationProperties",
+                }
             }
             l_client.link_nested_location(parent_guid, nested_guid, link_body)
             
@@ -682,8 +679,11 @@ class TestLocationArena:
             nested_guid = l_client.create_location(nested_body)
 
             # Link them
-            link_body = {
-                "class": "NewRelationshipRequestBody"
+            link_body  = {
+                "class": "NewRelationshipRequestBody",
+                "properties": {
+                    "class": "NestedLocationProperties",
+                }
             }
             l_client.link_nested_location(parent_guid, nested_guid, link_body)
             print(f"\n\nLinked nested location: {nested_guid} to parent: {parent_guid}")
@@ -755,7 +755,10 @@ class TestLocationArena:
 
             # Link as known location
             link_body = {
-                "class": "NewRelationshipRequestBody"
+                "class": "NewRelationshipRequestBody",
+                "properties": {
+                    "class": "NestedLocationProperties",
+                }
             }
             l_client.link_known_location(element_guid, location_guid, link_body)
             
@@ -817,7 +820,10 @@ class TestLocationArena:
 
             # Link them
             link_body = {
-                "class": "NewRelationshipRequestBody"
+                "class": "NewRelationshipRequestBody",
+                "properties": {
+                    "class": "KnownLocationProperties",
+                }
             }
             l_client.link_known_location(element_guid, location_guid, link_body)
             print(f"\n\nLinked known location: {location_guid} to element: {element_guid}")

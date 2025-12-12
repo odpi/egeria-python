@@ -690,7 +690,7 @@ class Location(ServerClient):
 
         """
 
-        url = f"{self.ref_location_command_base}/locations/{location_guid}/nested-location/{nested_location_guid}/attach"
+        url = f"{self.ref_location_command_base}/locations/{location_guid}/nested-locations/{nested_location_guid}/attach"
         await self._async_new_relationship_request(url, ["NestedLocationProperties"], body)
         logger.info(f"Linking element {location_guid} to nested location  {nested_location_guid}")
 
