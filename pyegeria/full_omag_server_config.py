@@ -10,7 +10,7 @@ import json
 from pyegeria.utils import body_slimmer
 from pyegeria._server_client import ServerClient
 from pyegeria._globals import max_paging_size
-from pyegeria._exceptions_new import (
+from pyegeria._exceptions import (
     PyegeriaInvalidParameterException,
     PyegeriaAPIException,
     PyegeriaUnauthorizedException,

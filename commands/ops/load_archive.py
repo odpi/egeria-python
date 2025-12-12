@@ -15,7 +15,7 @@ from loguru import logger
 from pyegeria import EgeriaTech, PyegeriaAPIException
 from pyegeria.config import settings
 from pyegeria.logging_configuration import config_logging
-from pyegeria._exceptions_new import (
+from pyegeria._exceptions import (
 PyegeriaException, print_exception_response, print_basic_exception
 )
 

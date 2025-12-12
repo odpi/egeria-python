@@ -16,7 +16,7 @@ import time
 from pydantic import ValidationError
 from pyegeria.reference_data import ReferenceDataManager
 
-from pyegeria._exceptions_new import (
+from pyegeria._exceptions import (
     PyegeriaException,
     print_basic_exception,
     print_exception_table,

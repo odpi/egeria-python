@@ -22,7 +22,7 @@ from pyegeria.egeria_tech_client import EgeriaTech, NO_ELEMENTS_FOUND
 from pyegeria.config import settings
 from pyegeria.logging_configuration import config_logging
 from pyegeria.base_report_formats import (select_report_spec, get_report_spec_heading, get_report_spec_description)
-from pyegeria._exceptions_new import PyegeriaException, print_exception_response
+from pyegeria._exceptions import PyegeriaException, print_exception_response
 
 GERIA_METADATA_STORE = os.environ.get("EGERIA_METADATA_STORE", "active-metadata-store")
 EGERIA_KAFKA_ENDPOINT = os.environ.get("KAFKA_ENDPOINT", "localhost:9092")

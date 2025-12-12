@@ -21,7 +21,7 @@ from pyegeria import (
     Egeria,
     EgeriaCat,
 )
-from pyegeria._exceptions_new import (
+from pyegeria._exceptions import (
     PyegeriaInvalidParameterException,
     PyegeriaAPIException,
     PyegeriaUnauthorizedException,

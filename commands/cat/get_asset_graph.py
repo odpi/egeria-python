@@ -20,7 +20,7 @@ from rich.prompt import Prompt
 from commands.cat.run_report import list_generic
 from pyegeria import config_logging
 from pyegeria.config import settings
-from pyegeria._exceptions_new import PyegeriaException, print_exception_response, print_basic_exception
+from pyegeria._exceptions import PyegeriaException, print_exception_response, print_basic_exception
 from pyegeria.base_report_formats import get_report_spec_heading, select_report_spec
 from pyegeria.format_set_executor import exec_report_spec
 EGERIA_USER = os.environ.get("EGERIA_USER", "erinoverview")

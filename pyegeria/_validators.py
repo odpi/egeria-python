@@ -9,7 +9,7 @@ from json import JSONDecodeError
 
 import validators
 
-from pyegeria._exceptions_new import PyegeriaInvalidParameterException
+from pyegeria._exceptions import PyegeriaInvalidParameterException
 
 """
 This package contains internally used validators.

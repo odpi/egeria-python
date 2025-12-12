@@ -23,7 +23,7 @@ from httpx import AsyncClient, Response, HTTPStatusError
 from loguru import logger
 from pydantic import TypeAdapter
 
-from pyegeria._exceptions_new import (
+from pyegeria._exceptions import (
     PyegeriaAPIException, PyegeriaConnectionException, PyegeriaInvalidParameterException,
     PyegeriaUnknownException, PyegeriaClientException
 )

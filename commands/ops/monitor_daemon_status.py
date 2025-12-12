@@ -24,7 +24,7 @@ from textual.widgets import DataTable
 from pyegeria import AutomatedCuration, EgeriaTech, PyegeriaException, settings, config_logging, \
     PyegeriaClientException, print_basic_exception
 
-from pyegeria._exceptions_new import (
+from pyegeria._exceptions import (
     PyegeriaInvalidParameterException,
     PyegeriaAPIException as PropertyServerException,
     PyegeriaUnauthorizedException as UserNotAuthorizedException,

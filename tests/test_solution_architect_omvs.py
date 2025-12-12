@@ -16,7 +16,8 @@ from datetime import datetime
 from rich import print, print_json
 from rich.console import Console
 
-from pyegeria._exceptions_new import (
+from pyegeria import SolutionArchitect, PyegeriaException
+from pyegeria._exceptions import (
     PyegeriaInvalidParameterException,
     PyegeriaConnectionException,
     PyegeriaAPIException,
@@ -26,6 +27,7 @@ from pyegeria._exceptions_new import (
     print_exception_table,
     print_validation_error,
 )
+from pyegeria._exceptions import PyegeriaException, print_basic_exception, print_validation_error, print_exception_response
 from pyegeria.logging_configuration import config_logging, init_logging
 from pyegeria.models import (NewElementRequestBody, UpdateElementRequestBody, DeleteElementRequestBody)
 from pyegeria.solution_architect import SolutionArchitect

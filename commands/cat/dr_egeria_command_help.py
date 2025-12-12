@@ -29,7 +29,7 @@ from pyegeria import (
     EgeriaTech,
     NO_CATEGORIES_FOUND, PyegeriaException, print_basic_exception, print_validation_error,
 )
-from pyegeria._exceptions_new import (
+from pyegeria._exceptions import (
     PyegeriaInvalidParameterException,
     PyegeriaAPIException as PropertyServerException,
     PyegeriaUnauthorizedException as UserNotAuthorizedException,

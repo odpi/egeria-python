@@ -18,7 +18,7 @@ from rich import print
 from rich.console import Console
 
 
-from pyegeria._exceptions_new import PyegeriaException
+from pyegeria._exceptions import PyegeriaException
 from md_processing.dr_egeria import process_md_file
 
 EGERIA_METADATA_STORE = os.environ.get("EGERIA_METADATA_STORE", "active-metadata-store")

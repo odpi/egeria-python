@@ -32,7 +32,7 @@ from rich.progress import Progress, SpinnerColumn, TextColumn
 from loguru import logger
 
 from pyegeria.location_arena import Location
-from pyegeria._exceptions_new import (
+from pyegeria._exceptions import (
     PyegeriaException,
     PyegeriaNotFoundException,
     print_exception_table, print_validation_error, PyegeriaAPIException,

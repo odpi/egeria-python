@@ -19,7 +19,7 @@ from pydantic import ValidationError
 from rich import print, print_json
 from rich.console import Console
 
-from pyegeria._exceptions_new import print_validation_error
+from pyegeria._exceptions import print_validation_error
 from pyegeria.models import SearchStringRequestBody
 
 console = Console(width=200)
@@ -31,7 +31,7 @@ import pytest
 #     require_local_server()
 
 from pyegeria import  EgeriaTech, PyegeriaException, print_basic_exception, settings
-from pyegeria._exceptions_new import (
+from pyegeria._exceptions import (
     PyegeriaInvalidParameterException,
     PyegeriaAPIException,
     PyegeriaUnauthorizedException,

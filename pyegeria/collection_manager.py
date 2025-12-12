@@ -13,7 +13,7 @@ from typing import Optional, Annotated, Literal, Union
 from loguru import logger
 from pydantic import Field, HttpUrl
 
-from pyegeria._exceptions_new import PyegeriaInvalidParameterException
+from pyegeria._exceptions import PyegeriaInvalidParameterException
 from pyegeria._globals import NO_ELEMENTS_FOUND, NO_GUID_RETURNED
 from pyegeria.base_report_formats import select_report_spec, get_report_spec_match
 from pyegeria.config import settings

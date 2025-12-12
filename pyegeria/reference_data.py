@@ -360,7 +360,7 @@ class ReferenceDataManager(ServerClient):
             """
 
         url = f"{self.ref_data_command_base}/valid-value-definitions/{vv_def_guid}/retrieve"
-        type = element_type if element_type else "ValidValuesDefinition"
+        type = element_type if element_type else "ValidValueDefinition"
 
         response = await self._async_get_guid_request(url, _type=type,
                                                       _gen_output=self._generate_vv_def_output,

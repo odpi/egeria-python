@@ -61,7 +61,7 @@ from pyegeria._output_format_models import load_format_sets_from_json
 from pyegeria.base_report_formats import (select_report_format, get_report_format_heading,
                                           load_user_report_specs, load_report_specs,
                                           get_report_format_description)
-from pyegeria._exceptions_new import PyegeriaException, print_exception_response
+from pyegeria._exceptions import PyegeriaException, print_exception_response
 
 # pydevd_pycharm.settrace('host.docker.internal',  # Use 'host.docker.internal' to connect to the host machine
 #                              port=5678,               # Port to communicate with PyCharm

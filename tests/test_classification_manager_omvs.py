@@ -19,7 +19,7 @@ from rich import print, print_json
 from rich.console import Console
 
 from pyegeria import EgeriaTech
-from pyegeria._exceptions_new import PyegeriaException, print_basic_exception, print_validation_error, \
+from pyegeria._exceptions import PyegeriaException, print_basic_exception, print_validation_error, \
     PyegeriaConnectionException, PyegeriaAPIException
 from pyegeria.classification_manager import ClassificationManager
 

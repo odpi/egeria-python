@@ -23,7 +23,7 @@ from pyegeria import (
     NO_ELEMENTS_FOUND, config_logging, load_app_config, get_app_config, init_logging, config_logging, PyegeriaException,
     print_basic_exception,PyegeriaException, )
 from commands.cat.run_report import list_generic
-from pyegeria._exceptions_new import print_validation_error
+from pyegeria._exceptions import print_validation_error
 app_config = settings.Environment
 
 EGERIA_USER = os.environ.get("EGERIA_USER", "erinoverview")

@@ -20,7 +20,7 @@ from loguru import logger
 from pydantic import TypeAdapter
 
 from pyegeria._base_server_client import BaseServerClient
-from pyegeria._exceptions_new import (
+from pyegeria._exceptions import (
     PyegeriaConnectionException, PyegeriaInvalidParameterException, PyegeriaException, PyegeriaErrorCode
 )
 from pyegeria._globals import max_paging_size, NO_ELEMENTS_FOUND, default_time_out, COMMENT_TYPES

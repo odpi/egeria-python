@@ -11,7 +11,7 @@ from datetime import datetime
 from httpx import Response
 from loguru import logger
 
-from pyegeria._exceptions_new import PyegeriaException, PyegeriaInvalidParameterException
+from pyegeria._exceptions import PyegeriaException, PyegeriaInvalidParameterException
 from pyegeria._server_client import ServerClient
 from pyegeria._globals import default_time_out, NO_ELEMENTS_FOUND
 from pyegeria.base_report_formats import select_report_spec, get_report_spec_match

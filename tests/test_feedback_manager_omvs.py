@@ -21,7 +21,7 @@ import pytest
 from pydantic import ValidationError
 
 from pyegeria import ServerClient, PyegeriaException, print_basic_exception, print_validation_error
-from pyegeria._exceptions_new import (
+from pyegeria._exceptions import (
     PyegeriaInvalidParameterException as InvalidParameterException,
     PyegeriaAPIException as PropertyServerException,
     PyegeriaUnauthorizedException as UserNotAuthorizedException,

@@ -15,7 +15,7 @@ from loguru import logger
 
 from pyegeria import print_basic_exception
 from pyegeria._server_client import ServerClient
-from pyegeria._exceptions_new import (
+from pyegeria._exceptions import (
      PyegeriaException, PyegeriaConnectionException,  PyegeriaInvalidParameterException,
      PyegeriaAPIException, PyegeriaUnknownException, PyegeriaClientException, PyegeriaNotFoundException,
     PyegeriaUnauthorizedException,

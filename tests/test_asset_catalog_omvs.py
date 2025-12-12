@@ -16,7 +16,8 @@ from datetime import datetime
 from rich import print, print_json
 from rich.console import Console
 
-from pyegeria._exceptions_new import (
+from pyegeria import PyegeriaException, print_basic_exception, PyegeriaInvalidParameterException
+from pyegeria._exceptions import (
     PyegeriaInvalidParameterException,
     PyegeriaConnectionException,
     PyegeriaAPIException,

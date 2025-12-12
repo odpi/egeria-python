@@ -19,12 +19,12 @@ from rich import print, print_json
 from rich.console import Console
 
 from pyegeria import SolutionArchitect, PyegeriaException
-from pyegeria._exceptions_new import (
+from pyegeria._exceptions import (
     PyegeriaInvalidParameterException,
     PyegeriaAPIException,
     PyegeriaUnauthorizedException,
 )
-from pyegeria._exceptions_new import PyegeriaException, print_basic_exception, print_validation_error, print_exception_response
+from pyegeria._exceptions import PyegeriaException, print_basic_exception, print_validation_error, print_exception_response
 
 disable_ssl_warnings = True
 

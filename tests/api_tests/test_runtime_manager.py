@@ -22,7 +22,7 @@ from rich.console import Console
 from rich.traceback import Traceback, install
 
 from pyegeria import AutomatedCuration, EgeriaTech, RuntimeManager
-from pyegeria._exceptions_new import (
+from pyegeria._exceptions import (
     PyegeriaInvalidParameterException,
     PyegeriaAPIException,
     PyegeriaUnauthorizedException,

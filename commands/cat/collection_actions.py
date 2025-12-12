@@ -19,7 +19,7 @@ import click
 
 
 from pyegeria import EgeriaTech, body_slimmer, settings
-from pyegeria._exceptions_new import (
+from pyegeria._exceptions import (
     PyegeriaException, print_basic_exception
 )
 app_config = settings.Environment

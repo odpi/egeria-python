@@ -21,7 +21,7 @@ from rich.console import Console
 from pyegeria.collection_manager import CollectionManager, CollectionProperties
 from pyegeria.egeria_tech_client import EgeriaTech
 from pyegeria.logging_configuration import config_logging, init_logging
-from pyegeria._exceptions_new import (
+from pyegeria._exceptions import (
     PyegeriaInvalidParameterException,
     PyegeriaException,
     PyegeriaConnectionException,
