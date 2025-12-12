@@ -13,8 +13,8 @@ from pyegeria.md_processing_utils import (extract_command, process_glossary_upse
                                           )
 import click
 
-from pyegeria._exceptions import (
-    print_exception_response,
+from pyegeria._exceptions_new import (
+    print_basic_exception as print_exception_response,
 )
 
 EGERIA_METADATA_STORE = os.environ.get("EGERIA_METADATA_STORE", "active-metadata-store")

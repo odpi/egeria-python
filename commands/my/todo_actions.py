@@ -15,10 +15,10 @@ from datetime import datetime
 import click
 
 from pyegeria import MyProfile
-from pyegeria._exceptions import (
-    InvalidParameterException,
-    PropertyServerException,
-    print_exception_response,
+from pyegeria._exceptions_new import (
+    PyegeriaInvalidParameterException,
+    PyegeriaAPIException as PropertyServerException,
+    print_basic_exception as print_exception_response,
 )
 
 erins_guid = "dcfd7e32-8074-4cdf-bdc5-9a6f28818a9d"

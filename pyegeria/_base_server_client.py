@@ -48,7 +48,7 @@ from pyegeria.utils import body_slimmer, dynamic_catch
 ...
 
 
-class BaseClient:
+class BaseServerClient:
     """
     An abstract class used to establish connectivity for an Egeria Client
     for a particular server, platform and user. This is a base client that more functional clients inherit from.
@@ -146,7 +146,7 @@ class BaseClient:
             if validate_server_name(server_name):
                 self.server_name = server_name
             self.session = AsyncClient(verify=enable_ssl_check)
-        self.command_root: str = f"{self.platform_url}/servers/{self.server_name}/api/open-metadata/generic"
+        self.command_root: str = f"{self.platform_url}/servers/{self.server_name}/api/open-metadata/"
 
         try:
             result = self.check_connection()
@@ -197,7 +197,7 @@ class BaseClient:
     async def _async_create_egeria_bearer_token(
             self, user_id: str , password: str
     ) -> str:
-        """Create and set an Egeria Bearer Token for the user. Async version
+        """Create and set an Egeria Server Bearer Token for the user. Async version
         Parameters
         ----------
         user_id : str, opt
@@ -212,9 +212,9 @@ class BaseClient:
 
         Raises
         ------
-        InvalidParameterException
+        PyegeriaInvalidParameterException
           If the client passes incorrect parameters on the request - such as bad URLs or invalid values
-        PropertyServerException
+        PyegeriaAPIException
           Raised by the server when an issue arises in processing a valid request
         NotAuthorizedException
           The principle specified by the user_id does not have authorization for the requested action
@@ -230,7 +230,7 @@ class BaseClient:
         if password is None:
             password = self.user_pwd
 
-        url = f"{self.platform_url}/api/token"
+        url = f"{self.platform_url}/servers/{self.server_name}/api/token"
         data = {"userId": user_id, "password": password}
         async with AsyncClient(verify=enable_ssl_check) as client:
             try:
@@ -252,24 +252,24 @@ class BaseClient:
     def create_egeria_bearer_token(
             self, user_id: str = None, password: str = None
     ) -> str:
-        """Create and set an Egeria Bearer Token for the user
+        """Create and set an Egeria Server Bearer Token for the user
         Parameters
         ----------
-        user_id : str
-            The user id to authenticate with.
-        password : str
-            The password for the user.
+        user_id : str, optional
+            The user id to authenticate with. If None, then user_id from class instance used.
+        password : str, optional
+            The password for the user. If None, then user_pwd from class instance is used.
 
         Returns
         -------
         token
-            The bearer token for the specified user.
+            The server bearer token for the specified user.
 
         Raises
         ------
-        InvalidParameterException
+        PyegeriaInvalidParameterException
           If the client passes incorrect parameters on the request - such as bad URLs or invalid values
-        PropertyServerException
+        PyegeriaAPIException
           Raised by the server when an issue arises in processing a valid request
         NotAuthorizedException
           The principle specified by the user_id does not have authorization for the requested action
@@ -293,7 +293,7 @@ class BaseClient:
         This method is used to refresh the bearer token used for authentication with Egeria. It checks if the token
         source is 'Egeria', and if the user ID and password are valid. If all conditions are met, it calls the
         `create_egeria_bearer_token` method to create a new bearer token. Otherwise,
-        it raises an `InvalidParameterException`.
+        it raises an `PyegeriaInvalidParameterException`.
 
         Parameters:
 
@@ -301,7 +301,7 @@ class BaseClient:
             None
 
         Raises:
-            InvalidParameterException: If the token source is invalid.
+            PyegeriaInvalidParameterException: If the token source is invalid.
         """
         if (
                 (self.token_src == "Egeria")
@@ -323,7 +323,7 @@ class BaseClient:
         This method is used to refresh the bearer token used for authentication with Egeria. It checks if the token
         source is 'Egeria', and if the user ID and password are valid. If all conditions are met, it calls the
         `create_egeria_bearer_token` method to create a new bearer token. Otherwise,
-        it raises an `InvalidParameterException`.
+        it raises an `PyegeriaInvalidParameterException`.
 
         Parameters:
 
@@ -331,8 +331,8 @@ class BaseClient:
             None
 
         Raises:
-            InvalidParameterException: If the token source is invalid.
-            PropertyServerException
+            PyegeriaInvalidParameterException: If the token source is invalid.
+            PyegeriaAPIException
                 Raised by the server when an issue arises in processing a valid request
             NotAuthorizedException
                 The principle specified by the user_id does not have authorization for the requested action
@@ -355,9 +355,9 @@ class BaseClient:
 
         Raises
         ------
-        InvalidParameterException
+        PyegeriaInvalidParameterException
           If the client passes incorrect parameters on the request - such as bad URLs or invalid values
-        PropertyServerException
+        PyegeriaAPIException
           Raised by the server when an issue arises in processing a valid request
         NotAuthorizedException
           The principle specified by the user_id does not have authorization for the requested action
@@ -379,7 +379,7 @@ class BaseClient:
 
         Historically this method returned a boolean; tests and helpers expect the actual origin text.
         """
-        origin_url = f"{self.platform_url}/open-metadata/platform-services/users/{self.user_id}/server-platform/origin"
+        origin_url = f"{self.platform_url}/open-metadata/platform-services/server-platform/origin"
         response = await self._async_make_request("GET", origin_url, is_json=False)
         if response.status_code == 200:
             text = response.text.strip()
@@ -434,7 +434,7 @@ class BaseClient:
     ) -> Response | str:
         """Make a request to the Egeria API - Async Version
         Function to make an API call via the self.session Library. Raise an exception if the HTTP response code
-        is not 200/201. IF there is a REST communication exception, raise InvalidParameterException.
+        is not 200/201. IF there is a REST communication exception, raise PyegeriaInvalidParameterException.
 
         :param request_type: Type of Request.
                Supported Values - GET, POST, (not PUT, PATCH, DELETE).

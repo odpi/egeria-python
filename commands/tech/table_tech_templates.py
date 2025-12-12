@@ -18,12 +18,8 @@ from textual.widgets import DataTable
 
 from pyegeria import (
     AutomatedCuration,
-    InvalidParameterException,
-    PropertyServerException,
-    RegisteredInfo,
-    UserNotAuthorizedException,
+PyegeriaAPIException, PyegeriaClientException, print_basic_exception, print_exception_table    RegisteredInfo,
     _client,
-    print_exception_response,
 )
 
 console = Console()

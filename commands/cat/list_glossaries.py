@@ -22,10 +22,12 @@ from rich.text import Text
 
 from pyegeria import (
     EgeriaTech,
-    InvalidParameterException,
-    PropertyServerException,
-    UserNotAuthorizedException,
-    print_exception_response,
+)
+from pyegeria._exceptions_new import (
+    PyegeriaInvalidParameterException,
+    PyegeriaAPIException as PropertyServerException,
+    PyegeriaUnauthorizedException as UserNotAuthorizedException,
+    print_basic_exception as print_exception_response,
 )
 
 disable_ssl_warnings = True
@@ -158,7 +160,7 @@ def display_glossaries(
 
             console.print(table)
 
-    except (InvalidParameterException, PropertyServerException) as e:
+    except (PyegeriaInvalidParameterException, PropertyServerException) as e:
         print_exception_response(e)
     finally:
         m_client.close_session()

@@ -18,11 +18,14 @@ from rich.tree import Tree
 
 from pyegeria import (
     CollectionManager,
-    InvalidParameterException,
-    PropertyServerException,
-    UserNotAuthorizedException, NO_ELEMENTS_FOUND,
-    )
-from pyegeria._exceptions import print_exception_response
+    NO_ELEMENTS_FOUND,
+)
+from pyegeria._exceptions_new import (
+    PyegeriaInvalidParameterException,
+    PyegeriaAPIException,
+    PyegeriaUnauthorizedException,
+    print_basic_exception as print_exception_response,
+)
 
 disable_ssl_warnings = True
 EGERIA_METADATA_STORE = os.environ.get("EGERIA_METADATA_STORE", "active-metadata-store")
@@ -105,9 +108,9 @@ def collection_viewer(
         print(tree)
 
     except (
-        InvalidParameterException,
-        PropertyServerException,
-        UserNotAuthorizedException,
+        PyegeriaInvalidParameterException,
+        PyegeriaAPIException,
+        PyegeriaUnauthorizedException,
     ) as e:
         if e.exception_error_message_parameters[1] == NO_ELEMENTS_FOUND:
             print("The collection was not found.")

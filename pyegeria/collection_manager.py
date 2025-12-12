@@ -55,7 +55,7 @@ def query_string(params):
             result = f"{result}{query_seperator(result)}{params[i][0]}={params[i][1]}"
     return result
 
-from pyegeria._client_new import Client2
+from pyegeria._server_client import ServerClient
 
 class CollectionProperties(ReferenceableProperties):
     class_: Annotated[Literal["CollectionProperties"], Field(alias="class")]
@@ -108,7 +108,7 @@ class Collections(PyegeriaModel):
                       DataSpecProperties, DataDictionaryProperties] = Field(desciminator="class_")
 
 
-class CollectionManager(Client2):
+class CollectionManager(ServerClient):
     """
     Maintain and explore the contents of nested collections. These collections can be used to represent digital
     products, or collections of resources for a particular project or team. They can be used to organize assets and
@@ -138,7 +138,7 @@ class CollectionManager(Client2):
         self.user_pwd = user_pwd
 
 
-        Client2.__init__(self, view_server, platform_url, user_id, user_pwd, token)
+        ServerClient.__init__(self, view_server, platform_url, user_id, user_pwd, token)
         # result = self.get_platform_origin()
         # logger.info(f"CollectionManager initialized, platform origin is: {result}")
         self.collection_command_root: str = (
@@ -181,9 +181,9 @@ class CollectionManager(Client2):
         Raises
         ------
 
-        InvalidParameterException
+        PyegeriaInvalidParameterException
           If the client passes incorrect parameters on the request - such as bad URLs or invalid values
-        PropertyServerException
+        PyegeriaAPIException
           Raised by the server when an issue arises in processing a valid request
         NotAuthorizedException
           The principle specified by the user_id does not have authorization for the requested action
@@ -252,9 +252,9 @@ class CollectionManager(Client2):
         Raises
         ------
 
-        InvalidParameterException
+        PyegeriaInvalidParameterException
           If the client passes incorrect parameters on the request - such as bad URLs or invalid values
-        PropertyServerException
+        PyegeriaAPIException
           Raised by the server when an issue arises in processing a valid request
         NotAuthorizedException
           The principle specified by the user_id does not have authorization for the requested action
@@ -451,9 +451,9 @@ class CollectionManager(Client2):
             Raises
             ------
 
-            InvalidParameterException
+            PyegeriaInvalidParameterException
               If the client passes incorrect parameters on the request - such as bad URLs or invalid values
-            PropertyServerException
+            PyegeriaAPIException
               Raised by the server when an issue arises in processing a valid request
             NotAuthorizedException
               The principle specified by the user_id does not have authorization for the requested action
@@ -612,9 +612,9 @@ class CollectionManager(Client2):
         Raises
         ------
 
-        InvalidParameterException
+        PyegeriaInvalidParameterException
           If the client passes incorrect parameters on the request - such as bad URLs or invalid values
-        PropertyServerException
+        PyegeriaAPIException
           Raised by the server when an issue arises in processing a valid request
         NotAuthorizedException
           The principle specified by the user_id does not have authorization for the requested action
@@ -671,9 +671,9 @@ class CollectionManager(Client2):
         Raises
         ------
 
-        InvalidParameterException
+        PyegeriaInvalidParameterException
           If the client passes incorrect parameters on the request - such as bad URLs or invalid values
-        PropertyServerException
+        PyegeriaAPIException
           Raised by the server when an issue arises in processing a valid request
         NotAuthorizedException
           The principle specified by the user_id does not have authorization for the requested action
@@ -730,9 +730,9 @@ class CollectionManager(Client2):
             Raises
             ------
 
-            InvalidParameterException
+            PyegeriaInvalidParameterException
               If the client passes incorrect parameters on the request - such as bad URLs or invalid values
-            PropertyServerException
+            PyegeriaAPIException
               Raised by the server when an issue arises in processing a valid request
             NotAuthorizedException
               The principle specified by the user_id does not have authorization for the requested action
@@ -792,9 +792,9 @@ class CollectionManager(Client2):
         Raises
         ------
 
-        InvalidParameterException
+        PyegeriaInvalidParameterException
           If the client passes incorrect parameters on the request - such as bad URLs or invalid values
-        PropertyServerException
+        PyegeriaAPIException
           Raised by the server when an issue arises in processing a valid request
         NotAuthorizedException
           The principle specified by the user_id does not have authorization for the requested action
@@ -865,9 +865,9 @@ class CollectionManager(Client2):
         Raises
         ------
 
-        InvalidParameterException
+        PyegeriaInvalidParameterException
           If the client passes incorrect parameters on the request - such as bad URLs or invalid values
-        PropertyServerException
+        PyegeriaAPIException
           Raised by the server when an issue arises in processing a valid request
         NotAuthorizedException
           The principle specified by the user_id does not have authorization for the requested action
@@ -925,9 +925,9 @@ class CollectionManager(Client2):
             Raises
             ------
 
-            InvalidParameterException
+            PyegeriaInvalidParameterException
               If the client passes incorrect parameters on the request - such as bad URLs or invalid values
-            PropertyServerException
+            PyegeriaAPIException
               Raised by the server when an issue arises in processing a valid request
             NotAuthorizedException
               The principle specified by the user_id does not have authorization for the requested action
@@ -990,9 +990,9 @@ class CollectionManager(Client2):
         Raises
         ------
 
-        InvalidParameterException
+        PyegeriaInvalidParameterException
           If the client passes incorrect parameters on the request - such as bad URLs or invalid values
-        PropertyServerException
+        PyegeriaAPIException
           Raised by the server when an issue arises in processing a valid request
         NotAuthorizedException
           The principle specified by the user_id does not have authorization for the requested action
@@ -1996,12 +1996,13 @@ class CollectionManager(Client2):
 
         Raises
         ------
-        InvalidParameterException
-          If the client passes incorrect parameters on the request - such as bad URLs or invalid values
-        PropertyServerException
-          Raised by the server when an issue arises in processing a valid request
-        NotAuthorizedException
-          The principle specified by the user_id does not have authorization for the requested action
+        PyegeriaException
+            One of the pyegeria exceptions will be raised if there are issues in communications, message format, or
+            Egeria errors.
+        ValidationError
+            Pydantic validation errors are raised if the body does not conform to the DeleteElementRequestBody.
+        PyegeriaNotAuthorizedException
+            The principle specified by the user_id does not have authorization for the requested action
 
         Notes
         -----
@@ -2067,9 +2068,9 @@ class CollectionManager(Client2):
 
         Raises
         ------
-        InvalidParameterException
+        PyegeriaInvalidParameterException
           If the client passes incorrect parameters on the request - such as bad URLs or invalid values
-        PropertyServerException
+        PyegeriaAPIException
           Raised by the server when an issue arises in processing a valid request
         NotAuthorizedException
           The principle specified by the user_id does not have authorization for the requested action
@@ -2638,9 +2639,9 @@ class CollectionManager(Client2):
 
         Raises
         ------
-        InvalidParameterException
+        PyegeriaInvalidParameterException
           If the client passes incorrect parameters on the request - such as bad URLs or invalid values
-        PropertyServerException
+        PyegeriaAPIException
           Raised by the server when an issue arises in processing a valid request
         NotAuthorizedException
           The principle specified by the user_id does not have authorization for the requested action
@@ -2683,9 +2684,9 @@ class CollectionManager(Client2):
 
         Raises
         ------
-        InvalidParameterException
+        PyegeriaInvalidParameterException
           If the client passes incorrect parameters on the request - such as bad URLs or invalid values
-        PropertyServerException
+        PyegeriaAPIException
           Raised by the server when an issue arises in processing a valid request
         NotAuthorizedException
           The principle specified by the user_id does not have authorization for the requested action
@@ -2728,9 +2729,9 @@ class CollectionManager(Client2):
 
         Raises
         ------
-        InvalidParameterException
+        PyegeriaInvalidParameterException
           If the client passes incorrect parameters on the request - such as bad URLs or invalid values
-        PropertyServerException
+        PyegeriaAPIException
           Raised by the server when an issue arises in processing a valid request
         NotAuthorizedException
           The principle specified by the user_id does not have authorization for the requested action
@@ -2774,9 +2775,9 @@ class CollectionManager(Client2):
 
         Raises
         ------
-        InvalidParameterException
+        PyegeriaInvalidParameterException
           If the client passes incorrect parameters on the request - such as bad URLs or invalid values
-        PropertyServerException
+        PyegeriaAPIException
           Raised by the server when an issue arises in processing a valid request
         NotAuthorizedException
           The principle specified by the user_id does not have authorization for the requested action
@@ -2828,9 +2829,9 @@ class CollectionManager(Client2):
 
             Raises
             ------
-            InvalidParameterException
+            PyegeriaInvalidParameterException
               If the client passes incorrect parameters on the request - such as bad URLs or invalid values
-            PropertyServerException
+            PyegeriaAPIException
               Raised by the server when an issue arises in processing a valid request
             NotAuthorizedException
               The principle specified by the user_id does not have authorization for the requested action
@@ -2883,9 +2884,9 @@ class CollectionManager(Client2):
 
         Raises
         ------
-        InvalidParameterException
+        PyegeriaInvalidParameterException
           If the client passes incorrect parameters on the request - such as bad URLs or invalid values
-        PropertyServerException
+        PyegeriaAPIException
           Raised by the server when an issue arises in processing a valid request
         NotAuthorizedException
           The principle specified by the user_id does not have authorization for the requested action
@@ -2932,9 +2933,9 @@ class CollectionManager(Client2):
 
         Raises
         ------
-        InvalidParameterException
+        PyegeriaInvalidParameterException
           If the client passes incorrect parameters on the request - such as bad URLs or invalid values
-        PropertyServerException
+        PyegeriaAPIException
           Raised by the server when an issue arises in processing a valid request
         NotAuthorizedException
           The principle specified by the user_id does not have authorization for the requested action
@@ -2981,9 +2982,9 @@ class CollectionManager(Client2):
 
         Raises
         ------
-        InvalidParameterException
+        PyegeriaInvalidParameterException
           If the client passes incorrect parameters on the request - such as bad URLs or invalid values
-        PropertyServerException
+        PyegeriaAPIException
           Raised by the server when an issue arises in processing a valid request
         NotAuthorizedException
           The principle specified by the user_id does not have authorization for the requested action
@@ -3033,9 +3034,9 @@ class CollectionManager(Client2):
 
             Raises
             ------
-            InvalidParameterException
+            PyegeriaInvalidParameterException
               If the client passes incorrect parameters on the request - such as bad URLs or invalid values
-            PropertyServerException
+            PyegeriaAPIException
               Raised by the server when an issue arises in processing a valid request
             NotAuthorizedException
               The principle specified by the user_id does not have authorization for the requested action
@@ -3084,9 +3085,9 @@ class CollectionManager(Client2):
 
         Raises
         ------
-        InvalidParameterException
+        PyegeriaInvalidParameterException
           If the client passes incorrect parameters on the request - such as bad URLs or invalid values
-        PropertyServerException
+        PyegeriaAPIException
           Raised by the server when an issue arises in processing a valid request
         NotAuthorizedException
           The principle specified by the user_id does not have authorization for the requested action
@@ -3132,9 +3133,9 @@ class CollectionManager(Client2):
 
         Raises
         ------
-        InvalidParameterException
+        PyegeriaInvalidParameterException
           If the client passes incorrect parameters on the request - such as bad URLs or invalid values
-        PropertyServerException
+        PyegeriaAPIException
           Raised by the server when an issue arises in processing a valid request
         NotAuthorizedException
           The principle specified by the user_id does not have authorization for the requested action
@@ -3559,9 +3560,9 @@ class CollectionManager(Client2):
 
         Raises
         ------
-        InvalidParameterException
+        PyegeriaInvalidParameterException
           If the client passes incorrect parameters on the request - such as bad URLs or invalid values
-        PropertyServerException
+        PyegeriaAPIException
           Raised by the server when an issue arises in processing a valid request
         NotAuthorizedException
           The principle specified by the user_id does not have authorization for the requested action
@@ -3606,9 +3607,9 @@ class CollectionManager(Client2):
 
         Raises
         ------
-        InvalidParameterException
+        PyegeriaInvalidParameterException
           If the client passes incorrect parameters on the request - such as bad URLs or invalid values
-        PropertyServerException
+        PyegeriaAPIException
           Raised by the server when an issue arises in processing a valid request
         NotAuthorizedException
           The principle specified by the user_id does not have authorization for the requested action
@@ -3661,9 +3662,9 @@ class CollectionManager(Client2):
 
           Raises
           ------
-          InvalidParameterException
+          PyegeriaInvalidParameterException
             If the client passes incorrect parameters on the request - such as bad URLs or invalid values
-          PropertyServerException
+          PyegeriaAPIException
             Raised by the server when an issue arises in processing a valid request
           NotAuthorizedException
             The principle specified by the user_id does not have authorization for the requested action
@@ -3715,9 +3716,9 @@ class CollectionManager(Client2):
 
         Raises
         ------
-        InvalidParameterException
+        PyegeriaInvalidParameterException
           If the client passes incorrect parameters on the request - such as bad URLs or invalid values
-        PropertyServerException
+        PyegeriaAPIException
           Raised by the server when an issue arises in processing a valid request
         NotAuthorizedException
           The principle specified by the user_id does not have authorization for the requested action
@@ -3764,9 +3765,9 @@ class CollectionManager(Client2):
 
         Raises
         ------
-        InvalidParameterException
+        PyegeriaInvalidParameterException
           If the client passes incorrect parameters on the request - such as bad URLs or invalid values
-        PropertyServerException
+        PyegeriaAPIException
           Raised by the server when an issue arises in processing a valid request
         NotAuthorizedException
           The principle specified by the user_id does not have authorization for the requested action
@@ -3814,9 +3815,9 @@ class CollectionManager(Client2):
 
         Raises
         ------
-        InvalidParameterException
+        PyegeriaInvalidParameterException
           If the client passes incorrect parameters on the request - such as bad URLs or invalid values
-        PropertyServerException
+        PyegeriaAPIException
           Raised by the server when an issue arises in processing a valid request
         NotAuthorizedException
           The principle specified by the user_id does not have authorization for the requested action
@@ -3883,9 +3884,9 @@ class CollectionManager(Client2):
 
                Raises
                ------
-               InvalidParameterException
+               PyegeriaInvalidParameterException
                  If the client passes incorrect parameters on the request - such as bad URLs or invalid values
-               PropertyServerException
+               PyegeriaAPIException
                  Raised by the server when an issue arises in processing a valid request
                NotAuthorizedException
                  The principle specified by the user_id does not have authorization for the requested action
@@ -3947,9 +3948,9 @@ class CollectionManager(Client2):
 
         Raises
         ------
-        InvalidParameterException
+        PyegeriaInvalidParameterException
           If the client passes incorrect parameters on the request - such as bad URLs or invalid values
-        PropertyServerException
+        PyegeriaAPIException
           Raised by the server when an issue arises in processing a valid request
         NotAuthorizedException
           The principle specified by the user_id does not have authorization for the requested action
@@ -3992,9 +3993,9 @@ class CollectionManager(Client2):
 
         Raises
         ------
-        InvalidParameterException
+        PyegeriaInvalidParameterException
           If the client passes incorrect parameters on the request - such as bad URLs or invalid values
-        PropertyServerException
+        PyegeriaAPIException
           Raised by the server when an issue arises in processing a valid request
         NotAuthorizedException
           The principle specified by the user_id does not have authorization for the requested action
@@ -4037,9 +4038,9 @@ class CollectionManager(Client2):
 
         Raises
         ------
-        InvalidParameterException
+        PyegeriaInvalidParameterException
           If the client passes incorrect parameters on the request - such as bad URLs or invalid values
-        PropertyServerException
+        PyegeriaAPIException
           Raised by the server when an issue arises in processing a valid request
         NotAuthorizedException
           The principle specified by the user_id does not have authorization for the requested action
@@ -4092,9 +4093,9 @@ class CollectionManager(Client2):
 
         Raises
         ------
-        InvalidParameterException
+        PyegeriaInvalidParameterException
           If the client passes incorrect parameters on the request - such as bad URLs or invalid values
-        PropertyServerException
+        PyegeriaAPIException
           Raised by the server when an issue arises in processing a valid request
         NotAuthorizedException
           The principle specified by the user_id does not have authorization for the requested action
@@ -4144,9 +4145,9 @@ class CollectionManager(Client2):
 
         Raises
         ------
-        InvalidParameterException
+        PyegeriaInvalidParameterException
           If the client passes incorrect parameters on the request - such as bad URLs or invalid values
-        PropertyServerException
+        PyegeriaAPIException
           Raised by the server when an issue arises in processing a valid request
         NotAuthorizedException
           The principle specified by the user_id does not have authorization for the requested action
@@ -4189,9 +4190,9 @@ class CollectionManager(Client2):
 
         Raises
         ------
-        InvalidParameterException
+        PyegeriaInvalidParameterException
           If the client passes incorrect parameters on the request - such as bad URLs or invalid values
-        PropertyServerException
+        PyegeriaAPIException
           Raised by the server when an issue arises in processing a valid request
         NotAuthorizedException
           The principle specified by the user_id does not have authorization for the requested action
@@ -4231,9 +4232,9 @@ class CollectionManager(Client2):
 
         Raises
         ------
-        InvalidParameterException
+        PyegeriaInvalidParameterException
           If the client passes incorrect parameters on the request - such as bad URLs or invalid values
-        PropertyServerException
+        PyegeriaAPIException
           Raised by the server when an issue arises in processing a valid request
         NotAuthorizedException
           The principle specified by the user_id does not have authorization for the requested action
@@ -4333,9 +4334,9 @@ class CollectionManager(Client2):
 
         Raises
         ------
-        InvalidParameterException
+        PyegeriaInvalidParameterException
           If the client passes incorrect parameters on the request - such as bad URLs or invalid values
-        PropertyServerException
+        PyegeriaAPIException
           Raised by the server when an issue arises in processing a valid request
         NotAuthorizedException
           The principle specified by the user_id does not have authorization for the requested action
@@ -4409,9 +4410,9 @@ class CollectionManager(Client2):
 
         Raises
         ------
-        InvalidParameterException
+        PyegeriaInvalidParameterException
           If the client passes incorrect parameters on the request - such as bad URLs or invalid values
-        PropertyServerException
+        PyegeriaAPIException
           Raised by the server when an issue arises in processing a valid request
         NotAuthorizedException
           The principle specified by the user_id does not have authorization for the requested action
@@ -4470,9 +4471,9 @@ class CollectionManager(Client2):
 
         Raises
         ------
-        InvalidParameterException
+        PyegeriaInvalidParameterException
           If the client passes incorrect parameters on the request - such as bad URLs or invalid values
-        PropertyServerException
+        PyegeriaAPIException
           Raised by the server when an issue arises in processing a valid request
         NotAuthorizedException
           The principle specified by the user_id does not have authorization for the requested action
@@ -4527,9 +4528,9 @@ class CollectionManager(Client2):
 
         Raises
         ------
-        InvalidParameterException
+        PyegeriaInvalidParameterException
           If the client passes incorrect parameters on the request - such as bad URLs or invalid values
-        PropertyServerException
+        PyegeriaAPIException
           Raised by the server when an issue arises in processing a valid request
         NotAuthorizedException
           The principle specified by the user_id does not have authorization for the requested action
@@ -4572,9 +4573,9 @@ class CollectionManager(Client2):
 
             Raises
             ------
-            InvalidParameterException
+            PyegeriaInvalidParameterException
               If the client passes incorrect parameters on the request - such as bad URLs or invalid values
-            PropertyServerException
+            PyegeriaAPIException
               Raised by the server when an issue arises in processing a valid request
             NotAuthorizedException
               The principle specified by the user_id does not have authorization for the requested action
@@ -4620,9 +4621,9 @@ class CollectionManager(Client2):
 
         Raises
         ------
-        InvalidParameterException
+        PyegeriaInvalidParameterException
           If the client passes incorrect parameters on the request - such as bad URLs or invalid values
-        PropertyServerException
+        PyegeriaAPIException
           Raised by the server when an issue arises in processing a valid request
         NotAuthorizedException
           The principle specified by the user_id does not have authorization for the requested action
@@ -4675,9 +4676,9 @@ class CollectionManager(Client2):
 
         Raises
         ------
-        InvalidParameterException
+        PyegeriaInvalidParameterException
           If the client passes incorrect parameters on the request - such as bad URLs or invalid values
-        PropertyServerException
+        PyegeriaAPIException
           Raised by the server when an issue arises in processing a valid request
         NotAuthorizedException
           The principle specified by the user_id does not have authorization for the requested action
@@ -4724,9 +4725,9 @@ class CollectionManager(Client2):
 
         Raises
         ------
-        InvalidParameterException
+        PyegeriaInvalidParameterException
           If the client passes incorrect parameters on the request - such as bad URLs or invalid values
-        PropertyServerException
+        PyegeriaAPIException
           Raised by the server when an issue arises in processing a valid request
         NotAuthorizedException
           The principle specified by the user_id does not have authorization for the requested action
@@ -4769,9 +4770,9 @@ class CollectionManager(Client2):
 
         Raises
         ------
-        InvalidParameterException
+        PyegeriaInvalidParameterException
           If the client passes incorrect parameters on the request - such as bad URLs or invalid values
-        PropertyServerException
+        PyegeriaAPIException
           Raised by the server when an issue arises in processing a valid request
         NotAuthorizedException
           The principle specified by the user_id does not have authorization for the requested action
@@ -4817,9 +4818,9 @@ class CollectionManager(Client2):
 
         Raises
         ------
-        InvalidParameterException
+        PyegeriaInvalidParameterException
           If the client passes incorrect parameters on the request - such as bad URLs or invalid values
-        PropertyServerException
+        PyegeriaAPIException
           Raised by the server when an issue arises in processing a valid request
         NotAuthorizedException
           The principle specified by the user_id does not have authorization for the requested action
@@ -4878,9 +4879,9 @@ class CollectionManager(Client2):
 
             Raises
             ------
-            InvalidParameterException
+            PyegeriaInvalidParameterException
               If the client passes incorrect parameters on the request - such as bad URLs or invalid values
-            PropertyServerException
+            PyegeriaAPIException
               Raised by the server when an issue arises in processing a valid request
             NotAuthorizedException
               The principle specified by the user_id does not have authorization for the requested action
@@ -4935,9 +4936,9 @@ class CollectionManager(Client2):
 
         Raises
         ------
-        InvalidParameterException
+        PyegeriaInvalidParameterException
           If the client passes incorrect parameters on the request - such as bad URLs or invalid values
-        PropertyServerException
+        PyegeriaAPIException
           Raised by the server when an issue arises in processing a valid request
         NotAuthorizedException
           The principle specified by the user_id does not have authorization for the requested action
@@ -4983,9 +4984,9 @@ class CollectionManager(Client2):
 
           Raises
           ------
-          InvalidParameterException
+          PyegeriaInvalidParameterException
             If the client passes incorrect parameters on the request - such as bad URLs or invalid values
-          PropertyServerException
+          PyegeriaAPIException
             Raised by the server when an issue arises in processing a valid request
           NotAuthorizedException
             The principle specified by the user_id does not have authorization for the requested action
@@ -5030,9 +5031,9 @@ class CollectionManager(Client2):
 
         Raises
         ------
-        InvalidParameterException
+        PyegeriaInvalidParameterException
           If the client passes incorrect parameters on the request - such as bad URLs or invalid values
-        PropertyServerException
+        PyegeriaAPIException
           Raised by the server when an issue arises in processing a valid request
         NotAuthorizedException
           The principle specified by the user_id does not have authorization for the requested action
@@ -5071,7 +5072,7 @@ class CollectionManager(Client2):
         cascade: bool, optional, defaults to True
             If true, a cascade delete is performed.
 
-        body: dict DeleteElementRequestBodyt, optional, default = None
+        body: dict | DeleteElementRequestBody, optional, default = None
             A dict representing the details of the relationship.
 
         Returns
@@ -5080,12 +5081,13 @@ class CollectionManager(Client2):
 
         Raises
         ------
-        InvalidParameterException
-          If the client passes incorrect parameters on the request - such as bad URLs or invalid values
-        PropertyServerException
-          Raised by the server when an issue arises in processing a valid request
-        NotAuthorizedException
-          The principle specified by the user_id does not have authorization for the requested action
+        PyegeriaException
+            One of the pyegeria exceptions will be raised if there are issues in communications, message format, or
+            Egeria errors.
+        ValidationError
+            Pydantic validation errors are raised if the body does not conform to the DeleteElementRequestBody.
+        PyegeriaNotAuthorizedException
+            The principle specified by the user_id does not have authorization for the requested action
 
         Notes
         _____
@@ -5118,13 +5120,13 @@ class CollectionManager(Client2):
 
         Raises
         ------
-
-        InvalidParameterException
-          If the client passes incorrect parameters on the request - such as bad URLs or invalid values
-        PropertyServerException
-          Raised by the server when an issue arises in processing a valid request
-        NotAuthorizedException
-          The principle specified by the user_id does not have authorization for the requested action
+        PyegeriaException
+            One of the pyegeria exceptions will be raised if there are issues in communications, message format, or
+            Egeria errors.
+        ValidationError
+            Pydantic validation errors are raised if the body does not conform to the NewRelationshipRequestBody.
+        PyegeriaNotAuthorizedException
+            The principle specified by the user_id does not have authorization for the requested action
 
         Notes
         -----
@@ -5183,9 +5185,9 @@ class CollectionManager(Client2):
         Raises
         ------
 
-        InvalidParameterException
+        PyegeriaInvalidParameterException
           If the client passes incorrect parameters on the request - such as bad URLs or invalid values
-        PropertyServerException
+        PyegeriaAPIException
           Raised by the server when an issue arises in processing a valid request
         NotAuthorizedException
           The principle specified by the user_id does not have authorization for the requested action
@@ -5253,9 +5255,9 @@ class CollectionManager(Client2):
         Raises
         ------
 
-        InvalidParameterException
+        PyegeriaInvalidParameterException
           If the client passes incorrect parameters on the request - such as bad URLs or invalid values
-        PropertyServerException
+        PyegeriaAPIException
           Raised by the server when an issue arises in processing a valid request
         NotAuthorizedException
           The principle specified by the user_id does not have authorization for the requested action
@@ -5319,9 +5321,9 @@ class CollectionManager(Client2):
         Raises
         ------
 
-        InvalidParameterException
+        PyegeriaInvalidParameterException
           If the client passes incorrect parameters on the request - such as bad URLs or invalid values
-        PropertyServerException
+        PyegeriaAPIException
           Raised by the server when an issue arises in processing a valid request
         NotAuthorizedException
           The principle specified by the user_id does not have authorization for the requested action
@@ -5416,9 +5418,9 @@ class CollectionManager(Client2):
         Raises
         ------
 
-        InvalidParameterException
+        PyegeriaInvalidParameterException
           If the client passes incorrect parameters on the request - such as bad URLs or invalid values
-        PropertyServerException
+        PyegeriaAPIException
           Raised by the server when an issue arises in processing a valid request
         NotAuthorizedException
           The principle specified by the user_id does not have authorization for the requested action
@@ -5463,9 +5465,9 @@ class CollectionManager(Client2):
         Raises
         ------
 
-        InvalidParameterException
+        PyegeriaInvalidParameterException
           If the client passes incorrect parameters on the request - such as bad URLs or invalid values
-        PropertyServerException
+        PyegeriaAPIException
           Raised by the server when an issue arises in processing a valid request
         NotAuthorizedException
           The principle specified by the user_id does not have authorization for the requested action
@@ -5505,7 +5507,7 @@ class CollectionManager(Client2):
 
         Raises
         ------
-        InvalidParameterException
+        PyegeriaInvalidParameterException
             If the root_collection_name does not have exactly one root collection.
 
         """
@@ -5556,7 +5558,7 @@ class CollectionManager(Client2):
 
         Raises
         ------
-        InvalidParameterException
+        PyegeriaInvalidParameterException
             If the root_collection_name does not have exactly one root collection.
 
         """

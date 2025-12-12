@@ -15,11 +15,11 @@ import time
 from rich.live import Live
 from rich.table import Table
 
-from pyegeria._exceptions import (
-    InvalidParameterException,
-    PropertyServerException,
-    UserNotAuthorizedException,
-    print_exception_response,
+from pyegeria._exceptions_new import (
+    PyegeriaInvalidParameterException,
+    PyegeriaAPIException as PropertyServerException,
+    PyegeriaUnauthorizedException as UserNotAuthorizedException,
+    print_basic_exception as print_exception_response,
 )
 from pyegeria.core_omag_server_config import CoreServerConfig
 from pyegeria.server_operations import ServerOps
@@ -107,7 +107,7 @@ def display_status(
                 live.update(generate_table())
 
     except (
-        InvalidParameterException,
+        PyegeriaInvalidParameterException,
         PropertyServerException,
         UserNotAuthorizedException,
     ) as e:

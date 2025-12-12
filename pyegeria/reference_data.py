@@ -10,7 +10,7 @@ Copyright Contributors to the ODPi Egeria project.
 import asyncio
 
 from pyegeria.base_report_formats import select_report_spec
-from pyegeria._client_new import Client2
+from pyegeria._server_client import ServerClient
 from pyegeria.base_report_formats import get_report_spec_match
 from pyegeria.config import settings as app_settings
 from pyegeria.models import (SearchStringRequestBody, FilterRequestBody, GetRequestBody, NewElementRequestBody,
@@ -24,12 +24,12 @@ EGERIA_LOCAL_QUALIFIER = app_settings.User_Profile.egeria_local_qualifier
 from loguru import logger
 
 
-class ReferenceDataManager(Client2):
+class ReferenceDataManager(ServerClient):
     """
     Manage Reference Data in Egeria..
 
     This client provides asynchronous and synchronous helpers to create, update, search,
-    and relate Project elements and their subtypes (Campaign, StudyProject, Task, PersonalProject).
+    and relate Reference Data elements and their subtypes (Campaign, StudyProject, Task, PersonalProject).
 
     References
 
@@ -70,7 +70,7 @@ class ReferenceDataManager(Client2):
             f"{self.platform_url}/servers/{self.view_server}/api/open-metadata/reference-data"
         )
         self.url_marker = 'reference-data'
-        Client2.__init__(self, view_server, platform_url, user_id, user_pwd, token)
+        ServerClient.__init__(self, view_server, platform_url, user_id, user_pwd, token)
 
     def _extract_additional_valid_value_definition_properties(self, element: dict, columns_struct: dict)-> dict:
 
@@ -102,7 +102,7 @@ class ReferenceDataManager(Client2):
         # Common population pipeline
         col_data = populate_common_columns(element, columns_struct)
         columns_list = col_data.get('formats', {}).get('attributes', [])
-        # Overlay extras (project roles) only where empty
+        # Overlay extras (project perspectives) only where empty
 
         # extra = self._extract_additional_project_properties(element, columns_struct)
 
@@ -398,9 +398,9 @@ class ReferenceDataManager(Client2):
             Raises
             ------
 
-            InvalidParameterException
+            PyegeriaInvalidParameterException
               If the client passes incorrect parameters on the request - such as bad URLs or invalid values
-            PropertyServerException
+            PyegeriaAPIException
               Raised by the server when an issue arises in processing a valid request
             NotAuthorizedException
               The principle specified by the user_id does not have authorization for the requested action

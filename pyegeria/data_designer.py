@@ -11,7 +11,7 @@ import asyncio
 
 from loguru import logger
 
-from pyegeria._client_new import max_paging_size, Client2
+from pyegeria._server_client import max_paging_size, ServerClient
 from pyegeria.base_report_formats import select_report_spec, get_report_spec_match
 from pyegeria.models import (SearchStringRequestBody, FilterRequestBody, GetRequestBody, NewElementRequestBody,
                              TemplateRequestBody,
@@ -47,7 +47,7 @@ def base_path(client, view_server: str):
     return f"{client.platform_url}/servers/{view_server}/api/open-metadata/data-designer"
 
 
-class DataDesigner(Client2):
+class DataDesigner(ServerClient):
     """DataDesigner is a class that extends the Client class. The Data Designer OMVS provides APIs for
       building specifications for data. This includes common data fields in a data dictionary, data specifications
       for a project and data classes for data quality validation.
@@ -61,7 +61,7 @@ class DataDesigner(Client2):
         self.user_pwd = user_pwd
         self.data_designer_root: str = (
             f"{self.platform_url}/servers/{self.view_server}/api/open-metadata/data-designer")
-        Client2.__init__(self, view_server_name, platform_url, user_id=user_id, user_pwd=user_pwd, token=token, )
+        ServerClient.__init__(self, view_server_name, platform_url, user_id=user_id, user_pwd=user_pwd, token=token, )
 
     #
     #    Data Structures
@@ -83,11 +83,11 @@ class DataDesigner(Client2):
 
         Raises
         ------
-        InvalidParameterException
+        PyegeriaInvalidParameterException
             one of the parameters is null or invalid or
-        PropertyServerException
+        PyegeriaAPIException
             There is a problem adding the element properties to the metadata repository or
-        UserNotAuthorizedException
+        PyegeriaUnauthorizedException
             the requesting user is not authorized to issue this request.
 
         Notes
@@ -154,11 +154,11 @@ class DataDesigner(Client2):
 
         Raises
         ------
-        InvalidParameterException
+        PyegeriaInvalidParameterException
             one of the parameters is null or invalid or
-        PropertyServerException
+        PyegeriaAPIException
             There is a problem adding the element properties to the metadata repository or
-        UserNotAuthorizedException
+        PyegeriaUnauthorizedException
             the requesting user is not authorized to issue this request.
 
         Notes
@@ -299,11 +299,11 @@ class DataDesigner(Client2):
 
         Raises
         ------
-        InvalidParameterException
+        PyegeriaInvalidParameterException
             one of the parameters is null or invalid or
-        PropertyServerException
+        PyegeriaAPIException
             There is a problem adding the element properties to the metadata repository or
-        UserNotAuthorizedException
+        PyegeriaUnauthorizedException
             the requesting user is not authorized to issue this request.
 
         Note
@@ -487,11 +487,11 @@ class DataDesigner(Client2):
 
         Raises
         ------
-        InvalidParameterException
+        PyegeriaInvalidParameterException
             one of the parameters is null or invalid or
-        PropertyServerException
+        PyegeriaAPIException
             There is a problem adding the element properties to the metadata repository or
-        UserNotAuthorizedException
+        PyegeriaUnauthorizedException
             the requesting user is not authorized to issue this request.
 
         Note
@@ -543,11 +543,11 @@ class DataDesigner(Client2):
 
          Raises
          ------
-         InvalidParameterException
+         PyegeriaInvalidParameterException
              one of the parameters is null or invalid or
-         PropertyServerException
+         PyegeriaAPIException
              There is a problem adding the element properties to the metadata repository or
-         UserNotAuthorizedException
+         PyegeriaUnauthorizedException
              the requesting user is not authorized to issue this request.
 
          Note
@@ -600,11 +600,11 @@ class DataDesigner(Client2):
 
         Raises
         ------
-        InvalidParameterException
+        PyegeriaInvalidParameterException
             one of the parameters is null or invalid or
-        PropertyServerException
+        PyegeriaAPIException
             There is a problem adding the element properties to the metadata repository or
-        UserNotAuthorizedException
+        PyegeriaUnauthorizedException
             the requesting user is not authorized to issue this request.
 
         Note
@@ -652,11 +652,11 @@ class DataDesigner(Client2):
 
         Raises
         ------
-        InvalidParameterException
+        PyegeriaInvalidParameterException
             one of the parameters is null or invalid or
-        PropertyServerException
+        PyegeriaAPIException
             There is a problem adding the element properties to the metadata repository or
-        UserNotAuthorizedException
+        PyegeriaUnauthorizedException
             the requesting user is not authorized to issue this request.
 
         Note
@@ -702,11 +702,11 @@ class DataDesigner(Client2):
 
         Raises
         ------
-        InvalidParameterException
+        PyegeriaInvalidParameterException
             one of the parameters is null or invalid or
-        PropertyServerException
+        PyegeriaAPIException
             There is a problem adding the element properties to the metadata repository or
-        UserNotAuthorizedException
+        PyegeriaUnauthorizedException
             the requesting user is not authorized to issue this request.
 
         Note
@@ -752,11 +752,11 @@ class DataDesigner(Client2):
 
         Raises
         ------
-        InvalidParameterException
+        PyegeriaInvalidParameterException
             one of the parameters is null or invalid or
-        PropertyServerException
+        PyegeriaAPIException
             There is a problem adding the element properties to the metadata repository or
-        UserNotAuthorizedException
+        PyegeriaUnauthorizedException
             the requesting user is not authorized to issue this request.
 
         Note
@@ -798,11 +798,11 @@ class DataDesigner(Client2):
 
         Raises
         ------
-        InvalidParameterException
+        PyegeriaInvalidParameterException
             one of the parameters is null or invalid or
-        PropertyServerException
+        PyegeriaAPIException
             There is a problem adding the element properties to the metadata repository or
-        UserNotAuthorizedException
+        PyegeriaUnauthorizedException
             the requesting user is not authorized to issue this request.
 
         """
@@ -844,11 +844,11 @@ class DataDesigner(Client2):
 
         Raises
         ------
-        InvalidParameterException
+        PyegeriaInvalidParameterException
             one of the parameters is null or invalid or
-        PropertyServerException
+        PyegeriaAPIException
             There is a problem adding the element properties to the metadata repository or
-        UserNotAuthorizedException
+        PyegeriaUnauthorizedException
             the requesting user is not authorized to issue this request.
 
         Notes:
@@ -912,11 +912,11 @@ class DataDesigner(Client2):
 
         Raises
         ------
-        InvalidParameterException
+        PyegeriaInvalidParameterException
             one of the parameters is null or invalid or
-        PropertyServerException
+        PyegeriaAPIException
             There is a problem adding the element properties to the metadata repository or
-        UserNotAuthorizedException
+        PyegeriaUnauthorizedException
             the requesting user is not authorized to issue this request.
 
         Notes:
@@ -977,11 +977,11 @@ class DataDesigner(Client2):
 
         Raises
         ------
-        InvalidParameterException
+        PyegeriaInvalidParameterException
             one of the parameters is null or invalid or
-        PropertyServerException
+        PyegeriaAPIException
             There is a problem adding the element properties to the metadata repository or
-        UserNotAuthorizedException
+        PyegeriaUnauthorizedException
             the requesting user is not authorized to issue this request.
 
         Notes
@@ -1039,11 +1039,11 @@ class DataDesigner(Client2):
 
         Raises
         ------
-        InvalidParameterException
+        PyegeriaInvalidParameterException
             one of the parameters is null or invalid or
-        PropertyServerException
+        PyegeriaAPIException
             There is a problem adding the element properties to the metadata repository or
-        UserNotAuthorizedException
+        PyegeriaUnauthorizedException
             the requesting user is not authorized to issue this request.
 
 
@@ -1083,11 +1083,11 @@ class DataDesigner(Client2):
 
         Raises
         ------
-        InvalidParameterException
+        PyegeriaInvalidParameterException
             one of the parameters is null or invalid or
-        PropertyServerException
+        PyegeriaAPIException
             There is a problem adding the element properties to the metadata repository or
-        UserNotAuthorizedException
+        PyegeriaUnauthorizedException
             the requesting user is not authorized to issue this request.
 
         Notes
@@ -1140,11 +1140,11 @@ class DataDesigner(Client2):
 
         Raises
         ------
-        InvalidParameterException
+        PyegeriaInvalidParameterException
             one of the parameters is null or invalid or
-        PropertyServerException
+        PyegeriaAPIException
             There is a problem adding the element properties to the metadata repository or
-        UserNotAuthorizedException
+        PyegeriaUnauthorizedException
             the requesting user is not authorized to issue this request.
 
         Notes
@@ -1416,11 +1416,11 @@ class DataDesigner(Client2):
 
         Raises
         ------
-        InvalidParameterException
+        PyegeriaInvalidParameterException
             one of the parameters is null or invalid or
-        PropertyServerException
+        PyegeriaAPIException
             There is a problem adding the element properties to the metadata repository or
-        UserNotAuthorizedException
+        PyegeriaUnauthorizedException
             the requesting user is not authorized to issue this request.
 
         Note
@@ -1528,11 +1528,11 @@ class DataDesigner(Client2):
 
         Raises
         ------
-        InvalidParameterException
+        PyegeriaInvalidParameterException
             one of the parameters is null or invalid or
-        PropertyServerException
+        PyegeriaAPIException
             There is a problem adding the element properties to the metadata repository or
-        UserNotAuthorizedException
+        PyegeriaUnauthorizedException
             the requesting user is not authorized to issue this request.
 
         Note
@@ -1643,11 +1643,11 @@ class DataDesigner(Client2):
 
         Raises
         ------
-        InvalidParameterException
+        PyegeriaInvalidParameterException
             one of the parameters is null or invalid or
-        PropertyServerException
+        PyegeriaAPIException
             There is a problem adding the element properties to the metadata repository or
-        UserNotAuthorizedException
+        PyegeriaUnauthorizedException
             the requesting user is not authorized to issue this request.
 
         Note
@@ -1716,11 +1716,11 @@ class DataDesigner(Client2):
 
         Raises
         ------
-        InvalidParameterException
+        PyegeriaInvalidParameterException
             one of the parameters is null or invalid or
-        PropertyServerException
+        PyegeriaAPIException
             There is a problem adding the element properties to the metadata repository or
-        UserNotAuthorizedException
+        PyegeriaUnauthorizedException
             the requesting user is not authorized to issue this request.
 
         Note
@@ -1788,11 +1788,11 @@ class DataDesigner(Client2):
 
         Raises
         ------
-        InvalidParameterException
+        PyegeriaInvalidParameterException
             one of the parameters is null or invalid or
-        PropertyServerException
+        PyegeriaAPIException
             There is a problem adding the element properties to the metadata repository or
-        UserNotAuthorizedException
+        PyegeriaUnauthorizedException
             the requesting user is not authorized to issue this request.
 
         Note
@@ -1861,11 +1861,11 @@ class DataDesigner(Client2):
 
         Raises
         ------
-        InvalidParameterException
+        PyegeriaInvalidParameterException
             one of the parameters is null or invalid or
-        PropertyServerException
+        PyegeriaAPIException
             There is a problem adding the element properties to the metadata repository or
-        UserNotAuthorizedException
+        PyegeriaUnauthorizedException
             the requesting user is not authorized to issue this request.
 
         Note
@@ -1932,11 +1932,11 @@ class DataDesigner(Client2):
 
         Raises
         ------
-        InvalidParameterException
+        PyegeriaInvalidParameterException
             one of the parameters is null or invalid or
-        PropertyServerException
+        PyegeriaAPIException
             There is a problem adding the element properties to the metadata repository or
-        UserNotAuthorizedException
+        PyegeriaUnauthorizedException
             the requesting user is not authorized to issue this request.
 
         Note
@@ -1990,11 +1990,11 @@ class DataDesigner(Client2):
 
         Raises
         ------
-        InvalidParameterException
+        PyegeriaInvalidParameterException
             one of the parameters is null or invalid or
-        PropertyServerException
+        PyegeriaAPIException
             There is a problem adding the element properties to the metadata repository or
-        UserNotAuthorizedException
+        PyegeriaUnauthorizedException
             the requesting user is not authorized to issue this request.
 
         Note
@@ -2046,11 +2046,11 @@ class DataDesigner(Client2):
 
         Raises
         ------
-        InvalidParameterException
+        PyegeriaInvalidParameterException
             one of the parameters is null or invalid or
-        PropertyServerException
+        PyegeriaAPIException
             There is a problem adding the element properties to the metadata repository or
-        UserNotAuthorizedException
+        PyegeriaUnauthorizedException
             the requesting user is not authorized to issue this request.
 
         Note
@@ -2097,11 +2097,11 @@ class DataDesigner(Client2):
 
         Raises
         ------
-        InvalidParameterException
+        PyegeriaInvalidParameterException
             one of the parameters is null or invalid or
-        PropertyServerException
+        PyegeriaAPIException
             There is a problem adding the element properties to the metadata repository or
-        UserNotAuthorizedException
+        PyegeriaUnauthorizedException
             the requesting user is not authorized to issue this request.
 
         Note
@@ -2146,11 +2146,11 @@ class DataDesigner(Client2):
 
         Raises
         ------
-        InvalidParameterException
+        PyegeriaInvalidParameterException
             one of the parameters is null or invalid or
-        PropertyServerException
+        PyegeriaAPIException
             There is a problem adding the element properties to the metadata repository or
-        UserNotAuthorizedException
+        PyegeriaUnauthorizedException
             the requesting user is not authorized to issue this request.
 
         Note
@@ -2197,11 +2197,11 @@ class DataDesigner(Client2):
 
         Raises
         ------
-        InvalidParameterException
+        PyegeriaInvalidParameterException
             one of the parameters is null or invalid or
-        PropertyServerException
+        PyegeriaAPIException
             There is a problem adding the element properties to the metadata repository or
-        UserNotAuthorizedException
+        PyegeriaUnauthorizedException
             the requesting user is not authorized to issue this request.
 
         Note
@@ -2246,11 +2246,11 @@ class DataDesigner(Client2):
 
         Raises
         ------
-        InvalidParameterException
+        PyegeriaInvalidParameterException
             one of the parameters is null or invalid or
-        PropertyServerException
+        PyegeriaAPIException
             There is a problem adding the element properties to the metadata repository or
-        UserNotAuthorizedException
+        PyegeriaUnauthorizedException
             the requesting user is not authorized to issue this request.
 
         """
@@ -2280,11 +2280,11 @@ class DataDesigner(Client2):
 
         Raises
         ------
-        InvalidParameterException
+        PyegeriaInvalidParameterException
             one of the parameters is null or invalid or
-        PropertyServerException
+        PyegeriaAPIException
             There is a problem adding the element properties to the metadata repository or
-        UserNotAuthorizedException
+        PyegeriaUnauthorizedException
             the requesting user is not authorized to issue this request.
 
         """
@@ -2328,11 +2328,11 @@ class DataDesigner(Client2):
 
         Raises
         ------
-        InvalidParameterException
+        PyegeriaInvalidParameterException
             one of the parameters is null or invalid or
-        PropertyServerException
+        PyegeriaAPIException
             There is a problem adding the element properties to the metadata repository or
-        UserNotAuthorizedException
+        PyegeriaUnauthorizedException
             the requesting user is not authorized to issue this request.
 
         """
@@ -2378,11 +2378,11 @@ class DataDesigner(Client2):
 
         Raises
         ------
-        InvalidParameterException
+        PyegeriaInvalidParameterException
             one of the parameters is null or invalid or
-        PropertyServerException
+        PyegeriaAPIException
             There is a problem adding the element properties to the metadata repository or
-        UserNotAuthorizedException
+        PyegeriaUnauthorizedException
             the requesting user is not authorized to issue this request.
 
 
@@ -2425,11 +2425,11 @@ class DataDesigner(Client2):
 
         Raises
         ------
-        InvalidParameterException
+        PyegeriaInvalidParameterException
             one of the parameters is null or invalid or
-        PropertyServerException
+        PyegeriaAPIException
             There is a problem adding the element properties to the metadata repository or
-        UserNotAuthorizedException
+        PyegeriaUnauthorizedException
             the requesting user is not authorized to issue this request.
         Notes
         -----
@@ -2488,11 +2488,11 @@ class DataDesigner(Client2):
 
         Raises
         ------
-        InvalidParameterException
+        PyegeriaInvalidParameterException
             one of the parameters is null or invalid or
-        PropertyServerException
+        PyegeriaAPIException
             There is a problem adding the element properties to the metadata repository or
-        UserNotAuthorizedException
+        PyegeriaUnauthorizedException
             the requesting user is not authorized to issue this request.
 
         Notes
@@ -2544,11 +2544,11 @@ class DataDesigner(Client2):
 
         Raises
         ------
-        InvalidParameterException
+        PyegeriaInvalidParameterException
             one of the parameters is null or invalid or
-        PropertyServerException
+        PyegeriaAPIException
             There is a problem adding the element properties to the metadata repository or
-        UserNotAuthorizedException
+        PyegeriaUnauthorizedException
             the requesting user is not authorized to issue this request.
 
 
@@ -2598,11 +2598,11 @@ class DataDesigner(Client2):
 
         Raises
         ------
-        InvalidParameterException
+        PyegeriaInvalidParameterException
             one of the parameters is null or invalid or
-        PropertyServerException
+        PyegeriaAPIException
             There is a problem adding the element properties to the metadata repository or
-        UserNotAuthorizedException
+        PyegeriaUnauthorizedException
             the requesting user is not authorized to issue this request.
 
         Notes
@@ -2647,11 +2647,11 @@ class DataDesigner(Client2):
 
         Raises
         ------
-        InvalidParameterException
+        PyegeriaInvalidParameterException
             one of the parameters is null or invalid or
-        PropertyServerException
+        PyegeriaAPIException
             There is a problem adding the element properties to the metadata repository or
-        UserNotAuthorizedException
+        PyegeriaUnauthorizedException
             the requesting user is not authorized to issue this request.
 
         Note
@@ -2769,11 +2769,11 @@ class DataDesigner(Client2):
 
         Raises
         ------
-        InvalidParameterException
+        PyegeriaInvalidParameterException
             one of the parameters is null or invalid or
-        PropertyServerException
+        PyegeriaAPIException
             There is a problem adding the element properties to the metadata repository or
-        UserNotAuthorizedException
+        PyegeriaUnauthorizedException
             the requesting user is not authorized to issue this request.
 
         Note
@@ -2893,11 +2893,11 @@ class DataDesigner(Client2):
 
         Raises
         ------
-        InvalidParameterException
+        PyegeriaInvalidParameterException
             one of the parameters is null or invalid or
-        PropertyServerException
+        PyegeriaAPIException
             There is a problem adding the element properties to the metadata repository or
-        UserNotAuthorizedException
+        PyegeriaUnauthorizedException
             the requesting user is not authorized to issue this request.
 
         Note
@@ -2965,11 +2965,11 @@ class DataDesigner(Client2):
 
         Raises
         ------
-        InvalidParameterException
+        PyegeriaInvalidParameterException
             one of the parameters is null or invalid or
-        PropertyServerException
+        PyegeriaAPIException
             There is a problem adding the element properties to the metadata repository or
-        UserNotAuthorizedException
+        PyegeriaUnauthorizedException
             the requesting user is not authorized to issue this request.
 
         Note
@@ -3037,11 +3037,11 @@ class DataDesigner(Client2):
 
         Raises
         ------
-        InvalidParameterException
+        PyegeriaInvalidParameterException
             one of the parameters is null or invalid or
-        PropertyServerException
+        PyegeriaAPIException
             There is a problem adding the element properties to the metadata repository or
-        UserNotAuthorizedException
+        PyegeriaUnauthorizedException
             the requesting user is not authorized to issue this request.
 
         Note
@@ -3107,11 +3107,11 @@ class DataDesigner(Client2):
 
         Raises
         ------
-        InvalidParameterException
+        PyegeriaInvalidParameterException
             one of the parameters is null or invalid or
-        PropertyServerException
+        PyegeriaAPIException
             There is a problem adding the element properties to the metadata repository or
-        UserNotAuthorizedException
+        PyegeriaUnauthorizedException
             the requesting user is not authorized to issue this request.
 
         Note
@@ -3180,11 +3180,11 @@ class DataDesigner(Client2):
 
         Raises
         ------
-        InvalidParameterException
+        PyegeriaInvalidParameterException
             one of the parameters is null or invalid or
-        PropertyServerException
+        PyegeriaAPIException
             There is a problem adding the element properties to the metadata repository or
-        UserNotAuthorizedException
+        PyegeriaUnauthorizedException
             the requesting user is not authorized to issue this request.
 
         Note
@@ -3230,11 +3230,11 @@ class DataDesigner(Client2):
 
         Raises
         ------
-        InvalidParameterException
+        PyegeriaInvalidParameterException
             one of the parameters is null or invalid or
-        PropertyServerException
+        PyegeriaAPIException
             There is a problem adding the element properties to the metadata repository or
-        UserNotAuthorizedException
+        PyegeriaUnauthorizedException
             the requesting user is not authorized to issue this request.
 
         Note
@@ -3278,11 +3278,11 @@ class DataDesigner(Client2):
 
         Raises
         ------
-        InvalidParameterException
+        PyegeriaInvalidParameterException
             one of the parameters is null or invalid or
-        PropertyServerException
+        PyegeriaAPIException
             There is a problem adding the element properties to the metadata repository or
-        UserNotAuthorizedException
+        PyegeriaUnauthorizedException
             the requesting user is not authorized to issue this request.
 
         Note
@@ -3329,11 +3329,11 @@ class DataDesigner(Client2):
 
         Raises
         ------
-        InvalidParameterException
+        PyegeriaInvalidParameterException
             one of the parameters is null or invalid or
-        PropertyServerException
+        PyegeriaAPIException
             There is a problem adding the element properties to the metadata repository or
-        UserNotAuthorizedException
+        PyegeriaUnauthorizedException
             the requesting user is not authorized to issue this request.
 
         Note
@@ -3378,11 +3378,11 @@ class DataDesigner(Client2):
 
         Raises
         ------
-        InvalidParameterException
+        PyegeriaInvalidParameterException
             one of the parameters is null or invalid or
-        PropertyServerException
+        PyegeriaAPIException
             There is a problem adding the element properties to the metadata repository or
-        UserNotAuthorizedException
+        PyegeriaUnauthorizedException
             the requesting user is not authorized to issue this request.
 
         Note
@@ -3428,11 +3428,11 @@ class DataDesigner(Client2):
 
         Raises
         ------
-        InvalidParameterException
+        PyegeriaInvalidParameterException
             one of the parameters is null or invalid or
-        PropertyServerException
+        PyegeriaAPIException
             There is a problem adding the element properties to the metadata repository or
-        UserNotAuthorizedException
+        PyegeriaUnauthorizedException
             the requesting user is not authorized to issue this request.
 
         Note
@@ -3477,11 +3477,11 @@ class DataDesigner(Client2):
 
         Raises
         ------
-        InvalidParameterException
+        PyegeriaInvalidParameterException
             one of the parameters is null or invalid or
-        PropertyServerException
+        PyegeriaAPIException
             There is a problem adding the element properties to the metadata repository or
-        UserNotAuthorizedException
+        PyegeriaUnauthorizedException
             the requesting user is not authorized to issue this request.
 
         Note
@@ -3528,11 +3528,11 @@ class DataDesigner(Client2):
 
         Raises
         ------
-        InvalidParameterException
+        PyegeriaInvalidParameterException
             one of the parameters is null or invalid or
-        PropertyServerException
+        PyegeriaAPIException
             There is a problem adding the element properties to the metadata repository or
-        UserNotAuthorizedException
+        PyegeriaUnauthorizedException
             the requesting user is not authorized to issue this request.
 
         Note
@@ -3578,11 +3578,11 @@ class DataDesigner(Client2):
 
         Raises
         ------
-        InvalidParameterException
+        PyegeriaInvalidParameterException
             one of the parameters is null or invalid or
-        PropertyServerException
+        PyegeriaAPIException
             There is a problem adding the element properties to the metadata repository or
-        UserNotAuthorizedException
+        PyegeriaUnauthorizedException
             the requesting user is not authorized to issue this request.
 
         Note
@@ -3631,11 +3631,11 @@ class DataDesigner(Client2):
 
         Raises
         ------
-        InvalidParameterException
+        PyegeriaInvalidParameterException
             one of the parameters is null or invalid or
-        PropertyServerException
+        PyegeriaAPIException
             There is a problem adding the element properties to the metadata repository or
-        UserNotAuthorizedException
+        PyegeriaUnauthorizedException
             the requesting user is not authorized to issue this request.
 
         Note
@@ -3682,11 +3682,11 @@ class DataDesigner(Client2):
 
         Raises
         ------
-        InvalidParameterException
+        PyegeriaInvalidParameterException
             one of the parameters is null or invalid or
-        PropertyServerException
+        PyegeriaAPIException
             There is a problem adding the element properties to the metadata repository or
-        UserNotAuthorizedException
+        PyegeriaUnauthorizedException
             the requesting user is not authorized to issue this request.
 
         """
@@ -3719,11 +3719,11 @@ class DataDesigner(Client2):
 
         Raises
         ------
-        InvalidParameterException
+        PyegeriaInvalidParameterException
             one of the parameters is null or invalid or
-        PropertyServerException
+        PyegeriaAPIException
             There is a problem adding the element properties to the metadata repository or
-        UserNotAuthorizedException
+        PyegeriaUnauthorizedException
             the requesting user is not authorized to issue this request.
 
         """
@@ -3768,11 +3768,11 @@ class DataDesigner(Client2):
 
         Raises
         ------
-        InvalidParameterException
+        PyegeriaInvalidParameterException
             one of the parameters is null or invalid or
-        PropertyServerException
+        PyegeriaAPIException
             There is a problem adding the element properties to the metadata repository or
-        UserNotAuthorizedException
+        PyegeriaUnauthorizedException
             the requesting user is not authorized to issue this request.
 
         """
@@ -3818,11 +3818,11 @@ class DataDesigner(Client2):
 
         Raises
         ------
-        InvalidParameterException
+        PyegeriaInvalidParameterException
             one of the parameters is null or invalid or
-        PropertyServerException
+        PyegeriaAPIException
             There is a problem adding the element properties to the metadata repository or
-        UserNotAuthorizedException
+        PyegeriaUnauthorizedException
             the requesting user is not authorized to issue this request.
 
 
@@ -3865,11 +3865,11 @@ class DataDesigner(Client2):
 
         Raises
         ------
-        InvalidParameterException
+        PyegeriaInvalidParameterException
             one of the parameters is null or invalid or
-        PropertyServerException
+        PyegeriaAPIException
             There is a problem adding the element properties to the metadata repository or
-        UserNotAuthorizedException
+        PyegeriaUnauthorizedException
             the requesting user is not authorized to issue this request.
         Notes
         -----
@@ -3929,11 +3929,11 @@ class DataDesigner(Client2):
 
         Raises
         ------
-        InvalidParameterException
+        PyegeriaInvalidParameterException
             one of the parameters is null or invalid or
-        PropertyServerException
+        PyegeriaAPIException
             There is a problem adding the element properties to the metadata repository or
-        UserNotAuthorizedException
+        PyegeriaUnauthorizedException
             the requesting user is not authorized to issue this request.
 
         Notes
@@ -3985,11 +3985,11 @@ class DataDesigner(Client2):
 
         Raises
         ------
-        InvalidParameterException
+        PyegeriaInvalidParameterException
             one of the parameters is null or invalid or
-        PropertyServerException
+        PyegeriaAPIException
             There is a problem adding the element properties to the metadata repository or
-        UserNotAuthorizedException
+        PyegeriaUnauthorizedException
             the requesting user is not authorized to issue this request.
 
         Notes
@@ -4039,11 +4039,11 @@ class DataDesigner(Client2):
 
         Raises
         ------
-        InvalidParameterException
+        PyegeriaInvalidParameterException
             one of the parameters is null or invalid or
-        PropertyServerException
+        PyegeriaAPIException
             There is a problem adding the element properties to the metadata repository or
-        UserNotAuthorizedException
+        PyegeriaUnauthorizedException
             the requesting user is not authorized to issue this request.
 
         Notes
@@ -4092,11 +4092,11 @@ class DataDesigner(Client2):
 
         Raises
         ------
-        InvalidParameterException
+        PyegeriaInvalidParameterException
             one of the parameters is null or invalid or
-        PropertyServerException
+        PyegeriaAPIException
             There is a problem adding the element properties to the metadata repository or
-        UserNotAuthorizedException
+        PyegeriaUnauthorizedException
             the requesting user is not authorized to issue this request.
 
         Note
@@ -4143,11 +4143,11 @@ class DataDesigner(Client2):
 
         Raises
         ------
-        InvalidParameterException
+        PyegeriaInvalidParameterException
             one of the parameters is null or invalid or
-        PropertyServerException
+        PyegeriaAPIException
             There is a problem adding the element properties to the metadata repository or
-        UserNotAuthorizedException
+        PyegeriaUnauthorizedException
             the requesting user is not authorized to issue this request.
 
         Note
@@ -4191,11 +4191,11 @@ class DataDesigner(Client2):
 
         Raises
         ------
-        InvalidParameterException
+        PyegeriaInvalidParameterException
             one of the parameters is null or invalid or
-        PropertyServerException
+        PyegeriaAPIException
             There is a problem adding the element properties to the metadata repository or
-        UserNotAuthorizedException
+        PyegeriaUnauthorizedException
             the requesting user is not authorized to issue this request.
 
         Note
@@ -4242,11 +4242,11 @@ class DataDesigner(Client2):
 
         Raises
         ------
-        InvalidParameterException
+        PyegeriaInvalidParameterException
             one of the parameters is null or invalid or
-        PropertyServerException
+        PyegeriaAPIException
             There is a problem adding the element properties to the metadata repository or
-        UserNotAuthorizedException
+        PyegeriaUnauthorizedException
             the requesting user is not authorized to issue this request.
 
         Note
@@ -4293,11 +4293,11 @@ class DataDesigner(Client2):
 
         Raises
         ------
-        InvalidParameterException
+        PyegeriaInvalidParameterException
             one of the parameters is null or invalid or
-        PropertyServerException
+        PyegeriaAPIException
             There is a problem adding the element properties to the metadata repository or
-        UserNotAuthorizedException
+        PyegeriaUnauthorizedException
             the requesting user is not authorized to issue this request.
 
         Note
@@ -4345,11 +4345,11 @@ class DataDesigner(Client2):
 
         Raises
         ------
-        InvalidParameterException
+        PyegeriaInvalidParameterException
             one of the parameters is null or invalid or
-        PropertyServerException
+        PyegeriaAPIException
             There is a problem adding the element properties to the metadata repository or
-        UserNotAuthorizedException
+        PyegeriaUnauthorizedException
             the requesting user is not authorized to issue this request.
 
         Note
@@ -4393,11 +4393,11 @@ class DataDesigner(Client2):
 
         Raises
         ------
-        InvalidParameterException
+        PyegeriaInvalidParameterException
             one of the parameters is null or invalid or
-        PropertyServerException
+        PyegeriaAPIException
             There is a problem adding the element properties to the metadata repository or
-        UserNotAuthorizedException
+        PyegeriaUnauthorizedException
             the requesting user is not authorized to issue this request.
 
         Note
@@ -4443,11 +4443,11 @@ class DataDesigner(Client2):
 
         Raises
         ------
-        InvalidParameterException
+        PyegeriaInvalidParameterException
             one of the parameters is null or invalid or
-        PropertyServerException
+        PyegeriaAPIException
             There is a problem adding the element properties to the metadata repository or
-        UserNotAuthorizedException
+        PyegeriaUnauthorizedException
             the requesting user is not authorized to issue this request.
 
         Note
@@ -4498,11 +4498,11 @@ class DataDesigner(Client2):
 
         Raises
         ------
-        InvalidParameterException
+        PyegeriaInvalidParameterException
             one of the parameters is null or invalid or
-        PropertyServerException
+        PyegeriaAPIException
             There is a problem adding the element properties to the metadata repository or
-        UserNotAuthorizedException
+        PyegeriaUnauthorizedException
             the requesting user is not authorized to issue this request.
 
         Note
@@ -4551,11 +4551,11 @@ class DataDesigner(Client2):
 
         Raises
         ------
-        InvalidParameterException
+        PyegeriaInvalidParameterException
             one of the parameters is null or invalid or
-        PropertyServerException
+        PyegeriaAPIException
             There is a problem adding the element properties to the metadata repository or
-        UserNotAuthorizedException
+        PyegeriaUnauthorizedException
             the requesting user is not authorized to issue this request.
 
         Note
@@ -4598,11 +4598,11 @@ class DataDesigner(Client2):
 
         Raises
         ------
-        InvalidParameterException
+        PyegeriaInvalidParameterException
             one of the parameters is null or invalid or
-        PropertyServerException
+        PyegeriaAPIException
             There is a problem adding the element properties to the metadata repository or
-        UserNotAuthorizedException
+        PyegeriaUnauthorizedException
             the requesting user is not authorized to issue this request.
 
         Note
@@ -4648,11 +4648,11 @@ class DataDesigner(Client2):
 
         Raises
         ------
-        InvalidParameterException
+        PyegeriaInvalidParameterException
             one of the parameters is null or invalid or
-        PropertyServerException
+        PyegeriaAPIException
             There is a problem adding the element properties to the metadata repository or
-        UserNotAuthorizedException
+        PyegeriaUnauthorizedException
             the requesting user is not authorized to issue this request.
 
         Note

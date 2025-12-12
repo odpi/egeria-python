@@ -12,19 +12,20 @@ import json
 
 import httpx
 
-from pyegeria._client_new import Client2
+from pyegeria._base_platform_client import BasePlatformClient
 from pyegeria._globals import enable_ssl_check
-from pyegeria._exceptions import (
-    InvalidParameterException,
-    OMAGCommonErrorCode,
-    PropertyServerException,
-    UserNotAuthorizedException,
-    print_exception_response,
+from pyegeria._exceptions_new import (
+    PyegeriaInvalidParameterException,
+    PyegeriaAPIException,
+    PyegeriaConnectionException,
+    PyegeriaUnauthorizedException,
+    PyegeriaException,
+    print_basic_exception,
 )
 from pyegeria._validators import validate_user_id
 from pyegeria._globals import NO_ELEMENTS_FOUND
 
-class Platform(Client2):
+class Platform(BasePlatformClient):
     """
     Client to operate Egeria Platforms - inherits from Server Ops
 
@@ -50,18 +51,17 @@ class Platform(Client2):
             user_id
         )  # add this check since we aren't using bearer tokens in this class
 
-        Client2.__init__(self, server_name, platform_url, user_id, user_pwd)
+        BasePlatformClient.__init__(self, server_name, platform_url, user_id, user_pwd)
         self.admin_command_root = (
             self.platform_url
-            + "/open-metadata/platform-services/users/"
-            + user_id
-            + "/server-platform"
+            + "/open-metadata/platform-services/"
+            + "server-platform"
         )
 
     def get_platform_origin(self) -> str:
         """Get the version and origin of the platform software
 
-         /open-metadata/platform-services/users/{userId}/server-platform/origin
+         /open-metadata/platform-services/server-platform/origin
          Response from this call is a string not JSON..
 
          Parameters
@@ -73,13 +73,12 @@ class Platform(Client2):
 
         Raises
         ------
-
-        InvalidParameterException
-          If the client passes incorrect parameters on the request - such as bad URLs or invalid values
-        PropertyServerException
-          Raised by the server when an issue arises in processing a valid request
-        NotAuthorizedException
-          The principle specified by the user_id does not have authorization for the requested action
+        PyegeriaInvalidParameterException
+          If the client passes incorrect parameters on the request — such as bad URLs or invalid values.
+        PyegeriaAPIException
+          Raised by the server when an issue arises in processing a valid request.
+        PyegeriaUnauthorizedException
+          The principal specified by the `user_id` does not have authorization for the requested action.
         """
 
         global response
@@ -94,54 +93,11 @@ class Platform(Client2):
         try:
             response = local_session.get(url)
             if response.status_code != 200:
-                msg = (
-                    OMAGCommonErrorCode.CLIENT_SIDE_REST_API_ERROR.value[
-                        "message_template"
-                    ].format(
-                        response.status_code,
-                        caller_method,
-                        class_name,
-                        url,
-                        OMAGCommonErrorCode.CLIENT_SIDE_REST_API_ERROR.value[
-                            "message_id"
-                        ],
-                    )
-                    + "==>System reports:'"
-                    + response.reason_phrase
-                    + "'"
-                )
-                exc_msg = json.dumps(
-                    {
-                        "class": "VoidResponse",
-                        "relatedHTTPCode": response.status_code,
-                        "exceptionClassName": "InvalidParameterException",
-                        "actionDescription": caller_method,
-                        "exceptionErrorMessage": msg,
-                        "exceptionErrorMessageId": OMAGCommonErrorCode.CLIENT_SIDE_REST_API_ERROR.value[
-                            "message_id"
-                        ],
-                        "exceptionErrorMessageParameters": [
-                            url,
-                            self.server_name,
-                            self.user_id,
-                        ],
-                        "exceptionSystemAction": OMAGCommonErrorCode.CLIENT_SIDE_REST_API_ERROR.value[
-                            "system_action"
-                        ],
-                        "exceptionUserAction": OMAGCommonErrorCode.CLIENT_SIDE_REST_API_ERROR.value[
-                            "user_action"
-                        ],
-                        "exceptionProperties": {
-                            "endpoint": url,
-                            "server": self.server_name,
-                            "user_id": self.user_id,
-                        },
-                    }
-                )
-                raise InvalidParameterException(exc_msg)
+                # Server returned non-200; raise API exception with response context
+                raise PyegeriaAPIException(response)
             else:
                 return response.text
-        except InvalidParameterException:
+        except PyegeriaException:
             raise
 
         except (
@@ -151,48 +107,13 @@ class Platform(Client2):
             httpx.TimeoutException,
         ) as e:
             msg = (
-                OMAGCommonErrorCode.CLIENT_SIDE_REST_API_ERROR.value[
-                    "message_template"
-                ].format(
-                    e.args[0],
-                    caller_method,
-                    class_name,
-                    url,
-                    OMAGCommonErrorCode.CLIENT_SIDE_REST_API_ERROR.value["message_id"],
-                )
-                + "==>System reports:'"
-                + response.reason_phrase
-                + "'"
+                f"Client error in {caller_method} for {class_name} calling {url}: {str(e)}"
             )
-            exc_msg = json.dumps(
-                {
-                    "class": "VoidResponse",
-                    "relatedHTTPCode": 400,
-                    "exceptionClassName": "InvalidParameterException",
-                    "actionDescription": caller_method,
-                    "exceptionErrorMessage": msg,
-                    "exceptionErrorMessageId": OMAGCommonErrorCode.CLIENT_SIDE_REST_API_ERROR.value[
-                        "message_id"
-                    ],
-                    "exceptionErrorMessageParameters": [
-                        url,
-                        self.server_name,
-                        self.user_id,
-                    ],
-                    "exceptionSystemAction": OMAGCommonErrorCode.CLIENT_SIDE_REST_API_ERROR.value[
-                        "system_action"
-                    ],
-                    "exceptionUserAction": OMAGCommonErrorCode.CLIENT_SIDE_REST_API_ERROR.value[
-                        "user_action"
-                    ],
-                    "exceptionProperties": {
-                        "endpoint": url,
-                        "server": self.server_name,
-                        "user_id": self.user_id,
-                    },
-                }
+            raise PyegeriaConnectionException(
+                context={"caller_method": caller_method, "class": class_name, "url": url},
+                additional_info={"message": msg},
+                e=e,
             )
-            raise InvalidParameterException(exc_msg)
 
     async def _async_activate_server_stored_config(
         self, server: str = None, timeout: int = 60
@@ -209,9 +130,9 @@ class Platform(Client2):
 
         Raises
         ------
-        InvalidParameterException
+        PyegeriaInvalidParameterException
           If the client passes incorrect parameters on the request - such as bad URLs or invalid values
-        PropertyServerException
+        PyegeriaAPIException
           Raised by the server when an issue arises in processing a valid request
         NotAuthorizedException
           The principle specified by the user_id does not have authorization for the requested action
@@ -239,9 +160,9 @@ class Platform(Client2):
 
         Raises
         ------
-        InvalidParameterException
+        PyegeriaInvalidParameterException
           If the client passes incorrect parameters on the request - such as bad URLs or invalid values
-        PropertyServerException
+        PyegeriaAPIException
           Raised by the server when an issue arises in processing a valid request
         NotAuthorizedException
           The principle specified by the user_id does not have authorization for the requested action
@@ -272,9 +193,9 @@ class Platform(Client2):
 
         Raises
         ------
-        InvalidParameterException
+        PyegeriaInvalidParameterException
           If the client passes incorrect parameters on the request - such as bad URLs or invalid values
-        PropertyServerException
+        PyegeriaAPIException
           Raised by the server when an issue arises in processing a valid request
         NotAuthorizedException
           The principle specified by the user_id does not have authorization for the requested action
@@ -305,9 +226,9 @@ class Platform(Client2):
 
         Raises
         ------
-        InvalidParameterException
+        PyegeriaInvalidParameterException
           If the client passes incorrect parameters on the request - such as bad URLs or invalid values
-        PropertyServerException
+        PyegeriaAPIException
           Raised by the server when an issue arises in processing a valid request
         NotAuthorizedException
           The principle specified by the user_id does not have authorization for the requested action
@@ -333,9 +254,9 @@ class Platform(Client2):
 
         Raises
         ------
-        InvalidParameterException
+        PyegeriaInvalidParameterException
           If the client passes incorrect parameters on the request - such as bad URLs or invalid values
-        PropertyServerException
+        PyegeriaAPIException
           Raised by the server when an issue arises in processing a valid request
         NotAuthorizedException
           The principle specified by the user_id does not have authorization for the requested action
@@ -361,9 +282,9 @@ class Platform(Client2):
 
         Raises
         ------
-        InvalidParameterException
+        PyegeriaInvalidParameterException
           If the client passes incorrect parameters on the request - such as bad URLs or invalid values
-        PropertyServerException
+        PyegeriaAPIException
           Raised by the server when an issue arises in processing a valid request
         NotAuthorizedException
           The principle specified by the user_id does not have authorization for the requested action
@@ -386,9 +307,9 @@ class Platform(Client2):
 
         Raises
         ------
-        InvalidParameterException
+        PyegeriaInvalidParameterException
           If the client passes incorrect parameters on the request - such as bad URLs or invalid values
-        PropertyServerException
+        PyegeriaAPIException
           Raised by the server when an issue arises in processing a valid request
         NotAuthorizedException
           The principle specified by the user_id does not have authorization for the requested action
@@ -409,9 +330,9 @@ class Platform(Client2):
 
         Raises
         ------
-        InvalidParameterException
+        PyegeriaInvalidParameterException
           If the client passes incorrect parameters on the request - such as bad URLs or invalid values
-        PropertyServerException
+        PyegeriaAPIException
           Raised by the server when an issue arises in processing a valid request
         NotAuthorizedException
           The principle specified by the user_id does not have authorization for the requested action
@@ -433,9 +354,9 @@ class Platform(Client2):
 
         Raises
         ------
-        InvalidParameterException
+        PyegeriaInvalidParameterException
           If the client passes incorrect parameters on the request - such as bad URLs or invalid values
-        PropertyServerException
+        PyegeriaAPIException
           Raised by the server when an issue arises in processing a valid request
         NotAuthorizedException
           The principle specified by the user_id does not have authorization for the requested action
@@ -460,9 +381,9 @@ class Platform(Client2):
 
         Raises
         ------
-        InvalidParameterException
+        PyegeriaInvalidParameterException
           If the client passes incorrect parameters on the request - such as bad URLs or invalid values
-        PropertyServerException
+        PyegeriaAPIException
           Raised by the server when an issue arises in processing a valid request
         NotAuthorizedException
           The principle specified by the user_id does not have authorization for the requested action
@@ -486,7 +407,7 @@ class Platform(Client2):
         """
         if server is None:
             server = self.server_name
-        url = f"{self.platform_url}/open-metadata/admin-services/users/{self.user_id}/servers/{server}/configuration"
+        url = f"{self.platform_url}/open-metadata/admin-services/servers/{server}/configuration"
 
         response = await self._async_make_request("GET", url)
         config = response.json().get("omagserverConfig", "No configuration found")
@@ -601,9 +522,9 @@ class Platform(Client2):
 
         Raises
         ------
-        InvalidParameterException
+        PyegeriaInvalidParameterException
           If the client passes incorrect parameters on the request - such as bad URLs or invalid values
-        PropertyServerException
+        PyegeriaAPIException
           Raised by the server when an issue arises in processing a valid request
         NotAuthorizedException
           The principle specified by the user_id does not have authorization for the requested action
@@ -627,9 +548,9 @@ class Platform(Client2):
 
         Raises
         ------
-        InvalidParameterException
+        PyegeriaInvalidParameterException
           If the client passes incorrect parameters on the request - such as bad URLs or invalid values
-        PropertyServerException
+        PyegeriaAPIException
           Raised by the server when an issue arises in processing a valid request
         NotAuthorizedException
           The principle specified by the user_id does not have authorization for the requested action
@@ -652,9 +573,9 @@ class Platform(Client2):
 
         Raises
         ------
-        InvalidParameterException
+        PyegeriaInvalidParameterException
           If the client passes incorrect parameters on the request - such as bad URLs or invalid values
-        PropertyServerException
+        PyegeriaAPIException
           Raised by the server when an issue arises in processing a valid request
         NotAuthorizedException
           The principle specified by the user_id does not have authorization for the requested action
@@ -678,9 +599,9 @@ class Platform(Client2):
 
         Raises
         ------
-        InvalidParameterException
+        PyegeriaInvalidParameterException
           If the client passes incorrect parameters on the request - such as bad URLs or invalid values
-        PropertyServerException
+        PyegeriaAPIException
           Raised by the server when an issue arises in processing a valid request
         NotAuthorizedException
           The principle specified by the user_id does not have authorization for the requested action
@@ -701,9 +622,9 @@ class Platform(Client2):
 
         Raises
         ------
-        InvalidParameterException
+        PyegeriaInvalidParameterException
           If the client passes incorrect parameters on the request - such as bad URLs or invalid values
-        PropertyServerException
+        PyegeriaAPIException
           Raised by the server when an issue arises in processing a valid request
         NotAuthorizedException
           The principle specified by the user_id does not have authorization for the requested action
@@ -727,9 +648,9 @@ class Platform(Client2):
 
         Raises
         ------
-        InvalidParameterException
+        PyegeriaInvalidParameterException
           If the client passes incorrect parameters on the request - such as bad URLs or invalid values
-        PropertyServerException
+        PyegeriaAPIException
           Raised by the server when an issue arises in processing a valid request
         NotAuthorizedException
           The principle specified by the user_id does not have authorization for the requested action
@@ -741,7 +662,7 @@ class Platform(Client2):
         """
         Shutdown and unregister all servers from their cohorts on the associated platform. Async version.
 
-        /open-metadata/platform-services/users/{userId}/server-platform/servers
+        /open-metadata/platform-services/server-platform/servers
 
         Parameters
         ----------
@@ -752,9 +673,9 @@ class Platform(Client2):
 
         Raises
         ------
-        InvalidParameterException
+        PyegeriaInvalidParameterException
           If the client passes incorrect parameters on the request - such as bad URLs or invalid values
-        PropertyServerException
+        PyegeriaAPIException
           Raised by the server when an issue arises in processing a valid request
         NotAuthorizedException
           The principle specified by the user_id does not have authorization for the requested action
@@ -768,7 +689,7 @@ class Platform(Client2):
         """
         Shutdown and unregister all servers from their cohorts on the associated platform.
 
-        /open-metadata/platform-services/users/{userId}/server-platform/servers
+        /open-metadata/platform-services/server-platform/servers
 
         Parameters
         ----------
@@ -779,9 +700,9 @@ class Platform(Client2):
 
         Raises
         ------
-        InvalidParameterException
+        PyegeriaInvalidParameterException
           If the client passes incorrect parameters on the request - such as bad URLs or invalid values
-        PropertyServerException
+        PyegeriaAPIException
           Raised by the server when an issue arises in processing a valid request
         NotAuthorizedException
           The principle specified by the user_id does not have authorization for the requested action
@@ -802,9 +723,9 @@ class Platform(Client2):
 
         Raises
         ------
-        InvalidParameterException
+        PyegeriaInvalidParameterException
           If the client passes incorrect parameters on the request - such as bad URLs or invalid values
-        PropertyServerException
+        PyegeriaAPIException
           Raised by the server when an issue arises in processing a valid request
         NotAuthorizedException
           The principle specified by the user_id does not have authorization for the requested action
@@ -826,9 +747,9 @@ class Platform(Client2):
 
         Raises
         ------
-        InvalidParameterException
+        PyegeriaInvalidParameterException
           If the client passes incorrect parameters on the request - such as bad URLs or invalid values
-        PropertyServerException
+        PyegeriaAPIException
           Raised by the server when an issue arises in processing a valid request
         NotAuthorizedException
           The principle specified by the user_id does not have authorization for the requested action
@@ -856,9 +777,9 @@ class Platform(Client2):
 
         Raises
         ------
-        InvalidParameterException
+        PyegeriaInvalidParameterException
           If the client passes incorrect parameters on the request - such as bad URLs or invalid values
-        PropertyServerException
+        PyegeriaAPIException
           Raised by the server when an issue arises in processing a valid request
         NotAuthorizedException
           The principle specified by the user_id does not have authorization for the requested action
@@ -889,14 +810,10 @@ class Platform(Client2):
                     print(f"      OMAG Server {server} needs to be configured")
                 return False
 
-        except (
-            InvalidParameterException,
-            PropertyServerException,
-            UserNotAuthorizedException,
-        ) as e:
+        except PyegeriaException as e:
             if verbose:
-                print_exception_response(e)
-            raise e
+                print_basic_exception(e)
+            raise
 
     def activate_server_if_down(
         self, server: str, verbose: bool = True, timeout: int = 60
@@ -918,9 +835,9 @@ class Platform(Client2):
 
         Raises
         ------
-        InvalidParameterException
+        PyegeriaInvalidParameterException
           If the client passes incorrect parameters on the request - such as bad URLs or invalid values
-        PropertyServerException
+        PyegeriaAPIException
           Raised by the server when an issue arises in processing a valid request
         NotAuthorizedException
           The principle specified by the user_id does not have authorization for the requested action
@@ -952,9 +869,9 @@ class Platform(Client2):
 
         Raises
         ------
-        InvalidParameterException
+        PyegeriaInvalidParameterException
           If the client passes incorrect parameters on the request - such as bad URLs or invalid values
-        PropertyServerException
+        PyegeriaAPIException
           Raised by the server when an issue arises in processing a valid request
         NotAuthorizedException
           The principle specified by the user_id does not have authorization for the requested action
@@ -1005,9 +922,9 @@ class Platform(Client2):
 
         Raises
         ------
-        InvalidParameterException
+        PyegeriaInvalidParameterException
           If the client passes incorrect parameters on the request - such as bad URLs or invalid values
-        PropertyServerException
+        PyegeriaAPIException
           Raised by the server when an issue arises in processing a valid request
         NotAuthorizedException
           The principle specified by the user_id does not have authorization for the requested action
@@ -1075,13 +992,9 @@ class Platform(Client2):
                 return
             else:
                 print(f"   {platform_name}, is down - start it before proceeding")
-        except (
-            InvalidParameterException,
-            PropertyServerException,
-            UserNotAuthorizedException,
-        ) as e:
+        except PyegeriaException as e:
             print(f"   {platform_name}, is down - start it before proceeding")
-            print_exception_response(e)
+            print_basic_exception(e)
 
     def activate_platform(
         self, platform_name: str, hosted_server_names: [str], timeout: int = 60

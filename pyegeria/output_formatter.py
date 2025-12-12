@@ -1,3 +1,21 @@
+"""
+SPDX-License-Identifier: Apache-2.0
+Copyright Contributors to the ODPi Egeria project.
+
+Utilities for rendering Egeria elements into various output formats
+such as DICT, LIST, Markdown (including Mermaid), and basic HTML.
+
+Exceptions
+----------
+Functions in this module may raise the following exceptions:
+- ValueError: Unsupported or inconsistent output format requests (e.g., LIST/TABLE
+  without the required columns); invalid option combinations.
+- KeyError: Missing expected keys from provided elements or report specifications.
+- TypeError: Incorrect input types (e.g., non-list where a list of dicts is required).
+- RuntimeError: Failures in Markdown/HTML conversion or Mermaid rendering helpers.
+"""
+
+import copy
 from datetime import datetime
 import re
 from typing import Any, Callable, Dict, List, Optional, Tuple, Union
@@ -19,8 +37,9 @@ Note on select_report_spec function:
 This function and related data structures have been moved back to _output_formats.py.
 Please import select_report_spec from pyegeria._output_formats instead of from this module.
 """
-
-console = Console(width=settings.Environment.console_width)
+# Todo - put this back after testing
+# console = Console(width=settings.Environment.console_width)
+console = Console(width=300)
 
 
 def _extract_referenceable_properties(element: dict[str, Any]) -> dict[str, Any]:
@@ -242,7 +261,11 @@ def populate_columns_from_properties(element: dict, columns_struct: dict) -> dic
     """
     Populate a columns_struct with values from the element's properties.
 
-    The element dict is expected to have a nested 'properties' dict whose keys are in camelCase.
+    The element can be either:
+      - a full element dict that contains a nested 'properties' dict (preferred), or
+      - a dict that itself represents the set of properties.
+
+    In both cases, the effective properties are expected to use camelCase keys.
     The columns_struct is expected to follow the format returned by select_report_spec, where
     columns are located at columns_struct['formats']['columns'] and each column is a dict containing
     at least a 'key' field expressed in snake_case. For each column whose snake_case key corresponds
@@ -250,7 +273,8 @@ def populate_columns_from_properties(element: dict, columns_struct: dict) -> dic
     entry to the column with the matching property's value.
 
     Args:
-        element: The element containing a 'properties' dict with camelCase keys.
+        element: Either a dict with a nested 'properties' dict using camelCase keys, or
+                 a dict that itself is the set of properties.
         columns_struct: The columns structure whose columns have snake_case 'key' fields.
 
     Returns:
@@ -259,8 +283,14 @@ def populate_columns_from_properties(element: dict, columns_struct: dict) -> dic
     if not isinstance(columns_struct, dict):
         return columns_struct
 
-    props = (element or {}).get('properties') or {}
-    # If properties is not a dict, do nothing
+    # Determine the effective properties:
+    # 1) Prefer element['properties'] if present and a dict
+    # 2) Otherwise, if element itself is a dict, treat it as the properties dict
+    # 3) Otherwise, nothing to do
+    props: dict | None = None
+    if isinstance(element, dict):
+        maybe_props = element.get('properties')
+        props = maybe_props if isinstance(maybe_props, dict) else element
     if not isinstance(props, dict):
         return columns_struct
 
@@ -501,7 +531,7 @@ def generate_entity_md(elements: List[Dict],
         else:
             display_name = props.get('display_name') or props.get('title') or props.get('keyword')
 
-        if display_name is None and (keyword:= element['properties'].get('keyword',None)) is not None:
+        if display_name is None and (keyword:= element.get('properties',{}).get('keyword',None)) is not None:
             display_name = keyword
         elif display_name is None:
             display_name = "NO DISPLAY NAME"
@@ -613,13 +643,15 @@ def generate_entity_md_table(elements: List[Dict],
     elements_md += header_row + "\n"
     elements_md += separator_row + "\n"
 
-    # Add rows
+
     for element in elements:
         guid = element.get('elementHeader', {}).get('guid', None)
 
         # Extractor returns columns_struct with values when possible
+        # Use a local copy of columns_struct to prevent data leakage between rows
+        local_columns_struct = copy.deepcopy(columns_struct)
         try:
-            returned_struct = extract_properties_func(element, columns_struct)
+            returned_struct = extract_properties_func(element, local_columns_struct)
         except TypeError:
             returned_struct = None
 
@@ -640,27 +672,42 @@ def generate_entity_md_table(elements: List[Dict],
                 value = column.get('value')
                 if (value in (None, "")) and key in additional_props:
                     value = additional_props[key]
+
+                if value in (None, ""):
+                    value = " --- "
+
                 if column.get('format'):
                     value = format_for_markdown_table(value, guid)
+                elif isinstance(value, str):
+                    value = value.replace("\n", " ").replace("|", "\\|")
+
                 row += f"{value} | "
         else:
             # Legacy fallback: read from props dict
             props = extract_properties_func(element)
             for column in columns:
                 key = column['key']
-                value = ""
+                value = " "
                 if key in props:
                     value = props[key]
                 elif key in additional_props:
                     value = additional_props[key]
+
+                if value in (None, "", " "):
+                    value = " --- "
+
                 if column.get('format'):
                     value = format_for_markdown_table(value, guid or props.get('GUID'))
+                elif isinstance(value, str):
+                    value = value.replace("\n", " ").replace("|", "\\|")
+
                 row += f"{value} | "
 
         elements_md += row + "\n"
         # if wk := columns_struct.get("annotations",{}).get("wikilinks", None):
         #     elements_md += ", ".join(wk)
     return elements_md
+
 
 def generate_entity_dict(elements: List[Dict], 
                         extract_properties_func: Callable, 
@@ -690,7 +737,7 @@ def generate_entity_dict(elements: List[Dict],
     # Add attributes based on column spec if available, otherwise, add all
     import copy
     for element in elements:
-        if element is None:
+        if not isinstance(element, dict):
             continue
 
         guid = element.get('elementHeader', {}).get('guid')
@@ -811,8 +858,9 @@ def resolve_output_formats(entity_type: str,
     Resolve a report format structure given an entity type, the desired output format
     (e.g., DICT, LIST, MD, REPORT, FORM), and either a label (str) or a dict of format sets.
 
-    Backward compatibility:
-    - Accepts legacy kwarg 'report_spec' and treats it as report_spec.
+    Notes:
+    - Preferred naming is report_spec (formerly output_format); compatibility for the
+      old 'output_format_spec' terminology has been removed.
 
     Selection order:
     - If report_spec is a str: select by label.
@@ -826,9 +874,8 @@ def resolve_output_formats(entity_type: str,
         if 'report_spec' in kwargs:
             report_spec = kwargs.get('report_spec')
         elif 'report_format' in kwargs:
+            # Still accept 'report_format' as a synonym for report_spec
             report_spec = kwargs.get('report_format')
-        elif 'output_format_spec' in kwargs:
-            report_spec = kwargs.get('output_format_spec')
 
     if isinstance(report_spec, str):
         return select_report_format(report_spec, output_format)

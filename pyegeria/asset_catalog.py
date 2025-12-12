@@ -15,20 +15,18 @@ import json
 from httpx import Response
 from loguru import logger
 
-from pyegeria import Client2
+from pyegeria import ServerClient
 from pyegeria.base_report_formats import select_report_format, get_report_spec_match
 from pyegeria.models import NewElementRequestBody, TemplateRequestBody, SearchStringRequestBody, ResultsRequestBody
 from pyegeria.output_formatter import populate_columns_from_properties, _extract_referenceable_properties, \
     get_required_relationships, generate_output
 from pyegeria.utils import body_slimmer
-from pyegeria._client import Client
 from pyegeria._globals import TEMPLATE_GUIDS, max_paging_size
-from pyegeria._exceptions import InvalidParameterException
 from pyegeria._globals import NO_ELEMENTS_FOUND, NO_ASSETS_FOUND
 from ._validators import validate_search_string
 
 
-class AssetCatalog(Client2):
+class AssetCatalog(ServerClient):
     """Set up and maintain automation services in Egeria.
 
     Attributes:
@@ -51,7 +49,6 @@ class AssetCatalog(Client2):
         self.platform_url = platform_url
         self.user_id = user_id
         self.user_pwd = user_pwd
-        Client.__init__(self, view_server, platform_url, user_id, user_pwd, token=token)
 
     #
     # Output helpers
@@ -229,11 +226,13 @@ class AssetCatalog(Client2):
             A list of dictionaries representing the engine actions found based on the search query.
             If no actions are found, returns the string "no actions".
 
-        Raises:
+        Raises
         ------
-        InvalidParameterException
-        PropertyServerException
-        UserNotAuthorizedException
+        PyegeriaException
+            One of the pyegeria exceptions will be raised if there are issues in communications, message format, or
+            Egeria errors.
+        PyegeriaNotAuthorizedException
+            The principle specified by the user_id does not have authorization for the requested action
 
         Notes
         -----
@@ -280,11 +279,13 @@ class AssetCatalog(Client2):
         dict or str
              A dictionary of the asset graph.
 
-         Raises:
+         Raises
          ------
-         InvalidParameterException
-         PropertyServerException
-         UserNotAuthorizedException
+         PyegeriaException
+             One of the pyegeria exceptions will be raised if there are issues in communications, message format, or
+             Egeria errors.
+         PyegeriaNotAuthorizedException
+             The principle specified by the user_id does not have authorization for the requested action
 
         """
 
@@ -330,11 +331,13 @@ class AssetCatalog(Client2):
          Args:
              body ():
 
-         Raises:
+         Raises
          ------
-         InvalidParameterException
-         PropertyServerException
-         UserNotAuthorizedException
+         PyegeriaException
+             One of the pyegeria exceptions will be raised if there are issues in communications, message format, or
+             Egeria errors.
+         PyegeriaNotAuthorizedException
+             The principle specified by the user_id does not have authorization for the requested action
 
         """
 
@@ -368,11 +371,13 @@ class AssetCatalog(Client2):
         str
              A mermaid string representing the asset graph.
 
-         Raises:
+         Raises
          ------
-         InvalidParameterException
-         PropertyServerException
-         UserNotAuthorizedException
+         PyegeriaException
+             One of the pyegeria exceptions will be raised if there are issues in communications, message format, or
+             Egeria errors.
+         PyegeriaNotAuthorizedException
+             The principle specified by the user_id does not have authorization for the requested action
 
         """
 
@@ -421,11 +426,14 @@ class AssetCatalog(Client2):
         str | dict
              A dictionary of the asset graph that includes a mermaid markdown string.
 
-         Raises:
+         Raises
          ------
-         InvalidParameterException
-         PropertyServerException
-         UserNotAuthorizedException
+         PyegeriaInvalidParameterException
+             One of the parameters is null or invalid (for example, bad URL or invalid values).
+         PyegeriaAPIException
+             The server reported an error while processing a valid request.
+         PyegeriaUnauthorizedException
+             The requesting user is not authorized to issue this request.
 
         """
 
@@ -499,11 +507,14 @@ class AssetCatalog(Client2):
         dict or str
              A dictionary of the asset graph.
 
-         Raises:
+         Raises
          ------
-         InvalidParameterException
-         PropertyServerException
-         UserNotAuthorizedException
+         PyegeriaInvalidParameterException
+             One of the parameters is null or invalid (for example, bad URL or invalid values).
+         PyegeriaAPIException
+             The server reported an error while processing a valid request.
+         PyegeriaUnauthorizedException
+             The requesting user is not authorized to issue this request.
 
         """
 
@@ -556,9 +567,9 @@ class AssetCatalog(Client2):
 
          Raises:
          ------
-         InvalidParameterException
-         PropertyServerException
-         UserNotAuthorizedException
+         PyegeriaInvalidParameterException
+         PyegeriaAPIException
+         PyegeriaUnauthorizedException
 
     """
 
@@ -606,9 +617,9 @@ class AssetCatalog(Client2):
 
          Raises:
          ------
-         InvalidParameterException
-         PropertyServerException
-         UserNotAuthorizedException
+         PyegeriaInvalidParameterException
+         PyegeriaAPIException
+         PyegeriaUnauthorizedException
 
         """
 
@@ -672,9 +683,9 @@ class AssetCatalog(Client2):
 
          Raises:
          ------
-         InvalidParameterException
-         PropertyServerException
-         UserNotAuthorizedException
+         PyegeriaInvalidParameterException
+         PyegeriaAPIException
+         PyegeriaUnauthorizedException
 
         """
 
@@ -706,11 +717,13 @@ class AssetCatalog(Client2):
         dict or str
             A dictionary of the asset graph.
 
-        Raises:
+        Raises
         ------
-        InvalidParameterException
-        PropertyServerException
-        UserNotAuthorizedException
+        PyegeriaException
+            One of the pyegeria exceptions will be raised if there are issues in communications, message format, or
+            Egeria errors.
+        PyegeriaNotAuthorizedException
+            The principle specified by the user_id does not have authorization for the requested action
 
         """
 
@@ -731,13 +744,15 @@ class AssetCatalog(Client2):
         dict or str
              A dictionary of the asset graph.
 
-         Raises:
+         Raises
          ------
-         InvalidParameterException
-         PropertyServerException
-         UserNotAuthorizedException
+         PyegeriaException
+             One of the pyegeria exceptions will be raised if there are issues in communications, message format, or
+             Egeria errors.
+         PyegeriaNotAuthorizedException
+             The principle specified by the user_id does not have authorization for the requested action
 
-        """
+         """
 
         loop = asyncio.get_event_loop()
         response = loop.run_until_complete(self._async_get_asset_types())

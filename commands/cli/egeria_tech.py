@@ -712,11 +712,11 @@ def list_blueprints(ctx, search_string):
     blueprint_list(search_string, c.view_server, c.view_server_url, c.userid, c.password, c.jupyter, c.width)
 
 
-@show_supply_chains.command("solution-roles")
+@show_supply_chains.command("solution-perspectives")
 @click.option("--search-string", default="*", help="Search string")
 @click.pass_context
 def list_solution_roles(ctx, search_string):
-    """Display solution roles"""
+    """Display solution perspectives"""
     c = ctx.obj
     solution_role_list(
         search_string,

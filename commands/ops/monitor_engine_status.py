@@ -21,9 +21,12 @@ from rich.table import Table
 
 from pyegeria import (
     EgeriaTech,
-    InvalidParameterException,
-    PropertyServerException,
-    UserNotAuthorizedException,
+)
+from pyegeria._exceptions_new import (
+    PyegeriaInvalidParameterException,
+    PyegeriaAPIException,
+    PyegeriaUnauthorizedException,
+    print_basic_exception,
 )
 
 EGERIA_METADATA_STORE = os.environ.get("EGERIA_METADATA_STORE", "active-metadata-store")
@@ -185,11 +188,11 @@ def display_gov_eng_status(
                     live.update(generate_table(search_list))
 
     except (
-        InvalidParameterException,
-        PropertyServerException,
-        UserNotAuthorizedException,
+        PyegeriaInvalidParameterException,
+        PyegeriaAPIException,
+        PyegeriaUnauthorizedException,
     ) as e:
-        console.print_exception(show_locals=True)
+        print_basic_exception(e)
 
     except KeyboardInterrupt:
         pass

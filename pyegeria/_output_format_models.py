@@ -51,6 +51,17 @@ format_set_dict = format_set.dict()
 The models are designed to be backward compatible with the existing dictionary-based
 implementation. The `FormatSet` class has a `get` method that mimics the behavior of a
 dictionary, and the `FormatSetDict` class provides dictionary-like access to the format sets.
+
+Exceptions
+----------
+The following exceptions may be raised by functions and classes in this module:
+- FileNotFoundError: When attempting to load format sets from a non-existent JSON file.
+- json.JSONDecodeError: When a JSON file cannot be parsed.
+- pydantic.ValidationError: When provided data does not conform to the expected model schema
+  for `Column`/`Attribute`, `Format`, `ActionParameter`, `QuestionSpec`, or `FormatSet`.
+- KeyError: Accessing a missing format set label via `FormatSetDict.__getitem__` or
+  `FormatSet.get` when a default is not supplied.
+- ValueError: From internal validators if an attribute/format contains invalid values.
 """
 
 import json
@@ -210,6 +221,25 @@ class ActionParameter(BaseModel):
                 values['required_params'] = values.pop('user_params')
         return values
 
+
+class QuestionSpec(BaseModel):
+    """
+    An example-question specification for a report spec.
+
+    Attributes:
+        perspectives: A list of perspective names for whom these questions are relevant
+        questions: Example natural-language questions this report spec can answer
+    """
+    @root_validator(pre=True)
+    def _migrate_legacy_roles(cls, values):
+        """Migrate legacy 'roles' field to 'perspectives' when loading from older dict/json."""
+        if isinstance(values, dict) and 'perspectives' not in values and 'roles' in values:
+            values = dict(values)
+            values['perspectives'] = values.pop('roles')
+        return values
+    perspectives: List[str] = Field(default_factory=list)
+    questions: List[str] = Field(default_factory=list)
+
 class FormatSet(BaseModel):
     """
     Represents a complete format set with target_type, heading, description, aliases, annotations, formats, and actions.
@@ -234,6 +264,8 @@ class FormatSet(BaseModel):
     formats: List[Union[Format, Dict[str, Any]]]
     action: Optional[Union[ActionParameter, Dict[str, Any]]] = None
     get_additional_props: Optional[Union[ActionParameter, Dict[str, Any]]] = None
+    # Optional: example questions and perspectives this report spec can address
+    question_spec: Optional[List[Union[QuestionSpec, Dict[str, Any]]]] = None
     
     @root_validator(pre=True)
     def _migrate_legacy_fields(cls, values):
@@ -253,6 +285,19 @@ class FormatSet(BaseModel):
             else:
                 result.append(item)
         return result
+
+    @validator('question_spec', pre=True)
+    def validate_question_spec(cls, v):
+        """Convert dictionary items to QuestionSpec objects when provided."""
+        if v is None:
+            return None
+        out: List[QuestionSpec] = []
+        for item in v:
+            if isinstance(item, dict):
+                out.append(QuestionSpec(**item))
+            else:
+                out.append(item)
+        return out
     
     @validator('action', 'get_additional_props', pre=True)
     def validate_action_like(cls, v):
@@ -282,6 +327,10 @@ class FormatSet(BaseModel):
             result['get_additional_props'] = (
                 self.get_additional_props if isinstance(self.get_additional_props, dict) else self.get_additional_props.dict()
             )
+        if self.question_spec is not None:
+            result['question_spec'] = [
+                item if isinstance(item, dict) else item.dict() for item in self.question_spec
+            ]
         return result
     
     def get(self, key, default=None):

@@ -9,7 +9,6 @@ from json import JSONDecodeError
 
 import validators
 
-from pyegeria._exceptions import InvalidParameterException, OMAGCommonErrorCode
 from pyegeria._exceptions_new import PyegeriaInvalidParameterException
 
 """
@@ -58,7 +57,7 @@ def validate_server_name(server_name: str) -> bool:
 
     Returns
     -------
-    bool - True if valid, If invalid an InvalidParameterException is raised.
+    bool - True if valid, If invalid an PyegeriaInvalidParameterException is raised.
 
     Raises
     ------
@@ -89,7 +88,7 @@ def validate_guid(guid: str) -> bool:
 
     Returns
     -------
-    bool - True if valid, If invalid an InvalidParameterException is raised.
+    bool - True if valid, If invalid an PyegeriaInvalidParameterException is raised.
 
     Raises
     ------
@@ -118,7 +117,7 @@ def validate_name(name: str) -> bool:
 
     Returns
     -------
-    bool - True if valid, If invalid an InvalidParameterException is raised.
+    bool - True if valid, If invalid an PyegeriaInvalidParameterException is raised.
 
     Raises
     ------
@@ -148,7 +147,7 @@ def validate_search_string(search_string: str) -> bool:
 
     Returns
     -------
-    bool - True if valid, If invalid an InvalidParameterException is raised.
+    bool - True if valid, If invalid an PyegeriaInvalidParameterException is raised.
 
     Raises
     ------
@@ -178,7 +177,7 @@ def validate_public(is_public: bool) -> bool:
 
     Returns
     -------
-    bool - True if valid, If invalid an InvalidParameterException is raised.
+    bool - True if valid, If invalid an PyegeriaInvalidParameterException is raised.
 
     Raises
     ------
@@ -209,7 +208,7 @@ def validate_url(url: str) -> bool:
 
     Returns
     -------
-    bool - True if valid, If invalid an InvalidParameterException is raised.
+    bool - True if valid, If invalid an PyegeriaInvalidParameterException is raised.
 
     """
     context: dict = {}

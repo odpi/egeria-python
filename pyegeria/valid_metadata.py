@@ -8,7 +8,7 @@ Copyright Contributors to the ODPi Egeria project.
 
 import asyncio
 
-from pyegeria._client_new import Client2
+from pyegeria._server_client import ServerClient
 from pyegeria.models import SearchStringRequestBody, ResultsRequestBody, FilterRequestBody, GetRequestBody, \
     DeleteElementRequestBody
 from pyegeria.utils import dict_to_markdown_list, dynamic_catch, body_slimmer
@@ -23,7 +23,7 @@ from pyegeria.output_formatter import (
 )
 
 
-class ValidMetadataManager(Client2):
+class ValidMetadataManager(ServerClient):
     """The Valid Metadata OMVS provides APIs for retrieving and updating lists of valid metadata values.
         For more details see: https://egeria-project.org/guides/planning/valid-values/overview/
 
@@ -56,7 +56,7 @@ class ValidMetadataManager(Client2):
 
         self.valid_m_command_base: str = f"/api/open-metadata/valid-metadata"
         self.page_size = max_paging_size
-        Client2.__init__(self, view_server, platform_url, user_id, user_pwd, token=token)
+        ServerClient.__init__(self, view_server, platform_url, user_id, user_pwd, token=token)
 
         # Default entity label used by output formatter when a specific type is not supplied
         self.REFERENCEABLE_LABEL = "Referenceable"
@@ -146,6 +146,9 @@ class ValidMetadataManager(Client2):
         is_case_sensitive = element.get("isCaseSensitive", "---")
         additional_properties = element.get("additionalProperties", "---")
         property_name = element.get("propertyName", "---")
+        map_name = element.get("mapName", "---")
+        type_name = element.get("typeName", "---")
+
 
         for column in columns_list:
             key = column.get("key")
@@ -206,7 +209,8 @@ class ValidMetadataManager(Client2):
             filter,
             entity_type,
             output_format,
-            self._extract_valid_value_output_properties,
+            # self._extract_valid_value_output_properties,
+            populate_columns_from_properties,
             None,
             output_formats,
         )
@@ -233,7 +237,7 @@ class ValidMetadataManager(Client2):
         # Mermaid graph support if present
         mermaid_val = element.get("mermaidGraph", "") or ""
         for col in columns_list:
-            if col.get("key") == "mermaid":
+            if col.get("key") == "mermaidGraph":
                 col["value"] = mermaid_val
                 break
 
@@ -251,7 +255,10 @@ class ValidMetadataManager(Client2):
 
         This aligns with the formatting workflow used by classification_manager and automated_curation.
         """
-        entity_type = element_type_name or self.REFERENCEABLE_LABEL
+        entity_type = element_type_name if element_type_name is not None else self.REFERENCEABLE_LABEL
+        # Remove a layer of nesting in the JSON if the output_format is not MERMAID
+        if output_format != "MERMAID":
+            elements = elements["typeDefs"] if output_format != "MERMAID" else elements
 
         # Resolve output format set
         if report_spec:
@@ -301,9 +308,9 @@ class ValidMetadataManager(Client2):
 
         Raises
         ------
-        InvalidParameterException
+        PyegeriaInvalidParameterException
           If the client passes incorrect parameters on the request - such as bad URLs or invalid values
-        PropertyServerException
+        PyegeriaAPIException
           Raised by the server when an issue arises in processing a valid request
         NotAuthorizedException
           The principle specified by the user_id does not have authorization for the requested action
@@ -357,9 +364,9 @@ class ValidMetadataManager(Client2):
 
         Raises
         ------
-        InvalidParameterException
+        PyegeriaInvalidParameterException
           If the client passes incorrect parameters on the request - such as bad URLs or invalid values
-        PropertyServerException
+        PyegeriaAPIException
           Raised by the server when an issue arises in processing a valid request
         NotAuthorizedException
           The principle specified by the user_id does not have authorization for the requested action
@@ -412,9 +419,9 @@ class ValidMetadataManager(Client2):
 
         Raises
         ------
-        InvalidParameterException
+        PyegeriaInvalidParameterException
           If the client passes incorrect parameters on the request - such as bad URLs or invalid values
-        PropertyServerException
+        PyegeriaAPIException
           Raised by the server when an issue arises in processing a valid request
         NotAuthorizedException
           The principle specified by the user_id does not have authorization for the requested action
@@ -472,9 +479,9 @@ class ValidMetadataManager(Client2):
 
         Raises
         ------
-        InvalidParameterException
+        PyegeriaInvalidParameterException
           If the client passes incorrect parameters on the request - such as bad URLs or invalid values
-        PropertyServerException
+        PyegeriaAPIException
           Raised by the server when an issue arises in processing a valid request
         NotAuthorizedException
           The principle specified by the user_id does not have authorization for the requested action
@@ -530,9 +537,9 @@ class ValidMetadataManager(Client2):
 
         Raises
         ------
-        InvalidParameterException
+        PyegeriaInvalidParameterException
           If the client passes incorrect parameters on the request - such as bad URLs or invalid values
-        PropertyServerException
+        PyegeriaAPIException
           Raised by the server when an issue arises in processing a valid request
         NotAuthorizedException
           The principle specified by the user_id does not have authorization for the requested action
@@ -590,9 +597,9 @@ class ValidMetadataManager(Client2):
 
         Raises
         ------
-        InvalidParameterException
+        PyegeriaInvalidParameterException
           If the client passes incorrect parameters on the request - such as bad URLs or invalid values
-        PropertyServerException
+        PyegeriaAPIException
           Raised by the server when an issue arises in processing a valid request
         NotAuthorizedException
           The principle specified by the user_id does not have authorization for the requested action
@@ -639,9 +646,9 @@ class ValidMetadataManager(Client2):
 
         Raises
         ------
-        InvalidParameterException
+        PyegeriaInvalidParameterException
           If the client passes incorrect parameters on the request - such as bad URLs or invalid values
-        PropertyServerException
+        PyegeriaAPIException
           Raised by the server when an issue arises in processing a valid request
         NotAuthorizedException
           The principle specified by the user_id does not have authorization for the requested action
@@ -676,9 +683,9 @@ class ValidMetadataManager(Client2):
 
         Raises
         ------
-        InvalidParameterException
+        PyegeriaInvalidParameterException
           If the client passes incorrect parameters on the request - such as bad URLs or invalid values
-        PropertyServerException
+        PyegeriaAPIException
           Raised by the server when an issue arises in processing a valid request
         NotAuthorizedException
           The principle specified by the user_id does not have authorization for the requested action
@@ -716,9 +723,9 @@ class ValidMetadataManager(Client2):
 
         Raises
         ------
-        InvalidParameterException
+        PyegeriaInvalidParameterException
           If the client passes incorrect parameters on the request - such as bad URLs or invalid values
-        PropertyServerException
+        PyegeriaAPIException
           Raised by the server when an issue arises in processing a valid request
         NotAuthorizedException
           The principle specified by the user_id does not have authorization for the requested action
@@ -756,9 +763,9 @@ class ValidMetadataManager(Client2):
 
         Raises
         ------
-        InvalidParameterException
+        PyegeriaInvalidParameterException
           If the client passes incorrect parameters on the request - such as bad URLs or invalid values
-        PropertyServerException
+        PyegeriaAPIException
           Raised by the server when an issue arises in processing a valid request
         NotAuthorizedException
           The principle specified by the user_id does not have authorization for the requested action
@@ -861,9 +868,9 @@ class ValidMetadataManager(Client2):
 
         Raises
         ------
-        InvalidParameterException
+        PyegeriaInvalidParameterException
           If the client passes incorrect parameters on the request - such as bad URLs or invalid values
-        PropertyServerException
+        PyegeriaAPIException
           Raised by the server when an issue arises in processing a valid request
         NotAuthorizedException
           The principle specified by the user_id does not have authorization for the requested action
@@ -898,9 +905,9 @@ class ValidMetadataManager(Client2):
 
         Raises
         ------
-        InvalidParameterException
+        PyegeriaInvalidParameterException
           If the client passes incorrect parameters on the request - such as bad URLs or invalid values
-        PropertyServerException
+        PyegeriaAPIException
           Raised by the server when an issue arises in processing a valid request
         NotAuthorizedException
           The principle specified by the user_id does not have authorization for the requested action
@@ -935,9 +942,9 @@ class ValidMetadataManager(Client2):
 
          Raises
          ------
-         InvalidParameterException
+         PyegeriaInvalidParameterException
            If the client passes incorrect parameters on the request - such as bad URLs or invalid values
-         PropertyServerException
+         PyegeriaAPIException
            Raised by the server when an issue arises in processing a valid request
          NotAuthorizedException
            The principle specified by the user_id does not have authorization for the requested action
@@ -972,9 +979,9 @@ class ValidMetadataManager(Client2):
 
         Raises
         ------
-        InvalidParameterException
+        PyegeriaInvalidParameterException
           If the client passes incorrect parameters on the request - such as bad URLs or invalid values
-        PropertyServerException
+        PyegeriaAPIException
           Raised by the server when an issue arises in processing a valid request
         NotAuthorizedException
           The principle specified by the user_id does not have authorization for the requested action
@@ -1009,9 +1016,9 @@ class ValidMetadataManager(Client2):
 
         Raises
         ------
-        InvalidParameterException
+        PyegeriaInvalidParameterException
           If the client passes incorrect parameters on the request - such as bad URLs or invalid values
-        PropertyServerException
+        PyegeriaAPIException
           Raised by the server when an issue arises in processing a valid request
         NotAuthorizedException
           The principle specified by the user_id does not have authorization for the requested action
@@ -1048,9 +1055,9 @@ class ValidMetadataManager(Client2):
 
         Raises
         ------
-        InvalidParameterException
+        PyegeriaInvalidParameterException
           If the client passes incorrect parameters on the request - such as bad URLs or invalid values
-        PropertyServerException
+        PyegeriaAPIException
           Raised by the server when an issue arises in processing a valid request
         NotAuthorizedException
           The principle specified by the user_id does not have authorization for the requested action
@@ -1072,7 +1079,7 @@ class ValidMetadataManager(Client2):
         preferred_value: str,
         output_format: str = "JSON",
         report_spec: dict | str | None = None,
-    ) -> dict | str:
+    ) -> dict | str | list[dict]:
         """Retrieve details of a specific valid value for a property. Async version.
 
         Parameters
@@ -1122,7 +1129,7 @@ class ValidMetadataManager(Client2):
         preferred_value: str,
         output_format: str = "JSON",
         report_spec: dict | str | None = None,
-    ) -> dict | str:
+    ) -> dict | str | list[dict]:
         """Retrieve details of a specific valid value for a property.
 
         Parameters
@@ -1165,7 +1172,7 @@ class ValidMetadataManager(Client2):
         map_name: str,
         output_format: str = "JSON",
         report_spec: dict | str | None = None,
-    ) -> dict | str:
+    ) -> dict | str | list[dict]:
         """Retrieve details of a specific valid name for a map property. Async version.
 
         Parameters
@@ -1215,7 +1222,7 @@ class ValidMetadataManager(Client2):
         map_name: str,
         output_format: str = "JSON",
         report_spec: dict | str | None = None,
-    ) -> dict | str:
+    ) -> dict | str | list[dict]:
         """Retrieve details of a specific valid name for a map property.
 
         Parameters
@@ -1258,7 +1265,7 @@ class ValidMetadataManager(Client2):
         map_name: str,
         output_format: str = "JSON",
         report_spec: dict | str | None = None,
-    ) -> dict | str:
+    ) -> dict | str | list[dict]:
         """Retrieve details of a specific valid value for a map property. Async version.
 
         Parameters
@@ -1312,7 +1319,7 @@ class ValidMetadataManager(Client2):
         map_name: str,
         output_format: str = "JSON",
         report_spec: dict | str | None = None,
-    ) -> dict | str:
+    ) -> dict | str | list[dict]:
         """Retrieve details of a specific valid value for a map property.
 
         Parameters
@@ -1390,9 +1397,9 @@ class ValidMetadataManager(Client2):
         Raises
         ------
 
-        InvalidParameterException
+        PyegeriaInvalidParameterException
           If the client passes incorrect parameters on the request - such as bad URLs or invalid values
-        PropertyServerException
+        PyegeriaAPIException
           Raised by the server when an issue arises in processing a valid request
         NotAuthorizedException
           The principle specified by the user_id does not have authorization for the requested action
@@ -1455,9 +1462,9 @@ class ValidMetadataManager(Client2):
         Raises
         ------
 
-        InvalidParameterException
+        PyegeriaInvalidParameterException
           If the client passes incorrect parameters on the request - such as bad URLs or invalid values
-        PropertyServerException
+        PyegeriaAPIException
           Raised by the server when an issue arises in processing a valid request
         NotAuthorizedException
           The principle specified by the user_id does not have authorization for the requested action
@@ -1478,7 +1485,7 @@ class ValidMetadataManager(Client2):
         map_name: str,
         preferred_value: str,
         start_from: int = 0,
-        page_size: int = None,
+        page_size: int = 0,
         output_format: str = "JSON",
         report_spec: dict | str | None = None,
     ) -> list | str:
@@ -1509,26 +1516,29 @@ class ValidMetadataManager(Client2):
         Raises
         ------
 
-        InvalidParameterException
+        PyegeriaInvalidParameterException
           If the client passes incorrect parameters on the request - such as bad URLs or invalid values
-        PropertyServerException
+        PyegeriaAPIException
           Raised by the server when an issue arises in processing a valid request
         NotAuthorizedException
           The principle specified by the user_id does not have authorization for the requested action
 
         """
-
-        if page_size is None:
-            page_size = self.page_size
-
+        params = {
+            "typeName": type_name,
+            "mapName": map_name,
+            "preferredValue": preferred_value,
+            "startFrom": str(start_from),
+            "pageSize": str(page_size)
+        }
+        params_s = body_slimmer(params)
         url = (
             f"{self.platform_url}/servers/{self.view_server}{self.valid_m_command_base}/{property_name}/"
-            f"consistent-metadata-values?typeName={type_name}&mapName={map_name}&preferredValue={preferred_value}"
-            f"&startFrom={start_from}&pageSize={page_size}"
+            f"consistent-metadata-values"
         )
 
-        resp = await self._async_make_request("GET", url)
-        elements = resp.json().get("elementList", NO_ELEMENTS_FOUND)
+        resp = await self._async_make_request("GET", url, params=params_s)
+        elements = resp.json().get("elements", NO_ELEMENTS_FOUND)
         if elements == NO_ELEMENTS_FOUND or elements is None or elements == []:
             return NO_ELEMENTS_FOUND
         if output_format != "JSON":
@@ -1543,7 +1553,7 @@ class ValidMetadataManager(Client2):
         map_name: str,
         preferred_value: str,
         start_from: int = 0,
-        page_size: int = None,
+        page_size: int = 0,
         output_format: str = "JSON",
         report_spec: dict | str | None = None,
     ) -> list | str:
@@ -1581,9 +1591,9 @@ class ValidMetadataManager(Client2):
         Raises
         ------
 
-        InvalidParameterException
+        PyegeriaInvalidParameterException
           If the client passes incorrect parameters on the request - such as bad URLs or invalid values
-        PropertyServerException
+        PyegeriaAPIException
           Raised by the server when an issue arises in processing a valid request
         NotAuthorizedException
           The principle specified by the user_id does not have authorization for the requested action
@@ -1607,11 +1617,11 @@ class ValidMetadataManager(Client2):
     async def _async_set_consistent_metadata_values(
         self,
         property_name1: str,
-        property_name2: str,
         type_name1: str,
-        map_name1: str,
+        map_name1: str ,
         preferred_value1: str,
-        type_name2: str,
+        property_name2: str,
+        type_name2: str ,
         map_name2: str,
         preferred_value2: str,
     ) -> None:
@@ -1642,32 +1652,39 @@ class ValidMetadataManager(Client2):
 
         Raises
         ------
-        InvalidParameterException
+        PyegeriaInvalidParameterException
           If the client passes incorrect parameters on the request - such as bad URLs or invalid values
-        PropertyServerException
+        PyegeriaAPIException
           Raised by the server when an issue arises in processing a valid request
         NotAuthorizedException
           The principle specified by the user_id does not have authorization for the requested action
 
         """
+        params = {
+           "typeName1": type_name1,
+           "typeName2": type_name2,
+           "mapName1": map_name1,
+           "mapName2": map_name2,
+           "preferredValue1": preferred_value1,
+           "preferredValue2": preferred_value2,
+       }
+        params_s = body_slimmer(params)
 
         url = (
             f"{self.platform_url}/servers/{self.view_server}{self.valid_m_command_base}/{property_name1}/"
-            f"consistent-metadata-values/{property_name2}?"
-            f"typeName1={type_name1}&mapName1={map_name1}&preferredValue1={preferred_value1}&"
-            f"typeName1={type_name2}&mapName2={map_name2}&preferredValue2={preferred_value2}"
+            f"consistent-metadata-values/{property_name2}"
         )
 
-        await self._async_make_request("POST", url)
+        await self._async_make_request("POST", url, params=params_s)
         return
 
     def set_consistent_metadata_values(
         self,
         property_name1: str,
-        property_name2: str,
         type_name1: str,
         map_name1: str,
         preferred_value1: str,
+        property_name2: str,
         type_name2: str,
         map_name2: str,
         preferred_value2: str,
@@ -1699,9 +1716,9 @@ class ValidMetadataManager(Client2):
 
         Raises
         ------
-        InvalidParameterException
+        PyegeriaInvalidParameterException
           If the client passes incorrect parameters on the request - such as bad URLs or invalid values
-        PropertyServerException
+        PyegeriaAPIException
           Raised by the server when an issue arises in processing a valid request
         NotAuthorizedException
           The principle specified by the user_id does not have authorization for the requested action
@@ -1709,16 +1726,8 @@ class ValidMetadataManager(Client2):
         """
         loop = asyncio.get_event_loop()
         loop.run_until_complete(
-            self._async_set_consistent_metadata_values(
-                property_name1,
-                property_name2,
-                type_name1,
-                map_name1,
-                preferred_value1,
-                type_name2,
-                map_name2,
-                preferred_value2,
-            )
+            self._async_set_consistent_metadata_values(property_name1, type_name1, map_name1, preferred_value1,
+                                                       property_name2, type_name2, map_name2, preferred_value2)
         )
         return
 
@@ -2767,9 +2776,9 @@ class ValidMetadataManager(Client2):
         Raises
         ------
 
-        InvalidParameterException
+        PyegeriaInvalidParameterException
           If the client passes incorrect parameters on the request - such as bad URLs or invalid values
-        PropertyServerException
+        PyegeriaAPIException
           Raised by the server when an issue arises in processing a valid request
         NotAuthorizedException
           The principle specified by the user_id does not have authorization for the requested action
@@ -2820,7 +2829,7 @@ class ValidMetadataManager(Client2):
 
         Raises
         ------
-        PropertyServerException
+        PyegeriaAPIException
 
         Notes
         -----
@@ -2882,7 +2891,7 @@ class ValidMetadataManager(Client2):
 
             Raises
             ------
-            PropertyServerException
+            PyegeriaAPIException
 
             Notes
             -----
@@ -2962,9 +2971,7 @@ class ValidMetadataManager(Client2):
 
         return response
 
-
-
-
+    @dynamic_catch
     def get_specification_property_by_guid(self, spec_property_guid: str, element_type: str = None, body: dict | GetRequestBody= None,
                                output_format: str = 'JSON', report_spec: str | dict = None) -> dict | str:
         """ Return the properties of a specific collection. Async version.
@@ -3007,6 +3014,89 @@ class ValidMetadataManager(Client2):
         return asyncio.get_event_loop().run_until_complete(
             self._async_get_specification_property_by_guid(spec_property_guid, element_type, body,
                                                output_format, report_spec))
+
+
+    @dynamic_catch
+    async def _async_get_specification_property_types(self, output_format: str = 'JSON',
+                                                               report_spec: str | dict = None) -> dict | str:
+        """Return the list of specification property types. Async version.
+
+        Parameters
+        ----------
+        output_format: str, default = "JSON"
+            - one of "DICT", "MERMAID" or "JSON"
+         report_spec: str | dict, optional, default = None
+                The desired output columns/fields to include.
+
+        Returns
+        -------
+        dict | str
+
+        A JSON dict representing the list of properties.
+
+        Raises
+        ------
+        PyegeriaException
+
+        Notes
+        ----
+        Body sample:
+        {
+          "class": "GetRequestBody",
+          "asOfTime": "{{$isoTimestamp}}",
+          "effectiveTime": "{{$isoTimestamp}}",
+          "forLineage": false,
+          "forDuplicateProcessing": false
+        }
+        """
+        url = (f"{self.platform_url}/servers/{self.view_server}/api/open-metadata/valid-metadata/"
+               f"specification-properties/type-names")
+        resp = await self._async_make_request("GET", url)
+        element = resp.json().get("stringMap", NO_ELEMENTS_FOUND)
+        if element == NO_ELEMENTS_FOUND or element is None:
+            return NO_ELEMENTS_FOUND
+        if output_format != "JSON":
+            return self._generate_entity_output(element, "ALL", "SpecificationPropertyValues",
+                                                output_format, report_spec)
+        return element
+
+        return response
+
+    @dynamic_catch
+    def get_specification_property_types(self, output_format: str = 'JSON', report_spec: str | dict = None) -> dict | str:
+        """Return the list of specification property types.
+
+             Parameters
+             ----------
+             output_format: str, default = "JSON"
+                 - one of "DICT", "MERMAID" or "JSON"
+              report_spec: str | dict, optional, default = None
+                     The desired output columns/fields to include.
+
+             Returns
+             -------
+             dict | str
+
+             A JSON dict representing the list of properties.
+
+             Raises
+             ------
+             PyegeriaException
+
+             Notes
+             ----
+             Body sample:
+             {
+               "class": "GetRequestBody",
+               "asOfTime": "{{$isoTimestamp}}",
+               "effectiveTime": "{{$isoTimestamp}}",
+               "forLineage": false,
+               "forDuplicateProcessing": false
+             }
+             """
+        return asyncio.get_event_loop().run_until_complete(
+            self._async_get_specification_property_types(output_format, report_spec))
+
 
 
 

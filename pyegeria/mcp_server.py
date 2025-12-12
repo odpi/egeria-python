@@ -13,7 +13,7 @@ from mcp.server.fastmcp.exceptions import ValidationError
 
 from pyegeria.egeria_tech_client import EgeriaTech
 from pyegeria._exceptions_new import print_validation_error
-
+# from pyegeria.base_report_formats import find_report_specs
 
 GLOBAL_EGERIA_CLIENT: Optional[EgeriaTech] = None
 nest_asyncio.apply()
@@ -25,14 +25,16 @@ try:
         list_reports,
         describe_report,
         run_report, _execute_egeria_call_blocking,
-        _async_run_report_tool
+        _async_run_report_tool, run_find_report_specs
     )
+
     print("MCP import successful...", file=sys.stderr)
 except ImportError:
     print("MCP import failed.", file=sys.stderr)
     raise
 
-def _ok(result: Dict[str, Any] ) -> Dict[str, Any]:
+
+def _ok(result: Dict[str, Any]) -> Dict[str, Any]:
     # Pass-through helper in case you want to normalize or add metadata
     print("OK: Operation completed successfully.", file=sys.stderr)
     return result
@@ -59,7 +61,7 @@ def main() -> None:
             user_pwd
         )
         print("DEBUG: Egeria Client initialized", file=sys.stderr)
-        GLOBAL_EGERIA_CLIENT.create_egeria_bearer_token("erinoverview","secret")
+        GLOBAL_EGERIA_CLIENT.create_egeria_bearer_token("erinoverview", "secret")
         print("DEBUG: Egeria Client connected", file=sys.stderr)
 
     except ValidationError as e:
@@ -79,7 +81,13 @@ def main() -> None:
         print("DEBUG: Listing reports...", file=sys.stderr)
         return _ok(list_reports())
 
-    # describe_report tool (formerly describe_format_set)
+    @srv.tool(name="find_report_specs")
+    def find_report_specs_tool(perspective: str=None, question: str=None, report_spec: str=None) -> Dict[str, Any]:
+        """Finds report specs that match the given perspective, question, and report spec."""
+        print("DEBUG: Finding report specs...", file=sys.stderr)
+        return _ok(run_find_report_specs(perspective=perspective, question=question, report_spec=report_spec))
+
+
     @srv.tool(name="describe_report")
     def describe_report_tool(name: str, output_type: str = "DICT") -> Dict[str, Any]:
         """Returns the schema and details for a specified report."""
@@ -95,8 +103,8 @@ def main() -> None:
     async def run_report_tool(
             report_name: str,
             search_string: str = "*",
-            page_size: Optional[int] = None,
-            start_from: Optional[int] = None,
+            page_size: Optional[int] = 0,
+            start_from: Optional[int] = 0,
             starts_with: Optional[bool] = None,
             ends_with: Optional[bool] = None,
             ignore_case: Optional[bool] = None,
@@ -184,17 +192,11 @@ def main() -> None:
                             file=sys.stderr)
 
                         # AWAIT the async function call
-                        return await run_report_tool(
-                            report_name=report_name,
-                            page_size=page_size,
-                            search_string=search_string
-                        )
+                        return await run_report_tool(report_name=report_name, search_string=search_string,
+                                                     page_size=page_size)
 
                 # AWAIT the async function call
-                return await run_report_tool(
-                    report_name=report_name,
-                    page_size=page_size
-                )
+                return await run_report_tool(report_name=report_name, page_size=page_size)
 
         return {
             "response": f"Acknowledged natural language query: '{prompt}'. This would be sent to an LLM."

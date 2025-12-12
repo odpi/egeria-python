@@ -12,7 +12,7 @@ import asyncio
 from httpx import Response
 
 from pyegeria.utils import body_slimmer
-from pyegeria._client import Client, max_paging_size
+from pyegeria._server_client import ServerClient, max_paging_size
 from pyegeria._globals import default_time_out, NO_ELEMENTS_FOUND
 
 
@@ -29,9 +29,9 @@ def query_seperator(current_string):
 
 def query_string(params):
     result = ""
-    for i in range(len(params)):
-        if params[i][1] is not None:
-            result = f"{result}{query_seperator(result)}{params[i][0]}={params[i][1]}"
+    for i, param in enumerate(params):
+        if param[1] is not None:
+            result = f"{result}{query_seperator(result)}{param[0]}={param[1]}"
     return result
 
 
@@ -76,7 +76,7 @@ def process_related_element_list(
     return elements
 
 
-class MetadataExplorer(Client):
+class MetadataExplorer(ServerClient):
     """MetadataExplorer is a class that extends the Client class. The Metadata Explorer OMVS provides APIs for
       supporting the search, query and retrieval of open metadata. It is an advanced API for users that understands
       the Open Metadata Types.
@@ -112,7 +112,7 @@ class MetadataExplorer(Client):
         self.metadata_explorer_command_root: str = (
             f"{self.platform_url}/servers/{self.view_server}/api/open-metadata/metadata-explorer"
         )
-        Client.__init__(
+        ServerClient.__init__(
             self,
             view_server,
             platform_url,
@@ -158,12 +158,12 @@ class MetadataExplorer(Client):
 
         Raises
         ------
-        InvalidParameterException
-            one of the parameters is null or invalid or
-        PropertyServerException
-            There is a problem adding the element properties to the metadata repository or
-        UserNotAuthorizedException
-            the requesting user is not authorized to issue this request.
+        PyegeriaInvalidParameterException
+            One of the parameters is null or invalid (for example, bad URL or invalid values).
+        PyegeriaAPIException
+            The server reported an error while processing a valid request.
+        PyegeriaUnauthorizedException
+            The requesting user is not authorized to issue this request.
         """
 
         possible_query_params = query_string(
@@ -222,12 +222,12 @@ class MetadataExplorer(Client):
 
         Raises
         ------
-        InvalidParameterException
-            one of the parameters is null or invalid or
-        PropertyServerException
-            There is a problem adding the element properties to the metadata repository or
-        UserNotAuthorizedException
-            the requesting user is not authorized to issue this request.
+        PyegeriaInvalidParameterException
+            One of the parameters is null or invalid (for example, bad URL or invalid values).
+        PyegeriaAPIException
+            The server reported an error while processing a valid request.
+        PyegeriaUnauthorizedException
+            The requesting user is not authorized to issue this request.
         """
 
         loop = asyncio.get_event_loop()
@@ -273,11 +273,11 @@ class MetadataExplorer(Client):
 
         Raises
         ------
-        InvalidParameterException
+        PyegeriaInvalidParameterException
             one of the parameters is null or invalid or
-        PropertyServerException
+        PyegeriaAPIException
             There is a problem adding the element properties to the metadata repository or
-        UserNotAuthorizedException
+        PyegeriaUnauthorizedException
             the requesting user is not authorized to issue this request.
         """
 
@@ -334,11 +334,11 @@ class MetadataExplorer(Client):
 
         Raises
         ------
-        InvalidParameterException
+        PyegeriaInvalidParameterException
             one of the parameters is null or invalid or
-        PropertyServerException
+        PyegeriaAPIException
             There is a problem adding the element properties to the metadata repository or
-        UserNotAuthorizedException
+        PyegeriaUnauthorizedException
             the requesting user is not authorized to issue this request.
         """
 
@@ -386,11 +386,11 @@ class MetadataExplorer(Client):
 
         Raises
         ------
-        InvalidParameterException
+        PyegeriaInvalidParameterException
             one of the parameters is null or invalid or
-        PropertyServerException
+        PyegeriaAPIException
             There is a problem adding the element properties to the metadata repository or
-        UserNotAuthorizedException
+        PyegeriaUnauthorizedException
             the requesting user is not authorized to issue this request.
         """
 
@@ -467,11 +467,11 @@ class MetadataExplorer(Client):
 
         Raises
         ------
-        InvalidParameterException
+        PyegeriaInvalidParameterException
             one of the parameters is null or invalid or
-        PropertyServerException
+        PyegeriaAPIException
             There is a problem adding the element properties to the metadata repository or
-        UserNotAuthorizedException
+        PyegeriaUnauthorizedException
             the requesting user is not authorized to issue this request.
         """
 
@@ -520,11 +520,11 @@ class MetadataExplorer(Client):
 
         Raises
         ------
-        InvalidParameterException
+        PyegeriaInvalidParameterException
             one of the parameters is null or invalid or
-        PropertyServerException
+        PyegeriaAPIException
             There is a problem adding the element properties to the metadata repository or
-        UserNotAuthorizedException
+        PyegeriaUnauthorizedException
             the requesting user is not authorized to issue this request.
         """
 
@@ -584,11 +584,11 @@ class MetadataExplorer(Client):
 
         Raises
         ------
-        InvalidParameterException
+        PyegeriaInvalidParameterException
             one of the parameters is null or invalid or
-        PropertyServerException
+        PyegeriaAPIException
             There is a problem adding the element properties to the metadata repository or
-        UserNotAuthorizedException
+        PyegeriaUnauthorizedException
             the requesting user is not authorized to issue this request.
         """
 
@@ -652,11 +652,11 @@ class MetadataExplorer(Client):
 
         Raises
         ------
-        InvalidParameterException
+        PyegeriaInvalidParameterException
             one of the parameters is null or invalid or
-        PropertyServerException
+        PyegeriaAPIException
             There is a problem adding the element properties to the metadata repository or
-        UserNotAuthorizedException
+        PyegeriaUnauthorizedException
             the requesting user is not authorized to issue this request.
         """
 
@@ -740,11 +740,11 @@ class MetadataExplorer(Client):
 
         Raises
         ------
-        InvalidParameterException
+        PyegeriaInvalidParameterException
             one of the parameters is null or invalid or
-        PropertyServerException
+        PyegeriaAPIException
             There is a problem adding the element properties to the metadata repository or
-        UserNotAuthorizedException
+        PyegeriaUnauthorizedException
             the requesting user is not authorized to issue this request.
         """
 
@@ -801,11 +801,11 @@ class MetadataExplorer(Client):
 
         Raises
         ------
-        InvalidParameterException
+        PyegeriaInvalidParameterException
             one of the parameters is null or invalid or
-        PropertyServerException
+        PyegeriaAPIException
             There is a problem adding the element properties to the metadata repository or
-        UserNotAuthorizedException
+        PyegeriaUnauthorizedException
             the requesting user is not authorized to issue this request.
 
         Notes:
@@ -883,11 +883,11 @@ class MetadataExplorer(Client):
 
         Raises
         ------
-        InvalidParameterException
+        PyegeriaInvalidParameterException
             one of the parameters is null or invalid or
-        PropertyServerException
+        PyegeriaAPIException
             There is a problem adding the element properties to the metadata repository or
-        UserNotAuthorizedException
+        PyegeriaUnauthorizedException
             the requesting user is not authorized to issue this request.
 
         Notes:
@@ -964,11 +964,11 @@ class MetadataExplorer(Client):
             If no elements found, string "No element found".
         Raises
         ------
-        InvalidParameterException
+        PyegeriaInvalidParameterException
             one of the parameters is null or invalid or
-        PropertyServerException
+        PyegeriaAPIException
             There is a problem adding the element properties to the metadata repository or
-        UserNotAuthorizedException
+        PyegeriaUnauthorizedException
             the requesting user is not authorized to issue this request.
 
         Notes:
@@ -1051,11 +1051,11 @@ class MetadataExplorer(Client):
 
         Raises
         ------
-        InvalidParameterException
+        PyegeriaInvalidParameterException
             one of the parameters is null or invalid or
-        PropertyServerException
+        PyegeriaAPIException
             There is a problem adding the element properties to the metadata repository or
-        UserNotAuthorizedException
+        PyegeriaUnauthorizedException
             the requesting user is not authorized to issue this request.
 
         Notes:
@@ -1136,11 +1136,11 @@ class MetadataExplorer(Client):
 
         Raises
         ------
-        InvalidParameterException
+        PyegeriaInvalidParameterException
             one of the parameters is null or invalid or
-        PropertyServerException
+        PyegeriaAPIException
             There is a problem adding the element properties to the metadata repository or
-        UserNotAuthorizedException
+        PyegeriaUnauthorizedException
             the requesting user is not authorized to issue this request.
 
         Notes:
@@ -1226,11 +1226,11 @@ class MetadataExplorer(Client):
 
         Raises
         ------
-        InvalidParameterException
+        PyegeriaInvalidParameterException
             one of the parameters is null or invalid or
-        PropertyServerException
+        PyegeriaAPIException
             There is a problem adding the element properties to the metadata repository or
-        UserNotAuthorizedException
+        PyegeriaUnauthorizedException
             the requesting user is not authorized to issue this request.
 
         Notes:
@@ -1313,11 +1313,11 @@ class MetadataExplorer(Client):
 
         Raises
         ------
-        InvalidParameterException
+        PyegeriaInvalidParameterException
             one of the parameters is null or invalid or
-        PropertyServerException
+        PyegeriaAPIException
             There is a problem adding the element properties to the metadata repository or
-        UserNotAuthorizedException
+        PyegeriaUnauthorizedException
             the requesting user is not authorized to issue this request.
 
         Notes:
@@ -1404,11 +1404,11 @@ class MetadataExplorer(Client):
 
         Raises
         ------
-        InvalidParameterException
+        PyegeriaInvalidParameterException
             one of the parameters is null or invalid or
-        PropertyServerException
+        PyegeriaAPIException
             There is a problem adding the element properties to the metadata repository or
-        UserNotAuthorizedException
+        PyegeriaUnauthorizedException
             the requesting user is not authorized to issue this request.
 
         Notes:
@@ -1493,11 +1493,11 @@ class MetadataExplorer(Client):
 
         Raises
         ------
-        InvalidParameterException
+        PyegeriaInvalidParameterException
             one of the parameters is null or invalid or
-        PropertyServerException
+        PyegeriaAPIException
             There is a problem adding the element properties to the metadata repository or
-        UserNotAuthorizedException
+        PyegeriaUnauthorizedException
             the requesting user is not authorized to issue this request.
 
         Notes:
@@ -1588,11 +1588,11 @@ class MetadataExplorer(Client):
 
         Raises
         ------
-        InvalidParameterException
+        PyegeriaInvalidParameterException
             one of the parameters is null or invalid or
-        PropertyServerException
+        PyegeriaAPIException
             There is a problem adding the element properties to the metadata repository or
-        UserNotAuthorizedException
+        PyegeriaUnauthorizedException
             the requesting user is not authorized to issue this request.
 
         Notes:
@@ -1660,11 +1660,11 @@ class MetadataExplorer(Client):
 
         Raises
         ------
-        InvalidParameterException
+        PyegeriaInvalidParameterException
             one of the parameters is null or invalid or
-        PropertyServerException
+        PyegeriaAPIException
             There is a problem adding the element properties to the metadata repository or
-        UserNotAuthorizedException
+        PyegeriaUnauthorizedException
             the requesting user is not authorized to issue this request.
 
         Notes:
@@ -1781,11 +1781,11 @@ class MetadataExplorer(Client):
 
         Raises
         ------
-        InvalidParameterException
+        PyegeriaInvalidParameterException
             one of the parameters is null or invalid or
-        PropertyServerException
+        PyegeriaAPIException
             There is a problem adding the element properties to the metadata repository or
-        UserNotAuthorizedException
+        PyegeriaUnauthorizedException
             the requesting user is not authorized to issue this request.
 
         Notes:
@@ -1896,11 +1896,11 @@ class MetadataExplorer(Client):
 
         Raises
         ------
-        InvalidParameterException
+        PyegeriaInvalidParameterException
             one of the parameters is null or invalid or
-        PropertyServerException
+        PyegeriaAPIException
             There is a problem adding the element properties to the metadata repository or
-        UserNotAuthorizedException
+        PyegeriaUnauthorizedException
             the requesting user is not authorized to issue this request.
 
         Notes:
@@ -1998,11 +1998,11 @@ class MetadataExplorer(Client):
 
         Raises
         ------
-        InvalidParameterException
+        PyegeriaInvalidParameterException
             one of the parameters is null or invalid or
-        PropertyServerException
+        PyegeriaAPIException
             There is a problem adding the element properties to the metadata repository or
-        UserNotAuthorizedException
+        PyegeriaUnauthorizedException
             the requesting user is not authorized to issue this request.
 
         Notes:
@@ -2082,11 +2082,11 @@ class MetadataExplorer(Client):
 
         Raises
         ------
-        InvalidParameterException
+        PyegeriaInvalidParameterException
             one of the parameters is null or invalid or
-        PropertyServerException
+        PyegeriaAPIException
             There is a problem adding the element properties to the metadata repository or
-        UserNotAuthorizedException
+        PyegeriaUnauthorizedException
             the requesting user is not authorized to issue this request.
         """
 
@@ -2140,11 +2140,11 @@ class MetadataExplorer(Client):
 
         Raises
         ------
-        InvalidParameterException
+        PyegeriaInvalidParameterException
             one of the parameters is null or invalid or
-        PropertyServerException
+        PyegeriaAPIException
             There is a problem adding the element properties to the metadata repository or
-        UserNotAuthorizedException
+        PyegeriaUnauthorizedException
             the requesting user is not authorized to issue this request.
         """
 
@@ -2206,11 +2206,11 @@ class MetadataExplorer(Client):
 
         Raises
         ------
-        InvalidParameterException
+        PyegeriaInvalidParameterException
             one of the parameters is null or invalid or
-        PropertyServerException
+        PyegeriaAPIException
             There is a problem adding the element properties to the metadata repository or
-        UserNotAuthorizedException
+        PyegeriaUnauthorizedException
             the requesting user is not authorized to issue this request.
         """
 
@@ -2295,11 +2295,11 @@ class MetadataExplorer(Client):
 
          Raises
          ------
-         InvalidParameterException
+         PyegeriaInvalidParameterException
              one of the parameters is null or invalid or
-         PropertyServerException
+         PyegeriaAPIException
              There is a problem adding the element properties to the metadata repository or
-         UserNotAuthorizedException
+         PyegeriaUnauthorizedException
              the requesting user is not authorized to issue this request.
         """
 

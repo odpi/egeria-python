@@ -19,12 +19,11 @@ from rich.prompt import Prompt
 from rich.tree import Tree
 
 from pyegeria import (
-    InvalidParameterException,
     ProjectManager,
-    PropertyServerException,
-    UserNotAuthorizedException, PyegeriaException, print_basic_exception, print_validation_error,
+    PyegeriaException,
+    print_basic_exception,
+    print_validation_error,
 )
-from pyegeria._exceptions import print_exception_response
 
 disable_ssl_warnings = True
 EGERIA_METADATA_STORE = os.environ.get("EGERIA_METADATA_STORE", "active-metadata-store")

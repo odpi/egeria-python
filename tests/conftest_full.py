@@ -26,7 +26,7 @@ from __future__ import annotations
 import os
 import pytest
 
-from pyegeria._client_new import Client2
+from pyegeria._server_client import ServerClient
 from pyegeria.egeria_tech_client import EgeriaTech
 
 
@@ -58,8 +58,8 @@ def live_egeria_enabled(pytestconfig: pytest.Config) -> bool:
 
 
 @pytest.fixture(scope="session")
-def live_client(live_egeria_enabled: bool) -> Client2:
-    """Provide a real Client2 instance connected to local Egeria when enabled.
+def live_client(live_egeria_enabled: bool) -> ServerClient:
+    """Provide a real ServerClient instance connected to local Egeria when enabled.
 
     Skips if live testing is not enabled.
     """
@@ -71,8 +71,8 @@ def live_client(live_egeria_enabled: bool) -> Client2:
     user_id = os.getenv("PYEG_USER_ID", "peterprofile")
     user_pwd = os.getenv("PYEG_USER_PWD", "secret")
 
-    # Construct the real client; BaseClient.check_connection() will verify connectivity
-    client = Client2(
+    # Construct the real client; BaseServerClient.check_connection() will verify connectivity
+    client = ServerClient(
         server_name=server_name,
         platform_url=platform_url,
         user_id=user_id,

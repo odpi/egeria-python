@@ -40,7 +40,8 @@ class ServerOps(Platform):
     ):
         Platform.__init__(self, server_name, platform_url, user_id, user_pwd)
         self.ops_command_root = (
-            f"{self.platform_url}/open-metadata/server-operations/users/{user_id}"
+            # f"{self.platform_url}/open-metadata/server-operations/users/{user_id}"
+            f"{self.platform_url}/open-metadata/server-operations/"
         )
 
     async def _async_get_active_configuration(self, server: str = None) -> dict | str:
@@ -211,9 +212,9 @@ class ServerOps(Platform):
 
         Raises
         ------
-        InvalidParameterException
+        PyegeriaInvalidParameterException
           If the client passes incorrect parameters on the request - such as bad URLs or invalid values
-        PropertyServerException
+        PyegeriaAPIException
           Raised by the server when an issue arises in processing a valid request
         NotAuthorizedException
           The principle specified by the user_id does not have authorization for the requested action
@@ -241,9 +242,9 @@ class ServerOps(Platform):
 
         Raises
         ------
-        InvalidParameterException
+        PyegeriaInvalidParameterException
           If the client passes incorrect parameters on the request - such as bad URLs or invalid values
-        PropertyServerException
+        PyegeriaAPIException
           Raised by the server when an issue arises in processing a valid request
         NotAuthorizedException
           The principle specified by the user_id does not have authorization for the requested action

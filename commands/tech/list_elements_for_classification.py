@@ -20,7 +20,7 @@ from pyegeria import (
     config_logging,
     save_mermaid_html,
 )
-from pyegeria._exceptions import EgeriaException
+from pyegeria._exceptions_new import PyegeriaException as EgeriaException
 
 app_config = settings.Environment
 config_path = os.path.join(app_config.pyegeria_config_directory, app_config.pyegeria_config_file)

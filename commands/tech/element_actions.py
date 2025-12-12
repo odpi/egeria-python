@@ -19,10 +19,10 @@ import click
 
 
 from pyegeria import EgeriaTech, body_slimmer
-from pyegeria._exceptions import (
-    InvalidParameterException,
-    PropertyServerException,
-    print_exception_response,
+from pyegeria._exceptions_new import (
+    PyegeriaInvalidParameterException,
+    PyegeriaAPIException as PropertyServerException,
+    print_basic_exception as print_exception_response,
 )
 
 EGERIA_METADATA_STORE = os.environ.get("EGERIA_METADATA_STORE", "active-metadata-store")
@@ -66,7 +66,7 @@ def delete_element(cascade, server, url, userid, password, timeout, element_guid
 
         click.echo(f"Deleted element: {element_guid}")
 
-    except (InvalidParameterException, PropertyServerException) as e:
+    except (PyegeriaInvalidParameterException, PropertyServerException) as e:
         print_exception_response(e)
     finally:
         m_client.close_session()

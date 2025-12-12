@@ -22,10 +22,19 @@ from pyegeria.output_formatter import make_preamble, make_md_attribute, generate
 from pyegeria.base_report_formats import select_report_spec, get_report_spec_match
 from pyegeria._validators import validate_guid
 from pyegeria.governance_officer import GovernanceOfficer
-from pyegeria._client_new import Client2, max_paging_size
+from pyegeria._server_client import ServerClient, max_paging_size
 from pyegeria._globals import NO_ELEMENTS_FOUND, NO_GUID_RETURNED
 from pyegeria.utils import body_slimmer, dynamic_catch
-from pyegeria._exceptions import (InvalidParameterException)
+from pyegeria._exceptions_new import (
+    PyegeriaException,
+    PyegeriaInvalidParameterException,
+    PyegeriaAPIException,
+    PyegeriaUnauthorizedException,
+    PyegeriaNotFoundException,
+    PyegeriaConnectionException,
+    print_basic_exception,
+    print_exception_response,
+)
 
 sys.path.insert(0, os.path.abspath(os.path.dirname(__file__)))
 
@@ -59,7 +68,7 @@ def base_path(client, view_server: str):
     return f"{client.platform_url}/servers/{view_server}/api/open-metadata/metadata-explorer"
 
 
-class SolutionArchitect(Client2):
+class SolutionArchitect(ServerClient):
     """SolutionArchitect is a class that extends the Client class. The Solution Architect OMVS provides APIs for
       searching for architectural elements such as information supply chains, solution blueprints, solution components,
       and component implementations.
@@ -88,7 +97,7 @@ class SolutionArchitect(Client2):
         self.user_pwd = user_pwd
         self.solution_architect_command_root: str = (f"{self.platform_url}/servers/{self.view_server}"
                                                      f"/api/open-metadata/solution-architect")
-        Client2.__init__(self, view_server, platform_url, user_id=user_id, user_pwd=user_pwd, token=token, )
+        ServerClient.__init__(self, view_server, platform_url, user_id=user_id, user_pwd=user_pwd, token=token, )
         self.url_marker = "solution-architect"
     #
     # Extract properties functions
@@ -736,11 +745,11 @@ class SolutionArchitect(Client2):
         ------
         Raises
         ------
-        InvalidParameterException
+        PyegeriaInvalidParameterException
             one of the parameters is null or invalid or
-        PropertyServerException
+        PyegeriaAPIException
             There is a problem adding the element properties to the metadata repository or
-        UserNotAuthorizedException
+        PyegeriaUnauthorizedException
             the requesting user is not authorized to issue this request.
 
         Notes
@@ -810,11 +819,11 @@ class SolutionArchitect(Client2):
         ------
         Raises
         ------
-        InvalidParameterException
+        PyegeriaInvalidParameterException
             one of the parameters is null or invalid or
-        PropertyServerException
+        PyegeriaAPIException
             There is a problem adding the element properties to the metadata repository or
-        UserNotAuthorizedException
+        PyegeriaUnauthorizedException
             the requesting user is not authorized to issue this request.
 
         Notes
@@ -886,11 +895,11 @@ class SolutionArchitect(Client2):
         ------
         Raises
         ------
-        InvalidParameterException
+        PyegeriaInvalidParameterException
             one of the parameters is null or invalid or
-        PropertyServerException
+        PyegeriaAPIException
             There is a problem adding the element properties to the metadata repository or
-        UserNotAuthorizedException
+        PyegeriaUnauthorizedException
             the requesting user is not authorized to issue this request.
 
         Notes
@@ -972,11 +981,11 @@ class SolutionArchitect(Client2):
         ------
         Raises
         ------
-        InvalidParameterException
+        PyegeriaInvalidParameterException
             one of the parameters is null or invalid or
-        PropertyServerException
+        PyegeriaAPIException
             There is a problem adding the element properties to the metadata repository or
-        UserNotAuthorizedException
+        PyegeriaUnauthorizedException
             the requesting user is not authorized to issue this request.
 
         Notes
@@ -1049,11 +1058,11 @@ class SolutionArchitect(Client2):
         ------
         Raises
         ------
-        InvalidParameterException
+        PyegeriaInvalidParameterException
             one of the parameters is null or invalid or
-        PropertyServerException
+        PyegeriaAPIException
             There is a problem adding the element properties to the metadata repository or
-        UserNotAuthorizedException
+        PyegeriaUnauthorizedException
             the requesting user is not authorized to issue this request.
 
         Notes
@@ -1109,11 +1118,11 @@ class SolutionArchitect(Client2):
             ------
             Raises
             ------
-            InvalidParameterException
+            PyegeriaInvalidParameterException
                 one of the parameters is null or invalid or
-            PropertyServerException
+            PyegeriaAPIException
                 There is a problem adding the element properties to the metadata repository or
-            UserNotAuthorizedException
+            PyegeriaUnauthorizedException
                 the requesting user is not authorized to issue this request.
 
             Notes
@@ -1167,11 +1176,11 @@ class SolutionArchitect(Client2):
 
         Raises
         ------
-        InvalidParameterException
+        PyegeriaInvalidParameterException
             one of the parameters is null or invalid or
-        PropertyServerException
+        PyegeriaAPIException
             There is a problem adding the element properties to the metadata repository or
-        UserNotAuthorizedException
+        PyegeriaUnauthorizedException
             the requesting user is not authorized to issue this request.
 
         Notes
@@ -1222,11 +1231,11 @@ class SolutionArchitect(Client2):
 
         Raises
         ------
-        InvalidParameterException
+        PyegeriaInvalidParameterException
             one of the parameters is null or invalid or
-        PropertyServerException
+        PyegeriaAPIException
             There is a problem adding the element properties to the metadata repository or
-        UserNotAuthorizedException
+        PyegeriaUnauthorizedException
             the requesting user is not authorized to issue this request.
 
         Notes
@@ -1274,11 +1283,11 @@ class SolutionArchitect(Client2):
 
         Raises
         ------
-        InvalidParameterException
+        PyegeriaInvalidParameterException
             one of the parameters is null or invalid or
-        PropertyServerException
+        PyegeriaAPIException
             There is a problem adding the element properties to the metadata repository or
-        UserNotAuthorizedException
+        PyegeriaUnauthorizedException
             the requesting user is not authorized to issue this request.
 
         Notes
@@ -1325,11 +1334,11 @@ class SolutionArchitect(Client2):
 
         Raises
         ------
-        InvalidParameterException
+        PyegeriaInvalidParameterException
             one of the parameters is null or invalid or
-        PropertyServerException
+        PyegeriaAPIException
             There is a problem adding the element properties to the metadata repository or
-        UserNotAuthorizedException
+        PyegeriaUnauthorizedException
             the requesting user is not authorized to issue this request.
 
         Notes
@@ -1369,11 +1378,11 @@ class SolutionArchitect(Client2):
 
         Raises
         ------
-        InvalidParameterException
+        PyegeriaInvalidParameterException
             one of the parameters is null or invalid or
-        PropertyServerException
+        PyegeriaAPIException
             There is a problem adding the element properties to the metadata repository or
-        UserNotAuthorizedException
+        PyegeriaUnauthorizedException
             the requesting user is not authorized to issue this request.
 
         Notes
@@ -1423,11 +1432,11 @@ class SolutionArchitect(Client2):
 
         Raises
         ------
-        InvalidParameterException
+        PyegeriaInvalidParameterException
             one of the parameters is null or invalid or
-        PropertyServerException
+        PyegeriaAPIException
             There is a problem adding the element properties to the metadata repository or
-        UserNotAuthorizedException
+        PyegeriaUnauthorizedException
             the requesting user is not authorized to issue this request.
 
         Notes
@@ -1474,11 +1483,11 @@ class SolutionArchitect(Client2):
 
         Raises
         ------
-        InvalidParameterException
+        PyegeriaInvalidParameterException
             one of the parameters is null or invalid or
-        PropertyServerException
+        PyegeriaAPIException
             There is a problem adding the element properties to the metadata repository or
-        UserNotAuthorizedException
+        PyegeriaUnauthorizedException
             the requesting user is not authorized to issue this request.
 
         Notes
@@ -1523,11 +1532,11 @@ class SolutionArchitect(Client2):
 
         Raises
         ------
-        InvalidParameterException
+        PyegeriaInvalidParameterException
             one of the parameters is null or invalid or
-        PropertyServerException
+        PyegeriaAPIException
             There is a problem adding the element properties to the metadata repository or
-        UserNotAuthorizedException
+        PyegeriaUnauthorizedException
             the requesting user is not authorized to issue this request.
 
         Notes
@@ -1566,11 +1575,11 @@ class SolutionArchitect(Client2):
 
            Raises
            ------
-           InvalidParameterException
+           PyegeriaInvalidParameterException
                one of the parameters is null or invalid or
-           PropertyServerException
+           PyegeriaAPIException
                There is a problem adding the element properties to the metadata repository or
-           UserNotAuthorizedException
+           PyegeriaUnauthorizedException
                the requesting user is not authorized to issue this request.
 
            Notes
@@ -1612,11 +1621,11 @@ class SolutionArchitect(Client2):
 
             Raises
             ------
-            InvalidParameterException
+            PyegeriaInvalidParameterException
                 one of the parameters is null or invalid or
-            PropertyServerException
+            PyegeriaAPIException
                 There is a problem adding the element properties to the metadata repository or
-            UserNotAuthorizedException
+            PyegeriaUnauthorizedException
                 the requesting user is not authorized to issue this request.
 
             Notes
@@ -1666,11 +1675,11 @@ class SolutionArchitect(Client2):
 
                 Raises
                 ------
-                InvalidParameterException
+                PyegeriaInvalidParameterException
                     one of the parameters is null or invalid or
-                PropertyServerException
+                PyegeriaAPIException
                     There is a problem adding the element properties to the metadata repository or
-                UserNotAuthorizedException
+                PyegeriaUnauthorizedException
                     the requesting user is not authorized to issue this request.
 
                 Notes
@@ -1736,11 +1745,11 @@ class SolutionArchitect(Client2):
 
             Raises
             ------
-            InvalidParameterException
+            PyegeriaInvalidParameterException
                 one of the parameters is null or invalid or
-            PropertyServerException
+            PyegeriaAPIException
                 There is a problem adding the element properties to the metadata repository or
-            UserNotAuthorizedException
+            PyegeriaUnauthorizedException
                 the requesting user is not authorized to issue this request.
 
             Notes
@@ -1816,11 +1825,11 @@ class SolutionArchitect(Client2):
 
         Raises
         ------
-        InvalidParameterException
+        PyegeriaInvalidParameterException
             one of the parameters is null or invalid or
-        PropertyServerException
+        PyegeriaAPIException
             There is a problem adding the element properties to the metadata repository or
-        UserNotAuthorizedException
+        PyegeriaUnauthorizedException
             the requesting user is not authorized to issue this request.
 
         Notes
@@ -1876,11 +1885,11 @@ class SolutionArchitect(Client2):
 
             Raises
             ------
-            InvalidParameterException
+            PyegeriaInvalidParameterException
                 one of the parameters is null or invalid or
-            PropertyServerException
+            PyegeriaAPIException
                 There is a problem adding the element properties to the metadata repository or
-            UserNotAuthorizedException
+            PyegeriaUnauthorizedException
                 the requesting user is not authorized to issue this request.
 
             Notes
@@ -1951,11 +1960,11 @@ class SolutionArchitect(Client2):
 
             Raises
             ------
-            InvalidParameterException
+            PyegeriaInvalidParameterException
                 one of the parameters is null or invalid or
-            PropertyServerException
+            PyegeriaAPIException
                 There is a problem adding the element properties to the metadata repository or
-            UserNotAuthorizedException
+            PyegeriaUnauthorizedException
                 the requesting user is not authorized to issue this request.
 
             Notes
@@ -2006,11 +2015,11 @@ class SolutionArchitect(Client2):
 
             Raises
             ------
-            InvalidParameterException
+            PyegeriaInvalidParameterException
                 one of the parameters is null or invalid or
-            PropertyServerException
+            PyegeriaAPIException
                 There is a problem adding the element properties to the metadata repository or
-            UserNotAuthorizedException
+            PyegeriaUnauthorizedException
                 the requesting user is not authorized to issue this request.
 
             Notes
@@ -2067,11 +2076,11 @@ class SolutionArchitect(Client2):
 
             Raises
             ------
-            InvalidParameterException
+            PyegeriaInvalidParameterException
                 one of the parameters is null or invalid or
-            PropertyServerException
+            PyegeriaAPIException
                 There is a problem adding the element properties to the metadata repository or
-            UserNotAuthorizedException
+            PyegeriaUnauthorizedException
                 the requesting user is not authorized to issue this request.
 
             Notes
@@ -2113,11 +2122,11 @@ class SolutionArchitect(Client2):
 
             Raises
             ------
-            InvalidParameterException
+            PyegeriaInvalidParameterException
                 one of the parameters is null or invalid or
-            PropertyServerException
+            PyegeriaAPIException
                 There is a problem adding the element properties to the metadata repository or
-            UserNotAuthorizedException
+            PyegeriaUnauthorizedException
                 the requesting user is not authorized to issue this request.
 
             Notes
@@ -2230,11 +2239,11 @@ class SolutionArchitect(Client2):
 
             Raises
             ------
-            InvalidParameterException
+            PyegeriaInvalidParameterException
                 one of the parameters is null or invalid or
-            PropertyServerException
+            PyegeriaAPIException
                 There is a problem adding the element properties to the metadata repository or
-            UserNotAuthorizedException
+            PyegeriaUnauthorizedException
                 the requesting user is not authorized to issue this request.
 
             Notes
@@ -2349,11 +2358,11 @@ class SolutionArchitect(Client2):
         ------
         Raises
         ------
-        InvalidParameterException
+        PyegeriaInvalidParameterException
             one of the parameters is null or invalid or
-        PropertyServerException
+        PyegeriaAPIException
             There is a problem adding the element properties to the metadata repository or
-        UserNotAuthorizedException
+        PyegeriaUnauthorizedException
             the requesting user is not authorized to issue this request.
 
         Notes
@@ -2433,11 +2442,11 @@ class SolutionArchitect(Client2):
 
         Raises
         ------
-        InvalidParameterException
+        PyegeriaInvalidParameterException
             one of the parameters is null or invalid or
-        PropertyServerException
+        PyegeriaAPIException
             There is a problem adding the element properties to the metadata repository or
-        UserNotAuthorizedException
+        PyegeriaUnauthorizedException
             the requesting user is not authorized to issue this request.
 
         Notes
@@ -2505,11 +2514,11 @@ class SolutionArchitect(Client2):
 
         Raises
         ------
-        InvalidParameterException
+        PyegeriaInvalidParameterException
             one of the parameters is null or invalid or
-        PropertyServerException
+        PyegeriaAPIException
             There is a problem adding the element properties to the metadata repository or
-        UserNotAuthorizedException
+        PyegeriaUnauthorizedException
             the requesting user is not authorized to issue this request.
 
         Notes
@@ -2564,11 +2573,11 @@ class SolutionArchitect(Client2):
             ------
             Raises
             ------
-            InvalidParameterException
+            PyegeriaInvalidParameterException
                 one of the parameters is null or invalid or
-            PropertyServerException
+            PyegeriaAPIException
                 There is a problem adding the element properties to the metadata repository or
-            UserNotAuthorizedException
+            PyegeriaUnauthorizedException
                 the requesting user is not authorized to issue this request.
 
             Notes
@@ -2620,11 +2629,11 @@ class SolutionArchitect(Client2):
 
            Raises
            ------
-           InvalidParameterException
+           PyegeriaInvalidParameterException
                one of the parameters is null or invalid or
-           PropertyServerException
+           PyegeriaAPIException
                There is a problem adding the element properties to the metadata repository or
-           UserNotAuthorizedException
+           PyegeriaUnauthorizedException
                the requesting user is not authorized to issue this request.
 
            Notes
@@ -2666,11 +2675,11 @@ class SolutionArchitect(Client2):
 
             Raises
             ------
-            InvalidParameterException
+            PyegeriaInvalidParameterException
                 one of the parameters is null or invalid or
-            PropertyServerException
+            PyegeriaAPIException
                 There is a problem adding the element properties to the metadata repository or
-            UserNotAuthorizedException
+            PyegeriaUnauthorizedException
                 the requesting user is not authorized to issue this request.
 
             Notes
@@ -2710,11 +2719,11 @@ class SolutionArchitect(Client2):
 
         Raises
         ------
-        InvalidParameterException
+        PyegeriaInvalidParameterException
             one of the parameters is null or invalid or
-        PropertyServerException
+        PyegeriaAPIException
             There is a problem adding the element properties to the metadata repository or
-        UserNotAuthorizedException
+        PyegeriaUnauthorizedException
             the requesting user is not authorized to issue this request.
 
         Notes
@@ -2764,11 +2773,11 @@ class SolutionArchitect(Client2):
 
         Raises
         ------
-        InvalidParameterException
+        PyegeriaInvalidParameterException
             one of the parameters is null or invalid or
-        PropertyServerException
+        PyegeriaAPIException
             There is a problem adding the element properties to the metadata repository or
-        UserNotAuthorizedException
+        PyegeriaUnauthorizedException
             the requesting user is not authorized to issue this request.
 
         Notes
@@ -2815,11 +2824,11 @@ class SolutionArchitect(Client2):
 
         Raises
         ------
-        InvalidParameterException
+        PyegeriaInvalidParameterException
             one of the parameters is null or invalid or
-        PropertyServerException
+        PyegeriaAPIException
             There is a problem adding the element properties to the metadata repository or
-        UserNotAuthorizedException
+        PyegeriaUnauthorizedException
             the requesting user is not authorized to issue this request.
 
         Notes
@@ -2864,11 +2873,11 @@ class SolutionArchitect(Client2):
 
         Raises
         ------
-        InvalidParameterException
+        PyegeriaInvalidParameterException
             one of the parameters is null or invalid or
-        PropertyServerException
+        PyegeriaAPIException
             There is a problem adding the element properties to the metadata repository or
-        UserNotAuthorizedException
+        PyegeriaUnauthorizedException
             the requesting user is not authorized to issue this request.
 
         Notes
@@ -2912,11 +2921,11 @@ class SolutionArchitect(Client2):
            ------
            Raises
            ------
-           InvalidParameterException
+           PyegeriaInvalidParameterException
                one of the parameters is null or invalid or
-           PropertyServerException
+           PyegeriaAPIException
                There is a problem adding the element properties to the metadata repository or
-           UserNotAuthorizedException
+           PyegeriaUnauthorizedException
                the requesting user is not authorized to issue this request.
 
            Notes
@@ -2957,11 +2966,11 @@ class SolutionArchitect(Client2):
 
             Raises
             ------
-            InvalidParameterException
+            PyegeriaInvalidParameterException
                 one of the parameters is null or invalid or
-            PropertyServerException
+            PyegeriaAPIException
                 There is a problem adding the element properties to the metadata repository or
-            UserNotAuthorizedException
+            PyegeriaUnauthorizedException
                 the requesting user is not authorized to issue this request.
 
             Notes
@@ -3021,11 +3030,11 @@ class SolutionArchitect(Client2):
 
         Raises
         ------
-        InvalidParameterException
+        PyegeriaInvalidParameterException
             one of the parameters is null or invalid or
-        PropertyServerException
+        PyegeriaAPIException
             There is a problem adding the element properties to the metadata repository or
-        UserNotAuthorizedException
+        PyegeriaUnauthorizedException
             the requesting user is not authorized to issue this request.
 
         Notes:
@@ -3099,11 +3108,11 @@ class SolutionArchitect(Client2):
 
         Raises
         ------
-        InvalidParameterException
+        PyegeriaInvalidParameterException
             one of the parameters is null or invalid or
-        PropertyServerException
+        PyegeriaAPIException
             There is a problem adding the element properties to the metadata repository or
-        UserNotAuthorizedException
+        PyegeriaUnauthorizedException
             the requesting user is not authorized to issue this request.
 
         Notes:
@@ -3170,11 +3179,11 @@ class SolutionArchitect(Client2):
 
             Raises
             ------
-            InvalidParameterException
+            PyegeriaInvalidParameterException
                 one of the parameters is null or invalid or
-            PropertyServerException
+            PyegeriaAPIException
                 There is a problem adding the element properties to the metadata repository or
-            UserNotAuthorizedException
+            PyegeriaUnauthorizedException
                 the requesting user is not authorized to issue this request.
 
             Notes
@@ -3231,11 +3240,11 @@ class SolutionArchitect(Client2):
 
             Raises
             ------
-            InvalidParameterException
+            PyegeriaInvalidParameterException
                 one of the parameters is null or invalid or
-            PropertyServerException
+            PyegeriaAPIException
                 There is a problem adding the element properties to the metadata repository or
-            UserNotAuthorizedException
+            PyegeriaUnauthorizedException
                 the requesting user is not authorized to issue this request.
 
             Notes
@@ -3283,11 +3292,11 @@ class SolutionArchitect(Client2):
 
             Raises
             ------
-            InvalidParameterException
+            PyegeriaInvalidParameterException
                 one of the parameters is null or invalid or
-            PropertyServerException
+            PyegeriaAPIException
                 There is a problem adding the element properties to the metadata repository or
-            UserNotAuthorizedException
+            PyegeriaUnauthorizedException
                 the requesting user is not authorized to issue this request.
 
             Notes
@@ -3357,11 +3366,11 @@ class SolutionArchitect(Client2):
 
             Raises
             ------
-            InvalidParameterException
+            PyegeriaInvalidParameterException
                 one of the parameters is null or invalid or
-            PropertyServerException
+            PyegeriaAPIException
                 There is a problem adding the element properties to the metadata repository or
-            UserNotAuthorizedException
+            PyegeriaUnauthorizedException
                 the requesting user is not authorized to issue this request.
 
             Notes
@@ -3413,11 +3422,11 @@ class SolutionArchitect(Client2):
         ------
         Raises
         ------
-        InvalidParameterException
+        PyegeriaInvalidParameterException
             one of the parameters is null or invalid or
-        PropertyServerException
+        PyegeriaAPIException
             There is a problem adding the element properties to the metadata repository or
-        UserNotAuthorizedException
+        PyegeriaUnauthorizedException
             the requesting user is not authorized to issue this request.
 
         Notes
@@ -3498,11 +3507,11 @@ class SolutionArchitect(Client2):
         ------
         Raises
         ------
-        InvalidParameterException
+        PyegeriaInvalidParameterException
             one of the parameters is null or invalid or
-        PropertyServerException
+        PyegeriaAPIException
             There is a problem adding the element properties to the metadata repository or
-        UserNotAuthorizedException
+        PyegeriaUnauthorizedException
             the requesting user is not authorized to issue this request.
 
         Notes
@@ -3582,11 +3591,11 @@ class SolutionArchitect(Client2):
 
         Raises
         ------
-        InvalidParameterException
+        PyegeriaInvalidParameterException
             one of the parameters is null or invalid or
-        PropertyServerException
+        PyegeriaAPIException
             There is a problem adding the element properties to the metadata repository or
-        UserNotAuthorizedException
+        PyegeriaUnauthorizedException
             the requesting user is not authorized to issue this request.
 
         Notes
@@ -3668,11 +3677,11 @@ class SolutionArchitect(Client2):
 
                 Raises
                 ------
-                InvalidParameterException
+                PyegeriaInvalidParameterException
                     one of the parameters is null or invalid or
-                PropertyServerException
+                PyegeriaAPIException
                     There is a problem adding the element properties to the metadata repository or
-                UserNotAuthorizedException
+                PyegeriaUnauthorizedException
                     the requesting user is not authorized to issue this request.
 
                 Notes
@@ -3742,11 +3751,11 @@ class SolutionArchitect(Client2):
 
         Raises
         ------
-        InvalidParameterException
+        PyegeriaInvalidParameterException
             one of the parameters is null or invalid or
-        PropertyServerException
+        PyegeriaAPIException
             There is a problem adding the element properties to the metadata repository or
-        UserNotAuthorizedException
+        PyegeriaUnauthorizedException
             the requesting user is not authorized to issue this request.
 
         Notes
@@ -3800,11 +3809,11 @@ class SolutionArchitect(Client2):
 
         Raises
         ------
-        InvalidParameterException
+        PyegeriaInvalidParameterException
             one of the parameters is null or invalid or
-        PropertyServerException
+        PyegeriaAPIException
             There is a problem adding the element properties to the metadata repository or
-        UserNotAuthorizedException
+        PyegeriaUnauthorizedException
             the requesting user is not authorized to issue this request.
 
         Notes
@@ -3858,11 +3867,11 @@ class SolutionArchitect(Client2):
 
         Raises
         ------
-        InvalidParameterException
+        PyegeriaInvalidParameterException
             one of the parameters is null or invalid or
-        PropertyServerException
+        PyegeriaAPIException
             There is a problem adding the element properties to the metadata repository or
-        UserNotAuthorizedException
+        PyegeriaUnauthorizedException
             the requesting user is not authorized to issue this request.
 
         Notes
@@ -3904,11 +3913,11 @@ class SolutionArchitect(Client2):
 
                 Raises
                 ------
-                InvalidParameterException
+                PyegeriaInvalidParameterException
                     one of the parameters is null or invalid or
-                PropertyServerException
+                PyegeriaAPIException
                     There is a problem adding the element properties to the metadata repository or
-                UserNotAuthorizedException
+                PyegeriaUnauthorizedException
                     the requesting user is not authorized to issue this request.
 
                 Notes
@@ -3947,11 +3956,11 @@ class SolutionArchitect(Client2):
 
         Raises
         ------
-        InvalidParameterException
+        PyegeriaInvalidParameterException
             one of the parameters is null or invalid or
-        PropertyServerException
+        PyegeriaAPIException
             There is a problem adding the element properties to the metadata repository or
-        UserNotAuthorizedException
+        PyegeriaUnauthorizedException
             the requesting user is not authorized to issue this request.
 
         Notes
@@ -3996,11 +4005,11 @@ class SolutionArchitect(Client2):
 
         Raises
         ------
-        InvalidParameterException
+        PyegeriaInvalidParameterException
             one of the parameters is null or invalid or
-        PropertyServerException
+        PyegeriaAPIException
             There is a problem adding the element properties to the metadata repository or
-        UserNotAuthorizedException
+        PyegeriaUnauthorizedException
             the requesting user is not authorized to issue this request.
 
         Notes
@@ -4040,11 +4049,11 @@ class SolutionArchitect(Client2):
 
         Raises
         ------
-        InvalidParameterException
+        PyegeriaInvalidParameterException
             one of the parameters is null or invalid or
-        PropertyServerException
+        PyegeriaAPIException
             There is a problem adding the element properties to the metadata repository or
-        UserNotAuthorizedException
+        PyegeriaUnauthorizedException
             the requesting user is not authorized to issue this request.
 
         Notes
@@ -4091,11 +4100,11 @@ class SolutionArchitect(Client2):
 
                 Raises
                 ------
-                InvalidParameterException
+                PyegeriaInvalidParameterException
                     one of the parameters is null or invalid or
-                PropertyServerException
+                PyegeriaAPIException
                     There is a problem adding the element properties to the metadata repository or
-                UserNotAuthorizedException
+                PyegeriaUnauthorizedException
                     the requesting user is not authorized to issue this request.
 
                 Notes
@@ -4141,11 +4150,11 @@ class SolutionArchitect(Client2):
 
         Raises
         ------
-        InvalidParameterException
+        PyegeriaInvalidParameterException
             one of the parameters is null or invalid or
-        PropertyServerException
+        PyegeriaAPIException
             There is a problem adding the element properties to the metadata repository or
-        UserNotAuthorizedException
+        PyegeriaUnauthorizedException
             the requesting user is not authorized to issue this request.
 
         Notes
@@ -4191,11 +4200,11 @@ class SolutionArchitect(Client2):
 
                 Raises
                 ------
-                InvalidParameterException
+                PyegeriaInvalidParameterException
                     one of the parameters is null or invalid or
-                PropertyServerException
+                PyegeriaAPIException
                     There is a problem adding the element properties to the metadata repository or
-                UserNotAuthorizedException
+                PyegeriaUnauthorizedException
                     the requesting user is not authorized to issue this request.
 
                 Notes
@@ -4235,11 +4244,11 @@ class SolutionArchitect(Client2):
 
            Raises
            ------
-           InvalidParameterException
+           PyegeriaInvalidParameterException
                one of the parameters is null or invalid or
-           PropertyServerException
+           PyegeriaAPIException
                There is a problem adding the element properties to the metadata repository or
-           UserNotAuthorizedException
+           PyegeriaUnauthorizedException
                the requesting user is not authorized to issue this request.
 
            Notes
@@ -4281,11 +4290,11 @@ class SolutionArchitect(Client2):
 
            Raises
            ------
-           InvalidParameterException
+           PyegeriaInvalidParameterException
                one of the parameters is null or invalid or
-           PropertyServerException
+           PyegeriaAPIException
                There is a problem adding the element properties to the metadata repository or
-           UserNotAuthorizedException
+           PyegeriaUnauthorizedException
                the requesting user is not authorized to issue this request.
 
            Notes
@@ -4343,11 +4352,11 @@ class SolutionArchitect(Client2):
 
         Raises
         ------
-        InvalidParameterException
+        PyegeriaInvalidParameterException
             one of the parameters is null or invalid or
-        PropertyServerException
+        PyegeriaAPIException
             There is a problem adding the element properties to the metadata repository or
-        UserNotAuthorizedException
+        PyegeriaUnauthorizedException
             the requesting user is not authorized to issue this request.
 
         Notes
@@ -4417,11 +4426,11 @@ class SolutionArchitect(Client2):
 
         Raises
         ------
-        InvalidParameterException
+        PyegeriaInvalidParameterException
             one of the parameters is null or invalid or
-        PropertyServerException
+        PyegeriaAPIException
             There is a problem adding the element properties to the metadata repository or
-        UserNotAuthorizedException
+        PyegeriaUnauthorizedException
             the requesting user is not authorized to issue this request.
 
         Notes
@@ -4484,11 +4493,11 @@ class SolutionArchitect(Client2):
 
             Raises
             ------
-            InvalidParameterException
+            PyegeriaInvalidParameterException
                 one of the parameters is null or invalid or
-            PropertyServerException
+            PyegeriaAPIException
                 There is a problem adding the element properties to the metadata repository or
-            UserNotAuthorizedException
+            PyegeriaUnauthorizedException
                 the requesting user is not authorized to issue this request.
 
             Notes
@@ -4556,11 +4565,11 @@ class SolutionArchitect(Client2):
 
             Raises
             ------
-            InvalidParameterException
+            PyegeriaInvalidParameterException
                 one of the parameters is null or invalid or
-            PropertyServerException
+            PyegeriaAPIException
                 There is a problem adding the element properties to the metadata repository or
-            UserNotAuthorizedException
+            PyegeriaUnauthorizedException
                 the requesting user is not authorized to issue this request.
 
             Notes
@@ -4613,11 +4622,11 @@ class SolutionArchitect(Client2):
 
             Raises
             ------
-            InvalidParameterException
+            PyegeriaInvalidParameterException
                 one of the parameters is null or invalid or
-            PropertyServerException
+            PyegeriaAPIException
                 There is a problem adding the element properties to the metadata repository or
-            UserNotAuthorizedException
+            PyegeriaUnauthorizedException
                 the requesting user is not authorized to issue this request.
 
             Notes
@@ -4674,11 +4683,11 @@ class SolutionArchitect(Client2):
 
             Raises
             ------
-            InvalidParameterException
+            PyegeriaInvalidParameterException
                 one of the parameters is null or invalid or
-            PropertyServerException
+            PyegeriaAPIException
                 There is a problem adding the element properties to the metadata repository or
-            UserNotAuthorizedException
+            PyegeriaUnauthorizedException
                 the requesting user is not authorized to issue this request.
 
             Notes
@@ -4799,11 +4808,11 @@ class SolutionArchitect(Client2):
 
             Raises
             ------
-            InvalidParameterException
+            PyegeriaInvalidParameterException
                 one of the parameters is null or invalid or
-            PropertyServerException
+            PyegeriaAPIException
                 There is a problem adding the element properties to the metadata repository or
-            UserNotAuthorizedException
+            PyegeriaUnauthorizedException
                 the requesting user is not authorized to issue this request.
 
             Notes
@@ -4869,11 +4878,11 @@ class SolutionArchitect(Client2):
 
             Raises
             ------
-            InvalidParameterException
+            PyegeriaInvalidParameterException
                 one of the parameters is null or invalid or
-            PropertyServerException
+            PyegeriaAPIException
                 There is a problem adding the element properties to the metadata repository or
-            UserNotAuthorizedException
+            PyegeriaUnauthorizedException
                 the requesting user is not authorized to issue this request.
 
             Notes
@@ -4918,11 +4927,11 @@ class SolutionArchitect(Client2):
 
         Raises
         ------
-        InvalidParameterException
+        PyegeriaInvalidParameterException
             one of the parameters is null or invalid or
-        PropertyServerException
+        PyegeriaAPIException
             There is a problem adding the element properties to the metadata repository or
-        UserNotAuthorizedException
+        PyegeriaUnauthorizedException
             the requesting user is not authorized to issue this request.
 
         Notes
@@ -4989,11 +4998,11 @@ class SolutionArchitect(Client2):
         ------
         Raises
         ------
-        InvalidParameterException
+        PyegeriaInvalidParameterException
             one of the parameters is null or invalid or
-        PropertyServerException
+        PyegeriaAPIException
             There is a problem adding the element properties to the metadata repository or
-        UserNotAuthorizedException
+        PyegeriaUnauthorizedException
             the requesting user is not authorized to issue this request.
 
         Notes
@@ -5063,11 +5072,11 @@ class SolutionArchitect(Client2):
 
         Raises
         ------
-        InvalidParameterException
+        PyegeriaInvalidParameterException
             one of the parameters is null or invalid or
-        PropertyServerException
+        PyegeriaAPIException
             There is a problem adding the element properties to the metadata repository or
-        UserNotAuthorizedException
+        PyegeriaUnauthorizedException
             the requesting user is not authorized to issue this request.
 
         Notes
@@ -5148,11 +5157,11 @@ class SolutionArchitect(Client2):
 
                 Raises
                 ------
-                InvalidParameterException
+                PyegeriaInvalidParameterException
                     one of the parameters is null or invalid or
-                PropertyServerException
+                PyegeriaAPIException
                     There is a problem adding the element properties to the metadata repository or
-                UserNotAuthorizedException
+                PyegeriaUnauthorizedException
                     the requesting user is not authorized to issue this request.
 
                 Notes
@@ -5226,11 +5235,11 @@ class SolutionArchitect(Client2):
         ------
         Raises
         ------
-        InvalidParameterException
+        PyegeriaInvalidParameterException
             one of the parameters is null or invalid or
-        PropertyServerException
+        PyegeriaAPIException
             There is a problem adding the element properties to the metadata repository or
-        UserNotAuthorizedException
+        PyegeriaUnauthorizedException
             the requesting user is not authorized to issue this request.
 
         Notes
@@ -5286,11 +5295,11 @@ class SolutionArchitect(Client2):
         ------
         Raises
         ------
-        InvalidParameterException
+        PyegeriaInvalidParameterException
             one of the parameters is null or invalid or
-        PropertyServerException
+        PyegeriaAPIException
             There is a problem adding the element properties to the metadata repository or
-        UserNotAuthorizedException
+        PyegeriaUnauthorizedException
             the requesting user is not authorized to issue this request.
 
         Notes
@@ -5341,11 +5350,11 @@ class SolutionArchitect(Client2):
 
         Raises
         ------
-        InvalidParameterException
+        PyegeriaInvalidParameterException
             one of the parameters is null or invalid or
-        PropertyServerException
+        PyegeriaAPIException
             There is a problem adding the element properties to the metadata repository or
-        UserNotAuthorizedException
+        PyegeriaUnauthorizedException
             the requesting user is not authorized to issue this request.
 
         Notes
@@ -5394,11 +5403,11 @@ class SolutionArchitect(Client2):
 
             Raises
             ------
-            InvalidParameterException
+            PyegeriaInvalidParameterException
                 one of the parameters is null or invalid or
-            PropertyServerException
+            PyegeriaAPIException
                 There is a problem adding the element properties to the metadata repository or
-            UserNotAuthorizedException
+            PyegeriaUnauthorizedException
                 the requesting user is not authorized to issue this request.
 
             Notes
@@ -5445,11 +5454,11 @@ class SolutionArchitect(Client2):
 
         Raises
         ------
-        InvalidParameterException
+        PyegeriaInvalidParameterException
             one of the parameters is null or invalid or
-        PropertyServerException
+        PyegeriaAPIException
             There is a problem adding the element properties to the metadata repository or
-        UserNotAuthorizedException
+        PyegeriaUnauthorizedException
             the requesting user is not authorized to issue this request.
 
         Notes
@@ -5493,11 +5502,11 @@ class SolutionArchitect(Client2):
 
         Raises
         ------
-        InvalidParameterException
+        PyegeriaInvalidParameterException
             one of the parameters is null or invalid or
-        PropertyServerException
+        PyegeriaAPIException
             There is a problem adding the element properties to the metadata repository or
-        UserNotAuthorizedException
+        PyegeriaUnauthorizedException
             the requesting user is not authorized to issue this request.
 
         Notes
@@ -5536,11 +5545,11 @@ class SolutionArchitect(Client2):
 
            Raises
            ------
-           InvalidParameterException
+           PyegeriaInvalidParameterException
                one of the parameters is null or invalid or
-           PropertyServerException
+           PyegeriaAPIException
                There is a problem adding the element properties to the metadata repository or
-           UserNotAuthorizedException
+           PyegeriaUnauthorizedException
                the requesting user is not authorized to issue this request.
 
            Notes
@@ -5582,11 +5591,11 @@ class SolutionArchitect(Client2):
 
            Raises
            ------
-           InvalidParameterException
+           PyegeriaInvalidParameterException
                one of the parameters is null or invalid or
-           PropertyServerException
+           PyegeriaAPIException
                There is a problem adding the element properties to the metadata repository or
-           UserNotAuthorizedException
+           PyegeriaUnauthorizedException
                the requesting user is not authorized to issue this request.
 
            Notes
@@ -5644,11 +5653,11 @@ class SolutionArchitect(Client2):
 
         Raises
         ------
-        InvalidParameterException
+        PyegeriaInvalidParameterException
             one of the parameters is null or invalid or
-        PropertyServerException
+        PyegeriaAPIException
             There is a problem adding the element properties to the metadata repository or
-        UserNotAuthorizedException
+        PyegeriaUnauthorizedException
             the requesting user is not authorized to issue this request.
 
         Notes
@@ -5725,11 +5734,11 @@ class SolutionArchitect(Client2):
 
         Raises
         ------
-        InvalidParameterException
+        PyegeriaInvalidParameterException
             one of the parameters is null or invalid or
-        PropertyServerException
+        PyegeriaAPIException
             There is a problem adding the element properties to the metadata repository or
-        UserNotAuthorizedException
+        PyegeriaUnauthorizedException
             the requesting user is not authorized to issue this request.
 
         Notes
@@ -5792,11 +5801,11 @@ class SolutionArchitect(Client2):
 
             Raises
             ------
-            InvalidParameterException
+            PyegeriaInvalidParameterException
                 one of the parameters is null or invalid or
-            PropertyServerException
+            PyegeriaAPIException
                 There is a problem adding the element properties to the metadata repository or
-            UserNotAuthorizedException
+            PyegeriaUnauthorizedException
                 the requesting user is not authorized to issue this request.
 
             Notes
@@ -5865,11 +5874,11 @@ class SolutionArchitect(Client2):
 
             Raises
             ------
-            InvalidParameterException
+            PyegeriaInvalidParameterException
                 one of the parameters is null or invalid or
-            PropertyServerException
+            PyegeriaAPIException
                 There is a problem adding the element properties to the metadata repository or
-            UserNotAuthorizedException
+            PyegeriaUnauthorizedException
                 the requesting user is not authorized to issue this request.
 
             Notes
@@ -5918,11 +5927,11 @@ class SolutionArchitect(Client2):
 
             Raises
             ------
-            InvalidParameterException
+            PyegeriaInvalidParameterException
                 one of the parameters is null or invalid or
-            PropertyServerException
+            PyegeriaAPIException
                 There is a problem adding the element properties to the metadata repository or
-            UserNotAuthorizedException
+            PyegeriaUnauthorizedException
                 the requesting user is not authorized to issue this request.
 
             Notes
@@ -5974,11 +5983,11 @@ class SolutionArchitect(Client2):
 
             Raises
             ------
-            InvalidParameterException
+            PyegeriaInvalidParameterException
                 one of the parameters is null or invalid or
-            PropertyServerException
+            PyegeriaAPIException
                 There is a problem adding the element properties to the metadata repository or
-            UserNotAuthorizedException
+            PyegeriaUnauthorizedException
                 the requesting user is not authorized to issue this request.
 
             Notes

@@ -20,11 +20,11 @@ from rich.markdown import Markdown
 from rich.table import Table
 
 from pyegeria import EgeriaTech
-from pyegeria._exceptions import (
-    InvalidParameterException,
-    PropertyServerException,
-    UserNotAuthorizedException,
-    print_exception_response,
+from pyegeria._exceptions_new import (
+    PyegeriaInvalidParameterException,
+    PyegeriaAPIException as PropertyServerException,
+    PyegeriaUnauthorizedException as UserNotAuthorizedException,
+    print_basic_exception as print_exception_response,
 )
 from pyegeria.my_profile_omvs import MyProfile
 
@@ -145,7 +145,7 @@ def display_todos(
                 live.console.pager()
 
     except (
-        InvalidParameterException,
+        PyegeriaInvalidParameterException,
         PropertyServerException,
         UserNotAuthorizedException,
     ) as e:

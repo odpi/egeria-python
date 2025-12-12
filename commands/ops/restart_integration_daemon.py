@@ -12,10 +12,10 @@ import argparse
 import os
 
 from pyegeria import EgeriaTech
-from pyegeria._exceptions import (
-    InvalidParameterException,
-    PropertyServerException,
-    print_exception_response,
+from pyegeria._exceptions_new import (
+    PyegeriaInvalidParameterException,
+    PyegeriaAPIException as PropertyServerException,
+    print_basic_exception as print_exception_response,
 )
 
 EGERIA_METADATA_STORE = os.environ.get("EGERIA_METADATA_STORE", "qs-metadata-store")
@@ -51,7 +51,7 @@ def restart_connector(
 
         print(f"\n===> Integration Daemon '{server}' restarted {statement}.")
 
-    except (InvalidParameterException, PropertyServerException) as e:
+    except (PyegeriaInvalidParameterException, PropertyServerException) as e:
         print_exception_response(e)
 
 

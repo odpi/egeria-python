@@ -11,7 +11,7 @@ from httpx import Response
 from loguru import logger
 
 # import json
-from pyegeria._client_new import Client2
+from pyegeria._server_client import ServerClient
 from pyegeria._globals import default_time_out, NO_ELEMENTS_FOUND
 from pyegeria.models import LevelIdentifierQueryBody
 from pyegeria.utils import body_slimmer
@@ -40,7 +40,7 @@ def base_path(client, view_server: str):
     return f"{client.platform_url}/servers/{view_server}/api/open-metadata/classification-manager"
 
 
-class ClassificationManager(Client2):
+class ClassificationManager(ServerClient):
     """ClassificationManager is a class that extends the Client class. It
     provides methods to CRUD annotations and to query elements and relationships. Async version.
 
@@ -75,7 +75,7 @@ class ClassificationManager(Client2):
         self.classification_command_root: str = (
             f"{self.platform_url}/servers/{self.view_server}/api/open-metadata/classification-manager"
         )
-        Client2.__init__(
+        ServerClient.__init__(
             self,
             view_server,
             platform_url,
@@ -1369,11 +1369,11 @@ class ClassificationManager(Client2):
 
          Raises
          ------
-         InvalidParameterException
+         PyegeriaInvalidParameterException
              one of the parameters is null or invalid or
-         PropertyServerException
+         PyegeriaAPIException
              There is a problem adding the element properties to the metadata repository or
-         UserNotAuthorizedException
+         PyegeriaUnauthorizedException
              the requesting user is not authorized to issue this request.
         """
 
@@ -2480,11 +2480,11 @@ class ClassificationManager(Client2):
     #
     #     Raises
     #     ------
-    #     InvalidParameterException
+    #     PyegeriaInvalidParameterException
     #         one of the parameters is null or invalid or
-    #     PropertyServerException
+    #     PyegeriaAPIException
     #         There is a problem adding the element properties to the metadata repository or
-    #     UserNotAuthorizedException
+    #     PyegeriaUnauthorizedException
     #         the requesting user is not authorized to issue this request.
     #     """
     #
@@ -2562,11 +2562,11 @@ class ClassificationManager(Client2):
     #
     #     Raises
     #     ------
-    #     InvalidParameterException
+    #     PyegeriaInvalidParameterException
     #         one of the parameters is null or invalid or
-    #     PropertyServerException
+    #     PyegeriaAPIException
     #         There is a problem adding the element properties to the metadata repository or
-    #     UserNotAuthorizedException
+    #     PyegeriaUnauthorizedException
     #         the requesting user is not authorized to issue this request.
     #     """
     #
@@ -5270,11 +5270,11 @@ class ClassificationManager(Client2):
 
          Raises
          ------
-         InvalidParameterException
+         PyegeriaInvalidParameterException
              one of the parameters is null or invalid or
-         PropertyServerException
+         PyegeriaAPIException
              There is a problem adding the element properties to the metadata repository or
-         UserNotAuthorizedException
+         PyegeriaUnauthorizedException
              the requesting user is not authorized to issue this request.
 
 
@@ -5326,11 +5326,11 @@ class ClassificationManager(Client2):
 
          Raises
          ------
-         InvalidParameterException
+         PyegeriaInvalidParameterException
              one of the parameters is null or invalid or
-         PropertyServerException
+         PyegeriaAPIException
              There is a problem adding the element properties to the metadata repository or
-         UserNotAuthorizedException
+         PyegeriaUnauthorizedException
              the requesting user is not authorized to issue this request.
 
 

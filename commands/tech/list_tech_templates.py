@@ -318,9 +318,9 @@ def main():
 #             console.print(generate_table())
 #
 #     except (
-#         InvalidParameterException,
-#         PropertyServerException,
-#         UserNotAuthorizedException,
+#         PyegeriaInvalidParameterException,
+#         PyegeriaAPIException,
+#         PyegeriaUnauthorizedException,
 #     ) as e:
 #         print_exception_response(e)
 #         assert e.related_http_code != "200", "Invalid parameters"

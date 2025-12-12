@@ -12,10 +12,10 @@ import click
 
 # from ops_config import Config, pass_config
 from pyegeria import EgeriaTech
-from pyegeria._exceptions import (
-    InvalidParameterException,
-    PropertyServerException,
-    print_exception_response,
+from pyegeria._exceptions_new import (
+    PyegeriaInvalidParameterException,
+    PyegeriaAPIException as PropertyServerException,
+    print_basic_exception as print_exception_response,
 )
 
 
@@ -32,7 +32,7 @@ def stop_server(ctx, server):
 
         p_client.shutdown_server(server_guid)
         click.echo(f"Stopped server {server}")
-    except (InvalidParameterException, PropertyServerException) as e:
+    except (PyegeriaInvalidParameterException, PropertyServerException) as e:
         print_exception_response(e)
     finally:
         p_client.close_session()
@@ -51,7 +51,7 @@ def start_server(ctx, server):
 
         click.echo(f"Started server {server}")
 
-    except (InvalidParameterException, PropertyServerException) as e:
+    except (PyegeriaInvalidParameterException, PropertyServerException) as e:
         print_exception_response(e)
     finally:
         p_client.close_session()
@@ -70,7 +70,7 @@ def refresh(ctx):
 
         click.echo(f"Refreshed server {c.engine_host}")
 
-    except (InvalidParameterException, PropertyServerException) as e:
+    except (PyegeriaInvalidParameterException, PropertyServerException) as e:
         print_exception_response(e)
     finally:
         p_client.close_session()

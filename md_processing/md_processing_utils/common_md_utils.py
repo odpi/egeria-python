@@ -12,7 +12,7 @@ from rich import print
 from rich.console import Console
 from rich.markdown import Markdown
 
-from pyegeria import Client2, PyegeriaException, egeria_client
+from pyegeria import ServerClient, PyegeriaException, egeria_client
 from pyegeria.utils import (camel_to_title_case, body_slimmer)
 from pyegeria._globals import DEBUG_LEVEL
 from md_processing.md_processing_utils.message_constants import message_types
@@ -542,11 +542,11 @@ def set_object_classifications(object_type: str, attributes: dict, obj_types: li
             body[classification] = {"class" : f"{classification}Properties"}
     return body
 
-def add_search_keywords(client: Client2, element_guid: str, keywords: list[str]):
+def add_search_keywords(client: ServerClient, element_guid: str, keywords: list[str]):
     """Add a search keyword to an element. Throw an exception if a problem is encountered.
 
     Args:
-        client (Client2): The Egeria client instance.
+        client (ServerClient): The Egeria client instance.
         element_guid (str): The GUID of the element to add the keyword to.
         keyword (str): The search keyword to add.
 
@@ -567,7 +567,7 @@ def add_search_keywords(client: Client2, element_guid: str, keywords: list[str])
         }
         raise PyegeriaException(context = context)
 
-def add_note_in_dr_e(client: Client2, qualified_name: str, display_name: str, journal_entry: str)-> str:
+def add_note_in_dr_e(client: ServerClient, qualified_name: str, display_name: str, journal_entry: str)-> str:
     if journal_entry:
         note_log_qn = f"{qualified_name}-NoteLog"
         note_log_display_name = f"{display_name}-NoteLog"
