@@ -1079,7 +1079,7 @@ class ValidMetadataManager(ServerClient):
         preferred_value: str,
         output_format: str = "JSON",
         report_spec: dict | str | None = None,
-    ) -> dict | str:
+    ) -> dict | str | list[dict]:
         """Retrieve details of a specific valid value for a property. Async version.
 
         Parameters
@@ -1129,7 +1129,7 @@ class ValidMetadataManager(ServerClient):
         preferred_value: str,
         output_format: str = "JSON",
         report_spec: dict | str | None = None,
-    ) -> dict | str:
+    ) -> dict | str | list[dict]:
         """Retrieve details of a specific valid value for a property.
 
         Parameters
@@ -1172,7 +1172,7 @@ class ValidMetadataManager(ServerClient):
         map_name: str,
         output_format: str = "JSON",
         report_spec: dict | str | None = None,
-    ) -> dict | str:
+    ) -> dict | str | list[dict]:
         """Retrieve details of a specific valid name for a map property. Async version.
 
         Parameters
@@ -1222,7 +1222,7 @@ class ValidMetadataManager(ServerClient):
         map_name: str,
         output_format: str = "JSON",
         report_spec: dict | str | None = None,
-    ) -> dict | str:
+    ) -> dict | str | list[dict]:
         """Retrieve details of a specific valid name for a map property.
 
         Parameters
@@ -1265,7 +1265,7 @@ class ValidMetadataManager(ServerClient):
         map_name: str,
         output_format: str = "JSON",
         report_spec: dict | str | None = None,
-    ) -> dict | str:
+    ) -> dict | str | list[dict]:
         """Retrieve details of a specific valid value for a map property. Async version.
 
         Parameters
@@ -1319,7 +1319,7 @@ class ValidMetadataManager(ServerClient):
         map_name: str,
         output_format: str = "JSON",
         report_spec: dict | str | None = None,
-    ) -> dict | str:
+    ) -> dict | str | list[dict]:
         """Retrieve details of a specific valid value for a map property.
 
         Parameters

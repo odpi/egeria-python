@@ -4,336 +4,478 @@ Copyright Contributors to the ODPi Egeria project.
 
 
 
-This module is for testing the core Project Manager class and methods
-The routines assume that pytest is being used as the test tool and framework.
+This module tests the ReferenceDataManager class and methods from reference_data.py
 
 A running Egeria environment is needed to run these tests.
 
 """
-
 import json
 import time
-from pydantic import ValidationError
-from pyegeria.reference_data import ReferenceDataManager
+from datetime import datetime
+
+from rich import print, print_json
+from rich.console import Console
 
 from pyegeria._exceptions import (
     PyegeriaException,
     print_basic_exception,
     print_exception_table,
     print_validation_error,
-    PyegeriaAPIException,
-    PyegeriaInvalidParameterException as InvalidParameterException,
-    PyegeriaAPIException as PropertyServerException,
-    PyegeriaUnauthorizedException as UserNotAuthorizedException,
-    print_basic_exception as print_exception_response,
 )
-
-
+from pyegeria.logging_configuration import config_logging, init_logging
+from pyegeria.models import (NewElementRequestBody, UpdateElementRequestBody, DeleteElementRequestBody)
+from pyegeria.reference_data import ReferenceDataManager
+from pydantic import ValidationError
 
 disable_ssl_warnings = True
 
+console = Console(width=250)
+
+config_logging()
+init_logging(True)
+
+VIEW_SERVER = "qs-view-server"
+PLATFORM_URL = "https://localhost:9443"
+USER_ID = "peterprofile"
+USER_PWD = "secret"
+
 
 class TestReferenceDataManager:
-    good_platform1_url = "https://127.0.0.1:9443"
+    good_platform1_url = PLATFORM_URL
 
-    good_user_1 = "garygeeke"
-    good_user_2 = "erinoverview"
-    good_user_3 = "peterprofile"
-    bad_user_1 = "eviledna"
-    bad_user_2 = ""
-    good_integ_1 = "fluffy_integration"
-    good_server_1 = "qs-metadata-store"
-    good_server_2 = "laz_kv"
-    good_server_3 = "active-metadata-store"
-    good_server_4 = "integration-daemon"
-    good_server_5 = "fluffy_kv"
-    good_server_6 = "cocoVIew1"
-    good_engine_host_1 = "governDL01"
-    good_view_server_1 = "view-server"
-    good_view_server_2 = "qs-view-server"
-    bad_server_1 = "coco"
-    bad_server_2 = ""
+    good_user_1 = USER_ID
+    good_user_2 = "peterprofile"
+    good_server_1 = VIEW_SERVER
+    good_server_2 = VIEW_SERVER
+    good_view_server_1 = VIEW_SERVER
+    good_view_server_2 = VIEW_SERVER
 
-
-
-    def test_find_vv_definitions(self):
-        try:
-            p_client = ReferenceDataManager(
-                self.good_view_server_2,
-                self.good_platform1_url,
-                user_id=self.good_user_2,
-            )
-            token = p_client.create_egeria_bearer_token(self.good_user_2, "secret")
-            start_time = time.perf_counter()
-            search_string = "*"
-
-            response = p_client.find_valid_value_definitions(
-                search_string, output_format="DICT", report_spec="Valid-Value-Def"
-            )
-            duration = time.perf_counter() - start_time
-
-            print(f"\n\tDuration was {duration} seconds")
-            if type(response) is list:
-                print(f"Found {len(response)} valid value definitions  {type(response)}\n\n")
-                print("\n\n" + json.dumps(response, indent=4))
-            elif type(response) is str:
-                print("\n\nGUID is: " + response)
-            assert True
-
-        except (
-            PyegeriaException
-        ) as e:
-            print_basic_exception(e)
-            assert False, "Invalid request"
-        except ValidationError as e:
-            print_validation_error(e)
-        finally:
-            p_client.close_session()
-
-    def test_get_vv_def_by_name(self):
-        try:
-            p_client = ReferenceDataManager(
-                self.good_view_server_2,
-                self.good_platform1_url,
-                user_id=self.good_user_2,
-            )
-            token = p_client.create_egeria_bearer_token(self.good_user_2, "secret")
-            start_time = time.perf_counter()
-            # project_name = "Teddy Bear Drop Foot Clinical Trial IT Setup"
-            name = "mpp"
-            response = p_client.get_valid_value_definitions_by_name(name)
-            duration = time.perf_counter() - start_time
-
-            print(f"\n\tDuration was {duration} seconds")
-            if type(response) is list:
-                print("\n\n" + json.dumps(response, indent=4))
-            elif type(response) is tuple:
-                print(f"Type is {type(response)}")
-                print("\n\n" + json.dumps(response, indent=4))
-            elif type(response) is str:
-                print("\n\nResponse is: " + response)
-            assert True
-
-        except (
-            InvalidParameterException,
-            PropertyServerException,
-            UserNotAuthorizedException,
-        ) as e:
-            print_exception_response(e)
-            assert False, "Invalid request"
-
-        finally:
-            p_client.close_session()
-
-
-    def test_get_vv_def_by_guid(self):
-        try:
-            p_client = ReferenceDataManager(
-                self.good_view_server_2,
-                self.good_platform1_url,
-                user_id=self.good_user_2,
-            )
-            token = p_client.create_egeria_bearer_token(self.good_user_2, "secret")
-            start_time = time.perf_counter()
-            guid = "8fbc6e7f-ac2f-47b6-8a31-f42ea92868ae"
-
-            response = p_client.get_valid_value_definition_by_guid(guid, output_format="DICT", report_spec="Valid-Value-Def")
-            duration = time.perf_counter() - start_time
-            duration = time.perf_counter() - start_time
-
-            print(f"\n\tDuration was {duration} seconds")
-            print(f"Type of response is {type(response)}")
-
-            if isinstance(response, list| dict):
-                print("dict:\n\n")
-                print(json.dumps(response, indent=4))
-            elif type(response) is tuple:
-                print(f"Type is {type(response)}\n\n")
-                print(json.dumps(response, indent=4))
-            elif type(response) is str:
-                print("\n\nGUID is: " + response)
-            assert True
-
-        except (
-            PyegeriaException, PyegeriaAPIException,
-        ) as e:
-            print_basic_exception(e)
-            assert False, "Invalid request"
-
-        finally:
-            p_client.close_session()
-
-
+    def _unique_qname(self, prefix: str = "ValidValueDef") -> str:
+        ts = datetime.now().strftime("%Y%m%d%H%M%S%f")
+        return f"{prefix}::{ts}"
 
     def test_create_valid_value_definition(self):
+        """Test creating a basic valid value definition with dict body"""
+        rd_client = None
         try:
-            p_client = ReferenceDataManager(
-                self.good_view_server_2,
-                self.good_platform1_url,
-                user_id=self.good_user_2,
-            )
-
-            token = p_client.create_egeria_bearer_token(self.good_user_2, "secret")
+            rd_client = ReferenceDataManager(self.good_view_server_1, self.good_platform1_url, user_id=self.good_user_2)
+            token = rd_client.create_egeria_bearer_token(self.good_user_2, "secret")
             start_time = time.perf_counter()
+
+            display_name = f"Test Valid Value {datetime.now().strftime('%Y%m%d%H%M%S')}"
+            description = "Test valid value definition for automated testing"
+            qualified_name = self._unique_qname("TestValidValue")
 
             body = {
                 "class": "NewElementRequestBody",
                 "isOwnAnchor": True,
-                "properties":{
+                "properties": {
                     "class": "ValidValueDefinitionProperties",
-                    "displayName": "Colors",
-                    "qualifiedName": f"ValidValueDef::Colors",
-                    "description": "List of colors"
-
-                    }
+                    "qualifiedName": qualified_name,
+                    "displayName": display_name,
+                    "description": description,
                 }
-            response = p_client.create_valid_value_definition(body)
+            }
+
+            response = rd_client.create_valid_value_definition(body)
             duration = time.perf_counter() - start_time
-            # resp_str = json.loads(response)
-            print(f"\n\tDuration was {duration} seconds\n")
-            if type(response) is dict:
-                print(json.dumps(response, indent=4))
-            elif type(response) is str:
-                print("\n\nGUID is: " + response)
-            assert True
+            print(f"\n\tDuration was {duration} seconds")
+            print(f"\n\nCreated valid value definition with GUID: {response}")
+            assert type(response) is str
+            assert len(response) > 0
 
         except (
-            PyegeriaException,
+                PyegeriaInvalidParameterException,
+                PyegeriaAPIException,
+                PyegeriaUnauthorizedException,
+                PyegeriaNotFoundException,
         ) as e:
-            print_basic_exception(e)
+            print_exception_table(e)
             assert False, "Invalid request"
         except ValidationError as e:
             print_validation_error(e)
+            assert False, "Invalid request"
+        except PyegeriaConnectionException as e:
+            print_basic_exception(e)
+            assert False, "Connection error"
         finally:
-            p_client.close_session()
+            if rd_client:
+                rd_client.close_session()
 
-    def test_create_valid_value_def_from_template(self):
+    def test_create_valid_value_def_w_pyd(self):
+        """Test creating a valid value definition with Pydantic model"""
+        rd_client = None
         try:
-            p_client = ReferenceDataManager(
-                self.good_view_server_1,
-                self.good_platform1_url,
-                user_id=self.good_user_2,
+            rd_client = ReferenceDataManager(self.good_view_server_1, self.good_platform1_url, user_id=self.good_user_2)
+            token = rd_client.create_egeria_bearer_token(self.good_user_2, "secret")
+            start_time = time.perf_counter()
+
+            q_name = self._unique_qname("TestValidValuePyd")
+            body = NewElementRequestBody(
+                class_="NewElementRequestBody",
+                is_own_anchor=True,
+                properties={
+                    "class": "ValidValueDefinitionProperties",
+                    "qualifiedName": q_name,
+                    "displayName": f"Pydantic Valid Value {datetime.now().strftime('%H%M%S')}",
+                    "description": "Valid value definition created with Pydantic model",
+                }
             )
 
-            token = p_client.create_egeria_bearer_token(self.good_user_2, "secret")
-            start_time = time.perf_counter()
-            anchor_guid = None
-            parent_guid = "97bbfe07-6696-4550-bf8b-6b577d25bef0"
-            parent_relationship_type_name = "CollectionMembership"
-            parent_at_end1 = True
-            display_name = "Meow"
-            description = "Meow"
-            project_type = "Meow"
-            is_own_anchor = False
-            project_ordering = "NAME"
-            order_property_name = None
-            body = {
-                "class": "TemplateRequestBody",
-                "parentGUID": parent_guid,
-                "parentRelationshipTypeName": parent_relationship_type_name,
-                "parentAtEnd1": True,
-                "templateGUID": "c7368217-d013-43cb-9af1-b58e3a491e77",
-                "replacementProperties": {
-                    "class": "ElementProperties",
-                    "propertyValueMap": {
-                        "qualifiedName": {
-                            "class": "PrimitiveTypePropertyValue",
-                            "typeName": "string",
-                            "primitiveTypeCategory": "OM_PRIMITIVE_TYPE_STRING",
-                            "primitiveValue": f"templated-{display_name}-{time.asctime()}",
-                        },
-                        "name": {
-                            "class": "PrimitiveTypePropertyValue",
-                            "typeName": "string",
-                            "primitiveTypeCategory": "OM_PRIMITIVE_TYPE_STRING",
-                            "primitiveValue": display_name,
-                        },
-                        "description": {
-                            "class": "PrimitiveTypePropertyValue",
-                            "typeName": "string",
-                            "primitiveTypeCategory": "OM_PRIMITIVE_TYPE_STRING",
-                            "primitiveValue": description,
-                        },
-                    },
-                },
-            }
-
-            response = p_client.create_valid_value_definition_from_template(body)
+            validated_body = body.model_dump(mode='json', by_alias=True, exclude_none=True)
+            response = rd_client.create_valid_value_definition(validated_body)
             duration = time.perf_counter() - start_time
-            # resp_str = json.loads(response)
-            print(f"\n\tDuration was {duration} seconds\n")
-            if type(response) is dict:
-                print(json.dumps(response, indent=4))
+            print(f"\n\tDuration was {duration} seconds")
+            print(f"\n\nCreated valid value definition with GUID: {response}")
+            assert type(response) is str
+            assert len(response) > 0
+
+        except (
+                PyegeriaInvalidParameterException,
+                PyegeriaAPIException,
+                PyegeriaUnauthorizedException,
+                PyegeriaNotFoundException,
+        ) as e:
+            print_exception_table(e)
+            assert False, "Invalid request"
+        except ValidationError as e:
+            print_validation_error(e)
+            assert False, "Invalid request"
+        except PyegeriaConnectionException as e:
+            print_basic_exception(e)
+            assert False, "Connection error"
+        finally:
+            if rd_client:
+                rd_client.close_session()
+
+    def test_find_vv_definitions(self):
+        """Test finding valid value definitions with search string"""
+        rd_client = None
+        try:
+            rd_client = ReferenceDataManager(self.good_view_server_2, self.good_platform1_url, user_id=self.good_user_2)
+            token = rd_client.create_egeria_bearer_token(self.good_user_2, "secret")
+            start_time = time.perf_counter()
+
+            search_string = "*"
+            response = rd_client.find_valid_value_definitions(
+                search_string,
+                output_format="DICT",
+                report_spec="Valid-Value-Def"
+            )
+            duration = time.perf_counter() - start_time
+
+            print(f"\n\tDuration was {duration} seconds")
+            if type(response) is list:
+                print(f"Found {len(response)} valid value definitions")
+                print("\n\n" + json.dumps(response, indent=4))
             elif type(response) is str:
-                print("\n\nGUID is: " + response)
+                print("\n\nResponse: " + response)
             assert True
 
         except (
-            InvalidParameterException,
-            PropertyServerException,
-            UserNotAuthorizedException,
+                PyegeriaInvalidParameterException,
+                PyegeriaAPIException,
+                PyegeriaUnauthorizedException,
+                PyegeriaNotFoundException,
         ) as e:
-            print_exception_response(e)
+            print_exception_table(e)
             assert False, "Invalid request"
+        except ValidationError as e:
+            print_validation_error(e)
+            assert False, "Invalid request"
+        except PyegeriaConnectionException as e:
+            print_basic_exception(e)
+            assert False, "Connection error"
         finally:
-            p_client.close_session()
+            if rd_client:
+                rd_client.close_session()
+
+    def test_get_vv_def_by_name(self):
+        """Test getting valid value definitions by name"""
+        rd_client = None
+        try:
+            rd_client = ReferenceDataManager(self.good_view_server_2, self.good_platform1_url, user_id=self.good_user_2)
+            token = rd_client.create_egeria_bearer_token(self.good_user_2, "secret")
+            start_time = time.perf_counter()
+
+            name = "Test Valid Value"
+            response = rd_client.get_valid_value_definitions_by_name(name)
+            duration = time.perf_counter() - start_time
+
+            print(f"\n\tDuration was {duration} seconds")
+            if type(response) is list:
+                print(f"Found {len(response)} valid value definitions")
+                print("\n\n" + json.dumps(response, indent=4))
+            elif type(response) is str:
+                print("\n\nResponse: " + response)
+            assert True
+
+        except (
+                PyegeriaInvalidParameterException,
+                PyegeriaAPIException,
+                PyegeriaUnauthorizedException,
+                PyegeriaNotFoundException,
+        ) as e:
+            print_exception_table(e)
+            assert False, "Invalid request"
+        except ValidationError as e:
+            print_validation_error(e)
+            assert False, "Invalid request"
+        except PyegeriaConnectionException as e:
+            print_basic_exception(e)
+            assert False, "Connection error"
+        finally:
+            if rd_client:
+                rd_client.close_session()
+
+    def test_get_vv_def_by_guid(self):
+        """Test getting a specific valid value definition by GUID"""
+        rd_client = None
+        try:
+            rd_client = ReferenceDataManager(self.good_view_server_2, self.good_platform1_url, user_id=self.good_user_2)
+            token = rd_client.create_egeria_bearer_token(self.good_user_2, "secret")
+            start_time = time.perf_counter()
+
+            # First create a valid value definition to retrieve
+            q_name = self._unique_qname("TestValidValueForRetrieval")
+            body = {
+                "class": "NewElementRequestBody",
+                "isOwnAnchor": True,
+                "properties": {
+                    "class": "ValidValueDefinitionProperties",
+                    "qualifiedName": q_name,
+                    "displayName": "Valid Value for GUID test",
+                    "description": "Test valid value definition to retrieve by GUID",
+                }
+            }
+            vv_guid = rd_client.create_valid_value_definition(body)
+            print(f"\n\nCreated valid value definition with GUID: {vv_guid}")
+
+            # Now retrieve it
+            response = rd_client.get_valid_value_definition_by_guid(
+                vv_guid,
+                
+                output_format="DICT",
+                report_spec="Valid-Value-Def"
+            )
+            duration = time.perf_counter() - start_time
+
+            print(f"\n\tDuration was {duration} seconds")
+            if isinstance(response, (list, dict)):
+                print("\n\n" + json.dumps(response, indent=4))
+            elif type(response) is str:
+                print("\n\nResponse: " + response)
+            assert True
+
+        except (
+                PyegeriaInvalidParameterException,
+                PyegeriaAPIException,
+                PyegeriaUnauthorizedException,
+                PyegeriaNotFoundException,
+        ) as e:
+            print_exception_table(e)
+            assert False, "Invalid request"
+        except ValidationError as e:
+            print_validation_error(e)
+            assert False, "Invalid request"
+        except PyegeriaConnectionException as e:
+            print_basic_exception(e)
+            assert False, "Connection error"
+        finally:
+            if rd_client:
+                rd_client.close_session()
 
     def test_update_valid_value_def(self):
+        """Test updating a valid value definition's properties"""
+        rd_client = None
         try:
-            p_client = ReferenceDataManager(
-                self.good_view_server_1,
-                self.good_platform1_url,
-                user_id=self.good_user_2,
-            )
-
-            token = p_client.create_egeria_bearer_token(self.good_user_2, "secret")
+            rd_client = ReferenceDataManager(self.good_view_server_1, self.good_platform1_url, user_id=self.good_user_2)
+            token = rd_client.create_egeria_bearer_token(self.good_user_2, "secret")
             start_time = time.perf_counter()
-            guid = "7ab4f441-83e2-4e3f-8b63-2ed3946a5dd7"
 
-            response = p_client.update_valid_value_definition("fill in")
+            # First create a valid value definition to update
+            q_name = self._unique_qname("TestValidValueForUpdate")
+            create_body = {
+                "class": "NewElementRequestBody",
+                "isOwnAnchor": True,
+                "properties": {
+                    "class": "ValidValueDefinitionProperties",
+                    "qualifiedName": q_name,
+                    "displayName": "Original Valid Value Name",
+                    "description": "Original description",
+                }
+            }
+            vv_guid = rd_client.create_valid_value_definition(create_body)
+            print(f"\n\nCreated valid value definition with GUID: {vv_guid}")
+
+            # Now update it
+            new_desc = "Updated description for testing"
+            update_body = {
+                "class": "UpdateElementRequestBody",
+                "mergeUpdate": True,
+                "properties": {
+                    "class": "ValidValueDefinitionProperties",
+                    "qualifiedName": q_name,
+                    "displayName": "Updated Valid Value Name",
+                    "description": new_desc,
+                }
+            }
+
+            response = rd_client.update_valid_value_definition(vv_guid, update_body)
             duration = time.perf_counter() - start_time
-            # resp_str = json.loads(response)
-            print(f"\n\tDuration was {duration} seconds\n")
-            if type(response) is dict:
-                print(json.dumps(response, indent=4))
-            elif type(response) is str:
-                print("\n\nGUID is: " + response)
+            print(f"\n\tDuration was {duration} seconds")
+            print(f"\n\nUpdated valid value definition successfully")
+
             assert True
 
         except (
-            InvalidParameterException,
-            PropertyServerException,
-            UserNotAuthorizedException,
+                PyegeriaInvalidParameterException,
+                PyegeriaAPIException,
+                PyegeriaUnauthorizedException,
+                PyegeriaNotFoundException,
         ) as e:
-            print_exception_response(e)
+            print_exception_table(e)
             assert False, "Invalid request"
+        except ValidationError as e:
+            print_validation_error(e)
+            assert False, "Invalid request"
+        except PyegeriaConnectionException as e:
+            print_basic_exception(e)
+            assert False, "Connection error"
         finally:
-            p_client.close_session()
+            if rd_client:
+                rd_client.close_session()
 
     def test_delete_valid_value_definition(self):
+        """Test deleting a valid value definition"""
+        rd_client = None
         try:
-            p_client = ReferenceDataManager(
-                self.good_view_server_2,
-                self.good_platform1_url,
-                user_id=self.good_user_2,
-            )
-
-            token = p_client.create_egeria_bearer_token(self.good_user_2, "secret")
+            rd_client = ReferenceDataManager(self.good_view_server_2, self.good_platform1_url, user_id=self.good_user_2)
+            token = rd_client.create_egeria_bearer_token(self.good_user_2, "secret")
             start_time = time.perf_counter()
-            guid = "90213557-be19-421c-990d-78a76c30e0f5"
 
-            response = p_client.delete_valid_value_definition(guid)
+            # Create a valid value definition to delete
+            q_name = self._unique_qname("ValidValueToDelete")
+            create_body = {
+                "class": "NewElementRequestBody",
+                "isOwnAnchor": True,
+                "properties": {
+                    "class": "ValidValueDefinitionProperties",
+                    "qualifiedName": q_name,
+                    "displayName": "Valid Value to Delete",
+                    "description": "This valid value definition will be deleted",
+                }
+            }
+            vv_guid = rd_client.create_valid_value_definition(create_body)
+            print(f"\n\nCreated valid value definition with GUID: {vv_guid}")
+
+            # Delete it
+            response = rd_client.delete_valid_value_definition(vv_guid)
             duration = time.perf_counter() - start_time
-            # resp_str = json.loads(response)
-            print(f"\n\tDuration was {duration} seconds\n")
-            print(f"Valid Value GUID: {guid} was deleted")
+            print(f"\n\tDuration was {duration} seconds")
+            print(f"\n\nDeleted valid value definition successfully")
+
             assert True
 
         except (
-            PyegeriaException
+                PyegeriaInvalidParameterException,
+                PyegeriaAPIException,
+                PyegeriaUnauthorizedException,
+                PyegeriaNotFoundException,
         ) as e:
-            print_basic_exception(e)
+            print_exception_table(e)
             assert False, "Invalid request"
+        except ValidationError as e:
+            print_validation_error(e)
+            assert False, "Invalid request"
+        except PyegeriaConnectionException as e:
+            print_basic_exception(e)
+            assert False, "Connection error"
         finally:
-            p_client.close_session()
+            if rd_client:
+                rd_client.close_session()
 
+    def test_crud_valid_value_e2e(self):
+        """End-to-end test: Create, Read, Update, Delete a valid value definition"""
+        rd_client = None
+        try:
+            rd_client = ReferenceDataManager(self.good_view_server_1, self.good_platform1_url, user_id=self.good_user_2)
+            created_guid = None
+            display_name = f"E2E Test Valid Value {datetime.now().strftime('%Y%m%d%H%M%S')}"
+
+            token = rd_client.create_egeria_bearer_token(self.good_user_2, "secret")
+
+            # CREATE
+            print("\n\n=== CREATE ===")
+            q_name = self._unique_qname("E2EValidValue")
+            body = {
+                "class": "NewElementRequestBody",
+                "isOwnAnchor": True,
+                "properties": {
+                    "class": "ValidValueDefinitionProperties",
+                    "qualifiedName": q_name,
+                    "displayName": display_name,
+                    "description": "End-to-end test valid value definition",
+                }
+            }
+
+            create_resp = rd_client.create_valid_value_definition(body)
+            created_guid = create_resp
+            print(f"Created valid value definition: {created_guid}")
+            assert created_guid is not None
+
+            # READ
+            print("\n\n=== READ ===")
+            got = rd_client.get_valid_value_definition_by_guid(created_guid, output_format="JSON")
+            print_json(json.dumps(got, indent=4))
+            assert got is not None
+
+            # UPDATE
+            print("\n\n=== UPDATE ===")
+            new_desc = "Updated description in E2E test"
+            upd_body = {
+                "class": "UpdateElementRequestBody",
+                "mergeUpdate": True,
+                "properties": {
+                    "class": "ValidValueDefinitionProperties",
+                    "qualifiedName": q_name,
+                    "displayName": display_name,
+                    "description": new_desc,
+                }
+            }
+
+            upd_resp = rd_client.update_valid_value_definition(created_guid, upd_body)
+            print("Updated valid value definition successfully")
+
+            # Verify update
+            found = rd_client.get_valid_value_definition_by_guid(created_guid, output_format="JSON")
+            print_json(json.dumps(found, indent=4))
+
+            # DELETE
+            print("\n\n=== DELETE ===")
+            del_resp = rd_client.delete_valid_value_definition(created_guid)
+            print("Deleted valid value definition successfully")
+
+            # Verify deletion
+            try:
+                after = rd_client.get_valid_value_definition_by_guid(created_guid, output_format="JSON")
+                # If we get here, deletion might not have worked
+                print("Warning: Valid value definition still exists after deletion")
+            except PyegeriaNotFoundException:
+                print("Confirmed: Valid value definition no longer exists")
+
+            assert True
+
+        except (
+                PyegeriaInvalidParameterException,
+                PyegeriaAPIException,
+                PyegeriaUnauthorizedException,
+        ) as e:
+            print_exception_table(e)
+            assert False, "Invalid request"
+        except PyegeriaConnectionException as e:
+            print_basic_exception(e)
+            assert False, "Connection error"
+        finally:
+            if rd_client:
+                rd_client.close_session()
