@@ -23,6 +23,7 @@ from datetime import datetime
 from typing import List, Dict, Optional
 from dataclasses import dataclass, field
 
+from pydantic import ValidationError
 from rich import print as rprint
 from rich.console import Console
 from rich.table import Table
@@ -34,7 +35,7 @@ from pyegeria.location_arena import Location
 from pyegeria._exceptions_new import (
     PyegeriaException,
     PyegeriaNotFoundException,
-    print_exception_table,
+    print_exception_table, print_validation_error,
 )
 
 # Configuration
@@ -250,6 +251,8 @@ class LocationScenarioTester:
                 created_guids=created_guids
             )
             
+        except ValidationError as e:
+            print_validation_error(e)
         except Exception as e:
             duration = time.perf_counter() - start_time
             console.print(f"  [red]✗ Scenario failed: {str(e)}[/red]")

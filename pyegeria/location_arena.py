@@ -143,7 +143,7 @@ class Location(ServerClient):
 
     """
 
-        url = f"{self.command_root}/location-arena/locations"
+        url = f"{self.ref_location_command_base}/locations"
         return await self._async_create_element_body_request(url, ["LocationProperties"], body)
 
     @dynamic_catch
@@ -275,7 +275,7 @@ class Location(ServerClient):
         }
     
         """
-        url = f"{self.command_root}/location-arena/locations/from-template"
+        url = f"{self.ref_location_command_base}/locations/from-template"
 
         return await self._async_create_element_from_template("POST", url, body)
 
@@ -398,7 +398,7 @@ class Location(ServerClient):
 
         """
 
-        url = f"{self.command_root}/location-arena/locations/{location_guid}/update"
+        url = f"{self.ref_location_command_base}/locations/{location_guid}/update"
         await self._async_update_element_body_request(url, ["LocationProperties"], body)
 
     @dynamic_catch
@@ -500,7 +500,7 @@ class Location(ServerClient):
 
         """
 
-        url = f"{self.command_root}/location-arena/locations/{location1_guid}/adjacent-locations/{location2_guid}/attach"
+        url = f"{self.ref_location_command_base}/locations/{location1_guid}/adjacent-locations/{location2_guid}/attach"
         await self._async_new_relationship_request(url, ["AdjacentLocationProperties"], body)
         logger.info(f"Linking location {location1_guid} to location {location2_guid}")
 
@@ -690,7 +690,7 @@ class Location(ServerClient):
 
         """
 
-        url = f"{self.command_root}/location-arena/locations/{location_guid}/nested-location/{nested_location_guid}/attach"
+        url = f"{self.ref_location_command_base}/locations/{location_guid}/nested-location/{nested_location_guid}/attach"
         await self._async_new_relationship_request(url, ["NestedLocationProperties"], body)
         logger.info(f"Linking element {location_guid} to nested location  {nested_location_guid}")
 
@@ -785,7 +785,7 @@ class Location(ServerClient):
         }
         """
         url = (
-            f"{self.command_root}/location-arena/locations{location_guid}/nested-locations/{nested_location_guid}/detach")
+            f"{self.ref_location_command_base}/locations{location_guid}/nested-locations/{nested_location_guid}/detach")
 
         await self._async_delete_element_request(url, body)
         logger.info(f"Detached location {location_guid} from nested location {nested_location_guid}")
@@ -881,7 +881,7 @@ class Location(ServerClient):
 
         """
 
-        url = f"{self.command_root}/location-arena/elements/{element_guid}/known-locations/{location_guid}/attach"
+        url = f"{self.ref_location_command_base}elements/{element_guid}/known-locations/{location_guid}/attach"
         await self._async_new_relationship_request(url, ["KnownLocationProperties"], body)
         logger.info(f"Linking element {element_guid} to location {location_guid}")
 
@@ -1066,7 +1066,7 @@ class Location(ServerClient):
           "forDuplicateProcessing": false
         }
         """
-        url = f"{self.command_root}/location-arena/locations/{location_guid}/delete"
+        url = f"{self.ref_location_command_base}/locations/{location_guid}/delete"
 
         await self._async_delete_element_request(url, body, cascade)
         logger.info(f"Deleted location {location_guid} with cascade {cascade}")
@@ -1172,7 +1172,7 @@ class Location(ServerClient):
           The principle specified by the user_id does not have authorization for the requested action
 
         """
-        url = f"{self.command_root}/location-arena/locations/by-search-string"
+        url = f"{self.ref_location_command_base}/locations/by-search-string"
         response = await self._async_find_request(url, _type="Location", search_string=search_string,
                                                   _gen_output=self._generate_location_output,
                                                   classification_names=classification_names,
@@ -1286,7 +1286,7 @@ class Location(ServerClient):
             NotAuthorizedException
               The principle specified by the user_id does not have authorization for the requested action
         """
-        url = f"{self.command_root}/location-arena/locations/by-name"
+        url = f"{self.ref_location_command_base}/locations/by-name"
         response = await self._async_get_name_request(url, _type="ExternalReference",
                                                       _gen_output=self._generate_location_output,
                                                       filter_string=filter_string,
@@ -1342,15 +1342,14 @@ class Location(ServerClient):
                                               output_format, report_spec))
 
     @dynamic_catch
-    async def _async_get_location_by_guid(self, ext_ref_guid: str, element_type: str = None,
-                                          body: dict | GetRequestBody = None,
-                                          output_format: str = 'JSON',
+    async def _async_get_location_by_guid(self, location_guid: str, element_type: str = None,
+                                          body: dict | GetRequestBody = None, output_format: str = 'JSON',
                                           report_spec: str | dict = "Locations") -> dict | str:
         """Return the properties of a specific location. Async version.
 
         Parameters
         ----------
-        ext_ref_guid: str,
+        location_guid: str,
             unique identifier of the location to retrieve.
         element_type: str, default = None, optional
              type of element, etc.
@@ -1389,8 +1388,8 @@ class Location(ServerClient):
         }
         """
 
-        url = f"{self.command_root}/location-arena/locations/retrieve"
-        type = element_type if element_type else "Locations"
+        url = f"{self.ref_location_command_base}/locations/{location_guid}/retrieve"
+        type = element_type if element_type else "Location"
 
         response = await self._async_get_guid_request(url, _type=type,
                                                       _gen_output=self._generate_location_output,
@@ -1400,15 +1399,13 @@ class Location(ServerClient):
         return response
 
     @dynamic_catch
-    def get_location_by_guid(self, ext_ref_guid: str, element_type: str = None,
-                             body: dict | GetRequestBody = None,
-                             output_format: str = 'JSON',
-                             report_spec: str | dict = "Locations") -> dict | str:
+    def get_location_by_guid(self, location_guid: str, element_type: str = None, body: dict | GetRequestBody = None,
+                             output_format: str = 'JSON', report_spec: str | dict = "Locations") -> dict | str:
         """Return the properties of a specific location. Async version.
 
         Parameters
         ----------
-        ext_ref_guid: str,
+        location_guid: str,
             unique identifier of the location to retrieve.
         element_type: str, default = None, optional
              type of element, etc.
@@ -1453,7 +1450,7 @@ class Location(ServerClient):
         }
         """
         return asyncio.get_event_loop().run_until_complete(
-            self._async_get_location_by_guid(ext_ref_guid, element_type, body, output_format, report_spec))
+            self._async_get_location_by_guid(location_guid, element_type, body, output_format, report_spec))
 
     @dynamic_catch
     def _extract_location_properties(self, element: dict, columns_struct: dict) -> dict:

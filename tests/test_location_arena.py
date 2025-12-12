@@ -228,21 +228,24 @@ class TestLocationArena:
             start_time = time.perf_counter()
 
             search_string = "*"
-            output_format = "JSON"
+            output_format = "DICT"
+            report_spec = "Referenceable"
 
             response = l_client.find_locations(
                 search_string=search_string,
                 starts_with=False,
                 ends_with=False,
                 ignore_case=True,
-                output_format=output_format
+                output_format=output_format,
+                report_spec=report_spec
             )
             duration = time.perf_counter() - start_time
             print(f"\n\tDuration was {duration} seconds")
             
-            if type(response) is dict:
+            if isinstance(response, dict | list):
+                assert len(response) > 0
                 print_json("\n\n" + json.dumps(response, indent=4))
-            elif type(response) is str:
+            elif isinstance(response, str):
                 print(f"\n\nResponse: {response}")
             
             assert True
@@ -364,10 +367,7 @@ class TestLocationArena:
             print(f"\n\nCreated location with GUID: {location_guid}")
 
             # Now retrieve it
-            response = l_client.get_location_by_guid(
-                ext_ref_guid=location_guid,
-                output_format="JSON"
-            )
+            response = l_client.get_location_by_guid(location_guid=location_guid, output_format="JSON")
             duration = time.perf_counter() - start_time
             print(f"\n\tDuration was {duration} seconds")
             
@@ -966,7 +966,7 @@ class TestLocationArena:
                 after = l_client.get_location_by_guid(created_guid, output_format="JSON")
                 # If we get here, deletion might not have worked
                 print("Warning: Location still exists after deletion")
-            except PyegeriaNotFoundException:
+            except PyegeriaAPIException:
                 print("Confirmed: Location no longer exists")
 
             assert True
