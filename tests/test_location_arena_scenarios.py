@@ -35,7 +35,7 @@ from pyegeria.location_arena import Location
 from pyegeria._exceptions_new import (
     PyegeriaException,
     PyegeriaNotFoundException,
-    print_exception_table, print_validation_error,
+    print_exception_table, print_validation_error, PyegeriaAPIException,
 )
 
 # Configuration
@@ -314,7 +314,7 @@ class LocationScenarioTester:
             link_body = {
                 "class": "NewRelationshipRequestBody",
                 "properties": {
-                    "class": "PeerLocationProperties",
+                    "class": "AdjacentLocationProperties",
                 }
             }
             
@@ -428,7 +428,7 @@ class LocationScenarioTester:
             try:
                 self.client.get_location_by_guid(guid, output_format="JSON")
                 raise Exception("Location still exists after deletion!")
-            except PyegeriaNotFoundException:
+            except PyegeriaAPIException:
                 console.print(f"  ✓ Verified deletion")
                 # Remove from cleanup list since we already deleted it
                 if guid in self.created_locations:

@@ -477,7 +477,7 @@ class TestLocationArena:
             link_body = {
                 "class": "NewRelationshipRequestBody",
                 "properties": {
-                    "class": "PeerLocationProperties",
+                    "class": "AdjacentLocationProperties",
                 }
             }
             l_client.link_peer_locations(location1_guid, location2_guid, link_body)
