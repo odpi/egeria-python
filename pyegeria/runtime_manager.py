@@ -10,12 +10,12 @@ import asyncio
 
 from requests import Response
 from pyegeria.utils import body_slimmer
-from pyegeria._client_new import Client2
+from pyegeria._server_client import ServerClient
 from pyegeria._globals import TEMPLATE_GUIDS, max_paging_size,default_time_out
 from pyegeria._exceptions_new import PyegeriaInvalidParameterException
 from pyegeria._globals import NO_ELEMENTS_FOUND
 
-class RuntimeManager(Client2):
+class RuntimeManager(ServerClient):
     """
     Client to issue Runtime status requests.
 
@@ -48,7 +48,7 @@ class RuntimeManager(Client2):
     ):
         self.view_server = view_server
         self.time_out = time_out
-        Client2.__init__(self, view_server, platform_url, user_id, user_pwd, token=token)
+        ServerClient.__init__(self, view_server, platform_url, user_id, user_pwd, token=token)
         self.runtime_command_root = f"{self.platform_url}/servers/{self.view_server}/api/open-metadata/runtime-manager"
         # self.platform_guid = "44bf319f-1e41-4da1-b771-2753b92b631a"  # this is platform @ 9443 from the core content archive
         self.platform_guid = None

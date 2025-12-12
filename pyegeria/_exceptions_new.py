@@ -21,7 +21,7 @@ from rich.console import Console
 
 # Standardize on CONSOLE_WIDTH with backward-compatible fallback
 try:
-    _width_val = int(os.getenv("CONSOLE_WIDTH", os.getenv("PYEGERIA_CONSOLE_WIDTH", 250)))
+    _width_val = int(os.getenv("CONSOLE_WIDTH", os.getenv("PYEGERIA_CONSOLE_WIDTH", 190)))
 except Exception:
     _width_val = 250
 console = Console(width=_width_val)
@@ -162,8 +162,11 @@ class PyegeriaException(Exception):
             self.response = response
             self.response_url = getattr(response, "url", "unknown URL") if response else additional_info.get("endpoint",                                                                                             "")
             self.response_code = getattr(response, "status_code", "unknown status code") if response else ""
-            self.response_egeria_msg_id = response.json().get("exceptionErrorMessageId", "")
-            self.response_egeria_msg = response.json().get("exceptionErrorMessage", "")
+            self.response_reason_phrase = getattr(response, "reason_phrase", "unknown reason")
+            self.http_status_code = getattr(response, "status_code", "unknown status code")
+            if self.http_status_code == 200:
+                self.response_egeria_msg_id = response.json().get("exceptionErrorMessageId", "")
+                self.response_egeria_msg = response.json().get("exceptionErrorMessage", "")
         else:
             self.response = None
             self.response_url = ""
@@ -347,7 +350,8 @@ def print_exception_response(e: PyegeriaException):
 def print_exception_table(e: PyegeriaException):
     """Prints the exception response"""
     related_code = e.related_http_code if hasattr(e, "related_http_code") else ""
-    related_response = e.response.json()
+    if e.response.status_code == 200:
+        related_response = e.response.json()
     table = Table(title=f"Exception: {e.__class__.__name__}", show_lines=True, header_style="bold", box=box.HEAVY_HEAD)
     table.caption = e.pyegeria_code
     table.add_column("Facet", justify="center")

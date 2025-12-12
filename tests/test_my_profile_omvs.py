@@ -17,9 +17,9 @@ from rich import print_json
 from rich.console import Console
 
 from pyegeria._exceptions_new import (
-    PyegeriaInvalidParameterException as InvalidParameterException,
-    PyegeriaAPIException as PropertyServerException,
-    PyegeriaUnauthorizedException as UserNotAuthorizedException,
+    PyegeriaInvalidParameterException,
+    PyegeriaAPIException,
+    PyegeriaUnauthorizedException,
     print_basic_exception as print_exception_response,
 )
 from pyegeria.my_profile import MyProfile
@@ -77,9 +77,9 @@ class TestMyProfile:
             assert True
 
         except (
-            InvalidParameterException,
-            PropertyServerException,
-            UserNotAuthorizedException,
+            PyegeriaInvalidParameterException,
+            PyegeriaAPIException,
+            PyegeriaUnauthorizedException,
         ) as e:
             print_exception_response(e)
             assert False, "Invalid request"
@@ -107,9 +107,9 @@ class TestMyProfile:
             assert True
 
         except (
-            InvalidParameterException,
-            PropertyServerException,
-            UserNotAuthorizedException,
+            PyegeriaInvalidParameterException,
+            PyegeriaAPIException,
+            PyegeriaUnauthorizedException,
         ) as e:
             print_exception_response(e)
             console.print_exception(show_locals=True)
@@ -137,9 +137,9 @@ class TestMyProfile:
             assert True
 
         except (
-            InvalidParameterException,
-            PropertyServerException,
-            UserNotAuthorizedException,
+            PyegeriaInvalidParameterException,
+            PyegeriaAPIException,
+            PyegeriaUnauthorizedException,
         ) as e:
             print_exception_response(e)
             console.print_exception(show_locals=True)
@@ -183,9 +183,9 @@ class TestMyProfile:
             assert True
 
         except (
-            InvalidParameterException,
-            PropertyServerException,
-            UserNotAuthorizedException,
+            PyegeriaInvalidParameterException,
+            PyegeriaAPIException,
+            PyegeriaUnauthorizedException,
         ) as e:
             print_exception_response(e)
             assert False, "Invalid request"
@@ -212,9 +212,9 @@ class TestMyProfile:
             assert True
 
         except (
-            InvalidParameterException,
-            PropertyServerException,
-            UserNotAuthorizedException,
+            PyegeriaInvalidParameterException,
+            PyegeriaAPIException,
+            PyegeriaUnauthorizedException,
         ) as e:
             print_exception_response(e)
             console.print_exception(show_locals=True)
@@ -243,9 +243,9 @@ class TestMyProfile:
             assert True
 
         except (
-            InvalidParameterException,
-            PropertyServerException,
-            UserNotAuthorizedException,
+            PyegeriaInvalidParameterException,
+            PyegeriaAPIException,
+            PyegeriaUnauthorizedException,
         ) as e:
             print_exception_response(e)
             console.print_exception(show_locals=True)

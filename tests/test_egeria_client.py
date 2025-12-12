@@ -22,9 +22,9 @@ from pyegeria import (
     EgeriaCat,
 )
 from pyegeria._exceptions_new import (
-    PyegeriaInvalidParameterException as InvalidParameterException,
-    PyegeriaAPIException as PropertyServerException,
-    PyegeriaUnauthorizedException as UserNotAuthorizedException,
+    PyegeriaInvalidParameterException,
+    PyegeriaAPIException,
+    PyegeriaUnauthorizedException,
     print_basic_exception as print_exception_response,
 )
 
@@ -67,9 +67,9 @@ class TestEgeriaCat:
             assert True
 
         except (
-            InvalidParameterException,
-            PropertyServerException,
-            UserNotAuthorizedException,
+            PyegeriaInvalidParameterException,
+            PyegeriaAPIException,
+            PyegeriaUnauthorizedException,
         ) as e:
             print_exception_response(e)
             assert False, "Invalid request"
@@ -96,9 +96,9 @@ class TestEgeriaCat:
             assert True
 
         except (
-            InvalidParameterException,
-            PropertyServerException,
-            UserNotAuthorizedException,
+            PyegeriaInvalidParameterException,
+            PyegeriaAPIException,
+            PyegeriaUnauthorizedException,
         ) as e:
             print_exception_response(e)
             assert False, "Invalid request"
@@ -122,7 +122,7 @@ class TestEgeriaCat:
                 print(f"\n\n\tIntegration Daemon Status response was: {response}")
             assert True, "Invalid URL or server"
 
-        except (InvalidParameterException, PropertyServerException) as e:
+        except (PyegeriaInvalidParameterException, PyegeriaAPIException) as e:
             print_exception_response(e)
             assert e.related_http_code != "200", "Invalid parameters"
 
@@ -151,9 +151,9 @@ class TestEgeriaCat:
             assert True
 
         except (
-            InvalidParameterException,
-            PropertyServerException,
-            UserNotAuthorizedException,
+            PyegeriaInvalidParameterException,
+            PyegeriaAPIException,
+            PyegeriaUnauthorizedException,
         ) as e:
             print_exception_response(e)
             assert False, "Invalid request"

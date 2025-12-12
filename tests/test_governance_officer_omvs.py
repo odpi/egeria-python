@@ -32,10 +32,9 @@ import pytest
 
 from pyegeria import  EgeriaTech, PyegeriaException, print_basic_exception, settings
 from pyegeria._exceptions_new import (
-    PyegeriaInvalidParameterException as InvalidParameterException,
-    PyegeriaAPIException as PropertyServerException,
-    PyegeriaUnauthorizedException as UserNotAuthorizedException,
-    print_basic_exception as print_exception_response,
+    PyegeriaInvalidParameterException,
+    PyegeriaAPIException,
+    PyegeriaUnauthorizedException,
 )
 from pyegeria.governance_officer import GovernanceOfficer
 
@@ -108,11 +107,11 @@ class TestGovernanceOfficer:
 
             assert True
         except (
-                InvalidParameterException,
-                PropertyServerException,
-                UserNotAuthorizedException,
-                ) as e:
-            print_exception_response(e)
+                PyegeriaInvalidParameterException,
+                PyegeriaAPIException,
+                PyegeriaUnauthorizedException,
+        ) as e:
+            print_basic_exception(e)
             assert False, "Invalid request"
 
         finally:
@@ -229,11 +228,11 @@ class TestGovernanceOfficer:
 
             assert True
         except (
-                InvalidParameterException,
-                PropertyServerException,
-                UserNotAuthorizedException,
+                PyegeriaInvalidParameterException,
+                PyegeriaAPIException,
+                PyegeriaUnauthorizedException,
                 ) as e:
-            print_exception_response(e)
+            print_basic_exception(e)
             assert False, "Invalid request"
 
         finally:
@@ -264,11 +263,11 @@ class TestGovernanceOfficer:
 
             assert True
         except (
-                InvalidParameterException,
-                PropertyServerException,
-                UserNotAuthorizedException,
+                PyegeriaInvalidParameterException,
+                PyegeriaAPIException,
+                PyegeriaUnauthorizedException,
                 ) as e:
-            print_exception_response(e)
+            print_basic_exception(e)
 
             assert False, "Invalid request"
 
@@ -370,11 +369,11 @@ class TestGovernanceOfficer:
 
             assert True
         except (
-            InvalidParameterException,
-            PropertyServerException,
-            UserNotAuthorizedException,
+            PyegeriaInvalidParameterException,
+            PyegeriaAPIException,
+            PyegeriaUnauthorizedException,
         ) as e:
-            print_exception_response(e)
+            print_basic_exception(e)
             assert False, "Invalid request"
 
         finally:
@@ -402,11 +401,11 @@ class TestGovernanceOfficer:
 
             assert True
         except (
-            InvalidParameterException,
-            PropertyServerException,
-            UserNotAuthorizedException,
+            PyegeriaInvalidParameterException,
+            PyegeriaAPIException,
+            PyegeriaUnauthorizedException,
         ) as e:
-            print_exception_response(e)
+            print_basic_exception(e)
             assert False, "Invalid request"
 
         finally:
@@ -435,11 +434,11 @@ class TestGovernanceOfficer:
 
             assert True
         except (
-            InvalidParameterException,
-            PropertyServerException,
-            UserNotAuthorizedException,
+            PyegeriaInvalidParameterException,
+            PyegeriaAPIException,
+            PyegeriaUnauthorizedException,
         ) as e:
-            print_exception_response(e)
+            print_basic_exception(e)
             assert False, "Invalid request"
 
         finally:
@@ -469,11 +468,11 @@ class TestGovernanceOfficer:
 
             assert True
         except (
-            InvalidParameterException,
-            PropertyServerException,
-            UserNotAuthorizedException,
+            PyegeriaInvalidParameterException,
+            PyegeriaAPIException,
+            PyegeriaUnauthorizedException,
         ) as e:
-            print_exception_response(e)
+            print_basic_exception(e)
             assert False, "Invalid request"
 
         finally:
@@ -505,11 +504,11 @@ class TestGovernanceOfficer:
 
             assert True
         except (
-            InvalidParameterException,
-            PropertyServerException,
-            UserNotAuthorizedException,
+            PyegeriaInvalidParameterException,
+            PyegeriaAPIException,
+            PyegeriaUnauthorizedException,
         ) as e:
-            print_exception_response(e)
+            print_basic_exception(e)
             assert False, "Invalid request"
 
         finally:
@@ -539,11 +538,11 @@ class TestGovernanceOfficer:
 
             assert True
         except (
-            InvalidParameterException,
-            PropertyServerException,
-            UserNotAuthorizedException,
+            PyegeriaInvalidParameterException,
+            PyegeriaAPIException,
+            PyegeriaUnauthorizedException,
         ) as e:
-            print_exception_response(e)
+            print_basic_exception(e)
             assert False, "Invalid request"
 
         finally:
@@ -580,11 +579,11 @@ class TestGovernanceOfficer:
 
             assert True
         except (
-            InvalidParameterException,
-            PropertyServerException,
-            UserNotAuthorizedException,
+            PyegeriaInvalidParameterException,
+            PyegeriaAPIException,
+            PyegeriaUnauthorizedException,
         ) as e:
-            print_exception_response(e)
+            print_basic_exception(e)
             assert False, "Invalid request"
 
         finally:
@@ -620,11 +619,11 @@ class TestGovernanceOfficer:
 
             assert True
         except (
-            InvalidParameterException,
-            PropertyServerException,
-            UserNotAuthorizedException,
+            PyegeriaInvalidParameterException,
+            PyegeriaAPIException,
+            PyegeriaUnauthorizedException,
         ) as e:
-            print_exception_response(e)
+            print_basic_exception(e)
             assert False, "Invalid request"
 
         finally:
@@ -656,11 +655,11 @@ class TestGovernanceOfficer:
 
             assert True
         except (
-            InvalidParameterException,
-            PropertyServerException,
-            UserNotAuthorizedException,
+            PyegeriaInvalidParameterException,
+            PyegeriaAPIException,
+            PyegeriaUnauthorizedException,
         ) as e:
-            print_exception_response(e)
+            print_basic_exception(e)
             assert False, "Invalid request"
 
         finally:
@@ -693,11 +692,11 @@ class TestGovernanceOfficer:
 
             assert True
         except (
-            InvalidParameterException,
-            PropertyServerException,
-            UserNotAuthorizedException,
+            PyegeriaInvalidParameterException,
+            PyegeriaAPIException,
+            PyegeriaUnauthorizedException,
         ) as e:
-            print_exception_response(e)
+            print_basic_exception(e)
             assert False, "Invalid request"
 
         finally:

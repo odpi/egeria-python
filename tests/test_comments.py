@@ -4,17 +4,17 @@ import pytest
 
 pytestmark = pytest.mark.unit
 
-from pyegeria._client_new import Client2
+from pyegeria._server_client import ServerClient
 
 
 @pytest.fixture()
 def client(monkeypatch):
     # Avoid real network during client construction
     monkeypatch.setattr(
-        Client2, "check_connection", lambda self: "OK",
+        ServerClient, "check_connection", lambda self: "OK",
         raising=False,
     )
-    c = Client2(server_name="server", platform_url="http://localhost:9443", user_id="tester")
+    c = ServerClient(server_name="server", platform_url="http://localhost:9443", user_id="tester")
     return c
 
 
@@ -26,7 +26,7 @@ def test_add_comment_to_element_sync_calls_async(monkeypatch, client):
         # return a sentinel value like the real method would
         return "GUID-123"
 
-    monkeypatch.setattr(Client2, "async_add_comment_to_element", fake_async_add_comment_to_element)
+    monkeypatch.setattr(ServerClient, "async_add_comment_to_element", fake_async_add_comment_to_element)
 
     result = client.add_comment_to_element("elem-1", "hello world", "STANDARD_COMMENT", None)
 
@@ -43,7 +43,7 @@ def test_add_comment_reply_sync_calls_async(monkeypatch, client):
         calls["args"] = (element_guid, comment_guid, comment, comment_type, body)
         return {"guid": "REPLY-999"}
 
-    monkeypatch.setattr(Client2, "async_add_comment_reply", fake_async_add_comment_reply)
+    monkeypatch.setattr(ServerClient, "async_add_comment_reply", fake_async_add_comment_reply)
 
     result = client.add_comment_reply("elem-1", "cmt-2", "a reply", "STANDARD_COMMENT", None)
 
@@ -58,7 +58,7 @@ def test_update_comment_sync_calls_async(monkeypatch, client):
         calls["args"] = (comment_guid, comment, comment_type, body, merge_update)
         return {"status": "OK"}
 
-    monkeypatch.setattr(Client2, "async_update_comment", fake_async_update_comment)
+    monkeypatch.setattr(ServerClient, "async_update_comment", fake_async_update_comment)
 
     result = client.update_comment("cmt-42", "new text", "STANDARD_COMMENT", {"x": 1}, True)
 
@@ -73,7 +73,7 @@ def test_setup_accepted_answer_sync_calls_async(monkeypatch, client):
         calls["args"] = (question_comment_guid, answer_comment_guid)
         return None
 
-    monkeypatch.setattr(Client2, "async_setup_accepted_answer", fake_async_setup_accepted_answer)
+    monkeypatch.setattr(ServerClient, "async_setup_accepted_answer", fake_async_setup_accepted_answer)
 
     assert client.setup_accepted_answer("q-1", "a-1") is None
     assert calls["args"] == ("q-1", "a-1")
@@ -86,7 +86,7 @@ def test_setup_clear_answer_sync_calls_async(monkeypatch, client):
         calls["args"] = (question_comment_guid, answer_comment_guid)
         return None
 
-    monkeypatch.setattr(Client2, "async_clear_accepted_answer", fake_async_clear_accepted_answer)
+    monkeypatch.setattr(ServerClient, "async_clear_accepted_answer", fake_async_clear_accepted_answer)
 
     assert client.setup_clear_answer("q-2", "a-2") is None
     assert calls["args"] == ("q-2", "a-2")
@@ -100,7 +100,7 @@ def test_remove_comment_from_element_sync_calls_async(monkeypatch, client):
         return None
 
     monkeypatch.setattr(
-        Client2, "async_remove_comment_from_element", fake_async_remove_comment_from_element
+        ServerClient, "async_remove_comment_from_element", fake_async_remove_comment_from_element
     )
 
     assert client.remove_note_log("e-1", {"y": 2}, cascade_delete=True) is None
@@ -114,7 +114,7 @@ def test_get_comment_by_guid_sync_calls_async(monkeypatch, client):
         calls["args"] = (comment_guid, element_type, body, output_format, report_spec)
         return {"comment_guid": comment_guid, "ok": True}
 
-    monkeypatch.setattr(Client2, "async_get_comment_by_guid", fake_async_get_comment_by_guid)
+    monkeypatch.setattr(ServerClient, "async_get_comment_by_guid", fake_async_get_comment_by_guid)
 
     out = client.get_comment_by_guid("cg-1", element_type="Comment", body=None, output_format="JSON", report_spec=None)
     assert out == {"comment_guid": "cg-1", "ok": True}
@@ -131,7 +131,7 @@ def test_get_attached_comments_sync_calls_async(monkeypatch, client):
             {"guid": "c2"},
         ]
 
-    monkeypatch.setattr(Client2, "async_get_attached_comments", fake_async_get_attached_comments)
+    monkeypatch.setattr(ServerClient, "async_get_attached_comments", fake_async_get_attached_comments)
 
     result = client.get_attached_note_logs("elem-99", element_type="Comment", body={}, start_from=0, page_size=10,
                                            output_format="JSON", report_spec=None)
@@ -172,7 +172,7 @@ def test_find_comments_sync_calls_async(monkeypatch, client):
         )
         return [{"guid": "c1"}]
 
-    monkeypatch.setattr(Client2, "async_find_comments", fake_async_find_comments)
+    monkeypatch.setattr(ServerClient, "async_find_comments", fake_async_find_comments)
 
     result = client.find_note_logs("foo", classification_names=["X"], metadata_element_types=["Comment"],
                                    starts_with=True, ends_with=False, ignore_case=False, start_from=5, page_size=25,

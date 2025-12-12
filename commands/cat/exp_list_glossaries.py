@@ -23,10 +23,7 @@ from rich.text import Text
 
 from pyegeria import (
     EgeriaTech,
-    InvalidParameterException,
-    PropertyServerException,
-    UserNotAuthorizedException,
-    print_exception_response,
+PyegeriaAPIException, PyegeriaClientException, print_basic_exception, print_exception_table
 )
 
 disable_ssl_warnings = True

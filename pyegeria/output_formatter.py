@@ -37,8 +37,9 @@ Note on select_report_spec function:
 This function and related data structures have been moved back to _output_formats.py.
 Please import select_report_spec from pyegeria._output_formats instead of from this module.
 """
-
-console = Console(width=settings.Environment.console_width)
+# Todo - put this back after testing
+# console = Console(width=settings.Environment.console_width)
+console = Console(width=300)
 
 
 def _extract_referenceable_properties(element: dict[str, Any]) -> dict[str, Any]:

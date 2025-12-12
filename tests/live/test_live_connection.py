@@ -18,7 +18,7 @@ import pytest
 
 @pytest.mark.live
 def test_live_connection_check(live_client):
-    # BaseClient.__init__ already calls check_connection(), but call explicitly too
+    # BaseServerClient.__init__ already calls check_connection(), but call explicitly too
     origin = live_client.check_connection()
     assert isinstance(origin, str)
     assert origin.strip() != ""

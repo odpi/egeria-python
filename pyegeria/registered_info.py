@@ -13,7 +13,7 @@ make sure the companion service is also configured and running.
 
 from typing import Optional
 
-from pyegeria._client_new import Client2
+from pyegeria._server_client import ServerClient
 from pyegeria.base_report_formats import select_report_spec, get_report_spec_match
 from pyegeria.output_formatter import (
     generate_output,
@@ -21,7 +21,7 @@ from pyegeria.output_formatter import (
 )
 
 
-class RegisteredInfo(Client2):
+class RegisteredInfo(ServerClient):
     """Client to discover Egeria services and capabilities
 
     Parameters:
@@ -62,7 +62,7 @@ class RegisteredInfo(Client2):
     ):
         if view_server is None:
             server_name = "NA"
-        Client2.__init__(self, view_server, platform_url, user_id, user_pwd)
+        ServerClient.__init__(self, view_server, platform_url, user_id, user_pwd)
         self.view_server = view_server
         self.platform_url = platform_url
         self.user_id = user_id

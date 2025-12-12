@@ -20,12 +20,11 @@ from rich.console import Console
 
 from pyegeria import SolutionArchitect, PyegeriaException
 from pyegeria._exceptions_new import (
-    PyegeriaInvalidParameterException as InvalidParameterException,
-    PyegeriaAPIException as PropertyServerException,
-    PyegeriaUnauthorizedException as UserNotAuthorizedException,
-    print_basic_exception as print_exception_response,
+    PyegeriaInvalidParameterException,
+    PyegeriaAPIException,
+    PyegeriaUnauthorizedException,
 )
-from pyegeria._exceptions_new import PyegeriaException, print_basic_exception, print_validation_error
+from pyegeria._exceptions_new import PyegeriaException, print_basic_exception, print_validation_error, print_exception_response
 
 disable_ssl_warnings = True
 
@@ -114,9 +113,9 @@ class TestSolutionArchitect:
 
             assert True
         except (
-                InvalidParameterException,
-                PropertyServerException,
-                UserNotAuthorizedException,
+                PyegeriaInvalidParameterException,
+                PyegeriaAPIException,
+                PyegeriaUnauthorizedException,
                 ) as e:
             print_exception_response(e)
             assert False, "Invalid request"
@@ -149,9 +148,9 @@ class TestSolutionArchitect:
 
             assert True
         except (
-                InvalidParameterException,
-                PropertyServerException,
-                UserNotAuthorizedException,
+                PyegeriaInvalidParameterException,
+                PyegeriaAPIException,
+                PyegeriaUnauthorizedException,
                 ) as e:
             print_exception_response(e)
             assert False, "Invalid request"
@@ -183,9 +182,9 @@ class TestSolutionArchitect:
 
             assert True
         except (
-                InvalidParameterException,
-                PropertyServerException,
-                UserNotAuthorizedException,
+                PyegeriaInvalidParameterException,
+                PyegeriaAPIException,
+                PyegeriaUnauthorizedException,
                 ) as e:
             print_exception_response(e)
             # if e.exception_error_message_id == 'OMAG-REPOSITORY-HANDLER-404-007':
@@ -302,9 +301,9 @@ class TestSolutionArchitect:
 
             assert True
         except (
-                InvalidParameterException,
-                PropertyServerException,
-                UserNotAuthorizedException,
+                PyegeriaInvalidParameterException,
+                PyegeriaAPIException,
+                PyegeriaUnauthorizedException,
                 ) as e:
             print_exception_response(e)
             assert False, "Invalid request"
@@ -667,9 +666,9 @@ class TestSolutionArchitect:
 
             assert True
         except (
-                InvalidParameterException,
-                PropertyServerException,
-                UserNotAuthorizedException,
+                PyegeriaInvalidParameterException,
+                PyegeriaAPIException,
+                PyegeriaUnauthorizedException,
                 ) as e:
             print_exception_response(e)
             assert False, "Invalid request"
@@ -700,9 +699,9 @@ class TestSolutionArchitect:
 
             assert True
         except (
-                InvalidParameterException,
-                PropertyServerException,
-                UserNotAuthorizedException,
+                PyegeriaInvalidParameterException,
+                PyegeriaAPIException,
+                PyegeriaUnauthorizedException,
                 ) as e:
             print_exception_response(e)
             assert False, "Invalid request"
@@ -873,9 +872,9 @@ class TestSolutionArchitect:
 
             assert True
         except (
-                InvalidParameterException,
-                PropertyServerException,
-                UserNotAuthorizedException,
+                PyegeriaInvalidParameterException,
+                PyegeriaAPIException,
+                PyegeriaUnauthorizedException,
                 ) as e:
             print_exception_response(e)
             assert False, "Invalid request"
@@ -908,9 +907,9 @@ class TestSolutionArchitect:
 
             assert True
         except (
-                InvalidParameterException,
-                PropertyServerException,
-                UserNotAuthorizedException,
+                PyegeriaInvalidParameterException,
+                PyegeriaAPIException,
+                PyegeriaUnauthorizedException,
                 ) as e:
             print_exception_response(e)
             assert False, "Invalid request"
@@ -979,9 +978,9 @@ class TestSolutionArchitect:
 
             assert True
         except (
-            InvalidParameterException,
-            PropertyServerException,
-            UserNotAuthorizedException,
+            PyegeriaInvalidParameterException,
+            PyegeriaAPIException,
+            PyegeriaUnauthorizedException,
         ) as e:
             print_exception_response(e)
             assert False, "Invalid request"
@@ -1012,9 +1011,9 @@ class TestSolutionArchitect:
 
             assert True
         except (
-            InvalidParameterException,
-            PropertyServerException,
-            UserNotAuthorizedException,
+            PyegeriaInvalidParameterException,
+            PyegeriaAPIException,
+            PyegeriaUnauthorizedException,
         ) as e:
             print_exception_response(e)
             assert False, "Invalid request"
@@ -1045,9 +1044,9 @@ class TestSolutionArchitect:
 
             assert True
         except (
-            InvalidParameterException,
-            PropertyServerException,
-            UserNotAuthorizedException,
+            PyegeriaInvalidParameterException,
+            PyegeriaAPIException,
+            PyegeriaUnauthorizedException,
         ) as e:
             print_exception_response(e)
             assert False, "Invalid request"
@@ -1076,9 +1075,9 @@ class TestSolutionArchitect:
 
             assert True
         except (
-            InvalidParameterException,
-            PropertyServerException,
-            UserNotAuthorizedException,
+            PyegeriaInvalidParameterException,
+            PyegeriaAPIException,
+            PyegeriaUnauthorizedException,
         ) as e:
             print_exception_response(e)
             assert False, "Invalid request"
@@ -1345,9 +1344,9 @@ class TestSolutionArchitect:
 
             assert True
         except (
-            InvalidParameterException,
-            PropertyServerException,
-            UserNotAuthorizedException,
+            PyegeriaInvalidParameterException,
+            PyegeriaAPIException,
+            PyegeriaUnauthorizedException,
         ) as e:
             print_exception_response(e)
             assert False, "Invalid request"
@@ -1438,9 +1437,9 @@ class TestSolutionArchitect:
 
             assert True
         except (
-            InvalidParameterException,
-            PropertyServerException,
-            UserNotAuthorizedException,
+            PyegeriaInvalidParameterException,
+            PyegeriaAPIException,
+            PyegeriaUnauthorizedException,
         ) as e:
             print_exception_response(e)
             assert False, "Invalid request"
@@ -1482,9 +1481,9 @@ class TestSolutionArchitect:
 
             assert True
         except (
-            InvalidParameterException,
-            PropertyServerException,
-            UserNotAuthorizedException,
+            PyegeriaInvalidParameterException,
+            PyegeriaAPIException,
+            PyegeriaUnauthorizedException,
         ) as e:
             print_exception_response(e)
             assert False, "Invalid request"

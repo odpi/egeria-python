@@ -20,7 +20,7 @@ from contextlib import nullcontext as does_not_raise
 import pytest
 from pydantic import ValidationError
 
-from pyegeria import Client2, PyegeriaException, print_basic_exception, print_validation_error
+from pyegeria import ServerClient, PyegeriaException, print_basic_exception, print_validation_error
 from pyegeria._exceptions_new import (
     PyegeriaInvalidParameterException as InvalidParameterException,
     PyegeriaAPIException as PropertyServerException,
@@ -41,7 +41,7 @@ view_server = "qs-view-server"
 user = "erinoverview"
 password = "secret"
 
-fm_client = Client2(view_server, TESTING_EGERIA_PLATFORM_URL, user)
+fm_client = ServerClient(view_server, TESTING_EGERIA_PLATFORM_URL, user)
 
 
 bearer_token = fm_client.create_egeria_bearer_token(user, password)

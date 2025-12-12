@@ -20,11 +20,9 @@ from rich.prompt import Prompt
 from rich.table import Table
 
 from pyegeria import (
-    InvalidParameterException,
-    PropertyServerException,
-    UserNotAuthorizedException,
-    ValidMetadataManager,
-    print_exception_response,
+    PyegeriaException,
+    ValidMetadataManager, print_basic_exception,
+
 )
 
 EGERIA_METADATA_STORE = os.environ.get("EGERIA_METADATA_STORE", "active-metadata-store")
@@ -132,15 +130,13 @@ def display_metadata_values(
             console.save_html("valid-metadata-values.html")
 
     except (
-        InvalidParameterException,
-        PropertyServerException,
-        UserNotAuthorizedException,
+        PyegeriaException,
         ValueError,
     ) as e:
         if type(e) is str:
             print(e)
         else:
-            print_exception_response(e)
+            print_basic_exception(e)
 
 
 def main():

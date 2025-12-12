@@ -27,15 +27,10 @@ from pyegeria import (
     print_basic_exception,
 )
 from pyegeria._exceptions_new import (
-    PyegeriaInvalidParameterException as _PyInv,
-    PyegeriaAPIException as _PyAPI,
-    PyegeriaUnauthorizedException as _PyUnauth,
+    PyegeriaInvalidParameterException,
+    PyegeriaAPIException,
+    PyegeriaUnauthorizedException,
 )
-# Standardize this test file on new exceptions while keeping the existing names local to the file
-InvalidParameterException = _PyInv
-PropertyServerException = _PyAPI
-UserNotAuthorizedException = _PyUnauth
-print_exception_response = print_basic_exception
 from pyegeria.glossary_manager import GlossaryManager, GlossaryTermProperties
 from pyegeria.core_omag_server_config import CoreServerConfig
 from pyegeria.models import NewElementRequestBody
@@ -706,9 +701,9 @@ class TestGlossaryManager:
             assert True
 
         except (
-                InvalidParameterException,
-                PropertyServerException,
-                UserNotAuthorizedException,
+                PyegeriaInvalidParameterException,
+                PyegeriaAPIException,
+                PyegeriaUnauthorizedException,
                 ) as e:
             print_exception_table(e)
             assert False, "Invalid request"
@@ -780,9 +775,9 @@ class TestGlossaryManager:
             assert True
 
         except (
-                InvalidParameterException,
-                PropertyServerException,
-                UserNotAuthorizedException,
+                PyegeriaInvalidParameterException,
+                PyegeriaAPIException,
+                PyegeriaUnauthorizedException,
                 ) as e:
             print_exception_table(e)
             assert False, "Invalid request"
@@ -810,9 +805,9 @@ class TestGlossaryManager:
             assert True
 
         except (
-                InvalidParameterException,
-                PropertyServerException,
-                UserNotAuthorizedException,
+                PyegeriaInvalidParameterException,
+                PyegeriaAPIException,
+                PyegeriaUnauthorizedException,
                 ) as e:
             print_exception_table(e)
             assert False, "Invalid request"
@@ -838,9 +833,9 @@ class TestGlossaryManager:
             assert True
 
         except (
-                InvalidParameterException,
-                PropertyServerException,
-                UserNotAuthorizedException,
+                PyegeriaInvalidParameterException,
+                PyegeriaAPIException,
+                PyegeriaUnauthorizedException,
                 ) as e:
             print_exception_table(e)
             assert False, "Invalid request"

@@ -16,11 +16,8 @@ from rich.live import Live
 from rich.table import Table
 
 from pyegeria import (
-    InvalidParameterException,
-    PropertyServerException,
     ServerOps,
-    UserNotAuthorizedException,
-    print_exception_response,
+    PyegeriaException, print_basic_exception,
 )
 
 EGERIA_METADATA_STORE = os.environ.get("EGERIA_METADATA_STORE", "active-metadata-store")
@@ -31,8 +28,7 @@ EGERIA_VIEW_SERVER_URL = os.environ.get(
     "EGERIA_VIEW_SERVER_URL", "https://localhost:9443"
 )
 EGERIA_INTEGRATION_DAEMON = os.environ.get("EGERIA_INTEGRATION_DAEMON", "integration-daemon")
-EGERIA_ADMIN_USER = os.environ.get("ADMIN_USER", "garygeeke")
-EGERIA_ADMIN_PASSWORD = os.environ.get("ADMIN_PASSWORD", "secret")
+
 EGERIA_USER = os.environ.get("EGERIA_USER", "erinoverview")
 EGERIA_USER_PASSWORD = os.environ.get("EGERIA_USER_PASSWORD", "secret")
 EGERIA_JUPYTER = bool(os.environ.get("EGERIA_JUPYTER", "False"))
@@ -42,12 +38,13 @@ EGERIA_WIDTH = int(os.environ.get("EGERIA_WIDTH", "220"))
 def display_startup_status(
     server: str,
     url: str,
-    username: str,
+    username: str = EGERIA_USER,
     password: str = EGERIA_USER_PASSWORD,
     jupyter: bool = EGERIA_JUPYTER,
     width: int = EGERIA_WIDTH,
 ):
     p_client = ServerOps(server, url, username)
+    token = p_client.create_egeria_bearer_token(username, password)
 
     def generate_table() -> Table:
         """Make a new table."""
@@ -91,11 +88,9 @@ def display_startup_status(
                 #     service_status = service['serviceStatus']
 
     except (
-        InvalidParameterException,
-        PropertyServerException,
-        UserNotAuthorizedException,
+        PyegeriaException
     ) as e:
-        print_exception_response(e)
+        print_basic_exception(e)
         assert e.related_http_code != "200", "Invalid parameters"
 
 

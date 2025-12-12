@@ -17,13 +17,17 @@ import time
 from contextlib import nullcontext as does_not_raise
 
 import pytest
+from rich.console import Console
+from rich import print
+
 
 from pyegeria import PyegeriaException, print_basic_exception, PyegeriaInvalidParameterException
 from pyegeria._exceptions_new import (
-    PyegeriaInvalidParameterException as InvalidParameterException,
-    PyegeriaAPIException as PropertyServerException,
-    PyegeriaUnauthorizedException as UserNotAuthorizedException,
-    print_basic_exception as print_exception_response,
+    PyegeriaInvalidParameterException,
+    PyegeriaAPIException,
+    PyegeriaClientException,
+    PyegeriaUnauthorizedException,
+    print_basic_exception, print_exception_table,
 )
 from pyegeria.asset_catalog import AssetCatalog
 from pyegeria.automated_curation import AutomatedCuration
@@ -32,7 +36,7 @@ from pyegeria.automated_curation import AutomatedCuration
 # from pyegeria.admin_services import FullServerConfig
 
 disable_ssl_warnings = True
-
+console = Console(width=300)
 
 class TestAssetCatalog:
     good_platform1_url = "https://127.0.0.1:9443"
@@ -107,7 +111,7 @@ class TestAssetCatalog:
 
             token = g_client.create_egeria_bearer_token(self.good_user_2, "secret")
             start_time = time.perf_counter()
-            asset = ["Set up new clinical trial", "unity", "number", "week"]
+            asset = ["Unity", "File", "number", "week"]
 
             for a in asset:
                 start_time = time.perf_counter()
@@ -116,7 +120,7 @@ class TestAssetCatalog:
                     starts_with=True,
                     ends_with=False,
                     ignore_case=False,
-                    time_out=120,
+
                 )
                 duration = time.perf_counter() - start_time
 
@@ -131,11 +135,10 @@ class TestAssetCatalog:
                     print("\n\n" + response)
 
         except (
-            InvalidParameterException,
-            PropertyServerException,
-            UserNotAuthorizedException,
+            PyegeriaAPIException,
+            PyegeriaClientException,
         ) as e:
-            print_exception_response(e)
+            print_basic_exception(e)
             assert False, "Invalid request"
         finally:
             g_client.close_session()
@@ -143,14 +146,14 @@ class TestAssetCatalog:
     def test_get_asset_graph(self, server: str = good_view_server_2):
         try:
             server_name = server
-            asset_guid = "890d26a8-a740-42c0-8585-801274bbf8f1"
+            asset_guid = "8be11e8d-3964-40c7-88cd-403526725523"
             a_client = AssetCatalog(
                 server_name, self.good_platform1_url, user_id=self.good_user_2
             )
 
             token = a_client.create_egeria_bearer_token(self.good_user_2, "secret")
 
-            response = a_client.get_asset_graph(asset_guid, output_format="JSON", report_spec="Asset-Graph")
+            response = a_client.get_asset_graph(asset_guid, output_format="DICT", report_spec="Asset-Graph")
             print(f"type is {type(response)}")
             if isinstance(response, dict | list):
                 print("\n\n" + json.dumps(response, indent=4))
@@ -171,7 +174,7 @@ class TestAssetCatalog:
     def test_get_asset_mermaid_graph(self, server: str = good_view_server_2):
         try:
             server_name = server
-            asset_guid = "890d26a8-a740-42c0-8585-801274bbf8f1"
+            asset_guid = "8be11e8d-3964-40c7-88cd-403526725523"
             a_client = AssetCatalog(
                 server_name, self.good_platform1_url, user_id=self.good_user_2
             )
@@ -185,7 +188,7 @@ class TestAssetCatalog:
                 count = len(response)
                 print(f"Found {count} pieces")
             elif type(response) is str:
-                print("\n\n" + response)
+                console.print("\n\n" + response)
             assert True
         except (
             PyegeriaException, PyegeriaInvalidParameterException,
@@ -199,7 +202,7 @@ class TestAssetCatalog:
     def test_get_asset_lineage_graph(self, server: str = good_view_server_2):
         try:
             server_name = server
-            asset_guid = "890d26a8-a740-42c0-8585-801274bbf8f1"
+            asset_guid = "8be11e8d-3964-40c7-88cd-403526725523"
             a_client = AssetCatalog(
                 server_name, self.good_platform1_url, user_id=self.good_user_2
             )
@@ -255,12 +258,8 @@ class TestAssetCatalog:
             elif type(response) is str:
                 print("\n\n" + response)
             assert True
-        except (
-            InvalidParameterException,
-            PropertyServerException,
-            UserNotAuthorizedException,
-        ) as e:
-            print_exception_response(e)
+        except (PyegeriaAPIException, PyegeriaClientException) as e:
+            print_exception_table(e)
             assert False, "Invalid request"
 
         finally:
@@ -292,12 +291,8 @@ class TestAssetCatalog:
             elif type(response) is str:
                 print("\n\n" + response)
             assert True
-        except (
-            InvalidParameterException,
-            PropertyServerException,
-            UserNotAuthorizedException,
-        ) as e:
-            print_exception_response(e)
+        except (PyegeriaAPIException, PyegeriaClientException) as e:
+            print_basic_exception(e)
             assert False, "Invalid request"
 
         finally:
@@ -321,12 +316,8 @@ class TestAssetCatalog:
             elif type(response) is str:
                 print("\n\n" + response)
             assert True
-        except (
-            InvalidParameterException,
-            PropertyServerException,
-            UserNotAuthorizedException,
-        ) as e:
-            print_exception_response(e)
+        except (PyegeriaAPIException, PyegeriaClientException) as e:
+            print_basic_exception(e)
             assert False, "Invalid request"
 
         finally:
@@ -373,12 +364,8 @@ class TestAssetCatalog:
             elif type(response) is str:
                 print("\n\n" + response)
             assert True
-        except (
-            InvalidParameterException,
-            PropertyServerException,
-            UserNotAuthorizedException,
-        ) as e:
-            print_exception_response(e)
+        except (PyegeriaAPIException, PyegeriaClientException) as e:
+            print_basic_exception(e)
             assert False, "Invalid request"
 
         finally:

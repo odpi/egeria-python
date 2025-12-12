@@ -38,7 +38,7 @@ from pyegeria._exceptions_new import (
     PyegeriaException,
     PyegeriaAPIException,
     PyegeriaUnauthorizedException,
-    print_exception_response,
+    print_exception_table,
     print_basic_exception
 )
 from pyegeria.platform_services import Platform
@@ -62,7 +62,7 @@ class TestPlatform:
 
     good_server_1 = "active-metadata-store"
     good_server_2 = "qs-metadata-store"
-    good_server_3 = "view-server"
+    good_server_3 = "qs-view-server"
     good_server_4 = "engine-host"
     bad_server_1 = "coco"
     bad_server_2 = ""
@@ -78,7 +78,7 @@ class TestPlatform:
             #         pytest.raises(PyegeriaException),
             # ),
             (
-                "active-metadata-server",
+                "qs-metadata-server",
                 "https://localhost:9443",
                 "garygeeke",
                 "secret",
@@ -111,12 +111,13 @@ class TestPlatform:
     def test_get_platform_origin(self, server, url, user_id, exc_type, expectation):
         with expectation as excinfo:
             p_client = Platform(server, url, user_id)
+            token = p_client.create_egeria_bearer_token(user_id,"secret")
             response_text = p_client.get_platform_origin()
             if response_text is not None:
                 print("\n\n" + response_text)
                 assert True
         if excinfo:
-            print_exception_response(excinfo.value)
+            print_basic_exception(excinfo.value)
             assert excinfo.typename is exc_type, "Unexpected exception"
 
     def test_shutdown_platform(self, server: str = good_server_1):
@@ -136,7 +137,7 @@ class TestPlatform:
         finally:
             p_client.close_session()
 
-    def test_activate_server_stored_config(self, server: str = "active-metadata-store"):
+    def test_activate_server_stored_config(self, server: str = "qs-metadata-store"):
         """
         Need to decide if its worth it to broaden out the test cases..for instance
         in this method if there is an exception - such as invalid server name
@@ -145,6 +146,7 @@ class TestPlatform:
         """
         try:
             p_client = Platform(server, self.good_platform1_url, self.good_user_1)
+            token = p_client.create_egeria_bearer_token(self.good_user_1,"secret")
             p_client.activate_server_stored_config(server)
             print(f"\n\n\t server {server} configured and activated successfully")
             assert True
@@ -154,7 +156,7 @@ class TestPlatform:
             PyegeriaAPIException,
             PyegeriaUnauthorizedException,
         ) as e:
-            print_exception_response(e)
+            print_basic_exception(e)
             assert e.related_http_code == "200", "Invalid parameters"
 
         finally:
@@ -172,14 +174,15 @@ class TestPlatform:
             PyegeriaAPIException,
             PyegeriaUnauthorizedException,
         ) as e:
-            print_exception_response(e)
+            print_basic_exception(e)
             assert e.related_http_code == 404, "Invalid parameters"
         finally:
             p_client.close_session()
 
-    def test_get_known_servers(self, server: str = good_server_3):
+    def test_get_known_servers(self, server: str = good_server_2):
         try:
-            p_client = Platform(server, self.good_platform2_url, self.good_user_1)
+            p_client = Platform(server, self.good_platform1_url, self.good_user_1)
+            token = p_client.create_egeria_bearer_token(self.good_user_1,"secret")
             response = p_client.get_known_servers()
             print(f"\n\n\t response = {response}")
             assert len(response) > 0, "Empty server list"
@@ -189,7 +192,7 @@ class TestPlatform:
             PyegeriaAPIException,
             PyegeriaUnauthorizedException,
         ) as e:
-            print_exception_response(e)
+            print_basic_exception(e)
             assert e.related_http_code == "200", "Invalid parameters"
         finally:
             p_client.close_session()
@@ -204,7 +207,7 @@ class TestPlatform:
             assert True
 
         except (PyegeriaException, PyegeriaAPIException) as e:
-            print_exception_response(e)
+            print_basic_exception(e)
             assert e.related_http_code == "200", "Invalid parameters"
         finally:
             p_client.close_session()
@@ -266,7 +269,7 @@ class TestPlatform:
                 assert True
 
             if excinfo:
-                print_exception_response(excinfo.value)
+                print_basic_exception(excinfo.value)
                 assert excinfo.typename is ex_type
 
     def test_activate_server_supplied_config(self, server: str = good_server_3):
@@ -588,7 +591,7 @@ class TestPlatform:
             print(f"\n\n\tServer {server_name} now configured and activated")
             assert True
         except (PyegeriaException, PyegeriaAPIException) as e:
-            print_exception_response(e)
+            print_basic_exception(e)
             assert e.related_http_code != "404", "Invalid parameters"
 
         finally:
@@ -597,6 +600,7 @@ class TestPlatform:
     def test_get_active_server_instance_status(self, server: str = good_server_2):
         try:
             p_client = Platform(server, self.good_platform1_url, self.good_user_1)
+            token = p_client.create_egeria_bearer_token("garygeeke","secret")
             response = p_client.get_active_server_instance_status()
             if type(response) is str:
                 print("Server instance status indicates: " + response)
@@ -605,7 +609,7 @@ class TestPlatform:
             assert True
 
         except (PyegeriaException, PyegeriaAPIException) as e:
-            print_exception_response(e)
+            print_basic_exception(e)
             assert e.related_http_code != "404", "Invalid parameters"
 
         finally:
@@ -614,20 +618,24 @@ class TestPlatform:
     def test_is_server_known(self, server: str = good_server_2):
         try:
             p_client = Platform(server, self.good_platform1_url, self.good_user_1)
+            token = p_client.create_egeria_bearer_token("garygeeke","secret")
+
             response = p_client.is_server_known(server)
             print(f"\n\n\tis_server_known() for server {server} reports {response}")
             assert (response is True) or (response is False), "Exception happened?"
 
         except (PyegeriaException, PyegeriaAPIException) as e:
-            print_exception_response(e)
+            print_basic_exception(e)
             assert e.related_http_code == "200", "Invalid parameters"
 
         finally:
             p_client.close_session()
 
-    def test_is_server_configured(self, server: str = good_server_3):
+    def test_is_server_configured(self, server: str = good_server_2):
         try:
             p_client = Platform(server, self.good_platform1_url, self.good_user_1)
+            token = p_client.create_egeria_bearer_token("garygeeke","secret")
+
             response = p_client.is_server_configured(server)
             print(
                 f"\n\n\tis_server_configured() for server {server} reports {response}"
@@ -635,7 +643,7 @@ class TestPlatform:
             assert (response is True) or (response is False), "Exception happened?"
 
         except (PyegeriaException, PyegeriaAPIException) as e:
-            print_exception_response(e)
+            print_basic_exception(e)
             assert e.related_http_code == "200", "Invalid parameters"
         finally:
             p_client.close_session()
@@ -643,12 +651,14 @@ class TestPlatform:
     def test_get_active_server_list(self, server: str = good_server_2):
         try:
             p_client = Platform(server, self.good_platform1_url, self.good_user_1)
+            token = p_client.create_egeria_bearer_token(self.good_user_1,"secret")
+
             response = p_client.get_active_server_list()
             print(f"\n\n\tThe active servers are: {response}")
             assert len(response) > 0, "Exception?"
 
         except (PyegeriaException, PyegeriaAPIException) as e:
-            print_exception_response(e)
+            print_basic_exception(e)
             assert e.related_http_code != "200", "Invalid parameters"
 
         finally:
@@ -663,7 +673,7 @@ class TestPlatform:
             assert True
 
         except (PyegeriaException, PyegeriaAPIException) as e:
-            print_exception_response(e)
+            print_basic_exception(e)
             assert e.related_http_code != "200", "Invalid parameters"
 
         finally:
@@ -672,6 +682,8 @@ class TestPlatform:
     def test_check_server_active(self, server: str = good_server_2):
         try:
             p_client = Platform(server, self.good_platform1_url, self.good_user_1)
+            token = p_client.create_egeria_bearer_token("garygeeke","secret")
+
             response = p_client.check_server_active(server)
             print(f"\n\nserver {server} active state is {str(response)}")
             assert response in (True, False), "Bad Response"
@@ -697,7 +709,7 @@ class TestPlatform:
             PyegeriaAPIException,
             PyegeriaUnauthorizedException,
         ) as e:
-            print_exception_response(e)
+            print_basic_exception(e)
             assert e.related_http_code != "200", "Invalid parameters"
 
     def test_activate_servers_on_platform(self, server: str = good_server_2):
@@ -718,7 +730,7 @@ class TestPlatform:
             assert True, "Issues encountered "
 
         if p_client.exc_type:
-            print_exception_response(p_client.exc_val)
+            print_basic_exception(p_client.exc_val)
             assert False
 
     def test_activate_platform(self, server: str = good_server_3):
@@ -731,7 +743,7 @@ class TestPlatform:
             assert True
 
         except (PyegeriaException, PyegeriaAPIException) as e:
-            print_exception_response(e)
+            print_basic_exception(e)
             assert e.related_http_code != "200", "Invalid parameters"
 
         finally:
@@ -755,6 +767,8 @@ class TestPlatform:
             with ServerOps(
                 server_name, self.good_platform1_url, self.good_user_1
             ) as p_client:
+                token = p_client.create_egeria_bearer_token("garygeeke", "secret")
+
                 server_list = p_client.get_known_servers()
                 live = Live(table, refresh_per_second=1)
                 with live:
@@ -776,10 +790,8 @@ class TestPlatform:
 
         except (
             PyegeriaException,
-            PyegeriaAPIException,
-            PyegeriaUnauthorizedException,
         ) as e:
-            print_exception_response(e)
+            print_basic_exception(e)
             assert e.related_http_code != "200", "Invalid parameters"
 
         finally:

@@ -16,20 +16,25 @@ import time
 from pydantic import ValidationError
 from pyegeria.project_manager import ProjectManager
 from pyegeria.glossary_manager import GlossaryManager
-from pyegeria._exceptions_new import PyegeriaException, print_basic_exception, print_exception_table, \
-    print_validation_error, PyegeriaAPIException
-
 from pyegeria._exceptions_new import (
-    PyegeriaInvalidParameterException as InvalidParameterException,
-    PyegeriaAPIException as PropertyServerException,
-    PyegeriaUnauthorizedException as UserNotAuthorizedException,
-    print_basic_exception as print_exception_response,
+    PyegeriaException,
+    print_basic_exception,
+    print_exception_table,
+    print_validation_error,
+    PyegeriaAPIException,
+)
+from rich.console import Console
+from rich import print
+from pyegeria._exceptions_new import (
+    PyegeriaInvalidParameterException,
+    PyegeriaAPIException,
+    PyegeriaUnauthorizedException,
 )
 
 # from pyegeria.admin_services import FullServerConfig
 
 disable_ssl_warnings = True
-
+console = Console(width = 300)
 
 class TestProjectManager:
     good_platform1_url = "https://127.0.0.1:9443"
@@ -86,11 +91,11 @@ class TestProjectManager:
             assert True
 
         except (
-            InvalidParameterException,
-            PropertyServerException,
-            UserNotAuthorizedException,
+            PyegeriaInvalidParameterException,
+            PyegeriaAPIException,
+            PyegeriaUnauthorizedException,
         ) as e:
-            print_exception_response(e)
+            print_basic_exception(e)
             assert False, "Invalid request"
 
         finally:
@@ -127,11 +132,11 @@ class TestProjectManager:
             assert True
 
         except (
-            InvalidParameterException,
-            PropertyServerException,
-            UserNotAuthorizedException,
+            PyegeriaInvalidParameterException,
+            PyegeriaAPIException,
+            PyegeriaUnauthorizedException,
         ) as e:
-            print_exception_response(e)
+            print_basic_exception(e)
             assert False, "Invalid request"
 
         finally:
@@ -196,11 +201,11 @@ class TestProjectManager:
             assert True
 
         except (
-            InvalidParameterException,
-            PropertyServerException,
-            UserNotAuthorizedException,
+            PyegeriaInvalidParameterException,
+            PyegeriaAPIException,
+            PyegeriaUnauthorizedException,
         ) as e:
-            print_exception_response(e)
+            print_basic_exception(e)
             assert False, "Invalid request"
 
         finally:
@@ -252,7 +257,7 @@ class TestProjectManager:
             start_time = time.perf_counter()
             # team_role = "ProjectManagement"
             team_role = None
-            project_guid = "2d86e375-c31b-494d-9e73-a03af1370d81"
+            project_guid = "91589680-75a7-481a-a2d1-53a63def65aa"
             response = p_client.get_project_team(project_guid, team_role, output_format="DICT", report_spec = "Referenceable")
 
             duration = time.perf_counter() - start_time
@@ -324,9 +329,9 @@ class TestProjectManager:
             token = p_client.create_egeria_bearer_token(self.good_user_2, "secret")
             start_time = time.perf_counter()
 
-            project_guid = "79ec7de5-7367-4bde-a3c8-b8d8c582b521"
+            project_guid = "91589680-75a7-481a-a2d1-53a63def65aa"
 
-            response = p_client.get_project_graph(project_guid, output_format='DICT', report_spec='Project')
+            response = p_client.get_project_graph(project_guid, output_format='MERMAID', report_spec='Common-Mermaid')
             duration = time.perf_counter() - start_time
 
             print(f"\n\tDuration was {duration} seconds")
@@ -337,17 +342,15 @@ class TestProjectManager:
                 print(json.dumps(response, indent=4))
             elif type(response) is list:
                 print(f"Type is {type(response)}\n\n")
-                print(json.dumps(response, indent=4))
+                console.print(response[0])
             elif type(response) is str:
                 print("\n\nGUID is: " + response)
             assert True
 
         except (
-                InvalidParameterException,
-                PropertyServerException,
-                UserNotAuthorizedException,
+                PyegeriaException, PyegeriaAPIException,
                 ) as e:
-            print_exception_response(e)
+            print_basic_exception(e)
             assert False, "Invalid request"
 
         finally:
@@ -366,15 +369,15 @@ class TestProjectManager:
             classification_name = "PersonalProject"
             body = {
                 "class": "NewElementRequestBody",
-                "parentGUID": "79ec7de5-7367-4bde-a3c8-b8d8c582b521",
+                "isOwnAnchor": True,
                 "parentRelationshipTypeName": "ProjectHierarchy",
                 "properties":{
                     "class": "ProjectProperties",
-                    "name": "My Study Project",
-                    "qualifiedName": f"{classification_name}-MyPersonalProject",
-                    "description": "my first personal project",
+                    "name": "RAG Experiments",
+                    "qualifiedName": f"{classification_name}-RAG Experiments",
+                    "description": "Experiments in RAG pipelines with Egeria",
                     "projectStatus": "DEFINED",
-                    "startDate": "2021-01-01",
+                    "startDate": "2025-12-01",
                     "plannedEndDate": "2028-01-01",
                     "initialClassifications" : {
                         "PersonalProject" : {
@@ -465,11 +468,11 @@ class TestProjectManager:
             assert True
 
         except (
-            InvalidParameterException,
-            PropertyServerException,
-            UserNotAuthorizedException,
+            PyegeriaInvalidParameterException,
+            PyegeriaAPIException,
+            PyegeriaUnauthorizedException,
         ) as e:
-            print_exception_response(e)
+            print_basic_exception(e)
             assert False, "Invalid request"
         finally:
             p_client.close_session()
@@ -499,11 +502,11 @@ class TestProjectManager:
             assert True
 
         except (
-            InvalidParameterException,
-            PropertyServerException,
-            UserNotAuthorizedException,
+            PyegeriaInvalidParameterException,
+            PyegeriaAPIException,
+            PyegeriaUnauthorizedException,
         ) as e:
-            print_exception_response(e)
+            print_basic_exception(e)
             assert False, "Invalid request"
         finally:
             p_client.close_session()
@@ -518,7 +521,7 @@ class TestProjectManager:
 
             token = p_client.create_egeria_bearer_token(self.good_user_2, "secret")
             start_time = time.perf_counter()
-            project_guid = "90213557-be19-421c-990d-78a76c30e0f5"
+            project_guid = "08e6bf95-60a0-4eb1-ac50-1f8ef40f8f26"
 
             response = p_client.delete_project(project_guid)
             duration = time.perf_counter() - start_time
@@ -540,15 +543,15 @@ class TestProjectManager:
     def test_add_to_project_team(self):
         try:
             p_client = ProjectManager(
-                self.good_view_server_1,
+                self.good_view_server_2,
                 self.good_platform1_url,
                 user_id=self.good_user_2,
             )
 
             token = p_client.create_egeria_bearer_token(self.good_user_2, "secret")
             start_time = time.perf_counter()
-            project_guid = "456cacde-a891-4e5a-bd3f-9fa0eeaa792c"
-            actor_guid = "a588fb08-ae09-4415-bd5d-991882ceacba"
+            project_guid = "91589680-75a7-481a-a2d1-53a63def65aa"
+            actor_guid = "dcfd7e32-8074-4cdf-bdc5-9a6f28818a9d"
 
             p_client.add_to_project_team(project_guid, actor_guid)
             duration = time.perf_counter() - start_time
@@ -558,11 +561,11 @@ class TestProjectManager:
             assert True
 
         except (
-            InvalidParameterException,
-            PropertyServerException,
-            UserNotAuthorizedException,
+            PyegeriaInvalidParameterException,
+            PyegeriaAPIException,
+            PyegeriaUnauthorizedException,
         ) as e:
-            print_exception_response(e)
+            print_basic_exception(e)
             assert False, "Invalid request"
         finally:
             p_client.close_session()
@@ -588,11 +591,11 @@ class TestProjectManager:
             assert True
 
         except (
-            InvalidParameterException,
-            PropertyServerException,
-            UserNotAuthorizedException,
+            PyegeriaInvalidParameterException,
+            PyegeriaAPIException,
+            PyegeriaUnauthorizedException,
         ) as e:
-            print_exception_response(e)
+            print_basic_exception(e)
             assert False, "Invalid request"
         finally:
             p_client.close_session()
@@ -618,11 +621,11 @@ class TestProjectManager:
             assert True
 
         except (
-            InvalidParameterException,
-            PropertyServerException,
-            UserNotAuthorizedException,
+            PyegeriaInvalidParameterException,
+            PyegeriaAPIException,
+            PyegeriaUnauthorizedException,
         ) as e:
-            print_exception_response(e)
+            print_basic_exception(e)
             assert False, "Invalid request"
         finally:
             p_client.close_session()
@@ -648,11 +651,11 @@ class TestProjectManager:
             assert True
 
         except (
-            InvalidParameterException,
-            PropertyServerException,
-            UserNotAuthorizedException,
+            PyegeriaInvalidParameterException,
+            PyegeriaAPIException,
+            PyegeriaUnauthorizedException,
         ) as e:
-            print_exception_response(e)
+            print_basic_exception(e)
             assert False, "Invalid request"
         finally:
             p_client.close_session()
@@ -778,11 +781,11 @@ class TestProjectManager:
             assert True
 
         except (
-            InvalidParameterException,
-            PropertyServerException,
-            UserNotAuthorizedException,
+            PyegeriaInvalidParameterException,
+            PyegeriaAPIException,
+            PyegeriaUnauthorizedException,
         ) as e:
-            print_exception_response(e)
+            print_basic_exception(e)
             assert False, "Invalid request"
         finally:
             p_client.close_session()

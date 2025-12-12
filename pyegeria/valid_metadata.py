@@ -8,7 +8,7 @@ Copyright Contributors to the ODPi Egeria project.
 
 import asyncio
 
-from pyegeria._client_new import Client2
+from pyegeria._server_client import ServerClient
 from pyegeria.models import SearchStringRequestBody, ResultsRequestBody, FilterRequestBody, GetRequestBody, \
     DeleteElementRequestBody
 from pyegeria.utils import dict_to_markdown_list, dynamic_catch, body_slimmer
@@ -23,7 +23,7 @@ from pyegeria.output_formatter import (
 )
 
 
-class ValidMetadataManager(Client2):
+class ValidMetadataManager(ServerClient):
     """The Valid Metadata OMVS provides APIs for retrieving and updating lists of valid metadata values.
         For more details see: https://egeria-project.org/guides/planning/valid-values/overview/
 
@@ -56,7 +56,7 @@ class ValidMetadataManager(Client2):
 
         self.valid_m_command_base: str = f"/api/open-metadata/valid-metadata"
         self.page_size = max_paging_size
-        Client2.__init__(self, view_server, platform_url, user_id, user_pwd, token=token)
+        ServerClient.__init__(self, view_server, platform_url, user_id, user_pwd, token=token)
 
         # Default entity label used by output formatter when a specific type is not supplied
         self.REFERENCEABLE_LABEL = "Referenceable"

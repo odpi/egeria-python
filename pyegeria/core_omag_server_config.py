@@ -15,12 +15,12 @@ import psycopg2
 from psycopg2 import sql
 from psycopg2.extensions import ISOLATION_LEVEL_AUTOCOMMIT
 
-from pyegeria._client_new import Client2
+from pyegeria._base_platform_client import BasePlatformClient
 from pyegeria._globals import enable_ssl_check
 from pyegeria._validators import validate_guid, validate_name, validate_url
 
 
-class CoreServerConfig(Client2):
+class CoreServerConfig(BasePlatformClient):
     """
     CoreServerConfig is a class that extends the Client class. It provides methods to configure and interact with access
     services in the OMAG server.
@@ -48,10 +48,9 @@ class CoreServerConfig(Client2):
         verify_flag: bool = enable_ssl_check,
     ):
         self.core_command_root: str
-        Client2.__init__(self, server_name, platform_url, user_id, user_pwd)
+        BasePlatformClient.__init__(self, server_name, platform_url, user_id, user_pwd)
         self.core_command_root = (
-            # self.platform_url + "/open-metadata/admin-services/users/" + user_id
-            self.platform_url + "/open-metadata/admin-services/"
+            self.platform_url + "/open-metadata/admin-services"
         )
 
     #

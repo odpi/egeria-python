@@ -18,9 +18,7 @@ from rich.tree import Tree
 
 from pyegeria import (
     AssetCatalog,
-    InvalidParameterException,
-    PropertyServerException,
-    UserNotAuthorizedException, PyegeriaException,
+PyegeriaAPIException, PyegeriaClientException, print_basic_exception, print_exception_table    UserNotAuthorizedException, PyegeriaException,
 )
 
 EGERIA_METADATA_STORE = os.environ.get("EGERIA_METADATA_STORE", "active-metadata-store")

@@ -8,12 +8,12 @@ This module contains the MyProfile class and its methods.
 
 import asyncio
 
-from pyegeria._client_new import Client2
+from pyegeria._server_client import ServerClient
 from pyegeria.models import NewElementRequestBody
 from pyegeria.utils import dynamic_catch
 
 
-class MyProfile(Client2):
+class MyProfile(ServerClient):
     """A class representing the profile of a user.
 
     This class provides methods for retrieving the profile details
@@ -42,7 +42,7 @@ class MyProfile(Client2):
                 user_pwd: str = None,
                 token: str = None,
                 ):
-        Client2.__init__(
+        ServerClient.__init__(
             self,
             view_server,
             platform_url,

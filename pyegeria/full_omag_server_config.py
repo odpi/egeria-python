@@ -8,7 +8,7 @@ Copyright Contributors to the ODPi Egeria project.
 
 import json
 from pyegeria.utils import body_slimmer
-from pyegeria._client_new import Client2
+from pyegeria._server_client import ServerClient
 from pyegeria._globals import max_paging_size
 from pyegeria._exceptions_new import (
     PyegeriaInvalidParameterException,
@@ -51,7 +51,7 @@ class FullServerConfig(CoreServerConfig):
         self.full_config_command_root: str
         CoreServerConfig.__init__(self, server_name, platform_url, user_id, user_pwd)
         self.full_config_command_root = (
-            self.platform_url + "/open-metadata/admin-services/users/" + user_id
+            self.platform_url + "/open-metadata/admin-services"
         )
 
     def get_access_services_topic_names(

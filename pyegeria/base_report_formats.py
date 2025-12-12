@@ -537,7 +537,7 @@ base_report_specs = FormatSetDict({
             )
         ],
     action=ActionParameter(
-        function="Client2.get_asset_graph",
+        function="ServerClient.get_asset_graph",
         optional_params=   OPTIONAL_FILTER_PARAMS + TIME_PARAMETERS ,
         required_params=["asset_guid"],
         spec_params={},
@@ -679,7 +679,7 @@ base_report_specs = FormatSetDict({
             )
         ],
         action=ActionParameter(
-            function="Client2.get_tech_type_detail",
+            function="ServerClient.get_tech_type_detail",
             optional_params=   OPTIONAL_FILTER_PARAMS + TIME_PARAMETERS,
             required_params=["filter"],
             spec_params={},
@@ -719,7 +719,7 @@ base_report_specs = FormatSetDict({
             )
         ],
         action=ActionParameter(
-            function="Client2.get_tech_type_detail",
+            function="ServerClient.get_tech_type_detail",
             optional_params=   OPTIONAL_FILTER_PARAMS + TIME_PARAMETERS,
             required_params=["filter"],
             spec_params={},
@@ -744,7 +744,7 @@ base_report_specs = FormatSetDict({
             )
         ],
         action=ActionParameter(
-            function="Client2.find_technology_types",
+            function="ServerClient.find_technology_types",
             optional_params=OPTIONAL_SEARCH_PARAMS,
             required_params=["search_string"],
             spec_params={},
@@ -770,7 +770,7 @@ base_report_specs = FormatSetDict({
             )
         ],
         action=ActionParameter(
-            function="Client2.find_notes",
+            function="ServerClient.find_notes",
             optional_params=OPTIONAL_SEARCH_PARAMS,
             required_params=["search_string"],
             spec_params={},
@@ -795,7 +795,7 @@ base_report_specs = FormatSetDict({
             )
         ],
         action=ActionParameter(
-            function="Client2.find_tags",
+            function="ServerClient.find_tags",
             optional_params=OPTIONAL_SEARCH_PARAMS,
             required_params=["search_string"],
             spec_params={},

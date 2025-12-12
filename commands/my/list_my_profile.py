@@ -19,10 +19,7 @@ from rich.table import Table
 from rich.tree import Tree
 
 from pyegeria import (
-    InvalidParameterException,
-    PropertyServerException,
-    UserNotAuthorizedException,
-    print_exception_response,
+PyegeriaAPIException, PyegeriaClientException, print_basic_exception, print_exception_table
 )
 from pyegeria.my_profile_omvs import MyProfile
 

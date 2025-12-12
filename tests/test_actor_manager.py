@@ -425,7 +425,7 @@ class TestActorManager:
         guid = None
         qn = _unique_qname("ActorProfile")
         metadata_element_types = ['Person','Team']
-        metadata_element_types = ["Team"]
+        # metadata_element_types = ["Team"]
         try:
             client = ActorManager(self.good_view_server_1, self.good_platform1_url, user_id=self.good_user_1)
             client.create_egeria_bearer_token(self.good_user_1, USER_PWD)

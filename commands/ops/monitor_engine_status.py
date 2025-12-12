@@ -24,9 +24,9 @@ from pyegeria import (
 )
 from pyegeria._exceptions_new import (
     PyegeriaInvalidParameterException,
-    PyegeriaAPIException as PropertyServerException,
-    PyegeriaUnauthorizedException as UserNotAuthorizedException,
-    print_basic_exception as print_exception_response,
+    PyegeriaAPIException,
+    PyegeriaUnauthorizedException,
+    print_basic_exception,
 )
 
 EGERIA_METADATA_STORE = os.environ.get("EGERIA_METADATA_STORE", "active-metadata-store")
@@ -189,10 +189,10 @@ def display_gov_eng_status(
 
     except (
         PyegeriaInvalidParameterException,
-        PropertyServerException,
-        UserNotAuthorizedException,
+        PyegeriaAPIException,
+        PyegeriaUnauthorizedException,
     ) as e:
-        console.print_exception(show_locals=True)
+        print_basic_exception(e)
 
     except KeyboardInterrupt:
         pass

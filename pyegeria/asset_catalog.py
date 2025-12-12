@@ -15,7 +15,7 @@ import json
 from httpx import Response
 from loguru import logger
 
-from pyegeria import Client2
+from pyegeria import ServerClient
 from pyegeria.base_report_formats import select_report_format, get_report_spec_match
 from pyegeria.models import NewElementRequestBody, TemplateRequestBody, SearchStringRequestBody, ResultsRequestBody
 from pyegeria.output_formatter import populate_columns_from_properties, _extract_referenceable_properties, \
@@ -26,7 +26,7 @@ from pyegeria._globals import NO_ELEMENTS_FOUND, NO_ASSETS_FOUND
 from ._validators import validate_search_string
 
 
-class AssetCatalog(Client2):
+class AssetCatalog(ServerClient):
     """Set up and maintain automation services in Egeria.
 
     Attributes:

@@ -20,10 +20,7 @@ from rich.table import Table
 
 from pyegeria import (
     ClassificationManager,
-    InvalidParameterException,
-    PropertyServerException,
-    UserNotAuthorizedException,
-    print_exception_response,
+PyegeriaAPIException, PyegeriaClientException, print_basic_exception, print_exception_table
 )
 
 console = Console()

@@ -16,7 +16,7 @@ from typing import List, Annotated, Literal
 from loguru import logger
 from pydantic import Field
 
-from pyegeria._client_new import Client2
+from pyegeria._server_client import ServerClient
 from pyegeria._exceptions_new import PyegeriaInvalidParameterException
 from pyegeria._globals import NO_GUID_RETURNED
 from pyegeria._validators import validate_guid

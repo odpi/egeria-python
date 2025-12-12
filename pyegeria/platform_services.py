@@ -12,7 +12,7 @@ import json
 
 import httpx
 
-from pyegeria._client_new import Client2
+from pyegeria._base_platform_client import BasePlatformClient
 from pyegeria._globals import enable_ssl_check
 from pyegeria._exceptions_new import (
     PyegeriaInvalidParameterException,
@@ -25,7 +25,7 @@ from pyegeria._exceptions_new import (
 from pyegeria._validators import validate_user_id
 from pyegeria._globals import NO_ELEMENTS_FOUND
 
-class Platform(Client2):
+class Platform(BasePlatformClient):
     """
     Client to operate Egeria Platforms - inherits from Server Ops
 
@@ -51,19 +51,17 @@ class Platform(Client2):
             user_id
         )  # add this check since we aren't using bearer tokens in this class
 
-        Client2.__init__(self, server_name, platform_url, user_id, user_pwd)
+        BasePlatformClient.__init__(self, server_name, platform_url, user_id, user_pwd)
         self.admin_command_root = (
             self.platform_url
             + "/open-metadata/platform-services/"
-            # + "users/"
-            # + user_id
-            + "/server-platform"
+            + "server-platform"
         )
 
     def get_platform_origin(self) -> str:
         """Get the version and origin of the platform software
 
-         /open-metadata/platform-services/users/{userId}/server-platform/origin
+         /open-metadata/platform-services/server-platform/origin
          Response from this call is a string not JSON..
 
          Parameters
@@ -409,7 +407,7 @@ class Platform(Client2):
         """
         if server is None:
             server = self.server_name
-        url = f"{self.platform_url}/open-metadata/admin-services/users/{self.user_id}/servers/{server}/configuration"
+        url = f"{self.platform_url}/open-metadata/admin-services/servers/{server}/configuration"
 
         response = await self._async_make_request("GET", url)
         config = response.json().get("omagserverConfig", "No configuration found")
@@ -664,7 +662,7 @@ class Platform(Client2):
         """
         Shutdown and unregister all servers from their cohorts on the associated platform. Async version.
 
-        /open-metadata/platform-services/users/{userId}/server-platform/servers
+        /open-metadata/platform-services/server-platform/servers
 
         Parameters
         ----------
@@ -691,7 +689,7 @@ class Platform(Client2):
         """
         Shutdown and unregister all servers from their cohorts on the associated platform.
 
-        /open-metadata/platform-services/users/{userId}/server-platform/servers
+        /open-metadata/platform-services/server-platform/servers
 
         Parameters
         ----------

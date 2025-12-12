@@ -22,8 +22,8 @@ from pyegeria import (
 )
 from pyegeria._exceptions_new import (
     PyegeriaInvalidParameterException,
-    PyegeriaAPIException as PropertyServerException,
-    PyegeriaUnauthorizedException as UserNotAuthorizedException,
+    PyegeriaAPIException,
+    PyegeriaUnauthorizedException,
     print_basic_exception as print_exception_response,
 )
 
@@ -109,8 +109,8 @@ def collection_viewer(
 
     except (
         PyegeriaInvalidParameterException,
-        PropertyServerException,
-        UserNotAuthorizedException,
+        PyegeriaAPIException,
+        PyegeriaUnauthorizedException,
     ) as e:
         if e.exception_error_message_parameters[1] == NO_ELEMENTS_FOUND:
             print("The collection was not found.")

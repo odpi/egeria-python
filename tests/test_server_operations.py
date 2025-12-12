@@ -19,9 +19,10 @@ import pytest
 from rich import print, print_json
 
 from pyegeria._exceptions_new import (
-    PyegeriaInvalidParameterException as InvalidParameterException,
-    PyegeriaAPIException as PropertyServerException,
-    print_basic_exception as print_exception_response,
+    PyegeriaInvalidParameterException,
+    PyegeriaAPIException,
+    PyegeriaException,
+    print_basic_exception,
 )
 from pyegeria.server_operations import ServerOps
 
@@ -57,8 +58,8 @@ class TestServerOperations:
             print(f"\n\n\tThe active configuration of {server} is \n{json.dumps(response, indent=4)}")
             assert True
 
-        except (InvalidParameterException, PropertyServerException) as e:
-            print_exception_response(e)
+        except (PyegeriaException) as e:
+            print_basic_exception(e)
             assert e.related_http_code != "404", f"Invalid parameters: {e.message}"
 
     def test_add_archive_files(self):
@@ -70,8 +71,8 @@ class TestServerOperations:
             p_client.add_archive_file("content-packs/CoreContentPack.omarchive", server)
             assert True, "Should have raised an exception"
 
-        except (InvalidParameterException, PropertyServerException) as e:
-            print_exception_response(e)
+        except (PyegeriaInvalidParameterException, PyegeriaAPIException) as e:
+            print_basic_exception(e)
             assert e.related_http_code != "404", "Invalid parameters"
 
     @pytest.mark.skip(reason="Need to find a good archive connection body")
@@ -84,8 +85,8 @@ class TestServerOperations:
 
             assert True, "Should have raised an exception"
 
-        except (InvalidParameterException, PropertyServerException) as e:
-            print_exception_response(e)
+        except (PyegeriaInvalidParameterException, PyegeriaAPIException) as e:
+            print_basic_exception(e)
             assert e.related_http_code != "404", "Invalid parameters"
 
     def test_get_active_server_status(self, server: str = good_server_1):
@@ -95,8 +96,8 @@ class TestServerOperations:
             print(response)
             assert response.get("relatedHTTPCode") == 200, "Invalid URL or server"
 
-        except (InvalidParameterException, PropertyServerException) as e:
-            print_exception_response(e)
+        except (PyegeriaInvalidParameterException, PyegeriaAPIException) as e:
+            print_basic_exception(e)
             assert e.related_http_code != "404", "Invalid parameters"
 
     def test_get_active_service_list_for_server(self):
@@ -107,8 +108,8 @@ class TestServerOperations:
             print(f"\n\n\tActive Service list for server {server} is {response}")
             assert True, "Invalid URL or server"
 
-        except (InvalidParameterException, PropertyServerException) as e:
-            print_exception_response(e)
+        except (PyegeriaInvalidParameterException, PyegeriaAPIException) as e:
+            print_basic_exception(e)
             assert e.related_http_code != "200", "Invalid parameters"
 
     def test_get_governance_engine_summaries(self, server: str = good_server_4):
@@ -122,8 +123,8 @@ class TestServerOperations:
 
             assert True, "Invalid URL or server"
 
-        except (InvalidParameterException, PropertyServerException) as e:
-            print_exception_response(e)
+        except (PyegeriaInvalidParameterException, PyegeriaAPIException) as e:
+            print_basic_exception(e)
             assert e.related_http_code != "200", "Invalid parameters"
 
     #
@@ -144,8 +145,8 @@ class TestServerOperations:
                 print(f"\n\n\tIntegration Daemon Status response was: {response}")
             assert True, "Invalid URL or server"
 
-        except (InvalidParameterException, PropertyServerException) as e:
-            print_exception_response(e)
+        except (PyegeriaInvalidParameterException, PyegeriaAPIException) as e:
+            print_basic_exception(e)
             assert e.related_http_code != "200", "Invalid parameters"
 
     def test_get_connector_config(self, server: str = good_server_2):
@@ -160,8 +161,8 @@ class TestServerOperations:
 
             assert True, "Invalid URL or server"
 
-        except (InvalidParameterException, PropertyServerException) as e:
-            print_exception_response(e)
+        except (PyegeriaInvalidParameterException, PyegeriaAPIException) as e:
+            print_basic_exception(e)
             assert e.related_http_code != "200", "Invalid parameters"
 
     # todo - review with Mandy?
@@ -178,8 +179,8 @@ class TestServerOperations:
 
             assert True, "Invalid URL or server"
 
-        except (InvalidParameterException, PropertyServerException) as e:
-            print_exception_response(e)
+        except (PyegeriaInvalidParameterException, PyegeriaAPIException) as e:
+            print_basic_exception(e)
             assert e.related_http_code != "200", "Invalid parameters"
 
     def test_refresh_integration_connectors(self, server: str = good_server_3):
@@ -192,6 +193,6 @@ class TestServerOperations:
 
             assert True, "Invalid URL or server"
 
-        except (InvalidParameterException, PropertyServerException) as e:
-            print_exception_response(e)
+        except (PyegeriaInvalidParameterException, PyegeriaAPIException) as e:
+            print_basic_exception(e)
             assert e.related_http_code != "200", "Invalid parameters"

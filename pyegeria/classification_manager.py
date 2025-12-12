@@ -12,7 +12,7 @@ from httpx import Response
 from loguru import logger
 
 from pyegeria._exceptions_new import PyegeriaException, PyegeriaInvalidParameterException
-from pyegeria._client_new import Client2
+from pyegeria._server_client import ServerClient
 from pyegeria._globals import default_time_out, NO_ELEMENTS_FOUND
 from pyegeria.base_report_formats import select_report_spec, get_report_spec_match
 from pyegeria.models import LevelIdentifierQueryBody, FilterRequestBody, GetRequestBody, NewClassificationRequestBody, \
@@ -49,7 +49,7 @@ def base_path(client, view_server: str):
     return f"{client.platform_url}/servers/{view_server}/api/open-metadata/classification-manager"
 
 
-class ClassificationManager(Client2):
+class ClassificationManager(ServerClient):
     """ClassificationManager is a class that extends the Client class. It
     provides methods to CRUD annotations and to query elements and relationships. Async version.
 
@@ -84,7 +84,7 @@ class ClassificationManager(Client2):
         self.classification_command_root: str = (
             f"{self.platform_url}/servers/{self.view_server}/api/open-metadata/classification-manager"
         )
-        Client2.__init__(
+        ServerClient.__init__(
             self,
             view_server,
             platform_url,

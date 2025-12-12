@@ -20,12 +20,16 @@ from rich.console import Console
 from pyegeria import PyegeriaAPIException
 from pyegeria.utils import body_slimmer
 from pyegeria._exceptions_new import (
-    PyegeriaInvalidParameterException as InvalidParameterException,
-    PyegeriaAPIException as PropertyServerException,
-    PyegeriaUnauthorizedException as UserNotAuthorizedException,
+    PyegeriaInvalidParameterException,
+    PyegeriaAPIException,
+    PyegeriaUnauthorizedException,
     print_basic_exception as print_exception_response,
 )
-from pyegeria._exceptions_new import PyegeriaException, print_basic_exception, print_exception_table
+from pyegeria._exceptions_new import (
+    PyegeriaException,
+    print_basic_exception,
+    print_exception_table,
+)
 from pyegeria.data_designer import DataDesigner
 from pyegeria.config import settings
 
@@ -142,9 +146,9 @@ class TestDataDesigner:
 
             assert True
         except (
-            InvalidParameterException,
-            PropertyServerException,
-            UserNotAuthorizedException,
+            PyegeriaInvalidParameterException,
+            PyegeriaAPIException,
+            PyegeriaUnauthorizedException,
         ) as e:
             print_basic_exception(e)
             assert False, "Invalid request"
@@ -180,9 +184,9 @@ class TestDataDesigner:
 
             assert True
         except (
-            InvalidParameterException,
-            PropertyServerException,
-            UserNotAuthorizedException,
+            PyegeriaInvalidParameterException,
+            PyegeriaAPIException,
+            PyegeriaUnauthorizedException,
         ) as e:
             print_basic_exception(e)
             assert False, "Invalid request"
@@ -213,9 +217,9 @@ class TestDataDesigner:
 
             assert True
         except (
-            InvalidParameterException,
-            PropertyServerException,
-            UserNotAuthorizedException,
+            PyegeriaInvalidParameterException,
+            PyegeriaAPIException,
+            PyegeriaUnauthorizedException,
         ) as e:
             print_basic_exception(e)
             assert False, "Invalid request"
@@ -451,9 +455,9 @@ class TestDataDesigner:
 
             assert True
         except (
-            InvalidParameterException,
-            PropertyServerException,
-            UserNotAuthorizedException,
+            PyegeriaInvalidParameterException,
+            PyegeriaAPIException,
+            PyegeriaUnauthorizedException,
         ) as e:
             print_basic_exception(e)
             assert False, "Invalid request"
@@ -559,9 +563,9 @@ class TestDataDesigner:
 
             assert True
         except (
-            InvalidParameterException,
-            PropertyServerException,
-            UserNotAuthorizedException,
+            PyegeriaInvalidParameterException,
+            PyegeriaAPIException,
+            PyegeriaUnauthorizedException,
         ) as e:
             print_basic_exception(e)
             assert False, "Invalid request"

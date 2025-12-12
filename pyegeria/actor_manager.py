@@ -33,10 +33,10 @@ ACTOR_PROFILE = ["ActorProfile", "Person", "Team",
 # ACTOR = ["Actor", "PersonRole", "TeamRole", "ITProfileRole"]
 ACTOR_ROLE = ["ActorRole", "PersonRole", "TeamRole", "ITProfileRole", "TeamMember", "TeamLeader"]
 
-from pyegeria._client_new import Client2
+from pyegeria._server_client import ServerClient
 
 
-class ActorManager(Client2):
+class ActorManager(ServerClient):
     """
     Create and manage actor profiles.
 
@@ -64,7 +64,7 @@ class ActorManager(Client2):
         self.user_id = user_id
         self.user_pwd = user_pwd
 
-        Client2.__init__(self, view_server, platform_url, user_id, user_pwd, token)
+        ServerClient.__init__(self, view_server, platform_url, user_id, user_pwd, token)
         result = self.get_platform_origin()
         logger.debug(f"{self.__class__} initialized, platform origin is: {result} ")
         self.command_root: str = (

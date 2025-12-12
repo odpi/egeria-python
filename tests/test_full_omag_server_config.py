@@ -12,10 +12,11 @@ A running Egeria environment is needed to run these tests.
 import json
 
 from pyegeria._exceptions_new import (
-    PyegeriaInvalidParameterException as InvalidParameterException,
-    PyegeriaAPIException as PropertyServerException,
-    PyegeriaUnauthorizedException as UserNotAuthorizedException,
-    print_basic_exception as print_exception_response,
+    PyegeriaInvalidParameterException,
+    PyegeriaAPIException,
+    PyegeriaUnauthorizedException,
+    PyegeriaClientException,
+    print_basic_exception, PyegeriaException, print_exception_table,
 )
 from pyegeria.full_omag_server_config import FullServerConfig
 
@@ -34,7 +35,7 @@ class TestAdminServices:
     bad_user_1 = "eviledna"
     bad_user_2 = ""
 
-    good_server_1 = "active-metadata-store"
+    good_server_1 = "qs-metadata-store"
     good_server_2 = "cocoMDS2"
     good_server_3 = "cocoMDS1"
     bad_server_1 = "coco"
@@ -95,17 +96,16 @@ class TestAdminServices:
             o_client = FullServerConfig(
                 self.good_server_2, self.good_platform1_url, self.good_user_1
             )
-
+            o_client.create_egeria_bearer_token(self.good_user_1,"secret")
             response = o_client.set_audit_log_destinations(audit_log_dest)
 
             print("\n\n" + json.dumps(response, indent=4))
             assert response is not None, "Failed to set audit log destinations"
 
         except (
-            InvalidParameterException,
-            PropertyServerException,
+            PyegeriaException
         ) as e:
-            print_exception_response(e)
+            print_exception_table(e)
             assert False, "Invalid request"
 
     def test_get_access_services_topic_names(self):
@@ -113,6 +113,8 @@ class TestAdminServices:
             o_client: FullServerConfig = FullServerConfig(
                 self.good_server_1, self.good_platform1_url, self.good_user_1
             )
+            o_client.create_egeria_bearer_token(self.good_user_1,"secret")
+
             response = o_client.get_access_services_topic_names("Asset Owner OMAS")
 
             assert response is not None and type(response) is dict, "No topic names"
@@ -120,10 +122,11 @@ class TestAdminServices:
             print("\n\n\t\tResponse is: " + json.dumps(response, indent=4))
 
         except (
-            InvalidParameterException,
-            PropertyServerException,
+            PyegeriaException,
+            PyegeriaClientException,
+            PyegeriaAPIException
         ) as e:
-            print_exception_response(e)
+            print_exception_table(e)
             assert False, "Invalid request"
 
     def test_all_get_access_services_topic_names(self):
@@ -138,10 +141,9 @@ class TestAdminServices:
             print("\n\n\t\tResponse is: " + json.dumps(response, indent=4))
 
         except (
-            InvalidParameterException,
-            PropertyServerException,
+            PyegeriaException
         ) as e:
-            print_exception_response(e)
+            print_exception_table(e)
             assert False, "Invalid request"
 
     def test_get_event_bus(self):
@@ -150,6 +152,8 @@ class TestAdminServices:
             o_client: FullServerConfig = FullServerConfig(
                 self.good_server_1, self.good_platform1_url, self.good_user_1
             )
+            o_client.create_egeria_bearer_token(self.good_user_1,"secret")
+
             response = o_client.get_event_bus()
 
             assert (
@@ -159,10 +163,9 @@ class TestAdminServices:
             print("\n\n\t\tResponse is: " + json.dumps(response, indent=4))
 
         except (
-            InvalidParameterException,
-            PropertyServerException,
+            PyegeriaException
         ) as e:
-            print_exception_response(e)
+            print_exception_table(e)
             assert False, "Invalid request"
 
     def test_set_event_bus(self):
@@ -171,17 +174,17 @@ class TestAdminServices:
             o_client: FullServerConfig = FullServerConfig(
                 self.good_server_1, self.good_platform1_url, self.good_user_1
             )
+            o_client.create_egeria_bearer_token(self.good_user_1,"secret")
 
             o_client.set_event_bus("EventBusConfig", "egeria.omag")
             assert True
             print("\n\n\t\tSet event bus configuration")
 
         except (
-            InvalidParameterException,
-            PropertyServerException,
-            UserNotAuthorizedException,
+            PyegeriaAPIException,
+            PyegeriaClientException,
         ) as e:
-            print_exception_response(e)
+            print_exception_table(e)
             assert False, "Invalid request"
 
     def test_set_startup_open_metadata_archive(self):
@@ -228,11 +231,10 @@ class TestAdminServices:
             print("\n\n\t\tArchives added")
 
         except (
-            InvalidParameterException,
-            PropertyServerException,
-            UserNotAuthorizedException,
+            PyegeriaException,
+            PyegeriaClientException,
         ) as e:
-            print_exception_response(e)
+            print_exception_table(e)
             assert False, "Invalid request"
 
     def test_config_view_service(self):
@@ -253,11 +255,10 @@ class TestAdminServices:
             print("\n\n\t\tView service set")
 
         except (
-            InvalidParameterException,
-            PropertyServerException,
-            UserNotAuthorizedException,
+            PyegeriaException
+           
         ) as e:
-            print_exception_response(e)
+            print_exception_table(e)
             assert False, "Invalid request"
 
     def test_set_view_service_config(self):
@@ -278,11 +279,10 @@ class TestAdminServices:
             print("\n\n\t\tView service set")
 
         except (
-            InvalidParameterException,
-            PropertyServerException,
-            UserNotAuthorizedException,
+            PyegeriaException
+            
         ) as e:
-            print_exception_response(e)
+            print_exception_table(e)
             assert False, "Invalid request"
 
     def test_clear_server_type(self):
@@ -298,11 +298,10 @@ class TestAdminServices:
             print("\n\n\t\tService type cleared")
 
         except (
-            InvalidParameterException,
-            PropertyServerException,
-            UserNotAuthorizedException,
+            PyegeriaException
+            
         ) as e:
-            print_exception_response(e)
+            print_exception_table(e)
             assert False, "Invalid request"
 
     def test_set_max_paging_size(self):
@@ -318,9 +317,8 @@ class TestAdminServices:
             print("\n\n\t\tService type cleared")
 
         except (
-            InvalidParameterException,
-            PropertyServerException,
-            UserNotAuthorizedException,
+            PyegeriaException
+            
         ) as e:
-            print_exception_response(e)
+            print_exception_table(e)
             assert False, "Invalid request"

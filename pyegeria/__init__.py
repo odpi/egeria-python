@@ -28,7 +28,7 @@ if disable_ssl_warnings:
     disable_warnings(InsecureRequestWarning)
 
 # from ._client import Client
-from ._client_new import Client2
+from ._server_client import ServerClient
 from ._exceptions_new import (PyegeriaInvalidParameterException,PyegeriaAPIException, PyegeriaException,
                               PyegeriaUnauthorizedException, PyegeriaClientException, PyegeriaUnknownException,
                               PyegeriaConnectionException, PyegeriaNotFoundException,

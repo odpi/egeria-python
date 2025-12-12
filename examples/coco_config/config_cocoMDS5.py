@@ -36,10 +36,7 @@ from globals import (
 )
 
 from pyegeria import (
-    InvalidParameterException,
-    PropertyServerException,
-    UserNotAuthorizedException,
-    print_exception_response,
+PyegeriaAPIException, PyegeriaClientException, print_basic_exception, print_exception_table
 )
 from pyegeria.core_omag_server_config import CoreServerConfig
 from pyegeria.platform_services import Platform

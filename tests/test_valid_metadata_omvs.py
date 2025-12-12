@@ -651,7 +651,7 @@ class TestValidMetadataOMVs:
             start_time = time.perf_counter()
             entity_type = "AssetOwner"
 
-            response = m_client.get_valid_relationship_types(entity_type)
+            response = m_client.get_valid_relationship_types(entity_type, output_format="DICT",report_spec="Referenceable")
             duration = time.perf_counter() - start_time
 
             print(f"\n\tDuration was {duration} seconds")

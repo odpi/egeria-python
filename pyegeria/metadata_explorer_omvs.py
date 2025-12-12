@@ -12,7 +12,7 @@ import asyncio
 from httpx import Response
 
 from pyegeria.utils import body_slimmer
-from pyegeria._client_new import Client2, max_paging_size
+from pyegeria._server_client import ServerClient, max_paging_size
 from pyegeria._globals import default_time_out, NO_ELEMENTS_FOUND
 
 
@@ -76,7 +76,7 @@ def process_related_element_list(
     return elements
 
 
-class MetadataExplorer(Client2):
+class MetadataExplorer(ServerClient):
     """MetadataExplorer is a class that extends the Client class. The Metadata Explorer OMVS provides APIs for
       supporting the search, query and retrieval of open metadata. It is an advanced API for users that understands
       the Open Metadata Types.
@@ -112,7 +112,7 @@ class MetadataExplorer(Client2):
         self.metadata_explorer_command_root: str = (
             f"{self.platform_url}/servers/{self.view_server}/api/open-metadata/metadata-explorer"
         )
-        Client2.__init__(
+        ServerClient.__init__(
             self,
             view_server,
             platform_url,

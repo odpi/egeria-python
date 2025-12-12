@@ -21,11 +21,9 @@ from rich.table import Table
 
 from pyegeria import (
     ClassificationManager,
-    InvalidParameterException,
     ProjectManager,
-    PropertyServerException,
-    UserNotAuthorizedException,
-    print_exception_response,
+    PyegeriaException,
+    print_basic_exception, print_validation_error,
 )
 
 EGERIA_METADATA_STORE = os.environ.get("EGERIA_METADATA_STORE", "active-metadata-store")
@@ -100,7 +98,8 @@ def display_project_list(
             end = " "
             description = " "
         elif type(projects) == str:
-            raise ValueError("-->This is not a known project")
+            print("-->This is not a known project")
+            exit(0)
         else:
             sorted_projects = sorted(
                 projects, key=lambda k: k["properties"].get("name", "---")
@@ -179,15 +178,13 @@ def display_project_list(
             console.save_html("projects.html")
 
     except (
-        InvalidParameterException,
-        PropertyServerException,
-        UserNotAuthorizedException,
-        ValueError,
+        PyegeriaException,
     ) as e:
         if type(e) is str:
             print(e)
         else:
-            print_exception_response(e)
+            print_basic_exception(e)
+
     except KeyboardInterrupt:
         pass
     finally:

@@ -15,7 +15,7 @@ from typing import Dict, List
 from loguru import logger
 from pydantic import Field
 
-from pyegeria._client_new import Client2
+from pyegeria._server_client import ServerClient
 from pyegeria.output_formatter import (
     extract_mermaid_only,
     generate_output,
@@ -72,7 +72,7 @@ class GovernanceDefinitionProperties(ReferenceableProperties):
     userDefinedStatus: str | None = None
 
 
-class GovernanceOfficer(Client2):
+class GovernanceOfficer(ServerClient):
     """GovernanceOfficer is a class that extends the Client class. The Governance Officer OMVS provides APIs for
       defining and managing governance definitions.
 
@@ -99,7 +99,7 @@ class GovernanceOfficer(Client2):
         self.user_id = user_id
         self.user_pwd = user_pwd
 
-        Client2.__init__(self, view_server, platform_url, user_id=user_id, user_pwd=user_pwd, token=token)
+        ServerClient.__init__(self, view_server, platform_url, user_id=user_id, user_pwd=user_pwd, token=token)
         self.url_marker = "governance-officer"
 
     #

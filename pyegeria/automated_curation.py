@@ -13,7 +13,7 @@ from httpx import Response
 from loguru import logger
 from pydantic import HttpUrl
 from pyegeria._globals import NO_ELEMENTS_FOUND
-from pyegeria._client_new import Client2
+from pyegeria._server_client import ServerClient
 from pyegeria._validators import validate_guid, validate_name, validate_search_string
 # from pyegeria._exceptions import (
 #     PyegeriaInvalidParameterException,
@@ -33,7 +33,7 @@ from pyegeria.output_formatter import (
 settings.Logging.console_logging_level = "ERROR"
 
 
-class AutomatedCuration(Client2):
+class AutomatedCuration(ServerClient):
     """Set up and maintain automation services in Egeria.
 
     Attributes:
@@ -62,7 +62,7 @@ class AutomatedCuration(Client2):
         self.platform_url = platform_url
         self.user_id = user_id
         self.user_pwd = user_pwd
-        Client2.__init__(self, view_server, platform_url, user_id, user_pwd, token=token)
+        ServerClient.__init__(self, view_server, platform_url, user_id, user_pwd, token=token)
         self.curation_command_root = f"{self.platform_url}/servers/{self.view_server}/api/open-metadata/automated-curation"
 
         # Default entity label used by the output formatter for Technology Types

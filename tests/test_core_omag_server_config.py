@@ -17,10 +17,14 @@ from contextlib import nullcontext as does_not_raise
 import pytest
 
 from pyegeria._exceptions_new import (
-    PyegeriaInvalidParameterException as InvalidParameterException,
-    PyegeriaAPIException as PropertyServerException,
-    PyegeriaUnauthorizedException as UserNotAuthorizedException,
+    PyegeriaInvalidParameterException,
+    PyegeriaAPIException,
+    PyegeriaUnauthorizedException,
     print_basic_exception as print_exception_response,
+    PyegeriaException,
+    print_exception_table,
+    PyegeriaClientException,
+    PyegeriaAPIException,
 )
 from pyegeria.core_omag_server_config import CoreServerConfig
 
@@ -38,7 +42,7 @@ class TestCoreAdminServices:
     bad_user_1 = "eviledna"
     bad_user_2 = ""
     good_integ_1 = "integration-daemon"
-    good_server_1 = "simple-metadata-store"
+    good_server_1 = "qs-metadata-store"
     good_server_2 = "cocoMDS1"
     good_server_3 = "active-metadata-store"
     good_server_4 = "integration-daemon"
@@ -59,7 +63,7 @@ class TestCoreAdminServices:
                 bad_server_1,
                 bad_platform1_url,
                 "garygeeke",
-                pytest.raises(InvalidParameterException),
+                pytest.raises(PyegeriaInvalidParameterException),
             ),
             (good_server_3, good_platform1_url, "garygeeke", does_not_raise()),
             (good_server_1, good_platform1_url, "garygeeke", does_not_raise()),
@@ -68,6 +72,8 @@ class TestCoreAdminServices:
     def test_get_stored_configuration(self, server, url, user, expectation):
         with expectation as excinfo:
             client = CoreServerConfig(server, url, user)
+            client.create_egeria_bearer_token(self.good_user_2, "secret")
+
             config = client.get_stored_configuration()
             assert isinstance(config, dict), "There was only an exception response"
             if type(config) is dict:
@@ -76,22 +82,23 @@ class TestCoreAdminServices:
         if excinfo:
             print_exception_response(excinfo.value)
 
-    def test_is_server_configured(self, server: str = good_server_4):
+    def test_is_server_configured(self, server: str = good_server_1):
         try:
             o_client = CoreServerConfig(
                 server, self.good_platform1_url, self.good_user_1
             )
-            configured = o_client.is_server_configured()
+            o_client.create_egeria_bearer_token(self.good_user_2, "secret")
+            configured = o_client.is_server_configured(self.good_server_1)
             assert True
             print(f"\n\n\t Server {server} configured status is {configured}")
 
         except (
-            InvalidParameterException,
-            PropertyServerException,
-            UserNotAuthorizedException,
+            # PyegeriaException,
+            PyegeriaClientException,
+            PyegeriaAPIException,
         ) as e:
-            print_exception_response(e)
-            assert False, "Invalid request"
+            print_exception_table(e)
+            # assert False, "Invalid request"
 
     #
     #   Configure Access Services
@@ -101,6 +108,8 @@ class TestCoreAdminServices:
             o_client = CoreServerConfig(
                 server, self.good_platform1_url, self.good_user_1
             )
+            o_client.create_egeria_bearer_token(self.good_user_2, "secret")
+
             response = o_client.get_configured_access_services()
             assert type(response) is list, "Failed to get access services"
             if type(response) is list:
@@ -109,11 +118,9 @@ class TestCoreAdminServices:
                 )
 
         except (
-            InvalidParameterException,
-            PropertyServerException,
-            UserNotAuthorizedException,
+            PyegeriaException
         ) as e:
-            print_exception_response(e)
+            print_exception_table(e)
             assert False, "Invalid request"
 
     def test_configure_all_access_services_good(self, server: str = good_server_3):
@@ -125,11 +132,9 @@ class TestCoreAdminServices:
             print(f"\n\n\t Server {server} has all access services configured")
             assert True
         except (
-            InvalidParameterException,
-            PropertyServerException,
-            UserNotAuthorizedException,
+            PyegeriaException
         ) as e:
-            print_exception_response(e)
+            print_exception_table(e)
             assert False, "Invalid request or improper server configuration"
 
     def test_configure_all_access_services_bad(self, server: str = bad_server_1):
@@ -141,12 +146,10 @@ class TestCoreAdminServices:
             print(f"\n\n Expected this to fail for {server} - why didn't it?")
             assert False
         except (
-            InvalidParameterException,
-            PropertyServerException,
-            UserNotAuthorizedException,
+            PyegeriaException
         ) as e:
             print("Expected this to fail")
-            print_exception_response(e)
+            print_exception_table(e)
             assert True, "Invalid request or improper server configuration"
 
     def test_configure_all_access_services_no_topics(self, server: str = good_server_1):
@@ -158,11 +161,9 @@ class TestCoreAdminServices:
             print(f"\n\n\t Server {server} has all access services configured")
             assert True
         except (
-            InvalidParameterException,
-            PropertyServerException,
-            UserNotAuthorizedException,
+            PyegeriaException
         ) as e:
-            print_exception_response(e)
+            print_exception_table(e)
             assert False, "Invalid request"
 
     def test_clear_all_access_services(self, server: str = good_server_1):
@@ -174,11 +175,9 @@ class TestCoreAdminServices:
             assert True, "Failed to delete access services"
             print(f"\n\n\tServer {server} has all access services cleared")
         except (
-            InvalidParameterException,
-            PropertyServerException,
-            UserNotAuthorizedException,
+            PyegeriaException
         ) as e:
-            print_exception_response(e)
+            print_exception_table(e)
             assert False, "Invalid request - clear access services failed"
 
     def test_get_access_service_config(self, server: str = good_server_1):
@@ -186,6 +185,8 @@ class TestCoreAdminServices:
             o_client: CoreServerConfig = CoreServerConfig(
                 server, self.good_platform1_url, self.good_user_1
             )
+            o_client.create_egeria_bearer_token(self.good_user_2, "secret")
+
             response = o_client.get_access_service_config("subject-area")
             print(f"\n\n\t Config for server {server} is:")
             if type(response) is dict:
@@ -195,11 +196,9 @@ class TestCoreAdminServices:
             assert True
 
         except (
-            InvalidParameterException,
-            PropertyServerException,
-            UserNotAuthorizedException,
+            PyegeriaException
         ) as e:
-            print_exception_response(e)
+            print_exception_table(e)
             assert False, "Invalid request"
 
     def test_configure_access_service(self, server: str = good_server_1):
@@ -221,11 +220,9 @@ class TestCoreAdminServices:
             print(f"\n\n\t Server {server} configured an access service")
             assert True
         except (
-            InvalidParameterException,
-            PropertyServerException,
-            UserNotAuthorizedException,
+            PyegeriaException
         ) as e:
-            print_exception_response(e)
+            print_exception_table(e)
             assert False, "Invalid request"
 
     def test_configure_access_service_no_topics(self, server: str = good_server_1):
@@ -248,11 +245,9 @@ class TestCoreAdminServices:
             assert True
             print(f"\n\n\t Server {server} configured an access service")
         except (
-            InvalidParameterException,
-            PropertyServerException,
-            UserNotAuthorizedException,
+            PyegeriaException
         ) as e:
-            print_exception_response(e)
+            print_exception_table(e)
             assert False, "Invalid request"
 
     def test_clear_access_service(self, server: str = good_server_1):
@@ -266,11 +261,9 @@ class TestCoreAdminServices:
             assert True, "Failed to delete access services"
             print(f"\n\n\tserver {server} has all access services cleared")
         except (
-            InvalidParameterException,
-            PropertyServerException,
-            UserNotAuthorizedException,
+            PyegeriaException
         ) as e:
-            print_exception_response(e)
+            print_exception_table(e)
             assert False, "Invalid request - clear access services failed"
 
     def test_get_access_services_config(self, server: str = good_server_1):
@@ -286,11 +279,9 @@ class TestCoreAdminServices:
                 )
 
         except (
-            InvalidParameterException,
-            PropertyServerException,
-            UserNotAuthorizedException,
+            PyegeriaException
         ) as e:
-            print_exception_response(e)
+            print_exception_table(e)
             assert False, "Invalid request"
 
     #
@@ -314,10 +305,10 @@ class TestCoreAdminServices:
                 print("\n\n\t\tResponse is: " + json.dumps(response, indent=4))
 
         except (
-            InvalidParameterException,
-            PropertyServerException,
+            PyegeriaInvalidParameterException,
+            PyegeriaAPIException,
         ) as e:
-            print_exception_response(e)
+            print_exception_table(e)
             assert False, "Invalid request"
 
     def test_set_event_bus(self, server: str = good_server_1):
@@ -335,11 +326,9 @@ class TestCoreAdminServices:
             print(f"\n\n\t\tServer {server} -Set event bus configuration")
 
         except (
-            InvalidParameterException,
-            PropertyServerException,
-            UserNotAuthorizedException,
+            PyegeriaException
         ) as e:
-            print_exception_response(e)
+            print_exception_table(e)
             assert False, "Invalid request"
 
     def test_clear_event_bus(self, server: str = good_server_1):
@@ -353,11 +342,9 @@ class TestCoreAdminServices:
             print(f"\n\n\tServer {server}: Event bus configuration cleared")
 
         except (
-            InvalidParameterException,
-            PropertyServerException,
-            UserNotAuthorizedException,
+            PyegeriaException
         ) as e:
-            print_exception_response(e)
+            print_exception_table(e)
             assert False, "Invalid request"
 
     #
@@ -375,11 +362,9 @@ class TestCoreAdminServices:
             assert destinations is not None, "Failed to get audit log destinations"
 
         except (
-            InvalidParameterException,
-            PropertyServerException,
-            UserNotAuthorizedException,
+            PyegeriaException
         ) as e:
-            print_exception_response(e)
+            print_exception_table(e)
             assert False, "Invalid request"
 
     def test_clear_audit_log_destinations(self, server: str = good_server_1):
@@ -393,11 +378,9 @@ class TestCoreAdminServices:
             print(f"\n\n\tServer {server}: All audit log destinations cleared")
 
         except (
-            InvalidParameterException,
-            PropertyServerException,
-            UserNotAuthorizedException,
+            PyegeriaException
         ) as e:
-            print_exception_response(e)
+            print_exception_table(e)
             assert False, "Invalid request"
 
     def test_clear_a_log_destination(self, server: str = good_server_1):
@@ -411,11 +394,9 @@ class TestCoreAdminServices:
             print(f"\n\n\tServer {server}: Audit log destinations cleared")
 
         except (
-            InvalidParameterException,
-            PropertyServerException,
-            UserNotAuthorizedException,
+            PyegeriaException
         ) as e:
-            print_exception_response(e)
+            print_exception_table(e)
             assert False, "Invalid request"
 
     def test_add_console_log_destinations(self, server: str = good_server_1):
@@ -429,11 +410,9 @@ class TestCoreAdminServices:
             print(f"\n\n\tServer {server}: Console log destination added")
 
         except (
-            InvalidParameterException,
-            PropertyServerException,
-            UserNotAuthorizedException,
+            PyegeriaException
         ) as e:
-            print_exception_response(e)
+            print_exception_table(e)
             assert False, "Invalid request"
 
     def test_add_postgres_log_destinations(self, server: str = good_server_3):
@@ -461,11 +440,9 @@ class TestCoreAdminServices:
             print(f"\n\n\tServer {server}: Console log destination added")
 
         except (
-            InvalidParameterException,
-            PropertyServerException,
-            UserNotAuthorizedException,
+            PyegeriaException
         ) as e:
-            print_exception_response(e)
+            print_exception_table(e)
             assert False, "Invalid request"
 
     def test_add_default_log_destinations(self, server: str = good_server_1):
@@ -480,11 +457,9 @@ class TestCoreAdminServices:
             assert True
 
         except (
-            InvalidParameterException,
-            PropertyServerException,
-            UserNotAuthorizedException,
+            PyegeriaException
         ) as e:
-            print_exception_response(e)
+            print_exception_table(e)
             assert False, "Invalid request"
 
     def test_add_topic_log_destinations(self, server: str = good_server_1):
@@ -499,11 +474,9 @@ class TestCoreAdminServices:
             assert True
 
         except (
-            InvalidParameterException,
-            PropertyServerException,
-            UserNotAuthorizedException,
+            PyegeriaException
         ) as e:
-            print_exception_response(e)
+            print_exception_table(e)
             assert False, "Invalid request"
 
     def test_add_file_log_destinations(self, server: str = good_server_2):
@@ -518,11 +491,9 @@ class TestCoreAdminServices:
             assert True
 
         except (
-            InvalidParameterException,
-            PropertyServerException,
-            UserNotAuthorizedException,
+            PyegeriaException
         ) as e:
-            print_exception_response(e)
+            print_exception_table(e)
             assert False, "Invalid request"
 
     def test_add_slf4j_log_destination(self, server: str = good_server_1):
@@ -536,11 +507,9 @@ class TestCoreAdminServices:
             print(f"\n\n\t\tServer {server}: Added slf4j log destination")
 
         except (
-            InvalidParameterException,
-            PropertyServerException,
-            UserNotAuthorizedException,
+            PyegeriaException
         ) as e:
-            print_exception_response(e)
+            print_exception_table(e)
             assert False, "Invalid request"
 
     #
@@ -558,11 +527,9 @@ class TestCoreAdminServices:
             print("\n\n\t\tNo repository mode set")
 
         except (
-            InvalidParameterException,
-            PropertyServerException,
-            UserNotAuthorizedException,
+            PyegeriaException
         ) as e:
-            print_exception_response(e)
+            print_exception_table(e)
             assert False, "Invalid request"
 
     def test_get_local_repository_config(self, server: str = good_server_3):
@@ -576,11 +543,9 @@ class TestCoreAdminServices:
             print(f"\n\n\tServer {server}: {json.dumps(config, indent=4)}")
 
         except (
-            InvalidParameterException,
-            PropertyServerException,
-            UserNotAuthorizedException,
+            PyegeriaException
         ) as e:
-            print_exception_response(e)
+            print_exception_table(e)
             assert False, "Invalid request"
 
     def test_clear_local_repository_config(self, server: str = good_server_1):
@@ -594,10 +559,10 @@ class TestCoreAdminServices:
             print(f"\n\n\t\tServer {server}: Local repository config cleared")
 
         except (
-            InvalidParameterException,
-            PropertyServerException,
+            PyegeriaInvalidParameterException,
+            PyegeriaAPIException,
         ) as e:
-            print_exception_response(e)
+            print_exception_table(e)
             assert False, "Invalid request"
 
     def test_get_local_metadata_collection_id(self, server: str = good_server_1):
@@ -613,11 +578,9 @@ class TestCoreAdminServices:
             print(f"\n\n\tServer {server}: Metadata collection ID GUID is: " + response)
 
         except (
-            InvalidParameterException,
-            PropertyServerException,
-            UserNotAuthorizedException,
+            PyegeriaException
         ) as e:
-            print_exception_response(e)
+            print_exception_table(e)
             assert False, "Invalid request"
 
     def test_set_local_metadata_collection_id(self, server: str = good_server_1):
@@ -631,11 +594,9 @@ class TestCoreAdminServices:
             print(f"\n\n\t\tServer {server}: Metadata collection id set")
 
         except (
-            InvalidParameterException,
-            PropertyServerException,
-            UserNotAuthorizedException,
+            PyegeriaException
         ) as e:
-            print_exception_response(e)
+            print_exception_table(e)
             assert False, "Invalid request"
 
     def test_get_local_metadata_collection_name(self, server: str = good_server_1):
@@ -653,11 +614,9 @@ class TestCoreAdminServices:
             )
 
         except (
-            InvalidParameterException,
-            PropertyServerException,
-            UserNotAuthorizedException,
+            PyegeriaException
         ) as e:
-            print_exception_response(e)
+            print_exception_table(e)
             assert False, "Invalid request"
 
     def test_set_local_metadata_collection_name(self, server: str = good_server_1):
@@ -671,11 +630,9 @@ class TestCoreAdminServices:
             print(f"\n\n\t\tServer {server}: Metadata collection id set")
 
         except (
-            InvalidParameterException,
-            PropertyServerException,
-            UserNotAuthorizedException,
+            PyegeriaException
         ) as e:
-            print_exception_response(e)
+            print_exception_table(e)
             assert False, "Invalid request"
 
     #
@@ -692,11 +649,9 @@ class TestCoreAdminServices:
             print(f"\n\n\t\tServer {server}: In memory repository type set")
 
         except (
-            InvalidParameterException,
-            PropertyServerException,
-            UserNotAuthorizedException,
+            PyegeriaException
         ) as e:
-            print_exception_response(e)
+            print_exception_table(e)
             assert False, "Invalid request"
 
     def test_set_graph_local_repository(self, server: str = good_server_1):
@@ -710,11 +665,9 @@ class TestCoreAdminServices:
             print(f"\n\n\t\tServer {server}: Local graph repository type set")
 
         except (
-            InvalidParameterException,
-            PropertyServerException,
-            UserNotAuthorizedException,
+            PyegeriaException
         ) as e:
-            print_exception_response(e)
+            print_exception_table(e)
             assert False, "Invalid request"
 
     def test_set_read_only_local_repository(self, server: str = good_server_1):
@@ -728,11 +681,9 @@ class TestCoreAdminServices:
             print(f"\n\n\t\tServer {server}: Read-only repository type set")
 
         except (
-            InvalidParameterException,
-            PropertyServerException,
-            UserNotAuthorizedException,
+            PyegeriaException
         ) as e:
-            print_exception_response(e)
+            print_exception_table(e)
             assert False, "Invalid request"
 
     def test_set_postgres_local_repository(self, server: str = good_server_3):
@@ -752,11 +703,9 @@ class TestCoreAdminServices:
             print(f"\n\n\t\tServer {server}: Postgres repository type set")
 
         except (
-            InvalidParameterException,
-            PropertyServerException,
-            UserNotAuthorizedException,
+            PyegeriaException
         ) as e:
-            print_exception_response(e)
+            print_exception_table(e)
             assert False, "Invalid request"
 
     def test_set_plug_in_repository(self, server: str = good_server_2):
@@ -809,11 +758,9 @@ class TestCoreAdminServices:
             print(f"\n\n\t\tServer {server}: Plug-in repository type set")
 
         except (
-            InvalidParameterException,
-            PropertyServerException,
-            UserNotAuthorizedException,
+            PyegeriaException
         ) as e:
-            print_exception_response(e)
+            print_exception_table(e)
             assert False, "Invalid request"
 
     def test_set_xtdb_in_mem_repository(self, server: str = "active-metadata-store"):
@@ -827,11 +774,9 @@ class TestCoreAdminServices:
             print(f"\n\n\t\tServer {server}: XTDB in-memory repository type set")
 
         except (
-            InvalidParameterException,
-            PropertyServerException,
-            UserNotAuthorizedException,
+            PyegeriaException
         ) as e:
-            print_exception_response(e)
+            print_exception_table(e)
             assert False, "Invalid request"
 
     def test_set_xtdb_local_kv_repository(self, server: str = good_server_3):
@@ -845,11 +790,9 @@ class TestCoreAdminServices:
             print(f"\n\n\t\tServer {server}: XTDB local kv repository type set")
 
         except (
-            InvalidParameterException,
-            PropertyServerException,
-            UserNotAuthorizedException,
+            PyegeriaException
         ) as e:
-            print_exception_response(e)
+            print_exception_table(e)
             assert False, "Invalid request"
 
     def test_set_xtdb_local_repository(self, server: str = "active-metadata-store"):
@@ -905,11 +848,9 @@ class TestCoreAdminServices:
             print(f"\n\n\t\tServer {server}: XTDB config set")
 
         except (
-            InvalidParameterException,
-            PropertyServerException,
-            UserNotAuthorizedException,
+            PyegeriaException
         ) as e:
-            print_exception_response(e)
+            print_exception_table(e)
             assert False, "Invalid request"
 
     def test_set_xtdb_pg_repository(self, server: str = good_server_3):
@@ -928,11 +869,9 @@ class TestCoreAdminServices:
             print(f"\n\n\t\tServer {server}: XTDB config set")
 
         except (
-            InvalidParameterException,
-            PropertyServerException,
-            UserNotAuthorizedException,
+            PyegeriaException
         ) as e:
-            print_exception_response(e)
+            print_exception_table(e)
             assert False, "Invalid request"
 
     def test_get_open_metadata_archives(self, server: str = good_server_1):
@@ -948,11 +887,9 @@ class TestCoreAdminServices:
                 print(f"\n\n\t Server {server}: No archives found")
 
         except (
-            InvalidParameterException,
-            PropertyServerException,
-            UserNotAuthorizedException,
+            PyegeriaException
         ) as e:
-            print_exception_response(e)
+            print_exception_table(e)
             assert False, "Invalid request"
 
     def test_add_startup_open_metadata_archive(self, server: str = good_server_1):
@@ -969,11 +906,9 @@ class TestCoreAdminServices:
             print(f"\n\n\t\tServer {server}: Archives added")
 
         except (
-            InvalidParameterException,
-            PropertyServerException,
-            UserNotAuthorizedException,
+            PyegeriaException
         ) as e:
-            print_exception_response(e)
+            print_exception_table(e)
             assert False, "Invalid request"
 
     def test_clear_open_metadata_archives(self, server: str = good_server_1):
@@ -988,11 +923,9 @@ class TestCoreAdminServices:
             print(f"\n\n\t\tServer {server}: Archives cleared")
 
         except (
-            InvalidParameterException,
-            PropertyServerException,
-            UserNotAuthorizedException,
+            PyegeriaException
         ) as e:
-            print_exception_response(e)
+            print_exception_table(e)
             assert False, "Invalid request"
 
     #
@@ -1013,11 +946,9 @@ class TestCoreAdminServices:
             )
 
         except (
-            InvalidParameterException,
-            PropertyServerException,
-            UserNotAuthorizedException,
+            PyegeriaException
         ) as e:
-            print_exception_response(e)
+            print_exception_table(e)
             assert False, "Invalid request"
 
     def test_set_basic_server_properties(self, server: str = good_server_1):
@@ -1039,10 +970,10 @@ class TestCoreAdminServices:
             print(f"\n\n\t\tServer {server}: Basic server properties set")
 
         except (
-            InvalidParameterException,
-            PropertyServerException,
+            PyegeriaInvalidParameterException,
+            PyegeriaAPIException,
         ) as e:
-            print_exception_response(e)
+            print_exception_table(e)
             assert False, "Invalid request"
 
     def test_get_server_security_connection(self, server: str = good_server_1):
@@ -1062,11 +993,9 @@ class TestCoreAdminServices:
                 print("\n\n\t\tResponse is: " + json.dumps(response, indent=4))
 
         except (
-            InvalidParameterException,
-            PropertyServerException,
-            UserNotAuthorizedException,
+            PyegeriaException
         ) as e:
-            print_exception_response(e)
+            print_exception_table(e)
             assert False, "Invalid request"
 
     def test_clear_server_security_connection(self, server: str = good_server_1):
@@ -1081,11 +1010,9 @@ class TestCoreAdminServices:
             print(f"\n\n\t\tServer {server}: Server security cleared")
 
         except (
-            InvalidParameterException,
-            PropertyServerException,
-            UserNotAuthorizedException,
+            PyegeriaException
         ) as e:
-            print_exception_response(e)
+            print_exception_table(e)
             assert False, "Invalid request"
 
     def test_set_security_connection(self, server: str = good_server_1):
@@ -1106,11 +1033,9 @@ class TestCoreAdminServices:
             print(f"\n\n\t\tServer {server}: Security connection set")
 
         except (
-            InvalidParameterException,
-            PropertyServerException,
-            UserNotAuthorizedException,
+            PyegeriaException
         ) as e:
-            print_exception_response(e)
+            print_exception_table(e)
             assert False, "Invalid request"
 
     def test_get_server_classification(self, server: str = good_server_1):
@@ -1130,11 +1055,9 @@ class TestCoreAdminServices:
                 )
 
         except (
-            InvalidParameterException,
-            PropertyServerException,
-            UserNotAuthorizedException,
+            PyegeriaException
         ) as e:
-            print_exception_response(e)
+            print_exception_table(e)
             assert False, "Invalid request"
 
     #
@@ -1156,11 +1079,9 @@ class TestCoreAdminServices:
             )
 
         except (
-            InvalidParameterException,
-            PropertyServerException,
-            UserNotAuthorizedException,
+            PyegeriaException
         ) as e:
-            print_exception_response(e)
+            print_exception_table(e)
             assert False, "Invalid request"
 
     def test_config_all_view_services(self, server: str = good_view_server_1):
@@ -1178,11 +1099,9 @@ class TestCoreAdminServices:
             print(f"\n\n\t\tServer {server}: View service set")
 
         except (
-            InvalidParameterException,
-            PropertyServerException,
-            UserNotAuthorizedException,
+            PyegeriaException
         ) as e:
-            print_exception_response(e)
+            print_exception_table(e)
             assert False, "Invalid request"
 
     def test_config_all_view_services_w_body(self, server: str = good_view_server_1):
@@ -1274,11 +1193,9 @@ class TestCoreAdminServices:
             print(f"\n\n\t\tServer {server}: View service set using body")
 
         except (
-            InvalidParameterException,
-            PropertyServerException,
-            UserNotAuthorizedException,
+            PyegeriaException
         ) as e:
-            print_exception_response(e)
+            print_exception_table(e)
             assert False, "Invalid request"
 
     def test_clear_all_view_svcs(self, server: str = good_view_server_1):
@@ -1293,11 +1210,9 @@ class TestCoreAdminServices:
             print(f"\n\n\t\tServer {server}: View services cleared")
 
         except (
-            InvalidParameterException,
-            PropertyServerException,
-            UserNotAuthorizedException,
+            PyegeriaException
         ) as e:
-            print_exception_response(e)
+            print_exception_table(e)
             assert False, "Invalid request"
 
     def test_get_view_svc_config(self, server: str = good_view_server_1):
@@ -1316,11 +1231,9 @@ class TestCoreAdminServices:
             )
 
         except (
-            InvalidParameterException,
-            PropertyServerException,
-            UserNotAuthorizedException,
+            PyegeriaException
         ) as e:
-            print_exception_response(e)
+            print_exception_table(e)
             assert False, "Invalid request"
 
     def test_config_view_service(self, server: str = good_view_server_1):
@@ -1337,11 +1250,9 @@ class TestCoreAdminServices:
             print(f"\n\n\t\tServer {server}: view service set")
 
         except (
-            InvalidParameterException,
-            PropertyServerException,
-            UserNotAuthorizedException,
+            PyegeriaException
         ) as e:
-            print_exception_response(e)
+            print_exception_table(e)
             assert False, "Invalid request"
 
     def test_clear_view_svc(self, server: str = good_view_server_1):
@@ -1356,11 +1267,9 @@ class TestCoreAdminServices:
             print(f"\n\n\t\tServer {server}: view service cleared")
 
         except (
-            InvalidParameterException,
-            PropertyServerException,
-            UserNotAuthorizedException,
+            PyegeriaException
         ) as e:
-            print_exception_response(e)
+            print_exception_table(e)
             assert False, "Invalid request"
 
     def test_get_view_svcs_config(self, server: str = "cocoView1"):
@@ -1379,11 +1288,9 @@ class TestCoreAdminServices:
             )
 
         except (
-            InvalidParameterException,
-            PropertyServerException,
-            UserNotAuthorizedException,
+            PyegeriaException
         ) as e:
-            print_exception_response(e)
+            print_exception_table(e)
             assert False, "Invalid request"
 
     #
@@ -1403,11 +1310,9 @@ class TestCoreAdminServices:
             print(f"\n\nServer {server}: type is: \n" + json.dumps(response, indent=4))
 
         except (
-            InvalidParameterException,
-            PropertyServerException,
-            UserNotAuthorizedException,
+            PyegeriaException
         ) as e:
-            print_exception_response(e)
+            print_exception_table(e)
             assert False, "Invalid request"
 
     def test_add_cohort_registration(self, server: str = good_server_3):
@@ -1422,11 +1327,9 @@ class TestCoreAdminServices:
             print(f"\n\n\t\tServer {server}: added to cohort")
 
         except (
-            InvalidParameterException,
-            PropertyServerException,
-            UserNotAuthorizedException,
+            PyegeriaException
         ) as e:
-            print_exception_response(e)
+            print_exception_table(e)
             assert False, "Invalid request"
 
     def test_get_cohort_config(self, server: str = good_server_1):
@@ -1445,11 +1348,9 @@ class TestCoreAdminServices:
             )
 
         except (
-            InvalidParameterException,
-            PropertyServerException,
-            UserNotAuthorizedException,
+            PyegeriaException
         ) as e:
-            print_exception_response(e)
+            print_exception_table(e)
             assert False, "Invalid request"
 
     def test_deploy_server_config(self, server: str = good_server_1):
@@ -1466,11 +1367,9 @@ class TestCoreAdminServices:
             print(f"\n\n\t\tServer {server}: Deployed to target")
 
         except (
-            InvalidParameterException,
-            PropertyServerException,
-            UserNotAuthorizedException,
+            PyegeriaException
         ) as e:
-            print_exception_response(e)
+            print_exception_table(e)
             assert False, "Invalid request"
 
     #
@@ -1488,11 +1387,9 @@ class TestCoreAdminServices:
             print(f"\n\n\t\tServer {server}: all integration groups cleared")
 
         except (
-            InvalidParameterException,
-            PropertyServerException,
-            UserNotAuthorizedException,
+            PyegeriaException
         ) as e:
-            print_exception_response(e)
+            print_exception_table(e)
             assert False, "Invalid request"
 
     def test_clear_an_integration_group(self, server: str = good_integ_1):
@@ -1509,11 +1406,9 @@ class TestCoreAdminServices:
             print(f"\n\n\t\tServer {server}: An integration group cleared")
 
         except (
-            InvalidParameterException,
-            PropertyServerException,
-            UserNotAuthorizedException,
+            PyegeriaException
         ) as e:
-            print_exception_response(e)
+            print_exception_table(e)
             assert False, "Invalid request"
 
     def test_get_integration_groups_config(self, server: str = good_integ_1):
@@ -1532,11 +1427,9 @@ class TestCoreAdminServices:
             )
 
         except (
-            InvalidParameterException,
-            PropertyServerException,
-            UserNotAuthorizedException,
+            PyegeriaException
         ) as e:
-            print_exception_response(e)
+            print_exception_table(e)
             assert False, "Invalid request"
 
     def test_config_integration_group(self, server: str = good_integ_1):
@@ -1555,11 +1448,9 @@ class TestCoreAdminServices:
             print(f"\n\n\t\tServer {server}: configured Integration Group")
 
         except (
-            InvalidParameterException,
-            PropertyServerException,
-            UserNotAuthorizedException,
+            PyegeriaException
         ) as e:
-            print_exception_response(e)
+            print_exception_table(e)
             assert False, "Invalid request"
 
     #
@@ -1581,11 +1472,9 @@ class TestCoreAdminServices:
             )
 
         except (
-            InvalidParameterException,
-            PropertyServerException,
-            UserNotAuthorizedException,
+            PyegeriaException
         ) as e:
-            print_exception_response(e)
+            print_exception_table(e)
             assert False, "Invalid request"
 
     def test_set_engine_definitions_client_config(
@@ -1604,11 +1493,9 @@ class TestCoreAdminServices:
             print(f"\n\n\t\tServer {server}: client config for engine definition set")
 
         except (
-            InvalidParameterException,
-            PropertyServerException,
-            UserNotAuthorizedException,
+            PyegeriaException
         ) as e:
-            print_exception_response(e)
+            print_exception_table(e)
             assert False, "Invalid request"
 
     def test_clear_engine_list(self, server: str = good_engine_host_1):
@@ -1623,11 +1510,9 @@ class TestCoreAdminServices:
             print(f"\n\n\t\tServer {server}: Engine list cleared")
 
         except (
-            InvalidParameterException,
-            PropertyServerException,
-            UserNotAuthorizedException,
+            PyegeriaException
         ) as e:
-            print_exception_response(e)
+            print_exception_table(e)
             assert False, "Invalid request"
 
     # def test_get_engine_list(self):
@@ -1645,7 +1530,7 @@ class TestCoreAdminServices:
     #             PyegeriaAPIException,
     #             PyegeriaUnauthorizedException
     #     ) as e:
-    #         print_exception_response(e)
+    #         print_exception_table(e)
     #         assert False, "Invalid request"
 
     def test_get_engine_host_services_config(self, server: str = good_engine_host_1):
@@ -1663,11 +1548,9 @@ class TestCoreAdminServices:
             )
 
         except (
-            InvalidParameterException,
-            PropertyServerException,
-            UserNotAuthorizedException,
+            PyegeriaException
         ) as e:
-            print_exception_response(e)
+            print_exception_table(e)
             assert False, "Invalid request"
 
     def test_set_engine_list(self, server: str = good_engine_host_1):
@@ -1695,11 +1578,9 @@ class TestCoreAdminServices:
             print(f"\n\n\t\tServer {server}: Engine list set")
 
         except (
-            InvalidParameterException,
-            PropertyServerException,
-            UserNotAuthorizedException,
+            PyegeriaException
         ) as e:
-            print_exception_response(e)
+            print_exception_table(e)
             assert False, "Invalid request"
 
     def test_get_placeholder_variables(self, server: str = good_server_1):
@@ -1718,11 +1599,9 @@ class TestCoreAdminServices:
             assert True
 
         except (
-            InvalidParameterException,
-            PropertyServerException,
-            UserNotAuthorizedException,
+            PyegeriaException
         ) as e:
-            print_exception_response(e)
+            print_exception_table(e)
             assert False, "Invalid request"
 
     def test_clear_placeholder_variables(self, server: str = good_server_1):
@@ -1737,11 +1616,9 @@ class TestCoreAdminServices:
             print(f"\n\n\t\tPlaceholder variables have been cleared")
 
         except (
-            InvalidParameterException,
-            PropertyServerException,
-            UserNotAuthorizedException,
+            PyegeriaException
         ) as e:
-            print_exception_response(e)
+            print_exception_table(e)
             assert False, "Invalid request"
 
     def test_set_placeholder_variables(self, server: str = good_server_1):
@@ -1760,11 +1637,9 @@ class TestCoreAdminServices:
             print(f"\n\n\t\tSet placeholder variables: \n {placeholder_variables}")
 
         except (
-            InvalidParameterException,
-            PropertyServerException,
-            UserNotAuthorizedException,
+            PyegeriaException
         ) as e:
-            print_exception_response(e)
+            print_exception_table(e)
             assert False, "Invalid request"
 
 

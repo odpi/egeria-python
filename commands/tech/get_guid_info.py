@@ -21,7 +21,7 @@ from rich.text import Text
 from rich.tree import Tree
 
 from pyegeria import (
-    Client2,
+    ServerClient,
     PyegeriaException,
     print_basic_exception,
     settings,
@@ -45,7 +45,7 @@ def display_guid(
     jupyter: bool = app_config.egeria_jupyter,
     width: int = app_config.console_width,
 ):
-    c = Client2(server, url, user_id=username)
+    c = ServerClient(server, url, user_id=username)
     bearer_token = c.create_egeria_bearer_token(username, user_password)
 
     try:

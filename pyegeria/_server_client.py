@@ -19,7 +19,7 @@ from httpx import Response
 from loguru import logger
 from pydantic import TypeAdapter
 
-from pyegeria._base_client import BaseClient
+from pyegeria._base_server_client import BaseServerClient
 from pyegeria._exceptions_new import (
     PyegeriaConnectionException, PyegeriaInvalidParameterException, PyegeriaException, PyegeriaErrorCode
 )
@@ -40,7 +40,7 @@ from pyegeria.utils import body_slimmer, dynamic_catch
 ...
 
 
-class Client2(BaseClient):
+class ServerClient(BaseServerClient):
     """
     An abstract class used to establish connectivity for an Egeria Client
     for a particular server, platform and user.
@@ -191,7 +191,7 @@ class Client2(BaseClient):
                 }
                 url = (
                     f"{self.platform_url}/servers/{view_server}/api/open-metadata/classification-manager/"
-                    f"elements/guid-by-unique-name?forLineage=false&forDuplicateProcessing=false"
+                    f"elements/guid-by-unique-name"
                 )
 
                 result = await self._async_make_request("POST", url, body_slimmer(body))

@@ -24,7 +24,7 @@ class EgeriaCat(ProjectManager, GlossaryManager, AssetCatalog, MyProfile):
     ProjectManager, GlossaryManager, AssetCatalog, and MyProfile via inheritance.
 
     Notes:
-    - ProjectManager is listed first to prefer the BaseClient (Client2) token/session
+    - ProjectManager is listed first to prefer the BaseServerClient (ServerClient) token/session
       implementations in method resolution order.
     - Each parent class is explicitly initialized to ensure its internal state
       (URLs, roots, etc.) is set up.

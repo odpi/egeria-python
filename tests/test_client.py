@@ -14,7 +14,7 @@ import asyncio
 from loguru import logger
 
 from pyegeria import print_basic_exception
-from pyegeria._client_new import Client2
+from pyegeria._server_client import ServerClient
 from pyegeria._exceptions_new import (
      PyegeriaException, PyegeriaConnectionException,  PyegeriaInvalidParameterException,
      PyegeriaAPIException, PyegeriaUnknownException, PyegeriaClientException, PyegeriaNotFoundException,
@@ -74,7 +74,7 @@ class TestClient:
     def test_get_origin(self, url, user_id, status_code, expectation):
         server = 'qs-view-server'
         with expectation as excinfo:
-            client = Client2(server, url, user_id)
+            client = ServerClient(server, url, user_id)
             response = client.get_platform_origin()
             if response:
                 assert response, "Successfully called get_platform_origin()"
@@ -89,7 +89,7 @@ class TestClient:
         user_pwd = "nonesuch"
         response = ""
         with expectation as excinfo:
-            t_client = Client2(server, url, user_id, user_pwd)
+            t_client = ServerClient(server, url, user_id, user_pwd)
             endpoint = (
                     url
                     + "/open-metadata/admin-services/users/"
@@ -109,7 +109,7 @@ class TestClient:
                 assert response.status_code == status_code, "Invalid URL"
 
     def test_refresh_egeria_bearer_token(self):
-        c = Client2(
+        c = ServerClient(
             "qs-metadata-store", "https://localhost:9443", "erinoverview", "secret"
             )
         token = c.create_egeria_bearer_token()
@@ -121,7 +121,7 @@ class TestClient:
 
     def test_get_guid(self):
         """This doesn't work since the method needs to be called from an omvs based class"""
-        c = Client2(
+        c = ServerClient(
             "qs-view-server", "https://localhost:9443", "erinoverview", "secret"
             )
         try:
@@ -138,7 +138,7 @@ class TestClient:
             assert False, "Invalid request"
 
     def test_get_guid(self):
-        c = Client2(
+        c = ServerClient(
             "qs-view-server", "https://localhost:9443", "erinoverview", "secret"
         )
         try:

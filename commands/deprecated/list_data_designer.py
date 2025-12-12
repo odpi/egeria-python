@@ -25,10 +25,7 @@ from rich.markdown import Markdown
 
 from pyegeria import (
     EgeriaTech,
-    InvalidParameterException,
-    PropertyServerException,
-    UserNotAuthorizedException,
-    print_exception_response,
+PyegeriaAPIException, PyegeriaClientException, print_basic_exception, print_exception_table
     NO_ELEMENTS_FOUND
 )
 

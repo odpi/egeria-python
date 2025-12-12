@@ -11,7 +11,7 @@ import asyncio
 
 from pyegeria import NO_ELEMENTS_FOUND
 from pyegeria.base_report_formats import select_report_spec
-from pyegeria._client_new import Client2
+from pyegeria._server_client import ServerClient
 from pyegeria.base_report_formats import get_report_spec_match
 from pyegeria.config import settings as app_settings
 from pyegeria.models import (SearchStringRequestBody, FilterRequestBody, GetRequestBody, NewElementRequestBody,
@@ -27,7 +27,7 @@ from loguru import logger
 PROJECT_TYPES = ["Project", "Campaign", "StudyProject", "Task", "PersonalProject"]
 
 
-class ProjectManager(Client2):
+class ProjectManager(ServerClient):
     """
     Manage Open Metadata Projects via the Project Manager OMVS.
 
@@ -74,7 +74,7 @@ class ProjectManager(Client2):
             f"{self.platform_url}/servers/{self.view_server}/api/open-metadata/project-manager/projects"
         )
         self.url_marker = 'project-manager'
-        Client2.__init__(self, view_server, platform_url, user_id, user_pwd, token)
+        ServerClient.__init__(self, view_server, platform_url, user_id, user_pwd, token)
 
     def _extract_additional_project_properties(self, element: dict, columns_struct: dict)-> dict:
 
@@ -797,9 +797,9 @@ class ProjectManager(Client2):
 
         """
 
-        url = (f"{self.platform_url}/servers/{self.view_server}/api/open-metadata/project-manager/pr"
-               f"ojects/{project_guid}/graph")
-
+        url = (f"{self.platform_url}/servers/{self.view_server}/api/open-metadata/project-manager/projects/"
+               f"{project_guid}/graph")
+        element_type = element_type if element_type else "Project"
         response = await self._async_get_guid_request(url, _type=element_type,
                                                       _gen_output=self._generate_project_output,
                                                       output_format=output_format, report_spec=report_spec,
@@ -1663,7 +1663,7 @@ class ProjectManager(Client2):
             }
             body_s = body_slimmer(body)
 
-        await self._async_new_relationship_request(url, ["AssignmentScopeRelationship"], body)
+        await self._async_new_relationship_request(url, ["AssignmentScopeProperties"], body)
         logger.info(f"Added member {actor_guid} to project {project_guid}")
 
     @dynamic_catch

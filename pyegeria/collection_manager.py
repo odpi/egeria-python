@@ -55,7 +55,7 @@ def query_string(params):
             result = f"{result}{query_seperator(result)}{params[i][0]}={params[i][1]}"
     return result
 
-from pyegeria._client_new import Client2
+from pyegeria._server_client import ServerClient
 
 class CollectionProperties(ReferenceableProperties):
     class_: Annotated[Literal["CollectionProperties"], Field(alias="class")]
@@ -108,7 +108,7 @@ class Collections(PyegeriaModel):
                       DataSpecProperties, DataDictionaryProperties] = Field(desciminator="class_")
 
 
-class CollectionManager(Client2):
+class CollectionManager(ServerClient):
     """
     Maintain and explore the contents of nested collections. These collections can be used to represent digital
     products, or collections of resources for a particular project or team. They can be used to organize assets and
@@ -138,7 +138,7 @@ class CollectionManager(Client2):
         self.user_pwd = user_pwd
 
 
-        Client2.__init__(self, view_server, platform_url, user_id, user_pwd, token)
+        ServerClient.__init__(self, view_server, platform_url, user_id, user_pwd, token)
         # result = self.get_platform_origin()
         # logger.info(f"CollectionManager initialized, platform origin is: {result}")
         self.collection_command_root: str = (

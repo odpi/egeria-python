@@ -22,8 +22,8 @@ from pyegeria import (
 )
 from pyegeria._exceptions_new import (
     PyegeriaInvalidParameterException,
-    PyegeriaAPIException as PropertyServerException,
-    PyegeriaUnauthorizedException as UserNotAuthorizedException,
+    PyegeriaAPIException,
+    PyegeriaUnauthorizedException,
     print_basic_exception as print_exception_response,
 )
 
@@ -135,8 +135,8 @@ def project_structure_viewer(
 
     except (
         PyegeriaInvalidParameterException,
-        PropertyServerException,
-        UserNotAuthorizedException,
+        PyegeriaAPIException,
+        PyegeriaUnauthorizedException,
     ) as e:
         print_exception_response(e)
 

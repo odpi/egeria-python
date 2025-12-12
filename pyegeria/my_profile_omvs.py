@@ -8,11 +8,11 @@ import asyncio
 import json
 
 from pyegeria.utils import body_slimmer
-from pyegeria._client_new import Client2
+from pyegeria._server_client import ServerClient
 from pyegeria._validators import validate_name, validate_search_string
 from pyegeria._globals import NO_ELEMENTS_FOUND
 
-class MyProfile(Client2):
+class MyProfile(ServerClient):
     """A class representing the profile of a user.
 
     This class provides methods for retrieving the profile details
@@ -41,7 +41,7 @@ class MyProfile(Client2):
         user_pwd: str = None,
         token: str = None,
     ):
-        Client2.__init__(
+        ServerClient.__init__(
             self,
             view_server,
             platform_url,

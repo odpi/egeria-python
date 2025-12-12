@@ -22,11 +22,9 @@ from rich.live import Live
 from rich.table import Table
 
 from pyegeria import (
-    InvalidParameterException,
-    PropertyServerException,
+    PyegeriaException, print_basic_exception,
     RuntimeManager,
-    UserNotAuthorizedException,
-    print_exception_response,
+    print_exception_table,
 )
 
 EGERIA_METADATA_STORE = os.environ.get("EGERIA_METADATA_STORE", "active-metadata-store")
@@ -154,11 +152,9 @@ def display_status(
                 live.update(generate_table())
 
     except (
-        InvalidParameterException,
-        PropertyServerException,
-        UserNotAuthorizedException,
+        PyegeriaException
     ) as e:
-        print_exception_response(e)
+        print_basic_exception(e)
     except KeyboardInterrupt:
         pass
     finally:
