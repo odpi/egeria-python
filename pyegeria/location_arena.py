@@ -2,7 +2,7 @@
 PDX-License-Identifier: Apache-2.0
 Copyright Contributors to the ODPi Egeria project.
 
-    Manage external references to a variety of artifacts.
+    Manage locations in Egeria.
 
 """
 
@@ -222,7 +222,7 @@ class Location(ServerClient):
     #######
 
     @dynamic_catch
-    async def create_async_location_from_template(self, body: TemplateRequestBody | dict) -> str:
+    async def _async_create_location_from_template(self, body: TemplateRequestBody | dict) -> str:
         """ Create a new metadata element to represent a Location using an existing metadata element as a template.
             The template defines additional classifications and relationships that should be added to the new element.
             Async version.
@@ -333,7 +333,7 @@ class Location(ServerClient):
 
         """
         loop = asyncio.get_event_loop()
-        resp = loop.run_until_complete(self._async_location_from_template(body))
+        resp = loop.run_until_complete(self._async_create_location_from_template(body))
         return resp
 
     @dynamic_catch
