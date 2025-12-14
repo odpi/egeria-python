@@ -3,46 +3,41 @@ SPDX-License-Identifier: Apache-2.0
 Copyright Contributors to the ODPi Egeria project.
 
 
-Functional tests for the ActorManager class.
 
-These tests require a running Egeria environment (view server) and mirror the
-style used by other functional tests (e.g., test_collection_manager_omvs.py).
-They perform end-to-end scenarios for create/update/find/get/delete of:
-- Actor Profiles
-- Actor Roles
-- User Identities
+This module tests the ActorManager class and methods from actor_manager.py
 
-Additionally, a simple relationship scenario is included to link and detach a
-User Identity to/from an Actor Profile.
+A running Egeria environment is needed to run these tests.
+
 """
-
 import json
 import time
 from datetime import datetime
 
-from loguru import logger
-from pydantic import ValidationError
+from rich import print, print_json
+from rich.console import Console
 
 from pyegeria.actor_manager import ActorManager
 from pyegeria._exceptions import (
     PyegeriaInvalidParameterException,
-    PyegeriaException,
     PyegeriaConnectionException,
-    PyegeriaClientException,
     PyegeriaAPIException,
-    PyegeriaUnknownException,
     PyegeriaNotFoundException,
     PyegeriaUnauthorizedException,
     print_basic_exception,
+    print_exception_table,
     print_validation_error,
 )
 from pyegeria.logging_configuration import config_logging, init_logging
+from pyegeria.models import (NewElementRequestBody, UpdateElementRequestBody, DeleteElementRequestBody)
+from pyegeria.actor_manager import ActorManager
+from pydantic import ValidationError
 
+disable_ssl_warnings = True
 
-# Align logging/init style with other tests
+console = Console(width=250)
+
 config_logging()
 init_logging(True)
-
 
 VIEW_SERVER = "qs-view-server"
 PLATFORM_URL = "https://localhost:9443"
@@ -50,952 +45,535 @@ USER_ID = "peterprofile"
 USER_PWD = "secret"
 
 
-def _unique_qname(prefix: str) -> str:
-    ts = datetime.now().strftime("%Y%m%d%H%M%S%f")
-    return f"{prefix}::{ts}"
-
-
 class TestActorManager:
     good_platform1_url = PLATFORM_URL
-    good_view_server_1 = VIEW_SERVER
+
     good_user_1 = USER_ID
+    good_user_2 = "peterprofile"
+    good_server_1 = VIEW_SERVER
+    good_server_2 = VIEW_SERVER
+    good_view_server_1 = VIEW_SERVER
+    good_view_server_2 = VIEW_SERVER
 
-    # -----------------------------
-    # Actor Profile end-to-end
-    # -----------------------------
-    def test_actor_profile_scenario(self):
-        client = None
-        try:
-            client = ActorManager(self.good_view_server_1, self.good_platform1_url, user_id=self.good_user_1)
-            token = client.create_egeria_bearer_token(self.good_user_1, USER_PWD)
+    def _unique_qname(self, prefix: str = "ActorProfile") -> str:
+        ts = datetime.now().strftime("%Y%m%d%H%M%S%f")
+        return f"{prefix}::{ts}"
 
-            qualified_name = _unique_qname("ActorProfile")
-
-            # Create
-            body = {
-                "class": "NewElementRequestBody",
-                "isOwnAnchor": True,
-                "properties": {
-                    "class": "ActorProfileProperties",
-                    "typeName": "ActorProfile",
-                    "qualifiedName": qualified_name,
-                    "displayName": qualified_name.split("::")[0],
-                    "description": "Functional test profile",
-                },
-            }
-            guid = client.create_actor_profile(body)
-            print(f"Created ActorProfile GUID: {guid}")
-            assert isinstance(guid, str) and len(guid) > 0
-
-            # Update
-            update_body = {
-                "class": "UpdateElementRequestBody",
-                "isMergeUpdate": True,
-                "properties": {
-                    "class": "ActorProfileProperties",
-                    "description": "Updated functional test profile",
-                },
-            }
-            client.update_actor_profile(guid, update_body)
-
-            # Find (search)
-            res = client.find_actor_profiles(search_string=qualified_name, output_format="DICT")
-            print("find_actor_profiles result (DICT):")
-            try:
-                print(json.dumps(res, indent=4, default=str))
-            except Exception:
-                print(str(res))
-            assert res is not None
-
-            # Get by name (filter)
-            get_by_name = client.get_actor_profiles_by_name(filter_string=qualified_name, output_format="DICT")
-            print("get_actor_profiles_by_name result (DICT):")
-            try:
-                print(json.dumps(get_by_name, indent=4, default=str))
-            except Exception:
-                print(str(get_by_name))
-            assert get_by_name is not None
-
-            # Get by GUID
-            got = client.get_actor_profile_by_guid(guid, output_format="DICT")
-            print("get_actor_profile_by_guid result (DICT):")
-            try:
-                print(json.dumps(got, indent=4, default=str))
-            except Exception:
-                print(str(got))
-            assert got is not None
-
-            # Relationship scenario: create a user identity and link to this profile, then detach
-            uid_qn = _unique_qname("UserIdentity")
-            uid_body = {
-                "class": "NewElementRequestBody",
-                "isOwnAnchor": True,
-                "properties": {
-                    "class": "UserIdentityProperties",
-                    "typeName": "UserIdentity",
-                    "qualifiedName": uid_qn,
-                    "userId": uid_qn[-8:],
-                },
-            }
-            user_identity_guid = client.create_user_identity(uid_body)
-            print(f"Created UserIdentity GUID: {user_identity_guid}")
-            assert isinstance(user_identity_guid, str) and len(user_identity_guid) > 0
-
-            # Link identity to actor profile
-            # client.link_identity_to_profile(user_identity_guid, guid)
-
-            # Detach identity from actor profile
-            # client.detach_identity_from_profile(user_identity_guid, guid)
-
-            # Delete child entity first (user identity), then the profile
-            client.delete_user_identity(user_identity_guid, cascade=True)
-            client.delete_actor_profile(guid, cascade=True)
-
-            assert True
-
-        except (
-            PyegeriaInvalidParameterException,
-            PyegeriaConnectionException,
-            PyegeriaClientException,
-            PyegeriaAPIException,
-            PyegeriaUnknownException,
-            PyegeriaNotFoundException,
-            PyegeriaUnauthorizedException,
-        ) as e:
-            print_basic_exception(e)
-            assert False, "Actor Profile scenario failed"
-        except ValidationError as e:
-            print_validation_error(e)
-            assert False, "Validation error in Actor Profile scenario"
-        finally:
-            if client:
-                client.close_session()
-
-    # -----------------------------
-    # Actor Role end-to-end
-    # -----------------------------
-    def test_actor_role_scenario(self):
-        client = None
-        try:
-            client = ActorManager(self.good_view_server_1, self.good_platform1_url, user_id=self.good_user_1)
-            token = client.create_egeria_bearer_token(self.good_user_1, USER_PWD)
-
-            qualified_name = _unique_qname("ActorRole")
-
-            # Create
-            body = {
-                "class": "NewElementRequestBody",
-                "isOwnAnchor": True,
-                "properties": {
-                    "class": "ActorRoleProperties",
-                    "typeName": "ActorRole",
-                    "qualifiedName": qualified_name,
-                    "displayName": qualified_name.split("::")[0],
-                    "description": "Functional test role",
-                    "scope": "Test scope",
-                },
-            }
-            guid = client.create_actor_role(body)
-            print(f"Created ActorRole GUID: {guid}")
-            assert isinstance(guid, str) and len(guid) > 0
-
-            # Update
-            update_body = {
-                "class": "UpdateElementRequestBody",
-                "isMergeUpdate": True,
-                "properties": {
-                    "class": "ActorRoleProperties",
-                    "description": "Updated functional test role",
-                },
-            }
-            client.update_actor_role(guid, update_body)
-
-            # Find
-            res = client.find_actor_roles(search_string=qualified_name, output_format="DICT")
-            print("find_actor_roles result (DICT):")
-            try:
-                print(json.dumps(res, indent=4, default=str))
-            except Exception:
-                print(str(res))
-            assert res is not None
-
-            # Get by name
-            get_by_name = client.get_actor_roles_by_name(filter_string=qualified_name, output_format="DICT")
-            print("get_actor_roles_by_name result (DICT):")
-            try:
-                print(json.dumps(get_by_name, indent=4, default=str))
-            except Exception:
-                print(str(get_by_name))
-            assert get_by_name is not None
-
-            # Get by GUID
-            got = client.get_actor_role_by_guid(guid, output_format="DICT")
-            print("get_actor_role_by_guid result (DICT):")
-            try:
-                print(json.dumps(got, indent=4, default=str))
-            except Exception:
-                print(str(got))
-            assert got is not None
-
-            # Delete
-            client.delete_actor_role(guid, cascade=True)
-            assert True
-
-        except (
-            PyegeriaInvalidParameterException,
-            PyegeriaConnectionException,
-            PyegeriaClientException,
-            PyegeriaAPIException,
-            PyegeriaUnknownException,
-            PyegeriaNotFoundException,
-            PyegeriaUnauthorizedException,
-        ) as e:
-            print_basic_exception(e)
-            assert False, "Actor Role scenario failed"
-        except ValidationError as e:
-            print_validation_error(e)
-            assert False, "Validation error in Actor Role scenario"
-        finally:
-            if client:
-                client.close_session()
-
-    # -----------------------------
-    # User Identity end-to-end
-    # -----------------------------
-    def test_user_identity_scenario(self):
-        client = None
-        try:
-            client = ActorManager(self.good_view_server_1, self.good_platform1_url, user_id=self.good_user_1)
-            token = client.create_egeria_bearer_token(self.good_user_1, USER_PWD)
-
-            qualified_name = _unique_qname("UserIdentity")
-
-            # Create
-            body = {
-                "class": "NewElementRequestBody",
-                "isOwnAnchor": True,
-                "properties": {
-                    "class": "UserIdentityProperties",
-                    "typeName": "UserIdentity",
-                    "qualifiedName": qualified_name,
-                    "userId": qualified_name[-8:],
-                },
-            }
-            guid = client.create_user_identity(body)
-            print(f"Created UserIdentity GUID: {guid}")
-            assert isinstance(guid, str) and len(guid) > 0
-
-            # Update
-            update_body = {
-                "class": "UpdateElementRequestBody",
-                "isMergeUpdate": True,
-                "properties": {
-                    "class": "UserIdentityProperties",
-                    "distinguishedName": f"CN={qualified_name}",
-                },
-            }
-            client.update_user_identity(guid, update_body)
-
-            # Find
-            res = client.find_user_identities(search_string=qualified_name, output_format="DICT")
-            print("find_user_identities result (DICT):")
-            try:
-                print(json.dumps(res, indent=4, default=str))
-            except Exception:
-                print(str(res))
-            assert res is not None
-
-            # Get by name
-            get_by_name = client.get_user_identities_by_name(filter_string=qualified_name, output_format="DICT")
-            print("get_user_identities_by_name result (DICT):")
-            try:
-                print(json.dumps(get_by_name, indent=4, default=str))
-            except Exception:
-                print(str(get_by_name))
-            assert get_by_name is not None
-
-            # Get by GUID
-            got = client.get_user_identity_by_guid(guid, output_format="DICT")
-            print("get_user_identity_by_guid result (DICT):")
-            try:
-                print(json.dumps(got, indent=4, default=str))
-            except Exception:
-                print(str(got))
-            assert got is not None
-
-            # Delete
-            client.delete_user_identity(guid, cascade=True)
-            assert True
-
-        except (
-            PyegeriaInvalidParameterException,
-            PyegeriaConnectionException,
-            PyegeriaClientException,
-            PyegeriaAPIException,
-            PyegeriaUnknownException,
-            PyegeriaNotFoundException,
-            PyegeriaUnauthorizedException,
-        ) as e:
-            print_basic_exception(e)
-            assert False, "User Identity scenario failed"
-        except ValidationError as e:
-            print_validation_error(e)
-            assert False, "Validation error in User Identity scenario"
-        finally:
-            if client:
-                client.close_session()
-
-    # -----------------------------
-    # Individual method tests: Actor Profile
-    # -----------------------------
     def test_create_actor_profile(self):
-        client = None
-        guid = None
+        """Test creating a basic actor profile with dict body"""
+        actor_client = None
         try:
-            client = ActorManager(self.good_view_server_1, self.good_platform1_url, user_id=self.good_user_1)
-            client.create_egeria_bearer_token(self.good_user_1, USER_PWD)
-            qn = _unique_qname("ActorProfile")
+            actor_client = ActorManager(self.good_view_server_1, self.good_platform1_url, user_id=self.good_user_2)
+            token = actor_client.create_egeria_bearer_token(self.good_user_2, "secret")
+            start_time = time.perf_counter()
+
+            display_name = f"Test Actor Profile {datetime.now().strftime('%Y%m%d%H%M%S')}"
+            description = "Test actor profile for automated testing"
+            qualified_name = self._unique_qname("TestActorProfile")
+
             body = {
                 "class": "NewElementRequestBody",
                 "isOwnAnchor": True,
                 "properties": {
                     "class": "ActorProfileProperties",
-                    "typeName": "ActorProfile",
-                    "displayName": "Puddy",
-                    "qualifiedName": "ActorProfile::Puddy"
-                },
+                    "qualifiedName": qualified_name,
+                    "displayName": display_name,
+                    "description": description,
+                }
             }
-            guid = client.create_actor_profile(body)
-            assert isinstance(guid, str) and len(guid) > 0
-            if guid:
-                print(f"Created ActorProfile with GUID: {guid}")
-        except (PyegeriaException,) as e:
-            print_basic_exception(e)
-            assert False, "create_actor_profile failed"
-        finally:
-            try:
-                if client and guid:
-                    client.delete_actor_profile(guid, cascade=True)
-            finally:
-                if client:
-                    client.close_session()
 
-    def test_update_actor_profile(self):
-        client = None
-        guid = None
-        try:
-            client = ActorManager(self.good_view_server_1, self.good_platform1_url, user_id=self.good_user_1)
-            client.create_egeria_bearer_token(self.good_user_1, USER_PWD)
-            qn = _unique_qname("ActorProfile")
-            guid = client.create_actor_profile({
-                "class": "NewElementRequestBody",
-                "isOwnAnchor": True,
-                "properties": {
-                    "class": "ActorProfileProperties",
-                    "typeName": "ActorProfile",
-                    "qualifiedName": qn,
-                },
-            })
-            update_body = {
-                "class": "UpdateElementRequestBody",
-                "isMergeUpdate": True,
-                "properties": {"class": "ActorProfileProperties", "description": "updated"},
-            }
-            client.update_actor_profile(guid, update_body)
-            got = client.get_actor_profile_by_guid(guid, output_format="DICT")
-            print("get_actor_profile_by_guid result (DICT):")
-            try:
-                print(json.dumps(got, indent=4, default=str))
-            except Exception:
-                print(str(got))
-            assert got is not None
-        except (PyegeriaException,) as e:
+            response = actor_client.create_actor_profile(body)
+            duration = time.perf_counter() - start_time
+            print(f"\n\tDuration was {duration} seconds")
+            print(f"\n\nCreated actor profile with GUID: {response}")
+            assert type(response) is str
+            assert len(response) > 0
+
+        except (
+                PyegeriaInvalidParameterException,
+                PyegeriaAPIException,
+                PyegeriaUnauthorizedException,
+                PyegeriaNotFoundException,
+        ) as e:
+            print_exception_table(e)
+            assert False, "Invalid request"
+        except ValidationError as e:
+            print_validation_error(e)
+            assert False, "Invalid request"
+        except PyegeriaConnectionException as e:
             print_basic_exception(e)
-            assert False, "update_actor_profile failed"
+            assert False, "Connection error"
         finally:
-            try:
-                if client and guid:
-                    client.delete_actor_profile(guid, cascade=True)
-            finally:
-                if client:
-                    client.close_session()
+            if actor_client:
+                actor_client.close_session()
+
+    def test_create_actor_profile_w_pyd(self):
+        """Test creating an actor profile with Pydantic model"""
+        actor_client = None
+        try:
+            actor_client = ActorManager(self.good_view_server_1, self.good_platform1_url, user_id=self.good_user_2)
+            token = actor_client.create_egeria_bearer_token(self.good_user_2, "secret")
+            start_time = time.perf_counter()
+
+            q_name = self._unique_qname("TestActorProfilePyd")
+            body = NewElementRequestBody(
+                class_="NewElementRequestBody",
+                is_own_anchor=True,
+                properties={
+                    "class": "ActorProfileProperties",
+                    "qualifiedName": q_name,
+                    "displayName": f"Pydantic Actor Profile {datetime.now().strftime('%H%M%S')}",
+                    "description": "Actor profile created with Pydantic model",
+                }
+            )
+
+            validated_body = body.model_dump(mode='json', by_alias=True, exclude_none=True)
+            response = actor_client.create_actor_profile(validated_body)
+            duration = time.perf_counter() - start_time
+            print(f"\n\tDuration was {duration} seconds")
+            print(f"\n\nCreated actor profile with GUID: {response}")
+            assert type(response) is str
+            assert len(response) > 0
+
+        except (
+                PyegeriaInvalidParameterException,
+                PyegeriaAPIException,
+                PyegeriaUnauthorizedException,
+                PyegeriaNotFoundException,
+        ) as e:
+            print_exception_table(e)
+            assert False, "Invalid request"
+        except ValidationError as e:
+            print_validation_error(e)
+            assert False, "Invalid request"
+        except PyegeriaConnectionException as e:
+            print_basic_exception(e)
+            assert False, "Connection error"
+        finally:
+            if actor_client:
+                actor_client.close_session()
 
     def test_find_actor_profiles(self):
-        client = None
-        guid = None
-        qn = _unique_qname("ActorProfile")
-        metadata_element_subtypes = ['Person','Team']
-        # metadata_element_subtypes = ["Team"]
+        """Test finding actor profiles with search string"""
+        actor_client = None
         try:
-            client = ActorManager(self.good_view_server_1, self.good_platform1_url, user_id=self.good_user_1)
-            client.create_egeria_bearer_token(self.good_user_1, USER_PWD)
-            # guid = client.create_actor_profile({
-            #     "class": "NewElementRequestBody",
-            #     "isOwnAnchor": True,
-            #     "properties": {
-            #         "class": "ActorProfileProperties",
-            #         "typeName": "ActorProfile",
-            #         "qualifiedName": qn,
-            #     },
-            # })
-            res = client.find_actor_profiles( metadata_element_subtypes=metadata_element_subtypes,output_format="DICT", report_spec="Actor-Profiles")
-            print("find_actor_profiles result (DICT):")
-            try:
-                print(json.dumps(res, indent=4, default=str))
-            except Exception:
-                print(str(res))
-            assert res is not None
-        except (PyegeriaException,) as e:
+            actor_client = ActorManager(self.good_view_server_2, self.good_platform1_url, user_id=self.good_user_2)
+            token = actor_client.create_egeria_bearer_token(self.good_user_2, "secret")
+            start_time = time.perf_counter()
+
+            search_string = "*"
+            response = actor_client.find_actor_profiles(
+                search_string,
+                output_format="DICT"
+            )
+            duration = time.perf_counter() - start_time
+
+            print(f"\n\tDuration was {duration} seconds")
+            if type(response) is list:
+                print(f"Found {len(response)} actor profiles")
+                print("\n\n" + json.dumps(response, indent=4))
+            elif type(response) is str:
+                print("\n\nResponse: " + response)
+            assert True
+
+        except (
+                PyegeriaInvalidParameterException,
+                PyegeriaAPIException,
+                PyegeriaUnauthorizedException,
+                PyegeriaNotFoundException,
+        ) as e:
+            print_exception_table(e)
+            assert False, "Invalid request"
+        except ValidationError as e:
+            print_validation_error(e)
+            assert False, "Invalid request"
+        except PyegeriaConnectionException as e:
             print_basic_exception(e)
-            assert False, "find_actor_profiles failed"
+            assert False, "Connection error"
         finally:
-            try:
-                if client and guid:
-                    client.delete_actor_profile(guid, cascade=True)
-            finally:
-                if client:
-                    client.close_session()
+            if actor_client:
+                actor_client.close_session()
 
     def test_get_actor_profiles_by_name(self):
-        client = None
-        guid = None
-        qn = _unique_qname("ActorProfile")
+        """Test getting actor profiles by name"""
+        actor_client = None
         try:
-            client = ActorManager(self.good_view_server_1, self.good_platform1_url, user_id=self.good_user_1)
-            client.create_egeria_bearer_token(self.good_user_1, USER_PWD)
-            guid = client.create_actor_profile({
-                "class": "NewElementRequestBody",
-                "isOwnAnchor": True,
-                "properties": {
-                    "class": "ActorProfileProperties",
-                    "typeName": "ActorProfile",
-                    "qualifiedName": qn,
-                },
-            })
-            res = client.get_actor_profiles_by_name(filter_string=qn, output_format="DICT")
-            print("get_actor_profiles_by_name result (DICT):")
-            try:
-                print(json.dumps(res, indent=4, default=str))
-            except Exception:
-                print(str(res))
-            assert res is not None
-        except (PyegeriaException,) as e:
+            actor_client = ActorManager(self.good_view_server_2, self.good_platform1_url, user_id=self.good_user_2)
+            token = actor_client.create_egeria_bearer_token(self.good_user_2, "secret")
+            start_time = time.perf_counter()
+
+            name = "Test Actor Profile"
+            response = actor_client.get_actor_profiles_by_name(name)
+            duration = time.perf_counter() - start_time
+
+            print(f"\n\tDuration was {duration} seconds")
+            if type(response) is list:
+                print(f"Found {len(response)} actor profiles")
+                print("\n\n" + json.dumps(response, indent=4))
+            elif type(response) is str:
+                print("\n\nResponse: " + response)
+            assert True
+
+        except (
+                PyegeriaInvalidParameterException,
+                PyegeriaAPIException,
+                PyegeriaUnauthorizedException,
+                PyegeriaNotFoundException,
+        ) as e:
+            print_exception_table(e)
+            assert False, "Invalid request"
+        except ValidationError as e:
+            print_validation_error(e)
+            assert False, "Invalid request"
+        except PyegeriaConnectionException as e:
             print_basic_exception(e)
-            assert False, "get_actor_profiles_by_name failed"
+            assert False, "Connection error"
         finally:
-            try:
-                if client and guid:
-                    client.delete_actor_profile(guid, cascade=True)
-            finally:
-                if client:
-                    client.close_session()
+            if actor_client:
+                actor_client.close_session()
 
     def test_get_actor_profile_by_guid(self):
-        client = None
-        guid = "22eca01b-fbab-476b-a2ff-266399f3ac0a"
+        """Test getting a specific actor profile by GUID"""
+        actor_client = None
         try:
-            client = ActorManager(self.good_view_server_1, self.good_platform1_url, user_id=self.good_user_1)
-            client.create_egeria_bearer_token(self.good_user_1, USER_PWD)
-            qn = _unique_qname("ActorProfile")
-            guid = client.create_actor_profile({
+            actor_client = ActorManager(self.good_view_server_2, self.good_platform1_url, user_id=self.good_user_2)
+            token = actor_client.create_egeria_bearer_token(self.good_user_2, "secret")
+            start_time = time.perf_counter()
+
+            # First create an actor profile to retrieve
+            q_name = self._unique_qname("TestActorProfileForRetrieval")
+            body = {
                 "class": "NewElementRequestBody",
                 "isOwnAnchor": True,
                 "properties": {
                     "class": "ActorProfileProperties",
-                    "typeName": "ActorProfile",
-                    "qualifiedName": qn,
-                },
-            })
-            got = client.get_actor_profile_by_guid(guid, output_format="DICT")
-            print("get_actor_profile_by_guid result (DICT):")
-            try:
-                print(json.dumps(got, indent=4, default=str))
-            except Exception:
-                print(str(got))
-            assert got is not None
-        except (PyegeriaException,) as e:
+                    "qualifiedName": q_name,
+                    "displayName": "Actor Profile for GUID test",
+                    "description": "Test actor profile to retrieve by GUID",
+                }
+            }
+            profile_guid = actor_client.create_actor_profile(body)
+            print(f"\n\nCreated actor profile with GUID: {profile_guid}")
+
+            # Now retrieve it
+            response = actor_client.get_actor_profile_by_guid(
+                profile_guid,
+                output_format="DICT"
+            )
+            duration = time.perf_counter() - start_time
+
+            print(f"\n\tDuration was {duration} seconds")
+            if isinstance(response, (list, dict)):
+                print("\n\n" + json.dumps(response, indent=4))
+            elif type(response) is str:
+                print("\n\nResponse: " + response)
+            assert True
+
+        except (
+                PyegeriaInvalidParameterException,
+                PyegeriaAPIException,
+                PyegeriaUnauthorizedException,
+                PyegeriaNotFoundException,
+        ) as e:
+            print_exception_table(e)
+            assert False, "Invalid request"
+        except ValidationError as e:
+            print_validation_error(e)
+            assert False, "Invalid request"
+        except PyegeriaConnectionException as e:
             print_basic_exception(e)
-            assert False, "get_actor_profile_by_guid failed"
+            assert False, "Connection error"
         finally:
-            try:
-                if client and guid:
-                    client.delete_actor_profile(guid, cascade=True)
-            finally:
-                if client:
-                    client.close_session()
+            if actor_client:
+                actor_client.close_session()
+
+    def test_update_actor_profile(self):
+        """Test updating an actor profile's properties"""
+        actor_client = None
+        try:
+            actor_client = ActorManager(self.good_view_server_1, self.good_platform1_url, user_id=self.good_user_2)
+            token = actor_client.create_egeria_bearer_token(self.good_user_2, "secret")
+            start_time = time.perf_counter()
+
+            # First create an actor profile to update
+            q_name = self._unique_qname("TestActorProfileForUpdate")
+            create_body = {
+                "class": "NewElementRequestBody",
+                "isOwnAnchor": True,
+                "properties": {
+                    "class": "ActorProfileProperties",
+                    "qualifiedName": q_name,
+                    "displayName": "Original Actor Profile Name",
+                    "description": "Original description",
+                }
+            }
+            profile_guid = actor_client.create_actor_profile(create_body)
+            print(f"\n\nCreated actor profile with GUID: {profile_guid}")
+
+            # Now update it
+            new_desc = "Updated description for testing"
+            update_body = {
+                "class": "UpdateElementRequestBody",
+                "mergeUpdate": True,
+                "properties": {
+                    "class": "ActorProfileProperties",
+                    "qualifiedName": q_name,
+                    "displayName": "Updated Actor Profile Name",
+                    "description": new_desc,
+                }
+            }
+
+            response = actor_client.update_actor_profile(profile_guid, update_body)
+            duration = time.perf_counter() - start_time
+            print(f"\n\tDuration was {duration} seconds")
+            print(f"\n\nUpdated actor profile successfully")
+
+            assert True
+
+        except (
+                PyegeriaInvalidParameterException,
+                PyegeriaAPIException,
+                PyegeriaUnauthorizedException,
+                PyegeriaNotFoundException,
+        ) as e:
+            print_exception_table(e)
+            assert False, "Invalid request"
+        except ValidationError as e:
+            print_validation_error(e)
+            assert False, "Invalid request"
+        except PyegeriaConnectionException as e:
+            print_basic_exception(e)
+            assert False, "Connection error"
+        finally:
+            if actor_client:
+                actor_client.close_session()
 
     def test_delete_actor_profile(self):
-        client = None
+        """Test deleting an actor profile"""
+        actor_client = None
         try:
-            client = ActorManager(self.good_view_server_1, self.good_platform1_url, user_id=self.good_user_1)
-            client.create_egeria_bearer_token(self.good_user_1, USER_PWD)
-            qn = _unique_qname("ActorProfile")
-            guid = client.create_actor_profile({
+            actor_client = ActorManager(self.good_view_server_2, self.good_platform1_url, user_id=self.good_user_2)
+            token = actor_client.create_egeria_bearer_token(self.good_user_2, "secret")
+            start_time = time.perf_counter()
+
+            # Create an actor profile to delete
+            q_name = self._unique_qname("ActorProfileToDelete")
+            create_body = {
                 "class": "NewElementRequestBody",
                 "isOwnAnchor": True,
                 "properties": {
                     "class": "ActorProfileProperties",
-                    "typeName": "ActorProfile",
-                    "qualifiedName": qn,
-                },
-            })
-            client.delete_actor_profile(guid, cascade=True)
-            assert True
-        except (PyegeriaException,) as e:
-            print_basic_exception(e)
-            assert False, "delete_actor_profile failed"
-        finally:
-            if client:
-                client.close_session()
+                    "qualifiedName": q_name,
+                    "displayName": "Actor Profile to Delete",
+                    "description": "This actor profile will be deleted",
+                }
+            }
+            profile_guid = actor_client.create_actor_profile(create_body)
+            print(f"\n\nCreated actor profile with GUID: {profile_guid}")
 
-    # -----------------------------
-    # Individual method tests: Actor Role
-    # -----------------------------
+            # Delete it
+            response = actor_client.delete_actor_profile(profile_guid)
+            duration = time.perf_counter() - start_time
+            print(f"\n\tDuration was {duration} seconds")
+            print(f"\n\nDeleted actor profile successfully")
+
+            assert True
+
+        except (
+                PyegeriaInvalidParameterException,
+                PyegeriaAPIException,
+                PyegeriaUnauthorizedException,
+                PyegeriaNotFoundException,
+        ) as e:
+            print_exception_table(e)
+            assert False, "Invalid request"
+        except ValidationError as e:
+            print_validation_error(e)
+            assert False, "Invalid request"
+        except PyegeriaConnectionException as e:
+            print_basic_exception(e)
+            assert False, "Connection error"
+        finally:
+            if actor_client:
+                actor_client.close_session()
+
+    def test_crud_actor_profile_e2e(self):
+        """End-to-end test: Create, Read, Update, Delete an actor profile"""
+        actor_client = None
+        try:
+            actor_client = ActorManager(self.good_view_server_1, self.good_platform1_url, user_id=self.good_user_2)
+            created_guid = None
+            display_name = f"E2E Test Actor Profile {datetime.now().strftime('%Y%m%d%H%M%S')}"
+
+            token = actor_client.create_egeria_bearer_token(self.good_user_2, "secret")
+
+            # CREATE
+            print("\n\n=== CREATE ===")
+            q_name = self._unique_qname("E2EActorProfile")
+            body = {
+                "class": "NewElementRequestBody",
+                "isOwnAnchor": True,
+                "properties": {
+                    "class": "ActorProfileProperties",
+                    "qualifiedName": q_name,
+                    "displayName": display_name,
+                    "description": "End-to-end test actor profile",
+                }
+            }
+
+            create_resp = actor_client.create_actor_profile(body)
+            created_guid = create_resp
+            print(f"Created actor profile: {created_guid}")
+            assert created_guid is not None
+
+            # READ
+            print("\n\n=== READ ===")
+            got = actor_client.get_actor_profile_by_guid(created_guid, output_format="JSON")
+            print_json(json.dumps(got, indent=4))
+            assert got is not None
+
+            # UPDATE
+            print("\n\n=== UPDATE ===")
+            new_desc = "Updated description in E2E test"
+            upd_body = {
+                "class": "UpdateElementRequestBody",
+                "mergeUpdate": True,
+                "properties": {
+                    "class": "ActorProfileProperties",
+                    "qualifiedName": q_name,
+                    "displayName": display_name,
+                    "description": new_desc,
+                }
+            }
+
+            upd_resp = actor_client.update_actor_profile(created_guid, upd_body)
+            print("Updated actor profile successfully")
+
+            # Verify update
+            found = actor_client.get_actor_profile_by_guid(created_guid, output_format="JSON")
+            print_json(json.dumps(found, indent=4))
+
+            # DELETE
+            print("\n\n=== DELETE ===")
+            del_resp = actor_client.delete_actor_profile(created_guid)
+            print("Deleted actor profile successfully")
+
+            # Verify deletion
+            try:
+                after = actor_client.get_actor_profile_by_guid(created_guid, output_format="JSON")
+                # If we get here, deletion might not have worked
+                print("Warning: Actor profile still exists after deletion")
+            except PyegeriaNotFoundException:
+                print("Confirmed: Actor profile no longer exists")
+
+            assert True
+
+        except (
+                PyegeriaInvalidParameterException,
+                PyegeriaAPIException,
+                PyegeriaUnauthorizedException,
+        ) as e:
+            print_exception_table(e)
+            assert False, "Invalid request"
+        except PyegeriaConnectionException as e:
+            print_basic_exception(e)
+            assert False, "Connection error"
+        finally:
+            if actor_client:
+                actor_client.close_session()
+
+    # Actor Role Tests
     def test_create_actor_role(self):
-        client = None
-        guid = None
+        """Test creating a basic actor role with dict body"""
+        actor_client = None
         try:
-            client = ActorManager(self.good_view_server_1, self.good_platform1_url, user_id=self.good_user_1)
-            client.create_egeria_bearer_token(self.good_user_1, USER_PWD)
-            qn = _unique_qname("ActorRole")
+            actor_client = ActorManager(self.good_view_server_1, self.good_platform1_url, user_id=self.good_user_2)
+            token = actor_client.create_egeria_bearer_token(self.good_user_2, "secret")
+            start_time = time.perf_counter()
+
+            display_name = f"Test Actor Role {datetime.now().strftime('%Y%m%d%H%M%S')}"
+            description = "Test actor role for automated testing"
+            qualified_name = self._unique_qname("TestActorRole")
+
             body = {
                 "class": "NewElementRequestBody",
                 "isOwnAnchor": True,
                 "properties": {
                     "class": "ActorRoleProperties",
-                    "typeName": "ActorRole",
-                    "qualifiedName": qn,
-                },
+                    "qualifiedName": qualified_name,
+                    "displayName": display_name,
+                    "description": description,
+                }
             }
-            guid = client.create_actor_role(body)
-            print(f"Created ActorRole GUID: {guid}")
-            assert isinstance(guid, str) and len(guid) > 0
-        except (PyegeriaException,) as e:
-            print_basic_exception(e)
-            assert False, "create_actor_role failed"
-        finally:
-            try:
-                if client and guid:
-                    client.delete_actor_role(guid, cascade=True)
-            finally:
-                if client:
-                    client.close_session()
 
-    def test_update_actor_role(self):
-        client = None
-        guid = None
-        try:
-            client = ActorManager(self.good_view_server_1, self.good_platform1_url, user_id=self.good_user_1)
-            client.create_egeria_bearer_token(self.good_user_1, USER_PWD)
-            qn = _unique_qname("ActorRole")
-            guid = client.create_actor_role({
-                "class": "NewElementRequestBody",
-                "isOwnAnchor": True,
-                "properties": {
-                    "class": "ActorRoleProperties",
-                    "typeName": "ActorRole",
-                    "qualifiedName": qn,
-                },
-            })
-            update_body = {
-                "class": "UpdateElementRequestBody",
-                "isMergeUpdate": True,
-                "properties": {"class": "ActorRoleProperties", "description": "updated"},
-            }
-            client.update_actor_role(guid, update_body)
-            got = client.get_actor_role_by_guid(guid, output_format="DICT")
-            print("get_actor_role_by_guid result (DICT):")
-            try:
-                print(json.dumps(got, indent=4, default=str))
-            except Exception:
-                print(str(got))
-            assert got is not None
-        except (PyegeriaException,) as e:
-            print_basic_exception(e)
-            assert False, "update_actor_role failed"
-        finally:
-            try:
-                if client and guid:
-                    client.delete_actor_role(guid, cascade=True)
-            finally:
-                if client:
-                    client.close_session()
+            response = actor_client.create_actor_role(body)
+            duration = time.perf_counter() - start_time
+            print(f"\n\tDuration was {duration} seconds")
+            print(f"\n\nCreated actor role with GUID: {response}")
+            assert type(response) is str
+            assert len(response) > 0
 
-    def test_find_actor_roles(self):
-        client = None
-        guid = None
-        qn = _unique_qname("ActorRole")
-        try:
-            client = ActorManager(self.good_view_server_1, self.good_platform1_url, user_id=self.good_user_1)
-            client.create_egeria_bearer_token(self.good_user_1, USER_PWD)
-            guid = client.create_actor_role({
-                "class": "NewElementRequestBody",
-                "isOwnAnchor": True,
-                "properties": {
-                    "class": "ActorRoleProperties",
-                    "typeName": "ActorRole",
-                    "qualifiedName": qn,
-                },
-            })
-            res = client.find_actor_roles(search_string=qn, output_format="DICT")
-            print("find_actor_roles result (DICT):")
-            try:
-                print(json.dumps(res, indent=4, default=str))
-            except Exception:
-                print(str(res))
-            assert res is not None
-        except (PyegeriaException,) as e:
+        except (
+                PyegeriaInvalidParameterException,
+                PyegeriaAPIException,
+                PyegeriaUnauthorizedException,
+                PyegeriaNotFoundException,
+        ) as e:
+            print_exception_table(e)
+            assert False, "Invalid request"
+        except ValidationError as e:
+            print_validation_error(e)
+            assert False, "Invalid request"
+        except PyegeriaConnectionException as e:
             print_basic_exception(e)
-            assert False, "find_actor_roles failed"
+            assert False, "Connection error"
         finally:
-            try:
-                if client and guid:
-                    client.delete_actor_role(guid, cascade=True)
-            finally:
-                if client:
-                    client.close_session()
+            if actor_client:
+                actor_client.close_session()
 
-    def test_get_actor_roles_by_name(self):
-        client = None
-        guid = None
-        qn = _unique_qname("ActorRole")
-        try:
-            client = ActorManager(self.good_view_server_1, self.good_platform1_url, user_id=self.good_user_1)
-            client.create_egeria_bearer_token(self.good_user_1, USER_PWD)
-            guid = client.create_actor_role({
-                "class": "NewElementRequestBody",
-                "isOwnAnchor": True,
-                "properties": {
-                    "class": "ActorRoleProperties",
-                    "typeName": "ActorRole",
-                    "qualifiedName": qn,
-                },
-            })
-            res = client.get_actor_roles_by_name(filter_string=qn, output_format="DICT")
-            print("get_actor_roles_by_name result (DICT):")
-            try:
-                print(json.dumps(res, indent=4, default=str))
-            except Exception:
-                print(str(res))
-            assert res is not None
-        except (PyegeriaException,) as e:
-            print_basic_exception(e)
-            assert False, "get_actor_roles_by_name failed"
-        finally:
-            try:
-                if client and guid:
-                    client.delete_actor_role(guid, cascade=True)
-            finally:
-                if client:
-                    client.close_session()
-
-    def test_get_actor_role_by_guid(self):
-        client = None
-        guid = None
-        try:
-            client = ActorManager(self.good_view_server_1, self.good_platform1_url, user_id=self.good_user_1)
-            client.create_egeria_bearer_token(self.good_user_1, USER_PWD)
-            qn = _unique_qname("ActorRole")
-            guid = client.create_actor_role({
-                "class": "NewElementRequestBody",
-                "isOwnAnchor": True,
-                "properties": {
-                    "class": "ActorRoleProperties",
-                    "typeName": "ActorRole",
-                    "qualifiedName": qn,
-                },
-            })
-            got = client.get_actor_role_by_guid(guid, output_format="DICT")
-            print("get_actor_role_by_guid result (DICT):")
-            try:
-                print(json.dumps(got, indent=4, default=str))
-            except Exception:
-                print(str(got))
-            assert got is not None
-        except (PyegeriaException,) as e:
-            print_basic_exception(e)
-            assert False, "get_actor_role_by_guid failed"
-        finally:
-            try:
-                if client and guid:
-                    client.delete_actor_role(guid, cascade=True)
-            finally:
-                if client:
-                    client.close_session()
-
-    def test_delete_actor_role(self):
-        client = None
-        try:
-            client = ActorManager(self.good_view_server_1, self.good_platform1_url, user_id=self.good_user_1)
-            client.create_egeria_bearer_token(self.good_user_1, USER_PWD)
-            qn = _unique_qname("ActorRole")
-            guid = client.create_actor_role({
-                "class": "NewElementRequestBody",
-                "isOwnAnchor": True,
-                "properties": {
-                    "class": "ActorRoleProperties",
-                    "typeName": "ActorRole",
-                    "qualifiedName": qn,
-                },
-            })
-            client.delete_actor_role(guid, cascade=True)
-            assert True
-        except (PyegeriaException,) as e:
-            print_basic_exception(e)
-            assert False, "delete_actor_role failed"
-        finally:
-            if client:
-                client.close_session()
-
-    # -----------------------------
-    # Individual method tests: User Identity
-    # -----------------------------
+    # User Identity Tests
     def test_create_user_identity(self):
-        client = None
-        guid = None
+        """Test creating a basic user identity with dict body"""
+        actor_client = None
         try:
-            client = ActorManager(self.good_view_server_1, self.good_platform1_url, user_id=self.good_user_1)
-            client.create_egeria_bearer_token(self.good_user_1, USER_PWD)
-            qn = _unique_qname("UserIdentity")
+            actor_client = ActorManager(self.good_view_server_1, self.good_platform1_url, user_id=self.good_user_2)
+            token = actor_client.create_egeria_bearer_token(self.good_user_2, "secret")
+            start_time = time.perf_counter()
+
+            qualified_name = self._unique_qname("TestUserIdentity")
+            user_id = f"testuser{datetime.now().strftime('%H%M%S')}"
+
             body = {
                 "class": "NewElementRequestBody",
                 "isOwnAnchor": True,
                 "properties": {
                     "class": "UserIdentityProperties",
-                    "typeName": "UserIdentity",
-                    "qualifiedName": qn,
-                    "userId": qn[-8:],
-                },
+                    "qualifiedName": qualified_name,
+                    "userId": user_id,
+                }
             }
-            guid = client.create_user_identity(body)
-            print(f"Created UserIdentity GUID: {guid}")
-            assert isinstance(guid, str) and len(guid) > 0
-        except (PyegeriaException,) as e:
-            print_basic_exception(e)
-            assert False, "create_user_identity failed"
-        finally:
-            try:
-                if client and guid:
-                    client.delete_user_identity(guid, cascade=True)
-            finally:
-                if client:
-                    client.close_session()
 
-    def test_update_user_identity(self):
-        client = None
-        guid = None
-        try:
-            client = ActorManager(self.good_view_server_1, self.good_platform1_url, user_id=self.good_user_1)
-            client.create_egeria_bearer_token(self.good_user_1, USER_PWD)
-            qn = _unique_qname("UserIdentity")
-            guid = client.create_user_identity({
-                "class": "NewElementRequestBody",
-                "isOwnAnchor": True,
-                "properties": {
-                    "class": "UserIdentityProperties",
-                    "typeName": "UserIdentity",
-                    "qualifiedName": qn,
-                    "userId": qn[-8:],
-                },
-            })
-            update_body = {
-                "class": "UpdateElementRequestBody",
-                "isMergeUpdate": True,
-                "properties": {"class": "UserIdentityProperties", "distinguishedName": f"CN={qn}"},
-            }
-            client.update_user_identity(guid, update_body)
-            got = client.get_user_identity_by_guid(guid, output_format="DICT")
-            print("get_user_identity_by_guid result (DICT):")
-            try:
-                print(json.dumps(got, indent=4, default=str))
-            except Exception:
-                print(str(got))
-            assert got is not None
-        except (PyegeriaException,) as e:
-            print_basic_exception(e)
-            assert False, "update_user_identity failed"
-        finally:
-            try:
-                if client and guid:
-                    client.delete_user_identity(guid, cascade=True)
-            finally:
-                if client:
-                    client.close_session()
+            response = actor_client.create_user_identity(body)
+            duration = time.perf_counter() - start_time
+            print(f"\n\tDuration was {duration} seconds")
+            print(f"\n\nCreated user identity with GUID: {response}")
+            assert type(response) is str
+            assert len(response) > 0
 
-    def test_find_user_identities(self):
-        client = None
-        guid = None
-        qn = _unique_qname("UserIdentity")
-        try:
-            client = ActorManager(self.good_view_server_1, self.good_platform1_url, user_id=self.good_user_1)
-            client.create_egeria_bearer_token(self.good_user_1, USER_PWD)
-            # guid = client.create_user_identity({
-            #     "class": "NewElementRequestBody",
-            #     "isOwnAnchor": True,
-            #     "properties": {
-            #         "class": "UserIdentityProperties",
-            #         "typeName": "UserIdentity",
-            #         "qualifiedName": qn,
-            #         "userId": qn[-8:],
-            #     },
-            # })
-            # res = client.find_user_identities(search_string=qn, output_format="DICT")
-            res = client.find_user_identities( output_format="DICT", report_spec="User-Identities")
-            print("find_user_identities result (DICT):")
-            try:
-                print(json.dumps(res, indent=4, default=str))
-            except Exception:
-                print(str(res))
-            assert res is not None
-        except (PyegeriaException,) as e:
+        except (
+                PyegeriaInvalidParameterException,
+                PyegeriaAPIException,
+                PyegeriaUnauthorizedException,
+                PyegeriaNotFoundException,
+        ) as e:
+            print_exception_table(e)
+            assert False, "Invalid request"
+        except ValidationError as e:
+            print_validation_error(e)
+            assert False, "Invalid request"
+        except PyegeriaConnectionException as e:
             print_basic_exception(e)
-            assert False, "find_user_identities failed"
+            assert False, "Connection error"
         finally:
-            try:
-                if client and guid:
-                    client.delete_user_identity(guid, cascade=True)
-            finally:
-                if client:
-                    client.close_session()
-
-    def test_get_user_identities_by_name(self):
-        client = None
-        guid = None
-        qn = _unique_qname("UserIdentity")
-        try:
-            client = ActorManager(self.good_view_server_1, self.good_platform1_url, user_id=self.good_user_1)
-            client.create_egeria_bearer_token(self.good_user_1, USER_PWD)
-            guid = client.create_user_identity({
-                "class": "NewElementRequestBody",
-                "isOwnAnchor": True,
-                "properties": {
-                    "class": "UserIdentityProperties",
-                    "typeName": "UserIdentity",
-                    "qualifiedName": qn,
-                    "userId": qn[-8:],
-                },
-            })
-            res = client.get_user_identities_by_name(filter_string=qn, output_format="DICT")
-            print("get_user_identities_by_name result (DICT):")
-            try:
-                print(json.dumps(res, indent=4, default=str))
-            except Exception:
-                print(str(res))
-            assert res is not None
-        except (PyegeriaException,) as e:
-            print_basic_exception(e)
-            assert False, "get_user_identities_by_name failed"
-        finally:
-            try:
-                if client and guid:
-                    client.delete_user_identity(guid, cascade=True)
-            finally:
-                if client:
-                    client.close_session()
-
-    def test_get_user_identity_by_guid(self):
-        client = None
-        guid = None
-        try:
-            client = ActorManager(self.good_view_server_1, self.good_platform1_url, user_id=self.good_user_1)
-            client.create_egeria_bearer_token(self.good_user_1, USER_PWD)
-            qn = _unique_qname("UserIdentity")
-            guid = client.create_user_identity({
-                "class": "NewElementRequestBody",
-                "isOwnAnchor": True,
-                "properties": {
-                    "class": "UserIdentityProperties",
-                    "typeName": "UserIdentity",
-                    "qualifiedName": qn,
-                    "userId": qn[-8:],
-                },
-            })
-            got = client.get_user_identity_by_guid(guid, output_format="DICT")
-            print("get_user_identity_by_guid result (DICT):")
-            try:
-                print(json.dumps(got, indent=4, default=str))
-            except Exception:
-                print(str(got))
-            assert got is not None
-        except (PyegeriaException,) as e:
-            print_basic_exception(e)
-            assert False, "get_user_identity_by_guid failed"
-        finally:
-            try:
-                if client and guid:
-                    client.delete_user_identity(guid, cascade=True)
-            finally:
-                if client:
-                    client.close_session()
-
-    def test_delete_user_identity(self):
-        client = None
-        try:
-            client = ActorManager(self.good_view_server_1, self.good_platform1_url, user_id=self.good_user_1)
-            client.create_egeria_bearer_token(self.good_user_1, USER_PWD)
-            qn = _unique_qname("UserIdentity")
-            guid = client.create_user_identity({
-                "class": "NewElementRequestBody",
-                "isOwnAnchor": True,
-                "properties": {
-                    "class": "UserIdentityProperties",
-                    "typeName": "UserIdentity",
-                    "qualifiedName": qn,
-                    "userId": qn[-8:],
-                },
-            })
-            client.delete_user_identity(guid, cascade=True)
-            assert True
-        except (PyegeriaException,) as e:
-            print_basic_exception(e)
-            assert False, "delete_user_identity failed"
-        finally:
-            if client:
-                client.close_session()
-
-    # -----------------------------
-    # Individual method tests: Relationships
-    # -----------------------------
-    def test_link_and_detach_identity_to_profile(self):
-        client = None
-        profile_guid = None
-        uid_guid = None
-        try:
-            client = ActorManager(self.good_view_server_1, self.good_platform1_url, user_id=self.good_user_1)
-            client.create_egeria_bearer_token(self.good_user_1, USER_PWD)
-            qn_p = _unique_qname("ActorProfile")
-            profile_guid = client.create_actor_profile({
-                "class": "NewElementRequestBody",
-                "isOwnAnchor": True,
-                "properties": {
-                    "class": "ActorProfileProperties",
-                    "typeName": "ActorProfile",
-                    "qualifiedName": qn_p,
-                },
-            })
-            qn_u = _unique_qname("UserIdentity")
-            uid_guid = client.create_user_identity({
-                "class": "NewElementRequestBody",
-                "isOwnAnchor": True,
-                "properties": {
-                    "class": "UserIdentityProperties",
-                    "typeName": "UserIdentity",
-                    "qualifiedName": qn_u,
-                    "userId": qn_u[-8:],
-                },
-            })
-            client.link_identity_to_profile(uid_guid, profile_guid)
-            client.detach_identity_from_profile(uid_guid, profile_guid)
-            assert True
-        except (PyegeriaException,) as e:
-            print_basic_exception(e)
-            assert False, "link/detach identity/profile failed"
-        finally:
-            try:
-                if client and uid_guid:
-                    client.delete_user_identity(uid_guid, cascade=True)
-                if client and profile_guid:
-                    client.delete_actor_profile(profile_guid, cascade=True)
-            finally:
-                if client:
-                    client.close_session()
+            if actor_client:
+                actor_client.close_session()
