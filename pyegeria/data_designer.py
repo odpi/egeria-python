@@ -874,11 +874,10 @@ class DataDesigner(ServerClient):
 
         url = f"{base_path(self, self.view_server)}/data-structures/by-search-string"
 
-        return await self._async_find_request(url, "DataStructure", self._generate_data_structure_output,
-                                              search_string, start_from=start_from, page_size=page_size,
+        return await self._async_find_request(url, "DataStructure", self._generate_data_structure_output, search_string,
                                               starts_with=starts_with, ends_with=ends_with, ignore_case=ignore_case,
-                                              body=body, output_format=output_format,
-                                              report_spec=report_spec)
+                                              start_from=start_from, page_size=page_size, output_format=output_format,
+                                              report_spec=report_spec, body=body)
 
     @dynamic_catch
     def find_data_structures(self, search_string: str, start_from: int = 0, page_size: int = 0,
@@ -2339,11 +2338,10 @@ class DataDesigner(ServerClient):
 
         url = f"{base_path(self, self.view_server)}/data-fields/by-search-string"
 
-        return await self._async_find_request(url, "DataField", self._generate_data_field_output,
-                                              search_string, start_from=start_from, page_size=page_size,
+        return await self._async_find_request(url, "DataField", self._generate_data_field_output, search_string,
                                               starts_with=starts_with, ends_with=ends_with, ignore_case=ignore_case,
-                                              body=body, output_format=output_format,
-                                              report_spec=report_spec)
+                                              start_from=start_from, page_size=page_size, output_format=output_format,
+                                              report_spec=report_spec, body=body)
 
     @dynamic_catch
     def find_data_fields(self, search_string: str, start_from: int = 0, page_size: int = max_paging_size,
@@ -3778,11 +3776,10 @@ class DataDesigner(ServerClient):
         """
 
         url = f"{base_path(self, self.view_server)}/data-classes/by-search-string"
-        return await self._async_find_request(url, "DataClass", self._generate_data_class_output,
-                                              search_string, start_from=start_from, page_size=page_size,
+        return await self._async_find_request(url, "DataClass", self._generate_data_class_output, search_string,
                                               starts_with=starts_with, ends_with=ends_with, ignore_case=ignore_case,
-                                              body=body, output_format=output_format,
-                                              report_spec=report_spec)
+                                              start_from=start_from, page_size=page_size, output_format=output_format,
+                                              report_spec=report_spec, body=body)
 
     @dynamic_catch
     def find_data_classes(self, search_string: str, start_from: int = 0, page_size: int = max_paging_size,

@@ -1645,7 +1645,7 @@ class SolutionArchitect(ServerClient):
         loop.run_until_complete(self._async_delete_info_supply_chain(guid, body, cascade_delete))
 
     def find_all_information_supply_chains(self, search_string: str = "*", add_implementation: bool = True, classification_names: list[str] = None,
-                                                    metadata_element_types: list[str] = None,
+                                                    metadata_element_subtypes: list[str] = None,
                                                     starts_with: bool = True, ends_with: bool = False,
                                                     ignore_case: bool = False, start_from: int = 0,
                                                     page_size: int = 0, output_format: str = 'JSON',
@@ -1700,13 +1700,13 @@ class SolutionArchitect(ServerClient):
             add_implementation ():
         """
 
-        return self.find_information_supply_chains("*", add_implementation, classification_names, metadata_element_types,
+        return self.find_information_supply_chains("*", add_implementation, classification_names, metadata_element_subtypes,
                                                    starts_with, ends_with, ignore_case,
                                                    start_from, page_size, output_format, report_spec, body)
 
     async def _async_find_information_supply_chains(self, search_string: str = "*", add_implementation: bool = True,
                                                     classification_names: list[str] = None,
-                                                    metadata_element_types: list[str] = None,
+                                                    metadata_element_subtypes: list[str] = None,
                                                     starts_with: bool = True, ends_with: bool = False,
                                                     ignore_case: bool = False, start_from: int = 0,
                                                     page_size: int = 0, output_format: str = 'JSON',
@@ -1771,18 +1771,18 @@ class SolutionArchitect(ServerClient):
         url = f"{self.solution_architect_command_root}/information-supply-chains/by-search-string?addImplementation={add_implementation}"
         return await self._async_find_request(url, _type="InformationSupplyChain",
                                               _gen_output=self.generate_info_supply_chain_output,
-                                              search_string=search_string, classification_names=classification_names,
-                                              metadata_element_types=metadata_element_types,
+                                              search_string=search_string,
+                                              include_only_classification_names=classification_names,
+                                              metadata_element_subtypes=metadata_element_subtypes,
                                               starts_with=starts_with, ends_with=ends_with, ignore_case=ignore_case,
-                                              start_from=start_from, page_size=page_size,
-                                              output_format=output_format, report_spec=report_spec,
-                                              body=body)
+                                              start_from=start_from, page_size=page_size, output_format=output_format,
+                                              report_spec=report_spec, body=body)
 
 
 
     def find_information_supply_chains(self, search_string: str = "*",  add_implementation: bool = False,
                                     classification_names: list[str] = None,
-                                    metadata_element_types: list[str] = None,
+                                    metadata_element_subtypes: list[str] = None,
                                     starts_with: bool = True, ends_with: bool = False,
                                     ignore_case: bool = False, start_from: int = 0,
                                     page_size: int = 0, output_format: str = 'JSON',
@@ -1850,7 +1850,7 @@ class SolutionArchitect(ServerClient):
 
         loop = asyncio.get_event_loop()
         response = loop.run_until_complete(
-            self._async_find_information_supply_chains(search_string, add_implementation,classification_names, metadata_element_types,
+            self._async_find_information_supply_chains(search_string, add_implementation,classification_names, metadata_element_subtypes,
                                                        starts_with, ends_with, ignore_case,
                                                        start_from, page_size,  output_format,
                                                        report_spec, body))
@@ -2993,7 +2993,7 @@ class SolutionArchitect(ServerClient):
 
 
     async def _async_find_solution_blueprints(self, search_string: str = "*", classification_names: list[str] = None,
-                                    metadata_element_types: list[str] = None,
+                                    metadata_element_subtypes: list[str] = None,
                                     starts_with: bool = True, ends_with: bool = False,
                                     ignore_case: bool = False, start_from: int = 0,
                                     page_size: int = 0, output_format: str = 'JSON',
@@ -3058,16 +3058,16 @@ class SolutionArchitect(ServerClient):
         url = f"{self.solution_architect_command_root}/solution-blueprints/by-search-string"
         return await self._async_find_request(url, _type="GovernanceDefinition",
                                               _gen_output=self.generate_info_supply_chain_output,
-                                              search_string=search_string, classification_names=classification_names,
-                                              metadata_element_types=metadata_element_types,
+                                              search_string=search_string,
+                                              include_only_classification_names=classification_names,
+                                              metadata_element_subtypes=metadata_element_subtypes,
                                               starts_with=starts_with, ends_with=ends_with, ignore_case=ignore_case,
-                                              start_from=start_from, page_size=page_size,
-                                              output_format=output_format, report_spec=report_spec,
-                                              body=body)
+                                              start_from=start_from, page_size=page_size, output_format=output_format,
+                                              report_spec=report_spec, body=body)
 
 
     def find_solution_blueprints(self, search_string: str = "*", classification_names: list[str] = None,
-                                    metadata_element_types: list[str] = None,
+                                    metadata_element_subtypes: list[str] = None,
                                     starts_with: bool = True, ends_with: bool = False,
                                     ignore_case: bool = False, start_from: int = 0,
                                     page_size: int = 0, output_format: str = 'JSON',
@@ -3132,13 +3132,13 @@ class SolutionArchitect(ServerClient):
 
         loop = asyncio.get_event_loop()
         response = loop.run_until_complete(
-            self._async_find_solution_blueprints(search_string, classification_names, metadata_element_types,
+            self._async_find_solution_blueprints(search_string, classification_names, metadata_element_subtypes,
                                                   starts_with, ends_with, ignore_case, start_from,
                                                   page_size, output_format, report_spec, body))
         return response
 
     def find_all_solution_blueprints(self, classification_names: list[str] = None,
-                                    metadata_element_types: list[str] = None,
+                                    metadata_element_subtypes: list[str] = None,
                                     starts_with: bool = True, ends_with: bool = False,
                                     ignore_case: bool = False, start_from: int = 0,
                                     page_size: int = 0, output_format: str = 'JSON',
@@ -3147,7 +3147,7 @@ class SolutionArchitect(ServerClient):
         """Retrieve a list of all solution blueprint elements
         https://egeria-project.org/concepts/solution-blueprint
         """
-        return self.find_solution_blueprints("*", classification_names, metadata_element_types,
+        return self.find_solution_blueprints("*", classification_names, metadata_element_subtypes,
                                               starts_with, ends_with, ignore_case, start_from,
                                               page_size, output_format, report_spec, body)
 
@@ -4314,7 +4314,7 @@ class SolutionArchitect(ServerClient):
         loop.run_until_complete(self._async_delete_solution_component(solution_component_guid, cascade_delete, body))
 
     async def _async_find_solution_components(self, search_string: str = "*", classification_names: list[str] = None,
-                                    metadata_element_types: list[str] = None,
+                                    metadata_element_subtypes: list[str] = None,
                                     starts_with: bool = True, ends_with: bool = False,
                                     ignore_case: bool = False, start_from: int = 0,
                                     page_size: int = 0, output_format: str = 'JSON',
@@ -4381,15 +4381,15 @@ class SolutionArchitect(ServerClient):
 
         return await self._async_find_request(url, _type="SolutionComponent",
                                               _gen_output=self.generate_solution_components_output,
-                                              search_string=search_string, classification_names=classification_names,
-                                              metadata_element_types=metadata_element_types,
+                                              search_string=search_string,
+                                              include_only_classification_names=classification_names,
+                                              metadata_element_subtypes=metadata_element_subtypes,
                                               starts_with=starts_with, ends_with=ends_with, ignore_case=ignore_case,
-                                              start_from=start_from, page_size=page_size,
-                                              output_format=output_format, report_spec=report_spec,
-                                              body=body)
+                                              start_from=start_from, page_size=page_size, output_format=output_format,
+                                              report_spec=report_spec, body=body)
 
     def find_solution_components(self, search_string: str = "*", classification_names: list[str] = None,
-                                    metadata_element_types: list[str] = None,
+                                    metadata_element_subtypes: list[str] = None,
                                     starts_with: bool = True, ends_with: bool = False,
                                     ignore_case: bool = False, start_from: int = 0,
                                     page_size: int = 0, output_format: str = 'JSON',
@@ -4452,11 +4452,11 @@ class SolutionArchitect(ServerClient):
 
         loop = asyncio.get_event_loop()
         response = loop.run_until_complete(
-            self._async_find_solution_components(search_string, classification_names, metadata_element_types, starts_with, ends_with, ignore_case, start_from, page_size, output_format, report_spec, body))
+            self._async_find_solution_components(search_string, classification_names, metadata_element_subtypes, starts_with, ends_with, ignore_case, start_from, page_size, output_format, report_spec, body))
         return response
 
     def find_all_solution_components(self, classification_names: list[str] = None,
-                                    metadata_element_types: list[str] = None,
+                                    metadata_element_subtypes: list[str] = None,
                                     starts_with: bool = True, ends_with: bool = False,
                                     ignore_case: bool = False, start_from: int = 0,
                                     page_size: int = 0, output_format: str = 'JSON',
@@ -4465,7 +4465,7 @@ class SolutionArchitect(ServerClient):
         """Retrieve a list of all solution component elements
         https://egeria-project.org/concepts/solution-components
         """
-        return self.find_solution_components("*", classification_names, metadata_element_types, starts_with, ends_with, ignore_case, start_from, page_size, output_format, report_spec, body)
+        return self.find_solution_components("*", classification_names, metadata_element_subtypes, starts_with, ends_with, ignore_case, start_from, page_size, output_format, report_spec, body)
 
 
     async def _async_get_solution_components_by_name(self, search_filter: str, body: dict = None, start_from: int = 0,
@@ -5615,7 +5615,7 @@ class SolutionArchitect(ServerClient):
         loop.run_until_complete(self._async_delete_solution_role(guid, cascade_delete, body))
 
     async def _async_find_solution_roles(self, search_string: str = "*", classification_names: list[str] = None,
-                                    metadata_element_types: list[str] = None,
+                                    metadata_element_subtypes: list[str] = None,
                                     starts_with: bool = True, ends_with: bool = False,
                                     ignore_case: bool = False, start_from: int = 0,
                                     page_size: int = 0, output_format: str = 'JSON',
@@ -5682,15 +5682,15 @@ class SolutionArchitect(ServerClient):
 
         return await self._async_find_request(url, _type="GovernanceDefinition",
                                               _gen_output=self.generate_info_supply_chain_output,
-                                              search_string=search_string, classification_names=classification_names,
-                                              metadata_element_types=metadata_element_types,
+                                              search_string=search_string,
+                                              include_only_classification_names=classification_names,
+                                              metadata_element_subtypes=metadata_element_subtypes,
                                               starts_with=starts_with, ends_with=ends_with, ignore_case=ignore_case,
-                                              start_from=start_from, page_size=page_size,
-                                              output_format=output_format, report_spec=report_spec,
-                                              body=body)
+                                              start_from=start_from, page_size=page_size, output_format=output_format,
+                                              report_spec=report_spec, body=body)
 
     def find_solution_roles(self, search_string: str = "*", classification_names: list[str] = None,
-                                    metadata_element_types: list[str] = None,
+                                    metadata_element_subtypes: list[str] = None,
                                     starts_with: bool = True, ends_with: bool = False,
                                     ignore_case: bool = False, start_from: int = 0,
                                     page_size: int = 0, output_format: str = 'JSON',
@@ -5759,11 +5759,11 @@ class SolutionArchitect(ServerClient):
 
         loop = asyncio.get_event_loop()
         response = loop.run_until_complete(
-            self._async_find_solution_roles(search_string, classification_names, metadata_element_types, starts_with, ends_with, ignore_case, start_from, page_size, output_format, report_spec, body))
+            self._async_find_solution_roles(search_string, classification_names, metadata_element_subtypes, starts_with, ends_with, ignore_case, start_from, page_size, output_format, report_spec, body))
         return response
 
     def find_all_solution_roles(self,  classification_names: list[str] = None,
-                                    metadata_element_types: list[str] = None,
+                                    metadata_element_subtypes: list[str] = None,
                                     starts_with: bool = True, ends_with: bool = False,
                                     ignore_case: bool = False, start_from: int = 0,
                                     page_size: int = 0, output_format: str = 'JSON',
@@ -5772,7 +5772,7 @@ class SolutionArchitect(ServerClient):
         """Retrieve a list of all solution blueprint elements
         https://egeria-project.org/concepts/actor
         """
-        return self.find_solution_roles("*", classification_names, metadata_element_types, starts_with, ends_with, ignore_case, start_from, page_size, output_format, report_spec, body)
+        return self.find_solution_roles("*", classification_names, metadata_element_subtypes, starts_with, ends_with, ignore_case, start_from, page_size, output_format, report_spec, body)
 
 
     async def _async_get_solution_roles_by_name(self, search_filter: str, body: dict = None, start_from: int = 0,

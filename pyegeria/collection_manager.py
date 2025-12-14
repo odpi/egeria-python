@@ -282,7 +282,7 @@ class CollectionManager(ServerClient):
 
     @dynamic_catch
     async def _async_find_collections(self, search_string: str = "*", classification_names: list[str] = None,
-                                      metadata_element_types: list[str] = None,
+                                      metadata_element_subtypes: list[str] = None,
                                       starts_with: bool = True, ends_with: bool = False, ignore_case: bool = False,
                                       start_from: int = 0, page_size: int = 0, output_format: str = 'JSON',
                                       report_spec: str | dict = None,
@@ -299,7 +299,7 @@ class CollectionManager(ServerClient):
         classification_names: list[str], optional, default=None
             A list of classification names to filter on - for example, ["DataSpec"], for data specifications. If none,
             then all classifications are returned.
-        metadata_element_types: list[str], optional, default=None
+        metadata_element_subtypes: list[str], optional, default=None
             A list of metadata element types to filter on - for example, ["DataSpec"], for data specifications. If none,
         starts_with : bool, [default=False], optional
             Starts with the supplied string.
@@ -337,20 +337,19 @@ class CollectionManager(ServerClient):
 
         """
         url = str(HttpUrl(f"{self.collection_command_root}/by-search-string"))
-        response = await self._async_find_request(url, _type="Collection",
-                                                  _gen_output=self._generate_collection_output,
-                                                  search_string = search_string, classification_names = classification_names,
-                                                  metadata_element_types = metadata_element_types,
-                                                  starts_with = starts_with, ends_with = ends_with, ignore_case = ignore_case,
-                                                  start_from = start_from, page_size = page_size,
-                                                  output_format=output_format, report_spec=report_spec,
-                                                  body=body)
+        response = await self._async_find_request(url, _type="Collection", _gen_output=self._generate_collection_output,
+                                                  search_string=search_string,
+                                                  include_only_classification_names=classification_names,
+                                                  metadata_element_subtypes=metadata_element_subtypes,
+                                                  starts_with=starts_with, ends_with=ends_with, ignore_case=ignore_case,
+                                                  start_from=start_from, page_size=page_size,
+                                                  output_format=output_format, report_spec=report_spec, body=body)
 
         return response
 
     @dynamic_catch
     def find_collections(self, search_string: str = '*', classification_names: str = None,
-                         metadata_element_types: list[str] = None, starts_with: bool = True,
+                         metadata_element_subtypes: list[str] = None, starts_with: bool = True,
                          ends_with: bool = False, ignore_case: bool = False,
                          start_from: int = 0, page_size: int = 0, output_format: str = 'JSON',
                          report_spec: str | dict = None,
@@ -367,7 +366,7 @@ class CollectionManager(ServerClient):
         classification_names: list[str], optional, default=None
             A list of classification names to filter on - for example, ["DataSpec"], for data specifications. If none,
             then all classifications are returned.
-        metadata_element_types: list[str], optional, default=None
+        metadata_element_subtypes: list[str], optional, default=None
             A list of metadata element types to filter on - for example, ["DataSpec"], for data specifications. If none,
             then all metadata element types are returned.
         starts_with : bool, [default=False], optional
@@ -406,11 +405,11 @@ class CollectionManager(ServerClient):
 
         Args:
             classification_names ():
-            metadata_element_types ():
+            metadata_element_subtypes ():
 
         """
         return asyncio.get_event_loop().run_until_complete(
-            self._async_find_collections(search_string, classification_names, metadata_element_types,
+            self._async_find_collections(search_string, classification_names, metadata_element_subtypes,
                                          starts_with, ends_with, ignore_case,
                                          start_from, page_size, output_format,
                                          report_spec, body))

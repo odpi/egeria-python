@@ -2732,26 +2732,26 @@ class GlossaryManager(CollectionManager):
         return response
 
     async def _async_find_glossaries(self, search_string: str = "*", classificaton_names: list[str] = None,
-                                     metadata_element_types: list[str] = ["Glossary"],
+                                     metadata_element_subtypes: list[str] = ["Glossary"],
                                      starts_with: bool = False, ends_with: bool = False, ignore_case: bool = False,
                                      start_from: int = 0,page_size: int = 0, output_format: str = 'JSON',
                                      report_spec: str | dict  = None,
                                      body: dict | SearchStringRequestBody = None) -> list | str:
 
         response = await self._async_find_collections(search_string, classificaton_names,
-                                                      metadata_element_types, starts_with, ends_with, ignore_case,
+                                                      metadata_element_subtypes, starts_with, ends_with, ignore_case,
                                                       start_from, page_size, output_format, report_spec, body)
         return response
 
     def find_glossaries(self, search_string: str = "*", classificaton_names: list[str] = None,
-                                     metadata_element_types: list[str] = ["Glossary"],
+                                     metadata_element_subtypes: list[str] = ["Glossary"],
                                      starts_with: bool = False, ends_with: bool = False, ignore_case: bool = False,
                                      start_from: int = 0,page_size: int = 0, output_format: str = 'JSON',
                                      report_spec: str | dict  = None,
                                      body: dict | SearchStringRequestBody = None) -> list | str:
         loop = asyncio.get_event_loop()
         response = loop.run_until_complete(
-                    self._async_find_glossaries(search_string,  classificaton_names, metadata_element_types, starts_with, ends_with, ignore_case, start_from, page_size, output_format, report_spec, body))
+                    self._async_find_glossaries(search_string,  classificaton_names, metadata_element_subtypes, starts_with, ends_with, ignore_case, start_from, page_size, output_format, report_spec, body))
         return response
 
     async def _async_get_glossaries_by_name(self, filter_string: str = None, classification_names: list[str] = None,
@@ -2839,14 +2839,13 @@ class GlossaryManager(CollectionManager):
                                      report_spec: str | dict = "Glossary-Term-DrE", body: dict = None) -> list | str:
         url = (f"{self.platform_url}/servers/{self.view_server}/api/open-metadata/glossary-manager/glossaries/terms/"
                f"by-search-string")
-        response = await self._async_find_request(url, _type= type_name,
-                                                  _gen_output=self._generate_term_output,
-                                                  search_string = search_string, classification_names = classification_names,
-                                                  metadata_element_types = ["GlossaryTerm"],
-                                                  starts_with = starts_with, ends_with = ends_with, ignore_case = ignore_case,
-                                                  start_from = start_from, page_size = page_size,
-                                                  output_format=output_format, report_spec=report_spec,
-                                                  body=body)
+        response = await self._async_find_request(url, _type=type_name, _gen_output=self._generate_term_output,
+                                                  search_string=search_string,
+                                                  include_only_classification_names=classification_names,
+                                                  metadata_element_subtypes=["GlossaryTerm"], starts_with=starts_with,
+                                                  ends_with=ends_with, ignore_case=ignore_case, start_from=start_from,
+                                                  page_size=page_size, output_format=output_format,
+                                                  report_spec=report_spec, body=body)
         return response
 
     def find_glossary_terms(self, search_string: str, starts_with: bool = False,

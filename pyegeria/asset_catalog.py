@@ -116,7 +116,7 @@ class AssetCatalog(ServerClient):
         )
 
     async def _async_find_in_asset_domain(self, search_string: str, classification_names: list[str] = None,
-                                          metadata_element_types: list[str] = None, start_from: int = 0,
+                                          metadata_element_subtypes: list[str] = None, start_from: int = 0,
                                           page_size: int = max_paging_size, starts_with: bool = True,
                                           ends_with: bool = False, ignore_case: bool = True, output_format: str="JSON",
                                           report_spec:str="Referenceable",
@@ -175,19 +175,18 @@ class AssetCatalog(ServerClient):
             f"{self.platform_url}/servers/{self.view_server}/api/open-metadata/asset-catalog/assets/in-domain/"
             f"by-search-string"
         )
-        response = await self._async_find_request(url, _type="ExternalReference", search_string=search_string,
-                                                  _gen_output=self._generate_asset_output,
-                                                  classification_names=classification_names,
-                                                  metadata_element_types=metadata_element_types,
+        response = await self._async_find_request(url, _type="ExternalReference",
+                                                  _gen_output=self._generate_asset_output, search_string=search_string,
+                                                  include_only_classification_names=classification_names,
+                                                  metadata_element_subtypes=metadata_element_subtypes,
                                                   starts_with=starts_with, ends_with=ends_with, ignore_case=ignore_case,
                                                   start_from=start_from, page_size=page_size,
-                                                  output_format=output_format, report_spec=report_spec,
-                                                  body=body)
+                                                  output_format=output_format, report_spec=report_spec, body=body)
 
         return response
 
     def find_in_asset_domain(self, search_string: str, classification_names: list[str] = None,
-                                          metadata_element_types: list[str] = None, start_from: int = 0,
+                                          metadata_element_subtypes: list[str] = None, start_from: int = 0,
                                           page_size: int = max_paging_size, starts_with: bool = True,
                                           ends_with: bool = False, ignore_case: bool = True, output_format: str="JSON",
                                           report_spec:str="Referenceable",
@@ -241,7 +240,7 @@ class AssetCatalog(ServerClient):
         loop = asyncio.get_event_loop()
         response = loop.run_until_complete(
             self._async_find_in_asset_domain(search_string, classification_names,
-                                             metadata_element_types, start_from, page_size,
+                                             metadata_element_subtypes, start_from, page_size,
                                              starts_with, ends_with, ignore_case,
                                              output_format, report_spec, body)
         )

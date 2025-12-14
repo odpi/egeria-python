@@ -215,7 +215,7 @@ class TestRuntimeManager:
     def test_get_platforms_by_type(self):
         try:
             r_client = RuntimeManager(
-                self.good_view_server_1,
+                self.good_view_server_2,
                 self.good_platform1_url,
                 user_id=self.good_user_2,
                 user_pwd="secret",

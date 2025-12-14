@@ -112,7 +112,7 @@
         "ignore_case"
       ],
       "spec_params": {
-        "metadata_element_types": [
+        "metadata_element_subtypes": [
           "GovernanceDriver"
         ]
       }
@@ -232,7 +232,7 @@
         "ignore_case"
       ],
       "spec_params": {
-        "metadata_element_types": [
+        "metadata_element_subtypes": [
           "GovernanceStrategy"
         ]
       }
@@ -2502,7 +2502,7 @@
         "ignore_case"
       ],
       "spec_params": {
-        "metadata_element_types": [
+        "metadata_element_subtypes": [
           "CitedDocument"
         ]
       }
@@ -2612,7 +2612,7 @@
         "ignore_case"
       ],
       "spec_params": {
-        "metadata_element_types": [
+        "metadata_element_subtypes": [
           "ExternalDataSource"
         ]
       }
@@ -2848,7 +2848,7 @@
         "ignore_case"
       ],
       "spec_params": {
-        "metadata_element_types": [
+        "metadata_element_subtypes": [
           "Agreement"
         ]
       }

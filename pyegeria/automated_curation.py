@@ -2156,22 +2156,13 @@ class AutomatedCuration(ServerClient):
             search_string = None
 
         url = str(HttpUrl(f"{self.curation_command_root}/assets/by-search-string"))
-        return await self._async_find_request(
-            url,
-            _type=self.ENGINE_ACTION_LABEL,
-            search_string=search_string,
-            _gen_output=self._generate_engine_action_output,
-            classification_names=None,
-            metadata_element_types=["EngineAction"],
-            starts_with=starts_with,
-            ends_with=ends_with,
-            ignore_case=ignore_case,
-            start_from=start_from,
-            page_size=page_size,
-            output_format=output_format,
-            report_spec=report_spec,
-            body=None,
-        )
+        return await self._async_find_request(url, _type=self.ENGINE_ACTION_LABEL,
+                                              _gen_output=self._generate_engine_action_output,
+                                              search_string=search_string, include_only_classification_names=None,
+                                              metadata_element_subtypes=["EngineAction"], starts_with=starts_with,
+                                              ends_with=ends_with, ignore_case=ignore_case, start_from=start_from,
+                                              page_size=page_size, output_format=output_format, report_spec=report_spec,
+                                              body=None)
 
     def find_engine_actions(
             self,
@@ -3881,14 +3872,12 @@ class AutomatedCuration(ServerClient):
             search_string = None
 
         url = str(HttpUrl(f"{self.curation_command_root}/technology-types/by-search-string"))
-        response = await self._async_find_request(url, _type="TechType", search_string=search_string,
-                                                  _gen_output=self._generate_tech_type_output,
-                                                  classification_names=None,
-                                                  metadata_element_types='ValidMetadataValue',
+        response = await self._async_find_request(url, _type="TechType", _gen_output=self._generate_tech_type_output,
+                                                  search_string=search_string, include_only_classification_names=None,
+                                                  metadata_element_subtypes='ValidMetadataValue',
                                                   starts_with=starts_with, ends_with=ends_with, ignore_case=ignore_case,
                                                   start_from=start_from, page_size=page_size,
-                                                  output_format=output_format, report_spec=report_spec,
-                                                  body=body)
+                                                  output_format=output_format, report_spec=report_spec, body=body)
 
         return response
 

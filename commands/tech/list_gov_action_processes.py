@@ -71,7 +71,7 @@ def display_gov_processes(
         )
         table.add_column("Description")
 
-        process_list = p_client.find_governance_definitions(search_string = type_name, metadata_element_types=["GovernanceActionProcess"])
+        process_list = p_client.find_governance_definitions(search_string = type_name, metadata_element_subtypes=["GovernanceActionProcess"])
 
         if type(process_list) is str:
             print("No Governance Processes found matching the type name\n")

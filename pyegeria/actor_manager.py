@@ -701,7 +701,7 @@ class ActorManager(ServerClient):
 
     @dynamic_catch
     async def _async_find_actor_profiles(self, search_string: str = "*", classification_names: list[str] = None,
-                                         metadata_element_types: list[str] = ACTOR_PROFILE,
+                                         metadata_element_subtypes: list[str] = ACTOR_PROFILE,
                                          starts_with: bool = True, ends_with: bool = False,
                                          ignore_case: bool = False,
                                          start_from: int = 0, page_size: int = 0, output_format: str = 'JSON',
@@ -717,7 +717,7 @@ class ActorManager(ServerClient):
         classification_names: list[str], optional, default=None
             A list of classification names to filter on - for example, ["DataSpec"], for data specifications. If none,
             then all classifications are returned.
-        metadata_element_types: list[str], optional, default=None
+        metadata_element_subtypes: list[str], optional, default=None
             A list of metadata element types to filter on - for example, ["DataSpec"], for data specifications. If none,
         starts_with : bool, [default=False], optional
             Starts with the supplied string.
@@ -755,20 +755,20 @@ class ActorManager(ServerClient):
             The principle specified by the user_id does not have authorization for the requested action
         """
         url = str(HttpUrl(f"{self.command_root}/actor-profiles/by-search-string"))
-        response = await self._async_find_request(url, _type="ActorProfile", search_string=search_string,
+        response = await self._async_find_request(url, _type="ActorProfile",
                                                   _gen_output=self._generate_actor_profile_output,
-                                                  classification_names=classification_names,
-                                                  metadata_element_types=metadata_element_types,
+                                                  search_string=search_string,
+                                                  include_only_classification_names=classification_names,
+                                                  metadata_element_subtypes=metadata_element_subtypes,
                                                   starts_with=starts_with, ends_with=ends_with, ignore_case=ignore_case,
                                                   start_from=start_from, page_size=page_size,
-                                                  output_format=output_format, report_spec=report_spec,
-                                                  body=body)
+                                                  output_format=output_format, report_spec=report_spec, body=body)
 
         return response
 
     @dynamic_catch
     def find_actor_profiles(self, search_string: str = '*', classification_names: str = None,
-                            metadata_element_types: list[str] = ACTOR_PROFILE, starts_with: bool = True,
+                            metadata_element_subtypes: list[str] = ACTOR_PROFILE, starts_with: bool = True,
                             ends_with: bool = False, ignore_case: bool = False,
                             start_from: int = 0, page_size: int = 0, output_format: str = 'JSON',
                             report_spec: str | dict = "Actor-Profiles",
@@ -783,7 +783,7 @@ class ActorManager(ServerClient):
           classification_names: list[str], optional, default=None
               A list of classification names to filter on - for example, ["DataSpec"], for data specifications. If none,
               then all classifications are returned.
-          metadata_element_types: list[str], optional, default=None
+          metadata_element_subtypes: list[str], optional, default=None
               A list of metadata element types to filter on - for example, ["DataSpec"], for data specifications. If none,
           starts_with : bool, [default=False], optional
               Starts with the supplied string.
@@ -822,7 +822,7 @@ class ActorManager(ServerClient):
 
           """
         return asyncio.get_event_loop().run_until_complete(
-            self._async_find_actor_profiles(search_string, classification_names, metadata_element_types, starts_with,
+            self._async_find_actor_profiles(search_string, classification_names, metadata_element_subtypes, starts_with,
                                             ends_with, ignore_case, start_from, page_size, output_format, report_spec,
                                             body))
 
@@ -2206,7 +2206,7 @@ class ActorManager(ServerClient):
 
     @dynamic_catch
     async def _async_find_actor_roles(self, search_string: str = "*", classification_names: list[str] = None,
-                                      metadata_element_types: list[str] = ACTOR_ROLE,
+                                      metadata_element_subtypes: list[str] = ACTOR_ROLE,
                                       starts_with: bool = True, ends_with: bool = False,
                                       ignore_case: bool = False,
                                       start_from: int = 0, page_size: int = 0, output_format: str = 'JSON',
@@ -2222,7 +2222,7 @@ class ActorManager(ServerClient):
         classification_names: list[str], optional, default=None
             A list of classification names to filter on - for example, ["DataSpec"], for data specifications. If none,
             then all classifications are returned.
-        metadata_element_types: list[str], optional, default=None
+        metadata_element_subtypes: list[str], optional, default=None
             A list of metadata element types to filter on - for example, ["ActorRoles"], for an actor role. If none,
         starts_with : bool, [default=False], optional
             Starts with the supplied string.
@@ -2261,20 +2261,19 @@ class ActorManager(ServerClient):
 
         """
         url = str(HttpUrl(f"{self.command_root}/actor-roles/by-search-string"))
-        response = await self._async_find_request(url, _type="ActorRole", search_string=search_string,
-                                                  _gen_output=self._generate_actor_role_output,
-                                                  classification_names=classification_names,
-                                                  metadata_element_types=metadata_element_types,
+        response = await self._async_find_request(url, _type="ActorRole", _gen_output=self._generate_actor_role_output,
+                                                  search_string=search_string,
+                                                  include_only_classification_names=classification_names,
+                                                  metadata_element_subtypes=metadata_element_subtypes,
                                                   starts_with=starts_with, ends_with=ends_with, ignore_case=ignore_case,
                                                   start_from=start_from, page_size=page_size,
-                                                  output_format=output_format, report_spec=report_spec,
-                                                  body=body)
+                                                  output_format=output_format, report_spec=report_spec, body=body)
 
         return response
 
     @dynamic_catch
     def find_actor_roles(self, search_string: str = '*', classification_names: str = None,
-                         metadata_element_types: list[str] = ACTOR_ROLE, starts_with: bool = True,
+                         metadata_element_subtypes: list[str] = ACTOR_ROLE, starts_with: bool = True,
                          ends_with: bool = False, ignore_case: bool = False,
                          start_from: int = 0, page_size: int = 0, output_format: str = 'JSON',
                          report_spec: str | dict = "Actor-Roles",
@@ -2289,7 +2288,7 @@ class ActorManager(ServerClient):
           classification_names: list[str], optional, default=None
               A list of classification names to filter on - for example, ["DataSpec"], for data specifications. If none,
               then all classifications are returned.
-          metadata_element_types: list[str], optional, default=None
+          metadata_element_subtypes: list[str], optional, default=None
               A list of metadata element types to filter on - for example, ["ActorRole"], for actor role. If none,
           starts_with : bool, [default=False], optional
               Starts with the supplied string.
@@ -2328,7 +2327,7 @@ class ActorManager(ServerClient):
 
           """
         return asyncio.get_event_loop().run_until_complete(
-            self._async_find_actor_roles(search_string, classification_names, metadata_element_types, starts_with,
+            self._async_find_actor_roles(search_string, classification_names, metadata_element_subtypes, starts_with,
                                          ends_with, ignore_case, start_from, page_size, output_format, report_spec,
                                          body))
 
@@ -3657,7 +3656,7 @@ class ActorManager(ServerClient):
 
     @dynamic_catch
     async def _async_find_user_identities(self, search_string: str = "*", classification_names: list[str] = None,
-                                          metadata_element_types: list[str] = ["UserIdentity"],
+                                          metadata_element_subtypes: list[str] = ["UserIdentity"],
                                           starts_with: bool = True, ends_with: bool = False,
                                           ignore_case: bool = False,
                                           start_from: int = 0, page_size: int = 0, output_format: str = 'JSON',
@@ -3673,7 +3672,7 @@ class ActorManager(ServerClient):
         classification_names: list[str], optional, default=None
             A list of classification names to filter on - for example, ["DataSpec"], for data specifications. If none,
             then all classifications are returned.
-        metadata_element_types: list[str], optional, default=None
+        metadata_element_subtypes: list[str], optional, default=None
             A list of metadata element types to filter on - for example, ["DataSpec"], for data specifications. If none,
         starts_with : bool, [default=False], optional
             Starts with the supplied string.
@@ -3712,20 +3711,20 @@ class ActorManager(ServerClient):
 
         """
         url = str(HttpUrl(f"{self.command_root}/user-identities/by-search-string"))
-        response = await self._async_find_request(url, _type="UserIdentity", search_string=search_string,
+        response = await self._async_find_request(url, _type="UserIdentity",
                                                   _gen_output=self._generate_user_identity_output,
-                                                  classification_names=classification_names,
-                                                  metadata_element_types=metadata_element_types,
+                                                  search_string=search_string,
+                                                  include_only_classification_names=classification_names,
+                                                  metadata_element_subtypes=metadata_element_subtypes,
                                                   starts_with=starts_with, ends_with=ends_with, ignore_case=ignore_case,
                                                   start_from=start_from, page_size=page_size,
-                                                  output_format=output_format, report_spec=report_spec,
-                                                  body=body)
+                                                  output_format=output_format, report_spec=report_spec, body=body)
 
         return response
 
     @dynamic_catch
     def find_user_identities(self, search_string: str = '*', classification_names: str = None,
-                             metadata_element_types: list[str] = ["UserIdentity"], starts_with: bool = True,
+                             metadata_element_subtypes: list[str] = ["UserIdentity"], starts_with: bool = True,
                              ends_with: bool = False, ignore_case: bool = False,
                              start_from: int = 0, page_size: int = 0, output_format: str = 'JSON',
                              report_spec: str | dict = "User-Identities",
@@ -3740,7 +3739,7 @@ class ActorManager(ServerClient):
           classification_names: list[str], optional, default=None
               A list of classification names to filter on - for example, ["DataSpec"], for data specifications. If none,
               then all classifications are returned.
-          metadata_element_types: list[str], optional, default=None
+          metadata_element_subtypes: list[str], optional, default=None
               A list of metadata element types to filter on - for example, ["DataSpec"], for data specifications. If none,
           starts_with : bool, [default=False], optional
               Starts with the supplied string.
@@ -3779,7 +3778,7 @@ class ActorManager(ServerClient):
 
           """
         return asyncio.get_event_loop().run_until_complete(
-            self._async_find_user_identities(search_string, classification_names, metadata_element_types, starts_with,
+            self._async_find_user_identities(search_string, classification_names, metadata_element_subtypes, starts_with,
                                              ends_with, ignore_case, start_from, page_size, output_format, report_spec,
                                              body))
 

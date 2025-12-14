@@ -424,8 +424,8 @@ class TestActorManager:
         client = None
         guid = None
         qn = _unique_qname("ActorProfile")
-        metadata_element_types = ['Person','Team']
-        # metadata_element_types = ["Team"]
+        metadata_element_subtypes = ['Person','Team']
+        # metadata_element_subtypes = ["Team"]
         try:
             client = ActorManager(self.good_view_server_1, self.good_platform1_url, user_id=self.good_user_1)
             client.create_egeria_bearer_token(self.good_user_1, USER_PWD)
@@ -438,7 +438,7 @@ class TestActorManager:
             #         "qualifiedName": qn,
             #     },
             # })
-            res = client.find_actor_profiles( metadata_element_types=metadata_element_types,output_format="DICT", report_spec="Actor-Profiles")
+            res = client.find_actor_profiles( metadata_element_subtypes=metadata_element_subtypes,output_format="DICT", report_spec="Actor-Profiles")
             print("find_actor_profiles result (DICT):")
             try:
                 print(json.dumps(res, indent=4, default=str))

@@ -147,7 +147,7 @@ def test_find_comments_sync_calls_async(monkeypatch, client):
         self,
         search_string,
         classification_names,
-        metadata_element_types,
+        metadata_element_subtypes,
         starts_with,
         ends_with,
         ignore_case,
@@ -160,7 +160,7 @@ def test_find_comments_sync_calls_async(monkeypatch, client):
         calls["args"] = (
             search_string,
             classification_names,
-            metadata_element_types,
+            metadata_element_subtypes,
             starts_with,
             ends_with,
             ignore_case,
@@ -174,7 +174,7 @@ def test_find_comments_sync_calls_async(monkeypatch, client):
 
     monkeypatch.setattr(ServerClient, "async_find_comments", fake_async_find_comments)
 
-    result = client.find_note_logs("foo", classification_names=["X"], metadata_element_types=["Comment"],
+    result = client.find_note_logs("foo", classification_names=["X"], metadata_element_subtypes=["Comment"],
                                    starts_with=True, ends_with=False, ignore_case=False, start_from=5, page_size=25,
                                    output_format="JSON", report_spec=None, body=None)
 
