@@ -144,7 +144,7 @@ class ReferenceDataManager(ServerClient):
     @dynamic_catch
     async def _async_find_valid_value_definitions(
             self,
-            search_string: str, classification_names: list[str] = None, metadata_element_types: list[str] = None,
+            search_string: str, classification_names: list[str] = None, metadata_element_subtypes: list[str] = None,
             starts_with: bool = False,
             ends_with: bool = False,
             ignore_case: bool = False,
@@ -197,21 +197,19 @@ class ReferenceDataManager(ServerClient):
         url = f"{self.ref_data_command_base}/valid-value-definitions/by-search-string"
 
         response = await self._async_find_request(url, _type="ValidValuesDefinition",
-                                                  _gen_output=self._generate_vv_def_output,
-                                                  search_string=search_string,
-                                                  classification_names=classification_names,
-                                                  metadata_element_types=metadata_element_types,
+                                                  _gen_output=self._generate_vv_def_output, search_string=search_string,
+                                                  include_only_classification_names=classification_names,
+                                                  metadata_element_subtypes=metadata_element_subtypes,
                                                   starts_with=starts_with, ends_with=ends_with, ignore_case=ignore_case,
                                                   start_from=start_from, page_size=page_size,
-                                                  output_format=output_format, report_spec=report_spec,
-                                                  body=body)
+                                                  output_format=output_format, report_spec=report_spec, body=body)
 
         return response
 
     @dynamic_catch
     def find_valid_value_definitions(
             self,
-            search_string: str, classification_names: list[str] = None, metadata_element_types: list[str] = None,
+            search_string: str, classification_names: list[str] = None, metadata_element_subtypes: list[str] = None,
             starts_with: bool = False,
             ends_with: bool = False,
             ignore_case: bool = False,
@@ -261,7 +259,7 @@ class ReferenceDataManager(ServerClient):
             self._async_find_valid_value_definitions(
                 search_string,
                 classification_names,
-                metadata_element_types,
+                metadata_element_subtypes,
                 starts_with,
                 ends_with,
                 ignore_case,

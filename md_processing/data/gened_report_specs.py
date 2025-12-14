@@ -406,7 +406,7 @@
         "ignore_case"
       ],
       "spec_params": {
-        "metadata_element_types": [
+        "metadata_element_subtypes": [
           "CitedDocument"
         ]
       }
@@ -544,7 +544,7 @@
         "ignore_case"
       ],
       "spec_params": {
-        "metadata_element_types": [
+        "metadata_element_subtypes": [
           "ExternalDataSource"
         ]
       }
@@ -787,7 +787,7 @@
         "ignore_case"
       ],
       "spec_params": {
-        "metadata_element_types": [
+        "metadata_element_subtypes": [
           "DigitalProduct"
         ]
       }
@@ -865,7 +865,7 @@
         "ignore_case"
       ],
       "spec_params": {
-        "metadata_element_types": [
+        "metadata_element_subtypes": [
           "Agreement"
         ]
       }
@@ -1031,7 +1031,7 @@
         "ignore_case"
       ],
       "spec_params": {
-        "metadata_element_types": [
+        "metadata_element_subtypes": [
           "DigitalSubscription"
         ]
       }
@@ -1170,7 +1170,7 @@
         "ignore_case"
       ],
       "spec_params": {
-        "metadata_element_types": [
+        "metadata_element_subtypes": [
           "DataDictionary"
         ]
       }
@@ -1228,7 +1228,7 @@
         "ignore_case"
       ],
       "spec_params": {
-        "metadata_element_types": [
+        "metadata_element_subtypes": [
           "DataSpec"
         ]
       }
@@ -2154,7 +2154,7 @@
         "ignore_case"
       ],
       "spec_params": {
-        "metadata_element_types": [
+        "metadata_element_subtypes": [
           "Glossary"
         ]
       }
@@ -3172,7 +3172,7 @@
         "ignore_case"
       ],
       "spec_params": {
-        "metadata_element_types": [
+        "metadata_element_subtypes": [
           "GovernanceDriver"
         ]
       }
@@ -3320,7 +3320,7 @@
         "ignore_case"
       ],
       "spec_params": {
-        "metadata_element_types": [
+        "metadata_element_subtypes": [
           "GovernanceStrategy"
         ]
       }
@@ -3468,7 +3468,7 @@
         "ignore_case"
       ],
       "spec_params": {
-        "metadata_element_types": [
+        "metadata_element_subtypes": [
           "GovernanceDriver"
         ]
       }
@@ -3636,7 +3636,7 @@
         "ignore_case"
       ],
       "spec_params": {
-        "metadata_element_types": [
+        "metadata_element_subtypes": [
           "Regulation"
         ]
       }
@@ -3784,7 +3784,7 @@
         "ignore_case"
       ],
       "spec_params": {
-        "metadata_element_types": [
+        "metadata_element_subtypes": [
           "RegulationArticle"
         ]
       }
@@ -3932,7 +3932,7 @@
         "ignore_case"
       ],
       "spec_params": {
-        "metadata_element_types": [
+        "metadata_element_subtypes": [
           "ThreatDefinition"
         ]
       }
@@ -4080,7 +4080,7 @@
         "ignore_case"
       ],
       "spec_params": {
-        "metadata_element_types": [
+        "metadata_element_subtypes": [
           "GovernancePolicy"
         ]
       }
@@ -4228,7 +4228,7 @@
         "ignore_case"
       ],
       "spec_params": {
-        "metadata_element_types": [
+        "metadata_element_subtypes": [
           "GovernancePrinciple"
         ]
       }
@@ -4376,7 +4376,7 @@
         "ignore_case"
       ],
       "spec_params": {
-        "metadata_element_types": [
+        "metadata_element_subtypes": [
           "GovernanceObligation"
         ]
       }
@@ -4524,7 +4524,7 @@
         "ignore_case"
       ],
       "spec_params": {
-        "metadata_element_types": [
+        "metadata_element_subtypes": [
           "GovernanceApproach"
         ]
       }
@@ -4692,7 +4692,7 @@
         "ignore_case"
       ],
       "spec_params": {
-        "metadata_element_types": [
+        "metadata_element_subtypes": [
           "GovernanceMetric"
         ]
       }
@@ -4840,7 +4840,7 @@
         "ignore_case"
       ],
       "spec_params": {
-        "metadata_element_types": [
+        "metadata_element_subtypes": [
           "GovernanceAction"
         ]
       }
@@ -4988,7 +4988,7 @@
         "ignore_case"
       ],
       "spec_params": {
-        "metadata_element_types": [
+        "metadata_element_subtypes": [
           "DataProcessingPurpose"
         ]
       }
@@ -5146,7 +5146,7 @@
         "ignore_case"
       ],
       "spec_params": {
-        "metadata_element_types": [
+        "metadata_element_subtypes": [
           "GovernanceRule"
         ]
       }
@@ -5304,7 +5304,7 @@
         "ignore_case"
       ],
       "spec_params": {
-        "metadata_element_types": [
+        "metadata_element_subtypes": [
           "ServiceLevelObjectives"
         ]
       }
@@ -5462,7 +5462,7 @@
         "ignore_case"
       ],
       "spec_params": {
-        "metadata_element_types": [
+        "metadata_element_subtypes": [
           "GovernanceResponsibility"
         ]
       }
@@ -5620,7 +5620,7 @@
         "ignore_case"
       ],
       "spec_params": {
-        "metadata_element_types": [
+        "metadata_element_subtypes": [
           "GovernanceProcedure"
         ]
       }
@@ -5768,7 +5768,7 @@
         "ignore_case"
       ],
       "spec_params": {
-        "metadata_element_types": [
+        "metadata_element_subtypes": [
           "SecurityAccessControl"
         ]
       }
@@ -5926,7 +5926,7 @@
         "ignore_case"
       ],
       "spec_params": {
-        "metadata_element_types": [
+        "metadata_element_subtypes": [
           "GovernanceZone"
         ]
       }
@@ -6074,7 +6074,7 @@
         "ignore_case"
       ],
       "spec_params": {
-        "metadata_element_types": [
+        "metadata_element_subtypes": [
           "SEcurityGroup"
         ]
       }
@@ -6232,7 +6232,7 @@
         "ignore_case"
       ],
       "spec_params": {
-        "metadata_element_types": [
+        "metadata_element_subtypes": [
           "NamingStandardRule"
         ]
       }

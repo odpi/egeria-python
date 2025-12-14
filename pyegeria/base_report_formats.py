@@ -843,7 +843,7 @@ base_report_specs = FormatSetDict({
             function="ExternalReference.find_external_references",
             optional_params=OPTIONAL_SEARCH_PARAMS,
             required_params=["search_string"],
-            spec_params={"metadata_element_types": ["RelatedMedia"]},
+            spec_params={"metadata_element_subtypes": ["RelatedMedia"]},
         )
 
     ),
@@ -875,7 +875,7 @@ base_report_specs = FormatSetDict({
             function="ExternalReference.find_external_references",
             optional_params=OPTIONAL_SEARCH_PARAMS,
             required_params=["search_string"],
-            spec_params={"metadata_element_types": ["CitedDocument"]},
+            spec_params={"metadata_element_subtypes": ["CitedDocument"]},
         )
 
     ),
@@ -1168,7 +1168,7 @@ base_report_specs = FormatSetDict({
             function="CollectionManager.find_collections",
             required_params=["search_string"],
             optional_params=OPTIONAL_SEARCH_PARAMS + ['body'],
-            spec_params={"metadata_element_types": ["DigitalProductCatalog"]},
+            spec_params={"metadata_element_subtypes": ["DigitalProductCatalog"]},
         ),
     ),
     "Digital-Product-Catalog-MyE": FormatSet(
@@ -1192,7 +1192,7 @@ base_report_specs = FormatSetDict({
             function="CollectionManager.find_collections",
             required_params=["search_string"],
             optional_params=OPTIONAL_SEARCH_PARAMS,
-            spec_params={"metadata_element_types": ["DigitalProductCatalog"]},
+            spec_params={"metadata_element_subtypes": ["DigitalProductCatalog"]},
         ),
     ),
 
@@ -1246,7 +1246,7 @@ base_report_specs = FormatSetDict({
             function="CollectionManager.find_collections",
             required_params=["search_string"],
             optional_params=OPTIONAL_SEARCH_PARAMS,
-            spec_params={"metadata_element_types": ["DigitalProduct"]},
+            spec_params={"metadata_element_subtypes": ["DigitalProduct"]},
         ),
         get_additional_props=ActionParameter(
             function="CollectionManager._extract_digital_product_properties",
@@ -1294,7 +1294,7 @@ base_report_specs = FormatSetDict({
             function="CollectionManager.find_collections",
             required_params=["search_string"],
             optional_params=OPTIONAL_SEARCH_PARAMS,
-            spec_params={"metadata_element_types": ["DigitalProduct"]},
+            spec_params={"metadata_element_subtypes": ["DigitalProduct"]},
         ),
         get_additional_props=ActionParameter(
             function="CollectionManager._extract_digital_product_properties",
@@ -1325,7 +1325,7 @@ base_report_specs = FormatSetDict({
         action=ActionParameter(
             function="CollectionManager.find_collections",
             required_params=["search_string"],
-            spec_params={"metadata_element_types": ["Agreement"]},
+            spec_params={"metadata_element_subtypes": ["Agreement"]},
             # spec_params={},
         ),
         get_additional_props=ActionParameter(
@@ -1346,7 +1346,7 @@ base_report_specs = FormatSetDict({
         action=ActionParameter(
             function="CollectionManager.find_collections",
             required_params=["search_string"],
-            spec_params={"metadata_element_types": ["DataDictionary"]},
+            spec_params={"metadata_element_subtypes": ["DataDictionary"]},
         )
     ),
 
@@ -1367,7 +1367,7 @@ base_report_specs = FormatSetDict({
         action=ActionParameter(
             function="CollectionManager.find_collections",
             required_params=["search_string"],
-            spec_params={"metadata_element_types": ["DdataSpec"]},
+            spec_params={"metadata_element_subtypes": ["DdataSpec"]},
         )
     ),
 
@@ -1519,7 +1519,7 @@ base_report_specs = FormatSetDict({
                                                             optional_params=['page_size', 'start_from',
                                                                              'starts_with', 'ends_with',
                                                                              'ignore_case'], spec_params={
-                                             'metadata_element_types': ['ExternalReference']})
+                                             'metadata_element_subtypes': ['ExternalReference']})
                                      ),
 
     "Governance Basics": FormatSet(
@@ -1562,7 +1562,7 @@ base_report_specs = FormatSetDict({
         action=ActionParameter(
             function="GovernanceOfficer.find_governance_definitions",
             required_params=["search_string"],
-            spec_params={"metadata_element_types": ["GovernancePrinciple", "GovernanceStrategy", "GovernanceResponse"]},
+            spec_params={"metadata_element_subtypes": ["GovernancePrinciple", "GovernanceStrategy", "GovernanceResponse"]},
         )
     ),
     'Governance-Controls': FormatSet(target_type='Governance Control',
@@ -1612,7 +1612,7 @@ base_report_specs = FormatSetDict({
                                         function="GovernanceOfficer.find_governance_definitions",
                                         required_params=["search_string"],
                                         optional_params=OPTIONAL_SEARCH_PARAMS,
-                                        spec_params={"metadata_element_types": ["GovernanceControl"]},
+                                        spec_params={"metadata_element_subtypes": ["GovernanceControl"]},
                                     )
         ),
 'Governance-Process': FormatSet(target_type='Governance Process',
@@ -1639,7 +1639,7 @@ base_report_specs = FormatSetDict({
                                         function="GovernanceOfficer.find_governance_definitions",
                                         required_params=["search_string"],
                                         optional_params=OPTIONAL_SEARCH_PARAMS,
-                                        spec_params={"metadata_element_types": ["GovernanceActionProcess"]},
+                                        spec_params={"metadata_element_subtypes": ["GovernanceActionProcess"]},
                                     )
                      ),
     "Valid-Value-Def": FormatSet(
@@ -1703,7 +1703,7 @@ base_report_specs = FormatSetDict({
                                   function="GovernanceOfficer.find_governance_definitions",
                                   required_params=["search_string"],
                                   optional_params=OPTIONAL_SEARCH_PARAMS,
-                                  spec_params={"metadata_element_types": ["LicenseType"]},
+                                  spec_params={"metadata_element_subtypes": ["LicenseType"]},
                               )
                               ),
 
@@ -1719,7 +1719,7 @@ base_report_specs = FormatSetDict({
             function="GovernanceOfficer.find_governance_definitions",
             required_params=["search_string"],
             optional_params=OPTIONAL_SEARCH_PARAMS,
-            spec_params={"metadata_element_types": ["GovernancePolicy"]},
+            spec_params={"metadata_element_subtypes": ["GovernancePolicy"]},
         )
     )
 

@@ -119,7 +119,7 @@ class TestCollectionManager:
             report_spec = "BasicCollections"
 
             response = c_client.find_collections(search_string = search_string, classification_names = classification_name
-                                                 ,metadata_element_types=element_type
+                                                 ,metadata_element_subtypes=element_type
                                                  ,output_format=output_format, report_spec=report_spec)
             duration = time.perf_counter() - start_time
             if response:

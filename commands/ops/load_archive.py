@@ -9,6 +9,7 @@ This script refreshed an integration daemon.
 """
 
 import os
+import sys
 
 import click
 from loguru import logger
@@ -66,14 +67,18 @@ def load_archive(file_name, server_name, view_server, url, userid, password, tim
         token = s_client.create_egeria_bearer_token()
         server_guid = s_client.__get_guid__(display_name = server_name, property_name = "displayName", tech_type = "MetadataStore")
         file_name = file_name.strip()
+        if server_guid == "No elements found":
+            print("Didn't find the metadata store")
+            sys.exit(0)
+
         s_client.add_archive_file(file_name, server_guid, server_name, time_out=timeout)
 
         click.echo(f"Loaded archive: {file_name}")
 
     except (PyegeriaException, PyegeriaAPIException) as e:
         print(
-            f"Perhaps there was a timeout? If so, the command will complete despite the exception\n"
-            f"===> You can check by rerunning the command in a few minutes"
+            "Perhaps there was a timeout? If so, the command will complete despite the exception\n" 
+            "===> You can check by rerunning the command in a few minutes"
         )
         print_basic_exception(e)
 

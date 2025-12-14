@@ -1483,7 +1483,7 @@ class ServerClient(BaseServerClient):
             self,
             search_string: str = None,
             classification_names: list[str] = None,
-            metadata_element_types: list[str] = ["Comment"],
+            metadata_element_subtypes: list[str] = ["Comment"],
             starts_with: bool = None,
             ends_with: bool = None,
             ignore_case: bool = None,
@@ -1529,28 +1529,26 @@ class ServerClient(BaseServerClient):
 
         Args:
             classification_names ():
-            metadata_element_types ():
+            metadata_element_subtypes ():
 
 
         """
 
         url = f"{self.command_root}feedback-manager/comments/by-search-string"
-        response = await self._async_find_request(url, _type="Comment",
-                                                  _gen_output=self._generate_comment_output,
+        response = await self._async_find_request(url, _type="Comment", _gen_output=self._generate_comment_output,
                                                   search_string=search_string,
-                                                  classification_names=classification_names,
-                                                  metadata_element_types=metadata_element_types,
+                                                  include_only_classification_names=classification_names,
+                                                  metadata_element_subtypes=metadata_element_subtypes,
                                                   starts_with=starts_with, ends_with=ends_with, ignore_case=ignore_case,
                                                   start_from=start_from, page_size=page_size,
-                                                  output_format=output_format, report_spec=report_spec,
-                                                  body=body)
+                                                  output_format=output_format, report_spec=report_spec, body=body)
 
         return response
 
     def find_comments(
             self,
             search_string: str = None,
-            classification_names: list[str] = None, metadata_element_types: list[str] = ["Comment"],
+            classification_names: list[str] = None, metadata_element_subtypes: list[str] = ["Comment"],
             starts_with: bool = True,
             ends_with: bool = False,
             ignore_case: bool = False,
@@ -1595,13 +1593,13 @@ class ServerClient(BaseServerClient):
 
         Args:
             classification_names ():
-            metadata_element_types ():
+            metadata_element_subtypes ():
 
 
         """
         loop = asyncio.get_event_loop()
         resp = loop.run_until_complete(
-            self._async_find_comments(search_string, classification_names, metadata_element_types, starts_with,
+            self._async_find_comments(search_string, classification_names, metadata_element_subtypes, starts_with,
                                       ends_with, ignore_case, start_from, page_size, output_format, report_spec, body)
         )
 
@@ -2068,7 +2066,7 @@ class ServerClient(BaseServerClient):
             self,
             search_string: str,
             classification_names: list[str] = None,
-            metadata_element_types: list[str] = ["NoteLog"],
+            metadata_element_subtypes: list[str] = ["NoteLog"],
             starts_with: bool = None,
             ends_with: bool = None,
             ignore_case: bool = None,
@@ -2135,15 +2133,13 @@ class ServerClient(BaseServerClient):
         """
 
         url = f"{self.command_root}feedback-manager/note-logs/by-search-string"
-        response = await self._async_find_request(url, _type="NoteLog",
-                                                  _gen_output=self._generate_feedback_output,
+        response = await self._async_find_request(url, _type="NoteLog", _gen_output=self._generate_feedback_output,
                                                   search_string=search_string,
-                                                  classification_names=classification_names,
-                                                  metadata_element_types=metadata_element_types,
+                                                  include_only_classification_names=classification_names,
+                                                  metadata_element_subtypes=metadata_element_subtypes,
                                                   starts_with=starts_with, ends_with=ends_with, ignore_case=ignore_case,
                                                   start_from=start_from, page_size=page_size,
-                                                  output_format=output_format, report_spec=report_spec,
-                                                  body=body)
+                                                  output_format=output_format, report_spec=report_spec, body=body)
 
         return response
 
@@ -2151,7 +2147,7 @@ class ServerClient(BaseServerClient):
     def find_note_logs(
             self,
             search_string: str,
-            classification_names: list[str] = None, metadata_element_types: list[str] = ["NoteLog"],
+            classification_names: list[str] = None, metadata_element_subtypes: list[str] = ["NoteLog"],
             starts_with: bool = True,
             ends_with: bool = False,
             ignore_case: bool = False,
@@ -2195,13 +2191,13 @@ class ServerClient(BaseServerClient):
 
         Args:
             classification_names ():
-            metadata_element_types ():
+            metadata_element_subtypes ():
 
 
         """
         loop = asyncio.get_event_loop()
         resp = loop.run_until_complete(
-            self._async_find_note_logs(search_string, classification_names, metadata_element_types, starts_with,
+            self._async_find_note_logs(search_string, classification_names, metadata_element_subtypes, starts_with,
                                        ends_with, ignore_case, start_from, page_size, output_format, report_spec, body)
         )
 
@@ -2999,11 +2995,11 @@ class ServerClient(BaseServerClient):
         """
 
         url = f"{self.command_root}feedback-manager/assets/by-search-string"
-        response = await self._async_find_request(url, "Notification", self._generate_feedback_output,
-                                                  search_string, None, ["Notification"] ,
-                                                  starts_with, ends_with, ignore_case,
-                                                  start_from, page_size, output_format, report_spec,
-                                                  body )
+        response = await self._async_find_request(url, "Notification", self._generate_feedback_output, search_string,
+                                                  None, metadata_element_subtypes=["Notification"],
+                                                  starts_with=starts_with, ends_with=ends_with, ignore_case=ignore_case,
+                                                  start_from=start_from, page_size=page_size,
+                                                  output_format=output_format, report_spec=report_spec, body=body)
         return response
 
     @dynamic_catch
@@ -3623,11 +3619,11 @@ class ServerClient(BaseServerClient):
         """
 
         url = f"{self.command_root}feedback-manager/tags/by-search-string"
-        response = await self._async_find_request(url, "InformalTag", self._generate_feedback_output,
-                                                  search_string, None, None,
-                                                  starts_with, ends_with, ignore_case,
-                                                  start_from, page_size, output_format,
-                                                  report_spec, body)
+        response = await self._async_find_request(url, "InformalTag", self._generate_feedback_output, search_string,
+                                                  None, metadata_element_subtypes=None, starts_with=starts_with,
+                                                  ends_with=ends_with, ignore_case=ignore_case, start_from=start_from,
+                                                  page_size=page_size, output_format=output_format,
+                                                  report_spec=report_spec, body=body)
         return response
 
     @dynamic_catch
@@ -4574,9 +4570,10 @@ class ServerClient(BaseServerClient):
             }
         url = f"{self.command_root}classification-manager/search-keywords/by-search-string"
         response = await self._async_find_request(url, "SearchKeyword", self._generate_feedback_output, search_string,
-                                                  None, None, True, False, False,
-                                                  start_from, page_size, output_format, report_spec, body
-                                                  )
+                                                  None, metadata_element_subtypes=None, starts_with=True,
+                                                  ends_with=False, ignore_case=False, start_from=start_from,
+                                                  page_size=page_size, output_format=output_format,
+                                                  report_spec=report_spec, body=body)
         return response
 
     @dynamic_catch
@@ -4898,12 +4895,16 @@ class ServerClient(BaseServerClient):
         return validated_body
 
     @dynamic_catch
-    async def _async_find_request(self, url: str, _type: str, _gen_output: Callable[..., Any],
-                                  search_string: str = '*', classification_names: list[str] = None,
-                                  metadata_element_types: list[str] = None,
+    async def _async_find_request(self, url: str, _type: str, _gen_output: Callable[..., Any], search_string: str = '*',
+                                  include_only_classification_names: list[str] = None,
+                                  metadata_element_type: str = None, metadata_element_subtypes: list[str] = None,
                                   starts_with: bool = True, ends_with: bool = False, ignore_case: bool = False,
                                   start_from: int = 0, page_size: int = 0, output_format: str = 'JSON',
-                                  report_spec: str | dict = None,
+                                  report_spec: str | dict = None, skip_relationships: list[str] = None,
+                                  include_only_relatiohsips: list[str] = None,
+                                  skip_classified_elements: list[str] = None, graph_query_depth: int = 3,
+                                  governance_zone_filter: list[str] = None, as_of_time: str = None,
+                                  effective_time: str = None, relationship_page_size: int = 0,
                                   body: dict | SearchStringRequestBody = None) -> Any:
 
         if isinstance(body, SearchStringRequestBody):
@@ -4914,19 +4915,26 @@ class ServerClient(BaseServerClient):
             search_string = None if search_string == "*" else search_string
             body = {
                 "class": "SearchStringRequestBody",
+                "include_only_classified_elements": include_only_classification_names,
+                "metadata_element_type": metadata_element_type,
+                "metadata_element_subtype_names": metadata_element_subtypes,
+                "skip_classified_elements": skip_classified_elements,
+                "skip_relationships": skip_relationships,
+                "include_only_relatiohsips": include_only_relatiohsips,
+                "graph_query_depth": graph_query_depth,
+                "governance_zone_filter": governance_zone_filter,
+                "as_of_time": as_of_time,
+                "effective_time": effective_time,
+                "relationship_page_size": relationship_page_size,
                 "search_string": search_string,
                 "starts_with": starts_with,
                 "ends_with": ends_with,
                 "ignore_case": ignore_case,
                 "start_from": start_from,
                 "page_size": page_size,
-                "include_only_classified_elements": classification_names,
-                "metadata_element_subtype_names": metadata_element_types,
+
             }
             validated_body = SearchStringRequestBody.model_validate(body)
-
-        # classification_names = validated_body.include_only_classified_elements
-        # element_type_name = classification_names[0] if classification_names else _type
 
         json_body = validated_body.model_dump_json(indent=2, exclude_none=True)
 
@@ -5349,265 +5357,6 @@ class ServerClient(BaseServerClient):
         loop = asyncio.get_event_loop()
         loop.run_until_complete(self._async_update_element_status(guid, status, body))
 
-    #
-    # @dynamic_catch
-    # async def _async_classify_element(self, guid: str, status: str = None,
-    #                                        body: dict | UpdateStatusRequestBody = None) -> None:
-    #     """ Update the status of an element. Async version.
-    #
-    #        Parameters
-    #        ----------
-    #        guid: str
-    #            The guid of the element to update.
-    #        status: str, optional
-    #            The new lifecycle status for the element. Ignored, if the body is provided.
-    #        body: dict | UpdateStatusRequestBody, optional
-    #            A structure representing the details of the element status to update. If supplied, these details
-    #            supersede the status parameter provided.
-    #
-    #        Returns
-    #        -------
-    #        Nothing
-    #
-    #        Raises
-    #        ------
-    #        PyegeriaException
-    #        ValidationError
-    #
-    #        Notes
-    #        -----
-    #        JSON Structure looks like:
-    #         {
-    #          "class": "UpdateStatusRequestBody",
-    #          "newStatus": "APPROVED",
-    #          "externalSourceGUID": "add guid here",
-    #          "externalSourceName": "add qualified name here",
-    #          "effectiveTime": "{{$isoTimestamp}}",
-    #          "forLineage": false,
-    #          "forDuplicateProcessing": false
-    #        }
-    #        """
-    #
-    #     url = f"{self.command_root}/metadata-elements/{guid}/update-status"
-    #     await self._async_update_status_request(url, status, body)
-    #
-    # @dynamic_catch
-    # def classify_element(self, guid: str, status: str = None,
-    #                           body: dict | UpdateStatusRequestBody = None) -> None:
-    #     """ Update the status of an element. Async version.
-    #
-    #        Parameters
-    #        ----------
-    #        guid: str
-    #            The guid of the element to update.
-    #        status: str, optional
-    #            The new lifecycle status for the element. Ignored, if the body is provided.
-    #        body: dict | UpdateStatusRequestBody, optional
-    #            A structure representing the details of the element status to update. If supplied, these details
-    #            supersede the status parameter provided.
-    #
-    #        Returns
-    #        -------
-    #        Nothing
-    #
-    #        Raises
-    #        ------
-    #        PyegeriaException
-    #        ValidationError
-    #
-    #        Notes
-    #        -----
-    #        JSON Structure looks like:
-    #         {
-    #          "class": "UpdateStatusRequestBody",
-    #          "newStatus": "APPROVED",
-    #          "externalSourceGUID": "add guid here",
-    #          "externalSourceName": "add qualified name here",
-    #          "effectiveTime": "{{$isoTimestamp}}",
-    #          "forLineage": false,
-    #          "forDuplicateProcessing": false
-    #        }
-    #        """
-    #     loop = asyncio.get_event_loop()
-    #     loop.run_until_complete(self._async_update_element_status(guid, status, body))
-    #
-    # @dynamic_catch
-    # async def _async_reclassify_element(self, guid: str, effectivity_time: str = None,
-    #                                             body: dict = None) -> None:
-    #     """ Update the status of an element. Async version.
-    #
-    #        Parameters
-    #        ----------
-    #        guid: str
-    #            The guid of the element to update.
-    #        effectivity_time: str, optional
-    #            The new effectivity time for the element.
-    #        body: dict, optional
-    #            A structure representing the details of the effectivity time to update. If supplied, these details
-    #             supersede the effectivity time parameter provided.
-    #
-    #        Returns
-    #        -------
-    #        Nothing
-    #
-    #        Raises
-    #        ------
-    #        PyegeriaException
-    #        ValidationError
-    #
-    #        Notes
-    #        -----
-    #        JSON Structure looks like:
-    #         {
-    #           "class" : "UpdateEffectivityDatesRequestBody",
-    #           "externalSourceGUID" :  "",
-    #           "externalSourceName" : "",
-    #           "effectiveFrom" : "{{$isoTimestamp}}",
-    #           "effectiveTo": "{{$isoTimestamp}}",
-    #           "forLineage" : false,
-    #           "forDuplicateProcessing" : false,
-    #           "effectiveTime" : "{{$isoTimestamp}}"
-    #         }
-    #        """
-    #
-    #     url = f"{self.command_root}/metadata-elements/{guid}/update-effectivity"
-    #     if body is None:
-    #         body = {
-    #             "class": "UpdateEffectivityRequestBody",
-    #             "effectiveTime": effectivity_time
-    #         }
-    #     logger.info(body)
-    #     await self._async_make_request("POST", url, body)
-    #
-    # @dynamic_catch
-    # def reclassify_element(self, guid: str, status: str = None,
-    #                                body: dict = None) -> None:
-    #     """ Update the status of an element. Async version.
-    #
-    #        Parameters
-    #        ----------
-    #        guid: str
-    #            The guid of the element to update.
-    #        effectivity_time: str, optional
-    #            The new effectivity time for the element.
-    #        body: dict, optional
-    #            A structure representing the details of the effectivity time to update. If supplied, these details
-    #             supersede the effectivity time parameter provided.
-    #
-    #        Returns
-    #        -------
-    #        Nothing
-    #
-    #        Raises
-    #        ------
-    #        PyegeriaException
-    #        ValidationError
-    #
-    #        Notes
-    #        -----
-    #        JSON Structure looks like:
-    #         {
-    #           "class" : "UpdateEffectivityDatesRequestBody",
-    #           "externalSourceGUID" :  "",
-    #           "externalSourceName" : "",
-    #           "effectiveFrom" : "{{$isoTimestamp}}",
-    #           "effectiveTo": "{{$isoTimestamp}}",
-    #           "forLineage" : false,
-    #           "forDuplicateProcessing" : false,
-    #           "effectiveTime" : "{{$isoTimestamp}}"
-    #         }
-    #        """
-    #     loop = asyncio.get_event_loop()
-    #     loop.run_until_complete(self._async_update_element_status(guid, status, body))
-    #
-    #     @dynamic_catch
-    #     async def _async_declassify_element(self, guid: str, effectivity_time: str = None,
-    #                                         body: dict = None) -> None:
-    #         """ Update the status of an element. Async version.
-    #
-    #            Parameters
-    #            ----------
-    #            guid: str
-    #                The guid of the element to update.
-    #            effectivity_time: str, optional
-    #                The new effectivity time for the element.
-    #            body: dict, optional
-    #                A structure representing the details of the effectivity time to update. If supplied, these details
-    #                 supersede the effectivity time parameter provided.
-    #
-    #            Returns
-    #            -------
-    #            Nothing
-    #
-    #            Raises
-    #            ------
-    #            PyegeriaException
-    #            ValidationError
-    #
-    #            Notes
-    #            -----
-    #            JSON Structure looks like:
-    #             {
-    #               "class" : "UpdateEffectivityDatesRequestBody",
-    #               "externalSourceGUID" :  "",
-    #               "externalSourceName" : "",
-    #               "effectiveFrom" : "{{$isoTimestamp}}",
-    #               "effectiveTo": "{{$isoTimestamp}}",
-    #               "forLineage" : false,
-    #               "forDuplicateProcessing" : false,
-    #               "effectiveTime" : "{{$isoTimestamp}}"
-    #             }
-    #            """
-    #
-    #         url = f"{self.command_root}/metadata-elements/{guid}/update-effectivity"
-    #         if body is None:
-    #             body = {
-    #                 "class": "UpdateEffectivityRequestBody",
-    #                 "effectiveTime": effectivity_time
-    #             }
-    #         logger.info(body)
-    #         await self._async_make_request("POST", url, body)
-    #
-    #     @dynamic_catch
-    #     def declassify_element(self, guid: str, status: str = None,
-    #                            body: dict = None) -> None:
-    #         """ Update the status of an element. Async version.
-    #
-    #            Parameters
-    #            ----------
-    #            guid: str
-    #                The guid of the element to update.
-    #            effectivity_time: str, optional
-    #                The new effectivity time for the element.
-    #            body: dict, optional
-    #                A structure representing the details of the effectivity time to update. If supplied, these details
-    #                 supersede the effectivity time parameter provided.
-    #
-    #            Returns
-    #            -------
-    #            Nothing
-    #
-    #            Raises
-    #            ------
-    #            PyegeriaException
-    #            ValidationError
-    #
-    #            Notes
-    #            -----
-    #            JSON Structure looks like:
-    #             {
-    #               "class" : "UpdateEffectivityDatesRequestBody",
-    #               "externalSourceGUID" :  "",
-    #               "externalSourceName" : "",
-    #               "effectiveFrom" : "{{$isoTimestamp}}",
-    #               "effectiveTo": "{{$isoTimestamp}}",
-    #               "forLineage" : false,
-    #               "forDuplicateProcessing" : false,
-    #               "effectiveTime" : "{{$isoTimestamp}}"
-    #             }
-    #            """
-    #         loop = asyncio.get_event_loop()
-    #         loop.run_until_complete(self._async_update_element_status(guid, status, body))
 
     @dynamic_catch
     def _extract_referenceable_properties(self, element: dict, columns_struct: dict) -> dict:

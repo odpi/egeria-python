@@ -112,7 +112,7 @@ class TestExternalReferences:
             search_string = "*"
 
             response = p_client.find_external_references(
-                search_string, metadata_element_types=["ExternalReference"],output_format="JSON", report_spec="Regerenceable"
+                search_string, metadata_element_subtypes=["ExternalReference"],output_format="JSON", report_spec="Regerenceable"
             )
             duration = time.perf_counter() - start_time
 
