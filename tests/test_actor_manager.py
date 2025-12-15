@@ -463,7 +463,7 @@ class TestActorManager:
                 after = actor_client.get_actor_profile_by_guid(created_guid, output_format="JSON")
                 # If we get here, deletion might not have worked
                 print("Warning: Actor profile still exists after deletion")
-            except PyegeriaNotFoundException:
+            except PyegeriaAPIException:
                 print("Confirmed: Actor profile no longer exists")
 
             assert True

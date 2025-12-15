@@ -700,7 +700,7 @@ class ProjectManager(ServerClient):
         type = element_type if element_type else "Collection"
 
         response = await self._async_get_guid_request(url, _type=type,
-                                                      _gen_output=self._generate_projectt_output,
+                                                      _gen_output=self._generate_project_output,
                                                       output_format=output_format, report_spec=report_spec,
                                                       body=body)
 

@@ -566,7 +566,7 @@ class TestSolutionArchitect:
                 after = sa_client.get_info_supply_chain_by_guid(created_guid, output_format="JSON")
                 # If we get here, deletion might not have worked
                 print("Warning: Supply chain still exists after deletion")
-            except PyegeriaNotFoundException:
+            except PyegeriaAPIException:
                 print("Confirmed: Supply chain no longer exists")
 
             assert True

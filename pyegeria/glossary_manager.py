@@ -211,8 +211,8 @@ class GlossaryManager(CollectionManager):
 
 
 
-        await self._async_update_collection(glossary_guid, body, is_merge_update=merge_update)
-        logger.info(f"Updated digital subscription {glossary_guid}")
+        await self._async_update_collection(glossary_guid, body)
+        logger.info(f"Updated glossary {glossary_guid}")
 
     def update_glossary(
             self,

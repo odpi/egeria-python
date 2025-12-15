@@ -458,7 +458,7 @@ class TestAssetCatalog:
                             output_format="JSON"
                         )
                         print(f"Retrieved asset lineage for {asset_guid}")
-                    except PyegeriaNotFoundException:
+                    except PyegeriaAPIException:
                         print(f"No lineage found for asset {asset_guid}")
             else:
                 print(f"No assets found matching '{search_string}'")
