@@ -183,7 +183,7 @@ class ValidMetadataManager(ServerClient):
         element_type_name: str | None,
         output_format: str = "DICT",
         report_spec: dict | str | None = None,
-    ) -> str | list[dict]:
+    ) -> dict | str | list[dict]:
         """Resolve format set and generate output for Referenceable-derived elements.
 
         This aligns with the formatting workflow used by classification_manager and automated_curation.
@@ -250,7 +250,7 @@ class ValidMetadataManager(ServerClient):
         element_type_name: str | None,
         output_format: str = "DICT",
         report_spec: dict | str | None = None,
-    ) -> str | list[dict]:
+    ) -> dict | str | list[dict]:
         """Resolve format set and generate output for Referenceable-derived elements.
 
         This aligns with the formatting workflow used by classification_manager and automated_curation.
@@ -1365,7 +1365,7 @@ class ValidMetadataManager(ServerClient):
         page_size: int = None,
         output_format: str = "JSON",
         report_spec: dict | str | None = None,
-    ) -> list | str:
+    ) -> dict | list | str:
         """Retrieve list of values for the property. Async version.
 
         Parameters
@@ -1431,7 +1431,7 @@ class ValidMetadataManager(ServerClient):
         page_size: int = None,
         output_format: str = "JSON",
         report_spec: dict | str | None = None,
-    ) -> list | str:
+    ) -> dict | list | str:
         """Retrieve list of values for the property.
 
         Parameters
@@ -1736,7 +1736,7 @@ class ValidMetadataManager(ServerClient):
     #
     async def _async_get_all_entity_types(self,
                                           output_format: str = "JSON",
-                                          report_spec: dict | str | None = None) -> list | str:
+                                          report_spec: dict | str | None = None) -> dict | list | str:
         """Returns the list of different types of metadata organized into two groups.  The first are the
             attribute type definitions (AttributeTypeDefs).  These provide types for attributes in full
             type definitions.  Full type definitions (TypeDefs) describe types for entities, relationships
@@ -1779,7 +1779,7 @@ class ValidMetadataManager(ServerClient):
 
     def get_all_entity_types(self,
                              output_format: str = "JSON",
-                             report_spec: dict | str | None = None) -> list | str:
+                             report_spec: dict | str | None = None) -> dict | list | str:
         """Returns the list of different types of metadata organized into two groups.  The first are the
             attribute type definitions (AttributeTypeDefs).  These provide types for attributes in full
             type definitions.  Full type definitions (TypeDefs) describe types for entities, relationships
@@ -1815,7 +1815,7 @@ class ValidMetadataManager(ServerClient):
 
     async def _async_get_all_entity_defs(self,
                                          output_format: str = "JSON",
-                                         report_spec: dict | str | None = None) -> list | str:
+                                         report_spec: dict | str | None = None) -> dict | list | str:
         """GReturns all the entity type definitions. Async version.
 
         Parameters
@@ -1854,7 +1854,7 @@ class ValidMetadataManager(ServerClient):
 
     def get_all_entity_defs(self,
                             output_format: str = "JSON",
-                            report_spec: dict | str | None = None) -> list | str:
+                            report_spec: dict | str | None = None) -> dict | list | str:
         """Returns all the entity type definitions.
 
         Parameters
@@ -1887,7 +1887,7 @@ class ValidMetadataManager(ServerClient):
 
     async def _async_get_all_relationship_defs(self,
                                                output_format: str = "JSON",
-                                               report_spec: dict | str | None = None) -> list | str:
+                                               report_spec: dict | str | None = None) -> dict | list | str:
         """Returns all the relationship type definitions. Async version.
 
         Parameters
@@ -1926,7 +1926,7 @@ class ValidMetadataManager(ServerClient):
 
     def get_all_relationship_defs(self,
                                   output_format: str = "JSON",
-                                  report_spec: dict | str | None = None) -> list | str:
+                                  report_spec: dict | str | None = None) -> dict | list | str:
         """Returns all the relationship type definitions.
 
         Parameters
@@ -1959,7 +1959,7 @@ class ValidMetadataManager(ServerClient):
 
     async def _async_get_all_classification_defs(self,
                                                  output_format: str = "JSON",
-                                                 report_spec: dict | str | None = None) -> list | str:
+                                                 report_spec: dict | str | None = None) -> dict | list | str:
         """Returns all the classification type definitions. Async version.
 
         Parameters
@@ -1998,7 +1998,7 @@ class ValidMetadataManager(ServerClient):
 
     def get_all_classification_defs(self,
                                     output_format: str = "JSON",
-                                    report_spec: dict | str | None = None) -> list | str:
+                                    report_spec: dict | str | None = None) -> dict | list | str:
         """Returns all the classification type definitions.
 
         Parameters
@@ -2035,7 +2035,7 @@ class ValidMetadataManager(ServerClient):
 
     async def _async_get_sub_types(self, type_name: str,
                                    output_format: str = "JSON",
-                                   report_spec: dict | str | None = None) -> list | str:
+                                   report_spec: dict | str | None = None) -> dict | list | str:
         """Returns all the TypeDefs for a specific subtype.  If a null result is returned it means the
             type has no subtypes. Async version.
 
@@ -2079,7 +2079,7 @@ class ValidMetadataManager(ServerClient):
 
     def get_sub_types(self, type_name: str,
                       output_format: str = "JSON",
-                      report_spec: dict | str | None = None) -> list | str:
+                      report_spec: dict | str | None = None) -> dict | list | str:
         """Returns all the TypeDefs for a specific subtype.  If a null result is returned it means the
             type has no subtypes.
 
@@ -2115,7 +2115,7 @@ class ValidMetadataManager(ServerClient):
 
     async def _async_get_valid_relationship_types(self, entity_type: str,
                                                   output_format: str = "JSON",
-                                                  report_spec: dict | str | None = None) -> list | str:
+                                                  report_spec: dict | str | None = None) -> dict | list | str:
         """Returns all the TypeDefs for relationships that can be attached to the requested entity type.
             Async version.
 
@@ -2160,7 +2160,7 @@ class ValidMetadataManager(ServerClient):
 
     def get_valid_relationship_types(self, entity_type: str,
                                      output_format: str = "JSON",
-                                     report_spec: dict | str | None = None) -> list | str:
+                                     report_spec: dict | str | None = None) -> dict | list | str:
         """Returns all the TypeDefs for relationships that can be attached to the requested entity type.
                     Async version.
 
@@ -2201,7 +2201,7 @@ class ValidMetadataManager(ServerClient):
         self, entity_type: str,
         output_format: str = "JSON",
         report_spec: dict | str | None = None
-    ) -> list | str:
+    ) -> dict | list | str:
         """Returns all the TypeDefs for classifications that can be attached to the requested entity type.
             Async version.
 
@@ -2246,7 +2246,7 @@ class ValidMetadataManager(ServerClient):
 
     def get_valid_classification_types(self, entity_type: str,
                                        output_format: str = "JSON",
-                                       report_spec: dict | str | None = None) -> list | str:
+                                       report_spec: dict | str | None = None) -> dict | list | str:
         """Returns all the TypeDefs for classifications that can be attached to the requested entity type.
                     Async version.
 
@@ -2286,7 +2286,7 @@ class ValidMetadataManager(ServerClient):
 
     async def _async_get_typedef_by_name(self, entity_type: str,
                                          output_format: str = "JSON",
-                                         report_spec: dict | str | None = None) -> dict | str:
+                                         report_spec: dict | str | None = None) -> dict | str | list[dict]:
         """Return the TypeDef identified by the unique name.
             Async version.
 
@@ -2328,7 +2328,7 @@ class ValidMetadataManager(ServerClient):
 
     def get_typedef_by_name(self, entity_type: str,
                             output_format: str = "JSON",
-                            report_spec: dict | str | None = None) -> dict | str:
+                            report_spec: dict | str | None = None) -> dict | str | list[dict]:
         """Return the TypeDef identified by the unique name.
 
         Parameters
@@ -3018,7 +3018,7 @@ class ValidMetadataManager(ServerClient):
 
     @dynamic_catch
     async def _async_get_specification_property_types(self, output_format: str = 'JSON',
-                                                               report_spec: str | dict = None) -> dict | str:
+                                                               report_spec: str | dict = None) -> dict | str | list[dict]:
         """Return the list of specification property types. Async version.
 
         Parameters
@@ -3063,7 +3063,7 @@ class ValidMetadataManager(ServerClient):
         return response
 
     @dynamic_catch
-    def get_specification_property_types(self, output_format: str = 'JSON', report_spec: str | dict = None) -> dict | str:
+    def get_specification_property_types(self, output_format: str = 'JSON', report_spec: str | dict = None) -> dict | str | list[dict]:
         """Return the list of specification property types.
 
              Parameters

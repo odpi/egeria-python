@@ -30,7 +30,7 @@ sys.path.insert(0, os.path.abspath(os.path.dirname(__file__)))
 from pyegeria._exceptions import PyegeriaInvalidParameterException
 from pyegeria._globals import NO_GUID_RETURNED
 from pyegeria.config import settings as app_settings
-from pyegeria.models import (SearchStringRequestBody, FilterRequestBody, NewElementRequestBody,
+from pyegeria.models import (GetRequestBody, SearchStringRequestBody, FilterRequestBody, NewElementRequestBody,
                              ReferenceableProperties, TemplateRequestBody,
                              UpdateElementRequestBody, UpdateStatusRequestBody, NewRelationshipRequestBody,
                              DeleteElementRequestBody, DeleteRelationshipRequestBody,DeleteClassificationRequestBody)
@@ -892,8 +892,7 @@ class GovernanceOfficer(ServerClient):
         }
         """
         url = (
-            f"{self.platform_url}/s"
-            f"ervers/{self.view_server}/api/open-metadata/governance-officer/governance-definitions/"
+            f"{self.platform_url}/servers/{self.view_server}/api/open-metadata/governance-officer/governance-definitions/"
             f"{definition_guid}/delete")
         await self._async_delete_element_request(url, body, cascade)
         logger.info(f"Deleted collection {definition_guid} with cascade {cascade}")
@@ -1574,97 +1573,97 @@ class GovernanceOfficer(ServerClient):
 
 
 
-    @dynamic_catch
-    async def _async_delete_governance_definition(self, guid: str, body: dict | DeleteElementRequestBody = None) -> None:
-        """ Delete an information supply. Async version.
+    # @dynamic_catch
+    # async def _async_delete_governance_definition(self, guid: str, body: dict | DeleteElementRequestBody = None) -> None:
+    #     """ Delete an information supply. Async version.
 
-        Parameters
-        ----------
-        guid: str
-            GUID of the governance definition to delete.
+    #     Parameters
+    #     ----------
+    #     guid: str
+    #         GUID of the governance definition to delete.
 
-        body: dict, optional
-            A dictionary containing the definition of the governance definition to create.
+    #     body: dict, optional
+    #         A dictionary containing the definition of the governance definition to create.
 
-        Returns
-        -------
+    #     Returns
+    #     -------
 
-        str - guid of the governance definition created.
+    #     str - guid of the governance definition created.
 
-        Raises
-        ------
-        PyegeriaInvalidParameterException
-            one of the parameters is null or invalid or
-        PyegeriaAPIException
-            There is a problem adding the element properties to the metadata repository or
-        PyegeriaUnauthorizedException
-            the requesting user is not authorized to issue this request.
+    #     Raises
+    #     ------
+    #     PyegeriaInvalidParameterException
+    #         one of the parameters is null or invalid or
+    #     PyegeriaAPIException
+    #         There is a problem adding the element properties to the metadata repository or
+    #     PyegeriaUnauthorizedException
+    #         the requesting user is not authorized to issue this request.
 
-        Notes
-        ----
-        https://egeria-project.org/concepts/governance-definition
+    #     Notes
+    #     ----
+    #     https://egeria-project.org/concepts/governance-definition
 
-        Body structure:
-        {
-          "class": "MetadataSourceRequestBody",
-          "externalSourceGUID": "add guid here",
-          "externalSourceName": "add qualified name here",
-          "effectiveTime": "{{$isoTimestamp}}",
-          "forLineage": false,
-          "forDuplicateProcessing": false
-        }
+    #     Body structure:
+    #     {
+    #       "class": "MetadataSourceRequestBody",
+    #       "externalSourceGUID": "add guid here",
+    #       "externalSourceName": "add qualified name here",
+    #       "effectiveTime": "{{$isoTimestamp}}",
+    #       "forLineage": false,
+    #       "forDuplicateProcessing": false
+    #     }
 
-       """
-        url = (f"{self.platform_url}/servers/{self.view_server}/api/open-metadata/"
-               f"{self.url_marker}/governance-definitions/{guid}/delete")
-        await self._async_delete_element_request(url, body)
-        logger.info(f"Deleted governance definition: {guid} ")
+    #    """
+    #     url = (f"{self.platform_url}/servers/{self.view_server}/api/open-metadata/"
+    #            f"{self.url_marker}/governance-definitions/{guid}/delete")
+    #     await self._async_delete_element_request(url, body)
+    #     logger.info(f"Deleted governance definition: {guid} ")
 
 
-    @dynamic_catch
-    def delete_governance_definition(self, guid: str, body: dict | DeleteElementRequestBody = None) -> None:
-        """ Delete an information supply. Request body is optional. Async version.
+    # @dynamic_catch
+    # def delete_governance_definition(self, guid: str, body: dict | DeleteElementRequestBody = None) -> None:
+    #     """ Delete an information supply. Request body is optional. Async version.
 
-        Parameters
-        ----------
-        guid: str
-            GUID of the governance definition to delete.
+    #     Parameters
+    #     ----------
+    #     guid: str
+    #         GUID of the governance definition to delete.
  
-        body: dict, optionl
-            A dictionary containing the definition of the governance definition to create.
+    #     body: dict, optionl
+    #         A dictionary containing the definition of the governance definition to create.
 
-        Returns
-        -------
+    #     Returns
+    #     -------
 
-        str - guid of the governance definition created.
+    #     str - guid of the governance definition created.
 
-        Raises
-        ------
-        PyegeriaInvalidParameterException
-            one of the parameters is null or invalid or
-        PyegeriaAPIException
-            There is a problem adding the element properties to the metadata repository or
-        PyegeriaUnauthorizedException
-            the requesting user is not authorized to issue this request.
+    #     Raises
+    #     ------
+    #     PyegeriaInvalidParameterException
+    #         one of the parameters is null or invalid or
+    #     PyegeriaAPIException
+    #         There is a problem adding the element properties to the metadata repository or
+    #     PyegeriaUnauthorizedException
+    #         the requesting user is not authorized to issue this request.
 
-        Notes
-        ----
-        https://egeria-project.org/concepts/governance-definition
+    #     Notes
+    #     ----
+    #     https://egeria-project.org/concepts/governance-definition
 
-        Body structure:
-        {
-          "class": "MetadataSourceRequestBody",
-          "externalSourceGUID": "add guid here",
-          "externalSourceName": "add qualified name here",
-          "effectiveTime": "{{$isoTimestamp}}",
-          "forLineage": false,
-          "forDuplicateProcessing": false
-        }
+    #     Body structure:
+    #     {
+    #       "class": "MetadataSourceRequestBody",
+    #       "externalSourceGUID": "add guid here",
+    #       "externalSourceName": "add qualified name here",
+    #       "effectiveTime": "{{$isoTimestamp}}",
+    #       "forLineage": false,
+    #       "forDuplicateProcessing": false
+    #     }
 
-       """
+    #    """
 
-        loop = asyncio.get_event_loop()
-        loop.run_until_complete(self._async_delete_governance_definition(guid, body))
+    #     loop = asyncio.get_event_loop()
+    #     loop.run_until_complete(self._async_delete_governance_definition(guid, body))
 
     @dynamic_catch
     async def _async_find_governance_definitions(self, search_string: str = "*", classification_names: list[str] = None,
@@ -1949,142 +1948,140 @@ class GovernanceOfficer(ServerClient):
             self._async_get_governance_definitions_by_name(filter_string, classification_names, body,
                                                            start_from, page_size, output_format, report_spec))
         return response
-    # @dynamic_catch
-    # async def _async_get_governance_process_graph(self, filter_string: str,
-    #                                                     classification_names: list[str] = None,
-    #                                                     body: dict | FilterRequestBody = None,
-    #                                                     start_from: int = 0, page_size: int = 0,
-    #                                                     output_format: str = "JSON",
-    #                                                     report_spec: dict = None) -> list | str:
-    #     """ Retrieve the governance action process metadata element with the supplied unique identifier
-    #         along with the flow definition describing its implementation. Async Version.
-    #
-    #         Parameters
-    #         ----------
-    #         filter_string: str
-    #             name of the information governance definition to retrieve.
-    #         body: dict, optional
-    #             A dictionary containing parameters of the retrieval.
-    #         output_format: str, default = 'JSON'
-    #             Type of output to produce include:
-    #             JSON - output standard json
-    #             MD - output standard markdown with no preamble
-    #             FORM - output markdown with a preamble for a form
-    #             REPORT - output markdown with a preamble for a report
-    #             MERMAID - output mermaid markdown
-    #
-    #         Returns
-    #         -------
-    #         [dict] | str
-    #             A list of information governance definitions matching the name.
-    #
-    #         Raises
-    #         ------
-    #         PyegeriaInvalidParameterException
-    #             one of the parameters is null or invalid or
-    #         PyegeriaAPIException
-    #             There is a problem adding the element properties to the metadata repository or
-    #         PyegeriaUnauthorizedException
-    #             the requesting user is not authorized to issue this request.
-    #
-    #         Notes
-    #         -----
-    #         If a body is provided it overrides the filter_string parameter.
-    #         Body structure:
-    #         {
-    #           "class": "FilterRequestBody",
-    #           "asOfTime": {{isotime}},
-    #           "effectiveTime": {{isotime}},
-    #           "forLineage": false,
-    #           "forDuplicateProcessing": false,
-    #           "limitResultsByStatus": ["ACTIVE"],
-    #           "sequencingOrder": "PROPERTY_ASCENDING",
-    #           "sequencingProperty": "qualifiedName",
-    #           "filter": "Add name here",
-    #           "templateFilter": "NO_TEMPLATES"
-    #         }
-    #
-    #     """
-    #
-    #     url = (
-    #         f"{self.platform_url}/servers/{self.view_server}/api/open-metadata/"
-    #         f"{self.url_marker}/governance-action-processes/{guid}/graph")
-    #     response = await self._async_get_name_request(url, _type="GovernanceDefinition",
-    #                                                   _gen_output=self._generate_governance_definition_output,
-    #                                                   filter_string=filter_string,
-    #                                                   classification_names=classification_names,
-    #                                                   start_from=start_from, page_size=page_size,
-    #                                                   output_format=output_format, report_spec=report_spec,
-    #                                                   body=body)
-    #
-    #     return response
-    #
-    # @dynamic_catch
-    # def get_governance_process_graph(self, filter_string: str, classification_names: list[str] = None,
-    #                                        body: dict | FilterRequestBody = None,
-    #                                        start_from: int = 0, page_size: int = 0,
-    #                                        output_format: str = "JSON",
-    #                                        report_spec: dict = None) -> list | str:
-    #     """ Retrieve the governance action process metadata element with the supplied unique identifier
-    #         along with the flow definition describing its implementation.
-    #
-    #         Parameters
-    #         ----------
-    #         filter_string: str
-    #             name of the information governance definition to retrieve.
-    #         body: dict, optional
-    #             A dictionary containing parameters of the retrieval.
-    #         add_implementation: bool, optional
-    #             Whether to add the implementation details to the response.
-    #         start_from: int, [default=0], optional
-    #             When multiple pages of results are available, the page number to start from.
-    #         page_size: int, [default=0], optional
-    #             The number of items to return in a single page. If not specified, the default will be taken from
-    #             the class instance.
-    #         output_format: str, default = 'JSON'
-    #             Type of output to produce:
-    #             JSON - output standard json
-    #             MD - output standard markdown with no preamble
-    #             FORM - output markdown with a preamble for a form
-    #             REPORT - output markdown with a preamble for a report
-    #             MERMAID - output mermaid markdown
-    #
-    #         Returns
-    #         -------
-    #         [dict] | str
-    #             A list of information governance definitions matching the name.
-    #
-    #         Raises
-    #         ------
-    #         PyegeriaInvalidParameterException
-    #             one of the parameters is null or invalid or
-    #         PyegeriaAPIException
-    #             There is a problem adding the element properties to the metadata repository or
-    #         PyegeriaUnauthorizedException
-    #             the requesting user is not authorized to issue this request.
-    #
-    #         Notes
-    #         -----
-    #         Body structure:
-    #         {
-    #           "class": "FilterRequestBody",
-    #           "asOfTime": {{isotime}},
-    #           "effectiveTime": {{isotime}},
-    #           "forLineage": false,
-    #           "forDuplicateProcessing": false,
-    #           "limitResultsByStatus": ["ACTIVE"],
-    #           "sequencingOrder": "PROPERTY_ASCENDING",
-    #           "sequencingProperty": "qualifiedName",
-    #           "filter": "Add name here",
-    #           "templateFilter": "NO_TEMPLATES"
-    #         }
-    #
-    #     """
-    #     loop = asyncio.get_event_loop()
-    #     response = loop.run_until_complete(
-    #         self._async_get_governance_process_graph(filter_string, classification_names, body,
-    #                                                        start_from, page_size, output_format, report_spec))
-    #     return response
+ 
+
+    async def _async_get_governance_definition_by_guid(self, definition_guid: str, 
+                                                       element_type: str = None,
+                                                        body: dict | GetRequestBody = None,
+                                                        output_format: str = "JSON",
+                                                        report_spec: dict = None) -> list | str:
+        """ Returns the  governance definitions with a particular GUID. Async Version.
+
+            Parameters
+            ----------
+            definition_guid: str
+                identity of the information governance definition to retrieve.
+            body: dict, optional
+                A dictionary containing parameters of the retrieval.
+            output_format: str, default = 'JSON'
+                Type of output to produce include:
+                JSON - output standard json
+                MD - output standard markdown with no preamble
+                FORM - output markdown with a preamble for a form
+                REPORT - output markdown with a preamble for a report
+                MERMAID - output mermaid markdown
+
+            Returns
+            -------
+            [dict] | str
+                A list of information governance definitions matching the name.
+
+            Raises
+            ------
+            PyegeriaInvalidParameterException
+                one of the parameters is null or invalid or
+            PyegeriaAPIException
+                There is a problem adding the element properties to the metadata repository or
+            PyegeriaUnauthorizedException
+                the requesting user is not authorized to issue this request.
+
+            Notes
+            -----
+            If a body is provided it overrides the filter_string parameter.
+            Body structure:
+            {
+            "class" : "GetRequestBody",
+            "metadataElementTypeName": "GovernancePolicy",
+            "metadataElementSubtypeNames": [],
+            "skipRelationships": [],
+            "includeOnlyRelationships": [],
+            "relationshipsPageSize": 100,
+            "skipClassifiedElements": [],
+            "includeOnlyClassifiedElements": [],
+            "asOfTime" : "{{$isoTimestamp}}",
+            "effectiveTime" : "{{$isoTimestamp}}",
+            "forLineage" : false,
+            "forDuplicateProcessing" : false
+            }
+
+        """
+
+        url = (
+            f"{self.platform_url}/servers/{self.view_server}/api/open-metadata/"
+            f"{self.url_marker}/governance-definitions/{definition_guid}/retrieve")
+        
+        element_type = element_type if element_type else "GovernanceDefinition"
+        response = await self._async_get_guid_request(url, _type=element_type,
+                                                      _gen_output=self._generate_governance_definition_output,
+                                                      output_format=output_format, report_spec=report_spec,
+                                                      body=body)
+
+        return response
+
+    @dynamic_catch
+    def get_governance_definition_by_guid(self, definition_guid: str, 
+                                           element_type: str = None,
+                                           body: dict | GetRequestBody = None,
+                                           output_format: str = "JSON",
+                                           report_spec: dict = None) -> list | str:
+        """ Returns the a governance definitions with a particular GUID. 
+
+            Parameters
+            ----------
+            definition_guid: str
+                GUID of the information governance definition to retrieve.
+            element_type: str
+                Type of element to retrieve.
+            body: dict, optional
+                A dictionary containing parameters of the retrieval.
+            
+            output_format: str, default = 'JSON'
+                Type of output to produce:
+                JSON - output standard json
+                MD - output standard markdown with no preamble
+                FORM - output markdown with a preamble for a form
+                REPORT - output markdown with a preamble for a report
+                MERMAID - output mermaid markdown
+
+            Returns
+            -------
+            [dict] | str
+                A list of information governance definitions matching the name.
+
+            Raises
+            ------
+            PyegeriaInvalidParameterException
+                one of the parameters is null or invalid or
+            PyegeriaAPIException
+                There is a problem adding the element properties to the metadata repository or
+            PyegeriaUnauthorizedException
+                the requesting user is not authorized to issue this request.
+
+            Notes
+            -----
+            Body structure:
+           {
+            "class" : "GetRequestBody",
+            "metadataElementTypeName": "GovernancePolicy",
+            "metadataElementSubtypeNames": [],
+            "skipRelationships": [],
+            "includeOnlyRelationships": [],
+            "relationshipsPageSize": 100,
+            "skipClassifiedElements": [],
+            "includeOnlyClassifiedElements": [],
+            "asOfTime" : "{{$isoTimestamp}}",
+            "effectiveTime" : "{{$isoTimestamp}}",
+            "forLineage" : false,
+            "forDuplicateProcessing" : false
+            }
+        """
+        loop = asyncio.get_event_loop()
+        response = loop.run_until_complete(
+            self._async_get_governance_definition_by_guid(definition_guid, element_type, body,
+                                                            output_format, report_spec))
+        return response
+ 
+
 
     @dynamic_catch
     async def _async_get_governance_process_graph(self, guid: str, element_type: str = None,

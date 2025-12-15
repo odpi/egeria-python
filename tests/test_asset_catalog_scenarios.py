@@ -30,8 +30,9 @@ from rich.panel import Panel
 from rich.progress import Progress, SpinnerColumn, TextColumn
 
 from pyegeria.asset_catalog import AssetCatalog
-from pyegeria._exceptions_new import (
+from pyegeria._exceptions import (
     PyegeriaException,
+    PyegeriaAPIException,
     PyegeriaNotFoundException,
     print_exception_table,
     print_validation_error,
@@ -130,7 +131,7 @@ class AssetCatalogScenarioTester:
                         search_results[asset_type] = 0
                         console.print(f"  ℹ No assets found for '{asset_type}'")
                         
-                except PyegeriaNotFoundException:
+                except PyegeriaAPIException:
                     search_results[asset_type] = 0
                     console.print(f"  ℹ No assets found for '{asset_type}'")
             
@@ -220,7 +221,7 @@ class AssetCatalogScenarioTester:
                                 console.print(f"    Found {len(relationships)} relationships")
                         elif isinstance(graph, list):
                             console.print(f"  ✓ Retrieved asset graph with {len(graph)} elements")
-                    except PyegeriaNotFoundException:
+                    except PyegeriaAPIException:
                         console.print(f"  ℹ No graph available for this asset")
                     
                     # Try to get lineage
@@ -230,7 +231,7 @@ class AssetCatalogScenarioTester:
                             output_format="JSON"
                         )
                         console.print(f"  ✓ Retrieved asset lineage")
-                    except PyegeriaNotFoundException:
+                    except PyegeriaAPIException:
                         console.print(f"  ℹ No lineage available for this asset")
                     except Exception as e:
                         console.print(f"  [yellow]⚠[/yellow] Lineage retrieval skipped: {str(e)[:50]}")
@@ -318,7 +319,7 @@ class AssetCatalogScenarioTester:
                 else:
                     console.print(f"  ℹ No assets found in metadata collection")
                     
-            except PyegeriaNotFoundException:
+            except PyegeriaAPIException:
                 console.print(f"  ℹ Metadata collection not found or empty")
             except Exception as e:
                 console.print(f"  [yellow]⚠[/yellow] Collection query skipped: {str(e)[:50]}")
@@ -394,7 +395,7 @@ class AssetCatalogScenarioTester:
                             console.print(f"  ✓ Generated Mermaid graph ({lines} lines)")
                         elif isinstance(mermaid_graph, dict):
                             console.print(f"  ✓ Generated Mermaid graph (dict format)")
-                    except PyegeriaNotFoundException:
+                    except PyegeriaAPIException:
                         console.print(f"  ℹ No Mermaid graph available")
                     except Exception as e:
                         console.print(f"  [yellow]⚠[/yellow] Mermaid graph generation skipped: {str(e)[:50]}")
@@ -408,7 +409,7 @@ class AssetCatalogScenarioTester:
                             console.print(f"  ✓ Generated Mermaid lineage graph ({lines} lines)")
                         elif isinstance(lineage_graph, dict):
                             console.print(f"  ✓ Generated Mermaid lineage graph (dict format)")
-                    except PyegeriaNotFoundException:
+                    except PyegeriaAPIException:
                         console.print(f"  ℹ No Mermaid lineage graph available")
                     except Exception as e:
                         console.print(f"  [yellow]⚠[/yellow] Mermaid lineage generation skipped: {str(e)[:50]}")

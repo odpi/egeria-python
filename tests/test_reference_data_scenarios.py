@@ -30,7 +30,7 @@ from rich.panel import Panel
 from rich.progress import Progress, SpinnerColumn, TextColumn
 
 from pyegeria.reference_data import ReferenceDataManager
-from pyegeria._exceptions_new import (
+from pyegeria._exceptions import (
     PyegeriaException,
     PyegeriaNotFoundException,
     print_exception_table,
@@ -120,7 +120,7 @@ class ReferenceDataScenarioTester:
                 try:
                     self.client.delete_valid_value_definition(guid)
                     cleanup_results["success"] += 1
-                except PyegeriaNotFoundException:
+                except PyegeriaAPIException:
                     cleanup_results["not_found"] += 1
                 except Exception as e:
                     cleanup_results["failed"] += 1

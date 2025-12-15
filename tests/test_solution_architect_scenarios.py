@@ -30,8 +30,9 @@ from rich.panel import Panel
 from rich.progress import Progress, SpinnerColumn, TextColumn
 
 from pyegeria.solution_architect import SolutionArchitect
-from pyegeria._exceptions_new import (
+from pyegeria._exceptions import (
     PyegeriaException,
+    PyegeriaAPIException,
     PyegeriaNotFoundException,
     print_exception_table,
     print_validation_error,
@@ -144,7 +145,7 @@ class SolutionArchitectScenarioTester:
                 try:
                     self.client.delete_solution_component(guid)
                     cleanup_results["success"] += 1
-                except PyegeriaNotFoundException:
+                except PyegeriaAPIException:
                     cleanup_results["not_found"] += 1
                 except Exception as e:
                     cleanup_results["failed"] += 1
@@ -156,7 +157,7 @@ class SolutionArchitectScenarioTester:
                 try:
                     self.client.delete_solution_blueprint(guid)
                     cleanup_results["success"] += 1
-                except PyegeriaNotFoundException:
+                except PyegeriaAPIException:
                     cleanup_results["not_found"] += 1
                 except Exception as e:
                     cleanup_results["failed"] += 1
@@ -168,7 +169,7 @@ class SolutionArchitectScenarioTester:
                 try:
                     self.client.delete_info_supply_chain(guid)
                     cleanup_results["success"] += 1
-                except PyegeriaNotFoundException:
+                except PyegeriaAPIException:
                     cleanup_results["not_found"] += 1
                 except Exception as e:
                     cleanup_results["failed"] += 1

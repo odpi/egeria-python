@@ -2129,9 +2129,7 @@ class CollectionManager(ServerClient):
             A dict or NewElementRequestBody representing the details of the collection to create. If supplied, this
             information will be used to create the collection and the other attributes will be ignored. The body is
             validated before being used.
-        merge_update: bool, optional, default = True
-            If true then property changes will be overlaid on top of existing properties. If false, existing
-            properties will all be replaced by the set provided in the update request.
+  
 
         Returns
         -------
@@ -2192,9 +2190,7 @@ class CollectionManager(ServerClient):
             A dict or NewElementRequestBody representing the details of the collection to create. If supplied, this
             information will be used to create the collection and the other attributes will be ignored. The body is
             validated before being used.
-        merge_update: bool, optional, default = True
-            If true then property changes will be overlaid on top of existing properties. If false, existing
-            properties will all be replaced by the set provided in the update request.
+        
 
         Returns
         -------
@@ -2495,9 +2491,7 @@ class CollectionManager(ServerClient):
             A dict or NewElementRequestBody representing the details of the collection to create. If supplied, this
             information will be used to create the collection and the other attributes will be ignored. The body is
             validated before being used.
-        merge_update: bool, optional, default = True
-            If true then property changes will be overlaid on top of existing properties. If false, existing
-            properties will all be replaced by the set provided in the update request.
+
 
         Returns
         -------
@@ -2563,9 +2557,7 @@ class CollectionManager(ServerClient):
             A dict or NewElementRequestBody representing the details of the collection to create. If supplied, this
             information will be used to create the collection and the other attributes will be ignored. The body is
             validated before being used.
-        merge_update: bool, optional, default = True
-            If true then property changes will be overlaid on top of existing properties. If false, existing
-            properties will all be replaced by the set provided in the update request.
+
 
         Returns
         -------
@@ -3437,9 +3429,7 @@ class CollectionManager(ServerClient):
 
         body: dict | NewElementRequestBody, optional
             A dict or NewElementRequestBody representing the details of the agreement to create.
-        merge_update: bool, optional, default = True
-            If true then property changes will be overlaid on top of existing properties. If false, existing
-            properties will all be replaced by the set provided in the update request.
+
 
         Returns
         -------
@@ -3493,9 +3483,7 @@ class CollectionManager(ServerClient):
 
             body: dict | NewElementRequestBody, optional
                 A dict or NewElementRequestBody representing the details of the agreement to create.
-            merge_update: bool, optional, default = True
-                If true then property changes will be overlaid on top of existing properties. If false, existing
-                properties will all be replaced by the set provided in the update request.
+
 
             Returns
             -------
@@ -4460,8 +4448,6 @@ class CollectionManager(ServerClient):
             The guid of the digital_subscription to update.
         body: dict
             A dict representing the details of the collection to create.
-        merge_update: bool, optional, defaults to False
-            Whether to replace all properties in the collection.
 
 
         Returns
@@ -5241,10 +5227,7 @@ class CollectionManager(ServerClient):
             Effective time of the query. If not specified will default to any time.
         body: dict, optional, defaults to None
             The body of the request to add to the collection. See notes.
-        merge_update: bool, optional, defaults to False
-            Replace all properties or just update ones specified in body.
 
-            The name of the server to use.
 
 
         Returns
@@ -5307,10 +5290,7 @@ class CollectionManager(ServerClient):
             Effective time of the query. If not specified will default to any time.
         body: dict, optional, defaults to None
             The body of the request to add to the collection. See notes.
-        merge_update: bool, optional, defaults to False
-            Replace all properties or just update ones specified in body.
 
-            The name of the server to use.
 
 
         Returns

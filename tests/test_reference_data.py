@@ -461,7 +461,7 @@ class TestReferenceDataManager:
                 after = rd_client.get_valid_value_definition_by_guid(created_guid, output_format="JSON")
                 # If we get here, deletion might not have worked
                 print("Warning: Valid value definition still exists after deletion")
-            except PyegeriaNotFoundException:
+            except PyegeriaAPIException:
                 print("Confirmed: Valid value definition no longer exists")
 
             assert True

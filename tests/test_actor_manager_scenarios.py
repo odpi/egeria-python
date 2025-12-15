@@ -30,8 +30,9 @@ from rich.panel import Panel
 from rich.progress import Progress, SpinnerColumn, TextColumn
 
 from pyegeria.actor_manager import ActorManager
-from pyegeria._exceptions_new import (
+from pyegeria._exceptions import (
     PyegeriaException,
+    PyegeriaAPIException,
     PyegeriaNotFoundException,
     print_exception_table,
     print_validation_error,
@@ -142,7 +143,7 @@ class ActorManagerScenarioTester:
                 try:
                     self.client.delete_user_identity(guid)
                     cleanup_results["success"] += 1
-                except PyegeriaNotFoundException:
+                except PyegeriaAPIException:
                     cleanup_results["not_found"] += 1
                 except Exception as e:
                     cleanup_results["failed"] += 1
@@ -154,7 +155,7 @@ class ActorManagerScenarioTester:
                 try:
                     self.client.delete_actor_role(guid)
                     cleanup_results["success"] += 1
-                except PyegeriaNotFoundException:
+                except PyegeriaAPIException:
                     cleanup_results["not_found"] += 1
                 except Exception as e:
                     cleanup_results["failed"] += 1
@@ -166,7 +167,7 @@ class ActorManagerScenarioTester:
                 try:
                     self.client.delete_actor_profile(guid)
                     cleanup_results["success"] += 1
-                except PyegeriaNotFoundException:
+                except PyegeriaAPIException:
                     cleanup_results["not_found"] += 1
                 except Exception as e:
                     cleanup_results["failed"] += 1
@@ -412,7 +413,7 @@ class ActorManagerScenarioTester:
             try:
                 after_delete = self.client.get_actor_profile_by_guid(guid, output_format="JSON")
                 console.print(f"  [yellow]⚠[/yellow] Profile still exists after deletion")
-            except PyegeriaNotFoundException:
+            except PyegeriaAPIException:
                 console.print(f"  ✓ Confirmed deletion")
             
             # Remove from cleanup list since we already deleted it
