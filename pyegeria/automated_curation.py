@@ -3941,13 +3941,16 @@ class AutomatedCuration(ServerClient):
             self, start_from: int = 0, page_size: int = 0, output_format: str = "JSON", report_spec: str = "TechType"
     ) -> list | str:
         """Get all technology types - async version"""
-        return await self._async_find_technology_types("*", start_from, page_size, output_format, report_spec)
+        return await self._async_find_technology_types(search_string = "*", start_from = start_from,
+                                                       page_size = page_size, output_format = output_format,
+                                                       report_spec = report_spec)
 
     def get_all_technology_types(
             self, start_from: int = 0, page_size: int = 0, output_format: str = "JSON", report_spec: str = "TechType"
     ) -> list | str:
         """Get all technology types"""
-        return self.find_technology_types("*", start_from, page_size, output_format, report_spec)
+        return self.find_technology_types(search_string = "*", start_from = start_from, page_size = page_size,
+                                          output_format = output_format, report_spec = report_spec)
 
     def print_engine_action_summary(self, governance_action: dict):
         """print_governance_action_summary

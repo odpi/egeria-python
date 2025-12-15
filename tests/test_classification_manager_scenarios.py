@@ -282,8 +282,15 @@ class ClassificationManagerScenarioTester:
             # Query elements by origin
             console.print("  → Querying elements by origin...")
             body = {
-                "class": "FilterRequestBody",
-                "filter": "*"
+                "class": "FindDigitalResourceOriginProperties",
+                "properties": {
+                    "class" : "DigitalResourceOriginProperties",
+                  "organization": None,
+                  "organizationPropertyName": None,
+                  "businessCapability"   : None,
+                  "businessCapabilityPropertyName" : None,
+                  "otherOriginValues": {}
+                }
             }
             
             elements = self.client.get_elements_by_origin(body, output_format="JSON")

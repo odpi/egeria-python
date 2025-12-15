@@ -339,7 +339,8 @@ class GovernanceOfficerScenarioTester:
             console.print(f"[green]✓[/green] New definition exists")
 
             # Step 4: Clean up
-            for guid in [new_guid, template_guid]:
+            for guid in [template_guid, new_guid]:
+
                 console.print(f"\n[cyan]Deleting definition: {guid}[/cyan]")
                 self.client.delete_governance_definition(guid, cascade=False)
                 self.created_definitions.remove(guid)

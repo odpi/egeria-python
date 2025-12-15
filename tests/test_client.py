@@ -84,29 +84,13 @@ class TestClient:
         #     logger.error(excinfo.value)
 
 
-    def test_make_get_request(self, url, user_id, status_code, expectation):
-        server = "None"
-        user_pwd = "nonesuch"
-        response = ""
-        with expectation as excinfo:
-            t_client = ServerClient(server, url, user_id, user_pwd)
-            endpoint = (
-                    url
-                    + "/open-metadata/admin-services/users/"
-                    + user_id
-                    + "/stores/connection"
-            )
-            if t_client is not None:
-                response = t_client.make_request("GET", endpoint, None)
-                assert response is not None, "There was only an exception response"
-        if excinfo:
-            logger.error(excinfo.value)
-        else:
-            if (response is not None) & (response.status_code is None):
-                assert excinfo.value.http_error_code == str(status_code), "Invalid URL"
+    def test_get_platform_origin(self):
+        server = 'qs-view-server'
+        client = ServerClient(server, 'https://localhost:9443', 'erinoverview', 'secret')
+        response = client.get_platform_origin()
+        print(f"\n{response}")
+        assert response, "Successfully called get_platform_origin()"
 
-            else:
-                assert response.status_code == status_code, "Invalid URL"
 
     def test_refresh_egeria_bearer_token(self):
         c = ServerClient(

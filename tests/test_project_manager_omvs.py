@@ -104,7 +104,7 @@ class TestProjectManager:
     def test_get_classified_projects(self):
         try:
             p_client = ProjectManager(
-                self.good_view_server_1,
+                self.good_view_server_2,
                 self.good_platform1_url,
                 user_id=self.good_user_2,
             )
@@ -112,7 +112,7 @@ class TestProjectManager:
             start_time = time.perf_counter()
             # parent_guid = "0fa16a37-5c61-44c1-85a0-e415c3cecb82"
             # classification = "RootCollection"
-            classification = "GovernanceProject"
+            classification = "Campaign"
             response = p_client.get_classified_projects(classification)
             duration = time.perf_counter() - start_time
 
@@ -123,7 +123,7 @@ class TestProjectManager:
                 count = len(t)
                 print(f"Found {count} projects {type(t)}\n\n")
                 print(json.dumps(response, indent=4))
-            elif type(response) is list:
+            elif isinstance(response, dict | list):
                 count = len(response)
                 print(f"Found {count} projects\n\n")
                 print(json.dumps(response, indent=4))
@@ -151,10 +151,10 @@ class TestProjectManager:
             )
             token = p_client.create_egeria_bearer_token(self.good_user_2, "secret")
             start_time = time.perf_counter()
-            search_string = "*"
+            search_string = "Sustainability"
 
             response = p_client.find_projects(
-                search_string, output_format="DICT", report_spec="Project"
+                search_string, output_format="JSON", report_spec="Project"
             )
             duration = time.perf_counter() - start_time
 
@@ -211,40 +211,7 @@ class TestProjectManager:
         finally:
             p_client.close_session()
 
-    def test_get_classified_projects(self):
-        try:
-            p_client = ProjectManager(
-                self.good_view_server_2,
-                self.good_platform1_url,
-                user_id=self.good_user_2,
-            )
-            token = p_client.create_egeria_bearer_token(self.good_user_2, "secret")
-            start_time = time.perf_counter()
-            project_classification = "Campaign"
 
-            response = p_client.get_classified_projects(project_classification)
-            duration = time.perf_counter() - start_time
-
-            print(f"\n\tDuration was {duration} seconds")
-            if type(response) is list:
-                print(f"Type was list - found {len(response)} elements\n")
-                print(json.dumps(response, indent=4))
-            elif type(response) is tuple:
-                print(f"Type is {type(response)}")
-                print("\n\n" + json.dumps(response, indent=4))
-            elif type(response) is str:
-                print("\n\nGUID is: " + response)
-            assert True
-
-        except (
-            PyegeriaException
-        ) as e:
-            print_basic_exception( e)
-            assert False, "Invalid request"
-        except ValidationError as e:
-            print_validation_error(e)
-        finally:
-            p_client.close_session()
 
     def test_get_project_team(self):
         try:

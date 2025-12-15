@@ -11,39 +11,23 @@ import asyncio
 import inspect
 import json
 import os
-import re
-import sys
-from collections.abc import Callable
-from typing import Any
 
 import httpcore
 import httpx
 from httpx import AsyncClient, Response, HTTPStatusError
-# from venv import logger
 from loguru import logger
-from pydantic import TypeAdapter
 
 from pyegeria._exceptions import (
     PyegeriaAPIException, PyegeriaConnectionException, PyegeriaInvalidParameterException,
     PyegeriaUnknownException, PyegeriaClientException
 )
-from pyegeria._globals import enable_ssl_check, max_paging_size, NO_ELEMENTS_FOUND, default_time_out
+from pyegeria._globals import enable_ssl_check, max_paging_size
 from pyegeria._validators import (
     validate_name,
     validate_server_name,
     validate_url,
     validate_user_id,
 )
-from pyegeria.models import (SearchStringRequestBody, FilterRequestBody, GetRequestBody, NewElementRequestBody,
-                             TemplateRequestBody, UpdateStatusRequestBody, UpdateElementRequestBody,
-                             NewRelationshipRequestBody,
-                              UpdateRelationshipRequestBody, ResultsRequestBody,
-                             NewClassificationRequestBody,
-                             DeleteElementRequestBody, DeleteRelationshipRequestBody, DeleteClassificationRequestBody,
-                             LevelIdentifierQueryBody)
-
-from pyegeria.output_formatter import populate_common_columns, resolve_output_formats, generate_output
-from pyegeria.utils import body_slimmer, dynamic_catch
 
 ...
 
@@ -109,7 +93,6 @@ class BaseServerClient:
         self.exc_type = None
         self.exc_value = None
         self.exc_tb = None
-        # self.url_marker = "MetadataExpert"
 
         #
         #           I'm commenting this out since you should only have to use tokens if you want - just have to
@@ -323,7 +306,7 @@ class BaseServerClient:
         This method is used to refresh the bearer token used for authentication with Egeria. It checks if the token
         source is 'Egeria', and if the user ID and password are valid. If all conditions are met, it calls the
         `create_egeria_bearer_token` method to create a new bearer token. Otherwise,
-        it raises an `PyegeriaInvalidParameterException`.
+        it raises a `PyegeriaInvalidParameterException`.
 
         Parameters:
 
@@ -332,10 +315,8 @@ class BaseServerClient:
 
         Raises:
             PyegeriaInvalidParameterException: If the token source is invalid.
-            PyegeriaAPIException
-                Raised by the server when an issue arises in processing a valid request
-            NotAuthorizedException
-                The principle specified by the user_id does not have authorization for the requested action
+            PyegeriaAPIException: Raised by the server when an issue arises in processing a valid request
+            PyegeriaNotAuthorizedException: The principle specified by the user_id does not have authorization for the requested action
         """
         loop = asyncio.get_event_loop()
         token = loop.run_until_complete(self._async_refresh_egeria_bearer_token())
@@ -377,9 +358,9 @@ class BaseServerClient:
     async def async_get_platform_origin(self) -> str:
         """Return the platform origin string if reachable.
 
-        Historically this method returned a boolean; tests and helpers expect the actual origin text.
+        Historically, this method returned a boolean; tests and helpers expect the actual origin text.
         """
-        origin_url = f"{self.platform_url}/open-metadata/platform-services/server-platform/origin"
+        origin_url = f"{self.platform_url}/api/about"
         response = await self._async_make_request("GET", origin_url, is_json=False)
         if response.status_code == 200:
             text = response.text.strip()
@@ -393,7 +374,7 @@ class BaseServerClient:
     def get_platform_origin(self) -> str:
         """Return the platform origin string if reachable.
 
-        Historically this method returned a boolean; tests and helpers expect the actual origin text.
+        Historically, this method returned a boolean; tests and helpers expect the actual origin text.
         """
         loop = asyncio.get_event_loop()
         response = loop.run_until_complete(self.async_get_platform_origin())

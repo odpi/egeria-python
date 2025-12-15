@@ -20,7 +20,8 @@ from pyegeria._exceptions import (
     PyegeriaException,
     print_basic_exception,
     print_exception_table,
-    print_validation_error,
+    print_validation_error, PyegeriaInvalidParameterException, PyegeriaAPIException, PyegeriaUnauthorizedException,
+    PyegeriaNotFoundException, PyegeriaConnectionException,
 )
 from pyegeria.logging_configuration import config_logging, init_logging
 from pyegeria.models import (NewElementRequestBody, UpdateElementRequestBody, DeleteElementRequestBody)

@@ -45,7 +45,7 @@ class TestEgeriaCat:
     good_server_2 = "integration-daemon"
     good_server_3 = "active-metadata-store"
     good_engine_host_1 = "governDL01"
-    good_view_server_1 = "view-server"
+    good_view_server_1 = "qs-view-server"
 
     def test_get_my_profile(self):
         try:

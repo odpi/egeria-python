@@ -79,7 +79,7 @@ class TestRuntimeManager:
             (
                 None,
                 "Integration Daemon:qs-integration-daemon",
-                "qualifiedName",
+                "resourceName",
                 None,
                 "Integration Daemon",
                 does_not_raise(),
@@ -95,7 +95,7 @@ class TestRuntimeManager:
             (
                 "qs-metadata-store",
                 None,
-                "displayName",
+                "resourceName",
                 None,
                 "Metadata Store",
                 does_not_raise(),
@@ -103,7 +103,7 @@ class TestRuntimeManager:
             (
                 "qs-view-server",
                 None,
-                "displayName",
+                "resourceName",
                 None,
                 "View Server",
                 does_not_raise(),
@@ -125,7 +125,7 @@ class TestRuntimeManager:
             token = r_client.create_egeria_bearer_token()
             print(
                 f"\ndisplay_name: {display_name} qualified_name: {qualified_name} parameter_name: {parameter_name}"
-                f" guid: {guid} tech_type: {tech_type}\n"
+                f" incoming guid: {guid} tech_type: {tech_type}\n"
             )
             start_time = time.perf_counter()
             response = r_client.__get_guid__(
@@ -191,7 +191,7 @@ class TestRuntimeManager:
             token = r_client.create_egeria_bearer_token()
 
             start_time = time.perf_counter()
-            response = r_client.get_platforms_by_name()
+            response = r_client.get_platforms_by_name("Local OMAG Server Platform")
             duration = time.perf_counter() - start_time
             print(f"Type of response: {type(response)}")
             print(f"\n\tDuration was {duration} seconds")
@@ -286,7 +286,7 @@ class TestRuntimeManager:
                 user_pwd="secret",
             )
             token = r_client.create_egeria_bearer_token()
-            platform_guid = "44bf319f-1e41-4da1-b771-2753b92b631a"
+            platform_guid = "c757acd4-9b40-4110-8f6b-5ff8a6ba9827"
             start_time = time.perf_counter()
             response = r_client.get_platform_by_guid(platform_guid)
 
@@ -319,12 +319,12 @@ class TestRuntimeManager:
                 user_pwd="secret",
             )
             token = r_client.create_egeria_bearer_token()
-            # platform_guid = "44bf319f-1e41-4da1-b771-2753b92b631a"
-            platform_name = "Default Local OMAG Server \nPlatform"
+            platform_guid = "c757acd4-9b40-4110-8f6b-5ff8a6ba9827"
+            platform_name = "Local OMAG Server Platform"
             platform_guid = None
             start_time = time.perf_counter()
             response = r_client.get_platform_report(
-                platform_guid, "Default Local OMAG Server Platform"
+                platform_guid, platform_name
             )
 
             duration = time.perf_counter() - start_time
@@ -753,8 +753,8 @@ class TestRuntimeManager:
                 user_pwd="secret",
             )
             token = r_client.create_egeria_bearer_token()
-            # server_guid = "df7d0bf1-e763-447e-89d0-167b9f567d9e"
-            server_guid = r_client.get_guid_for_name("qs-metadata-store")
+            # server_guid = "c757acd4-9b40-4110-8f6b-5ff8a6ba9827"
+            server_guid = r_client.__get_guid__(property_name="resourceName",display_name = "qs-metadata-store")
             print("server_guid", server_guid)
             archive_file = "content-packs/CocoComboArchive.omarchive"
             server_name = "qs-metadata-store"

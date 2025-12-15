@@ -266,7 +266,7 @@ class ProjectManager(ServerClient):
 
         """Returns the list of projects with a particular classification. The name of the classification is
             supplied in the request body. Examples of these classifications include StudyProject, PersonalProject,
-            Campaign or Task. There is also GlossaryProject and GovernanceProject. Async version.
+            Campaign, or Task. There is also GlossaryProject and GovernanceProject. Async version.
 
         Parameters
         ----------
@@ -294,7 +294,6 @@ class ProjectManager(ServerClient):
           The principle specified by the user_id does not have authorization for the requested action
 
         """
-
 
         url = (
             f"{self.platform_url}/servers/{self.view_server}/api/open-metadata/project-manager/"

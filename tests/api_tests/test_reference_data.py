@@ -135,7 +135,7 @@ class TestReferenceDataManager:
             )
             token = p_client.create_egeria_bearer_token(self.good_user_2, "secret")
             start_time = time.perf_counter()
-            guid = "8fbc6e7f-ac2f-47b6-8a31-f42ea92868ae"
+            guid = "0d3e1ca0-7d00-43b4-944e-5d9e3bf8a18e"
 
             response = p_client.get_valid_value_definition_by_guid(guid, output_format="DICT", report_spec="Valid-Value-Def")
             duration = time.perf_counter() - start_time
