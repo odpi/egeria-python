@@ -34,7 +34,7 @@ from pyegeria._exceptions import (
     PyegeriaException,
     PyegeriaNotFoundException,
     print_exception_table,
-    print_validation_error,
+    print_validation_error, PyegeriaAPIException,
 )
 from pydantic import ValidationError
 

@@ -32,10 +32,8 @@ from pyegeria._exceptions import (
     PyegeriaUnauthorizedException,
 )
 from pyegeria.glossary_manager import GlossaryManager, GlossaryTermProperties
-from pyegeria.core_omag_server_config import CoreServerConfig
 from pyegeria.models import NewElementRequestBody
-from tests.test_classification_manager_omvs import relationship_type
-from tests.test_feedback_manager_omvs import password
+
 
 # from pyegeria.admin_services import FullServerConfig
 
@@ -182,8 +180,8 @@ class TestGlossaryManager:
                 self.good_user_2, self.good_user_2_pwd
             )
             start_time = time.perf_counter()
-            glossary_guid ="6222f556-9123-4bb2-ba60-d2fe2b1d7fe9"
-            qualified_name = "GlossaryTerm:test-term"
+            glossary_guid ="6fb1a752-5a41-4c91-9f9d-da4f5e2dea60"
+            qualified_name = "GlossaryTerm:test-term2"
             prop_body = GlossaryTermProperties(class_ = "GlossaryTermProperties",
                                                display_name = "test-term",
                                                 description = "A test term",

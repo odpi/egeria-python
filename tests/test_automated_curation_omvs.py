@@ -705,7 +705,7 @@ class TestAutomatedCuration:
             token = a_client.create_egeria_bearer_token()
 
             start_time = time.perf_counter()
-            response = a_client.get_all_technology_types(output_format = "DICT", report_spec = "Referenceable")
+            response = a_client.get_all_technology_types(output_format = "JSON", report_spec = "Referenceable")
             duration = time.perf_counter() - start_time
             print(f"\n\tDuration was {duration} seconds")
             if type(response) is list:

@@ -35,12 +35,12 @@ from pyegeria._exceptions import (
     PyegeriaAPIException,
     PyegeriaNotFoundException,
     print_exception_table,
-    print_validation_error,
+    print_validation_error, print_basic_exception,
 )
 from pydantic import ValidationError
 
 # Configuration
-VIEW_SERVER = "view-server"
+VIEW_SERVER = "qs-view-server"
 PLATFORM_URL = "https://localhost:9443"
 USER_ID = "erinoverview"
 USER_PWD = "secret"
@@ -73,6 +73,7 @@ class AutomatedCurationScenarioTester:
             self.client = AutomatedCuration(VIEW_SERVER, PLATFORM_URL, user_id=USER_ID, user_pwd=USER_PWD)
             token = self.client.create_egeria_bearer_token(USER_ID, USER_PWD)
             console.print(f"✓ Connected to {PLATFORM_URL}")
+            console.print(f"✓ View Server {VIEW_SERVER}")
             console.print(f"✓ Authenticated as {USER_ID}")
             console.print(f"✓ Test Run ID: {self.test_run_id}\n")
             return True
@@ -159,7 +160,7 @@ class AutomatedCurationScenarioTester:
                 # Get detailed info for a specific type
                 if type_count > 0:
                     console.print("\n  → Getting detailed information for first type...")
-                    detail = self.client.get_tech_type_detail(output_format="JSON")
+                    detail = self.client.get_tech_type_detail(filter = all_types[0]['displayName'],output_format="JSON")
                     if detail:
                         console.print("  ✓ Retrieved technology type details")
                 
@@ -181,6 +182,7 @@ class AutomatedCurationScenarioTester:
                 
         except PyegeriaAPIException as e:
             duration = time.perf_counter() - start_time
+            print_basic_exception(e)
             console.print(f"  [yellow]⚠ API Exception: {str(e)}[/yellow]")
             return TestResult(
                 scenario_name=scenario_name,
@@ -254,6 +256,7 @@ class AutomatedCurationScenarioTester:
         except PyegeriaAPIException as e:
             duration = time.perf_counter() - start_time
             console.print(f"  [yellow]⚠ API Exception: {str(e)}[/yellow]")
+            print_basic_exception(e) if isinstance(e, PyegeriaException) else console.print_exception()
             return TestResult(
                 scenario_name=scenario_name,
                 status="WARNING",
@@ -295,8 +298,8 @@ class AutomatedCurationScenarioTester:
                     console.print("\n  Matching Technology Types:")
                     for tech_type in found_types[:5]:  # Show first 5
                         if isinstance(tech_type, dict):
-                            props = tech_type.get('properties', {})
-                            name = props.get('displayName', props.get('qualifiedName', 'Unknown'))
+
+                            name = tech_type.get('displayName', tech_type.get('qualifiedName', 'Unknown'))
                             console.print(f"    • {name}")
                 
                 duration = time.perf_counter() - start_time
@@ -347,8 +350,9 @@ class AutomatedCurationScenarioTester:
             
             # Get technology type hierarchy
             console.print("  → Retrieving technology type hierarchy...")
-            hierarchy = self.client.get_tech_type_hierarchy(output_format="JSON")
-            
+            root = self.client.get_tech_type_hierarchy(filter = '*',
+                                                            output_format="JSON")
+            hierarchy = root['subTypes']
             if isinstance(hierarchy, list):
                 hierarchy_count = len(hierarchy)
                 console.print(f"  ✓ Found {hierarchy_count} items in hierarchy")
@@ -380,6 +384,7 @@ class AutomatedCurationScenarioTester:
         except PyegeriaAPIException as e:
             duration = time.perf_counter() - start_time
             console.print(f"  [yellow]⚠ API Exception: {str(e)}[/yellow]")
+            print_basic_exception(e)
             return TestResult(
                 scenario_name=scenario_name,
                 status="WARNING",

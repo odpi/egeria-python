@@ -329,7 +329,7 @@ class RuntimeManager(ServerClient):
 
         """
         server_guid = self.__get_guid__(
-            server_guid, display_name, "displayName", qualified_name, tech_type="Engine Host"
+            server_guid, display_name, "resourceName", qualified_name, tech_type="Engine Host"
         )
         if gov_engine_name is None:
             url = (
@@ -435,11 +435,11 @@ class RuntimeManager(ServerClient):
             "Integration Daemon",
         )
         url = (
-            f"{self.runtime_command_root}/integration-daemons/"
+            f"{self.runtime_command_root}/integration-daemon/"
             f"{server_guid}/integration-connectors/{connector_name}/configuration-properties"
         )
         response = await self._async_make_request("GET", url)
-        return response.json().get("properties", "No pproperties found")
+        return response.json().get("properties", "No properties found")
 
     def get_integ_connector_config_properties(
         self,
@@ -533,7 +533,7 @@ class RuntimeManager(ServerClient):
             "Integration Daemon",
         )
         url = (
-            f"{self.runtime_command_root}/integration-daemons/"
+            f"{self.runtime_command_root}/integration-daemon/"
             f"{server_guid}/integration-connectors/configuration-properties"
         )
 
@@ -642,7 +642,7 @@ class RuntimeManager(ServerClient):
             server_guid, display_name, "qualifiedName", qualified_name, "Connection"
         )
         url = (
-            f"{self.runtime_command_root}/integration-daemons/"
+            f"{self.runtime_command_root}/integration-daemon/"
             f"{server_guid}/integration-connectors/{connector_name}/endpoint-network-address"
         )
 
@@ -745,7 +745,7 @@ class RuntimeManager(ServerClient):
             "Integration Daemon",
         )
         url = (
-            f"{self.runtime_command_root}/integration-daemons/"
+            f"{self.runtime_command_root}/integration-daemon/"
             f"{server_guid}/integration-connectors/refresh"
         )
 
@@ -840,7 +840,7 @@ class RuntimeManager(ServerClient):
             "Integration Daemon",
         )
         url = (
-            f"{self.runtime_command_root}/integration-daemons/"
+            f"{self.runtime_command_root}/integration-daemon/"
             f"{server_guid}/integration-connectors/restart"
         )
 
@@ -937,7 +937,7 @@ class RuntimeManager(ServerClient):
             "Integration Daemon",
         )
         url = (
-            f"{self.runtime_command_root}/integration-daemons/"
+            f"{self.runtime_command_root}/integration-daemon/"
             f"{server_guid}/integration-groups/{integ_group_name}/refresh-config"
         )
 
@@ -1028,16 +1028,14 @@ class RuntimeManager(ServerClient):
         server_guid = self.__get_guid__(
             server_guid,
             display_name,
-            "displayName",
+            "resourceName",
             qualified_name,
         )
         url = (
-            f"{self.runtime_command_root}/integration-daemons/"
-            f"{server_guid}/integration-daemons/{server_guid}/open-lineage-events/publish"
+            f"{self.runtime_command_root}/integration-daemons/{server_guid}/open-lineage-events/publish-event-string"
         )
 
         await self._async_make_request("POST", url, ol_event)
-        return
 
     def publish_open_lineage_event(
         self,
@@ -1077,7 +1075,7 @@ class RuntimeManager(ServerClient):
         loop.run_until_complete(
             self._async_publish_open_lineage_event(ol_event, server_guid, display_name)
         )
-        return
+
 
     async def _async_add_archive_content(
         self,
@@ -1221,7 +1219,7 @@ class RuntimeManager(ServerClient):
         server_guid = self.__get_guid__(
             server_guid,
             display_name,
-            "displayName",
+            "resourceName",
             qualified_name,
             "Metadata Access Server",
         )
@@ -1382,7 +1380,7 @@ class RuntimeManager(ServerClient):
 
         """
         server_guid = self.__get_guid__(
-            server_guid, display_name, "displayName", qualified_name
+            server_guid, display_name, "resourceName", qualified_name
         )
 
         url = f"{self.runtime_command_root}/omag-servers/{server_guid}/instance"
@@ -1571,8 +1569,7 @@ class RuntimeManager(ServerClient):
             filter = self.default_platform_name
 
         url = (
-            f"{self.runtime_command_root}/platforms/by-name?"
-            f"startFrom={start_from}&pageSize={page_size}"
+            f"{self.runtime_command_root}/platforms/by-name"
         )
         if effective_time is not None:
             body = {"filter": filter, "effectiveTime": effective_time}
@@ -2242,7 +2239,7 @@ class RuntimeManager(ServerClient):
 
         """
         server_guid = self.__get_guid__(
-            server_guid, server_name, "displayName", tech_type="Integration Daemon"
+            server_guid, server_name, "resourceName", tech_type="Integration Daemon"
         )
         url = f"{self.runtime_command_root}/omag-servers/{server_guid}/instance/report"
 

@@ -86,7 +86,8 @@ class Platform(BasePlatformClient):
         caller_method = inspect.getframeinfo(calling_frame).function
         class_name = __class__.__name__
 
-        url = self.admin_command_root + "/origin"
+        # url = f"{self.platform_url}/open-metadata/platform-services/server-platform/origin"
+        url = f"{self.platform_url}/api/about"
 
         local_session = httpx.Client(verify=enable_ssl_check)
         response = " "

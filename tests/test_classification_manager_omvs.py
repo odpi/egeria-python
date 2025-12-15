@@ -107,16 +107,16 @@ def test_get_security_tagged_elements():
         body = {
             "class": "SecurityTagQueryProperties",
 
-            "metadataElementTypeName": "GlossaryTerm",
-            "limitResultsByStatus": ["ACTIVE", "DRAFT"],
+            "metadataElementTypeName": None,
+            "limitResultsByStatus": [],
             "sequencingProperty": "displayName",
             "sequencingOrder": "LAST_UPDATE_RECENT",
-            "securityLabels": ["???"],
+            "securityLabels": [],
             "securityProperties": {
                 "propertyName": "propertyValue"
             },
             "accessGroups": {
-                "groupName": ["???"]
+                "groupName": []
             }
         }
         response = c_client.get_security_tagged_elements(body, output_format="DICT", report_spec="Referenceable")
