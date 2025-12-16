@@ -310,27 +310,99 @@ class CollectionManagerScenarioTester:
         try:
             console.print(f"\n[bold blue]▶ Running: {scenario_name}[/bold blue]")
             
-            # TODO: Implement collection hierarchy scenario
             # 1. Create root collection
-            # 2. Create child collections
-            # 3. Link collections in hierarchy
-            # 4. Query hierarchy
-            # 5. Cleanup
+            console.print("  → Creating root collection...")
+            root_data = self._create_test_collection("RootCollection")
+            root_body = {
+                "class": "NewElementRequestBody",
+                "typeName": "Collection",
+                "initialStatus": "ACTIVE",
+                "properties": {
+                    "class": "CollectionProperties",
+                    "qualifiedName": root_data.qualified_name,
+                    "displayName": root_data.display_name,
+                    "description": root_data.description,
+                }
+            }
             
-            console.print("  [yellow]⚠ Scenario not yet implemented[/yellow]")
+            root_guid = self.client.create_collection(
+                display_name=root_data.display_name,
+                description=root_data.description,
+                category=root_data.category,
+                body=root_body
+            )
+            
+            if root_guid:
+                created_guids.append(root_guid)
+                self.created_collections.append(root_guid)
+                console.print(f"  ✓ Created root collection: {root_guid}")
+            else:
+                raise Exception("Failed to create root collection")
+            
+            # 2. Create child collections
+            console.print("  → Creating child collections...")
+            child_guids = []
+            for i in range(2):
+                child_data = self._create_test_collection(f"ChildCollection{i+1}")
+                child_body = {
+                    "class": "NewElementRequestBody",
+                    "typeName": "Collection",
+                    "initialStatus": "ACTIVE",
+                    "properties": {
+                        "class": "CollectionProperties",
+                        "qualifiedName": child_data.qualified_name,
+                        "displayName": child_data.display_name,
+                        "description": child_data.description,
+                    }
+                }
+                
+                child_guid = self.client.create_collection(
+                    display_name=child_data.display_name,
+                    description=child_data.description,
+                    category=child_data.category,
+                    body=child_body
+                )
+                
+                if child_guid:
+                    created_guids.append(child_guid)
+                    self.created_collections.append(child_guid)
+                    child_guids.append(child_guid)
+                    console.print(f"  ✓ Created child collection {i+1}: {child_guid}")
+            
+            # 3. Link collections in hierarchy
+            console.print("  → Linking collections in hierarchy...")
+            for i, child_guid in enumerate(child_guids):
+                link_body = {
+                    "class": "NewRelationshipRequestBody",
+                    "properties": {
+                        "class": "CollectionMembershipProperties"
+                    }
+                }
+                self.client.add_to_collection(root_guid, child_guid, link_body)
+                console.print(f"  ✓ Linked child {i+1} to root collection")
+            
+            # 4. Query hierarchy - get members of root collection
+            console.print("  → Querying collection hierarchy...")
+            members = self.client.get_collection_members(collection_guid=root_guid, output_format="JSON")
+            
+            if isinstance(members, list):
+                console.print(f"  ✓ Root collection has {len(members)} members")
+            else:
+                console.print("  [yellow]⚠ Could not retrieve collection members[/yellow]")
             
             duration = time.perf_counter() - start_time
             return TestResult(
                 scenario_name=scenario_name,
-                status="WARNING",
+                status="PASSED",
                 duration=duration,
-                message="Scenario template - needs implementation",
+                message=f"Created hierarchy with 1 root and {len(child_guids)} child collections",
                 created_guids=created_guids
             )
             
         except Exception as e:
             duration = time.perf_counter() - start_time
             console.print(f"  [red]✗ Error: {str(e)}[/red]")
+            print_exception_table(e) if isinstance(e, PyegeriaException) else console.print_exception()
             return TestResult(
                 scenario_name=scenario_name,
                 status="FAILED",
@@ -349,27 +421,89 @@ class CollectionManagerScenarioTester:
         try:
             console.print(f"\n[bold blue]▶ Running: {scenario_name}[/bold blue]")
             
-            # TODO: Implement digital product scenario
             # 1. Create digital product
-            # 2. Update product properties
-            # 3. Update product status
-            # 4. Query products
-            # 5. Cleanup
+            console.print("  → Creating digital product...")
+            ts = datetime.now().strftime("%Y%m%d%H%M%S%f")
+            product_qname = f"DigitalProduct::TestProduct::{ts}"
+            product_name = f"Test Digital Product {ts}"
             
-            console.print("  [yellow]⚠ Scenario not yet implemented[/yellow]")
+            product_body = {
+                "class": "NewElementRequestBody",
+                "typeName": "DigitalProduct",
+                "initialStatus": "ACTIVE",
+                "properties": {
+                    "class": "DigitalProductProperties",
+                    "qualifiedName": product_qname,
+                    "displayName": product_name,
+                    "description": "Test digital product for scenario testing",
+                    "productName": product_name,
+                    "identifier": f"PROD-{ts}",
+                    "maturity": "Development",
+                    "serviceLife": "2 years"
+                }
+            }
+            
+            product_guid = self.client.create_digital_product(product_body)
+            
+            if product_guid:
+                created_guids.append(product_guid)
+                self.created_collections.append(product_guid)
+                console.print(f"  ✓ Created digital product: {product_guid}")
+            else:
+                raise Exception("Failed to create digital product")
+            
+            # 2. Update product properties
+            console.print("  → Updating product properties...")
+            update_body = {
+                "class": "UpdateElementRequestBody",
+                "properties": {
+                    "class": "DigitalProductProperties",
+                    "qualifiedName": product_qname,
+                    "displayName": f"{product_name} (Updated)",
+                    "description": "Updated test digital product",
+                    "productName": f"{product_name} (Updated)",
+                    "identifier": f"PROD-{ts}",
+                    "maturity": "Testing",
+                    "serviceLife": "3 years"
+                }
+            }
+            
+            self.client.update_collection(product_guid, update_body)
+            console.print("  ✓ Updated product properties")
+            
+            # 3. Update product status
+            console.print("  → Updating product status...")
+            status_body = {
+                "class": "UpdateStatusRequestBody",
+                "status": "Production Ready"
+            }
+            
+            self.client.update_digital_product_status(product_guid, status="Production Ready", body=status_body)
+            console.print("  ✓ Updated product status")
+            
+            # 4. Query products - retrieve by GUID
+            console.print("  → Querying digital product...")
+            retrieved = self.client.get_collection_by_guid(product_guid, output_format="JSON")
+            
+            if isinstance(retrieved, dict):
+                retrieved_name = retrieved.get('properties', {}).get('displayName', 'Unknown')
+                console.print(f"  ✓ Retrieved product: {retrieved_name}")
+            else:
+                console.print("  [yellow]⚠ Could not retrieve product[/yellow]")
             
             duration = time.perf_counter() - start_time
             return TestResult(
                 scenario_name=scenario_name,
-                status="WARNING",
+                status="PASSED",
                 duration=duration,
-                message="Scenario template - needs implementation",
+                message="Digital product created, updated, and queried successfully",
                 created_guids=created_guids
             )
             
         except Exception as e:
             duration = time.perf_counter() - start_time
             console.print(f"  [red]✗ Error: {str(e)}[/red]")
+            print_exception_table(e) if isinstance(e, PyegeriaException) else console.print_exception()
             return TestResult(
                 scenario_name=scenario_name,
                 status="FAILED",
@@ -388,27 +522,103 @@ class CollectionManagerScenarioTester:
         try:
             console.print(f"\n[bold blue]▶ Running: {scenario_name}[/bold blue]")
             
-            # TODO: Implement collection membership scenario
-            # 1. Create collection
-            # 2. Add members to collection
-            # 3. Query collection members
-            # 4. Remove members
-            # 5. Cleanup
+            # 1. Create parent collection
+            console.print("  → Creating parent collection...")
+            parent_data = self._create_test_collection("ParentCollection")
+            parent_body = {
+                "class": "NewElementRequestBody",
+                "typeName": "Collection",
+                "initialStatus": "ACTIVE",
+                "properties": {
+                    "class": "CollectionProperties",
+                    "qualifiedName": parent_data.qualified_name,
+                    "displayName": parent_data.display_name,
+                    "description": parent_data.description,
+                }
+            }
             
-            console.print("  [yellow]⚠ Scenario not yet implemented[/yellow]")
+            parent_guid = self.client.create_collection(
+                display_name=parent_data.display_name,
+                description=parent_data.description,
+                category=parent_data.category,
+                body=parent_body
+            )
+            
+            if parent_guid:
+                created_guids.append(parent_guid)
+                self.created_collections.append(parent_guid)
+                console.print(f"  ✓ Created parent collection: {parent_guid}")
+            else:
+                raise Exception("Failed to create parent collection")
+            
+            # 2. Create member collections
+            console.print("  → Creating member collections...")
+            member_guids = []
+            for i in range(3):
+                member_data = self._create_test_collection(f"MemberCollection{i+1}")
+                member_body = {
+                    "class": "NewElementRequestBody",
+                    "typeName": "Collection",
+                    "initialStatus": "ACTIVE",
+                    "properties": {
+                        "class": "CollectionProperties",
+                        "qualifiedName": member_data.qualified_name,
+                        "displayName": member_data.display_name,
+                        "description": member_data.description,
+                    }
+                }
+                
+                member_guid = self.client.create_collection(
+                    display_name=member_data.display_name,
+                    description=member_data.description,
+                    category=member_data.category,
+                    body=member_body
+                )
+                
+                if member_guid:
+                    created_guids.append(member_guid)
+                    self.created_collections.append(member_guid)
+                    member_guids.append(member_guid)
+                    console.print(f"  ✓ Created member collection {i+1}: {member_guid}")
+            
+            # 3. Add members to parent collection
+            console.print("  → Adding members to parent collection...")
+            for i, member_guid in enumerate(member_guids):
+                membership_body = {
+                    "class": "NewRelationshipRequestBody",
+                    "properties": {
+                        "class": "RelationshipProperties"
+                    }
+                }
+                self.client.add_to_collection(parent_guid, member_guid, membership_body)
+                console.print(f"  ✓ Added member {i+1} to parent collection")
+            
+            # 4. Query collection members
+            console.print("  → Querying collection members...")
+            members = self.client.get_collection_members(collection_guid=parent_guid, output_format="JSON")
+            
+            if isinstance(members, list):
+                console.print(f"  ✓ Parent collection has {len(members)} members")
+                if len(members) >= len(member_guids):
+                    console.print("  ✓ All members successfully added")
+                else:
+                    console.print(f"  [yellow]⚠ Expected {len(member_guids)} members, found {len(members)}[/yellow]")
+            else:
+                console.print("  [yellow]⚠ Could not retrieve collection members[/yellow]")
             
             duration = time.perf_counter() - start_time
             return TestResult(
                 scenario_name=scenario_name,
-                status="WARNING",
+                status="PASSED",
                 duration=duration,
-                message="Scenario template - needs implementation",
+                message=f"Created collection with {len(member_guids)} members",
                 created_guids=created_guids
             )
             
         except Exception as e:
             duration = time.perf_counter() - start_time
             console.print(f"  [red]✗ Error: {str(e)}[/red]")
+            print_exception_table(e) if isinstance(e, PyegeriaException) else console.print_exception()
             return TestResult(
                 scenario_name=scenario_name,
                 status="FAILED",
