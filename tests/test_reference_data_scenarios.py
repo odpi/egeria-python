@@ -299,9 +299,13 @@ class ReferenceDataScenarioTester:
             created_guids.append(guid)
             console.print(f"  ✓ Created valid value definition: {guid}")
             
-            # Note: get_valid_value_definition_by_guid has a known server-side issue
-            # Skipping retrieval step for now
-            console.print(f"  [yellow]⚠[/yellow] Skipping retrieval (known server issue)")
+            # Retrieve by GUID
+            retrieved = self.client.get_valid_value_definition_by_guid(guid, output_format="JSON")
+            if isinstance(retrieved, dict):
+                retrieved_name = retrieved.get('properties', {}).get('displayName', '')
+                console.print(f"  ✓ Retrieved valid value definition: {retrieved_name}")
+            else:
+                console.print(f"  [yellow]⚠[/yellow] Retrieved data is not a dict: {type(retrieved)}")
             
             # Update
             update_body = {
@@ -317,8 +321,17 @@ class ReferenceDataScenarioTester:
             self.client.update_valid_value_definition(guid, update_body)
             console.print(f"  ✓ Updated valid value definition properties")
             
-            # Note: Skipping verification due to known server issue with get_by_guid
-            console.print(f"  [yellow]⚠[/yellow] Skipping verification (known server issue)")
+            # Verify update
+            updated = self.client.get_valid_value_definition_by_guid(guid, output_format="JSON")
+            if isinstance(updated, dict):
+                updated_name = updated.get('properties', {}).get('displayName', '')
+                updated_desc = updated.get('properties', {}).get('description', '')
+                if updated_name == "Updated Lifecycle Valid Value":
+                    console.print(f"  ✓ Verified update: {updated_name}")
+                else:
+                    console.print(f"  [yellow]⚠[/yellow] Update verification mismatch: {updated_name}")
+            else:
+                console.print(f"  [yellow]⚠[/yellow] Updated data is not a dict: {type(updated)}")
             
             # Search
             search_results = self.client.find_valid_value_definitions(
@@ -334,8 +347,16 @@ class ReferenceDataScenarioTester:
             self.client.delete_valid_value_definition(guid)
             console.print(f"  ✓ Deleted valid value definition")
             
-            # Note: Skipping deletion verification due to known server issue
-            console.print(f"  [yellow]⚠[/yellow] Skipping deletion verification (known server issue)")
+            # Verify deletion - should return string or raise exception
+            try:
+                deleted_check = self.client.get_valid_value_definition_by_guid(guid, output_format="JSON")
+                if isinstance(deleted_check, str):
+                    console.print(f"  ✓ Verified deletion: element not found")
+                else:
+                    console.print(f"  [yellow]⚠[/yellow] Element still exists after deletion")
+            except PyegeriaAPIException:
+                console.print(f"  ✓ Verified deletion: element not found (exception)")
+            
             # Remove from cleanup list since we already deleted it
             if guid in self.created_valid_values:
                 self.created_valid_values.remove(guid)
@@ -429,8 +450,15 @@ class ReferenceDataScenarioTester:
             )
             console.print(f"  ✓ Filter by name pattern found results")
             
-            # Note: Skipping retrieval by GUID due to known server issue
-            console.print(f"  [yellow]⚠[/yellow] Skipping GUID retrieval (known server issue)")
+            # Test retrieval by GUID for one of the created valid values
+            if created_guids:
+                test_guid = created_guids[0]
+                guid_result = self.client.get_valid_value_definition_by_guid(test_guid, output_format="JSON")
+                if isinstance(guid_result, dict):
+                    guid_name = guid_result.get('properties', {}).get('displayName', '')
+                    console.print(f"  ✓ Retrieved by GUID: {guid_name}")
+                else:
+                    console.print(f"  [yellow]⚠[/yellow] GUID retrieval returned: {type(guid_result)}")
             
             duration = time.perf_counter() - start_time
             console.print(f"  [green]✓ Scenario completed in {duration:.2f}s[/green]")
