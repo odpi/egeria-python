@@ -45,7 +45,7 @@ class GlossaryScenarioTester:
 
     def __init__(self):
         self.view_server = "qs-view-server"
-        self.platform_url = "https://127.0.0.1:9443"
+        self.platform_url = "https://laz.local:9443"
         self.user = "erinoverview"
         self.password = "secret"
         self.client = None
