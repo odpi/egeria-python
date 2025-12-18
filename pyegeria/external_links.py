@@ -756,34 +756,16 @@ class ExternalReferences(ServerClient):
           "forLineage" : false,
           "forDuplicateProcessing" : false,
           "properties": {
-                    "class": "CitedDocumentProperties",
-                    "qualifiedName": "Must provide a unique name here",
-                    "name": "Add display name here",
-                    "description": "Add description of the external_reference here",
-                    "category": "Add appropriate valid value for type",
-                    "numberOfPates": int,
-                    "pageRange": "Add page range here",
-                    "publicationSeries": "Add publication series here",
-                    "publicationSeriesVolume": "Add publication series volume here",
-                    "publisher": "Add publisher here",
-                    "edition": "Add edition here",
-                    "firstPublicationDate": "2023-01-01",
-                    "publicationDate": "2023-01-01",
-                    "publicationCity": "Add publication city here",
-                    "publicationYear": "publication year",
-                    "publicationNumbers": ["string"],
-                    "defaultMediaUsage": "Add default media usage here",
-                    "defaultMediaUsageOtherId": "Add default media usage other id here",
-                    "referenceTitle": "Add reference title here",
-                    "referenceAbstract": "Add reference abstract here",
-                    "authors": ["Add author names here"],
-                    "url": "Add url here",
-                    "sources": "Add sources here",
-                     "license": "Add license here",
-                     "copyright": "Add copyright here",
-                     "attribution": "Add attribution here"
-                  }
+            "class": "MediaReferenceProperties",
+            "mediaId": "",
+            "description": "",
+            "mediaUsage": "ICON",
+            "mediaUsageOtherId": "",
+            "effectiveFrom": "{{$isoTimestamp}}",
+            "effectiveTo": "{{$isoTimestamp}}"
+          }
         }
+
         """
         url = f"{self.command_root}/elements/{element_guid}/media-references/{media_ref_guid}/attach"
         await self._async_new_relationship_request(url, "MediaReferenceProperties", body)
@@ -827,34 +809,15 @@ class ExternalReferences(ServerClient):
               "forLineage" : false,
               "forDuplicateProcessing" : false,
               "properties": {
-                    "class": "CitedDocumentProperties",
-                    "qualifiedName": "Must provide a unique name here",
-                    "name": "Add display name here",
-                    "description": "Add description of the external_reference here",
-                    "category": "Add appropriate valid value for type",
-                    "numberOfPates": int,
-                    "pageRange": "Add page range here",
-                    "publicationSeries": "Add publication series here",
-                    "publicationSeriesVolume": "Add publication series volume here",
-                    "publisher": "Add publisher here",
-                    "edition": "Add edition here",
-                    "firstPublicationDate": "2023-01-01",
-                    "publicationDate": "2023-01-01",
-                    "publicationCity": "Add publication city here",
-                    "publicationYear": "publication year",
-                    "publicationNumbers": ["string"],
-                    "defaultMediaUsage": "Add default media usage here",
-                    "defaultMediaUsageOtherId": "Add default media usage other id here",
-                    "referenceTitle": "Add reference title here",
-                    "referenceAbstract": "Add reference abstract here",
-                    "authors": ["Add author names here"],
-                    "url": "Add url here",
-                    "sources": "Add sources here",
-                     "license": "Add license here",
-                     "copyright": "Add copyright here",
-                     "attribution": "Add attribution here"
-                  }
-             }
+                "class": "MediaReferenceProperties",
+                "mediaId": "",
+                "description": "",
+                "mediaUsage": "ICON",
+                "mediaUsageOtherId": "",
+                "effectiveFrom": "{{$isoTimestamp}}",
+                "effectiveTo": "{{$isoTimestamp}}"
+              }
+            }
             """
         loop = asyncio.get_event_loop()
         loop.run_until_complete(self._async_link_media_reference(element_guid, media_ref_guid, body))

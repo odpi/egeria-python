@@ -796,36 +796,21 @@ class GlossaryManager(CollectionManager):
             body = {
                 "class" : "TemplateRequestBody",
                 "templateGUID": glossary_term_guid,
+                "parentGuid": glossary_guid,
+                "parentAtEnd1": True,
+
                 "replacementProperties": {
-                    "class": "ElementProperties",
-                    "propertyValueMap": {
-                        "qualifiedName": {
-                            "class": "PrimitiveTypePropertyValue",
-                            "typeName": "string",
-                            "primitiveValue": qualified_name,
-                            },
-
-                        "displayName": {
-                            "class": "PrimitiveTypePropertyValue",
-                            "typeName": "string",
-                            "primitiveValue": new_display_name,
-                            },
-
-                        # "publishVersionIdentifier": {
-                        #     "class": "PrimitiveTypePropertyValue",
-                        #     "typeName": "string",
-                        #     "primitiveValue": version_id,
-                        #     },
-
-                        }
+                    "class": "GlossaryTermProperties",
+                        "qualifiedName": qualified_name,
+                        "displayName":  new_display_name,
+                        "status": term_status,
+                        "versionIdentifier": version_id
                     },
-                "initialStatus": term_status,
                 }
             validated_body = self._template_request_adapter.validate_python(body)
-
+            validated_body._templateGUID = glossary_term_guid
         v_body = body_slimmer(validated_body.model_dump(exclude_none=True))
         logger.info(v_body)
-
 
         url = (
             f"{self.platform_url}/servers/{self.view_server}/api/open-metadata/glossary-manager/glossaries/"
