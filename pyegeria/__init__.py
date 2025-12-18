@@ -74,6 +74,7 @@ from .mcp_adapter import list_reports, describe_report, run_report, _async_run_r
 from .base_report_formats import report_spec_list, select_report_spec, get_report_format_description
 from .actor_manager import ActorManager
 from .community_matters_omvs import CommunityMatters
+from .asset_maker import AssetMaker
 #
 # 2/12/25
 
