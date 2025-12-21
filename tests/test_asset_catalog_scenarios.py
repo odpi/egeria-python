@@ -543,8 +543,15 @@ class AssetCatalogScenarioTester:
             self.teardown()
 
 
+def test_asset_catalog_scenarios():
+    """Pytest entry point for asset catalog scenario tests"""
+    tester = AssetCatalogScenarioTester()
+    exit_code = tester.run_all_scenarios()
+    assert exit_code == 0, "One or more scenarios failed"
+
+
 def main():
-    """Main entry point"""
+    """Main entry point for direct execution"""
     console.print(Panel.fit(
         "[bold cyan]Asset Catalog Scenario Testing[/bold cyan]\n"
         "Comprehensive testing of asset search, exploration, and visualization",

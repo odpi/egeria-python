@@ -316,6 +316,12 @@ class DigitalBusinessScenarioTester:
             time.sleep(0.5)  # Brief pause between scenarios
 
 
+def test_digital_business_scenarios():
+    """Pytest entry point for digital business scenario tests"""
+    exit_code = main()
+    assert exit_code == 0, "One or more scenarios failed"
+
+
 def main():
     """Main test execution"""
     tester = DigitalBusinessScenarioTester()

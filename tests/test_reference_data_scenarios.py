@@ -589,8 +589,15 @@ class ReferenceDataScenarioTester:
             self.teardown()
 
 
+def test_reference_data_scenarios():
+    """Pytest entry point for reference data scenario tests"""
+    tester = ReferenceDataScenarioTester()
+    exit_code = tester.run_all_scenarios()
+    assert exit_code == 0, "One or more scenarios failed"
+
+
 def main():
-    """Main entry point"""
+    """Main entry point for direct execution"""
     console.print(Panel.fit(
         "[bold cyan]Reference Data Manager Scenario Testing[/bold cyan]\n"
         "Comprehensive testing with synthetic data and automatic cleanup",

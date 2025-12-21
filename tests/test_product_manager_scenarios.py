@@ -388,6 +388,12 @@ class ProductManagerScenarioTester:
             time.sleep(0.5)  # Brief pause between scenarios
 
 
+def test_product_manager_scenarios():
+    """Pytest entry point for product manager scenario tests"""
+    exit_code = main()
+    assert exit_code == 0, "One or more scenarios failed"
+
+
 def main():
     """Main test execution"""
     tester = ProductManagerScenarioTester()
