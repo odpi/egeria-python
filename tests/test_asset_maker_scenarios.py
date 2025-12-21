@@ -16,6 +16,7 @@ Usage:
     pytest tests/test_asset_maker_scenarios.py -v -s
 """
 
+import json
 import sys
 import time
 import traceback
@@ -382,11 +383,11 @@ class AssetMakerScenarioTester:
         try:
             console.print(f"\n[bold blue]▶ Running: {scenario_name}[/bold blue]")
             
-            # First create a template asset
+            # First create a regular asset to use AS a template
             console.print("  → Creating template asset...")
             template_data = self._create_test_asset("TemplateAsset")
             template_body = {
-                "class": "TemplateRequestBody",
+                "class": "NewElementRequestBody",
                 "typeName": "Asset",
                 "initialStatus": "ACTIVE",
                 "properties": {
@@ -406,23 +407,15 @@ class AssetMakerScenarioTester:
             else:
                 raise Exception("Failed to create template asset")
             
-            # Now create an asset from the template
+            # Now create an asset FROM the template
             console.print("  → Creating asset from template...")
             from_template_body = {
                 "class": "TemplateRequestBody",
                 "templateGUID": template_guid,
-                "replacementProperties": {
-                    "class": "ElementProperties",
-                    "propertyValueMap": {
-                        "displayName": {
-                            "class": "PrimitiveTypePropertyValue",
-                            "typeName": "string",
-                            "primitiveValue": "Asset from Template"
-                        }
-                    }
-                }
+                "displayName": "Asset from Template",
+                "description": "This asset was created from a template"
             }
-            
+            console.print(json.dumps(from_template_body, indent=2))
             new_asset_guid = self.client.create_asset_from_template(body=from_template_body)
             
             if new_asset_guid:
@@ -441,6 +434,8 @@ class AssetMakerScenarioTester:
                 created_guids=created_guids
             )
             
+        except validationError as e:
+            print_validation_error(e)
         except Exception as e:
             duration = time.perf_counter() - start_time
             console.print(f"  [red]✗ Error: {str(e)}[/red]")
