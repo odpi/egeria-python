@@ -75,6 +75,9 @@ from .base_report_formats import report_spec_list, select_report_spec, get_repor
 from .actor_manager import ActorManager
 from .community_matters_omvs import CommunityMatters
 from .asset_maker import AssetMaker
+from .digital_business import DigitalBusiness
+from .notification_manager import NotificationManager
+from .product_manager import ProductManager
 #
 # 2/12/25
 
