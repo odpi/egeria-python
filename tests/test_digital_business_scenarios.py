@@ -40,7 +40,7 @@ from pyegeria._exceptions import (
 from pydantic import ValidationError
 
 # Configuration
-VIEW_SERVER = "view-server"
+VIEW_SERVER = "qs-view-server"
 PLATFORM_URL = "https://localhost:9443"
 USER_ID = "peterprofile"
 USER_PWD = "secret"

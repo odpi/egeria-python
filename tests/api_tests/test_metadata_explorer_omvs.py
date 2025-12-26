@@ -95,7 +95,7 @@ class TestMetadataExplorer:
 
             m_client.create_egeria_bearer_token(self.user, self.password)
             start_time = time.perf_counter()
-            response = m_client.get_metadata_element_by_guid(guid)
+            response = m_client.get_metadata_element_by_guid(guid, output_format=JSON, report_spec=Referenceable)
             duration = time.perf_counter() - start_time
             print(
                 f"\n\tDuration was {duration:.2f} seconds, Type: {type(response)}, Element count is {len(response)}"
@@ -196,9 +196,7 @@ class TestMetadataExplorer:
 
             m_client.create_egeria_bearer_token(self.user, self.password)
             start_time = time.perf_counter()
-            response = m_client.get_metadata_element_by_unique_name(
-                name, "qualifiedName"
-            )
+            response = m_client.get_metadata_element_by_unique_name(name, "qualifiedName")
             duration = time.perf_counter() - start_time
             print(
                 f"\n\tDuration was {duration:.2f} seconds, Type: {type(response)}, Element count is {len(response)}"
@@ -229,7 +227,7 @@ class TestMetadataExplorer:
 
             m_client.create_egeria_bearer_token(self.user, self.password)
             start_time = time.perf_counter()
-            response = m_client.get_metadata_element_history(guid)
+            response = m_client.get_metadata_element_history(guid, None)
             duration = time.perf_counter() - start_time
             print(
                 f"\n\tDuration was {duration:.2f} seconds, Type: {type(response)}, Element count is {len(response)}"
@@ -314,7 +312,7 @@ class TestMetadataExplorer:
 
             m_client.create_egeria_bearer_token(self.user, self.password)
             start_time = time.perf_counter()
-            response = m_client.get_all_related_metadata_elements(
+            response = m_client.get_all_related_elements(
                 guid, body, mermaid_only=False
             )
             duration = time.perf_counter() - start_time
@@ -357,7 +355,7 @@ class TestMetadataExplorer:
 
             m_client.create_egeria_bearer_token(self.user, self.password)
             start_time = time.perf_counter()
-            response = m_client.get_all_related_metadata_elements(
+            response = m_client.get_all_related_elements(
                 guid, body, mermaid_only=True
             )
             duration = time.perf_counter() - start_time

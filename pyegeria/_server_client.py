@@ -1536,12 +1536,8 @@ class ServerClient(BaseServerClient):
 
         url = f"{self.command_root}feedback-manager/comments/by-search-string"
         response = await self._async_find_request(url, _type="Comment", _gen_output=self._generate_comment_output,
-                                                  search_string=search_string,
-                                                  include_only_classification_names=classification_names,
-                                                  metadata_element_subtypes=metadata_element_subtypes,
-                                                  starts_with=starts_with, ends_with=ends_with, ignore_case=ignore_case,
-                                                  start_from=start_from, page_size=page_size,
-                                                  output_format=output_format, report_spec=report_spec, body=body)
+                                                  search_string=search_string, output_format="JSON", page_size=0,
+                                                  body=body)
 
         return response
 
@@ -2134,12 +2130,8 @@ class ServerClient(BaseServerClient):
 
         url = f"{self.command_root}feedback-manager/note-logs/by-search-string"
         response = await self._async_find_request(url, _type="NoteLog", _gen_output=self._generate_feedback_output,
-                                                  search_string=search_string,
-                                                  include_only_classification_names=classification_names,
-                                                  metadata_element_subtypes=metadata_element_subtypes,
-                                                  starts_with=starts_with, ends_with=ends_with, ignore_case=ignore_case,
-                                                  start_from=start_from, page_size=page_size,
-                                                  output_format=output_format, report_spec=report_spec, body=body)
+                                                  search_string=search_string, output_format="JSON", page_size=0,
+                                                  body=body)
 
         return response
 
@@ -2996,10 +2988,7 @@ class ServerClient(BaseServerClient):
 
         url = f"{self.command_root}feedback-manager/assets/by-search-string"
         response = await self._async_find_request(url, "Notification", self._generate_feedback_output, search_string,
-                                                  None, metadata_element_subtypes=["Notification"],
-                                                  starts_with=starts_with, ends_with=ends_with, ignore_case=ignore_case,
-                                                  start_from=start_from, page_size=page_size,
-                                                  output_format=output_format, report_spec=report_spec, body=body)
+                                                  anchor_domain=None, output_format="JSON", page_size=0, body=body)
         return response
 
     @dynamic_catch
@@ -3620,10 +3609,7 @@ class ServerClient(BaseServerClient):
 
         url = f"{self.command_root}feedback-manager/tags/by-search-string"
         response = await self._async_find_request(url, "InformalTag", self._generate_feedback_output, search_string,
-                                                  None, metadata_element_subtypes=None, starts_with=starts_with,
-                                                  ends_with=ends_with, ignore_case=ignore_case, start_from=start_from,
-                                                  page_size=page_size, output_format=output_format,
-                                                  report_spec=report_spec, body=body)
+                                                  anchor_domain=None, output_format="JSON", page_size=0, body=body)
         return response
 
     @dynamic_catch
@@ -4570,10 +4556,7 @@ class ServerClient(BaseServerClient):
             }
         url = f"{self.command_root}classification-manager/search-keywords/by-search-string"
         response = await self._async_find_request(url, "SearchKeyword", self._generate_feedback_output, search_string,
-                                                  None, metadata_element_subtypes=None, starts_with=True,
-                                                  ends_with=False, ignore_case=False, start_from=start_from,
-                                                  page_size=page_size, output_format=output_format,
-                                                  report_spec=report_spec, body=body)
+                                                  anchor_domain=None, output_format="JSON", page_size=0, body=body)
         return response
 
     @dynamic_catch
@@ -4870,7 +4853,10 @@ class ServerClient(BaseServerClient):
             }
             validated_body = UpdateStatusRequestBody.model_validate(body)
         else:
-            raise PyegeriaInvalidParameterException(additional_info={"reason": "invalid parameters"})
+            raise PyegeriaInvalidParameterExceptio
+            lid
+            parameters
+            "})
 
         return validated_body
 
@@ -4895,16 +4881,21 @@ class ServerClient(BaseServerClient):
         return validated_body
 
     @dynamic_catch
-    async def _async_find_request(self, url: str, _type: str, _gen_output: Callable[..., Any], search_string: str = '*',
-                                  include_only_classification_names: list[str] = None,
-                                  metadata_element_type: str = None, metadata_element_subtypes: list[str] = None,
+    async def _async_find_request(self, url: str, _type: str, _gen_output: Callable[..., Any], search_string: str,
                                   starts_with: bool = True, ends_with: bool = False, ignore_case: bool = False,
-                                  start_from: int = 0, page_size: int = 0, output_format: str = 'JSON',
-                                  report_spec: str | dict = None, skip_relationships: list[str] = None,
-                                  include_only_relatiohsips: list[str] = None,
-                                  skip_classified_elements: list[str] = None, graph_query_depth: int = 3,
+                                  anchor_domain: str = None,
+                                  metadata_element_type: str = None, metadata_element_sub_type: list[str] = None,
+                                  skip_relationships: list[str] = None,
+                                  include_only_relationships: list[str] = None,
+                                  skip_classified_elements: list[str] = None,
+                                  include_only_classified_elements: list[str] = None,
+                                  graph_query_depth: int = 3,
                                   governance_zone_filter: list[str] = None, as_of_time: str = None,
                                   effective_time: str = None, relationship_page_size: int = 0,
+                                  limit_results_by_status: list[str] = None, sequencing_order: str = None,
+                                  sequencing_property: str = None,
+                                  output_format: str = None, report_spec: str | dict = None,
+                                  start_from: int = 0, page_size: int = 100,
                                   body: dict | SearchStringRequestBody = None) -> Any:
 
         if isinstance(body, SearchStringRequestBody):
@@ -4915,23 +4906,27 @@ class ServerClient(BaseServerClient):
             search_string = None if search_string == "*" else search_string
             body = {
                 "class": "SearchStringRequestBody",
-                "include_only_classified_elements": include_only_classification_names,
-                "metadata_element_type": metadata_element_type,
-                "metadata_element_subtype_names": metadata_element_subtypes,
-                "skip_classified_elements": skip_classified_elements,
-                "skip_relationships": skip_relationships,
-                "include_only_relatiohsips": include_only_relatiohsips,
-                "graph_query_depth": graph_query_depth,
-                "governance_zone_filter": governance_zone_filter,
-                "as_of_time": as_of_time,
-                "effective_time": effective_time,
-                "relationship_page_size": relationship_page_size,
-                "search_string": search_string,
-                "starts_with": starts_with,
-                "ends_with": ends_with,
-                "ignore_case": ignore_case,
+                "searchString": search_string,
+                "startWith": starts_with,
+                "endWith": ends_with,
+                "ignoreCase": ignore_case,
+                "anchorDomain": anchor_domain,
+                "zoneFilter": governance_zone_filter,
+                "metadataElementType": metadata_element_type,
+                "metadataElementSubType": metadata_element_sub_type,
+                "skipRelationships": skip_relationships,
+                "includeOnlyRelationships": include_only_relationships,
+                "relationshipPageSize": relationship_page_size,
+                "skipClassifiedElements": skip_classified_elements,
+                "includeOnlyClassifiedElements": include_only_classified_elements,
+                "graphQueryDepth": graph_query_depth,
+                "asOfTime": as_of_time,
+                "effectiveTime": effective_time,
+                "limitResultsByStatus": limit_results_by_status,
+                "sequencingOrder": sequencing_order,
+                "sequencingProperty": sequencing_property,
                 "start_from": start_from,
-                "page_size": page_size,
+                "pageSize": page_size
 
             }
             validated_body = SearchStringRequestBody.model_validate(body)
@@ -5025,6 +5020,7 @@ class ServerClient(BaseServerClient):
                                               start_from: int = 0, page_size: int = 0, output_format: str = 'JSON',
                                               report_spec: str | dict = None,
                                               body: dict | ResultsRequestBody = None) -> Any:
+        """Handles request; returns elements or formatted output"""
         if isinstance(body, ResultsRequestBody):
             validated_body = body
         elif isinstance(body, dict):

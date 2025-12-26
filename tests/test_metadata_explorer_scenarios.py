@@ -147,7 +147,8 @@ class MetadataExplorerScenarioTester:
             if element_guid:
                 # Step 2: Retrieve element by GUID
                 console.print(f"\n[cyan]Retrieving element by GUID: {element_guid}[/cyan]")
-                element = self.client.get_metadata_element_by_guid(element_guid)
+                element = self.client.get_metadata_element_by_guid(element_guid, output_format=JSON,
+                                                                   report_spec=Referenceable)
 
                 if isinstance(element, dict):
                     element_type = element.get("elementHeader", {}).get("type", {}).get("typeName", "Unknown")
@@ -212,7 +213,7 @@ class MetadataExplorerScenarioTester:
                 # Step 2: Get all related elements
                 console.print(f"\n[cyan]Getting all related elements for: {element_guid}[/cyan]")
                 try:
-                    related = self.client.get_all_related_metadata_elements(
+                    related = self.client.get_all_related_elements(
                         element_guid=element_guid,
                         start_from=0,
                         page_size=50,
@@ -359,10 +360,8 @@ class MetadataExplorerScenarioTester:
                 # Step 2: Retrieve GUID by qualified name
                 console.print(f"\n[cyan]Retrieving GUID by qualified name[/cyan]")
                 try:
-                    guid = self.client.get_metadata_guid_by_unique_name(
-                        name=qualified_name,
-                        property_name="qualifiedName",
-                    )
+                    guid = self.client.get_metadata_guid_by_unique_name(name=qualified_name,
+                                                                        property_name="qualifiedName")
 
                     if guid and isinstance(guid, str):
                         console.print(f"[green]✓[/green] Retrieved GUID: {guid}")

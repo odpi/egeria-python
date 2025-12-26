@@ -568,18 +568,21 @@ class SolutionArchitectScenarioTester:
             self.teardown()
 
 
-def main():
+def test_solution_architect_scenarios():
     """Main entry point"""
     console.print(Panel.fit(
         "[bold cyan]Solution Architect Scenario Testing[/bold cyan]\n"
         "Comprehensive testing with synthetic data and automatic cleanup",
         border_style="cyan"
     ))
-    
     tester = SolutionArchitectScenarioTester()
-    exit_code = tester.run_all_scenarios()
-    sys.exit(exit_code)
+    success = tester.run_all_scenarios()
+    assert success == 0, "One or more scenarios failed"
+    return success
+
 
 
 if __name__ == "__main__":
-    main()
+    tester = SolutionArchitectScenarioTester()
+    success = tester.run_all_scenarios()
+    sys.exit(0 if success else 1)

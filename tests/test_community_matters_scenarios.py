@@ -391,7 +391,6 @@ class CommunityMattersScenarioTester:
             template_body = {
                 "class": "NewElementRequestBody",
                 "typeName": "Community",
-                "initialStatus": "ACTIVE",
                 "properties": {
                     "class": "CommunityProperties",
                     "qualifiedName": template_data.qualified_name,
@@ -416,17 +415,13 @@ class CommunityMattersScenarioTester:
                 "class": "TemplateRequestBody",
                 "templateGUID": template_guid,
                 "replacementProperties": {
-                    "class": "ElementProperties",
-                    "propertyValueMap": {
-                        "displayName": {
-                            "class": "PrimitiveTypePropertyValue",
-                            "typeName": "string",
-                            "primitiveValue": "Community from Template"
-                        }
-                    }
+                    "class": "AssetProperties",
+                    "displayName": "Community from Template",
+                    "qualifiedName": template_data.qualified_name,
+                    "description": template_data.description,
                 }
             }
-            
+
             new_community_guid = self.client.create_community_from_template(body=from_template_body)
             
             if new_community_guid:

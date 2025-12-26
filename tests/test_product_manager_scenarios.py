@@ -40,7 +40,7 @@ from pyegeria._exceptions import (
 from pydantic import ValidationError
 
 # Configuration
-VIEW_SERVER = "view-server"
+VIEW_SERVER = "qs-view-server"
 PLATFORM_URL = "https://localhost:9443"
 USER_ID = "peterprofile"
 USER_PWD = "secret"
@@ -277,7 +277,7 @@ class ProductManagerScenarioTester:
             body = {
                 "class": "NewRelationshipRequestBody",
                 "properties": {
-                    "class": "DigitalPropertyDependencyProperties",
+                    "class": "DigitalProductDependencyProperties",
                     "label": "Test Dependency",
                     "description": "Test product dependency"
                 }
@@ -335,7 +335,7 @@ class ProductManagerScenarioTester:
             body = {
                 "class": "NewRelationshipRequestBody",
                 "properties": {
-                    "class": "AssignmentScope",
+                    "class": "AssignmentScopeProperties",
                     "assignmentType": "Product Manager",
                     "description": "Test product manager assignment"
                 }

@@ -412,8 +412,12 @@ class AssetMakerScenarioTester:
             from_template_body = {
                 "class": "TemplateRequestBody",
                 "templateGUID": template_guid,
-                "displayName": "Asset from Template",
-                "description": "This asset was created from a template"
+                "replacementProperties": {
+                    "class": "AssetProperties",
+                    "qualifiedName": template_data.qualified_name,
+                    "displayName": "Asset from Template",
+                    "description": "This asset was created from a template"
+                }
             }
             console.print(json.dumps(from_template_body, indent=2))
             new_asset_guid = self.client.create_asset_from_template(body=from_template_body)
@@ -433,8 +437,8 @@ class AssetMakerScenarioTester:
                 message="Template-based asset creation tested",
                 created_guids=created_guids
             )
-            
-        except validationError as e:
+
+        except ValidationError as e:
             print_validation_error(e)
         except Exception as e:
             duration = time.perf_counter() - start_time
