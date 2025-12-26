@@ -31,7 +31,7 @@ dependencies = [
     "jupyter-notebook-parser",
     "loguru",
     "inflect",
-    "pydantic >=2.12.3",
+    "pydantic>=2.12.3",
     "pydantic-settings >= 2.10.1",
     "pydevd-pycharm >=253.27642.35",
     "wcwidth",
