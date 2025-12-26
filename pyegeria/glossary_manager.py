@@ -981,7 +981,7 @@ class GlossaryManager(CollectionManager):
             self,
             glossary_term_guid: str,
             term_status: str = "DRAFT",
-            body: dict | UpdateStatusRequestBody = None,
+            body: dict | UpdateElementRequestBody = None,
     ) -> None:
         """Update the status of a term. Async version.
 
@@ -991,7 +991,7 @@ class GlossaryManager(CollectionManager):
                 Unique identifier for the source glossary term.
             term_status: str
                 new status of the term.
-            body: dict | UpdateStatusRequestBody
+            body: dict | UpdateElementRequestBody
                 Body containing information about the status change. Supersedes other parameters.
 
         Returns
@@ -1006,16 +1006,13 @@ class GlossaryManager(CollectionManager):
 
         validate_guid(glossary_term_guid)
 
-        url = (
-            f"{self.platform_url}/servers/{self.view_server}/api/open-metadata/glossary-manager/glossaries/terms/"
-            f"{glossary_term_guid}/status"
-        )
         if body is None:
             body = {
-             "class": "UpdateStatusRequestBody",
-             "newStatus": term_status,
+             "class": "UpdateElementRequestBody",
+             "contentStatus": term_status,
+             "mergeUpdate": True,
             }
-        await self._async_update_status_request(url, term_status, body)
+        await self._async_update_glossary_term( glossary_term_guid, body)
         logger.info(f"Updated term status {glossary_term_guid}")
 
 
@@ -1023,7 +1020,7 @@ class GlossaryManager(CollectionManager):
     def update_glossary_term_status(
             self,
             glossary_term_guid: str, term_status: str = "DRAFT",
-            body: dict | UpdateStatusRequestBody = None,
+            body: dict | UpdateElementRequestBody = None,
             ) -> None:
         """Add the data field values classification to a glossary term
 
