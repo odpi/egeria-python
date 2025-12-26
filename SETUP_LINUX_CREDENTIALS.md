@@ -53,7 +53,7 @@ The `.env` file approach keeps credentials in a single location and loads them a
 6. **Verify it's ignored by git:**
    Ensure `.env` is in your `.gitignore` to prevent committing secrets:
    ```bash
-   echo ".env" >> .gitignore
+   grep -qxF '.env' .gitignore || echo '.env' >> .gitignore
    ```
 
 ### Using the .env file:
