@@ -764,7 +764,7 @@ class TestGlossaryManager:
                     "class": "GlossaryTermRelationship",
                     "confidence": 15,
                     "description": "Why not",
-                    "status": "DRAFT",
+                    "contentStatus": "DRAFT",
                     "steward": "Martha"
                 }
             }
