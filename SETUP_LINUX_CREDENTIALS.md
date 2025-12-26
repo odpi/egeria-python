@@ -257,25 +257,26 @@ Reference it in your service file with `EnvironmentFile=-/home/username/.config/
 After configuring credentials, test your setup:
 
 ```python
-from pyegeria import load_app_config, settings
+from pyegeria import load_app_config, get_app_config
 
 # Load configuration
 load_app_config()
+cfg = get_app_config()
 
 # Access credentials (safely - never print passwords!)
-print(f"User: {settings.User_Profile.egeria_user}")
-print(f"Platform URL: {settings.Environment.egeria_platform_url}")
+print(f"User: {cfg.User_Profile.user_name}")
+print(f"Platform URL: {cfg.Environment.egeria_platform_url}")
 
 # Note: Never print passwords in production!
 # This is just for initial verification:
-if settings.User_Profile.egeria_user_password:
+if cfg.User_Profile.user_pwd:
     print("Password is set ✓")
 ```
 
 Or use the validation script:
 
 ```bash
-python scripts/validate_env.py --env .env
+python tests/validate_env.py --env .env
 ```
 
 ---
@@ -350,10 +351,11 @@ grep -q "^\.env$" .gitignore || echo ".env" >> .gitignore
 
 # 5. Test the configuration
 python << 'PYTHON'
-from pyegeria import load_app_config, settings
+from pyegeria import load_app_config, get_app_config
 load_app_config()
-print(f"✓ User configured: {settings.User_Profile.egeria_user}")
-print(f"✓ Platform URL: {settings.Environment.egeria_platform_url}")
+cfg = get_app_config()
+print(f"✓ User configured: {cfg.User_Profile.user_name}")
+print(f"✓ Platform URL: {cfg.Environment.egeria_platform_url}")
 print("✓ Configuration loaded successfully!")
 PYTHON
 ```
