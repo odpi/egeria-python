@@ -19,7 +19,7 @@ from pyegeria.base_report_formats import select_report_spec, get_report_spec_mat
 from pyegeria.config import settings
 from pyegeria.models import (SearchStringRequestBody, FilterRequestBody, GetRequestBody, NewElementRequestBody,
                              ReferenceableProperties, InitialClassifications, TemplateRequestBody,
-                             UpdateElementRequestBody, UpdateStatusRequestBody, NewRelationshipRequestBody,
+                             UpdateElementRequestBody, NewRelationshipRequestBody,
                              DeleteElementRequestBody, DeleteRelationshipRequestBody, UpdateRelationshipRequestBody,
                              ResultsRequestBody,
                              get_defined_field_values, PyegeriaModel)
@@ -338,12 +338,9 @@ class CollectionManager(ServerClient):
         """
         url = str(HttpUrl(f"{self.collection_command_root}/by-search-string"))
         response = await self._async_find_request(url, _type="Collection", _gen_output=self._generate_collection_output,
-                                                  search_string=search_string,
-                                                  include_only_classification_names=classification_names,
-                                                  metadata_element_subtypes=metadata_element_subtypes,
-                                                  starts_with=starts_with, ends_with=ends_with, ignore_case=ignore_case,
-                                                  start_from=start_from, page_size=page_size,
-                                                  output_format=output_format, report_spec=report_spec, body=body)
+                                                  search_string=search_string, output_format=output_format,
+                                                  report_spec=report_spec, page_size=0,
+                                                  metadata_element_subtype=metadata_element_subtypes, body=body)
 
         return response
 
@@ -2152,6 +2149,7 @@ class CollectionManager(ServerClient):
           "class" : "UpdateElementRequestBody",
           "properties": {
             "class" : "CollectionProperties",
+            "contentStatus": "Add appropriate valid value for type",
             "qualifiedName": "Must provide a unique name here",
             "name" : "Add display name here",
             "description" : "Add description of the collection here",
@@ -2169,10 +2167,6 @@ class CollectionManager(ServerClient):
 
         url = (f"{self.collection_command_root}/{collection_guid}/update")
         await self._async_update_element_body_request(url, COLLECTION_PROPERTIES_LIST,body)
-
-
-
-
 
 
     @dynamic_catch
@@ -2216,6 +2210,7 @@ class CollectionManager(ServerClient):
             "qualifiedName": "Must provide a unique name here",
             "name" : "Add display name here",
             "description" : "Add description of the collection here",
+            "contentStatus": "Add appropriate valid value for type",
             "category": "Add appropriate valid value for type"
           },
           "externalSourceGUID": "add guid here",
@@ -2299,7 +2294,7 @@ class CollectionManager(ServerClient):
         default to ACTIVE.
         """
         url = f"{self.collection_command_root}"
-        return await self._async_create_element_body_request(url, "DigitalProductProperties", body)
+        return await self._async_create_element_body_request(url, ["DigitalProductProperties"], body)
 
 
     @dynamic_catch
@@ -2361,10 +2356,9 @@ class CollectionManager(ServerClient):
               "effectiveTime" : "{{$isoTimestamp}}",
               "forLineage" : false,
               "forDuplicateProcessing" : false,
-              "initialStatus" : "ACTIVE"
             }
 
-            The valid values for initialStatus are: DRAFT, PREPARED, PROPOSED, APPROVED, REJECTED, APPROVED_CONCEPT,
+            The valid values for Status are: DRAFT, PREPARED, PROPOSED, APPROVED, REJECTED, APPROVED_CONCEPT,
             UNDER_DEVELOPMENT, DEVELOPMENT_COMPLETE, APPROVED_FOR_DEPLOYMENT, ACTIVE, DISABLED, DEPRECATED,
             OTHER.  If using OTHER, set the userDefinedStatus with the status value you want. If not specified, will
             default to ACTIVE.
@@ -2610,141 +2604,6 @@ class CollectionManager(ServerClient):
 
 
     @dynamic_catch
-    async def _async_update_collection_status(self, collection_guid: str, status: str = None,
-                                              body: dict | UpdateStatusRequestBody = None):
-        """Update the status of a collection. Async version.
-
-        Parameters
-        ----------
-        collection_guid: str
-            The guid of the collection to update.
-        status: str, optional
-            The new lifecycle status for the collection. Ignored, if the body is provided.
-        body: dict | UpdateStatusRequestBody, optional
-            A structure representing the details of the collection to create. If supplied, these details
-            supersede the status parameter provided.
-
-        Returns
-        -------
-        Nothing
-
-        Raises
-        ------
-        PyegeriaInvalidParameterException
-          If the client passes incorrect parameters on the request - such as bad URLs or invalid values
-        PyegeriaAPIException
-          Raised by the server when an issue arises in processing a valid request
-        NotAuthorizedException
-          The principle specified by the user_id does not have authorization for the requested action
-
-        Notes
-        -----
-        JSON Structure looks like:
-         {
-          "class": "UpdateStatusRequestBody",
-          "status": "APPROVED",
-          "externalSourceGUID": "add guid here",
-          "externalSourceName": "add qualified name here",
-          "effectiveTime": "{{$isoTimestamp}}",
-          "forLineage": false,
-          "forDuplicateProcessing": false
-        }
-        """
-
-
-        await self._async_update_element_status(collection_guid, status, body)
-
-    @dynamic_catch
-    def update_collection_status(self, collection_guid: str, status: str = None,
-                                 body: dict | UpdateStatusRequestBody = None):
-        """Update the status of a DigitalProduct collection.
-
-        Parameters
-        ----------
-        collection_guid: str
-            The guid of the collection to update.
-        status: str, optional
-            The new lifecycle status for the digital product. Ignored, if the body is provided.
-        body: dict | UpdateStatusRequestBody, optional
-            A structure representing the details of the collection to create. If supplied, these details
-            supersede the status parameter provided.
-
-        Returns
-        -------
-        Nothing
-
-        Raises
-        ------
-        PyegeriaInvalidParameterException
-          If the client passes incorrect parameters on the request - such as bad URLs or invalid values
-        PyegeriaAPIException
-          Raised by the server when an issue arises in processing a valid request
-        NotAuthorizedException
-          The principle specified by the user_id does not have authorization for the requested action
-
-        Notes
-        -----
-        JSON Structure looks like:
-         {
-          "class": "UpdateStatusRequestBody",
-          "status": "APPROVED",
-          "externalSourceGUID": "add guid here",
-          "externalSourceName": "add qualified name here",
-          "effectiveTime": "{{$isoTimestamp}}",
-          "forLineage": false,
-          "forDuplicateProcessing": false
-        }
-        """
-        loop = asyncio.get_event_loop()
-        loop.run_until_complete(self._async_update_collection_status(collection_guid, status, body))
-
-
-    @dynamic_catch
-    def update_digital_product_status(self, digital_product_guid: str, status: str = None,
-                                      body: dict | UpdateStatusRequestBody = None):
-        """Update the status of a DigitalProduct collection.
-
-        Parameters
-        ----------
-        digital_product_guid: str
-            The guid of the collection to update.
-        status: str, optional
-            The new lifecycle status for the digital product. Ignored, if the body is provided.
-        body: dict | UpdateStatusRequestBody, optional
-            A structure representing the details of the collection to create. If supplied, these details
-            supersede the status parameter provided.
-
-        Returns
-        -------
-        Nothing
-
-        Raises
-        ------
-        PyegeriaInvalidParameterException
-          If the client passes incorrect parameters on the request - such as bad URLs or invalid values
-        PyegeriaAPIException
-          Raised by the server when an issue arises in processing a valid request
-        NotAuthorizedException
-          The principle specified by the user_id does not have authorization for the requested action
-
-        Notes
-        -----
-        JSON Structure looks like:
-         {
-          "class": "UpdateStatusRequestBody",
-          "status": "APPROVED",
-          "externalSourceGUID": "add guid here",
-          "externalSourceName": "add qualified name here",
-          "effectiveTime": "{{$isoTimestamp}}",
-          "forLineage": false,
-          "forDuplicateProcessing": false
-        }
-        """
-        loop = asyncio.get_event_loop()
-        loop.run_until_complete(self._async_update_collection_status(digital_product_guid, status, body))
-
-
-    @dynamic_catch
     async def _async_link_digital_product_dependency(self, upstream_digital_prod_guid: str,
                                                      downstream_digital_prod_guid: str,
                                                      body: dict | NewRelationshipRequestBody = None):
@@ -2784,7 +2643,7 @@ class CollectionManager(ServerClient):
           "forLineage" : false,
           "forDuplicateProcessing" : false,
           "properties": {
-            "class": "InformationSupplyChainLinkProperties",
+            "class": "DigitalProductDependencyProperties",
             "label": "add label here",
             "description": "add description here",
             "effectiveFrom": "{{$isoTimestamp}}",
@@ -3525,51 +3384,6 @@ class CollectionManager(ServerClient):
 
         return asyncio.get_event_loop().run_until_complete(
             self._async_update_agreement(agreement_guid, body))
-
-
-
-    @dynamic_catch
-    def update_agreement_status(self, agreement_guid: str, status: str = None,
-                                body: dict | UpdateStatusRequestBody = None):
-        """Update the status of an agreement.
-        Parameters
-        ----------
-        agreement_guid: str
-            The guid of the collection to update.
-        status: str, optional
-            The new lifecycle status for the collection. Ignored, if the body is provided.
-        body: dict | UpdateStatusRequestBody
-            A structure representing the details of the collection to create.
-
-        Returns
-        -------
-        Nothing
-
-        Raises
-        ------
-        PyegeriaInvalidParameterException
-          If the client passes incorrect parameters on the request - such as bad URLs or invalid values
-        PyegeriaAPIException
-          Raised by the server when an issue arises in processing a valid request
-        NotAuthorizedException
-          The principle specified by the user_id does not have authorization for the requested action
-
-        Notes
-        -----
-        JSON Structure looks like:
-         {
-          "class": "UpdateStatusRequestBody",
-          "status": "APPROVED",
-          "externalSourceGUID": "add guid here",
-          "externalSourceName": "add qualified name here",
-          "effectiveTime": "{{$isoTimestamp}}",
-          "forLineage": false,
-          "forDuplicateProcessing": false
-        }
-        """
-        loop = asyncio.get_event_loop()
-        loop.run_until_complete(self._async_update_collection_status(agreement_guid, status,body))
-
 
 
     @dynamic_catch
@@ -4491,96 +4305,6 @@ class CollectionManager(ServerClient):
         loop = asyncio.get_event_loop()
         loop.run_until_complete(
             self._async_update_digital_subscription(digital_subscription_guid, body))
-
-
-    @dynamic_catch
-    async def _async_update_digital_subscription_status(self, digital_subscription_guid: str, status: str = None,
-                                                        body: dict | UpdateStatusRequestBody = None)-> None:
-        """Update the status of a digital_subscription collection. Async version.
-
-        Parameters
-        ----------
-        digital_subscription_guid: str
-            The guid of the digital product collection to update.
-        status: str, optional
-            The new status of the digital_subscription collection. Will be used only if body is not provided.
-        body: dict | UpdateStatusRequestBody, optional, defaults to None
-            A structure representing the details of the collection to create.
-
-        Returns
-        -------
-        Nothing
-
-        Raises
-        ------
-        PyegeriaInvalidParameterException
-          If the client passes incorrect parameters on the request - such as bad URLs or invalid values
-        PyegeriaAPIException
-          Raised by the server when an issue arises in processing a valid request
-        NotAuthorizedException
-          The principle specified by the user_id does not have authorization for the requested action
-
-        Notes
-        -----
-        JSON Structure looks like:
-         {
-          "class": "UpdateStatusRequestBody",
-          "status": "APPROVED",
-          "externalSourceGUID": "add guid here",
-          "externalSourceName": "add qualified name here",
-          "effectiveTime": "{{$isoTimestamp}}",
-          "forLineage": false,
-          "forDuplicateProcessing": false
-        }
-        """
-        url = (
-            f"{self.platform_url}/servers/{self.view_server}/api/open-metadata/collection-manager/collections"
-            f"/agreements/"
-            f"{digital_subscription_guid}/update-status")
-        await self._async_update_status_request(url, status, body)
-        logger.info(f"Updated status for DigitalProduct {digital_subscription_guid}")
-
-    @dynamic_catch
-    def update_digital_subscription_status(self, digital_subscription_guid: str,
-                                           body: dict | UpdateStatusRequestBody = None,):
-        """Update the status of an digital_subscription collection. Async version.
-
-            Parameters
-            ----------
-            digital_subscription_guid: str
-                The guid of the digital product collection to update.
-            body: dict
-                A dict representing the details of the collection to create.
-
-            Returns
-            -------
-            Nothing
-
-            Raises
-            ------
-            PyegeriaInvalidParameterException
-              If the client passes incorrect parameters on the request - such as bad URLs or invalid values
-            PyegeriaAPIException
-              Raised by the server when an issue arises in processing a valid request
-            NotAuthorizedException
-              The principle specified by the user_id does not have authorization for the requested action
-
-            Notes
-            -----
-            JSON Structure looks like:
-               {
-                  "class": "AgreementStatusRequestBody",
-                  "status": "APPROVED",
-                  "externalSourceGUID": "add guid here",
-                  "externalSourceName": "add qualified name here",
-                  "effectiveTime": "{{$isoTimestamp}}",
-                  "forLineage": false,
-                  "forDuplicateProcessing": false
-                }
-
-        """
-        loop = asyncio.get_event_loop()
-        loop.run_until_complete(self._async_update_digital_subscription_status(digital_subscription_guid, body))
 
 
     @dynamic_catch

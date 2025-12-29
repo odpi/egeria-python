@@ -474,11 +474,15 @@ class CollectionManagerScenarioTester:
             # 3. Update product status
             console.print("  → Updating product status...")
             status_body = {
-                "class": "UpdateStatusRequestBody",
-                "status": "Production Ready"
+                "class": "UpdateElementRequestBody",
+                "properties": {
+                    "class": "DigitalProductProperties",
+                    "contentStatus": "ACTIVE"
+                },
+                "mergeUpdate": True,
             }
-            
-            self.client.update_digital_product_status(product_guid, status="Production Ready", body=status_body)
+
+            self.client.update_digital_product(product_guid, body=status_body)
             console.print("  ✓ Updated product status")
             
             # 4. Query products - retrieve by GUID
@@ -587,7 +591,8 @@ class CollectionManagerScenarioTester:
                 membership_body = {
                     "class": "NewRelationshipRequestBody",
                     "properties": {
-                        "class": "RelationshipProperties"
+                        "class": "CollectionMembershipProperties",
+                        "confidence": 20
                     }
                 }
                 self.client.add_to_collection(parent_guid, member_guid, membership_body)

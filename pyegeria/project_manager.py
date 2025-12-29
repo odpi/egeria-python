@@ -525,12 +525,8 @@ class ProjectManager(ServerClient):
         )
 
         response = await self._async_find_request(url, _type="Project", _gen_output=self._generate_project_output,
-                                                  search_string=search_string,
-                                                  include_only_classification_names=classification_names,
-                                                  metadata_element_subtypes=metadata_element_subtypes,
-                                                  starts_with=starts_with, ends_with=ends_with, ignore_case=ignore_case,
-                                                  start_from=start_from, page_size=page_size,
-                                                  output_format=output_format, report_spec=report_spec, body=body)
+                                                  search_string=search_string, output_format="JSON", page_size=0,
+                                                  body=body)
 
         return response
 
@@ -696,7 +692,7 @@ class ProjectManager(ServerClient):
 
         url = (f"{self.platform_url}/servers/{self.view_server}/api/open-metadata/project-manager/projects/"
                f"{project_guid}")
-        type = element_type if element_type else "Collection"
+        type = element_type if element_type else "Project"
 
         response = await self._async_get_guid_request(url, _type=type,
                                                       _gen_output=self._generate_project_output,

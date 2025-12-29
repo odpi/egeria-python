@@ -120,10 +120,56 @@ class ProductManager(ServerClient):
             If the body does not conform to NewElementRequestBody.
         PyegeriaNotAuthorizedException
             If the user is not authorized for the requested action.
+
+        Notes
+        -----
+            Note: the three dates: introductionDate, nextVersionDate and withdrawDate must
+            be valid dates if specified, otherwise you will get a 400 error response.
+
+            JSON Structure looks like:
+            {
+              "class" : "NewElementRequestBody",
+              "isOwnAnchor" : true,
+              "anchorScopeGUID" : "optional GUID of search scope",
+              "parentGUID" : "xxx",
+              "parentRelationshipTypeName" : "CollectionMembership",
+              "parentAtEnd1": true,
+              "properties": {
+                "class" : "DigitalProductProperties",
+                "qualifiedName": "DigitalProduct::Add product name here",
+                "name" : "Product contents",
+                "description" : "Add description of product and its expected usage here",
+                "identifier" : "Add product identifier here",
+                "productName" : "Add product name here",
+                "category" : "Periodic Delta",
+                "maturity" : "Add valid value here",
+                "serviceLife" : "Add the estimated lifetime of the product",
+                "introductionDate" : "date",
+                "nextVersionDate": "date",
+                "withdrawDate": "date",
+                "currentVersion": "V0.1",
+                "additionalProperties": {
+                  "property1Name" : "property1Value",
+                  "property2Name" : "property2Value"
+                }
+              },
+              "externalSourceGUID": "add guid here",
+              "externalSourceName": "add qualified name here",
+              "effectiveTime" : "{{$isoTimestamp}}",
+              "forLineage" : false,
+              "forDuplicateProcessing" : false,
+            }
+
+            The valid values for Status are: DRAFT, PREPARED, PROPOSED, APPROVED, REJECTED, APPROVED_CONCEPT,
+            UNDER_DEVELOPMENT, DEVELOPMENT_COMPLETE, APPROVED_FOR_DEPLOYMENT, ACTIVE, DISABLED, DEPRECATED,
+            OTHER.  If using OTHER, set the userDefinedStatus with the status value you want. If not specified, will
+            default to ACTIVE.
         """
-        url = f"{self.product_manager_command_root}/collections"
-        response = await self._async_make_request("POST", url, self._prepare_body(body))
-        return response.json().get("guid", NO_GUID_RETURNED) if response else NO_GUID_RETURNED
+        url = f"{self.platform_url}/servers/{self.view_server}/api/open-metadata/product-manager/collections"
+        return await self._async_create_element_body_request(url, ["DigitalProductProperties"], body)
+
+        # response = await self._async_make_request("POST", url, self._prepare_body(body))
+        # return response.json().get("guid", NO_GUID_RETURNED) if response else NO_GUID_RETURNED
 
     def create_digital_product(
         self,
@@ -172,9 +218,41 @@ class ProductManager(ServerClient):
         ------
         PyegeriaException
             If there are issues in communications, message format, or Egeria errors.
+
+        Notes:
+        -----
+        {
+          "class" : "UpdateElementRequestBody",
+          "properties": {
+            "class" : "DigitalProductProperties",
+            "qualifiedName": "DigitalProduct::Add product name here",
+            "name" : "Product contents",
+            "description" : "Add description of product and its expected usage here",
+            "userDefinedStatus" : "OBSOLETE",
+            "identifier" : "Add product identifier here",
+            "productName" : "Add product name here",
+            "category" : "Periodic Delta",
+            "maturity" : "Add valid value here",
+            "serviceLife" : "Add the estimated lifetime of the product",
+            "introductionDate" : "date",
+            "nextVersionDate": "date",
+            "withdrawDate": "date",
+            "currentVersion": "V0.1",
+            "additionalProperties": {
+              "property1Name" : "property1Value",
+              "property2Name" : "property2Value"
+            }
+          },
+          "externalSourceGUID": "add guid here",
+          "externalSourceName": "add qualified name here",
+          "effectiveTime" : "{{$isoTimestamp}}",
+          "forLineage" : false,
+          "forDuplicateProcessing" : false
+        }
         """
         url = f"{self.product_manager_command_root}/collections/{digital_product_guid}/update"
-        await self._async_make_request("POST", url, self._prepare_body(body))
+        # await self._async_make_request("POST", url, self._prepare_body(body))
+        await self._async_update_element_body_request(url, ["DigitalProductProperties"], body)
 
     def update_digital_product(
         self,
@@ -234,12 +312,33 @@ class ProductManager(ServerClient):
         ------
         PyegeriaException
             If there are issues in communications, message format, or Egeria errors.
+
+        Notes
+        -----
+        JSON Structure looks like:
+        {
+          "class" : "NewRelationshipRequestBody",
+          "externalSourceGUID": "add guid here",
+          "externalSourceName": "add qualified name here",
+          "effectiveTime" : "{{$isoTimestamp}}",
+          "forLineage" : false,
+          "forDuplicateProcessing" : false,
+          "properties": {
+            "class": "DigitalProductDependencyProperties",
+            "label": "add label here",
+            "description": "add description here",
+            "effectiveFrom": "{{$isoTimestamp}}",
+            "effectiveTo": "{{$isoTimestamp}}"
+          }
+        }
         """
         url = (
             f"{self.product_manager_command_root}/digital-products/"
             f"{consumer_product_guid}/product-dependencies/{consumed_product_guid}/attach"
         )
-        await self._async_make_request("POST", url, self._prepare_body(body))
+        # await self._async_make_request("POST", url, self._prepare_body(body))
+        await self._async_new_relationship_request(url, ["DigitalProductDependencyProperties"], body)
+        logger.info(f"Linked {consumed_product_guid} -> {consumer_product_guid}")
 
     def link_digital_product_dependency(
         self,
@@ -300,12 +399,27 @@ class ProductManager(ServerClient):
         ------
         PyegeriaException
             If there are issues in communications, message format, or Egeria errors.
+
+        Notes
+        -----
+        JSON Structure looks like:
+        {
+          "class": "DeleteRelationshipRequestBody",
+          "externalSourceGUID": "add guid here",
+          "externalSourceName": "add qualified name here",
+          "effectiveTime": "{{$isoTimestamp}}",
+          "forLineage": false,
+          "forDuplicateProcessing": false
+        }
+
         """
         url = (
             f"{self.product_manager_command_root}/digital-products/"
             f"{consumer_product_guid}/product-dependencies/{consumed_product_guid}/detach"
         )
-        await self._async_make_request("POST", url, self._prepare_body(body))
+        # await self._async_make_request("POST", url, self._prepare_body(body))
+        await self._async_delete_relationship_request(url, body)
+        logger.info(f"Detached digital product dependency {consumer_product_guid} -> {consumed_product_guid}")
 
     def detach_digital_product_dependency(
         self,
@@ -370,12 +484,31 @@ class ProductManager(ServerClient):
         ------
         PyegeriaException
             If there are issues in communications, message format, or Egeria errors.
+
+        Notes
+        -----
+        JSON Structure looks like:
+        {
+          "class": "NewRelationshipRequestBody",
+          "properties": {
+              "assignmentType": "Add type here",
+              "description": "Add assignment description here"
+          },
+          "externalSourceGUID": "add guid here",
+          "externalSourceName": "add qualified name here",
+          "effectiveTime": "{{$isoTimestamp}}",
+          "forLineage": false,
+          "forDuplicateProcessing": false
+        }
+
         """
         url = (
             f"{self.product_manager_command_root}/digital-products/"
             f"{digital_product_guid}/product-managers/{product_manager_role_guid}/attach"
         )
-        await self._async_make_request("POST", url, self._prepare_body(body))
+        # await self._async_make_request("POST", url, self._prepare_body(body))
+        await self._async_new_relationship_request(url, ["AssignmentScopeProperties"], body)
+        logger.info(f"Attached digital product manager {digital_product_guid} -> {product_manager_role_guid}")
 
     def link_product_manager(
         self,
@@ -436,12 +569,27 @@ class ProductManager(ServerClient):
         ------
         PyegeriaException
             If there are issues in communications, message format, or Egeria errors.
+
+        Notes
+        -----
+        JSON Structure looks like:
+        {
+          "class": "DeleteRelationshipRequestBody",
+          "externalSourceGUID": "add guid here",
+          "externalSourceName": "add qualified name here",
+          "effectiveTime": "{{$isoTimestamp}}",
+          "forLineage": false,
+          "forDuplicateProcessing": false
+        }
+
         """
         url = (
             f"{self.product_manager_command_root}/digital-products/"
             f"{digital_product_guid}/product-managers/{product_manager_role_guid}/detach"
         )
-        await self._async_make_request("POST", url, self._prepare_body(body))
+        # await self._async_make_request("POST", url, self._prepare_body(body))
+        await self._async_delete_relationship_request(url, body)
+        logger.info(f"Detached digital product manager {digital_product_guid} -> {product_manager_role_guid}")
 
     def detach_product_manager(
         self,

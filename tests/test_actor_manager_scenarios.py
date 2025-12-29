@@ -642,7 +642,7 @@ class ActorManagerScenarioTester:
             self.teardown()
 
 
-def main():
+def test_actora_manager_scenarios():
     """Main entry point"""
     console.print(Panel.fit(
         "[bold cyan]Actor Manager Scenario Testing[/bold cyan]\n"
@@ -651,9 +651,12 @@ def main():
     ))
     
     tester = ActorManagerScenarioTester()
-    exit_code = tester.run_all_scenarios()
-    sys.exit(exit_code)
+    success = tester.run_all_scenarios()
+    assert success == 0, "One or more scenarios failed"
 
 
 if __name__ == "__main__":
-    main()
+    """Direct execution entry point"""
+    tester = ActorManagerScenarioTester()
+    success = tester.run_all_scenarios()
+    sys.exit(0 if success else 1)

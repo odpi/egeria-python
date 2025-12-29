@@ -151,7 +151,7 @@ class TestProjectManager:
             )
             token = p_client.create_egeria_bearer_token(self.good_user_2, "secret")
             start_time = time.perf_counter()
-            search_string = "Sustainability"
+            search_string = "*"
 
             response = p_client.find_projects(
                 search_string, output_format="JSON", report_spec="Project"
@@ -259,7 +259,7 @@ class TestProjectManager:
             )
             token = p_client.create_egeria_bearer_token(self.good_user_2, "secret")
             start_time = time.perf_counter()
-            project_guid = "79ec7de5-7367-4bde-a3c8-b8d8c582b521"
+            project_guid = "a9c66fb9-05eb-4ed0-8042-cd5fbabf8caf"
 
             response = p_client.get_project_by_guid(project_guid, output_format="DICT", report_spec="Projects")
             duration = time.perf_counter() - start_time

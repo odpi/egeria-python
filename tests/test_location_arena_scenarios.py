@@ -633,7 +633,7 @@ class LocationScenarioTester:
             self.teardown()
 
 
-def main():
+def test_location_arena_scenarios():
     """Main entry point"""
     console.print(Panel.fit(
         "[bold cyan]Location Arena Scenario Testing[/bold cyan]\n"
@@ -642,9 +642,12 @@ def main():
     ))
     
     tester = LocationScenarioTester()
-    exit_code = tester.run_all_scenarios()
-    sys.exit(exit_code)
+    success = tester.run_all_scenarios()
+    assert success == 0, "One or more scenarios failed"
 
 
 if __name__ == "__main__":
-    main()
+    """Direct execution entry point"""
+    tester = LocationScenarioTester()
+    success = tester.run_all_scenarios()
+    sys.exit(0 if success else 1)
