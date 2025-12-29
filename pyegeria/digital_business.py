@@ -16,6 +16,9 @@ from pyegeria._exceptions import PyegeriaInvalidParameterException
 from pyegeria._globals import NO_GUID_RETURNED
 from pyegeria.config import settings as app_settings
 from pyegeria.models import (
+    NewElementRequestBody,
+    UpdateElementRequestBody,
+    DeleteElementRequestBody,
     NewRelationshipRequestBody,
     DeleteRelationshipRequestBody,
     NewClassificationRequestBody,
@@ -29,10 +32,11 @@ EGERIA_LOCAL_QUALIFIER = app_settings.User_Profile.egeria_local_qualifier
 
 class DigitalBusiness(ServerClient):
     """
-    Manage business capabilities and their digital support relationships.
+    Manage business capabilities, their lifecycle, and their digital support relationships.
 
-    This client provides methods to link business capabilities with their dependencies
-    and digital support elements, as well as manage business significance classifications.
+    This client provides methods to create, update, and manage business capabilities,
+    link business capabilities with their dependencies and digital support elements,
+    as well as manage business significance classifications.
 
     Attributes
     ----------
@@ -50,6 +54,18 @@ class DigitalBusiness(ServerClient):
 
     Methods
     -------
+    create_business_capability(body)
+        Create a new business capability collection.
+    update_business_capability(business_capability_guid, body)
+        Update the properties of a business capability.
+    delete_business_capability(business_capability_guid, body, cascade)
+        Delete a business capability.
+    get_business_capability_by_guid(business_capability_guid, body, output_format, report_spec)
+        Return the properties of a specific business capability by GUID.
+    get_business_capabilities_by_name(filter_string, body, start_from, page_size, output_format, report_spec)
+        Returns the list of business capabilities with a particular name.
+    find_business_capabilities(search_string, starts_with, ends_with, ignore_case, start_from, page_size, output_format, report_spec, body)
+        Returns the list of business capabilities matching the search string.
     link_business_capability_dependency(business_capability_guid, supporting_capability_guid, body)
         Link dependent business capabilities.
     detach_business_capability_dependency(business_capability_guid, supporting_capability_guid, body)
@@ -81,8 +97,10 @@ class DigitalBusiness(ServerClient):
         )
         ServerClient.__init__(self, view_server, platform_url, user_id, user_pwd, token)
 
-    def _prepare_body(self, body: Optional[dict | NewRelationshipRequestBody | DeleteRelationshipRequestBody |
-                                           NewClassificationRequestBody | DeleteClassificationRequestBody]) -> dict:
+    def _prepare_body(self, body: Optional[dict | NewElementRequestBody | UpdateElementRequestBody |
+                                           DeleteElementRequestBody | NewRelationshipRequestBody |
+                                           DeleteRelationshipRequestBody | NewClassificationRequestBody |
+                                           DeleteClassificationRequestBody]) -> dict:
         """Convert Pydantic models to dict and slim the body."""
         if body is None:
             return {}
@@ -90,6 +108,625 @@ class DigitalBusiness(ServerClient):
             return body_slimmer(body)
         # It's a Pydantic model
         return body_slimmer(body.model_dump(mode='json', by_alias=True, exclude_none=True))
+
+    #
+    # Business Capability Lifecycle Management
+    #
+
+    @dynamic_catch
+    async def _async_create_business_capability(
+        self,
+        body: Optional[dict | NewElementRequestBody] = None,
+    ) -> str:
+        """Create a new business capability collection. Async version.
+
+        Parameters
+        ----------
+        body : dict | NewElementRequestBody, optional
+            Request body containing business capability properties.
+
+        Returns
+        -------
+        str
+            The GUID of the created business capability.
+
+        Raises
+        ------
+        PyegeriaException
+            If there are issues in communications, message format, or Egeria errors.
+        ValidationError
+            If the body does not conform to NewElementRequestBody.
+        PyegeriaNotAuthorizedException
+            If the user is not authorized for the requested action.
+
+        Notes
+        -----
+            JSON Structure looks like:
+            {
+              "class" : "NewElementRequestBody",
+              "typeName": "BusinessCapability",
+              "isOwnAnchor" : true,
+              "properties": {
+                "class" : "BusinessCapabilityProperties",
+                "qualifiedName": "BusinessCapability::Add capability name here",
+                "displayName" : "Capability name",
+                "description" : "Add description of capability here",
+                "identifier" : "Add capability identifier here",
+                "businessCapabilityType" : "Add type here",
+                "additionalProperties": {
+                  "property1Name" : "property1Value"
+                }
+              },
+              "effectiveTime" : "timestamp",
+              "forLineage" : false,
+              "forDuplicateProcessing" : false,
+            }
+        """
+        url = f"{self.digital_business_command_root}/business-capabilities"
+        return await self._async_create_element_body_request(url, ["BusinessCapabilityProperties"], body)
+
+    def create_business_capability(
+        self,
+        body: Optional[dict | NewElementRequestBody] = None,
+    ) -> str:
+        """Create a new business capability collection. Sync version.
+
+        Parameters
+        ----------
+        body : dict | NewElementRequestBody, optional
+            Request body containing business capability properties.
+
+        Returns
+        -------
+        str
+            The GUID of the created business capability.
+
+        Raises
+        ------
+        PyegeriaException
+            If there are issues in communications, message format, or Egeria errors.
+        """
+        body = self._prepare_body(body)
+        loop = asyncio.get_event_loop()
+        return loop.run_until_complete(self._async_create_business_capability(body))
+
+    @dynamic_catch
+    async def _async_update_business_capability(
+        self,
+        business_capability_guid: str,
+        body: Optional[dict | UpdateElementRequestBody] = None,
+    ) -> None:
+        """Update the properties of a business capability. Async version.
+
+        Parameters
+        ----------
+        business_capability_guid : str
+            The GUID of the business capability to update.
+        body : dict | UpdateElementRequestBody, optional
+            Request body containing updated properties.
+
+        Returns
+        -------
+        None
+
+        Raises
+        ------
+        PyegeriaException
+            If there are issues in communications, message format, or Egeria errors.
+        ValidationError
+            If the body does not conform to UpdateElementRequestBody.
+        PyegeriaNotAuthorizedException
+            If the user is not authorized for the requested action.
+        """
+        url = f"{self.digital_business_command_root}/business-capabilities/{business_capability_guid}/update"
+        await self._async_update_element_body_request(url, ["BusinessCapabilityProperties"], body)
+
+    def update_business_capability(
+        self,
+        business_capability_guid: str,
+        body: Optional[dict | UpdateElementRequestBody] = None,
+    ) -> None:
+        """Update the properties of a business capability. Sync version.
+
+        Parameters
+        ----------
+        business_capability_guid : str
+            The GUID of the business capability to update.
+        body : dict | UpdateElementRequestBody, optional
+            Request body containing updated properties.
+
+        Returns
+        -------
+        None
+
+        Raises
+        ------
+        PyegeriaException
+            If there are issues in communications, message format, or Egeria errors.
+        """
+        business_capability_guid = str(business_capability_guid)
+        body = self._prepare_body(body)
+        loop = asyncio.get_event_loop()
+        loop.run_until_complete(
+            self._async_update_business_capability(business_capability_guid, body)
+        )
+
+    @dynamic_catch
+    async def _async_delete_business_capability(
+        self,
+        business_capability_guid: str,
+        body: Optional[dict | DeleteElementRequestBody] = None,
+        cascade: bool = False,
+    ) -> None:
+        """Delete a business capability. Async version.
+
+        Parameters
+        ----------
+        business_capability_guid : str
+            The GUID of the business capability to delete.
+        body : dict | DeleteElementRequestBody, optional
+            Request body for deletion.
+        cascade : bool, optional
+            Whether to cascade the delete. Defaults to False.
+
+        Returns
+        -------
+        None
+
+        Raises
+        ------
+        PyegeriaException
+            If there are issues in communications, message format, or Egeria errors.
+        ValidationError
+            If the body does not conform to DeleteElementRequestBody.
+        PyegeriaNotAuthorizedException
+            If the user is not authorized for the requested action.
+        """
+        url = f"{self.digital_business_command_root}/business-capabilities/{business_capability_guid}/delete"
+        await self._async_delete_element_request(url, body, cascade)
+
+    def delete_business_capability(
+        self,
+        business_capability_guid: str,
+        body: Optional[dict | DeleteElementRequestBody] = None,
+        cascade: bool = False,
+    ) -> None:
+        """Delete a business capability. Sync version.
+
+        Parameters
+        ----------
+        business_capability_guid : str
+            The GUID of the business capability to delete.
+        body : dict | DeleteElementRequestBody, optional
+            Request body for deletion.
+        cascade : bool, optional
+            Whether to cascade the delete. Defaults to False.
+
+        Returns
+        -------
+        None
+
+        Raises
+        ------
+        PyegeriaException
+            If there are issues in communications, message format, or Egeria errors.
+        """
+        business_capability_guid = str(business_capability_guid)
+        body = self._prepare_body(body)
+        cascade = bool(cascade)
+        loop = asyncio.get_event_loop()
+        loop.run_until_complete(
+            self._async_delete_business_capability(business_capability_guid, body, cascade)
+        )
+
+    @dynamic_catch
+    async def _async_get_business_capability_by_guid(
+        self,
+        business_capability_guid: str,
+        body: Optional[dict] = None,
+        output_format: str = "JSON",
+        report_spec: Optional[str | dict] = None,
+    ) -> dict | str:
+        """Return the properties of a specific business capability by GUID. Async version.
+
+        Parameters
+        ----------
+        business_capability_guid : str
+            The GUID of the business capability to retrieve.
+        body : dict, optional
+            Request body (typically empty for retrieval).
+        output_format : str, optional
+            Format for output. Defaults to "JSON".
+        report_spec : str | dict, optional
+            Report specification for formatting.
+
+        Returns
+        -------
+        dict | str
+            The business capability properties.
+
+        Raises
+        ------
+        PyegeriaException
+            If there are issues in communications, message format, or Egeria errors.
+        PyegeriaNotFoundException
+            If the business capability is not found.
+        PyegeriaNotAuthorizedException
+            If the user is not authorized for the requested action.
+        """
+        url = f"{self.digital_business_command_root}/business-capabilities/{business_capability_guid}/retrieve"
+        response = await self._async_get_guid_request(
+            url,
+            _type="BusinessCapability",
+            _gen_output=None,
+            output_format=output_format,
+            report_spec=report_spec,
+            body=body,
+        )
+        return response
+
+    def get_business_capability_by_guid(
+        self,
+        business_capability_guid: str,
+        body: Optional[dict] = None,
+        output_format: str = "JSON",
+        report_spec: Optional[str | dict] = None,
+    ) -> dict | str:
+        """Return the properties of a specific business capability by GUID. Sync version.
+
+        Parameters
+        ----------
+        business_capability_guid : str
+            The GUID of the business capability to retrieve.
+        body : dict, optional
+            Request body (typically empty for retrieval).
+        output_format : str, optional
+            Format for output. Defaults to "JSON".
+        report_spec : str | dict, optional
+            Report specification for formatting.
+
+        Returns
+        -------
+        dict | str
+            The business capability properties.
+
+        Raises
+        ------
+        PyegeriaException
+            If there are issues in communications, message format, or Egeria errors.
+        """
+        loop = asyncio.get_event_loop()
+        return loop.run_until_complete(
+            self._async_get_business_capability_by_guid(
+                business_capability_guid, body, output_format, report_spec
+            )
+        )
+
+    @dynamic_catch
+    async def _async_get_business_capabilities_by_name(
+        self,
+        filter_string: Optional[str] = None,
+        classification_names: Optional[list[str]] = None,
+        body: Optional[dict] = None,
+        start_from: int = 0,
+        page_size: int = 0,
+        output_format: str = "JSON",
+        report_spec: Optional[str | dict] = None,
+    ) -> list | str:
+        """Returns the list of business capabilities with a particular name. Async version.
+
+        Parameters
+        ----------
+        filter_string : str, optional
+            Filter string to match against capability names.
+        classification_names : list[str], optional
+            List of classification names to filter by.
+        body : dict, optional
+            Request body for additional filtering.
+        start_from : int, optional
+            Starting index for pagination. Defaults to 0.
+        page_size : int, optional
+            Number of results per page. Defaults to 0 (no limit).
+        output_format : str, optional
+            Format for output. Defaults to "JSON".
+        report_spec : str | dict, optional
+            Report specification for formatting.
+
+        Returns
+        -------
+        list | str
+            List of business capabilities matching the criteria.
+
+        Raises
+        ------
+        PyegeriaException
+            If there are issues in communications, message format, or Egeria errors.
+        """
+        url = f"{self.digital_business_command_root}/business-capabilities/by-name"
+        response = await self._async_get_name_request(
+            url,
+            _type="BusinessCapability",
+            _gen_output=None,
+            filter_string=filter_string,
+            classification_names=classification_names,
+            start_from=start_from,
+            page_size=page_size,
+            output_format=output_format,
+            report_spec=report_spec,
+            body=body,
+        )
+        return response
+
+    def get_business_capabilities_by_name(
+        self,
+        filter_string: Optional[str] = None,
+        classification_names: Optional[list[str]] = None,
+        body: Optional[dict] = None,
+        start_from: int = 0,
+        page_size: int = 0,
+        output_format: str = "JSON",
+        report_spec: Optional[str | dict] = None,
+    ) -> list | str:
+        """Returns the list of business capabilities with a particular name. Sync version.
+
+        Parameters
+        ----------
+        filter_string : str, optional
+            Filter string to match against capability names.
+        classification_names : list[str], optional
+            List of classification names to filter by.
+        body : dict, optional
+            Request body for additional filtering.
+        start_from : int, optional
+            Starting index for pagination. Defaults to 0.
+        page_size : int, optional
+            Number of results per page. Defaults to 0 (no limit).
+        output_format : str, optional
+            Format for output. Defaults to "JSON".
+        report_spec : str | dict, optional
+            Report specification for formatting.
+
+        Returns
+        -------
+        list | str
+            List of business capabilities matching the criteria.
+
+        Raises
+        ------
+        PyegeriaException
+            If there are issues in communications, message format, or Egeria errors.
+        """
+        loop = asyncio.get_event_loop()
+        return loop.run_until_complete(
+            self._async_get_business_capabilities_by_name(
+                filter_string, classification_names, body, start_from, page_size, output_format, report_spec
+            )
+        )
+
+    @dynamic_catch
+    async def _async_find_business_capabilities(
+        self,
+        search_string: str = "*",
+        starts_with: bool = False,
+        ends_with: bool = False,
+        ignore_case: bool = True,
+        anchor_domain: Optional[str] = None,
+        metadata_element_type: Optional[str] = None,
+        metadata_element_subtype: Optional[str] = None,
+        skip_relationships: Optional[list[str]] = None,
+        include_only_relationships: Optional[list[str]] = None,
+        skip_classified_elements: Optional[list[str]] = None,
+        include_only_classified_elements: Optional[list[str]] = None,
+        graph_query_depth: int = 0,
+        governance_zone_filter: Optional[list[str]] = None,
+        as_of_time: Optional[str] = None,
+        effective_time: Optional[str] = None,
+        relationship_page_size: int = 0,
+        limit_results_by_status: Optional[list[str]] = None,
+        sequencing_order: Optional[str] = None,
+        sequencing_property: Optional[str] = None,
+        start_from: int = 0,
+        page_size: int = 0,
+        output_format: str = "JSON",
+        report_spec: Optional[str | dict] = None,
+        body: Optional[dict] = None,
+    ) -> list | str:
+        """Returns the list of business capabilities matching the search string. Async version.
+
+        Parameters
+        ----------
+        search_string : str, optional
+            Search string to match. Defaults to "*" (all).
+        starts_with : bool, optional
+            Whether to match from the start. Defaults to False.
+        ends_with : bool, optional
+            Whether to match at the end. Defaults to False.
+        ignore_case : bool, optional
+            Whether to ignore case. Defaults to True.
+        anchor_domain : str, optional
+            Domain to anchor the search.
+        metadata_element_type : str, optional
+            Type of metadata element to search for.
+        metadata_element_subtype : str, optional
+            Subtype of metadata element.
+        skip_relationships : list[str], optional
+            Relationships to skip in the graph.
+        include_only_relationships : list[str], optional
+            Only include these relationships.
+        skip_classified_elements : list[str], optional
+            Skip elements with these classifications.
+        include_only_classified_elements : list[str], optional
+            Only include elements with these classifications.
+        graph_query_depth : int, optional
+            Depth of graph query. Defaults to 0.
+        governance_zone_filter : list[str], optional
+            Filter by governance zones.
+        as_of_time : str, optional
+            Historical time for the query.
+        effective_time : str, optional
+            Effective time for the query.
+        relationship_page_size : int, optional
+            Page size for relationships. Defaults to 0.
+        limit_results_by_status : list[str], optional
+            Limit results by status values.
+        sequencing_order : str, optional
+            Order for sequencing results.
+        sequencing_property : str, optional
+            Property to sequence by.
+        start_from : int, optional
+            Starting index for pagination. Defaults to 0.
+        page_size : int, optional
+            Number of results per page. Defaults to 0 (no limit).
+        output_format : str, optional
+            Format for output. Defaults to "JSON".
+        report_spec : str | dict, optional
+            Report specification for formatting.
+        body : dict, optional
+            Request body for additional parameters.
+
+        Returns
+        -------
+        list | str
+            List of business capabilities matching the search criteria.
+
+        Raises
+        ------
+        PyegeriaException
+            If there are issues in communications, message format, or Egeria errors.
+        """
+        url = f"{self.digital_business_command_root}/business-capabilities/by-search-string"
+        response = await self._async_find_request(
+            url,
+            _type="BusinessCapability",
+            _gen_output=None,
+            search_string=search_string,
+            starts_with=starts_with,
+            ends_with=ends_with,
+            ignore_case=ignore_case,
+            anchor_domain=anchor_domain,
+            metadata_element_type=metadata_element_type,
+            metadata_element_subtype=metadata_element_subtype,
+            skip_relationships=skip_relationships,
+            include_only_relationships=include_only_relationships,
+            skip_classified_elements=skip_classified_elements,
+            include_only_classified_elements=include_only_classified_elements,
+            graph_query_depth=graph_query_depth,
+            governance_zone_filter=governance_zone_filter,
+            as_of_time=as_of_time,
+            effective_time=effective_time,
+            relationship_page_size=relationship_page_size,
+            limit_results_by_status=limit_results_by_status,
+            sequencing_order=sequencing_order,
+            sequencing_property=sequencing_property,
+            start_from=start_from,
+            page_size=page_size,
+            output_format=output_format,
+            report_spec=report_spec,
+            body=body,
+        )
+        return response
+
+    def find_business_capabilities(
+        self,
+        search_string: str = "*",
+        starts_with: bool = False,
+        ends_with: bool = False,
+        ignore_case: bool = True,
+        anchor_domain: Optional[str] = None,
+        metadata_element_type: Optional[str] = None,
+        metadata_element_subtype: Optional[str] = None,
+        skip_relationships: Optional[list[str]] = None,
+        include_only_relationships: Optional[list[str]] = None,
+        skip_classified_elements: Optional[list[str]] = None,
+        include_only_classified_elements: Optional[list[str]] = None,
+        graph_query_depth: int = 0,
+        governance_zone_filter: Optional[list[str]] = None,
+        as_of_time: Optional[str] = None,
+        effective_time: Optional[str] = None,
+        relationship_page_size: int = 0,
+        limit_results_by_status: Optional[list[str]] = None,
+        sequencing_order: Optional[str] = None,
+        sequencing_property: Optional[str] = None,
+        start_from: int = 0,
+        page_size: int = 0,
+        output_format: str = "JSON",
+        report_spec: Optional[str | dict] = None,
+        body: Optional[dict] = None,
+    ) -> list | str:
+        """Returns the list of business capabilities matching the search string. Sync version.
+
+        Parameters
+        ----------
+        search_string : str, optional
+            Search string to match. Defaults to "*" (all).
+        starts_with : bool, optional
+            Whether to match from the start. Defaults to False.
+        ends_with : bool, optional
+            Whether to match at the end. Defaults to False.
+        ignore_case : bool, optional
+            Whether to ignore case. Defaults to True.
+        anchor_domain : str, optional
+            Domain to anchor the search.
+        metadata_element_type : str, optional
+            Type of metadata element to search for.
+        metadata_element_subtype : str, optional
+            Subtype of metadata element.
+        skip_relationships : list[str], optional
+            Relationships to skip in the graph.
+        include_only_relationships : list[str], optional
+            Only include these relationships.
+        skip_classified_elements : list[str], optional
+            Skip elements with these classifications.
+        include_only_classified_elements : list[str], optional
+            Only include elements with these classifications.
+        graph_query_depth : int, optional
+            Depth of graph query. Defaults to 0.
+        governance_zone_filter : list[str], optional
+            Filter by governance zones.
+        as_of_time : str, optional
+            Historical time for the query.
+        effective_time : str, optional
+            Effective time for the query.
+        relationship_page_size : int, optional
+            Page size for relationships. Defaults to 0.
+        limit_results_by_status : list[str], optional
+            Limit results by status values.
+        sequencing_order : str, optional
+            Order for sequencing results.
+        sequencing_property : str, optional
+            Property to sequence by.
+        start_from : int, optional
+            Starting index for pagination. Defaults to 0.
+        page_size : int, optional
+            Number of results per page. Defaults to 0 (no limit).
+        output_format : str, optional
+            Format for output. Defaults to "JSON".
+        report_spec : str | dict, optional
+            Report specification for formatting.
+        body : dict, optional
+            Request body for additional parameters.
+
+        Returns
+        -------
+        list | str
+            List of business capabilities matching the search criteria.
+
+        Raises
+        ------
+        PyegeriaException
+            If there are issues in communications, message format, or Egeria errors.
+        """
+        loop = asyncio.get_event_loop()
+        return loop.run_until_complete(
+            self._async_find_business_capabilities(
+                search_string, starts_with, ends_with, ignore_case, anchor_domain,
+                metadata_element_type, metadata_element_subtype, skip_relationships,
+                include_only_relationships, skip_classified_elements, include_only_classified_elements,
+                graph_query_depth, governance_zone_filter, as_of_time, effective_time,
+                relationship_page_size, limit_results_by_status, sequencing_order,
+                sequencing_property, start_from, page_size, output_format, report_spec, body
+            )
+        )
 
     #
     # Business Capability Dependency Management

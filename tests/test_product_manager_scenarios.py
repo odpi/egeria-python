@@ -13,7 +13,7 @@ Usage:
     python tests/test_product_manager_scenarios.py
     
     Or with pytest:
-    pytest tests/test_product_manager_scenarios.py -v -s
+    c
 """
 
 import sys
@@ -113,10 +113,10 @@ class ProductManagerScenarioTester:
             
             for guid in self.created_products:
                 try:
-                    # Note: Product deletion would typically be done through collection manager
-                    # since digital products are collections
+                    # Use the new delete_digital_product method
+                    self.client.delete_digital_product(guid)
                     cleanup_results["success"] += 1
-                except PyegeriaAPIException:
+                except PyegeriaNotFoundException:
                     cleanup_results["not_found"] += 1
                 except Exception as e:
                     console.print(f"  [yellow]⚠ Failed to delete {guid}: {str(e)}[/yellow]")
@@ -372,14 +372,378 @@ class ProductManagerScenarioTester:
                 error=e
             )
     
+    def scenario_retrieve_digital_products(self) -> TestResult:
+        """Scenario: Test retrieval methods - get by GUID, get by name, find"""
+        scenario_name = "Digital Product Retrieval Methods"
+        start_time = time.perf_counter()
+        created_guids = []
+        
+        try:
+            console.print(f"\n[bold blue]▶ Running: {scenario_name}[/bold blue]")
+            
+            # CREATE: Create test products for retrieval
+            console.print("  → Creating test products for retrieval...")
+            products_to_create = [
+                self._create_test_product("RetrievalTest_Alpha"),
+                self._create_test_product("RetrievalTest_Beta"),
+                self._create_test_product("RetrievalTest_Gamma"),
+            ]
+            
+            for product_data in products_to_create:
+                body = {
+                    "class": "NewElementRequestBody",
+                    "typeName": "DigitalProduct",
+                    "initialStatus": "ACTIVE",
+                    "properties": {
+                        "class": "DigitalProductProperties",
+                        "qualifiedName": product_data.qualified_name,
+                        "displayName": product_data.display_name,
+                        "description": product_data.description,
+                        "productName": product_data.product_name,
+                    }
+                }
+                
+                guid = self.client.create_digital_product(body)
+                if guid:
+                    created_guids.append(guid)
+                    self.created_products.append(guid)
+                    product_data.guid = guid
+                    console.print(f"  ✓ Created product: {product_data.display_name} ({guid})")
+            
+            # TEST 1: Get by GUID
+            console.print("\n  → Testing get_digital_product_by_guid...")
+            if created_guids:
+                test_guid = created_guids[0]
+                product = self.client.get_digital_product_by_guid(test_guid)
+                if product:
+                    console.print(f"  ✓ Retrieved product by GUID: {test_guid}")
+                    console.print(f"    Display Name: {product.get('elementHeader', {}).get('properties', {}).get('displayName', 'N/A')}")
+                else:
+                    console.print(f"  [yellow]⚠ No product found for GUID: {test_guid}[/yellow]")
+            
+            # TEST 2: Get by name (using filter string)
+            console.print("\n  → Testing get_digital_products_by_name...")
+            products = self.client.get_digital_products_by_name(filter_string="RetrievalTest")
+            if products:
+                console.print(f"  ✓ Found {len(products)} products with filter 'RetrievalTest'")
+                for prod in products[:3]:  # Show first 3
+                    if type(prod) is str:
+                        console.print(f"prod was: {prod}")
+                        exit(0)
+                    else:
+                        console.print(json.dumps(prod))
+                    name = prod.get('elementHeader', {}).get('properties', {}).get('displayName', 'N/A')
+                    guid = prod.get('elementHeader', {}).get('guid', 'N/A')
+                    console.print(f"    - {name} ({guid})")
+            else:
+                console.print("  [yellow]⚠ No products found by name[/yellow]")
+            
+            # TEST 3: Find products (search)
+            console.print("\n  → Testing find_digital_products...")
+            found_products = self.client.find_digital_products(search_string="Alpha", starts_with=False)
+            if found_products:
+                console.print(f"  ✓ Found {len(found_products)} products matching 'Alpha'")
+                for prod in found_products[:3]:  # Show first 3
+                    name = prod.get('elementHeader', {}).get('properties', {}).get('displayName', 'N/A')
+                    guid = prod.get('elementHeader', {}).get('guid', 'N/A')
+                    console.print(f"    - {name} ({guid})")
+            else:
+                console.print("  [yellow]⚠ No products found by search[/yellow]")
+            
+            # TEST 4: Test output formats
+            console.print("\n  → Testing different output formats...")
+            if created_guids:
+                test_guid = created_guids[0]
+                
+                # Test JSON format (default)
+                json_result = self.client.get_digital_product_by_guid(test_guid, output_format="JSON")
+                console.print(f"  ✓ JSON format: {type(json_result).__name__}")
+                
+                # Test DICT format
+                dict_result = self.client.get_digital_product_by_guid(test_guid, output_format="DICT")
+                console.print(f"  ✓ DICT format: {type(dict_result).__name__}")
+            
+            duration = time.perf_counter() - start_time
+            return TestResult(
+                scenario_name=scenario_name,
+                status="PASSED",
+                duration=duration,
+                message=f"Successfully tested retrieval methods with {len(created_guids)} products",
+                created_guids=created_guids
+            )
+            
+        except Exception as e:
+            duration = time.perf_counter() - start_time
+            console.print(f"  [red]✗ Error: {str(e)}[/red]")
+            print_exception_table(e) if isinstance(e, PyegeriaException) else console.print_exception()
+            return TestResult(
+                scenario_name=scenario_name,
+                status="FAILED",
+                duration=duration,
+                message=str(e)[:100],
+                error=e,
+                created_guids=created_guids
+            )
+    
+    def scenario_delete_digital_product(self) -> TestResult:
+        """Scenario: Test delete_digital_product method"""
+        scenario_name = "Digital Product Deletion"
+        start_time = time.perf_counter()
+        created_guids = []
+        
+        try:
+            console.print(f"\n[bold blue]▶ Running: {scenario_name}[/bold blue]")
+            
+            # CREATE: Create a product to delete
+            console.print("  → Creating product for deletion test...")
+            product_data = self._create_test_product("DeleteTest")
+            
+            body = {
+                "class": "NewElementRequestBody",
+                "typeName": "DigitalProduct",
+                "initialStatus": "ACTIVE",
+                "properties": {
+                    "class": "DigitalProductProperties",
+                    "qualifiedName": product_data.qualified_name,
+                    "displayName": product_data.display_name,
+                    "description": product_data.description,
+                    "productName": product_data.product_name,
+                }
+            }
+            
+            guid = self.client.create_digital_product(body)
+            if guid:
+                created_guids.append(guid)
+                console.print(f"  ✓ Created product for deletion: {guid}")
+            else:
+                raise Exception("Failed to create product for deletion test")
+            
+            # DELETE: Delete the product
+            console.print("  → Deleting product...")
+            self.client.delete_digital_product(guid)
+            console.print(f"  ✓ Deleted product: {guid}")
+            
+            # VERIFY: Try to retrieve deleted product (should fail or return None)
+            console.print("  → Verifying deletion...")
+            try:
+                deleted_product = self.client.get_digital_product_by_guid(guid)
+                if deleted_product:
+                    console.print("  [yellow]⚠ Product still exists after deletion (may be soft delete)[/yellow]")
+                else:
+                    console.print("  ✓ Product successfully deleted (not found)")
+            except PyegeriaNotFoundException:
+                console.print("  ✓ Product successfully deleted (not found)")
+            
+            duration = time.perf_counter() - start_time
+            return TestResult(
+                scenario_name=scenario_name,
+                status="PASSED",
+                duration=duration,
+                message="Successfully tested delete_digital_product method",
+                created_guids=[]  # Don't track since we deleted it
+            )
+            
+        except Exception as e:
+            duration = time.perf_counter() - start_time
+            console.print(f"  [red]✗ Error: {str(e)}[/red]")
+            print_exception_table(e) if isinstance(e, PyegeriaException) else console.print_exception()
+            return TestResult(
+                scenario_name=scenario_name,
+                status="FAILED",
+                duration=duration,
+                message=str(e)[:100],
+                error=e,
+                created_guids=created_guids
+            )
+    
+    def scenario_digital_product_catalog_lifecycle(self) -> TestResult:
+        """Scenario: Complete digital product catalog lifecycle - create, update, delete"""
+        scenario_name = "Digital Product Catalog Lifecycle"
+        start_time = time.perf_counter()
+        created_guids = []
+        
+        try:
+            console.print(f"\n[bold blue]▶ Running: {scenario_name}[/bold blue]")
+            
+            # CREATE: Create a new digital product catalog
+            console.print("  → Creating digital product catalog...")
+            ts = datetime.now().strftime("%Y%m%d%H%M%S%f")
+            
+            body = {
+                "class": "NewElementRequestBody",
+                "typeName": "DigitalProductCatalog",
+                "initialStatus": "ACTIVE",
+                "properties": {
+                    "class": "CatalogProperties",
+                    "qualifiedName": f"DigitalProductCatalog::CatalogTest::{ts}",
+                    "displayName": f"Test Product Catalog {ts}",
+                    "description": f"Test digital product catalog created at {datetime.now().isoformat()}",
+                }
+            }
+            
+            guid = self.client.create_digital_product_catalog(body)
+            
+            if guid:
+                created_guids.append(guid)
+                self.created_products.append(guid)
+                console.print(f"  ✓ Created digital product catalog: {guid}")
+            else:
+                raise Exception("Failed to create digital product catalog - no GUID returned")
+            
+            # UPDATE: Update the digital product catalog
+            console.print("  → Updating digital product catalog...")
+            update_body = {
+                "class": "UpdateElementRequestBody",
+                "properties": {
+                    "class": "CatalogProperties",
+                    "qualifiedName": f"DigitalProductCatalog::CatalogTest::{ts}",
+                    "displayName": f"Test Product Catalog {ts} (Updated)",
+                    "description": f"Test digital product catalog - Updated",
+                }
+            }
+            
+            self.client.update_digital_product_catalog(guid, update_body)
+            console.print("  ✓ Updated digital product catalog")
+            
+            # RETRIEVE: Get the catalog by GUID
+            console.print("  → Retrieving digital product catalog by GUID...")
+            catalog = self.client.get_digital_product_catalog_by_guid(guid)
+            if catalog:
+                console.print(f"  ✓ Retrieved catalog by GUID")
+            
+            # DELETE: Delete the catalog
+            console.print("  → Deleting digital product catalog...")
+            self.client.delete_digital_product_catalog(guid)
+            console.print(f"  ✓ Deleted catalog: {guid}")
+            created_guids.remove(guid)  # Remove from tracking since we deleted it
+            self.created_products.remove(guid)
+            
+            duration = time.perf_counter() - start_time
+            return TestResult(
+                scenario_name=scenario_name,
+                status="PASSED",
+                duration=duration,
+                message="Digital product catalog lifecycle executed successfully",
+                created_guids=created_guids
+            )
+            
+        except Exception as e:
+            duration = time.perf_counter() - start_time
+            console.print(f"  [red]✗ Error: {str(e)}[/red]")
+            print_exception_table(e) if isinstance(e, PyegeriaException) else console.print_exception()
+            return TestResult(
+                scenario_name=scenario_name,
+                status="FAILED",
+                duration=duration,
+                message=str(e)[:100],
+                error=e,
+                created_guids=created_guids
+            )
+    
+    def scenario_retrieve_digital_product_catalogs(self) -> TestResult:
+        """Scenario: Test retrieval methods for digital product catalogs - get by GUID, get by name, find"""
+        scenario_name = "Digital Product Catalog Retrieval Methods"
+        start_time = time.perf_counter()
+        created_guids = []
+        
+        try:
+            console.print(f"\n[bold blue]▶ Running: {scenario_name}[/bold blue]")
+            
+            # CREATE: Create test catalogs for retrieval
+            console.print("  → Creating test catalogs for retrieval...")
+            catalog_names = ["CatalogAlpha", "CatalogBeta", "CatalogGamma"]
+            
+            for name in catalog_names:
+                ts = datetime.now().strftime("%Y%m%d%H%M%S%f")
+                body = {
+                    "class": "NewElementRequestBody",
+                    "typeName": "DigitalProductCatalog",
+                    "initialStatus": "ACTIVE",
+                    "properties": {
+                        "class": "CatalogProperties",
+                        "qualifiedName": f"DigitalProductCatalog::RetrievalTest_{name}::{ts}",
+                        "displayName": f"RetrievalTest {name} {ts}",
+                        "description": f"Test catalog for retrieval - {name}",
+                    }
+                }
+                
+                guid = self.client.create_digital_product_catalog(body)
+                if guid:
+                    created_guids.append(guid)
+                    self.created_products.append(guid)
+                    console.print(f"  ✓ Created catalog: {name} ({guid})")
+                time.sleep(0.1)  # Small delay between creates
+            
+            # TEST 1: Get by GUID
+            console.print("\n  → Testing get_digital_product_catalog_by_guid...")
+            if created_guids:
+                test_guid = created_guids[0]
+                catalog = self.client.get_digital_product_catalog_by_guid(test_guid)
+                if catalog:
+                    console.print(f"  ✓ Retrieved catalog by GUID: {test_guid}")
+                else:
+                    console.print(f"  [yellow]⚠ No catalog found for GUID: {test_guid}[/yellow]")
+            
+            # TEST 2: Get by name (using filter string)
+            console.print("\n  → Testing get_digital_product_catalogs_by_name...")
+            catalogs = self.client.get_digital_product_catalogs_by_name(filter_string="RetrievalTest")
+            if catalogs:
+                console.print(f"  ✓ Found {len(catalogs)} catalogs with filter 'RetrievalTest'")
+                for cat in catalogs[:3]:  # Show first 3
+                    if isinstance(cat, dict):
+                        name = cat.get('elementHeader', {}).get('properties', {}).get('displayName', 'N/A')
+                        guid = cat.get('elementHeader', {}).get('guid', 'N/A')
+                        console.print(f"    - {name} ({guid})")
+            else:
+                console.print("  [yellow]⚠ No catalogs found by name[/yellow]")
+            
+            # TEST 3: Find catalogs (search)
+            console.print("\n  → Testing find_digital_product_catalogs...")
+            found_catalogs = self.client.find_digital_product_catalogs(search_string="CatalogAlpha", starts_with=False)
+            if found_catalogs:
+                console.print(f"  ✓ Found {len(found_catalogs)} catalogs matching 'CatalogAlpha'")
+                for cat in found_catalogs[:3]:  # Show first 3
+                    if isinstance(cat, dict):
+                        name = cat.get('elementHeader', {}).get('properties', {}).get('displayName', 'N/A')
+                        guid = cat.get('elementHeader', {}).get('guid', 'N/A')
+                        console.print(f"    - {name} ({guid})")
+            else:
+                console.print("  [yellow]⚠ No catalogs found by search[/yellow]")
+            
+            duration = time.perf_counter() - start_time
+            return TestResult(
+                scenario_name=scenario_name,
+                status="PASSED",
+                duration=duration,
+                message=f"Successfully tested retrieval methods with {len(created_guids)} catalogs",
+                created_guids=created_guids
+            )
+            
+        except Exception as e:
+            duration = time.perf_counter() - start_time
+            console.print(f"  [red]✗ Error: {str(e)}[/red]")
+            print_exception_table(e) if isinstance(e, PyegeriaException) else console.print_exception()
+            return TestResult(
+                scenario_name=scenario_name,
+                status="FAILED",
+                duration=duration,
+                message=str(e)[:100],
+                error=e,
+                created_guids=created_guids
+            )
+    
     def run_all_scenarios(self):
         """Execute all test scenarios"""
         console.print("\n[bold magenta]═══ Running Product Manager Scenarios ═══[/bold magenta]")
         
         scenarios = [
             self.scenario_digital_product_lifecycle,
+            self.scenario_retrieve_digital_products,
+            self.scenario_delete_digital_product,
             self.scenario_product_dependency,
             self.scenario_product_manager_role,
+            self.scenario_digital_product_catalog_lifecycle,
+            self.scenario_retrieve_digital_product_catalogs,
         ]
         
         for scenario_func in scenarios:
