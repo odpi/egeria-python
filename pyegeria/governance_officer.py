@@ -16,15 +16,12 @@ from loguru import logger
 from pydantic import Field
 
 from pyegeria._server_client import ServerClient
+from pyegeria.base_report_formats import select_report_spec, get_report_spec_match
 from pyegeria.output_formatter import (
     extract_mermaid_only,
     generate_output,
-    _extract_referenceable_properties,
-    populate_columns_from_properties,
-    get_required_relationships,
     populate_common_columns,
 )
-from pyegeria.base_report_formats import select_report_spec, get_report_spec_match
 
 sys.path.insert(0, os.path.abspath(os.path.dirname(__file__)))
 from pyegeria._exceptions import PyegeriaInvalidParameterException
@@ -32,8 +29,8 @@ from pyegeria._globals import NO_GUID_RETURNED
 from pyegeria.config import settings as app_settings
 from pyegeria.models import (GetRequestBody, SearchStringRequestBody, FilterRequestBody, NewElementRequestBody,
                              ReferenceableProperties, TemplateRequestBody,
-                             UpdateElementRequestBody, UpdateStatusRequestBody, NewRelationshipRequestBody,
-                             DeleteElementRequestBody, DeleteRelationshipRequestBody,DeleteClassificationRequestBody)
+                             UpdateElementRequestBody, NewRelationshipRequestBody,
+                             DeleteElementRequestBody, DeleteRelationshipRequestBody)
 from pyegeria.utils import dynamic_catch
 
 GOV_DEF_PROPERTIES_LIST = ["GovernanceDefinitionProperties", "GovernanceStrategyProperties", "RegulationProperties",
@@ -787,8 +784,7 @@ class GovernanceOfficer(ServerClient):
             f"{guid}/update")
         await self._async_update_element_body_request(url, GOV_DEF_PROPERTIES_LIST, body)
 
-
-    def update_governance_definition(self, guid: str, body: dict | UpdateStatusRequestBody) -> None:
+    def update_governance_definition(self, guid: str, body: dict | UpdateElementRequestBody) -> None:
         """ Update the properties of a governance definition.
 
         Parameters

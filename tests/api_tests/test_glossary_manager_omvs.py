@@ -35,7 +35,7 @@ from pyegeria.glossary_manager import GlossaryManager, GlossaryTermProperties
 from pyegeria.core_omag_server_config import CoreServerConfig
 from pyegeria.models import NewElementRequestBody
 from tests.test_classification_manager_omvs import relationship_type
-from tests.test_feedback_manager_omvs import password
+
 
 # from pyegeria.admin_services import FullServerConfig
 
@@ -297,14 +297,8 @@ class TestGlossaryManager:
 
             token = g_client.create_egeria_bearer_token(self.good_user_2, "secret")
             start_time = time.perf_counter()
-            response = g_client.find_glossaries(
-                "Coco Pharmaceuticals Clinical",
-                starts_with=False,
-                ends_with=False,
-                ignore_case=True,
-                page_size=0,
-                output_format="JSON"
-            )
+            response = g_client.find_glossaries("*", starts_with=False, ends_with=False, ignore_case=True, page_size=0,
+                                                output_format="DICT", report_spec="Glossaries")
             duration = time.perf_counter() - start_time
             # resp_str = json.loads(response)
             print(f"\n\tDuration was {duration} seconds")

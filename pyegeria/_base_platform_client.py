@@ -11,39 +11,24 @@ import asyncio
 import inspect
 import json
 import os
-import re
-import sys
-from collections.abc import Callable
-from typing import Any
 
 import httpcore
 import httpx
 from httpx import AsyncClient, Response, HTTPStatusError
 # from venv import logger
 from loguru import logger
-from pydantic import TypeAdapter
 
 from pyegeria._exceptions import (
     PyegeriaAPIException, PyegeriaConnectionException, PyegeriaInvalidParameterException,
     PyegeriaUnknownException, PyegeriaClientException
 )
-from pyegeria._globals import enable_ssl_check, max_paging_size, NO_ELEMENTS_FOUND, default_time_out
+from pyegeria._globals import enable_ssl_check, max_paging_size
 from pyegeria._validators import (
     validate_name,
     validate_server_name,
     validate_url,
     validate_user_id,
 )
-from pyegeria.models import (SearchStringRequestBody, FilterRequestBody, GetRequestBody, NewElementRequestBody,
-                             TemplateRequestBody, UpdateStatusRequestBody, UpdateElementRequestBody,
-                             NewRelationshipRequestBody,
-                              UpdateRelationshipRequestBody, ResultsRequestBody,
-                             NewClassificationRequestBody,
-                             DeleteElementRequestBody, DeleteRelationshipRequestBody, DeleteClassificationRequestBody,
-                             LevelIdentifierQueryBody)
-
-from pyegeria.output_formatter import populate_common_columns, resolve_output_formats, generate_output
-from pyegeria.utils import body_slimmer, dynamic_catch
 
 ...
 

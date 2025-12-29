@@ -9,32 +9,21 @@ This module provides access to the Solution Architect OMVS module.
 import asyncio
 import os
 import sys
-from typing import Any, Callable, Dict, List, Optional, Tuple, Union
+from typing import Dict, List, Union
 
 from httpx import Response
 from loguru import logger
 
-from pyegeria.models import NewElementRequestBody, TemplateRequestBody, UpdateElementRequestBody, \
-    NewRelationshipRequestBody, UpdateStatusRequestBody, SearchStringRequestBody, DeleteElementRequestBody, \
-    DeleteRelationshipRequestBody
-from pyegeria.output_formatter import make_preamble, make_md_attribute, generate_output, extract_mermaid_only, \
-    extract_basic_dict, MD_SEPARATOR, populate_common_columns
-from pyegeria.base_report_formats import select_report_spec, get_report_spec_match
-from pyegeria._validators import validate_guid
-from pyegeria.governance_officer import GovernanceOfficer
-from pyegeria._server_client import ServerClient, max_paging_size
 from pyegeria._globals import NO_ELEMENTS_FOUND, NO_GUID_RETURNED
+from pyegeria._server_client import ServerClient, max_paging_size
+from pyegeria._validators import validate_guid
+from pyegeria.base_report_formats import select_report_spec, get_report_spec_match
+from pyegeria.models import NewElementRequestBody, TemplateRequestBody, UpdateElementRequestBody, \
+    NewRelationshipRequestBody, SearchStringRequestBody, DeleteElementRequestBody, \
+    DeleteRelationshipRequestBody
+from pyegeria.output_formatter import generate_output, extract_mermaid_only, \
+    populate_common_columns
 from pyegeria.utils import body_slimmer, dynamic_catch
-from pyegeria._exceptions import (
-    PyegeriaException,
-    PyegeriaInvalidParameterException,
-    PyegeriaAPIException,
-    PyegeriaUnauthorizedException,
-    PyegeriaNotFoundException,
-    PyegeriaConnectionException,
-    print_basic_exception,
-    print_exception_response,
-)
 
 sys.path.insert(0, os.path.abspath(os.path.dirname(__file__)))
 

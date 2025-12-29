@@ -19,7 +19,7 @@ from pyegeria.base_report_formats import select_report_spec, get_report_spec_mat
 from pyegeria.config import settings
 from pyegeria.models import (SearchStringRequestBody, FilterRequestBody, GetRequestBody, NewElementRequestBody,
                              ReferenceableProperties, InitialClassifications, TemplateRequestBody,
-                             UpdateElementRequestBody, UpdateStatusRequestBody, NewRelationshipRequestBody,
+                             UpdateElementRequestBody, NewRelationshipRequestBody,
                              DeleteElementRequestBody, DeleteRelationshipRequestBody, UpdateRelationshipRequestBody,
                              ResultsRequestBody,
                              get_defined_field_values, PyegeriaModel)
@@ -338,8 +338,9 @@ class CollectionManager(ServerClient):
         """
         url = str(HttpUrl(f"{self.collection_command_root}/by-search-string"))
         response = await self._async_find_request(url, _type="Collection", _gen_output=self._generate_collection_output,
-                                                  search_string=search_string, output_format="JSON", page_size=0,
-                                                  body=body)
+                                                  search_string=search_string, output_format=output_format,
+                                                  report_spec=report_spec, page_size=0,
+                                                  metadata_element_subtype=metadata_element_subtypes, body=body)
 
         return response
 
@@ -2148,6 +2149,7 @@ class CollectionManager(ServerClient):
           "class" : "UpdateElementRequestBody",
           "properties": {
             "class" : "CollectionProperties",
+            "contentStatus": "Add appropriate valid value for type",
             "qualifiedName": "Must provide a unique name here",
             "name" : "Add display name here",
             "description" : "Add description of the collection here",
@@ -2165,10 +2167,6 @@ class CollectionManager(ServerClient):
 
         url = (f"{self.collection_command_root}/{collection_guid}/update")
         await self._async_update_element_body_request(url, COLLECTION_PROPERTIES_LIST,body)
-
-
-
-
 
 
     @dynamic_catch
@@ -2212,6 +2210,7 @@ class CollectionManager(ServerClient):
             "qualifiedName": "Must provide a unique name here",
             "name" : "Add display name here",
             "description" : "Add description of the collection here",
+            "contentStatus": "Add appropriate valid value for type",
             "category": "Add appropriate valid value for type"
           },
           "externalSourceGUID": "add guid here",
@@ -3385,51 +3384,6 @@ class CollectionManager(ServerClient):
 
         return asyncio.get_event_loop().run_until_complete(
             self._async_update_agreement(agreement_guid, body))
-
-
-
-    @dynamic_catch
-    def update_agreement_status(self, agreement_guid: str, status: str = None,
-                                body: dict | UpdateStatusRequestBody = None):
-        """Update the status of an agreement.
-        Parameters
-        ----------
-        agreement_guid: str
-            The guid of the collection to update.
-        status: str, optional
-            The new lifecycle status for the collection. Ignored, if the body is provided.
-        body: dict | UpdateStatusRequestBody
-            A structure representing the details of the collection to create.
-
-        Returns
-        -------
-        Nothing
-
-        Raises
-        ------
-        PyegeriaInvalidParameterException
-          If the client passes incorrect parameters on the request - such as bad URLs or invalid values
-        PyegeriaAPIException
-          Raised by the server when an issue arises in processing a valid request
-        NotAuthorizedException
-          The principle specified by the user_id does not have authorization for the requested action
-
-        Notes
-        -----
-        JSON Structure looks like:
-         {
-          "class": "UpdateStatusRequestBody",
-          "status": "APPROVED",
-          "externalSourceGUID": "add guid here",
-          "externalSourceName": "add qualified name here",
-          "effectiveTime": "{{$isoTimestamp}}",
-          "forLineage": false,
-          "forDuplicateProcessing": false
-        }
-        """
-        loop = asyncio.get_event_loop()
-        loop.run_until_complete(self._async_update_collection_status(agreement_guid, status,body))
-
 
 
     @dynamic_catch

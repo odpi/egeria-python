@@ -245,8 +245,6 @@ class MetadataExplorer(ServerClient):
         guid: str,
         effective_time: str = None,
         as_of_time: str = None,
-            output_format: str = "JSON",
-            report_spec: dict | str = "Referenceable",
             body: dict | GetRequestBody = None,
     ) -> dict | str:
         """
@@ -260,10 +258,6 @@ class MetadataExplorer(ServerClient):
             - Time format is "YYYY-MM-DDTHH:MM:SS" (ISO 8601)
         as_of_time: str, default = None
             - Query the element as of this time. If None, then use current time.
-        output_format: str, default = "JSON"
-            - How to represent the output.
-        report_spec: dict | str, default = "Referenceable"
-            - How to generate the output.
         body: dict | GetRequestBody, default = None
             - details of the request supersede parameters. Body, if present overrides parameters.
 
@@ -302,8 +296,8 @@ class MetadataExplorer(ServerClient):
         url = f"{base_path(self, self.view_server)}/metadata-elements/{guid}"
         response = await self._async_get_guid_request(url=url, _type="Referenceable",
                                                       _gen_output=self._generate_referenceable_output,
-                                                      output_format=output_format,
-                                                      report_spec=report_spec, body=body)
+                                                      output_format="JSON",
+                                                      report_spec=None, body=body)
         return response
 
     @dynamic_catch
@@ -312,8 +306,6 @@ class MetadataExplorer(ServerClient):
         guid: str,
         effective_time: str = None,
         as_of_time: str = None,
-            output_format: str = "JSON",
-            report_spec: str | dict = "Referenceable",
             body: dict | GetRequestBody = None,
     ) -> dict | str:
         """
@@ -327,10 +319,6 @@ class MetadataExplorer(ServerClient):
             - Time format is "YYYY-MM-DDTHH:MM:SS" (ISO 8601)
         as_of_time: str, default = None
             - Query the element as of this time. If None, then use current time.
-        output_format:str, default = JSON
-            - How to represent the output.
-        report_spec: dict, default = Referenceable
-            - How to generate the output.
         body: dict | GetRequestBody, default = None
             - details of the request supersede parameters. Body, if present overrides parameters.
 
@@ -352,16 +340,13 @@ class MetadataExplorer(ServerClient):
 
         loop = asyncio.get_event_loop()
         response = loop.run_until_complete(
-            self._async_get_metadata_element_by_guid(guid, effective_time, as_of_time, output_format,
-                                                     report_spec, body,
-                                                     )
+            self._async_get_metadata_element_by_guid(guid, effective_time, as_of_time, body)
         )
         return response
 
     @dynamic_catch
     async def _async_get_anchored_element_graph(self, guid: str, effective_time: str = None, as_of_time: str = None,
-                                                output_format: str = "JSON",
-                                                report_spec: str | dict = "Referenceable",
+                                                mermaid_only: bool = False,
                                                 body: dict | GetRequestBody = None) -> dict | str:
         """
         Retrieve the metadata element and all of its anchored elements using its unique identifier. Async version.
@@ -374,10 +359,6 @@ class MetadataExplorer(ServerClient):
             - Time format is "YYYY-MM-DDTHH:MM:SS" (ISO 8601)
         as_of_time: str, default = None
             - Query the element as of this time. If None, current time is used.
-        output_format: str, default = "JSON"
-            - How to represent the output.
-        report_spec: str|dict, default = "Referenceable"
-            - How to generate the output.
         body: dict | GetRequestBody, default = None
         - details of the request supersede parameters. Body, if present, overrides parameters.
 
@@ -420,9 +401,10 @@ class MetadataExplorer(ServerClient):
         )
         response = await self._async_get_guid_request(
             url=url, _type="Referenceable", _gen_output=self._generate_referenceable_output,
-            output_format=output_format, report_spec=report_spec, body=body
+            output_format="JSON", report_spec=None, body=body
         )
-
+        if mermaid_only:
+            return response.get("mermaidGraph", "No Mermaid Graph Found")
         return response
 
     @dynamic_catch
@@ -431,8 +413,7 @@ class MetadataExplorer(ServerClient):
         guid: str,
         effective_time: str = None,
         as_of_time: str = None,
-            output_format: str = "JSON",
-            report_spec: str | dict = "Referenceable",
+            mermaid_only: bool = False,
             body: dict | GetRequestBody = None
     ) -> dict | str:
         """
@@ -446,10 +427,6 @@ class MetadataExplorer(ServerClient):
                 - Time format is "YYYY-MM-DDTHH:MM:SS" (ISO 8601)
             as_of_time: str, default = None
                 - Query the element as of this time. If None, current time is used.
-            output_format: str, default = "JSON"
-                - How to represent the output.
-            report_spec: str|dict, default = "Referenceable"
-                - How to generate the output.
             body: dict | GetRequestBody, default = None
             - details of the request supersede parameters. Body, if present, overrides parameters.
 
@@ -477,13 +454,15 @@ class MetadataExplorer(ServerClient):
               "effectiveTime": "{{$isoTimestamp}}"
             }
 
+            Args:
+                mermaid_only ():
+
 
             """
 
         loop = asyncio.get_event_loop()
         response = loop.run_until_complete(
-            self._async_get_anchored_element_graph(guid, effective_time, as_of_time, output_format,
-                                                   report_spec, body)
+            self._async_get_anchored_element_graph(guid, effective_time, as_of_time, mermaid_only, body)
         )
         return response
 
@@ -493,8 +472,6 @@ class MetadataExplorer(ServerClient):
         name: str,
         property_name: str = "qualifiedName",
         effective_time: str = None,
-            output_format: str = "JSON",
-            report_spec: str | dict = "Referenceable",
             body: dict = None
     ) -> dict | str:
         """
@@ -509,10 +486,6 @@ class MetadataExplorer(ServerClient):
             - property name to search in (typically the qualified name)
         effective_time: str, default = None
             - Time format is "YYYY-MM-DDTHH:MM:SS" (ISO 8601)
-        output_format: str, default = "JSON"
-            - How to represent the output.
-        report_spec: str|dict, default = "Referenceable"
-            - How to generate the output.
         body: dict, default = None
             - details of the request supersede parameters. Body, if present, overrides parameters.
         Returns
@@ -563,10 +536,6 @@ class MetadataExplorer(ServerClient):
             logger.info(NO_ELEMENTS_FOUND)
             return NO_ELEMENTS_FOUND
 
-        if output_format != 'JSON':  # return a simplified markdown representation
-            logger.info(f"Found elements, output format: {output_format} and report_spec: {report_spec}")
-            return self._generate_referenceable_output(elements, name, "Referenceable",
-                                                       output_format, report_spec)
         return elements
 
     @dynamic_catch
@@ -575,8 +544,6 @@ class MetadataExplorer(ServerClient):
         name: str,
         property_name: str = "qualifiedName",
         effective_time: str = None,
-            output_format: str = "JSON",
-            report_spec: str = "Referenceable",
             body: dict = None
     ) -> str:
         """
@@ -591,10 +558,6 @@ class MetadataExplorer(ServerClient):
             - property name to search in (typically the qualified name)
         effective_time: str, default = None
             - Time format is "YYYY-MM-DDTHH:MM:SS" (ISO 8601)
-        output_format: str, default = "JSON"
-            - How to represent the output.
-        report_spec: str|dict, default = "Referenceable"
-            - How to generate the output.
         body: dict, default = None
             - details of the request supersede parameters. Body, if present, overrides parameters.
         Returns
@@ -626,8 +589,7 @@ class MetadataExplorer(ServerClient):
 
         loop = asyncio.get_event_loop()
         response = loop.run_until_complete(
-            self._async_get_metadata_element_by_unique_name(name, property_name, effective_time,
-                                                            output_format, report_spec, body)
+            self._async_get_metadata_element_by_unique_name(name, property_name, effective_time, body)
         )
         return response
 
@@ -641,8 +603,6 @@ class MetadataExplorer(ServerClient):
         to_time: str = None,
         start_from: int = 0,
             page_size: int = 0,
-            output_format: str = "JSON",
-            report_spec: str = "Referenceable",
             body: dict = None
     ) -> list | str:
         """
@@ -663,10 +623,6 @@ class MetadataExplorer(ServerClient):
             - index of the list to start from (0 for start).
         page_size: int, default = 0
             - maximum number of elements to return.
-        output_format: str, default = "JSON"
-            - output format for the response
-        report_spec: str|dict, default = "Referenceable"
-            - specification for the report to generate
         body: dict, default = None
             - details of the request supersede parameters. Body, if present, overrides parameters.
 
@@ -720,15 +676,11 @@ class MetadataExplorer(ServerClient):
             "POST", url, body_slimmer(body),
         )
 
-        elements = response.json().get("element", NO_ELEMENTS_FOUND)
+        elements = response.json().get("elementList", NO_ELEMENTS_FOUND)
         if type(elements) is str:
             logger.info(NO_ELEMENTS_FOUND)
             return NO_ELEMENTS_FOUND
 
-        if output_format != 'JSON':  # return a simplified markdown representation
-            logger.info(f"Found elements, output format: {output_format} and report_spec: {report_spec}")
-            return self._generate_referenceable_output(elements, "GUID", "Referenceable",
-                                                       output_format, report_spec)
         return elements
 
     @dynamic_catch
@@ -741,8 +693,6 @@ class MetadataExplorer(ServerClient):
         to_time: str = None,
         start_from: int = 0,
         page_size: int = max_paging_size,
-            output_format: str = "JSON",
-            report_spec: str = "Referenceable",
             body: dict = None
 
     ) -> list | str:
@@ -762,12 +712,8 @@ class MetadataExplorer(ServerClient):
             Time to end returning history
         start_from: int, default = 0
             - index of the list to start from (0 for start).
-        page_size: int, default = 0
+        page_size: int, default = max_paging_size
             - maximum number of elements to return.
-        output_format: str, default = "JSON"
-            - output format for the response
-        report_spec: str|dict, default = "Referenceable"
-            - specification for the report to generate
         body: dict, default = None
             - details of the request supersede parameters. Body, if present, overrides parameters.
         Returns
@@ -800,15 +746,13 @@ class MetadataExplorer(ServerClient):
         }
 
         Args:
-            output_format ():
-            report_spec ():
             body ():
         """
 
         loop = asyncio.get_event_loop()
         response = loop.run_until_complete(
             self._async_get_element_history(guid, effective_time, oldest_first, from_time, to_time, start_from,
-                                            page_size, output_format, report_spec, body)
+                                            page_size, body)
         )
         return response
 
@@ -823,8 +767,6 @@ class MetadataExplorer(ServerClient):
             to_time: str = None,
         start_from: int = 0,
             page_size: int = 0,
-            output_format: str = "JSON",
-            report_spec: str = "Referenceable",
             body: dict = None
     ) -> list | str:
         """
@@ -847,10 +789,6 @@ class MetadataExplorer(ServerClient):
             - index of the list to start from (0 for start).
         page_size: int, default = 0
             - maximum number of elements to return.
-        output_format: str, default = "JSON"
-            - output format for the response
-        report_spec: str|dict, default = "Referenceable"
-            - specification for the report to generate
         body: dict, default = None
             - details of the request supersede parameters. Body, if present, overrides parameters.
 
@@ -907,19 +845,15 @@ class MetadataExplorer(ServerClient):
             "POST", url, body_slimmer(body),
         )
 
-        elements = response.json().get("element", NO_ELEMENTS_FOUND)
+        elements = response.json().get("elementList", NO_ELEMENTS_FOUND)
         if type(elements) is str:
             logger.info(NO_ELEMENTS_FOUND)
             return NO_ELEMENTS_FOUND
 
-        if output_format != 'JSON':  # return a simplified markdown representation
-            logger.info(f"Found elements, output format: {output_format} and report_spec: {report_spec}")
-            return self._generate_referenceable_output(elements, "GUID", "Referenceable",
-                                                       output_format, report_spec)
         return elements
 
     @dynamic_catch
-    def get_metadata_element_history(
+    def get_classification_history(
         self,
             guid: str,
             classification_name: str,
@@ -929,8 +863,6 @@ class MetadataExplorer(ServerClient):
             to_time: str = None,
         start_from: int = 0,
         page_size: int = max_paging_size,
-            output_format: str = "JSON",
-            report_spec: str = "Referenceable",
             body: dict = None
 
     ) -> list | str:
@@ -952,12 +884,8 @@ class MetadataExplorer(ServerClient):
             Time to end returning history
         start_from: int, default = 0
             - index of the list to start from (0 for start).
-        page_size: int, default = 0
+        page_size: int, default = max_paging_size
             - maximum number of elements to return.
-        output_format: str, default = "JSON"
-            - output format for the response
-        report_spec: str|dict, default = "Referenceable"
-            - specification for the report to generate
         body: dict, default = None
             - details of the request supersede parameters. Body, if present, overrides parameters.
 
@@ -994,7 +922,7 @@ class MetadataExplorer(ServerClient):
         loop = asyncio.get_event_loop()
         response = loop.run_until_complete(
             self._async_get_classification_history(guid, classification_name, effective_time, oldest_first, from_time,
-                                                   to_time, start_from, page_size, output_format, report_spec, body)
+                                                   to_time, start_from, page_size, body)
         )
         return response
 
@@ -1013,8 +941,6 @@ class MetadataExplorer(ServerClient):
                                                         limit_results_by_status: list[str] = None,
                                                         sequencing_order: str = "PROPERTY_ASCENDING",
                                                         sequencing_property: str = "qualifiedName",
-                                                        output_format: str = "json",
-                                                        report_spec: str | dict = "Referenceable",
                                                         start_from: int = 0, page_size: int = 0,
                                                         body: SearchStringRequestBody | dict = None) -> list | str:
         """ Searches for metadata elements based on a string pattern with a comprehensive filtering
@@ -1059,9 +985,6 @@ class MetadataExplorer(ServerClient):
             sequencing_order (str): Determines the sequencing order of results. Defaults to "PROPERTY_ASCENDING".
             sequencing_property (str): The property used for sequencing metadata elements. Defaults to
                 "qualifiedName".
-            output_format (str): The format of the output, with supported values like "json". Defaults to "json".
-            report_spec (str): A specification defining the expected structure of the metadata elements
-                returned in the report. Defaults to "Referenceable".
             start_from (int): The starting index for paginated results. Defaults to 0.
             page_size (int): The number of metadata elements to return per page. A value of 0 implies no pagination.
                 Defaults to 0.
@@ -1084,7 +1007,7 @@ class MetadataExplorer(ServerClient):
                                                   anchor_domain=anchor_domain,
                                                   governance_zone_filter=zone_filter,
                                                   metadata_element_type=metadata_element_type,
-                                                  metadata_element_sub_type=metadata_element_sub_type,
+                                                  metadata_element_subtype=metadata_element_sub_type,
                                                   skip_relationships=skip_relationships,
                                                   include_only_relationships=include_only_relationships,
                                                   skip_classified_elements=skip_classified_elements,
@@ -1094,8 +1017,9 @@ class MetadataExplorer(ServerClient):
                                                   relationship_page_size=relationship_page_size,
                                                   limit_results_by_status=limit_results_by_status,
                                                   sequencing_order=sequencing_order,
-                                                  sequencing_property=sequencing_property, output_format=output_format,
-                                                  report_spec=report_spec, start_from=start_from,
+                                                  sequencing_property=sequencing_property,
+                                                  output_format="JSON",
+                                                  report_spec=None, start_from=start_from,
                                                   page_size=page_size, body=body)
         return response
 
@@ -1113,7 +1037,6 @@ class MetadataExplorer(ServerClient):
                                            limit_results_by_status: list[str] = None,
                                            sequencing_order: str = "PROPERTY_ASCENDING",
                                            sequencing_property: str = "qualifiedName",
-                                           output_format: str = "json", report_spec: str = "Referenceable",
                                            start_from: int = 0, page_size: int = 0,
                                            body: SearchStringRequestBody | dict = None) -> list | str:
         """
@@ -1158,9 +1081,6 @@ class MetadataExplorer(ServerClient):
             sequencing_order (str): Determines the sequencing order of results. Defaults to "PROPERTY_ASCENDING".
             sequencing_property (str): The property used for sequencing metadata elements. Defaults to
                 "qualifiedName".
-            output_format (str): The format of the output, with supported values like "json". Defaults to "json".
-            report_spec (str): A specification defining the expected structure of the metadata elements
-                returned in the report. Defaults to "Referenceable".
             start_from (int): The starting index for paginated results. Defaults to 0.
             page_size (int): The number of metadata elements to return per page. A value of 0 implies no pagination.
                 Defaults to 0.
@@ -1181,8 +1101,7 @@ class MetadataExplorer(ServerClient):
                                                            include_only_classified_elements,
                                                            graph_query_depth, as_of_time, effective_time,
                                                            limit_results_by_status, sequencing_order,
-                                                           sequencing_property, output_format,
-                                                           report_spec, start_from, page_size, body)
+                                                           sequencing_property, start_from, page_size, body)
         )
         return response
 
@@ -1201,7 +1120,6 @@ class MetadataExplorer(ServerClient):
                                               limit_results_by_status: list[str] = None,
                                               sequencing_order: str = "PROPERTY_ASCENDING",
                                               sequencing_property: str = "qualifiedName",
-                                              output_format: str = "json", report_spec: str = "Referenceable",
                                               start_from: int = 0, page_size: int = 0,
                                               body: SearchStringRequestBody | dict = None) -> list | str:
         """ Return a list of elements with the requested search string in their (display, resource) name, qualified name,
@@ -1246,9 +1164,6 @@ class MetadataExplorer(ServerClient):
             sequencing_order (str): Determines the sequencing order of results. Defaults to "PROPERTY_ASCENDING".
             sequencing_property (str): The property used for sequencing metadata elements. Defaults to
                 "qualifiedName".
-            output_format (str): The format of the output, with supported values like "json". Defaults to "json".
-            report_spec (str): A specification defining the expected structure of the metadata elements
-                returned in the report. Defaults to "Referenceable".
             start_from (int): The starting index for paginated results. Defaults to 0.
             page_size (int): The number of metadata elements to return per page. A value of 0 implies no pagination.
                 Defaults to 0.
@@ -1269,7 +1184,7 @@ class MetadataExplorer(ServerClient):
                                                   search_string=search_string, anchor_domain=anchor_domain,
                                                   governance_zone_filter=zone_filter,
                                                   metadata_element_type=metadata_element_type,
-                                                  metadata_element_sub_type=metadata_element_sub_type,
+                                                  metadata_element_subtype=metadata_element_sub_type,
                                                   skip_relationships=skip_relationships,
                                                   include_only_relationships=include_only_relationships,
                                                   skip_classified_elements=skip_classified_elements,
@@ -1279,8 +1194,9 @@ class MetadataExplorer(ServerClient):
                                                   relationship_page_size=relationship_page_size,
                                                   limit_results_by_status=limit_results_by_status,
                                                   sequencing_order=sequencing_order,
-                                                  sequencing_property=sequencing_property, output_format=output_format,
-                                                  report_spec=report_spec, start_from=start_from, page_size=page_size,
+                                                  sequencing_property=sequencing_property,
+                                                  output_format="JSON",
+                                                  report_spec=None, start_from=start_from, page_size=page_size,
                                                   body=body)
         return response
 
@@ -1296,7 +1212,6 @@ class MetadataExplorer(ServerClient):
                                  limit_results_by_status: list[str] = None,
                                  sequencing_order: str = "PROPERTY_ASCENDING",
                                  sequencing_property: str = "qualifiedName",
-                                 output_format: str = "json", report_spec: str = "Referenceable",
                                  start_from: int = 0, page_size: int = 0,
                                  body: SearchStringRequestBody | dict = None) -> list | str:
         """ Return a list of elements with the requested search string in their (display, resource) name, qualified name,
@@ -1333,7 +1248,7 @@ class MetadataExplorer(ServerClient):
                 graph_query_depth (int): Specifies the depth for graph queries, useful for deeply connected
                     metadata elements. Defaults to 5.
                 as_of_time (str | None): Timestamp to filter metadata elements based on their historical
-                    state as of the given time. Defaults to None.
+                state as of the given time. Defaults to None.
                 effective_time (str | None): Timestamp to filter metadata elements based on their effective
                     state. Defaults to None.
                 limit_results_by_status (list[str] | None): Filters to return only metadata elements associated
@@ -1341,9 +1256,6 @@ class MetadataExplorer(ServerClient):
                 sequencing_order (str): Determines the sequencing order of results. Defaults to "PROPERTY_ASCENDING".
                 sequencing_property (str): The property used for sequencing metadata elements. Defaults to
                     "qualifiedName".
-                output_format (str): The format of the output, with supported values like "json". Defaults to "json".
-                report_spec (str): A specification defining the expected structure of the metadata elements
-                    returned in the report. Defaults to "Referenceable".
                 start_from (int): The starting index for paginated results. Defaults to 0.
                 page_size (int): The number of metadata elements to return per page. A value of 0 implies no pagination.
                     Defaults to 0.
@@ -1364,8 +1276,7 @@ class MetadataExplorer(ServerClient):
                                                  include_only_classified_elements,
                                                  graph_query_depth, as_of_time, effective_time,
                                                  limit_results_by_status, sequencing_order,
-                                                 sequencing_property, output_format,
-                                                 report_spec, start_from, page_size, body)
+                                                 sequencing_property, start_from, page_size, body)
         )
         return response
 
@@ -1384,7 +1295,6 @@ class MetadataExplorer(ServerClient):
                                                     limit_results_by_status: list[str] = None,
                                                     sequencing_order: str = "PROPERTY_ASCENDING",
                                                     sequencing_property: str = "qualifiedName",
-                                                    output_format: str = "json", report_spec: str = "Referenceable",
                                                     start_from: int = 0, page_size: int = 0,
                                                     body: SearchStringRequestBody | dict = None) -> list | str:
         """ Return a list of elements with the requested search string in their (display, resource) name, qualified name,
@@ -1428,9 +1338,6 @@ class MetadataExplorer(ServerClient):
             sequencing_order (str): Determines the sequencing order of results. Defaults to "PROPERTY_ASCENDING".
             sequencing_property (str): The property used for sequencing metadata elements. Defaults to
                 "qualifiedName".
-            output_format (str): The format of the output, with supported values like "json". Defaults to "json".
-            report_spec (str): A specification defining the expected structure of the metadata elements
-                returned in the report. Defaults to "Referenceable".
             start_from (int): The starting index for paginated results. Defaults to 0.
             page_size (int): The number of metadata elements to return per page. A value of 0 implies no pagination.
                 Defaults to 0.
@@ -1454,7 +1361,7 @@ class MetadataExplorer(ServerClient):
                                                   anchor_domain=anchor_domain,
                                                   governance_zone_filter=zone_filter,
                                                   metadata_element_type=metadata_element_type,
-                                                  metadata_element_sub_type=metadata_element_sub_type,
+                                                  metadata_element_subtype=metadata_element_sub_type,
                                                   skip_relationships=skip_relationships,
                                                   include_only_relationships=include_only_relationships,
                                                   skip_classified_elements=skip_classified_elements,
@@ -1464,8 +1371,9 @@ class MetadataExplorer(ServerClient):
                                                   relationship_page_size=relationship_page_size,
                                                   limit_results_by_status=limit_results_by_status,
                                                   sequencing_order=sequencing_order,
-                                                  sequencing_property=sequencing_property, output_format=output_format,
-                                                  report_spec=report_spec, start_from=start_from, page_size=page_size,
+                                                  sequencing_property=sequencing_property,
+                                                  output_format="JSON",
+                                                  report_spec=None, start_from=start_from, page_size=page_size,
                                                   body=body)
         return response
 
@@ -1481,7 +1389,6 @@ class MetadataExplorer(ServerClient):
                                        limit_results_by_status: list[str] = None,
                                        sequencing_order: str = "PROPERTY_ASCENDING",
                                        sequencing_property: str = "qualifiedName",
-                                       output_format: str = "json", report_spec: str = "Referenceable",
                                        start_from: int = 0, page_size: int = 0,
                                        body: SearchStringRequestBody | dict = None) -> list | str:
         """ Return a list of elements with the requested search string in their (display, resource) name, qualified name,
@@ -1525,9 +1432,6 @@ class MetadataExplorer(ServerClient):
                 sequencing_order (str): Determines the sequencing order of results. Defaults to "PROPERTY_ASCENDING".
                 sequencing_property (str): The property used for sequencing metadata elements. Defaults to
                     "qualifiedName".
-                output_format (str): The format of the output, with supported values like "json". Defaults to "json".
-                report_spec (str): A specification defining the expected structure of the metadata elements
-                    returned in the report. Defaults to "Referenceable".
                 start_from (int): The starting index for paginated results. Defaults to 0.
                 page_size (int): The number of metadata elements to return per page. A value of 0 implies no pagination.
                     Defaults to 0.
@@ -1547,7 +1451,7 @@ class MetadataExplorer(ServerClient):
                                                        relationship_page_size, skip_classified_elements,
                                                        include_only_classified_elements, graph_query_depth, as_of_time,
                                                        effective_time, limit_results_by_status, sequencing_order,
-                                                       sequencing_property, output_format, report_spec, start_from,
+                                                       sequencing_property, start_from,
                                                        page_size, body)
         )
         return response
@@ -1567,7 +1471,6 @@ class MetadataExplorer(ServerClient):
                                                    limit_results_by_status: list[str] = None,
                                                    sequencing_order: str = "PROPERTY_ASCENDING",
                                                    sequencing_property: str = "qualifiedName",
-                                                   output_format: str = "json", report_spec: str = "Referenceable",
                                                    start_from: int = 0, page_size: int = 0,
                                                    body: SearchStringRequestBody | dict = None) -> list | str:
         """ Return a list of elements with the requested search string in their (display, resource) name, qualified name,
@@ -1613,9 +1516,6 @@ class MetadataExplorer(ServerClient):
             sequencing_order (str): Determines the sequencing order of results. Defaults to "PROPERTY_ASCENDING".
             sequencing_property (str): The property used for sequencing metadata elements. Defaults to
                 "qualifiedName".
-            output_format (str): The format of the output, with supported values like "json". Defaults to "json".
-            report_spec (str): A specification defining the expected structure of the metadata elements
-                returned in the report. Defaults to "Referenceable".
             start_from (int): The starting index for paginated results. Defaults to 0.
             page_size (int): The number of metadata elements to return per page. A value of 0 implies no pagination.
                 Defaults to 0.
@@ -1639,7 +1539,7 @@ class MetadataExplorer(ServerClient):
                                                   anchor_domain=anchor_domain,
                                                   governance_zone_filter=zone_filter,
                                                   metadata_element_type=metadata_element_type,
-                                                  metadata_element_sub_type=metadata_element_sub_type,
+                                                  metadata_element_subtype=metadata_element_sub_type,
                                                   skip_relationships=skip_relationships,
                                                   include_only_relationships=include_only_relationships,
                                                   skip_classified_elements=skip_classified_elements,
@@ -1649,8 +1549,9 @@ class MetadataExplorer(ServerClient):
                                                   relationship_page_size=relationship_page_size,
                                                   limit_results_by_status=limit_results_by_status,
                                                   sequencing_order=sequencing_order,
-                                                  sequencing_property=sequencing_property, output_format=output_format,
-                                                  report_spec=report_spec, start_from=start_from, page_size=page_size,
+                                                  sequencing_property=sequencing_property,
+                                                  output_format="JSON",
+                                                  report_spec=None, start_from=start_from, page_size=page_size,
                                                   body=body)
         return response
 
@@ -1666,13 +1567,11 @@ class MetadataExplorer(ServerClient):
                                       limit_results_by_status: list[str] = None,
                                       sequencing_order: str = "PROPERTY_ASCENDING",
                                       sequencing_property: str = "qualifiedName",
-                                      output_format: str = "json", report_spec: str = "Referenceable",
                                       start_from: int = 0, page_size: int = 0,
                                       body: SearchStringRequestBody | dict = None) -> list | str:
         """ Return a list of elements with the requested search string in their (display, resource) name, qualified name,
             title, text, summary, identifier, or description.  The search string is interpreted as a regular expression (RegEx).
             The breadth of the search is determined by the supplied scope guid. The results are organized by anchor element.
-            Async Version.
 
             Args:
                 anchor_scope_guid (str): The guid of the scope to search within. Required.
@@ -1704,7 +1603,7 @@ class MetadataExplorer(ServerClient):
                 graph_query_depth (int): Specifies the depth for graph queries, useful for deeply connected
                     metadata elements. Defaults to 5.
                 as_of_time (str | None): Timestamp to filter metadata elements based on their historical
-                    state as of the given time. Defaults to None.
+                state as of the given time. Defaults to None.
                 effective_time (str | None): Timestamp to filter metadata elements based on their effective
                     state. Defaults to None.
                 limit_results_by_status (list[str] | None): Filters to return only metadata elements associated
@@ -1712,9 +1611,6 @@ class MetadataExplorer(ServerClient):
                 sequencing_order (str): Determines the sequencing order of results. Defaults to "PROPERTY_ASCENDING".
                 sequencing_property (str): The property used for sequencing metadata elements. Defaults to
                     "qualifiedName".
-                output_format (str): The format of the output, with supported values like "json". Defaults to "json".
-                report_spec (str): A specification defining the expected structure of the metadata elements
-                    returned in the report. Defaults to "Referenceable".
                 start_from (int): The starting index for paginated results. Defaults to 0.
                 page_size (int): The number of metadata elements to return per page. A value of 0 implies no pagination.
                     Defaults to 0.
@@ -1734,7 +1630,7 @@ class MetadataExplorer(ServerClient):
                                                       relationship_page_size, skip_classified_elements,
                                                       include_only_classified_elements, graph_query_depth, as_of_time,
                                                       effective_time, limit_results_by_status, sequencing_order,
-                                                      sequencing_property, output_format, report_spec, start_from,
+                                                      sequencing_property, start_from,
                                                       page_size, body)
         )
         return response
@@ -1748,8 +1644,6 @@ class MetadataExplorer(ServerClient):
             page_size: int = 0,
             graph_query_depth: int = 5,
             relationships_page_size: int = 0,
-            output_format: str = 'JSON',
-            report_spec: str = 'Referenceable',
             body: dict | ResultsRequestBody = None,
     ) -> list | str:
         """ Retrieve the metadata elements connected to the supplied element. Async Version.
@@ -1766,10 +1660,6 @@ class MetadataExplorer(ServerClient):
                 to traverse to fetch related elements. Defaults to 5.
             relationships_page_size (int): The page size for traversing relationships.
                 Defaults to 0 (no limit).
-            output_format (str): The desired format for the output data, e.g., JSON.
-                Defaults to 'JSON'.
-            report_spec (str): A report specification for filtering or processing
-                metadata elements. Defaults to 'Referenceable'.
             body (dict | ResultsRequestBody): The request body containing additional
                 filtering or query parameters specific to the request. This can either
                 be a dictionary or an object of class ResultsRequestBody.
@@ -1826,8 +1716,6 @@ class MetadataExplorer(ServerClient):
             page_size: int = max_paging_size,
             graph_query_depth: int = 5,
             relationships_page_size: int = 0,
-            output_format: str = 'JSON',
-            report_spec: str = 'Referenceable',
             body: dict | ResultsRequestBody = None,
     ) -> list | str:
         """ Retrieve the metadata elements connected to the supplied element.
@@ -1844,10 +1732,6 @@ class MetadataExplorer(ServerClient):
                 to traverse to fetch related elements. Defaults to 5.
             relationships_page_size (int): The page size for traversing relationships.
                 Defaults to 0 (no limit).
-            output_format (str): The desired format for the output data, e.g., JSON.
-                Defaults to 'JSON'.
-            report_spec (str): A report specification for filtering or processing
-                metadata elements. Defaults to 'Referenceable'.
             body (dict | ResultsRequestBody): The request body containing additional
                 filtering or query parameters specific to the request. This can either
                 be a dictionary or an object of class ResultsRequestBody.
@@ -1885,82 +1769,80 @@ class MetadataExplorer(ServerClient):
         response = loop.run_until_complete(
             self._async_get_all_related_elements(element_guid, starting_at_end, start_from, page_size,
                                                  graph_query_depth, relationships_page_size,
-                                                 output_format, report_spec,
                                                  body=body)
         )
         return response
 
-
-async def _async_get_related_metadata_elements(
-        self,
-        element_guid: str,
-        relationship_type: str,
-        body: dict,
-        for_lineage: bool = None,
-        for_duplicate_processing: bool = None,
-        starting_at_end: int = 0,
-        start_from: int = 0,
-        page_size: int = max_paging_size,
-        time_out: int = default_time_out,
-        mermaid_only: bool = False,
-) -> list | str:
-    """
-        Retrieve the metadata elements connected to the supplied element.
-        Async version.
-
-        Parameters
-        ----------
-        guid: str
-            - Unique identity of the element to retrieve.
-        relationship_type: str
-            - name of the relationship type to retrieve relationships of
-        body: dict
-            - A structure containing the search criteria. (example below)
-        for_lineage: bool, default is set by server
-            - determines if elements classified as Memento should be returned - normally false
-        for_duplicate_processing: bool, default is set by server
-            - Normally false. Set true when the caller is part of a deduplication function
-        starting_at_end: int, default = 0
-            - Relationship end to start from.
-        start_from: int, default = 0
-            - index of the list to start from (0 for start).
-        page_size
-            - maximum number of elements to return.
-        time_out: int, default = default_time_out
-            - http request timeout for this request
-        mermaid_only: bool, default is False
-            - if true only a string representing the mermaid graph will be returned
-
-        Returns
-        -------
-        [dict] | str
-            Output based on the output_format and report_spec.
-
-        Raises
-        ------
-        PyegeriaInvalidParameterException
-            one of the parameters is null or invalid or
-        PyegeriaAPIException
-            There is a problem adding the element properties to the metadata repository or
-        PyegeriaUnauthorizedException
-            the requesting user is not authorized to issue this request.
-
-        Notes:
-
-            Sample body:
-                {
-                  "class": "ResultsRequestBody",
-                  "effectiveTime": "{{$isoTimestamp}}",
-                  "limitResultsByStatus": ["ACTIVE"],
-                  "asOfTime": "{{$isoTimestamp}}",
-                  "sequencingOrder": "PROPERTY_ASCENDING",
-                  "sequencingProperty": "fileName"
-                }
-
+    async def _async_get_related_metadata_elements(
+            self,
+            element_guid: str,
+            relationship_type: str,
+            body: dict,
+            for_lineage: bool = None,
+            for_duplicate_processing: bool = None,
+            starting_at_end: int = 0,
+            start_from: int = 0,
+            page_size: int = max_paging_size,
+            time_out: int = default_time_out,
+            mermaid_only: bool = False,
+    ) -> list | str:
         """
+            Retrieve the metadata elements connected to the supplied element.
+            Async version.
+
+            Parameters
+            ----------
+            guid: str
+                - Unique identity of the element to retrieve.
+            relationship_type: str
+                - name of the relationship type to retrieve relationships of
+            body: dict
+                - A structure containing the search criteria. (example below)
+            for_lineage: bool, default is set by server
+                - determines if elements classified as Memento should be returned - normally false
+            for_duplicate_processing: bool, default is set by server
+                - Normally false. Set true when the caller is part of a deduplication function
+            starting_at_end: int, default = 0
+                - Relationship end to start from.
+            start_from: int, default = 0
+                - index of the list to start from (0 for start).
+            page_size
+                - maximum number of elements to return.
+            time_out: int, default = default_time_out
+                - http request timeout for this request
+            mermaid_only: bool, default is False
+                - if true only a string representing the mermaid graph will be returned
+
+            Returns
+            -------
+            [dict] | str
+                The related metadata elements.
+
+            Raises
+            ------
+            PyegeriaInvalidParameterException
+                one of the parameters is null or invalid or
+            PyegeriaAPIException
+                There is a problem adding the element properties to the metadata repository or
+            PyegeriaUnauthorizedException
+                the requesting user is not authorized to issue this request.
+
+            Notes:
+
+                Sample body:
+                    {
+                      "class": "ResultsRequestBody",
+                      "effectiveTime": "{{$isoTimestamp}}",
+                      "limitResultsByStatus": ["ACTIVE"],
+                      "asOfTime": "{{$isoTimestamp}}",
+                      "sequencingOrder": "PROPERTY_ASCENDING",
+                      "sequencingProperty": "fileName"
+                    }
+
+            """
 
         url = (
-            f"{base_path(self, self.view_server)}/related-elements/{guid}/type/{relationship_type}"
+            f"{base_path(self, self.view_server)}/related-elements/{element_guid}/type/{relationship_type}"
 
         )
 

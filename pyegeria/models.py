@@ -342,14 +342,14 @@ class UpdateElementRequestBody(PyegeriaModel):
     for_duplicate_processing: bool | None = False
 
 
-class UpdateStatusRequestBody(PyegeriaModel):
-    class_: Annotated[Literal["UpdateStatusRequestBody"], Field(alias="class")]
-    new_status: str
-    external_source_guid: str | None = None
-    external_source_name: str | None = None
-    effective_time: datetime | None = None
-    for_lineage: bool | None = False
-    for_duplicate_processing: bool | None = False
+# class UpdateStatusRequestBody(PyegeriaModel):
+#     class_: Annotated[Literal["UpdateStatusRequestBody"], Field(alias="class")]
+#     new_status: str
+#     external_source_guid: str | None = None
+#     external_source_name: str | None = None
+#     effective_time: datetime | None = None
+#     for_lineage: bool | None = False
+#     for_duplicate_processing: bool | None = False
 
 
 class GetRequestBody(PyegeriaModel):

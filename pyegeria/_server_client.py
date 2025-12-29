@@ -27,7 +27,7 @@ from pyegeria._globals import max_paging_size, NO_ELEMENTS_FOUND, default_time_o
 from pyegeria.base_report_formats import get_report_spec_match
 from pyegeria.base_report_formats import select_report_spec
 from pyegeria.models import (SearchStringRequestBody, FilterRequestBody, GetRequestBody, NewElementRequestBody,
-                             TemplateRequestBody, UpdateStatusRequestBody, UpdateElementRequestBody,
+                             TemplateRequestBody, UpdateElementRequestBody,
                              NewRelationshipRequestBody,
                              UpdateRelationshipRequestBody, ResultsRequestBody,
                              NewClassificationRequestBody,
@@ -101,7 +101,7 @@ class ServerClient(BaseServerClient):
         self._get_request_adapter = TypeAdapter(GetRequestBody)
         self._new_element_request_adapter = TypeAdapter(NewElementRequestBody)
         self._update_element_request_adapter = TypeAdapter(UpdateElementRequestBody)
-        self._update_status_request_adapter = TypeAdapter(UpdateStatusRequestBody)
+        # self._update_status_request_adapter = TypeAdapter(UpdateStatusRequestBody)
         self._new_relationship_request_adapter = TypeAdapter(NewRelationshipRequestBody)
         self._new_classification_request_adapter = TypeAdapter(NewClassificationRequestBody)
         self._delete_element_request_adapter = TypeAdapter(DeleteElementRequestBody)
@@ -4837,28 +4837,25 @@ class ServerClient(BaseServerClient):
             validated_body = None
         return validated_body
 
-    @dynamic_catch
-    def validate_update_status_request(self, status: str = None, body: dict | UpdateStatusRequestBody = None,
-                                       prop: list[str] = None) -> UpdateStatusRequestBody | None:
-        if isinstance(body, UpdateStatusRequestBody):
-            validated_body = body
-
-        elif isinstance(body, dict):
-            validated_body = self._update_element_request_adapter.validate_python(body)
-
-        elif status:
-            body = {
-                "class": "UpdateStatusRequestBody",
-                "newStatus": status
-            }
-            validated_body = UpdateStatusRequestBody.model_validate(body)
-        else:
-            raise PyegeriaInvalidParameterExceptio
-            lid
-            parameters
-            "})
-
-        return validated_body
+    # @dynamic_catch
+    # def validate_update_status_request(self, status: str = None, body: dict | UpdateStatusRequestBody = None,
+    #                                    prop: list[str] = None) -> UpdateStatusRequestBody | None:
+    #     if isinstance(body, UpdateStatusRequestBody):
+    #         validated_body = body
+    #
+    #     elif isinstance(body, dict):
+    #         validated_body = self._update_element_request_adapter.validate_python(body)
+    #
+    #     elif status:
+    #         body = {
+    #             "class": "UpdateStatusRequestBody",
+    #             "newStatus": status
+    #         }
+    #         validated_body = UpdateStatusRequestBody.model_validate(body)
+    #     else:
+    #         raise PyegeriaInvalidParameterException
+    #
+    #     return validated_body
 
     @dynamic_catch
     def validate_update_relationship_request(self, body: dict | UpdateRelationshipRequestBody,
@@ -4884,7 +4881,7 @@ class ServerClient(BaseServerClient):
     async def _async_find_request(self, url: str, _type: str, _gen_output: Callable[..., Any], search_string: str,
                                   starts_with: bool = True, ends_with: bool = False, ignore_case: bool = False,
                                   anchor_domain: str = None,
-                                  metadata_element_type: str = None, metadata_element_sub_type: list[str] = None,
+                                  metadata_element_type: str = None, metadata_element_subtype: list[str] = None,
                                   skip_relationships: list[str] = None,
                                   include_only_relationships: list[str] = None,
                                   skip_classified_elements: list[str] = None,
@@ -4912,8 +4909,8 @@ class ServerClient(BaseServerClient):
                 "ignoreCase": ignore_case,
                 "anchorDomain": anchor_domain,
                 "zoneFilter": governance_zone_filter,
-                "metadataElementType": metadata_element_type,
-                "metadataElementSubType": metadata_element_sub_type,
+                "metadataElementTypeName": metadata_element_type,
+                "metadataElementSubtypeNames": metadata_element_subtype,
                 "skipRelationships": skip_relationships,
                 "includeOnlyRelationships": include_only_relationships,
                 "relationshipPageSize": relationship_page_size,
@@ -5007,8 +5004,10 @@ class ServerClient(BaseServerClient):
         response = await self._async_make_request("POST", url, json_body)
         elements = response.json().get("element", NO_ELEMENTS_FOUND)
         if type(elements) is str:
-            logger.info(NO_ELEMENTS_FOUND)
-            return NO_ELEMENTS_FOUND
+            elements = response.json().get("elementGraph", NO_ELEMENTS_FOUND)
+            if type(elements) is str:
+                logger.info(NO_ELEMENTS_FOUND)
+                return NO_ELEMENTS_FOUND
 
         if output_format != 'JSON':  # return a simplified markdown representation
             logger.info(f"Found elements, output format: {output_format} and report_spec: {report_spec}")
@@ -5107,14 +5106,14 @@ class ServerClient(BaseServerClient):
         response = await self._async_make_request("POST", url, json_body)
         logger.info(response.json())
 
-    @dynamic_catch
-    async def _async_update_status_request(self, url: str, status: str = None,
-                                           body: dict | UpdateStatusRequestBody = None) -> None:
-        validated_body = self.validate_update_status_request(status, body)
-        json_body = validated_body.model_dump_json(indent=2, exclude_none=True)
-        logger.info(json_body)
-        response = await self._async_make_request("POST", url, json_body)
-        logger.info(response.json())
+    # @dynamic_catch
+    # async def _async_update_status_request(self, url: str, status: str = None,
+    #                                        body: dict | UpdateStatusRequestBody = None) -> None:
+    #     validated_body = self.validate_update_status_request(status, body)
+    #     json_body = validated_body.model_dump_json(indent=2, exclude_none=True)
+    #     logger.info(json_body)
+    #     response = await self._async_make_request("POST", url, json_body)
+    #     logger.info(response.json())
 
     @dynamic_catch
     async def _async_new_relationship_request(self, url: str, prop: list[str] = None,
@@ -5182,87 +5181,87 @@ class ServerClient(BaseServerClient):
         else:
             await self._async_make_request("POST", url)
 
-    @dynamic_catch
-    async def _async_update_element_status(self, guid: str, status: str = None,
-                                           body: dict | UpdateStatusRequestBody = None) -> None:
-        """ Update the status of an element. Async version.
-
-           Parameters
-           ----------
-           guid: str
-               The guid of the element to update.
-           status: str, optional
-               The new lifecycle status for the element. Ignored, if the body is provided.
-           body: dict | UpdateStatusRequestBody, optional
-               A structure representing the details of the element status to update. If supplied, these details
-               supersede the status parameter provided.
-
-           Returns
-           -------
-           Nothing
-
-           Raises
-           ------
-           PyegeriaException
-           ValidationError
-
-           Notes
-           -----
-           JSON Structure looks like:
-            {
-             "class": "UpdateStatusRequestBody",
-             "newStatus": "APPROVED",
-             "externalSourceGUID": "add guid here",
-             "externalSourceName": "add qualified name here",
-             "effectiveTime": "{{$isoTimestamp}}",
-             "forLineage": false,
-             "forDuplicateProcessing": false
-           }
-           """
-
-        url = (f"{self.platform_url}/servers/{self.view_server}/api/open-metadata/"
-               f"{self.url_marker}/metadata-elements/{guid}/update-status")
-        await self._async_update_status_request(url, status, body)
-
-    @dynamic_catch
-    def update_element_status(self, guid: str, status: str = None,
-                              body: dict | UpdateStatusRequestBody = None) -> None:
-        """ Update the status of an element. Async version.
-
-           Parameters
-           ----------
-           guid: str
-               The guid of the element to update.
-           status: str, optional
-               The new lifecycle status for the element. Ignored, if the body is provided.
-           body: dict | UpdateStatusRequestBody, optional
-               A structure representing the details of the element status to update. If supplied, these details
-               supersede the status parameter provided.
-
-           Returns
-           -------
-           Nothing
-
-           Raises
-           ------
-           PyegeriaException
-           ValidationError
-
-           Notes
-           -----
-           JSON Structure looks like:
-            {
-             "class": "UpdateStatusRequestBody",
-             "newStatus": "APPROVED",
-             "externalSourceGUID": "add guid here",
-             "externalSourceName": "add qualified name here",
-             "effectiveTime": "{{$isoTimestamp}}",
-             "forLineage": false,
-             "forDuplicateProcessing": false
-           }
-           """
-        loop = asyncio.get_event_loop()
-        loop.run_until_complete(self._async_update_element_status(guid, status, body))
+    # @dynamic_catch
+    # async def _async_update_element_status(self, guid: str, status: str = None,
+    #                                        body: dict | UpdateStatusRequestBody = None) -> None:
+    #     """ Update the status of an element. Async version.
+    #
+    #        Parameters
+    #        ----------
+    #        guid: str
+    #            The guid of the element to update.
+    #        status: str, optional
+    #            The new lifecycle status for the element. Ignored, if the body is provided.
+    #        body: dict | UpdateStatusRequestBody, optional
+    #            A structure representing the details of the element status to update. If supplied, these details
+    #            supersede the status parameter provided.
+    #
+    #        Returns
+    #        -------
+    #        Nothing
+    #
+    #        Raises
+    #        ------
+    #        PyegeriaException
+    #        ValidationError
+    #
+    #        Notes
+    #        -----
+    #        JSON Structure looks like:
+    #         {
+    #          "class": "UpdateStatusRequestBody",
+    #          "newStatus": "APPROVED",
+    #          "externalSourceGUID": "add guid here",
+    #          "externalSourceName": "add qualified name here",
+    #          "effectiveTime": "{{$isoTimestamp}}",
+    #          "forLineage": false,
+    #          "forDuplicateProcessing": false
+    #        }
+    #        """
+    #
+    #     url = (f"{self.platform_url}/servers/{self.view_server}/api/open-metadata/"
+    #            f"{self.url_marker}/metadata-elements/{guid}/update-status")
+    #     await self._async_update_status_request(url, status, body)
+    #
+    # @dynamic_catch
+    # def update_element_status(self, guid: str, status: str = None,
+    #                           body: dict | UpdateStatusRequestBody = None) -> None:
+    #     """ Update the status of an element. Async version.
+    #
+    #        Parameters
+    #        ----------
+    #        guid: str
+    #            The guid of the element to update.
+    #        status: str, optional
+    #            The new lifecycle status for the element. Ignored, if the body is provided.
+    #        body: dict | UpdateStatusRequestBody, optional
+    #            A structure representing the details of the element status to update. If supplied, these details
+    #            supersede the status parameter provided.
+    #
+    #        Returns
+    #        -------
+    #        Nothing
+    #
+    #        Raises
+    #        ------
+    #        PyegeriaException
+    #        ValidationError
+    #
+    #        Notes
+    #        -----
+    #        JSON Structure looks like:
+    #         {
+    #          "class": "UpdateStatusRequestBody",
+    #          "newStatus": "APPROVED",
+    #          "externalSourceGUID": "add guid here",
+    #          "externalSourceName": "add qualified name here",
+    #          "effectiveTime": "{{$isoTimestamp}}",
+    #          "forLineage": false,
+    #          "forDuplicateProcessing": false
+    #        }
+    #        """
+    #     loop = asyncio.get_event_loop()
+    #     loop.run_until_complete(self._async_update_element_status(guid, status, body))
 
     @dynamic_catch
     async def _async_update_element_effectivity(self, guid: str, effectivity_time: str = None,

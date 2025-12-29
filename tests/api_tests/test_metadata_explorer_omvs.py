@@ -22,8 +22,9 @@ from pyegeria._exceptions import (
     PyegeriaInvalidParameterException,
     PyegeriaAPIException,
     PyegeriaUnauthorizedException,
-    print_basic_exception as print_exception_response,
+    print_basic_exception as print_exception_response, print_basic_exception, print_validation_error,
 )
+from pyegeria._exceptions import ValidationError
 
 disable_ssl_warnings = True
 
@@ -56,7 +57,7 @@ class TestMetadataExplorer:
     ##
     #
     def test_get_metadata_guid_by_unique_name(self):
-        name = "Command"
+        name = "Open Metadata Digital Product Glossary"
         property_name = "displayName"
         try:
             m_client = MetadataExplorer(self.view_server, self.platform_url)
@@ -87,15 +88,15 @@ class TestMetadataExplorer:
 
     # active-metadata-store is a3603c04-3697-49d1-ad79-baf3ea3db61f
     def test_get_element_by_guid(self):
-        # guid = "d11fd82f-49f4-4b81-ad42-d5012863cf39"
-        # guid = "dcfd7e32-8074-4cdf-bdc5-9a6f28818a9d"
-        guid = '5539a643-875b-450c-adc1-aba38912d822'  # a glossary term
+
+        # guid = '35cd2a82-4e29-4df0-b6f7-9d33dc53d1d9'  # a glossary
+        guid = '5dc94eb4-5cf9-41f5-b24c-cfb8fc7e1772'  # a term
         try:
             m_client = MetadataExplorer(self.view_server, self.platform_url)
 
             m_client.create_egeria_bearer_token(self.user, self.password)
             start_time = time.perf_counter()
-            response = m_client.get_metadata_element_by_guid(guid, output_format=JSON, report_spec=Referenceable)
+            response = m_client.get_metadata_element_by_guid(guid)
             duration = time.perf_counter() - start_time
             print(
                 f"\n\tDuration was {duration:.2f} seconds, Type: {type(response)}, Element count is {len(response)}"
@@ -119,19 +120,15 @@ class TestMetadataExplorer:
             m_client.close_session()
 
     def test_get_element_graph(self):
-        guid = "43e630ec-2afb-40fb-a0ba-c08e0c6215dc"
-        # guid = "58933d73-7f04-4899-99ce-bbd25826041a"  # a glossary term
-        # guid = "dcfd7e32-8074-4cdf-bdc5-9a6f28818a9d"
-        # guid = "58933d73-7f04-4899-99ce-bbd25826041a"  # a glossary term
-        # guid = "f28a154b-ecdc-49b1-bfac-29da9d44fb99"
+        guid = "5dc94eb4-5cf9-41f5-b24c-cfb8fc7e1772"
+
         try:
             m_client = MetadataExplorer(self.view_server, self.platform_url)
 
             m_client.create_egeria_bearer_token(self.user, self.password)
             start_time = time.perf_counter()
-            response = m_client.get_anchored_metadata_element_graph(
-                guid, mermaid_only=False
-            )
+            response = m_client.get_anchored_element_graph(guid, mermaid_only=False)
+            duration = time.perf_counter() - start_time
             duration = time.perf_counter() - start_time
             print(
                 f"\n\tDuration was {duration:.2f} seconds, Type: {type(response)}, Element count is {len(response)}"
@@ -155,18 +152,14 @@ class TestMetadataExplorer:
             m_client.close_session()
 
     def test_get_element_mermaid_graph(self):
-        guid = "58933d73-7f04-4899-99ce-bbd25826041a"  # a glossary term
-        # guid = "d11fd82f-49f4-4b81-ad42-d5012863cf39"
-        # guid = "dcfd7e32-8074-4cdf-bdc5-9a6f28818a9d"
-        # guid = "58933d73-7f04-4899-99ce-bbd25826041a"  # a glossary term
-        # guid = "f28a154b-ecdc-49b1-bfac-29da9d44fb99"
+        guid = "5dc94eb4-5cf9-41f5-b24c-cfb8fc7e1772"  # a glossary term
         try:
             m_client = MetadataExplorer(self.view_server, self.platform_url)
 
             m_client.create_egeria_bearer_token(self.user, self.password)
             start_time = time.perf_counter()
             # response = m_client.get_metadata_element_mermaid_graph(guid)
-            response = m_client.get_metadata_element_graph(guid, mermaid_only=True)
+            response = m_client.get_anchored_element_graph(guid, mermaid_only=False)
             duration = time.perf_counter() - start_time
             print(
                 f"\n\tDuration was {duration:.2f} seconds, Type: {type(response)}, Element count is {len(response)}"
@@ -190,7 +183,7 @@ class TestMetadataExplorer:
             m_client.close_session()
 
     def test_get_element_by_unique_name(self):
-        name = "Metadata Access Server:active-metadata-store"
+        name = "GlossaryTerm::CO2 Emission Scope"
         try:
             m_client = MetadataExplorer(self.view_server, self.platform_url)
 
@@ -220,20 +213,20 @@ class TestMetadataExplorer:
             m_client.close_session()
 
     def test_get_metadata_element_history(self):
-        guid = "929ea364-cead-456d-b9f1-1016202196ed"  # active-metadata-store
-        # guid = "a3603c04-3697-49d1-ad79-baf3ea3db61f"  # kv - active-metadata-store
+        guid = "5dc94eb4-5cf9-41f5-b24c-cfb8fc7e1772"  # CO2 Emission Scope
         try:
             m_client = MetadataExplorer(self.view_server, self.platform_url)
 
             m_client.create_egeria_bearer_token(self.user, self.password)
             start_time = time.perf_counter()
-            response = m_client.get_metadata_element_history(guid, None)
+            response = m_client.get_element_history(guid)
             duration = time.perf_counter() - start_time
             print(
                 f"\n\tDuration was {duration:.2f} seconds, Type: {type(response)}, Element count is {len(response)}"
             )
 
-            if type(response) is list:
+            if isinstance(response, dict | list):
+                print_json(data=response)
                 print(f"\n\tElement count is: {len(response)}")
                 print_json(data=response)
             elif type(response) is str:
@@ -254,8 +247,8 @@ class TestMetadataExplorer:
     def test_find_metadata_elements_with_string(self):
         body = {
             "class": "SearchStringRequestBody",
-            "searchString": None,
-            "typeName": "DataStructure",
+            "searchString": "Emission",
+            "typeName": "GlossaryTerm",
             "effectiveTime": None,
             "limitResultsByStatus": [],
             "asOfTime": None,
@@ -268,7 +261,7 @@ class TestMetadataExplorer:
 
             m_client.create_egeria_bearer_token(self.user, self.password)
             start_time = time.perf_counter()
-            response = m_client.find_metadata_elements_with_string(body, page_size=1000)
+            response = m_client.find_metadata_elements_with_string("Emission", body=body, page_size=1000)
             duration = time.perf_counter() - start_time
             print(
                 f"\n\tDuration was {duration:.2f} seconds, Type: {type(response)}, Element count is {len(response)}"
@@ -282,11 +275,14 @@ class TestMetadataExplorer:
 
             assert True
         except (
-            InvalidParameterException,
-            PropertyServerException,
-            UserNotAuthorizedException,
+                PyegeriaInvalidParameterException,
+                PyegeriaAPIException,
+                PyegeriaUnauthorizedException,
         ) as e:
-            print_exception_response(e)
+            print_basic_exception(e)
+            assert False, "Invalid request"
+        except ValidationError as e:
+            print_validation_error(e)
             assert False, "Invalid request"
 
         finally:
@@ -328,11 +324,11 @@ class TestMetadataExplorer:
 
             assert True
         except (
-            InvalidParameterException,
-            PropertyServerException,
-            UserNotAuthorizedException,
+                PyegeriaInvalidParameterException,
+                PyegeriaAPIException,
+                PyegeriaUnauthorizedException,
         ) as e:
-            print_exception_response(e)
+            print_basic_exception(e)
             assert False, "Invalid request"
 
         finally:
@@ -371,11 +367,11 @@ class TestMetadataExplorer:
 
             assert True
         except (
-            InvalidParameterException,
-            PropertyServerException,
-            UserNotAuthorizedException,
+                PyegeriaInvalidParameterException,
+                PyegeriaAPIException,
+                PyegeriaUnauthorizedException,
         ) as e:
-            print_exception_response(e)
+            print_basic_exception(e)
             assert False, "Invalid request"
 
         finally:
@@ -415,11 +411,11 @@ class TestMetadataExplorer:
 
             assert True
         except (
-            InvalidParameterException,
-            PropertyServerException,
-            UserNotAuthorizedException,
+                PyegeriaInvalidParameterException,
+                PyegeriaAPIException,
+                PyegeriaUnauthorizedException,
         ) as e:
-            print_exception_response(e)
+            print_basic_exception(e)
             assert False, "Invalid request"
 
         finally:
@@ -459,11 +455,11 @@ class TestMetadataExplorer:
 
             assert True
         except (
-            InvalidParameterException,
-            PropertyServerException,
-            UserNotAuthorizedException,
+                PyegeriaInvalidParameterException,
+                PyegeriaAPIException,
+                PyegeriaUnauthorizedException,
         ) as e:
-            print_exception_response(e)
+            print_basic_exception(e)
             assert False, "Invalid request"
 
         finally:
@@ -503,11 +499,11 @@ class TestMetadataExplorer:
 
             assert True
         except (
-            InvalidParameterException,
-            PropertyServerException,
-            UserNotAuthorizedException,
+                PyegeriaInvalidParameterException,
+                PyegeriaAPIException,
+                PyegeriaUnauthorizedException,
         ) as e:
-            print_exception_response(e)
+            print_basic_exception(e)
             assert False, "Invalid request"
 
         finally:
@@ -563,11 +559,11 @@ class TestMetadataExplorer:
 
             assert True
         except (
-            InvalidParameterException,
-            PropertyServerException,
-            UserNotAuthorizedException,
+                PyegeriaInvalidParameterException,
+                PyegeriaAPIException,
+                PyegeriaUnauthorizedException,
         ) as e:
-            print_exception_response(e)
+            print_basic_exception(e)
             assert False, "Invalid request"
 
         finally:
@@ -656,11 +652,11 @@ class TestMetadataExplorer:
 
             assert True
         except (
-            InvalidParameterException,
-            PropertyServerException,
-            UserNotAuthorizedException,
+                PyegeriaInvalidParameterException,
+                PyegeriaAPIException,
+                PyegeriaUnauthorizedException,
         ) as e:
-            print_exception_response(e)
+            print_basic_exception(e)
             assert False, "Invalid request"
 
         finally:
@@ -716,11 +712,11 @@ class TestMetadataExplorer:
 
             assert True
         except (
-            InvalidParameterException,
-            PropertyServerException,
-            UserNotAuthorizedException,
+                PyegeriaInvalidParameterException,
+                PyegeriaAPIException,
+                PyegeriaUnauthorizedException,
         ) as e:
-            print_exception_response(e)
+            print_basic_exception(e)
             assert False, "Invalid request"
 
         finally:
@@ -778,11 +774,11 @@ class TestMetadataExplorer:
 
             assert True
         except (
-            InvalidParameterException,
-            PropertyServerException,
-            UserNotAuthorizedException,
+                PyegeriaInvalidParameterException,
+                PyegeriaAPIException,
+                PyegeriaUnauthorizedException,
         ) as e:
-            print_exception_response(e)
+            print_basic_exception(e)
             assert False, "Invalid request"
 
         finally:
@@ -833,11 +829,11 @@ class TestMetadataExplorer:
 
             assert True
         except (
-            InvalidParameterException,
-            PropertyServerException,
-            UserNotAuthorizedException,
+                PyegeriaInvalidParameterException,
+                PyegeriaAPIException,
+                PyegeriaUnauthorizedException,
         ) as e:
-            print_exception_response(e)
+            print_basic_exception(e)
             assert False, "Invalid request"
 
         finally:
@@ -863,11 +859,11 @@ class TestMetadataExplorer:
 
             assert True
         except (
-            InvalidParameterException,
-            PropertyServerException,
-            UserNotAuthorizedException,
+                PyegeriaInvalidParameterException,
+                PyegeriaAPIException,
+                PyegeriaUnauthorizedException,
         ) as e:
-            print_exception_response(e)
+            print_basic_exception(e)
             assert False, "Invalid request"
 
         finally:
@@ -893,11 +889,11 @@ class TestMetadataExplorer:
 
             assert True
         except (
-            InvalidParameterException,
-            PropertyServerException,
-            UserNotAuthorizedException,
+                PyegeriaInvalidParameterException,
+                PyegeriaAPIException,
+                PyegeriaUnauthorizedException,
         ) as e:
-            print_exception_response(e)
+            print_basic_exception(e)
             assert False, "Invalid request"
 
         finally:
