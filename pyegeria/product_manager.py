@@ -11,6 +11,7 @@ relationships, including product dependencies and product managers.
 import asyncio
 from typing import Optional
 
+from pyegeria import CollectionManager
 from pyegeria._server_client import ServerClient
 from pyegeria._exceptions import PyegeriaInvalidParameterException
 from pyegeria._globals import NO_GUID_RETURNED
@@ -28,7 +29,7 @@ from loguru import logger
 EGERIA_LOCAL_QUALIFIER = app_settings.User_Profile.egeria_local_qualifier
 
 
-class ProductManager(ServerClient):
+class ProductManager(CollectionManager):
     """
     Manage digital products, digital product catalogs, and their relationships.
 
@@ -425,7 +426,7 @@ class ProductManager(ServerClient):
         response = await self._async_get_guid_request(
             url,
             _type="DigitalProduct",
-            _gen_output=None,
+            _gen_output=self._generate_collection_output,
             output_format=output_format,
             report_spec=report_spec,
             body=body,
@@ -472,7 +473,7 @@ class ProductManager(ServerClient):
     @dynamic_catch
     async def _async_get_digital_products_by_name(
         self,
-        filter_string: Optional[str] = None,
+        filter_string: str,
         classification_names: Optional[list[str]] = None,
         body: Optional[dict] = None,
         start_from: int = 0,
@@ -484,7 +485,7 @@ class ProductManager(ServerClient):
 
         Parameters
         ----------
-        filter_string : str, optional
+        filter_string : str
             Name to use to find matching digital products.
         classification_names : list[str], optional
             List of classification names to filter on.
@@ -513,7 +514,7 @@ class ProductManager(ServerClient):
         response = await self._async_get_name_request(
             url,
             _type="DigitalProduct",
-            _gen_output=None,
+            _gen_output=self._generate_collection_output,
             filter_string=filter_string,
             classification_names=classification_names,
             start_from=start_from,
@@ -526,7 +527,7 @@ class ProductManager(ServerClient):
 
     def get_digital_products_by_name(
         self,
-        filter_string: Optional[str] = None,
+        filter_string: str,
         classification_names: Optional[list[str]] = None,
         body: Optional[dict] = None,
         start_from: int = 0,
@@ -538,7 +539,7 @@ class ProductManager(ServerClient):
 
         Parameters
         ----------
-        filter_string : str, optional
+        filter_string : str
             Name to use to find matching digital products.
         classification_names : list[str], optional
             List of classification names to filter on.
@@ -668,7 +669,7 @@ class ProductManager(ServerClient):
         response = await self._async_find_request(
             url,
             _type="DigitalProduct",
-            _gen_output=None,
+            _gen_output=self._generate_collection_output,
             search_string=search_string,
             starts_with=starts_with,
             ends_with=ends_with,

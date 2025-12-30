@@ -114,7 +114,7 @@ class TestCollectionManager:
             start_time = time.perf_counter()
             search_string = "*"
             classification_name = None
-            element_type = ["CollectionFolder"]
+            element_type = ["DigitalProduct"]
             output_format = "DICT"
             report_spec = "BasicCollections"
 
