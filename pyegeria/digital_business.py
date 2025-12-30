@@ -1003,6 +1003,9 @@ class DigitalBusiness(CollectionManager):
         PyegeriaException
             If there are issues in communications, message format, or Egeria errors.
 
+
+        Args:
+            cascade ():
         """
         loop = asyncio.get_event_loop()
         loop.run_until_complete(

@@ -264,17 +264,64 @@ class ProductManagerScenarioTester:
         """Scenario: Link and unlink product dependencies"""
         scenario_name = "Product Dependency Management"
         start_time = time.perf_counter()
+        created_guids = []
         
         try:
             console.print(f"\n[bold blue]▶ Running: {scenario_name}[/bold blue]")
             
-            console.print("  → Testing product dependency linking...")
+            # CREATE: Create two digital products for dependency testing
+            console.print("  → Creating digital products for dependency test...")
+            ts = datetime.now().strftime("%Y%m%d%H%M%S%f")
             
-            # Mock GUIDs for demonstration (in real tests, these would be actual product GUIDs)
-            consumer_product_guid = "test-consumer-product-guid-1"
-            consumed_product_guid = "test-consumed-product-guid-1"
+            # Create consumer product
+            consumer_body = {
+                "class": "NewElementRequestBody",
+                "typeName": "DigitalProduct",
+                "initialStatus": "ACTIVE",
+                "properties": {
+                    "class": "DigitalProductProperties",
+                    "qualifiedName": f"DigitalProduct::ConsumerProduct::{ts}",
+                    "displayName": f"Consumer Product {ts}",
+                    "description": "Digital product that consumes another product",
+                    "productName": f"Consumer-{ts}",
+                    "productType": "Application"
+                }
+            }
             
-            body = {
+            consumer_product_guid = self.client.create_digital_product(consumer_body)
+            if consumer_product_guid:
+                created_guids.append(consumer_product_guid)
+                self.created_products.append(consumer_product_guid)
+                console.print(f"  ✓ Created consumer product: {consumer_product_guid}")
+            else:
+                raise Exception("Failed to create consumer product")
+            
+            # Create consumed product
+            consumed_body = {
+                "class": "NewElementRequestBody",
+                "typeName": "DigitalProduct",
+                "initialStatus": "ACTIVE",
+                "properties": {
+                    "class": "DigitalProductProperties",
+                    "qualifiedName": f"DigitalProduct::ConsumedProduct::{ts}",
+                    "displayName": f"Consumed Product {ts}",
+                    "description": "Digital product that is consumed by another",
+                    "productName": f"Consumed-{ts}",
+                    "productType": "Service"
+                }
+            }
+            
+            consumed_product_guid = self.client.create_digital_product(consumed_body)
+            if consumed_product_guid:
+                created_guids.append(consumed_product_guid)
+                self.created_products.append(consumed_product_guid)
+                console.print(f"  ✓ Created consumed product: {consumed_product_guid}")
+            else:
+                raise Exception("Failed to create consumed product")
+            
+            # LINK: Link product dependency
+            console.print("  → Linking product dependency...")
+            dependency_body = {
                 "class": "NewRelationshipRequestBody",
                 "properties": {
                     "class": "DigitalProductDependencyProperties",
@@ -283,27 +330,25 @@ class ProductManagerScenarioTester:
                 }
             }
             
-            try:
-                self.client.link_digital_product_dependency(
-                    consumer_product_guid, consumed_product_guid, body
-                )
-                console.print("  ✓ Linked product dependency")
-                
-                # Detach
-                self.client.detach_digital_product_dependency(
-                    consumer_product_guid, consumed_product_guid
-                )
-                console.print("  ✓ Detached product dependency")
-                
-            except PyegeriaNotFoundException:
-                console.print("  [yellow]⚠ Test GUIDs not found (expected in test environment)[/yellow]")
+            self.client.link_digital_product_dependency(
+                consumer_product_guid, consumed_product_guid, dependency_body
+            )
+            console.print("  ✓ Linked product dependency")
+            
+            # DETACH: Remove product dependency
+            console.print("  → Detaching product dependency...")
+            self.client.detach_digital_product_dependency(
+                consumer_product_guid, consumed_product_guid
+            )
+            console.print("  ✓ Detached product dependency")
             
             duration = time.perf_counter() - start_time
             return TestResult(
                 scenario_name=scenario_name,
                 status="PASSED",
                 duration=duration,
-                message="Product dependency methods executed (requires real GUIDs for full test)"
+                message=f"Successfully tested product dependency with {len(created_guids)} products",
+                created_guids=created_guids
             )
             
         except Exception as e:
@@ -322,17 +367,66 @@ class ProductManagerScenarioTester:
         """Scenario: Link and unlink product manager roles"""
         scenario_name = "Product Manager Role Assignment"
         start_time = time.perf_counter()
+        created_guids = []
         
         try:
             console.print(f"\n[bold blue]▶ Running: {scenario_name}[/bold blue]")
             
-            console.print("  → Testing product manager role assignment...")
+            # CREATE: Create a digital product and an actor role for manager assignment
+            console.print("  → Creating product and manager role for assignment test...")
+            ts = datetime.now().strftime("%Y%m%d%H%M%S%f")
             
-            # Mock GUIDs for demonstration
-            product_guid = "test-product-guid-1"
-            manager_role_guid = "test-manager-role-guid-1"
+            # Create digital product
+            product_body = {
+                "class": "NewElementRequestBody",
+                "typeName": "DigitalProduct",
+                "initialStatus": "ACTIVE",
+                "properties": {
+                    "class": "DigitalProductProperties",
+                    "qualifiedName": f"DigitalProduct::ManagedProduct::{ts}",
+                    "displayName": f"Managed Product {ts}",
+                    "description": "Digital product for manager assignment testing",
+                    "productName": f"Managed-{ts}",
+                    "productType": "Platform"
+                }
+            }
             
-            body = {
+            product_guid = self.client.create_digital_product(product_body)
+            if product_guid:
+                created_guids.append(product_guid)
+                self.created_products.append(product_guid)
+                console.print(f"  ✓ Created digital product: {product_guid}")
+            else:
+                raise Exception("Failed to create digital product")
+            
+            # Note: We need to import ActorManager to create an actor role
+            from pyegeria.actor_manager import ActorManager
+            actor_client = ActorManager(VIEW_SERVER, PLATFORM_URL, user_id=USER_ID, user_pwd=USER_PWD)
+            actor_client.create_egeria_bearer_token(USER_ID, USER_PWD)
+            
+            # Create actor role for product manager
+            role_body = {
+                "class": "NewElementRequestBody",
+                "typeName": "ActorRole",
+                "initialStatus": "ACTIVE",
+                "properties": {
+                    "class": "ActorRoleProperties",
+                    "qualifiedName": f"ActorRole::ProductManager::{ts}",
+                    "name": f"Product Manager Role {ts}",
+                    "description": "Actor role for product manager testing"
+                }
+            }
+            
+            manager_role_guid = actor_client.create_actor_role(role_body)
+            if manager_role_guid:
+                created_guids.append(manager_role_guid)
+                console.print(f"  ✓ Created manager role: {manager_role_guid}")
+            else:
+                raise Exception("Failed to create manager role")
+            
+            # LINK: Link product manager role
+            console.print("  → Linking product manager...")
+            assignment_body = {
                 "class": "NewRelationshipRequestBody",
                 "properties": {
                     "class": "AssignmentScopeProperties",
@@ -341,23 +435,31 @@ class ProductManagerScenarioTester:
                 }
             }
             
+            self.client.link_product_manager(product_guid, manager_role_guid, assignment_body)
+            console.print("  ✓ Linked product manager")
+            
+            # DETACH: Remove product manager assignment
+            console.print("  → Detaching product manager...")
+            self.client.detach_product_manager(product_guid, manager_role_guid)
+            console.print("  ✓ Detached product manager")
+            
+            # Cleanup actor role
             try:
-                self.client.link_product_manager(product_guid, manager_role_guid, body)
-                console.print("  ✓ Linked product manager")
-                
-                # Detach
-                self.client.detach_product_manager(product_guid, manager_role_guid)
-                console.print("  ✓ Detached product manager")
-                
-            except PyegeriaNotFoundException:
-                console.print("  [yellow]⚠ Test GUIDs not found (expected in test environment)[/yellow]")
+                actor_client.delete_actor_role(manager_role_guid)
+                console.print("  ✓ Deleted manager role")
+                created_guids.remove(manager_role_guid)
+            except Exception as e:
+                console.print(f"  [yellow]⚠ Failed to delete manager role: {str(e)}[/yellow]")
+            
+            actor_client.close_session()
             
             duration = time.perf_counter() - start_time
             return TestResult(
                 scenario_name=scenario_name,
                 status="PASSED",
                 duration=duration,
-                message="Product manager role methods executed (requires real GUIDs for full test)"
+                message=f"Successfully tested product manager role with {len(created_guids)} elements",
+                created_guids=created_guids
             )
             
         except Exception as e:
@@ -393,7 +495,6 @@ class ProductManagerScenarioTester:
                 body = {
                     "class": "NewElementRequestBody",
                     "typeName": "DigitalProduct",
-                    "initialStatus": "ACTIVE",
                     "properties": {
                         "class": "DigitalProductProperties",
                         "qualifiedName": product_data.qualified_name,
@@ -573,10 +674,9 @@ class ProductManagerScenarioTester:
             
             body = {
                 "class": "NewElementRequestBody",
-                "typeName": "DigitalProductCatalog",
-                "initialStatus": "ACTIVE",
+                "isOwnAnchor": True,
                 "properties": {
-                    "class": "CatalogProperties",
+                    "class": "DigitalProductCatalogProperties",
                     "qualifiedName": f"DigitalProductCatalog::CatalogTest::{ts}",
                     "displayName": f"Test Product Catalog {ts}",
                     "description": f"Test digital product catalog created at {datetime.now().isoformat()}",
@@ -597,7 +697,7 @@ class ProductManagerScenarioTester:
             update_body = {
                 "class": "UpdateElementRequestBody",
                 "properties": {
-                    "class": "CatalogProperties",
+                    "class": "DigitalProductCatalogProperties",
                     "qualifiedName": f"DigitalProductCatalog::CatalogTest::{ts}",
                     "displayName": f"Test Product Catalog {ts} (Updated)",
                     "description": f"Test digital product catalog - Updated",
@@ -659,10 +759,9 @@ class ProductManagerScenarioTester:
                 ts = datetime.now().strftime("%Y%m%d%H%M%S%f")
                 body = {
                     "class": "NewElementRequestBody",
-                    "typeName": "DigitalProductCatalog",
-                    "initialStatus": "ACTIVE",
+                    "isOwnAnchor": True,
                     "properties": {
-                        "class": "CatalogProperties",
+                        "class": "DigitalProductCatalogProperties",
                         "qualifiedName": f"DigitalProductCatalog::RetrievalTest_{name}::{ts}",
                         "displayName": f"RetrievalTest {name} {ts}",
                         "description": f"Test catalog for retrieval - {name}",
