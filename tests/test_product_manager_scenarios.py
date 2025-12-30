@@ -15,7 +15,7 @@ Usage:
     Or with pytest:
     c
 """
-
+import json
 import sys
 import time
 import traceback
@@ -417,21 +417,22 @@ class ProductManagerScenarioTester:
                 product = self.client.get_digital_product_by_guid(test_guid)
                 if product:
                     console.print(f"  ✓ Retrieved product by GUID: {test_guid}")
-                    console.print(f"    Display Name: {product.get('elementHeader', {}).get('properties', {}).get('displayName', 'N/A')}")
+                    console.print(f"    Display Name: {product.get('properties', {}).get('displayName', 'N/A')}")
                 else:
                     console.print(f"  [yellow]⚠ No product found for GUID: {test_guid}[/yellow]")
             
             # TEST 2: Get by name (using filter string)
             console.print("\n  → Testing get_digital_products_by_name...")
-            products = self.client.get_digital_products_by_name(filter_string="RetrievalTest")
+            filter_string = product.get('properties', {}).get('qualifiedName', 'N/A')
+            products = self.client.get_digital_products_by_name(filter_string=filter_string)
             if products:
-                console.print(f"  ✓ Found {len(products)} products with filter 'RetrievalTest'")
+                console.print(f"  ✓ Found {len(products)} products with filter `{filter_string}`")
                 for prod in products[:3]:  # Show first 3
                     if type(prod) is str:
                         console.print(f"prod was: {prod}")
                         exit(0)
                     else:
-                        console.print(json.dumps(prod))
+                        console.print(json.dumps(prod, indent =2))
                     name = prod.get('elementHeader', {}).get('properties', {}).get('displayName', 'N/A')
                     guid = prod.get('elementHeader', {}).get('guid', 'N/A')
                     console.print(f"    - {name} ({guid})")
@@ -531,8 +532,9 @@ class ProductManagerScenarioTester:
                     console.print("  [yellow]⚠ Product still exists after deletion (may be soft delete)[/yellow]")
                 else:
                     console.print("  ✓ Product successfully deleted (not found)")
-            except PyegeriaNotFoundException:
-                console.print("  ✓ Product successfully deleted (not found)")
+            except PyegeriaAPIException as e:
+                if e.related_http_code == 404:
+                    console.print("  ✓ Product successfully deleted (not found)")
             
             duration = time.perf_counter() - start_time
             return TestResult(

@@ -353,7 +353,7 @@ class DigitalBusinessScenarioTester:
                     "displayName": f"Test Business Capability {ts}",
                     "description": f"Test business capability created at {datetime.now().isoformat()}",
                     "identifier": f"BC-{ts}",
-                    "businessCapabilityType": "Core"
+                    "businessCapabilityType": 1
                 }
             }
             
@@ -375,7 +375,7 @@ class DigitalBusinessScenarioTester:
                     "qualifiedName": f"BusinessCapability::CapabilityTest::{ts}",
                     "displayName": f"Test Business Capability {ts} (Updated)",
                     "description": f"Test business capability - Updated",
-                    "businessCapabilityType": "Supporting"
+                    "businessCapabilityType": 2
                 }
             }
             
@@ -477,7 +477,8 @@ class DigitalBusinessScenarioTester:
             
             # TEST 3: Find capabilities (search)
             console.print("\n  → Testing find_business_capabilities...")
-            found_capabilities = self.client.find_business_capabilities(search_string="CapabilityAlpha", starts_with=False)
+            found_capabilities = self.client.find_business_capabilities(search_string="CapabilityAlpha",
+                                                                        starts_with=False)
             if found_capabilities:
                 console.print(f"  ✓ Found {len(found_capabilities)} capabilities matching 'CapabilityAlpha'")
                 for cap in found_capabilities[:3]:  # Show first 3

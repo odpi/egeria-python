@@ -1076,7 +1076,7 @@ def _generate_default_output(self, elements: dict | list[dict], search_string: s
                              output_format: str = 'DICT',
                              report_format: dict | str | None = None,
                              **kwargs) -> str | list[dict]:
-    entity_type = 'Referenceable'
+    entity_type = 'Referenceable' if element_type_name is None else element_type_name
     # Backward compatibility: accept legacy kwarg
     if report_format is None and isinstance(kwargs, dict) and 'report_spec' in kwargs:
         report_format = kwargs.get('report_spec')

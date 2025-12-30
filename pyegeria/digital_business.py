@@ -11,6 +11,7 @@ relationships to digital resources.
 import asyncio
 from typing import Optional
 
+from pyegeria import CollectionManager
 from pyegeria._server_client import ServerClient
 from pyegeria._exceptions import PyegeriaInvalidParameterException
 from pyegeria._globals import NO_GUID_RETURNED
@@ -24,13 +25,14 @@ from pyegeria.models import (
     NewClassificationRequestBody,
     DeleteClassificationRequestBody
 )
+
 from pyegeria.utils import dynamic_catch, body_slimmer
 from loguru import logger
 
 EGERIA_LOCAL_QUALIFIER = app_settings.User_Profile.egeria_local_qualifier
 
 
-class DigitalBusiness(ServerClient):
+class DigitalBusiness(CollectionManager):
     """
     Manage business capabilities, their lifecycle, and their digital support relationships.
 
@@ -116,13 +118,13 @@ class DigitalBusiness(ServerClient):
     @dynamic_catch
     async def _async_create_business_capability(
         self,
-        body: Optional[dict | NewElementRequestBody] = None,
+        body: Optional[dict | NewElementRequestBody],
     ) -> str:
         """Create a new business capability collection. Async version.
 
         Parameters
         ----------
-        body : dict | NewElementRequestBody, optional
+        body : dict | NewElementRequestBody
             Request body containing business capability properties.
 
         Returns
@@ -162,18 +164,18 @@ class DigitalBusiness(ServerClient):
               "forDuplicateProcessing" : false,
             }
         """
-        url = f"{self.digital_business_command_root}/business-capabilities"
+        url = f"{self.digital_business_command_root}/collections"
         return await self._async_create_element_body_request(url, ["BusinessCapabilityProperties"], body)
 
     def create_business_capability(
         self,
-        body: Optional[dict | NewElementRequestBody] = None,
+        body: Optional[dict | NewElementRequestBody],
     ) -> str:
         """Create a new business capability collection. Sync version.
 
         Parameters
         ----------
-        body : dict | NewElementRequestBody, optional
+        body : dict | NewElementRequestBody
             Request body containing business capability properties.
 
         Returns
@@ -218,7 +220,7 @@ class DigitalBusiness(ServerClient):
         PyegeriaNotAuthorizedException
             If the user is not authorized for the requested action.
         """
-        url = f"{self.digital_business_command_root}/business-capabilities/{business_capability_guid}/update"
+        url = f"{self.digital_business_command_root}/collections/{business_capability_guid}/update"
         await self._async_update_element_body_request(url, ["BusinessCapabilityProperties"], body)
 
     def update_business_capability(
@@ -282,7 +284,7 @@ class DigitalBusiness(ServerClient):
         PyegeriaNotAuthorizedException
             If the user is not authorized for the requested action.
         """
-        url = f"{self.digital_business_command_root}/business-capabilities/{business_capability_guid}/delete"
+        url = f"{self.digital_business_command_root}/collections/{business_capability_guid}/delete"
         await self._async_delete_element_request(url, body, cascade)
 
     def delete_business_capability(
@@ -354,11 +356,11 @@ class DigitalBusiness(ServerClient):
         PyegeriaNotAuthorizedException
             If the user is not authorized for the requested action.
         """
-        url = f"{self.digital_business_command_root}/business-capabilities/{business_capability_guid}/retrieve"
+        url = f"{self.digital_business_command_root}/collections/{business_capability_guid}/retrieve"
         response = await self._async_get_guid_request(
             url,
             _type="BusinessCapability",
-            _gen_output=None,
+            _gen_output=self._generate_collection_output,
             output_format=output_format,
             report_spec=report_spec,
             body=body,
@@ -442,11 +444,11 @@ class DigitalBusiness(ServerClient):
         PyegeriaException
             If there are issues in communications, message format, or Egeria errors.
         """
-        url = f"{self.digital_business_command_root}/business-capabilities/by-name"
+        url = f"{self.digital_business_command_root}/collections/by-name"
         response = await self._async_get_name_request(
             url,
             _type="BusinessCapability",
-            _gen_output=None,
+            _gen_output=self._generate_collection_output,
             filter_string=filter_string,
             classification_names=classification_names,
             start_from=start_from,
@@ -511,8 +513,8 @@ class DigitalBusiness(ServerClient):
         ends_with: bool = False,
         ignore_case: bool = True,
         anchor_domain: Optional[str] = None,
-        metadata_element_type: Optional[str] = None,
-        metadata_element_subtype: Optional[str] = None,
+        metadata_element_type: Optional[str] = "BusinessCapability",
+        metadata_element_subtype: Optional[list[str]] = None,
         skip_relationships: Optional[list[str]] = None,
         include_only_relationships: Optional[list[str]] = None,
         skip_classified_elements: Optional[list[str]] = None,
@@ -594,11 +596,11 @@ class DigitalBusiness(ServerClient):
         PyegeriaException
             If there are issues in communications, message format, or Egeria errors.
         """
-        url = f"{self.digital_business_command_root}/business-capabilities/by-search-string"
+        url = f"{self.digital_business_command_root}/collections/by-search-string"
         response = await self._async_find_request(
             url,
             _type="BusinessCapability",
-            _gen_output=None,
+            _gen_output=self._generate_collection_output,
             search_string=search_string,
             starts_with=starts_with,
             ends_with=ends_with,
@@ -633,8 +635,8 @@ class DigitalBusiness(ServerClient):
         ends_with: bool = False,
         ignore_case: bool = True,
         anchor_domain: Optional[str] = None,
-        metadata_element_type: Optional[str] = None,
-        metadata_element_subtype: Optional[str] = None,
+        metadata_element_type: Optional[str] = "BusinessCapability",
+        metadata_element_subtype: Optional[list[str]] = None,
         skip_relationships: Optional[list[str]] = None,
         include_only_relationships: Optional[list[str]] = None,
         skip_classified_elements: Optional[list[str]] = None,
@@ -718,14 +720,14 @@ class DigitalBusiness(ServerClient):
         """
         loop = asyncio.get_event_loop()
         return loop.run_until_complete(
-            self._async_find_business_capabilities(
-                search_string, starts_with, ends_with, ignore_case, anchor_domain,
-                metadata_element_type, metadata_element_subtype, skip_relationships,
-                include_only_relationships, skip_classified_elements, include_only_classified_elements,
-                graph_query_depth, governance_zone_filter, as_of_time, effective_time,
-                relationship_page_size, limit_results_by_status, sequencing_order,
-                sequencing_property, start_from, page_size, output_format, report_spec, body
-            )
+            self._async_find_business_capabilities(search_string, starts_with, ends_with, ignore_case, anchor_domain,
+                                                   metadata_element_type, metadata_element_subtype, skip_relationships,
+                                                   include_only_relationships, skip_classified_elements,
+                                                   include_only_classified_elements, graph_query_depth,
+                                                   governance_zone_filter, as_of_time, effective_time,
+                                                   relationship_page_size, limit_results_by_status, sequencing_order,
+                                                   sequencing_property, start_from, page_size, output_format,
+                                                   report_spec, body)
         )
 
     #

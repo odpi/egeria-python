@@ -4772,7 +4772,7 @@ class ServerClient(BaseServerClient):
         return validated_body
 
     @dynamic_catch
-    def validate_delete_element_request(self, body: dict | DeleteElementRequestBody,
+    def validate_delete_element_request(self, body: dict | DeleteElementRequestBody = None,
                                         cascade_delete: bool = False) -> DeleteElementRequestBody | None:
         if isinstance(body, DeleteElementRequestBody):
             validated_body = body
@@ -5140,11 +5140,12 @@ class ServerClient(BaseServerClient):
     @dynamic_catch
     async def _async_delete_element_request(self, url: str, body: dict | DeleteElementRequestBody = None,
                                             cascade_delete: bool = False) -> None:
-        validated_body = self.validate_delete_element_request(body, cascade_delete)
-        if validated_body:
-            json_body = validated_body.model_dump_json(indent=2, exclude_none=True)
-            logger.info(json_body)
-            await self._async_make_request("POST", url, json_body)
+        if body:
+            validated_body = self.validate_delete_element_request(body, cascade_delete)
+            if validated_body:
+                json_body = validated_body.model_dump_json(indent=2, exclude_none=True)
+                logger.info(json_body)
+                await self._async_make_request("POST", url, json_body)
         else:
             await self._async_make_request("POST", url)
 
