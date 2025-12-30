@@ -944,6 +944,7 @@ class DigitalBusiness(CollectionManager):
         business_capability_guid: str,
         element_guid: str,
         body: Optional[dict | DeleteRelationshipRequestBody] = None,
+        cascade: bool = False,
     ) -> None:
         """Detach a business capability from digital support. Async version.
 
@@ -964,18 +965,22 @@ class DigitalBusiness(CollectionManager):
         ------
         PyegeriaException
             If there are issues in communications, message format, or Egeria errors.
+
+        Args:
+            cascade ():
         """
         url = (
             f"{self.digital_business_command_root}/business-capabilities/"
             f"{business_capability_guid}/digital-support/{element_guid}/detach"
         )
-        await self._async_make_request("POST", url, self._prepare_body(body))
+        await self._async_delete_relationship_request(url, self._prepare_body(body), cascade)
 
     def detach_digital_support(
         self,
         business_capability_guid: str,
         element_guid: str,
         body: Optional[dict | DeleteRelationshipRequestBody] = None,
+        cascade: bool = False,
     ) -> None:
         """Detach a business capability from digital support. Sync version.
 
@@ -996,10 +1001,13 @@ class DigitalBusiness(CollectionManager):
         ------
         PyegeriaException
             If there are issues in communications, message format, or Egeria errors.
+
+        Args:
+            cascade ():
         """
         loop = asyncio.get_event_loop()
         loop.run_until_complete(
-            self._async_detach_digital_support(business_capability_guid, element_guid, body)
+            self._async_detach_digital_support(business_capability_guid, element_guid, body, cascade)
         )
 
     #
