@@ -87,7 +87,6 @@ class MetadataExplorerScenarioTester:
 
                 results = self.client.find_metadata_elements_with_string(
                     search_string=search_term,
-                    type_name=None,
                     starts_with=False,
                     ends_with=False,
                     ignore_case=True,
@@ -132,7 +131,7 @@ class MetadataExplorerScenarioTester:
             console.print(f"\n[cyan]Searching for glossary elements[/cyan]")
             search_results = self.client.find_metadata_elements_with_string(
                 search_string="Glossary",
-                type_name="Glossary",
+                metadata_element_type="Glossary",
                 ignore_case=True,
             )
 
@@ -147,8 +146,7 @@ class MetadataExplorerScenarioTester:
             if element_guid:
                 # Step 2: Retrieve element by GUID
                 console.print(f"\n[cyan]Retrieving element by GUID: {element_guid}[/cyan]")
-                element = self.client.get_metadata_element_by_guid(element_guid, output_format=JSON,
-                                                                   report_spec=Referenceable)
+                element = self.client.get_metadata_element_by_guid(element_guid)
 
                 if isinstance(element, dict):
                     element_type = element.get("elementHeader", {}).get("type", {}).get("typeName", "Unknown")
@@ -197,7 +195,7 @@ class MetadataExplorerScenarioTester:
             console.print(f"\n[cyan]Searching for elements with relationships[/cyan]")
             search_results = self.client.find_metadata_elements_with_string(
                 search_string="*",
-                type_name="GlossaryTerm",
+                metadata_element_type="GlossaryTerm",
                 ignore_case=True,
             )
 
@@ -344,7 +342,7 @@ class MetadataExplorerScenarioTester:
             console.print(f"\n[cyan]Searching for elements with qualified names[/cyan]")
             search_results = self.client.find_metadata_elements_with_string(
                 search_string="*",
-                type_name="Glossary",
+                metadata_element_type="Glossary",
                 ignore_case=True,
             )
 

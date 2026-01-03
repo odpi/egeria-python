@@ -58,19 +58,21 @@ def _extract_referenceable_properties(element: dict[str, Any]) -> dict[str, Any]
     classifications = element['elementHeader'].get("classifications", [])
     effective_from = element['elementHeader'].get("effectiveFrom", None)
     effective_to = element['elementHeader'].get("effectiveTo", None)
-
+    status = element['elementHeader'].get("status", None)
     # Get attributes from properties
-    # properties = element['properties']
-    # display_name = properties.get("name", "") or ""
-    # if display_name == "":
-    #     display_name = properties.get("displayName","")
-    # description = properties.get("description", "") or ""
-    # qualified_name = properties.get("qualifiedName", "") or ""
-    # category = properties.get("category", "") or ""
-    # version_identifier = properties.get("versionIdentifier", "") or ""
-    # additional_properties = properties.get("additionalProperties", {}) or {}
-    # extended_properties = properties.get("extendedProperties", {}) or {}
-    #
+    properties = element['properties']
+    url = properties.get('url', None)
+    display_name = properties.get("displayName","")
+    description = properties.get("description", "") or ""
+    qualified_name = properties.get("qualifiedName", "") or ""
+    category = properties.get("category", "") or ""
+    version_identifier = properties.get("versionIdentifier", "") or ""
+    additional_properties = properties.get("additionalProperties", {}) or {}
+    extended_properties = properties.get("extendedProperties", {}) or {}
+    contentStatus = properties.get("contentStatus", "")
+    activityStatus = properties.get("activityStatus", "")
+    deploymentStatus = properties.get("deploymentStatus", "")
+
     return {
         "GUID": guid,
         "metadata_collection_id": metadata_collection_id,
@@ -82,16 +84,20 @@ def _extract_referenceable_properties(element: dict[str, Any]) -> dict[str, Any]
         "version": version,
         "type_name": type_name,
         "classifications": classifications,
-
-        # "display_name": display_name,
-        # "description": description,
-        # "qualified_name": qualified_name,
-        # "category": category,
-        # "version_identifier": version_identifier,
-        # "additional_properties": additional_properties,
-        # "extended_properties": extended_properties,
+        "element_status": status,
+        "url": url,
+        "display_name": display_name,
+        "description": description,
+        "qualified_name": qualified_name,
+        "category": category,
+        "version_identifier": version_identifier,
+        "additional_properties": additional_properties,
+        "extended_properties": extended_properties,
         "effective_from": effective_from,
         "effective_to": effective_to,
+        "content_status": contentStatus,
+        "activity_status": activityStatus,
+        "deployment_status": deploymentStatus,
         }
 
 

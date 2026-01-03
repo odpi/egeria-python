@@ -154,7 +154,7 @@ class TestProjectManager:
             search_string = "*"
 
             response = p_client.find_projects(
-                search_string, output_format="JSON", report_spec="Project"
+                search_string, output_format="DICT", report_spec="Project"
             )
             duration = time.perf_counter() - start_time
 

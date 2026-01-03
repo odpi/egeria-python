@@ -16,7 +16,7 @@ open source Egeria project can be found at [Egeria Project](https://egeria-proje
 
 This package is in active development. There is initial
 support for many of Egeria's services including configuration and operation.  This client depends on 
-This release supports Egeria 5.1 - although most of the functions may work on earlier versions of Egeria as well. 
+This release supports Egeria 6.0 - although most of the functions may work on earlier versions of Egeria as well. 
 
 The code is organized to mimic the existing Egeria Java Client structure.
 

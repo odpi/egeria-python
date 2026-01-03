@@ -269,7 +269,8 @@ class TestDigitalBusiness:
             db_client.link_digital_support(cap_guid, support_guid, body=NewRelationshipRequestBody(class_="NewRelationshipRequestBody"))
             
             # Cleanup
-            db_client.detach_digital_support(cap_guid, support_guid, body=DeleteRelationshipRequestBody(class_="DeleteRelationshipRequestBody"))
+            db_client.detach_digital_support(cap_guid, support_guid,
+                                             body=DeleteRelationshipRequestBody(class_="DeleteRelationshipRequestBody"))
 
         except Exception as e:
             print(f"Exception: {e}")

@@ -21,7 +21,7 @@ from pyegeria.my_profile import MyProfile
 from pyegeria._exceptions import (
     PyegeriaException,
     PyegeriaAPIException,
-    PyegeriaNotFoundException,
+    PyegeriaNotFoundException, print_basic_exception,
 )
 
 console = Console()
@@ -106,6 +106,15 @@ class MyProfileScenarioTester:
                 message=f"Successfully retrieved profile for {self.user}",
             )
 
+        except PyegeriaException as e:
+            duration = time.perf_counter() - start_time
+            print_basic_exception(e)
+            return TestResult(
+                scenario_name=scenario_name,
+                passed=False,
+                duration=duration,
+                error=str(e),
+            )
         except Exception as e:
             duration = time.perf_counter() - start_time
             return TestResult(

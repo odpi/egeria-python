@@ -1173,7 +1173,9 @@ class Location(ServerClient):
         """
         url = f"{self.ref_location_command_base}/locations/by-search-string"
         response = await self._async_find_request(url, _type="Location", _gen_output=self._generate_location_output,
-                                                  search_string=search_string, output_format="JSON", page_size=0,
+
+                                                  search_string=search_string, output_format="JSON", page_size=page_size,
+                                                  start_from = start_from,
                                                   body=body)
 
         return response

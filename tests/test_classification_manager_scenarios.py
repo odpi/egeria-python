@@ -29,13 +29,18 @@ from rich.table import Table
 from rich.panel import Panel
 from rich.progress import Progress, SpinnerColumn, TextColumn
 
-from pyegeria.classification_manager import ClassificationManager
+from pyegeria import EgeriaTech
 from pyegeria._exceptions import (
     PyegeriaException,
     PyegeriaAPIException,
     PyegeriaNotFoundException,
     print_exception_table,
     print_validation_error,
+)
+from pyegeria.models import (
+    NewElementRequestBody,
+    NewClassificationRequestBody,
+    DeleteElementRequestBody,
 )
 from pydantic import ValidationError
 
@@ -62,27 +67,121 @@ class ClassificationManagerScenarioTester:
     """Execute realistic classification management scenarios"""
     
     def __init__(self):
-        self.client: Optional[ClassificationManager] = None
+        self.client: Optional[EgeriaTech] = None
         self.results: List[TestResult] = []
         self.test_run_id = datetime.now().strftime("%Y%m%d_%H%M%S")
+        self.created_guids: List[str] = []
         
     def setup(self) -> bool:
-        """Initialize connection to Egeria"""
+        """Initialize connection to Egeria and create test data"""
         try:
             console.print("\n[bold cyan]═══ Setting up Classification Manager Test Environment ═══[/bold cyan]\n")
-            self.client = ClassificationManager(VIEW_SERVER, PLATFORM_URL, user_id=USER_ID, user_pwd=USER_PWD)
+            self.client = EgeriaTech(VIEW_SERVER, PLATFORM_URL, user_id=USER_ID, user_pwd=USER_PWD)
             token = self.client.create_egeria_bearer_token(USER_ID, USER_PWD)
             console.print(f"✓ Connected to {PLATFORM_URL}")
             console.print(f"✓ Authenticated as {USER_ID}")
             console.print(f"✓ Test Run ID: {self.test_run_id}\n")
+
+            # Create test Glossary
+            glossary_qname = f"Glossary::Scenario::{self.test_run_id}"
+            glossary_guid = self.client.create_glossary(
+                display_name=f"Scenario Test Glossary {self.test_run_id}",
+                description="Glossary for classification scenario testing",
+                body=NewElementRequestBody(
+                    class_="NewElementRequestBody",
+                    properties={"class": "GlossaryProperties", "qualifiedName": glossary_qname}
+                )
+            )
+            self.created_guids.append(glossary_guid)
+            console.print(f"✓ Created test Glossary: {glossary_guid}")
+
+            # Create test terms and classify them
+            term_names = ["Confidential Term", "Owned Term", "Origin Term"]
+            for name in term_names:
+                term_qname = f"Term::{name}::{self.test_run_id}"
+                term_guid = self.client.create_glossary_term(
+                    body=NewElementRequestBody(
+                        class_="NewElementRequestBody",
+                        anchor_guid=glossary_guid,
+                        properties={
+                            "class": "GlossaryTermProperties",
+                            "qualifiedName": term_qname,
+                            "displayName": name
+                        }
+                    )
+                )
+                self.created_guids.append(term_guid)
+                console.print(f"✓ Created test Term '{name}': {term_guid}")
+
+                if name == "Confidential Term":
+                    self.client.set_confidentiality_classification(
+                        term_guid,
+                        body={
+                            "class": "NewClassificationRequestBody",
+                            "properties": {
+                                "class": "ConfidentialityProperties",
+                                "levelIdentifier": 3,
+                                "confidence": 100,
+                                "status": 1
+                            }
+                        }
+                    )
+                    console.print("  - Applied Confidentiality classification")
+                elif name == "Owned Term":
+                    self.client.add_ownership_to_element(
+                        term_guid,
+                        body={
+                            "class": "NewClassificationRequestBody",
+                            "properties": {
+                                "class": "OwnerProperties",
+                                "owner": USER_ID,
+                                "ownerTypeName": "USER_ID"
+                            }
+                        }
+                    )
+                    console.print(f"  - Applied Ownership classification")
+                elif name == "Origin Term":
+                    self.client.add_digital_resource_origin(
+                        term_guid,
+                        body=NewClassificationRequestBody(
+                            class_="NewClassificationRequestBody",
+                            properties={
+                                "class": "DigitalResourceOriginProperties",
+                                "source": "Scenario Test Script",
+                                "description": "Created for testing"
+                            }
+                        ).model_dump(exclude_none=True, by_alias=True)
+                    )
+                    console.print(f"  - Applied Origin classification")
+
             return True
+
         except Exception as e:
             console.print(f"[bold red]✗ Setup failed: {str(e)}[/bold red]")
+            traceback.print_exc()
             return False
     
     def teardown(self):
         """Clean up and close connection"""
         if self.client:
+            console.print("\n[bold cyan]═══ Cleaning up Test Data ═══[/bold cyan]\n")
+            for guid in reversed(self.created_guids):
+                try:
+                    # Check if it's a glossary or term to use appropriate delete method
+                    # For simplicity, we can use a generic delete if available, 
+                    # but here we'll try to be specific or use the most flexible one.
+                    # GlossaryManager has delete_term and delete_glossary
+                    # We can use find_element_by_guid to check type if needed, 
+                    # but we know the order in created_guids (glossary first, then terms)
+                    if guid == self.created_guids[0]:
+                         self.client.delete_glossary(guid, body=DeleteElementRequestBody(class_="DeleteElementRequestBody"), cascade=True)
+                         console.print(f"✓ Deleted Glossary: {guid}")
+                    else:
+                         self.client.delete_term(guid, body=DeleteElementRequestBody(class_="DeleteElementRequestBody"))
+                         console.print(f"✓ Deleted Term: {guid}")
+                except Exception as e:
+                    console.print(f"⚠ Failed to delete {guid}: {str(e)}")
+
             self.client.close_session()
             console.print("\n✓ Session closed")
     
@@ -141,8 +240,8 @@ class ClassificationManagerScenarioTester:
             console.print(f"\n[bold blue]▶ Running: {scenario_name}[/bold blue]")
             
             # Query elements with confidentiality classification
-            console.print("  → Querying elements with 'confidentiality' classification...")
-            classification_name = "confidentiality"
+            console.print("  → Querying elements with 'Confidentiality' classification...")
+            classification_name = "Confidentiality"
             body = {
                 "class": "LevelIdentifierQueryProperties",
                 "levelIdentifier": 1

@@ -769,7 +769,7 @@ class DigitalBusiness(CollectionManager):
             f"{self.digital_business_command_root}/business-capabilities/"
             f"{business_capability_guid}/dependencies/{supporting_capability_guid}/attach"
         )
-        await self._async_make_request("POST", url, self._prepare_body(body))
+        await self._async_new_relationship_request(url=url, prop=['BusinessCapabilityDependencyProperties'],body=body)
 
     def link_business_capability_dependency(
         self,
@@ -810,6 +810,7 @@ class DigitalBusiness(CollectionManager):
         business_capability_guid: str,
         supporting_capability_guid: str,
         body: Optional[dict | DeleteRelationshipRequestBody] = None,
+        cascade: bool = False,
     ) -> None:
         """Detach dependent business capabilities. Async version.
 
@@ -821,7 +822,8 @@ class DigitalBusiness(CollectionManager):
             The GUID of the supporting business capability to detach.
         body : dict | DeleteRelationshipRequestBody, optional
             Request body for deletion.
-
+        cascade : bool, optional, default=False
+            Whether to cascade delete dependent elements.
         Returns
         -------
         None
@@ -830,18 +832,20 @@ class DigitalBusiness(CollectionManager):
         ------
         PyegeriaException
             If there are issues in communications, message format, or Egeria errors.
+
         """
         url = (
             f"{self.digital_business_command_root}/business-capabilities/"
             f"{business_capability_guid}/dependencies/{supporting_capability_guid}/detach"
         )
-        await self._async_make_request("POST", url, self._prepare_body(body))
+        await self._async_delete_relationship_request(url=url, body=body, cascade_delete=cascade)
 
     def detach_business_capability_dependency(
         self,
         business_capability_guid: str,
         supporting_capability_guid: str,
         body: Optional[dict | DeleteRelationshipRequestBody] = None,
+        cascade: bool = False,
     ) -> None:
         """Detach dependent business capabilities. Sync version.
 
@@ -853,6 +857,8 @@ class DigitalBusiness(CollectionManager):
             The GUID of the supporting business capability to detach.
         body : dict | DeleteRelationshipRequestBody, optional
             Request body for deletion.
+        cascade : bool, optional, default=False
+            Whether to cascade delete dependent elements.
 
         Returns
         -------
@@ -865,9 +871,8 @@ class DigitalBusiness(CollectionManager):
         """
         loop = asyncio.get_event_loop()
         loop.run_until_complete(
-            self._async_detach_business_capability_dependency(
-                business_capability_guid, supporting_capability_guid, body
-            )
+            self._async_detach_business_capability_dependency(business_capability_guid, supporting_capability_guid,
+                                                              body, cascade)
         )
 
     #
@@ -905,7 +910,7 @@ class DigitalBusiness(CollectionManager):
             f"{self.digital_business_command_root}/business-capabilities/"
             f"{business_capability_guid}/digital-support/{element_guid}/attach"
         )
-        await self._async_make_request("POST", url, self._prepare_body(body))
+        await self._async_new_relationship_request(url=url, prop=['DigitalSupportProperties'],body=body)
 
     def link_digital_support(
         self,
@@ -944,6 +949,7 @@ class DigitalBusiness(CollectionManager):
         business_capability_guid: str,
         element_guid: str,
         body: Optional[dict | DeleteRelationshipRequestBody] = None,
+        cascade: bool = False,
     ) -> None:
         """Detach a business capability from digital support. Async version.
 
@@ -964,18 +970,22 @@ class DigitalBusiness(CollectionManager):
         ------
         PyegeriaException
             If there are issues in communications, message format, or Egeria errors.
+
+        Args:
+            cascade ():
         """
         url = (
             f"{self.digital_business_command_root}/business-capabilities/"
             f"{business_capability_guid}/digital-support/{element_guid}/detach"
         )
-        await self._async_make_request("POST", url, self._prepare_body(body))
+        await self._async_delete_relationship_request(url, self._prepare_body(body), cascade)
 
     def detach_digital_support(
         self,
         business_capability_guid: str,
         element_guid: str,
         body: Optional[dict | DeleteRelationshipRequestBody] = None,
+        cascade: bool = False,
     ) -> None:
         """Detach a business capability from digital support. Sync version.
 
@@ -987,7 +997,8 @@ class DigitalBusiness(CollectionManager):
             The GUID of the digital support element to detach.
         body : dict | DeleteRelationshipRequestBody, optional
             Request body for deletion.
-
+        cascade: bool, default False
+            If true, will perform a cascade delete.
         Returns
         -------
         None
@@ -996,10 +1007,14 @@ class DigitalBusiness(CollectionManager):
         ------
         PyegeriaException
             If there are issues in communications, message format, or Egeria errors.
+
+
+        Args:
+            cascade ():
         """
         loop = asyncio.get_event_loop()
         loop.run_until_complete(
-            self._async_detach_digital_support(business_capability_guid, element_guid, body)
+            self._async_detach_digital_support(business_capability_guid, element_guid, body, cascade)
         )
 
     #
@@ -1031,7 +1046,7 @@ class DigitalBusiness(CollectionManager):
             If there are issues in communications, message format, or Egeria errors.
         """
         url = f"{self.digital_business_command_root}/elements/{element_guid}/business-significant"
-        await self._async_make_request("POST", url, self._prepare_body(body))
+        await self._async_new_classification_request(url=url, prop = ['BusinessSignificantProperties'],body=body)
 
     def set_business_significant(
         self,
@@ -1084,7 +1099,7 @@ class DigitalBusiness(CollectionManager):
             If there are issues in communications, message format, or Egeria errors.
         """
         url = f"{self.digital_business_command_root}/elements/{element_guid}/business-significant/remove"
-        await self._async_make_request("POST", url, self._prepare_body(body))
+        await self._async_delete_classification_request(url=url,body=body,)
 
     def clear_business_significance(
         self,

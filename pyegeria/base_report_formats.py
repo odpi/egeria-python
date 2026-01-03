@@ -151,7 +151,6 @@ COMMON_COLUMNS = [
     Column(name='Qualified Name', key='qualified_name', format=False),
     Column(name='Category', key='category'),
     Column(name='Description', key='description', format=True),
-    Column(name='Status', key='status'),
     Column(name='Type Name', key='type_name'),
     Column(name='URL', key='url')
 ]
@@ -308,6 +307,40 @@ TIME_PARAMETERS = ["as_of_time", "effective_time"]
 
 # Modularized report_specs
 base_report_specs = FormatSetDict({
+"Referenceable": FormatSet(
+        heading="Default Attributes for a Referenceable",
+        description="Basic attributes for a Referenceable",
+        annotations={},  # No specific annotations
+        family="General",
+        question_spec=[{'perspectives':["ANY"], 'questions': WHO + WHAT + WHEN}],
+        formats=[
+            Format(
+                types=["ALL", "TABLE", "DICT"],
+                attributes=COMMON_COLUMNS + [
+                    Column(name='Version Identifier', key='version_identifier'),
+                    Column(name="Classifications", key='classifications'),
+                    Column(name="Additional Properties", key='additional_properties'),
+                    Column(name="Created By", key='created_by'),
+                    Column(name="Create Time", key='create_time'),
+                    Column(name="Updated By", key='updated_by'),
+                    Column(name="Update Time", key='update_time'),
+                    Column(name="Effective From", key='effective_from'),
+                    Column(name="Effective To", key='effective_to'),
+                    Column(name="Version", key='version'),
+                    Column(name="Open Metadata Type Name", key='type_name'),
+                    Column(name="Content Status", key='content_status'),
+                    Column(name="Activity Status", key='activity_status'),
+                    Column(name="Deployment Status", key='deployment_status'),
+                ],
+            )
+        ],
+        action=ActionParameter(
+            function="ClassificationManager.get_elements_by_property_value",
+            optional_params=OPTIONAL_FILTER_PARAMS + ["metadata_element_type_name"] + TIME_PARAMETERS,
+            required_params=["property_value"],
+            spec_params={"property_names":["displayName", "qualifiedName"]},
+        )
+    ),
     "Default": FormatSet(
         heading="Default Base Attributes",
         description="Was a valid combination of report_spec and output_format provided?",

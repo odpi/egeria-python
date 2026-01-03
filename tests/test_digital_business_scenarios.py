@@ -167,19 +167,60 @@ class DigitalBusinessScenarioTester:
         """Scenario: Link and unlink business capability dependencies"""
         scenario_name = "Business Capability Dependency Management"
         start_time = time.perf_counter()
+        created_guids = []
         
         try:
             console.print(f"\n[bold blue]▶ Running: {scenario_name}[/bold blue]")
             
-            # Note: This test requires pre-existing business capability GUIDs
-            # In a real scenario, you would create or retrieve these
-            console.print("  → Testing business capability dependency linking...")
+            # CREATE: Create two business capabilities for testing dependency
+            console.print("  → Creating business capabilities for dependency test...")
+            ts = datetime.now().strftime("%Y%m%d%H%M%S%f")
             
-            # Mock GUIDs for demonstration (in real tests, these would be actual GUIDs)
-            capability_guid = "test-capability-guid-1"
-            supporting_guid = "test-supporting-guid-1"
+            # Create first capability (the one that depends on another)
+            body1 = {
+                "class": "NewElementRequestBody",
+                "properties": {
+                    "class": "BusinessCapabilityProperties",
+                    "qualifiedName": f"BusinessCapability::DependentCapability::{ts}",
+                    "displayName": f"Dependent Capability {ts}",
+                    "description": "Business capability that depends on another",
+                    "identifier": f"BC-DEP-{ts}",
+                    "businessCapabilityType": 1
+                }
+            }
             
-            body = {
+            capability_guid = self.client.create_business_capability(body1)
+            if capability_guid:
+                created_guids.append(capability_guid)
+                self.created_capabilities.append(capability_guid)
+                console.print(f"  ✓ Created dependent capability: {capability_guid}")
+            else:
+                raise Exception("Failed to create dependent capability")
+            
+            # Create second capability (the supporting one)
+            body2 = {
+                "class": "NewElementRequestBody",
+                "properties": {
+                    "class": "BusinessCapabilityProperties",
+                    "qualifiedName": f"BusinessCapability::SupportingCapability::{ts}",
+                    "displayName": f"Supporting Capability {ts}",
+                    "description": "Business capability that supports another",
+                    "identifier": f"BC-SUP-{ts}",
+                    "businessCapabilityType": 2
+                }
+            }
+            
+            supporting_guid = self.client.create_business_capability(body2)
+            if supporting_guid:
+                created_guids.append(supporting_guid)
+                self.created_capabilities.append(supporting_guid)
+                console.print(f"  ✓ Created supporting capability: {supporting_guid}")
+            else:
+                raise Exception("Failed to create supporting capability")
+            
+            # LINK: Link the dependency relationship
+            console.print("  → Linking business capability dependency...")
+            dependency_body = {
                 "class": "NewRelationshipRequestBody",
                 "properties": {
                     "class": "BusinessCapabilityDependencyProperties",
@@ -188,28 +229,26 @@ class DigitalBusinessScenarioTester:
                 }
             }
             
-            # This would fail without real GUIDs, so we catch and report
-            try:
-                self.client.link_business_capability_dependency(
-                    capability_guid, supporting_guid, body
-                )
-                console.print("  ✓ Linked business capability dependency")
-                
-                # Detach
-                self.client.detach_business_capability_dependency(
-                    capability_guid, supporting_guid
-                )
-                console.print("  ✓ Detached business capability dependency")
-                
-            except PyegeriaNotFoundException:
-                console.print("  [yellow]⚠ Test GUIDs not found (expected in test environment)[/yellow]")
+            self.client.link_business_capability_dependency(
+                capability_guid, supporting_guid, dependency_body
+            )
+            console.print("  ✓ Linked business capability dependency")
+            
+            # DETACH: Remove the dependency relationship
+            console.print("  → Detaching business capability dependency...")
+            body = {"class":"DeleteRelationshipRequestBody"}
+            self.client.detach_business_capability_dependency(
+                capability_guid, supporting_guid, body
+            )
+            console.print("  ✓ Detached business capability dependency")
             
             duration = time.perf_counter() - start_time
             return TestResult(
                 scenario_name=scenario_name,
                 status="PASSED",
                 duration=duration,
-                message="Business capability dependency methods executed (requires real GUIDs for full test)"
+                message=f"Successfully tested dependency linking with {len(created_guids)} capabilities",
+                created_guids=created_guids
             )
             
         except Exception as e:
@@ -228,17 +267,63 @@ class DigitalBusinessScenarioTester:
         """Scenario: Link and unlink digital support to business capabilities"""
         scenario_name = "Digital Support Management"
         start_time = time.perf_counter()
+        created_guids = []
         
         try:
             console.print(f"\n[bold blue]▶ Running: {scenario_name}[/bold blue]")
             
-            console.print("  → Testing digital support linking...")
+            # CREATE: Create a business capability and another element for digital support
+            console.print("  → Creating business capability for digital support test...")
+            ts = datetime.now().strftime("%Y%m%d%H%M%S%f")
             
-            # Mock GUIDs for demonstration
-            capability_guid = "test-capability-guid-2"
-            element_guid = "test-element-guid-1"
+            # Create business capability
+            capability_body = {
+                "class": "NewElementRequestBody",
+                "typeName": "BusinessCapability",
+                "properties": {
+                    "class": "BusinessCapabilityProperties",
+                    "qualifiedName": f"BusinessCapability::DigitalSupportTest::{ts}",
+                    "displayName": f"Digital Support Test Capability {ts}",
+                    "description": "Business capability for digital support testing",
+                    "identifier": f"BC-DS-{ts}",
+                    "businessCapabilityType": 1
+                }
+            }
             
-            body = {
+            capability_guid = self.client.create_business_capability(capability_body)
+            if capability_guid:
+                created_guids.append(capability_guid)
+                self.created_capabilities.append(capability_guid)
+                console.print(f"  ✓ Created business capability: {capability_guid}")
+            else:
+                raise Exception("Failed to create business capability")
+            
+            # Create another business capability to act as the digital support element
+            element_body = {
+                "class": "NewElementRequestBody",
+                "typeName": "BusinessCapability",
+                "initialStatus": "ACTIVE",
+                "properties": {
+                    "class": "BusinessCapabilityProperties",
+                    "qualifiedName": f"BusinessCapability::DigitalSupportElement::{ts}",
+                    "displayName": f"Digital Support Element {ts}",
+                    "description": "Element providing digital support",
+                    "identifier": f"BC-DSE-{ts}",
+                    "businessCapabilityType": 2
+                }
+            }
+            
+            element_guid = self.client.create_business_capability(element_body)
+            if element_guid:
+                created_guids.append(element_guid)
+                self.created_capabilities.append(element_guid)
+                console.print(f"  ✓ Created digital support element: {element_guid}")
+            else:
+                raise Exception("Failed to create digital support element")
+            
+            # LINK: Link digital support
+            console.print("  → Linking digital support...")
+            support_body = {
                 "class": "NewRelationshipRequestBody",
                 "properties": {
                     "class": "DigitalSupportProperties",
@@ -247,23 +332,22 @@ class DigitalBusinessScenarioTester:
                 }
             }
             
-            try:
-                self.client.link_digital_support(capability_guid, element_guid, body)
-                console.print("  ✓ Linked digital support")
-                
-                # Detach
-                self.client.detach_digital_support(capability_guid, element_guid)
-                console.print("  ✓ Detached digital support")
-                
-            except PyegeriaNotFoundException:
-                console.print("  [yellow]⚠ Test GUIDs not found (expected in test environment)[/yellow]")
+            self.client.link_digital_support(capability_guid, element_guid, support_body)
+            console.print("  ✓ Linked digital support")
+            
+            # DETACH: Remove digital support
+            console.print("  → Detaching digital support...")
+            body = {"class":"DeleteRelationshipRequestBody"}
+            self.client.detach_digital_support(capability_guid, element_guid, body=body)
+            console.print("  ✓ Detached digital support")
             
             duration = time.perf_counter() - start_time
             return TestResult(
                 scenario_name=scenario_name,
                 status="PASSED",
                 duration=duration,
-                message="Digital support methods executed (requires real GUIDs for full test)"
+                message=f"Successfully tested digital support with {len(created_guids)} elements",
+                created_guids=created_guids
             )
             
         except Exception as e:
@@ -282,16 +366,39 @@ class DigitalBusinessScenarioTester:
         """Scenario: Set and clear business significance classification"""
         scenario_name = "Business Significance Classification"
         start_time = time.perf_counter()
+        created_guids = []
         
         try:
             console.print(f"\n[bold blue]▶ Running: {scenario_name}[/bold blue]")
             
-            console.print("  → Testing business significance classification...")
+            # CREATE: Create a business capability for significance testing
+            console.print("  → Creating business capability for significance test...")
+            ts = datetime.now().strftime("%Y%m%d%H%M%S%f")
             
-            # Mock GUID for demonstration
-            element_guid = "test-element-guid-2"
+            element_body = {
+                "class": "NewElementRequestBody",
+                "typeName": "BusinessCapability",
+                "properties": {
+                    "class": "BusinessCapabilityProperties",
+                    "qualifiedName": f"BusinessCapability::SignificanceTest::{ts}",
+                    "displayName": f"Significance Test Capability {ts}",
+                    "description": "Business capability for significance testing",
+                    "identifier": f"BC-SIG-{ts}",
+                    "businessCapabilityType": 1
+                }
+            }
             
-            body = {
+            element_guid = self.client.create_business_capability(element_body)
+            if element_guid:
+                created_guids.append(element_guid)
+                self.created_capabilities.append(element_guid)
+                console.print(f"  ✓ Created business capability: {element_guid}")
+            else:
+                raise Exception("Failed to create business capability")
+            
+            # SET: Set business significance classification
+            console.print("  → Setting business significance...")
+            significance_body = {
                 "class": "NewClassificationRequestBody",
                 "properties": {
                     "class": "BusinessSignificantProperties",
@@ -299,23 +406,21 @@ class DigitalBusinessScenarioTester:
                 }
             }
             
-            try:
-                self.client.set_business_significant(element_guid, body)
-                console.print("  ✓ Set business significance")
-                
-                # Clear
-                self.client.clear_business_significance(element_guid)
-                console.print("  ✓ Cleared business significance")
-                
-            except PyegeriaNotFoundException:
-                console.print("  [yellow]⚠ Test GUID not found (expected in test environment)[/yellow]")
+            self.client.set_business_significant(element_guid, significance_body)
+            console.print("  ✓ Set business significance")
+            
+            # CLEAR: Remove business significance classification
+            console.print("  → Clearing business significance...")
+            self.client.clear_business_significance(element_guid)
+            console.print("  ✓ Cleared business significance")
             
             duration = time.perf_counter() - start_time
             return TestResult(
                 scenario_name=scenario_name,
                 status="PASSED",
                 duration=duration,
-                message="Business significance methods executed (requires real GUID for full test)"
+                message=f"Successfully tested business significance with {len(created_guids)} element",
+                created_guids=created_guids
             )
             
         except Exception as e:

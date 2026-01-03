@@ -66,7 +66,7 @@ def test_get_classified_elements_by():
     # metadata_element_type_name = 'CertificationType'
     #
     # metadata_element_type_name = "DeployedDatabaseSchema"
-    classification_name = "confidentiality"
+    classification_name = "Confidentiality"
     try:
         c_client = ClassificationManager(view_server, platform_url)
 
@@ -75,7 +75,7 @@ def test_get_classified_elements_by():
             "class": "LevelIdentifierQueryProperties",
             "levelIdentifier": 1
         }
-        response = c_client.get_classified_elements_by(classification_name, body)
+        response = c_client.get_classified_elements_by(classification_name)
 
         if type(response) is list:
             print(f"\n\tElement count is: {len(response)}")
@@ -316,10 +316,11 @@ def test_get_element_by_guid():
 
         bearer_token = c_client.create_egeria_bearer_token(user, password)
         start_time = time.perf_counter()
-        result = c_client.get_element_by_guid(element_guid)
+        result = c_client.get_element_by_guid(element_guid, output_format="DICT", report_spec="Referenceable")
         duration = time.perf_counter() - start_time
         print(f"\n\tDuration was {duration} seconds")
-        if type(result) is dict:
+        if isinstance(result, list|dict):
+            print(f"\n\tElement count is: {len(result)}")
             print_json(data=result)
         elif type(result) is str:
             console.print("\n\n\t Response is: " + result)
@@ -352,21 +353,24 @@ def test_get_actor_for_guid():
 
         assert True
 
-    except (
-            PyegeriaException) as e:
+    except PyegeriaException as e:
         print_basic_exception(e)
         console.print_exception(show_locals=True)
         assert False, "Invalid request"
+    except ValidationError as e:
+        print_validation_error(e)
+        console.print_exception(show_locals=True)
     finally:
         c_client.close_session()
 
 
 def test_get_guid_for_name():
     open_metadata_type_name = None
-    # property_value = "Person:UK:324713"
+    property_value = "Erin Overview"
     # property_value = "simple-metadata-store"
     # property_value = "Sustainability Glossary"
-    property_value = "qs-view-server"
+    # property_value = "qs-view-server"
+    # property_value = "Campaign:Sustainability"
     c_client = ClassificationManager(view_server, platform_url)
 
     bearer_token = c_client.create_egeria_bearer_token(user, password)
@@ -387,7 +391,8 @@ def test_get_element_guid_by_unique_name():
     open_metadata_type_name = None
     # property_value = "Person:UK:324713"
     # property_value = "simple-metadata-store"
-    property_value = "FileDirectory:CreateAndSurveyGovernanceActionProcess"
+    # property_value = "FileDirectory:CreateAndSurveyGovernanceActionProcess"
+    property_value = "Campaign:Sustainability"
 
     c_client = ClassificationManager(view_server, platform_url)
     try:
@@ -436,14 +441,14 @@ def test_get_element_by_unique_name():
 def test_get_elements_by_classification():
     # metadata_element_type_name = "Project"
     # metadata_element_type_name = "DeployedDatabaseSchema"
-    open_metadata_type_name = "Collection"
+    open_metadata_type_name = "Project"
     # classification = "GovernanceProject"
-    classification = "Folder"
+    classification = "Campaign"
     c_client = ClassificationManager(view_server, platform_url)
 
     bearer_token = c_client.create_egeria_bearer_token(user, password)
     response = c_client.get_elements_by_classification(
-        classification, open_metadata_type_name, output_format="DICT", report_spec="Collections"
+        classification, open_metadata_type_name, output_format="JSON", report_spec="Collections", page_size=10
     )
 
     if type(response) is list:
@@ -492,9 +497,9 @@ def test_find_elements_by_classification_with_property_value():
     # property_value = "Clinical Trials"
     # property_names = ["name", "qualifiedName"]
     #
-    classification = "DataSpec"
-    # metadata_element_type_name = "DeployedDatabaseSchema"
-    open_metadata_type_name = None
+    classification = "Campaign"
+    # metadata_element_type_name = "Project"
+    open_metadata_type_name = "Project"
     property_value = ""
     property_names = ["displayName"]
     c_client = ClassificationManager(view_server, platform_url)

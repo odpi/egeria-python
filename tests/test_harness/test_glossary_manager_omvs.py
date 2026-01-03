@@ -34,7 +34,7 @@ from pyegeria._exceptions import (
 from pyegeria.glossary_manager import GlossaryManager, GlossaryTermProperties
 from pyegeria.core_omag_server_config import CoreServerConfig
 from pyegeria.models import NewElementRequestBody
-from tests.test_classification_manager_omvs import relationship_type
+from tests.test_classification_manager import relationship_type
 
 
 # from pyegeria.admin_services import FullServerConfig

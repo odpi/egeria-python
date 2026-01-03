@@ -4752,7 +4752,7 @@ class ServerClient(BaseServerClient):
 
     @dynamic_catch
     def validate_new_classification_request(self, body: dict | NewClassificationRequestBody,
-                                            prop: str = None) -> NewClassificationRequestBody | None:
+                                            prop: str | list[str] = None) -> NewClassificationRequestBody | None:
         if isinstance(body, NewClassificationRequestBody):
             if (prop and body.properties.class_ in prop) or (prop is None):
                 validated_body = body
@@ -4761,7 +4761,7 @@ class ServerClient(BaseServerClient):
                                                         {"reason": "unexpected property class name"})
 
         elif isinstance(body, dict):
-            if prop is None or body.get("properties", {}).get("class", "") == prop:
+            if prop is None or body.get("properties", {}).get("class", "") in prop:
                 validated_body = self._new_classification_request_adapter.validate_python(body)
             else:
                 raise PyegeriaInvalidParameterException(additional_info=
