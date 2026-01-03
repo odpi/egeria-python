@@ -280,7 +280,6 @@ class DigitalBusinessScenarioTester:
             capability_body = {
                 "class": "NewElementRequestBody",
                 "typeName": "BusinessCapability",
-                "initialStatus": "ACTIVE",
                 "properties": {
                     "class": "BusinessCapabilityProperties",
                     "qualifiedName": f"BusinessCapability::DigitalSupportTest::{ts}",
@@ -379,7 +378,6 @@ class DigitalBusinessScenarioTester:
             element_body = {
                 "class": "NewElementRequestBody",
                 "typeName": "BusinessCapability",
-                "initialStatus": "ACTIVE",
                 "properties": {
                     "class": "BusinessCapabilityProperties",
                     "qualifiedName": f"BusinessCapability::SignificanceTest::{ts}",

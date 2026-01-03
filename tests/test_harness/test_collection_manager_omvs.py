@@ -114,7 +114,7 @@ class TestCollectionManager:
             start_time = time.perf_counter()
             search_string = "*"
             classification_name = None
-            element_type = ["CollectionFolder"]
+            element_type = ["DigitalProduct"]
             output_format = "DICT"
             report_spec = "BasicCollections"
 
@@ -545,13 +545,8 @@ class TestCollectionManager:
             body = {
                 "class": "NewElementRequestBody",
                 "isOwnAnchor": True,
-                "initialClassifications": {
-                    classification_name : {
-                      "class" :  "ClassificationProperties"
-                    }
-                  },
                 "properties": {
-                    "class": "CollectionProperties",
+                    "class": "CollectionFolderProperties",
                     "displayName": display_name,
                     "qualifiedName": q_name,
                     "description": "A collection of my Flex radios",

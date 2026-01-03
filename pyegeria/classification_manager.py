@@ -133,6 +133,13 @@ class ClassificationManager(ServerClient):
                                        output_format: str = "DICT",
                                        report_spec: dict | str | None = None) -> str | list[dict]:
         """Resolve format set and generate output for Referenceable-derived elements."""
+        if isinstance(elements,list):
+            el_type = elements[0]['elementHeader']['type']['typeName']
+        elif isinstance(elements,dict):
+            el_type = elements['elementHeader']['type']['typeName']
+        else:
+            el_type = "Referenceable"
+
         entity_type = element_type_name or self.REFERENCEABLE_LABEL
 
         # Resolve output format set
@@ -142,10 +149,10 @@ class ClassificationManager(ServerClient):
                 output_formats = select_report_spec(report_spec, output_format)
             else:
                 output_formats = get_report_spec_match(report_spec, output_format)
-        elif element_type_name:
+        elif element_type_name not in ['Referenceable','OpenMetadataRoot']:
             output_formats = select_report_spec(element_type_name, output_format)
         else:
-            output_formats = select_report_spec(entity_type, output_format)
+            output_formats = select_report_spec(el_type, output_format)
 
         if output_formats is None:
             output_formats = select_report_spec("Default", output_format)
@@ -176,7 +183,7 @@ class ClassificationManager(ServerClient):
     async def _async_get_classified_elements_by(
             self,
             classification_name: str,
-            body: dict | LevelIdentifierQueryBody,
+            body: dict | LevelIdentifierQueryBody = None,
             output_format: str = "JSON",
             report_spec: dict | str = None
     ) -> list | str:
@@ -188,7 +195,7 @@ class ClassificationManager(ServerClient):
         Parameters
         ----------
         classification_name: str
-            One of impact, confidence, criticality, confidentiality, retention
+            One of Impact, Confidence, Criticality, Confidentiality, Retention
         body: dict | LevelIdentifierQueryBody
             Details of the query. See LevelIdentifierQueryBody for details.
         output_format: str, default = "JSON"
@@ -223,9 +230,11 @@ class ClassificationManager(ServerClient):
         }
 
         """
-
+        if classification_name not in ["Confidence", "Criticality", "Confidentiality", "Impact", "Retention"]:
+            print("Invalid classification name. Must be one of Confidence, Criticality, Confidentiality, Impact, Retention")
+            raise PyegeriaException(context="Invalid classification name")
         url = (f"{self.platform_url}/servers/{self.view_server}/api/open-metadata/"
-               f"classification-explorer/elements/by-{classification_name}")
+               f"classification-explorer/elements/by-{classification_name.lower()}")
 
         response = await self._async_get_level_identifier_query_body_request(
             url=url, _gen_output=self._generate_referenceable_output, output_format=output_format,
@@ -237,7 +246,7 @@ class ClassificationManager(ServerClient):
     def get_classified_elements_by(
             self,
             classification_name: str,
-            body: dict | LevelIdentifierQueryBody,
+            body: dict | LevelIdentifierQueryBody = None,
             output_format: str = "JSON",
             report_spec: dict | str = None
     ) -> list | str:
@@ -2849,7 +2858,7 @@ body: dict | FilterRequestBody = None,
         ------
         PyegeriaException
         """
-
+        element_type_name = element_type_name if element_type_name else "Referenceable"
         url = (f"{self.platform_url}/servers/{self.view_server}/api/open-metadata/"
                f"classification-explorer/elements/{element_guid}")
 
@@ -2905,7 +2914,7 @@ body: dict | FilterRequestBody = None,
 
     def get_actor_for_guid(self, guid: str) -> str:
         """Get the name of the actor from the supplied guid."""
-        details = self.get_element_by_guid(guid)
+        details = self.get_element_by_guid(guid, element_type_name="UserIdentity")
         if type(details) is str:
             return details
         if details["elementHeader"]["type"]["typeName"] != "UserIdentity":
@@ -3097,7 +3106,7 @@ body: dict | FilterRequestBody = None,
         return response
 
     async def _async_get_guid_for_name(self, name: str, property_name: list[str] = ["qualifiedName", "displayName"],
-                                       type_name: str = "ValidMetadataValue") -> str:
+                                       type_name: str = None) -> str:
         """
         Retrieve the guid associated with the supplied element name.
         If more than one element returned, an exception is thrown. Async version.
@@ -3134,7 +3143,7 @@ body: dict | FilterRequestBody = None,
 
     def get_guid_for_name(
             self, name: str, property_name: list[str] = ["qualifiedName", "displayName"],
-            type_name: str = "ValidMetadataValue"
+            type_name: str = None
     ) -> str:
         """
         Retrieve the guid associated with the supplied element name.
@@ -3224,7 +3233,7 @@ body: dict | FilterRequestBody = None,
         """
 
         body = {
-            "class": "FindProperties",
+            "class": "ResultsRequestBody",
             "metadataElementTypeName": metadata_element_type_name,
             "effectiveTime": effective_time,
             "forLineage": for_lineage,
@@ -6497,7 +6506,7 @@ body: dict | FilterRequestBody = None,
         -----
 
         {
-           "class": "ClassificationRequestBody",
+           "class": "NewClassificationRequestBody",
            "effectiveTime": "an isoTimestamp",
            "forDuplicateProcessing": false,
            "forLineage": false,
@@ -6516,9 +6525,14 @@ body: dict | FilterRequestBody = None,
             f""
         )
 
-        await self._async_make_request(
-            "POST", url, body_slimmer(body), time_out=time_out
-        )
+        # await self._async_make_request(
+        #     "POST", url, body_slimmer(body), time_out=time_out
+        # )
+        if body is not None:
+            prop = body['properties']['class']
+        else:
+            prop = None
+        await self._async_new_classification_request(url=url, prop=prop, body=body)
 
     def add_ownership_to_element(
             self,
@@ -6554,7 +6568,7 @@ body: dict | FilterRequestBody = None,
         -----
 
         {
-           "class": "ClassificationRequestBody",
+           "class": "NewClassificationRequestBody",
            "effectiveTime": "an isoTimestamp",
            "forDuplicateProcessing": false,
            "forLineage": false,
@@ -6621,7 +6635,7 @@ body: dict | FilterRequestBody = None,
             f""
         )
 
-        body = {"class": "ClassificationRequestBody", "effectiveTime": effective_time, "forLineage": for_lineage,
+        body = {"class": "NewClassificationRequestBody", "effectiveTime": effective_time, "forLineage": for_lineage,
                 "forDuplicateProcessing": for_duplicate_processing}
 
         await self._async_make_request(
@@ -6750,7 +6764,7 @@ body: dict | FilterRequestBody = None,
         -----
 
         {
-           "class": "ClassificationRequestBody",
+           "class": "NewClassificationRequestBody",
            "effectiveTime": "an isoTimestamp",
            "forDuplicateProcessing": false,
            "forLineage": false,
@@ -6918,7 +6932,7 @@ body: dict | FilterRequestBody = None,
         -----
 
         {
-           "class": "ClassificationRequestBody",
+           "class": "NewClassificationRequestBody",
            "effectiveTime": "an isoTimestamp",
            "forDuplicateProcessing": false,
            "forLineage": false,
@@ -7047,7 +7061,7 @@ body: dict | FilterRequestBody = None,
         A sample dict structure is:
 
         {
-           "class": "ClassificationRequestBody",
+           "class": "NewClassificationRequestBody",
            "effectiveTime": "an isoTimestamp",
            "forLineage": false,
            "forDuplicateProcessing": false,
@@ -7116,7 +7130,7 @@ body: dict | FilterRequestBody = None,
         A sample dict structure is:
 
         {
-           "class": "ClassificationRequestBody",
+           "class": "NewClassificationRequestBody",
            "effectiveTime": "an isoTimestamp",
            "forLineage": false,
            "forDuplicateProcessing": false,
@@ -7192,7 +7206,7 @@ body: dict | FilterRequestBody = None,
             f""
         )
 
-        body = {"class": "ClassificationRequestBody", "effectiveTime": effective_time, "forLineage": for_lineage,
+        body = {"class": "NewClassificationRequestBody", "effectiveTime": effective_time, "forLineage": for_lineage,
                 "forDuplicateProcessing": for_duplicate_processing}
 
         await self._async_make_request(
@@ -7433,7 +7447,7 @@ body: dict | FilterRequestBody = None,
             f""
         )
 
-        body = {"class": "ClassificationRequestBody", "effectiveTime": effective_time, "forLineage": for_lineage,
+        body = {"class": "NewClassificationRequestBody", "effectiveTime": effective_time, "forLineage": for_lineage,
                 "forDuplicateProcessing": for_duplicate_processing}
 
         await self._async_make_request(
@@ -7617,7 +7631,7 @@ body: dict | FilterRequestBody = None,
         A sample dict structure is:
 
         {
-           "class": "ClassificationRequestBody",
+           "class": "NewClassificationRequestBody",
            "effectiveTime": "an isoTimestamp",
            "forLineage": false,
            "forDuplicateProcessing": false,
@@ -7684,7 +7698,7 @@ body: dict | FilterRequestBody = None,
         A sample dict structure is:
 
         {
-           "class": "ClassificationRequestBody",
+           "class": "NewClassificationRequestBody",
            "effectiveTime": "an isoTimestamp",
            "forLineage": false,
            "forDuplicateProcessing": false,
@@ -7756,7 +7770,7 @@ body: dict | FilterRequestBody = None,
             f""
         )
 
-        body = {"class": "ClassificationRequestBody", "effectiveTime": effective_time, "forLineage": for_lineage,
+        body = {"class": "NewClassificationRequestBody", "effectiveTime": effective_time, "forLineage": for_lineage,
                 "forDuplicateProcessing": for_duplicate_processing}
 
         await self._async_make_request(
@@ -7997,7 +8011,7 @@ body: dict | FilterRequestBody = None,
             f"{glossary_term_guid}/detach"
         )
 
-        body = {"class": "ClassificationRequestBody", "effectiveTime": effective_time, "forLineage": for_lineage,
+        body = {"class": "NewClassificationRequestBody", "effectiveTime": effective_time, "forLineage": for_lineage,
                 "forDuplicateProcessing": for_duplicate_processing}
 
         await self._async_make_request(
@@ -8093,7 +8107,7 @@ body: dict | FilterRequestBody = None,
         A sample dict structure is:
 
         {
-           "class": "ClassificationRequestBody",
+           "class": "NewClassificationRequestBody",
            "effectiveTime": "an isoTimestamp",
            "forLineage": false,
            "forDuplicateProcessing": false,
@@ -8149,7 +8163,7 @@ body: dict | FilterRequestBody = None,
         A sample dict structure is:
 
         {
-           "class": "ClassificationRequestBody",
+           "class": "NewClassificationRequestBody",
            "effectiveTime": "an isoTimestamp",
            "forLineage": false,
            "forDuplicateProcessing": false,
@@ -8218,7 +8232,7 @@ body: dict | FilterRequestBody = None,
             f"/remove"
         )
 
-        body = {"class": "ClassificationRequestBody", "effectiveTime": effective_time, "forLineage": for_lineage,
+        body = {"class": "NewClassificationRequestBody", "effectiveTime": effective_time, "forLineage": for_lineage,
                 "forDuplicateProcessing": for_duplicate_processing}
 
         await self._async_make_request(

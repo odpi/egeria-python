@@ -292,7 +292,7 @@ class NewElementRequestBody(RequestBody):
     parent_guid: str | None = None
     parent_relationship_type_name: str | None = None
     parent_at_end_1: bool | None = True
-    properties: dict | None = None
+    properties: dict | None =None
 
 
 class NewClassificationRequestBody(RequestBody):

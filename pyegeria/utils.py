@@ -213,6 +213,78 @@ def dict_to_markdown_list(data: dict, level: int = 0) -> str:
 
 
 import json
+import csv
+import io
+from typing import Dict, Any
+
+
+def transform_json_to_tabular(json_data: Dict[str, Any], output_format: str = 'rich'):
+    """
+    Transforms Egeria TabularDataSetReportResponse JSON to CSV, Rich table, or Markdown table (LIST).
+
+    :param json_data: The JSON data as a dictionary.
+    :param output_format: 'CSV', 'RICH-TABLE', or 'LIST'.
+    """
+    report = json_data.json().get('tabularDataSetReport')
+    if not report:
+        print("No tabularDataSetReport found in JSON.")
+        return
+
+    column_descriptions = report.get('columnDescriptions', [])
+    headers = [col.get('columnName') for col in column_descriptions]
+    data_records = report.get('dataRecords', {})
+
+    # Sort keys to ensure correct order if they are numeric strings
+    sorted_record_keys = sorted(data_records.keys(), key=lambda x: int(x))
+    rows = [data_records[key] for key in sorted_record_keys]
+
+    if output_format == 'CSV':
+        output = io.StringIO()
+        writer = csv.writer(output)
+        writer.writerow(headers)
+        writer.writerows(rows)
+        print(output.getvalue())
+    elif output_format == 'RICH-TABLE':
+        try:
+            from rich.console import Console
+            from rich.table import Table
+
+            console = Console()
+            table = Table(title=report.get('tableName', 'Report'))
+
+            for header in headers:
+                table.add_column(header)
+
+            for row in rows:
+                # Convert all items to string for Rich
+                str_row = [str(item) if item is not None else "" for item in row]
+                table.add_row(*str_row)
+
+            console.print(table)
+        except ImportError:
+            print("Rich library not installed. Defaulting to simple text output.")
+            print(f"Headers: {headers}")
+            for row in rows:
+                print(row)
+    elif output_format == 'LIST':
+        # Generate a markdown table
+        markdown_output = f"### {report.get('tableName', 'Report')}\n\n"
+        markdown_output += "| " + " | ".join(headers) + " |\n"
+        markdown_output += "| " + " | ".join(["---"] * len(headers)) + " |\n"
+        for row in rows:
+            str_row = [str(item) if item is not None else "" for item in row]
+            markdown_output += "| " + " | ".join(str_row) + " |\n"
+        print(markdown_output)
+    else:
+        print(f"Unknown output format: {output_format}")
+
+
+# Example usage:
+# with open('path/to/your/file.json', 'r') as f:
+#     data = json.load(f)
+#     transform_json_to_tabular(data, 'CSV') # or 'RICH-TABLE' or 'LIST'
+
+import json
 import re
 
 

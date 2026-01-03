@@ -1061,7 +1061,7 @@ class CollectionManager(ServerClient):
           "properties": {
             "class": "CollectionProperties",
             "qualifiedName": "Must provide a unique name here",
-            "name": "Add display name here",
+            "displayName": "Add display name here",
             "description": "Add description of the collection here",
             "category": "Add appropriate valid value for type"
           }
@@ -1079,7 +1079,7 @@ class CollectionManager(ServerClient):
           "properties": {
             "class": "CollectionProperties",
             "qualifiedName": "Must provide a unique name here",
-            "name": "Add display name here",
+            "displayName": "Add display name here",
             "description": "Add description of the collection here",
             "category": "Add appropriate valid value for type"
           },
@@ -1105,7 +1105,7 @@ class CollectionManager(ServerClient):
           "properties": {
             "class": "CollectionProperties",
             "qualifiedName": "Must provide a unique name here",
-            "name": "Add display name here",
+            "displayName": "Add display name here",
             "description": "Add description of the collection here",
             "category": "Add appropriate valid value for type"
           },
@@ -1167,7 +1167,7 @@ class CollectionManager(ServerClient):
 
 
     def create_collection(self, display_name: str = None, description: str = None,
-                                category: str = None, initial_classifications: list[str] = None, prop:list[str]="Collection",
+                                category: str = None, initial_classifications: list[str] = None, prop:list[str]=["Collection"],
                                 body: dict | NewElementRequestBody = None) -> str:
         """ Create a new generic collection. If the body is not present, the display_name, description, category
             and classification will be used to create a simple, self-anchored collection.
@@ -1215,7 +1215,7 @@ class CollectionManager(ServerClient):
           "properties": {
             "class": "CollectionProperties",
             "qualifiedName": "Must provide a unique name here",
-            "name": "Add display name here",
+            "displayName": "Add display name here",
             "description": "Add description of the collection here",
             "category": "Add appropriate valid value for type"
           }
@@ -1233,7 +1233,7 @@ class CollectionManager(ServerClient):
           "properties": {
             "class": "CollectionProperties",
             "qualifiedName": "Must provide a unique name here",
-            "name": "Add display name here",
+            "displayName": "Add display name here",
             "description": "Add description of the collection here",
             "category": "Add appropriate valid value for type"
           },
@@ -1259,7 +1259,7 @@ class CollectionManager(ServerClient):
           "properties": {
             "class": "CollectionProperties",
             "qualifiedName": "Must provide a unique name here",
-            "name": "Add display name here",
+            "displayName": "Add display name here",
             "description": "Add description of the collection here",
             "category": "Add appropriate valid value for type"
           },
@@ -1505,7 +1505,7 @@ class CollectionManager(ServerClient):
           "properties": {
             "class": "CollectionProperties",
             "qualifiedName": "Must provide a unique name here",
-            "name": "Add display name here",
+            "displayName": "Add display name here",
             "description": "Add description of the collection here",
             "category": "Add appropriate valid value for type"
           }
@@ -1523,7 +1523,7 @@ class CollectionManager(ServerClient):
           "properties": {
             "class": "CollectionProperties",
             "qualifiedName": "Must provide a unique name here",
-            "name": "Add display name here",
+            "displayName": "Add display name here",
             "description": "Add description of the collection here",
             "category": "Add appropriate valid value for type"
           },
@@ -1549,7 +1549,7 @@ class CollectionManager(ServerClient):
           "properties": {
             "class": "CollectionProperties",
             "qualifiedName": "Must provide a unique name here",
-            "name": "Add display name here",
+            "displayName": "Add display name here",
             "description": "Add description of the collection here",
             "category": "Add appropriate valid value for type"
           },
@@ -1649,7 +1649,7 @@ class CollectionManager(ServerClient):
           "properties": {
             "class": "CollectionProperties",
             "qualifiedName": "Must provide a unique name here",
-            "name": "Add display name here",
+            "displayName": "Add display name here",
             "description": "Add description of the collection here",
             "category": "Add appropriate valid value for type"
           }
@@ -1667,7 +1667,7 @@ class CollectionManager(ServerClient):
           "properties": {
             "class": "CollectionProperties",
             "qualifiedName": "Must provide a unique name here",
-            "name": "Add display name here",
+            "displayName": "Add display name here",
             "description": "Add description of the collection here",
             "category": "Add appropriate valid value for type"
           },
@@ -1693,7 +1693,7 @@ class CollectionManager(ServerClient):
           "properties": {
             "class": "CollectionProperties",
             "qualifiedName": "Must provide a unique name here",
-            "name": "Add display name here",
+            "displayName": "Add display name here",
             "description": "Add description of the collection here",
             "category": "Add appropriate valid value for type"
           },
@@ -1762,7 +1762,7 @@ class CollectionManager(ServerClient):
           "properties": {
             "class": "CollectionProperties",
             "qualifiedName": "Must provide a unique name here",
-            "name": "Add display name here",
+            "displayName": "Add display name here",
             "description": "Add description of the collection here",
             "category": "Add appropriate valid value for type"
           }
@@ -1780,7 +1780,7 @@ class CollectionManager(ServerClient):
           "properties": {
             "class": "CollectionProperties",
             "qualifiedName": "Must provide a unique name here",
-            "name": "Add display name here",
+            "displayName": "Add display name here",
             "description": "Add description of the collection here",
             "category": "Add appropriate valid value for type"
           },
@@ -1806,7 +1806,7 @@ class CollectionManager(ServerClient):
           "properties": {
             "class": "CollectionProperties",
             "qualifiedName": "Must provide a unique name here",
-            "name": "Add display name here",
+            "displayName": "Add display name here",
             "description": "Add description of the collection here",
             "category": "Add appropriate valid value for type"
           },
@@ -1904,7 +1904,7 @@ class CollectionManager(ServerClient):
           "properties": {
             "class": "CollectionProperties",
             "qualifiedName": "Must provide a unique name here",
-            "name": "Add display name here",
+            "displayName": "Add display name here",
             "description": "Add description of the collection here",
             "category": "Add appropriate valid value for type"
           }
@@ -1922,7 +1922,7 @@ class CollectionManager(ServerClient):
           "properties": {
             "class": "CollectionProperties",
             "qualifiedName": "Must provide a unique name here",
-            "name": "Add display name here",
+            "displayName": "Add display name here",
             "description": "Add description of the collection here",
             "category": "Add appropriate valid value for type"
           },
@@ -1948,7 +1948,7 @@ class CollectionManager(ServerClient):
           "properties": {
             "class": "CollectionProperties",
             "qualifiedName": "Must provide a unique name here",
-            "name": "Add display name here",
+            "displayName": "Add display name here",
             "description": "Add description of the collection here",
             "category": "Add appropriate valid value for type"
           },
@@ -2151,7 +2151,7 @@ class CollectionManager(ServerClient):
             "class" : "CollectionProperties",
             "contentStatus": "Add appropriate valid value for type",
             "qualifiedName": "Must provide a unique name here",
-            "name" : "Add display name here",
+            "displayName" : "Add display name here",
             "description" : "Add description of the collection here",
             "category": "Add appropriate valid value for type"
           },
@@ -2208,7 +2208,7 @@ class CollectionManager(ServerClient):
           "properties": {
             "class" : "CollectionProperties",
             "qualifiedName": "Must provide a unique name here",
-            "name" : "Add display name here",
+            "displayName" : "Add display name here",
             "description" : "Add description of the collection here",
             "contentStatus": "Add appropriate valid value for type",
             "category": "Add appropriate valid value for type"
@@ -2264,7 +2264,7 @@ class CollectionManager(ServerClient):
           "properties": {
             "class" : "DigitalProductProperties",
             "qualifiedName": "DigitalProduct::Add product name here",
-            "name" : "Product contents",
+            "displayName" : "Product contents",
             "description" : "Add description of product and its expected usage here",
             "identifier" : "Add product identifier here",
             "productName" : "Add product name here",
@@ -2335,7 +2335,7 @@ class CollectionManager(ServerClient):
               "properties": {
                 "class" : "DigitalProductProperties",
                 "qualifiedName": "DigitalProduct::Add product name here",
-                "name" : "Product contents",
+                "displayName" : "Product contents",
                 "description" : "Add description of product and its expected usage here",
                 "identifier" : "Add product identifier here",
                 "productName" : "Add product name here",
@@ -2508,7 +2508,7 @@ class CollectionManager(ServerClient):
           "properties": {
             "class" : "DigitalProductProperties",
             "qualifiedName": "DigitalProduct::Add product name here",
-            "name" : "Product contents",
+            "displayName" : "Product contents",
             "description" : "Add description of product and its expected usage here",
             "userDefinedStatus" : "OBSOLETE",
             "identifier" : "Add product identifier here",
@@ -2574,7 +2574,7 @@ class CollectionManager(ServerClient):
           "properties": {
             "class" : "DigitalProductProperties",
             "qualifiedName": "DigitalProduct::Add product name here",
-            "name" : "Product contents",
+            "displayName" : "Product contents",
             "description" : "Add description of product and its expected usage here",
             "userDefinedStatus" : "OBSOLETE",
             "identifier" : "Add product identifier here",
@@ -3050,7 +3050,7 @@ class CollectionManager(ServerClient):
           "properties": {
             "class" : "AgreementProperties",
             "qualifiedName": "Agreement::Add agreement name here",
-            "name" : "display name",
+            "displayName" : "display name",
             "description" : "Add description of the agreement here",
             "identifier" : "Add agreement identifier here",
             "additionalProperties": {
@@ -3112,7 +3112,7 @@ class CollectionManager(ServerClient):
               "properties": {
                 "class" : "AgreementProperties",
                 "qualifiedName": "Agreement::Add agreement name here",
-                "name" : "display name",
+                "displayName" : "display name",
                 "description" : "Add description of the agreement here",
                 "identifier" : "Add agreement identifier here",
                 "additionalProperties": {
@@ -3177,7 +3177,7 @@ class CollectionManager(ServerClient):
     #       "properties": {
     #         "class" : "AgreementProperties",
     #         "qualifiedName": "Agreement::Add agreement name here",
-    #         "name" : "display name",
+    #         "displayName" : "display name",
     #         "description" : "Add description of the agreement here",
     #         "userDefinedStatus" : "NEW",
     #         "identifier" : "Add agreement identifier here",
@@ -3241,7 +3241,7 @@ class CollectionManager(ServerClient):
     #           "properties": {
     #             "class" : "DigitalProductProperties",
     #             "qualifiedName": "DigitalProduct::Add product name here",
-    #             "name" : "Product contents",
+    #             "displayName" : "Product contents",
     #             "description" : "Add description of product and its expected usage here",
     #             "identifier" : "Add product identifier here",
     #             "productName" : "Add product name here",
@@ -3311,7 +3311,7 @@ class CollectionManager(ServerClient):
           "properties": {
             "class" : "AgreementProperties",
             "qualifiedName": "Agreement::Add agreement name here",
-            "name" : "display name",
+            "displayName" : "display name",
             "description" : "Add description of the agreement here",
             "userDefinedStatus" : "OBSOLETE",
             "identifier" : "Add agreement identifier here",
@@ -3365,7 +3365,7 @@ class CollectionManager(ServerClient):
               "properties": {
                 "class" : "AgreementProperties",
                 "qualifiedName": "Agreement::Add agreement name here",
-                "name" : "display name",
+                "displayName" : "display name",
                 "description" : "Add description of the agreement here",
                 "userDefinedStatus" : "OBSOLETE",
                 "identifier" : "Add agreement identifier here",
@@ -4056,7 +4056,7 @@ class CollectionManager(ServerClient):
           "properties": {
             "class" : "DigitalSubscriptionProperties",
             "qualifiedName": "DigitalSubscription::Add subscription name here",
-            "name" : "display name",
+            "displayName" : "display name",
             "description" : "Add description of the subscription here",
             "userDefinedStatus" : "OBSOLETE",
             "identifier" : "Add subscription identifier here",
@@ -4095,7 +4095,7 @@ class CollectionManager(ServerClient):
           "properties": {
             "class" : "DigitalSubscriptionProperties",
             "qualifiedName": "DigitalSubscription::Add subscription name here",
-            "name" : "display name",
+            "displayName" : "display name",
             "description" : "Add description of the subscription here",
             "userDefinedStatus" : "OBSOLETE",
             "identifier" : "Add subscription identifier here",
@@ -4166,7 +4166,7 @@ class CollectionManager(ServerClient):
           "properties": {
             "class" : "DigitalSubscriptionProperties",
             "qualifiedName": "DigitalSubscription::Add subscription name here",
-            "name" : "display name",
+            "displayName" : "display name",
             "description" : "Add description of the subscription here",
             "userDefinedStatus" : "OBSOLETE",
             "identifier" : "Add subscription identifier here",
@@ -4226,7 +4226,7 @@ class CollectionManager(ServerClient):
           "properties": {
             "class" : "DigitalSubscriptionProperties",
             "qualifiedName": "DigitalSubscription::Add subscription name here",
-            "name" : "display name",
+            "displayName" : "display name",
             "description" : "Add description of the subscription here",
             "userDefinedStatus" : "OBSOLETE",
             "identifier" : "Add subscription identifier here",
@@ -4285,7 +4285,7 @@ class CollectionManager(ServerClient):
           "properties": {
             "class" : "AgreementProperties",
             "qualifiedName": "Agreement::Add digital_subscription name here",
-            "name" : "display name",
+            "displayName" : "display name",
             "description" : "Add description of the digital_subscription here",
             "userDefinedStatus" : "OBSOLETE",
             "identifier" : "Add digital_subscription identifier here",
@@ -5230,7 +5230,7 @@ class CollectionManager(ServerClient):
             member = member_rel
             if isinstance(member, dict):
                 member_instance = {
-                    "name": member["properties"].get('displayName', ''),
+                    "displayName": member["properties"].get('displayName', ''),
                     "qualifiedName": member["properties"]["qualifiedName"], "guid": member["elementHeader"]["guid"],
                     "description": member["properties"].get("description", ''),
                     "type": member["elementHeader"]["type"]['typeName'],

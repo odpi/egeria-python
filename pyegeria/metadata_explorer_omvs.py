@@ -676,7 +676,7 @@ class MetadataExplorer(ServerClient):
             "POST", url, body_slimmer(body),
         )
 
-        elements = response.json().get("elementList", NO_ELEMENTS_FOUND)
+        elements = response.json().get("elements", NO_ELEMENTS_FOUND)
         if type(elements) is str:
             logger.info(NO_ELEMENTS_FOUND)
             return NO_ELEMENTS_FOUND
@@ -845,7 +845,7 @@ class MetadataExplorer(ServerClient):
             "POST", url, body_slimmer(body),
         )
 
-        elements = response.json().get("elementList", NO_ELEMENTS_FOUND)
+        elements = response.json().get("elements", NO_ELEMENTS_FOUND)
         if type(elements) is str:
             logger.info(NO_ELEMENTS_FOUND)
             return NO_ELEMENTS_FOUND
@@ -2385,7 +2385,7 @@ class MetadataExplorer(ServerClient):
             "POST", url, body_slimmer(body), time_out=time_out
         )
 
-        elements = response.json().get("elementList", NO_ELEMENTS_FOUND)
+        elements = response.json().get("elements", NO_ELEMENTS_FOUND)
         if type(elements) is list:
             if len(elements) == 0:
                 return NO_ELEMENTS_FOUND
@@ -2858,7 +2858,7 @@ class MetadataExplorer(ServerClient):
         )
         rel = response.json().get("relationshipList", NO_ELEMENTS_FOUND)
         if isinstance(rel, (list, dict)):
-            return rel.get("elementList", NO_ELEMENTS_FOUND)
+            return rel.get("elements", NO_ELEMENTS_FOUND)
         else:
             return rel
 

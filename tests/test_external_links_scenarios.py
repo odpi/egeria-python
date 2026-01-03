@@ -384,9 +384,9 @@ class ExternalLinksScenarioTester:
             ts = datetime.now().strftime("%Y%m%d%H%M%S%f")
             
             media_types = [
-                ("Image", 0),
-                ("Video", 3),
-                ("Audio", 1),
+                ("IMAGE", 0),
+                ("VIDEO", 3),
+                ("AUDIO", 1),
             ]
             media_guids = []
             
@@ -406,7 +406,7 @@ class ExternalLinksScenarioTester:
                         "url": f"https://example.com/media/{ref_name}",
                         "referenceTitle": f"{media_name} Media",
                         "referenceAbstract": f"This is a test {media_name} media file",
-                        "mediaType": media_type
+                        "mediaType": media_name
                     }
                 }
                 console.print(f"{json.dumps(body, indent=2)}")

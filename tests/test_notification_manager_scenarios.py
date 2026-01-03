@@ -81,6 +81,10 @@ class NotificationManagerScenarioTester:
             self.actor_client = ActorManager(VIEW_SERVER, PLATFORM_URL, user_id=USER_ID, user_pwd=USER_PWD)
             self.collection_client = CollectionManager(VIEW_SERVER, PLATFORM_URL, user_id=USER_ID, user_pwd=USER_PWD)
             token = self.client.create_egeria_bearer_token(USER_ID, USER_PWD)
+
+            # Apply the token to the other clients
+            self.actor_client.token = token
+            self.collection_client.token = token
             console.print(f"✓ Connected to {PLATFORM_URL}")
             console.print(f"✓ Authenticated as {USER_ID}")
             console.print(f"✓ Test Run ID: {self.test_run_id}\n")
@@ -198,24 +202,23 @@ class NotificationManagerScenarioTester:
         try:
             console.print(f"\n[bold blue]▶ Running: {scenario_name}[/bold blue]")
             
-            # CREATE: Create two collections to act as notification type and monitored resource
+            # CREATE: Create two collections to act as notification types and monitored resource
             console.print("  → Creating collections for notification test...")
             ts = datetime.now().strftime("%Y%m%d%H%M%S%f")
             
             # Create notification type collection
             notification_body = {
                 "class": "NewElementRequestBody",
-                "typeName": "Collection",
-                "initialStatus": "ACTIVE",
+                "isOwnAnchor": True,
                 "properties": {
                     "class": "CollectionProperties",
                     "qualifiedName": f"Collection::NotificationType::{ts}",
-                    "name": f"Notification Type {ts}",
+                    "displayName": f"Notification Type {ts}",
                     "description": "Collection acting as notification type for testing"
                 }
             }
             
-            notification_type_guid = self.collection_client.create_collection(notification_body)
+            notification_type_guid = self.collection_client.create_collection(body=notification_body)
             if notification_type_guid:
                 created_guids.append(notification_type_guid)
                 self.created_collections.append(notification_type_guid)
@@ -227,16 +230,16 @@ class NotificationManagerScenarioTester:
             resource_body = {
                 "class": "NewElementRequestBody",
                 "typeName": "Collection",
-                "initialStatus": "ACTIVE",
+        
                 "properties": {
                     "class": "CollectionProperties",
                     "qualifiedName": f"Collection::MonitoredResource::{ts}",
-                    "name": f"Monitored Resource {ts}",
+                    "displayName": f"Monitored Resource {ts}",
                     "description": "Collection acting as monitored resource for testing"
                 }
             }
             
-            monitored_resource_guid = self.collection_client.create_collection(resource_body)
+            monitored_resource_guid = self.collection_client.create_collection(body=resource_body)
             if monitored_resource_guid:
                 created_guids.append(monitored_resource_guid)
                 self.created_collections.append(monitored_resource_guid)
@@ -305,11 +308,11 @@ class NotificationManagerScenarioTester:
             notification_body = {
                 "class": "NewElementRequestBody",
                 "typeName": "Collection",
-                "initialStatus": "ACTIVE",
+                "isOwnAnchor": True,
                 "properties": {
                     "class": "CollectionProperties",
                     "qualifiedName": f"Collection::NotificationTypeSubscriber::{ts}",
-                    "name": f"Notification Type for Subscriber {ts}",
+                    "displayName": f"Notification Type for Subscriber {ts}",
                     "description": "Collection acting as notification type for subscriber testing"
                 }
             }
@@ -326,11 +329,10 @@ class NotificationManagerScenarioTester:
             subscriber_body = {
                 "class": "NewElementRequestBody",
                 "typeName": "ActorProfile",
-                "initialStatus": "ACTIVE",
                 "properties": {
                     "class": "ActorProfileProperties",
                     "qualifiedName": f"ActorProfile::Subscriber::{ts}",
-                    "name": f"Subscriber {ts}",
+                    "displayName": f"Subscriber {ts}",
                     "description": "Actor profile acting as notification subscriber"
                 }
             }
@@ -404,11 +406,11 @@ class NotificationManagerScenarioTester:
             notification_body = {
                 "class": "NewElementRequestBody",
                 "typeName": "Collection",
-                "initialStatus": "ACTIVE",
+        
                 "properties": {
                     "class": "CollectionProperties",
                     "qualifiedName": f"Collection::CompleteNotification::{ts}",
-                    "name": f"Complete Notification Type {ts}",
+                    "displayName": f"Complete Notification Type {ts}",
                     "description": "Collection for complete notification setup testing"
                 }
             }
@@ -425,11 +427,11 @@ class NotificationManagerScenarioTester:
             resource_body_create = {
                 "class": "NewElementRequestBody",
                 "typeName": "Collection",
-                "initialStatus": "ACTIVE",
+        
                 "properties": {
                     "class": "CollectionProperties",
                     "qualifiedName": f"Collection::CompleteResource::{ts}",
-                    "name": f"Complete Monitored Resource {ts}",
+                    "displayName": f"Complete Monitored Resource {ts}",
                     "description": "Collection for complete resource testing"
                 }
             }
@@ -446,11 +448,11 @@ class NotificationManagerScenarioTester:
             subscriber_body_create = {
                 "class": "NewElementRequestBody",
                 "typeName": "ActorProfile",
-                "initialStatus": "ACTIVE",
+        
                 "properties": {
                     "class": "ActorProfileProperties",
                     "qualifiedName": f"ActorProfile::CompleteSubscriber::{ts}",
-                    "name": f"Complete Subscriber {ts}",
+                    "displayName": f"Complete Subscriber {ts}",
                     "description": "Actor profile for complete subscriber testing"
                 }
             }

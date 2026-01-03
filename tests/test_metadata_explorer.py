@@ -89,7 +89,7 @@ class TestMetadataExplorer:
     # active-metadata-store is a3603c04-3697-49d1-ad79-baf3ea3db61f
     def test_get_element_by_guid(self):
 
-        # guid = '35cd2a82-4e29-4df0-b6f7-9d33dc53d1d9'  # a glossary
+        # guid = "4e12a28c-56e7-48ab-838b-8fc157e3b710"  # a glossary
         guid = '5dc94eb4-5cf9-41f5-b24c-cfb8fc7e1772'  # a term
         try:
             m_client = MetadataExplorer(self.view_server, self.platform_url)
@@ -159,7 +159,7 @@ class TestMetadataExplorer:
             m_client.create_egeria_bearer_token(self.user, self.password)
             start_time = time.perf_counter()
             # response = m_client.get_metadata_element_mermaid_graph(guid)
-            response = m_client.get_anchored_element_graph(guid, mermaid_only=False)
+            response = m_client.get_anchored_element_graph(guid, mermaid_only=True)
             duration = time.perf_counter() - start_time
             print(
                 f"\n\tDuration was {duration:.2f} seconds, Type: {type(response)}, Element count is {len(response)}"
@@ -289,18 +289,16 @@ class TestMetadataExplorer:
             m_client.close_session()
 
     def test_get_all_related_metadata_elements(self):
-        guid = "43e630ec-2afb-40fb-a0ba-c08e0c6215dc"
-        # guid = "d11fd82f-49f4-4b81-ad42-d5012863cf39"
+        guid = "5dc94eb4-5cf9-41f5-b24c-cfb8fc7e1772"
         # guid = "30bfe79e-adf2-4fda-b9c5-9c86ad6b0d6c"  # sustainability glossary
         # guid = "2d86e375-c31b-494d-9e73-a03af1370d81"  # Clinical trials project
         body = {
             "class": "ResultsRequestBody",
             "effectiveTime": None,
-            "limitResultsByStatus": ["ACTIVE"],
+            "limitResultsByStatus": [],
             "asOfTime": None,
             "sequencingOrder": "CREATION_DATE_RECENT",
-            "sequencingProperty": "",
-            "mermaidOnly": False
+            "sequencingProperty": ""
         }
 
         try:
@@ -309,7 +307,7 @@ class TestMetadataExplorer:
             m_client.create_egeria_bearer_token(self.user, self.password)
             start_time = time.perf_counter()
             response = m_client.get_all_related_elements(
-                guid, body, mermaid_only=False
+                guid, body=body, starting_at_end=1
             )
             duration = time.perf_counter() - start_time
             print(
@@ -335,15 +333,12 @@ class TestMetadataExplorer:
             m_client.close_session()
 
     def test_get_all_related_metadata_elements2(self):
-        guid = "1f71e403-1187-4f03-a1dd-ae7dc105f06f"
+        guid = '5dc94eb4-5cf9-41f5-b24c-cfb8fc7e1772'
         # guid = "a3603c04-3697-49d1-ad79-baf3ea3db61f"  # kv - active-metadata-store
         body = {
             "class": "ResultsRequestBody",
             "effectiveTime": None,
-            "limitResultsByStatus": ["ACTIVE"],
             "asOfTime": None,
-            "sequencingOrder": "PROPERTY_ASCENDING",
-            "sequencingProperty": "fileName",
         }
 
         try:
@@ -352,7 +347,7 @@ class TestMetadataExplorer:
             m_client.create_egeria_bearer_token(self.user, self.password)
             start_time = time.perf_counter()
             response = m_client.get_all_related_elements(
-                guid, body, mermaid_only=True
+                guid, 1,body=body
             )
             duration = time.perf_counter() - start_time
             print(
@@ -378,9 +373,8 @@ class TestMetadataExplorer:
             m_client.close_session()
 
     def test_get_related_metadata_elements(self):
-        guid = "a2c7378b-289d-49e2-92eb-cf5e72822d1f"
-        # guid = "a3603c04-3697-49d1-ad79-baf3ea3db61f"  # kv - active-metadata-store
-        relationship_type = "EngineActionRequestSource"
+        guid = "7f7b6919-8f17-4f97-966c-9ca0bc0efd29"
+        relationship_type = "CollectionMembership"
         body = {
             "class": "ResultsRequestBody",
             "effectiveTime": None,
@@ -428,7 +422,6 @@ class TestMetadataExplorer:
         body = {
             "class": "ResultsRequestBody",
             "effectiveTime": None,
-            "limitResultsByStatus": ["ACTIVE"],
             "asOfTime": None,
             "sequencingOrder": "CREATION_DATE_RECENT",
             "sequencingProperty": "",
