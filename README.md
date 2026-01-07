@@ -95,6 +95,8 @@ Environment always overrides config file, which overrides defaults.
 
 See config/env for more variables and defaults.
 
+**For detailed instructions on setting up authentication credentials on Linux, see [SETUP_LINUX_CREDENTIALS.md](SETUP_LINUX_CREDENTIALS.md)**
+
 ### Example .env
 
 # PYEGERIA_CONFIG_DIRECTORY=/path/to/configs
