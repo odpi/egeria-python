@@ -8,16 +8,14 @@ A running Egeria environment is needed to run these tests.
 """
 
 import time
-from contextlib import nullcontext as does_not_raise
 
 import pytest
 
 from pyegeria import (
     PyegeriaException,
     print_exception_table,
-    PyegeriaInvalidParameterException,
 )
-from pyegeria.community_matters_omvs import CommunityMatters
+from pyegeria.omvs.community_matters_omvs import CommunityMatters
 
 disable_ssl_warnings = True
 

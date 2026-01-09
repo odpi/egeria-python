@@ -9,8 +9,8 @@ import inflect
 from loguru import logger
 from rich.markdown import Markdown
 
-from pyegeria._globals import DEBUG_LEVEL
-from pyegeria.logging_configuration import config_logging
+from pyegeria.core._globals import DEBUG_LEVEL
+from pyegeria.core.logging_configuration import config_logging
 
 inflect_engine = inflect.engine()
 

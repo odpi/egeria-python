@@ -11,26 +11,22 @@ A running Egeria environment is needed to run these tests.
 
 """
 
-import asyncio
 import json
 import time
-from contextlib import nullcontext as does_not_raise
 
-import pytest
 from rich.console import Console
 from rich import print
 
 
-from pyegeria import PyegeriaException, print_basic_exception, PyegeriaInvalidParameterException
-from pyegeria._exceptions import (
+from pyegeria import PyegeriaException
+from pyegeria.core._exceptions import (
     PyegeriaInvalidParameterException,
     PyegeriaAPIException,
     PyegeriaClientException,
-    PyegeriaUnauthorizedException,
     print_basic_exception, print_exception_table,
 )
-from pyegeria.asset_catalog import AssetCatalog
-from pyegeria.automated_curation import AutomatedCuration
+from pyegeria.omvs.asset_catalog import AssetCatalog
+from pyegeria.omvs.automated_curation import AutomatedCuration
 # from pyegeria.md_processing_utils import print_json_list_as_table
 
 # from pyegeria.admin_services import FullServerConfig

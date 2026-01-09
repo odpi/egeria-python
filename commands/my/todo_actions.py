@@ -15,8 +15,7 @@ from datetime import datetime
 import click
 
 from pyegeria import MyProfile
-from pyegeria._exceptions import (
-    PyegeriaInvalidParameterException,
+from pyegeria.core._exceptions import (
     PyegeriaAPIException as PropertyServerException,
     print_basic_exception as print_exception_response,
 )

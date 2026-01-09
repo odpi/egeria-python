@@ -8,17 +8,12 @@ This script restarts an integration daemon.
 
 """
 
-import os
-
 import click
-from rich import print, print_json
-from rich.console import Console
 
 from pyegeria import AutomatedCuration, EgeriaTech
-from pyegeria._exceptions import (
+from pyegeria.core._exceptions import (
     PyegeriaInvalidParameterException as PyegeriaInvalidParameterException,
     PyegeriaAPIException as PyegeriaAPIException,
-    PyegeriaUnauthorizedException as PyegeriaUnauthorizedException,
     print_basic_exception as print_exception_response,
 )
 

@@ -8,16 +8,15 @@ A running Egeria environment is needed to run these tests.
 """
 
 import time
-from contextlib import nullcontext as does_not_raise
 
 import pytest
+from rich import console
 
 from pyegeria import (
     PyegeriaException,
     print_exception_table,
-    PyegeriaInvalidParameterException,
 )
-from pyegeria.asset_maker import AssetMaker
+from pyegeria.omvs.asset_maker import AssetMaker
 
 disable_ssl_warnings = True
 
@@ -106,10 +105,7 @@ class TestAssetMaker:
             )
             start_time = time.perf_counter()
             
-            response = a_client.find_assets(
-                search_string="*",
-                output_format="JSON"
-            )
+            response = a_client.find_assets(search_string="Postgres", output_format="JSON")
             duration = time.perf_counter() - start_time
             
             print(f"\n\tDuration was {duration} seconds")
@@ -120,6 +116,9 @@ class TestAssetMaker:
         except PyegeriaException as e:
             print_exception_table(e)
             assert False, "Invalid request"
+        except Exception as e:
+            console.print_exception(e)
+            assert False, "Unexpected error"
         finally:
             a_client.close_session()
 

@@ -12,7 +12,7 @@ import os
 # Add the parent directory to the path so we can import the modules
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
-from pyegeria.base_report_formats import (
+from pyegeria.view.base_report_formats import (
     report_specs,
     select_report_spec,
     report_spec_list,
@@ -20,7 +20,7 @@ from pyegeria.base_report_formats import (
     get_report_spec_description,
     get_report_spec_match,
 )
-from pyegeria._output_format_models import Column, Format, ActionParameter, FormatSet, FormatSetDict
+from pyegeria.view._output_format_models import Column, Format, FormatSet, FormatSetDict
 
 def test_report_specs():
     """Test that the report_specs dictionary is correctly initialized."""
@@ -115,7 +115,7 @@ def test_report_spec_list():
 
 def test_report_spec_list_records_and_markdown():
     """Test the new return kinds for report_spec_list: records and markdown."""
-    from pyegeria.base_report_formats import report_spec_list
+    from pyegeria.view.base_report_formats import report_spec_list
 
     # Records mode
     records = report_spec_list(return_kind="records")

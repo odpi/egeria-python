@@ -8,15 +8,14 @@ A running Egeria environment is needed to run these tests.
 """
 import time
 from datetime import datetime
-from loguru import logger
 
-from rich import print, print_json
+from rich import print
 from rich.console import Console
-from pyegeria.notification_manager import NotificationManager
-from pyegeria.actor_manager import ActorManager
-from pyegeria.collection_manager import CollectionManager
-from pyegeria.logging_configuration import config_logging, init_logging
-from pyegeria._exceptions import (
+from pyegeria.omvs.notification_manager import NotificationManager
+from pyegeria.omvs.actor_manager import ActorManager
+from pyegeria.omvs.collection_manager import CollectionManager
+from pyegeria.core.logging_configuration import config_logging, init_logging
+from pyegeria.core._exceptions import (
     PyegeriaInvalidParameterException,
     PyegeriaConnectionException,
     PyegeriaClientException,
@@ -29,7 +28,6 @@ from pydantic import ValidationError
 from pyegeria.models import (
     NewElementRequestBody,
     NewRelationshipRequestBody,
-    DeleteRelationshipRequestBody,
 )
 
 disable_ssl_warnings = True

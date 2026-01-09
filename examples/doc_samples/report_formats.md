@@ -21,7 +21,7 @@ The core models are defined in pyegeria/_output_format_models.py:
 ## Quick Start: Selecting a Report Format
 
 ```python
-from pyegeria.base_report_formats import select_report_spec, report_spec_list, get_report_spec_heading
+from pyegeria.view.base_report_formats import select_report_spec, report_spec_list, get_report_spec_heading
 
 # List all available report specs
 labels = report_spec_list()
@@ -32,8 +32,8 @@ fmt = select_report_spec("Referenceable", "DICT")
 if not fmt:
     raise ValueError("Report spec not found")
 
-print(fmt["heading"])          # format set heading
-print(fmt["description"])      # description
+print(fmt["heading"])  # format set heading
+print(fmt["description"])  # description
 print(fmt["formats"]["types"])  # e.g., ["DICT"]
 print(fmt["formats"]["attributes"])  # the attributes to include
 
@@ -53,16 +53,18 @@ Format sets can carry an optional `family` tag to help organize and discover rel
 - Show names with family, sorted by family then name:
 
 ```python
-from pyegeria.base_report_formats import report_spec_list
+from pyegeria.view.base_report_formats import report_spec_list
+
 print("\n".join(report_spec_list(show_family=True, sort_by_family=True)))
 ```
 
 - Programmatically filter by family (case-insensitive):
 
 ```python
-from pyegeria.base_report_formats import report_specs
-security = report_specs.filter_by_family("Security")   # dict[str, FormatSet]
-no_family = report_specs.filter_by_family("")         # specs with no family assigned
+from pyegeria.view.base_report_formats import report_specs
+
+security = report_specs.filter_by_family("Security")  # dict[str, FormatSet]
+no_family = report_specs.filter_by_family("")  # specs with no family assigned
 ```
 
 ## Dynamic Loading (No Restart)
@@ -84,7 +86,7 @@ export PYEGERIA_REPORT_FORMATS_MODULES=acme_formats.load,org_formats.loader:load
 In code, refresh to load new sources:
 
 ```python
-from pyegeria.base_report_formats import refresh_report_specs, list_report_specs
+from pyegeria.view.base_report_formats import refresh_report_specs, list_report_specs
 
 refresh_report_specs()
 print(list_report_specs())
@@ -97,7 +99,7 @@ Collision policy: If any newly loaded set defines a report format label that alr
 You can register and unregister report formats entirely in-memory during a session.
 
 ```python
-from pyegeria.base_report_formats import register_report_specs, unregister_report_spec, select_report_spec
+from pyegeria.view.base_report_formats import register_report_specs, unregister_report_spec, select_report_spec
 
 # Register a temporary report format programmatically
 register_report_specs({

@@ -7,13 +7,13 @@ import json
 import tempfile
 import shutil
 from pathlib import Path
-from pyegeria.load_config import load_app_config, get_app_config, PyegeriaSettings
-from pyegeria._exceptions import PyegeriaInvalidParameterException
+from pyegeria.core.load_config import load_app_config, get_app_config
+from pyegeria.core._exceptions import PyegeriaInvalidParameterException
 
 def reset_config():
     """Reset the loaded configuration to force reloading."""
-    import pyegeria.load_config
-    pyegeria.load_config._app_config = None
+    import pyegeria.core.load_config
+    pyegeria.core.load_config._app_config = None
 
 def test_parameter_passing():
     """Test that the env_file parameter is correctly passed from get_app_config to load_app_config."""

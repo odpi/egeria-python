@@ -17,10 +17,7 @@ from rich import box
 from rich.console import Console
 from rich.table import Table
 
-from pyegeria import (
-PyegeriaAPIException, PyegeriaClientException, print_basic_exception, print_exception_table
-)
-from pyegeria.my_profile_omvs import MyProfile
+from pyegeria.omvs.my_profile_omvs import MyProfile
 
 disable_ssl_warnings = True
 EGERIA_METADATA_STORE = os.environ.get("EGERIA_METADATA_STORE", "active-metadata-store")

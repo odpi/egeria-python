@@ -46,22 +46,17 @@ from rich.console import Console
 from rich.markdown import Markdown
 from rich.prompt import Prompt
 from rich.table import Table
-from rich.text import Text
-import pydevd_pycharm
 
 from pyegeria import (
     EgeriaTech,
     CollectionManager,
     NO_ELEMENTS_FOUND, GovernanceOfficer, GlossaryManager, print_validation_error,
 )
-from pyegeria.config import settings
-from pyegeria.external_links import ExternalReferences
-from pyegeria.logging_configuration import config_logging
-from pyegeria._output_format_models import load_format_sets_from_json
-from pyegeria.base_report_formats import (select_report_format, get_report_format_heading,
-                                          load_user_report_specs, load_report_specs,
-                                          get_report_format_description)
-from pyegeria._exceptions import PyegeriaException, print_exception_response
+from pyegeria.core.config import settings
+from pyegeria.omvs.external_links import ExternalReferences
+from pyegeria.core.logging_configuration import config_logging
+from pyegeria.view.base_report_formats import (select_report_format)
+from pyegeria.core._exceptions import PyegeriaException, print_exception_response
 
 # pydevd_pycharm.settrace('host.docker.internal',  # Use 'host.docker.internal' to connect to the host machine
 #                              port=5678,               # Port to communicate with PyCharm
@@ -154,7 +149,7 @@ def execute_format_set_action(
     params.update(spec_params)
 
     # Delegate execution to exec_report_spec for canonical behavior
-    from pyegeria.format_set_executor import exec_report_spec
+    from pyegeria.view.format_set_executor import exec_report_spec
     ofmt = (output_format or "TABLE").upper()
     mapped = "DICT" if ofmt == "TABLE" else ofmt
     res = exec_report_spec(
@@ -197,7 +192,7 @@ def execute_format_set_action(
             for r in rows:
                 table.add_row(str(r))
         # Optional header
-        from pyegeria.base_report_formats import get_report_format_heading, get_report_format_description
+        from pyegeria.view.base_report_formats import get_report_format_heading, get_report_format_description
         heading = get_report_format_heading(format_set_name)
         desc = get_report_format_description(format_set_name)
         if heading and desc:
@@ -448,7 +443,7 @@ def main():
     if not format_set:
         print(f"Error: Report Spec for '{format_set_name}' not found.")
         print("Available Report Specs:")
-        from pyegeria.base_report_formats import report_spec_list
+        from pyegeria.view.base_report_formats import report_spec_list
         for name in report_spec_list():
             print(f"  - {name}")
         return

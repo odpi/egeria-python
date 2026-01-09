@@ -17,14 +17,12 @@ User Identity to/from an Actor Profile.
 """
 
 import json
-import time
 from datetime import datetime
 
-from loguru import logger
 from pydantic import ValidationError
 
-from pyegeria.actor_manager import ActorManager
-from pyegeria._exceptions import (
+from pyegeria.omvs.actor_manager import ActorManager
+from pyegeria.core._exceptions import (
     PyegeriaInvalidParameterException,
     PyegeriaException,
     PyegeriaConnectionException,
@@ -36,7 +34,7 @@ from pyegeria._exceptions import (
     print_basic_exception,
     print_validation_error,
 )
-from pyegeria.logging_configuration import config_logging, init_logging
+from pyegeria.core.logging_configuration import config_logging, init_logging
 
 
 # Align logging/init style with other tests

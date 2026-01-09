@@ -1,5 +1,4 @@
-import json
-from pyegeria._output_format_models import Column, Format, FormatSet, FormatSetDict, save_format_sets_to_json, load_format_sets_from_json
+from pyegeria.view._output_format_models import Column, Format, FormatSet, FormatSetDict, save_format_sets_to_json, load_format_sets_from_json
 from tempfile import NamedTemporaryFile
 
 

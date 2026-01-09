@@ -17,15 +17,14 @@ import pytest
 from rich import print as rprint
 from rich.console import Console
 from rich.markdown import Markdown
-from rich.table import Table
 
-from pyegeria._exceptions import (
+from pyegeria.core._exceptions import (
     PyegeriaInvalidParameterException as InvalidParameterException,
     PyegeriaAPIException as PropertyServerException,
     PyegeriaUnauthorizedException as UserNotAuthorizedException,
     print_basic_exception as print_exception_response,
 )
-from pyegeria.registered_info import RegisteredInfo
+from pyegeria.omvs.registered_info import RegisteredInfo
 
 disable_ssl_warnings = True
 

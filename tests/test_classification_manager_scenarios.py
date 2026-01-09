@@ -20,29 +20,24 @@ import sys
 import time
 import traceback
 from datetime import datetime
-from typing import List, Dict, Optional
-from dataclasses import dataclass, field
+from typing import List, Optional
+from dataclasses import dataclass
 
-from rich import print as rprint
 from rich.console import Console
 from rich.table import Table
 from rich.panel import Panel
-from rich.progress import Progress, SpinnerColumn, TextColumn
 
 from pyegeria import EgeriaTech
-from pyegeria._exceptions import (
+from pyegeria.core._exceptions import (
     PyegeriaException,
     PyegeriaAPIException,
-    PyegeriaNotFoundException,
     print_exception_table,
-    print_validation_error,
 )
 from pyegeria.models import (
     NewElementRequestBody,
     NewClassificationRequestBody,
     DeleteElementRequestBody,
 )
-from pydantic import ValidationError
 
 # Configuration
 VIEW_SERVER = "qs-view-server"
@@ -133,7 +128,7 @@ class ClassificationManagerScenarioTester:
                         body={
                             "class": "NewClassificationRequestBody",
                             "properties": {
-                                "class": "OwnerProperties",
+                                "class": "OwnershipProperties",
                                 "owner": USER_ID,
                                 "ownerTypeName": "USER_ID"
                             }
@@ -310,7 +305,7 @@ class ClassificationManagerScenarioTester:
             
             # Query elements owned by a specific owner
             console.print("  → Querying elements by owner...")
-            owner_name = "Egeria Project"
+            owner_name = "f6bc847b-868d-43cc-b767-41f5fe3e47d1"
             body = {
                 "class": "FilterRequestBody",
                 "filter": owner_name
@@ -465,7 +460,7 @@ class ClassificationManagerScenarioTester:
             elements = self.client.get_elements_by_property_value(
                 property_value, 
                 property_names,
-                output_format="JSON"
+                # output_format="JSON"
             )
             
             if isinstance(elements, list):

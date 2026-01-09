@@ -3,10 +3,8 @@ This is an ongoing experiment in parsing and playing with Freddie docs
 """
 import os
 import sys
-from datetime import datetime
 
 from loguru import logger
-from pydantic import ValidationError
 
 log_format = "{time} | {level} | {function} | {line} | {message} | {extra}"
 logger.remove()
@@ -14,11 +12,8 @@ logger.add(sys.stderr, level="INFO", format=log_format, colorize=True)
 logger.add("debug_log.log", rotation="1 day", retention="1 week", compression="zip", level="TRACE", format=log_format,
            colorize=True)
 import click
-from rich import print
-from rich.console import Console
 
-
-from pyegeria._exceptions import PyegeriaException
+from pyegeria.core._exceptions import PyegeriaException
 from md_processing.dr_egeria import process_md_file
 
 EGERIA_METADATA_STORE = os.environ.get("EGERIA_METADATA_STORE", "active-metadata-store")

@@ -19,9 +19,8 @@ from rich.console import Console
 
 from pyegeria import (
     Egeria,
-    EgeriaCat,
 )
-from pyegeria._exceptions import (
+from pyegeria.core._exceptions import (
     PyegeriaInvalidParameterException,
     PyegeriaAPIException,
     PyegeriaUnauthorizedException,

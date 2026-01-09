@@ -10,16 +10,13 @@ import json
 from contextlib import nullcontext as does_not_raise
 
 import pytest
-import asyncio
 from loguru import logger
 
 from pyegeria import print_basic_exception
-from pyegeria._server_client import ServerClient
-from pyegeria._exceptions import (
+from pyegeria.core._server_client import ServerClient
+from pyegeria.core._exceptions import (
      PyegeriaException, PyegeriaConnectionException,  PyegeriaInvalidParameterException,
-     PyegeriaAPIException, PyegeriaUnknownException, PyegeriaClientException, PyegeriaNotFoundException,
-    PyegeriaUnauthorizedException,
-    )
+     PyegeriaClientException, )
 
 
 @pytest.fixture()

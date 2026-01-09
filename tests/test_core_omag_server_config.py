@@ -16,17 +16,15 @@ from contextlib import nullcontext as does_not_raise
 
 import pytest
 
-from pyegeria._exceptions import (
+from pyegeria.core._exceptions import (
     PyegeriaInvalidParameterException,
-    PyegeriaAPIException,
-    PyegeriaUnauthorizedException,
     print_basic_exception as print_exception_response,
     PyegeriaException,
     print_exception_table,
     PyegeriaClientException,
     PyegeriaAPIException,
 )
-from pyegeria.core_omag_server_config import CoreServerConfig
+from pyegeria.omvs.core_omag_server_config import CoreServerConfig
 
 disable_ssl_warnings = True
 

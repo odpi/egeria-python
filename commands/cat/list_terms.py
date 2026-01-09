@@ -20,9 +20,8 @@ from rich.text import Text
 
 from pyegeria import (
     EgeriaTech, settings,
-    PyegeriaException, print_basic_exception, NO_CATEGORIES_FOUND,
-    )
-from pyegeria._globals import NO_GLOSSARIES_FOUND
+    PyegeriaException, print_basic_exception, )
+from pyegeria.core._globals import NO_GLOSSARIES_FOUND
 app_config = settings.Environment
 # config_logging()
 disable_ssl_warnings = True

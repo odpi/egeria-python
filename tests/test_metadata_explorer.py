@@ -18,13 +18,13 @@ from rich import print, print_json
 from rich.console import Console
 
 from pyegeria import MetadataExplorer
-from pyegeria._exceptions import (
+from pyegeria.core._exceptions import (
     PyegeriaInvalidParameterException,
     PyegeriaAPIException,
     PyegeriaUnauthorizedException,
     print_basic_exception as print_exception_response, print_basic_exception, print_validation_error,
 )
-from pyegeria._exceptions import ValidationError
+from pyegeria.core._exceptions import ValidationError
 
 disable_ssl_warnings = True
 

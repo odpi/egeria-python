@@ -14,12 +14,11 @@ A running Egeria environment is needed to run these tests.
 import json
 import time
 from pydantic import ValidationError
-from pyegeria.reference_data import ReferenceDataManager
+from pyegeria.omvs.reference_data import ReferenceDataManager
 
-from pyegeria._exceptions import (
+from pyegeria.core._exceptions import (
     PyegeriaException,
     print_basic_exception,
-    print_exception_table,
     print_validation_error,
     PyegeriaAPIException,
     PyegeriaInvalidParameterException as InvalidParameterException,

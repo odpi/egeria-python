@@ -12,12 +12,11 @@ import os
 import sys
 
 import click
-from loguru import logger
 from pyegeria import EgeriaTech, PyegeriaAPIException
-from pyegeria.config import settings
-from pyegeria.logging_configuration import config_logging
-from pyegeria._exceptions import (
-PyegeriaException, print_exception_response, print_basic_exception
+from pyegeria.core.config import settings
+from pyegeria.core.logging_configuration import config_logging
+from pyegeria.core._exceptions import (
+    PyegeriaException, print_basic_exception
 )
 
 # EGERIA_METADATA_STORE = os.environ.get("EGERIA_METADATA_STORE", "active-metadata-store")

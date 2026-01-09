@@ -3,38 +3,24 @@ This file contains glossary-related object_action functions for processing Egeri
 """
 
 import json
-import os
-import re
 from typing import List, Optional
 from loguru import logger
 from rich import print
-from rich.console import Console
 from rich.markdown import Markdown
 
 from md_processing.md_processing_utils.common_md_proc_utils import (parse_upsert_command, parse_view_command,
                                                                     sync_collection_memberships)
-from md_processing.md_processing_utils.common_md_utils import update_element_dictionary, set_update_body, \
-    set_element_status_request_body, set_element_prop_body, set_delete_request_body, set_rel_request_body, set_peer_gov_def_request_body, \
-    set_rel_request_body, set_create_body, set_object_classifications, set_product_body, set_rel_prop_body
+from md_processing.md_processing_utils.common_md_utils import set_update_body, \
+    set_element_prop_body, set_rel_request_body, set_create_body, set_object_classifications, set_rel_prop_body
 
-from md_processing.md_processing_utils.extraction_utils import (extract_command_plus, update_a_command)
-from md_processing.md_processing_utils.md_processing_constants import (load_commands)
-from pyegeria import DEBUG_LEVEL, body_slimmer, to_pascal_case, PyegeriaException, print_basic_exception, print_exception_table
-from pyegeria.egeria_tech_client import EgeriaTech
+from pyegeria import PyegeriaException, print_basic_exception
 
-
-
-from md_processing.md_processing_utils.common_md_utils import (debug_level, print_msg, set_debug_level,
-                                                               get_element_dictionary, update_element_dictionary,
+from md_processing.md_processing_utils.common_md_utils import (debug_level, print_msg, get_element_dictionary, update_element_dictionary,
                                                                )
-from md_processing.md_processing_utils.extraction_utils import (extract_command_plus, extract_command,
-                                                                process_simple_attribute, process_element_identifiers,
-                                                                update_a_command, extract_attribute,
-                                                                get_element_by_name, process_name_list)
+from md_processing.md_processing_utils.extraction_utils import (extract_command_plus, update_a_command)
 
-from pyegeria._globals import (NO_GLOSSARIES_FOUND, NO_ELEMENTS_FOUND, NO_CATEGORIES_FOUND)
 from pyegeria.egeria_tech_client import EgeriaTech
-from pyegeria.utils import make_format_set_name_from_type, body_slimmer
+from pyegeria.core.utils import make_format_set_name_from_type, body_slimmer
 
 
 # EGERIA_WIDTH = int(os.environ.get("EGERIA_WIDTH", "170"))

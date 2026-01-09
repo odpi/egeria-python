@@ -18,26 +18,21 @@ Usage:
 
 import sys
 import time
-import traceback
 from datetime import datetime
-from typing import List, Dict, Optional
+from typing import List, Optional
 from dataclasses import dataclass, field
 
-from rich import print as rprint
 from rich.console import Console
 from rich.table import Table
 from rich.panel import Panel
 from rich.progress import Progress, SpinnerColumn, TextColumn
 
-from pyegeria.data_designer import DataDesigner
-from pyegeria._exceptions import (
+from pyegeria.omvs.data_designer import DataDesigner
+from pyegeria.core._exceptions import (
     PyegeriaException,
     PyegeriaAPIException,
-    PyegeriaNotFoundException,
     print_exception_table,
-    print_validation_error,
 )
-from pydantic import ValidationError
 
 # Configuration
 VIEW_SERVER = "qs-view-server"

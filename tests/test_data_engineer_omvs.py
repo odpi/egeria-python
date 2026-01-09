@@ -7,23 +7,20 @@ This module tests the DataEngineer class and methods
 A running Egeria environment is needed to run these tests.
 """
 import asyncio
-import json
 import time
-from loguru import logger
 
 from rich import print
 from rich.console import Console
-from pyegeria.data_engineer import DataEngineer
-from pyegeria.logging_configuration import config_logging, init_logging
-from pyegeria._exceptions import (
+from pyegeria.omvs.data_engineer import DataEngineer
+from pyegeria.core.logging_configuration import config_logging, init_logging
+from pyegeria.core._exceptions import (
     PyegeriaInvalidParameterException,
     PyegeriaConnectionException,
     PyegeriaClientException,
     PyegeriaAPIException,
     PyegeriaUnknownException,
     print_basic_exception,
-    print_validation_error, PyegeriaException,
-)
+    print_validation_error, )
 from pydantic import ValidationError
 
 disable_ssl_warnings = True

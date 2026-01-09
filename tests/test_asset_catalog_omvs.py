@@ -11,13 +11,11 @@ A running Egeria environment is needed to run these tests.
 """
 import json
 import time
-from datetime import datetime
 
-from rich import print, print_json
+from rich import print
 from rich.console import Console
 
-from pyegeria import PyegeriaException, print_basic_exception, PyegeriaInvalidParameterException
-from pyegeria._exceptions import (
+from pyegeria.core._exceptions import (
     PyegeriaInvalidParameterException,
     PyegeriaConnectionException,
     PyegeriaAPIException,
@@ -27,8 +25,8 @@ from pyegeria._exceptions import (
     print_exception_table,
     print_validation_error,
 )
-from pyegeria.logging_configuration import config_logging, init_logging
-from pyegeria.asset_catalog import AssetCatalog
+from pyegeria.core.logging_configuration import config_logging, init_logging
+from pyegeria.omvs.asset_catalog import AssetCatalog
 from pydantic import ValidationError
 
 disable_ssl_warnings = True

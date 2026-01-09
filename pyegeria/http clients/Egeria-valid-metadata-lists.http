@@ -1,0 +1,400 @@
+# Egeria-valid-metadata-lists
+# Further Information: https://egeria-project.org/services/omvs/valid-metadata/overview/
+
+@baseURL=https://localhost:9443
+@viewServer=view-server
+
+###
+# =====================================================================================================================
+# Manage the authentication token.  Run this request to create/refresh the token.
+
+# @name Token (RequestBody)
+POST {{baseURL}}/api/token
+Content-Type: application/json
+
+{
+  "userId" : "peterprofile",
+  "password" : "secret"
+}
+
+> {% client.global.set("token", response.body); %}
+
+###
+# =====================================================================================================================
+# Setting up 4 valid values for the category property: "clinical-trial", "manufacturing-improvement",
+# "security-assessment", "incident-investigation".  TypeName is not specified which means these are valid values for
+# the category attribute in any type.
+#
+
+###
+# @name setUpValidMetadataValue - clinical-trial
+#
+POST {{baseURL}}/servers/{{viewServer}}/api/open-metadata/valid-metadata/setup-value/category
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{                                       
+  "displayName": "Clinical Trial",
+  "description": "Element supporting one or more clinical trials.",
+  "preferredValue": "clinical-trial",
+  "dataType": "string",
+  "isCaseSensitive": false
+}
+
+###
+# @name setUpValidMetadataValue - manufacturing-improvement
+#
+POST {{baseURL}}/servers/{{viewServer}}/api/open-metadata/valid-metadata/setup-value/category
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "displayName": "Manufacturing Improvement",
+  "description": "Element supporting one or more manufacturing improvements.",
+  "preferredValue": "manufacturing-improvement",
+  "dataType": "string",
+  "isCaseSensitive": false
+}
+
+###
+# @name setUpValidMetadataValue - security-assessment
+#
+POST {{baseURL}}/servers/{{viewServer}}/api/open-metadata/valid-metadata/setup-value/category
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "displayName": "Security Assessment",
+  "description": "Element supporting one or more security assessments.",
+  "preferredValue": "security-assessment",
+  "dataType": "string",
+  "isCaseSensitive": false
+}
+
+###
+# @name setUpValidMetadataValue - incident-investigation
+#
+POST {{baseURL}}/servers/{{viewServer}}/api/open-metadata/valid-metadata/setup-value/category
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "displayName": "Incident Investigation",
+  "description": "Element supporting the investigation of an incident such as a data breach.",
+  "preferredValue": "incident-investigation",
+  "dataType": "string",
+  "isCaseSensitive": false
+}
+
+
+###
+# =====================================================================================================================
+# Setting up 5 valid values for the purposes property: "governance", "market-analysis", "product-development",
+# "product-verification", "patient-treatment".  TypeName is is set to Project which means these are valid values for
+# the purposes attribute only in Project entities.
+#
+
+@typeName=Project
+
+###
+# @name setUpValidMetadataValue - governance
+#
+POST {{baseURL}}/servers/{{viewServer}}/api/open-metadata/valid-metadata/setup-value/purposes?typeName={{typeName}}
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "displayName": "Governance",
+  "description": "Indicates that this project is supporting a governance requirement.",
+  "preferredValue": "governance",
+  "dataType": "string",
+  "isCaseSensitive": true
+}
+
+###
+# @name setUpValidMetadataValue - market-analysis
+#
+POST {{baseURL}}/servers/{{viewServer}}/api/open-metadata/valid-metadata/setup-value/purposes?typeName={{typeName}}
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "displayName": "Market Analysis",
+  "description": "Indicates that this project is supporting analysis of a new market requirement, or the perception of the company and/or its products in the market.",
+  "preferredValue": "market-analysis",
+  "dataType": "string",
+  "isCaseSensitive": true
+}
+
+
+###
+# @name setUpValidMetadataValue - product-development
+#
+POST {{baseURL}}/servers/{{viewServer}}/api/open-metadata/valid-metadata/setup-value/purposes?typeName={{typeName}}
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "displayName": "Product Development",
+  "description": "Indicates that this project is supporting the development of a new product.",
+  "preferredValue": "product-development",
+  "dataType": "string",
+  "isCaseSensitive": true
+}
+
+
+###
+# @name setUpValidMetadataValue - product-verification
+#
+POST {{baseURL}}/servers/{{viewServer}}/api/open-metadata/valid-metadata/setup-value/purposes?typeName={{typeName}}
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "displayName": "Product Verification",
+  "description": "Indicates that this project is supporting the verification of all aspects of a new product (including clinical trials).",
+  "preferredValue": "product-verification",
+  "dataType": "string",
+  "isCaseSensitive": true
+}
+
+###
+# @name setUpValidMetadataValue - patient-treatment
+#
+POST {{baseURL}}/servers/{{viewServer}}/api/open-metadata/valid-metadata/setup-value/purposes?typeName={{typeName}}
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "displayName": "Patient Treatment",
+  "description": "Indicates that this project is supporting the treatment of a patient.",
+  "preferredValue": "patient-treatment",
+  "dataType": "string",
+  "isCaseSensitive": true
+}
+
+###
+# =====================================================================================================================
+# Setting up the values for addtionalProperties is in two parts: first setting the valid values for the map name
+# "expectedDuration" and then setting the mapValues for each value of "expectedDuration"
+
+###
+# @name setUpValidMetadataMapName expectedDuration
+#
+POST {{baseURL}}/servers/{{viewServer}}/api/open-metadata/valid-metadata/setup-map-name/additionalProperties?typeName={{typeName}}
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "displayName": "Expected Duration",
+  "description": "How long (roughly) is this project expected to run?",
+  "preferredValue": "expectedDuration",
+  "dataType": "string",
+  "isCaseSensitive": false
+}
+
+
+###
+# @name setUpValidMetadataMapValue - 1 month
+#
+POST {{baseURL}}/servers/{{viewServer}}/api/open-metadata/valid-metadata/setup-map-value/additionalProperties/expectedDuration?typeName={{typeName}}
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "displayName": "One Month",
+  "description": "The project is expected to run for a month.",
+  "preferredValue": "1 month",
+  "dataType": "string",
+  "isCaseSensitive": false
+}
+
+
+###
+# @name setUpValidMetadataMapValue - 2 months
+#
+POST {{baseURL}}/servers/{{viewServer}}/api/open-metadata/valid-metadata/setup-map-value/additionalProperties/expectedDuration?typeName={{typeName}}
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "displayName": "Two Month",
+  "description": "The project is expected to run for two months.",
+  "preferredValue": "2 months",
+  "dataType": "string",
+  "isCaseSensitive": false
+}
+
+
+###
+# @name setUpValidMetadataMapValue - 6 months
+#
+POST {{baseURL}}/servers/{{viewServer}}/api/open-metadata/valid-metadata/setup-map-value/additionalProperties/expectedDuration?typeName={{typeName}}
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "displayName": "Six Month",
+  "description": "The project is expected to run for six months.",
+  "preferredValue": "6 months",
+  "dataType": "string",
+  "isCaseSensitive": false
+}
+
+
+###
+# @name setUpValidMetadataMapValue - 1 year
+#
+POST {{baseURL}}/servers/{{viewServer}}/api/open-metadata/valid-metadata/setup-map-value/additionalProperties/expectedDuration?typeName={{typeName}}
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "displayName": "One year",
+  "description": "The project is expected to run for about a year.",
+  "preferredValue": "1 year",
+  "dataType": "string",
+  "isCaseSensitive": false
+}
+
+
+###
+# @name setUpValidMetadataMapValue - other
+#
+POST {{baseURL}}/servers/{{viewServer}}/api/open-metadata/valid-metadata/setup-map-value/additionalProperties/expectedDuration?typeName={{typeName}}
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "displayName": "One year",
+  "description": "The project is expected to run for longer than 1 year.",
+  "preferredValue": "other",
+  "dataType": "string",
+  "isCaseSensitive": false
+}
+
+###
+# =====================================================================================================================
+
+
+###
+# @name getValidMetadataValue - clinical-trial
+# Retrieve details of a specific valid value for a property.
+#
+GET {{baseURL}}/servers/{{viewServer}}/api/open-metadata/valid-metadata/get-value/category?typeName={{typeName}}&preferredValue=clinical-trial
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+
+###
+# @name getValidMetadataMapName - expectedDuration
+# Retrieve details of a specific valid name for a map property.
+#
+GET {{baseURL}}/servers/{{viewServer}}/api/open-metadata/valid-metadata/get-map-name/additionalProperties?typeName={{typeName}}&mapName=expectedDuration
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+
+###
+# @name getValidMetadataMapValue - 1 month
+# Retrieve details of a specific valid value for a map name.
+#
+GET {{baseURL}}/servers/{{viewServer}}/api/open-metadata/valid-metadata/get-map-value/additionalProperties/expectedDuration?typeName={{typeName}}&preferredValue=1 month
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+
+###
+# @name getValidMetadataValues - category
+# Retrieve all the valid values for the category property.
+#
+GET {{baseURL}}/servers/{{viewServer}}/api/open-metadata/valid-metadata/get-valid-metadata-values/category?typeName={{typeName}}&startFrom=0&pageSize=0
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+###
+# @name getValidMetadataValues - purposes
+# Retrieve all the valid values for the purposes property.
+#
+GET {{baseURL}}/servers/{{viewServer}}/api/open-metadata/valid-metadata/get-valid-metadata-values/purposes?typeName={{typeName}}&startFrom=0&pageSize=0
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+###
+# =====================================================================================================================
+
+###
+# @name validateMetadataValue
+# Validate whether the value found in an open metadata property is valid.
+#
+GET {{baseURL}}/servers/{{viewServer}}/api/open-metadata/valid-metadata/validate-value/category?typeName={{typeName}}&actualValue=clinical-trial
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+###
+# @name validateMetadataValue
+# Validate whether the value found in an open metadata property is valid.
+#
+GET {{baseURL}}/servers/{{viewServer}}/api/open-metadata/valid-metadata/validate-value/purposes?typeName={{typeName}}&actualValue=marketing
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+
+###
+# @name validateMetadataMapName
+# Validate whether the name found in an open metadata map property is valid.
+#
+GET {{baseURL}}/servers/{{viewServer}}/api/open-metadata/valid-metadata/validate-map-name/additionalProperties?typeName={{typeName}}&mapName=expectedDuration
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+
+###
+# @name validateMetadataMapValue
+# Validate whether the value found in an open metadata map property is valid.
+#
+GET {{baseURL}}/servers/{{viewServer}}/api/open-metadata/valid-metadata/validate-map-value/additionalProperties/expectedDuration?typeName={{typeName}}&actualValue=1 year
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+###
+# @name validateMetadataMapValue
+# Validate whether the value found in an open metadata map property is valid.
+#
+GET {{baseURL}}/servers/{{viewServer}}/api/open-metadata/valid-metadata/validate-map-value/additionalProperties/expectedDuration?typeName={{typeName}}&actualValue=2 years
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+###
+# =====================================================================================================================
+# The ConsistentValidValues relationship shows how valid values should be used together.
+###
+
+###
+# @name setConsistentMetadataValues - clinical-trials (category) and product-verification (purposes)
+# Set up consistent metadata values relationship between the two property values.
+#
+POST {{baseURL}}/servers/{{viewServer}}/api/open-metadata/valid-metadata/category/consistent-metadata-values/purposes?preferredValue1=clinical-trial&typeName2={{typeName}}&preferredValue2=product-verification
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+###
+# @name getConsistentMetadataValues - clinical-trial
+# Retrieve all the consistent valid values for the requested property.
+#
+GET {{baseURL}}/servers/{{viewServer}}/api/open-metadata/valid-metadata/category/consistent-metadata-values?typeName={{typeName}}&preferredValue=clinical-trial&startFrom=0&pageSize=0
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+
+###
+# @name getConsistentMetadataValues - fileType
+# Retrieve all the consistent valid values for the fileType property.
+#
+GET {{baseURL}}/servers/{{viewServer}}/api/open-metadata/valid-metadata/fileType/consistent-metadata-values?preferredValue=CSV File&startFrom=0&pageSize=0
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+###
+
+###

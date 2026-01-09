@@ -15,15 +15,13 @@
 """
 from __future__ import annotations
 
-import os
 import re
-from typing import Any, LiteralString
+from typing import Any
 
 from commands.cat.run_report import list_generic
 from pydantic import ValidationError
-from pyegeria import run_report
-from pyegeria.base_report_formats import report_spec_list, get_report_format_description, select_report_spec
-from pyegeria.format_set_executor import exec_report_spec
+from pyegeria.view.base_report_formats import report_spec_list, select_report_spec
+from pyegeria.view.format_set_executor import exec_report_spec
 from textual import on
 from textual.app import App
 from textual.containers import Container, Horizontal, HorizontalScroll, ScrollableContainer

@@ -9,11 +9,10 @@ Runtime manager is a view service that supports user interaction with the runnin
 import asyncio
 
 from requests import Response
-from pyegeria.utils import body_slimmer
-from pyegeria._server_client import ServerClient
-from pyegeria._globals import TEMPLATE_GUIDS, max_paging_size,default_time_out
-from pyegeria._exceptions import PyegeriaInvalidParameterException
-from pyegeria._globals import NO_ELEMENTS_FOUND
+from pyegeria.core.utils import body_slimmer
+from pyegeria.core._server_client import ServerClient
+from pyegeria.core._globals import max_paging_size,default_time_out
+
 
 class RuntimeManager(ServerClient):
     """

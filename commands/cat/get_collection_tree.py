@@ -20,7 +20,7 @@ from pyegeria import (
     CollectionManager,
     NO_ELEMENTS_FOUND,
 )
-from pyegeria._exceptions import (
+from pyegeria.core._exceptions import (
     PyegeriaInvalidParameterException,
     PyegeriaAPIException,
     PyegeriaUnauthorizedException,

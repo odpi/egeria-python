@@ -1,4 +1,4 @@
-"""PDX-License-Identifier: Apache-2.0
+"""SPDX-License-Identifier: Apache-2.0
 Copyright Contributors to the ODPi Egeria project.
 
 This module provides access to the classification_manager_omvs module.
@@ -8,14 +8,12 @@ This module provides access to the classification_manager_omvs module.
 import asyncio
 
 from httpx import Response
-from loguru import logger
 
 # import json
-from pyegeria._server_client import ServerClient
-from pyegeria._globals import default_time_out, NO_ELEMENTS_FOUND
+from pyegeria.core._server_client import ServerClient
+from pyegeria.core._globals import default_time_out, NO_ELEMENTS_FOUND
 from pyegeria.models import LevelIdentifierQueryBody
-from pyegeria.utils import body_slimmer
-from pyegeria.output_formatter import generate_output, populate_common_columns, resolve_output_formats
+from pyegeria.core.utils import body_slimmer
 
 
 def query_seperator(current_string):

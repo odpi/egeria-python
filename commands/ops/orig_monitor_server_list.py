@@ -15,14 +15,14 @@ import time
 from rich.live import Live
 from rich.table import Table
 
-from pyegeria._exceptions import (
+from pyegeria.core._exceptions import (
     PyegeriaInvalidParameterException,
     PyegeriaAPIException as PropertyServerException,
     PyegeriaUnauthorizedException as UserNotAuthorizedException,
     print_basic_exception as print_exception_response,
 )
-from pyegeria.core_omag_server_config import CoreServerConfig
-from pyegeria.server_operations import ServerOps
+from pyegeria.omvs.core_omag_server_config import CoreServerConfig
+from pyegeria.omvs.server_operations import ServerOps
 
 disable_ssl_warnings = True
 

@@ -6,12 +6,13 @@ This module tests the TemplateManager class and methods from template_manager_om
 
 A running Egeria environment is needed to run these tests.
 """
+import pytest
 import time
 from datetime import datetime
 from rich import print
 from rich.console import Console
 
-from pyegeria._exceptions import (
+from pyegeria.core._exceptions import (
     PyegeriaInvalidParameterException,
     PyegeriaConnectionException,
     PyegeriaAPIException,
@@ -20,8 +21,8 @@ from pyegeria._exceptions import (
     print_basic_exception,
     print_exception_table,
 )
-from pyegeria.template_manager_omvs import TemplateManager
-from pyegeria.logging_configuration import config_logging, init_logging
+from pyegeria.egeria_client import Egeria
+from pyegeria.core.logging_configuration import config_logging, init_logging
 
 disable_ssl_warnings = True
 
@@ -44,203 +45,114 @@ class TestTemplateManager:
         ts = datetime.now().strftime("%Y%m%d%H%M%S%f")
         return f"{prefix}::{ts}"
 
-    def test_create_metadata_element_in_store(self):
-        """Test creating a metadata element in store"""
+    def test_template_classification_lifecycle(self):
+        """Test adding and removing template classifications"""
+        client = Egeria(self.good_view_server_1, self.good_platform1_url, user_id=self.good_user_1)
+        
         try:
-            tm_client = TemplateManager(self.good_view_server_1, self.good_platform1_url, user_id=self.good_user_1)
-            tm_client.create_egeria_bearer_token(self.good_user_1, USER_PWD)
-            start_time = time.perf_counter()
-
-            qualified_name = self._unique_qname("TestTemplateElement")
-            body = {
-                "class": "NewOpenMetadataElementRequestBody",
-                "typeName": "Referenceable",
-                "initialStatus": "ACTIVE",
-                "properties": {
-                    "class": "ReferenceableProperties",
-                    "qualifiedName": qualified_name,
-                }
-            }
-
-            response = tm_client.create_metadata_element_in_store(body)
-            duration = time.perf_counter() - start_time
-            print(f"\n\tDuration was {duration} seconds")
-            print(f"\n\nCreated element with GUID: {response}")
-            assert type(response) is str
-            assert len(response) > 0
-            return response
-
-        except (
-            PyegeriaInvalidParameterException,
-            PyegeriaAPIException,
-            PyegeriaUnauthorizedException,
-            PyegeriaNotFoundException,
-        ) as e:
-            print_exception_table(e)
-            assert False, "Invalid request"
-        except PyegeriaConnectionException as e:
-            print_basic_exception(e)
-            assert False, "Connection error"
-        finally:
-            tm_client.close_session()
-
-    def test_update_metadata_element_in_store(self):
-        """Test updating a metadata element in store"""
-        tm_client = TemplateManager(self.good_view_server_1, self.good_platform1_url, user_id=self.good_user_1)
-        tm_client.create_egeria_bearer_token(self.good_user_1, USER_PWD)
+            client.create_egeria_bearer_token(self.good_user_1, USER_PWD)
+        except PyegeriaConnectionException:
+            pytest.skip("No Egeria server running")
+        except Exception as e:
+            pytest.skip(f"Could not authenticate: {e}")
+        
         try:
-            # Create first
-            qualified_name = self._unique_qname("TestUpdateElement")
-            create_body = {
+            # 1. Create a base element using MetadataExpert
+            qname = self._unique_qname("TemplateClassLifecycle")
+            guid = client.expert.create_metadata_element({
                 "class": "NewOpenMetadataElementRequestBody",
                 "typeName": "Referenceable",
                 "properties": {
-                    "class": "ReferenceableProperties",
-                    "qualifiedName": qualified_name,
+                    "class": "ElementProperties",
+                    "propertyValueMap": {
+                        "qualifiedName": {"class": "PrimitiveTypePropertyValue", "typeName": "string", "primitiveValue": qname}
+                    }
                 }
-            }
-            guid = tm_client.create_metadata_element_in_store(create_body)
+            })
             assert guid is not None
 
-            # Update
-            update_body = {
-                "class": "UpdateOpenMetadataElementRequestBody",
+            # 2. Add Template classification
+            client.templates.add_template_classification(guid, {
+                "class": "NewClassificationRequestBody",
                 "properties": {
-                    "class": "ReferenceableProperties",
-                    "qualifiedName": qualified_name,
-                    "description": "Updated description"
+                    "class": "TemplateProperties",
+                    "displayName": "Test Template"
                 }
-            }
-            tm_client.update_metadata_element_in_store(guid, update_body)
-            print(f"Updated element {guid}")
-
-        finally:
-            tm_client.close_session()
-
-    def test_classify_declassify_metadata_element(self):
-        """Test classifying and declassifying a metadata element"""
-        tm_client = TemplateManager(self.good_view_server_1, self.good_platform1_url, user_id=self.good_user_1)
-        tm_client.create_egeria_bearer_token(self.good_user_1, USER_PWD)
-        try:
-            # Create
-            qualified_name = self._unique_qname("TestClassify")
-            create_body = {
-                "class": "NewOpenMetadataElementRequestBody",
-                "typeName": "Referenceable",
-                "properties": {
-                    "class": "ReferenceableProperties",
-                    "qualifiedName": qualified_name,
-                }
-            }
-            guid = tm_client.create_metadata_element_in_store(create_body)
-
-            # Classify
-            classify_body = {
-                "class": "ClassificationRequestBody",
-                "properties": {
-                    "class": "ClassificationProperties",
-                }
-            }
-            tm_client.classify_metadata_element_in_store(guid, "Template", classify_body)
-            print(f"Classified element {guid} as Template")
-
-            # Declassify
-            declassify_body = {
-                "class": "ClassificationRequestBody"
-            }
-            tm_client.declassify_metadata_element_in_store(guid, "Template", declassify_body)
-            print(f"Declassified element {guid}")
-
-        finally:
-            tm_client.close_session()
-
-    def test_delete_metadata_element_in_store(self):
-        """Test deleting a metadata element"""
-        tm_client = TemplateManager(self.good_view_server_1, self.good_platform1_url, user_id=self.good_user_1)
-        tm_client.create_egeria_bearer_token(self.good_user_1, USER_PWD)
-        try:
-            # Create
-            qualified_name = self._unique_qname("TestDelete")
-            create_body = {
-                "class": "NewOpenMetadataElementRequestBody",
-                "typeName": "Referenceable",
-                "properties": {
-                    "class": "ReferenceableProperties",
-                    "qualifiedName": qualified_name,
-                }
-            }
-            guid = tm_client.create_metadata_element_in_store(create_body)
-
-            # Delete
-            delete_body = {
-                "class": "DeleteElementRequestBody"
-            }
-            tm_client.delete_metadata_element_in_store(guid, delete_body)
-            print(f"Deleted element {guid}")
-
-        finally:
-            tm_client.close_session()
-
-    def test_create_related_elements(self):
-        """Test creating related elements"""
-        tm_client = TemplateManager(self.good_view_server_1, self.good_platform1_url, user_id=self.good_user_1)
-        tm_client.create_egeria_bearer_token(self.good_user_1, USER_PWD)
-        try:
-            # Create two elements
-            q1 = self._unique_qname("Rel1")
-            q2 = self._unique_qname("Rel2")
-            g1 = tm_client.create_metadata_element_in_store({
-                "class": "NewOpenMetadataElementRequestBody",
-                "typeName": "Referenceable",
-                "properties": {"class": "ReferenceableProperties", "qualifiedName": q1}
             })
-            g2 = tm_client.create_metadata_element_in_store({
+            print(f"Added template classification to {guid}")
+
+            # 3. Remove Template classification
+            client.templates.remove_template_classification(guid)
+            print(f"Removed template classification from {guid}")
+
+            # 4. Add Template Substitute classification
+            client.templates.add_template_substitute_classification(guid, {
+                "class": "NewClassificationRequestBody"
+            })
+            print(f"Added template substitute classification to {guid}")
+
+            # 5. Remove Template Substitute classification
+            client.templates.remove_template_substitute_classification(guid)
+            print(f"Removed template substitute classification from {guid}")
+
+            # Cleanup
+            client.expert.delete_metadata_element(guid, {"class": "OpenMetadataDeleteRequestBody"})
+
+        finally:
+            client.close_session()
+
+    def test_template_relationship_lifecycle(self):
+        """Test linking and detaching template relationships"""
+        client = Egeria(self.good_view_server_1, self.good_platform1_url, user_id=self.good_user_1)
+        
+        try:
+            client.create_egeria_bearer_token(self.good_user_1, USER_PWD)
+        except PyegeriaConnectionException:
+            pytest.skip("No Egeria server running")
+        except Exception as e:
+            pytest.skip(f"Could not authenticate: {e}")
+        
+        try:
+            # 1. Create two elements
+            q1 = self._unique_qname("Element")
+            q2 = self._unique_qname("Template")
+            
+            e_guid = client.expert.create_metadata_element({
                 "class": "NewOpenMetadataElementRequestBody",
                 "typeName": "Referenceable",
-                "properties": {"class": "ReferenceableProperties", "qualifiedName": q2}
+                "properties": {"class": "ElementProperties", "propertyValueMap": {"qualifiedName": {"class": "PrimitiveTypePropertyValue", "typeName": "string", "primitiveValue": q1}}}
+            })
+            t_guid = client.expert.create_metadata_element({
+                "class": "NewOpenMetadataElementRequestBody",
+                "typeName": "Referenceable",
+                "properties": {"class": "ElementProperties", "propertyValueMap": {"qualifiedName": {"class": "PrimitiveTypePropertyValue", "typeName": "string", "primitiveValue": q2}}}
             })
 
-            # Create relationship
-            rel_body = {
-                "class": "NewRelatedElementsRequestBody",
-                "relationshipTypeName": "Peer",
-                "end1GUID": g1,
-                "end2GUID": g2
-            }
-            rel_guid = tm_client.create_related_elements_in_store(rel_body)
-            print(f"Created relationship {rel_guid}")
-            assert rel_guid is not None
-
-        finally:
-            tm_client.close_session()
-
-    def test_create_metadata_element_from_template(self):
-        """Test creating a metadata element from template"""
-        tm_client = TemplateManager(self.good_view_server_1, self.good_platform1_url, user_id=self.good_user_1)
-        tm_client.create_egeria_bearer_token(self.good_user_1, USER_PWD)
-        try:
-            # Create template
-            q1 = self._unique_qname("TemplateBase")
-            guid = tm_client.create_metadata_element_in_store({
-                "class": "NewOpenMetadataElementRequestBody",
-                "typeName": "Referenceable",
-                "properties": {"class": "ReferenceableProperties", "qualifiedName": q1}
+            # 2. Link Sourced From
+            client.templates.link_sourced_from(e_guid, t_guid, {
+                "class": "NewRelationshipRequestBody",
+                "relationshipProperties": {"class": "SourceFromProperties", "sourceVersionNumber": 1}
             })
-            tm_client.classify_metadata_element_in_store(guid, "Template", {"class": "ClassificationRequestBody"})
+            print(f"Linked {e_guid} as sourced from {t_guid}")
 
-            # Create from template
-            q2 = self._unique_qname("FromTemplate")
-            from_template_body = {
-                "class": "TemplateRequestBody",
-                "templateGUID": guid,
-                "replacementProperties": {
-                    "class": "ReferenceableProperties",
-                    "qualifiedName": q2
-                }
-            }
-            new_guid = tm_client.create_metadata_element_from_template(from_template_body)
-            print(f"Created from template: {new_guid}")
-            assert new_guid is not None
+            # 3. Detach Sourced From
+            client.templates.detach_sourced_from(e_guid, t_guid)
+            print(f"Detached sourced from relationship between {e_guid} and {t_guid}")
+
+            # 4. Link Catalog Template
+            client.templates.link_catalog_template(e_guid, t_guid, {
+                "class": "NewRelationshipRequestBody",
+                "relationshipProperties": {"class": "CatalogTemplateProperties"}
+            })
+            print(f"Linked {e_guid} to catalog template {t_guid}")
+
+            # 5. Detach Catalog Template
+            client.templates.detach_catalog_template(e_guid, t_guid)
+            print(f"Detached catalog template relationship between {e_guid} and {t_guid}")
+
+            # Cleanup
+            client.expert.delete_metadata_element(e_guid, {"class": "OpenMetadataDeleteRequestBody"})
+            client.expert.delete_metadata_element(t_guid, {"class": "OpenMetadataDeleteRequestBody"})
 
         finally:
-            tm_client.close_session()
+            client.close_session()

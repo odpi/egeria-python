@@ -11,14 +11,12 @@ A running Egeria environment is needed to run these tests.
 
 import json
 
-from pyegeria._exceptions import (
-    PyegeriaInvalidParameterException,
+from pyegeria.core._exceptions import (
     PyegeriaAPIException,
-    PyegeriaUnauthorizedException,
     PyegeriaClientException,
-    print_basic_exception, PyegeriaException, print_exception_table,
+    PyegeriaException, print_exception_table,
 )
-from pyegeria.full_omag_server_config import FullServerConfig
+from pyegeria.omvs.full_omag_server_config import FullServerConfig
 
 # from pyegeria.admin_services import FullServerConfig
 

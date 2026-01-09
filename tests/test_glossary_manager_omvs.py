@@ -11,27 +11,23 @@ A running Egeria environment is needed to run these tests.
 
 """
 
-import asyncio
 import json
 import time
-from contextlib import nullcontext as does_not_raise
 
-import pytest
 from pydantic import ValidationError
 
 from pyegeria import (
     PyegeriaException,
     print_exception_table,
     print_validation_error,
-    PyegeriaInvalidParameterException,
     print_basic_exception,
 )
-from pyegeria._exceptions import (
+from pyegeria.core._exceptions import (
     PyegeriaInvalidParameterException,
     PyegeriaAPIException,
     PyegeriaUnauthorizedException,
 )
-from pyegeria.glossary_manager import GlossaryManager, GlossaryTermProperties
+from pyegeria.omvs.glossary_manager import GlossaryManager, GlossaryTermProperties
 from pyegeria.models import NewElementRequestBody
 
 
@@ -295,7 +291,7 @@ class TestGlossaryManager:
 
             token = g_client.create_egeria_bearer_token(self.good_user_2, "secret")
             start_time = time.perf_counter()
-            response = g_client.find_glossaries("Coco Pharmaceuticals Clinical", starts_with=False, ends_with=False,
+            response = g_client.find_glossaries("*", starts_with=False, ends_with=False,
                                                 ignore_case=True, page_size=0, output_format="JSON")
             duration = time.perf_counter() - start_time
             # resp_str = json.loads(response)

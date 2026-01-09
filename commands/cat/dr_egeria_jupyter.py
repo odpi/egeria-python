@@ -8,12 +8,12 @@ from rich import print
 from rich.console import Console
 
 from pyegeria.egeria_tech_client import EgeriaTech
-from pyegeria.md_processing_utils import (extract_command, process_glossary_upsert_command, process_term_upsert_command,
-                                          get_current_datetime_string, process_per_proj_upsert_command, command_list,
-                                          )
+from pyegeria.view.md_processing_utils import (extract_command, process_glossary_upsert_command, process_term_upsert_command,
+                                               get_current_datetime_string, process_per_proj_upsert_command, command_list,
+                                               )
 import click
 
-from pyegeria._exceptions import (
+from pyegeria.core._exceptions import (
     print_basic_exception, PyegeriaException,
 )
 

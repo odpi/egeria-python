@@ -9,26 +9,23 @@ This module tests the CollectionManager class and methods
 A running Egeria environment is needed to run these tests.
 
 """
-import asyncio
 import json
 import time
 from datetime import datetime
 # import pytest.asyncio
-from loguru import logger
 
 from rich import print, print_json
 from rich.console import Console
-from pyegeria.collection_manager import CollectionManager, CollectionProperties
+from pyegeria.omvs.collection_manager import CollectionManager
 from pyegeria.egeria_tech_client import EgeriaTech
-from pyegeria.logging_configuration import config_logging, init_logging
-from pyegeria._exceptions import (
+from pyegeria.core.logging_configuration import config_logging, init_logging
+from pyegeria.core._exceptions import (
     PyegeriaInvalidParameterException,
     PyegeriaException,
     PyegeriaConnectionException,
     PyegeriaClientException,
     PyegeriaAPIException,
     PyegeriaUnknownException,
-    PyegeriaNotFoundException,
     PyegeriaUnauthorizedException,
     print_basic_exception,
     print_exception_table,
@@ -36,7 +33,7 @@ from pyegeria._exceptions import (
 )
 from pydantic import ValidationError
 from pyegeria.models import (SearchStringRequestBody, SequencingOrder, FilterRequestBody,
-                             NewElementRequestBody, InitialClassifications)
+                             NewElementRequestBody)
 
 
 disable_ssl_warnings = True

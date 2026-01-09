@@ -5,7 +5,7 @@ Copyright Contributors to the ODPi Egeria project.
     Manage external references to a variety of artifacts.
 
 """
-from pyegeria.utils import dynamic_catch
+from pyegeria.core.utils import dynamic_catch
 
 
 @dynamic_catch
