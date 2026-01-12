@@ -809,11 +809,25 @@ class DataDesigner(ServerClient):
                                          report_spec=report_spec)
 
     @dynamic_catch
-    async def _async_find_data_structures(self, search_string: str, start_from: int = 0, page_size: int = 0,
-                                          starts_with: bool = True, ends_with: bool = False, ignore_case: bool = True,
-                                          body: dict | SearchStringRequestBody = None,
-                                          output_format: str = 'JSON',
-                                          report_spec: str | dict = None) -> list | str:
+    async def _async_find_data_structures(self, search_string: str,
+                                          starts_with: bool = True, ends_with: bool = False,
+                                          ignore_case: bool = False,
+                                          anchor_domain: str = None,
+                                          metadata_element_type: str = None,
+                                          metadata_element_subtypes: list[str] = None,
+                                          skip_relationships: list[str] = None,
+                                          include_only_relationships: list[str] = None,
+                                          skip_classified_elements: list[str] = None,
+                                          include_only_classified_elements: list[str] = None,
+                                          graph_query_depth: int = 3,
+                                          governance_zone_filter: list[str] = None, as_of_time: str = None,
+                                          effective_time: str = None, relationship_page_size: int = 0,
+                                          limit_results_by_status: list[str] = None, sequencing_order: str = None,
+                                          sequencing_property: str = None,
+                                          output_format: str = "JSON", report_spec: str | dict = None,
+                                          start_from: int = 0, page_size: int = 100,
+                                          property_names: list[str] = None,
+                                          body: dict | SearchStringRequestBody = None) -> list | str:
         """ Find the list of data structure metadata elements that contain the search string.
             Async version.
 
@@ -821,20 +835,59 @@ class DataDesigner(ServerClient):
         ----------
         search_string: str
             - search string to filter on.
-        start_from: int, default = 0
-            - index of the list to start from (0 for start).
-        page_size
-            - maximum number of elements to return.
-        starts_with: bool, default = True
-            - if True, the search string filters from the beginning of the string.
-        ends_with: bool, default = False
-            - if True, the search string filters from the end of the string.
-        ignore_case: bool, default = True
-            - If True, the case of the search string is ignored.
-        output_format: str, default = "DICT"
-            - one of "DICT", "MERMAID" or "JSON"
-        report_spec: dict|str, optional, default = None
-            - The desired output columns/field options.
+        starts_with : bool, [default=True], optional
+            Starts with the supplied string.
+        ends_with : bool, [default=False], optional
+            Ends with the supplied string
+        ignore_case : bool, [default=False], optional
+            Ignore case when searching
+        anchor_domain: str, optional
+            The anchor domain to search in.
+        metadata_element_type: str, optional
+            The type of metadata element to search for.
+        metadata_element_subtypes: list[str], optional
+            The subtypes of metadata element to search for.
+        skip_relationships: list[str], optional
+            The types of relationships to skip.
+        include_only_relationships: list[str], optional
+            The types of relationships to include.
+        skip_classified_elements: list[str], optional
+            The types of classified elements to skip.
+        include_only_classified_elements: list[str], optional
+            The types of classified elements to include.
+        graph_query_depth: int, [default=3], optional
+            The depth of the graph query.
+        governance_zone_filter: list[str], optional
+            The governance zones to search in.
+        as_of_time: str, optional
+            The time to search as of.
+        effective_time: str, optional
+            The effective time to search at.
+        relationship_page_size: int, [default=0], optional
+            The page size for relationships.
+        limit_results_by_status: list[str], optional
+            The statuses to limit results by.
+        sequencing_order: str, optional
+            The order to sequence results by.
+        sequencing_property: str, optional
+            The property to sequence results by.
+        output_format: str, default = 'JSON'
+            Type of output to produce:
+                JSON - output standard json
+                MD - output standard markdown with no preamble
+                FORM - output markdown with a preamble for a form
+                REPORT - output markdown with a preamble for a report
+        report_spec: str | dict, optional
+            The report specification to use.
+        start_from: int, [default=0], optional
+            The page number to start from.
+        page_size: int, [default=100], optional
+            The number of items to return in a single page.
+        property_names: list[str], optional
+            The names of properties to search for.
+        body: dict, optional, default = None
+            - additional optional specifications for the search.
+
         Returns
         -------
         [dict] | str
@@ -873,33 +926,104 @@ class DataDesigner(ServerClient):
         url = f"{base_path(self, self.view_server)}/data-structures/by-search-string"
 
         return await self._async_find_request(url, "DataStructure", self._generate_data_structure_output, search_string,
-                                              output_format="JSON", page_size=0, body=body)
+                                              starts_with=starts_with, ends_with=ends_with, ignore_case=ignore_case,
+                                              anchor_domain=anchor_domain,
+                                              metadata_element_type=metadata_element_type,
+                                              metadata_element_subtypes=metadata_element_subtypes,
+                                              skip_relationships=skip_relationships,
+                                              include_only_relationships=include_only_relationships,
+                                              skip_classified_elements=skip_classified_elements,
+                                              include_only_classified_elements=include_only_classified_elements,
+                                              graph_query_depth=graph_query_depth,
+                                              governance_zone_filter=governance_zone_filter,
+                                              as_of_time=as_of_time, effective_time=effective_time,
+                                              relationship_page_size=relationship_page_size,
+                                              limit_results_by_status=limit_results_by_status,
+                                              sequencing_order=sequencing_order,
+                                              sequencing_property=sequencing_property,
+                                              output_format=output_format, report_spec=report_spec,
+                                              start_from=start_from, page_size=page_size,
+                                              property_names=property_names, body=body)
 
     @dynamic_catch
-    def find_data_structures(self, search_string: str, start_from: int = 0, page_size: int = 0,
-                             starts_with: bool = True, ends_with: bool = False, ignore_case: bool = True,
-                             body: dict | SearchStringRequestBody = None,
-                             output_format: str = 'JSON', report_spec: str | dict = None) -> list | str:
+    def find_data_structures(self, search_string: str,
+                             starts_with: bool = True, ends_with: bool = False,
+                             ignore_case: bool = False,
+                             anchor_domain: str = None,
+                             metadata_element_type: str = None,
+                             metadata_element_subtypes: list[str] = None,
+                             skip_relationships: list[str] = None,
+                             include_only_relationships: list[str] = None,
+                             skip_classified_elements: list[str] = None,
+                             include_only_classified_elements: list[str] = None,
+                             graph_query_depth: int = 3,
+                             governance_zone_filter: list[str] = None, as_of_time: str = None,
+                             effective_time: str = None, relationship_page_size: int = 0,
+                             limit_results_by_status: list[str] = None, sequencing_order: str = None,
+                             sequencing_property: str = None,
+                             output_format: str = "JSON", report_spec: str | dict = None,
+                             start_from: int = 0, page_size: int = 100,
+                             property_names: list[str] = None,
+                             body: dict | SearchStringRequestBody = None) -> list | str:
         """ Find the list of data structure metadata elements that contain the search string.
 
         Parameters
         ----------
         search_string: str
             - search string to filter on.
-        start_from: int, default = 0
-            - index of the list to start from (0 for start).
-        page_size
-            - maximum number of elements to return.
-        starts_with: bool, default = True
-            - if True, the search string filters from the beginning of the string.
-        ends_with: bool, default = False
-            - if True, the search string filters from the end of the string.
-        ignore_case: bool, default = True
-            - If True, the case of the search string is ignored.
-        output_format: str, default = "DICT"
-            - one of "DICT", "MERMAID" or "JSON"
-        report_spec: dict|str, optional, default = None
-            - The desired output columns/field options.
+        starts_with : bool, [default=True], optional
+            Starts with the supplied string.
+        ends_with : bool, [default=False], optional
+            Ends with the supplied string
+        ignore_case : bool, [default=False], optional
+            Ignore case when searching
+        anchor_domain: str, optional
+            The anchor domain to search in.
+        metadata_element_type: str, optional
+            The type of metadata element to search for.
+        metadata_element_subtypes: list[str], optional
+            The subtypes of metadata element to search for.
+        skip_relationships: list[str], optional
+            The types of relationships to skip.
+        include_only_relationships: list[str], optional
+            The types of relationships to include.
+        skip_classified_elements: list[str], optional
+            The types of classified elements to skip.
+        include_only_classified_elements: list[str], optional
+            The types of classified elements to include.
+        graph_query_depth: int, [default=3], optional
+            The depth of the graph query.
+        governance_zone_filter: list[str], optional
+            The governance zones to search in.
+        as_of_time: str, optional
+            The time to search as of.
+        effective_time: str, optional
+            The effective time to search at.
+        relationship_page_size: int, [default=0], optional
+            The page size for relationships.
+        limit_results_by_status: list[str], optional
+            The statuses to limit results by.
+        sequencing_order: str, optional
+            The order to sequence results by.
+        sequencing_property: str, optional
+            The property to sequence results by.
+        output_format: str, default = 'JSON'
+            Type of output to produce:
+                JSON - output standard json
+                MD - output standard markdown with no preamble
+                FORM - output markdown with a preamble for a form
+                REPORT - output markdown with a preamble for a report
+        report_spec: str | dict, optional
+            The report specification to use.
+        start_from: int, [default=0], optional
+            The page number to start from.
+        page_size: int, [default=100], optional
+            The number of items to return in a single page.
+        property_names: list[str], optional
+            The names of properties to search for.
+        body: dict, optional, default = None
+            - additional optional specifications for the search.
+
         Returns
         -------
         [dict] | str
@@ -937,8 +1061,25 @@ class DataDesigner(ServerClient):
 
         loop = asyncio.get_event_loop()
         response = loop.run_until_complete(
-            self._async_find_data_structures(search_string, start_from, page_size, starts_with, ends_with, ignore_case,
-                                             body, output_format, report_spec))
+            self._async_find_data_structures(search_string,
+                                             starts_with=starts_with, ends_with=ends_with, ignore_case=ignore_case,
+                                             anchor_domain=anchor_domain,
+                                             metadata_element_type=metadata_element_type,
+                                             metadata_element_subtypes=metadata_element_subtypes,
+                                             skip_relationships=skip_relationships,
+                                             include_only_relationships=include_only_relationships,
+                                             skip_classified_elements=skip_classified_elements,
+                                             include_only_classified_elements=include_only_classified_elements,
+                                             graph_query_depth=graph_query_depth,
+                                             governance_zone_filter=governance_zone_filter,
+                                             as_of_time=as_of_time, effective_time=effective_time,
+                                             relationship_page_size=relationship_page_size,
+                                             limit_results_by_status=limit_results_by_status,
+                                             sequencing_order=sequencing_order,
+                                             sequencing_property=sequencing_property,
+                                             output_format=output_format, report_spec=report_spec,
+                                             start_from=start_from, page_size=page_size,
+                                             property_names=property_names, body=body))
         return response
 
     @dynamic_catch
@@ -2290,31 +2431,84 @@ class DataDesigner(ServerClient):
         return response
 
     @dynamic_catch
-    async def _async_find_data_fields(self, search_string: str, start_from: int = 0, page_size: int = 0,
-                                      starts_with: bool = True, ends_with: bool = False, ignore_case: bool = True,
-                                      body: dict | SearchStringRequestBody = None,
-                                      output_format: str = 'JSON', report_spec: str | dict = None) -> list | str:
+    async def _async_find_data_fields(self, search_string: str,
+                                      starts_with: bool = True, ends_with: bool = False,
+                                      ignore_case: bool = False,
+                                      anchor_domain: str = None,
+                                      metadata_element_type: str = None,
+                                      metadata_element_subtypes: list[str] = None,
+                                      skip_relationships: list[str] = None,
+                                      include_only_relationships: list[str] = None,
+                                      skip_classified_elements: list[str] = None,
+                                      include_only_classified_elements: list[str] = None,
+                                      graph_query_depth: int = 3,
+                                      governance_zone_filter: list[str] = None, as_of_time: str = None,
+                                      effective_time: str = None, relationship_page_size: int = 0,
+                                      limit_results_by_status: list[str] = None, sequencing_order: str = None,
+                                      sequencing_property: str = None,
+                                      output_format: str = "JSON", report_spec: str | dict = None,
+                                      start_from: int = 0, page_size: int = 100,
+                                      property_names: list[str] = None,
+                                      body: dict | SearchStringRequestBody = None) -> list | str:
         """ Find the list of data class elements that contain the search string.
             Async version.
 
         Parameters
         ----------
-        filter: str
+        search_string: str
             - search string to filter on.
-        start_from: int, default = 0
-            - index of the list to start from (0 for start).
-        page_size
-            - maximum number of elements to return.
-        starts_with: bool, default = True
-            - if True, the search string filters from the beginning of the string.
-        ends_with: bool, default = False
-            - if True, the search string filters from the end of the string.
-        ignore_case: bool, default = True
-            - If True, the case of the search string is ignored.
-        output_format: str, default = "DICT"
-            - output format of the data structure. Possible values: "DICT", "JSON", "MERMAID".
-        report_spec: str|dict, optional, default = None
-            - The desired output columns/field options.
+        starts_with : bool, [default=True], optional
+            Starts with the supplied string.
+        ends_with : bool, [default=False], optional
+            Ends with the supplied string
+        ignore_case : bool, [default=False], optional
+            Ignore case when searching
+        anchor_domain: str, optional
+            The anchor domain to search in.
+        metadata_element_type: str, optional
+            The type of metadata element to search for.
+        metadata_element_subtypes: list[str], optional
+            The subtypes of metadata element to search for.
+        skip_relationships: list[str], optional
+            The types of relationships to skip.
+        include_only_relationships: list[str], optional
+            The types of relationships to include.
+        skip_classified_elements: list[str], optional
+            The types of classified elements to skip.
+        include_only_classified_elements: list[str], optional
+            The types of classified elements to include.
+        graph_query_depth: int, [default=3], optional
+            The depth of the graph query.
+        governance_zone_filter: list[str], optional
+            The governance zones to search in.
+        as_of_time: str, optional
+            The time to search as of.
+        effective_time: str, optional
+            The effective time to search at.
+        relationship_page_size: int, [default=0], optional
+            The page size for relationships.
+        limit_results_by_status: list[str], optional
+            The statuses to limit results by.
+        sequencing_order: str, optional
+            The order to sequence results by.
+        sequencing_property: str, optional
+            The property to sequence results by.
+        output_format: str, default = 'JSON'
+            Type of output to produce:
+                JSON - output standard json
+                MD - output standard markdown with no preamble
+                FORM - output markdown with a preamble for a form
+                REPORT - output markdown with a preamble for a report
+        report_spec: str | dict, optional
+            The report specification to use.
+        start_from: int, [default=0], optional
+            The page number to start from.
+        page_size: int, [default=100], optional
+            The number of items to return in a single page.
+        property_names: list[str], optional
+            The names of properties to search for.
+        body: dict, optional, default = None
+            - additional optional specifications for the search.
 
         Returns
         -------
@@ -2335,33 +2529,103 @@ class DataDesigner(ServerClient):
         url = f"{base_path(self, self.view_server)}/data-fields/by-search-string"
 
         return await self._async_find_request(url, "DataField", self._generate_data_field_output, search_string,
-                                              output_format="JSON", page_size=0, body=body)
+                                              starts_with=starts_with, ends_with=ends_with, ignore_case=ignore_case,
+                                              anchor_domain=anchor_domain,
+                                              metadata_element_type=metadata_element_type,
+                                              metadata_element_subtypes=metadata_element_subtypes,
+                                              skip_relationships=skip_relationships,
+                                              include_only_relationships=include_only_relationships,
+                                              skip_classified_elements=skip_classified_elements,
+                                              include_only_classified_elements=include_only_classified_elements,
+                                              graph_query_depth=graph_query_depth,
+                                              governance_zone_filter=governance_zone_filter,
+                                              as_of_time=as_of_time, effective_time=effective_time,
+                                              relationship_page_size=relationship_page_size,
+                                              limit_results_by_status=limit_results_by_status,
+                                              sequencing_order=sequencing_order,
+                                              sequencing_property=sequencing_property,
+                                              output_format=output_format, report_spec=report_spec,
+                                              start_from=start_from, page_size=page_size,
+                                              property_names=property_names, body=body)
 
     @dynamic_catch
-    def find_data_fields(self, search_string: str, start_from: int = 0, page_size: int = max_paging_size,
-                         starts_with: bool = True, ends_with: bool = False, ignore_case: bool = True,
-                         body: dict | SearchStringRequestBody = None,
-                         output_format: str = 'JSON', report_spec: str | dict = None) -> list | str:
+    def find_data_fields(self, search_string: str,
+                         starts_with: bool = True, ends_with: bool = False,
+                         ignore_case: bool = False,
+                         anchor_domain: str = None,
+                         metadata_element_type: str = None,
+                         metadata_element_subtypes: list[str] = None,
+                         skip_relationships: list[str] = None,
+                         include_only_relationships: list[str] = None,
+                         skip_classified_elements: list[str] = None,
+                         include_only_classified_elements: list[str] = None,
+                         graph_query_depth: int = 3,
+                         governance_zone_filter: list[str] = None, as_of_time: str = None,
+                         effective_time: str = None, relationship_page_size: int = 0,
+                         limit_results_by_status: list[str] = None, sequencing_order: str = None,
+                         sequencing_property: str = None,
+                         output_format: str = "JSON", report_spec: str | dict = None,
+                         start_from: int = 0, page_size: int = 100,
+                         property_names: list[str] = None,
+                         body: dict | SearchStringRequestBody = None) -> list | str:
         """ Retrieve the list of data fields elements that contain the search string filter.
 
         Parameters
         ----------
-        filter: str
+        search_string: str
             - search string to filter on.
-        start_from: int, default = 0
-            - index of the list to start from (0 for start).
-        page_size
-            - maximum number of elements to return.
-        starts_with: bool, default = True
-            - if True, the search string filters from the beginning of the string.
-        ends_with: bool, default = False
-            - if True, the search string filters from the end of the string.
-        ignore_case: bool, default = True
-            - If True, the case of the search string is ignored.
-        output_format: str, default = "DICT"
-            - output format of the data structure. Possible values: "DICT", "JSON", "MERMAID".
-        report_spec: str|dict, optional, default = None
-            - The desired output columns/field options.
+        starts_with : bool, [default=True], optional
+            Starts with the supplied string.
+        ends_with : bool, [default=False], optional
+            Ends with the supplied string
+        ignore_case : bool, [default=False], optional
+            Ignore case when searching
+        anchor_domain: str, optional
+            The anchor domain to search in.
+        metadata_element_type: str, optional
+            The type of metadata element to search for.
+        metadata_element_subtypes: list[str], optional
+            The subtypes of metadata element to search for.
+        skip_relationships: list[str], optional
+            The types of relationships to skip.
+        include_only_relationships: list[str], optional
+            The types of relationships to include.
+        skip_classified_elements: list[str], optional
+            The types of classified elements to skip.
+        include_only_classified_elements: list[str], optional
+            The types of classified elements to include.
+        graph_query_depth: int, [default=3], optional
+            The depth of the graph query.
+        governance_zone_filter: list[str], optional
+            The governance zones to search in.
+        as_of_time: str, optional
+            The time to search as of.
+        effective_time: str, optional
+            The effective time to search at.
+        relationship_page_size: int, [default=0], optional
+            The page size for relationships.
+        limit_results_by_status: list[str], optional
+            The statuses to limit results by.
+        sequencing_order: str, optional
+            The order to sequence results by.
+        sequencing_property: str, optional
+            The property to sequence results by.
+        output_format: str, default = 'JSON'
+            Type of output to produce:
+                JSON - output standard json
+                MD - output standard markdown with no preamble
+                FORM - output markdown with a preamble for a form
+                REPORT - output markdown with a preamble for a report
+        report_spec: str | dict, optional
+            The report specification to use.
+        start_from: int, [default=0], optional
+            The page number to start from.
+        page_size: int, [default=100], optional
+            The number of items to return in a single page.
+        property_names: list[str], optional
+            The names of properties to search for.
+        body: dict, optional, default = None
+            - additional optional specifications for the search.
 
         Returns
         -------
@@ -2382,8 +2646,25 @@ class DataDesigner(ServerClient):
 
         loop = asyncio.get_event_loop()
         response = loop.run_until_complete(
-            self._async_find_data_fields(search_string, start_from, page_size, starts_with, ends_with, ignore_case,
-                                         body, output_format, report_spec))
+            self._async_find_data_fields(search_string,
+                                         starts_with=starts_with, ends_with=ends_with, ignore_case=ignore_case,
+                                         anchor_domain=anchor_domain,
+                                         metadata_element_type=metadata_element_type,
+                                         metadata_element_subtypes=metadata_element_subtypes,
+                                         skip_relationships=skip_relationships,
+                                         include_only_relationships=include_only_relationships,
+                                         skip_classified_elements=skip_classified_elements,
+                                         include_only_classified_elements=include_only_classified_elements,
+                                         graph_query_depth=graph_query_depth,
+                                         governance_zone_filter=governance_zone_filter,
+                                         as_of_time=as_of_time, effective_time=effective_time,
+                                         relationship_page_size=relationship_page_size,
+                                         limit_results_by_status=limit_results_by_status,
+                                         sequencing_order=sequencing_order,
+                                         sequencing_property=sequencing_property,
+                                         output_format=output_format, report_spec=report_spec,
+                                         start_from=start_from, page_size=page_size,
+                                         property_names=property_names, body=body))
         return response
 
     @dynamic_catch
@@ -3726,32 +4007,84 @@ class DataDesigner(ServerClient):
         return response
 
     @dynamic_catch
-    async def _async_find_data_classes(self, search_string: str, start_from: int = 0, page_size: int = max_paging_size,
-                                       starts_with: bool = True, ends_with: bool = False, ignore_case: bool = True,
-                                       output_format: str = 'JSON', report_spec: str | dict = None,
+    async def _async_find_data_classes(self, search_string: str,
+                                       starts_with: bool = True, ends_with: bool = False,
+                                       ignore_case: bool = False,
+                                       anchor_domain: str = None,
+                                       metadata_element_type: str = None,
+                                       metadata_element_subtypes: list[str] = None,
+                                       skip_relationships: list[str] = None,
+                                       include_only_relationships: list[str] = None,
+                                       skip_classified_elements: list[str] = None,
+                                       include_only_classified_elements: list[str] = None,
+                                       graph_query_depth: int = 3,
+                                       governance_zone_filter: list[str] = None, as_of_time: str = None,
+                                       effective_time: str = None, relationship_page_size: int = 0,
+                                       limit_results_by_status: list[str] = None, sequencing_order: str = None,
+                                       sequencing_property: str = None,
+                                       output_format: str = "JSON", report_spec: str | dict = None,
+                                       start_from: int = 0, page_size: int = 100,
+                                       property_names: list[str] = None,
                                        body: dict | SearchStringRequestBody = None) -> list | str:
         """ Find the list of data class elements that contain the search string.
             Async version.
 
         Parameters
         ----------
-        filter: str
+        search_string: str
             - search string to filter on.
-        start_from: int, default = 0
-            - index of the list to start from (0 for start).
-        page_size
-            - maximum number of elements to return.
-        starts_with: bool, default = True
-            - if True, the search string filters from the beginning of the string.
-        ends_with: bool, default = False
-            - if True, the search string filters from the end of the string.
-        ignore_case: bool, default = True
-            - If True, the case of the search string is ignored.
-        output_format: str, default = "DICT"
-            - output format of the data structure. Possible values: "DICT", "JSON", "MERMAID".
-        report_spec: str|dict, optional, default = None
-            - The desired output columns/field options.
-
+        starts_with : bool, [default=True], optional
+            Starts with the supplied string.
+        ends_with : bool, [default=False], optional
+            Ends with the supplied string
+        ignore_case : bool, [default=False], optional
+            Ignore case when searching
+        anchor_domain: str, optional
+            The anchor domain to search in.
+        metadata_element_type: str, optional
+            The type of metadata element to search for.
+        metadata_element_subtypes: list[str], optional
+            The subtypes of metadata element to search for.
+        skip_relationships: list[str], optional
+            The types of relationships to skip.
+        include_only_relationships: list[str], optional
+            The types of relationships to include.
+        skip_classified_elements: list[str], optional
+            The types of classified elements to skip.
+        include_only_classified_elements: list[str], optional
+            The types of classified elements to include.
+        graph_query_depth: int, [default=3], optional
+            The depth of the graph query.
+        governance_zone_filter: list[str], optional
+            The governance zones to search in.
+        as_of_time: str, optional
+            The time to search as of.
+        effective_time: str, optional
+            The effective time to search at.
+        relationship_page_size: int, [default=0], optional
+            The page size for relationships.
+        limit_results_by_status: list[str], optional
+            The statuses to limit results by.
+        sequencing_order: str, optional
+            The order to sequence results by.
+        sequencing_property: str, optional
+            The property to sequence results by.
+        output_format: str, default = 'JSON'
+            Type of output to produce:
+                JSON - output standard json
+                MD - output standard markdown with no preamble
+                FORM - output markdown with a preamble for a form
+                REPORT - output markdown with a preamble for a report
+        report_spec: str | dict, optional
+            The report specification to use.
+        start_from: int, [default=0], optional
+            The page number to start from.
+        page_size: int, [default=100], optional
+            The number of items to return in a single page.
+        property_names: list[str], optional
+            The names of properties to search for.
+        body: dict, optional, default = None
+            - additional optional specifications for the search.
 
         Returns
         -------
@@ -3770,35 +4103,105 @@ class DataDesigner(ServerClient):
         """
 
         url = f"{base_path(self, self.view_server)}/data-classes/by-search-string"
+
         return await self._async_find_request(url, "DataClass", self._generate_data_class_output, search_string,
-                                              output_format="JSON", page_size=0, body=body)
+                                              starts_with=starts_with, ends_with=ends_with, ignore_case=ignore_case,
+                                              anchor_domain=anchor_domain,
+                                              metadata_element_type=metadata_element_type,
+                                              metadata_element_subtypes=metadata_element_subtypes,
+                                              skip_relationships=skip_relationships,
+                                              include_only_relationships=include_only_relationships,
+                                              skip_classified_elements=skip_classified_elements,
+                                              include_only_classified_elements=include_only_classified_elements,
+                                              graph_query_depth=graph_query_depth,
+                                              governance_zone_filter=governance_zone_filter,
+                                              as_of_time=as_of_time, effective_time=effective_time,
+                                              relationship_page_size=relationship_page_size,
+                                              limit_results_by_status=limit_results_by_status,
+                                              sequencing_order=sequencing_order,
+                                              sequencing_property=sequencing_property,
+                                              output_format=output_format, report_spec=report_spec,
+                                              start_from=start_from, page_size=page_size,
+                                              property_names=property_names, body=body)
 
     @dynamic_catch
-    def find_data_classes(self, search_string: str, start_from: int = 0, page_size: int = max_paging_size,
-                          starts_with: bool = True, ends_with: bool = False, ignore_case: bool = True,
-                          output_format: str = 'JSON', report_spec: str | dict = None,
+    def find_data_classes(self, search_string: str,
+                          starts_with: bool = True, ends_with: bool = False,
+                          ignore_case: bool = False,
+                          anchor_domain: str = None,
+                          metadata_element_type: str = None,
+                          metadata_element_subtypes: list[str] = None,
+                          skip_relationships: list[str] = None,
+                          include_only_relationships: list[str] = None,
+                          skip_classified_elements: list[str] = None,
+                          include_only_classified_elements: list[str] = None,
+                          graph_query_depth: int = 3,
+                          governance_zone_filter: list[str] = None, as_of_time: str = None,
+                          effective_time: str = None, relationship_page_size: int = 0,
+                          limit_results_by_status: list[str] = None, sequencing_order: str = None,
+                          sequencing_property: str = None,
+                          output_format: str = "JSON", report_spec: str | dict = None,
+                          start_from: int = 0, page_size: int = 100,
+                          property_names: list[str] = None,
                           body: dict | SearchStringRequestBody = None) -> list | str:
-        """ Retrieve the list of data fields elements that contain the search string filter.
+        """ Retrieve the list of data classes elements that contain the search string filter.
 
         Parameters
         ----------
-        filter: str
+        search_string: str
             - search string to filter on.
-        start_from: int, default = 0
-            - index of the list to start from (0 for start).
-        page_size
-            - maximum number of elements to return.
-        starts_with: bool, default = True
-            - if True, the search string filters from the beginning of the string.
-        ends_with: bool, default = False
-            - if True, the search string filters from the end of the string.
-        ignore_case: bool, default = True
-            - If True, the case of the search string is ignored.
-        output_format: str, default = "DICT"
-            - output format of the data structure. Possible values: "DICT", "JSON", "MERMAID".
-        report_spec: str|dict, optional, default = None
-            - The desired output columns/field options.
-
+        starts_with : bool, [default=True], optional
+            Starts with the supplied string.
+        ends_with : bool, [default=False], optional
+            Ends with the supplied string
+        ignore_case : bool, [default=False], optional
+            Ignore case when searching
+        anchor_domain: str, optional
+            The anchor domain to search in.
+        metadata_element_type: str, optional
+            The type of metadata element to search for.
+        metadata_element_subtypes: list[str], optional
+            The subtypes of metadata element to search for.
+        skip_relationships: list[str], optional
+            The types of relationships to skip.
+        include_only_relationships: list[str], optional
+            The types of relationships to include.
+        skip_classified_elements: list[str], optional
+            The types of classified elements to skip.
+        include_only_classified_elements: list[str], optional
+            The types of classified elements to include.
+        graph_query_depth: int, [default=3], optional
+            The depth of the graph query.
+        governance_zone_filter: list[str], optional
+            The governance zones to search in.
+        as_of_time: str, optional
+            The time to search as of.
+        effective_time: str, optional
+            The effective time to search at.
+        relationship_page_size: int, [default=0], optional
+            The page size for relationships.
+        limit_results_by_status: list[str], optional
+            The statuses to limit results by.
+        sequencing_order: str, optional
+            The order to sequence results by.
+        sequencing_property: str, optional
+            The property to sequence results by.
+        output_format: str, default = 'JSON'
+            Type of output to produce:
+                JSON - output standard json
+                MD - output standard markdown with no preamble
+                FORM - output markdown with a preamble for a form
+                REPORT - output markdown with a preamble for a report
+        report_spec: str | dict, optional
+            The report specification to use.
+        start_from: int, [default=0], optional
+            The page number to start from.
+        page_size: int, [default=100], optional
+            The number of items to return in a single page.
+        property_names: list[str], optional
+            The names of properties to search for.
+        body: dict, optional, default = None
+            - additional optional specifications for the search.
 
         Returns
         -------
@@ -3819,8 +4222,25 @@ class DataDesigner(ServerClient):
 
         loop = asyncio.get_event_loop()
         response = loop.run_until_complete(
-            self._async_find_data_classes(search_string, start_from, page_size, starts_with, ends_with, ignore_case,
-                                          output_format, report_spec, body))
+            self._async_find_data_classes(search_string,
+                                          starts_with=starts_with, ends_with=ends_with, ignore_case=ignore_case,
+                                          anchor_domain=anchor_domain,
+                                          metadata_element_type=metadata_element_type,
+                                          metadata_element_subtypes=metadata_element_subtypes,
+                                          skip_relationships=skip_relationships,
+                                          include_only_relationships=include_only_relationships,
+                                          skip_classified_elements=skip_classified_elements,
+                                          include_only_classified_elements=include_only_classified_elements,
+                                          graph_query_depth=graph_query_depth,
+                                          governance_zone_filter=governance_zone_filter,
+                                          as_of_time=as_of_time, effective_time=effective_time,
+                                          relationship_page_size=relationship_page_size,
+                                          limit_results_by_status=limit_results_by_status,
+                                          sequencing_order=sequencing_order,
+                                          sequencing_property=sequencing_property,
+                                          output_format=output_format, report_spec=report_spec,
+                                          start_from=start_from, page_size=page_size,
+                                          property_names=property_names, body=body))
         return response
 
     @dynamic_catch

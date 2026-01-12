@@ -1,12 +1,14 @@
+import json
+
 import pytest
 import asyncio
 from pyegeria.omvs.my_profile import MyProfile
 from pyegeria.models import NewElementRequestBody
 from pyegeria.core._exceptions import PyegeriaException
 
-VIEW_SERVER = "view-server"
+VIEW_SERVER = "qs-view-server"
 PLATFORM_URL = "https://localhost:9443"
-USER_ID = "peterprofile"
+USER_ID = "erinoverview"
 USER_PWD = "secret"
 
 class TestMyProfile:
@@ -22,13 +24,14 @@ class TestMyProfile:
 
     def test_get_my_profile(self, profile_client):
         try:
+            profile_client = MyProfile(VIEW_SERVER, PLATFORM_URL, USER_ID, USER_PWD)
+            token = profile_client.create_egeria_bearer_token(USER_ID, USER_PWD)
             profile = profile_client.get_my_profile()
-            assert isinstance(profile, (dict, str))
-            print(f"\nRetrieved profile (JSON): {profile}")
+            assert isinstance(profile, (dict, list, str))
 
-            profile_dict = profile_client.get_my_profile(output_format="DICT")
-            assert isinstance(profile_dict, (dict, list))
-            print(f"\nRetrieved profile (DICT): {profile_dict}")
+            profile_dict = profile_client.get_my_profile(output_format="DICT", report_spec="Referenceable")
+            assert isinstance(profile_dict, (dict, list, str))
+            print(f"\nRetrieved profile (DICT): {json.dumps(profile_dict, indent=2)}")
         except PyegeriaException as e:
             # We might get a 404 or 401 depending on the environment, but the call should at least attempt
             print(f"get_my_profile failed as expected or due to env: {e}")

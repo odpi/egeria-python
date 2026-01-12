@@ -386,6 +386,10 @@ def exec_report_spec(
     except PyegeriaException as e:
         # Re-raise with a simpler message for upstream mapping
         raise
+    except ValueError as e:
+        import traceback
+        traceback.print_exc()
+
     finally:
         try:
             client.close_session()

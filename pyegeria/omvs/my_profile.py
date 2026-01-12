@@ -7,6 +7,8 @@ This module contains the MyProfile class and its methods.
 """
 import json
 
+from loguru import logger
+
 from pyegeria.core._server_client import ServerClient
 from pyegeria.core._validators import validate_name, validate_search_string
 from pyegeria.core.utils import dynamic_catch, body_slimmer
@@ -75,13 +77,16 @@ class MyProfile(ServerClient):
             Egeria errors.
         """
         url = self.my_profile_command_root
-        return await self._async_get_guid_request(
-            url,
-            _type="Person",
-            _gen_output=self._generate_referenceable_output,
-            output_format=output_format,
-            report_spec=report_spec,
-        )
+        response = await self._async_make_request("GET",url)
+        if type(response) == str:
+            return "No Profile Found"
+
+        elements = response.json().get("element", "No Profile Found")
+        if output_format != 'JSON':  # return a simplified markdown representation
+            logger.info(f"Found elements, output format: {output_format} and report_spec: {report_spec}")
+            return super()._generate_referenceable_output(elements, self.user_id, "Person",
+                               output_format, report_spec)
+        return elements
 
     @dynamic_catch
     def get_my_profile(

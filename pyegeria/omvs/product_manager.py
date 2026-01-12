@@ -590,6 +590,7 @@ class ProductManager(CollectionManager):
         page_size: int = 100,
         output_format: str = "JSON",
         report_spec: Optional[str | dict] = None,
+        property_names: list[str] = None,
         body: Optional[dict] = None,
     ) -> list | str:
         """Returns the list of digital products matching the search string. Async version.
@@ -642,6 +643,8 @@ class ProductManager(CollectionManager):
             One of "JSON", "DICT", "MD", "FORM", "REPORT", or "MERMAID".
         report_spec : str | dict, optional
             The desired output columns/fields to include.
+        property_names: list[str], optional
+            The names of properties to search for.
         body : dict, optional
             If provided, the search parameters in the body supersede other attributes.
 
@@ -657,7 +660,7 @@ class ProductManager(CollectionManager):
         """
         if metadata_element_subtype is None:
             metadata_element_subtype = ["DigitalProduct"]
-            
+
         url = f"{self.product_manager_command_root}/collections/by-search-string"
         response = await self._async_find_request(
             url,
@@ -686,6 +689,7 @@ class ProductManager(CollectionManager):
             page_size=page_size,
             output_format=output_format,
             report_spec=report_spec,
+            property_names=property_names,
             body=body,
         )
         return response
@@ -715,6 +719,7 @@ class ProductManager(CollectionManager):
         page_size: int = 100,
         output_format: str = "JSON",
         report_spec: Optional[str | dict] = None,
+        property_names: list[str] = None,
         body: Optional[dict] = None,
     ) -> list | str:
         """Returns the list of digital products matching the search string. Sync version.
@@ -767,6 +772,8 @@ class ProductManager(CollectionManager):
             One of "JSON", "DICT", "MD", "FORM", "REPORT", or "MERMAID".
         report_spec : str | dict, optional
             The desired output columns/fields to include.
+        property_names: list[str], optional
+            The names of properties to search for.
         body : dict, optional
             If provided, the search parameters in the body supersede other attributes.
 
@@ -806,6 +813,7 @@ class ProductManager(CollectionManager):
                 page_size,
                 output_format,
                 report_spec,
+                property_names,
                 body,
             )
         )
@@ -1609,6 +1617,7 @@ class ProductManager(CollectionManager):
         page_size: int = 0,
         output_format: str = "JSON",
         report_spec: Optional[str | dict] = None,
+        property_names: list[str] = None,
         body: Optional[dict] = None,
     ) -> list | str:
         """Returns the list of digital product catalogs matching the search string. Async version.
@@ -1661,6 +1670,8 @@ class ProductManager(CollectionManager):
             Format for output. Defaults to "JSON".
         report_spec : str | dict, optional
             Report specification for formatting.
+        property_names: list[str], optional
+            The names of properties to search for.
         body : dict, optional
             Request body for additional parameters.
 
@@ -1702,6 +1713,7 @@ class ProductManager(CollectionManager):
             page_size=page_size,
             output_format=output_format,
             report_spec=report_spec,
+            property_names=property_names,
             body=body,
         )
         return response
@@ -1731,6 +1743,7 @@ class ProductManager(CollectionManager):
         page_size: int = 0,
         output_format: str = "JSON",
         report_spec: Optional[str | dict] = None,
+        property_names: list[str] = None,
         body: Optional[dict] = None,
     ) -> list | str:
         """Returns the list of digital product catalogs matching the search string. Sync version.
@@ -1783,6 +1796,8 @@ class ProductManager(CollectionManager):
             Format for output. Defaults to "JSON".
         report_spec : str | dict, optional
             Report specification for formatting.
+        property_names: list[str], optional
+            The names of properties to search for.
         body : dict, optional
             Request body for additional parameters.
 
@@ -1804,6 +1819,7 @@ class ProductManager(CollectionManager):
                 include_only_relationships, skip_classified_elements, include_only_classified_elements,
                 graph_query_depth, governance_zone_filter, as_of_time, effective_time,
                 relationship_page_size, limit_results_by_status, sequencing_order,
-                sequencing_property, start_from, page_size, output_format, report_spec, body
+                sequencing_property, start_from, page_size, output_format, report_spec,
+                property_names, body
             )
         )

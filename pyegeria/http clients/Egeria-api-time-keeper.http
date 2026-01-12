@@ -40,16 +40,55 @@ Content-Type: application/json
 
 {
   "class" : "NewElementRequestBody",
-  "isOwnAnchor": true,
+  "anchorGUID" : "add guid here",
+  "isOwnAnchor": false,
+  "parentGUID": "add guid here",
+  "parentRelationshipTypeName": "add type name here",
+  "parentRelationshipProperties": {
+    "class": "RelationshipElementProperties",
+    "propertyValueMap" : {
+      "description" : {
+        "class": "PrimitiveTypePropertyValue",
+        "typeName": "string",
+        "primitiveValue" : "New description"
+      }
+    }
+  },
+  "parentAtEnd1": false,
   "properties": {
     "class" : "ContextEventProperties",
-    "qualifiedName": "meowmix",
-    "displayName": "meowmix",
-    "description": "meow"
-    }
+    "qualifiedName": "add unique name here",
+    "displayName": "add short name here",
+    "description": "add description here",
+    "category" : "",
+    "url" : "",
+    "eventEffect" : "",
+    "plannedStartDate" : "{{$isoTimestamp}}",
+    "actualStartDate" : "{{$isoTimestamp}}",
+    "plannedDuration" : 5,
+    "actualDuration" : 6,
+    "repeatInterval" : 7,
+    "plannedCompletionDate" : "{{$isoTimestamp}}",
+    "actualCompletionDate" : "{{$isoTimestamp}}",
+    "referenceEffectiveFrom" : "{{$isoTimestamp}}",
+    "referenceEffectiveTo" : "{{$isoTimestamp}}",
+    "additionalProperties": {
+      "property1" : "propertyValue1",
+      "property2" : "propertyValue2"
+    },
+    "extendedProperties": {
+      "property1" : "propertyValue1",
+      "property2" : "propertyValue2"
+    },
+    "effectiveFrom": "{{$isoTimestamp}}",
+    "effectiveTo": "{{$isoTimestamp}}"
+  },
+  "externalSourceGUID": "add guid here",
+  "externalSourceName": "add qualified name here",
+  "effectiveTime" : "{{$isoTimestamp}}",
+  "forLineage" : false,
+  "forDuplicateProcessing" : false
 }
-
-
 
 
 

@@ -528,6 +528,7 @@ class DigitalBusiness(CollectionManager):
         page_size: int = 0,
         output_format: str = "JSON",
         report_spec: Optional[str | dict] = None,
+        property_names: list[str] = None,
         body: Optional[dict] = None,
     ) -> list | str:
         """Returns the list of business capabilities matching the search string. Async version.
@@ -545,9 +546,9 @@ class DigitalBusiness(CollectionManager):
         anchor_domain : str, optional
             Domain to anchor the search.
         metadata_element_type : str, optional
-            Type of metadata element to search for.
-        metadata_element_subtype : str, optional
-            Subtype of metadata element.
+            Type of metadata element to search for. Defaults to "BusinessCapability".
+        metadata_element_subtype : list[str], optional
+            Subtypes of metadata element.
         skip_relationships : list[str], optional
             Relationships to skip in the graph.
         include_only_relationships : list[str], optional
@@ -580,6 +581,8 @@ class DigitalBusiness(CollectionManager):
             Format for output. Defaults to "JSON".
         report_spec : str | dict, optional
             Report specification for formatting.
+        property_names: list[str], optional
+            The names of properties to search for.
         body : dict, optional
             Request body for additional parameters.
 
@@ -621,6 +624,7 @@ class DigitalBusiness(CollectionManager):
             page_size=page_size,
             output_format=output_format,
             report_spec=report_spec,
+            property_names=property_names,
             body=body,
         )
         return response
@@ -650,6 +654,7 @@ class DigitalBusiness(CollectionManager):
         page_size: int = 0,
         output_format: str = "JSON",
         report_spec: Optional[str | dict] = None,
+        property_names: list[str] = None,
         body: Optional[dict] = None,
     ) -> list | str:
         """Returns the list of business capabilities matching the search string. Sync version.
@@ -667,9 +672,9 @@ class DigitalBusiness(CollectionManager):
         anchor_domain : str, optional
             Domain to anchor the search.
         metadata_element_type : str, optional
-            Type of metadata element to search for.
-        metadata_element_subtype : str, optional
-            Subtype of metadata element.
+            Type of metadata element to search for. Defaults to "BusinessCapability".
+        metadata_element_subtype : list[str], optional
+            Subtypes of metadata element.
         skip_relationships : list[str], optional
             Relationships to skip in the graph.
         include_only_relationships : list[str], optional
@@ -702,6 +707,8 @@ class DigitalBusiness(CollectionManager):
             Format for output. Defaults to "JSON".
         report_spec : str | dict, optional
             Report specification for formatting.
+        property_names: list[str], optional
+            The names of properties to search for.
         body : dict, optional
             Request body for additional parameters.
 
@@ -717,14 +724,15 @@ class DigitalBusiness(CollectionManager):
         """
         loop = asyncio.get_event_loop()
         return loop.run_until_complete(
-            self._async_find_business_capabilities(search_string, starts_with, ends_with, ignore_case, anchor_domain,
-                                                   metadata_element_type, metadata_element_subtype, skip_relationships,
-                                                   include_only_relationships, skip_classified_elements,
-                                                   include_only_classified_elements, graph_query_depth,
-                                                   governance_zone_filter, as_of_time, effective_time,
-                                                   relationship_page_size, limit_results_by_status, sequencing_order,
-                                                   sequencing_property, start_from, page_size, output_format,
-                                                   report_spec, body)
+            self._async_find_business_capabilities(
+                search_string, starts_with, ends_with, ignore_case, anchor_domain,
+                metadata_element_type, metadata_element_subtype, skip_relationships,
+                include_only_relationships, skip_classified_elements, include_only_classified_elements,
+                graph_query_depth, governance_zone_filter, as_of_time, effective_time,
+                relationship_page_size, limit_results_by_status, sequencing_order,
+                sequencing_property, start_from, page_size, output_format, report_spec,
+                property_names, body
+            )
         )
 
     #

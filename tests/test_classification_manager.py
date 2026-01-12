@@ -15,12 +15,12 @@ import json
 import time
 
 from pydantic import ValidationError
-from rich import print, print_json
+from rich import print, print_json, traceback
 from rich.console import Console
 
 from pyegeria import EgeriaTech
 from pyegeria.core._exceptions import PyegeriaException, print_basic_exception, print_validation_error, \
-    PyegeriaConnectionException, PyegeriaAPIException
+    PyegeriaConnectionException, PyegeriaAPIException, print_exception_table
 from pyegeria.omvs.classification_manager import ClassificationManager
 
 # from pyegeria.output_formatter import make_preamble, make_md_attribute
@@ -310,13 +310,13 @@ def test_find_elements_by_property_value():
 
 
 def test_get_element_by_guid():
-    element_guid = '0759666b-5aff-4840-8432-63389bd2326a'
+    element_guid = '6ec2c097-9d6e-4e9d-ab51-186d2c437443'
     try:
         c_client = ClassificationManager(view_server, platform_url)
 
         bearer_token = c_client.create_egeria_bearer_token(user, password)
         start_time = time.perf_counter()
-        result = c_client.get_element_by_guid(element_guid, output_format="DICT", report_spec="Referenceable")
+        result = c_client.get_element_by_guid(element_guid, output_format="JSON", report_spec="Referenceable")
         duration = time.perf_counter() - start_time
         print(f"\n\tDuration was {duration} seconds")
         if isinstance(result, list|dict):
@@ -726,7 +726,7 @@ def test_retrieve_instance_for_guid():
     c_client = ClassificationManager(view_server, platform_url)
 
     bearer_token = c_client.create_egeria_bearer_token(user, password)
-    element_guid = "bda24e8a-4798-4cc0-b693-b09c688d5a6f"
+    element_guid = "59f0232c-f834-4365-8e06-83695d238d2d"
     response = c_client.retrieve_instance_for_guid(element_guid, output_format="JSON")
 
     if type(response) is dict:
@@ -1083,8 +1083,9 @@ def test_add_ownership_to_element():
     body = {
         "class": "NewClassificationRequestBody",
         "properties": {
-            "class": "OwnershipProperties",
-            "owner": "erinoverview",
+            "class": "OwnerProperties",
+            "owner": "72b2af0a-cdd6-477a-b885-08d9f2e1b3b0",
+            "ownerType": "USER_ID"
         }
     }
     try:
@@ -1094,7 +1095,9 @@ def test_add_ownership_to_element():
         c_client.clear_ownership_from_element(element_guid)
         assert True
     except PyegeriaException as e:
-        print_basic_exception(e)
+        print_exception_table(e)
+    except Exception as e:
+        console.print_exception(show_locals=True)
     finally:
         c_client.close_session()
 
@@ -1216,6 +1219,153 @@ def test_subject_area_membership():
         bearer_token = c_client.create_egeria_bearer_token(user, password)
         c_client.add_element_to_subject_area(element_guid, {})
         c_client.remove_element_from_subject_area(element_guid)
+        assert True
+    except PyegeriaException as e:
+        print_basic_exception(e)
+    finally:
+        c_client.close_session()
+
+
+def test_governance_measurements():
+    body = {
+        "class": "NewClassificationRequestBody",
+        "properties": {
+            "class": "GovernanceMeasurementsProperties",
+        }
+    }
+    update_body = {
+        "class": "UpdateClassificationRequestBody",
+        "mergeUpdate": True,
+        "properties": {
+            "class": "GovernanceMeasurementsProperties",
+        }
+    }
+    try:
+        c_client = ClassificationManager(view_server, platform_url)
+        bearer_token = c_client.create_egeria_bearer_token(user, password)
+        c_client.add_governance_measurements(element_guid, body)
+        c_client.update_governance_measurements(element_guid, update_body)
+        c_client.clear_governance_measurements(element_guid)
+        assert True
+    except PyegeriaException as e:
+        print_basic_exception(e)
+    finally:
+        c_client.close_session()
+
+
+def test_search_keywords():
+    body = {
+        "class": "NewAttachmentRequestBody",
+        "properties": {
+            "class": "SearchKeywordProperties",
+            "displayName": "testKeyword",
+        }
+    }
+    update_body = {
+        "class": "UpdateElementRequestBody",
+        "mergeUpdate": True,
+        "properties": {
+            "class": "SearchKeywordProperties",
+            "displayName": "updatedKeyword",
+        }
+    }
+    try:
+        c_client = ClassificationManager(view_server, platform_url)
+        bearer_token = c_client.create_egeria_bearer_token(user, password)
+        keyword_guid = c_client.add_search_keyword_to_element(element_guid, body)
+        if keyword_guid != "NO_GUID_RETURNED":
+            c_client.update_search_keyword(keyword_guid, update_body)
+            c_client.remove_search_keyword_from_element(keyword_guid)
+        assert True
+    except PyegeriaException as e:
+        print_basic_exception(e)
+    finally:
+        c_client.close_session()
+
+
+def test_known_duplicate_classification():
+    body = {
+        "class": "NewClassificationRequestBody",
+        "properties": {
+            "class": "KnownDuplicateProperties"
+        }
+    }
+    try:
+        c_client = ClassificationManager(view_server, platform_url)
+        bearer_token = c_client.create_egeria_bearer_token(user, password)
+        c_client.set_known_duplicate_classification(element_guid, body)
+        c_client.clear_known_duplicate_classification(element_guid)
+        assert True
+    except PyegeriaException as e:
+        print_basic_exception(e)
+    finally:
+        c_client.close_session()
+
+
+def test_peer_duplicate_link():
+    peer_guid = "peer-guid"
+    body = {
+        "class": "NewRelationshipRequestBody",
+        "properties": {
+            "class": "PeerDuplicateLinkProperties",
+        }
+    }
+    try:
+        c_client = ClassificationManager(view_server, platform_url)
+        bearer_token = c_client.create_egeria_bearer_token(user, password)
+        c_client.link_elements_as_peer_duplicates(element_guid, peer_guid, body)
+        c_client.unlink_elements_as_peer_duplicates(element_guid, peer_guid, body)
+        assert True
+    except PyegeriaException as e:
+        print_basic_exception(e)
+    finally:
+        c_client.close_session()
+
+
+def test_consolidated_duplicate_management():
+    source_guid = "source-guid"
+    body = {
+        "class": "NewClassificationRequestBody",
+        "properties": {
+            "class": "ConsolidatedDuplicateProperties",
+        }
+    }
+    link_body = {
+        "class": "NewRelationshipRequestBody",
+        "properties": {
+            "class": "ConsolidatedDuplicateLinkProperties"
+        }
+    }
+    try:
+        c_client = ClassificationManager(view_server, platform_url)
+        bearer_token = c_client.create_egeria_bearer_token(user, password)
+        c_client.set_consolidated_duplicate_classification(element_guid, body)
+        c_client.link_consolidated_duplicate_to_source(element_guid, source_guid, link_body)
+        c_client.unlink_consolidated_duplicate_from_source_element(element_guid, source_guid, link_body)
+        c_client.clear_consolidated_duplicate_classification(element_guid)
+        assert True
+    except PyegeriaException as e:
+        print_basic_exception(e)
+    finally:
+        c_client.close_session()
+
+
+def test_action_actor_linking():
+    action_guid = "action-guid"
+    actor_guid = "actor-guid"
+    body = {
+        "class": "NewRelationshipRequestBody",
+        "properties": {
+            "class": "AssignmentScopeProperties",
+            "label": "testAction",
+        }
+    }
+    try:
+        c_client = ClassificationManager(view_server, platform_url)
+        bearer_token = c_client.create_egeria_bearer_token(user, password)
+        c_client.assign_action(action_guid, actor_guid, body)
+        c_client.reassign_action(action_guid, actor_guid, body)
+        c_client.unassign_action(action_guid, actor_guid, body)
         assert True
     except PyegeriaException as e:
         print_basic_exception(e)

@@ -15,6 +15,7 @@ from pyegeria.omvs.runtime_manager import RuntimeManager
 from pyegeria.omvs.solution_architect import SolutionArchitect
 from pyegeria.omvs.template_manager_omvs import TemplateManager
 from pyegeria.omvs.valid_metadata import ValidMetadataManager
+from pyegeria.omvs.glossary_manager import GlossaryManager
 from pyegeria.omvs.governance_officer import GovernanceOfficer
 from pyegeria.omvs.collection_manager import CollectionManager
 from pyegeria.omvs.external_links import ExternalReferences
@@ -77,6 +78,7 @@ class EgeriaTech:
             "expert": MetadataExpert,
             "sol_arch": SolutionArchitect,
             "designer": DataDesigner,
+            "glossary": GlossaryManager,
             "templates": TemplateManager,
             "gov_officer": GovernanceOfficer,
             "collections": CollectionManager,

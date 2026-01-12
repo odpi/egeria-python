@@ -2303,7 +2303,7 @@ class ServerClient(BaseServerClient):
         """
 
         url = f"{self.command_root}feedback-manager/note-logs/by-name"
-        response = await self._async_get_name_request(url, _type=element_type, filter=filter,
+        response = await self._async_get_name_request(url, _type=element_type, filter_string=filter,
                                                       _gen_output=self._generate_feedback_output, start_from=start_from,
                                                       page_size=page_size, output_format=output_format,
                                                       report_spec=report_spec,
@@ -5824,8 +5824,7 @@ class ServerClient(BaseServerClient):
                                  effective_time: str = None, relationship_page_size: int = 0,
                                  limit_results_by_status: list[str] = None, sequencing_order: str = None,
                                  sequencing_property: str = None, output_format: str = "DICT",
-                                 report_spec: dict | str | None = None, start_from: int = 0,
-                                 page_size: int | None = None, property_names: list[str]=None,
+                                 report_spec: dict | str | None = None, start_from: int = 0, page_size: int = 0,
                                  body: dict | SearchStringRequestBody | None = None) -> list | dict | str:
         """Retrieve the list of asset metadata elements that contain the search string. Async version.
 
@@ -5861,8 +5860,6 @@ class ServerClient(BaseServerClient):
             One of the pyegeria exceptions will be raised if there are issues in communications, message format, or
             Egeria errors.
 
-        Args:
-            property_names ():
         """
         url = f"{self.command_root}asset-maker/assets/by-search-string"
 
@@ -5893,7 +5890,7 @@ class ServerClient(BaseServerClient):
             report_spec=report_spec,
             start_from=start_from,
             page_size=page_size,
-            property_names=property_names,
+            property_names=None,
             body=body,
         )
 
@@ -5906,8 +5903,8 @@ class ServerClient(BaseServerClient):
                     governance_zone_filter: list[str] = None, as_of_time: str = None, effective_time: str = None,
                     relationship_page_size: int = 0, limit_results_by_status: list[str] = None,
                     sequencing_order: str = None, sequencing_property: str = None, output_format: str = "DICT",
-                    report_spec: dict | str | None = None, start_from: int = 0, page_size: int | None = None,
-                    property_names: list[str]=None, body: dict | SearchStringRequestBody | None = None) -> list | dict | str:
+                    report_spec: dict | str | None = None, start_from: int = 0, page_size: int = 0,
+                    body: dict | SearchStringRequestBody | None = None) -> list | dict | str:
         """Retrieve the list of asset metadata elements that contain the search string.
 
         Parameters
@@ -5942,8 +5939,6 @@ class ServerClient(BaseServerClient):
             One of the pyegeria exceptions will be raised if there are issues in communications, message format, or
             Egeria errors.
 
-        Args:
-            property_names ():
         """
         loop = asyncio.get_event_loop()
         return loop.run_until_complete(
@@ -5960,8 +5955,7 @@ class ServerClient(BaseServerClient):
                                     relationship_page_size=relationship_page_size,
                                     limit_results_by_status=limit_results_by_status, sequencing_order=sequencing_order,
                                     sequencing_property=sequencing_property, output_format=output_format,
-                                    report_spec=report_spec, start_from=start_from, page_size=page_size,
-                                    property_names=property_names,body=body)
+                                    report_spec=report_spec, start_from=start_from, page_size=page_size, body=body)
         )
 
 

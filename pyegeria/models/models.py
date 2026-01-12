@@ -424,7 +424,7 @@ class GetRequestBody(PyegeriaModel):
     effective_time: datetime | None = None
     for_lineage: bool | None = False
     for_duplicate_processing: bool | None = False
-    relationship_page_size: int | None = None
+    relationship_page_size: int = 0
 
 
 class ResultsRequestBody(GetRequestBody):

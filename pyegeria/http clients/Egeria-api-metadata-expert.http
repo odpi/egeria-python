@@ -2,7 +2,7 @@
 # The Metadata Expert OMVS provides APIs for supporting the search, query and retrieval of open metadata.  It is an advanced API for users that understand the [Open Metadata Types](https://egeria-project.org/types/).
 
 @baseURL=https://localhost:9443
-@viewServer=qs-view-server
+@viewServer=view-server
 
 # Optional request options not show on the example requests below:
 # -------------------------------------------------------------------
@@ -49,17 +49,20 @@ Content-Type: application/json
 
 {
   "class" : "NewOpenMetadataElementRequestBody",
-  "typeName" : "Referenceable",
-  "properties": {
-                "class": "ElementProperties",
-                "propertyValueMap": {
-                    "qualifiedName": {
-                        "class": "PrimitiveTypePropertyValue",
-                        "typeName": "string",
-                        "primitiveValue": "TestElement-{{$isoTimestamp}}"
-                    }
-                }
-            }
+  "externalSourceGUID" : "",
+  "externalSourceName" : "",
+  "typeName" : "",
+  "initialClassifications" : {},
+  "anchorGUID" : "",
+  "isOwnAnchor" : false,
+  "effectiveFrom" : "{{$isoTimestamp}}",
+  "effectiveTo": "{{$isoTimestamp}}",
+  "properties" : {},
+  "parentGUID" : "",
+  "parentRelationshipTypeName" : "",
+  "parentRelationshipProperties" : {},
+  "parentAtEnd1" : true,
+  "effectiveTime" : "{{$isoTimestamp}}"
 }
 
 

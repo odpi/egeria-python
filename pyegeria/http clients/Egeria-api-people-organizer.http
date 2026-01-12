@@ -1,7 +1,7 @@
 # Egeria-people-organizer-view-service
 
 @baseURL=https://localhost:9443
-@viewServer=qs-view-server
+@viewServer=view-server
 
 ###
 # =====================================================================================================================
@@ -21,8 +21,8 @@ Content-Type: application/json
 
 ###
 
-@personOneGUID=cf73ee3b-893d-43d3-948b-15fb9482527d
-@personTwoGUID=c9fce4ac-e03b-4be7-a01d-48ac7c450a19
+@personOneGUID=add guid here
+@personTwoGUID=add guid here
 
 ###
 # @name linkPeerPerson
@@ -57,7 +57,7 @@ Content-Type: application/json
 
 
 ###
-# @name detachSupportingDefinition
+# @name detachPeerPerson
 # Detach a person profile from one of its peers.
 #
 # @param personOneGUID          unique identifier of the first person profile

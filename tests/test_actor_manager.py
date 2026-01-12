@@ -203,7 +203,7 @@ class TestActorManager:
             token = actor_client.create_egeria_bearer_token(self.good_user_2, "secret")
             start_time = time.perf_counter()
 
-            name = "Test Actor Profile"
+            name = "erinoverview"
             response = actor_client.get_actor_profiles_by_name(name)
             duration = time.perf_counter() - start_time
 

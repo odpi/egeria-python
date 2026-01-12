@@ -130,6 +130,13 @@ def list_generic(
         sys.exit(1)
 
     # Normalize/augment response
+    if result is None:
+        return {
+            "kind": "empty",
+            "heading": get_report_spec_heading(report_spec) or f"Report: {report_spec}",
+            "required": required_params,
+            "optional": optional_params,
+        }
     if result.get("kind") == "empty":
         return {
             "kind": "empty",

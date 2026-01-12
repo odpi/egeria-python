@@ -18,7 +18,7 @@ from pyegeria.view.base_report_formats import select_report_format, get_report_s
 from pyegeria.models import SearchStringRequestBody, ResultsRequestBody
 from pyegeria.view.output_formatter import populate_columns_from_properties, _extract_referenceable_properties, \
     get_required_relationships, generate_output
-from pyegeria.core.utils import body_slimmer
+from pyegeria.core.utils import body_slimmer, dynamic_catch
 from pyegeria.core._globals import max_paging_size
 from pyegeria.core._globals import NO_ELEMENTS_FOUND, NO_ASSETS_FOUND
 
@@ -115,127 +115,242 @@ class AssetCatalog(ServerClient):
             output_formats,
         )
 
-    async def _async_find_in_asset_domain(self, search_string: str, classification_names: list[str] = None,
-                                          metadata_element_subtypes: list[str] = None, start_from: int = 0,
-                                          page_size: int = max_paging_size, starts_with: bool = True,
-                                          ends_with: bool = False, ignore_case: bool = True, output_format: str="JSON",
-                                          report_spec:str="Referenceable",
+    @dynamic_catch
+    async def _async_find_in_asset_domain(self, search_string: str = "*",
+                                          starts_with: bool = True, ends_with: bool = False,
+                                          ignore_case: bool = False,
+                                          anchor_domain: str = None,
+                                          metadata_element_type: str = None,
+                                          metadata_element_subtypes: list[str] = None,
+                                          skip_relationships: list[str] = None,
+                                          include_only_relationships: list[str] = None,
+                                          skip_classified_elements: list[str] = None,
+                                          include_only_classified_elements: list[str] = None,
+                                          graph_query_depth: int = 3,
+                                          governance_zone_filter: list[str] = None, as_of_time: str = None,
+                                          effective_time: str = None, relationship_page_size: int = 0,
+                                          limit_results_by_status: list[str] = None, sequencing_order: str = None,
+                                          sequencing_property: str = None,
+                                          output_format: str = "JSON",
+                                          report_spec: str | dict = "Referenceable",
+                                          start_from: int = 0, page_size: int = 100,
+                                          property_names: list[str] = None,
                                           body: dict | SearchStringRequestBody = None) -> list | str:
-        """Locate string value in elements that are anchored to assets.  Async Version.
-        Asset: https: // egeria - project.org / concepts / asset /
+        """ Retrieve the list of asset metadata elements that contain the search string. Async Version.
 
         Parameters
         ----------
-        search_string : str
-            The string used for searching engine actions by name.
-
-        starts_with : bool, optional
-            Whether to search engine actions that start with the given search string. Default is False.
-
-        ends_with : bool, optional
-            Whether to search engine actions that end with the given search string. Default is False.
-
-        ignore_case : bool, optional
-            Whether to ignore case while searching engine actions. Default is False.
-
-        start_from : int, optional
-            The index from which to start fetching the engine actions. Default is 0.
-
-        page_size : int, optional
-            The maximum number of engine actions to fetch in a single request. Default is `max_paging_size`.
+        search_string: str
+            Search string to match against - None or '*' indicate match against all assets.
+        starts_with : bool, [default=True], optional
+            Starts with the supplied string.
+        ends_with : bool, [default=False], optional
+            Ends with the supplied string
+        ignore_case : bool, [default=False], optional
+            Ignore case when searching
+        anchor_domain: str, optional
+            The anchor domain to search in.
+        metadata_element_type: str, optional
+            The type of metadata element to search for.
+        metadata_element_subtypes: list[str], optional
+            The subtypes of metadata element to search for.
+        skip_relationships: list[str], optional
+            The types of relationships to skip.
+        include_only_relationships: list[str], optional
+            The types of relationships to include.
+        skip_classified_elements: list[str], optional
+            The types of classified elements to skip.
+        include_only_classified_elements: list[str], optional
+            The types of classified elements to include.
+        graph_query_depth: int, [default=3], optional
+            The depth of the graph query.
+        governance_zone_filter: list[str], optional
+            The governance zones to search in.
+        as_of_time: str, optional
+            The time to search as of.
+        effective_time: str, optional
+            The effective time to search at.
+        relationship_page_size: int, [default=0], optional
+            The page size for relationships.
+        limit_results_by_status: list[str], optional
+            The statuses to limit results by.
+        sequencing_order: str, optional
+            The order to sequence results by.
+        sequencing_property: str, optional
+            The property to sequence results by.
         output_format: str, default = "JSON"
             - one of "MD", "LIST", "FORM", "REPORT", "DICT", "MERMAID" or "JSON"
-        report_spec: str | dict , optional, default = None
+        report_spec: str | dict , optional, default = "Referenceable"
             - The desired output columns/fields to include.
+        start_from: int, [default=0], optional
+            When multiple pages of results are available, the page number to start from.
+        page_size: int, [default=100]
+            The number of items to return in a single page.
+        property_names: list[str], optional
+            The names of properties to search for.
         body: dict | SearchStringRequestBody, optional, default = None
             - if provided, the search parameters in the body will supercede other attributes, such as "search_string"
 
-
         Returns
-        -------
-        List[dict] or str
-            A list of dictionaries representing the engine actions found based on the search query.
-            If no actions are found, returns the string "no actions".
+-------
+        List | str
 
-        Args:
-            classification_names ():
-            output_format ():
-            report_spec ():
+        Output depends on the output format specified.
 
-        Raises:
-        ------
+        Raises
+-------
+
+        ValidationError
+          If the client passes incorrect parameters on the request that don't conform to the data model.
         PyegeriaException
-
-        Notes
-        -----
+          Issues raised in communicating or server side processing.
+        NotAuthorizedException
+          The principle specified by the user_id does not have authorization for the requested action
 
         """
-
-        url = (
-            f"{self.platform_url}/servers/{self.view_server}/api/open-metadata/asset-catalog/assets/in-domain/"
-            f"by-search-string"
-        )
-        response = await self._async_find_request(url, _type="ExternalReference",
-                                                  _gen_output=self._generate_asset_output, search_string=search_string,
-                                                  output_format="JSON", page_size=0, body=body)
+        url = f"{self.platform_url}/servers/{self.view_server}/api/open-metadata/asset-catalog/assets/in-domain/by-search-string"
+        response = await self._async_find_request(url, _type="Asset", _gen_output=self._generate_asset_output,
+                                                  search_string=search_string, starts_with=starts_with,
+                                                  ends_with=ends_with, ignore_case=ignore_case,
+                                                  anchor_domain=anchor_domain,
+                                                  metadata_element_type=metadata_element_type,
+                                                  metadata_element_subtypes=metadata_element_subtypes,
+                                                  skip_relationships=skip_relationships,
+                                                  include_only_relationships=include_only_relationships,
+                                                  skip_classified_elements=skip_classified_elements,
+                                                  include_only_classified_elements=include_only_classified_elements,
+                                                  graph_query_depth=graph_query_depth,
+                                                  governance_zone_filter=governance_zone_filter,
+                                                  as_of_time=as_of_time, effective_time=effective_time,
+                                                  relationship_page_size=relationship_page_size,
+                                                  limit_results_by_status=limit_results_by_status,
+                                                  sequencing_order=sequencing_order,
+                                                  sequencing_property=sequencing_property,
+                                                  output_format=output_format, report_spec=report_spec,
+                                                  start_from=start_from, page_size=page_size,
+                                                  property_names=property_names, body=body)
 
         return response
 
-    def find_in_asset_domain(self, search_string: str, classification_names: list[str] = None,
-                                          metadata_element_subtypes: list[str] = None, start_from: int = 0,
-                                          page_size: int = max_paging_size, starts_with: bool = True,
-                                          ends_with: bool = False, ignore_case: bool = True, output_format: str="JSON",
-                                          report_spec:str="Referenceable",
-                                          body: dict | SearchStringRequestBody = None)-> list | str:
-
-        """Retrieve the list of assets that contain the search string.
+    @dynamic_catch
+    def find_in_asset_domain(self, search_string: str = "*",
+                             starts_with: bool = True, ends_with: bool = False,
+                             ignore_case: bool = False,
+                             anchor_domain: str = None,
+                             metadata_element_type: str = None,
+                             metadata_element_subtypes: list[str] = None,
+                             skip_relationships: list[str] = None,
+                             include_only_relationships: list[str] = None,
+                             skip_classified_elements: list[str] = None,
+                             include_only_classified_elements: list[str] = None,
+                             graph_query_depth: int = 3,
+                             governance_zone_filter: list[str] = None, as_of_time: str = None,
+                             effective_time: str = None, relationship_page_size: int = 0,
+                             limit_results_by_status: list[str] = None, sequencing_order: str = None,
+                             sequencing_property: str = None,
+                             output_format: str = "JSON",
+                             report_spec: str | dict = "Referenceable",
+                             start_from: int = 0, page_size: int = 100,
+                             property_names: list[str] = None,
+                             body: dict | SearchStringRequestBody = None) -> list | str:
+        """ Retrieve the list of asset metadata elements that contain the search string.
 
         Parameters
         ----------
-        search_string : str
-            The string used for searching assets.
-        classification_names : list[str], optional
-            A list of classification names to filter by.
-        metadata_element_subtypes : list[str], optional
-            A list of metadata element subtypes to filter by.
-        start_from : int, optional
-            The index from which to start fetching the assets. Default is 0.
-        page_size : int, optional
-            The maximum number of assets to fetch in a single request. Default is `max_paging_size`.
-        starts_with : bool, optional
-            Whether to search assets that start with the given search string. Default is True.
-        ends_with : bool, optional
-            Whether to search assets that end with the given search string. Default is False.
-        ignore_case : bool, optional
-            Whether to ignore case while searching. Default is True.
-        output_format : str, default = "JSON"
-            The desired output format. One of "MD", "LIST", "FORM", "REPORT", "DICT", "MERMAID", or "JSON".
-        report_spec : str | dict, optional
-            The desired output columns/fields to include. Default is "Referenceable".
-        body : dict | SearchStringRequestBody, optional
-            If provided, the search parameters in the body will supersede other attributes.
+        search_string: str
+            Search string to match against - None or '*' indicate match against all assets.
+        starts_with : bool, [default=True], optional
+            Starts with the supplied string.
+        ends_with : bool, [default=False], optional
+            Ends with the supplied string
+        ignore_case : bool, [default=False], optional
+            Ignore case when searching
+        anchor_domain: str, optional
+            The anchor domain to search in.
+        metadata_element_type: str, optional
+            The type of metadata element to search for.
+        metadata_element_subtypes: list[str], optional
+            The subtypes of metadata element to search for.
+        skip_relationships: list[str], optional
+            The types of relationships to skip.
+        include_only_relationships: list[str], optional
+            The types of relationships to include.
+        skip_classified_elements: list[str], optional
+            The types of classified elements to skip.
+        include_only_classified_elements: list[str], optional
+            The types of classified elements to include.
+        graph_query_depth: int, [default=3], optional
+            The depth of the graph query.
+        governance_zone_filter: list[str], optional
+            The governance zones to search in.
+        as_of_time: str, optional
+            The time to search as of.
+        effective_time: str, optional
+            The effective time to search at.
+        relationship_page_size: int, [default=0], optional
+            The page size for relationships.
+        limit_results_by_status: list[str], optional
+            The statuses to limit results by.
+        sequencing_order: str, optional
+            The order to sequence results by.
+        sequencing_property: str, optional
+            The property to sequence results by.
+        output_format: str, default = "JSON"
+            - one of "MD", "LIST", "FORM", "REPORT", "DICT", "MERMAID" or "JSON"
+        report_spec: str | dict , optional, default = "Referenceable"
+            - The desired output columns/fields to include.
+        start_from: int, [default=0], optional
+            When multiple pages of results are available, the page number to start from.
+        page_size: int, [default=100]
+            The number of items to return in a single page.
+        property_names: list[str], optional
+            The names of properties to search for.
+        body: dict | SearchStringRequestBody, optional, default = None
+            - if provided, the search parameters in the body will supercede other attributes, such as "search_string"
 
         Returns
-        -------
-        list[dict] or str
-            A list of dictionaries representing the assets found.
-            If no assets are found, returns NO_ASSETS_FOUND.
+-------
+        List | str
+
+        Output depends on the output format specified.
 
         Raises
-        ------
+-------
+
+        ValidationError
+          If the client passes incorrect parameters on the request that don't conform to the data model.
         PyegeriaException
-            If there are issues in communications, message format, or Egeria errors.
-        PyegeriaNotAuthorizedException
-            The principle specified by the user_id does not have authorization.
+          Issues raised in communicating or server side processing.
+        NotAuthorizedException
+          The principle specified by the user_id does not have authorization for the requested action
+
         """
         loop = asyncio.get_event_loop()
-        response = loop.run_until_complete(
-            self._async_find_in_asset_domain(search_string, classification_names,
-                                             metadata_element_subtypes, start_from, page_size,
-                                             starts_with, ends_with, ignore_case,
-                                             output_format, report_spec, body)
-        )
-        return response
+        return loop.run_until_complete(self._async_find_in_asset_domain(search_string=search_string,
+                                                                       starts_with=starts_with,
+                                                                       ends_with=ends_with,
+                                                                       ignore_case=ignore_case,
+                                                                       anchor_domain=anchor_domain,
+                                                                       metadata_element_type=metadata_element_type,
+                                                                       metadata_element_subtypes=metadata_element_subtypes,
+                                                                       skip_relationships=skip_relationships,
+                                                                       include_only_relationships=include_only_relationships,
+                                                                       skip_classified_elements=skip_classified_elements,
+                                                                       include_only_classified_elements=include_only_classified_elements,
+                                                                       graph_query_depth=graph_query_depth,
+                                                                       governance_zone_filter=governance_zone_filter,
+                                                                       as_of_time=as_of_time,
+                                                                       effective_time=effective_time,
+                                                                       relationship_page_size=relationship_page_size,
+                                                                       limit_results_by_status=limit_results_by_status,
+                                                                       sequencing_order=sequencing_order,
+                                                                       sequencing_property=sequencing_property,
+                                                                       output_format=output_format,
+                                                                       report_spec=report_spec,
+                                                                       start_from=start_from,
+                                                                       page_size=page_size,
+                                                                       property_names=property_names,
+                                                                       body=body))
 
     async def _async_get_asset_graph(
         self,

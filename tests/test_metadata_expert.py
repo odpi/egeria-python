@@ -93,7 +93,7 @@ class TestMetadataExpert:
 
     def test_delete_metadata_element(self, expert_client):
         """Test delete_metadata_element"""
-        guid = "some-guid"
+        guid = "6ec2c097-9d6e-4e9d-ab51-186d2c437443"
         body = OpenMetadataDeleteRequestBody(class_="OpenMetadataDeleteRequestBody")
         try:
             expert_client.delete_metadata_element(guid, body)

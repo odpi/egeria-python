@@ -1420,166 +1420,241 @@ class TimeKeeper(ServerClient):
         )
 
     @dynamic_catch
-    async def _async_find_context_events(
-        self,
-        search_string: str = "*",
-        skip_classification_names: list[str] = None,
-        metadata_element_subtypes: list[str] = None,
-        starts_with: bool = True,
-        ends_with: bool = False,
-        ignore_case: bool = False,
-        start_from: int = 0,
-        page_size: int = 0,
-        output_format: str = "JSON",
-        report_spec: str | dict = "Referenceable",
-        body: dict | SearchStringRequestBody = None,
-    ) -> list | str:
-        """Find context events. Async version.
+    async def _async_find_context_events(self, search_string: str = "*",
+                                         starts_with: bool = True, ends_with: bool = False,
+                                         ignore_case: bool = False,
+                                         anchor_domain: str = None,
+                                         metadata_element_type: str = None,
+                                         metadata_element_subtypes: list[str] = None,
+                                         skip_relationships: list[str] = None,
+                                         include_only_relationships: list[str] = None,
+                                         skip_classified_elements: list[str] = None,
+                                         include_only_classified_elements: list[str] = None,
+                                         graph_query_depth: int = 3,
+                                         governance_zone_filter: list[str] = None, as_of_time: str = None,
+                                         effective_time: str = None, relationship_page_size: int = 0,
+                                         limit_results_by_status: list[str] = None, sequencing_order: str = None,
+                                         sequencing_property: str = None,
+                                         output_format: str = "JSON",
+                                         report_spec: str | dict = "Referenceable",
+                                         start_from: int = 0, page_size: int = 100,
+                                         property_names: list[str] = None,
+                                         body: dict | SearchStringRequestBody = None) -> list | str:
+        """ Retrieve the list of context event metadata elements that contain the search string. Async Version.
 
         Parameters
         ----------
-        search_string : str, optional
-            The string to search for.
-        skip_classification_names : list[str], optional
-            The list of classification names to skip.
-        metadata_element_subtypes : list[str], optional
-            The list of metadata element subtypes to filter by.
-        starts_with : bool, optional
-            Whether the search string must be at the start.
-        ends_with : bool, optional
-            Whether the search string must be at the end.
-        ignore_case : bool, optional
-            Whether to ignore case in the search.
-        start_from : int, optional
-            The starting index for paged results.
-        page_size : int, optional
-            The maximum number of results to return.
-        output_format : str, optional
-            The desired output format.
-        report_spec : str | dict, optional
-            The desired output columns/fields to include.
-        body : dict | SearchStringRequestBody, optional
-            The request body for the search.
+        search_string: str
+            Search string to match against - None or '*' indicate match against all context events.
+        starts_with : bool, [default=True], optional
+            Starts with the supplied string.
+        ends_with : bool, [default=False], optional
+            Ends with the supplied string
+        ignore_case : bool, [default=False], optional
+            Ignore case when searching
+        anchor_domain: str, optional
+            The anchor domain to search in.
+        metadata_element_type: str, optional
+            The type of metadata element to search for.
+        metadata_element_subtypes: list[str], optional
+            The subtypes of metadata element to search for.
+        skip_relationships: list[str], optional
+            The types of relationships to skip.
+        include_only_relationships: list[str], optional
+            The types of relationships to include.
+        skip_classified_elements: list[str], optional
+            The types of classified elements to skip.
+        include_only_classified_elements: list[str], optional
+            The types of classified elements to include.
+        graph_query_depth: int, [default=3], optional
+            The depth of the graph query.
+        governance_zone_filter: list[str], optional
+            The governance zones to search in.
+        as_of_time: str, optional
+            The time to search as of.
+        effective_time: str, optional
+            The effective time to search at.
+        relationship_page_size: int, [default=0], optional
+            The page size for relationships.
+        limit_results_by_status: list[str], optional
+            The statuses to limit results by.
+        sequencing_order: str, optional
+            The order to sequence results by.
+        sequencing_property: str, optional
+            The property to sequence results by.
+        output_format: str, default = "JSON"
+            - one of "MD", "LIST", "FORM", "REPORT", "DICT", "MERMAID" or "JSON"
+        report_spec: str | dict , optional, default = "Referenceable"
+            - The desired output columns/fields to include.
+        start_from: int, [default=0], optional
+            When multiple pages of results are available, the page number to start from.
+        page_size: int, [default=100]
+            The number of items to return in a single page.
+        property_names: list[str], optional
+            The names of properties to search for.
+        body: dict | SearchStringRequestBody, optional, default = None
+            - if provided, the search parameters in the body will supercede other attributes, such as "search_string"
 
         Returns
         -------
-        list | str
-            The list of matching context events or a message if none found.
+        List | str
+
+        Output depends on the output format specified.
 
         Raises
-        ------
-        PyegeriaException
-            If there are issues in communications, message format, or Egeria errors.
+-------
 
-        Notes
-        -----
-        Sample JSON body:
-        ```json
-        {
-          "class" : "SearchStringRequestBody",
-          "searchString": "Event",
-          "startsWith" : true,
-          "ignoreCase" : true
-        }
-        ```
+        ValidationError
+          If the client passes incorrect parameters on the request that don't conform to the data model.
+        PyegeriaException
+          Issues raised in communicating or server side processing.
+        NotAuthorizedException
+          The principle specified by the user_id does not have authorization for the requested action
+
         """
         url = f"{self.platform_url}/servers/{self.view_server}/api/open-metadata/time-keeper/context-events/by-search-string"
-        return await self._async_find_request(
-            url,
-            _type="ContextEvent",
-            _gen_output=self._generate_context_event_output,
-            search_string=search_string,
-            skip_classified_elements=skip_classification_names,
-            metadata_element_subtypes=metadata_element_subtypes,
-            starts_with=starts_with,
-            ends_with=ends_with,
-            ignore_case=ignore_case,
-            start_from=start_from,
-            page_size=page_size,
-            output_format=output_format,
-            report_spec=report_spec,
-            body=body,
-        )
+        response = await self._async_find_request(url, _type="ContextEvent", _gen_output=self._generate_context_event_output,
+                                                  search_string=search_string, starts_with=starts_with,
+                                                  ends_with=ends_with, ignore_case=ignore_case,
+                                                  anchor_domain=anchor_domain,
+                                                  metadata_element_type=metadata_element_type,
+                                                  metadata_element_subtypes=metadata_element_subtypes,
+                                                  skip_relationships=skip_relationships,
+                                                  include_only_relationships=include_only_relationships,
+                                                  skip_classified_elements=skip_classified_elements,
+                                                  include_only_classified_elements=include_only_classified_elements,
+                                                  graph_query_depth=graph_query_depth,
+                                                  governance_zone_filter=governance_zone_filter,
+                                                  as_of_time=as_of_time, effective_time=effective_time,
+                                                  relationship_page_size=relationship_page_size,
+                                                  limit_results_by_status=limit_results_by_status,
+                                                  sequencing_order=sequencing_order,
+                                                  sequencing_property=sequencing_property,
+                                                  output_format=output_format, report_spec=report_spec,
+                                                  start_from=start_from, page_size=page_size,
+                                                  property_names=property_names, body=body)
 
-    def find_context_events(
-        self,
-        search_string: str = "*",
-        classification_names: list[str] = None,
-        metadata_element_subtypes: list[str] = None,
-        starts_with: bool = True,
-        ends_with: bool = False,
-        ignore_case: bool = False,
-        start_from: int = 0,
-        page_size: int = 0,
-        output_format: str = "JSON",
-        report_spec: str | dict = "Referenceable",
-        body: dict | SearchStringRequestBody = None,
-    ) -> list | str:
-        """Find context events.
+        return response
+
+    @dynamic_catch
+    def find_context_events(self, search_string: str = "*",
+                            starts_with: bool = True, ends_with: bool = False,
+                            ignore_case: bool = False,
+                            anchor_domain: str = None,
+                            metadata_element_type: str = None,
+                            metadata_element_subtypes: list[str] = None,
+                            skip_relationships: list[str] = None,
+                            include_only_relationships: list[str] = None,
+                            skip_classified_elements: list[str] = None,
+                            include_only_classified_elements: list[str] = None,
+                            graph_query_depth: int = 3,
+                            governance_zone_filter: list[str] = None, as_of_time: str = None,
+                            effective_time: str = None, relationship_page_size: int = 0,
+                            limit_results_by_status: list[str] = None, sequencing_order: str = None,
+                            sequencing_property: str = None,
+                            output_format: str = "JSON",
+                            report_spec: str | dict = "Referenceable",
+                            start_from: int = 0, page_size: int = 100,
+                            property_names: list[str] = None,
+                            body: dict | SearchStringRequestBody = None) -> list | str:
+        """ Retrieve the list of context event metadata elements that contain the search string.
 
         Parameters
         ----------
-        search_string : str, optional
-            The string to search for.
-        classification_names : list[str], optional
-            The list of classification names to filter by.
-        metadata_element_subtypes : list[str], optional
-            The list of metadata element subtypes to filter by.
-        starts_with : bool, optional
-            Whether the search string must be at the start.
-        ends_with : bool, optional
-            Whether the search string must be at the end.
-        ignore_case : bool, optional
-            Whether to ignore case in the search.
-        start_from : int, optional
-            The starting index for paged results.
-        page_size : int, optional
-            The maximum number of results to return.
-        output_format : str, optional
-            The desired output format.
-        report_spec : str | dict, optional
-            The desired output columns/fields to include.
-        body : dict | SearchStringRequestBody, optional
-            The request body for the search.
+        search_string: str
+            Search string to match against - None or '*' indicate match against all context events.
+        starts_with : bool, [default=True], optional
+            Starts with the supplied string.
+        ends_with : bool, [default=False], optional
+            Ends with the supplied string
+        ignore_case : bool, [default=False], optional
+            Ignore case when searching
+        anchor_domain: str, optional
+            The anchor domain to search in.
+        metadata_element_type: str, optional
+            The type of metadata element to search for.
+        metadata_element_subtypes: list[str], optional
+            The subtypes of metadata element to search for.
+        skip_relationships: list[str], optional
+            The types of relationships to skip.
+        include_only_relationships: list[str], optional
+            The types of relationships to include.
+        skip_classified_elements: list[str], optional
+            The types of classified elements to skip.
+        include_only_classified_elements: list[str], optional
+            The types of classified elements to include.
+        graph_query_depth: int, [default=3], optional
+            The depth of the graph query.
+        governance_zone_filter: list[str], optional
+            The governance zones to search in.
+        as_of_time: str, optional
+            The time to search as of.
+        effective_time: str, optional
+            The effective time to search at.
+        relationship_page_size: int, [default=0], optional
+            The page size for relationships.
+        limit_results_by_status: list[str], optional
+            The statuses to limit results by.
+        sequencing_order: str, optional
+            The order to sequence results by.
+        sequencing_property: str, optional
+            The property to sequence results by.
+        output_format: str, default = "JSON"
+            - one of "MD", "LIST", "FORM", "REPORT", "DICT", "MERMAID" or "JSON"
+        report_spec: str | dict , optional, default = "Referenceable"
+            - The desired output columns/fields to include.
+        start_from: int, [default=0], optional
+            When multiple pages of results are available, the page number to start from.
+        page_size: int, [default=100]
+            The number of items to return in a single page.
+        property_names: list[str], optional
+            The names of properties to search for.
+        body: dict | SearchStringRequestBody, optional, default = None
+            - if provided, the search parameters in the body will supercede other attributes, such as "search_string"
 
         Returns
-        -------
-        list | str
-            The list of matching context events or a message if none found.
+-------
+        List | str
+
+        Output depends on the output format specified.
 
         Raises
         ------
-        PyegeriaException
-            If there are issues in communications, message format, or Egeria errors.
 
-        Notes
-        -----
-        Sample JSON body:
-        ```json
-        {
-          "class" : "SearchStringRequestBody",
-          "searchString": "Event",
-          "startsWith" : true,
-          "ignoreCase" : true
-        }
-        ```
+        ValidationError
+          If the client passes incorrect parameters on the request that don't conform to the data model.
+        PyegeriaException
+          Issues raised in communicating or server side processing.
+        NotAuthorizedException
+          The principle specified by the user_id does not have authorization for the requested action
+
         """
         loop = asyncio.get_event_loop()
-        return loop.run_until_complete(
-            self._async_find_context_events(
-                search_string,
-                classification_names,
-                metadata_element_subtypes,
-                starts_with,
-                ends_with,
-                ignore_case,
-                start_from,
-                page_size,
-                output_format,
-                report_spec,
-                body,
-            )
-        )
+        return loop.run_until_complete(self._async_find_context_events(search_string=search_string,
+                                                                      starts_with=starts_with,
+                                                                      ends_with=ends_with,
+                                                                      ignore_case=ignore_case,
+                                                                      anchor_domain=anchor_domain,
+                                                                      metadata_element_type=metadata_element_type,
+                                                                      metadata_element_subtypes=metadata_element_subtypes,
+                                                                      skip_relationships=skip_relationships,
+                                                                      include_only_relationships=include_only_relationships,
+                                                                      skip_classified_elements=skip_classified_elements,
+                                                                      include_only_classified_elements=include_only_classified_elements,
+                                                                      graph_query_depth=graph_query_depth,
+                                                                      governance_zone_filter=governance_zone_filter,
+                                                                      as_of_time=as_of_time,
+                                                                      effective_time=effective_time,
+                                                                      relationship_page_size=relationship_page_size,
+                                                                      limit_results_by_status=limit_results_by_status,
+                                                                      sequencing_order=sequencing_order,
+                                                                      sequencing_property=sequencing_property,
+                                                                      output_format=output_format,
+                                                                      report_spec=report_spec,
+                                                                      start_from=start_from,
+                                                                      page_size=page_size,
+                                                                      property_names=property_names,
+                                                                      body=body))
 
     @dynamic_catch
     async def _async_get_context_event_by_guid(

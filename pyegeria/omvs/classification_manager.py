@@ -16,7 +16,8 @@ from pyegeria.core._globals import default_time_out, NO_ELEMENTS_FOUND
 from pyegeria.view.base_report_formats import select_report_spec, get_report_spec_match
 from pyegeria.models import LevelIdentifierQueryBody, FilterRequestBody, GetRequestBody, NewClassificationRequestBody, \
     DeleteClassificationRequestBody, NewRelationshipRequestBody, DeleteRelationshipRequestBody, \
-    UpdateRelationshipRequestBody, SearchStringRequestBody
+    UpdateRelationshipRequestBody, SearchStringRequestBody, UpdateClassificationRequestBody, \
+    NewAttachmentRequestBody, UpdateElementRequestBody, FindPropertyNamesRequestBody, ResultsRequestBody
 from pyegeria.view.output_formatter import (
     generate_output,
     _extract_referenceable_properties,
@@ -1090,7 +1091,7 @@ body: dict | FilterRequestBody = None,
     async def _async_get_governed_elements(
             self,
             gov_def_guid: str,
-            body: dict = None,
+            body: dict | ResultsRequestBody = None,
             output_format: str = "JSON",
             report_spec: dict | str = None,
             start_from: int = 0,
@@ -1104,7 +1105,7 @@ body: dict | FilterRequestBody = None,
         __________
         gov_def_guid: str
             Governance definition linked by governed-by relationship.
-        body: dict
+        body: dict | ResultsRequestBody
             Details of the query.
         output_format: str, default = "JSON"
             Type of output to return.
@@ -1154,7 +1155,7 @@ body: dict | FilterRequestBody = None,
     def get_governed_elements(
             self,
             gov_def_guid: str,
-            body: dict = None,
+            body: dict | ResultsRequestBody = None,
             output_format: str = "JSON",
             report_spec: dict | str = None,
             start_from: int = 0,
@@ -1168,7 +1169,7 @@ body: dict | FilterRequestBody = None,
         __________
         gov_def_guid: str
             Governance definition linked by governed-by relationship.
-        body: dict
+        body: dict | ResultsRequestBody
             Details of the query.
         output_format: str, default = "JSON"
             Type of output to return.
@@ -1217,7 +1218,7 @@ body: dict | FilterRequestBody = None,
     async def _async_get_governed_by_definitions(
             self,
             element_guid: str,
-            body: dict = None,
+            body: dict | ResultsRequestBody = None,
             output_format: str = "JSON",
             report_spec: dict | str = None,
             start_from: int = 0,
@@ -1231,7 +1232,7 @@ body: dict | FilterRequestBody = None,
         __________
         element_guid: str
             Element to retrieve information for.
-        body: dict
+        body: dict | ResultsRequestBody
             Details of the query.
         output_format: str, default = "JSON"
             Type of output to return.
@@ -1281,7 +1282,7 @@ body: dict | FilterRequestBody = None,
     def get_governed_by_definitions(
             self,
             element_guid: str,
-            body: dict = None,
+            body: dict | ResultsRequestBody = None,
             output_format: str = "JSON",
             report_spec: dict | str = None,
             start_from: int = 0,
@@ -1295,7 +1296,7 @@ body: dict | FilterRequestBody = None,
         __________
         element_guid: str
             element to retrieve governed-by relationship for.
-        body: dict
+        body: dict | ResultsRequestBody
             Details of the query.
         output_format: str, default = "JSON"
             Type of output to return.
@@ -1344,7 +1345,7 @@ body: dict | FilterRequestBody = None,
     async def _async_get_source_elements(
             self,
             element_guid: str,
-            body: dict = None,
+            body: dict | ResultsRequestBody = None,
             output_format: str = "JSON",
             report_spec: dict | str = None,
             start_from: int = 0,
@@ -1361,7 +1362,7 @@ body: dict | FilterRequestBody = None,
         __________
         element_guid: str
             Element to retrieve information for.
-        body: dict
+        body: dict | ResultsRequestBody
             Details of the query.
         output_format: str, default = "JSON"
             Type of output to return.
@@ -1411,7 +1412,7 @@ body: dict | FilterRequestBody = None,
     def get_source_elements(
             self,
             element_guid: str,
-            body: dict = None,
+            body: dict | ResultsRequestBody = None,
             output_format: str = "JSON",
             report_spec: dict | str = None,
             start_from: int = 0,
@@ -1420,7 +1421,7 @@ body: dict | FilterRequestBody = None,
         """
             Retrieve the elements linked via a SourceFrom relationship to the requested element.
             The elements returned were used to create the requested element.
-            Typically only one element is returned.  Async version.
+            Typically only one element is returned.
 
             https://egeria-project.org/types/0/0011-Managing-Referenceables/
 
@@ -1428,7 +1429,7 @@ body: dict | FilterRequestBody = None,
         __________
         element_guid: str
             Element to retrieve information for.
-        body: dict
+        body: dict | ResultsRequestBody
             Details of the query.
         output_format: str, default = "JSON"
             Type of output to return.
@@ -1468,7 +1469,7 @@ body: dict | FilterRequestBody = None,
 
         loop = asyncio.get_event_loop()
         response = loop.run_until_complete(
-            self._async_get_certified_elements(element_guid, body, output_format, report_spec, start_from,
+            self._async_get_source_elements(element_guid, body, output_format, report_spec, start_from,
                                               page_size)
         )
         return response
@@ -1477,7 +1478,7 @@ body: dict | FilterRequestBody = None,
     async def _async_get_elements_sourced_from(
             self,
             element_guid: str,
-            body: dict = None,
+            body: dict | ResultsRequestBody = None,
             output_format: str = "JSON",
             report_spec: dict | str = None,
             start_from: int = 0,
@@ -1493,7 +1494,7 @@ body: dict | FilterRequestBody = None,
         __________
         element_guid: str
             Element to retrieve information for.
-        body: dict
+        body: dict | ResultsRequestBody
             Details of the query.
         output_format: str, default = "JSON"
             Type of output to return.
@@ -1543,7 +1544,7 @@ body: dict | FilterRequestBody = None,
     def get_elements_sourced_from(
             self,
             element_guid: str,
-            body: dict = None,
+            body: dict | ResultsRequestBody = None,
             output_format: str = "JSON",
             report_spec: dict | str = None,
             start_from: int = 0,
@@ -1559,7 +1560,7 @@ body: dict | FilterRequestBody = None,
         __________
         element_guid: str
             Element to retrieve information for.
-        body: dict
+        body: dict | ResultsRequestBody
             Details of the query.
         output_format: str, default = "JSON"
             Type of output to return.
@@ -1608,7 +1609,7 @@ body: dict | FilterRequestBody = None,
     async def _async_get_scopes(
             self,
             element_guid: str,
-            body: dict = None,
+            body: dict | ResultsRequestBody = None,
             output_format: str = "JSON",
             report_spec: dict | str = None,
             start_from: int = 0,
@@ -1622,7 +1623,7 @@ body: dict | FilterRequestBody = None,
         __________
         element_guid: str
             Element to retrieve information for.
-        body: dict
+        body: dict | ResultsRequestBody
             Details of the query.
         output_format: str, default = "JSON"
             Type of output to return.
@@ -1672,7 +1673,7 @@ body: dict | FilterRequestBody = None,
     def get_scopes(
             self,
             element_guid: str,
-            body: dict = None,
+            body: dict | ResultsRequestBody = None,
             output_format: str = "JSON",
             report_spec: dict | str = None,
             start_from: int = 0,
@@ -1686,7 +1687,7 @@ body: dict | FilterRequestBody = None,
         __________
         element_guid: str
             Element to retrieve information for.
-        body: dict
+        body: dict | ResultsRequestBody
             Details of the query.
         output_format: str, default = "JSON"
             Type of output to return.
@@ -1726,7 +1727,7 @@ body: dict | FilterRequestBody = None,
 
         loop = asyncio.get_event_loop()
         response = loop.run_until_complete(
-            self._async_get_certified_elements(element_guid, body, output_format, report_spec, start_from,
+            self._async_get_scopes(element_guid, body, output_format, report_spec, start_from,
                                               page_size)
         )
         return response
@@ -1735,7 +1736,7 @@ body: dict | FilterRequestBody = None,
     async def _async_get_scoped_elements(
             self,
             scope_guid: str,
-            body: dict = None,
+            body: dict | ResultsRequestBody = None,
             output_format: str = "JSON",
             report_spec: dict | str = None,
             start_from: int = 0,
@@ -1749,7 +1750,7 @@ body: dict | FilterRequestBody = None,
         __________
         scope_guid: str
              Scope to retrieve information for.
-        body: dict
+        body: dict | ResultsRequestBody
             Details of the query.
         output_format: str, default = "JSON"
             Type of output to return.
@@ -1799,21 +1800,21 @@ body: dict | FilterRequestBody = None,
     def get_scoped_elements(
             self,
             scope_guid: str,
-            body: dict = None,
+            body: dict | ResultsRequestBody = None,
             output_format: str = "JSON",
             report_spec: dict | str = None,
             start_from: int = 0,
             page_size: int = 0
     ) -> list | str:
         """
-             Retrieve the elements linked via the ScopedBy relationship to the scope. Async version.
+             Retrieve the elements linked via the ScopedBy relationship to the scope.
             scopes: https://egeria-project.org/types/1/0120-Assignment-Scopes/
 
         Parameters
         __________
         scope_guid: str
             Scope to retrieve information for.
-        body: dict
+        body: dict | ResultsRequestBody
             Details of the query.
         output_format: str, default = "JSON"
             Type of output to return.
@@ -1853,7 +1854,7 @@ body: dict | FilterRequestBody = None,
 
         loop = asyncio.get_event_loop()
         response = loop.run_until_complete(
-            self._async_get_scoped_elements(scope_guid,body, output_format, report_spec, start_from, page_size)
+            self._async_get_scoped_elements(scope_guid, body, output_format, report_spec, start_from, page_size)
         )
         return response
 
@@ -1861,7 +1862,7 @@ body: dict | FilterRequestBody = None,
     async def _async_get_licensed_elements(
             self,
             license_type_guid: str,
-            body: dict = None,
+            body: dict | ResultsRequestBody = None,
             output_format: str = "JSON",
             report_spec: dict | str = None,
             start_from: int = 0,
@@ -1869,12 +1870,12 @@ body: dict | FilterRequestBody = None,
     ) -> list | str:
         """
             Retrieve the elements linked via a License relationship to the requested LicenseType. Async version.
-            https://https://egeria-project.org/types/4/0481-Licenses/
+            https://egeria-project.org/types/0/0030-Licenses/
         Parameters
         __________
         license_type_guid: str
             License type to retrieve information for.
-        body: dict
+        body: dict | ResultsRequestBody
             Details of the query.
         output_format: str, default = "JSON"
             Type of output to return.
@@ -1924,7 +1925,7 @@ body: dict | FilterRequestBody = None,
     def get_licensed_elements(
             self,
             license_type_guid: str,
-            body: dict = None,
+            body: dict | ResultsRequestBody = None,
             output_format: str = "JSON",
             report_spec: dict | str = None,
             start_from: int = 0,
@@ -1932,13 +1933,13 @@ body: dict | FilterRequestBody = None,
     ) -> list | str:
         """
             Retrieve the elements linked via a License relationship to the requested LicenseType.
-            https://https://egeria-project.org/types/4/0481-Licenses/
+            https://egeria-project.org/types/0/0030-Licenses/
 
         Parameters
         __________
         license_type_guid: str
             License type to retrieve information for.
-        body: dict
+        body: dict | ResultsRequestBody
             Details of the query.
         output_format: str, default = "JSON"
             Type of output to return.
@@ -1986,7 +1987,7 @@ body: dict | FilterRequestBody = None,
     async def _async_get_licenses(
             self,
             element_guid: str,
-            body: dict = None,
+            body: dict | ResultsRequestBody = None,
             output_format: str = "JSON",
             report_spec: dict | str = None,
             start_from: int = 0,
@@ -1994,13 +1995,13 @@ body: dict | FilterRequestBody = None,
     ) -> list | str:
         """
             Retrieve the license types linked via a License relationship to the requested element. Async version.
-            https://https://egeria-project.org/types/4/0481-Licenses/
+            https://egeria-project.org/types/0/0030-Licenses/
 
         Parameters
         __________
         element_guid: str
             Element to retrieve information for.
-        body: dict
+        body: dict | ResultsRequestBody
             Details of the query.
         output_format: str, default = "JSON"
             Type of output to return.
@@ -2050,7 +2051,7 @@ body: dict | FilterRequestBody = None,
     def get_licenses(
             self,
             element_guid: str,
-            body: dict = None,
+            body: dict | ResultsRequestBody = None,
             output_format: str = "JSON",
             report_spec: dict | str = None,
             start_from: int = 0,
@@ -2058,13 +2059,13 @@ body: dict | FilterRequestBody = None,
     ) -> list | str:
         """
             Retrieve the license types linked via a License relationship to the requested element.
-            https://https://egeria-project.org/types/4/0481-Licenses/
+            https://egeria-project.org/types/0/0030-Licenses/
 
         Parameters
         __________
         element_guid: str
             Element to retrieve information for.
-        body: dict
+        body: dict | ResultsRequestBody
             Details of the query.
         output_format: str, default = "JSON"
             Type of output to return.
@@ -2113,7 +2114,7 @@ body: dict | FilterRequestBody = None,
     async def _async_get_certified_elements(
             self,
             certification_type_guid: str,
-            body: dict = None,
+            body: dict | ResultsRequestBody = None,
             output_format: str = "JSON",
             report_spec: dict | str = None,
             start_from: int = 0,
@@ -2121,13 +2122,13 @@ body: dict | FilterRequestBody = None,
     ) -> list | str:
         """
             Retrieve the elements linked via a Certification relationship to the requested CertificationType. Async version.
-            https://egeria-project.org/types/4/0481-Licenses/
+            https://egeria-project.org/types/0/0035-Certifications/
 
         Parameters
         __________
         certification_type_guid: str
             Certification type to retrieve information for.
-        body: dict
+        body: dict | ResultsRequestBody
             Details of the query.
         output_format: str, default = "JSON"
             Type of output to return.
@@ -2166,7 +2167,7 @@ body: dict | FilterRequestBody = None,
         """
 
         url = (f"{self.platform_url}/servers/{self.view_server}/api/open-metadata/"
-               f"classification-explorer/glossaries/elements/certificactions/{certification_type_guid}")
+               f"classification-explorer/glossaries/elements/certifications/{certification_type_guid}")
 
         response = await self._async_get_results_body_request(url, "Referenceable", self._generate_referenceable_output,
                                                               start_from, page_size, output_format,
@@ -2177,21 +2178,21 @@ body: dict | FilterRequestBody = None,
     def get_certified_elements(
             self,
             certification_type_guid: str,
-            body: dict = None,
+            body: dict | ResultsRequestBody = None,
             output_format: str = "JSON",
             report_spec: dict | str = None,
             start_from: int = 0,
             page_size: int = 0
     ) -> list | str:
         """
-            Retrieve the elements linked via a Certification relationship to the requested CertificationType. Async version.
-            https://egeria-project.org/types/4/0481-Licenses/
+            Retrieve the elements linked via a Certification relationship to the requested CertificationType.
+            https://egeria-project.org/types/0/0035-Certifications/
 
         Parameters
         __________
         certification_type_guid: str
             Certification type to retrieve information for.
-        body: dict
+        body: dict | ResultsRequestBody
             Details of the query.
         output_format: str, default = "JSON"
             Type of output to return.
@@ -2231,8 +2232,8 @@ body: dict | FilterRequestBody = None,
 
         loop = asyncio.get_event_loop()
         response = loop.run_until_complete(
-            self._async_get_certified_elements(certification_type_guid, body, output_format, report_spec, start_from,
-                                              page_size)
+            self._async_get_certified_elements(certification_type_guid, body, output_format, report_spec,
+                                              start_from, page_size)
         )
         return response
 
@@ -2240,21 +2241,22 @@ body: dict | FilterRequestBody = None,
     async def _async_get_certifications(
             self,
             element_guid: str,
-            body: dict = None,
+            body: dict | ResultsRequestBody = None,
             output_format: str = "JSON",
             report_spec: dict | str = None,
             start_from: int = 0,
             page_size: int = 0
     ) -> list | str:
         """
-            Retrieve the certification types linked via a Certification relationship to the requested element. Async version.
-            https://https://egeria-project.org/types/4/0481-Licenses/
+            Retrieve the certification types linked via a Certification relationship to the requested element.
+            Async version.
+            https://egeria-project.org/types/0/0035-Certifications/
 
         Parameters
         __________
         element_guid: str
             Element to retrieve information for.
-        body: dict
+        body: dict | ResultsRequestBody
             Details of the query.
         output_format: str, default = "JSON"
             Type of output to return.
@@ -2304,7 +2306,7 @@ body: dict | FilterRequestBody = None,
     def get_certifications(
             self,
             element_guid: str,
-            body: dict = None,
+            body: dict | ResultsRequestBody = None,
             output_format: str = "JSON",
             report_spec: dict | str = None,
             start_from: int = 0,
@@ -2312,20 +2314,20 @@ body: dict | FilterRequestBody = None,
     ) -> list | str:
         """
             Retrieve the certification types linked via a Certification relationship to the requested element.
-            https://https://egeria-project.org/types/4/0481-Licenses/
+            https://egeria-project.org/types/0/0035-Certifications/
 
         Parameters
         __________
         element_guid: str
             Element to retrieve information for.
-        body: dict
+        body: dict | ResultsRequestBody
             Details of the query.
         output_format: str, default = "JSON"
             Type of output to return.
         report_spec: dict | str, default = None
             Output format set to use. If None, the default output format set is used.
         start_from: int, default = 0
-            When multiple pages of results are available, the element number to start from.
+            When multiple pages of results available, the element number to start from.
         page_size: int, default = 0
             The number of elements returned per page.
 
@@ -2673,7 +2675,7 @@ body: dict | FilterRequestBody = None,
         start_from: int = 0,
         page_size: int = 0,
         time_out: int = default_time_out,
-        body: dict | SearchStringRequestBody = None,
+        body: dict | FindPropertyNamesRequestBody = None,
     ) -> list | str:
         """
         Retrieve elements by a value found in one of the properties specified. The value must only be contained in the
@@ -2734,7 +2736,7 @@ body: dict | FilterRequestBody = None,
             - Type of output to return.
         report_spec: dict | str = None
             - Output format set to use. If None, the default output format set is used.
-        body: dict | SearchStringRequestBody = None
+        body: dict | FindPropertyNamesRequestBody = None
             - Full request body - supercedes other parameters.
 
         Returns
@@ -2744,14 +2746,14 @@ body: dict | FilterRequestBody = None,
 
         Raises
         ------
-        PyegeriaExeception
+        PyegeriaException
 
         Notes
         -----
 
         Sample body:
         {
-            "class": "FindPropertyNamesProperties",
+            "class": "FindPropertyNamesRequestBody",
             "metadataElementTypeName": metadata_element_type_name,
             "propertyValue": property_value,
             "propertyNames": property_names,
@@ -2764,7 +2766,7 @@ body: dict | FilterRequestBody = None,
         """
         if body is None:
             body = {
-                "class": "FindPropertyNamesProperties",
+                "class": "FindPropertyNamesRequestBody",
                 "metadataElementTypeName": metadata_element_type_name,
                 "propertyValue": property_value,
                 "propertyNames": property_names,
@@ -2835,7 +2837,7 @@ body: dict | FilterRequestBody = None,
         start_from: int = 0,
         page_size: int = 0,
         time_out: int = default_time_out,
-        body: dict | SearchStringRequestBody = None,
+        body: dict | FindPropertyNamesRequestBody = None,
     ) -> list | str:
         """
         Retrieve elements by a value found in one of the properties specified. The value must only be contained in the
@@ -2862,8 +2864,8 @@ body: dict | FilterRequestBody = None,
             - Type of output to return.
         report_spec: dict | str = None
             - Output format set to use. If None, the default output format set is used.
-        body: dict = None
--           - Full request body - supercedes other parameters.
+        body: dict | FindPropertyNamesRequestBody = None
+           - Full request body - supercedes other parameters.
 
         Returns
         -------
@@ -2872,14 +2874,14 @@ body: dict | FilterRequestBody = None,
 
         Raises
         ------
-        PyegeriaExeception
+        PyegeriaException
 
         Notes
         -----
 
         Sample body:
         {
-            "class": "FindPropertyNamesProperties",
+            "class": "FindPropertyNamesRequestBody",
             "metadataElementTypeName": metadata_element_type_name,
             "propertyValue": property_value,
             "propertyNames": property_names,
@@ -2889,7 +2891,7 @@ body: dict | FilterRequestBody = None,
             "forLineage": for_lineage,
             "forDuplicateProcessing": for_duplicate_processing
         }
-"""
+        """
 
         loop = asyncio.get_event_loop()
         response = loop.run_until_complete(
@@ -4679,6 +4681,289 @@ body: dict | FilterRequestBody = None,
         )
         return response
 
+    async def _async_find_relationships_with_property_value(
+            self,
+            relationship_type: str,
+            property_value: str,
+            property_names: list[str],
+            starts_with: bool = True,
+            ends_with: bool = False,
+            ignore_case: bool = False,
+            anchor_domain: str = None,
+            metadata_element_subtypes: list[str] = None,
+            skip_relationships: list[str] = None,
+            include_only_relationships: list[str] = None,
+            skip_classified_elements: list[str] = None,
+            include_only_classified_elements: list[str] = None,
+            graph_query_depth: int = 3,
+            governance_zone_filter: list[str] = None,
+            as_of_time: str = None,
+            effective_time: str = None,
+            relationship_page_size: int = 0,
+            limit_results_by_status: list[str] = None,
+            sequencing_order: str = None,
+            sequencing_property: str = None,
+            output_format: str = "JSON",
+            report_spec: dict | str = None,
+            start_from: int = 0,
+            page_size: int = 0,
+            time_out: int = default_time_out,
+            body: dict | SearchStringRequestBody = None,
+    ) -> list | str:
+        """
+        Retrieve relationships of the requested relationship type name and with the requested a value found in
+        one of the relationship's properties specified.  The value must only be contained in the properties rather than
+        needing to be an exact match. Async version.
+
+        https://egeria-project.org/types/
+
+        Parameters
+        ----------
+        relationship_type: str
+            - the type of relationship to navigate to related elements
+        property_value: str
+            - property value to be searched.
+        property_names: list[str]
+            - property names to search in.
+        starts_with : bool, default = True
+            - Whether to match only at the start.
+        ends_with : bool, default = False
+            - Whether to match only at the end.
+        ignore_case : bool, default = False
+            - Whether to ignore case in matching.
+        anchor_domain: str, default = None
+            - The anchor domain to restrict the search.
+        metadata_element_subtypes: list[str], default = None
+            - The subtypes of metadata elements to restrict the search.
+        skip_relationships: list[str], default = None
+            - Relationships to skip.
+        include_only_relationships: list[str], default = None
+            - Relationships to include.
+        skip_classified_elements: list[str], default = None
+            - Classified elements to skip.
+        include_only_classified_elements: list[str], default = None
+            - Classified elements to include.
+        graph_query_depth: int, default = 3
+            - The depth of the graph query.
+        governance_zone_filter: list[str], default = None
+            - Governance zones to filter by.
+        as_of_time: str, default = None
+            - The time to retrieve metadata for.
+        effective_time: str, default = None
+            - The effective time for the metadata.
+        relationship_page_size: int, default = 0
+            - Page size for relationships.
+        limit_results_by_status: list[str], default = None
+            - Limit results by status.
+        sequencing_order: str, default = None
+            - Sequencing order.
+        sequencing_property: str, default = None
+            - Sequencing property.
+        start_from: int, default = 0
+            - index of the list to start from (0 for start).
+        page_size
+            - maximum number of elements to return.
+        time_out: int, default = default_time_out
+            - http request timeout for this request
+        output_format: str, default = "JSON"
+            - Type of output to return.
+        report_spec: dict | str = None
+            - Output format set to use. If None, the default output format set is used.
+        body: dict | SearchStringRequestBody = None
+            - Full request body - supercedes other parameters.
+
+        Returns
+        -------
+        [dict] | str
+            Returns a string if no elements found and a list of dict of elements with the results.
+
+        Raises
+        ------
+        PyegeriaException
+
+        Note:
+        -----
+        Sample body:
+
+        {
+            "class": "FindPropertyNamesProperties",
+            "metadataElementTypeName": "OpenMetadataType",
+            "propertyValue": "propertyValue",
+            "propertyNames": ["propertyName1", "propertyName2"],
+            "effectiveTime": "isoTimestamp",
+            "startFrom": 0,
+            "pageSize": 0
+        }
+        """
+
+        url = (
+            f"{base_path(self, self.view_server)}/relationships/"
+            f"by-property-value-search"
+        )
+
+        return await self._async_find_request(
+            url,
+            _type=relationship_type,
+            _gen_output=self._generate_referenceable_output,
+            search_string=property_value,
+            starts_with=starts_with,
+            ends_with=ends_with,
+            ignore_case=ignore_case,
+            anchor_domain=anchor_domain,
+            metadata_element_type=relationship_type,
+            metadata_element_subtypes=metadata_element_subtypes,
+            skip_relationships=skip_relationships,
+            include_only_relationships=include_only_relationships,
+            skip_classified_elements=skip_classified_elements,
+            include_only_classified_elements=include_only_classified_elements,
+            graph_query_depth=graph_query_depth,
+            governance_zone_filter=governance_zone_filter,
+            as_of_time=as_of_time,
+            effective_time=effective_time,
+            relationship_page_size=relationship_page_size,
+            limit_results_by_status=limit_results_by_status,
+            sequencing_order=sequencing_order,
+            sequencing_property=sequencing_property,
+            output_format=output_format,
+            report_spec=report_spec,
+            start_from=start_from,
+            page_size=page_size,
+            property_names=property_names,
+            body=body,
+        )
+
+    def find_relationships_with_property_value(
+            self,
+            relationship_type: str,
+            property_value: str,
+            property_names: list[str],
+            starts_with: bool = True,
+            ends_with: bool = False,
+            ignore_case: bool = False,
+            anchor_domain: str = None,
+            metadata_element_subtypes: list[str] = None,
+            skip_relationships: list[str] = None,
+            include_only_relationships: list[str] = None,
+            skip_classified_elements: list[str] = None,
+            include_only_classified_elements: list[str] = None,
+            graph_query_depth: int = 3,
+            governance_zone_filter: list[str] = None,
+            as_of_time: str = None,
+            effective_time: str = None,
+            relationship_page_size: int = 0,
+            limit_results_by_status: list[str] = None,
+            sequencing_order: str = None,
+            sequencing_property: str = None,
+            output_format: str = "JSON",
+            report_spec: dict | str = None,
+            start_from: int = 0,
+            page_size: int = 0,
+            time_out: int = default_time_out,
+            body: dict | SearchStringRequestBody = None,
+    ) -> list | str:
+        """
+        Retrieve relationships of the requested relationship type name and with the requested a value found in
+        one of the relationship's properties specified.  The value must only be contained in the properties rather than
+        needing to be an exact match.
+
+        Parameters
+        ----------
+        relationship_type: str
+            - the type of relationship to navigate to related elements
+        property_value: str
+            - property value to be searched.
+        property_names: list[str]
+            - property names to search in.
+        starts_with : bool, default = True
+            - Whether to match only at the start.
+        ends_with : bool, default = False
+            - Whether to match only at the end.
+        ignore_case : bool, default = False
+            - Whether to ignore case in matching.
+        anchor_domain: str, default = None
+            - The anchor domain to restrict the search.
+        metadata_element_subtypes: list[str], default = None
+            - The subtypes of metadata elements to restrict the search.
+        skip_relationships: list[str], default = None
+            - Relationships to skip.
+        include_only_relationships: list[str], default = None
+            - Relationships to include.
+        skip_classified_elements: list[str], default = None
+            - Classified elements to skip.
+        include_only_classified_elements: list[str], default = None
+            - Classified elements to include.
+        graph_query_depth: int, default = 3
+            - The depth of the graph query.
+        governance_zone_filter: list[str], default = None
+            - Governance zones to filter by.
+        as_of_time: str, default = None
+            - The time to retrieve metadata for.
+        effective_time: str, default = None
+            - The effective time for the metadata.
+        relationship_page_size: int, default = 0
+            - Page size for relationships.
+        limit_results_by_status: list[str], default = None
+            - Limit results by status.
+        sequencing_order: str, default = None
+            - Sequencing order.
+        sequencing_property: str, default = None
+            - Sequencing property.
+        start_from: int, default = 0
+            - index of the list to start from (0 for start).
+        page_size
+            - maximum number of elements to return.
+        time_out: int, default = default_time_out
+            - http request timeout for this request
+        output_format: str, default = "JSON"
+            - Type of output to return.
+        report_spec: dict | str = None
+            - Output format set to use. If None, the default output format set is used.
+        body: dict | SearchStringRequestBody = None
+            - Full request body - supercedes other parameters.
+
+        Returns
+        -------
+        [dict] | str
+            Returns a string if no elements found and a list of dict of elements with the results.
+
+        Raises
+        ------
+        PyegeriaException
+        """
+
+        loop = asyncio.get_event_loop()
+        response = loop.run_until_complete(
+            self._async_find_relationships_with_property_value(
+                relationship_type,
+                property_value,
+                property_names,
+                starts_with=starts_with,
+                ends_with=ends_with,
+                ignore_case=ignore_case,
+                anchor_domain=anchor_domain,
+                metadata_element_subtypes=metadata_element_subtypes,
+                skip_relationships=skip_relationships,
+                include_only_relationships=include_only_relationships,
+                skip_classified_elements=skip_classified_elements,
+                include_only_classified_elements=include_only_classified_elements,
+                graph_query_depth=graph_query_depth,
+                governance_zone_filter=governance_zone_filter,
+                as_of_time=as_of_time,
+                effective_time=effective_time,
+                relationship_page_size=relationship_page_size,
+                limit_results_by_status=limit_results_by_status,
+                sequencing_order=sequencing_order,
+                sequencing_property=sequencing_property,
+                output_format=output_format,
+                report_spec=report_spec,
+                start_from=start_from,
+                page_size=page_size,
+                time_out=time_out,
+                body=body,
+            )
+        )
+        return response
+
     #
     #  guid
     #
@@ -4803,7 +5088,7 @@ body: dict | FilterRequestBody = None,
     async def _async_set_confidence_classification(
             self,
             element_guid: str,
-            body: dict,
+            body: dict | NewClassificationRequestBody,
             time_out: int = default_time_out,
     ) -> None:
         """
@@ -4817,56 +5102,58 @@ body: dict | FilterRequestBody = None,
         ----------
         element_guid: str
             - the identity of the element to update
-        body: dict
-            - a dictionary structure containing the properties to set - see note below
+        body: dict | NewClassificationRequestBody
+            - a dictionary or Pydantic model containing the properties to set - see note below
 
         time_out: int, default = default_time_out
             - http request timeout for this request
 
         Returns
         -------
-        [dict] | str
-            Returns a string if no elements found and a list of dict of elements with the results.
+        None
 
         Raises
         ------
         PyegeriaException
 
         Note:
-
-        A sample dict structure is:
+        -----
+        Sample body:
 
         {
-           "class": "ClassificationRequestBody",
-           "effectiveTime": "an-isoTimestamp",
-           "properties": {
-               "class": "GovernanceClassificationProperties",
-               "levelIdentifier": 0,
-               "status": 0,
-               "confidence": 0,
-               "steward": "Add value here",
-               "stewardTypeName": "Add value here",
-               "stewardPropertyName": "Add value here",
-               "source": "Add value here",
-               "notes": "Add value here"
-           }
+           "class" : "NewClassificationRequestBody",
+           "properties" : {
+               "class" : "ConfidenceProperties",
+               "levelIdentifier" : 0,
+               "status" : 0,
+               "confidence" : 0,
+               "steward" : "Add value here",
+               "stewardTypeName" : "Add value here",
+               "stewardPropertyName" : "Add value here",
+               "source" : "Add value here",
+               "notes" : "Add value here"
+           },
+           "externalSourceGUID": "Add guid here",
+           "externalSourceName": "Add qualified name here",
+           "forLineage": false,
+           "forDuplicateProcessing": false,
+           "effectiveTime" : "isoTimestamp"
         }
 
         """
 
         url = (
             f"{base_path(self, self.view_server)}/elements/{element_guid}/confidence"
-            f""
         )
 
-        await self._async_make_request(
-            "POST", url, body_slimmer(body), time_out=time_out
+        await self._async_new_classification_request(
+            url, prop=["ConfidenceProperties"], body=body
         )
 
     def set_confidence_classification(
             self,
             element_guid: str,
-            body: dict,
+            body: dict | NewClassificationRequestBody,
             time_out: int = default_time_out,
     ) -> None:
         """
@@ -4880,38 +5167,41 @@ body: dict | FilterRequestBody = None,
         ----------
         element_guid: str
             - the identity of the element to update
-        body: dict
-            - a dictionary structure containing the properties to set - see note below
+        body: dict | NewClassificationRequestBody
+            - a dictionary or Pydantic model containing the properties to set - see note below
         time_out: int, default = default_time_out
             - http request timeout for this request
 
         Returns
         -------
-        [dict] | str
-            Returns a string if no elements found and a list of dict of elements with the results.
+        None
 
         Raises
         ------
         PyegeriaException
 
         Note:
-
-        A sample dict structure is:
+        -----
+        Sample body:
 
         {
-           "class": "ClassificationRequestBody",
-           "effectiveTime": "an-isoTimestamp",
-           "properties": {
-               "class": "GovernanceClassificationProperties",
-               "levelIdentifier": 0,
-               "status": 0,
-               "confidence": 0,
-               "steward": "Add value here",
-               "stewardTypeName": "Add value here",
-               "stewardPropertyName": "Add value here",
-               "source": "Add value here",
-               "notes": "Add value here"
-           }
+           "class" : "NewClassificationRequestBody",
+           "properties" : {
+               "class" : "ConfidenceProperties",
+               "levelIdentifier" : 0,
+               "status" : 0,
+               "confidence" : 0,
+               "steward" : "Add value here",
+               "stewardTypeName" : "Add value here",
+               "stewardPropertyName" : "Add value here",
+               "source" : "Add value here",
+               "notes" : "Add value here"
+           },
+           "externalSourceGUID": "Add guid here",
+           "externalSourceName": "Add qualified name here",
+           "forLineage": false,
+           "forDuplicateProcessing": false,
+           "effectiveTime" : "isoTimestamp"
         }
 
         """
@@ -4928,6 +5218,7 @@ body: dict | FilterRequestBody = None,
     async def _async_clear_confidence_classification(
             self,
             element_guid: str,
+            body: dict | DeleteClassificationRequestBody = None,
             for_lineage: bool = False,
             for_duplicate_processing: bool = False,
             effective_time: str = None,
@@ -4943,6 +5234,8 @@ body: dict | FilterRequestBody = None,
         ----------
         element_guid: str
             - the identity of the element to update
+        body: dict | DeleteClassificationRequestBody, default = None
+            - a dictionary or Pydantic model containing the properties for the request - see note below
         for_lineage: bool, default is set by server
             - determines if elements classified as Memento should be returned - normally false
         for_duplicate_processing: bool, default is set by server
@@ -4956,13 +5249,24 @@ body: dict | FilterRequestBody = None,
 
         Returns
         -------
-        [dict] | str
-            Returns a string if no elements found and a list of dict of elements with the results.
+        None
 
         Raises
         ------
         PyegeriaException
 
+        Note:
+        -----
+        Sample body:
+
+        {
+           "class" : "DeleteClassificationRequestBody",
+           "externalSourceGUID": "Add guid here",
+           "externalSourceName": "Add qualified name here",
+           "forLineage": false,
+           "forDuplicateProcessing": false,
+           "effectiveTime" : "isoTimestamp"
+        }
 
         """
 
@@ -4970,12 +5274,13 @@ body: dict | FilterRequestBody = None,
             f"{base_path(self, self.view_server)}/elements/{element_guid}/confidence/remove"
             f""
         )
-        body = {
-            "class": "ClassificationRequestBody",
-            "effectiveTime": effective_time,
-            "forLineage": for_lineage,
-            "forDuplicateProcessing": for_duplicate_processing,
-        }
+        if body is None:
+            body = {
+                "class": "DeleteClassificationRequestBody",
+                "effectiveTime": effective_time,
+                "forLineage": for_lineage,
+                "forDuplicateProcessing": for_duplicate_processing,
+            }
 
         await self._async_make_request(
             "POST", url, body_slimmer(body), time_out=time_out
@@ -4984,6 +5289,7 @@ body: dict | FilterRequestBody = None,
     def clear_confidence_classification(
             self,
             element_guid: str,
+            body: dict | DeleteClassificationRequestBody = None,
             for_lineage: bool = False,
             for_duplicate_processing: bool = False,
             effective_time: str = None,
@@ -4999,6 +5305,8 @@ body: dict | FilterRequestBody = None,
         ----------
         element_guid: str
             - the identity of the element to update
+        body: dict | DeleteClassificationRequestBody, default = None
+            - a dictionary or Pydantic model containing the properties for the request - see note below
         for_lineage: bool, default is set by server
             - determines if elements classified as Memento should be returned - normally false
         for_duplicate_processing: bool, default is set by server
@@ -5012,13 +5320,24 @@ body: dict | FilterRequestBody = None,
 
         Returns
         -------
-        [dict] | str
-            Returns a string if no elements found and a list of dict of elements with the results.
+        None
 
         Raises
         ------
         PyegeriaException
 
+        Note:
+        -----
+        Sample body:
+
+        {
+           "class" : "DeleteClassificationRequestBody",
+           "externalSourceGUID": "Add guid here",
+           "externalSourceName": "Add qualified name here",
+           "forLineage": false,
+           "forDuplicateProcessing": false,
+           "effectiveTime" : "isoTimestamp"
+        }
 
         """
 
@@ -5026,6 +5345,7 @@ body: dict | FilterRequestBody = None,
         loop.run_until_complete(
             self._async_clear_confidence_classification(
                 element_guid,
+                body,
                 for_lineage,
                 for_duplicate_processing,
                 effective_time,
@@ -5036,121 +5356,123 @@ body: dict | FilterRequestBody = None,
     async def _async_set_confidentiality_classification(
             self,
             element_guid: str,
-            body: dict,
+            body: dict | NewClassificationRequestBody,
             time_out: int = default_time_out,
     ) -> None:
         """
-        Classify/reclassify the element (typically a data field, schema attribute or glossary term) to indicate the
-        level of confidentiality that any data associated with the element should be given.  If the classification is
-        attached to a glossary term, the level of confidentiality is a suggestion for any element linked to the
-        glossary term via the SemanticAssignment classification. The level of confidence is expressed by the
-        levelIdentifier property. Async version.
+        Classify the element (typically a data field, schema attribute or glossary term) to indicate the level of
+        confidentiality that any data associated with the element should be given. If the classification is attached
+        to a glossary term, the level of confidentiality is a suggestion for any element linked to the glossary term via
+        the SemanticAssignment classification. The level of confidence is expressed by the levelIdentifier property.
+        Async version.
 
-        Governance Action Classifications: https://egeria-project.org/types/4/0422-Governance-Action-Classifications/
+        Governance Action Classifications: https://egeria-project.org/types/4/0422-Governed-Data-Classifications/
 
         Parameters
         ----------
         element_guid: str
             - the identity of the element to update
-        body: dict
-            - a dictionary structure containing the properties to set - see note below
+        body: dict | NewClassificationRequestBody
+            - a dictionary or Pydantic model containing the properties to set - see note below
 
         time_out: int, default = default_time_out
             - http request timeout for this request
 
         Returns
         -------
-        [dict] | str
-            Returns a string if no elements found and a list of dict of elements with the results.
+        None
 
         Raises
         ------
         PyegeriaException
 
         Note:
-
-        A sample dict structure is:
+        -----
+        Sample body:
 
         {
-           "class": "ClassificationRequestBody",
-           "effectiveTime": "an-isoTimestamp",
-           "properties": {
-               "class": "GovernanceClassificationProperties",
-               "levelIdentifier": 0,
-               "status": 0,
-               "confidentiality": 0,
-               "steward": "Add value here",
-               "stewardTypeName": "Add value here",
-               "stewardPropertyName": "Add value here",
-               "source": "Add value here",
-               "notes": "Add value here"
-           }
+           "class" : "NewClassificationRequestBody",
+           "properties" : {
+               "class" : "ConfidentialityProperties",
+               "levelIdentifier" : 0,
+               "status" : 0,
+               "confidence" : 0,
+               "steward" : "Add value here",
+               "stewardTypeName" : "Add value here",
+               "stewardPropertyName" : "Add value here",
+               "source" : "Add value here",
+               "notes" : "Add value here"
+           },
+           "externalSourceGUID": "Add guid here",
+           "externalSourceName": "Add qualified name here",
+           "forLineage": false,
+           "forDuplicateProcessing": false,
+           "effectiveTime" : "isoTimestamp"
         }
 
         """
 
         url = (
             f"{base_path(self, self.view_server)}/elements/{element_guid}/confidentiality"
-            f""
         )
 
-        await self._async_make_request(
-            "POST", url, body_slimmer(body), time_out=time_out
+        await self._async_new_classification_request(
+            url, prop=["ConfidentialityProperties"], body=body
         )
 
     def set_confidentiality_classification(
             self,
             element_guid: str,
-            body: dict,
+            body: dict | NewClassificationRequestBody,
             time_out: int = default_time_out,
     ) -> None:
         """
-        Classify/reclassify the element (typically a data field, schema attribute or glossary term) to indicate the
-        level of confidentiality that any data associated with the element should be given.  If the classification is
-        attached to a glossary term, the level of confidentiality is a suggestion for any element linked to the
-        glossary term via the SemanticAssignment classification. The level of confidence is expressed by the
-        levelIdentifier property.
+        Classify the element (typically a data field, schema attribute or glossary term) to indicate the level of
+        confidentiality that any data associated with the element should be given. If the classification is attached
+        to a glossary term, the level of confidentiality is a suggestion for any element linked to the glossary term via
+        the SemanticAssignment classification. The level of confidence is expressed by the levelIdentifier property.
 
-         Governance Action Classifications: https://egeria-project.org/types/4/0422-Governance-Action-Classifications/
+        Governance Action Classifications: https://egeria-project.org/types/4/0422-Governed-Data-Classifications/
 
         Parameters
         ----------
         element_guid: str
             - the identity of the element to update
-        body: dict
-            - a dictionary structure containing the properties to set - see note below
-
-
+        body: dict | NewClassificationRequestBody
+            - a dictionary or Pydantic model containing the properties to set - see note below
         time_out: int, default = default_time_out
             - http request timeout for this request
 
         Returns
         -------
-        [dict] | str
-            Returns a string if no elements found and a list of dict of elements with the results.
+        None
 
         Raises
         ------
         PyegeriaException
 
         Note:
-
-        A sample dict structure is:
+        -----
+        Sample body:
 
         {
-           "class": "ClassificationRequestBody",
-           "effectiveTime": "an-isoTimestamp",
-           "properties": {
-               "class": "GovernanceClassificationProperties",
-               "levelIdentifier": 0,
-               "status": 0,
-               "confidentiality": 0,
-               "steward": "Add value here",
-               "stewardTypeName": "Add value here",
-               "stewardPropertyName": "Add value here",
-               "source": "Add value here",
-               "notes": "Add value here"
-           }
+           "class" : "NewClassificationRequestBody",
+           "properties" : {
+               "class" : "ConfidentialityProperties",
+               "levelIdentifier" : 0,
+               "status" : 0,
+               "confidence" : 0,
+               "steward" : "Add value here",
+               "stewardTypeName" : "Add value here",
+               "stewardPropertyName" : "Add value here",
+               "source" : "Add value here",
+               "notes" : "Add value here"
+           },
+           "externalSourceGUID": "Add guid here",
+           "externalSourceName": "Add qualified name here",
+           "forLineage": false,
+           "forDuplicateProcessing": false,
+           "effectiveTime" : "isoTimestamp"
         }
 
         """
@@ -5160,13 +5482,14 @@ body: dict | FilterRequestBody = None,
             self._async_set_confidentiality_classification(
                 element_guid,
                 body,
-                time_out
+                time_out,
             )
         )
 
     async def _async_clear_confidentiality_classification(
             self,
             element_guid: str,
+            body: dict | DeleteClassificationRequestBody = None,
             for_lineage: bool = False,
             for_duplicate_processing: bool = False,
             effective_time: str = None,
@@ -5182,6 +5505,8 @@ body: dict | FilterRequestBody = None,
         ----------
         element_guid: str
             - the identity of the element to update
+        body: dict | DeleteClassificationRequestBody, default = None
+            - a dictionary or Pydantic model containing the properties for the request - see note below
         for_lineage: bool, default is set by server
             - determines if elements classified as Memento should be returned - normally false
         for_duplicate_processing: bool, default is set by server
@@ -5195,13 +5520,24 @@ body: dict | FilterRequestBody = None,
 
         Returns
         -------
-        [dict] | str
-            Returns a string if no elements found and a list of dict of elements with the results.
+        None
 
         Raises
         ------
         PyegeriaException
 
+        Note:
+        -----
+        Sample body:
+
+        {
+           "class" : "DeleteClassificationRequestBody",
+           "externalSourceGUID": "Add guid here",
+           "externalSourceName": "Add qualified name here",
+           "forLineage": false,
+           "forDuplicateProcessing": false,
+           "effectiveTime" : "isoTimestamp"
+        }
 
         """
 
@@ -5210,8 +5546,9 @@ body: dict | FilterRequestBody = None,
             f""
         )
 
-        body = {"class": "ClassificationRequestBody", "effectiveTime": effective_time,
-                "forLineage": for_lineage, "forDuplicateProcessing": for_duplicate_processing}
+        if body is None:
+            body = {"class": "DeleteClassificationRequestBody", "effectiveTime": effective_time,
+                    "forLineage": for_lineage, "forDuplicateProcessing": for_duplicate_processing}
 
         await self._async_make_request(
             "POST", url, body_slimmer(body), time_out=time_out
@@ -5220,6 +5557,7 @@ body: dict | FilterRequestBody = None,
     def clear_confidentiality_classification(
             self,
             element_guid: str,
+            body: dict | DeleteClassificationRequestBody = None,
             for_lineage: bool = False,
             for_duplicate_processing: bool = False,
             effective_time: str = None,
@@ -5235,6 +5573,8 @@ body: dict | FilterRequestBody = None,
         ----------
         element_guid: str
             - the identity of the element to update
+        body: dict | DeleteClassificationRequestBody, default = None
+            - a dictionary or Pydantic model containing the properties for the request - see note below
         for_lineage: bool, default is set by server
             - determines if elements classified as Memento should be returned - normally false
         for_duplicate_processing: bool, default is set by server
@@ -5248,13 +5588,24 @@ body: dict | FilterRequestBody = None,
 
         Returns
         -------
-        [dict] | str
-            Returns a string if no elements found and a list of dict of elements with the results.
+        None
 
         Raises
         ------
         PyegeriaException
 
+        Note:
+        -----
+        Sample body:
+
+        {
+           "class" : "DeleteClassificationRequestBody",
+           "externalSourceGUID": "Add guid here",
+           "externalSourceName": "Add qualified name here",
+           "forLineage": false,
+           "forDuplicateProcessing": false,
+           "effectiveTime" : "isoTimestamp"
+        }
 
         """
 
@@ -5262,6 +5613,7 @@ body: dict | FilterRequestBody = None,
         loop.run_until_complete(
             self._async_clear_confidentiality_classification(
                 element_guid,
+                body,
                 for_lineage,
                 for_duplicate_processing,
                 effective_time,
@@ -5272,47 +5624,40 @@ body: dict | FilterRequestBody = None,
     async def _async_set_impact_classification(
             self,
             element_guid: str,
-            body: dict,
+            body: dict | NewClassificationRequestBody,
             time_out: int = default_time_out,
     ) -> None:
         """
-        Classify/reclassify the element (typically a data field, schema attribute or glossary term) to indicate the
-        level of confidentiality that any data associated with the element should be given.  If the classification is
-        attached to a glossary term, the level of impact is a suggestion for any element linked to the
-        glossary term via the SemanticAssignment classification. The level of confidence is expressed by the
-        levelIdentifier property. Async version.
+        Classify the element (typically a context event, to do or incident report) to indicate the level of impact
+        that the event described will have on the organization. The level of impact is expressed by the levelIdentifier
+        property. Async version.
 
-        Governance Action Classifications: https://egeria-project.org/types/4/0422-Governance-Action-Classifications/
+        Governance Action Classifications: https://egeria-project.org/types/4/0422-Governed-Data-Classifications/
 
         Parameters
         ----------
         element_guid: str
             - the identity of the element to update
-        body: dict
-            - a dictionary structure containing the properties to set - see note below
+        body: dict | NewClassificationRequestBody
+            - a dictionary or Pydantic model containing the properties to set - see note below
 
         time_out: int, default = default_time_out
             - http request timeout for this request
 
         Returns
         -------
-        [dict] | str
-            Returns a string if no elements found and a list of dict of elements with the results.
+        None
 
         Raises
         ------
         PyegeriaException
 
         Note:
+        -----
+        Sample body:
 
-        A sample dict structure is:
         {
            "class" : "NewClassificationRequestBody",
-           "externalSourceGUID": "Add guid here",
-           "externalSourceName": "Add qualified name here",
-           "forLineage": false,
-           "forDuplicateProcessing": false,
-           "effectiveTime" : "{{$isoTimestamp}}",
            "properties" : {
                "class" : "ImpactProperties",
                "levelIdentifier" : 0,
@@ -5323,66 +5668,60 @@ body: dict | FilterRequestBody = None,
                "stewardPropertyName" : "Add value here",
                "source" : "Add value here",
                "notes" : "Add value here"
-           }
+           },
+           "externalSourceGUID": "Add guid here",
+           "externalSourceName": "Add qualified name here",
+           "forLineage": false,
+           "forDuplicateProcessing": false,
+           "effectiveTime" : "isoTimestamp"
         }
 
         """
 
         url = (
             f"{base_path(self, self.view_server)}/elements/{element_guid}/impact"
-            f""
         )
 
-        await self._async_make_request(
-            "POST", url, body_slimmer(body), time_out=time_out
+        await self._async_new_classification_request(
+            url, prop=["ImpactProperties"], body=body
         )
 
     def set_impact_classification(
             self,
             element_guid: str,
-            body: dict,
+            body: dict | NewClassificationRequestBody,
             time_out: int = default_time_out,
     ) -> None:
         """
-        Classify/reclassify the element (typically a data field, schema attribute or glossary term) to indicate the
-        level of impact that any data associated with the element should be given.  If the classification is
-        attached to a glossary term, the level of impact is a suggestion for any element linked to the
-        glossary term via the SemanticAssignment classification. The level of confidence is expressed by the
-        levelIdentifier property.
+        Classify the element (typically a context event, to do or incident report) to indicate the level of impact
+        that the event described will have on the organization. The level of impact is expressed by the levelIdentifier
+        property.
 
-         Governance Action Classifications: https://egeria-project.org/types/4/0422-Governance-Action-Classifications/
+        Governance Action Classifications: https://egeria-project.org/types/4/0422-Governed-Data-Classifications/
 
         Parameters
         ----------
         element_guid: str
             - the identity of the element to update
-        body: dict
-            - a dictionary structure containing the properties to set - see note below
-
-
+        body: dict | NewClassificationRequestBody
+            - a dictionary or Pydantic model containing the properties to set - see note below
         time_out: int, default = default_time_out
             - http request timeout for this request
 
         Returns
         -------
-        [dict] | str
-            Returns a string if no elements found and a list of dict of elements with the results.
+        None
 
         Raises
         ------
         PyegeriaException
 
         Note:
-
-        A sample dict structure is:
+        -----
+        Sample body:
 
         {
            "class" : "NewClassificationRequestBody",
-           "externalSourceGUID": "Add guid here",
-           "externalSourceName": "Add qualified name here",
-           "forLineage": false,
-           "forDuplicateProcessing": false,
-           "effectiveTime" : "{{$isoTimestamp}}",
            "properties" : {
                "class" : "ImpactProperties",
                "levelIdentifier" : 0,
@@ -5393,8 +5732,13 @@ body: dict | FilterRequestBody = None,
                "stewardPropertyName" : "Add value here",
                "source" : "Add value here",
                "notes" : "Add value here"
-           }
-}
+           },
+           "externalSourceGUID": "Add guid here",
+           "externalSourceName": "Add qualified name here",
+           "forLineage": false,
+           "forDuplicateProcessing": false,
+           "effectiveTime" : "isoTimestamp"
+        }
 
         """
 
@@ -5403,13 +5747,14 @@ body: dict | FilterRequestBody = None,
             self._async_set_impact_classification(
                 element_guid,
                 body,
-                time_out
+                time_out,
             )
         )
 
     async def _async_clear_impact_classification(
             self,
             element_guid: str,
+            body: dict | DeleteClassificationRequestBody = None,
             for_lineage: bool = False,
             for_duplicate_processing: bool = False,
             effective_time: str = None,
@@ -5425,6 +5770,8 @@ body: dict | FilterRequestBody = None,
         ----------
         element_guid: str
             - the identity of the element to update
+        body: dict | DeleteClassificationRequestBody, default = None
+            - a dictionary or Pydantic model containing the properties for the request - see note below
         for_lineage: bool, default is set by server
             - determines if elements classified as Memento should be returned - normally false
         for_duplicate_processing: bool, default is set by server
@@ -5438,13 +5785,24 @@ body: dict | FilterRequestBody = None,
 
         Returns
         -------
-        [dict] | str
-            Returns a string if no elements found and a list of dict of elements with the results.
+        None
 
         Raises
         ------
         PyegeriaException
 
+        Note:
+        -----
+        Sample body:
+
+        {
+           "class" : "DeleteClassificationRequestBody",
+           "externalSourceGUID": "Add guid here",
+           "externalSourceName": "Add qualified name here",
+           "forLineage": false,
+           "forDuplicateProcessing": false,
+           "effectiveTime" : "isoTimestamp"
+        }
 
         """
 
@@ -5453,8 +5811,9 @@ body: dict | FilterRequestBody = None,
             f""
         )
 
-        body = {"class": "ClassificationRequestBody", "effectiveTime": effective_time,
-                "forLineage": for_lineage, "forDuplicateProcessing": for_duplicate_processing}
+        if body is None:
+            body = {"class": "DeleteClassificationRequestBody", "effectiveTime": effective_time,
+                    "forLineage": for_lineage, "forDuplicateProcessing": for_duplicate_processing}
 
         await self._async_make_request(
             "POST", url, body_slimmer(body), time_out=time_out
@@ -5463,6 +5822,7 @@ body: dict | FilterRequestBody = None,
     def clear_impact_classification(
             self,
             element_guid: str,
+            body: dict | DeleteClassificationRequestBody = None,
             for_lineage: bool = False,
             for_duplicate_processing: bool = False,
             effective_time: str = None,
@@ -5478,6 +5838,8 @@ body: dict | FilterRequestBody = None,
         ----------
         element_guid: str
             - the identity of the element to update
+        body: dict | DeleteClassificationRequestBody, default = None
+            - a dictionary or Pydantic model containing the properties for the request - see note below
         for_lineage: bool, default is set by server
             - determines if elements classified as Memento should be returned - normally false
         for_duplicate_processing: bool, default is set by server
@@ -5491,13 +5853,24 @@ body: dict | FilterRequestBody = None,
 
         Returns
         -------
-        [dict] | str
-            Returns a string if no elements found and a list of dict of elements with the results.
+        None
 
         Raises
         ------
         PyegeriaException
 
+        Note:
+        -----
+        Sample body:
+
+        {
+           "class" : "DeleteClassificationRequestBody",
+           "externalSourceGUID": "Add guid here",
+           "externalSourceName": "Add qualified name here",
+           "forLineage": false,
+           "forDuplicateProcessing": false,
+           "effectiveTime" : "isoTimestamp"
+        }
 
         """
 
@@ -5505,6 +5878,7 @@ body: dict | FilterRequestBody = None,
         loop.run_until_complete(
             self._async_clear_impact_classification(
                 element_guid,
+                body,
                 for_lineage,
                 for_duplicate_processing,
                 effective_time,
@@ -5515,116 +5889,119 @@ body: dict | FilterRequestBody = None,
     async def _async_set_criticality_classification(
             self,
             element_guid: str,
-            body: dict,
+            body: dict | NewClassificationRequestBody,
             time_out: int = default_time_out,
     ) -> None:
         """
-        Classify/reclassify the element (typically an asset) to indicate how critical the element (or
-        associated resource) is to the organization.  The level of criticality is expressed by the levelIdentifier
-        property. Async version.
+        Classify the element (typically an asset) to indicate how critical the element (or associated resource)
+        is to the organization. The level of criticality is expressed by the levelIdentifier property.
+        Async version.
 
-        Governance Action Classifications: https://egeria-project.org/types/4/0422-Governance-Action-Classifications/
+        Governance Action Classifications: https://egeria-project.org/types/4/0422-Governed-Data-Classifications/
 
         Parameters
         ----------
         element_guid: str
             - the identity of the element to update
-        body: dict
-            - a dictionary structure containing the properties to set - see note below
+        body: dict | NewClassificationRequestBody
+            - a dictionary or Pydantic model containing the properties to set - see note below
+
         time_out: int, default = default_time_out
             - http request timeout for this request
 
         Returns
         -------
-        [dict] | str
-            Returns a string if no elements found and a list of dict of elements with the results.
+        None
 
         Raises
         ------
         PyegeriaException
 
         Note:
-
-        A sample dict structure is:
+        -----
+        Sample body:
 
         {
-           "class": "ClassificationRequestBody",
-           "effectiveTime": "an-isoTimestamp",
-           "properties": {
-               "class": "GovernanceClassificationProperties",
-               "levelIdentifier": 0,
-               "status": 0,
-               "criticality": 0,
-               "steward": "Add value here",
-               "stewardTypeName": "Add value here",
-               "stewardPropertyName": "Add value here",
-               "source": "Add value here",
-               "notes": "Add value here"
-           }
+           "class" : "NewClassificationRequestBody",
+           "properties" : {
+               "class" : "CriticalityProperties",
+               "levelIdentifier" : 0,
+               "status" : 0,
+               "confidence" : 0,
+               "steward" : "Add value here",
+               "stewardTypeName" : "Add value here",
+               "stewardPropertyName" : "Add value here",
+               "source" : "Add value here",
+               "notes" : "Add value here"
+           },
+           "externalSourceGUID": "Add guid here",
+           "externalSourceName": "Add qualified name here",
+           "forLineage": false,
+           "forDuplicateProcessing": false,
+           "effectiveTime" : "isoTimestamp"
         }
 
         """
 
         url = (
             f"{base_path(self, self.view_server)}/elements/{element_guid}/criticality"
-            f""
         )
 
-        await self._async_make_request(
-            "POST", url, body_slimmer(body), time_out=time_out
+        await self._async_new_classification_request(
+            url, prop=["CriticalityProperties"], body=body
         )
 
     def set_criticality_classification(
             self,
             element_guid: str,
-            body: dict,
+            body: dict | NewClassificationRequestBody,
             time_out: int = default_time_out,
     ) -> None:
         """
-        Classify/reclassify the element (typically an asset) to indicate how critical the element (or
-        associated resource) is to the organization.  The level of criticality is expressed by the levelIdentifier
-        property.
+        Classify the element (typically an asset) to indicate how critical the element (or associated resource)
+        is to the organization. The level of criticality is expressed by the levelIdentifier property.
 
-        Governance Action Classifications: https://egeria-project.org/types/4/0422-Governance-Action-Classifications/
+        Governance Action Classifications: https://egeria-project.org/types/4/0422-Governed-Data-Classifications/
 
         Parameters
         ----------
         element_guid: str
             - the identity of the element to update
-        body: dict
-            - a dictionary structure containing the properties to set - see note below
-
-
+        body: dict | NewClassificationRequestBody
+            - a dictionary or Pydantic model containing the properties to set - see note below
         time_out: int, default = default_time_out
             - http request timeout for this request
 
         Returns
         -------
-        [dict] | str
-            Returns a string if no elements found and a list of dict of elements with the results.
+        None
 
         Raises
         ------
         PyegeriaException
 
         Note:
-
-        A sample dict structure is:
+        -----
+        Sample body:
 
         {
-           "class": "ClassificationRequestBody",
-           "effectiveTime": "an-isoTimestamp",
-           "properties": {
-               "class": "GovernanceClassificationProperties",
-               "levelIdentifier": 0,
-               "status": 0,
-               "criticality": 0,
-               "steward": "Add value here",
-               "stewardTypeName": "Add value here",
-               "stewardPropertyName": "Add value here",
-               "source": "Add value here",
-               "notes": "Add value here"
-           }
+           "class" : "NewClassificationRequestBody",
+           "properties" : {
+               "class" : "CriticalityProperties",
+               "levelIdentifier" : 0,
+               "status" : 0,
+               "confidence" : 0,
+               "steward" : "Add value here",
+               "stewardTypeName" : "Add value here",
+               "stewardPropertyName" : "Add value here",
+               "source" : "Add value here",
+               "notes" : "Add value here"
+           },
+           "externalSourceGUID": "Add guid here",
+           "externalSourceName": "Add qualified name here",
+           "forLineage": false,
+           "forDuplicateProcessing": false,
+           "effectiveTime" : "isoTimestamp"
         }
 
         """
@@ -5641,6 +6018,7 @@ body: dict | FilterRequestBody = None,
     async def _async_clear_criticality_classification(
             self,
             element_guid: str,
+            body: dict | DeleteClassificationRequestBody = None,
             for_lineage: bool = False,
             for_duplicate_processing: bool = False,
             effective_time: str = None,
@@ -5656,6 +6034,8 @@ body: dict | FilterRequestBody = None,
         ----------
         element_guid: str
             - the identity of the element to update
+        body: dict | DeleteClassificationRequestBody, default = None
+            - a dictionary or Pydantic model containing the properties for the request - see note below
         for_lineage: bool, default is set by server
             - determines if elements classified as Memento should be returned - normally false
         for_duplicate_processing: bool, default is set by server
@@ -5669,13 +6049,24 @@ body: dict | FilterRequestBody = None,
 
         Returns
         -------
-        [dict] | str
-            Returns a string if no elements found and a list of dict of elements with the results.
+        None
 
         Raises
         ------
         PyegeriaException
 
+        Note:
+        -----
+        Sample body:
+
+        {
+           "class" : "DeleteClassificationRequestBody",
+           "externalSourceGUID": "Add guid here",
+           "externalSourceName": "Add qualified name here",
+           "forLineage": false,
+           "forDuplicateProcessing": false,
+           "effectiveTime" : "isoTimestamp"
+        }
 
         """
 
@@ -5684,8 +6075,9 @@ body: dict | FilterRequestBody = None,
             f""
         )
 
-        body = {"class": "ClassificationRequestBody", "effectiveTime": effective_time, "forLineage": for_lineage,
-                "forDuplicateProcessing": for_duplicate_processing}
+        if body is None:
+            body = {"class": "DeleteClassificationRequestBody", "effectiveTime": effective_time, "forLineage": for_lineage,
+                    "forDuplicateProcessing": for_duplicate_processing}
 
         await self._async_make_request(
             "POST", url, body_slimmer(body), time_out=time_out
@@ -5694,6 +6086,7 @@ body: dict | FilterRequestBody = None,
     def clear_criticality_classification(
             self,
             element_guid: str,
+            body: dict | DeleteClassificationRequestBody = None,
             for_lineage: bool = False,
             for_duplicate_processing: bool = False,
             effective_time: str = None,
@@ -5709,6 +6102,8 @@ body: dict | FilterRequestBody = None,
         ----------
         element_guid: str
             - the identity of the element to update
+        body: dict | DeleteClassificationRequestBody, default = None
+            - a dictionary or Pydantic model containing the properties for the request - see note below
         for_lineage: bool, default is set by server
             - determines if elements classified as Memento should be returned - normally false
         for_duplicate_processing: bool, default is set by server
@@ -5722,13 +6117,24 @@ body: dict | FilterRequestBody = None,
 
         Returns
         -------
-        [dict] | str
-            Returns a string if no elements found and a list of dict of elements with the results.
+        None
 
         Raises
         ------
         PyegeriaException
 
+        Note:
+        -----
+        Sample body:
+
+        {
+           "class" : "DeleteClassificationRequestBody",
+           "externalSourceGUID": "Add guid here",
+           "externalSourceName": "Add qualified name here",
+           "forLineage": false,
+           "forDuplicateProcessing": false,
+           "effectiveTime" : "isoTimestamp"
+        }
 
         """
 
@@ -5736,6 +6142,7 @@ body: dict | FilterRequestBody = None,
         loop.run_until_complete(
             self._async_clear_criticality_classification(
                 element_guid,
+                body,
                 for_lineage,
                 for_duplicate_processing,
                 effective_time,
@@ -6713,11 +7120,11 @@ body: dict | FilterRequestBody = None,
     async def _async_add_ownership_to_element(
             self,
             element_guid: str,
-            body: dict,
+            body: dict | NewClassificationRequestBody,
             time_out: int = default_time_out,
     ) -> None:
         """
-        Add or replace the ownership classification for an element. Async version.
+        Add the ownership classification for an element. Async version.
 
         Ownership: https://egeria-project.org/types/4/0445-Governance-Roles/
 
@@ -6725,9 +7132,8 @@ body: dict | FilterRequestBody = None,
         ----------
         element_guid: str
             - the identity of the element to update
-        body: dict
-            - structure containing ownership information - see Notes
-
+        body: dict | NewClassificationRequestBody
+            - a dictionary or Pydantic model containing the properties to set - see note below
 
         time_out: int, default = default_time_out
             - http request timeout for this request
@@ -6740,46 +7146,42 @@ body: dict | FilterRequestBody = None,
         ------
         PyegeriaException
 
-        Notes
+        Note:
         -----
+        Sample body:
 
         {
-           "class": "NewClassificationRequestBody",
-           "effectiveTime": "an isoTimestamp",
-           "forDuplicateProcessing": false,
+           "class" : "NewClassificationRequestBody",
+           "properties" : {
+               "class" : "OwnerProperties",
+               "owner" : "Add value here",
+               "ownerTypeName" : "Add value here",
+               "ownerPropertyName" : "Add value here"
+           },
+           "externalSourceGUID": "Add guid here",
+           "externalSourceName": "Add qualified name here",
            "forLineage": false,
-           "properties": {
-               "class": "OwnerProperties",
-               "owner": "Add value here",
-               "ownerTypeName": "Add value here",
-               "ownerPropertyName": "Add value here"
-           }
+           "forDuplicateProcessing": false,
+           "effectiveTime" : "isoTimestamp"
         }
-
         """
 
         url = (
             f"{base_path(self, self.view_server)}/elements/{element_guid}/ownership"
-            f""
         )
 
-        # await self._async_make_request(
-        #     "POST", url, body_slimmer(body), time_out=time_out
-        # )
-        if body is not None:
-            prop = body['properties']['class']
-        else:
-            prop = None
-        await self._async_new_classification_request(url=url, prop=prop, body=body)
+        await self._async_new_classification_request(
+            url, prop=["OwnerProperties"], body=body
+        )
 
     def add_ownership_to_element(
             self,
             element_guid: str,
-            body: dict,
+            body: dict | NewClassificationRequestBody,
             time_out: int = default_time_out,
     ) -> None:
         """
-        Add or replace the ownership classification for an element.
+        Add the ownership classification for an element.
 
         Ownership: https://egeria-project.org/types/4/0445-Governance-Roles/
 
@@ -6787,9 +7189,8 @@ body: dict | FilterRequestBody = None,
         ----------
         element_guid: str
             - the identity of the element to update
-        body: dict
-            - structure containing ownership information - see Notes
-
+        body: dict | NewClassificationRequestBody
+            - a dictionary or Pydantic model containing the properties to set - see note below
 
         time_out: int, default = default_time_out
             - http request timeout for this request
@@ -6802,22 +7203,24 @@ body: dict | FilterRequestBody = None,
         ------
         PyegeriaException
 
-        Notes
+        Note:
         -----
+        Sample body:
 
         {
-           "class": "NewClassificationRequestBody",
-           "effectiveTime": "an isoTimestamp",
-           "forDuplicateProcessing": false,
+           "class" : "NewClassificationRequestBody",
+           "properties" : {
+               "class" : "OwnerProperties",
+               "owner" : "Add value here",
+               "ownerTypeName" : "Add value here",
+               "ownerPropertyName" : "Add value here"
+           },
+           "externalSourceGUID": "Add guid here",
+           "externalSourceName": "Add qualified name here",
            "forLineage": false,
-           "properties": {
-               "class": "OwnerProperties",
-               "owner": "Add value here",
-               "ownerTypeName": "Add value here",
-               "ownerPropertyName": "Add value here"
-           }
+           "forDuplicateProcessing": false,
+           "effectiveTime" : "isoTimestamp"
         }
-
         """
 
         loop = asyncio.get_event_loop()
@@ -6929,7 +7332,8 @@ body: dict | FilterRequestBody = None,
     async def _async_add_digital_resource_origin(
             self,
             element_guid: str,
-            body: dict | NewClassificationRequestBody
+            body: dict | NewClassificationRequestBody,
+            time_out: int = default_time_out,
     ) -> None:
         """
         Add the digital resource origin classification for an element. Async Version.
@@ -6941,7 +7345,10 @@ body: dict | FilterRequestBody = None,
         element_guid: str
             - the identity of the element to update
         body: dict | NewClassificationRequestBody
-            - structure containing origin information - see Notes
+            - a dictionary or Pydantic model containing the properties to set - see note below
+
+        time_out: int, default = default_time_out
+            - http request timeout for this request
 
         Returns
         -------
@@ -6951,35 +7358,41 @@ body: dict | FilterRequestBody = None,
         ------
         PyegeriaException
 
-        Notes
+        Note:
         -----
+        Sample body:
 
         {
-           "class": "NewClassificationRequestBody",
-           "effectiveTime": "an isoTimestamp",
-           "forDuplicateProcessing": false,
+           "class" : "NewClassificationRequestBody",
+           "properties" : {
+               "class" : "DigitalResourceOriginProperties",
+               "owner" : "Add value here",
+               "ownerTypeName" : "Add value here",
+               "ownerPropertyName" : "Add value here"
+           },
+           "externalSourceGUID": "Add guid here",
+           "externalSourceName": "Add qualified name here",
            "forLineage": false,
-           "properties": {
-               "class": "DigitalResourceOriginProperties",
-               "owner": "Add value here",
-               "ownerTypeName": "Add value here",
-               "ownerPropertyName": "Add value here"
-           }
+           "forDuplicateProcessing": false,
+           "effectiveTime" : "isoTimestamp"
         }
 
         """
 
         url = f"{base_path(self, self.view_server)}/elements/{element_guid}/digital-resource-origin"
-        await self._async_new_classification_request(url, ["DigitalResourceOriginProperties"], body)
+        await self._async_new_classification_request(
+            url, prop=["DigitalResourceOriginProperties"], body=body
+        )
 
     @dynamic_catch
     def add_digital_resource_origin(
             self,
             element_guid: str,
-            body: dict | NewClassificationRequestBody
+            body: dict | NewClassificationRequestBody,
+            time_out: int = default_time_out,
     ) -> None:
         """
-        Add or replace the digital resource origin classification for an element.
+        Add the digital resource origin classification for an element.
 
         Origin: https://egeria-project.org/types/4/0440-Organizational-Controls/
 
@@ -6988,7 +7401,10 @@ body: dict | FilterRequestBody = None,
         element_guid: str
             - the identity of the element to update
         body: dict | NewClassificationRequestBody
-            - structure containing ownership information - see Notes
+            - a dictionary or Pydantic model containing the properties to set - see note below
+
+        time_out: int, default = default_time_out
+            - http request timeout for this request
 
         Returns
         -------
@@ -6998,20 +7414,23 @@ body: dict | FilterRequestBody = None,
         ------
         PyegeriaException
 
-        Notes
+        Note:
         -----
+        Sample body:
 
         {
-           "class": "NewClassificationRequestBody",
-           "effectiveTime": "an isoTimestamp",
-           "forDuplicateProcessing": false,
+           "class" : "NewClassificationRequestBody",
+           "properties" : {
+               "class" : "DigitalResourceOriginProperties",
+               "owner" : "Add value here",
+               "ownerTypeName" : "Add value here",
+               "ownerPropertyName" : "Add value here"
+           },
+           "externalSourceGUID": "Add guid here",
+           "externalSourceName": "Add qualified name here",
            "forLineage": false,
-           "properties": {
-               "class": "DigitalResourceOriginProperties",
-               "owner": "Add value here",
-               "ownerTypeName": "Add value here",
-               "ownerPropertyName": "Add value here"
-           }
+           "forDuplicateProcessing": false,
+           "effectiveTime" : "isoTimestamp"
         }
 
         """
@@ -7021,6 +7440,7 @@ body: dict | FilterRequestBody = None,
             self._async_add_digital_resource_origin(
                 element_guid,
                 body,
+                time_out,
             )
         )
 
@@ -7097,19 +7517,23 @@ body: dict | FilterRequestBody = None,
     async def _async_add_zone_membership(
             self,
             element_guid: str,
-            body: dict | NewClassificationRequestBody
+            body: dict | NewClassificationRequestBody,
+            time_out: int = default_time_out,
     ) -> None:
         """
-        Add the zone membership classification for an element. Async Version.
+        Add the zone membership classification for an element. Async version.
 
-        Origin: Governance Zones: https://egeria-project.org/types/4/0424-Governance-Zones/
+        Governance Zones: https://egeria-project.org/types/4/0424-Governance-Zones/
 
         Parameters
         ----------
         element_guid: str
             - the identity of the element to update
         body: dict | NewClassificationRequestBody
-            - structure containing zone information - see Notes
+            - a dictionary or Pydantic model containing the properties to set - see note below
+
+        time_out: int, default = default_time_out
+            - http request timeout for this request
 
         Returns
         -------
@@ -7119,44 +7543,50 @@ body: dict | FilterRequestBody = None,
         ------
         PyegeriaException
 
-        Notes
+        Note:
         -----
+        Sample body:
 
         {
-           "class": "NewClassificationRequestBody",
-           "effectiveTime": "an isoTimestamp",
-           "forDuplicateProcessing": false,
+           "class" : "NewClassificationRequestBody",
+           "properties" : {
+               "class" : "ZoneMembershipProperties",
+               "zoneMembership" : [ "quarantine", "sandbox" ]
+           },
+           "externalSourceGUID": "Add guid here",
+           "externalSourceName": "Add qualified name here",
            "forLineage": false,
-           "properties": {
-               "class": "ZoneMembershipProperties",
-               "owner": "Add value here",
-               "ownerTypeName": "Add value here",
-               "ownerPropertyName": "Add value here"
-           }
+           "forDuplicateProcessing": false,
+           "effectiveTime" : "isoTimestamp"
         }
-
         """
 
         url = f"{base_path(self, self.view_server)}/elements/{element_guid}/zone-membership"
-        await self._async_new_classification_request(url, ["ZoneMembershipProperties"], body)
+        await self._async_new_classification_request(
+            url, prop=["ZoneMembershipProperties"], body=body
+        )
 
     @dynamic_catch
     def add_zone_membership(
             self,
             element_guid: str,
-            body: dict | NewClassificationRequestBody
+            body: dict | NewClassificationRequestBody,
+            time_out: int = default_time_out,
     ) -> None:
         """
         Add the zone membership classification for an element.
 
-        Origin: https://egeria-project.org/types/4/0424-Governance-Zones/
+        Governance Zones: https://egeria-project.org/types/4/0424-Governance-Zones/
 
         Parameters
         ----------
         element_guid: str
             - the identity of the element to update
         body: dict | NewClassificationRequestBody
-            - structure containing zone information - see Notes
+            - a dictionary or Pydantic model containing the properties to set - see note below
+
+        time_out: int, default = default_time_out
+            - http request timeout for this request
 
         Returns
         -------
@@ -7166,27 +7596,30 @@ body: dict | FilterRequestBody = None,
         ------
         PyegeriaException
 
-        Notes
+        Note:
         -----
+        Sample body:
 
         {
-           "class": "NewClassificationRequestBody",
-           "effectiveTime": "an isoTimestamp",
-           "forDuplicateProcessing": false,
+           "class" : "NewClassificationRequestBody",
+           "properties" : {
+               "class" : "ZoneMembershipProperties",
+               "zoneMembership" : [ "quarantine", "sandbox" ]
+           },
+           "externalSourceGUID": "Add guid here",
+           "externalSourceName": "Add qualified name here",
            "forLineage": false,
-           "properties": {
-               "class": "ZoneMembershipProperties",
-               "owner": "Add value here",
-               "ownerTypeName": "Add value here",
-               "ownerPropertyName": "Add value here"
-           }
+           "forDuplicateProcessing": false,
+           "effectiveTime" : "isoTimestamp"
         }
-
         """
 
         loop = asyncio.get_event_loop()
         loop.run_until_complete(
-            self._async_add_zone_membership(element_guid, body
+            self._async_add_zone_membership(
+                element_guid,
+                body,
+                time_out,
             )
         )
 
@@ -7262,131 +7695,130 @@ body: dict | FilterRequestBody = None,
     async def _async_set_retention_classification(
             self,
             element_guid: str,
-            body: dict,
+            body: dict | NewClassificationRequestBody,
             time_out: int = default_time_out,
     ) -> None:
         """
-        Classify/reclassify the element (typically an asset) to indicate how long the element (or associated resource)
-        is to be retained by the organization.  The policy to apply to the element/resource is captured by the retentionBasis
-        property.  The dates after which the element/resource is archived and then deleted are specified in the archiveAfter and deleteAfter
-        properties respectively. Async version
+        Classify the element (typically an asset) to indicate how long the element (or associated resource)
+        is to be retained by the organization. The policy to apply to the element/resource is captured by the
+        retentionBasis property. The dates after which the element/resource is archived and then deleted are specified
+        in the archiveAfter and deleteAfter properties respectively. Async version.
 
-        Governance Action Classifications: https://egeria-project.org/types/4/0422-Governance-Action-Classifications/
+        Governance Action Classifications: https://egeria-project.org/types/4/0422-Governed-Data-Classifications/
 
         Parameters
         ----------
         element_guid: str
             - the identity of the element to update
-        body: dict
-            - a dictionary structure containing the properties to set - see note below
-
-
+        body: dict | NewClassificationRequestBody
+            - a dictionary or Pydantic model containing the properties to set - see note below
 
         time_out: int, default = default_time_out
             - http request timeout for this request
 
         Returns
         -------
-        [dict] | str
-            Returns a string if no elements found and a list of dict of elements with the results.
+        None
 
         Raises
         ------
         PyegeriaException
 
         Note:
-
-        A sample dict structure is:
+        -----
+        Sample body:
 
         {
-           "class": "NewClassificationRequestBody",
-           "effectiveTime": "an isoTimestamp",
+           "class" : "NewClassificationRequestBody",
+           "properties" : {
+               "class" : "RetentionClassificationProperties",
+               "retentionBasis" : "Add value here",
+               "status" : "ACTIVE",
+               "confidence" : 100,
+               "associatedGUID" : "Add value here",
+               "archiveAfter" : "isoTimestamp",
+               "deleteAfter" : "isoTimestamp",
+               "steward" : "Add value here",
+               "stewardTypeName" : "Add value here",
+               "stewardPropertyName" : "Add value here",
+               "source" : "Add value here",
+               "notes" : "Add value here"
+           },
+           "externalSourceGUID": "Add guid here",
+           "externalSourceName": "Add qualified name here",
            "forLineage": false,
            "forDuplicateProcessing": false,
-           "properties": {
-               "class": "RetentionClassificationProperties",
-               "retentionBasis": 0,
-               "status": 0,
-               "confidence": 0,
-               "associatedGUID": "Add value here",
-               "archiveAfter": "{{$isoTimestamp}}",
-               "deleteAfter": "{{$isoTimestamp}}",
-               "steward": "Add value here",
-               "stewardTypeName": "Add value here",
-               "stewardPropertyName": "Add value here",
-               "source": "Add value here",
-               "notes": "Add value here"
-           }
+           "effectiveTime" : "isoTimestamp"
         }
 
         """
 
         url = (
             f"{base_path(self, self.view_server)}/elements/{element_guid}/retention"
-            f""
         )
 
-        await self._async_make_request(
-            "POST", url, body_slimmer(body), time_out=time_out
+        await self._async_new_classification_request(
+            url, prop=["RetentionClassificationProperties"], body=body
         )
 
     def set_retention_classification(
             self,
             element_guid: str,
-            body: dict,
+            body: dict | NewClassificationRequestBody,
             time_out: int = default_time_out,
     ) -> None:
         """
-        Classify/reclassify the element (typically an asset) to indicate how long the element (or associated resource)
-        is to be retained by the organization.  The policy to apply to the element/resource is captured by the retentionBasis
-        property.  The dates after which the element/resource is archived and then deleted are specified in the archiveAfter and deleteAfter
-        properties respectively. Async version
+        Classify the element (typically an asset) to indicate how long the element (or associated resource)
+        is to be retained by the organization. The policy to apply to the element/resource is captured by the
+        retentionBasis property. The dates after which the element/resource is archived and then deleted are specified
+        in the archiveAfter and deleteAfter properties respectively.
 
-        Governance Action Classifications: https://egeria-project.org/types/4/0422-Governance-Action-Classifications/
+        Governance Action Classifications: https://egeria-project.org/types/4/0422-Governed-Data-Classifications/
 
         Parameters
         ----------
         element_guid: str
             - the identity of the element to update
-        body: dict
-            - a dictionary structure containing the properties to set - see note below
-
+        body: dict | NewClassificationRequestBody
+            - a dictionary or Pydantic model containing the properties to set - see note below
         time_out: int, default = default_time_out
             - http request timeout for this request
 
         Returns
         -------
-        [dict] | str
-            Returns a string if no elements found and a list of dict of elements with the results.
+        None
 
         Raises
         ------
         PyegeriaException
 
         Note:
-
-        A sample dict structure is:
+        -----
+        Sample body:
 
         {
-           "class": "NewClassificationRequestBody",
-           "effectiveTime": "an isoTimestamp",
+           "class" : "NewClassificationRequestBody",
+           "properties" : {
+               "class" : "RetentionClassificationProperties",
+               "retentionBasis" : "Add value here",
+               "status" : "ACTIVE",
+               "confidence" : 100,
+               "associatedGUID" : "Add value here",
+               "archiveAfter" : "isoTimestamp",
+               "deleteAfter" : "isoTimestamp",
+               "steward" : "Add value here",
+               "stewardTypeName" : "Add value here",
+               "stewardPropertyName" : "Add value here",
+               "source" : "Add value here",
+               "notes" : "Add value here"
+           },
+           "externalSourceGUID": "Add guid here",
+           "externalSourceName": "Add qualified name here",
            "forLineage": false,
            "forDuplicateProcessing": false,
-           "properties": {
-               "class": "RetentionClassificationProperties",
-               "retentionBasis": 0,
-               "status": 0,
-               "confidence": 0,
-               "associatedGUID": "Add value here",
-               "archiveAfter": "{{$isoTimestamp}}",
-               "deleteAfter": "{{$isoTimestamp}}",
-               "steward": "Add value here",
-               "stewardTypeName": "Add value here",
-               "stewardPropertyName": "Add value here",
-               "source": "Add value here",
-               "notes": "Add value here"
-           }
+           "effectiveTime" : "isoTimestamp"
         }
+
         """
 
         loop = asyncio.get_event_loop()
@@ -7401,6 +7833,7 @@ body: dict | FilterRequestBody = None,
     async def _async_clear_retention_classification(
             self,
             element_guid: str,
+            body: dict | DeleteClassificationRequestBody = None,
             for_lineage: bool = False,
             for_duplicate_processing: bool = False,
             effective_time: str = None,
@@ -7416,6 +7849,8 @@ body: dict | FilterRequestBody = None,
         ----------
         element_guid: str
             - the identity of the element to update
+        body: dict | DeleteClassificationRequestBody, default = None
+            - a dictionary or Pydantic model containing the properties for the request - see note below
         for_lineage: bool, default is set by server
             - determines if elements classified as Memento should be returned - normally false
         for_duplicate_processing: bool, default is set by server
@@ -7429,13 +7864,24 @@ body: dict | FilterRequestBody = None,
 
         Returns
         -------
-        [dict] | str
-            Returns a string if no elements found and a list of dict of elements with the results.
+        None
 
         Raises
         ------
         PyegeriaException
 
+        Note:
+        -----
+        Sample body:
+
+        {
+           "class" : "DeleteClassificationRequestBody",
+           "externalSourceGUID": "Add guid here",
+           "externalSourceName": "Add qualified name here",
+           "forLineage": false,
+           "forDuplicateProcessing": false,
+           "effectiveTime" : "isoTimestamp"
+        }
 
         """
 
@@ -7444,8 +7890,9 @@ body: dict | FilterRequestBody = None,
             f""
         )
 
-        body = {"class": "NewClassificationRequestBody", "effectiveTime": effective_time, "forLineage": for_lineage,
-                "forDuplicateProcessing": for_duplicate_processing}
+        if body is None:
+            body = {"class": "DeleteClassificationRequestBody", "effectiveTime": effective_time, "forLineage": for_lineage,
+                    "forDuplicateProcessing": for_duplicate_processing}
 
         await self._async_make_request(
             "POST", url, body_slimmer(body), time_out=time_out
@@ -7454,6 +7901,7 @@ body: dict | FilterRequestBody = None,
     def clear_retention_classification(
             self,
             element_guid: str,
+            body: dict | DeleteClassificationRequestBody = None,
             for_lineage: bool = False,
             for_duplicate_processing: bool = False,
             effective_time: str = None,
@@ -7469,6 +7917,8 @@ body: dict | FilterRequestBody = None,
         ----------
         element_guid: str
             - the identity of the element to update
+        body: dict | DeleteClassificationRequestBody, default = None
+            - a dictionary or Pydantic model containing the properties for the request - see note below
         for_lineage: bool, default is set by server
             - determines if elements classified as Memento should be returned - normally false
         for_duplicate_processing: bool, default is set by server
@@ -7482,13 +7932,24 @@ body: dict | FilterRequestBody = None,
 
         Returns
         -------
-        [dict] | str
-            Returns a string if no elements found and a list of dict of elements with the results.
+        None
 
         Raises
         ------
         PyegeriaException
 
+        Note:
+        -----
+        Sample body:
+
+        {
+           "class" : "DeleteClassificationRequestBody",
+           "externalSourceGUID": "Add guid here",
+           "externalSourceName": "Add qualified name here",
+           "forLineage": false,
+           "forDuplicateProcessing": false,
+           "effectiveTime" : "isoTimestamp"
+        }
 
         """
 
@@ -7496,6 +7957,7 @@ body: dict | FilterRequestBody = None,
         loop.run_until_complete(
             self._async_clear_retention_classification(
                 element_guid,
+                body,
                 for_lineage,
                 for_duplicate_processing,
                 effective_time,
@@ -7506,36 +7968,35 @@ body: dict | FilterRequestBody = None,
     async def _async_set_governance_expectation(
             self,
             element_guid: str,
-            body: dict,
+            body: dict | NewClassificationRequestBody,
             time_out: int = default_time_out,
     ) -> None:
         """
-        Classify/reclassify the element (typically an asset) to Add the governance expectations classification to an element. Async version
+        Add the governance expectations classification to an element. Async version.
+
         Governance Rollout: https://egeria-project.org/types/4/0450-Governance-Rollout/
-        Async Version
 
         Parameters
         ----------
         element_guid: str
             - the identity of the element to update
-        body: dict
-            - a dictionary structure containing the properties to set - see note below
+        body: dict | NewClassificationRequestBody
+            - a dictionary or Pydantic model containing the properties to set - see note below
 
         time_out: int, default = default_time_out
             - http request timeout for this request
 
         Returns
         -------
-        [dict] | str
-            Returns a string if no elements found and a list of dict of elements with the results.
+        None
 
         Raises
         ------
         PyegeriaException
 
         Note:
-
-        A sample dict structure is:
+        -----
+        Sample body:
 
         {
            "class" : "NewClassificationRequestBody",
@@ -7558,78 +8019,75 @@ body: dict | FilterRequestBody = None,
            "externalSourceName": "Add qualified name here",
            "forLineage": false,
            "forDuplicateProcessing": false,
-           "effectiveTime" : "{{$isoTimestamp}}"
+           "effectiveTime" : "isoTimestamp"
         }
-
         """
 
         url = (
             f"{base_path(self, self.view_server)}/elements/{element_guid}/governance-expectations"
-            f""
         )
 
-        await self._async_make_request(
-            "POST", url, body_slimmer(body), time_out=time_out
+        await self._async_new_classification_request(
+            url, prop=["GovernanceExpectationsProperties"], body=body
         )
 
     def set_governance_expectation(
             self,
             element_guid: str,
-            body: dict,
+            body: dict | NewClassificationRequestBody,
             time_out: int = default_time_out,
     ) -> None:
         """
-            Classify/reclassify the element (typically an asset) to Add the governance expectations classification to an element. Async version
-            Governance Rollout: https://egeria-project.org/types/4/0450-Governance-Rollout/
+        Add the governance expectations classification to an element.
 
-            Parameters
-            ----------
-            element_guid: str
-                - the identity of the element to update
-            body: dict
-                - a dictionary structure containing the properties to set - see note below
+        Governance Rollout: https://egeria-project.org/types/4/0450-Governance-Rollout/
 
-            time_out: int, default = default_time_out
-                - http request timeout for this request
+        Parameters
+        ----------
+        element_guid: str
+            - the identity of the element to update
+        body: dict | NewClassificationRequestBody
+            - a dictionary or Pydantic model containing the properties to set - see note below
 
-            Returns
-            -------
-            [dict] | str
-                Returns a string if no elements found and a list of dict of elements with the results.
+        time_out: int, default = default_time_out
+            - http request timeout for this request
 
-            Raises
-            ------
-            PyegeriaException
+        Returns
+        -------
+        None
 
-            Note:
+        Raises
+        ------
+        PyegeriaException
 
-            A sample dict structure is:
+        Note:
+        -----
+        Sample body:
 
-            {
-               "class" : "NewClassificationRequestBody",
-               "properties" : {
-                   "class" : "GovernanceExpectationsProperties",
-                   "counts" : {
-                     "countName1" : 23,
-                     "countName2" : 42
-                   },
-                   "values" : {
-                     "valueName1" : "Add string here",
-                     "valueName2" : "Add string here"
-                   },
-                   "flags" : {
-                     "flagName1" : true,
-                     "flagName2" : false
-                   }
+        {
+           "class" : "NewClassificationRequestBody",
+           "properties" : {
+               "class" : "GovernanceExpectationsProperties",
+               "counts" : {
+                 "countName1" : 23,
+                 "countName2" : 42
                },
-               "externalSourceGUID": "Add guid here",
-               "externalSourceName": "Add qualified name here",
-               "forLineage": false,
-               "forDuplicateProcessing": false,
-               "effectiveTime" : "{{$isoTimestamp}}"
-            }
-
-            """
+               "values" : {
+                 "valueName1" : "Add string here",
+                 "valueName2" : "Add string here"
+               },
+               "flags" : {
+                 "flagName1" : true,
+                 "flagName2" : false
+               }
+           },
+           "externalSourceGUID": "Add guid here",
+           "externalSourceName": "Add qualified name here",
+           "forLineage": false,
+           "forDuplicateProcessing": false,
+           "effectiveTime" : "isoTimestamp"
+        }
+        """
 
         loop = asyncio.get_event_loop()
         loop.run_until_complete(
@@ -7643,6 +8101,7 @@ body: dict | FilterRequestBody = None,
     async def _async_clear_governance_expectation(
             self,
             element_guid: str,
+            body: dict | DeleteClassificationRequestBody = None,
             for_lineage: bool = False,
             for_duplicate_processing: bool = False,
             effective_time: str = None,
@@ -7651,12 +8110,14 @@ body: dict | FilterRequestBody = None,
         """
         Remove the governance expectations classification from an element. Async version
 
-#       Governance Rollout: https://egeria-project.org/types/4/0450-Governance-Rollout/
+        Governance Rollout: https://egeria-project.org/types/4/0450-Governance-Rollout/
 
         Parameters
         ----------
         element_guid: str
             - the identity of the element to update
+        body: dict | DeleteClassificationRequestBody, default = None
+            - a dictionary or Pydantic model containing the properties for the request - see note below
         for_lineage: bool, default is set by server
             - determines if elements classified as Memento should be returned - normally false
         for_duplicate_processing: bool, default is set by server
@@ -7670,13 +8131,24 @@ body: dict | FilterRequestBody = None,
 
         Returns
         -------
-        [dict] | str
-            Returns a string if no elements found and a list of dict of elements with the results.
+        None
 
         Raises
         ------
         PyegeriaException
 
+        Note:
+        -----
+        Sample body:
+
+        {
+           "class" : "DeleteClassificationRequestBody",
+           "externalSourceGUID": "Add guid here",
+           "externalSourceName": "Add qualified name here",
+           "forLineage": false,
+           "forDuplicateProcessing": false,
+           "effectiveTime" : "isoTimestamp"
+        }
 
         """
 
@@ -7685,48 +8157,111 @@ body: dict | FilterRequestBody = None,
             f""
         )
 
-        body = {"class": "NewClassificationRequestBody", "effectiveTime": effective_time, "forLineage": for_lineage,
-                "forDuplicateProcessing": for_duplicate_processing}
+        if body is None:
+            body = {"class": "DeleteClassificationRequestBody", "effectiveTime": effective_time, "forLineage": for_lineage,
+                    "forDuplicateProcessing": for_duplicate_processing}
 
         await self._async_make_request(
             "POST", url, body_slimmer(body), time_out=time_out
         )
 
-    async def _async_update_governance_expectation(
-            self,
-            element_guid: str,
-            body: dict,
-            time_out: int = default_time_out,
+    def clear_governance_expectation(
+        self,
+        element_guid: str,
+        body: dict | DeleteClassificationRequestBody = None,
+        for_lineage: bool = False,
+        for_duplicate_processing: bool = False,
+        effective_time: str = None,
+        time_out: int = default_time_out,
     ) -> None:
         """
-        Classify/reclassify the element (typically an asset) to Add the governance expectations classification to an element. Async version
+        Remove the governance expectations classification from an element.
+
         Governance Rollout: https://egeria-project.org/types/4/0450-Governance-Rollout/
-        Async Version
 
         Parameters
         ----------
         element_guid: str
             - the identity of the element to update
-        body: dict
-            - a dictionary structure containing the properties to set - see note below
-
+        body: dict | DeleteClassificationRequestBody, default = None
+            - a dictionary or Pydantic model containing the properties for the request - see note below
+        for_lineage: bool, default is set by server
+            - determines if elements classified as Memento should be returned - normally false
+        for_duplicate_processing: bool, default is set by server
+            - Normally false. Set true when the caller is part of a deduplication function
+        effective_time: str, default = None
+           - Time format is "YYYY-MM-DDTHH:MM:SS" (ISO 8601)
         time_out: int, default = default_time_out
             - http request timeout for this request
 
         Returns
         -------
-        [dict] | str
-            Returns a string if no elements found and a list of dict of elements with the results.
+        None
 
         Raises
         ------
         PyegeriaException
 
         Note:
+        -----
+        Sample body:
 
-        A sample dict structure is:
+        {
+           "class" : "DeleteClassificationRequestBody",
+           "externalSourceGUID": "Add guid here",
+           "externalSourceName": "Add qualified name here",
+           "forLineage": false,
+           "forDuplicateProcessing": false,
+           "effectiveTime" : "isoTimestamp"
+        }
 
-    {
+        """
+        loop = asyncio.get_event_loop()
+        loop.run_until_complete(
+            self._async_clear_governance_expectation(
+                element_guid,
+                body,
+                for_lineage,
+                for_duplicate_processing,
+                effective_time,
+                time_out,
+            )
+        )
+
+    async def _async_update_governance_expectation(
+            self,
+            element_guid: str,
+            body: dict | UpdateClassificationRequestBody,
+            time_out: int = default_time_out,
+    ) -> None:
+        """
+        Update the governance expectations classification to an element. Async version.
+
+        Governance Rollout: https://egeria-project.org/types/4/0450-Governance-Rollout/
+
+        Parameters
+        ----------
+        element_guid: str
+            - the identity of the element to update
+        body: dict | UpdateClassificationRequestBody
+            - a dictionary or Pydantic model containing the properties to set - see note below
+
+        time_out: int, default = default_time_out
+            - http request timeout for this request
+
+        Returns
+        -------
+        None
+
+        Raises
+        ------
+        PyegeriaException
+
+        Note:
+        -----
+        Sample body:
+
+        {
            "class" : "UpdateClassificationRequestBody",
            "mergeUpdate": true,
            "properties" : {
@@ -7748,80 +8283,76 @@ body: dict | FilterRequestBody = None,
            "externalSourceName": "Add qualified name here",
            "forLineage": false,
            "forDuplicateProcessing": false,
-           "effectiveTime" : "{{$isoTimestamp}}"
+           "effectiveTime" : "isoTimestamp"
         }
-
         """
 
         url = (
             f"{base_path(self, self.view_server)}/elements/{element_guid}/governance-expectations/update"
-            f""
         )
 
-        await self._async_make_request(
-            "POST", url, body_slimmer(body), time_out=time_out
+        await self._async_update_element_body_request(
+            url, prop=["GovernanceExpectationsProperties"], body=body
         )
 
     def update_governance_expectation(
             self,
             element_guid: str,
-            body: dict,
+            body: dict | UpdateClassificationRequestBody,
             time_out: int = default_time_out,
     ) -> None:
         """
-         Classify/reclassify the element (typically an asset) to Add the governance expectations classification to an element. Async version
-         Governance Rollout: https://egeria-project.org/types/4/0450-Governance-Rollout/
-         Async Version
+        Update the governance expectations classification to an element.
 
-         Parameters
-         ----------
-         element_guid: str
-             - the identity of the element to update
-         body: dict
-             - a dictionary structure containing the properties to set - see note below
+        Governance Rollout: https://egeria-project.org/types/4/0450-Governance-Rollout/
 
-         time_out: int, default = default_time_out
-             - http request timeout for this request
+        Parameters
+        ----------
+        element_guid: str
+            - the identity of the element to update
+        body: dict | UpdateClassificationRequestBody
+            - a dictionary or Pydantic model containing the properties to set - see note below
 
-         Returns
-         -------
-         [dict] | str
-             Returns a string if no elements found and a list of dict of elements with the results.
+        time_out: int, default = default_time_out
+            - http request timeout for this request
 
-         Raises
-         ------
-         PyegeriaException
+        Returns
+        -------
+        None
 
-         Note:
+        Raises
+        ------
+        PyegeriaException
 
-         A sample dict structure is:
+        Note:
+        -----
+        Sample body:
 
         {
-            "class" : "UpdateClassificationRequestBody",
-            "mergeUpdate": true,
-            "properties" : {
-                "class" : "GovernanceExpectationsProperties",
-                "counts" : {
-                  "countName1" : 23,
-                  "countName2" : 42
-                },
-                "values" : {
-                  "valueName1" : "Add string here",
-                  "valueName2" : "Add string here"
-                },
-                "flags" : {
-                  "flagName1" : true,
-                  "flagName2" : false
-                }
-            },
-            "externalSourceGUID": "Add guid here",
-            "externalSourceName": "Add qualified name here",
-            "forLineage": false,
-            "forDuplicateProcessing": false,
-            "effectiveTime" : "{{$isoTimestamp}}"
+           "class" : "UpdateClassificationRequestBody",
+           "mergeUpdate": true,
+           "properties" : {
+               "class" : "GovernanceExpectationsProperties",
+               "counts" : {
+                 "countName1" : 23,
+                 "countName2" : 42
+               },
+               "values" : {
+                 "valueName1" : "Add string here",
+                 "valueName2" : "Add string here"
+               },
+               "flags" : {
+                 "flagName1" : true,
+                 "flagName2" : false
+               }
+           },
+           "externalSourceGUID": "Add guid here",
+           "externalSourceName": "Add qualified name here",
+           "forLineage": false,
+           "forDuplicateProcessing": false,
+           "effectiveTime" : "isoTimestamp"
         }
-
-    """
+        """
 
         loop = asyncio.get_event_loop()
         loop.run_until_complete(
@@ -7832,81 +8363,418 @@ body: dict | FilterRequestBody = None,
             )
         )
 
-    async def _async_set_security_tags_classification(
+    async def _async_add_governance_measurements(
             self,
             element_guid: str,
-            body: dict,
+            body: dict | NewClassificationRequestBody,
             time_out: int = default_time_out,
     ) -> None:
         """
-        Add or replace the security tags for an element. Async version,
+        Add the governance measurements classification to an element. Async version.
 
-        Security Tags: https://egeria-project.org/types/4/0423-Security-Definitions/
+        Governance Rollout: https://egeria-project.org/types/4/0450-Governance-Rollout/
 
         Parameters
         ----------
         element_guid: str
             - the identity of the element to update
-        body: dict
-            - a dictionary structure containing the properties to set - see note below
-
-
+        body: dict | NewClassificationRequestBody
+            - a dictionary or Pydantic model containing the properties to set - see note below
 
         time_out: int, default = default_time_out
             - http request timeout for this request
 
         Returns
         -------
-        [dict] | str
-            Returns a string if no elements found and a list of dict of elements with the results.
+        None
 
         Raises
         ------
         PyegeriaException
 
         Note:
-
-        A sample dict structure is:
+        -----
+        Sample body:
 
         {
-           "class": "NewClassificationRequestBody",
-           "effectiveTime": "an isoTimestamp",
+           "class" : "NewClassificationRequestBody",
+           "properties" : {
+               "class" : "GovernanceMeasurementsProperties",
+               "dataCollectionStartTime" : "isoTimestamp",
+               "dataCollectionEndTime" : "isoTimestamp",
+               "counts" : {
+                 "countName1" : 23,
+                 "countName2" : 42
+               },
+               "values" : {
+                 "valueName1" : "Add string here",
+                 "valueName2" : "Add string here"
+               },
+               "flags" : {
+                 "flagName1" : true,
+                 "flagName2" : false
+               }
+           },
+           "externalSourceGUID": "Add guid here",
+           "externalSourceName": "Add qualified name here",
            "forLineage": false,
            "forDuplicateProcessing": false,
-           "properties": {
-               "class": "SecurityTagsProperties",
-               "securityLabels": [ "Label1", "Label2" ],
-               "securityProperties": {
-                   "propertyName1": "add property value here",
-                   "propertyName2": "add property value here"
-               },
-               "accessGroups": {
-                   "groupName1": [ "operation1", "operation2" ],
-                   "groupName2": [ "operation1", "operation3" ]
-               }
-           }
+           "effectiveTime" : "isoTimestamp"
         }
+        """
 
+        url = (
+            f"{base_path(self, self.view_server)}/elements/{element_guid}/governance-measurements"
+        )
+
+        await self._async_new_classification_request(
+            url, prop=["GovernanceMeasurementsProperties"], body=body
+        )
+
+    def add_governance_measurements(
+            self,
+            element_guid: str,
+            body: dict | NewClassificationRequestBody,
+            time_out: int = default_time_out,
+    ) -> None:
+        """
+        Add the governance measurements classification to an element.
+
+        Governance Rollout: https://egeria-project.org/types/4/0450-Governance-Rollout/
+
+        Parameters
+        ----------
+        element_guid: str
+            - the identity of the element to update
+        body: dict | NewClassificationRequestBody
+            - a dictionary or Pydantic model containing the properties to set - see note below
+
+        time_out: int, default = default_time_out
+            - http request timeout for this request
+
+        Returns
+        -------
+        None
+
+        Raises
+        ------
+        PyegeriaException
+
+        Note:
+        -----
+        Sample body:
+
+        {
+           "class" : "NewClassificationRequestBody",
+           "properties" : {
+               "class" : "GovernanceMeasurementsProperties",
+               "dataCollectionStartTime" : "isoTimestamp",
+               "dataCollectionEndTime" : "isoTimestamp",
+               "counts" : {
+                 "countName1" : 23,
+                 "countName2" : 42
+               },
+               "values" : {
+                 "valueName1" : "Add string here",
+                 "valueName2" : "Add string here"
+               },
+               "flags" : {
+                 "flagName1" : true,
+                 "flagName2" : false
+               }
+           },
+           "externalSourceGUID": "Add guid here",
+           "externalSourceName": "Add qualified name here",
+           "forLineage": false,
+           "forDuplicateProcessing": false,
+           "effectiveTime" : "isoTimestamp"
+        }
+        """
+
+        loop = asyncio.get_event_loop()
+        loop.run_until_complete(
+            self._async_add_governance_measurements(
+                element_guid,
+                body,
+                time_out,
+            )
+        )
+
+    async def _async_update_governance_measurements(
+            self,
+            element_guid: str,
+            body: dict | UpdateClassificationRequestBody,
+            time_out: int = default_time_out,
+    ) -> None:
+        """
+        Update the governance measurements classification to an element. Async version.
+
+        Governance Rollout: https://egeria-project.org/types/4/0450-Governance-Rollout/
+
+        Parameters
+        ----------
+        element_guid: str
+            - the identity of the element to update
+        body: dict | UpdateClassificationRequestBody
+            - a dictionary or Pydantic model containing the properties to set - see note below
+
+        time_out: int, default = default_time_out
+            - http request timeout for this request
+
+        Returns
+        -------
+        None
+
+        Raises
+        ------
+        PyegeriaException
+
+        Note:
+        -----
+        Sample body:
+
+        {
+           "class" : "UpdateClassificationRequestBody",
+           "mergeUpdate" : true,
+           "properties" : {
+               "class" : "GovernanceMeasurementsProperties",
+               "dataCollectionStartTime" : "isoTimestamp",
+               "dataCollectionEndTime" : "isoTimestamp",
+               "counts" : {
+                 "countName1" : 23,
+                 "countName2" : 42
+               },
+               "values" : {
+                 "valueName1" : "Add string here",
+                 "valueName2" : "Add string here"
+               },
+               "flags" : {
+                 "flagName1" : true,
+                 "flagName2" : false
+               }
+           },
+           "externalSourceGUID": "Add guid here",
+           "externalSourceName": "Add qualified name here",
+           "forLineage": false,
+           "forDuplicateProcessing": false,
+           "effectiveTime" : "isoTimestamp"
+        }
+        """
+
+        url = (
+            f"{base_path(self, self.view_server)}/elements/{element_guid}/governance-measurements/update"
+        )
+
+        await self._async_update_element_body_request(
+            url, prop=["GovernanceMeasurementsProperties"], body=body
+        )
+
+    def update_governance_measurements(
+            self,
+            element_guid: str,
+            body: dict | UpdateClassificationRequestBody,
+            time_out: int = default_time_out,
+    ) -> None:
+        """
+        Update the governance measurements classification to an element.
+
+        Governance Rollout: https://egeria-project.org/types/4/0450-Governance-Rollout/
+
+        Parameters
+        ----------
+        element_guid: str
+            - the identity of the element to update
+        body: dict | UpdateClassificationRequestBody
+            - a dictionary or Pydantic model containing the properties to set - see note below
+
+        time_out: int, default = default_time_out
+            - http request timeout for this request
+
+        Returns
+        -------
+        None
+
+        Raises
+        ------
+        PyegeriaException
+
+        Note:
+        -----
+        Sample body:
+
+        {
+           "class" : "UpdateClassificationRequestBody",
+           "mergeUpdate" : true,
+           "properties" : {
+               "class" : "GovernanceMeasurementsProperties",
+               "dataCollectionStartTime" : "isoTimestamp",
+               "dataCollectionEndTime" : "isoTimestamp",
+               "counts" : {
+                 "countName1" : 23,
+                 "countName2" : 42
+               },
+               "values" : {
+                 "valueName1" : "Add string here",
+                 "valueName2" : "Add string here"
+               },
+               "flags" : {
+                 "flagName1" : true,
+                 "flagName2" : false
+               }
+           },
+           "externalSourceGUID": "Add guid here",
+           "externalSourceName": "Add qualified name here",
+           "forLineage": false,
+           "forDuplicateProcessing": false,
+           "effectiveTime" : "isoTimestamp"
+        }
+        """
+
+        loop = asyncio.get_event_loop()
+        loop.run_until_complete(
+            self._async_update_governance_measurements(
+                element_guid,
+                body,
+                time_out,
+            )
+        )
+
+    async def _async_clear_governance_measurements(
+            self,
+            element_guid: str,
+            body: dict | DeleteClassificationRequestBody = None,
+            for_lineage: bool = False,
+            for_duplicate_processing: bool = False,
+            effective_time: str = None,
+            time_out: int = default_time_out,
+    ) -> None:
+        """
+        Remove the governance measurements classification from an element. Async version.
+
+        Governance Rollout: https://egeria-project.org/types/4/0450-Governance-Rollout/
+
+        Parameters
+        ----------
+        element_guid: str
+            - the identity of the element to update
+        body: dict | DeleteClassificationRequestBody, default = None
+            - a dictionary or Pydantic model containing the properties for the request - see note below
+        for_lineage: bool, default = False
+            - determines if elements classified as Memento should be returned
+        for_duplicate_processing: bool, default = False
+            - Normally false. Set true when the caller is part of a deduplication function
+        effective_time: str, default = None
+           - Time format is "YYYY-MM-DDTHH:MM:SS" (ISO 8601)
+        time_out: int, default = default_time_out
+            - http request timeout for this request
+
+        Returns
+        -------
+        None
+
+        Raises
+        ------
+        PyegeriaException
+
+        Note:
+        -----
+        Sample body:
+
+        {
+           "class" : "DeleteClassificationRequestBody",
+           "externalSourceGUID": "Add guid here",
+           "externalSourceName": "Add qualified name here",
+           "forLineage": false,
+           "forDuplicateProcessing": false,
+           "effectiveTime" : "isoTimestamp"
+        }
 
         """
 
         url = (
-            f"{base_path(self, self.view_server)}/elements/{element_guid}/security-tags"
-            f""
+            f"{base_path(self, self.view_server)}/elements/{element_guid}/governance-measurements/remove"
         )
+
+        if body is None:
+            body = {
+                "class": "DeleteClassificationRequestBody",
+                "forLineage": for_lineage,
+                "forDuplicateProcessing": for_duplicate_processing,
+                "effectiveTime": effective_time
+            }
 
         await self._async_make_request(
             "POST", url, body_slimmer(body), time_out=time_out
         )
 
-    def set_security_tags_classification(
+    def clear_governance_measurements(
             self,
             element_guid: str,
-            body: dict,
+            body: dict | DeleteClassificationRequestBody = None,
+            for_lineage: bool = False,
+            for_duplicate_processing: bool = False,
+            effective_time: str = None,
             time_out: int = default_time_out,
     ) -> None:
         """
-        Add or replace the security tags for an element. Async versuib,
+        Remove the governance measurements classification from an element.
+
+        Governance Rollout: https://egeria-project.org/types/4/0450-Governance-Rollout/
+
+        Parameters
+        ----------
+        element_guid: str
+            - the identity of the element to update
+        body: dict | DeleteClassificationRequestBody, default = None
+            - a dictionary or Pydantic model containing the properties for the request - see note below
+        for_lineage: bool, default = False
+        for_duplicate_processing: bool, default = False
+        effective_time: str, default = None
+        time_out: int, default = default_time_out
+
+        Returns
+        -------
+        None
+
+        Raises
+        ------
+        PyegeriaException
+
+        Note:
+        -----
+        Sample body:
+
+        {
+           "class" : "DeleteClassificationRequestBody",
+           "externalSourceGUID": "Add guid here",
+           "externalSourceName": "Add qualified name here",
+           "forLineage": false,
+           "forDuplicateProcessing": false,
+           "effectiveTime" : "isoTimestamp"
+        }
+
+        """
+
+        loop = asyncio.get_event_loop()
+        loop.run_until_complete(
+            self._async_clear_governance_measurements(
+                element_guid,
+                body,
+                for_lineage,
+                for_duplicate_processing,
+                effective_time,
+                time_out,
+            )
+        )
+
+    async def _async_set_security_tags_classification(
+            self,
+            element_guid: str,
+            body: dict | NewClassificationRequestBody,
+            time_out: int = default_time_out,
+    ) -> None:
+        """
+        Add or replace the security tags for an element. Async version.
 
         Security Tags: https://egeria-project.org/types/4/0423-Security-Definitions/
 
@@ -7914,47 +8782,107 @@ body: dict | FilterRequestBody = None,
         ----------
         element_guid: str
             - the identity of the element to update
-        body: dict
-            - a dictionary structure containing the properties to set - see note below
-
-
+        body: dict | NewClassificationRequestBody
+            - a dictionary or Pydantic model containing the properties to set - see note below
 
         time_out: int, default = default_time_out
             - http request timeout for this request
 
         Returns
         -------
-        [dict] | str
-            Returns a string if no elements found and a list of dict of elements with the results.
+        None
 
         Raises
         ------
         PyegeriaException
 
         Note:
-
-        A sample dict structure is:
+        -----
+        Sample body:
 
         {
-           "class": "NewClassificationRequestBody",
-           "effectiveTime": "an isoTimestamp",
+           "class" : "NewClassificationRequestBody",
+           "properties" : {
+               "class" : "SecurityTagsProperties",
+               "securityLabels" : [ "Label1", "Label2" ],
+               "securityProperties" : {
+                   "propertyName1" : "add property value here",
+                   "propertyName2" : "add property value here"
+               },
+               "accessGroups" : {
+                   "groupName1" : [ "operation1", "operation2" ],
+                   "groupName2" : [ "operation1", "operation3" ]
+               }
+           },
+           "externalSourceGUID": "Add guid here",
+           "externalSourceName": "Add qualified name here",
            "forLineage": false,
            "forDuplicateProcessing": false,
-           "properties": {
-               "class": "SecurityTagsProperties",
-               "securityLabels": [ "Label1", "Label2" ],
-               "securityProperties": {
-                   "propertyName1": "add property value here",
-                   "propertyName2": "add property value here"
-               },
-               "accessGroups": {
-                   "groupName1": [ "operation1", "operation2" ],
-                   "groupName2": [ "operation1", "operation3" ]
-               }
-           }
+           "effectiveTime" : "isoTimestamp"
         }
+        """
 
+        url = (
+            f"{base_path(self, self.view_server)}/elements/{element_guid}/security-tags"
+        )
 
+        await self._async_new_classification_request(
+            url, prop=["SecurityTagsProperties"], body=body
+        )
+
+    def set_security_tags_classification(
+            self,
+            element_guid: str,
+            body: dict | NewClassificationRequestBody,
+            time_out: int = default_time_out,
+    ) -> None:
+        """
+        Add or replace the security tags for an element.
+
+        Security Tags: https://egeria-project.org/types/4/0423-Security-Definitions/
+
+        Parameters
+        ----------
+        element_guid: str
+            - the identity of the element to update
+        body: dict | NewClassificationRequestBody
+            - a dictionary or Pydantic model containing the properties to set - see note below
+
+        time_out: int, default = default_time_out
+            - http request timeout for this request
+
+        Returns
+        -------
+        None
+
+        Raises
+        ------
+        PyegeriaException
+
+        Note:
+        -----
+        Sample body:
+
+        {
+           "class" : "NewClassificationRequestBody",
+           "properties" : {
+               "class" : "SecurityTagsProperties",
+               "securityLabels" : [ "Label1", "Label2" ],
+               "securityProperties" : {
+                   "propertyName1" : "add property value here",
+                   "propertyName2" : "add property value here"
+               },
+               "accessGroups" : {
+                   "groupName1" : [ "operation1", "operation2" ],
+                   "groupName2" : [ "operation1", "operation3" ]
+               }
+           },
+           "externalSourceGUID": "Add guid here",
+           "externalSourceName": "Add qualified name here",
+           "forLineage": false,
+           "forDuplicateProcessing": false,
+           "effectiveTime" : "isoTimestamp"
+        }
         """
 
         loop = asyncio.get_event_loop()
@@ -7969,13 +8897,14 @@ body: dict | FilterRequestBody = None,
     async def _async_clear_security_tags_classification(
             self,
             element_guid: str,
+            body: dict | DeleteClassificationRequestBody = None,
             for_lineage: bool = False,
             for_duplicate_processing: bool = False,
             effective_time: str = None,
             time_out: int = default_time_out,
     ) -> None:
         """
-        Remove the security-tags classification from the element.
+        Remove the security-tags classification from the element. Async version.
 
         Security Tags: https://egeria-project.org/types/4/0423-Security-Definitions/
 
@@ -7983,14 +8912,16 @@ body: dict | FilterRequestBody = None,
         ----------
         element_guid: str
             - the identity of the element to update
+        body: dict | DeleteClassificationRequestBody, default = None
+            - a dictionary or Pydantic model containing the properties for the request - see note below
         for_lineage: bool, default is set by server
             - determines if elements classified as Memento should be returned - normally false
         for_duplicate_processing: bool, default is set by server
             - Normally false. Set true when the caller is part of a deduplication function
-        time_out: int, default = default_time_out
-            - http request timeout for this request
         effective_time: str, default = None
             - Time format is "YYYY-MM-DDTHH:MM:SS" (ISO 8601)
+        time_out: int, default = default_time_out
+            - http request timeout for this request
 
         Returns
         -------
@@ -8000,6 +8931,18 @@ body: dict | FilterRequestBody = None,
         ------
         PyegeriaException
 
+        Note:
+        -----
+        Sample body:
+
+        {
+           "class" : "DeleteClassificationRequestBody",
+           "externalSourceGUID": "Add guid here",
+           "externalSourceName": "Add qualified name here",
+           "forLineage": false,
+           "forDuplicateProcessing": false,
+           "effectiveTime" : "isoTimestamp"
+        }
 
         """
 
@@ -8008,8 +8951,9 @@ body: dict | FilterRequestBody = None,
             f""
         )
 
-        body = {"class": "NewClassificationRequestBody", "effectiveTime": effective_time, "forLineage": for_lineage,
-                "forDuplicateProcessing": for_duplicate_processing}
+        if body is None:
+            body = {"class": "DeleteClassificationRequestBody", "effectiveTime": effective_time, "forLineage": for_lineage,
+                    "forDuplicateProcessing": for_duplicate_processing}
 
         await self._async_make_request(
             "POST", url, body_slimmer(body), time_out=time_out
@@ -8018,6 +8962,7 @@ body: dict | FilterRequestBody = None,
     def clear_security_tags_classification(
             self,
             element_guid: str,
+            body: dict | DeleteClassificationRequestBody = None,
             for_lineage: bool = False,
             for_duplicate_processing: bool = False,
             effective_time: str = None,
@@ -8032,6 +8977,8 @@ body: dict | FilterRequestBody = None,
         ----------
         element_guid: str
             - the identity of the element to update
+        body: dict | DeleteClassificationRequestBody, default = None
+            - a dictionary or Pydantic model containing the properties for the request - see note below
         for_lineage: bool, default is set by server
             - determines if elements classified as Memento should be returned - normally false
         for_duplicate_processing: bool, default is set by server
@@ -8051,6 +8998,18 @@ body: dict | FilterRequestBody = None,
         ------
         PyegeriaException
 
+        Note:
+        -----
+        Sample body:
+
+        {
+           "class" : "DeleteClassificationRequestBody",
+           "externalSourceGUID": "Add guid here",
+           "externalSourceName": "Add qualified name here",
+           "forLineage": false,
+           "forDuplicateProcessing": false,
+           "effectiveTime" : "isoTimestamp"
+        }
 
         """
 
@@ -8058,6 +9017,7 @@ body: dict | FilterRequestBody = None,
         loop.run_until_complete(
             self._async_clear_security_tags_classification(
                 element_guid,
+                body,
                 for_lineage,
                 for_duplicate_processing,
                 effective_time,
@@ -8065,30 +9025,128 @@ body: dict | FilterRequestBody = None,
             )
         )
 
-    async def _async_setup_semantic_assignment(
+    async def _async_add_search_keyword_to_element(
             self,
-            glossary_term_guid: str,
             element_guid: str,
-            body: dict,
+            body: dict | NewAttachmentRequestBody,
             time_out: int = default_time_out,
-    ) -> None:
+    ) -> str:
         """
-        Create a semantic assignment relationship between a glossary term and an element (normally a schema attribute,
-        data field or asset). This relationship indicates that the data associated with the element meaning matches
-        the description in the glossary term. Async version
+        Creates a search keyword and attaches it to an element. Async version.
 
-        Semantic Assignments: https://egeria-project.org/types/3/0370-Semantic-Assignment/
+        Search keyword: https://egeria-project.org/concepts/search-keyword/
 
         Parameters
         ----------
-        glossary_term_guid: str
-            - identity of glossary to assign
         element_guid: str
             - the identity of the element to update
-        body: dict
-            - a dictionary structure containing the properties to set - see note below
+        body: dict | NewAttachmentRequestBody
+            - a dictionary or Pydantic model containing the properties to set - see note below
 
+        time_out: int, default = default_time_out
+            - http request timeout for this request
 
+        Returns
+        -------
+        str
+            - the guid of the new search keyword
+
+        Raises
+        ------
+        PyegeriaException
+
+        Note:
+        -----
+        Sample body:
+
+        {
+          "class" : "NewAttachmentRequestBody",
+          "properties" : {
+            "class" : "SearchKeywordProperties",
+            "displayName" : "myKeyword",
+            "description" : "Add search keyword text here"
+          }
+        }
+        """
+
+        url = (
+            f"{base_path(self, self.view_server)}/elements/{element_guid}/search-keywords"
+        )
+
+        return await self._async_create_attachment_body_request(
+            url, prop=["SearchKeywordProperties"], body=body
+        )
+
+    def add_search_keyword_to_element(
+            self,
+            element_guid: str,
+            body: dict | NewAttachmentRequestBody,
+            time_out: int = default_time_out,
+    ) -> str:
+        """
+        Creates a search keyword and attaches it to an element.
+
+        Search keyword: https://egeria-project.org/concepts/search-keyword/
+
+        Parameters
+        ----------
+        element_guid: str
+            - the identity of the element to update
+        body: dict | NewAttachmentRequestBody
+            - a dictionary or Pydantic model containing the properties to set - see note below
+
+        time_out: int, default = default_time_out
+            - http request timeout for this request
+
+        Returns
+        -------
+        str
+            - the guid of the new search keyword
+
+        Raises
+        ------
+        PyegeriaException
+
+        Note:
+        -----
+        Sample body:
+
+        {
+          "class" : "NewAttachmentRequestBody",
+          "properties" : {
+            "class" : "SearchKeywordProperties",
+            "displayName" : "myKeyword",
+            "description" : "Add search keyword text here"
+          }
+        }
+        """
+
+        loop = asyncio.get_event_loop()
+        return loop.run_until_complete(
+            self._async_add_search_keyword_to_element(
+                element_guid,
+                body,
+                time_out,
+            )
+        )
+
+    async def _async_update_search_keyword(
+            self,
+            search_keyword_guid: str,
+            body: dict | UpdateElementRequestBody,
+            time_out: int = default_time_out,
+    ) -> None:
+        """
+        Update an existing search keyword. Async version.
+
+        Search keyword: https://egeria-project.org/concepts/search-keyword/
+
+        Parameters
+        ----------
+        search_keyword_guid: str
+            - the identity of the search keyword to update
+        body: dict | UpdateElementRequestBody
+            - a dictionary or Pydantic model containing the properties to set - see note below
 
         time_out: int, default = default_time_out
             - http request timeout for this request
@@ -8102,45 +9160,1524 @@ body: dict | FilterRequestBody = None,
         PyegeriaException
 
         Note:
-
-        A sample dict structure is:
+        -----
+        Sample body:
 
         {
-          "class": "RelationshipRequestBody",
-          "effectiveTime": "an isoTimestamp",
-          "forLineage": false,
-          "forDuplicateProcessing": false,
-          "relationshipProperties": {
-            "class": "SemanticAssignmentProperties",
-            "expression": "add value here",
-            "description": "add value here",
-            "status": "VALIDATED",
-            "confidence": 100,
-            "createdBy": "add value here",
-            "steward": "add value here",
-            "source": "add value here"
+          "class" : "UpdateElementRequestBody",
+          "mergeUpdate": true,
+          "properties" : {
+            "class" : "SearchKeywordProperties",
+            "displayName" : "myKeyword",
+            "description" : "Add search keyword text here"
           }
         }
+        """
 
+        url = (
+            f"{base_path(self, self.view_server)}/search-keywords/{search_keyword_guid}/update"
+        )
+
+        await self._async_update_element_body_request(
+            url, prop=["SearchKeywordProperties"], body=body
+        )
+
+    def update_search_keyword(
+            self,
+            search_keyword_guid: str,
+            body: dict | UpdateElementRequestBody,
+            time_out: int = default_time_out,
+    ) -> None:
+        """
+        Update an existing search keyword.
+
+        Search keyword: https://egeria-project.org/concepts/search-keyword/
+
+        Parameters
+        ----------
+        search_keyword_guid: str
+            - the identity of the search keyword to update
+        body: dict | UpdateElementRequestBody
+            - a dictionary or Pydantic model containing the properties to set - see note below
+
+        time_out: int, default = default_time_out
+            - http request timeout for this request
+
+        Returns
+        -------
+        None
+
+        Raises
+        ------
+        PyegeriaException
+
+        Note:
+        -----
+        Sample body:
+
+        {
+          "class" : "UpdateElementRequestBody",
+          "mergeUpdate": true,
+          "properties" : {
+            "class" : "SearchKeywordProperties",
+            "displayName" : "myKeyword",
+            "description" : "Add search keyword text here"
+          }
+        }
+        """
+
+        loop = asyncio.get_event_loop()
+        loop.run_until_complete(
+            self._async_update_search_keyword(
+                search_keyword_guid,
+                body,
+                time_out,
+            )
+        )
+
+    async def _async_remove_search_keyword_from_element(
+            self,
+            search_keyword_guid: str,
+            time_out: int = default_time_out,
+    ) -> None:
+        """
+        Removes a search keyword added to the element by this user.
+        This deletes the link to the search keyword and the search keyword itself.
+        Async version.
+
+        Search keyword: https://egeria-project.org/concepts/search-keyword/
+
+        Parameters
+        ----------
+        search_keyword_guid: str
+            - the identity of the search keyword to remove
+
+        time_out: int, default = default_time_out
+            - http request timeout for this request
+
+        Returns
+        -------
+        None
+
+        Raises
+        ------
+        PyegeriaException
+        """
+
+        url = (
+            f"{base_path(self, self.view_server)}/search-keywords/{search_keyword_guid}/remove"
+        )
+
+        await self._async_make_request(
+            "POST", url, None, time_out=time_out
+        )
+
+    def remove_search_keyword_from_element(
+            self,
+            search_keyword_guid: str,
+            time_out: int = default_time_out,
+    ) -> None:
+        """
+        Removes a search keyword added to the element by this user.
+        This deletes the link to the search keyword and the search keyword itself.
+
+        Search keyword: https://egeria-project.org/concepts/search-keyword/
+
+        Parameters
+        ----------
+        search_keyword_guid: str
+            - the identity of the search keyword to remove
+
+        time_out: int, default = default_time_out
+            - http request timeout for this request
+
+        Returns
+        -------
+        None
+
+        Raises
+        ------
+        PyegeriaException
+        """
+
+        loop = asyncio.get_event_loop()
+        loop.run_until_complete(
+            self._async_remove_search_keyword_from_element(
+                search_keyword_guid,
+                time_out,
+            )
+        )
+
+    async def _async_set_known_duplicate_classification(
+            self,
+            element_guid: str,
+            body: dict | NewClassificationRequestBody,
+            time_out: int = default_time_out,
+    ) -> None:
+        """
+        Classify the element to indicate that is has one or more duplicate in the open metadata ecosystem.
+        Async version.
+
+        Duplicate Management: https://egeria-project.org/features/duplicate-management/overview
+
+        Parameters
+        ----------
+        element_guid: str
+            - the identity of the element to update
+        body: dict | NewClassificationRequestBody
+            - a dictionary or Pydantic model containing the properties to set - see note below
+
+        time_out: int, default = default_time_out
+            - http request timeout for this request
+
+        Returns
+        -------
+        None
+
+        Raises
+        ------
+        PyegeriaException
+
+        Note:
+        -----
+        Sample body:
+
+        {
+           "class" : "NewClassificationRequestBody",
+           "properties" : {
+               "class" : "KnownDuplicateProperties"
+           },
+           "externalSourceGUID": "Add guid here",
+           "externalSourceName": "Add qualified name here",
+           "forLineage": false,
+           "forDuplicateProcessing": false,
+           "effectiveTime" : "isoTimestamp"
+        }
+        """
+
+        url = (
+            f"{base_path(self, self.view_server)}/elements/{element_guid}/known-duplicate"
+        )
+
+        await self._async_new_classification_request(
+            url, prop=["KnownDuplicateProperties"], body=body
+        )
+
+    def set_known_duplicate_classification(
+            self,
+            element_guid: str,
+            body: dict | NewClassificationRequestBody,
+            time_out: int = default_time_out,
+    ) -> None:
+        """
+        Classify the element to indicate that is has one or more duplicate in the open metadata ecosystem.
+
+        Duplicate Management: https://egeria-project.org/features/duplicate-management/overview
+
+        Parameters
+        ----------
+        element_guid: str
+            - the identity of the element to update
+        body: dict | NewClassificationRequestBody
+            - a dictionary or Pydantic model containing the properties to set - see note below
+
+        time_out: int, default = default_time_out
+            - http request timeout for this request
+
+        Returns
+        -------
+        None
+
+        Raises
+        ------
+        PyegeriaException
+
+        Note:
+        -----
+        Sample body:
+
+        {
+           "class" : "NewClassificationRequestBody",
+           "properties" : {
+               "class" : "KnownDuplicateProperties"
+           },
+           "externalSourceGUID": "Add guid here",
+           "externalSourceName": "Add qualified name here",
+           "forLineage": false,
+           "forDuplicateProcessing": false,
+           "effectiveTime" : "isoTimestamp"
+        }
+        """
+
+        loop = asyncio.get_event_loop()
+        loop.run_until_complete(
+            self._async_set_known_duplicate_classification(
+                element_guid,
+                body,
+                time_out,
+            )
+        )
+
+    async def _async_clear_known_duplicate_classification(
+            self,
+            element_guid: str,
+            body: dict | DeleteClassificationRequestBody = None,
+            for_lineage: bool = False,
+            for_duplicate_processing: bool = False,
+            effective_time: str = None,
+            time_out: int = default_time_out,
+    ) -> None:
+        """
+        Remove the KnownDuplicate classification from the element. Async version.
+
+        Duplicate Management: https://egeria-project.org/features/duplicate-management/overview
+
+        Parameters
+        ----------
+        element_guid: str
+            - the identity of the element to update
+        body: dict | DeleteClassificationRequestBody, default = None
+            - a dictionary or Pydantic model containing the properties for the request - see note below
+        for_lineage: bool, default = False
+        for_duplicate_processing: bool, default = False
+        effective_time: str, default = None
+        time_out: int, default = default_time_out
+
+        Returns
+        -------
+        None
+
+        Raises
+        ------
+        PyegeriaException
+
+        Note:
+        -----
+        Sample body:
+
+        {
+           "class" : "DeleteClassificationRequestBody",
+           "externalSourceGUID": "Add guid here",
+           "externalSourceName": "Add qualified name here",
+           "forLineage": false,
+           "forDuplicateProcessing": false,
+           "effectiveTime" : "isoTimestamp"
+        }
 
         """
 
         url = (
-            f"{base_path(self, self.view_server)}/elements/{element_guid}/semantic-assignment/terms/attach"
-            f"/{glossary_term_guid}"
+            f"{base_path(self, self.view_server)}/elements/{element_guid}/known-duplicate/remove"
+        )
+
+        if body is None:
+            body = {
+                "class": "DeleteClassificationRequestBody",
+                "forLineage": for_lineage,
+                "forDuplicateProcessing": for_duplicate_processing,
+                "effectiveTime": effective_time
+            }
+
+        await self._async_make_request(
+            "POST", url, body_slimmer(body), time_out=time_out
+        )
+
+    def clear_known_duplicate_classification(
+            self,
+            element_guid: str,
+            body: dict | DeleteClassificationRequestBody = None,
+            for_lineage: bool = False,
+            for_duplicate_processing: bool = False,
+            effective_time: str = None,
+            time_out: int = default_time_out,
+    ) -> None:
+        """
+        Remove the KnownDuplicate classification from the element.
+
+        Duplicate Management: https://egeria-project.org/features/duplicate-management/overview
+
+        Parameters
+        ----------
+        element_guid: str
+            - the identity of the element to update
+        body: dict | DeleteClassificationRequestBody, default = None
+            - a dictionary or Pydantic model containing the properties for the request - see note below
+        for_lineage: bool, default = False
+        for_duplicate_processing: bool, default = False
+        effective_time: str, default = None
+        time_out: int, default = default_time_out
+
+        Returns
+        -------
+        None
+
+        Raises
+        ------
+        PyegeriaException
+
+        Note:
+        -----
+        Sample body:
+
+        {
+           "class" : "DeleteClassificationRequestBody",
+           "externalSourceGUID": "Add guid here",
+           "externalSourceName": "Add qualified name here",
+           "forLineage": false,
+           "forDuplicateProcessing": false,
+           "effectiveTime" : "isoTimestamp"
+        }
+
+        """
+
+        loop = asyncio.get_event_loop()
+        loop.run_until_complete(
+            self._async_clear_known_duplicate_classification(
+                element_guid,
+                body,
+                for_lineage,
+                for_duplicate_processing,
+                effective_time,
+                time_out,
+            )
+        )
+
+    async def _async_link_elements_as_peer_duplicates(
+            self,
+            element_guid: str,
+            peer_duplicate_guid: str,
+            body: dict | NewRelationshipRequestBody,
+            time_out: int = default_time_out,
+    ) -> str:
+        """
+        Create a PeerDuplicateLink relationship between two elements that shows they represent the same 'thing'.
+        Async version.
+
+        Duplicate Management: https://egeria-project.org/features/duplicate-management/overview
+
+        Parameters
+        ----------
+        element_guid: str
+            - the identity of the first element
+        peer_duplicate_guid: str
+            - the identity of the peer duplicate element
+        body: dict | NewRelationshipRequestBody
+            - a dictionary or Pydantic model containing the properties to set - see note below
+
+        time_out: int, default = default_time_out
+            - http request timeout for this request
+
+        Returns
+        -------
+        str
+            - the guid of the new relationship
+
+        Raises
+        ------
+        PyegeriaException
+
+        Note:
+        -----
+        Sample body:
+
+        {
+           "class" : "NewRelationshipRequestBody",
+           "properties" : {
+             "class": "PeerDuplicateLinkProperties",
+             "statusIdentifier" : 0,
+             "steward" : "Add value here",
+             "stewardTypeName" : "Add value here",
+             "stewardPropertyName" : "Add value here",
+             "source" : "Add value here",
+             "notes" : "Add value here"
+          },
+           "externalSourceGUID": "Add guid here",
+           "externalSourceName": "Add qualified name here",
+           "forLineage": false,
+           "forDuplicateProcessing": false,
+           "effectiveTime" : "isoTimestamp"
+        }
+        """
+
+        url = (
+            f"{base_path(self, self.view_server)}/elements/{element_guid}/peer-duplicate/{peer_duplicate_guid}/attach"
+        )
+
+        return await self._async_new_relationship_request(
+            url, prop=["PeerDuplicateLinkProperties"], body=body
+        )
+
+    def link_elements_as_peer_duplicates(
+            self,
+            element_guid: str,
+            peer_duplicate_guid: str,
+            body: dict | NewRelationshipRequestBody,
+            time_out: int = default_time_out,
+    ) -> str:
+        """
+        Create a PeerDuplicateLink relationship between two elements that shows they represent the same 'thing'.
+
+        Duplicate Management: https://egeria-project.org/features/duplicate-management/overview
+
+        Parameters
+        ----------
+        element_guid: str
+            - the identity of the first element
+        peer_duplicate_guid: str
+            - the identity of the peer duplicate element
+        body: dict | NewRelationshipRequestBody
+            - a dictionary or Pydantic model containing the properties to set - see note below
+
+        time_out: int, default = default_time_out
+            - http request timeout for this request
+
+        Returns
+        -------
+        str
+            - the guid of the new relationship
+
+        Raises
+        ------
+        PyegeriaException
+
+        Note:
+        -----
+        Sample body:
+
+        {
+           "class" : "NewRelationshipRequestBody",
+           "properties" : {
+             "class": "PeerDuplicateLinkProperties",
+             "statusIdentifier" : 0,
+             "steward" : "Add value here",
+             "stewardTypeName" : "Add value here",
+             "stewardPropertyName" : "Add value here",
+             "source" : "Add value here",
+             "notes" : "Add value here"
+          },
+           "externalSourceGUID": "Add guid here",
+           "externalSourceName": "Add qualified name here",
+           "forLineage": false,
+           "forDuplicateProcessing": false,
+           "effectiveTime" : "isoTimestamp"
+        }
+        """
+
+        loop = asyncio.get_event_loop()
+        return loop.run_until_complete(
+            self._async_link_elements_as_peer_duplicates(
+                element_guid,
+                peer_duplicate_guid,
+                body,
+                time_out,
+            )
+        )
+
+    async def _async_unlink_elements_as_peer_duplicates(
+            self,
+            element_guid: str,
+            peer_duplicate_guid: str,
+            body: dict | DeleteRelationshipRequestBody,
+            time_out: int = default_time_out,
+    ) -> None:
+        """
+        Remove the PeerDuplicateLink a relationship between two elements that showed they represent the same 'thing'.
+        Async version.
+
+        Duplicate Management: https://egeria-project.org/features/duplicate-management/overview
+
+        Parameters
+        ----------
+        element_guid: str
+            - the identity of the element to update
+        peer_duplicate_guid: str
+            - the identity of the peer duplicate element
+        body: dict | DeleteRelationshipRequestBody
+            - a dictionary or Pydantic model containing the properties for the request - see note below
+
+        time_out: int, default = default_time_out
+            - http request timeout for this request
+
+        Returns
+        -------
+        None
+
+        Raises
+        ------
+        PyegeriaException
+
+        Note:
+        -----
+        Sample body:
+
+        {
+           "class" : "DeleteRelationshipRequestBody",
+           "externalSourceGUID": "Add guid here",
+           "externalSourceName": "Add qualified name here",
+           "forLineage": false,
+           "forDuplicateProcessing": false,
+           "effectiveTime" : "isoTimestamp"
+        }
+        """
+
+        url = (
+            f"{base_path(self, self.view_server)}/elements/{element_guid}/peer-duplicate/{peer_duplicate_guid}/detach"
         )
 
         await self._async_make_request(
             "POST", url, body_slimmer(body), time_out=time_out
         )
 
+    def unlink_elements_as_peer_duplicates(
+            self,
+            element_guid: str,
+            peer_duplicate_guid: str,
+            body: dict | DeleteRelationshipRequestBody,
+            time_out: int = default_time_out,
+    ) -> None:
+        """
+        Remove the PeerDuplicateLink a relationship between two elements that showed they represent the same 'thing'.
+
+        Duplicate Management: https://egeria-project.org/features/duplicate-management/overview
+
+        Parameters
+        ----------
+        element_guid: str
+            - the identity of the element to update
+        peer_duplicate_guid: str
+            - the identity of the peer duplicate element
+        body: dict | DeleteRelationshipRequestBody
+            - a dictionary or Pydantic model containing the properties for the request - see note below
+
+        time_out: int, default = default_time_out
+            - http request timeout for this request
+
+        Returns
+        -------
+        None
+
+        Raises
+        ------
+        PyegeriaException
+
+        Note:
+        -----
+        Sample body:
+
+        {
+           "class" : "DeleteRelationshipRequestBody",
+           "externalSourceGUID": "Add guid here",
+           "externalSourceName": "Add qualified name here",
+           "forLineage": false,
+           "forDuplicateProcessing": false,
+           "effectiveTime" : "isoTimestamp"
+        }
+        """
+
+        loop = asyncio.get_event_loop()
+        loop.run_until_complete(
+            self._async_unlink_elements_as_peer_duplicates(
+                element_guid,
+                peer_duplicate_guid,
+                body,
+                time_out,
+            )
+        )
+
+    async def _async_set_consolidated_duplicate_classification(
+            self,
+            element_guid: str,
+            body: dict | NewClassificationRequestBody,
+            time_out: int = default_time_out,
+    ) -> None:
+        """
+        Classify the element to indicate that it is derived from one or more duplicates in the open metadata ecosystem.
+        Async version.
+
+        Duplicate Management: https://egeria-project.org/features/duplicate-management/overview
+
+        Parameters
+        ----------
+        element_guid: str
+            - the identity of the element to update
+        body: dict | NewClassificationRequestBody
+            - a dictionary or Pydantic model containing the properties to set - see note below
+
+        time_out: int, default = default_time_out
+            - http request timeout for this request
+
+        Returns
+        -------
+        None
+
+        Raises
+        ------
+        PyegeriaException
+
+        Note:
+        -----
+        Sample body:
+
+        {
+           "class" : "NewClassificationRequestBody",
+           "properties" : {
+               "class" : "ConsolidatedDuplicateProperties",
+               "statusIdentifier" : 0,
+               "steward" : "Add value here",
+               "stewardTypeName" : "Add value here",
+               "stewardPropertyName" : "Add value here",
+               "source" : "Add value here",
+               "notes" : "Add value here"
+           },
+           "externalSourceGUID": "Add guid here",
+           "externalSourceName": "Add qualified name here",
+           "forLineage": false,
+           "forDuplicateProcessing": false,
+           "effectiveTime" : "isoTimestamp"
+        }
+        """
+
+        url = (
+            f"{base_path(self, self.view_server)}/elements/{element_guid}/consolidated-duplicate"
+        )
+
+        await self._async_new_classification_request(
+            url, prop=["ConsolidatedDuplicateProperties"], body=body
+        )
+
+    def set_consolidated_duplicate_classification(
+            self,
+            element_guid: str,
+            body: dict | NewClassificationRequestBody,
+            time_out: int = default_time_out,
+    ) -> None:
+        """
+        Classify the element to indicate that it is derived from one or more duplicates in the open metadata ecosystem.
+
+        Duplicate Management: https://egeria-project.org/features/duplicate-management/overview
+
+        Parameters
+        ----------
+        element_guid: str
+            - the identity of the element to update
+        body: dict | NewClassificationRequestBody
+            - a dictionary or Pydantic model containing the properties to set - see note below
+
+        time_out: int, default = default_time_out
+            - http request timeout for this request
+
+        Returns
+        -------
+        None
+
+        Raises
+        ------
+        PyegeriaException
+
+        Note:
+        -----
+        Sample body:
+
+        {
+           "class" : "NewClassificationRequestBody",
+           "properties" : {
+               "class" : "ConsolidatedDuplicateProperties",
+               "statusIdentifier" : 0,
+               "steward" : "Add value here",
+               "stewardTypeName" : "Add value here",
+               "stewardPropertyName" : "Add value here",
+               "source" : "Add value here",
+               "notes" : "Add value here"
+           },
+           "externalSourceGUID": "Add guid here",
+           "externalSourceName": "Add qualified name here",
+           "forLineage": false,
+           "forDuplicateProcessing": false,
+           "effectiveTime" : "isoTimestamp"
+        }
+        """
+
+        loop = asyncio.get_event_loop()
+        loop.run_until_complete(
+            self._async_set_consolidated_duplicate_classification(
+                element_guid,
+                body,
+                time_out,
+            )
+        )
+
+    async def _async_clear_consolidated_duplicate_classification(
+            self,
+            element_guid: str,
+            body: dict | DeleteClassificationRequestBody = None,
+            for_lineage: bool = False,
+            for_duplicate_processing: bool = False,
+            effective_time: str = None,
+            time_out: int = default_time_out,
+    ) -> None:
+        """
+        Remove the ConsolidatedDuplicate classification from the element. Async version.
+
+        Duplicate Management: https://egeria-project.org/features/duplicate-management/overview
+
+        Parameters
+        ----------
+        element_guid: str
+            - the identity of the element to update
+        body: dict | DeleteClassificationRequestBody, default = None
+            - a dictionary or Pydantic model containing the properties for the request - see note below
+        for_lineage: bool, default = False
+        for_duplicate_processing: bool, default = False
+        effective_time: str, default = None
+        time_out: int, default = default_time_out
+
+        Returns
+        -------
+        None
+
+        Raises
+        ------
+        PyegeriaException
+
+        Note:
+        -----
+        Sample body:
+
+        {
+           "class" : "DeleteClassificationRequestBody",
+           "externalSourceGUID": "Add guid here",
+           "externalSourceName": "Add qualified name here",
+           "forLineage": false,
+           "forDuplicateProcessing": false,
+           "effectiveTime" : "isoTimestamp"
+        }
+        """
+
+        url = (
+            f"{base_path(self, self.view_server)}/elements/{element_guid}/consolidated-duplicate/remove"
+        )
+
+        if body is None:
+            body = {
+                "class": "DeleteClassificationRequestBody",
+                "forLineage": for_lineage,
+                "forDuplicateProcessing": for_duplicate_processing,
+                "effectiveTime": effective_time
+            }
+
+        await self._async_make_request(
+            "POST", url, body_slimmer(body), time_out=time_out
+        )
+
+    def clear_consolidated_duplicate_classification(
+            self,
+            element_guid: str,
+            body: dict | DeleteClassificationRequestBody = None,
+            for_lineage: bool = False,
+            for_duplicate_processing: bool = False,
+            effective_time: str = None,
+            time_out: int = default_time_out,
+    ) -> None:
+        """
+        Remove the ConsolidatedDuplicate classification from the element.
+
+        Duplicate Management: https://egeria-project.org/features/duplicate-management/overview
+
+        Parameters
+        ----------
+        element_guid: str
+            - the identity of the element to update
+        body: dict | DeleteClassificationRequestBody, default = None
+            - a dictionary or Pydantic model containing the properties for the request - see note below
+        for_lineage: bool, default = False
+        for_duplicate_processing: bool, default = False
+        effective_time: str, default = None
+        time_out: int, default = default_time_out
+
+        Returns
+        -------
+        None
+
+        Raises
+        ------
+        PyegeriaException
+
+        Note:
+        -----
+        Sample body:
+
+        {
+           "class" : "DeleteClassificationRequestBody",
+           "externalSourceGUID": "Add guid here",
+           "externalSourceName": "Add qualified name here",
+           "forLineage": false,
+           "forDuplicateProcessing": false,
+           "effectiveTime" : "isoTimestamp"
+        }
+        """
+
+        loop = asyncio.get_event_loop()
+        loop.run_until_complete(
+            self._async_clear_consolidated_duplicate_classification(
+                element_guid,
+                body,
+                for_lineage,
+                for_duplicate_processing,
+                effective_time,
+                time_out,
+            )
+        )
+
+    async def _async_link_consolidated_duplicate_to_source(
+            self,
+            element_guid: str,
+            source_element_guid: str,
+            body: dict | NewRelationshipRequestBody,
+            time_out: int = default_time_out,
+    ) -> str:
+        """
+        Create a relationship between two elements that shows that one is a combination of
+        a number of duplicates, and it should be used instead. Async version.
+
+        Duplicate Management: https://egeria-project.org/features/duplicate-management/overview
+
+        Parameters
+        ----------
+        element_guid: str
+            - the identity of the consolidated duplicate element
+        source_element_guid: str
+            - the identity of the source element
+        body: dict | NewRelationshipRequestBody
+            - a dictionary or Pydantic model containing the properties to set - see note below
+
+        time_out: int, default = default_time_out
+            - http request timeout for this request
+
+        Returns
+        -------
+        str
+            - the guid of the new relationship
+
+        Raises
+        ------
+        PyegeriaException
+
+        Note:
+        -----
+        Sample body:
+
+        {
+           "class" : "NewRelationshipRequestBody",
+           "properties" : {
+             "class": "ConsolidatedDuplicateLinkProperties"
+          },
+           "externalSourceGUID": "Add guid here",
+           "externalSourceName": "Add qualified name here",
+           "forLineage": false,
+           "forDuplicateProcessing": false,
+           "effectiveTime" : "isoTimestamp"
+        }
+        """
+
+        url = (
+            f"{base_path(self, self.view_server)}/elements/{element_guid}/consolidated-duplicate-source/{source_element_guid}/attach"
+        )
+
+        return await self._async_new_relationship_request(
+            url, prop=["ConsolidatedDuplicateLinkProperties"], body=body
+        )
+
+    def link_consolidated_duplicate_to_source(
+            self,
+            element_guid: str,
+            source_element_guid: str,
+            body: dict | NewRelationshipRequestBody,
+            time_out: int = default_time_out,
+    ) -> str:
+        """
+        Create a relationship between two elements that shows that one is a combination of
+        a number of duplicates, and it should be used instead.
+
+        Duplicate Management: https://egeria-project.org/features/duplicate-management/overview
+
+        Parameters
+        ----------
+        element_guid: str
+            - the identity of the consolidated duplicate element
+        source_element_guid: str
+            - the identity of the source element
+        body: dict | NewRelationshipRequestBody
+            - a dictionary or Pydantic model containing the properties to set - see note below
+
+        time_out: int, default = default_time_out
+            - http request timeout for this request
+
+        Returns
+        -------
+        str
+            - the guid of the new relationship
+
+        Raises
+        ------
+        PyegeriaException
+
+        Note:
+        -----
+        Sample body:
+
+        {
+           "class" : "NewRelationshipRequestBody",
+           "properties" : {
+             "class": "ConsolidatedDuplicateLinkProperties"
+          },
+           "externalSourceGUID": "Add guid here",
+           "externalSourceName": "Add qualified name here",
+           "forLineage": false,
+           "forDuplicateProcessing": false,
+           "effectiveTime" : "isoTimestamp"
+        }
+        """
+
+        loop = asyncio.get_event_loop()
+        return loop.run_until_complete(
+            self._async_link_consolidated_duplicate_to_source(
+                element_guid,
+                source_element_guid,
+                body,
+                time_out,
+            )
+        )
+
+    async def _async_unlink_consolidated_duplicate_from_source_element(
+            self,
+            element_guid: str,
+            source_element_guid: str,
+            body: dict | DeleteRelationshipRequestBody,
+            time_out: int = default_time_out,
+    ) -> None:
+        """
+        Remove the ConsolidatedDuplicateLink relationship between two elements that showed they represent
+        the same "thing". Async version.
+
+        Duplicate Management: https://egeria-project.org/features/duplicate-management/overview
+
+        Parameters
+        ----------
+        element_guid: str
+            - the identity of the source element
+        source_element_guid: str
+            - the identity of the source element
+        body: dict | DeleteRelationshipRequestBody
+            - a dictionary or Pydantic model containing the properties for the request - see note below
+
+        time_out: int, default = default_time_out
+            - http request timeout for this request
+
+        Returns
+        -------
+        None
+
+        Raises
+        ------
+        PyegeriaException
+
+        Note:
+        -----
+        Sample body:
+
+        {
+           "class" : "DeleteRelationshipRequestBody",
+           "externalSourceGUID": "Add guid here",
+           "externalSourceName": "Add qualified name here",
+           "forLineage": false,
+           "forDuplicateProcessing": false,
+           "effectiveTime" : "isoTimestamp"
+        }
+        """
+
+        url = (
+            f"{base_path(self, self.view_server)}/elements/{element_guid}/consolidated-duplicate-source/{source_element_guid}/detach"
+        )
+
+        await self._async_make_request(
+            "POST", url, body_slimmer(body), time_out=time_out
+        )
+
+    def unlink_consolidated_duplicate_from_source_element(
+            self,
+            element_guid: str,
+            source_element_guid: str,
+            body: dict | DeleteRelationshipRequestBody,
+            time_out: int = default_time_out,
+    ) -> None:
+        """
+        Remove the ConsolidatedDuplicateLink relationship between two elements that showed they represent the same "thing".
+
+        Duplicate Management: https://egeria-project.org/features/duplicate-management/overview
+
+        Parameters
+        ----------
+        element_guid: str
+            - the identity of the consolidated duplicate element
+        source_element_guid: str
+            - the identity of the source element
+        body: dict | DeleteRelationshipRequestBody
+            - a dictionary or Pydantic model containing the properties for the request - see note below
+
+        time_out: int, default = default_time_out
+            - http request timeout for this request
+
+        Returns
+        -------
+        None
+
+        Raises
+        ------
+        PyegeriaException
+
+        Note:
+        -----
+        Sample body:
+
+        {
+           "class" : "DeleteRelationshipRequestBody",
+           "externalSourceGUID": "Add guid here",
+           "externalSourceName": "Add qualified name here",
+           "forLineage": false,
+           "forDuplicateProcessing": false,
+           "effectiveTime" : "isoTimestamp"
+        }
+        """
+
+        loop = asyncio.get_event_loop()
+        loop.run_until_complete(
+            self._async_unlink_consolidated_duplicate_from_source_element(
+                element_guid,
+                source_element_guid,
+                body,
+                time_out,
+            )
+        )
+
+    async def _async_assign_action(
+            self,
+            action_guid: str,
+            actor_guid: str,
+            body: dict | NewRelationshipRequestBody = None,
+            time_out: int = default_time_out,
+    ) -> None:
+        """
+        Assign an action to an actor. Async version.
+
+        https://egeria-project.org/concepts/action
+
+        Parameters
+        ----------
+        action_guid: str
+            - unique identifier of the action
+        actor_guid: str
+            - actor to assign the action to
+        body: dict | NewRelationshipRequestBody, optional
+            - a dictionary or Pydantic model containing the properties to set - see note below
+
+        time_out: int, default = default_time_out
+            - http request timeout for this request
+
+        Returns
+        -------
+        None
+
+        Raises
+        ------
+        PyegeriaException
+
+        Note:
+        -----
+        Sample body:
+
+        {
+           "class" : "NewRelationshipRequestBody",
+           "properties" : {
+             "class": "AssignmentScopeProperties",
+             "label" : "add label here",
+             "description" : "Add description here"
+          },
+           "externalSourceGUID": "Add guid here",
+           "externalSourceName": "Add qualified name here",
+           "forLineage": false,
+           "forDuplicateProcessing": false,
+           "effectiveTime" : "isoTimestamp"
+        }
+        """
+
+        url = (
+            f"{self.platform_url}/servers/{self.view_server}/api/open-metadata/classification-explorer/actions/{action_guid}/assign/{actor_guid}"
+        )
+
+        await self._async_new_relationship_request(
+            url, prop=["AssignmentScopeProperties"], body=body
+        )
+
+    def assign_action(
+            self,
+            action_guid: str,
+            actor_guid: str,
+            body: dict | NewRelationshipRequestBody = None,
+            time_out: int = default_time_out,
+    ) -> None:
+        """
+        Assign an action to an actor.
+
+        Parameters
+        ----------
+        action_guid: str
+            - unique identifier of the action
+        actor_guid: str
+            - actor to assign the action to
+        body: dict | NewRelationshipRequestBody, optional
+            - a dictionary or Pydantic model containing the properties to set - see note below
+
+        time_out: int, default = default_time_out
+            - http request timeout for this request
+
+        Returns
+        -------
+        None
+
+        Raises
+        ------
+        PyegeriaException
+
+        Note:
+        -----
+        Sample body:
+
+        {
+           "class" : "NewRelationshipRequestBody",
+           "properties" : {
+             "class": "AssignmentScopeProperties",
+             "label" : "add label here",
+             "description" : "Add description here"
+          },
+           "externalSourceGUID": "Add guid here",
+           "externalSourceName": "Add qualified name here",
+           "forLineage": false,
+           "forDuplicateProcessing": false,
+           "effectiveTime" : "isoTimestamp"
+        }
+        """
+
+        loop = asyncio.get_event_loop()
+        loop.run_until_complete(
+            self._async_assign_action(
+                action_guid,
+                actor_guid,
+                body,
+                time_out,
+            )
+        )
+
+    async def _async_reassign_action(
+            self,
+            action_guid: str,
+            actor_guid: str,
+            body: dict | NewRelationshipRequestBody = None,
+            time_out: int = default_time_out,
+    ) -> None:
+        """
+        Assign an action to a new actor. This will unassign all other actors previously assigned to the action.
+        Async version.
+
+        https://egeria-project.org/concepts/action
+
+        Parameters
+        ----------
+        action_guid: str
+            - unique identifier of the action
+        actor_guid: str
+            - actor to assign the action to
+        body: dict | NewRelationshipRequestBody, optional
+            - a dictionary or Pydantic model containing the properties to set - see note below
+
+        time_out: int, default = default_time_out
+            - http request timeout for this request
+
+        Returns
+        -------
+        None
+
+        Raises
+        ------
+        PyegeriaException
+
+        Note:
+        -----
+        A sample dict structure is:
+
+        {
+           "class" : "NewRelationshipRequestBody",
+           "properties" : {
+             "class": "AssignmentScopeProperties",
+             "label" : "add label here",
+             "description" : "Add description here"
+          },
+           "externalSourceGUID": "Add guid here",
+           "externalSourceName": "Add qualified name here",
+           "forLineage": false,
+           "forDuplicateProcessing": false,
+           "effectiveTime" : "isoTimestamp"
+        }
+        """
+
+        url = (
+            f"{self.platform_url}/servers/{self.view_server}/api/open-metadata/classification-explorer/actions/{action_guid}/reassign/{actor_guid}"
+        )
+
+        await self._async_new_relationship_request(
+            url, prop=["AssignmentScopeProperties"], body=body
+        )
+
+    def reassign_action(
+            self,
+            action_guid: str,
+            actor_guid: str,
+            body: dict | NewRelationshipRequestBody = None,
+            time_out: int = default_time_out,
+    ) -> None:
+        """
+        Assign an action to a new actor. This will unassign all other actors previously assigned to the action.
+
+        Parameters
+        ----------
+        action_guid: str
+            - unique identifier of the action
+        actor_guid: str
+            - actor to assign the action to
+        body: dict | NewRelationshipRequestBody, optional
+            - a dictionary or Pydantic model containing the properties to set - see note below
+
+        time_out: int, default = default_time_out
+            - http request timeout for this request
+
+        Returns
+        -------
+        None
+
+        Raises
+        ------
+        PyegeriaException
+
+        Note:
+        -----
+        A sample dict structure is:
+
+        {
+           "class" : "NewRelationshipRequestBody",
+           "properties" : {
+             "class": "AssignmentScopeProperties",
+             "label" : "add label here",
+             "description" : "Add description here"
+          },
+           "externalSourceGUID": "Add guid here",
+           "externalSourceName": "Add qualified name here",
+           "forLineage": false,
+           "forDuplicateProcessing": false,
+           "effectiveTime" : "isoTimestamp"
+        }
+        """
+
+        loop = asyncio.get_event_loop()
+        loop.run_until_complete(
+            self._async_reassign_action(
+                action_guid,
+                actor_guid,
+                body,
+                time_out,
+            )
+        )
+
+    async def _async_unassign_action(
+            self,
+            action_guid: str,
+            actor_guid: str,
+            body: dict | DeleteRelationshipRequestBody = None,
+            time_out: int = default_time_out,
+    ) -> None:
+        """
+        Remove an action from an actor. Async version.
+
+        https://egeria-project.org/concepts/action
+
+        Parameters
+        ----------
+        action_guid: str
+            - unique identifier of the action
+        actor_guid: str
+            - actor to unassign the action from
+        body: dict | DeleteRelationshipRequestBody, optional
+            - a dictionary or Pydantic model containing the properties to set - see note below
+
+        time_out: int, default = default_time_out
+            - http request timeout for this request
+
+        Returns
+        -------
+        None
+
+        Raises
+        ------
+        PyegeriaException
+
+        Note:
+        -----
+        Sample body:
+
+        {
+           "class" : "DeleteRelationshipRequestBody",
+           "externalSourceGUID": "Add guid here",
+           "externalSourceName": "Add qualified name here",
+           "forLineage": false,
+           "forDuplicateProcessing": false,
+           "effectiveTime" : "isoTimestamp"
+        }
+        """
+
+        url = (
+            f"{self.platform_url}/servers/{self.view_server}/api/open-metadata/classification-explorer/actions/{action_guid}/unassign/{actor_guid}"
+        )
+
+        await self._async_delete_relationship_request(
+            url, body=body
+        )
+
+    def unassign_action(
+            self,
+            action_guid: str,
+            actor_guid: str,
+            body: dict | DeleteRelationshipRequestBody = None,
+            time_out: int = default_time_out,
+    ) -> None:
+        """
+        Remove an action from an actor.
+
+        Parameters
+        ----------
+        action_guid: str
+            - unique identifier of the action
+        actor_guid: str
+            - actor to unassign the action from
+        body: dict | DeleteRelationshipRequestBody, optional
+            - a dictionary or Pydantic model containing the properties to set - see note below
+
+        time_out: int, default = default_time_out
+            - http request timeout for this request
+
+        Returns
+        -------
+        None
+
+        Raises
+        ------
+        PyegeriaException
+
+        Note:
+        -----
+        Sample body:
+
+        {
+           "class" : "DeleteRelationshipRequestBody",
+           "externalSourceGUID": "Add guid here",
+           "externalSourceName": "Add qualified name here",
+           "forLineage": false,
+           "forDuplicateProcessing": false,
+           "effectiveTime" : "isoTimestamp"
+        }
+        """
+
+        loop = asyncio.get_event_loop()
+        loop.run_until_complete(
+            self._async_unassign_action(
+                action_guid,
+                actor_guid,
+                body,
+                time_out,
+            )
+        )
+
+    async def _async_setup_semantic_assignment(
+            self,
+            glossary_term_guid: str,
+            element_guid: str,
+            body: dict | NewRelationshipRequestBody,
+            time_out: int = default_time_out,
+    ) -> str:
+        """
+        Create a semantic assignment relationship between a glossary term and an element (normally a schema attribute,
+        data field or asset). This relationship indicates that the data associated with the element meaning matches
+        the description in the glossary term. Async version.
+
+        Semantic Assignments: https://egeria-project.org/types/3/0370-Semantic-Assignment/
+
+        Parameters
+        ----------
+        glossary_term_guid: str
+            - the identity of the glossary term
+        element_guid: str
+            - the identity of the element to be linked
+        body: dict | NewRelationshipRequestBody
+            - a dictionary or Pydantic model containing the properties to set - see note below
+
+        time_out: int, default = default_time_out
+            - http request timeout for this request
+
+        Returns
+        -------
+        str
+            - the guid of the new relationship
+
+        Raises
+        ------
+        PyegeriaException
+
+        Note:
+        -----
+        Sample body:
+
+        {
+           "class" : "NewRelationshipRequestBody",
+           "properties" : {
+             "class": "SemanticAssignmentProperties",
+             "expression" : "add value here",
+             "description" : "add value here",
+             "status" : "VALIDATED",
+             "confidence" : 100,
+             "createdBy" : "add value here",
+             "steward" : "add value here",
+             "source" : "add value here"
+          },
+           "externalSourceGUID": "Add guid here",
+           "externalSourceName": "Add qualified name here",
+           "forLineage": false,
+           "forDuplicateProcessing": false,
+           "effectiveTime" : "isoTimestamp"
+        }
+        """
+
+        url = (
+            f"{base_path(self, self.view_server)}/elements/{element_guid}/semantic-assignment/terms/{glossary_term_guid}/attach"
+        )
+
+        return await self._async_new_relationship_request(
+            url, prop=["SemanticAssignmentProperties"], body=body
+        )
+
     def setup_semantic_assignment(
             self,
             glossary_term_guid: str,
             element_guid: str,
-            body: dict,
+            body: dict | NewRelationshipRequestBody,
             time_out: int = default_time_out,
-    ) -> None:
+    ) -> str:
         """
         Create a semantic assignment relationship between a glossary term and an element (normally a schema attribute,
         data field or asset). This relationship indicates that the data associated with the element meaning matches
@@ -8151,50 +10688,50 @@ body: dict | FilterRequestBody = None,
         Parameters
         ----------
         glossary_term_guid: str
-            - identity of glossary to assign
+            - the identity of the glossary term
         element_guid: str
-            - the identity of the element to update
-        body: dict
-            - a dictionary structure containing the properties to set - see note below
-
-
+            - the identity of the element to be linked
+        body: dict | NewRelationshipRequestBody
+            - a dictionary or Pydantic model containing the properties to set - see note below
 
         time_out: int, default = default_time_out
             - http request timeout for this request
 
         Returns
         -------
-        None
+        str
+            - the guid of the new relationship
 
         Raises
         ------
         PyegeriaException
 
         Note:
-
-        A sample dict structure is:
+        -----
+        Sample body:
 
         {
-          "class": "RelationshipRequestBody",
-          "effectiveTime": "an isoTimestamp",
-          "forLineage": false,
-          "forDuplicateProcessing": false,
-          "relationshipProperties": {
-            "class": "SemanticAssignmentProperties",
-            "expression": "add value here",
-            "description": "add value here",
-            "status": "VALIDATED",
-            "confidence": 100,
-            "createdBy": "add value here",
-            "steward": "add value here",
-            "source": "add value here"
-          }
+           "class" : "NewRelationshipRequestBody",
+           "properties" : {
+             "class": "SemanticAssignmentProperties",
+             "expression" : "add value here",
+             "description" : "add value here",
+             "status" : "VALIDATED",
+             "confidence" : 100,
+             "createdBy" : "add value here",
+             "steward" : "add value here",
+             "source" : "add value here"
+          },
+           "externalSourceGUID": "Add guid here",
+           "externalSourceName": "Add qualified name here",
+           "forLineage": false,
+           "forDuplicateProcessing": false,
+           "effectiveTime" : "isoTimestamp"
         }
-
         """
 
         loop = asyncio.get_event_loop()
-        loop.run_until_complete(
+        return loop.run_until_complete(
             self._async_setup_semantic_assignment(
                 glossary_term_guid,
                 element_guid,
@@ -8207,22 +10744,25 @@ body: dict | FilterRequestBody = None,
             self,
             glossary_term_guid: str,
             element_guid: str,
+            body: dict | DeleteRelationshipRequestBody = None,
             for_lineage: bool = False,
             for_duplicate_processing: bool = False,
             effective_time: str = None,
             time_out: int = default_time_out,
     ) -> None:
         """
-        Remove the semantic_assignment classification from the element. Async version.
+        Remove a semantic assignment relationship between an element and its glossary term. Async version.
 
-        Security Tags: https://egeria-project.org/types/4/0423-Security-Definitions/
+        Semantic Assignments: https://egeria-project.org/types/3/0370-Semantic-Assignment/
 
         Parameters
         ----------
         glossary_term_guid: str
-           - identity of glossary to remove
+            - the identity of the glossary term
         element_guid: str
-            - the identity of the element to update
+            - the identity of the element
+        body: dict | DeleteRelationshipRequestBody, default = None
+            - a dictionary or Pydantic model containing the properties for the request - see note below
         for_lineage: bool, default is set by server
             - determines if elements classified as Memento should be returned - normally false
         for_duplicate_processing: bool, default is set by server
@@ -8236,21 +10776,34 @@ body: dict | FilterRequestBody = None,
 
         Returns
         -------
-           None
+        None
 
         Raises
         ------
         PyegeriaException
 
+        Note:
+        -----
+        Sample body:
+
+        {
+           "class" : "DeleteRelationshipRequestBody",
+           "externalSourceGUID": "Add guid here",
+           "externalSourceName": "Add qualified name here",
+           "forLineage": false,
+           "forDuplicateProcessing": false,
+           "effectiveTime" : "isoTimestamp"
+        }
         """
 
         url = (
-            f"{base_path(self, self.view_server)}/elements/{element_guid}/semantic-assignment/terms/"
-            f"{glossary_term_guid}/detach"
+            f"{base_path(self, self.view_server)}/elements/{element_guid}/semantic-assignment/terms/{glossary_term_guid}/detach"
+            f""
         )
 
-        body = {"class": "NewClassificationRequestBody", "effectiveTime": effective_time, "forLineage": for_lineage,
-                "forDuplicateProcessing": for_duplicate_processing}
+        if body is None:
+            body = {"class": "DeleteRelationshipRequestBody", "effectiveTime": effective_time,
+                    "forLineage": for_lineage, "forDuplicateProcessing": for_duplicate_processing}
 
         await self._async_make_request(
             "POST", url, body_slimmer(body), time_out=time_out
@@ -8260,22 +10813,25 @@ body: dict | FilterRequestBody = None,
             self,
             glossary_term_guid: str,
             element_guid: str,
+            body: dict | DeleteRelationshipRequestBody = None,
             for_lineage: bool = False,
             for_duplicate_processing: bool = False,
             effective_time: str = None,
             time_out: int = default_time_out,
     ) -> None:
         """
-        Remove the semantic_assignment classification from the element.
+        Remove a semantic assignment relationship between an element and its glossary term.
 
-        Security Tags: https://egeria-project.org/types/4/0423-Security-Definitions/
+        Semantic Assignments: https://egeria-project.org/types/3/0370-Semantic-Assignment/
 
         Parameters
         ----------
         glossary_term_guid: str
-           - identity of glossary to remove
+            - the identity of the glossary term
         element_guid: str
-            - the identity of the element to update
+            - the identity of the element
+        body: dict | DeleteRelationshipRequestBody, default = None
+            - a dictionary or Pydantic model containing the properties for the request - see note below
         for_lineage: bool, default is set by server
             - determines if elements classified as Memento should be returned - normally false
         for_duplicate_processing: bool, default is set by server
@@ -8289,13 +10845,24 @@ body: dict | FilterRequestBody = None,
 
         Returns
         -------
-           None
+        None
 
         Raises
         ------
         PyegeriaException
 
+        Note:
+        -----
+        Sample body:
 
+        {
+           "class" : "DeleteRelationshipRequestBody",
+           "externalSourceGUID": "Add guid here",
+           "externalSourceName": "Add qualified name here",
+           "forLineage": false,
+           "forDuplicateProcessing": false,
+           "effectiveTime" : "isoTimestamp"
+        }
         """
 
         loop = asyncio.get_event_loop()
@@ -8303,6 +10870,7 @@ body: dict | FilterRequestBody = None,
             self._async_clear_semantic_assignment_classification(
                 glossary_term_guid,
                 element_guid,
+                body,
                 for_lineage,
                 for_duplicate_processing,
                 effective_time,
@@ -8313,11 +10881,12 @@ body: dict | FilterRequestBody = None,
     async def _async_add_element_to_subject_area(
             self,
             element_guid: str,
-            body: dict,
+            body: dict | NewClassificationRequestBody,
             time_out: int = default_time_out,
     ) -> None:
         """
-        Classify the element to assert that the definitions it represents are part of a subject area definition. Async
+        Classify the element to assert that the definitions it represents are part of a subject area definition.
+        Async version.
 
         Subject Areas: https://egeria-project.org/types/4/0425-Subject-Areas/
 
@@ -8325,9 +10894,8 @@ body: dict | FilterRequestBody = None,
         ----------
         element_guid: str
             - the identity of the element to update
-        body: dict
-            - a dictionary structure containing the properties to set - see note below
-
+        body: dict | NewClassificationRequestBody
+            - a dictionary or Pydantic model containing the properties to set - see note below
 
         time_out: int, default = default_time_out
             - http request timeout for this request
@@ -8341,40 +10909,39 @@ body: dict | FilterRequestBody = None,
         PyegeriaException
 
         Note:
-
-        A sample dict structure is:
+        -----
+        Sample body:
 
         {
-           "class": "NewClassificationRequestBody",
-           "effectiveTime": "an isoTimestamp",
+           "class" : "NewClassificationRequestBody",
+           "properties" : {
+               "class" : "SubjectAreaMemberProperties",
+               "subjectAreaName" : "Add value here"
+           },
+           "externalSourceGUID": "Add guid here",
+           "externalSourceName": "Add qualified name here",
            "forLineage": false,
            "forDuplicateProcessing": false,
-           "properties": {
-               "class": "SubjectAreaMemberProperties",
-               "subjectAreaName": "Add value here"
-           }
+           "effectiveTime" : "isoTimestamp"
         }
-
-
         """
 
         url = (
             f"{base_path(self, self.view_server)}/elements/{element_guid}/subject-area-member"
-            f""
         )
 
-        await self._async_make_request(
-            "POST", url, body_slimmer(body), time_out=time_out
+        await self._async_new_classification_request(
+            url, prop=["SubjectAreaMemberProperties"], body=body
         )
 
     def add_element_to_subject_area(
             self,
             element_guid: str,
-            body: dict,
+            body: dict | NewClassificationRequestBody,
             time_out: int = default_time_out,
     ) -> None:
         """
-        Classify the element to assert that the definitions it represents are part of a subject area definition. Async
+        Classify the element to assert that the definitions it represents are part of a subject area definition.
 
         Subject Areas: https://egeria-project.org/types/4/0425-Subject-Areas/
 
@@ -8382,8 +10949,8 @@ body: dict | FilterRequestBody = None,
         ----------
         element_guid: str
             - the identity of the element to update
-        body: dict
-            - a dictionary structure containing the properties to set - see note below
+        body: dict | NewClassificationRequestBody
+            - a dictionary or Pydantic model containing the properties to set - see note below
 
         time_out: int, default = default_time_out
             - http request timeout for this request
@@ -8397,21 +10964,21 @@ body: dict | FilterRequestBody = None,
         PyegeriaException
 
         Note:
-
-        A sample dict structure is:
+        -----
+        Sample body:
 
         {
-           "class": "NewClassificationRequestBody",
-           "effectiveTime": "an isoTimestamp",
+           "class" : "NewClassificationRequestBody",
+           "properties" : {
+               "class" : "SubjectAreaMemberProperties",
+               "subjectAreaName" : "Add value here"
+           },
+           "externalSourceGUID": "Add guid here",
+           "externalSourceName": "Add qualified name here",
            "forLineage": false,
            "forDuplicateProcessing": false,
-           "properties": {
-               "class": "SubjectAreaMemberProperties",
-               "subjectAreaName": "Add value here"
-           }
+           "effectiveTime" : "isoTimestamp"
         }
-
-
         """
 
         loop = asyncio.get_event_loop()

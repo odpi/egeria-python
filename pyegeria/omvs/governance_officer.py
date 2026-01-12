@@ -1661,146 +1661,244 @@ class GovernanceOfficer(ServerClient):
     #     loop.run_until_complete(self._async_delete_governance_definition(guid, body))
 
     @dynamic_catch
-    async def _async_find_governance_definitions(self, search_string: str = "*", classification_names: list[str] = None,
+    async def _async_find_governance_definitions(self, search_string: str = "*",
+                                                 starts_with: bool = True, ends_with: bool = False,
+                                                 ignore_case: bool = False,
+                                                 anchor_domain: str = None,
+                                                 metadata_element_type: str = None,
                                                  metadata_element_subtypes: list[str] = None,
-                                                 starts_with: bool = True,
-                                                 ends_with: bool = False, ignore_case: bool = False,
-                                                 start_from: int = 0, page_size: int = 0,
-                                                 output_format: str = 'JSON', report_spec: dict = None,
-                                                 body: dict | SearchStringRequestBody = None,
-                                                 ) -> list | str:
-        """ Retrieve the list of governance definition metadata elements that contain the search string.
-            Async version.
+                                                 skip_relationships: list[str] = None,
+                                                 include_only_relationships: list[str] = None,
+                                                 skip_classified_elements: list[str] = None,
+                                                 include_only_classified_elements: list[str] = None,
+                                                 graph_query_depth: int = 3,
+                                                 governance_zone_filter: list[str] = None, as_of_time: str = None,
+                                                 effective_time: str = None, relationship_page_size: int = 0,
+                                                 limit_results_by_status: list[str] = None, sequencing_order: str = None,
+                                                 sequencing_property: str = None,
+                                                 output_format: str = "JSON",
+                                                 report_spec: str | dict = None,
+                                                 start_from: int = 0, page_size: int = 100,
+                                                 property_names: list[str] = None,
+                                                 body: dict | SearchStringRequestBody = None) -> list | str:
+        """ Retrieve the list of governance definition metadata elements that contain the search string. Async Version.
 
-            Parameters
-            ----------
-            search_string : str
-                - string to search for.
-            starts_with : bool, [default=False], optional
-                Starts with the supplied string.
-            ends_with : bool, [default=False], optional
-                Ends with the supplied string
-            ignore_case : bool, [default=False], optional
-                Ignore case when searching
-            body: dict, optional, default = None
-                - additional optional specifications for the search.
-            output_format: str, default = 'JSON'
-                Type of output to produce:
-                    JSON - output standard json
-                    MD - output standard markdown with no preamble
-                    FORM - output markdown with a preamble for a form
-                    REPORT - output markdown with a preamble for a report
-                    Mermaid - output markdown with a mermaid graph
+        Parameters
+        ----------
+        search_string: str
+            Search string to match against - None or '*' indicate match against all governance definitions.
+        starts_with : bool, [default=True], optional
+            Starts with the supplied string.
+        ends_with : bool, [default=False], optional
+            Ends with the supplied string
+        ignore_case : bool, [default=False], optional
+            Ignore case when searching
+        anchor_domain: str, optional
+            The anchor domain to search in.
+        metadata_element_type: str, optional
+            The type of metadata element to search for.
+        metadata_element_subtypes: list[str], optional
+            The subtypes of metadata element to search for.
+        skip_relationships: list[str], optional
+            The types of relationships to skip.
+        include_only_relationships: list[str], optional
+            The types of relationships to include.
+        skip_classified_elements: list[str], optional
+            The types of classified elements to skip.
+        include_only_classified_elements: list[str], optional
+            The types of classified elements to include.
+        graph_query_depth: int, [default=3], optional
+            The depth of the graph query.
+        governance_zone_filter: list[str], optional
+            The governance zones to search in.
+        as_of_time: str, optional
+            The time to search as of.
+        effective_time: str, optional
+            The effective time to search at.
+        relationship_page_size: int, [default=0], optional
+            The page size for relationships.
+        limit_results_by_status: list[str], optional
+            The statuses to limit results by.
+        sequencing_order: str, optional
+            The order to sequence results by.
+        sequencing_property: str, optional
+            The property to sequence results by.
+        output_format: str, default = "JSON"
+            - one of "MD", "LIST", "FORM", "REPORT", "DICT", "MERMAID" or "JSON"
+        report_spec: str | dict , optional, default = None
+            - The desired output columns/fields to include.
+        start_from: int, [default=0], optional
+            When multiple pages of results are available, the page number to start from.
+        page_size: int, [default=100]
+            The number of items to return in a single page.
+        property_names: list[str], optional
+            The names of properties to search for.
+        body: dict | SearchStringRequestBody, optional, default = None
+            - if provided, the search parameters in the body will supercede other attributes, such as "search_string"
 
-            Returns
-            -------
-            list[dict] | str
-                A list of information governance definition structures or a string if there are no elements found.
+        Returns
+-------
+        List | str
 
-            Raises
-            ------
-            PyegeriaInvalidParameterException
-                one of the parameters is null or invalid or
-            PyegeriaAPIException
-                There is a problem adding the element properties to the metadata repository or
-            PyegeriaUnauthorizedException
-                the requesting user is not authorized to issue this request.
+        Output depends on the output format specified.
 
-            Notes
-            -----
-            If a body is provided it overrides the filter_string parameter.
-            
-            Body structure:
-            {
-              "class": "FilterRequestBody",
-              "asOfTime": {{isotime}},
-              "effectiveTime": {{isotime}},
-              "forLineage": false,
-              "forDuplicateProcessing": false,
-              "limitResultsByStatus": ["ACTIVE"],
-              "sequencingOrder": "PROPERTY_ASCENDING",
-              "sequencingProperty": "qualifiedName",
-              "filter": "Add name here",
-              "templateFilter": "NO_TEMPLATES"
-            }
-            """
+        Raises
+-------
 
+        ValidationError
+          If the client passes incorrect parameters on the request that don't conform to the data model.
+        PyegeriaException
+          Issues raised in communicating or server side processing.
+        NotAuthorizedException
+          The principle specified by the user_id does not have authorization for the requested action
+
+        """
         url = (
             f"{self.platform_url}/servers/{self.view_server}/api/open-metadata/"
             f"{self.url_marker}/governance-definitions/"
             f"by-search-string")
-        return await self._async_find_request(url, _type="GovernanceDefinition",
-                                              _gen_output=self._generate_governance_definition_output,
-                                              search_string=search_string, output_format="JSON", page_size=0, body=body)
+        response = await self._async_find_request(url, _type="GovernanceDefinition", _gen_output=self._generate_governance_definition_output,
+                                                  search_string=search_string, starts_with=starts_with,
+                                                  ends_with=ends_with, ignore_case=ignore_case,
+                                                  anchor_domain=anchor_domain,
+                                                  metadata_element_type=metadata_element_type,
+                                                  metadata_element_subtypes=metadata_element_subtypes,
+                                                  skip_relationships=skip_relationships,
+                                                  include_only_relationships=include_only_relationships,
+                                                  skip_classified_elements=skip_classified_elements,
+                                                  include_only_classified_elements=include_only_classified_elements,
+                                                  graph_query_depth=graph_query_depth,
+                                                  governance_zone_filter=governance_zone_filter,
+                                                  as_of_time=as_of_time, effective_time=effective_time,
+                                                  relationship_page_size=relationship_page_size,
+                                                  limit_results_by_status=limit_results_by_status,
+                                                  sequencing_order=sequencing_order,
+                                                  sequencing_property=sequencing_property,
+                                                  output_format=output_format, report_spec=report_spec,
+                                                  start_from=start_from, page_size=page_size,
+                                                  property_names=property_names, body=body)
+
+        return response
 
     @dynamic_catch
-    def find_governance_definitions(self, search_string: str = "*", classification_names: list[str] = None,
-                                    metadata_element_subtypes: list[str] = None,
+    def find_governance_definitions(self, search_string: str = "*",
                                     starts_with: bool = True, ends_with: bool = False,
-                                    ignore_case: bool = False, start_from: int = 0, page_size: int = 0,
-                                    output_format: str = 'JSON', report_spec: dict = None,
-                                    body: dict | SearchStringRequestBody = None, ) -> list | str:
+                                    ignore_case: bool = False,
+                                    anchor_domain: str = None,
+                                    metadata_element_type: str = None,
+                                    metadata_element_subtypes: list[str] = None,
+                                    skip_relationships: list[str] = None,
+                                    include_only_relationships: list[str] = None,
+                                    skip_classified_elements: list[str] = None,
+                                    include_only_classified_elements: list[str] = None,
+                                    graph_query_depth: int = 3,
+                                    governance_zone_filter: list[str] = None, as_of_time: str = None,
+                                    effective_time: str = None, relationship_page_size: int = 0,
+                                    limit_results_by_status: list[str] = None, sequencing_order: str = None,
+                                    sequencing_property: str = None,
+                                    output_format: str = "JSON",
+                                    report_spec: str | dict = None,
+                                    start_from: int = 0, page_size: int = 100,
+                                    property_names: list[str] = None,
+                                    body: dict | SearchStringRequestBody = None) -> list | str:
         """ Retrieve the list of governance definition metadata elements that contain the search string.
 
-            Parameters
-            ----------
-            search_string : str
-                - filter_string string to search for.
-            starts_with : bool, [default=False], optional
-                Starts with the supplied string.
-            ends_with : bool, [default=False], optional
-                Ends with the supplied string
-            ignore_case : bool, [default=False], optional
-                Ignore case when searching
-            body: dict, optional, default = None
-                - additional optional specifications for the search.
-            output_format: str, default = 'JSON'
-                Type of output to produce:
-                    JSON - output standard json
-                    MD - output standard markdown with no preamble
-                    FORM - output markdown with a preamble for a form
-                    REPORT - output markdown with a preamble for a report
-                    Mermaid - output markdown with a mermaid graph
+        Parameters
+        ----------
+        search_string: str
+            Search string to match against - None or '*' indicate match against all governance definitions.
+        starts_with : bool, [default=True], optional
+            Starts with the supplied string.
+        ends_with : bool, [default=False], optional
+            Ends with the supplied string
+        ignore_case : bool, [default=False], optional
+            Ignore case when searching
+        anchor_domain: str, optional
+            The anchor domain to search in.
+        metadata_element_type: str, optional
+            The type of metadata element to search for.
+        metadata_element_subtypes: list[str], optional
+            The subtypes of metadata element to search for.
+        skip_relationships: list[str], optional
+            The types of relationships to skip.
+        include_only_relationships: list[str], optional
+            The types of relationships to include.
+        skip_classified_elements: list[str], optional
+            The types of classified elements to skip.
+        include_only_classified_elements: list[str], optional
+            The types of classified elements to include.
+        graph_query_depth: int, [default=3], optional
+            The depth of the graph query.
+        governance_zone_filter: list[str], optional
+            The governance zones to search in.
+        as_of_time: str, optional
+            The time to search as of.
+        effective_time: str, optional
+            The effective time to search at.
+        relationship_page_size: int, [default=0], optional
+            The page size for relationships.
+        limit_results_by_status: list[str], optional
+            The statuses to limit results by.
+        sequencing_order: str, optional
+            The order to sequence results by.
+        sequencing_property: str, optional
+            The property to sequence results by.
+        output_format: str, default = "JSON"
+            - one of "MD", "LIST", "FORM", "REPORT", "DICT", "MERMAID" or "JSON"
+        report_spec: str | dict , optional, default = None
+            - The desired output columns/fields to include.
+        start_from: int, [default=0], optional
+            When multiple pages of results are available, the page number to start from.
+        page_size: int, [default=100]
+            The number of items to return in a single page.
+        property_names: list[str], optional
+            The names of properties to search for.
+        body: dict | SearchStringRequestBody, optional, default = None
+            - if provided, the search parameters in the body will supercede other attributes, such as "search_string"
 
-            Returns
-            -------
-            list[dict] | str
-                A list of information governance definition structures or a string if there are no elements found.
+        Returns
+-------
+        List | str
 
-            Raises
-            ------
-            PyegeriaInvalidParameterException
-                one of the parameters is null or invalid or
-            PyegeriaAPIException
-                There is a problem adding the element properties to the metadata repository or
-            PyegeriaUnauthorizedException
-                the requesting user is not authorized to issue this request.
+        Output depends on the output format specified.
 
-            Notes
-            -----
-            If a body is provided it overrides the filter_string parameter.
+        Raises
+-------
 
-            Body structure:
-            {
-              "class": "FilterRequestBody",
-              "asOfTime": {{isotime}},
-              "effectiveTime": {{isotime}},
-              "forLineage": false,
-              "forDuplicateProcessing": false,
-              "limitResultsByStatus": ["ACTIVE"],
-              "sequencingOrder": "PROPERTY_ASCENDING",
-              "sequencingProperty": "qualifiedName",
-              "filter": "Add name here",
-              "templateFilter": "NO_TEMPLATES"
-            }
-            """
+        ValidationError
+          If the client passes incorrect parameters on the request that don't conform to the data model.
+        PyegeriaException
+          Issues raised in communicating or server side processing.
+        NotAuthorizedException
+          The principle specified by the user_id does not have authorization for the requested action
 
+        """
         loop = asyncio.get_event_loop()
-        response = loop.run_until_complete(
-            self._async_find_governance_definitions(search_string, classification_names, metadata_element_subtypes,
-                                                    starts_with, ends_with, ignore_case, start_from,
-                                                    page_size, output_format, report_spec, body))
-        return response
+        return loop.run_until_complete(self._async_find_governance_definitions(search_string=search_string,
+                                                                               starts_with=starts_with,
+                                                                               ends_with=ends_with,
+                                                                               ignore_case=ignore_case,
+                                                                               anchor_domain=anchor_domain,
+                                                                               metadata_element_type=metadata_element_type,
+                                                                               metadata_element_subtypes=metadata_element_subtypes,
+                                                                               skip_relationships=skip_relationships,
+                                                                               include_only_relationships=include_only_relationships,
+                                                                               skip_classified_elements=skip_classified_elements,
+                                                                               include_only_classified_elements=include_only_classified_elements,
+                                                                               graph_query_depth=graph_query_depth,
+                                                                               governance_zone_filter=governance_zone_filter,
+                                                                               as_of_time=as_of_time,
+                                                                               effective_time=effective_time,
+                                                                               relationship_page_size=relationship_page_size,
+                                                                               limit_results_by_status=limit_results_by_status,
+                                                                               sequencing_order=sequencing_order,
+                                                                               sequencing_property=sequencing_property,
+                                                                               output_format=output_format,
+                                                                               report_spec=report_spec,
+                                                                               start_from=start_from,
+                                                                               page_size=page_size,
+                                                                               property_names=property_names,
+                                                                               body=body))
 
     @dynamic_catch
     async def _async_get_governance_definitions_by_name(self, filter_string: str,

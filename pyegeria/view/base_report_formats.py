@@ -142,8 +142,8 @@ USER_FORMAT_SETS_DIR = os.getenv("PYEGERIA_USER_REPORT_SPECS_DIR", os.getenv("PY
 MD_SEPARATOR = "\n---\n\n"
 
 # Standard optional parameters for search functions
-OPTIONAL_SEARCH_PARAMS= ["page_size", "start_from", "starts_with", "ends_with", "ignore_case"]
-OPTIONAL_FILTER_PARAMS= ["page_size", "start_from"]
+OPTIONAL_SEARCH_PARAMS = ["page_size", "start_from", "starts_with", "ends_with", "ignore_case"]
+OPTIONAL_FILTER_PARAMS = ["page_size", "start_from"]
 
 # Define shared elements
 COMMON_COLUMNS = [
@@ -279,20 +279,20 @@ COMMON_ANNOTATIONS = {
 }
 
 WHO = [
-    "Who created this?", # header
-    "Who last updated this?", # header
-    "Who owns this?", # ownership classification
+    "Who created this?",  # header
+    "Who last updated this?",  # header
+    "Who owns this?",  # ownership classification
     "Who has been working on this?"  # header - modified_users
 ]
 WHAT = [
-    "What is this?", # description
-    "What is the source of this?", # metadata_collection_id/name
-    "What type is this?" # type
-    "What zone is this?" # Anchors classification - zone membership
+    "What is this?",  # description
+    "What is the source of this?",  # metadata_collection_id/name
+    "What type is this?"  # type
+    "What zone is this?"  # Anchors classification - zone membership
 ]
 
 WHEN = [
-    "When was this created?", # create
+    "When was this created?",  # create
     "When was this last updated?",
     "When did this become effective?",
     "When will this no longer be effective?",
@@ -307,12 +307,12 @@ TIME_PARAMETERS = ["as_of_time", "effective_time"]
 
 # Modularized report_specs
 base_report_specs = FormatSetDict({
-"Referenceable": FormatSet(
+    "Referenceable": FormatSet(
         heading="Default Attributes for a Referenceable",
         description="Basic attributes for a Referenceable",
         annotations={},  # No specific annotations
         family="General",
-        question_spec=[{'perspectives':["ANY"], 'questions': WHO + WHAT + WHEN}],
+        question_spec=[{'perspectives': ["ANY"], 'questions': WHO + WHAT + WHEN}],
         formats=[
             Format(
                 types=["ALL", "TABLE", "DICT"],
@@ -338,7 +338,7 @@ base_report_specs = FormatSetDict({
             function="ClassificationManager.get_elements_by_property_value",
             optional_params=OPTIONAL_FILTER_PARAMS + ["metadata_element_type_name"] + TIME_PARAMETERS,
             required_params=["property_value"],
-            spec_params={"property_names":["displayName", "qualifiedName"]},
+            spec_params={"property_names": ["displayName", "qualifiedName"]},
         )
     ),
     "Default": FormatSet(
@@ -346,7 +346,7 @@ base_report_specs = FormatSetDict({
         description="Was a valid combination of report_spec and output_format provided?",
         annotations={},  # No specific annotations
         family="General",
-        question_spec=[{'perspectives':["ANY"], 'questions': WHO + WHAT + WHEN}],
+        question_spec=[{'perspectives': ["ANY"], 'questions': WHO + WHAT + WHEN}],
         formats=[
             Format(
                 types=["ALL", "TABLE", "DICT"],
@@ -369,18 +369,18 @@ base_report_specs = FormatSetDict({
             function="ClassificationManager.get_elements_by_property_value",
             optional_params=OPTIONAL_FILTER_PARAMS + ["metadata_element_type_name"] + TIME_PARAMETERS,
             required_params=["property_value"],
-            spec_params={"property_names":["displayName", "qualifiedName"]},
+            spec_params={"property_names": ["displayName", "qualifiedName"]},
         )
     ),
-"Element-By-Owner": FormatSet(
+    "Element-By-Owner": FormatSet(
         heading="Elements by Owner",
         description="Return elements for the specified owner",
         annotations={},  # No specific annotations
         family="General",
-        question_spec=[{'perspectives':["ANY"], 'questions': WHO + WHAT + WHEN}],
+        question_spec=[{'perspectives': ["ANY"], 'questions': WHO + WHAT + WHEN}],
         formats=[
             Format(
-                types=["ALL", "TABLE","DICT"],
+                types=["ALL", "TABLE", "DICT"],
                 attributes=COMMON_COLUMNS + COMMON_METADATA_COLUMNS + [
                     Column(name='Version Identifier', key='version_identifier'),
                     Column(name="Classifications", key='classifications'),
@@ -412,7 +412,7 @@ base_report_specs = FormatSetDict({
         formats=[
             Format(
                 types=["ALL"],
-                attributes=COMMON_COLUMNS  + [
+                attributes=COMMON_COLUMNS + [
                     Column(name="Open Metadata Type Name", key='type_name'),
                     Column(name="GUID", key='GUID'),
                 ],
@@ -420,7 +420,7 @@ base_report_specs = FormatSetDict({
         ],
         action=ActionParameter(
             function="ActorManager.find_actor_profiles",
-            optional_params=   OPTIONAL_FILTER_PARAMS + TIME_PARAMETERS,
+            optional_params=OPTIONAL_FILTER_PARAMS + TIME_PARAMETERS,
             required_params=["search_string"],
             spec_params={},
         )
@@ -441,7 +441,7 @@ base_report_specs = FormatSetDict({
         ],
         action=ActionParameter(
             function="ActorManager.find_roles_profiles",
-            optional_params=   OPTIONAL_FILTER_PARAMS + TIME_PARAMETERS,
+            optional_params=OPTIONAL_FILTER_PARAMS + TIME_PARAMETERS,
             required_params=["search_string"],
             spec_params={},
         )
@@ -464,7 +464,7 @@ base_report_specs = FormatSetDict({
         ],
         action=ActionParameter(
             function="ActorManager.find_user_identities",
-            optional_params=   OPTIONAL_FILTER_PARAMS + TIME_PARAMETERS,
+            optional_params=OPTIONAL_FILTER_PARAMS + TIME_PARAMETERS,
             required_params=["search_string"],
             spec_params={},
         )
@@ -501,7 +501,7 @@ base_report_specs = FormatSetDict({
         formats=[
             Format(
                 types=["ALL"],
-                attributes= [
+                attributes=[
                     Column(name='Name', key='display_name'),
                     Column(name="Category", key='category'),
                     Column(name="Property Name", key='property_name'),
@@ -516,13 +516,13 @@ base_report_specs = FormatSetDict({
         ],
         action=ActionParameter(
             function="ValidValueManager.find_valid_values",
-            optional_params=   OPTIONAL_FILTER_PARAMS + TIME_PARAMETERS + ["type_name"],
+            optional_params=OPTIONAL_FILTER_PARAMS + TIME_PARAMETERS + ["type_name"],
             required_params=["property_name"],
             spec_params={},
         )
     ),
 
-"Engine-Actions": FormatSet(
+    "Engine-Actions": FormatSet(
         target_type="Referenceable",
         heading="Engine Actions",
         description="A Display of Engine Actions",
@@ -547,7 +547,7 @@ base_report_specs = FormatSetDict({
             )
         ],
     ),
-"Asset-Graph": FormatSet(
+    "Asset-Graph": FormatSet(
         target_type="Asset",
         heading="Asset Graph",
         description="Attributes that apply to all Assets",
@@ -570,12 +570,12 @@ base_report_specs = FormatSetDict({
                 ],
             )
         ],
-    action=ActionParameter(
-        function="ServerClient.get_asset_graph",
-        optional_params=   OPTIONAL_FILTER_PARAMS + TIME_PARAMETERS ,
-        required_params=["asset_guid"],
-        spec_params={},
-    )
+        action=ActionParameter(
+            function="ServerClient.get_asset_graph",
+            optional_params=OPTIONAL_FILTER_PARAMS + TIME_PARAMETERS,
+            required_params=["asset_guid"],
+            spec_params={},
+        )
     ),
     "Common-Mermaid": FormatSet(
         target_type="Referenceable",
@@ -605,11 +605,11 @@ base_report_specs = FormatSetDict({
 
                 ],
             ),
-        Format(
-            types=["MERMAID"],
-            attributes = [
-                   Column(name="Mermaid Graph", key='mermaidGraph')
-            ])
+            Format(
+                types=["MERMAID"],
+                attributes=[
+                    Column(name="Mermaid Graph", key='mermaidGraph')
+                ])
         ],
 
     ),
@@ -621,8 +621,8 @@ base_report_specs = FormatSetDict({
         family="Automated Curation",
         formats=[
             Format(
-                types=[ "MD", "FORM", ],
-                attributes= COMMON_HEADER_COLUMNS + [
+                types=["MD", "FORM", ],
+                attributes=COMMON_HEADER_COLUMNS + [
                     Column(name='Display Name', key='display_name'),
                     Column(name="Qualified Name", key='qualified_name'),
                     Column(name="GUID", key='guid', format=True),
@@ -634,11 +634,11 @@ base_report_specs = FormatSetDict({
                 ],
             ),
             Format(
-                types=[ "MERMAID","HTML", "REPORT"],
-                attributes= COMMON_HEADER_COLUMNS + [
+                types=["MERMAID", "HTML", "REPORT"],
+                attributes=COMMON_HEADER_COLUMNS + [
                     Column(name='Display Name', key='display_name'),
                     Column(name="Qualified Name", key='qualified_name'),
-                    Column(name="GUID", key='guid', Format = True),
+                    Column(name="GUID", key='guid', Format=True),
                     Column(name="Description", key='description'),
                     Column(name="Deployed Implementation", key='deployedImplementationType'),
                     Column(name="Mermaid Graph", key='mermaidGraph'),
@@ -646,11 +646,11 @@ base_report_specs = FormatSetDict({
                 ]
             ),
             Format(
-                types=[ "DICT","TABLE", "LIST"],
-                attributes= [
+                types=["DICT", "TABLE", "LIST"],
+                attributes=[
                     Column(name='Display Name', key='display_name'),
                     Column(name="Qualified Name", key='qualified_name'),
-                    Column(name="GUID", key='guid', Format = True),
+                    Column(name="GUID", key='guid', Format=True),
                     Column(name="Description", key='description'),
                     Column(name="Deployed Implementation", key='deployedImplementationType'),
                 ]
@@ -658,7 +658,7 @@ base_report_specs = FormatSetDict({
         ],
         action=ActionParameter(
             function="EgeriaTech.get_technology_type_elements",
-            optional_params=   OPTIONAL_FILTER_PARAMS + TIME_PARAMETERS + ["get_templates"],
+            optional_params=OPTIONAL_FILTER_PARAMS + TIME_PARAMETERS + ["get_templates"],
             required_params=["filter"],
             spec_params={},
         )
@@ -714,7 +714,7 @@ base_report_specs = FormatSetDict({
         ],
         action=ActionParameter(
             function="ServerClient.get_tech_type_detail",
-            optional_params=   OPTIONAL_FILTER_PARAMS + TIME_PARAMETERS,
+            optional_params=OPTIONAL_FILTER_PARAMS + TIME_PARAMETERS,
             required_params=["filter"],
             spec_params={},
         )
@@ -727,7 +727,7 @@ base_report_specs = FormatSetDict({
         family="Automated Curation",
         formats=[
             Format(
-                types=["REPORT","LIST","FORM","MD", "TABLE"],
+                types=["REPORT", "LIST", "FORM", "MD", "TABLE"],
                 attributes=[
                     Column(name='Display Name', key='display_name'),
                     Column(name="Qualified Name", key='qualified_name'),
@@ -754,7 +754,7 @@ base_report_specs = FormatSetDict({
         ],
         action=ActionParameter(
             function="ServerClient.get_tech_type_detail",
-            optional_params=   OPTIONAL_FILTER_PARAMS + TIME_PARAMETERS,
+            optional_params=OPTIONAL_FILTER_PARAMS + TIME_PARAMETERS,
             required_params=["filter"],
             spec_params={},
         )
@@ -1078,7 +1078,7 @@ base_report_specs = FormatSetDict({
         action=ActionParameter(
             function="CollectionManager.get_collection_members",
             required_params=["collection_guid"],
-            optional_params= OPTIONAL_FILTER_PARAMS + TIME_PARAMETERS,
+            optional_params=OPTIONAL_FILTER_PARAMS + TIME_PARAMETERS,
             spec_params={"output_format": "DICT"},
         )
     ),
@@ -1180,7 +1180,7 @@ base_report_specs = FormatSetDict({
         aliases=["Product Catalog", "DataProductCatalog"],
         annotations={"Wikilinks": ["[[Digital Products]]"]},
         family="Product Manager",
-        question_spec=[{'perspectives':["ANY"], 'questions': WHO + WHAT + WHEN}],
+        question_spec=[{'perspectives': ["ANY"], 'questions': WHO + WHAT + WHEN}],
         formats=[
             Format(
                 types=["DICT", "TABLE", "LIST", "MD", "FORM"],
@@ -1202,7 +1202,7 @@ base_report_specs = FormatSetDict({
             function="CollectionManager.find_collections",
             required_params=["search_string"],
             optional_params=OPTIONAL_SEARCH_PARAMS + ['body'],
-            spec_params={"metadata_element_subtypes": ["DigitalProductCatalog"]},
+            spec_params={"metadata_element_subtypes": ["DigitalProductCatalog"],"_type":"DigitalProductCatalog"},
         ),
     ),
     "Digital-Product-Catalog-MyE": FormatSet(
@@ -1226,7 +1226,7 @@ base_report_specs = FormatSetDict({
             function="CollectionManager.find_collections",
             required_params=["search_string"],
             optional_params=OPTIONAL_SEARCH_PARAMS,
-            spec_params={"metadata_element_subtypes": ["DigitalProductCatalog"]},
+            spec_params={"metadata_element_subtypes": ["DigitalProductCatalog"], "_type":"DigitalProductCatalog"},
         ),
     ),
 
@@ -1237,7 +1237,7 @@ base_report_specs = FormatSetDict({
         aliases=["DigitalProduct", "DataProducts"],
         annotations={},
         family="Product Manager",
-        question_spec=[{'perspectives':["ANY"], 'questions': WHO + WHAT + WHEN}],
+        question_spec=[{'perspectives': ["ANY"], 'questions': WHO + WHAT + WHEN}],
         formats=[
             Format(
                 types=["FORM", "DICT", "TABLE", "LIST"],
@@ -1280,7 +1280,7 @@ base_report_specs = FormatSetDict({
             function="CollectionManager.find_collections",
             required_params=["search_string"],
             optional_params=OPTIONAL_SEARCH_PARAMS,
-            spec_params={"metadata_element_subtypes": ["DigitalProduct"]},
+            spec_params={"metadata_element_subtypes": ["DigitalProduct"], "_type":"DigitalProduct"},
         ),
         get_additional_props=ActionParameter(
             function="CollectionManager._extract_digital_product_properties",
@@ -1329,7 +1329,9 @@ base_report_specs = FormatSetDict({
             required_params=["search_string"],
             optional_params=OPTIONAL_SEARCH_PARAMS,
             spec_params={"_type": "DigitalProductProperties",
-"metadata               _element_subtypes": ["DigitalProduct"]},
+                         "metadata_element_subtypes": ["DigitalProduct"],
+                         "metadata_element_type": "DigitalProduct",
+                        },
         ),
         get_additional_props=ActionParameter(
             function="CollectionManager._extract_digital_product_properties",
@@ -1393,7 +1395,8 @@ base_report_specs = FormatSetDict({
         annotations={"wikilinks": ["[[Data Specification]]"]},
         family="Data Designer",
         formats=[
-            Format(types=["REPORT", "HTML"], attributes=COMMON_COLUMNS + [Column(name="Mermaid", key='mermaidGraph'), ]),
+            Format(types=["REPORT", "HTML"],
+                   attributes=COMMON_COLUMNS + [Column(name="Mermaid", key='mermaidGraph'), ]),
             Format(types=["MERMAID"], attributes=[
                 Column(name="Display Name", key='display_name'),
                 Column(name="Mermaid", key='mermaidGraph'),
@@ -1445,15 +1448,15 @@ base_report_specs = FormatSetDict({
         annotations={"wikilinks": ["[[Data Field]]"]},
         family="Data Designer",
         formats=[Format(types=["MD", "FORM", "DICT", "LIST"], attributes=COMMON_COLUMNS + [
-                            Column(name="In Data Dictionaries", key='in_data_dictionary'),
-                            Column(name="In Data Structure", key='in_data_structure')]),
+            Column(name="In Data Dictionaries", key='in_data_dictionary'),
+            Column(name="In Data Structure", key='in_data_structure')]),
                  Format(types=["REPORT"], attributes=COMMON_COLUMNS +
-                         [
-                             Column(name="In Data Structure", key='in_data_structure'),
-                             Column(name="In Data Dictionaries", key='in_data_dictionary'),
-                             Column(name="Member Data Fields", key='member_data_fields'),
-                             Column(name="Mermaid", key='mermaidGraph')
-                         ]
+                                                     [
+                                                         Column(name="In Data Structure", key='in_data_structure'),
+                                                         Column(name="In Data Dictionaries", key='in_data_dictionary'),
+                                                         Column(name="Member Data Fields", key='member_data_fields'),
+                                                         Column(name="Mermaid", key='mermaidGraph')
+                                                     ]
                         )],
 
         action=ActionParameter(
@@ -1470,19 +1473,20 @@ base_report_specs = FormatSetDict({
         annotations={"wikilinks": ["[[Data Field]]"]},
         family="Data Designer",
         formats=[Format(types=["MD", "FORM", "DICT", "LIST"], attributes=COMMON_COLUMNS + [
-                        Column(name="Data Type", key='data_type'),
-                        Column(name="Specification", key='specification'),
-                        Column(name="In Data Dictionaries", key='in_data_dictionary'),
-                        Column(name="In Data Structure", key='in_data_structure')]),
+            Column(name="Data Type", key='data_type'),
+            Column(name="Specification", key='specification'),
+            Column(name="In Data Dictionaries", key='in_data_dictionary'),
+            Column(name="In Data Structure", key='in_data_structure')]),
                  Format(types=["REPORT"], attributes=COMMON_COLUMNS +
-                     [
-                         Column(name="Data Type", key='data_type'),
-                         Column(name="Specification", key='specification'),
-                         Column(name="In Data Dictionaries", key='in_data_dictionary'),
-                         Column(name="Containing Data Class", key='containing_data_class'),
-                         Column(name="Specializes", key='specializes_data_class'),
-                         Column(name="Mermaid", key='mermaidGraph')
-                     ]
+                                                     [
+                                                         Column(name="Data Type", key='data_type'),
+                                                         Column(name="Specification", key='specification'),
+                                                         Column(name="In Data Dictionaries", key='in_data_dictionary'),
+                                                         Column(name="Containing Data Class",
+                                                                key='containing_data_class'),
+                                                         Column(name="Specializes", key='specializes_data_class'),
+                                                         Column(name="Mermaid", key='mermaidGraph')
+                                                     ]
                         )],
 
         action=ActionParameter(
@@ -1547,7 +1551,8 @@ base_report_specs = FormatSetDict({
                                                             Column(name='Mermaid', key='mermaidGraph'),
                                                             ]),
 
-                                         Format(types=["MERMAID"], attributes=[Column(name='Mermaid', key='mermaidGraph')]),
+                                         Format(types=["MERMAID"],
+                                                attributes=[Column(name='Mermaid', key='mermaidGraph')]),
                                      ],
                                      action=ActionParameter(function='ExternalReference.find_external_references',
                                                             required_params=['search_string'],
@@ -1578,7 +1583,7 @@ base_report_specs = FormatSetDict({
         aliases=["GovernanceDefinitions"],
         annotations={"wikilinks": ["[[Governance]]"]},
         family="Governance Officer",
-        question_spec=[{'perspectives':["ANY"], 'questions': WHO + WHAT + WHEN}],
+        question_spec=[{'perspectives': ["ANY"], 'questions': WHO + WHAT + WHEN}],
         formats=[Format(types=["ALL"], attributes=GOVERNANCE_DEFINITIONS_COLUMNS)],
         action=ActionParameter(
             function="GovernanceOfficer.find_governance_definitions",
@@ -1597,65 +1602,66 @@ base_report_specs = FormatSetDict({
         action=ActionParameter(
             function="GovernanceOfficer.find_governance_definitions",
             required_params=["search_string"],
-            spec_params={"metadata_element_subtypes": ["GovernancePrinciple", "GovernanceStrategy", "GovernanceResponse"]},
+            spec_params={
+                "metadata_element_subtypes": ["GovernancePrinciple", "GovernanceStrategy", "GovernanceResponse"]},
         )
     ),
     'Governance-Controls': FormatSet(target_type='Governance Control',
-                                    heading='Control Attributes',
-                                    description='Governance Control (Create).',
-                                    family="Governance Officer",
-                                    question_spec=[{'perspectives':["Governance"], 'questions': WHO + WHAT + WHEN + [
-                                        "What governance controls have been defined?",
-                                        "What measurements and measurement targets have been defined for governance controls?",
-                                        "What are the implications of the governance controls?",
-                                        "What are the risks associated with the governance controls?",
-                                    ]}],
-                                    formats=[
-                                        Format(types=['DICT', 'MD', 'FORM', 'REPORT'],
-                                               attributes=[Column(name='Display Name', key='display_name'),
-                                                           Column(name='Summary', key='summary'),
-                                                           Column(name='Description', key='description'),
-                                                           Column(name='Category', key='category'),
-                                                           Column(name='Domain Identifier', key='domain_identifier'),
-                                                           Column(name='Identifier', key='identifier'),
-                                                           Column(name='Version Identifier', key='version_identifier'),
-                                                           Column(name='Usage', key='usage'),
-                                                           Column(name='Scope', key='scope'),
-                                                           Column(name='Importance', key='importance'),
-                                                           Column(name='measurement', key='measurement'),
-                                                           Column(name='target', key='target'),
-                                                           Column(name='Implications', key='implications'),
-                                                           Column(name='Outcomes', key='outcomes'),
-                                                           Column(name='Results', key='results'),
-                                                           Column(name='Status', key='element_status'),
-                                                           Column(name='User Defined Status',
-                                                                  key='user_defined_status'),
-                                                           Column(name='Qualified Name', key='qualified_name'),
-                                                           Column(name='GUID', key='guid')
-                                                           ]),
-                                        Format(types=['TABLE', 'LIST'],
-                                               attributes=[Column(name='Display Name', key='display_name'),
-                                                           Column(name='Summary', key='summary'),
-                                                           Column(name='Category', key='category'),
-                                                           Column(name='Identifier', key='identifier'),
-                                                           Column(name='Usage', key='usage'),
-                                                           Column(name='Status', key='element_status'),
-                                                           Column(name='Qualified Name', key='qualified_name'),
-                                                           ])
-                                    ],
-                                    action=ActionParameter(
-                                        function="GovernanceOfficer.find_governance_definitions",
-                                        required_params=["search_string"],
-                                        optional_params=OPTIONAL_SEARCH_PARAMS,
-                                        spec_params={"metadata_element_subtypes": ["GovernanceControl"]},
-                                    )
-        ),
-'Governance-Process': FormatSet(target_type='Governance Process',
+                                     heading='Control Attributes',
+                                     description='Governance Control (Create).',
+                                     family="Governance Officer",
+                                     question_spec=[{'perspectives': ["Governance"], 'questions': WHO + WHAT + WHEN + [
+                                         "What governance controls have been defined?",
+                                         "What measurements and measurement targets have been defined for governance controls?",
+                                         "What are the implications of the governance controls?",
+                                         "What are the risks associated with the governance controls?",
+                                     ]}],
+                                     formats=[
+                                         Format(types=['DICT', 'MD', 'FORM', 'REPORT'],
+                                                attributes=[Column(name='Display Name', key='display_name'),
+                                                            Column(name='Summary', key='summary'),
+                                                            Column(name='Description', key='description'),
+                                                            Column(name='Category', key='category'),
+                                                            Column(name='Domain Identifier', key='domain_identifier'),
+                                                            Column(name='Identifier', key='identifier'),
+                                                            Column(name='Version Identifier', key='version_identifier'),
+                                                            Column(name='Usage', key='usage'),
+                                                            Column(name='Scope', key='scope'),
+                                                            Column(name='Importance', key='importance'),
+                                                            Column(name='measurement', key='measurement'),
+                                                            Column(name='target', key='target'),
+                                                            Column(name='Implications', key='implications'),
+                                                            Column(name='Outcomes', key='outcomes'),
+                                                            Column(name='Results', key='results'),
+                                                            Column(name='Status', key='element_status'),
+                                                            Column(name='User Defined Status',
+                                                                   key='user_defined_status'),
+                                                            Column(name='Qualified Name', key='qualified_name'),
+                                                            Column(name='GUID', key='guid')
+                                                            ]),
+                                         Format(types=['TABLE', 'LIST'],
+                                                attributes=[Column(name='Display Name', key='display_name'),
+                                                            Column(name='Summary', key='summary'),
+                                                            Column(name='Category', key='category'),
+                                                            Column(name='Identifier', key='identifier'),
+                                                            Column(name='Usage', key='usage'),
+                                                            Column(name='Status', key='element_status'),
+                                                            Column(name='Qualified Name', key='qualified_name'),
+                                                            ])
+                                     ],
+                                     action=ActionParameter(
+                                         function="GovernanceOfficer.find_governance_definitions",
+                                         required_params=["search_string"],
+                                         optional_params=OPTIONAL_SEARCH_PARAMS,
+                                         spec_params={"metadata_element_subtypes": ["GovernanceControl"]},
+                                     )
+                                     ),
+    'Governance-Process': FormatSet(target_type='Governance Process',
                                     heading='Governance Process Attributes',
                                     description='Governance Process Attributes.',
                                     family="Governance Officer",
                                     formats=[
-                                        Format(types=['TABLE','LIST', 'MD', 'FORM', 'REPORT'],
+                                        Format(types=['TABLE', 'LIST', 'MD', 'FORM', 'REPORT'],
                                                attributes=[Column(name='Display Name', key='display_name'),
                                                            Column(name='Description', key='description'),
                                                            Column(name='Category', key='category'),
@@ -1676,7 +1682,7 @@ base_report_specs = FormatSetDict({
                                         optional_params=OPTIONAL_SEARCH_PARAMS,
                                         spec_params={"metadata_element_subtypes": ["GovernanceActionProcess"]},
                                     )
-                     ),
+                                    ),
     "Valid-Value-Def": FormatSet(
         target_type="Valid Value Definition",
         heading="Valid Value Definitions Information",
@@ -2363,10 +2369,10 @@ def find_report_specs_by_perspective(perspective: str, *, case_insensitive: bool
 
 
 def find_report_specs_by_question(
-    question: str,
-    *,
-    case_insensitive: bool = True,
-    substring: bool = True,
+        question: str,
+        *,
+        case_insensitive: bool = True,
+        substring: bool = True,
 ) -> list[dict]:
     """
     Return a list of dicts for report specs whose `question_spec` includes a matching example question.
@@ -2418,12 +2424,12 @@ def find_report_specs_by_question(
 
 
 def find_report_specs(
-    *,
-    perspective: str | None = None,
-    question: str | None = None,
-    report_spec: str | None = None,
-    case_insensitive: bool = True,
-    substring: bool = True,
+        *,
+        perspective: str | None = None,
+        question: str | None = None,
+        report_spec: str | None = None,
+        case_insensitive: bool = True,
+        substring: bool = True,
 ) -> list[dict]:
     """
     Flexible finder that accepts optional filters and returns matching report_spec dicts.

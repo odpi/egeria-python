@@ -364,7 +364,7 @@ class TestCollectionManager:
             c_client = CollectionManager(self.good_view_server_1, self.good_platform1_url, user_id=self.good_user_2, )
             token = c_client.create_egeria_bearer_token(self.good_user_2, "secret")
             start_time = time.perf_counter()
-            collection_guid = "5f4ed132-407a-4047-ac65-dee8ca09c057"
+            collection_guid = "1e58d1d6-d24e-4929-9c04-53ac629b86b9"
             element_type = None
             response = c_client.get_collection_by_guid(collection_guid, element_type,
                                                        output_format="JSON", report_spec="Folders")

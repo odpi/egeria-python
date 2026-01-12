@@ -112,7 +112,47 @@ class AssetMaker(ServerClient):
         -----
         See: https://egeria-project.org/concepts/asset
 
-
+        Sample body:
+        {
+          "class" : "NewElementRequestBody",
+          "anchorGUID" : "add guid here",
+          "isOwnAnchor": false,
+          "parentGUID": "add guid here",
+          "parentRelationshipTypeName": "add type name here",
+          "parentRelationshipProperties": {
+            "class": "RelationshipElementProperties",
+            "propertyValueMap" : {
+              "description" : {
+                "class": "PrimitiveTypePropertyValue",
+                "typeName": "string",
+                "primitiveValue" : "New description"
+              }
+            }
+          },
+          "parentAtEnd1": false,
+          "properties": {
+            "class" : "AssetProperties",
+            "typeName" : "enter the type of the element",
+            "qualifiedName": "add unique name here",
+            "displayName": "add short name here",
+            "description": "add description here",
+            "additionalProperties": {
+              "property1" : "propertyValue1",
+              "property2" : "propertyValue2"
+            },
+            "extendedProperties": {
+              "property1" : "propertyValue1",
+              "property2" : "propertyValue2"
+            },
+            "effectiveFrom": "2024-01-01T00:00:00.000+00:00",
+            "effectiveTo": "2024-12-31T23:59:59.999+00:00"
+          },
+          "externalSourceGUID": "add guid here",
+          "externalSourceName": "add qualified name here",
+          "effectiveTime" : "2024-01-01T00:00:00.000+00:00",
+          "forLineage" : false,
+          "forDuplicateProcessing" : false
+        }
         """
         return await super()._async_create_asset(asset_type, body)
 
@@ -143,7 +183,47 @@ class AssetMaker(ServerClient):
         -----
         See: https://egeria-project.org/concepts/asset
 
-
+        Sample body:
+        {
+          "class" : "NewElementRequestBody",
+          "anchorGUID" : "add guid here",
+          "isOwnAnchor": false,
+          "parentGUID": "add guid here",
+          "parentRelationshipTypeName": "add type name here",
+          "parentRelationshipProperties": {
+            "class": "RelationshipElementProperties",
+            "propertyValueMap" : {
+              "description" : {
+                "class": "PrimitiveTypePropertyValue",
+                "typeName": "string",
+                "primitiveValue" : "New description"
+              }
+            }
+          },
+          "parentAtEnd1": false,
+          "properties": {
+            "class" : "AssetProperties",
+            "typeName" : "enter the type of the element",
+            "qualifiedName": "add unique name here",
+            "displayName": "add short name here",
+            "description": "add description here",
+            "additionalProperties": {
+              "property1" : "propertyValue1",
+              "property2" : "propertyValue2"
+            },
+            "extendedProperties": {
+              "property1" : "propertyValue1",
+              "property2" : "propertyValue2"
+            },
+            "effectiveFrom": "2024-01-01T00:00:00.000+00:00",
+            "effectiveTo": "2024-12-31T23:59:59.999+00:00"
+          },
+          "externalSourceGUID": "add guid here",
+          "externalSourceName": "add qualified name here",
+          "effectiveTime" : "2024-01-01T00:00:00.000+00:00",
+          "forLineage" : false,
+          "forDuplicateProcessing" : false
+        }
         """
         return super().create_asset(asset_type, body)
 
@@ -171,6 +251,48 @@ class AssetMaker(ServerClient):
             Egeria errors.
         ValidationError
             Pydantic validation errors are raised if the body does not conform to the TemplateRequestBody.
+
+        Notes
+        -----
+        Sample body:
+        {
+          "class" : "TemplateRequestBody",
+          "anchorGUID" : "add guid here",
+          "isOwnAnchor": false,
+          "parentGUID": "add guid here",
+          "parentRelationshipTypeName": "add type name here",
+          "parentRelationshipProperties": {
+            "class": "RelationshipElementProperties",
+            "propertyValueMap" : {
+              "description" : {
+                "class": "PrimitiveTypePropertyValue",
+                "typeName": "string",
+                "primitiveValue" : "New description"
+              }
+            }
+          },
+          "parentAtEnd1": false,
+          "templateGUID": "add guid here",
+          "replacementProperties": {
+            "class": "ElementProperties",
+            "propertyValueMap" : {
+              "description" : {
+                "class": "PrimitiveTypePropertyValue",
+                "typeName": "string",
+                "primitiveValue" : "New description"
+              }
+            }
+          },
+          "placeholderPropertyValues":  {
+            "placeholder1" : "propertyValue1",
+            "placeholder2" : "propertyValue2"
+          },
+          "externalSourceGUID": "add guid here",
+          "externalSourceName": "add qualified name here",
+          "effectiveTime" : "2024-01-01T00:00:00.000+00:00",
+          "forLineage" : false,
+          "forDuplicateProcessing" : false
+        }
         """
         return await super()._async_create_asset_from_template(body)
 
@@ -195,6 +317,48 @@ class AssetMaker(ServerClient):
             Egeria errors.
         ValidationError
             Pydantic validation errors are raised if the body does not conform to the TemplateRequestBody.
+
+        Notes
+        -----
+        Sample body:
+        {
+          "class" : "TemplateRequestBody",
+          "anchorGUID" : "add guid here",
+          "isOwnAnchor": false,
+          "parentGUID": "add guid here",
+          "parentRelationshipTypeName": "add type name here",
+          "parentRelationshipProperties": {
+            "class": "RelationshipElementProperties",
+            "propertyValueMap" : {
+              "description" : {
+                "class": "PrimitiveTypePropertyValue",
+                "typeName": "string",
+                "primitiveValue" : "New description"
+              }
+            }
+          },
+          "parentAtEnd1": false,
+          "templateGUID": "add guid here",
+          "replacementProperties": {
+            "class": "ElementProperties",
+            "propertyValueMap" : {
+              "description" : {
+                "class": "PrimitiveTypePropertyValue",
+                "typeName": "string",
+                "primitiveValue" : "New description"
+              }
+            }
+          },
+          "placeholderPropertyValues":  {
+            "placeholder1" : "propertyValue1",
+            "placeholder2" : "propertyValue2"
+          },
+          "externalSourceGUID": "add guid here",
+          "externalSourceName": "add qualified name here",
+          "effectiveTime" : "2024-01-01T00:00:00.000+00:00",
+          "forLineage" : false,
+          "forDuplicateProcessing" : false
+        }
         """
         return super().create_asset_from_template(body)
 
@@ -222,6 +386,33 @@ class AssetMaker(ServerClient):
             Egeria errors.
         ValidationError
             Pydantic validation errors are raised if the body does not conform to the UpdateElementRequestBody.
+
+        Notes
+        -----
+        Sample body:
+        {
+          "class" : "UpdateElementRequestBody",
+          "properties": {
+            "class" : "AssetProperties",
+            "typeName" : "enter the type of the element",
+            "qualifiedName": "add unique name here",
+            "displayName": "add short name here",
+            "description": "add description here",
+            "additionalProperties": {
+              "property1" : "propertyValue1",
+              "property2" : "propertyValue2"
+            },
+            "extendedProperties": {
+              "property1" : "propertyValue1",
+              "property2" : "propertyValue2"
+            }
+          },
+          "externalSourceGUID": "add guid here",
+          "externalSourceName": "add qualified name here",
+          "effectiveTime" : "2024-01-01T00:00:00.000+00:00",
+          "forLineage" : false,
+          "forDuplicateProcessing" : false
+        }
         """
         await super()._async_update_asset(asset_guid, body)
 
@@ -249,6 +440,33 @@ class AssetMaker(ServerClient):
             Egeria errors.
         ValidationError
             Pydantic validation errors are raised if the body does not conform to the UpdateElementRequestBody.
+
+        Notes
+        -----
+        Sample body:
+        {
+          "class" : "UpdateElementRequestBody",
+          "properties": {
+            "class" : "AssetProperties",
+            "typeName" : "enter the type of the element",
+            "qualifiedName": "add unique name here",
+            "displayName": "add short name here",
+            "description": "add description here",
+            "additionalProperties": {
+              "property1" : "propertyValue1",
+              "property2" : "propertyValue2"
+            },
+            "extendedProperties": {
+              "property1" : "propertyValue1",
+              "property2" : "propertyValue2"
+            }
+          },
+          "externalSourceGUID": "add guid here",
+          "externalSourceName": "add qualified name here",
+          "effectiveTime" : "2024-01-01T00:00:00.000+00:00",
+          "forLineage" : false,
+          "forDuplicateProcessing" : false
+        }
         """
         super().update_asset(asset_guid, body)
 
@@ -274,6 +492,18 @@ class AssetMaker(ServerClient):
         PyegeriaException
             One of the pyegeria exceptions will be raised if there are issues in communications, message format, or
             Egeria errors.
+
+        Notes
+        -----
+        Sample body:
+        {
+          "class" : "DeleteElementRequestBody",
+          "externalSourceGUID": "add guid here",
+          "externalSourceName": "add qualified name here",
+          "effectiveTime" : "2024-01-01T00:00:00.000+00:00",
+          "forLineage" : false,
+          "forDuplicateProcessing" : false
+        }
         """
         await super()._async_delete_asset(asset_guid, body)
 
@@ -299,6 +529,18 @@ class AssetMaker(ServerClient):
         PyegeriaException
             One of the pyegeria exceptions will be raised if there are issues in communications, message format, or
             Egeria errors.
+
+        Notes
+        -----
+        Sample body:
+        {
+          "class" : "DeleteElementRequestBody",
+          "externalSourceGUID": "add guid here",
+          "externalSourceName": "add qualified name here",
+          "effectiveTime" : "2024-01-01T00:00:00.000+00:00",
+          "forLineage" : false,
+          "forDuplicateProcessing" : false
+        }
         """
         super().delete_asset(asset_guid, body)
 
@@ -308,7 +550,7 @@ class AssetMaker(ServerClient):
         filter_string: str,
         body: dict | FilterRequestBody | None = None,
         start_from: int = 0,
-        page_size: int | None = None,
+        page_size: int = 0,
         output_format: str = "DICT",
         report_spec: dict | str | None = None,
     ) -> list | dict | str:
@@ -339,24 +581,44 @@ class AssetMaker(ServerClient):
         PyegeriaException
             One of the pyegeria exceptions will be raised if there are issues in communications, message format, or
             Egeria errors.
+
+        Notes
+        -----
+        Sample body:
+        {
+          "class" : "FilterRequestBody",
+          "filter" : "Add name here",
+          "startFrom" : 0,
+          "pageSize": 10,
+          "metadataElementTypeName": "GovernanceActionType",
+          "metadataElementSubtypeNames": [],
+          "skipRelationships": [],
+          "includeOnlyRelationships": [],
+          "relationshipsPageSize": 100,
+          "skipClassifiedElements": [],
+          "includeOnlyClassifiedElements": [],
+          "graphQueryDepth" : 10,
+          "asOfTime" : "2024-01-01T00:00:00.000+00:00",
+          "effectiveTime" : "2024-01-01T00:00:00.000+00:00",
+          "forLineage" : false,
+          "forDuplicateProcessing" : false,
+          "limitResultsByStatus" : ["ACTIVE"],
+          "sequencingOrder" : "PROPERTY_ASCENDING",
+          "sequencingProperty" : "qualifiedName"
+        }
         """
-        if page_size is None:
-            page_size = max_paging_size
-
-        if body is None:
-            body = {"class": "FilterRequestBody", "filter": filter_string}
-        elif isinstance(body, dict):
-            body["filter"] = filter_string
-        else:
-            body.filter = filter_string
-
-        body_dict = body if isinstance(body, dict) else body.model_dump(mode="json", by_alias=True, exclude_none=True)
-        body_dict["startFrom"] = start_from
-        body_dict["pageSize"] = page_size
-# Todo - deal with output format
         url = f"{self.asset_command_root}/assets/by-name"
-        response = await self._async_make_request("POST", url, body_dict)
-        return response.json().get("elements", [])
+        return await self._async_get_name_request(
+            url,
+            _type="Asset",
+            _gen_output=self._generate_referenceable_output,
+            filter_string=filter_string,
+            start_from=start_from,
+            page_size=page_size,
+            output_format=output_format,
+            report_spec=report_spec,
+            body=body,
+        )
 
     @dynamic_catch
     def get_assets_by_name(
@@ -364,7 +626,7 @@ class AssetMaker(ServerClient):
         filter_string: str,
         body: dict | FilterRequestBody | None = None,
         start_from: int = 0,
-        page_size: int | None = None,
+        page_size: int = 0,
         output_format: str = "DICT",
         report_spec: dict | str | None = None,
     ) -> list | dict | str:
@@ -395,6 +657,31 @@ class AssetMaker(ServerClient):
         PyegeriaException
             One of the pyegeria exceptions will be raised if there are issues in communications, message format, or
             Egeria errors.
+
+        Notes
+        -----
+        Sample body:
+        {
+          "class" : "FilterRequestBody",
+          "filter" : "Add name here",
+          "startFrom" : 0,
+          "pageSize": 10,
+          "metadataElementTypeName": "GovernanceActionType",
+          "metadataElementSubtypeNames": [],
+          "skipRelationships": [],
+          "includeOnlyRelationships": [],
+          "relationshipsPageSize": 100,
+          "skipClassifiedElements": [],
+          "includeOnlyClassifiedElements": [],
+          "graphQueryDepth" : 10,
+          "asOfTime" : "2024-01-01T00:00:00.000+00:00",
+          "effectiveTime" : "2024-01-01T00:00:00.000+00:00",
+          "forLineage" : false,
+          "forDuplicateProcessing" : false,
+          "limitResultsByStatus" : ["ACTIVE"],
+          "sequencingOrder" : "PROPERTY_ASCENDING",
+          "sequencingProperty" : "qualifiedName"
+        }
         """
         loop = asyncio.get_event_loop()
         return loop.run_until_complete(
@@ -415,7 +702,8 @@ class AssetMaker(ServerClient):
                                  limit_results_by_status: list[str] = None, sequencing_order: str = None,
                                  sequencing_property: str = None, output_format: str = "DICT",
                                  report_spec: dict | str | None = None, start_from: int = 0,
-                                 page_size: int | None = None, property_names=None, body=None) -> list | dict | str:
+                                 page_size: int = 0, property_names: list[str] = None,
+                                 body: dict | SearchStringRequestBody | None = None) -> list | dict | str:
         """Retrieve the list of asset metadata elements that contain the search string. Async version.
 
         Parameters
@@ -450,8 +738,33 @@ class AssetMaker(ServerClient):
             One of the pyegeria exceptions will be raised if there are issues in communications, message format, or
             Egeria errors.
 
-        Args:
-            property_names ():
+        Notes
+        -----
+        Sample body:
+        {
+          "class" : "SearchStringRequestBody",
+          "searchString": "xxx",
+          "metadataElementTypeName": "GovernanceActionType",
+          "metadataElementSubtypeNames": [],
+          "skipRelationships": [],
+          "includeOnlyRelationships": [],
+          "relationshipsPageSize": 100,
+          "skipClassifiedElements": [],
+          "includeOnlyClassifiedElements": [],
+          "graphQueryDepth" : 10,
+          "startsWith" : false,
+          "endsWith" : false,
+          "ignoreCase" : true,
+          "startFrom" : 0,
+          "pageSize": 0,
+          "asOfTime" : "2024-01-01T00:00:00.000+00:00",
+          "effectiveTime" : "2024-01-01T00:00:00.000+00:00",
+          "forLineage" : false,
+          "forDuplicateProcessing" : false,
+          "limitResultsByStatus" : ["ACTIVE"],
+          "sequencingOrder" : "PROPERTY_ASCENDING",
+          "sequencingProperty" : "qualifiedName"
+        }
         """
         return await super()._async_find_assets(search_string=search_string, starts_with=starts_with,
                                                 ends_with=ends_with, ignore_case=ignore_case,
@@ -481,8 +794,8 @@ class AssetMaker(ServerClient):
                     governance_zone_filter: list[str] = None, as_of_time: str = None, effective_time: str = None,
                     relationship_page_size: int = 0, limit_results_by_status: list[str] = None,
                     sequencing_order: str = None, sequencing_property: str = None, output_format: str = "DICT",
-                    report_spec: dict | str | None = None, start_from: int = 0, page_size: int | None = None,
-                    property_names=None, body=None) -> list | dict | str:
+                    report_spec: dict | str | None = None, start_from: int = 0, page_size: int = 0,
+                    property_names: list[str] = None, body: dict | SearchStringRequestBody | None = None) -> list | dict | str:
         """Retrieve the list of asset metadata elements that contain the search string.
 
         Parameters
@@ -517,8 +830,33 @@ class AssetMaker(ServerClient):
             One of the pyegeria exceptions will be raised if there are issues in communications, message format, or
             Egeria errors.
 
-        Args:
-            property_names ():
+        Notes
+        -----
+        Sample body:
+        {
+          "class" : "SearchStringRequestBody",
+          "searchString": "xxx",
+          "metadataElementTypeName": "GovernanceActionType",
+          "metadataElementSubtypeNames": [],
+          "skipRelationships": [],
+          "includeOnlyRelationships": [],
+          "relationshipsPageSize": 100,
+          "skipClassifiedElements": [],
+          "includeOnlyClassifiedElements": [],
+          "graphQueryDepth" : 10,
+          "startsWith" : false,
+          "endsWith" : false,
+          "ignoreCase" : true,
+          "startFrom" : 0,
+          "pageSize": 0,
+          "asOfTime" : "2024-01-01T00:00:00.000+00:00",
+          "effectiveTime" : "2024-01-01T00:00:00.000+00:00",
+          "forLineage" : false,
+          "forDuplicateProcessing" : false,
+          "limitResultsByStatus" : ["ACTIVE"],
+          "sequencingOrder" : "PROPERTY_ASCENDING",
+          "sequencingProperty" : "qualifiedName"
+        }
         """
         return super().find_assets(search_string=search_string, starts_with=starts_with, ends_with=ends_with,
                                    ignore_case=ignore_case, anchor_domain=anchor_domain,
@@ -566,15 +904,35 @@ class AssetMaker(ServerClient):
         PyegeriaException
             One of the pyegeria exceptions will be raised if there are issues in communications, message format, or
             Egeria errors.
+
+        Notes
+        -----
+        Sample body:
+        {
+          "class" : "GetRequestBody",
+          "metadataElementTypeName": "",
+          "metadataElementSubtypeNames": [],
+          "skipRelationships": [],
+          "includeOnlyRelationships": [],
+          "relationshipsPageSize": 100,
+          "skipClassifiedElements": [],
+          "includeOnlyClassifiedElements": [],
+          "graphQueryDepth" : 10,
+          "asOfTime" : "2024-01-01T00:00:00.000+00:00",
+          "effectiveTime" : "2024-01-01T00:00:00.000+00:00",
+          "forLineage" : false,
+          "forDuplicateProcessing" : false
+        }
         """
-        if body is None:
-            body = {"class": "GetRequestBody"}
-
-        body_dict = body if isinstance(body, dict) else body.model_dump(mode="json", by_alias=True, exclude_none=True)
-
         url = f"{self.asset_command_root}/assets/{asset_guid}/retrieve"
-        response = await self._async_make_request("POST", url, body_dict)
-        return response.json().get("element", {})
+        return await self._async_get_guid_request(
+            url,
+            _type="Asset",
+            _gen_output=self._generate_referenceable_output,
+            output_format=output_format,
+            report_spec=report_spec,
+            body=body,
+        )
 
     @dynamic_catch
     def get_asset_by_guid(
@@ -607,6 +965,25 @@ class AssetMaker(ServerClient):
         PyegeriaException
             One of the pyegeria exceptions will be raised if there are issues in communications, message format, or
             Egeria errors.
+
+        Notes
+        -----
+        Sample body:
+        {
+          "class" : "GetRequestBody",
+          "metadataElementTypeName": "",
+          "metadataElementSubtypeNames": [],
+          "skipRelationships": [],
+          "includeOnlyRelationships": [],
+          "relationshipsPageSize": 100,
+          "skipClassifiedElements": [],
+          "includeOnlyClassifiedElements": [],
+          "graphQueryDepth" : 10,
+          "asOfTime" : "2024-01-01T00:00:00.000+00:00",
+          "effectiveTime" : "2024-01-01T00:00:00.000+00:00",
+          "forLineage" : false,
+          "forDuplicateProcessing" : false
+        }
         """
         loop = asyncio.get_event_loop()
         return loop.run_until_complete(
@@ -649,6 +1026,31 @@ class AssetMaker(ServerClient):
         Notes
         -----
         See: https://egeria-project.org/concepts/integration-connector/
+
+        Sample body:
+        {
+          "class" : "NewRelationshipRequestBody",
+          "externalSourceGUID": "add guid here",
+          "externalSourceName": "add qualified name here",
+          "effectiveTime" : "2024-01-01T00:00:00.000+00:00",
+          "forLineage" : false,
+          "forDuplicateProcessing" : false,
+          "properties": {
+            "class": "CatalogTargetProperties",
+            "catalogTargetName" : "Freddy",
+            "metadataSourceQualifiedName" : "",
+            "templates" : {
+               "templateName1" : "template1GUID",
+               "templateName2" : "template2GUID"
+            },
+            "configurationProperties" : {
+              "propertyName1" : "propertyValue1",
+              "propertyName2" : "propertyValue2"
+            },
+            "effectiveFrom": "2024-01-01T00:00:00.000+00:00",
+            "effectiveTo": "2024-12-31T23:59:59.999+00:00"
+          }
+        }
         """
         url = f"{self.curation_command_root}/integration-connectors/{integration_connector_guid}/catalog-targets/{metadata_element_guid}"
         await self._async_new_relationship_request(url, ["CatalogTargetProperties"], body)
@@ -686,6 +1088,31 @@ class AssetMaker(ServerClient):
         Notes
         -----
         See: https://egeria-project.org/concepts/integration-connector/
+
+        Sample body:
+        {
+          "class" : "NewRelationshipRequestBody",
+          "externalSourceGUID": "add guid here",
+          "externalSourceName": "add qualified name here",
+          "effectiveTime" : "2024-01-01T00:00:00.000+00:00",
+          "forLineage" : false,
+          "forDuplicateProcessing" : false,
+          "properties": {
+            "class": "CatalogTargetProperties",
+            "catalogTargetName" : "Freddy",
+            "metadataSourceQualifiedName" : "",
+            "templates" : {
+               "templateName1" : "template1GUID",
+               "templateName2" : "template2GUID"
+            },
+            "configurationProperties" : {
+              "propertyName1" : "propertyValue1",
+              "propertyName2" : "propertyValue2"
+            },
+            "effectiveFrom": "2024-01-01T00:00:00.000+00:00",
+            "effectiveTo": "2024-12-31T23:59:59.999+00:00"
+          }
+        }
         """
         loop = asyncio.get_event_loop()
         return loop.run_until_complete(
@@ -722,6 +1149,30 @@ class AssetMaker(ServerClient):
         Notes
         -----
         See: https://egeria-project.org/concepts/integration-connector/
+
+        Sample body:
+        {
+          "class" : "UpdateRelationshipRequestBody",
+          "properties" : {
+            "class": "CatalogTargetProperties",
+            "catalogTargetName" : "Freddy",
+            "metadataSourceQualifiedName" : "",
+            "templates" : {
+               "templateName1" : "template1GUID",
+               "templateName2" : "template2GUID"
+            },
+            "configurationProperties" : {
+              "propertyName1" : "propertyValue1",
+              "propertyName2" : "propertyValue2"
+            }
+          },
+          "mergeUpdate": true,
+          "externalSourceGUID": "add guid here",
+          "externalSourceName": "add qualified name here",
+          "effectiveTime" : "2024-01-01T00:00:00.000+00:00",
+          "forLineage" : false,
+          "forDuplicateProcessing" : false
+        }
         """
         url = f"{self.curation_command_root}/catalog-targets/{relationship_guid}/update"
         await self._async_update_relationship_request(url, ["CatalogTargetProperties"], body)
@@ -754,6 +1205,30 @@ class AssetMaker(ServerClient):
         Notes
         -----
         See: https://egeria-project.org/concepts/integration-connector/
+
+        Sample body:
+        {
+          "class" : "UpdateRelationshipRequestBody",
+          "properties" : {
+            "class": "CatalogTargetProperties",
+            "catalogTargetName" : "Freddy",
+            "metadataSourceQualifiedName" : "",
+            "templates" : {
+               "templateName1" : "template1GUID",
+               "templateName2" : "template2GUID"
+            },
+            "configurationProperties" : {
+              "propertyName1" : "propertyValue1",
+              "propertyName2" : "propertyValue2"
+            }
+          },
+          "mergeUpdate": true,
+          "externalSourceGUID": "add guid here",
+          "externalSourceName": "add qualified name here",
+          "effectiveTime" : "2024-01-01T00:00:00.000+00:00",
+          "forLineage" : false,
+          "forDuplicateProcessing" : false
+        }
         """
         loop = asyncio.get_event_loop()
         loop.run_until_complete(
@@ -794,8 +1269,13 @@ class AssetMaker(ServerClient):
         See: https://egeria-project.org/concepts/integration-connector/
         """
         url = f"{self.curation_command_root}/catalog-targets/{relationship_guid}"
-        response = await self._async_make_request("GET", url)
-        return response.json().get("element", {})
+        return await self._async_get_guid_request(
+            url,
+            _type="CatalogTarget",
+            _gen_output=self._generate_referenceable_output,
+            output_format=output_format,
+            report_spec=report_spec,
+        )
 
     @dynamic_catch
     def get_catalog_target(
@@ -840,7 +1320,7 @@ class AssetMaker(ServerClient):
         self,
         integration_connector_guid: str,
         start_from: int = 0,
-        page_size: int | None = None,
+        page_size: int = 0,
         output_format: str = "DICT",
         report_spec: dict | str | None = None,
     ) -> list | dict | str:
@@ -875,22 +1355,26 @@ class AssetMaker(ServerClient):
         -----
         See: https://egeria-project.org/concepts/integration-connector/
         """
-        if page_size is None:
-            page_size = max_paging_size
-
         url = (
             f"{self.curation_command_root}/integration-connectors/{integration_connector_guid}/"
-            f"catalog-targets?startFrom={start_from}&pageSize={page_size}"
+            f"catalog-targets"
         )
-        response = await self._async_make_request("GET", url)
-        return response.json().get("elements", [])
+        return await self._async_get_results_body_request(
+            url,
+            _type="CatalogTarget",
+            _gen_output=self._generate_referenceable_output,
+            start_from=start_from,
+            page_size=page_size,
+            output_format=output_format,
+            report_spec=report_spec,
+        )
 
     @dynamic_catch
     def get_catalog_targets(
         self,
         integration_connector_guid: str,
         start_from: int = 0,
-        page_size: int | None = None,
+        page_size: int = 0,
         output_format: str = "DICT",
         report_spec: dict | str | None = None,
     ) -> list | dict | str:
