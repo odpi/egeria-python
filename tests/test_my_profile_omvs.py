@@ -16,13 +16,13 @@ import time
 from rich import print_json
 from rich.console import Console
 
-from pyegeria._exceptions import (
+from pyegeria.core._exceptions import (
     PyegeriaInvalidParameterException,
     PyegeriaAPIException,
     PyegeriaUnauthorizedException,
     print_basic_exception as print_exception_response,
 )
-from pyegeria.my_profile import MyProfile
+from pyegeria.omvs.my_profile_omvs import MyProfile
 
 disable_ssl_warnings = True
 

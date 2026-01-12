@@ -22,7 +22,7 @@ from rich.table import Table
 from pyegeria import (
     EgeriaTech,
 )
-from pyegeria._exceptions import (
+from pyegeria.core._exceptions import (
     PyegeriaInvalidParameterException,
     PyegeriaAPIException,
     PyegeriaUnauthorizedException,

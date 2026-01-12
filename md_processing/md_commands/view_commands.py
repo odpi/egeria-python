@@ -3,8 +3,6 @@ This file contains term-related object_action functions for processing Egeria Ma
 """
 import json
 import os
-import sys
-import time
 from typing import Optional
 
 from loguru import logger
@@ -13,16 +11,15 @@ from rich import print
 from rich.console import Console
 from rich.markdown import Markdown
 
-from md_processing.md_processing_utils.common_md_proc_utils import (parse_upsert_command, parse_view_command)
-from md_processing.md_processing_utils.common_md_utils import update_element_dictionary
-from md_processing.md_processing_utils.extraction_utils import (extract_command_plus, update_a_command)
+from md_processing.md_processing_utils.common_md_proc_utils import (parse_view_command)
+from md_processing.md_processing_utils.extraction_utils import (extract_command_plus)
 from md_processing.md_processing_utils.md_processing_constants import (load_commands)
 from pyegeria import DEBUG_LEVEL, body_slimmer, print_basic_exception, print_validation_error
 from pyegeria.egeria_tech_client import EgeriaTech, NO_ELEMENTS_FOUND
-from pyegeria.config import settings
-from pyegeria.logging_configuration import config_logging
-from pyegeria.base_report_formats import (select_report_spec, get_report_spec_heading, get_report_spec_description)
-from pyegeria._exceptions import PyegeriaException, print_exception_response
+from pyegeria.core.config import settings
+from pyegeria.core.logging_configuration import config_logging
+from pyegeria.view.base_report_formats import (select_report_spec)
+from pyegeria.core._exceptions import PyegeriaException
 
 GERIA_METADATA_STORE = os.environ.get("EGERIA_METADATA_STORE", "active-metadata-store")
 EGERIA_KAFKA_ENDPOINT = os.environ.get("KAFKA_ENDPOINT", "localhost:9092")

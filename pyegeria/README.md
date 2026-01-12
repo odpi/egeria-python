@@ -78,7 +78,7 @@ Printing exceptions
 Examples
 
 ```python
-from pyegeria._exceptions import (
+from pyegeria.core._exceptions import (
     PyegeriaException,
     PyegeriaAPIException,
     PyegeriaInvalidParameterException,

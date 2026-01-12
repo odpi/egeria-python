@@ -11,31 +11,24 @@ A running Egeria environment is needed to run these tests.
 
 """
 
-import asyncio
 import json
 import time
-from contextlib import nullcontext as does_not_raise
 
-import pytest
 from pydantic import ValidationError
 
 from pyegeria import (
     PyegeriaException,
     print_exception_table,
     print_validation_error,
-    PyegeriaInvalidParameterException,
     print_basic_exception,
 )
-from pyegeria._exceptions import (
+from pyegeria.core._exceptions import (
     PyegeriaInvalidParameterException,
     PyegeriaAPIException,
     PyegeriaUnauthorizedException,
 )
-from pyegeria.glossary_manager import GlossaryManager, GlossaryTermProperties
-from pyegeria.core_omag_server_config import CoreServerConfig
+from pyegeria.omvs.glossary_manager import GlossaryManager, GlossaryTermProperties
 from pyegeria.models import NewElementRequestBody
-from tests.test_classification_manager import relationship_type
-
 
 # from pyegeria.admin_services import FullServerConfig
 

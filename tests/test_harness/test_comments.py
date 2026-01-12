@@ -1,10 +1,8 @@
-import asyncio
-import types
 import pytest
 
 pytestmark = pytest.mark.unit
 
-from pyegeria._server_client import ServerClient
+from pyegeria.core._server_client import ServerClient
 
 
 @pytest.fixture()

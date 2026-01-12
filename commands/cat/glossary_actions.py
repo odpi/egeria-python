@@ -15,7 +15,7 @@ import sys
 import click
 
 from pyegeria import EgeriaTech, body_slimmer, settings, NO_ELEMENTS_FOUND, TERM_STATUS
-from pyegeria._exceptions import (
+from pyegeria.core._exceptions import (
     PyegeriaException, print_basic_exception
 )
 

@@ -16,16 +16,15 @@ from datetime import datetime
 from rich import print, print_json
 from rich.console import Console
 
-from pyegeria._exceptions import (
-    PyegeriaException,
+from pyegeria.core._exceptions import (
     print_basic_exception,
     print_exception_table,
     print_validation_error, PyegeriaInvalidParameterException, PyegeriaAPIException, PyegeriaUnauthorizedException,
     PyegeriaNotFoundException, PyegeriaConnectionException,
 )
-from pyegeria.logging_configuration import config_logging, init_logging
-from pyegeria.models import (NewElementRequestBody, UpdateElementRequestBody, DeleteElementRequestBody)
-from pyegeria.reference_data import ReferenceDataManager
+from pyegeria.core.logging_configuration import config_logging, init_logging
+from pyegeria.models import (NewElementRequestBody)
+from pyegeria.omvs.reference_data import ReferenceDataManager
 from pydantic import ValidationError
 
 disable_ssl_warnings = True

@@ -15,17 +15,14 @@ This script shows how to:
 
 import sys
 import os
-import json
-from pathlib import Path
 
 # Add the parent directory to the path so we can import the modules
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
-from pyegeria._output_format_models import Column, Format, ActionParameter, FormatSet, FormatSetDict
-from pyegeria.base_report_formats import (
+from pyegeria.view._output_format_models import Column, Format, ActionParameter, FormatSet, FormatSetDict
+from pyegeria.view.base_report_formats import (
     report_specs,
     save_report_specs,
-    load_report_specs,
     USER_FORMAT_SETS_DIR,
     select_report_spec,
 )
@@ -257,7 +254,7 @@ def user_format_sets_directory_example(custom_format_sets):
     print(f"Saved user custom report spec to {user_format_sets_path}")
     
     # Load the user format sets
-    from pyegeria.base_report_formats import load_user_report_specs
+    from pyegeria.view.base_report_formats import load_user_report_specs
     load_user_report_specs()
     
     # Check if the user report spec was loaded

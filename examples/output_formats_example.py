@@ -18,8 +18,8 @@ import os
 # Add the parent directory to the path so we can import the modules
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
-from pyegeria._output_format_models import Column, Format, ActionParameter, FormatSet
-from pyegeria.base_report_formats import (
+from pyegeria.view._output_format_models import Column, Format, ActionParameter, FormatSet
+from pyegeria.view.base_report_formats import (
     report_specs,
     select_report_spec,
     report_spec_list,

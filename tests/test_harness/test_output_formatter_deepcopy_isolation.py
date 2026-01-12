@@ -1,4 +1,4 @@
-from pyegeria.output_formatter import generate_entity_dict
+from pyegeria.view.output_formatter import generate_entity_dict
 
 
 def fake_extract(element: dict, columns_struct: dict | None = None):

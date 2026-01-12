@@ -8,18 +8,13 @@ Execute Generic actions.
 
 """
 
-import csv
-import json
 import os
-import sys
-import time
-from datetime import datetime
 
 import click
 
 
-from pyegeria import EgeriaTech, body_slimmer
-from pyegeria._exceptions import (
+from pyegeria import EgeriaTech
+from pyegeria.core._exceptions import (
     PyegeriaInvalidParameterException,
     PyegeriaAPIException as PropertyServerException,
     print_basic_exception as print_exception_response,

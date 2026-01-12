@@ -18,13 +18,13 @@ import json
 import pytest
 from rich import print, print_json
 
-from pyegeria._exceptions import (
+from pyegeria.core._exceptions import (
     PyegeriaInvalidParameterException,
     PyegeriaAPIException,
     PyegeriaException,
     print_basic_exception,
 )
-from pyegeria.server_operations import ServerOps
+from pyegeria.omvs.server_operations import ServerOps
 
 disable_ssl_warnings = True
 

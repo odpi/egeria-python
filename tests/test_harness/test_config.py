@@ -3,7 +3,7 @@
 Simple test script to verify the refactored load_config.py implementation.
 """
 import os
-from pyegeria.load_config import load_app_config, get_app_config
+from pyegeria.core.load_config import load_app_config, get_app_config
 
 def test_config_loading():
     """Test that configuration loading works correctly."""
@@ -33,8 +33,8 @@ def test_env_override():
     os.environ["EGERIA_PLATFORM_URL"] = "https://test-override:9443"
     
     # Clear the loaded configuration to force reloading
-    import pyegeria.load_config
-    pyegeria.load_config._app_config = None
+    import pyegeria.core.load_config
+    pyegeria.core.load_config._app_config = None
     
     # Reload the configuration
     config = load_app_config()
@@ -55,8 +55,8 @@ def test_validation():
     os.environ["EGERIA_USER_PASSWORD"] = ""
     
     # Clear the loaded configuration to force reloading
-    import pyegeria.load_config
-    pyegeria.load_config._app_config = None
+    import pyegeria.core.load_config
+    pyegeria.core.load_config._app_config = None
     
     # Reload the configuration - this should raise an exception
     try:

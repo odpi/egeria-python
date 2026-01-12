@@ -16,7 +16,7 @@ from pprint import pprint
 
 try:
     # Import lazily through the public API
-    from pyegeria.load_config import PyegeriaSettings
+    from pyegeria.core.load_config import PyegeriaSettings
 except Exception as e:
     print(f"Error: could not import pyegeria: {e}")
     sys.exit(2)

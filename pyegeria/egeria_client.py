@@ -11,48 +11,53 @@ for all use cases..using the more role based clients is often appropriate:
     * EgeriaTech - for technical users such as data scientists and engineers
 
 """
-# from pyegeria.x_action_author_omvs import ActionAuthor
-from pyegeria.asset_catalog import AssetCatalog
-from pyegeria.collection_manager import CollectionManager
-from pyegeria.glossary_manager import GlossaryManager
-from pyegeria.project_manager import ProjectManager
-from pyegeria.automated_curation import AutomatedCuration
-from pyegeria.classification_manager import ClassificationManager
-from pyegeria.template_manager_omvs import TemplateManager
-from pyegeria.runtime_manager import RuntimeManager
-from pyegeria.full_omag_server_config import FullServerConfig
-from pyegeria.metadata_explorer_omvs import MetadataExplorer
-from pyegeria.my_profile_omvs import MyProfile
-from pyegeria.feedback_manager import FeedbackManager
-from pyegeria.solution_architect import SolutionArchitect
-from pyegeria.server_operations import ServerOps
-from pyegeria.registered_info import RegisteredInfo
-from pyegeria.valid_metadata import ValidMetadataManager
+from typing import Optional, Dict, Any
+
 from pyegeria.egeria_config_client import EgeriaConfig
-from pyegeria.data_designer import DataDesigner
-from pyegeria.governance_officer import GovernanceOfficer
-# from pyegeria.md_processing_utils import render_markdown
+from pyegeria.omvs.action_author import ActionAuthor
+from pyegeria.omvs.actor_manager import ActorManager
+from pyegeria.omvs.asset_catalog import AssetCatalog
+from pyegeria.omvs.asset_maker import AssetMaker
+from pyegeria.omvs.automated_curation import AutomatedCuration
+from pyegeria.omvs.classification_manager import ClassificationManager
+from pyegeria.omvs.collection_manager import CollectionManager
+from pyegeria.omvs.community_matters_omvs import CommunityMatters
+from pyegeria.omvs.data_designer import DataDesigner
+from pyegeria.omvs.data_discovery import DataDiscovery
+from pyegeria.omvs.data_engineer import DataEngineer
+from pyegeria.omvs.digital_business import DigitalBusiness
+from pyegeria.omvs.external_links import ExternalReferences
+from pyegeria.omvs.feedback_manager import FeedbackManager
+from pyegeria.omvs.full_omag_server_config import FullServerConfig
+from pyegeria.omvs.glossary_manager import GlossaryManager
+from pyegeria.omvs.governance_officer import GovernanceOfficer
+from pyegeria.omvs.lineage_linker import LineageLinker
+from pyegeria.omvs.location_arena import Location
+from pyegeria.omvs.metadata_expert import MetadataExpert
+from pyegeria.omvs.metadata_explorer_omvs import MetadataExplorer
+from pyegeria.omvs.my_profile import MyProfile
+from pyegeria.omvs.notification_manager import NotificationManager
+from pyegeria.omvs.people_organizer import PeopleOrganizer
+from pyegeria.omvs.product_manager import ProductManager
+from pyegeria.omvs.project_manager import ProjectManager
+from pyegeria.omvs.reference_data import ReferenceDataManager
+from pyegeria.omvs.registered_info import RegisteredInfo
+from pyegeria.omvs.runtime_manager import RuntimeManager
+from pyegeria.omvs.schema_maker import SchemaMaker
+from pyegeria.omvs.server_operations import ServerOps
+from pyegeria.omvs.solution_architect import SolutionArchitect
+from pyegeria.omvs.specification_properties import SpecificationProperties
+from pyegeria.omvs.subject_area import SubjectArea
+from pyegeria.omvs.template_manager_omvs import TemplateManager
+from pyegeria.omvs.time_keeper import TimeKeeper
+from pyegeria.omvs.valid_metadata import ValidMetadataManager
+from pyegeria.omvs.valid_metadata_lists import ValidMetadataLists
+from pyegeria.omvs.valid_type_lists import ValidTypeLists
 
 
 class Egeria:
     """
-    Overall Egeria client that composes all functional pyegeria clients and delegates calls to them.
-
-    Attributes:
-        view_server: str
-            Name of the view server to use.
-        platform_url : str
-            URL of the server platform to connect to
-        user_id : str
-            The identity of the user calling the method - this sets a default optionally used by the methods
-            when the user doesn't pass the user_id on a method call.
-        user_pwd: str
-            The password associated with the user_id. Defaults to None
-        token: str
-            An optional bearer token
-
-    Methods:
-        Methods are provided by composed sub-clients via delegation.
+    Overall Egeria client that composes all functional pyegeria clients using lazy loading.
     """
 
     def __init__(
@@ -63,75 +68,100 @@ class Egeria:
         user_pwd: str = None,
         token: str = None,
     ):
-        # Compose major umbrella and service clients
-        self._asset_catalog = AssetCatalog(view_server, platform_url, user_id, user_pwd, token)
-        self._my_profile = MyProfile(view_server, platform_url, user_id, user_pwd, token)
-        self._feedback = FeedbackManager(view_server, platform_url, user_id, user_pwd, token)
-        self._glossary = GlossaryManager(view_server, platform_url, user_id, user_pwd, token)
-        self._projects = ProjectManager(view_server, platform_url, user_id, user_pwd, token)
-        self._runtime = RuntimeManager(view_server, platform_url, user_id, user_pwd, token)
-        self._server_ops = ServerOps(view_server, platform_url, user_id, user_pwd)
-        self._full_server_config = FullServerConfig(view_server, platform_url, user_id, user_pwd)
-        self._auto_curate = AutomatedCuration(view_server, platform_url, user_id, user_pwd, token)
-        self._class_mgr = ClassificationManager(view_server, platform_url, user_id, user_pwd, token)
-        self._reg_info = RegisteredInfo(view_server, platform_url, user_id, user_pwd, token)
-        self._templates = TemplateManager(view_server, platform_url, user_id, user_pwd, token)
-        self._valid = ValidMetadataManager(view_server, platform_url, user_id, user_pwd, token)
-        self._explorer = MetadataExplorer(view_server, platform_url, user_id, user_pwd, token)
-        self._sol_arch = SolutionArchitect(view_server, platform_url, user_id, user_pwd, token)
-        self._config = EgeriaConfig(view_server, platform_url, user_id, user_pwd)
-        self._designer = DataDesigner(view_server, platform_url, user_id, user_pwd, token)
-        self._gov_officer = GovernanceOfficer(view_server, platform_url, user_id, user_pwd, token)
+        self.view_server = view_server
+        self.platform_url = platform_url
+        self.user_id = user_id
+        self.user_pwd = user_pwd
+        self.token = token
 
-        self._subclients = [
-            self._asset_catalog,
-            self._my_profile,
-            self._feedback,
-            self._glossary,
-            self._projects,
-            self._runtime,
-            self._server_ops,
-            self._full_server_config,
-            self._auto_curate,
-            self._class_mgr,
-            self._reg_info,
-            self._templates,
-            self._valid,
-            self._explorer,
-            self._sol_arch,
-            self._config,
-            self._designer,
-            self._gov_officer,
-        ]
+        self._subclient_map = {
+            "action_author": ActionAuthor,
+            "actor_manager": ActorManager,
+            "asset_catalog": AssetCatalog,
+            "asset_maker": AssetMaker,
+            "auto_curate": AutomatedCuration,
+            "class_mgr": ClassificationManager,
+            "collections": CollectionManager,
+            "community": CommunityMatters,
+            "config": EgeriaConfig,
+            "data_discovery": DataDiscovery,
+            "data_engineer": DataEngineer,
+            "designer": DataDesigner,
+            "digital_business": DigitalBusiness,
+            "expert": MetadataExpert,
+            "explorer": MetadataExplorer,
+            "external_refs": ExternalReferences,
+            "feedback": FeedbackManager,
+            "full_server_config": FullServerConfig,
+            "glossary": GlossaryManager,
+            "gov_officer": GovernanceOfficer,
+            "lineage_linker": LineageLinker,
+            "location": Location,
+            "my_profile": MyProfile,
+            "notifications": NotificationManager,
+            "people_organizer": PeopleOrganizer,
+            "product_manager": ProductManager,
+            "projects": ProjectManager,
+            "reference_data": ReferenceDataManager,
+            "reg_info": RegisteredInfo,
+            "runtime": RuntimeManager,
+            "schema_maker": SchemaMaker,
+            "server_ops": ServerOps,
+            "sol_arch": SolutionArchitect,
+            "specification_properties": SpecificationProperties,
+            "subject_area": SubjectArea,
+            "templates": TemplateManager,
+            "time_keeper": TimeKeeper,
+            "valid": ValidMetadataManager,
+            "valid_metadata_lists": ValidMetadataLists,
+            "valid_type_lists": ValidTypeLists,
+        }
+        self._instantiated_clients = {}
+
+    def _get_subclient(self, attr_name: str):
+        if attr_name not in self._instantiated_clients:
+            client_cls = self._subclient_map[attr_name]
+            self._instantiated_clients[attr_name] = client_cls(
+                self.view_server, self.platform_url, self.user_id, self.user_pwd, self.token
+            )
+        return self._instantiated_clients[attr_name]
 
     def __getattr__(self, name):
-        for sub in self._subclients:
-            if hasattr(sub, name):
-                return getattr(sub, name)
-        raise AttributeError(f"{self.__class__.__name__!s} object has no attribute {name!r}")
+        """Resolves attributes via instantiated or mapped subclients"""
+        # Allow direct access to sub-clients if the name matches a key in the map
+        if name in self._subclient_map:
+            return self._get_subclient(name)
+
+        for inst in self._instantiated_clients.values():
+            if hasattr(inst, name):
+                return getattr(inst, name)
+        for attr_name, client_cls in self._subclient_map.items():
+            if hasattr(client_cls, name):
+                return getattr(self._get_subclient(attr_name), name)
+        raise AttributeError(f"{self.__class__.__name__} object has no attribute {name}")
 
     def create_egeria_bearer_token(self, user_id: str = None, user_pwd: str = None):
-        token_val = None
-        for sub in self._subclients:
-            if hasattr(sub, "create_egeria_bearer_token"):
-                token_val = sub.create_egeria_bearer_token(user_id, user_pwd)
+        # Use server_ops as a reliable helper for token generation
+        helper = self._get_subclient("server_ops")
+        token_val = helper.create_egeria_bearer_token(user_id, user_pwd)
+        self.set_bearer_token(token_val)
         return token_val
 
     def set_bearer_token(self, token: str) -> None:
-        for sub in self._subclients:
-            if hasattr(sub, "set_bearer_token"):
-                sub.set_bearer_token(token)
+        self.token = token
+        for sub in self._instantiated_clients.values():
+            sub.set_bearer_token(token)
 
     def get_token(self) -> str:
-        for sub in self._subclients:
+        if self.token: return self.token
+        for sub in self._instantiated_clients.values():
             if hasattr(sub, "get_token"):
                 return sub.get_token()
         return None
 
     def close_session(self) -> None:
-        for sub in self._subclients:
+        for sub in self._instantiated_clients.values():
             if hasattr(sub, "close_session"):
-                try:
-                    sub.close_session()
-                except Exception:
-                    pass
+                try: sub.close_session()
+                except Exception: pass
+        self._instantiated_clients.clear()

@@ -22,7 +22,7 @@ from md_processing.md_processing_utils.extraction_utils import (extract_command_
 from md_processing.md_processing_utils.md_processing_constants import (load_commands)
 from pyegeria import DEBUG_LEVEL, body_slimmer, PyegeriaException, print_basic_exception, print_validation_error
 from pyegeria.egeria_tech_client import EgeriaTech
-from pyegeria.utils import make_format_set_name_from_type
+from pyegeria.core.utils import make_format_set_name_from_type
 
 GERIA_METADATA_STORE = os.environ.get("EGERIA_METADATA_STORE", "active-metadata-store")
 EGERIA_KAFKA_ENDPOINT = os.environ.get("KAFKA_ENDPOINT", "localhost:9092")

@@ -8,18 +8,13 @@ Execute Glossary actions.
 
 """
 
-import csv
-import json
 import os
-import sys
-import time
-from datetime import datetime
 
 import click
 
 
 from pyegeria import EgeriaTech, body_slimmer, settings
-from pyegeria._exceptions import (
+from pyegeria.core._exceptions import (
     PyegeriaException, print_basic_exception
 )
 app_config = settings.Environment

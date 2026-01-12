@@ -11,23 +11,18 @@ A running Egeria environment is needed to run these tests.
 
 """
 
-import asyncio
 import json
 import os
-import time
-from contextlib import nullcontext as does_not_raise
 
 import pytest
 from pydantic import ValidationError
 
 from pyegeria import ServerClient, PyegeriaException, print_basic_exception, print_validation_error
-from pyegeria._exceptions import (
+from pyegeria.core._exceptions import (
     PyegeriaInvalidParameterException as InvalidParameterException,
-    PyegeriaAPIException as PropertyServerException,
-    PyegeriaUnauthorizedException as UserNotAuthorizedException,
     print_basic_exception as print_exception_response,
 )
-from pyegeria.core_omag_server_config import CoreServerConfig
+
 # from pyegeria.feedback_manager_omvs import FeedbackManager
 
 disable_ssl_warnings = True

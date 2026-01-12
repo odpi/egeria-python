@@ -1,9 +1,9 @@
-# PDX-License-Identifier: Apache-2.0
+# SPDX-License-Identifier: Apache-2.0
 # Copyright Contributors to the ODPi Egeria project.
 
 [project]
 name = "pyegeria"
-version = "5.5.3"
+version = "5.5.3.2"
 license = 'Apache-2.0'
 license-files = ["LICENSE"]
 authors = [{name = "Dan Wolfson", email = "dan.wolfson@pdr-associates.com"},]

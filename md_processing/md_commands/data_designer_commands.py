@@ -8,7 +8,6 @@ This file contains term-related object_action functions for processing Egeria Ma
 
 import json
 import os
-import sys
 from typing import Optional
 
 from loguru import logger
@@ -16,15 +15,13 @@ from rich import print
 from rich.console import Console
 from rich.markdown import Markdown
 
-from md_processing.md_processing_utils.common_md_proc_utils import (parse_upsert_command, parse_view_command )
+from md_processing.md_processing_utils.common_md_proc_utils import (parse_upsert_command)
 from md_processing.md_processing_utils.common_md_utils import (
     update_element_dictionary,
-    set_find_body,
     set_create_body,
     set_element_prop_body,
     set_update_body,
     set_rel_request_body,
-    set_update_status_body,
     set_rel_prop_body,
     set_data_field_body,
 )
@@ -36,7 +33,7 @@ from md_processing.md_processing_utils.extraction_utils import (extract_command_
 from md_processing.md_processing_utils.md_processing_constants import (load_commands)
 from pyegeria import DEBUG_LEVEL, body_slimmer
 from pyegeria.egeria_tech_client import EgeriaTech
-from pyegeria.utils import make_format_set_name_from_type
+from pyegeria.core.utils import make_format_set_name_from_type
 
 GERIA_METADATA_STORE = os.environ.get("EGERIA_METADATA_STORE", "active-metadata-store")
 EGERIA_KAFKA_ENDPOINT = os.environ.get("KAFKA_ENDPOINT", "localhost:9092")

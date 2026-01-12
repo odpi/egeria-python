@@ -22,7 +22,7 @@ from md_processing.md_processing_utils.extraction_utils import (extract_command_
 
 from pyegeria import PyegeriaException, print_basic_exception, print_validation_error
 from pyegeria.egeria_tech_client import EgeriaTech
-from pyegeria.utils import make_format_set_name_from_type, body_slimmer
+from pyegeria.core.utils import make_format_set_name_from_type, body_slimmer
 
 
 # EGERIA_WIDTH = int(os.environ.get("EGERIA_WIDTH", "170"))

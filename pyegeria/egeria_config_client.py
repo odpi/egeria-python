@@ -5,71 +5,65 @@ Copyright Contributors to the ODPi Egeria project.
 Client to configure the Egeria platform and servers
 
 """
-
-from pyegeria.full_omag_server_config import FullServerConfig
-from pyegeria.server_operations import  ServerOps
+from pyegeria.omvs.core_omag_server_config import CoreServerConfig
+from pyegeria.omvs.full_omag_server_config import FullServerConfig
+from pyegeria.omvs.server_operations import  ServerOps
 
 
 class EgeriaConfig:
     """
-    Client for configuring the Egeria Platform and Servers using composition.
-
-    Attributes:
-        server_name: str
-            Name of the server to use.
-        platform_url : str
-            URL of the server platform to connect to
-        user_id : str
-            The identity of the user calling the method - this sets a default optionally used by the methods
-            when the user doesn't pass the user_id on a method call.
-        user_pwd: str
-            The password associated with the user_id. Defaults to None
-
-    Methods:
-        Methods are provided by composed sub-clients via delegation.
+    Client for managing Egeria configuration using lazy loading.
     """
 
     def __init__(
-        self, server_name: str, platform_url: str, user_id: str, user_pwd: str = None
+        self,
+        view_server: str,
+        platform_url: str,
+        user_id: str,
+        user_pwd: str = None,
+        token: str = None,
     ):
-        self.server_name = server_name
+        self.view_server = view_server
         self.platform_url = platform_url
         self.user_id = user_id
         self.user_pwd = user_pwd
+        self.token = token
 
-        self._config = FullServerConfig(server_name, platform_url, user_id, user_pwd)
-        self._ops = ServerOps(server_name, platform_url, user_id, user_pwd)
-        self._subclients = [self._config, self._ops]
+        self._subclient_map = {
+            "core_config": CoreServerConfig,
+            "full_config": FullServerConfig,
+        }
+        self._instantiated_clients = {}
+
+    def _get_subclient(self, attr_name: str):
+        if attr_name not in self._instantiated_clients:
+            client_cls = self._subclient_map[attr_name]
+            self._instantiated_clients[attr_name] = client_cls(
+                self.view_server, self.platform_url, self.user_id, self.user_pwd, self.token
+            )
+        return self._instantiated_clients[attr_name]
 
     def __getattr__(self, name):
-        for sub in self._subclients:
-            if hasattr(sub, name):
-                return getattr(sub, name)
-        raise AttributeError(f"{self.__class__.__name__!s} object has no attribute {name!r}")
-
-    def create_egeria_bearer_token(self, user_id: str = None, user_pwd: str = None):
-        token_val = None
-        for sub in self._subclients:
-            token_val = sub.create_egeria_bearer_token(user_id, user_pwd)
-        return token_val
+        """Resolves attribute via instantiated or mapped subclients"""
+        for inst in self._instantiated_clients.values():
+            if hasattr(inst, name):
+                return getattr(inst, name)
+        for attr_name, client_cls in self._subclient_map.items():
+            if hasattr(client_cls, name):
+                return getattr(self._get_subclient(attr_name), name)
+        raise AttributeError(f"{self.__class__.__name__} object has no attribute {name}")
 
     def set_bearer_token(self, token: str) -> None:
-        for sub in self._subclients:
+        self.token = token
+        for sub in self._instantiated_clients.values():
             sub.set_bearer_token(token)
 
-    def get_token(self) -> str:
-        for sub in self._subclients:
-            if hasattr(sub, "get_token"):
-                return sub.get_token()
-        return None
-
     def close_session(self) -> None:
-        for sub in self._subclients:
+        for sub in self._instantiated_clients.values():
             if hasattr(sub, "close_session"):
-                try:
-                    sub.close_session()
-                except Exception:
-                    pass
+                try: sub.close_session()
+                except Exception: pass
+        self._instantiated_clients.clear()
 
 
 if __name__ == "__main__":

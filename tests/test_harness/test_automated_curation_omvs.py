@@ -15,7 +15,6 @@ A running Egeria environment is needed to run these tests.
 
 import json
 import time
-from datetime import datetime
 
 from pydantic import ValidationError
 from rich import print, print_json
@@ -23,8 +22,8 @@ from rich.console import Console
 from rich.pretty import pprint
 
 from pyegeria import AutomatedCuration, PyegeriaException, print_basic_exception, \
-    print_validation_error, PyegeriaAPIException, EgeriaTech
-from pyegeria._exceptions import (
+    print_validation_error, EgeriaTech
+from pyegeria.core._exceptions import (
     PyegeriaInvalidParameterException,
     PyegeriaAPIException,
     PyegeriaUnauthorizedException,

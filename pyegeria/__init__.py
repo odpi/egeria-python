@@ -1,25 +1,32 @@
 """
-SPDX-License-Identifier: Apache-2.0
-Copyright Contributors to the ODPi Egeria project.
-
-This is the pyegeria client package. The purpose of the package is to provide
-easy access to Egeria (https://egeria-project.org). The package is currently in
-development.
-
-The first capabilities are around Egeria's platform services used to start and stop
-the server platform and servers.
-
+pyegeria: A Python SDK for ODPi Egeria.
 """
-from .config import load_app_config, get_app_config,pretty_print_config
-from .logging_configuration import config_logging, init_logging
-from ._globals import (default_time_out, disable_ssl_warnings, enable_ssl_check,
-                       is_debug, max_paging_size, NO_ELEMENTS_FOUND, NO_ASSETS_FOUND, NO_SERVERS_FOUND,
-                       NO_CATALOGS_FOUND, NO_GLOSSARIES_FOUND, NO_TERMS_FOUND, NO_CATEGORIES_FOUND, NO_ELEMENT_FOUND,
-                       NO_PROJECTS_FOUND, DEBUG_LEVEL, NO_COLLECTION_FOUND, NO_GUID_RETURNED, COMMENT_TYPES,
-                       TERM_STATUS
-                       )
-
-
+from pyegeria.core.config import load_app_config, get_app_config, pretty_print_config
+from pyegeria.core.logging_configuration import config_logging, init_logging
+from pyegeria.core._globals import (
+    COMMENT_TYPES,
+    DEBUG_LEVEL,
+    default_time_out,
+    disable_ssl_warnings,
+    enable_ssl_check,
+    is_debug,
+    max_paging_size,
+    MERMAID_GRAPH_TITLES,
+    MERMAID_GRAPHS,
+    NO_ASSETS_FOUND,
+    NO_CATALOGS_FOUND,
+    NO_CATEGORIES_FOUND,
+    NO_COLLECTION_FOUND,
+    NO_ELEMENT_FOUND,
+    NO_ELEMENTS_FOUND,
+    NO_GLOSSARIES_FOUND,
+    NO_GUID_RETURNED,
+    NO_MEMBERS_FOUND,
+    NO_PROJECTS_FOUND,
+    NO_SERVERS_FOUND,
+    NO_TERMS_FOUND,
+    TERM_STATUS,
+)
 
 if disable_ssl_warnings:
     from urllib3 import disable_warnings
@@ -27,78 +34,180 @@ if disable_ssl_warnings:
 
     disable_warnings(InsecureRequestWarning)
 
-# from ._client import Client
-from ._server_client import ServerClient
-from ._exceptions import (PyegeriaInvalidParameterException, PyegeriaAPIException, PyegeriaException,
-                          PyegeriaUnauthorizedException, PyegeriaClientException, PyegeriaUnknownException,
-                          PyegeriaConnectionException, PyegeriaNotFoundException,
-                          print_exception_table, print_basic_exception, print_validation_error)
-from .config import load_app_config, get_app_config, settings
-from .logging_configuration import config_logging, console_log_filter, init_logging
-# from ._exceptions import (PyegeriaInvalidParameterException, PyegeriaAPIException, PyegeriaUnauthorizedException,
-#                           print_exception_response, )
-from ._validators import (is_json, validate_guid, validate_name, validate_public, validate_search_string,
-                          validate_server_name, validate_url, validate_user_id, )
-from .asset_catalog import AssetCatalog
-from .automated_curation import AutomatedCuration
-from .classification_manager import ClassificationManager
-from .collection_manager import CollectionManager
-from .core_omag_server_config import CoreServerConfig
-from .create_tech_guid_lists import build_global_guid_lists
-from .egeria_cat_client import EgeriaCat
-from .egeria_client import Egeria
-from .egeria_config_client import EgeriaConfig
+from pyegeria.core._server_client import ServerClient
+from pyegeria.core._exceptions import (
+    PyegeriaException,
+    PyegeriaAPIException,
+    PyegeriaConnectionException,
+    PyegeriaNotFoundException,
+    PyegeriaUnauthorizedException,
+    PyegeriaInvalidParameterException,
+    PyegeriaClientException,
+    PyegeriaUnknownException,
+    print_exception_table,
+    print_basic_exception,
+    print_validation_error,
+)
+from pyegeria.core.config import settings
 
-from .egeria_tech_client import EgeriaTech
-# from .feedback_manager_omvs import FeedbackManager
-from .full_omag_server_config import FullServerConfig
-from .glossary_manager import GlossaryManager
-from .governance_officer import GovernanceOfficer
-from .mermaid_utilities import (construct_mermaid_web, construct_mermaid_jup,  load_mermaid,
-                                parse_mermaid_code, render_mermaid, save_mermaid_graph, save_mermaid_html, )
-from .metadata_explorer_omvs import MetadataExplorer
-from .my_profile_omvs import MyProfile
-from .platform_services import Platform
-from .project_manager import ProjectManager
-from .registered_info import RegisteredInfo
-from .runtime_manager import RuntimeManager
-from .server_operations import ServerOps
-from .solution_architect import SolutionArchitect
-from .utils import body_slimmer,to_pascal_case, to_camel_case, camel_to_title_case
-from .valid_metadata import ValidMetadataManager
-from .x_action_author_omvs import ActionAuthor
-from .template_manager_omvs import TemplateManager
-from .data_designer import DataDesigner
-from .base_report_formats import select_report_spec
-from .mcp_adapter import list_reports, describe_report, run_report, _async_run_report, _execute_egeria_call_blocking
-from .base_report_formats import report_spec_list, select_report_spec, get_report_format_description
-from .actor_manager import ActorManager
-from .community_matters_omvs import CommunityMatters
-from .asset_maker import AssetMaker
-from .digital_business import DigitalBusiness
-from .notification_manager import NotificationManager
-from .product_manager import ProductManager
-#
-# 2/12/25
+from pyegeria.core.utils import body_slimmer
+# OMVS Clients - Promoted to package level for ease of use
+from pyegeria.omvs.action_author import ActionAuthor
+from pyegeria.omvs.actor_manager import ActorManager
+from pyegeria.omvs.asset_catalog import AssetCatalog
+from pyegeria.omvs.asset_maker import AssetMaker
+from pyegeria.omvs.automated_curation import AutomatedCuration
+from pyegeria.omvs.classification_manager import ClassificationManager
+from pyegeria.omvs.collection_manager import CollectionManager
+from pyegeria.omvs.community_matters_omvs import CommunityMatters
+from pyegeria.omvs.data_designer import DataDesigner
+from pyegeria.omvs.data_discovery import DataDiscovery
+from pyegeria.omvs.data_engineer import DataEngineer
+from pyegeria.omvs.digital_business import DigitalBusiness
+from pyegeria.omvs.external_links import ExternalReferences
+from pyegeria.omvs.feedback_manager import FeedbackManager
+from pyegeria.omvs.full_omag_server_config import FullServerConfig
+from pyegeria.omvs.glossary_manager import GlossaryManager
+from pyegeria.omvs.governance_officer import GovernanceOfficer
+from pyegeria.omvs.lineage_linker import LineageLinker
+from pyegeria.omvs.location_arena import Location
+from pyegeria.omvs.metadata_expert import MetadataExpert
+from pyegeria.omvs.metadata_explorer_omvs import MetadataExplorer
+from pyegeria.omvs.my_profile import MyProfile
+from pyegeria.omvs.notification_manager import NotificationManager
+from pyegeria.omvs.people_organizer import PeopleOrganizer
+from pyegeria.omvs.product_manager import ProductManager
+from pyegeria.omvs.project_manager import ProjectManager
+from pyegeria.omvs.reference_data import ReferenceDataManager
+from pyegeria.omvs.registered_info import RegisteredInfo
+from pyegeria.omvs.runtime_manager import RuntimeManager
+from pyegeria.omvs.schema_maker import SchemaMaker
+from pyegeria.omvs.server_operations import ServerOps
+from pyegeria.omvs.solution_architect import SolutionArchitect
+from pyegeria.omvs.specification_properties import SpecificationProperties
+from pyegeria.omvs.subject_area import SubjectArea
+from pyegeria.omvs.template_manager_omvs import TemplateManager
+from pyegeria.omvs.time_keeper import TimeKeeper
+from pyegeria.omvs.valid_metadata import ValidMetadataManager
+from pyegeria.omvs.valid_metadata_lists import ValidMetadataLists
+from pyegeria.omvs.valid_type_lists import ValidTypeLists
 
-def __getattr__(name):
-    """
-    Lazy attribute loader to avoid import-time circular dependencies while preserving API.
-    Exposes:
-    - process_markdown_file via commands.cat.dr_egeria_md
-    - md_processing package
-    - commands package
-    """
-    if name == "process_markdown_file":
-        from commands.cat.dr_egeria_md import process_markdown_file as _pmf
-        return _pmf
-    if name == "md_processing":
-        import md_processing as _mdp
-        return _mdp
-    if name == "commands":
-        import commands as _cmd
-        return _cmd
-    raise AttributeError(f"module 'pyegeria' has no attribute {name!r}")
+# View Utilities
+from pyegeria.view.mermaid_utilities import (
+    construct_mermaid_web,
+    construct_mermaid_jup,
+    load_mermaid,
+    render_mermaid,
+    save_mermaid_html,
+    save_mermaid_graph,
+)
+from pyegeria.view.output_formatter import (
+    generate_output,
+    resolve_output_formats,
+    populate_common_columns,
+)
 
-if __name__ == "__main__":
-    print("Main-Init")
+# Combined Clients
+from pyegeria.egeria_client import Egeria
+from pyegeria.egeria_tech_client import EgeriaTech
+from pyegeria.egeria_config_client import EgeriaConfig
+from pyegeria.egeria_cat_client import EgeriaCat
+
+__all__ = [
+    # Main Clients
+    "Egeria",
+    "EgeriaTech",
+    "EgeriaConfig",
+    "EgeriaCat",
+    "ServerClient",
+    # Exceptions
+    "PyegeriaException",
+    "PyegeriaAPIException",
+    "PyegeriaConnectionException",
+    "PyegeriaNotFoundException",
+    "PyegeriaUnauthorizedException",
+    "PyegeriaInvalidParameterException",
+    "PyegeriaClientException",
+    "PyegeriaUnknownException",
+    "print_exception_table",
+    # Globals & Constants
+    "COMMENT_TYPES",
+    "DEBUG_LEVEL",
+    "default_time_out",
+    "disable_ssl_warnings",
+    "enable_ssl_check",
+    "is_debug",
+    "max_paging_size",
+    "MERMAID_GRAPH_TITLES",
+    "MERMAID_GRAPHS",
+    "NO_ASSETS_FOUND",
+    "NO_CATALOGS_FOUND",
+    "NO_CATEGORIES_FOUND",
+    "NO_COLLECTION_FOUND",
+    "NO_ELEMENT_FOUND",
+    "NO_ELEMENTS_FOUND",
+    "NO_GLOSSARIES_FOUND",
+    "NO_GUID_RETURNED",
+    "NO_MEMBERS_FOUND",
+    "NO_PROJECTS_FOUND",
+    "NO_SERVERS_FOUND",
+    "NO_TERMS_FOUND",
+    "TERM_STATUS",
+    # OMVS Module Clients
+    "ActionAuthor",
+    "ActorManager",
+    "AssetCatalog",
+    "AssetMaker",
+    "AutomatedCuration",
+    "ClassificationManager",
+    "CollectionManager",
+    "CommunityMatters",
+    "DataDesigner",
+    "DataDiscovery",
+    "DataEngineer",
+    "DigitalBusiness",
+    "ExternalReferences",
+    "FeedbackManager",
+    "FullServerConfig",
+    "GlossaryManager",
+    "GovernanceOfficer",
+    "LineageLinker",
+    "Location",
+    "MetadataExpert",
+    "MetadataExplorer",
+    "MyProfile",
+    "NotificationManager",
+    "PeopleOrganizer",
+    "ProductManager",
+    "ProjectManager",
+    "ReferenceDataManager",
+    "RegisteredInfo",
+    "RuntimeManager",
+    "SchemaMaker",
+    "ServerOps",
+    "SolutionArchitect",
+    "SpecificationProperties",
+    "SubjectArea",
+    "TemplateManager",
+    "TimeKeeper",
+    "ValidMetadataManager",
+    "ValidMetadataLists",
+    "ValidTypeLists",
+    # View Utilities
+    "construct_mermaid_web",
+    "construct_mermaid_jup",
+    "load_mermaid",
+    "render_mermaid",
+    "save_mermaid_html",
+    "save_mermaid_graph",
+    "generate_output",
+    "resolve_output_formats",
+    "populate_common_columns",
+    # Config Utilities
+    "load_app_config",
+    "get_app_config",
+    "pretty_print_config",
+    # Logging Utilities
+    "config_logging",
+    "init_logging",
+]

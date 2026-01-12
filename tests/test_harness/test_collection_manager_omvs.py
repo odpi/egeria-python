@@ -9,26 +9,23 @@ This module tests the CollectionManager class and methods
 A running Egeria environment is needed to run these tests.
 
 """
-import asyncio
 import json
 import time
 from datetime import datetime
 # import pytest.asyncio
-from loguru import logger
 
 from rich import print, print_json
 from rich.console import Console
-from pyegeria.collection_manager import CollectionManager, CollectionProperties
+from pyegeria.omvs.collection_manager import CollectionManager
 from pyegeria.egeria_tech_client import EgeriaTech
-from pyegeria.logging_configuration import config_logging, init_logging
-from pyegeria._exceptions import (
+from pyegeria.core.logging_configuration import config_logging, init_logging
+from pyegeria.core._exceptions import (
     PyegeriaInvalidParameterException,
     PyegeriaException,
     PyegeriaConnectionException,
     PyegeriaClientException,
     PyegeriaAPIException,
     PyegeriaUnknownException,
-    PyegeriaNotFoundException,
     PyegeriaUnauthorizedException,
     print_basic_exception,
     print_exception_table,
@@ -36,7 +33,7 @@ from pyegeria._exceptions import (
 )
 from pydantic import ValidationError
 from pyegeria.models import (SearchStringRequestBody, SequencingOrder, FilterRequestBody,
-                             NewElementRequestBody, InitialClassifications)
+                             NewElementRequestBody)
 
 
 disable_ssl_warnings = True
@@ -367,7 +364,7 @@ class TestCollectionManager:
             c_client = CollectionManager(self.good_view_server_1, self.good_platform1_url, user_id=self.good_user_2, )
             token = c_client.create_egeria_bearer_token(self.good_user_2, "secret")
             start_time = time.perf_counter()
-            collection_guid = "5f4ed132-407a-4047-ac65-dee8ca09c057"
+            collection_guid = "1e58d1d6-d24e-4929-9c04-53ac629b86b9"
             element_type = None
             response = c_client.get_collection_by_guid(collection_guid, element_type,
                                                        output_format="JSON", report_spec="Folders")

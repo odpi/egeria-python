@@ -6,8 +6,8 @@ import os
 from rich import print
 from rich.console import Console
 
-from pyegeria.md_processing_utils import (commands,
-                                          process_provenance_command)
+from pyegeria.view.md_processing_utils import (commands,
+                                               process_provenance_command)
 
 import click
 from pyegeria import (extract_command, process_glossary_upsert_command, process_term_upsert_command,

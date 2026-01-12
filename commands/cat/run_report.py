@@ -21,18 +21,17 @@ import json
 import os
 import sys
 import time
-from typing import Any, Dict, Iterable, List, Mapping, Sequence
+from typing import Any, Dict, List, Mapping, Sequence
 
 from rich import box
 from rich.console import Console
 from rich.table import Table
 from rich.prompt import Prompt
 
-from pyegeria import config_logging
-from pyegeria.config import settings
-from pyegeria._exceptions import PyegeriaException, print_exception_response
-from pyegeria.base_report_formats import get_report_spec_heading, select_report_spec
-from pyegeria.format_set_executor import exec_report_spec
+from pyegeria.core.config import settings
+from pyegeria.core._exceptions import PyegeriaException, print_exception_response
+from pyegeria.view.base_report_formats import get_report_spec_heading, select_report_spec
+from pyegeria.view.format_set_executor import exec_report_spec
 EGERIA_USER = os.environ.get("EGERIA_USER", "erinoverview")
 EGERIA_USER_PASSWORD = os.environ.get("EGERIA_USER_PASSWORD", "secret")
 
@@ -131,6 +130,13 @@ def list_generic(
         sys.exit(1)
 
     # Normalize/augment response
+    if result is None:
+        return {
+            "kind": "empty",
+            "heading": get_report_spec_heading(report_spec) or f"Report: {report_spec}",
+            "required": required_params,
+            "optional": optional_params,
+        }
     if result.get("kind") == "empty":
         return {
             "kind": "empty",

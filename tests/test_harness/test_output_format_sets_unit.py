@@ -1,4 +1,4 @@
-from pyegeria.base_report_formats import select_report_spec
+from pyegeria.view.base_report_formats import select_report_spec
 
 
 def test_select_default_formats():

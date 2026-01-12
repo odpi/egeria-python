@@ -6,17 +6,15 @@ This module tests the DigitalBusiness class and methods
 
 A running Egeria environment is needed to run these tests.
 """
-import asyncio
 import json
 import time
 from datetime import datetime
-from loguru import logger
 
 from rich import print, print_json
 from rich.console import Console
-from pyegeria.digital_business import DigitalBusiness
-from pyegeria.logging_configuration import config_logging, init_logging
-from pyegeria._exceptions import (
+from pyegeria.omvs.digital_business import DigitalBusiness
+from pyegeria.core.logging_configuration import config_logging, init_logging
+from pyegeria.core._exceptions import (
     PyegeriaInvalidParameterException,
     PyegeriaConnectionException,
     PyegeriaClientException,

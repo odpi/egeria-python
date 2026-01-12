@@ -20,20 +20,16 @@ import sys
 import time
 import traceback
 from datetime import datetime
-from typing import List, Dict, Optional
+from typing import List, Optional
 from dataclasses import dataclass, field
 
-from rich import print as rprint
 from rich.console import Console
 from rich.table import Table
 from rich.panel import Panel
 from rich.progress import Progress, SpinnerColumn, TextColumn
 
-from pyegeria.reference_data import ReferenceDataManager
-from pyegeria._exceptions import (
-    PyegeriaException,
-    PyegeriaNotFoundException,
-    print_exception_table,
+from pyegeria.omvs.reference_data import ReferenceDataManager
+from pyegeria.core._exceptions import (
     print_validation_error, PyegeriaAPIException,
 )
 from pydantic import ValidationError

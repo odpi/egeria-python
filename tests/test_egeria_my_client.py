@@ -11,13 +11,10 @@ A running Egeria environment is needed to run these tests.
 
 """
 
-import json
-import time
-
 from rich import print, print_json
 
-from pyegeria.my_profile_omvs import MyProfile as EgeriaMy
-from pyegeria._exceptions import (
+from pyegeria.omvs.my_profile_omvs import MyProfile as EgeriaMy
+from pyegeria.core._exceptions import (
     PyegeriaInvalidParameterException,
     PyegeriaAPIException,
     PyegeriaUnauthorizedException,

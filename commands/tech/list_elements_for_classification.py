@@ -5,7 +5,6 @@ import os
 import sys
 import time
 
-from jedi import Project
 from rich import box
 from rich.console import Console
 from rich.markdown import Markdown
@@ -16,11 +15,8 @@ from pyegeria import (
     EgeriaTech,
     print_basic_exception,
     PyegeriaException,
-    settings, load_app_config, pretty_print_config,
-    config_logging,
-    save_mermaid_html,
+    settings, load_app_config, config_logging,
 )
-from pyegeria._exceptions import PyegeriaException as EgeriaException
 
 app_config = settings.Environment
 config_path = os.path.join(app_config.pyegeria_config_directory, app_config.pyegeria_config_file)

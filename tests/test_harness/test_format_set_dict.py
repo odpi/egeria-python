@@ -13,7 +13,7 @@ import os
 # Add the parent directory to the path so we can import the modules
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
-from pyegeria._output_format_models import Column, Format, FormatSet, FormatSetDict
+from pyegeria.view._output_format_models import Column, Format, FormatSet, FormatSetDict
 
 def test_format_set_dict_find_by_name_or_alias():
     """Test the ability to find format sets by either name or alias."""

@@ -2,14 +2,13 @@
 This file contains functions for extracting data from text for Egeria Markdown processing
 """
 import re
-import json
 from typing import Any
 
 from md_processing.md_processing_utils.common_md_utils import (print_msg, find_key_with_value, get_element_dictionary,
                                                                update_element_dictionary)
 from md_processing.md_processing_utils.message_constants import INFO, EXISTS_REQUIRED
 from md_processing.md_processing_utils.md_processing_constants import debug_level
-from pyegeria._globals import NO_ELEMENTS_FOUND
+from pyegeria.core._globals import NO_ELEMENTS_FOUND
 from pyegeria.egeria_tech_client import EgeriaTech
 
 

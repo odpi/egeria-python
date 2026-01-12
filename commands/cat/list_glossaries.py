@@ -10,7 +10,6 @@ A simple display for glossary terms
 """
 import argparse
 import os
-import sys
 import time
 
 from rich import box
@@ -23,10 +22,9 @@ from rich.text import Text
 from pyegeria import (
     EgeriaTech,
 )
-from pyegeria._exceptions import (
+from pyegeria.core._exceptions import (
     PyegeriaInvalidParameterException,
     PyegeriaAPIException as PropertyServerException,
-    PyegeriaUnauthorizedException as UserNotAuthorizedException,
     print_basic_exception as print_exception_response,
 )
 
@@ -136,7 +134,10 @@ def display_glossaries(
         glossaries = m_client.find_glossaries(search_string)
         if type(glossaries) is list:
             sorted_glossary_list = sorted(
-                glossaries, key=lambda k: k["properties"]["displayName"]
+                glossaries,
+                key=lambda k: k.get("properties", {}).get("displayName",
+                                                          k.get("properties", {}).get("qualifiedName", ""))
+
             )
             for glossary in sorted_glossary_list:
                 display_name = glossary["properties"].get("displayName",'---')

@@ -16,30 +16,23 @@ Usage:
     pytest tests/test_data_engineer_scenarios.py -v -s
 """
 
-import sys
 import time
 import traceback
 from datetime import datetime
-from typing import List, Dict, Optional
+from typing import List, Optional
 from dataclasses import dataclass, field
 
-from rich import print as rprint
 from rich.console import Console
 from rich.table import Table
 from rich.panel import Panel
 from rich.progress import Progress, SpinnerColumn, TextColumn
 
-from pyegeria.data_engineer import DataEngineer
-from pyegeria.asset_maker import AssetMaker
-from pyegeria._exceptions import (
-    PyegeriaException,
-    PyegeriaAPIException,
+from pyegeria.omvs.data_engineer import DataEngineer
+from pyegeria.omvs.asset_maker import AssetMaker
+from pyegeria.core._exceptions import (
     PyegeriaNotFoundException,
-    print_exception_table,
-    print_validation_error,
 )
 from pyegeria.models import NewElementRequestBody
-from pydantic import ValidationError
 
 # Configuration
 VIEW_SERVER = "qs-view-server"
@@ -169,7 +162,7 @@ class DataEngineerScenarioTester:
             body = NewElementRequestBody(
                 class_="NewElementRequestBody",
                 properties={
-                    "class": "TabularDataSet",
+                    "class": "TabularDataSetProperties",
                     "qualifiedName": qname,
                     "displayName": f"Scenario Test Data {self.test_run_id}",
                     "description": "A tabular data set created for scenario testing"

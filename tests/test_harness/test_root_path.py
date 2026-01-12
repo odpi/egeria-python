@@ -5,12 +5,13 @@ Test script to verify the root path setting in load_config.py.
 import os
 import json
 import tempfile
-from pyegeria.load_config import load_app_config, get_app_config
+from pyegeria.core.load_config import load_app_config
+
 
 def reset_config():
     """Reset the loaded configuration to force reloading."""
-    import pyegeria.load_config
-    pyegeria.load_config._app_config = None
+    import pyegeria.core.load_config
+    pyegeria.core.load_config._app_config = None
 
 def test_root_path_from_env():
     """Test that the root path is set correctly from the environment variable."""

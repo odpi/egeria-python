@@ -16,7 +16,7 @@ from datetime import datetime
 from rich import print, print_json
 from rich.console import Console
 
-from pyegeria._exceptions import (
+from pyegeria.core._exceptions import (
     PyegeriaInvalidParameterException,
     PyegeriaConnectionException,
     PyegeriaAPIException,
@@ -25,8 +25,8 @@ from pyegeria._exceptions import (
     print_basic_exception,
     print_exception_table,
 )
-from pyegeria.location_arena import Location
-from pyegeria.logging_configuration import config_logging, init_logging
+from pyegeria.omvs.location_arena import Location
+from pyegeria.core.logging_configuration import config_logging, init_logging
 from pyegeria.models import (NewElementRequestBody)
 
 disable_ssl_warnings = True

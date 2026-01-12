@@ -1,5 +1,4 @@
-import os
-from pyegeria.config import PyegeriaSettings, EnvironmentConfig, AppConfig
+from pyegeria.core.config import PyegeriaSettings, EnvironmentConfig, AppConfig
 
 
 def test_pyegeria_settings_instantiation():
@@ -17,6 +16,6 @@ def test_environment_config_defaults():
 def test_app_config_basic_structure():
     # Minimal viable AppConfig composed of defaulted sub-sections
     env = EnvironmentConfig()
-    from pyegeria.config import DebugConfig, LoggingConfig, UserProfileConfig
+    from pyegeria.core.config import DebugConfig, LoggingConfig, UserProfileConfig
     app = AppConfig(Environment=env, Debug=DebugConfig(), Logging=LoggingConfig(), **{"User Profile": UserProfileConfig()})
     assert app.Environment.console_width == env.console_width

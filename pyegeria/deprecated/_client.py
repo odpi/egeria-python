@@ -11,21 +11,20 @@ import asyncio
 import inspect
 import json
 import os
-import re
 from datetime import datetime
 
 import httpx
 from httpx import AsyncClient, Response
 
-from pyegeria.utils import body_slimmer
-from pyegeria._exceptions import (
+from pyegeria.core.utils import body_slimmer
+from pyegeria.core._exceptions import (
     InvalidParameterException,
     OMAGCommonErrorCode,
     PropertyServerException,
     UserNotAuthorizedException,
 )
-from pyegeria._globals import enable_ssl_check, max_paging_size, NO_ELEMENTS_FOUND
-from pyegeria._validators import (
+from pyegeria.core._globals import enable_ssl_check, max_paging_size, NO_ELEMENTS_FOUND
+from pyegeria.core._validators import (
     is_json,
     validate_name,
     validate_server_name,

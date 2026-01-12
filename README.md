@@ -35,17 +35,17 @@ Report specs (aka format sets) can be tagged with an optional `family` string to
 - Show names with family and sort by family, then name:
 
 ```python
-from pyegeria.base_report_formats import report_spec_list
+from pyegeria.view.base_report_formats import report_spec_list
 
 names = report_spec_list(show_family=True, sort_by_family=True)
 for n in names:
-    print(n)
+  print(n)
 ```
 
 - Filter specs by family programmatically:
 
 ```python
-from pyegeria.base_report_formats import report_specs
+from pyegeria.view.base_report_formats import report_specs
 
 # Exact family match (case-insensitive)
 security_specs = report_specs.filter_by_family("Security")

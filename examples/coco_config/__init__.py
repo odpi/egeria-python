@@ -1,4 +1,0 @@
-"""
-
-Coco Pharmaceuticals Configurations
-"""

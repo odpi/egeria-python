@@ -18,7 +18,7 @@ from rich.markdown import Markdown
 from rich.prompt import Prompt
 from rich.table import Table
 from rich.text import Text
-from typing import List, Dict, Any
+from typing import List
 from html import escape
 try:
     from markdown_it import MarkdownIt
@@ -27,16 +27,15 @@ except Exception:
 
 from pyegeria import (
     EgeriaTech,
-    NO_CATEGORIES_FOUND, PyegeriaException, print_basic_exception, print_validation_error,
+    PyegeriaException, print_basic_exception, print_validation_error,
 )
-from pyegeria._exceptions import (
+from pyegeria.core._exceptions import (
     PyegeriaInvalidParameterException,
     PyegeriaAPIException as PropertyServerException,
     PyegeriaUnauthorizedException as UserNotAuthorizedException,
 )
 # Default glossary GUID can be provided via environment; fall back to None
 EGERIA_HOME_GLOSSARY_GUID = os.environ.get("EGERIA_HOME_GLOSSARY_GUID", None)
-from pyegeria._globals import NO_GLOSSARIES_FOUND
 
 disable_ssl_warnings = True
 
@@ -61,7 +60,7 @@ EGERIA_OUTBOX_PATH = os.environ.get("EGERIA_OUTBOX_PATH", "md_processing/dr_eger
 
 def _get_console_width_from_config(default_width: int = EGERIA_WIDTH) -> int:
     try:
-        from pyegeria.config import settings
+        from pyegeria.core.config import settings
         return int(getattr(settings.Environment, "console_width", default_width) or default_width)
     except Exception:
         return default_width

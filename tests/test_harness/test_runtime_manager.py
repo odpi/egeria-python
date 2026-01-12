@@ -14,20 +14,18 @@ A running Egeria environment is needed to run these tests.
 import json
 import time
 from contextlib import nullcontext as does_not_raise
-from json import JSONDecodeError
 
 import pytest
-from rich import print, print_json
+from rich import print
 from rich.console import Console
-from rich.traceback import Traceback, install
+from rich.traceback import install
 
-from pyegeria import AutomatedCuration, EgeriaTech, RuntimeManager
-from pyegeria._exceptions import (
+from pyegeria import EgeriaTech, RuntimeManager
+from pyegeria.core._exceptions import (
     PyegeriaInvalidParameterException,
     PyegeriaAPIException,
     PyegeriaUnauthorizedException,
-    print_exception_response, print_basic_exception, print_exception_table, PyegeriaException,
-)
+    print_exception_response, print_basic_exception, print_exception_table, )
 
 # from pyegeria.admin_services import FullServerConfig
 

@@ -5,34 +5,27 @@ import json
 import os
 import sys
 import re
-from typing import List, Optional
+from typing import Optional
 
 from loguru import logger
 from pydantic import ValidationError
 from rich import print
 from rich.markdown import Markdown
 from rich.console import Console
-from pyegeria.utils import parse_to_dict
-from pyegeria.config import settings
-from md_processing.md_processing_utils.common_md_utils import (get_current_datetime_string, get_element_dictionary,
-                                                               update_element_dictionary,
-                                                               split_tb_string, str_to_bool, )
+from pyegeria.core.utils import parse_to_dict
+from pyegeria.core.config import settings
+from md_processing.md_processing_utils.common_md_utils import (get_current_datetime_string, split_tb_string, str_to_bool, )
 from md_processing.md_processing_utils.extraction_utils import (process_simple_attribute, extract_attribute,
                                                                 get_element_by_name)
-from md_processing.md_processing_utils.common_md_utils import (update_element_dictionary, set_gov_prop_body, \
-                                                               set_update_body, set_create_body,
-                                                               set_peer_gov_def_request_body, set_rel_request_body,
-                                                               set_delete_request_body,set_rel_request_body,
-                                                               set_filter_request_body,
-                                                               ALL_GOVERNANCE_DEFINITIONS, set_find_body)
-from md_processing.md_processing_utils.extraction_utils import (extract_command_plus, update_a_command)
+from md_processing.md_processing_utils.common_md_utils import (update_element_dictionary, set_find_body)
+from md_processing.md_processing_utils.extraction_utils import (extract_command_plus)
 from md_processing.md_processing_utils.md_processing_constants import (get_command_spec, add_default_upsert_attributes,
                                                                        add_default_link_attributes)
-from md_processing.md_processing_utils.message_constants import (ERROR, INFO, WARNING, ALWAYS, EXISTS_REQUIRED)
-from pyegeria import EgeriaTech, select_report_spec, PyegeriaException, print_basic_exception, \
-    print_validation_error
-
-from pyegeria._globals import DEBUG_LEVEL
+from md_processing.md_processing_utils.message_constants import (ERROR, INFO, WARNING, EXISTS_REQUIRED)
+from pyegeria import EgeriaTech, PyegeriaException
+from pyegeria.view.base_report_formats import select_report_spec
+from pyegeria.core._exceptions import print_basic_exception, print_validation_error, print_basic_exception
+from pyegeria.core._globals import DEBUG_LEVEL
 
 debug_level = DEBUG_LEVEL
 global COMMAND_DEFINITIONS

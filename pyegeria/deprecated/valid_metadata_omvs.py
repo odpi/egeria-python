@@ -10,7 +10,7 @@ import asyncio
 
 # import json
 from pyegeria._client import Client
-from pyegeria._globals import max_paging_size, NO_ELEMENTS_FOUND
+from pyegeria.core._globals import max_paging_size, NO_ELEMENTS_FOUND
 
 
 class ValidMetadataManager(Client):

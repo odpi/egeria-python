@@ -12,19 +12,16 @@ import time
 from dataclasses import dataclass
 from datetime import datetime
 
-from rich import print
 from rich.console import Console
 from rich.table import Table
 from rich.panel import Panel
 
 from pyegeria import GlossaryManager
-from pyegeria._exceptions import (
+from pyegeria.core._exceptions import (
     PyegeriaException,
-    PyegeriaAPIException,
-    PyegeriaNotFoundException,
     print_basic_exception,
 )
-from pyegeria.glossary_manager import GlossaryTermProperties
+from pyegeria.omvs.glossary_manager import GlossaryTermProperties
 from pyegeria.models import NewElementRequestBody
 
 console = Console()

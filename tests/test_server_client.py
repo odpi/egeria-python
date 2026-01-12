@@ -1,18 +1,15 @@
 import json
-import types
 from json import JSONDecodeError
 
-import pytest
 import os
 
 from pydantic import ValidationError
 
-from pyegeria._server_client import ServerClient
-from pyegeria.config import settings
-from pyegeria.external_links import ExternalReferences
-from pyegeria.logging_configuration import config_logging
+from pyegeria.core._server_client import ServerClient
+from pyegeria.core.config import settings
+from pyegeria.core.logging_configuration import config_logging
 
-from pyegeria._exceptions import PyegeriaException, print_exception_response, print_basic_exception, \
+from pyegeria.core._exceptions import PyegeriaException, print_basic_exception, \
     print_validation_error, PyegeriaAPIException
 
 EGERIA_USER = os.environ.get("EGERIA_USER", "peterprofile")

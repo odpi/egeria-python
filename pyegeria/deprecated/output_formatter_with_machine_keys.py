@@ -1,14 +1,14 @@
 from datetime import datetime
 import re
 from typing import Any, Callable, Dict, List, Optional, Tuple, Union
-from pyegeria.utils import (camel_to_title_case)
+from pyegeria.core.utils import (camel_to_title_case)
 from markdown_it import MarkdownIt
 from rich.console import Console
 from loguru import logger
-from pyegeria.config import settings
+from pyegeria.core.config import settings
 
-from pyegeria.mermaid_utilities import construct_mermaid_web
-from pyegeria.base_report_formats import select_report_format, MD_SEPARATOR, get_report_spec_match
+from pyegeria.view.mermaid_utilities import construct_mermaid_web
+from pyegeria.view.base_report_formats import select_report_format, MD_SEPARATOR, get_report_spec_match
 from pyegeria.models import to_camel_case
 
 """
@@ -760,7 +760,7 @@ def resolve_output_formats(entity_type: str,
     - Else: try selecting by entity_type or default_label.
     - Fallback: select "Default".
     """
-    from pyegeria.base_report_formats import get_report_spec_match
+    from pyegeria.view.base_report_formats import get_report_spec_match
 
     if report_spec is None and isinstance(kwargs, dict):
         if 'report_spec' in kwargs:

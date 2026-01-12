@@ -12,17 +12,11 @@ import time
 from dataclasses import dataclass
 from datetime import datetime
 
-from rich import print
 from rich.console import Console
 from rich.table import Table
 from rich.panel import Panel
 
-from pyegeria.project_manager import ProjectManager
-from pyegeria._exceptions import (
-    PyegeriaException,
-    PyegeriaAPIException,
-    PyegeriaNotFoundException,
-)
+from pyegeria.omvs.project_manager import ProjectManager
 
 console = Console()
 

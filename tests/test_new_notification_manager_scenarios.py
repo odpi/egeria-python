@@ -12,34 +12,15 @@ uv run tests/test_new_notification_manager_scenarios.py
 pytest tests/test_new_notification_manager_scenarios.py -v -s
 """
 
-import sys
-import time
-from datetime import datetime
-from typing import List, Optional
-from dataclasses import dataclass, field
-
-from rich.console import Console
-from rich.table import Table
-from rich.panel import Panel
-
-from pyegeria.notification_manager import NotificationManager
-from pyegeria.actor_manager import ActorManager
-from pyegeria.collection_manager import CollectionManager
-from pyegeria._exceptions import (
-    PyegeriaException,
-    print_exception_table,
-)
-
 # !/usr/bin/env python3
 """
 Functional Lifecycle Scenario for Notification Manager.
 Tests resource creation, subscriber linking, and cleanup using the EgeriaTech client.
 """
 
-import sys
 import time
 from datetime import datetime
-from typing import List, Optional
+from typing import List
 from dataclasses import dataclass
 
 from rich.console import Console
@@ -47,8 +28,8 @@ from rich.table import Table
 from rich.panel import Panel
 
 from pyegeria.egeria_tech_client import EgeriaTech
-from pyegeria.notification_manager import NotificationManager
-from pyegeria._exceptions import PyegeriaException, print_exception_table
+from pyegeria.omvs.notification_manager import NotificationManager
+from pyegeria.core._exceptions import PyegeriaException, print_exception_table
 
 # Configuration
 VIEW_SERVER = "view-server"

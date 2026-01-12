@@ -3,26 +3,17 @@ This file contains general utility functions for processing Egeria Markdown
 """
 import os
 import sys
-from typing import List, Dict
 import io
 import copy
 from loguru import logger
 from rich import print
 from rich.console import Console
 
-from commands.cat.dr_egeria_command_help import EGERIA_INBOX_PATH
-from md_processing.md_processing_utils.common_md_utils import (get_current_datetime_string, get_element_dictionary,
-                                                               update_element_dictionary,
-                                                               split_tb_string, str_to_bool, )
-from md_processing.md_processing_utils.extraction_utils import (process_simple_attribute, extract_attribute,
-                                                                get_element_by_name)
-from md_processing.md_processing_utils.md_processing_constants import (get_command_spec, load_commands, load_commands,
+from md_processing.md_processing_utils.md_processing_constants import (load_commands,
                                                                        COMMAND_DEFINITIONS, add_default_link_attributes,
                                                                        add_default_upsert_attributes)
 
-from md_processing.md_processing_utils.message_constants import (ERROR, INFO, WARNING, ALWAYS, EXISTS_REQUIRED)
-from pyegeria import EgeriaTech
-from pyegeria._globals import DEBUG_LEVEL
+from pyegeria.core._globals import DEBUG_LEVEL
 
 
 # Constants

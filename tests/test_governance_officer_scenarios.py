@@ -12,16 +12,13 @@ import time
 from dataclasses import dataclass
 from datetime import datetime
 
-from rich import print
 from rich.console import Console
 from rich.table import Table
 from rich.panel import Panel
 
-from pyegeria.governance_officer import GovernanceOfficer
-from pyegeria._exceptions import (
+from pyegeria.omvs.governance_officer import GovernanceOfficer
+from pyegeria.core._exceptions import (
     PyegeriaException,
-    PyegeriaAPIException,
-    PyegeriaNotFoundException,
     print_basic_exception,
 )
 

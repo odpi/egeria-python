@@ -19,22 +19,19 @@ Usage:
 import json
 import sys
 import time
-import traceback
 from datetime import datetime
-from typing import List, Dict, Optional
+from typing import List, Optional
 from dataclasses import dataclass, field
 
-from rich import print as rprint
 from rich.console import Console
 from rich.table import Table
 from rich.panel import Panel
 from rich.progress import Progress, SpinnerColumn, TextColumn
 
-from pyegeria.asset_maker import AssetMaker
-from pyegeria._exceptions import (
+from pyegeria.omvs.asset_maker import AssetMaker
+from pyegeria.core._exceptions import (
     PyegeriaException,
     PyegeriaAPIException,
-    PyegeriaNotFoundException,
     print_exception_table,
     print_validation_error,
 )
@@ -255,10 +252,7 @@ class AssetMakerScenarioTester:
             
             # SEARCH: Find the asset
             console.print("  → Searching for asset...")
-            search_results = self.client.find_assets(
-                search_string=asset_data.display_name[:10],
-                output_format="JSON"
-            )
+            search_results = self.client.find_assets(search_string=asset_data.display_name[:10], output_format="JSON")
             
             if isinstance(search_results, list) and len(search_results) > 0:
                 console.print(f"  ✓ Found {len(search_results)} assets in search")
@@ -334,10 +328,7 @@ class AssetMakerScenarioTester:
             
             # Search for assets
             console.print("  → Searching for created assets...")
-            search_results = self.client.find_assets(
-                search_string="MultiAsset",
-                output_format="JSON"
-            )
+            search_results = self.client.find_assets(search_string="MultiAsset", output_format="JSON")
             
             if isinstance(search_results, list):
                 console.print(f"  ✓ Found {len(search_results)} assets matching search")

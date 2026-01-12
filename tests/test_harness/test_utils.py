@@ -5,8 +5,7 @@ Copyright Contributors to the ODPi Egeria project.
 Tests for the utility functions in the pyegeria.utils module.
 """
 
-import pytest
-from pyegeria.utils import to_camel_case
+from pyegeria.core.utils import to_camel_case
 
 
 class TestUtils:

@@ -12,10 +12,10 @@ This client combines methods from:
 
 to provide a single, convenient surface for catalog users.
 """
-from pyegeria.asset_catalog import AssetCatalog
-from pyegeria.glossary_manager import GlossaryManager
-from pyegeria.project_manager import ProjectManager
-from pyegeria.my_profile_omvs import MyProfile
+from pyegeria.omvs.asset_catalog import AssetCatalog
+from pyegeria.omvs.glossary_manager import GlossaryManager
+from pyegeria.omvs.project_manager import ProjectManager
+from pyegeria.omvs.my_profile_omvs import MyProfile
 
 
 class EgeriaCat(ProjectManager, GlossaryManager, AssetCatalog, MyProfile):

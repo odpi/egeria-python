@@ -11,15 +11,12 @@ A running Egeria environment is needed to run these tests.
 
 """
 
-import json
-import time
-
 from rich import print, print_json
 
 from pyegeria import (
     EgeriaCat,
 )
-from pyegeria._exceptions import (
+from pyegeria.core._exceptions import (
     PyegeriaInvalidParameterException,
     PyegeriaAPIException,
     PyegeriaUnauthorizedException,

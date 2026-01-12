@@ -4,14 +4,13 @@ Test script to verify loading environment variables from the .env file using pyd
 """
 import os
 import tempfile
-import shutil
 from pathlib import Path
-from pyegeria.load_config import load_app_config, PyegeriaSettings
+from pyegeria.core.load_config import load_app_config, PyegeriaSettings
 
 def reset_config():
     """Reset the loaded configuration to force reloading."""
-    import pyegeria.load_config
-    pyegeria.load_config._app_config = None
+    import pyegeria.core.load_config
+    pyegeria.core.load_config._app_config = None
 
 def test_env_settings():
     """Test that environment variables are correctly loaded and used in the configuration."""

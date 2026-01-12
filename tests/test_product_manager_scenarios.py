@@ -18,26 +18,21 @@ Usage:
 import json
 import sys
 import time
-import traceback
 from datetime import datetime
-from typing import List, Dict, Optional
+from typing import List, Optional
 from dataclasses import dataclass, field
 
-from rich import print as rprint
 from rich.console import Console
 from rich.table import Table
-from rich.panel import Panel
 from rich.progress import Progress, SpinnerColumn, TextColumn
 
-from pyegeria.product_manager import ProductManager
-from pyegeria._exceptions import (
+from pyegeria.omvs.product_manager import ProductManager
+from pyegeria.core._exceptions import (
     PyegeriaException,
     PyegeriaAPIException,
     PyegeriaNotFoundException,
     print_exception_table,
-    print_validation_error,
 )
-from pydantic import ValidationError
 
 # Configuration
 VIEW_SERVER = "qs-view-server"
@@ -400,7 +395,7 @@ class ProductManagerScenarioTester:
                 raise Exception("Failed to create digital product")
             
             # Note: We need to import ActorManager to create an actor role
-            from pyegeria.actor_manager import ActorManager
+            from pyegeria.omvs.actor_manager import ActorManager
             actor_client = ActorManager(VIEW_SERVER, PLATFORM_URL, user_id=USER_ID, user_pwd=USER_PWD)
             actor_client.create_egeria_bearer_token(USER_ID, USER_PWD)
             

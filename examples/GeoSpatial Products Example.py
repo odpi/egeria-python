@@ -1,4 +1,4 @@
-"""PDX-License-Identifier: Apache-2.0
+"""SPDX-License-Identifier: Apache-2.0
 Copyright Contributors to the ODPi Egeria project.
 
 This module provides a simple example for building out some GeoSpatial Digital Products.
@@ -9,27 +9,14 @@ import os
 import time
 
 from loguru import logger
-from rich import box
 from rich.console import Console
-from rich.markdown import Markdown
-from rich.prompt import Prompt
-from rich.table import Table
-from rich.text import Text
-import pydevd_pycharm
 
-from pyegeria import (
-    EgeriaTech,
-    CollectionManager,
-    NO_ELEMENTS_FOUND,
-
-)
-from pyegeria.config import settings, get_app_config
-from pyegeria.logging_configuration import config_logging
-from pyegeria.base_report_formats import (select_report_spec, get_report_spec_heading, get_report_spec_description)
-from pyegeria._exceptions import (PyegeriaException, print_basic_exception, print_validation_error,
-                                  PyegeriaInvalidParameterException, PyegeriaConnectionException,
-                                  PyegeriaAPIException, PyegeriaUnknownException, print_exception_table
-                                  )
+from pyegeria.core.config import get_app_config
+from pyegeria.core.logging_configuration import config_logging
+from pyegeria.core._exceptions import (PyegeriaException, print_validation_error,
+                                       PyegeriaInvalidParameterException, PyegeriaConnectionException,
+                                       PyegeriaAPIException, PyegeriaUnknownException, print_exception_table
+                                       )
 from pydantic import ValidationError
 from pyegeria import EgeriaTech
 
@@ -530,6 +517,8 @@ except (PyegeriaInvalidParameterException, PyegeriaConnectionException, Pyegeria
     print_exception_table(e)
 except ValidationError as e:
     print_validation_error(e)
+except Exception as e:
+    print(e)
 
 finally:
     client.close_session()

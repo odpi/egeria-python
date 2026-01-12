@@ -26,7 +26,7 @@ from __future__ import annotations
 import os
 import pytest
 
-from pyegeria._server_client import ServerClient
+from pyegeria.core._server_client import ServerClient
 from pyegeria.egeria_tech_client import EgeriaTech
 
 

@@ -11,7 +11,7 @@ the server platform and servers.
 
 """
 
-from pyegeria._globals import (disable_ssl_warnings, )
+from pyegeria.core._globals import (disable_ssl_warnings, )
 
 if disable_ssl_warnings:
     from urllib3 import disable_warnings

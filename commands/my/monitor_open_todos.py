@@ -20,13 +20,12 @@ from rich.markdown import Markdown
 from rich.table import Table
 
 from pyegeria import EgeriaTech
-from pyegeria._exceptions import (
+from pyegeria.core._exceptions import (
     PyegeriaInvalidParameterException,
     PyegeriaAPIException as PropertyServerException,
     PyegeriaUnauthorizedException as UserNotAuthorizedException,
     print_basic_exception as print_exception_response,
 )
-from pyegeria.my_profile_omvs import MyProfile
 
 disable_ssl_warnings = True
 

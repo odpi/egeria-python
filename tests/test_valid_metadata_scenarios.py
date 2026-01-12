@@ -10,19 +10,12 @@ A running Egeria environment is needed to run these tests.
 
 import time
 from dataclasses import dataclass
-from datetime import datetime
 
-from rich import print
 from rich.console import Console
 from rich.table import Table
 from rich.panel import Panel
 
 from pyegeria import ValidMetadataManager
-from pyegeria._exceptions import (
-    PyegeriaException,
-    PyegeriaAPIException,
-    PyegeriaNotFoundException,
-)
 
 console = Console()
 

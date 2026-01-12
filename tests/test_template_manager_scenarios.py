@@ -14,23 +14,18 @@ Usage:
 
 import sys
 import time
-import traceback
 from datetime import datetime
-from typing import List, Dict, Optional
+from typing import List, Optional
 from dataclasses import dataclass, field
 
-from rich import print as rprint
 from rich.console import Console
 from rich.table import Table
-from rich.panel import Panel
 from rich.progress import Progress, SpinnerColumn, TextColumn
 from loguru import logger
 
-from pyegeria.template_manager_omvs import TemplateManager
-from pyegeria._exceptions import (
-    PyegeriaException,
+from pyegeria.egeria_tech_client import EgeriaTech
+from pyegeria.core._exceptions import (
     PyegeriaNotFoundException,
-    print_exception_table, PyegeriaAPIException,
 )
 
 # Configuration
@@ -52,10 +47,10 @@ class TestResult:
     created_guids: List[str] = field(default_factory=list)
 
 class TemplateScenarioTester:
-    """Execute realistic template management scenarios"""
+    """Execute realistic template management scenarios using EgeriaTech client"""
     
     def __init__(self):
-        self.client: Optional[TemplateManager] = None
+        self.tech: Optional[EgeriaTech] = None
         self.results: List[TestResult] = []
         self.created_elements: List[str] = []
         self.test_run_id = datetime.now().strftime("%Y%m%d_%H%M%S")
@@ -63,9 +58,9 @@ class TemplateScenarioTester:
     def setup(self) -> bool:
         """Initialize connection to Egeria"""
         try:
-            console.print("\n[bold cyan]═══ Setting up Template Manager Test Environment ═══[/bold cyan]\n")
-            self.client = TemplateManager(VIEW_SERVER, PLATFORM_URL, user_id=USER_ID, user_pwd=USER_PWD)
-            self.client.create_egeria_bearer_token(USER_ID, USER_PWD)
+            console.print("\n[bold cyan]═══ Setting up Template Manager Scenario Test Environment ═══[/bold cyan]\n")
+            self.tech = EgeriaTech(VIEW_SERVER, PLATFORM_URL, user_id=USER_ID, user_pwd=USER_PWD)
+            self.tech.create_egeria_bearer_token(USER_ID, USER_PWD)
             console.print(f"✓ Connected to {PLATFORM_URL}")
             console.print(f"✓ Authenticated as {USER_ID}")
             console.print(f"✓ Test Run ID: {self.test_run_id}\n")
@@ -76,12 +71,12 @@ class TemplateScenarioTester:
     
     def teardown(self):
         """Clean up and close connection"""
-        if self.client:
-            self.client.close_session()
+        if self.tech:
+            self.tech.close_session()
             console.print("\n✓ Session closed")
     
     def cleanup_created_elements(self):
-        """Delete all elements created during testing"""
+        """Delete all elements created during testing using MetadataExpert"""
         console.print("\n[bold yellow]═══ Cleaning Up Test Data ═══[/bold yellow]\n")
         
         if not self.created_elements:
@@ -100,9 +95,9 @@ class TemplateScenarioTester:
             # Delete in reverse order of creation
             for guid in reversed(self.created_elements):
                 try:
-                    self.client.delete_metadata_element_in_store(
+                    self.tech.expert.delete_metadata_element(
                         guid, 
-                        {"class": "DeleteElementRequestBody"}
+                        {"class": "OpenMetadataDeleteRequestBody"}
                     )
                     cleanup_results["success"] += 1
                 except PyegeriaNotFoundException:
@@ -121,61 +116,84 @@ class TemplateScenarioTester:
         return f"{prefix}_{self.test_run_id}_{len(self.created_elements)}"
 
     def scenario_1_template_lifecycle(self) -> TestResult:
-        """Test the lifecycle of a template element"""
+        """Test the lifecycle of a template element using expert and template clients"""
         start_time = time.perf_counter()
-        scenario_name = "Template Lifecycle"
+        scenario_name = "Template Lifecycle & Classification"
         created_in_scenario = []
         
         try:
-            # 1. Create a metadata element that will serve as a template
-            qname = self._unique_qname("Template_Lifecycle")
+            # 1. Create a metadata element using MetadataExpert
+            qname = self._unique_qname("Template_Expert")
             body = {
                 "class": "NewOpenMetadataElementRequestBody",
                 "typeName": "Referenceable",
                 "properties": {
-                    "class": "ReferenceableProperties",
-                    "qualifiedName": qname,
-                    "description": "Template for lifecycle testing"
+                    "class": "ElementProperties",
+                    "propertyValueMap": {
+                        "qualifiedName": {
+                            "class": "PrimitiveTypePropertyValue",
+                            "typeName": "string",
+                            "primitiveValue": qname
+                        },
+                        "description": {
+                            "class": "PrimitiveTypePropertyValue",
+                            "typeName": "string",
+                            "primitiveValue": "Template for lifecycle testing"
+                        }
+                    }
                 }
             }
             
-            guid = self.client.create_metadata_element_in_store(body)
+            guid = self.tech.expert.create_metadata_element(body)
             self.created_elements.append(guid)
             created_in_scenario.append(guid)
+            console.print(f"  [green]✓[/green] Created base element: {guid}")
             
-            # 2. Classify it as a template
-            classify_body = {
-                "class": "ClassificationRequestBody",
+            # 2. Classify it as a template using TemplateManager
+            self.tech.templates.add_template_classification(guid, {
+                "class": "NewClassificationRequestBody",
                 "properties": {
-                    "class": "ClassificationProperties",
+                    "class": "TemplateProperties",
+                    "displayName": "Test Template",
+                    "description": "A test template classification"
                 }
-            }
-            self.client.classify_metadata_element_in_store(guid, "Template", classify_body)
+            })
+            console.print(f"  [green]✓[/green] Added Template classification")
             
-            # 3. Update the template
-            update_body = {
-                "class": "UpdateOpenMetadataElementRequestBody",
-                "properties": {
-                    "class": "ReferenceableProperties",
-                    "qualifiedName": qname,
-                    "description": "Updated template description"
-                }
-            }
-            self.client.update_metadata_element_in_store(guid, update_body)
-            
-            # 4. Use it to create another element from template
+            # 3. Create another element from it using MetadataExpert
             new_qname = self._unique_qname("From_Template")
             from_template_body = {
                 "class": "TemplateRequestBody",
                 "templateGUID": guid,
                 "replacementProperties": {
-                    "class": "ReferenceableProperties",
-                    "qualifiedName": new_qname
+                    "class": "ElementProperties",
+                    "propertyValueMap": {
+                        "qualifiedName": {
+                            "class": "PrimitiveTypePropertyValue",
+                            "typeName": "string",
+                            "primitiveValue": new_qname
+                        }
+                    }
                 }
             }
-            new_guid = self.client.create_metadata_element_from_template(from_template_body)
+            new_guid = self.tech.expert.create_metadata_element_from_template(from_template_body)
             self.created_elements.append(new_guid)
             created_in_scenario.append(new_guid)
+            console.print(f"  [green]✓[/green] Created new element from template: {new_guid}")
+            
+            # 4. Link them using link_sourced_from in TemplateManager
+            self.tech.templates.link_sourced_from(new_guid, guid, {
+                "class": "NewRelationshipRequestBody",
+                "relationshipProperties": {
+                    "class": "SourceFromProperties",
+                    "sourceVersionNumber": 1
+                }
+            })
+            console.print(f"  [green]✓[/green] Linked new element to source template")
+            
+            # 5. Remove classification
+            self.tech.templates.remove_template_classification(guid)
+            console.print(f"  [green]✓[/green] Removed Template classification")
             
             duration = time.perf_counter() - start_time
             return TestResult(scenario_name, "PASSED", duration, "Successfully completed template lifecycle", created_guids=created_in_scenario)
@@ -184,40 +202,56 @@ class TemplateScenarioTester:
             duration = time.perf_counter() - start_time
             return TestResult(scenario_name, "FAILED", duration, str(e), error=e, created_guids=created_in_scenario)
 
-    def scenario_2_template_classification_management(self) -> TestResult:
-        """Test management of classifications on template elements"""
+    def scenario_2_catalog_template_management(self) -> TestResult:
+        """Test catalog template management"""
         start_time = time.perf_counter()
-        scenario_name = "Template Classification Management"
+        scenario_name = "Catalog Template Management"
         created_in_scenario = []
         
         try:
-            # 1. Create element
-            qname = self._unique_qname("Template_Class")
-            guid = self.client.create_metadata_element_in_store({
+            # 1. Create a "parent" element (e.g. an Asset)
+            qname_asset = self._unique_qname("Asset")
+            asset_guid = self.tech.expert.create_metadata_element({
+                "class": "NewOpenMetadataElementRequestBody",
+                "typeName": "Asset",
+                "properties": {
+                    "class": "ElementProperties",
+                    "propertyValueMap": {
+                        "qualifiedName": {"class": "PrimitiveTypePropertyValue", "typeName": "string", "primitiveValue": qname_asset}
+                    }
+                }
+            })
+            self.created_elements.append(asset_guid)
+            created_in_scenario.append(asset_guid)
+            
+            # 2. Create a template element
+            qname_template = self._unique_qname("CatalogTemplate")
+            template_guid = self.tech.expert.create_metadata_element({
                 "class": "NewOpenMetadataElementRequestBody",
                 "typeName": "Referenceable",
-                "properties": {"class": "ReferenceableProperties", "qualifiedName": qname}
+                "properties": {
+                    "class": "ElementProperties",
+                    "propertyValueMap": {
+                        "qualifiedName": {"class": "PrimitiveTypePropertyValue", "typeName": "string", "primitiveValue": qname_template}
+                    }
+                }
             })
-            self.created_elements.append(guid)
-            created_in_scenario.append(guid)
+            self.created_elements.append(template_guid)
+            created_in_scenario.append(template_guid)
             
-            # 2. Add classification
-            self.client.classify_metadata_element_in_store(guid, "SubjectArea", {
-                "class": "ClassificationRequestBody",
-                "properties": {"class": "SubjectAreaClassificationProperties", "name": "TestArea"}
+            # 3. Link Catalog Template
+            self.tech.templates.link_catalog_template(asset_guid, template_guid, {
+                "class": "NewRelationshipRequestBody",
+                "relationshipProperties": {"class": "CatalogTemplateProperties"}
             })
+            console.print(f"  [green]✓[/green] Linked catalog template")
             
-            # 3. Update classification
-            self.client.reclassify_metadata_element_in_store(guid, "SubjectArea", {
-                "class": "ClassificationRequestBody",
-                "properties": {"class": "SubjectAreaClassificationProperties", "name": "UpdatedArea"}
-            })
-            
-            # 4. Remove classification
-            self.client.declassify_metadata_element_in_store(guid, "SubjectArea", {"class": "ClassificationRequestBody"})
+            # 4. Detach Catalog Template
+            self.tech.templates.detach_catalog_template(asset_guid, template_guid)
+            console.print(f"  [green]✓[/green] Detached catalog template")
             
             duration = time.perf_counter() - start_time
-            return TestResult(scenario_name, "PASSED", duration, "Successfully managed classifications", created_guids=created_in_scenario)
+            return TestResult(scenario_name, "PASSED", duration, "Successfully managed catalog templates", created_guids=created_in_scenario)
             
         except Exception as e:
             duration = time.perf_counter() - start_time
@@ -251,7 +285,7 @@ class TemplateScenarioTester:
             
         scenarios = [
             self.scenario_1_template_lifecycle,
-            self.scenario_2_template_classification_management,
+            self.scenario_2_catalog_template_management,
         ]
         
         with Progress(

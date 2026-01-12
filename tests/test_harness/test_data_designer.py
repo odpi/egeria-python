@@ -17,21 +17,18 @@ import time, os
 from rich import print, print_json
 from rich.console import Console
 
-from pyegeria import PyegeriaAPIException
-from pyegeria.utils import body_slimmer
-from pyegeria._exceptions import (
+from pyegeria.core.utils import body_slimmer
+from pyegeria.core._exceptions import (
     PyegeriaInvalidParameterException,
     PyegeriaAPIException,
     PyegeriaUnauthorizedException,
-    print_basic_exception as print_exception_response,
 )
-from pyegeria._exceptions import (
+from pyegeria.core._exceptions import (
     PyegeriaException,
     print_basic_exception,
-    print_exception_table,
 )
-from pyegeria.data_designer import DataDesigner
-from pyegeria.config import settings
+from pyegeria.omvs.data_designer import DataDesigner
+from pyegeria.core.config import settings
 
 disable_ssl_warnings = True
 PLATFORM_URL = settings.Environment.egeria_platform_url
@@ -58,10 +55,6 @@ def valid_guid(guid):
 EGERIA_USER = os.environ.get("EGERIA_USER", "erinoverview")
 EGERIA_USER_PASSWORD = os.environ.get("EGERIA_USER_PASSWORD", "secret")
 USER_PWD = EGERIA_USER_PASSWORD
-
-
-import pytest
-
 
 
 class TestDataDesigner:

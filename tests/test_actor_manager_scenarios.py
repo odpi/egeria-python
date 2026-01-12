@@ -20,21 +20,17 @@ import sys
 import time
 import traceback
 from datetime import datetime
-from typing import List, Dict, Optional
+from typing import List, Optional
 from dataclasses import dataclass, field
 
-from rich import print as rprint
 from rich.console import Console
 from rich.table import Table
 from rich.panel import Panel
 from rich.progress import Progress, SpinnerColumn, TextColumn
 
-from pyegeria.actor_manager import ActorManager
-from pyegeria._exceptions import (
-    PyegeriaException,
+from pyegeria.omvs.actor_manager import ActorManager
+from pyegeria.core._exceptions import (
     PyegeriaAPIException,
-    PyegeriaNotFoundException,
-    print_exception_table,
     print_validation_error,
 )
 from pydantic import ValidationError
@@ -548,7 +544,90 @@ class ActorManagerScenarioTester:
                 error=e,
                 created_guids=created_guids
             )
-    
+
+    def scenario_4_assignment_and_contact_details(self) -> TestResult:
+        """Scenario 4: Assignment Scope and Contact Details management"""
+        scenario_name = "Assignment & Contact Details Management"
+        console.print(f"\n[bold cyan]▶ Starting Scenario: {scenario_name}[/bold cyan]")
+        start_time = time.perf_counter()
+        created_guids = []
+
+        try:
+            # 1. Create Actor Profile
+            profile_data = ActorProfileData(
+                qualified_name=f"scenario4_actor_{datetime.now().strftime('%H%M%S')}",
+                display_name="Scenario 4 Actor",
+                description="Actor for testing assignments and contact details"
+            )
+            actor_guid = self._create_actor_profile(profile_data)
+            created_guids.append(actor_guid)
+            console.print(f"  [green]✓[/green] Created Actor Profile: {actor_guid}")
+
+            # 2. Create Contact Details
+            contact_body = {
+                "class": "NewElementRequestBody",
+                "properties": {
+                    "class": "ContactDetailsProperties",
+                    "qualifiedName": f"scenario4_contact_{datetime.now().strftime('%H%M%S')}",
+                    "contactMethodType": "EMAIL",
+                    "contactMethodValue": "scenario4@example.com"
+                }
+            }
+            contact_guid = self.client.create_contact_details(contact_body)
+            created_guids.append(contact_guid)
+            console.print(f"  [green]✓[/green] Created Contact Details: {contact_guid}")
+
+            # 3. Link Contact Details
+            link_body = {
+                "class": "NewRelationshipRequestBody",
+                "properties": {
+                    "class": "ContactThroughProperties"
+                }
+            }
+            self.client.link_contact_details(actor_guid, contact_guid, link_body)
+            console.print(f"  [green]✓[/green] Linked Contact Details to Actor")
+
+            # 4. Detach Contact Details
+            self.client.detach_contact_details(actor_guid, contact_guid)
+            console.print(f"  [green]✓[/green] Detached Contact Details from Actor")
+
+            # 5. Link Assignment Scope (using another actor as a dummy scope element)
+            scope_element_guid = actor_guid  # Self-reference for test purposes
+            scope_body = {
+                "class": "NewRelationshipRequestBody",
+                "properties": {
+                    "class": "AssignmentScopeProperties",
+                    "description": "Scenario 4 Test Scope"
+                }
+            }
+            self.client.link_assignment_scope(scope_element_guid, actor_guid, scope_body)
+            console.print(f"  [green]✓[/green] Linked Assignment Scope")
+
+            # 6. Detach Assignment Scope
+            self.client.detach_assignment_scope(scope_element_guid, actor_guid)
+            console.print(f"  [green]✓[/green] Detached Assignment Scope")
+
+            duration = time.perf_counter() - start_time
+            return TestResult(
+                scenario_name=scenario_name,
+                status="PASSED",
+                duration=duration,
+                message="Successfully managed assignments and contact details",
+                created_guids=created_guids
+            )
+
+        except Exception as e:
+            duration = time.perf_counter() - start_time
+            console.print(f"  [red]✗ Scenario failed: {str(e)}[/red]")
+            return TestResult(
+                scenario_name=scenario_name,
+                status="FAILED",
+                duration=duration,
+                message=str(e),
+                error=e,
+                created_guids=created_guids
+            )
+
     def generate_report(self):
         """Generate comprehensive test report"""
         console.print("\n[bold cyan]═══ Test Execution Report ═══[/bold cyan]\n")
@@ -623,6 +702,7 @@ class ActorManagerScenarioTester:
             self.results.append(self.scenario_1_organizational_structure())
             self.results.append(self.scenario_2_actor_lifecycle())
             self.results.append(self.scenario_3_user_identities())
+            self.results.append(self.scenario_4_assignment_and_contact_details())
             
             # Cleanup
             self.cleanup_created_actors()

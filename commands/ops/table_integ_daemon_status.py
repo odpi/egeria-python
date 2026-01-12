@@ -18,7 +18,7 @@ from rich.table import Table
 from textual.widgets import DataTable
 
 from pyegeria import EgeriaTech
-from pyegeria._exceptions import (
+from pyegeria.core._exceptions import (
     PyegeriaInvalidParameterException,
     PyegeriaAPIException as PropertyServerException,
     PyegeriaUnauthorizedException as UserNotAuthorizedException,

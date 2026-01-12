@@ -11,25 +11,15 @@ A simple status display for the Integration Daemon.
 import argparse
 import os
 import time
-from typing import Union
 
-import nest_asyncio
 from rich import box
 from rich.console import Console
 from rich.live import Live
 from rich.prompt import Prompt
 from rich.table import Table
-from textual.widgets import DataTable
 
-from pyegeria import AutomatedCuration, EgeriaTech, PyegeriaException, settings, config_logging, \
+from pyegeria import EgeriaTech, PyegeriaException, settings, config_logging, \
     PyegeriaClientException, print_basic_exception
-
-from pyegeria._exceptions import (
-    PyegeriaInvalidParameterException,
-    PyegeriaAPIException as PropertyServerException,
-    PyegeriaUnauthorizedException as UserNotAuthorizedException,
-    print_basic_exception as print_exception_response,
-)
 
 EGERIA_USER = os.environ.get("EGERIA_USER", "erinoverview")
 EGERIA_USER_PASSWORD = os.environ.get("EGERIA_USER_PASSWORD", "secret")

@@ -3,8 +3,6 @@ This file contains general utility functions for processing Egeria Markdown
 """
 import os
 import re
-import sys
-import json
 from datetime import datetime
 from typing import Any
 from loguru import logger
@@ -12,9 +10,9 @@ from rich import print
 from rich.console import Console
 from rich.markdown import Markdown
 
-from pyegeria import ServerClient, PyegeriaException, egeria_client
-from pyegeria.utils import (camel_to_title_case, body_slimmer)
-from pyegeria._globals import DEBUG_LEVEL
+from pyegeria import ServerClient, PyegeriaException
+from pyegeria.core.utils import (camel_to_title_case)
+from pyegeria.core._globals import DEBUG_LEVEL
 from md_processing.md_processing_utils.message_constants import message_types
 
 # Constants
