@@ -10,6 +10,7 @@ A simple viewer for project structure - provide the root and we display the hier
 import argparse
 import os
 
+from pydantic import ValidationError
 from rich import print
 from rich.console import Console
 from rich.markdown import Markdown
@@ -19,12 +20,7 @@ from rich.tree import Tree
 
 from pyegeria import (
     ProjectManager,
-)
-from pyegeria.core._exceptions import (
-    PyegeriaInvalidParameterException,
-    PyegeriaAPIException,
-    PyegeriaUnauthorizedException,
-    print_basic_exception as print_exception_response,
+    PyegeriaAPIException, PyegeriaClientException, print_basic_exception, print_exception_table, print_validation_error
 )
 
 disable_ssl_warnings = True
@@ -96,8 +92,8 @@ def project_structure_viewer(
         member_md = ""
         if type(team) is list:
             for member in team:
-                member_guid = member["member"]["guid"]
-                member_unique = member["member"]["uniqueName"]
+                member_guid = member["elementHeader"]["guid"]
+                member_unique = member["properties"]["qualifiedName"]
                 member_md += f"* Member Unique Name: {member_unique}\n* Member GUID: {member_guid}"
             proj_props_md += f"\n### Team Members\n {member_md}"
 
@@ -133,12 +129,15 @@ def project_structure_viewer(
         walk_project_hierarchy(p_client, root, tree, root=True)
         print(tree)
 
-    except (
-        PyegeriaInvalidParameterException,
-        PyegeriaAPIException,
-        PyegeriaUnauthorizedException,
-    ) as e:
-        print_exception_response(e)
+    except (PyegeriaAPIException, PyegeriaClientException) as e:
+        print_basic_exception(e)
+
+    except ValidationError as e:
+        print_validation_error(e)
+
+    except Exception as e:
+        console.print_exception()
+
 
 
 def main():

@@ -366,7 +366,7 @@ def test_get_actor_for_guid():
 
 def test_get_guid_for_name():
     open_metadata_type_name = None
-    property_value = "Erin Overview"
+    property_value = "PostgreSQLServer::CreateAndSurveyGovernanceActionProcess"
     # property_value = "simple-metadata-store"
     # property_value = "Sustainability Glossary"
     # property_value = "qs-view-server"
@@ -1083,7 +1083,7 @@ def test_add_ownership_to_element():
     body = {
         "class": "NewClassificationRequestBody",
         "properties": {
-            "class": "OwnerProperties",
+            "class": "OwnershipProperties",
             "owner": "72b2af0a-cdd6-477a-b885-08d9f2e1b3b0",
             "ownerType": "USER_ID"
         }

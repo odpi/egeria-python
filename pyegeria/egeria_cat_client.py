@@ -15,7 +15,7 @@ to provide a single, convenient surface for catalog users.
 from pyegeria.omvs.asset_catalog import AssetCatalog
 from pyegeria.omvs.glossary_manager import GlossaryManager
 from pyegeria.omvs.project_manager import ProjectManager
-from pyegeria.omvs.my_profile_omvs import MyProfile
+from pyegeria.omvs.my_profile import MyProfile
 
 
 class EgeriaCat(ProjectManager, GlossaryManager, AssetCatalog, MyProfile):

@@ -14,7 +14,7 @@ from rich.prompt import Prompt
 from commands.cat.run_report import list_generic
 from pyegeria import (
     settings,
-    config_logging, print_basic_exception, PyegeriaException
+    config_logging, print_basic_exception, PyegeriaAPIException, PyegeriaClientException
 )
 
 EGERIA_USER = os.environ.get("EGERIA_USER", "erinoverview")
@@ -42,8 +42,8 @@ def tech_viewer(
                      params = {"filter": tech_name},
                  render_table=True, table_caption="Tech Type Elements", use_pager=True, width=width, jupyter=jupyter)
 
-    except PyegeriaException as e:
-        console.print_exception(show_locals=True)
+    except (PyegeriaAPIException, PyegeriaClientException) as e:
+        print_basic_exception(e)
 
 
 def main():

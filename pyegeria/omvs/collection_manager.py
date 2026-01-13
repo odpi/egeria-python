@@ -22,6 +22,7 @@ from pyegeria.models import (SearchStringRequestBody, FilterRequestBody, GetRequ
                              UpdateElementRequestBody, NewRelationshipRequestBody,
                              DeleteElementRequestBody, DeleteRelationshipRequestBody, UpdateRelationshipRequestBody,
                              ResultsRequestBody,
+                             DeploymentStatusSearchString, DeploymentStatusFilterRequestBody,
                              get_defined_field_values, PyegeriaModel)
 from pyegeria.view.output_formatter import (generate_output,
                                             populate_common_columns)
@@ -524,6 +525,242 @@ class CollectionManager(ServerClient):
                                                                     body=body,
                                                                     _type=_type))
 
+
+    @dynamic_catch
+    async def _async_find_digital_products(
+        self,
+        search_string: str = "*",
+        deployment_status: str = None,
+        starts_with: bool = True,
+        ends_with: bool = False,
+        ignore_case: bool = False,
+        start_from: int = 0,
+        page_size: int = 100,
+        output_format: str = "JSON",
+        report_spec: str | dict = None,
+        body: dict | DeploymentStatusSearchString = None,
+    ) -> list | str:
+        """
+        Returns the list of digital products matching the search string and optional deployment status.
+
+        Parameters
+        ----------
+        search_string: str, default = "*"
+            - the search string to use to find matching digital products
+        deployment_status: str, optional
+            - optional deployment status to filter by (e.g., ACTIVE)
+        starts_with: bool, default = True
+            - if True, the search string must match the start of the property value
+        ends_with: bool, default = False
+            - if True, the search string must match the end of the property value
+        ignore_case: bool, default = False
+            - if True, the search is case-insensitive
+        start_from: int, default = 0
+            - the starting point in the results list
+        page_size: int, default = 100
+            - the maximum number of results to return
+        output_format: str, default = "JSON"
+            - the format of the output (JSON, DICT, etc.)
+        report_spec: str | dict, optional
+            - the report specification to use for the output
+        body: dict | DeploymentStatusSearchString, optional
+            - the request body to use for the request. If specified, this takes precedence over other parameters.
+
+        Returns
+        -------
+        list | str
+            - a list of digital products or a string message if no products are found
+
+        Note:
+        -----
+        Sample body:
+        {
+          "class": "DeploymentStatusSearchString",
+          "searchString" : "add search string here",
+          "deploymentStatus" : "ACTIVE",
+          "startsWith" : false,
+          "endsWith" : false,
+          "ignoreCase" : true,
+          "startFrom" : 0,
+          "pageSize": 0
+        }
+        """
+        url = (
+            f"{self.platform_url}/servers/{self.view_server}/api/open-metadata/collection-manager"
+            f"/digital-products/by-search-string"
+        )
+
+        if isinstance(body, DeploymentStatusSearchString):
+            validated_body = body
+        elif isinstance(body, dict):
+            validated_body = self._deployment_status_search_request_adapter.validate_python(body)
+        else:
+            search_string = None if search_string == "*" else search_string
+            body_dict = {
+                "class": "DeploymentStatusSearchString",
+                "searchString": search_string,
+                "deploymentStatus": deployment_status,
+                "startsWith": starts_with,
+                "endsWith": ends_with,
+                "ignoreCase": ignore_case,
+                "startFrom": start_from,
+                "pageSize": page_size,
+            }
+            validated_body = DeploymentStatusSearchString.model_validate(body_dict)
+
+        json_body = validated_body.model_dump_json(indent=2, exclude_none=True)
+        response = await self._async_make_request("POST", url, json_body)
+        elements = response.json().get("elements", NO_ELEMENTS_FOUND)
+
+        if type(elements) is str or len(elements) == 0:
+            logger.info(NO_ELEMENTS_FOUND)
+            return NO_ELEMENTS_FOUND
+
+        if output_format.upper() != "JSON":
+            return self._generate_collection_output(
+                elements, search_string, "DigitalProduct", output_format, report_spec
+            )
+        return elements
+
+    def find_digital_products(
+        self,
+        search_string: str = "*",
+        deployment_status: str = None,
+        starts_with: bool = True,
+        ends_with: bool = False,
+        ignore_case: bool = False,
+        start_from: int = 0,
+        page_size: int = 100,
+        output_format: str = "JSON",
+        report_spec: str | dict = None,
+        body: dict | DeploymentStatusSearchString = None,
+    ) -> list | str:
+        """
+        Returns the list of digital products matching the search string and optional deployment status. Sync version.
+
+        See _async_find_digital_products for more details.
+        """
+        return asyncio.get_event_loop().run_until_complete(
+            self._async_find_digital_products(
+                search_string,
+                deployment_status,
+                starts_with,
+                ends_with,
+                ignore_case,
+                start_from,
+                page_size,
+                output_format,
+                report_spec,
+                body,
+            )
+        )
+
+    @dynamic_catch
+    async def _async_get_digital_products_by_category(
+        self,
+        category: str,
+        deployment_status: str = None,
+        start_from: int = 0,
+        page_size: int = 100,
+        output_format: str = "JSON",
+        report_spec: str | dict = None,
+        body: dict | DeploymentStatusFilterRequestBody = None,
+    ) -> list | str:
+        """
+        Returns the list of digital products matching the category and optional deployment status.
+
+        Parameters
+        ----------
+        category: str
+            - the category to use to find matching digital products
+        deployment_status: str, optional
+            - optional deployment status to filter by (e.g., ACTIVE)
+        start_from: int, default = 0
+            - the starting point in the results list
+        page_size: int, default = 100
+            - the maximum number of results to return
+        output_format: str, default = "JSON"
+            - the format of the output (JSON, DICT, etc.)
+        report_spec: str | dict, optional
+            - the report specification to use for the output
+        body: dict | DeploymentStatusFilterRequestBody, optional
+            - the request body to use for the request. If specified, this takes precedence over other parameters.
+
+        Returns
+        -------
+        list | str
+            - a list of digital products or a string message if no products are found
+
+        Note:
+        -----
+        Sample body:
+        {
+          "class" : "DeploymentStatusFilterRequestBody",
+          "filter" : "xxx",
+          "deploymentStatus" : "ACTIVE",
+          "startFrom" : 0,
+          "pageSize": 0
+        }
+        """
+        url = (
+            f"{self.platform_url}/servers/{self.view_server}/api/open-metadata/collection-manager"
+            f"/digital-products/by-category"
+        )
+
+        if isinstance(body, DeploymentStatusFilterRequestBody):
+            validated_body = body
+        elif isinstance(body, dict):
+            validated_body = self._deployment_status_filter_request_adapter.validate_python(body)
+        else:
+            body_dict = {
+                "class": "DeploymentStatusFilterRequestBody",
+                "filter": category,
+                "deploymentStatus": deployment_status,
+                "startFrom": start_from,
+                "pageSize": page_size,
+            }
+            validated_body = DeploymentStatusFilterRequestBody.model_validate(body_dict)
+
+        json_body = validated_body.model_dump_json(indent=2, exclude_none=True)
+        response = await self._async_make_request("POST", url, json_body)
+        elements = response.json().get("elements", NO_ELEMENTS_FOUND)
+
+        if type(elements) is str or len(elements) == 0:
+            logger.info(NO_ELEMENTS_FOUND)
+            return NO_ELEMENTS_FOUND
+
+        if output_format.upper() != "JSON":
+            return self._generate_collection_output(
+                elements, category, "DigitalProduct", output_format, report_spec
+            )
+        return elements
+
+    def get_digital_products_by_category(
+        self,
+        category: str,
+        deployment_status: str = None,
+        start_from: int = 0,
+        page_size: int = 100,
+        output_format: str = "JSON",
+        report_spec: str | dict = None,
+        body: dict | DeploymentStatusFilterRequestBody = None,
+    ) -> list | str:
+        """
+        Returns the list of digital products matching the category and optional deployment status. Sync version.
+
+        See _async_get_digital_products_by_category for more details.
+        """
+        return asyncio.get_event_loop().run_until_complete(
+            self._async_get_digital_products_by_category(
+                category,
+                deployment_status,
+                start_from,
+                page_size,
+                output_format,
+                report_spec,
+                body,
+            )
+        )
 
     @dynamic_catch
     async def _async_get_collections_by_name(self, filter_string: str = None, classification_names: list[str] = None,
@@ -5420,7 +5657,8 @@ class CollectionManager(ServerClient):
             for actor in actors:
                 actor_type = actor['relatedElement']['elementHeader']['type']['typeName']
                 actor_qname = actor['relatedElement']['properties']['qualifiedName']
-                actor_list += actor_qname
+                actor_display_name = actor['relatedElement']['properties']['displayName']
+                actor_list += actor_display_name
             added_props["actor_list"] = actor_list[:-2] if actor_list else ""
 
         governed_by = element.get("governedBy", "")

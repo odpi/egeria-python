@@ -23,11 +23,11 @@ from rich.table import Table
 from rich.text import Text
 
 from pyegeria import (
-    PyegeriaException,
+    PyegeriaAPIException, PyegeriaClientException,
     RuntimeManager,
     print_basic_exception,
     settings,
-    config_logging
+    config_logging, PyegeriaException
 )
 
 

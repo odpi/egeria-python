@@ -5,7 +5,7 @@
     "timeout_seconds": 30
   },
   "Environment": {
-    "Console Width": 201,
+    "Console Width": 151,
     "Egeria Inbox": "egeria-inbox",
     "Egeria Outbox": "egeria-outbox",
     "Dr.Egeria Inbox": "inbox/dr-egeria-inbox",

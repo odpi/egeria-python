@@ -19,12 +19,7 @@ from rich.tree import Tree
 from pyegeria import (
     CollectionManager,
     NO_ELEMENTS_FOUND,
-)
-from pyegeria.core._exceptions import (
-    PyegeriaInvalidParameterException,
-    PyegeriaAPIException,
-    PyegeriaUnauthorizedException,
-    print_basic_exception as print_exception_response,
+    PyegeriaAPIException, PyegeriaClientException, print_basic_exception, print_exception_table
 )
 
 disable_ssl_warnings = True
@@ -107,15 +102,11 @@ def collection_viewer(
         walk_collection_hierarchy(tree, c_client, None, root)
         print(tree)
 
-    except (
-        PyegeriaInvalidParameterException,
-        PyegeriaAPIException,
-        PyegeriaUnauthorizedException,
-    ) as e:
-        if e.exception_error_message_parameters[1] == NO_ELEMENTS_FOUND:
+    except (PyegeriaAPIException, PyegeriaClientException) as e:
+        if hasattr(e, 'exception_error_message_parameters') and len(e.exception_error_message_parameters) > 1 and e.exception_error_message_parameters[1] == NO_ELEMENTS_FOUND:
             print("The collection was not found.")
         else:
-            print_exception_response(e)
+            print_basic_exception(e)
     finally:
         c_client.close_session()
 
@@ -137,7 +128,7 @@ def main():
     try:
         root_collection = Prompt.ask(
             "Enter the Root Collection to start from:",
-            default="Digital Products Root",
+            default="GeoSpatial-Root",
         )
         collection_viewer(root_collection, server, url, userid, user_pass)
     except KeyboardInterrupt:

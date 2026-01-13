@@ -29,11 +29,12 @@ def test_add_archive_file():
     try:
         client = ServerClient(view_server, view_url, user, user_pass)
         client.create_egeria_bearer_token()
-        archive_file = "content-packs/CocoComboArchive.omarchive"
+        # archive_file = "content-packs/CocoComboArchive.omarchive"
+        archive_file = "content-packs/PostgresContentPack.omarchive"
         response = client.add_archive_file(archive_file, display_name = "qs-metadata-store")
         print(response)
         assert True
-    except PyegeriaException as e:
+    except (PyegeriaException,PyegeriaAPIException) as e:
         print_basic_exception(e)
         assert False
 

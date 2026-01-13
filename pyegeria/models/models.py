@@ -461,6 +461,49 @@ class FindPropertyNamesRequestBody(ResultsRequestBody):
     property_names: list[str] | None = None
 
 
+class DeploymentStatusSearchString(SearchStringRequestBody):
+    class_: Annotated[Literal["DeploymentStatusSearchString"], Field(alias="class")]
+    deployment_status: Optional[str] = Field(None, alias="deploymentStatus")
+
+
+class DeploymentStatusFilterRequestBody(FilterRequestBody):
+    class_: Annotated[Literal["DeploymentStatusFilterRequestBody"], Field(alias="class")]
+    deployment_status: Optional[str] = Field(None, alias="deploymentStatus")
+
+
+class ContentStatusSearchString(SearchStringRequestBody):
+    class_: Annotated[Literal["ContentStatusSearchString"], Field(alias="class")]
+    content_status: Optional[str] = Field(None, alias="contentStatus")
+
+
+class ContentStatusFilterRequestBody(FilterRequestBody):
+    class_: Annotated[Literal["ContentStatusFilterRequestBody"], Field(alias="class")]
+    content_status: Optional[str] = Field(None, alias="contentStatus")
+
+
+class ActivityStatusSearchString(SearchStringRequestBody):
+    class_: Annotated[Literal["ActivityStatusSearchString"], Field(alias="class")]
+    activity_status: Optional[str] = Field(None, alias="activityStatus")
+
+
+class ActivityStatusFilterRequestBody(FilterRequestBody):
+    class_: Annotated[Literal["ActivityStatusFilterRequestBody"], Field(alias="class")]
+    activity_status: Optional[str] = Field(None, alias="activityStatus")
+
+
+class ActivityStatusRequestBody(ResultsRequestBody):
+    class_: Annotated[Literal["ActivityStatusRequestBody"], Field(alias="class")]
+    activity_status: Optional[str] = Field(None, alias="activityStatus")
+
+
+class ActionRequestBody(RequestBody):
+    class_: Annotated[Literal["ActionRequestBody"], Field(alias="class")]
+    properties: Optional[dict] = None
+    action_sponsor_guid: Optional[str] = Field(None, alias="actionSponsorGUID")
+    action_executor_guid: Optional[str] = Field(None, alias="actionExecutorGUID")
+    action_target_guids: Optional[list[str]] = Field(None, alias="actionTargetGUIDs")
+
+
 
 #######
 # This gets only the fields in the most specific model

@@ -134,12 +134,8 @@ def display_assets(
         with console.pager(styles=True):
             console.print(generate_table(search_string), soft_wrap=True)
 
-    except (
-        InvalidParameterException,
-        PropertyServerException,
-        UserNotAuthorizedException,
-    ) as e:
-        console.print_exception()
+    except (PyegeriaAPIException, PyegeriaClientException) as e:
+        print_basic_exception(e)
         sys.exit(1)
 
     except ValueError as e:

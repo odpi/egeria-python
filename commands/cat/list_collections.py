@@ -13,7 +13,7 @@ from rich.console import Console
 from rich.prompt import Prompt
 from pyegeria import (
     settings,
-    get_app_config, config_logging, print_basic_exception, PyegeriaException, )
+    get_app_config, config_logging, print_basic_exception, PyegeriaAPIException, PyegeriaClientException, )
 from commands.cat.run_report import list_generic
 from pyegeria.core._exceptions import print_validation_error
 app_config = settings.Environment
@@ -65,7 +65,7 @@ def display_collections(
                      width=width, jupyter=jupyter, prompt_missing=True)
 
 
-    except (PyegeriaException) as e:
+    except (PyegeriaAPIException, PyegeriaClientException) as e:
         print_basic_exception(e)
     except ValidationError as e:
         print_validation_error(e)
@@ -98,7 +98,7 @@ def main():
     except KeyboardInterrupt:
         pass
 
-    except PyegeriaException as e:
+    except (PyegeriaAPIException, PyegeriaClientException) as e:
         print_basic_exception(e)
     except ValidationError as e:
         print_validation_error(e)

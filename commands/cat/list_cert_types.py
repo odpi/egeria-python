@@ -88,8 +88,8 @@ def display_certifications(
             if (len(related) > 0) and (type(related) is list):
                 rel_md = ""
                 for rel in related:
-                    rel_type = rel["relationshipHeader"]["type"]["typeName"]
-                    rel_element_props = rel["relatedElement"]["properties"]
+                    rel_type = rel["elementHeader"]["type"]["typeName"]
+                    rel_element_props = rel["properties"]
                     rel_el_md = f"* Rel Type: {rel_type}\n"
                     for key in rel_element_props.keys():
                         rel_el_md += f"* {key}: {rel_element_props[key]}\n"

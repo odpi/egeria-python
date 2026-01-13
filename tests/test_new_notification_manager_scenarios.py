@@ -32,7 +32,7 @@ from pyegeria.omvs.notification_manager import NotificationManager
 from pyegeria.core._exceptions import PyegeriaException, print_exception_table
 
 # Configuration
-VIEW_SERVER = "view-server"
+VIEW_SERVER = "qs-view-server"
 PLATFORM_URL = "https://localhost:9443"
 USER_ID = "peterprofile"
 USER_PWD = "secret"
@@ -62,7 +62,7 @@ class NotificationScenarioRunner:
         try:
             console.print(Panel("[bold cyan]PRE-FLIGHT: Authenticating Clients[/bold cyan]"))
             token = self.tech_client.create_egeria_bearer_token(USER_ID, USER_PWD)
-            self.nm_client.token = token
+            self.nm_client.set_bearer_token(token)
             console.print(f"  [green]✓[/green] Connected to {PLATFORM_URL} as {USER_ID}")
             return True
         except Exception as e:
@@ -81,8 +81,7 @@ class NotificationScenarioRunner:
             nt_guid = self.tech_client.create_collection(
                 display_name=f"Alerts-{ts}",
                 description="Lifecycle Notification Type",
-                collection_type="NotificationType",
-                is_own_anchor=True
+                category="NotificationType",
             )
             self.created_guids.append(nt_guid)
             self.results.append(TestResult(step, "SUCCESS", time.perf_counter() - s_start, nt_guid))
@@ -94,8 +93,7 @@ class NotificationScenarioRunner:
             res_guid = self.tech_client.create_collection(
                 display_name=f"Resource-{ts}",
                 description="Monitored Lifecycle Asset",
-                collection_type="MonitoredResource",
-                is_own_anchor=True
+                category="MonitoredResource",
             )
             self.created_guids.append(res_guid)
             self.results.append(TestResult(step, "SUCCESS", time.perf_counter() - s_start, res_guid))
@@ -118,9 +116,10 @@ class NotificationScenarioRunner:
 
         except Exception as e:
             console.print(f"\n[bold red]✗ Scenario Interrupted: {e}[/bold red]")
-            if isinstance(e, PyegeriaException):
-                print_exception_table(e)
+            # if isinstance(e, PyegeriaException):
+            #    print_exception_table(e)
             self.results.append(TestResult("Critical Failure", "ERROR", 0.0, str(e)))
+            # raise e
 
     def cleanup(self):
         console.print("\n[bold yellow]TEARDOWN: Cleaning up synthetic data...[/bold yellow]")
@@ -147,13 +146,12 @@ class NotificationScenarioRunner:
         console.print(table)
 
 
-def main():
+def test_new_notification_manager_scenarios():
     runner = NotificationScenarioRunner()
     if runner.setup():
         runner.run_scenario()
     runner.cleanup()
     runner.report()
 
-
 if __name__ == "__main__":
-    main()
+    test_new_notification_manager_scenarios()

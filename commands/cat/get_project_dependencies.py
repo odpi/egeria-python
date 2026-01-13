@@ -20,7 +20,7 @@ from rich.tree import Tree
 
 from pyegeria import (
     ProjectManager,
-    PyegeriaException,
+    PyegeriaAPIException, PyegeriaClientException,
     print_basic_exception,
     print_validation_error,
 )
@@ -94,8 +94,8 @@ def project_dependency_viewer(
         member_md = ""
         if type(team) is list:
             for member in team:
-                member_guid = member["member"]["guid"]
-                member_unique = member["member"]["uniqueName"]
+                member_guid = member["elementHeader"]["guid"]
+                member_unique = member["properties"]["qualifiedName"]
                 member_md += f"* Member Unique Name: {member_unique}\n* Member GUID: {member_guid}"
             proj_props_md += f"\n### Team Members\n {member_md}"
 
@@ -131,7 +131,7 @@ def project_dependency_viewer(
         walk_project_hierarchy(p_client, root, tree, root=True)
         print(tree)
 
-    except PyegeriaException as e:
+    except (PyegeriaAPIException, PyegeriaClientException) as e:
         print_basic_exception(e)
     except ValidationError as e:
         print_validation_error(e)

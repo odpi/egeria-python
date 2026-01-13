@@ -10,7 +10,7 @@ The Asset Maker OMVS provides APIs for supporting the creation and editing of as
 import asyncio
 
 from pyegeria.core._server_client import ServerClient
-from pyegeria.core._globals import max_paging_size
+from pyegeria.core._globals import max_paging_size, NO_ELEMENTS_FOUND, NO_GUID_RETURNED
 from pyegeria.core.config import settings as app_settings
 from pyegeria.models import (
     GetRequestBody,
@@ -24,6 +24,14 @@ from pyegeria.models import (
     NewRelationshipRequestBody,
     UpdateRelationshipRequestBody,
     DeleteRelationshipRequestBody,
+    ContentStatusSearchString,
+    ContentStatusFilterRequestBody,
+    ActivityStatusSearchString,
+    ActivityStatusFilterRequestBody,
+    ActivityStatusRequestBody,
+    ActionRequestBody,
+    DeploymentStatusSearchString,
+    DeploymentStatusFilterRequestBody,
 )
 from pyegeria.core.utils import dynamic_catch
 
@@ -1479,4 +1487,1250 @@ class AssetMaker(ServerClient):
         loop = asyncio.get_event_loop()
         loop.run_until_complete(
             self._async_remove_catalog_target(relationship_guid, body)
+        )
+
+    #
+    # Data Asset Methods
+    #
+
+    @dynamic_catch
+    async def _async_find_data_assets(
+        self,
+        search_string: str = "*",
+        content_status: str = "ACTIVE",
+        starts_with: bool = False,
+        ends_with: bool = False,
+        ignore_case: bool = True,
+        start_from: int = 0,
+        page_size: int = 0,
+        output_format: str = "JSON",
+        report_spec: str | dict = None,
+        body: dict | ContentStatusSearchString = None,
+    ) -> list | str:
+        """
+        Returns the list of data assets matching the search string and optional content status. Async version.
+
+        Parameters
+        ----------
+        search_string: str, default = "*"
+            - the search string to use to find matching data assets
+        content_status: str, default = "ACTIVE"
+            - optional content status to filter by (e.g., ACTIVE)
+        starts_with: bool, default = False
+            - if True, the search string must match the start of the property value
+        ends_with: bool, default = False
+            - if True, the search string must match the end of the property value
+        ignore_case: bool, default = True
+            - if True, the search is case-insensitive
+        start_from: int, default = 0
+            - the starting point in the results list
+        page_size: int, default = 0
+            - the maximum number of results to return
+        output_format: str, default = "JSON"
+            - the format of the output (JSON, DICT, etc.)
+        report_spec: str | dict, optional
+            - the report specification to use for the output
+        body: dict | ContentStatusSearchString, optional
+            - the request body to use for the request. If specified, this takes precedence over other parameters.
+
+        Returns
+        -------
+        list | str
+            - a list of data assets or a string message if no assets are found
+
+        Note:
+        -----
+        Sample body:
+        {
+          "class" : "ContentStatusSearchString",
+          "searchString" : "xxx",
+          "contentStatus" : "ACTIVE",
+          "startsWith" : false,
+          "endsWith" : false,
+          "ignoreCase" : true,
+          "startFrom" : 0,
+          "pageSize": 0
+        }
+        """
+        url = f"{self.asset_command_root}/data-assets/by-search-string"
+
+        if isinstance(body, ContentStatusSearchString):
+            validated_body = body
+        elif isinstance(body, dict):
+            validated_body = self._content_status_search_request_adapter.validate_python(body)
+        else:
+            search_string = None if search_string == "*" else search_string
+            body_dict = {
+                "class": "ContentStatusSearchString",
+                "searchString": search_string,
+                "contentStatus": content_status,
+                "startsWith": starts_with,
+                "endsWith": ends_with,
+                "ignoreCase": ignore_case,
+                "startFrom": start_from,
+                "pageSize": page_size,
+            }
+            validated_body = ContentStatusSearchString.model_validate(body_dict)
+
+        json_body = validated_body.model_dump_json(indent=2, exclude_none=True)
+        response = await self._async_make_request("POST", url, json_body)
+        elements = response.json().get("elements", NO_ELEMENTS_FOUND)
+
+        if type(elements) is str or len(elements) == 0:
+            return NO_ELEMENTS_FOUND
+
+        if output_format.upper() != "JSON":
+            return self._generate_referenceable_output(
+                elements, search_string, "DataAsset", output_format, report_spec
+            )
+        return elements
+
+    @dynamic_catch
+    def find_data_assets(
+        self,
+        search_string: str = "*",
+        content_status: str = "ACTIVE",
+        starts_with: bool = False,
+        ends_with: bool = False,
+        ignore_case: bool = True,
+        start_from: int = 0,
+        page_size: int = 0,
+        output_format: str = "JSON",
+        report_spec: str | dict = None,
+        body: dict | ContentStatusSearchString = None,
+    ) -> list | str:
+        """
+        Returns the list of data assets matching the search string and optional content status. Sync version.
+        """
+        loop = asyncio.get_event_loop()
+        return loop.run_until_complete(
+            self._async_find_data_assets(
+                search_string,
+                content_status,
+                starts_with,
+                ends_with,
+                ignore_case,
+                start_from,
+                page_size,
+                output_format,
+                report_spec,
+                body,
+            )
+        )
+
+    @dynamic_catch
+    async def _async_get_data_assets_by_category(
+        self,
+        category: str,
+        content_status: str = "ACTIVE",
+        start_from: int = 0,
+        page_size: int = 0,
+        output_format: str = "JSON",
+        report_spec: str | dict = None,
+        body: dict | ContentStatusFilterRequestBody = None,
+    ) -> list | str:
+        """
+        Returns the list of data assets matching the category and optional content status. Async version.
+
+        Parameters
+        ----------
+        category: str
+            - the category to filter by
+        content_status: str, default = "ACTIVE"
+            - optional content status to filter by
+        start_from: int, default = 0
+            - starting point in the results
+        page_size: int, default = 0
+            - maximum results per page
+        output_format: str, default = "JSON"
+            - format of the output
+        report_spec: str | dict, optional
+            - report specification
+        body: dict | ContentStatusFilterRequestBody, optional
+            - the request body
+
+        Returns
+        -------
+        list | str
+            - a list of data assets
+
+        Note:
+        -----
+        Sample body:
+        {
+          "class" : "ContentStatusFilterRequestBody",
+          "filter" : "xxx",
+          "contentStatus" : "ACTIVE",
+          "startFrom" : 0,
+          "pageSize": 0
+        }
+        """
+        url = f"{self.asset_command_root}/data-assets/by-category"
+
+        if isinstance(body, ContentStatusFilterRequestBody):
+            validated_body = body
+        elif isinstance(body, dict):
+            validated_body = self._content_status_filter_request_adapter.validate_python(body)
+        else:
+            body_dict = {
+                "class": "ContentStatusFilterRequestBody",
+                "filter": category,
+                "contentStatus": content_status,
+                "startFrom": start_from,
+                "pageSize": page_size,
+            }
+            validated_body = ContentStatusFilterRequestBody.model_validate(body_dict)
+
+        json_body = validated_body.model_dump_json(indent=2, exclude_none=True)
+        response = await self._async_make_request("POST", url, json_body)
+        elements = response.json().get("elements", NO_ELEMENTS_FOUND)
+
+        if type(elements) is str or len(elements) == 0:
+            return NO_ELEMENTS_FOUND
+
+        if output_format.upper() != "JSON":
+            return self._generate_referenceable_output(
+                elements, category, "DataAsset", output_format, report_spec
+            )
+        return elements
+
+    @dynamic_catch
+    def get_data_assets_by_category(
+        self,
+        category: str,
+        content_status: str = "ACTIVE",
+        start_from: int = 0,
+        page_size: int = 0,
+        output_format: str = "JSON",
+        report_spec: str | dict = None,
+        body: dict | ContentStatusFilterRequestBody = None,
+    ) -> list | str:
+        """
+        Returns the list of data assets matching the category and optional content status. Sync version.
+        """
+        loop = asyncio.get_event_loop()
+        return loop.run_until_complete(
+            self._async_get_data_assets_by_category(
+                category, content_status, start_from, page_size, output_format, report_spec, body
+            )
+        )
+
+    #
+    # Infrastructure Methods
+    #
+
+    @dynamic_catch
+    async def _async_find_infrastructure(
+        self,
+        search_string: str = "*",
+        deployment_status: str = "ACTIVE",
+        starts_with: bool = False,
+        ends_with: bool = False,
+        ignore_case: bool = True,
+        start_from: int = 0,
+        page_size: int = 0,
+        output_format: str = "JSON",
+        report_spec: str | dict = None,
+        body: dict | DeploymentStatusSearchString = None,
+    ) -> list | str:
+        """
+        Returns the list of infrastructure assets matching the search string and optional deployment status. Async version.
+
+        Parameters
+        ----------
+        search_string: str, default = "*"
+            - the search string to use to find matching infrastructure assets
+        deployment_status: str, default = "ACTIVE"
+            - optional deployment status to filter by
+        starts_with: bool, default = False
+            - if True, the search string must match the start of the property value
+        ends_with: bool, default = False
+            - if True, the search string must match the end of the property value
+        ignore_case: bool, default = True
+            - if True, the search is case-insensitive
+        start_from: int, default = 0
+            - the starting point in the results list
+        page_size: int, default = 0
+            - the maximum number of results to return
+        output_format: str, default = "JSON"
+            - the format of the output
+        report_spec: str | dict, optional
+            - the report specification
+        body: dict | DeploymentStatusSearchString, optional
+            - the request body
+
+        Returns
+        -------
+        list | str
+            - a list of infrastructure assets
+
+        Note:
+        -----
+        Sample body:
+        {
+          "class" : "DeploymentStatusSearchString",
+          "searchString" : "xxx",
+          "deploymentStatus" : "ACTIVE",
+          "startsWith" : false,
+          "endsWith" : false,
+          "ignoreCase" : true,
+          "startFrom" : 0,
+          "pageSize": 0
+        }
+        """
+        url = f"{self.asset_command_root}/infrastructure-assets/by-search-string"
+
+        if isinstance(body, DeploymentStatusSearchString):
+            validated_body = body
+        elif isinstance(body, dict):
+            validated_body = self._deployment_status_search_request_adapter.validate_python(body)
+        else:
+            search_string = None if search_string == "*" else search_string
+            body_dict = {
+                "class": "DeploymentStatusSearchString",
+                "searchString": search_string,
+                "deploymentStatus": deployment_status,
+                "startsWith": starts_with,
+                "endsWith": ends_with,
+                "ignoreCase": ignore_case,
+                "startFrom": start_from,
+                "pageSize": page_size,
+            }
+            validated_body = DeploymentStatusSearchString.model_validate(body_dict)
+
+        json_body = validated_body.model_dump_json(indent=2, exclude_none=True)
+        response = await self._async_make_request("POST", url, json_body)
+        elements = response.json().get("elements", NO_ELEMENTS_FOUND)
+
+        if type(elements) is str or len(elements) == 0:
+            return NO_ELEMENTS_FOUND
+
+        if output_format.upper() != "JSON":
+            return self._generate_referenceable_output(
+                elements, search_string, "Infrastructure", output_format, report_spec
+            )
+        return elements
+
+    @dynamic_catch
+    def find_infrastructure(
+        self,
+        search_string: str = "*",
+        deployment_status: str = "ACTIVE",
+        starts_with: bool = False,
+        ends_with: bool = False,
+        ignore_case: bool = True,
+        start_from: int = 0,
+        page_size: int = 0,
+        output_format: str = "JSON",
+        report_spec: str | dict = None,
+        body: dict | DeploymentStatusSearchString = None,
+    ) -> list | str:
+        """
+        Returns the list of infrastructure assets matching the search string and optional deployment status. Sync version.
+        """
+        loop = asyncio.get_event_loop()
+        return loop.run_until_complete(
+            self._async_find_infrastructure(
+                search_string,
+                deployment_status,
+                starts_with,
+                ends_with,
+                ignore_case,
+                start_from,
+                page_size,
+                output_format,
+                report_spec,
+                body,
+            )
+        )
+
+    @dynamic_catch
+    async def _async_get_infrastructure_by_category(
+        self,
+        category: str,
+        deployment_status: str = "ACTIVE",
+        start_from: int = 0,
+        page_size: int = 0,
+        output_format: str = "JSON",
+        report_spec: str | dict = None,
+        body: dict | DeploymentStatusFilterRequestBody = None,
+    ) -> list | str:
+        """
+        Returns the list of infrastructure assets matching the category and optional deployment status. Async version.
+
+        Parameters
+        ----------
+        category: str
+            - the category to filter by
+        deployment_status: str, default = "ACTIVE"
+            - optional deployment status to filter by
+        start_from: int, default = 0
+            - starting point in the results
+        page_size: int, default = 0
+            - maximum results per page
+        output_format: str, default = "JSON"
+            - format of the output
+        report_spec: str | dict, optional
+            - report specification
+        body: dict | DeploymentStatusFilterRequestBody, optional
+            - the request body
+
+        Returns
+        -------
+        list | str
+            - a list of infrastructure assets
+
+        Note:
+        -----
+        Sample body:
+        {
+          "class" : "DeploymentStatusFilterRequestBody",
+          "filter" : "xxx",
+          "deploymentStatus" : "ACTIVE",
+          "startFrom" : 0,
+          "pageSize": 0
+        }
+        """
+        url = f"{self.asset_command_root}/infrastructure-assets/by-category"
+
+        if isinstance(body, DeploymentStatusFilterRequestBody):
+            validated_body = body
+        elif isinstance(body, dict):
+            validated_body = self._deployment_status_filter_request_adapter.validate_python(body)
+        else:
+            body_dict = {
+                "class": "DeploymentStatusFilterRequestBody",
+                "filter": category,
+                "deploymentStatus": deployment_status,
+                "startFrom": start_from,
+                "pageSize": page_size,
+            }
+            validated_body = DeploymentStatusFilterRequestBody.model_validate(body_dict)
+
+        json_body = validated_body.model_dump_json(indent=2, exclude_none=True)
+        response = await self._async_make_request("POST", url, json_body)
+        elements = response.json().get("elements", NO_ELEMENTS_FOUND)
+
+        if type(elements) is str or len(elements) == 0:
+            return NO_ELEMENTS_FOUND
+
+        if output_format.upper() != "JSON":
+            return self._generate_referenceable_output(
+                elements, category, "Infrastructure", output_format, report_spec
+            )
+        return elements
+
+    @dynamic_catch
+    def get_infrastructure_by_category(
+        self,
+        category: str,
+        deployment_status: str = "ACTIVE",
+        start_from: int = 0,
+        page_size: int = 0,
+        output_format: str = "JSON",
+        report_spec: str | dict = None,
+        body: dict | DeploymentStatusFilterRequestBody = None,
+    ) -> list | str:
+        """
+        Returns the list of infrastructure assets matching the category and optional deployment status. Sync version.
+        """
+        loop = asyncio.get_event_loop()
+        return loop.run_until_complete(
+            self._async_get_infrastructure_by_category(
+                category, deployment_status, start_from, page_size, output_format, report_spec, body
+            )
+        )
+
+    #
+    # Process Methods
+    #
+
+    @dynamic_catch
+    async def _async_find_processes(
+        self,
+        search_string: str = "*",
+        activity_status: str = "IN_PROGRESS",
+        starts_with: bool = False,
+        ends_with: bool = False,
+        ignore_case: bool = True,
+        start_from: int = 0,
+        page_size: int = 0,
+        output_format: str = "JSON",
+        report_spec: str | dict = None,
+        body: dict | ActivityStatusSearchString = None,
+    ) -> list | str:
+        """
+        Retrieve the processes that match the search string and activity status. Async version.
+
+        Parameters
+        ----------
+        search_string: str, default = "*"
+            - search string for process properties
+        activity_status: str, default = "IN_PROGRESS"
+            - activity status to filter by
+        starts_with: bool, default = False
+        ends_with: bool, default = False
+        ignore_case: bool, default = True
+        start_from: int, default = 0
+        page_size: int, default = 0
+        output_format: str, default = "JSON"
+        report_spec: str | dict, optional
+        body: dict | ActivityStatusSearchString, optional
+
+        Returns
+        -------
+        list | str
+            - list of processes
+
+        Note:
+        -----
+        Sample body:
+        {
+          "class" : "ActivityStatusSearchString",
+          "searchString" : "xxx",
+          "activityStatus" : "IN_PROGRESS",
+          "startsWith" : false,
+          "endsWith" : false,
+          "ignoreCase" : true,
+          "startFrom" : 0,
+          "pageSize": 0
+        }
+        """
+        url = f"{self.asset_command_root}/processes/find-by-search-string"
+
+        if isinstance(body, ActivityStatusSearchString):
+            validated_body = body
+        elif isinstance(body, dict):
+            validated_body = self._activity_status_search_request_adapter.validate_python(body)
+        else:
+            search_string = None if search_string == "*" else search_string
+            body_dict = {
+                "class": "ActivityStatusSearchString",
+                "searchString": search_string,
+                "activityStatus": activity_status,
+                "startsWith": starts_with,
+                "endsWith": ends_with,
+                "ignoreCase": ignore_case,
+                "startFrom": start_from,
+                "pageSize": page_size,
+            }
+            validated_body = ActivityStatusSearchString.model_validate(body_dict)
+
+        json_body = validated_body.model_dump_json(indent=2, exclude_none=True)
+        response = await self._async_make_request("POST", url, json_body)
+        elements = response.json().get("elements", NO_ELEMENTS_FOUND)
+
+        if type(elements) is str or len(elements) == 0:
+            return NO_ELEMENTS_FOUND
+
+        if output_format.upper() != "JSON":
+            return self._generate_referenceable_output(
+                elements, search_string, "Process", output_format, report_spec
+            )
+        return elements
+
+    @dynamic_catch
+    def find_processes(
+        self,
+        search_string: str = "*",
+        activity_status: str = "IN_PROGRESS",
+        starts_with: bool = False,
+        ends_with: bool = False,
+        ignore_case: bool = True,
+        start_from: int = 0,
+        page_size: int = 0,
+        output_format: str = "JSON",
+        report_spec: str | dict = None,
+        body: dict | ActivityStatusSearchString = None,
+    ) -> list | str:
+        """
+        Retrieve the processes that match the search string and activity status. Sync version.
+        """
+        loop = asyncio.get_event_loop()
+        return loop.run_until_complete(
+            self._async_find_processes(
+                search_string,
+                activity_status,
+                starts_with,
+                ends_with,
+                ignore_case,
+                start_from,
+                page_size,
+                output_format,
+                report_spec,
+                body,
+            )
+        )
+
+    @dynamic_catch
+    async def _async_get_processes_by_category(
+        self,
+        category: str,
+        activity_status: str = "IN_PROGRESS",
+        start_from: int = 0,
+        page_size: int = 0,
+        output_format: str = "JSON",
+        report_spec: str | dict = None,
+        body: dict | ActivityStatusFilterRequestBody = None,
+    ) -> list | str:
+        """
+        Retrieve the processes that match the category name and status. Async version.
+
+        Parameters
+        ----------
+        category: str
+        activity_status: str, default = "IN_PROGRESS"
+        start_from: int, default = 0
+        page_size: int, default = 0
+        output_format: str, default = "JSON"
+        report_spec: str | dict, optional
+        body: dict | ActivityStatusFilterRequestBody, optional
+
+        Returns
+        -------
+        list | str
+            - list of processes
+
+        Note:
+        -----
+        Sample body:
+        {
+          "class" : "ActivityStatusFilterRequestBody",
+          "filter" : "xxx",
+          "activityStatus" : "IN_PROGRESS",
+          "startFrom" : 0,
+          "pageSize": 0
+        }
+        """
+        url = f"{self.asset_command_root}/processes/by-category"
+
+        if isinstance(body, ActivityStatusFilterRequestBody):
+            validated_body = body
+        elif isinstance(body, dict):
+            validated_body = self._activity_status_filter_request_adapter.validate_python(body)
+        else:
+            body_dict = {
+                "class": "ActivityStatusFilterRequestBody",
+                "filter": category,
+                "activityStatus": activity_status,
+                "startFrom": start_from,
+                "pageSize": page_size,
+            }
+            validated_body = ActivityStatusFilterRequestBody.model_validate(body_dict)
+
+        json_body = validated_body.model_dump_json(indent=2, exclude_none=True)
+        response = await self._async_make_request("POST", url, json_body)
+        elements = response.json().get("elements", NO_ELEMENTS_FOUND)
+
+        if type(elements) is str or len(elements) == 0:
+            return NO_ELEMENTS_FOUND
+
+        if output_format.upper() != "JSON":
+            return self._generate_referenceable_output(
+                elements, category, "Process", output_format, report_spec
+            )
+        return elements
+
+    @dynamic_catch
+    def get_processes_by_category(
+        self,
+        category: str,
+        activity_status: str = "IN_PROGRESS",
+        start_from: int = 0,
+        page_size: int = 0,
+        output_format: str = "JSON",
+        report_spec: str | dict = None,
+        body: dict | ActivityStatusFilterRequestBody = None,
+    ) -> list | str:
+        """
+        Retrieve the processes that match the category name and status. Sync version.
+        """
+        loop = asyncio.get_event_loop()
+        return loop.run_until_complete(
+            self._async_get_processes_by_category(
+                category, activity_status, start_from, page_size, output_format, report_spec, body
+            )
+        )
+
+    #
+    # Action Methods
+    #
+
+    @dynamic_catch
+    async def _async_create_action(
+        self, body: dict | ActionRequestBody
+    ) -> str:
+        """
+        Create a new action and link it to the supplied actor and targets (if applicable). Async version.
+
+        Parameters
+        ----------
+        body: dict | ActionRequestBody
+            - properties of the action
+
+        Returns
+        -------
+        str
+            - unique identifier of the action
+
+        Note:
+        -----
+        Sample body:
+        {
+          "class" : "ActionRequestBody",
+          "properties": {
+             "class": "ActionProperties",
+             "qualifiedName": "...",
+             "displayName": "..."
+          }
+        }
+        """
+        url = f"{self.asset_command_root}/actions"
+
+        if isinstance(body, ActionRequestBody):
+            validated_body = body
+        else:
+            validated_body = self._action_request_adapter.validate_python(body)
+
+        json_body = validated_body.model_dump_json(indent=2, exclude_none=True)
+        response = await self._async_make_request("POST", url, json_body)
+        return response.json().get("guid", NO_GUID_RETURNED)
+
+    @dynamic_catch
+    def create_action(self, body: dict | ActionRequestBody) -> str:
+        """
+        Create a new action and link it to the supplied actor and targets (if applicable). Sync version.
+        """
+        loop = asyncio.get_event_loop()
+        return loop.run_until_complete(self._async_create_action(body))
+
+    @dynamic_catch
+    async def _async_add_action_target(
+        self,
+        action_guid: str,
+        metadata_element_guid: str,
+        body: dict | NewRelationshipRequestBody | None = None,
+    ) -> str:
+        """
+        Add an element to an action's workload. Async version.
+
+        Parameters
+        ----------
+        action_guid: str
+            - unique identifier of the action
+        metadata_element_guid: str
+            - unique identifier of the metadata element that is a target
+        body: dict | NewRelationshipRequestBody, optional
+
+        Returns
+        -------
+        str
+            - unique identifier of the relationship
+
+        Note:
+        -----
+        Sample body:
+        {
+          "class" : "NewRelationshipRequestBody",
+          "properties" : {
+             "class": "ActionTargetProperties",
+             "activityStatus" : "IN_PROGRESS",
+             "actionTargetName" : "add label here"
+          }
+        }
+        """
+        url = f"{self.asset_command_root}/actions/{action_guid}/action-targets/{metadata_element_guid}/attach"
+
+        if isinstance(body, NewRelationshipRequestBody):
+            validated_body = body
+        elif isinstance(body, dict):
+            validated_body = self._new_relationship_request_adapter.validate_python(body)
+        else:
+            validated_body = NewRelationshipRequestBody(class_="NewRelationshipRequestBody")
+
+        json_body = validated_body.model_dump_json(indent=2, exclude_none=True)
+        response = await self._async_make_request("POST", url, json_body)
+        return response.json().get("guid", NO_GUID_RETURNED)
+
+    @dynamic_catch
+    def add_action_target(
+        self,
+        action_guid: str,
+        metadata_element_guid: str,
+        body: dict | NewRelationshipRequestBody | None = None,
+    ) -> str:
+        """
+        Add an element to an action's workload. Sync version.
+        """
+        loop = asyncio.get_event_loop()
+        return loop.run_until_complete(
+            self._async_add_action_target(action_guid, metadata_element_guid, body)
+        )
+
+    @dynamic_catch
+    async def _async_update_action_target_properties(
+        self,
+        action_target_guid: str,
+        body: dict | UpdateRelationshipRequestBody,
+    ) -> None:
+        """
+        Update the properties associated with an Action Target for an action. Async version.
+
+        Parameters
+        ----------
+        action_target_guid: str
+            - unique identifier of the action target relationship
+        body: dict | UpdateRelationshipRequestBody
+
+        Returns
+        -------
+        None
+        """
+        url = f"{self.asset_command_root}/actions/action-targets/{action_target_guid}/update"
+
+        if isinstance(body, UpdateRelationshipRequestBody):
+            validated_body = body
+        else:
+            validated_body = self._update_relationship_request_adapter.validate_python(body)
+
+        json_body = validated_body.model_dump_json(indent=2, exclude_none=True)
+        await self._async_make_request("POST", url, json_body)
+
+    @dynamic_catch
+    def update_action_target_properties(
+        self,
+        action_target_guid: str,
+        body: dict | UpdateRelationshipRequestBody,
+    ) -> None:
+        """
+        Update the properties associated with an Action Target for an action. Sync version.
+        """
+        loop = asyncio.get_event_loop()
+        loop.run_until_complete(
+            self._async_update_action_target_properties(action_target_guid, body)
+        )
+
+    @dynamic_catch
+    async def _async_get_action_target(
+        self,
+        action_target_guid: str,
+        body: dict | GetRequestBody | None = None,
+        output_format: str = "JSON",
+        report_spec: str | dict = None,
+    ) -> list | dict | str:
+        """
+        Retrieve a specific action target associated with an action. Async version.
+
+        Parameters
+        ----------
+        action_target_guid: str
+        body: dict | GetRequestBody, optional
+        output_format: str, default = "JSON"
+        report_spec: str | dict, optional
+
+        Returns
+        -------
+        list | dict | str
+        """
+        url = f"{self.asset_command_root}/actions/action-targets/{action_target_guid}/retrieve"
+
+        return await self._async_get_guid_request(
+            url,
+            _type="ActionTarget",
+            _gen_output=self._generate_referenceable_output,
+            output_format=output_format,
+            report_spec=report_spec,
+            body=body,
+        )
+
+    @dynamic_catch
+    def get_action_target(
+        self,
+        action_target_guid: str,
+        body: dict | GetRequestBody | None = None,
+        output_format: str = "JSON",
+        report_spec: str | dict = None,
+    ) -> list | dict | str:
+        """
+        Retrieve a specific action target associated with an action. Sync version.
+        """
+        loop = asyncio.get_event_loop()
+        return loop.run_until_complete(
+            self._async_get_action_target(action_target_guid, body, output_format, report_spec)
+        )
+
+    @dynamic_catch
+    async def _async_get_action_targets(
+        self,
+        action_guid: str,
+        activity_status: str = "IN_PROGRESS",
+        body: dict | ActivityStatusRequestBody | None = None,
+        output_format: str = "JSON",
+        report_spec: str | dict = None,
+    ) -> list | dict | str:
+        """
+        Return a list of elements that are target elements for an action. Async version.
+
+        Parameters
+        ----------
+        action_guid: str
+        activity_status: str, default = "IN_PROGRESS"
+        body: dict | ActivityStatusRequestBody, optional
+        output_format: str, default = "JSON"
+        report_spec: str | dict, optional
+
+        Returns
+        -------
+        list | dict | str
+        """
+        url = f"{self.asset_command_root}/actions/{action_guid}/action-targets"
+
+        if isinstance(body, ActivityStatusRequestBody):
+            validated_body = body
+        elif isinstance(body, dict):
+            validated_body = self._activity_status_request_adapter.validate_python(body)
+        else:
+            body_dict = {
+                "class": "ActivityStatusRequestBody",
+                "activityStatus": activity_status,
+            }
+            validated_body = ActivityStatusRequestBody.model_validate(body_dict)
+
+        return await self._async_get_results_body_request(
+            url,
+            _type="ActionTarget",
+            _gen_output=self._generate_referenceable_output,
+            output_format=output_format,
+            report_spec=report_spec,
+            body=validated_body,
+        )
+
+    @dynamic_catch
+    def get_action_targets(
+        self,
+        action_guid: str,
+        activity_status: str = "IN_PROGRESS",
+        body: dict | ActivityStatusRequestBody | None = None,
+        output_format: str = "JSON",
+        report_spec: str | dict = None,
+    ) -> list | dict | str:
+        """
+        Return a list of elements that are target elements for an action. Sync version.
+        """
+        loop = asyncio.get_event_loop()
+        return loop.run_until_complete(
+            self._async_get_action_targets(action_guid, activity_status, body, output_format, report_spec)
+        )
+
+    @dynamic_catch
+    async def _async_get_actions_for_action_target(
+        self,
+        metadata_element_guid: str,
+        activity_status: str = "IN_PROGRESS",
+        body: dict | ActivityStatusRequestBody | None = None,
+        output_format: str = "JSON",
+        report_spec: str | dict = None,
+    ) -> list | dict | str:
+        """
+        Retrieve the "Actions" that are chained off of an action target element. Async version.
+
+        Parameters
+        ----------
+        metadata_element_guid: str
+        activity_status: str, default = "IN_PROGRESS"
+        body: dict | ActivityStatusRequestBody, optional
+        output_format: str, default = "JSON"
+        report_spec: str | dict, optional
+
+        Returns
+        -------
+        list | dict | str
+        """
+        url = f"{self.asset_command_root}/elements/{metadata_element_guid}/action-targets/actions"
+
+        if isinstance(body, ActivityStatusRequestBody):
+            validated_body = body
+        elif isinstance(body, dict):
+            validated_body = self._activity_status_request_adapter.validate_python(body)
+        else:
+            body_dict = {
+                "class": "ActivityStatusRequestBody",
+                "activityStatus": activity_status,
+            }
+            validated_body = ActivityStatusRequestBody.model_validate(body_dict)
+
+        return await self._async_get_results_body_request(
+            url,
+            _type="Action",
+            _gen_output=self._generate_referenceable_output,
+            output_format=output_format,
+            report_spec=report_spec,
+            body=validated_body,
+        )
+
+    @dynamic_catch
+    def get_actions_for_action_target(
+        self,
+        metadata_element_guid: str,
+        activity_status: str = "IN_PROGRESS",
+        body: dict | ActivityStatusRequestBody | None = None,
+        output_format: str = "JSON",
+        report_spec: str | dict = None,
+    ) -> list | dict | str:
+        """
+        Retrieve the "Actions" that are chained off of an action target element. Sync version.
+        """
+        loop = asyncio.get_event_loop()
+        return loop.run_until_complete(
+            self._async_get_actions_for_action_target(
+                metadata_element_guid, activity_status, body, output_format, report_spec
+            )
+        )
+
+    @dynamic_catch
+    async def _async_assign_action(
+        self,
+        action_guid: str,
+        actor_guid: str,
+        body: dict | NewRelationshipRequestBody = None,
+    ) -> None:
+        """
+        Assign an action to an actor. Request body is optional. Async version.
+
+        Parameters
+        ----------
+        action_guid: str
+            - unique identifier of the action
+        actor_guid: str
+            - actor to assign the action to
+        body: dict | NewRelationshipRequestBody, optional
+            - request body
+        """
+        url = f"{self.asset_command_root}/actions/{action_guid}/assign/{actor_guid}"
+
+        await self._async_new_relationship_request(url, prop=["AssignmentScopeProperties"], body=body)
+
+    @dynamic_catch
+    def assign_action(
+        self,
+        action_guid: str,
+        actor_guid: str,
+        body: dict | NewRelationshipRequestBody = None,
+    ) -> None:
+        """
+        Assign an action to an actor. Sync version.
+        """
+        loop = asyncio.get_event_loop()
+        loop.run_until_complete(self._async_assign_action(action_guid, actor_guid, body))
+
+    @dynamic_catch
+    async def _async_reassign_action(
+        self,
+        action_guid: str,
+        actor_guid: str,
+        body: dict | NewRelationshipRequestBody = None,
+    ) -> None:
+        """
+        Assign an action to a new actor. This will unassign all other actors previously assigned to the action. Async version.
+
+        Parameters
+        ----------
+        action_guid: str
+        actor_guid: str
+        body: dict | NewRelationshipRequestBody, optional
+        """
+        url = f"{self.asset_command_root}/actions/{action_guid}/reassign/{actor_guid}"
+
+        await self._async_new_relationship_request(url, prop=["AssignmentScopeProperties"], body=body)
+
+    @dynamic_catch
+    def reassign_action(
+        self,
+        action_guid: str,
+        actor_guid: str,
+        body: dict | NewRelationshipRequestBody = None,
+    ) -> None:
+        """
+        Assign an action to a new actor. Sync version.
+        """
+        loop = asyncio.get_event_loop()
+        loop.run_until_complete(self._async_reassign_action(action_guid, actor_guid, body))
+
+    @dynamic_catch
+    async def _async_unassign_action(
+        self,
+        action_guid: str,
+        actor_guid: str,
+        body: dict | DeleteRelationshipRequestBody = None,
+    ) -> None:
+        """
+        Remove an action from an actor. Async version.
+
+        Parameters
+        ----------
+        action_guid: str
+        actor_guid: str
+        body: dict | DeleteRelationshipRequestBody, optional
+        """
+        url = f"{self.asset_command_root}/actions/{action_guid}/reassign/{actor_guid}"
+
+        await self._async_delete_relationship_request(url, body)
+
+    @dynamic_catch
+    def unassign_action(
+        self,
+        action_guid: str,
+        actor_guid: str,
+        body: dict | DeleteRelationshipRequestBody = None,
+    ) -> None:
+        """
+        Remove an action from an actor. Sync version.
+        """
+        loop = asyncio.get_event_loop()
+        loop.run_until_complete(self._async_unassign_action(action_guid, actor_guid, body))
+
+    @dynamic_catch
+    async def _async_get_assigned_actions(
+        self,
+        actor_guid: str,
+        activity_status: str = "IN_PROGRESS",
+        body: dict | ActivityStatusRequestBody | None = None,
+        output_format: str = "JSON",
+        report_spec: str | dict = None,
+    ) -> list | dict | str:
+        """
+        Retrieve the actions for a particular actor. Async version.
+
+        Parameters
+        ----------
+        actor_guid: str
+        activity_status: str, default = "IN_PROGRESS"
+        body: dict | ActivityStatusRequestBody, optional
+        output_format: str, default = "JSON"
+        report_spec: str | dict, optional
+
+        Returns
+        -------
+        list | dict | str
+        """
+        url = f"{self.asset_command_root}/actors/{actor_guid}/assigned/actions"
+
+        if isinstance(body, ActivityStatusRequestBody):
+            validated_body = body
+        elif isinstance(body, dict):
+            validated_body = self._activity_status_request_adapter.validate_python(body)
+        else:
+            body_dict = {
+                "class": "ActivityStatusRequestBody",
+                "activityStatus": activity_status,
+            }
+            validated_body = ActivityStatusRequestBody.model_validate(body_dict)
+
+        return await self._async_get_results_body_request(
+            url,
+            _type="Action",
+            _gen_output=self._generate_referenceable_output,
+            output_format=output_format,
+            report_spec=report_spec,
+            body=validated_body,
+        )
+
+    @dynamic_catch
+    def get_assigned_actions(
+        self,
+        actor_guid: str,
+        activity_status: str = "IN_PROGRESS",
+        body: dict | ActivityStatusRequestBody | None = None,
+        output_format: str = "JSON",
+        report_spec: str | dict = None,
+    ) -> list | dict | str:
+        """
+        Retrieve the actions for a particular actor. Sync version.
+        """
+        loop = asyncio.get_event_loop()
+        return loop.run_until_complete(
+            self._async_get_assigned_actions(actor_guid, activity_status, body, output_format, report_spec)
+        )
+
+    @dynamic_catch
+    async def _async_get_actions_for_sponsor(
+        self,
+        metadata_element_guid: str,
+        activity_status: str = "IN_PROGRESS",
+        body: dict | ActivityStatusRequestBody | None = None,
+        output_format: str = "JSON",
+        report_spec: str | dict = None,
+    ) -> list | dict | str:
+        """
+        Retrieve the "Actions" that are chained off of a sponsor's element. Async version.
+
+        Parameters
+        ----------
+        metadata_element_guid: str
+        activity_status: str, default = "IN_PROGRESS"
+        body: dict | ActivityStatusRequestBody, optional
+        output_format: str, default = "JSON"
+        report_spec: str | dict, optional
+
+        Returns
+        -------
+        list | dict | str
+        """
+        url = f"{self.asset_command_root}/elements/{metadata_element_guid}/sponsored/actions"
+
+        if isinstance(body, ActivityStatusRequestBody):
+            validated_body = body
+        elif isinstance(body, dict):
+            validated_body = self._activity_status_request_adapter.validate_python(body)
+        else:
+            body_dict = {
+                "class": "ActivityStatusRequestBody",
+                "activityStatus": activity_status,
+            }
+            validated_body = ActivityStatusRequestBody.model_validate(body_dict)
+
+        return await self._async_get_results_body_request(
+            url,
+            _type="Action",
+            _gen_output=self._generate_referenceable_output,
+            output_format=output_format,
+            report_spec=report_spec,
+            body=validated_body,
+        )
+
+    @dynamic_catch
+    def get_actions_for_sponsor(
+        self,
+        metadata_element_guid: str,
+        activity_status: str = "IN_PROGRESS",
+        body: dict | ActivityStatusRequestBody | None = None,
+        output_format: str = "JSON",
+        report_spec: str | dict = None,
+    ) -> list | dict | str:
+        """
+        Retrieve the "Actions" that are chained off of a sponsor's element. Sync version.
+        """
+        loop = asyncio.get_event_loop()
+        return loop.run_until_complete(
+            self._async_get_actions_for_sponsor(
+                metadata_element_guid, activity_status, body, output_format, report_spec
+            )
+        )
+
+    def _generate_referenceable_output(
+        self,
+        elements: list | dict,
+        filter: str | None,
+        element_type_name: str | None,
+        output_format: str = "DICT",
+        report_spec: dict | str | None = None,
+    ):
+        """Helper to generate output for referenceable elements."""
+        from pyegeria.view.output_formatter import generate_output
+        return generate_output(
+            elements,
+            filter=filter,
+            element_type_name=element_type_name,
+            output_format=output_format,
+            report_spec=report_spec,
         )

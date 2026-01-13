@@ -30,12 +30,16 @@ from pyegeria.models import (SearchStringRequestBody, FilterRequestBody, GetRequ
                              TemplateRequestBody, UpdateElementRequestBody, NewAttachmentRequestBody,
                              NewRelationshipRequestBody,
                              UpdateRelationshipRequestBody, ResultsRequestBody,
+                             DeploymentStatusSearchString, DeploymentStatusFilterRequestBody,
                              NewClassificationRequestBody,
                              DeleteElementRequestBody, DeleteRelationshipRequestBody, DeleteClassificationRequestBody,
                              LevelIdentifierQueryBody, UpdatePropertiesRequestBody, MetadataSourceRequestBody,
                              UpdateEffectivityDatesRequestBody, OpenMetadataDeleteRequestBody, ArchiveRequestBody,
                              NewOpenMetadataElementRequestBody, NewRelatedElementsRequestBody,
-                             FindPropertyNamesRequestBody)
+                             FindPropertyNamesRequestBody,
+                             ContentStatusSearchString, ContentStatusFilterRequestBody,
+                             ActivityStatusSearchString, ActivityStatusFilterRequestBody,
+                             ActivityStatusRequestBody, ActionRequestBody)
 from pyegeria.core.utils import body_slimmer, dynamic_catch
 from pyegeria.view.output_formatter import populate_common_columns, resolve_output_formats, generate_output, overlay_additional_values
 
@@ -52,6 +56,8 @@ from pyegeria.models.models import (
     DeleteRelationshipRequestBody,
     NewClassificationRequestBody,
     DeleteClassificationRequestBody,
+    DeploymentStatusSearchString,
+    DeploymentStatusFilterRequestBody,
     SearchStringRequestBody,
     FilterRequestBody,
     GetRequestBody,
@@ -65,7 +71,13 @@ from pyegeria.models.models import (
     ArchiveRequestBody,
     NewOpenMetadataElementRequestBody,
     NewRelatedElementsRequestBody,
-    FindPropertyNamesRequestBody
+    FindPropertyNamesRequestBody,
+    ContentStatusSearchString,
+    ContentStatusFilterRequestBody,
+    ActivityStatusSearchString,
+    ActivityStatusFilterRequestBody,
+    ActivityStatusRequestBody,
+    ActionRequestBody
 )
 
 __all__ = [
@@ -178,6 +190,14 @@ class ServerClient(BaseServerClient):
         self._new_open_metadata_element_request_adapter = TypeAdapter(NewOpenMetadataElementRequestBody)
         self._new_related_elements_request_adapter = TypeAdapter(NewRelatedElementsRequestBody)
         self._find_property_names_request_adapter = TypeAdapter(FindPropertyNamesRequestBody)
+        self._deployment_status_search_request_adapter = TypeAdapter(DeploymentStatusSearchString)
+        self._deployment_status_filter_request_adapter = TypeAdapter(DeploymentStatusFilterRequestBody)
+        self._content_status_search_request_adapter = TypeAdapter(ContentStatusSearchString)
+        self._content_status_filter_request_adapter = TypeAdapter(ContentStatusFilterRequestBody)
+        self._activity_status_search_request_adapter = TypeAdapter(ActivityStatusSearchString)
+        self._activity_status_filter_request_adapter = TypeAdapter(ActivityStatusFilterRequestBody)
+        self._activity_status_request_adapter = TypeAdapter(ActivityStatusRequestBody)
+        self._action_request_adapter = TypeAdapter(ActionRequestBody)
 
         try:
             result = self.check_connection()
@@ -249,7 +269,8 @@ class ServerClient(BaseServerClient):
                 return result.json().get("guid", NO_ELEMENTS_FOUND)
             else:
                 body = {
-                    "class": "NameRequestBody",
+                    # "class": "NameRequestBody",
+                    "class": "UniqueNameRequestBody",
                     "name": display_name,
                     "namePropertyName": property_name,
                     "forLineage": False,
@@ -935,7 +956,7 @@ class ServerClient(BaseServerClient):
         await self._async_make_request(
             "POST-DATA", url, archive_file, time_out=time_out
         )
-        return
+
 
     def add_archive_file(
             self,

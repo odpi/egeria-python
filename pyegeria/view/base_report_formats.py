@@ -1339,7 +1339,61 @@ base_report_specs = FormatSetDict({
             spec_params={},
         )
     ),
-
+    "Digital-Products-Slim": FormatSet(
+        target_type="DigitalProduct",
+        heading="Digital Product Information",
+        description="Attributes useful to Digital Products.",
+        aliases=[],
+        annotations={},
+        family="Product Manager",
+        formats=[
+            Format(
+                types=["FORM", "TABLE", "LIST", "MD"],
+                attributes=[
+                    Column(name="Display Name", key='display_name'),
+                    Column(name="Type Name", key='type_name'),
+                    Column(name="Content Status", key='content_status'),
+                    Column(name="Deployment Status", key='deployment_status'),
+                    Column(name='Product Name', key='product_name'),
+                    Column(name='Members', key='members', format=True),
+                    # Column(name='Product Manager', key='assigned_actors'),
+                    Column(name='Contacts', key='actor_list'),
+                ]),
+            Format(
+                types=["REPORT", "HTML"],
+                attributes=COMMON_COLUMNS + [
+                    Column(name="Status", key='status'),
+                    Column(name='Product Name', key='product_name'),
+                    Column(name='Identifier', key='identifier'),
+                    Column(name='Maturity', key='maturity'),
+                    Column(name='Service Life', key='service_life'),
+                    Column(name='Next Version', key='next_version'),
+                    Column(name='Withdraw Date', key='withdraw_date'),
+                    Column(name='Members', key='members', format=True),
+                    Column(name='Uses Products', key='uses_digital_products'),
+                    Column(name='Used by Products', key='used_by_digital_products'),
+                    Column(name='Product Manager', key='assigned_actors'),
+                    Column(name='License', key='governed_by'),
+                    Column(name='Solution Blueprint', key='solution_designs'),
+                    Column(name="Mermaid", key="mermaid")
+                ],
+            )
+        ],
+        action=ActionParameter(
+            function="CollectionManager.find_collections",
+            required_params=["search_string"],
+            optional_params=OPTIONAL_SEARCH_PARAMS,
+            spec_params={"_type": "DigitalProductProperties",
+                         "metadata_element_subtypes": ["DigitalProduct"],
+                         "metadata_element_type": "DigitalProduct",
+                         },
+        ),
+        get_additional_props=ActionParameter(
+            function="CollectionManager._extract_digital_product_properties",
+            required_params=[],
+            spec_params={},
+        )
+    ),
     "Agreements": FormatSet(
         target_type="Agreement",
         heading="General Agreement Information",

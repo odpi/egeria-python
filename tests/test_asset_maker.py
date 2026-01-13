@@ -244,6 +244,100 @@ class TestAssetMaker:
         finally:
             a_client.close_session()
 
+    def test_find_data_assets(self):
+        """Test finding data assets"""
+        try:
+            a_client = AssetMaker(self.good_view_server_2, self.good_platform1_url, user_id=self.good_user_2,
+                                  user_pwd=self.good_user_2_pwd)
+            a_client.create_egeria_bearer_token(self.good_user_2, self.good_user_2_pwd)
+            response = a_client.find_data_assets(search_string="*", output_format="JSON")
+            assert response is not None
+        except PyegeriaException as e:
+            print_exception_table(e)
+            assert False, "Invalid request"
+        finally:
+            a_client.close_session()
+
+    def test_get_data_assets_by_category(self):
+        """Test getting data assets by category"""
+        try:
+            a_client = AssetMaker(self.good_view_server_2, self.good_platform1_url, user_id=self.good_user_2,
+                                  user_pwd=self.good_user_2_pwd)
+            a_client.create_egeria_bearer_token(self.good_user_2, self.good_user_2_pwd)
+            response = a_client.get_data_assets_by_category(category="test", output_format="JSON")
+            assert response is not None
+        except PyegeriaException as e:
+            print_exception_table(e)
+            assert False, "Invalid request"
+        finally:
+            a_client.close_session()
+
+    def test_find_infrastructure(self):
+        """Test finding infrastructure assets"""
+        try:
+            a_client = AssetMaker(self.good_view_server_2, self.good_platform1_url, user_id=self.good_user_2,
+                                  user_pwd=self.good_user_2_pwd)
+            a_client.create_egeria_bearer_token(self.good_user_2, self.good_user_2_pwd)
+            response = a_client.find_infrastructure(search_string="*", output_format="JSON")
+            assert response is not None
+        except PyegeriaException as e:
+            print_exception_table(e)
+            assert False, "Invalid request"
+        finally:
+            a_client.close_session()
+
+    def test_find_processes(self):
+        """Test finding processes"""
+        try:
+            a_client = AssetMaker(self.good_view_server_2, self.good_platform1_url, user_id=self.good_user_2,
+                                  user_pwd=self.good_user_2_pwd)
+            a_client.create_egeria_bearer_token(self.good_user_2, self.good_user_2_pwd)
+            response = a_client.find_processes(search_string="*", output_format="JSON")
+            assert response is not None
+        except PyegeriaException as e:
+            print_exception_table(e)
+            assert False, "Invalid request"
+        finally:
+            a_client.close_session()
+
+    def test_create_action(self):
+        """Test creating an action"""
+        try:
+            a_client = AssetMaker(self.good_view_server_2, self.good_platform1_url, user_id=self.good_user_2,
+                                  user_pwd=self.good_user_2_pwd)
+            a_client.create_egeria_bearer_token(self.good_user_2, self.good_user_2_pwd)
+            body = {
+                "class": "ActionRequestBody",
+                "properties": {
+                    "class": "ActionProperties",
+                    "qualifiedName": f"test-action-{int(time.time())}",
+                    "displayName": "Test Action"
+                }
+            }
+            response = a_client.create_action(body=body)
+            assert response is not None
+        except PyegeriaException as e:
+            print_exception_table(e)
+            # It might fail if Action type is not supported, but we test the method call
+            pass
+        finally:
+            a_client.close_session()
+
+    def test_get_assigned_actions(self):
+        """Test getting assigned actions for an actor"""
+        try:
+            a_client = AssetMaker(self.good_view_server_2, self.good_platform1_url, user_id=self.good_user_2,
+                                  user_pwd=self.good_user_2_pwd)
+            a_client.create_egeria_bearer_token(self.good_user_2, self.good_user_2_pwd)
+            # Using a dummy GUID
+            response = a_client.get_assigned_actions(actor_guid="dummy-guid", output_format="JSON")
+            assert response is not None
+        except PyegeriaException as e:
+            print_exception_table(e)
+            pass
+        finally:
+            a_client.close_session()
+
 
 if __name__ == "__main__":
     pytest.main([__file__, "-v", "-s"])

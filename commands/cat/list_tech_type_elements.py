@@ -20,7 +20,7 @@ from rich.table import Table
 
 from pyegeria import (
     AutomatedCuration,
-    PyegeriaException,
+    PyegeriaAPIException, PyegeriaClientException,
     print_basic_exception,
     settings,
     config_logging
@@ -136,7 +136,7 @@ def list_tech_elements(
         with console.pager(styles=True):
             console.print(generate_table())
 
-    except PyegeriaException as e:
+    except (PyegeriaAPIException, PyegeriaClientException) as e:
         print_basic_exception(e)
         print("\n\nPerhaps the type name isn't known")
     except Exception as e:

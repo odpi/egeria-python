@@ -18,7 +18,7 @@ from rich.live import Live
 from rich.markdown import Markdown
 from rich.table import Table
 
-from pyegeria.omvs.my_profile_omvs import MyProfile
+from pyegeria.omvs.my_profile import MyProfile
 
 EGERIA_METADATA_STORE = os.environ.get("EGERIA_METADATA_STORE", "active-metadata-store")
 EGERIA_KAFKA_ENDPOINT = os.environ.get("KAFKA_ENDPOINT", "localhost:9092")

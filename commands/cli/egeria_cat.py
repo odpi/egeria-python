@@ -16,7 +16,7 @@ from trogon import tui
 from pyegeria import settings
 from loguru import logger
 
-from commands.cat.run_report_orig import execute_format_set_action
+from commands.cat.run_report import list_generic
 from commands.cat.dr_egeria_md import process_markdown_file
 from commands.cat.old_get_asset_graph import asset_viewer
 from commands.cat.get_collection_tree import collection_viewer

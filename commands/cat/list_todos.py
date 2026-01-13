@@ -19,7 +19,10 @@ from rich.markdown import Markdown
 from rich.prompt import Prompt
 from rich.table import Table
 
-from pyegeria.omvs.my_profile_omvs import MyProfile
+from pyegeria import (
+    PyegeriaAPIException, PyegeriaClientException, print_basic_exception, print_exception_table
+)
+from pyegeria.omvs.my_profile import MyProfile
 
 EGERIA_METADATA_STORE = os.environ.get("EGERIA_METADATA_STORE", "active-metadata-store")
 EGERIA_KAFKA_ENDPOINT = os.environ.get("KAFKA_ENDPOINT", "localhost:9092")
@@ -142,12 +145,8 @@ def display_to_dos(
         with console.pager():
             console.print(generate_table(search_string))
 
-    except (
-        InvalidParameterException,
-        PropertyServerException,
-        UserNotAuthorizedException,
-    ) as e:
-        print_exception_response(e)
+    except (PyegeriaAPIException, PyegeriaClientException) as e:
+        print_basic_exception(e)
     except KeyboardInterrupt:
         pass
     finally:

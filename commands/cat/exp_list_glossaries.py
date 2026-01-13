@@ -96,17 +96,17 @@ def display_glossaries(
         glossaries = m_client.find_glossaries(search_string)
         if type(glossaries) is list:
             sorted_glossary_list = sorted(
-                glossaries, key=lambda k: k["properties"]["displayName"]
+                glossaries, key=lambda k: k["properties"]["qualifiedName"]
             )
             for glossary in sorted_glossary_list:
 
-                display_name = glossary["properties"]["displayName"]
-                qualified_name = glossary["properties"]["qualifiedName"]
+                display_name = glossary["properties"].get("displayName","---")
+                qualified_name = glossary["properties"].get("qualifiedName","---")
                 guid = glossary["elementHeader"]["guid"]
                 q_name = Text(f"{qualified_name}\n&\n{guid}", justify="center")
-                language = glossary["properties"]["language"]
-                description = glossary["properties"]["description"]
-                usage = glossary["properties"]["usage"]
+                language = glossary["properties"].get("language","---")
+                description = glossary["properties"].get("description","---")
+                usage = glossary["properties"].get("usage","---")
                 text = "http://100.83.199.62:8088/superset/dashboard/p/xOgE56dLNaY/"
 
                 table.add_row(display_name, q_name, language, text)
@@ -116,10 +116,9 @@ def display_glossaries(
                 force_terminal=not jupyter,
             )
             console.print(table)
-            print("Visit my [link=https://www.willmcgugan.com]blog[/link]!")
 
-    except (InvalidParameterException, PropertyServerException) as e:
-        print_exception_response(e)
+    except (PyegeriaAPIException, PyegeriaClientException) as e:
+        print_basic_exception(e)
     finally:
         m_client.close_session()
 

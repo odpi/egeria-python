@@ -14,9 +14,9 @@ import sys
 
 import click
 
-from pyegeria import EgeriaTech, body_slimmer, settings, NO_ELEMENTS_FOUND, TERM_STATUS
-from pyegeria.core._exceptions import (
-    PyegeriaException, print_basic_exception
+from pyegeria import (
+    EgeriaTech, body_slimmer, settings, NO_ELEMENTS_FOUND, TERM_STATUS,
+    PyegeriaAPIException, PyegeriaClientException, print_basic_exception, print_exception_table
 )
 
 app_config = settings.Environment
@@ -58,7 +58,7 @@ def create_glossary(
         glossary_guid = m_client.create_glossary(name, description, language, usage, category)
         print(f"New glossary `{name}` created with id of `{glossary_guid}`")
 
-    except PyegeriaException as e:
+    except (PyegeriaAPIException, PyegeriaClientException) as e:
         print_basic_exception(e)
     finally:
         m_client.close_session()
@@ -82,7 +82,7 @@ def delete_glossary(server, url, userid, password, timeout, glossary_guid):
 
         click.echo(f"Deleted glossary: `{glossary_guid}`")
 
-    except PyegeriaException as e:
+    except (PyegeriaAPIException, PyegeriaClientException) as e:
         print_basic_exception(e)
     finally:
         m_client.close_session()
@@ -149,7 +149,7 @@ def create_term(server, url, userid, password, glossary_name, term_name, summary
             f"Successfully created term `{term_name}` with GUID `{term_guid}`, in glossary `{glossary_name}`.\n"
         )
         return term_guid
-    except PyegeriaException as e:
+    except (PyegeriaAPIException, PyegeriaClientException) as e:
         print_basic_exception(e)
     finally:
         m_client.close_session()
@@ -198,7 +198,7 @@ def update_term(server, url, userid, password, term_name, summary, description, 
             f"Successfully updated term `{term_name}` with GUID `{term_guid}`.\n"
         )
 
-    except PyegeriaException as e:
+    except (PyegeriaAPIException, PyegeriaClientException) as e:
         print_basic_exception(e)
     finally:
         m_client.close_session()
@@ -227,7 +227,7 @@ def update_term_status(server, url, userid, password, term_guid, status, timeout
             f"Successfully updated term {term_guid} with status `{status}`.\n"
         )
 
-    except PyegeriaException as e:
+    except (PyegeriaAPIException, PyegeriaClientException) as e:
         print_basic_exception(e)
     finally:
         m_client.close_session()
@@ -256,7 +256,7 @@ def delete_term(server, url, userid, password, timeout, term_guid):
             f"Deleted term with GUID: {term_guid} and Display Name: {term_info['glossaryTermProperties']['displayName']}"
         )
 
-    except PyegeriaException as e:
+    except (PyegeriaAPIException, PyegeriaClientException) as e:
         print_basic_exception(e)
     finally:
         m_client.close_session()
@@ -316,7 +316,7 @@ def import_terms_csv(
         if verbose:
             print(f"\n Verbose output:\n{json.dumps(result, indent=2)}")
 
-    except PyegeriaException as e:
+    except (PyegeriaAPIException, PyegeriaClientException) as e:
         print_basic_exception(e)
     finally:
         m_client.close_session()
@@ -352,7 +352,7 @@ def export_terms_csv(
             f"Exported {result} terms  from glossary: {glossary_guid} into {file_name}"
         )
 
-    except PyegeriaException as e:
+    except (PyegeriaAPIException, PyegeriaClientException) as e:
         print_basic_exception(e)
     finally:
         m_client.close_session()

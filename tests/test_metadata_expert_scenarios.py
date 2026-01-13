@@ -85,5 +85,8 @@ def run_scenario():
     except Exception as e:
         console.print(f"[bold red]Scenario failed: {e}[/bold red]")
 
-if __name__ == "__main__":
+def test_metadata_expert_scenarios():
     run_scenario()
+
+if __name__ == "__main__":
+    test_metadata_expert_scenarios()
