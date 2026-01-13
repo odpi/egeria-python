@@ -36,7 +36,7 @@ from pyegeria.models import (SearchStringRequestBody, FilterRequestBody, GetRequ
                              LevelIdentifierQueryBody, UpdatePropertiesRequestBody, MetadataSourceRequestBody,
                              UpdateEffectivityDatesRequestBody, OpenMetadataDeleteRequestBody, ArchiveRequestBody,
                              NewOpenMetadataElementRequestBody, NewRelatedElementsRequestBody,
-                             FindPropertyNamesRequestBody,
+                             FindPropertyNamesRequestBody, FindRequestBody,
                              ContentStatusSearchString, ContentStatusFilterRequestBody,
                              ActivityStatusSearchString, ActivityStatusFilterRequestBody,
                              ActivityStatusRequestBody, ActionRequestBody)
@@ -72,6 +72,7 @@ from pyegeria.models.models import (
     NewOpenMetadataElementRequestBody,
     NewRelatedElementsRequestBody,
     FindPropertyNamesRequestBody,
+    FindRequestBody,
     ContentStatusSearchString,
     ContentStatusFilterRequestBody,
     ActivityStatusSearchString,
@@ -190,6 +191,7 @@ class ServerClient(BaseServerClient):
         self._new_open_metadata_element_request_adapter = TypeAdapter(NewOpenMetadataElementRequestBody)
         self._new_related_elements_request_adapter = TypeAdapter(NewRelatedElementsRequestBody)
         self._find_property_names_request_adapter = TypeAdapter(FindPropertyNamesRequestBody)
+        self._find_request_adapter = TypeAdapter(FindRequestBody)
         self._deployment_status_search_request_adapter = TypeAdapter(DeploymentStatusSearchString)
         self._deployment_status_filter_request_adapter = TypeAdapter(DeploymentStatusFilterRequestBody)
         self._content_status_search_request_adapter = TypeAdapter(ContentStatusSearchString)

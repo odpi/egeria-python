@@ -17,7 +17,8 @@ from pyegeria.view.base_report_formats import select_report_spec, get_report_spe
 from pyegeria.models import LevelIdentifierQueryBody, FilterRequestBody, GetRequestBody, NewClassificationRequestBody, \
     DeleteClassificationRequestBody, NewRelationshipRequestBody, DeleteRelationshipRequestBody, \
     UpdateRelationshipRequestBody, SearchStringRequestBody, UpdateClassificationRequestBody, \
-    NewAttachmentRequestBody, UpdateElementRequestBody, FindPropertyNamesRequestBody, ResultsRequestBody
+    NewAttachmentRequestBody, UpdateElementRequestBody, FindPropertyNamesRequestBody, ResultsRequestBody, \
+    FindRequestBody, ContentStatusSearchString, ContentStatusFilterRequestBody
 from pyegeria.view.output_formatter import (
     generate_output,
     _extract_referenceable_properties,
@@ -10752,6 +10753,458 @@ body: dict | FilterRequestBody = None,
                 for_duplicate_processing,
                 effective_time,
                 time_out,
+            )
+        )
+
+
+    @dynamic_catch
+    async def _async_find_root_elements(
+        self,
+        metadata_element_type_name: str = None,
+        search_properties: dict = None,
+        match_classifications: dict = None,
+        start_from: int = 0,
+        page_size: int = 0,
+        output_format: str = "JSON",
+        report_spec: str | dict = None,
+        time_out: int = default_time_out,
+        body: dict | FindRequestBody = None,
+    ) -> list | str:
+        """Return a list of metadata elements that match the supplied criteria.
+        The results can be returned over many pages. Async version.
+
+        Parameters
+        ----------
+        metadata_element_type_name: str, optional
+            - name of the type of element to return.
+        search_properties: dict, optional
+            - structure containing the search criteria for the properties.
+        match_classifications: dict, optional
+            - structure containing the search criteria for the classifications.
+        start_from: int, default = 0
+            - index of the list to start from (0 for start).
+        page_size: int, default = 0
+            - maximum number of elements to return.
+        output_format: str, default = "JSON"
+            - one of "MD", "LIST", "FORM", "REPORT", "DICT", "MERMAID" or "JSON"
+        report_spec: str | dict, optional
+            - the desired output columns/fields to include.
+        time_out: int, default = default_time_out
+            - http request timeout for this request
+        body: dict | FindRequestBody, optional
+            - if specified, this takes precedence over other parameters.
+
+        Returns
+        -------
+        list | str
+            Returns a string if no elements found and a list of dict of elements with the results.
+
+        Notes:
+        ------
+        Sample body:
+        {
+          "class" : "FindRequestBody",
+          "metadataElementTypeName": "ValidValueDefinition",
+          "searchProperties": {
+            "class" : "SearchProperties",
+            "conditions": [ {
+              "property" : "identifier",
+              "operator": "LIKE",
+              "value": {
+                "class" : "PrimitiveTypePropertyValue",
+                "typeName" : "string",
+                "primitiveValue" : "deployedImplementationType"
+              }
+            }],
+            "matchCriteria": "ANY"
+          }
+        }
+        """
+        url = (
+            f"{base_path(self, self.view_server)}/elements/by-complex-query"
+        )
+
+        if isinstance(body, FindRequestBody):
+            validated_body = body
+        elif isinstance(body, dict):
+            validated_body = self._find_request_adapter.validate_python(body)
+        else:
+            body_dict = {
+                "class": "FindRequestBody",
+                "metadataElementTypeName": metadata_element_type_name,
+                "searchProperties": search_properties,
+                "matchClassifications": match_classifications,
+                "startFrom": start_from,
+                "pageSize": page_size,
+            }
+            validated_body = FindRequestBody.model_validate(body_dict)
+
+        json_body = validated_body.model_dump_json(indent=2, exclude_none=True)
+
+        response = await self._async_make_request("POST", url, json_body, time_out=time_out)
+        elements = response.json().get("elements", NO_ELEMENTS_FOUND)
+
+        if type(elements) is str or len(elements) == 0:
+            logger.info(NO_ELEMENTS_FOUND)
+            return NO_ELEMENTS_FOUND
+
+        if output_format.upper() != "JSON":
+            return self._generate_referenceable_output(
+                elements, None, metadata_element_type_name, output_format, report_spec
+            )
+        return elements
+
+    @dynamic_catch
+    def find_root_elements(
+        self,
+        metadata_element_type_name: str = None,
+        search_properties: dict = None,
+        match_classifications: dict = None,
+        start_from: int = 0,
+        page_size: int = 0,
+        output_format: str = "JSON",
+        report_spec: str | dict = None,
+        time_out: int = default_time_out,
+        body: dict | FindRequestBody = None,
+    ) -> list | str:
+        """Return a list of metadata elements that match the supplied criteria.
+        The results can be returned over many pages.
+
+        Parameters
+        ----------
+        metadata_element_type_name: str, optional
+            - name of the type of element to return.
+        search_properties: dict, optional
+            - structure containing the search criteria for the properties.
+        match_classifications: dict, optional
+            - structure containing the search criteria for the classifications.
+        start_from: int, default = 0
+            - index of the list to start from (0 for start).
+        page_size: int, default = 0
+            - maximum number of elements to return.
+        output_format: str, default = "JSON"
+            - one of "MD", "LIST", "FORM", "REPORT", "DICT", "MERMAID" or "JSON"
+        report_spec: str | dict, optional
+            - the desired output columns/fields to include.
+        time_out: int, default = default_time_out
+            - http request timeout for this request
+        body: dict | FindRequestBody, optional
+            - if specified, this takes precedence over other parameters.
+
+        Returns
+        -------
+        list | str
+            Returns a string if no elements found and a list of dict of elements with the results.
+        """
+        loop = asyncio.get_event_loop()
+        return loop.run_until_complete(
+            self._async_find_root_elements(
+                metadata_element_type_name,
+                search_properties,
+                match_classifications,
+                start_from,
+                page_size,
+                output_format,
+                report_spec,
+                time_out,
+                body,
+            )
+        )
+
+    @dynamic_catch
+    async def _async_find_authored_elements(
+        self,
+        search_string: str = "*",
+        content_status: str = "ACTIVE",
+        starts_with: bool = True,
+        ends_with: bool = False,
+        ignore_case: bool = False,
+        start_from: int = 0,
+        page_size: int = 0,
+        output_format: str = "JSON",
+        report_spec: str | dict = None,
+        time_out: int = default_time_out,
+        body: dict | ContentStatusSearchString = None,
+    ) -> list | str:
+        """Returns the list of authored elements matching the search string and optional content status.
+        Async version.
+
+        Parameters
+        ----------
+        search_string: str, default = "*"
+            - the search string to use to find matching authored elements
+        content_status: str, default = "ACTIVE"
+            - optional content status to filter by (e.g., ACTIVE)
+        starts_with: bool, default = True
+            - if True, the search string must match the start of the property value
+        ends_with: bool, default = False
+            - if True, the search string must match the end of the property value
+        ignore_case: bool, default = False
+            - if True, the search is case-insensitive
+        start_from: int, default = 0
+            - the starting point in the results list
+        page_size: int, default = 0
+            - the maximum number of results to return
+        output_format: str, default = "JSON"
+            - the format of the output (JSON, DICT, etc.)
+        report_spec: str | dict, optional
+            - the report specification to use for the output
+        time_out: int, default = default_time_out
+            - http request timeout for this request
+        body: dict | ContentStatusSearchString, optional
+            - the request body to use for the request. If specified, this takes precedence over other parameters.
+
+        Returns
+        -------
+        list | str
+            - a list of authored elements or a string message if no elements are found
+
+        Notes:
+        ------
+        Sample body:
+        {
+          "class" : "ContentStatusSearchString",
+          "searchString" : "xxx",
+          "contentStatus" : "ACTIVE",
+          "startsWith" : false,
+          "endsWith" : false,
+          "ignoreCase" : true,
+          "startFrom" : 0,
+          "pageSize": 0
+        }
+        """
+        url = (
+            f"{base_path(self, self.view_server)}/authored-elements/by-search-string"
+        )
+
+        if isinstance(body, ContentStatusSearchString):
+            validated_body = body
+        elif isinstance(body, dict):
+            validated_body = self._content_status_search_request_adapter.validate_python(body)
+        else:
+            # search_string = None if search_string == "*" else search_string
+            body_dict = {
+                "class": "ContentStatusSearchString",
+                "searchString": search_string,
+                "contentStatus": content_status,
+                "startsWith": starts_with,
+                "endsWith": ends_with,
+                "ignoreCase": ignore_case,
+                "startFrom": start_from,
+                "pageSize": page_size,
+            }
+            validated_body = ContentStatusSearchString.model_validate(body_dict)
+
+        json_body = validated_body.model_dump_json(indent=2, exclude_none=True)
+        response = await self._async_make_request("POST", url, json_body, time_out=time_out)
+        elements = response.json().get("elements", NO_ELEMENTS_FOUND)
+
+        if type(elements) is str or len(elements) == 0:
+            logger.info(NO_ELEMENTS_FOUND)
+            return NO_ELEMENTS_FOUND
+
+        if output_format.upper() != "JSON":
+            return self._generate_referenceable_output(
+                elements, search_string, "Referenceable", output_format, report_spec
+            )
+        return elements
+
+    @dynamic_catch
+    def find_authored_elements(
+        self,
+        search_string: str = "*",
+        content_status: str = "ACTIVE",
+        starts_with: bool = True,
+        ends_with: bool = False,
+        ignore_case: bool = False,
+        start_from: int = 0,
+        page_size: int = 0,
+        output_format: str = "JSON",
+        report_spec: str | dict = None,
+        time_out: int = default_time_out,
+        body: dict | ContentStatusSearchString = None,
+    ) -> list | str:
+        """Returns the list of authored elements matching the search string and optional content status.
+
+        Parameters
+        ----------
+        search_string: str, default = "*"
+            - the search string to use to find matching authored elements
+        content_status: str, default = "ACTIVE"
+            - optional content status to filter by (e.g., ACTIVE)
+        starts_with: bool, default = True
+            - if True, the search string must match the start of the property value
+        ends_with: bool, default = False
+            - if True, the search string must match the end of the property value
+        ignore_case: bool, default = False
+            - if True, the search is case-insensitive
+        start_from: int, default = 0
+            - the starting point in the results list
+        page_size: int, default = 0
+            - the maximum number of results to return
+        output_format: str, default = "JSON"
+            - the format of the output (JSON, DICT, etc.)
+        report_spec: str | dict, optional
+            - the report specification to use for the output
+        time_out: int, default = default_time_out
+            - http request timeout for this request
+        body: dict | ContentStatusSearchString, optional
+            - the request body to use for the request. If specified, this takes precedence over other parameters.
+
+        Returns
+        -------
+        list | str
+            - a list of authored elements or a string message if no elements are found
+        """
+        loop = asyncio.get_event_loop()
+        return loop.run_until_complete(
+            self._async_find_authored_elements(
+                search_string,
+                content_status,
+                starts_with,
+                ends_with,
+                ignore_case,
+                start_from,
+                page_size,
+                output_format,
+                report_spec,
+                time_out,
+                body,
+            )
+        )
+
+    @dynamic_catch
+    async def _async_find_authored_elements_by_category(
+        self,
+        filter_string: str = "*",
+        content_status: str = "ACTIVE",
+        start_from: int = 0,
+        page_size: int = 0,
+        output_format: str = "JSON",
+        report_spec: str | dict = None,
+        time_out: int = default_time_out,
+        body: dict | ContentStatusFilterRequestBody = None,
+    ) -> list | str:
+        """Returns the list of authored elements matching the category and optional content status.
+        Async version.
+
+        Parameters
+        ----------
+        filter_string: str, default = "*"
+            - the category value to use to find matching authored elements
+        content_status: str, default = "ACTIVE"
+            - optional content status to filter by (e.g., ACTIVE)
+        start_from: int, default = 0
+            - the starting point in the results list
+        page_size: int, default = 0
+            - the maximum number of results to return
+        output_format: str, default = "JSON"
+            - the format of the output (JSON, DICT, etc.)
+        report_spec: str | dict, optional
+            - the report specification to use for the output
+        time_out: int, default = default_time_out
+            - http request timeout for this request
+        body: dict | ContentStatusFilterRequestBody, optional
+            - the request body to use for the request. If specified, this takes precedence over other parameters.
+
+        Returns
+        -------
+        list | str
+            - a list of authored elements or a string message if no elements are found
+
+        Notes:
+        ------
+        Sample body:
+        {
+          "class" : "ContentStatusFilterRequestBody",
+          "filter" : "xxx",
+          "contentStatus" : "ACTIVE",
+          "startFrom" : 0,
+          "pageSize": 0
+        }
+        """
+        url = (
+            f"{base_path(self, self.view_server)}/authored-elements/by-category"
+        )
+
+        if isinstance(body, ContentStatusFilterRequestBody):
+            validated_body = body
+        elif isinstance(body, dict):
+            validated_body = self._content_status_filter_request_adapter.validate_python(body)
+        else:
+            # filter_string = None if filter_string == "*" else filter_string
+            body_dict = {
+                "class": "ContentStatusFilterRequestBody",
+                "filter": filter_string,
+                "contentStatus": content_status,
+                "startFrom": start_from,
+                "pageSize": page_size,
+            }
+            validated_body = ContentStatusFilterRequestBody.model_validate(body_dict)
+
+        json_body = validated_body.model_dump_json(indent=2, exclude_none=True)
+        response = await self._async_make_request("POST", url, json_body, time_out=time_out)
+        elements = response.json().get("elements", NO_ELEMENTS_FOUND)
+
+        if type(elements) is str or len(elements) == 0:
+            logger.info(NO_ELEMENTS_FOUND)
+            return NO_ELEMENTS_FOUND
+
+        if output_format.upper() != "JSON":
+            return self._generate_referenceable_output(
+                elements, filter_string, "Referenceable", output_format, report_spec
+            )
+        return elements
+
+    @dynamic_catch
+    def find_authored_elements_by_category(
+        self,
+        filter_string: str = "*",
+        content_status: str = "ACTIVE",
+        start_from: int = 0,
+        page_size: int = 0,
+        output_format: str = "JSON",
+        report_spec: str | dict = None,
+        time_out: int = default_time_out,
+        body: dict | ContentStatusFilterRequestBody = None,
+    ) -> list | str:
+        """Returns the list of authored elements matching the category and optional content status.
+
+        Parameters
+        ----------
+        filter_string: str, default = "*"
+            - the category value to use to find matching authored elements
+        content_status: str, default = "ACTIVE"
+            - optional content status to filter by (e.g., ACTIVE)
+        start_from: int, default = 0
+            - the starting point in the results list
+        page_size: int, default = 0
+            - the maximum number of results to return
+        output_format: str, default = "JSON"
+            - the format of the output (JSON, DICT, etc.)
+        report_spec: str | dict, optional
+            - the report specification to use for the output
+        time_out: int, default = default_time_out
+            - http request timeout for this request
+        body: dict | ContentStatusFilterRequestBody, optional
+            - the request body to use for the request. If specified, this takes precedence over other parameters.
+
+        Returns
+        -------
+        list | str
+            - a list of authored elements or a string message if no elements are found
+        """
+        loop = asyncio.get_event_loop()
+        return loop.run_until_complete(
+            self._async_find_authored_elements_by_category(
+                filter_string,
+                content_status,
+                start_from,
+                page_size,
+                output_format,
+                report_spec,
+                time_out,
+                body,
             )
         )
 
