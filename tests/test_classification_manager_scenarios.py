@@ -128,7 +128,7 @@ class ClassificationManagerScenarioTester:
                         body={
                             "class": "NewClassificationRequestBody",
                             "properties": {
-                                "class": "OwnerProperties",
+                                "class": "OwnershipProperties",
                                 "owner": USER_ID,
                                 "ownerTypeName": "USER_ID"
                             }

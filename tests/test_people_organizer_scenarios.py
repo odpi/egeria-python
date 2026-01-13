@@ -207,10 +207,13 @@ class PeopleOrganizerScenarioTester:
         console.print("\n")
         console.print(table)
 
-if __name__ == "__main__":
+def test_people_organizer_scenarios():
     tester = PeopleOrganizerScenarioTester()
     if tester.setup():
         tester.run_scenario(tester.scenario_peer_person_relationship)
         tester.run_scenario(tester.scenario_team_structure_relationship)
         tester.print_summary()
         tester.teardown()
+
+if __name__ == "__main__":
+    test_people_organizer_scenarios()

@@ -108,12 +108,8 @@ def list_user_ids(
         with console.pager(styles=True):
             console.print(generate_table())
 
-    except (
-        InvalidParameterException,
-        PropertyServerException,
-        UserNotAuthorizedException,
-    ) as e:
-        print_exception_response(e)
+    except (PyegeriaAPIException, PyegeriaClientException) as e:
+        print_basic_exception(e)
         print("Perhaps the type name isn't known")
     finally:
         c_client.close_session()

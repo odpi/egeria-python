@@ -13,7 +13,7 @@ A running Egeria environment is needed to run these tests.
 
 from rich import print, print_json
 
-from pyegeria.omvs.my_profile_omvs import MyProfile as EgeriaMy
+from pyegeria.omvs.my_profile import MyProfile as EgeriaMy
 from pyegeria.core._exceptions import (
     PyegeriaInvalidParameterException,
     PyegeriaAPIException,

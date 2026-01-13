@@ -22,7 +22,7 @@ from pyegeria.core._exceptions import (
     PyegeriaUnauthorizedException,
     print_basic_exception as print_exception_response,
 )
-from pyegeria.omvs.my_profile_omvs import MyProfile
+from pyegeria.omvs.my_profile import MyProfile
 
 disable_ssl_warnings = True
 
@@ -66,11 +66,11 @@ class TestMyProfile:
 
             token = m_client.create_egeria_bearer_token(self.good_user_2, "secret")
 
-            response = m_client.get_my_profile()
+            response = m_client.get_my_profile(output_format="JSON",report_spec="Actor-Profiles")
 
             # resp_str = json.loads(response)
             id_list = []
-            if type(response) is dict:
+            if isinstance(response, list | dict):
                 print_json(data=response)
             elif type(response) is str:
                 print("\n\n" + response)

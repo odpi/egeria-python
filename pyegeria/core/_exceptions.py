@@ -386,8 +386,16 @@ def print_exception_table(e: PyegeriaException):
 
 def print_basic_exception(e: PyegeriaException):
     """Prints the exception response"""
+    standard_errors = ["OMAG-REPOSITORY-HANDLER-404-001",
+                       "OMAG-REPOSITORY-HANDLER-404-007",
+    ]
+    if e.response_egeria_msg_id and e.response_egeria_msg_id in standard_errors:
+        print(f"\n==> {e.response_egeria_msg}")
+        return
+
     related_code = e.related_http_code if hasattr(e, "related_http_code") else ""
     http_reason = e.response.text if e.response else ""
+
     table = Table(title=f"Exception: {e.__class__.__name__}", show_lines=True, header_style="bold", box=box.HEAVY_HEAD)
     table.caption = e.pyegeria_code
     table.add_column("Facet", justify="center")
@@ -423,7 +431,7 @@ def print_basic_exception(e: PyegeriaException):
                           format_dict_to_string(related_response.get('exceptionUserAction',"")) if isinstance(related_response,dict) else related_response)
 
             exception_msg_id = related_response.get("exceptionErrorMessageId", None) if isinstance(related_response,dict) else related_response
-        table.add_row("Egeria Exception", exception_msg_id)
+        table.add_row("Egeria Exception Message Id", exception_msg_id)
         table.add_row("Pyegeria Message", e.message)
         console.print(table)
 

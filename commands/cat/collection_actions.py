@@ -13,9 +13,9 @@ import os
 import click
 
 
-from pyegeria import EgeriaTech, body_slimmer, settings
-from pyegeria.core._exceptions import (
-    PyegeriaException, print_basic_exception
+from pyegeria import (
+    EgeriaTech, body_slimmer, settings,
+    PyegeriaAPIException, PyegeriaClientException, print_basic_exception, print_exception_table
 )
 app_config = settings.Environment
 
@@ -50,7 +50,7 @@ def add_element_to_collection(server, url, userid, password, timeout, element_gu
             f"Added element with GUID: {element_guid} to Collection with GUID: {collection_guid}\n"
         )
 
-    except PyegeriaException as e:
+    except (PyegeriaAPIException, PyegeriaClientException) as e:
         print_basic_exception(e)
     finally:
         m_client.close_session()
@@ -83,7 +83,7 @@ def remove_element_from_collection(server, url, userid, password, timeout, eleme
             f"Removed term with GUID: {element_guid} from Collection with GUID: {collection_guid}\n"
         )
 
-    except PyegeriaException as e:
+    except (PyegeriaAPIException, PyegeriaClientException) as e:
         print_basic_exception(e)
     finally:
         m_client.close_session()
@@ -130,7 +130,7 @@ def create_collection(
                                                       prop = [kind])
         print(f"New categry \'{name}\' created with id of \'{collection_guid}\'")
 
-    except PyegeriaException as e:
+    except (PyegeriaAPIException, PyegeriaClientException) as e:
         print_basic_exception(e)
     finally:
         m_client.close_session()
@@ -167,7 +167,7 @@ def update_collection(collection_guid, name, description, category, server, url,
 
         click.echo(f"Updated glossary: {collection_guid}")
 
-    except PyegeriaException as e:
+    except (PyegeriaAPIException, PyegeriaClientException) as e:
         print_basic_exception(e)
     finally:
         m_client.close_session()
@@ -191,7 +191,7 @@ def delete_collection(server, url, userid, password, timeout, collection_guid):
 
         click.echo(f"Deleted collection: {collection_guid}")
 
-    except PyegeriaException as e:
+    except (PyegeriaAPIException, PyegeriaClientException) as e:
         print_basic_exception(e)
     finally:
         m_client.close_session()

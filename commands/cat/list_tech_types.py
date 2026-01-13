@@ -21,7 +21,7 @@ from rich.table import Table
 from pyegeria import (
     AutomatedCuration,
     settings,
-    PyegeriaException,
+    PyegeriaAPIException, PyegeriaClientException,
     print_basic_exception
 )
 

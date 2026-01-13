@@ -12,10 +12,10 @@ from rich.table import Table
 
 from pyegeria import (
     EgeriaTech,
-    PyegeriaException,
+    PyegeriaAPIException, PyegeriaClientException,
     print_basic_exception,
     settings,
-    config_logging
+    config_logging, PyegeriaException
 )
 
 EGERIA_USER = os.environ.get("EGERIA_USER", "erinoverview")
@@ -122,9 +122,7 @@ def list_deployed_databases(
                 if type(rel_elements) is list:
                     for rel_element in rel_elements:
                         count += 1
-                        rel_type = rel_element["relatedElement"]["elementHeader"][
-                            "type"
-                        ]["typeName"]
+                        rel_type = rel_element["elementHeader"]["type"]["typeName"]
                         rel_guid = rel_element["relatedElement"]["elementHeader"][
                             "guid"
                         ]

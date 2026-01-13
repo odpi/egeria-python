@@ -20,7 +20,8 @@ from rich.text import Text
 
 from pyegeria import (
     EgeriaTech, settings,
-    PyegeriaException, print_basic_exception, )
+    PyegeriaAPIException, PyegeriaClientException, print_basic_exception, print_exception_table
+)
 from pyegeria.core._globals import NO_GLOSSARIES_FOUND
 app_config = settings.Environment
 # config_logging()
@@ -108,9 +109,7 @@ def display_glossary_terms(
             print(f"\n==> Terms output written to {full_file_path}")
             return
 
-    except (
-        PyegeriaException
-        ) as e:
+    except (PyegeriaAPIException, PyegeriaClientException) as e:
         print_basic_exception(e)
 
 
@@ -208,9 +207,7 @@ def display_glossary_terms(
         with console.pager(styles=True):
             console.print(generate_table(search_string, glossary_guid))
 
-    except (
-        PyegeriaException
-    ) as e:
+    except (PyegeriaAPIException, PyegeriaClientException) as e:
         print_basic_exception(e)
 
 

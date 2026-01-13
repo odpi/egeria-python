@@ -22,7 +22,7 @@ from rich.table import Table
 from pyegeria import (
     ClassificationManager,
     ProjectManager,
-    PyegeriaException,
+    PyegeriaAPIException, PyegeriaClientException,
     print_basic_exception, print_validation_error,
 )
 

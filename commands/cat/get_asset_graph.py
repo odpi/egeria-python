@@ -14,7 +14,9 @@ from rich.prompt import Prompt
 
 from commands.cat.run_report import list_generic
 from pyegeria.core.config import settings
-from pyegeria.core._exceptions import PyegeriaException, print_basic_exception
+from pyegeria import (
+    PyegeriaAPIException, PyegeriaClientException, print_basic_exception, print_exception_table, PyegeriaException
+)
 
 EGERIA_USER = os.environ.get("EGERIA_USER", "erinoverview")
 EGERIA_USER_PASSWORD = os.environ.get("EGERIA_USER_PASSWORD", "secret")
@@ -48,7 +50,12 @@ def asset_viewer(
                  render_table=render_table, write_file = write_file, table_caption=table_caption, use_pager=use_pager,
                      width=width, jupyter=jupyter, prompt_missing=prompt_missing)
 
-    except PyegeriaException as e:
+    except PyegeriaAPIException as e:
+        if e.response_egeria_msg_id == "OMAG-REPOSITORY-HANDLER-404-001":
+            print(e.response_egeria_msg)
+            return
+
+    except (PyegeriaException, PyegeriaClientException) as e:
         print_basic_exception(e)
 
 

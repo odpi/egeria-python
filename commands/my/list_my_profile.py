@@ -17,7 +17,8 @@ from rich.panel import Panel
 from rich.table import Table
 from rich.tree import Tree
 
-from pyegeria.omvs.my_profile_omvs import MyProfile
+from pyegeria import print_basic_exception, PyegeriaException
+from pyegeria.omvs.my_profile import MyProfile
 
 disable_ssl_warnings = True
 EGERIA_METADATA_STORE = os.environ.get("EGERIA_METADATA_STORE", "active-metadata-store")
@@ -57,7 +58,7 @@ def display_my_profile(
 
         console = Console(width=width, force_terminal=not jupyter, soft_wrap=True)
 
-        profile_props = my_profiles.get("profileProperties", "---")
+        profile_props = my_profiles.get("properties", "---")
         name = profile_props["fullName"]
 
         tree = Tree(
@@ -86,12 +87,12 @@ def display_my_profile(
         id_list_md = ""
         for identities in my_profiles["userIdentities"]:
             id_list_md += (
-                f"* {identities['userIdentity']['properties']['userId']}\n"
-                f"* {identities['userIdentity']['elementHeader']['guid']}\n"
+                f"* {identities['relatedElement']['properties']['userId']}\n"
+                f"* {identities['relatedElement']['elementHeader']['guid']}\n"
             )
         t2 = tree.add(Panel(Markdown(id_list_md), title="Identities", expand=False))
 
-        contact_methods = my_profiles["contactMethods"]
+        contact_methods = my_profiles["contactDetails"]
         for method in contact_methods:
             contact = method["properties"]
             contact_methods_md = ""
@@ -124,11 +125,9 @@ def display_my_profile(
         print(tree)
 
     except (
-        InvalidParameterException,
-        PropertyServerException,
-        UserNotAuthorizedException,
+        PyegeriaException,
     ) as e:
-        print_exception_response(e)
+        print_basic_exception(e)
     finally:
         m_client.close_session()
 

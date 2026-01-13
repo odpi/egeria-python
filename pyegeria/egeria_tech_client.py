@@ -5,32 +5,43 @@ Copyright Contributors to the ODPi Egeria project.
 The Tech Client is a facade that provides a unified interface to the most 
 commonly used technical OMVS modules.
 """
+from pyegeria.omvs.action_author import ActionAuthor
+from pyegeria.omvs.actor_manager import ActorManager
+from pyegeria.omvs.asset_catalog import AssetCatalog
+from pyegeria.omvs.asset_maker import AssetMaker
 from pyegeria.omvs.automated_curation import AutomatedCuration
 from pyegeria.omvs.classification_manager import ClassificationManager
-from pyegeria.omvs.data_designer import DataDesigner
-from pyegeria.omvs.metadata_explorer_omvs import MetadataExplorer
-from pyegeria.omvs.metadata_expert import MetadataExpert
-from pyegeria.omvs.registered_info import RegisteredInfo
-from pyegeria.omvs.runtime_manager import RuntimeManager
-from pyegeria.omvs.solution_architect import SolutionArchitect
-from pyegeria.omvs.template_manager_omvs import TemplateManager
-from pyegeria.omvs.valid_metadata import ValidMetadataManager
-from pyegeria.omvs.glossary_manager import GlossaryManager
-from pyegeria.omvs.governance_officer import GovernanceOfficer
 from pyegeria.omvs.collection_manager import CollectionManager
-from pyegeria.omvs.external_links import ExternalReferences
-from pyegeria.omvs.actor_manager import ActorManager
-from pyegeria.omvs.time_keeper import TimeKeeper
-from pyegeria.omvs.product_manager import ProductManager
-from pyegeria.omvs.location_arena import Location
+from pyegeria.omvs.community_matters_omvs import CommunityMatters
+from pyegeria.omvs.data_designer import DataDesigner
 from pyegeria.omvs.data_discovery import DataDiscovery
 from pyegeria.omvs.data_engineer import DataEngineer
 from pyegeria.omvs.digital_business import DigitalBusiness
+from pyegeria.omvs.external_links import ExternalReferences
+from pyegeria.omvs.feedback_manager import FeedbackManager
+from pyegeria.omvs.glossary_manager import GlossaryManager
+from pyegeria.omvs.governance_officer import GovernanceOfficer
 from pyegeria.omvs.lineage_linker import LineageLinker
+from pyegeria.omvs.location_arena import Location
+from pyegeria.omvs.metadata_expert import MetadataExpert
+from pyegeria.omvs.metadata_explorer_omvs import MetadataExplorer
+from pyegeria.omvs.my_profile import MyProfile
+from pyegeria.omvs.notification_manager import NotificationManager
+from pyegeria.omvs.people_organizer import PeopleOrganizer
+from pyegeria.omvs.product_manager import ProductManager
+from pyegeria.omvs.project_manager import ProjectManager
+from pyegeria.omvs.reference_data import ReferenceDataManager
+from pyegeria.omvs.registered_info import RegisteredInfo
+from pyegeria.omvs.runtime_manager import RuntimeManager
 from pyegeria.omvs.schema_maker import SchemaMaker
-from pyegeria.omvs.valid_type_lists import ValidTypeLists
+from pyegeria.omvs.solution_architect import SolutionArchitect
+from pyegeria.omvs.specification_properties import SpecificationProperties
+from pyegeria.omvs.subject_area import SubjectArea
+from pyegeria.omvs.template_manager_omvs import TemplateManager
+from pyegeria.omvs.time_keeper import TimeKeeper
+from pyegeria.omvs.valid_metadata import ValidMetadataManager
 from pyegeria.omvs.valid_metadata_lists import ValidMetadataLists
-from pyegeria.omvs.action_author import ActionAuthor
+from pyegeria.omvs.valid_type_lists import ValidTypeLists
 from pyegeria.core._globals import NO_ELEMENTS_FOUND
 
 class EgeriaTech:
@@ -78,8 +89,10 @@ class EgeriaTech:
             "expert": MetadataExpert,
             "sol_arch": SolutionArchitect,
             "designer": DataDesigner,
+            "data_designer": DataDesigner,
             "glossary": GlossaryManager,
             "templates": TemplateManager,
+            "template_manager": TemplateManager,
             "gov_officer": GovernanceOfficer,
             "collections": CollectionManager,
             "external_references": ExternalReferences,
@@ -93,8 +106,26 @@ class EgeriaTech:
             "lineage_linker": LineageLinker,
             "schema_maker": SchemaMaker,
             "valid_types": ValidTypeLists,
+            "valid_type_lists": ValidTypeLists,
             "valid_metadata_lists": ValidMetadataLists,
             "action_author": ActionAuthor,
+            "asset_catalog": AssetCatalog,
+            "asset_maker": AssetMaker,
+            "community": CommunityMatters,
+            "community_matters": CommunityMatters,
+            "feedback": FeedbackManager,
+            "feedback_manager": FeedbackManager,
+            "my_profile": MyProfile,
+            "notifications": NotificationManager,
+            "notification_manager": NotificationManager,
+            "people_organizer": PeopleOrganizer,
+            "projects": ProjectManager,
+            "project_manager": ProjectManager,
+            "reference_data": ReferenceDataManager,
+            "specification_properties": SpecificationProperties,
+            "subject_area": SubjectArea,
+            "valid": ValidMetadataManager,
+            "valid_metadata": ValidMetadataManager,
         }
         self._instantiated_clients = {}
         self.NO_ELEMENTS_FOUND = NO_ELEMENTS_FOUND

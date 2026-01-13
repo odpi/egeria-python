@@ -13,10 +13,10 @@ from rich.table import Table
 
 from pyegeria import (
     EgeriaTech,
-    PyegeriaException,
+    PyegeriaAPIException, PyegeriaClientException,
     print_basic_exception,
     settings,
-    config_logging
+    config_logging, PyegeriaException
 )
 
 
