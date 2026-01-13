@@ -455,6 +455,18 @@ class SearchStringRequestBody(ResultsRequestBody):
     ignore_case: bool = False
 
 
+class FindRequestBody(ResultsRequestBody):
+    class_: Annotated[Literal["FindRequestBody"], Field(alias="class")]
+    metadata_element_type_name: str | None = Field(None, alias="metadataElementTypeName")
+    metadata_element_subtype_names: list[str] | None = Field(
+        None, alias="metadataElementSubtypeNames"
+    )
+    search_properties: dict | None = Field(None, alias="searchProperties")
+    match_classifications: dict | None = Field(None, alias="matchClassifications")
+    as_of_time: datetime | None = Field(None, alias="asOfTime")
+    effective_time: datetime | None = Field(None, alias="effectiveTime")
+
+
 class FindPropertyNamesRequestBody(ResultsRequestBody):
     class_: Annotated[Literal["FindPropertyNamesProperties"], Field(alias="class")]
     property_value: str | None = None
