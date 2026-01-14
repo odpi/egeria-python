@@ -1203,6 +1203,12 @@ wheels = [
 ]
 
 [[package]]
+name = "optional"
+version = "0.0.1"
+source = { registry = "https://pypi.org/simple" }
+sdist = { url = "https://files.pythonhosted.org/packages/81/6d/6e5de8c53a36ffb43bebef8dfded5ca782e41010489104e4a90962f080a5/optional-0.0.1.tar.gz", hash = "sha256:2d8532e9f688b936be1ae13f81e57347631017831fc49f358e8f3de975d353eb", size = 1476, upload-time = "2015-03-30T07:14:42.495Z" }
+
+[[package]]
 name = "packaging"
 version = "25.0"
 source = { registry = "https://pypi.org/simple" }
@@ -1527,6 +1533,7 @@ dependencies = [
     { name = "loguru" },
     { name = "markers" },
     { name = "mcp" },
+    { name = "optional" },
     { name = "psycopg2-binary" },
     { name = "pydantic" },
     { name = "pydantic-settings" },
@@ -1564,6 +1571,7 @@ requires-dist = [
     { name = "loguru" },
     { name = "markers", specifier = ">=0.3.0" },
     { name = "mcp", specifier = ">=0.1" },
+    { name = "optional", specifier = ">=0.0.1" },
     { name = "psycopg2-binary", specifier = ">=2.9.11" },
     { name = "pydantic", specifier = ">=2.12.3" },
     { name = "pydantic-settings", specifier = ">=2.10.1" },

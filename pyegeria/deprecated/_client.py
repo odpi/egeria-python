@@ -769,7 +769,7 @@ class Client:
         )
         return result
 
-    def __create_qualified_name__(self, type: str, display_name: str, local_qualifier: str = None,
+    def __create_qualified_name__(self, type_name: str, display_name: str, local_qualifier: str = None,
                                   version_identifier: str = None) -> str:
         """Helper function to create a qualified name for a given type and display name.
            If present, the local qualifier will be prepended to the qualified name."""

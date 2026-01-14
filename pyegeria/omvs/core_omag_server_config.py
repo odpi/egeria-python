@@ -14,6 +14,7 @@ import json
 import psycopg2
 from psycopg2 import sql
 from psycopg2.extensions import ISOLATION_LEVEL_AUTOCOMMIT
+from typing import Any, Optional
 
 from pyegeria.core._base_platform_client import BasePlatformClient
 from pyegeria.core._globals import enable_ssl_check
@@ -44,7 +45,7 @@ class CoreServerConfig(BasePlatformClient):
         server_name: str,
         platform_url: str,
         user_id: str,
-        user_pwd: str = None,
+        user_pwd: Optional[str] = None,
         verify_flag: bool = enable_ssl_check,
     ):
         self.core_command_root: str
@@ -290,7 +291,7 @@ class CoreServerConfig(BasePlatformClient):
         self,
         access_service_name: str,
         access_service_options: dict = None,
-        server_name: str = None,
+        server_name: Optional[str] = None,
     ) -> None:
         """Enable a single access service. This access service will send notifications if it is part
             of its implementation.
@@ -338,7 +339,7 @@ class CoreServerConfig(BasePlatformClient):
         self,
         access_service_name: str,
         access_service_options: dict = None,
-        server_name: str = None,
+        server_name: Optional[str] = None,
     ) -> None:
         """Enable a single access service. Notifications, if supported, are disabled.
 
@@ -1635,7 +1636,7 @@ class CoreServerConfig(BasePlatformClient):
         local_server_user_id: str,
         local_server_password: str,
         max_page_size: int = 0,
-        server_name: str = None,
+        server_name: Optional[str] = None,
     ):
         """Sets the basic server properties.
         Parameters
@@ -1911,7 +1912,7 @@ class CoreServerConfig(BasePlatformClient):
         self,
         mdr_server_name: str,
         mdr_server_platform_root_url: str,
-        server_name: str = None,
+        server_name: Optional[str] = None,
     ) -> None:
         """Enable all view services that are registered with this OMAG server platform.
 
@@ -2074,7 +2075,7 @@ class CoreServerConfig(BasePlatformClient):
         service_url_marker: str,
         mdr_server_name: str,
         mdr_server_platform_root_url: str,
-        server_name: str = None,
+        server_name: Optional[str] = None,
     ) -> None:
         """Configure a view service specified by the service_url_marker with basic properties.
 
@@ -2431,7 +2432,7 @@ class CoreServerConfig(BasePlatformClient):
         omag_server_name: str,
         omag_server_platform_root_url: str,
         qualified_name: str,
-        server_name: str = None,
+        server_name: Optional[str] = None,
     ) -> None:
         """Add configuration for a single integration group to the server's config document.
 
@@ -2526,7 +2527,7 @@ class CoreServerConfig(BasePlatformClient):
         self,
         mdr_server_name: str,
         mdr_server_platform_root_url: str,
-        server_name: str = None,
+        server_name: Optional[str] = None,
     ) -> None:
         """Set up the name and platform URL root for the metadata server running the Governance Engine OMAS that
          provides the governance engine definitions used by the engine services.

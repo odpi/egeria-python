@@ -86,7 +86,7 @@ def display_data_struct(
             action = "Dict"
         elif output_format == "MERMAID":
             action = "Mermaid"
-        filter = search_string.strip() if search_string != "*" else None
+        filter_string = search_string.strip() if search_string != "*" else None
 
         body = {
             "class": "FilterRequestBody",
@@ -97,7 +97,7 @@ def display_data_struct(
             "limitResultsByStatus": ["ACTIVE"],
             "sequencingOrder": "PROPERTY_ASCENDING",
             "sequencingProperty": "qualifiedName",
-            "filter": filter
+            "filter": filter_string
             }
 
         if output_format != "TABLE":

@@ -9,7 +9,7 @@ import asyncio
 
 from httpx import Response
 from loguru import logger
-
+from typing import Any, Optional
 from pyegeria.core._exceptions import PyegeriaException, PyegeriaInvalidParameterException
 from pyegeria.core._server_client import ServerClient
 from pyegeria.core._globals import default_time_out, NO_ELEMENTS_FOUND
@@ -73,9 +73,9 @@ class ClassificationManager(ServerClient):
             self,
             view_server: str,
             platform_url: str,
-            user_id: str = None,
-            user_pwd: str = None,
-            token: str = None,
+            user_id: Optional[str] = None,
+            user_pwd: Optional[str] = None,
+            token: Optional[str] = None,
     ):
         self.view_server = view_server
         self.platform_url = platform_url
@@ -128,7 +128,7 @@ class ClassificationManager(ServerClient):
     @dynamic_catch
     def _generate_referenceable_output(self,
                                        elements: dict | list[dict],
-                                       filter: str | None,
+        filter_string : str | None,
                                        element_type_name: str | None,
                                        output_format: str = "DICT",
                                        report_spec: dict | str | None = None) -> str | list[dict]:
@@ -183,7 +183,7 @@ class ClassificationManager(ServerClient):
     async def _async_get_classified_elements_by(
             self,
             classification_name: str,
-            body: dict | LevelIdentifierQueryBody = None,
+            body: Optional[dict | LevelIdentifierQueryBody] = None,
             output_format: str = "JSON",
             report_spec: dict | str = None
     ) -> list | str:
@@ -246,7 +246,7 @@ class ClassificationManager(ServerClient):
     def get_classified_elements_by(
             self,
             classification_name: str,
-            body: dict | LevelIdentifierQueryBody = None,
+            body: Optional[dict | LevelIdentifierQueryBody] = None,
             output_format: str = "JSON",
             report_spec: dict | str = None
     ) -> list | str:
@@ -438,7 +438,7 @@ class ClassificationManager(ServerClient):
     async def _async_get_owners_elements(
             self,
             owner_name: str,
-            body: dict | FilterRequestBody = None,
+            body: Optional[dict | FilterRequestBody] = None,
             output_format: str = "JSON",
             report_spec: dict | str = None
     ) -> list | str:
@@ -498,7 +498,7 @@ class ClassificationManager(ServerClient):
     def get_owners_elements(
             self,
             owner_name: str,
-body: dict | FilterRequestBody = None,
+body: Optional[dict | FilterRequestBody] = None,
             output_format: str = "JSON",
             report_spec: dict | str = None
     ) -> list | str:
@@ -1091,7 +1091,7 @@ body: dict | FilterRequestBody = None,
     async def _async_get_governed_elements(
             self,
             gov_def_guid: str,
-            body: dict | ResultsRequestBody = None,
+            body: Optional[dict | ResultsRequestBody] = None,
             output_format: str = "JSON",
             report_spec: dict | str = None,
             start_from: int = 0,
@@ -1155,7 +1155,7 @@ body: dict | FilterRequestBody = None,
     def get_governed_elements(
             self,
             gov_def_guid: str,
-            body: dict | ResultsRequestBody = None,
+            body: Optional[dict | ResultsRequestBody] = None,
             output_format: str = "JSON",
             report_spec: dict | str = None,
             start_from: int = 0,
@@ -1218,7 +1218,7 @@ body: dict | FilterRequestBody = None,
     async def _async_get_governed_by_definitions(
             self,
             element_guid: str,
-            body: dict | ResultsRequestBody = None,
+            body: Optional[dict | ResultsRequestBody] = None,
             output_format: str = "JSON",
             report_spec: dict | str = None,
             start_from: int = 0,
@@ -1282,7 +1282,7 @@ body: dict | FilterRequestBody = None,
     def get_governed_by_definitions(
             self,
             element_guid: str,
-            body: dict | ResultsRequestBody = None,
+            body: Optional[dict | ResultsRequestBody] = None,
             output_format: str = "JSON",
             report_spec: dict | str = None,
             start_from: int = 0,
@@ -1345,7 +1345,7 @@ body: dict | FilterRequestBody = None,
     async def _async_get_source_elements(
             self,
             element_guid: str,
-            body: dict | ResultsRequestBody = None,
+            body: Optional[dict | ResultsRequestBody] = None,
             output_format: str = "JSON",
             report_spec: dict | str = None,
             start_from: int = 0,
@@ -1412,7 +1412,7 @@ body: dict | FilterRequestBody = None,
     def get_source_elements(
             self,
             element_guid: str,
-            body: dict | ResultsRequestBody = None,
+            body: Optional[dict | ResultsRequestBody] = None,
             output_format: str = "JSON",
             report_spec: dict | str = None,
             start_from: int = 0,
@@ -1478,7 +1478,7 @@ body: dict | FilterRequestBody = None,
     async def _async_get_elements_sourced_from(
             self,
             element_guid: str,
-            body: dict | ResultsRequestBody = None,
+            body: Optional[dict | ResultsRequestBody] = None,
             output_format: str = "JSON",
             report_spec: dict | str = None,
             start_from: int = 0,
@@ -1544,7 +1544,7 @@ body: dict | FilterRequestBody = None,
     def get_elements_sourced_from(
             self,
             element_guid: str,
-            body: dict | ResultsRequestBody = None,
+            body: Optional[dict | ResultsRequestBody] = None,
             output_format: str = "JSON",
             report_spec: dict | str = None,
             start_from: int = 0,
@@ -1609,7 +1609,7 @@ body: dict | FilterRequestBody = None,
     async def _async_get_scopes(
             self,
             element_guid: str,
-            body: dict | ResultsRequestBody = None,
+            body: Optional[dict | ResultsRequestBody] = None,
             output_format: str = "JSON",
             report_spec: dict | str = None,
             start_from: int = 0,
@@ -1673,7 +1673,7 @@ body: dict | FilterRequestBody = None,
     def get_scopes(
             self,
             element_guid: str,
-            body: dict | ResultsRequestBody = None,
+            body: Optional[dict | ResultsRequestBody] = None,
             output_format: str = "JSON",
             report_spec: dict | str = None,
             start_from: int = 0,
@@ -1736,7 +1736,7 @@ body: dict | FilterRequestBody = None,
     async def _async_get_scoped_elements(
             self,
             scope_guid: str,
-            body: dict | ResultsRequestBody = None,
+            body: Optional[dict | ResultsRequestBody] = None,
             output_format: str = "JSON",
             report_spec: dict | str = None,
             start_from: int = 0,
@@ -1800,7 +1800,7 @@ body: dict | FilterRequestBody = None,
     def get_scoped_elements(
             self,
             scope_guid: str,
-            body: dict | ResultsRequestBody = None,
+            body: Optional[dict | ResultsRequestBody] = None,
             output_format: str = "JSON",
             report_spec: dict | str = None,
             start_from: int = 0,
@@ -1862,7 +1862,7 @@ body: dict | FilterRequestBody = None,
     async def _async_get_licensed_elements(
             self,
             license_type_guid: str,
-            body: dict | ResultsRequestBody = None,
+            body: Optional[dict | ResultsRequestBody] = None,
             output_format: str = "JSON",
             report_spec: dict | str = None,
             start_from: int = 0,
@@ -1925,7 +1925,7 @@ body: dict | FilterRequestBody = None,
     def get_licensed_elements(
             self,
             license_type_guid: str,
-            body: dict | ResultsRequestBody = None,
+            body: Optional[dict | ResultsRequestBody] = None,
             output_format: str = "JSON",
             report_spec: dict | str = None,
             start_from: int = 0,
@@ -1987,7 +1987,7 @@ body: dict | FilterRequestBody = None,
     async def _async_get_licenses(
             self,
             element_guid: str,
-            body: dict | ResultsRequestBody = None,
+            body: Optional[dict | ResultsRequestBody] = None,
             output_format: str = "JSON",
             report_spec: dict | str = None,
             start_from: int = 0,
@@ -2051,7 +2051,7 @@ body: dict | FilterRequestBody = None,
     def get_licenses(
             self,
             element_guid: str,
-            body: dict | ResultsRequestBody = None,
+            body: Optional[dict | ResultsRequestBody] = None,
             output_format: str = "JSON",
             report_spec: dict | str = None,
             start_from: int = 0,
@@ -2114,7 +2114,7 @@ body: dict | FilterRequestBody = None,
     async def _async_get_certified_elements(
             self,
             certification_type_guid: str,
-            body: dict | ResultsRequestBody = None,
+            body: Optional[dict | ResultsRequestBody] = None,
             output_format: str = "JSON",
             report_spec: dict | str = None,
             start_from: int = 0,
@@ -2178,7 +2178,7 @@ body: dict | FilterRequestBody = None,
     def get_certified_elements(
             self,
             certification_type_guid: str,
-            body: dict | ResultsRequestBody = None,
+            body: Optional[dict | ResultsRequestBody] = None,
             output_format: str = "JSON",
             report_spec: dict | str = None,
             start_from: int = 0,
@@ -2241,7 +2241,7 @@ body: dict | FilterRequestBody = None,
     async def _async_get_certifications(
             self,
             element_guid: str,
-            body: dict | ResultsRequestBody = None,
+            body: Optional[dict | ResultsRequestBody] = None,
             output_format: str = "JSON",
             report_spec: dict | str = None,
             start_from: int = 0,
@@ -2306,7 +2306,7 @@ body: dict | FilterRequestBody = None,
     def get_certifications(
             self,
             element_guid: str,
-            body: dict | ResultsRequestBody = None,
+            body: Optional[dict | ResultsRequestBody] = None,
             output_format: str = "JSON",
             report_spec: dict | str = None,
             start_from: int = 0,
@@ -2370,8 +2370,8 @@ body: dict | FilterRequestBody = None,
     #
     async def _async_get_elements(
             self,
-            metadata_element_type_name: str = None,
-            effective_time: str = None,
+            metadata_element_type_name: Optional[str] = None,
+            effective_time: Optional[str] = None,
             for_lineage: bool = False,
             for_duplicate_processing: bool = False,
             start_from: int = 0,
@@ -2438,7 +2438,7 @@ body: dict | FilterRequestBody = None,
             return NO_ELEMENTS_FOUND
         if output_format != 'JSON':  # return a simplified markdown representation
             logger.info(f"Found elements, output format: {output_format} and report_spec: {report_spec}")
-            return self._generate_referenceable_output(elements = elements, filter = metadata_element_type_name,
+            return self._generate_referenceable_output(elements = elements, filter_string = metadata_element_type_name,
                                                        element_type_name = "Referenceable", output_format=output_format,
                                                        report_spec=report_spec,
                                                        )
@@ -2447,8 +2447,8 @@ body: dict | FilterRequestBody = None,
 
     def get_elements(
             self,
-            metadata_element_type_name: str = None,
-            effective_time: str = None,
+            metadata_element_type_name: Optional[str] = None,
+            effective_time: Optional[str] = None,
             for_lineage: bool = False,
             for_duplicate_processing: bool = False,
             start_from: int = 0,
@@ -2503,8 +2503,8 @@ body: dict | FilterRequestBody = None,
         return response
 
     async def _async_get_elements_by_property_value(self, property_value: str, property_names: list[str],
-                                                    metadata_element_type_name: str = None, effective_time: str = None,
-                                                    as_of_time: str = None, for_lineage: bool = False,
+                                                    metadata_element_type_name: Optional[str] = None, effective_time: Optional[str] = None,
+                                                    as_of_time: Optional[str] = None, for_lineage: bool = False,
                                                      for_duplicate_processing: bool = False,
                                                     start_from: int = 0, page_size: int = 0,
                                                     time_out: int = default_time_out, output_format: str = "JSON",
@@ -2586,14 +2586,14 @@ body: dict | FilterRequestBody = None,
 
         if output_format != 'JSON':  # return a simplified markdown representation
             logger.info(f"Found elements, output format: {output_format} and report_spec: {report_spec}")
-            return self._generate_referenceable_output(elements = elements, filter=property_value,
+            return self._generate_referenceable_output(elements = elements, filter_string = property_value,
                                                        element_type_name = "Referenceable",
                                                        output_format = output_format, report_spec = report_spec)
         return elements
 
     def get_elements_by_property_value(self, property_value: str, property_names: list[str],
-                                       metadata_element_type_name: str = None, effective_time: str = None,
-                                       as_of_time: str = None, for_lineage: bool = False, for_duplicate_processing: bool = False,
+                                       metadata_element_type_name: Optional[str] = None, effective_time: Optional[str] = None,
+                                       as_of_time: Optional[str] = None, for_lineage: bool = False, for_duplicate_processing: bool = False,
                                        start_from: int = 0, page_size: int = 0,
                                        time_out: int = default_time_out, output_format: str = "JSON",
                                        report_spec: str | dict = None) -> list | str:
@@ -2652,30 +2652,30 @@ body: dict | FilterRequestBody = None,
         self,
         property_value: str,
         property_names: list[str],
-        metadata_element_type_name: str = None,
+        metadata_element_type_name: Optional[str] = None,
         starts_with: bool = True,
         ends_with: bool = False,
         ignore_case: bool = False,
-        anchor_domain: str = None,
-        metadata_element_subtypes: list[str] = None,
-        skip_relationships: list[str] = None,
-        include_only_relationships: list[str] = None,
-        skip_classified_elements: list[str] = None,
-        include_only_classified_elements: list[str] = None,
+        anchor_domain: Optional[str] = None,
+        metadata_element_subtypes: Optional[list[str]] = None,
+        skip_relationships: Optional[list[str]] = None,
+        include_only_relationships: Optional[list[str]] = None,
+        skip_classified_elements: Optional[list[str]] = None,
+        include_only_classified_elements: Optional[list[str]] = None,
         graph_query_depth: int = 3,
-        governance_zone_filter: list[str] = None,
-        as_of_time: str = None,
-        effective_time: str = None,
+        governance_zone_filter: Optional[list[str]] = None,
+        as_of_time: Optional[str] = None,
+        effective_time: Optional[str] = None,
         relationship_page_size: int = 0,
-        limit_results_by_status: list[str] = None,
-        sequencing_order: str = None,
-        sequencing_property: str = None,
+        limit_results_by_status: Optional[list[str]] = None,
+        sequencing_order: Optional[str] = None,
+        sequencing_property: Optional[str] = None,
         output_format: str = "JSON",
         report_spec: dict | str = None,
         start_from: int = 0,
         page_size: int = 0,
         time_out: int = default_time_out,
-        body: dict | FindPropertyNamesRequestBody = None,
+        body: Optional[dict | FindPropertyNamesRequestBody] = None,
     ) -> list | str:
         """
         Retrieve elements by a value found in one of the properties specified. The value must only be contained in the
@@ -2736,7 +2736,7 @@ body: dict | FilterRequestBody = None,
             - Type of output to return.
         report_spec: dict | str = None
             - Output format set to use. If None, the default output format set is used.
-        body: dict | FindPropertyNamesRequestBody = None
+        body: Optional[dict | FindPropertyNamesRequestBody] = None
             - Full request body - supercedes other parameters.
 
         Returns
@@ -2814,30 +2814,30 @@ body: dict | FilterRequestBody = None,
         self,
         property_value: str,
         property_names: list[str],
-        metadata_element_type_name: str = None,
+        metadata_element_type_name: Optional[str] = None,
         starts_with: bool = True,
         ends_with: bool = False,
         ignore_case: bool = False,
-        anchor_domain: str = None,
-        metadata_element_subtypes: list[str] = None,
-        skip_relationships: list[str] = None,
-        include_only_relationships: list[str] = None,
-        skip_classified_elements: list[str] = None,
-        include_only_classified_elements: list[str] = None,
+        anchor_domain: Optional[str] = None,
+        metadata_element_subtypes: Optional[list[str]] = None,
+        skip_relationships: Optional[list[str]] = None,
+        include_only_relationships: Optional[list[str]] = None,
+        skip_classified_elements: Optional[list[str]] = None,
+        include_only_classified_elements: Optional[list[str]] = None,
         graph_query_depth: int = 3,
-        governance_zone_filter: list[str] = None,
-        as_of_time: str = None,
-        effective_time: str = None,
+        governance_zone_filter: Optional[list[str]] = None,
+        as_of_time: Optional[str] = None,
+        effective_time: Optional[str] = None,
         relationship_page_size: int = 0,
-        limit_results_by_status: list[str] = None,
-        sequencing_order: str = None,
-        sequencing_property: str = None,
+        limit_results_by_status: Optional[list[str]] = None,
+        sequencing_order: Optional[str] = None,
+        sequencing_property: Optional[str] = None,
         output_format: str = "JSON",
         report_spec: dict | str = None,
         start_from: int = 0,
         page_size: int = 0,
         time_out: int = default_time_out,
-        body: dict | FindPropertyNamesRequestBody = None,
+        body: Optional[dict | FindPropertyNamesRequestBody] = None,
     ) -> list | str:
         """
         Retrieve elements by a value found in one of the properties specified. The value must only be contained in the
@@ -2864,7 +2864,7 @@ body: dict | FilterRequestBody = None,
             - Type of output to return.
         report_spec: dict | str = None
             - Output format set to use. If None, the default output format set is used.
-        body: dict | FindPropertyNamesRequestBody = None
+        body: Optional[dict | FindPropertyNamesRequestBody] = None
            - Full request body - supercedes other parameters.
 
         Returns
@@ -2929,10 +2929,10 @@ body: dict | FilterRequestBody = None,
     async def _async_get_element_by_guid(
             self,
             element_guid: str,
-            element_type_name: str = None,
+            element_type_name: Optional[str] = None,
             output_format: str = "JSON",
             report_spec: dict | str = "Referenceable",
-            body: dict | GetRequestBody = None,
+            body: Optional[dict | GetRequestBody] = None,
     ) -> dict | str:
         """
         Retrieve element by its unique identifier.  Async version.
@@ -2973,10 +2973,10 @@ body: dict | FilterRequestBody = None,
     def get_element_by_guid(
             self,
             element_guid: str,
-            element_type_name: str = None,
+            element_type_name: Optional[str] = None,
             output_format: str = "JSON",
             report_spec: dict | str = None,
-            body: dict | GetRequestBody = None
+            body: Optional[dict | GetRequestBody] = None
     ) -> dict | str:
         """
         Retrieve element by its unique identifier.
@@ -3027,7 +3027,7 @@ body: dict | FilterRequestBody = None,
     async def _async_get_element_by_unique_name(
             self,
             name: str,
-            property_name: str = None,
+            property_name: Optional[str] = None,
             output_format: str = "JSON",
             report_spec: dict | str = "Referenceable",
             body: dict = None
@@ -3087,7 +3087,7 @@ body: dict | FilterRequestBody = None,
     def get_element_by_unique_name(
             self,
             name: str,
-            property_name: str = None,
+            property_name: Optional[str] = None,
             output_format: str = "JSON",
             report_spec: dict | str = "Referenceable",
             body: dict = None
@@ -3129,7 +3129,7 @@ body: dict | FilterRequestBody = None,
     async def _async_get_element_guid_by_unique_name(
             self,
             name: str,
-            property_name: str = None,
+            property_name: Optional[str] = None,
             body: dict = None) -> list | str:
         """
         Retrieve the guid associated with the supplied unique element name.
@@ -3174,7 +3174,7 @@ body: dict | FilterRequestBody = None,
     def get_element_guid_by_unique_name(
             self,
             name: str,
-            property_name: str = None,
+            property_name: Optional[str] = None,
             body: dict = None) -> list | str:
         """
         Retrieve the guid associated with the supplied unique element name.
@@ -3283,8 +3283,8 @@ body: dict | FilterRequestBody = None,
     async def _async_get_elements_by_classification(
             self,
             classification_name: str,
-            metadata_element_type_name: str = None,
-            effective_time: str = None,
+            metadata_element_type_name: Optional[str] = None,
+            effective_time: Optional[str] = None,
             for_lineage: bool = False,
             for_duplicate_processing: bool = False,
             start_from: int = 0,
@@ -3362,8 +3362,8 @@ body: dict | FilterRequestBody = None,
     def get_elements_by_classification(
             self,
             classification_name: str,
-            metadata_element_type_name: str = None,
-            effective_time: str = None,
+            metadata_element_type_name: Optional[str] = None,
+            effective_time: Optional[str] = None,
             for_lineage: bool = False,
             for_duplicate_processing: bool = False,
             start_from: int = 0,
@@ -3426,8 +3426,8 @@ body: dict | FilterRequestBody = None,
             classification_name: str,
             property_value: str,
             property_names: list[str],
-            metadata_element_type_name: str = None,
-            effective_time: str = None,
+            metadata_element_type_name: Optional[str] = None,
+            effective_time: Optional[str] = None,
             for_lineage: bool = False,
             for_duplicate_processing: bool = False,
             start_from: int = 0,
@@ -3520,8 +3520,8 @@ body: dict | FilterRequestBody = None,
             classification_name: str,
             property_value: str,
             property_names: list[str],
-            metadata_element_type_name: str = None,
-            effective_time: str = None,
+            metadata_element_type_name: Optional[str] = None,
+            effective_time: Optional[str] = None,
             for_lineage: bool = False,
             for_duplicate_processing: bool = False,
             start_from: int = 0,
@@ -3588,30 +3588,30 @@ body: dict | FilterRequestBody = None,
         classification_name: str,
         property_value: str,
         property_names: list[str],
-        metadata_element_type_name: str = None,
+        metadata_element_type_name: Optional[str] = None,
         starts_with: bool = True,
         ends_with: bool = False,
         ignore_case: bool = False,
-        anchor_domain: str = None,
-        metadata_element_subtypes: list[str] = None,
-        skip_relationships: list[str] = None,
-        include_only_relationships: list[str] = None,
-        skip_classified_elements: list[str] = None,
-        include_only_classified_elements: list[str] = None,
+        anchor_domain: Optional[str] = None,
+        metadata_element_subtypes: Optional[list[str]] = None,
+        skip_relationships: Optional[list[str]] = None,
+        include_only_relationships: Optional[list[str]] = None,
+        skip_classified_elements: Optional[list[str]] = None,
+        include_only_classified_elements: Optional[list[str]] = None,
         graph_query_depth: int = 3,
-        governance_zone_filter: list[str] = None,
-        as_of_time: str = None,
-        effective_time: str = None,
+        governance_zone_filter: Optional[list[str]] = None,
+        as_of_time: Optional[str] = None,
+        effective_time: Optional[str] = None,
         relationship_page_size: int = 0,
-        limit_results_by_status: list[str] = None,
-        sequencing_order: str = None,
-        sequencing_property: str = None,
+        limit_results_by_status: Optional[list[str]] = None,
+        sequencing_order: Optional[str] = None,
+        sequencing_property: Optional[str] = None,
         output_format: str = "JSON",
         report_spec: dict | str = None,
         start_from: int = 0,
         page_size: int = 0,
         time_out: int = default_time_out,
-        body: dict | SearchStringRequestBody = None,
+        body: Optional[dict | SearchStringRequestBody] = None,
     ) -> list | str:
         """
         Retrieve elements with the requested classification name and with the requested value found in
@@ -3644,7 +3644,7 @@ body: dict | FilterRequestBody = None,
             - Type of output to return.
         report_spec: dict | str = None
             - Output format set to use. If None, the default output format set is used.
-        body: dict | SearchStringRequestBody = None
+        body: Optional[dict | SearchStringRequestBody] = None
             - Full request body - supercedes other parameters.
 
         Returns
@@ -3713,30 +3713,30 @@ body: dict | FilterRequestBody = None,
         classification_name: str,
         property_value: str,
         property_names: list[str],
-        metadata_element_type_name: str = None,
+        metadata_element_type_name: Optional[str] = None,
         starts_with: bool = True,
         ends_with: bool = False,
         ignore_case: bool = False,
-        anchor_domain: str = None,
-        metadata_element_subtypes: list[str] = None,
-        skip_relationships: list[str] = None,
-        include_only_relationships: list[str] = None,
-        skip_classified_elements: list[str] = None,
-        include_only_classified_elements: list[str] = None,
+        anchor_domain: Optional[str] = None,
+        metadata_element_subtypes: Optional[list[str]] = None,
+        skip_relationships: Optional[list[str]] = None,
+        include_only_relationships: Optional[list[str]] = None,
+        skip_classified_elements: Optional[list[str]] = None,
+        include_only_classified_elements: Optional[list[str]] = None,
         graph_query_depth: int = 3,
-        governance_zone_filter: list[str] = None,
-        as_of_time: str = None,
-        effective_time: str = None,
+        governance_zone_filter: Optional[list[str]] = None,
+        as_of_time: Optional[str] = None,
+        effective_time: Optional[str] = None,
         relationship_page_size: int = 0,
-        limit_results_by_status: list[str] = None,
-        sequencing_order: str = None,
-        sequencing_property: str = None,
+        limit_results_by_status: Optional[list[str]] = None,
+        sequencing_order: Optional[str] = None,
+        sequencing_property: Optional[str] = None,
         output_format: str = "JSON",
         report_spec: dict | str = None,
         start_from: int = 0,
         page_size: int = 0,
         time_out: int = default_time_out,
-        body: dict | SearchStringRequestBody = None,
+        body: Optional[dict | SearchStringRequestBody] = None,
     ) -> list | str:
         """
         Retrieve elements with the requested classification name and with the requested value found in
@@ -3768,7 +3768,7 @@ body: dict | FilterRequestBody = None,
             - Type of output to return.
         report_spec: dict | str, default = None
             - Output format set to use. If None, the default output format set is used.
-        body: dict | SearchStringRequestBody = None
+        body: Optional[dict | SearchStringRequestBody] = None
             - Full request body - supercedes other parameters.
 
         Returns
@@ -3822,10 +3822,10 @@ body: dict | FilterRequestBody = None,
     async def _async_get_related_elements(
             self,
             element_guid: str,
-            relationship_type: str = None,
-            metadata_element_type_name: str = None,
+            relationship_type: Optional[str] = None,
+            metadata_element_type_name: Optional[str] = None,
             start_at_end: int = 1,
-            effective_time: str = None,
+            effective_time: Optional[str] = None,
             for_lineage: bool = False,
             for_duplicate_processing: bool = False,
             start_from: int = 0,
@@ -3916,10 +3916,10 @@ body: dict | FilterRequestBody = None,
     def get_related_elements(
             self,
             element_guid: str,
-            relationship_type: str = None,
-            metadata_element_type_name: str = None,
+            relationship_type: Optional[str] = None,
+            metadata_element_type_name: Optional[str] = None,
             start_at_end: int = 1,
-            effective_time: str = None,
+            effective_time: Optional[str] = None,
             for_lineage: bool = False,
             for_duplicate_processing: bool = False,
             start_from: int = 0,
@@ -3986,9 +3986,9 @@ body: dict | FilterRequestBody = None,
             relationship_type: str,
             property_value: str,
             property_names: list[str],
-            metadata_element_type_name: str = None,
+            metadata_element_type_name: Optional[str] = None,
             start_at_end: int = 1,
-            effective_time: str = None,
+            effective_time: Optional[str] = None,
             for_lineage: bool = False,
             for_duplicate_processing: bool = False,
             start_from: int = 0,
@@ -4082,9 +4082,9 @@ body: dict | FilterRequestBody = None,
             relationship_type: str,
             property_value: str,
             property_names: list[str],
-            metadata_element_type_name: str = None,
+            metadata_element_type_name: Optional[str] = None,
             start_at_end: int = 1,
-            effective_time: str = None,
+            effective_time: Optional[str] = None,
             for_lineage: bool = False,
             for_duplicate_processing: bool = False,
             start_from: int = 0,
@@ -4158,31 +4158,31 @@ body: dict | FilterRequestBody = None,
         relationship_type: str,
         property_value: str,
         property_names: list[str],
-        metadata_element_type_name: str = None,
+        metadata_element_type_name: Optional[str] = None,
         start_at_end: int = 1,
         starts_with: bool = True,
         ends_with: bool = False,
         ignore_case: bool = False,
-        anchor_domain: str = None,
-        metadata_element_subtypes: list[str] = None,
-        skip_relationships: list[str] = None,
-        include_only_relationships: list[str] = None,
-        skip_classified_elements: list[str] = None,
-        include_only_classified_elements: list[str] = None,
+        anchor_domain: Optional[str] = None,
+        metadata_element_subtypes: Optional[list[str]] = None,
+        skip_relationships: Optional[list[str]] = None,
+        include_only_relationships: Optional[list[str]] = None,
+        skip_classified_elements: Optional[list[str]] = None,
+        include_only_classified_elements: Optional[list[str]] = None,
         graph_query_depth: int = 3,
-        governance_zone_filter: list[str] = None,
-        as_of_time: str = None,
-        effective_time: str = None,
+        governance_zone_filter: Optional[list[str]] = None,
+        as_of_time: Optional[str] = None,
+        effective_time: Optional[str] = None,
         relationship_page_size: int = 0,
-        limit_results_by_status: list[str] = None,
-        sequencing_order: str = None,
-        sequencing_property: str = None,
+        limit_results_by_status: Optional[list[str]] = None,
+        sequencing_order: Optional[str] = None,
+        sequencing_property: Optional[str] = None,
         output_format: str = "JSON",
         report_spec: dict | str = None,
         start_from: int = 0,
         page_size: int = 0,
         time_out: int = default_time_out,
-        body: dict | SearchStringRequestBody = None,
+        body: Optional[dict | SearchStringRequestBody] = None,
     ) -> list | str:
         """
         Retrieve elements linked via the requested relationship type name and with the requested value found in one of
@@ -4218,7 +4218,7 @@ body: dict | FilterRequestBody = None,
             - Type of output to return.
         report_spec: dict | str = None
             - Output format set to use. If None, the default output format set is used.
-        body: dict | SearchStringRequestBody = None
+        body: Optional[dict | SearchStringRequestBody] = None
             - Full request body - supercedes other parameters.
 
         Returns
@@ -4292,31 +4292,31 @@ body: dict | FilterRequestBody = None,
         relationship_type: str,
         property_value: str,
         property_names: list[str],
-        metadata_element_type_name: str = None,
+        metadata_element_type_name: Optional[str] = None,
         start_at_end: int = 1,
         starts_with: bool = True,
         ends_with: bool = False,
         ignore_case: bool = False,
-        anchor_domain: str = None,
-        metadata_element_subtypes: list[str] = None,
-        skip_relationships: list[str] = None,
-        include_only_relationships: list[str] = None,
-        skip_classified_elements: list[str] = None,
-        include_only_classified_elements: list[str] = None,
+        anchor_domain: Optional[str] = None,
+        metadata_element_subtypes: Optional[list[str]] = None,
+        skip_relationships: Optional[list[str]] = None,
+        include_only_relationships: Optional[list[str]] = None,
+        skip_classified_elements: Optional[list[str]] = None,
+        include_only_classified_elements: Optional[list[str]] = None,
         graph_query_depth: int = 3,
-        governance_zone_filter: list[str] = None,
-        as_of_time: str = None,
-        effective_time: str = None,
+        governance_zone_filter: Optional[list[str]] = None,
+        as_of_time: Optional[str] = None,
+        effective_time: Optional[str] = None,
         relationship_page_size: int = 0,
-        limit_results_by_status: list[str] = None,
-        sequencing_order: str = None,
-        sequencing_property: str = None,
+        limit_results_by_status: Optional[list[str]] = None,
+        sequencing_order: Optional[str] = None,
+        sequencing_property: Optional[str] = None,
         output_format: str = "JSON",
         report_spec: dict | str = None,
         start_from: int = 0,
         page_size: int = 0,
         time_out: int = default_time_out,
-        body: dict | SearchStringRequestBody = None,
+        body: Optional[dict | SearchStringRequestBody] = None,
     ) -> list | str:
         """
         Retrieve elements linked via the requested relationship type name and with the requested a value found in one of
@@ -4352,7 +4352,7 @@ body: dict | FilterRequestBody = None,
             - Type of output to return.
         report_spec: dict | str, default = None
             - Output format set to use. If None, the default output format set is used.
-        body: dict | SearchStringRequestBody = None
+        body: Optional[dict | SearchStringRequestBody] = None
             - Full request body - supercedes other parameters.
 
         Returns
@@ -4407,7 +4407,7 @@ body: dict | FilterRequestBody = None,
     async def _async_get_relationships(
             self,
             relationship_type: str,
-            effective_time: str = None,
+            effective_time: Optional[str] = None,
             for_lineage: bool = False,
             for_duplicate_processing: bool = False,
             start_from: int = 0,
@@ -4480,7 +4480,7 @@ body: dict | FilterRequestBody = None,
     def get_relationships(
             self,
             relationship_type: str,
-            effective_time: str = None,
+            effective_time: Optional[str] = None,
             for_lineage: bool = False,
             for_duplicate_processing: bool = False,
             start_from: int = 0,
@@ -4537,7 +4537,7 @@ body: dict | FilterRequestBody = None,
             relationship_type: str,
             property_value: str,
             property_names: list[str],
-            effective_time: str = None,
+            effective_time: Optional[str] = None,
             for_lineage: bool = False,
             for_duplicate_processing: bool = False,
             start_from: int = 0,
@@ -4623,7 +4623,7 @@ body: dict | FilterRequestBody = None,
             relationship_type: str,
             property_value: str,
             property_names: list[str],
-            effective_time: str = None,
+            effective_time: Optional[str] = None,
             for_lineage: bool = False,
             for_duplicate_processing: bool = False,
             start_from: int = 0,
@@ -4689,26 +4689,26 @@ body: dict | FilterRequestBody = None,
             starts_with: bool = True,
             ends_with: bool = False,
             ignore_case: bool = False,
-            anchor_domain: str = None,
-            metadata_element_subtypes: list[str] = None,
-            skip_relationships: list[str] = None,
-            include_only_relationships: list[str] = None,
-            skip_classified_elements: list[str] = None,
-            include_only_classified_elements: list[str] = None,
+            anchor_domain: Optional[str] = None,
+            metadata_element_subtypes: Optional[list[str]] = None,
+            skip_relationships: Optional[list[str]] = None,
+            include_only_relationships: Optional[list[str]] = None,
+            skip_classified_elements: Optional[list[str]] = None,
+            include_only_classified_elements: Optional[list[str]] = None,
             graph_query_depth: int = 3,
-            governance_zone_filter: list[str] = None,
-            as_of_time: str = None,
-            effective_time: str = None,
+            governance_zone_filter: Optional[list[str]] = None,
+            as_of_time: Optional[str] = None,
+            effective_time: Optional[str] = None,
             relationship_page_size: int = 0,
-            limit_results_by_status: list[str] = None,
-            sequencing_order: str = None,
-            sequencing_property: str = None,
+            limit_results_by_status: Optional[list[str]] = None,
+            sequencing_order: Optional[str] = None,
+            sequencing_property: Optional[str] = None,
             output_format: str = "JSON",
             report_spec: dict | str = None,
             start_from: int = 0,
             page_size: int = 0,
             time_out: int = default_time_out,
-            body: dict | SearchStringRequestBody = None,
+            body: Optional[dict | SearchStringRequestBody] = None,
     ) -> list | str:
         """
         Retrieve relationships of the requested relationship type name and with the requested a value found in
@@ -4769,7 +4769,7 @@ body: dict | FilterRequestBody = None,
             - Type of output to return.
         report_spec: dict | str = None
             - Output format set to use. If None, the default output format set is used.
-        body: dict | SearchStringRequestBody = None
+        body: Optional[dict | SearchStringRequestBody] = None
             - Full request body - supercedes other parameters.
 
         Returns
@@ -4840,26 +4840,26 @@ body: dict | FilterRequestBody = None,
             starts_with: bool = True,
             ends_with: bool = False,
             ignore_case: bool = False,
-            anchor_domain: str = None,
-            metadata_element_subtypes: list[str] = None,
-            skip_relationships: list[str] = None,
-            include_only_relationships: list[str] = None,
-            skip_classified_elements: list[str] = None,
-            include_only_classified_elements: list[str] = None,
+            anchor_domain: Optional[str] = None,
+            metadata_element_subtypes: Optional[list[str]] = None,
+            skip_relationships: Optional[list[str]] = None,
+            include_only_relationships: Optional[list[str]] = None,
+            skip_classified_elements: Optional[list[str]] = None,
+            include_only_classified_elements: Optional[list[str]] = None,
             graph_query_depth: int = 3,
-            governance_zone_filter: list[str] = None,
-            as_of_time: str = None,
-            effective_time: str = None,
+            governance_zone_filter: Optional[list[str]] = None,
+            as_of_time: Optional[str] = None,
+            effective_time: Optional[str] = None,
             relationship_page_size: int = 0,
-            limit_results_by_status: list[str] = None,
-            sequencing_order: str = None,
-            sequencing_property: str = None,
+            limit_results_by_status: Optional[list[str]] = None,
+            sequencing_order: Optional[str] = None,
+            sequencing_property: Optional[str] = None,
             output_format: str = "JSON",
             report_spec: dict | str = None,
             start_from: int = 0,
             page_size: int = 0,
             time_out: int = default_time_out,
-            body: dict | SearchStringRequestBody = None,
+            body: Optional[dict | SearchStringRequestBody] = None,
     ) -> list | str:
         """
         Retrieve relationships of the requested relationship type name and with the requested a value found in
@@ -4918,7 +4918,7 @@ body: dict | FilterRequestBody = None,
             - Type of output to return.
         report_spec: dict | str = None
             - Output format set to use. If None, the default output format set is used.
-        body: dict | SearchStringRequestBody = None
+        body: Optional[dict | SearchStringRequestBody] = None
             - Full request body - supercedes other parameters.
 
         Returns
@@ -4971,7 +4971,7 @@ body: dict | FilterRequestBody = None,
     async def _async_retrieve_instance_for_guid(
             self,
             guid: str,
-            effective_time: str = None,
+            effective_time: Optional[str] = None,
             for_lineage: bool = False,
             for_duplicate_processing: bool = False,
             time_out: int = default_time_out,
@@ -5034,7 +5034,7 @@ body: dict | FilterRequestBody = None,
     def retrieve_instance_for_guid(
             self,
             guid: str,
-            effective_time: str = None,
+            effective_time: Optional[str] = None,
             for_lineage: bool = False,
             for_duplicate_processing: bool = False,
             time_out: int = default_time_out,
@@ -5218,10 +5218,10 @@ body: dict | FilterRequestBody = None,
     async def _async_clear_confidence_classification(
             self,
             element_guid: str,
-            body: dict | DeleteClassificationRequestBody = None,
+            body: Optional[dict | DeleteClassificationRequestBody] = None,
             for_lineage: bool = False,
             for_duplicate_processing: bool = False,
-            effective_time: str = None,
+            effective_time: Optional[str] = None,
             time_out: int = default_time_out,
     ) -> None:
         """
@@ -5289,10 +5289,10 @@ body: dict | FilterRequestBody = None,
     def clear_confidence_classification(
             self,
             element_guid: str,
-            body: dict | DeleteClassificationRequestBody = None,
+            body: Optional[dict | DeleteClassificationRequestBody] = None,
             for_lineage: bool = False,
             for_duplicate_processing: bool = False,
-            effective_time: str = None,
+            effective_time: Optional[str] = None,
             time_out: int = default_time_out,
     ) -> None:
         """
@@ -5489,10 +5489,10 @@ body: dict | FilterRequestBody = None,
     async def _async_clear_confidentiality_classification(
             self,
             element_guid: str,
-            body: dict | DeleteClassificationRequestBody = None,
+            body: Optional[dict | DeleteClassificationRequestBody] = None,
             for_lineage: bool = False,
             for_duplicate_processing: bool = False,
-            effective_time: str = None,
+            effective_time: Optional[str] = None,
             time_out: int = default_time_out,
     ) -> None:
         """
@@ -5557,10 +5557,10 @@ body: dict | FilterRequestBody = None,
     def clear_confidentiality_classification(
             self,
             element_guid: str,
-            body: dict | DeleteClassificationRequestBody = None,
+            body: Optional[dict | DeleteClassificationRequestBody] = None,
             for_lineage: bool = False,
             for_duplicate_processing: bool = False,
-            effective_time: str = None,
+            effective_time: Optional[str] = None,
             time_out: int = default_time_out,
     ) -> None:
         """
@@ -5754,10 +5754,10 @@ body: dict | FilterRequestBody = None,
     async def _async_clear_impact_classification(
             self,
             element_guid: str,
-            body: dict | DeleteClassificationRequestBody = None,
+            body: Optional[dict | DeleteClassificationRequestBody] = None,
             for_lineage: bool = False,
             for_duplicate_processing: bool = False,
-            effective_time: str = None,
+            effective_time: Optional[str] = None,
             time_out: int = default_time_out,
     ) -> None:
         """
@@ -5822,10 +5822,10 @@ body: dict | FilterRequestBody = None,
     def clear_impact_classification(
             self,
             element_guid: str,
-            body: dict | DeleteClassificationRequestBody = None,
+            body: Optional[dict | DeleteClassificationRequestBody] = None,
             for_lineage: bool = False,
             for_duplicate_processing: bool = False,
-            effective_time: str = None,
+            effective_time: Optional[str] = None,
             time_out: int = default_time_out,
     ) -> None:
         """
@@ -6018,10 +6018,10 @@ body: dict | FilterRequestBody = None,
     async def _async_clear_criticality_classification(
             self,
             element_guid: str,
-            body: dict | DeleteClassificationRequestBody = None,
+            body: Optional[dict | DeleteClassificationRequestBody] = None,
             for_lineage: bool = False,
             for_duplicate_processing: bool = False,
-            effective_time: str = None,
+            effective_time: Optional[str] = None,
             time_out: int = default_time_out,
     ) -> None:
         """
@@ -6086,10 +6086,10 @@ body: dict | FilterRequestBody = None,
     def clear_criticality_classification(
             self,
             element_guid: str,
-            body: dict | DeleteClassificationRequestBody = None,
+            body: Optional[dict | DeleteClassificationRequestBody] = None,
             for_lineage: bool = False,
             for_duplicate_processing: bool = False,
-            effective_time: str = None,
+            effective_time: Optional[str] = None,
             time_out: int = default_time_out,
     ) -> None:
         """
@@ -6154,7 +6154,7 @@ body: dict | FilterRequestBody = None,
             self,
             definition_guid: str,
             element_guid: str,
-            effective_time: str = None,
+            effective_time: Optional[str] = None,
             for_lineage: bool = False,
             for_duplicate_processing: bool = False,
             time_out: int = default_time_out,
@@ -6207,7 +6207,7 @@ body: dict | FilterRequestBody = None,
             self,
             definition_guid: str,
             element_guid: str,
-            effective_time: str = None,
+            effective_time: Optional[str] = None,
             for_lineage: bool = False,
             for_duplicate_processing: bool = False,
             time_out: int = default_time_out,
@@ -6262,7 +6262,7 @@ body: dict | FilterRequestBody = None,
             element_guid: str,
             for_lineage: bool = False,
             for_duplicate_processing: bool = False,
-            effective_time: str = None,
+            effective_time: Optional[str] = None,
 
     ) -> None:
         """
@@ -6313,7 +6313,7 @@ body: dict | FilterRequestBody = None,
             element_guid: str,
             for_lineage: bool = False,
             for_duplicate_processing: bool = False,
-            effective_time: str = None,
+            effective_time: Optional[str] = None,
     ) -> None:
         """
         Remove the GovernedBy relationship between a governance definition and an element. Async Version.
@@ -6355,7 +6355,7 @@ body: dict | FilterRequestBody = None,
             self,
             scoped_by_guid: str,
             element_guid: str,
-            body: dict | NewRelationshipRequestBody = None,
+            body: Optional[dict | NewRelationshipRequestBody] = None,
     ) -> None:
         """
         Link a scope to an element using the ScopedBy relationship. Async version.
@@ -6389,7 +6389,7 @@ body: dict | FilterRequestBody = None,
             self,
             scoped_by_guid: str,
             element_guid: str,
-            body: dict | NewRelationshipRequestBody = None,
+            body: Optional[dict | NewRelationshipRequestBody] = None,
     ) -> None:
         """
         Link a scope to an element using the ScopedBy relationship.
@@ -6420,7 +6420,7 @@ body: dict | FilterRequestBody = None,
             self,
             scoped_by_guid,
             element_guid: str,
-            body: dict | DeleteRelationshipRequestBody = None,
+            body: Optional[dict | DeleteRelationshipRequestBody] = None,
     ) -> None:
         """
         Remove the ScopedBy relationship between a scope and an element. Async Version.
@@ -6492,7 +6492,7 @@ body: dict | FilterRequestBody = None,
             self,
             certification_type_guid: str,
             element_guid: str,
-            body: dict | NewRelationshipRequestBody = None,
+            body: Optional[dict | NewRelationshipRequestBody] = None,
     ) -> str:
         """
         Link an element to a certification type and include details of the certification in the relationship properties.
@@ -6555,7 +6555,7 @@ body: dict | FilterRequestBody = None,
             self,
             certification_type_guid: str,
             element_guid: str,
-            body: dict | NewRelationshipRequestBody = None,
+            body: Optional[dict | NewRelationshipRequestBody] = None,
     ) -> str:
         """
         Link an element to a certification type and include details of the certification in the relationship properties.
@@ -6621,7 +6621,7 @@ body: dict | FilterRequestBody = None,
     async def _async_update_certification(
             self,
             certification_guid: str,
-            body: dict | UpdateRelationshipRequestBody = None,
+            body: Optional[dict | UpdateRelationshipRequestBody] = None,
     ) -> str:
         """
             Update the properties of a certification.  Remember to include the certificationId in the properties if the element has multiple
@@ -6679,7 +6679,7 @@ body: dict | FilterRequestBody = None,
     def update_certification(
             self,
             certification_guid: str,
-            body: dict | UpdateRelationshipRequestBody = None,
+            body: Optional[dict | UpdateRelationshipRequestBody] = None,
     ) -> str:
         """
             Update the properties of a certification.  Remember to include the certificationId in the properties if the element has multiple
@@ -6739,7 +6739,7 @@ body: dict | FilterRequestBody = None,
     async def _async_decertify_element(
             self,
             certification_guid,
-            body: dict | DeleteRelationshipRequestBody = None,
+            body: Optional[dict | DeleteRelationshipRequestBody] = None,
     ) -> None:
         """
         Remove the certification for an element. Async Version.
@@ -6797,7 +6797,7 @@ body: dict | FilterRequestBody = None,
             self,
             license_type_guid: str,
             element_guid: str,
-            body: dict | NewRelationshipRequestBody = None,
+            body: Optional[dict | NewRelationshipRequestBody] = None,
     ) -> str:
         """
         Link an element to a license type and include details of the license in the relationship properties.
@@ -6863,7 +6863,7 @@ body: dict | FilterRequestBody = None,
             self,
             license_type_guid: str,
             element_guid: str,
-            body: dict | NewRelationshipRequestBody = None,
+            body: Optional[dict | NewRelationshipRequestBody] = None,
     ) -> str:
         """
         Link an element to a license type and include details of the license in the relationship properties.
@@ -6929,7 +6929,7 @@ body: dict | FilterRequestBody = None,
     async def _async_update_license(
             self,
             license_guid: str,
-            body: dict | UpdateRelationshipRequestBody = None,
+            body: Optional[dict | UpdateRelationshipRequestBody] = None,
     ) -> str:
         """
        Update the properties of a license.  Remember to include the licenseId in the properties if the element has multiple
@@ -6991,7 +6991,7 @@ body: dict | FilterRequestBody = None,
     def update_license(
             self,
             license_guid: str,
-            body: dict | UpdateRelationshipRequestBody = None,
+            body: Optional[dict | UpdateRelationshipRequestBody] = None,
     ) -> str:
         """
        Update the properties of a license.  Remember to include the licenseId in the properties if the element has multiple
@@ -7055,7 +7055,7 @@ body: dict | FilterRequestBody = None,
     async def _async_unlicense_element(
             self,
             license_guid,
-            body: dict | DeleteRelationshipRequestBody = None,
+            body: Optional[dict | DeleteRelationshipRequestBody] = None,
     ) -> None:
         """
         Remove the licensed for an element. Async Version.
@@ -7237,7 +7237,7 @@ body: dict | FilterRequestBody = None,
             element_guid: str,
             for_lineage: bool = False,
             for_duplicate_processing: bool = False,
-            effective_time: str = None,
+            effective_time: Optional[str] = None,
             time_out: int = default_time_out,
     ) -> None:
         """
@@ -7288,7 +7288,7 @@ body: dict | FilterRequestBody = None,
             element_guid: str,
             for_lineage: bool = False,
             for_duplicate_processing: bool = False,
-            effective_time: str = None,
+            effective_time: Optional[str] = None,
             time_out: int = default_time_out,
     ) -> None:
         """
@@ -7833,10 +7833,10 @@ body: dict | FilterRequestBody = None,
     async def _async_clear_retention_classification(
             self,
             element_guid: str,
-            body: dict | DeleteClassificationRequestBody = None,
+            body: Optional[dict | DeleteClassificationRequestBody] = None,
             for_lineage: bool = False,
             for_duplicate_processing: bool = False,
-            effective_time: str = None,
+            effective_time: Optional[str] = None,
             time_out: int = default_time_out,
     ) -> None:
         """
@@ -7901,10 +7901,10 @@ body: dict | FilterRequestBody = None,
     def clear_retention_classification(
             self,
             element_guid: str,
-            body: dict | DeleteClassificationRequestBody = None,
+            body: Optional[dict | DeleteClassificationRequestBody] = None,
             for_lineage: bool = False,
             for_duplicate_processing: bool = False,
-            effective_time: str = None,
+            effective_time: Optional[str] = None,
             time_out: int = default_time_out,
     ) -> None:
         """
@@ -8101,10 +8101,10 @@ body: dict | FilterRequestBody = None,
     async def _async_clear_governance_expectation(
             self,
             element_guid: str,
-            body: dict | DeleteClassificationRequestBody = None,
+            body: Optional[dict | DeleteClassificationRequestBody] = None,
             for_lineage: bool = False,
             for_duplicate_processing: bool = False,
-            effective_time: str = None,
+            effective_time: Optional[str] = None,
             time_out: int = default_time_out,
     ) -> None:
         """
@@ -8168,10 +8168,10 @@ body: dict | FilterRequestBody = None,
     def clear_governance_expectation(
         self,
         element_guid: str,
-        body: dict | DeleteClassificationRequestBody = None,
+        body: Optional[dict | DeleteClassificationRequestBody] = None,
         for_lineage: bool = False,
         for_duplicate_processing: bool = False,
-        effective_time: str = None,
+        effective_time: Optional[str] = None,
         time_out: int = default_time_out,
     ) -> None:
         """
@@ -8642,10 +8642,10 @@ body: dict | FilterRequestBody = None,
     async def _async_clear_governance_measurements(
             self,
             element_guid: str,
-            body: dict | DeleteClassificationRequestBody = None,
+            body: Optional[dict | DeleteClassificationRequestBody] = None,
             for_lineage: bool = False,
             for_duplicate_processing: bool = False,
-            effective_time: str = None,
+            effective_time: Optional[str] = None,
             time_out: int = default_time_out,
     ) -> None:
         """
@@ -8710,10 +8710,10 @@ body: dict | FilterRequestBody = None,
     def clear_governance_measurements(
             self,
             element_guid: str,
-            body: dict | DeleteClassificationRequestBody = None,
+            body: Optional[dict | DeleteClassificationRequestBody] = None,
             for_lineage: bool = False,
             for_duplicate_processing: bool = False,
-            effective_time: str = None,
+            effective_time: Optional[str] = None,
             time_out: int = default_time_out,
     ) -> None:
         """
@@ -8897,10 +8897,10 @@ body: dict | FilterRequestBody = None,
     async def _async_clear_security_tags_classification(
             self,
             element_guid: str,
-            body: dict | DeleteClassificationRequestBody = None,
+            body: Optional[dict | DeleteClassificationRequestBody] = None,
             for_lineage: bool = False,
             for_duplicate_processing: bool = False,
-            effective_time: str = None,
+            effective_time: Optional[str] = None,
             time_out: int = default_time_out,
     ) -> None:
         """
@@ -8962,10 +8962,10 @@ body: dict | FilterRequestBody = None,
     def clear_security_tags_classification(
             self,
             element_guid: str,
-            body: dict | DeleteClassificationRequestBody = None,
+            body: Optional[dict | DeleteClassificationRequestBody] = None,
             for_lineage: bool = False,
             for_duplicate_processing: bool = False,
-            effective_time: str = None,
+            effective_time: Optional[str] = None,
             time_out: int = default_time_out,
     ) -> None:
         """
@@ -9421,10 +9421,10 @@ body: dict | FilterRequestBody = None,
     async def _async_clear_known_duplicate_classification(
             self,
             element_guid: str,
-            body: dict | DeleteClassificationRequestBody = None,
+            body: Optional[dict | DeleteClassificationRequestBody] = None,
             for_lineage: bool = False,
             for_duplicate_processing: bool = False,
-            effective_time: str = None,
+            effective_time: Optional[str] = None,
             time_out: int = default_time_out,
     ) -> None:
         """
@@ -9485,10 +9485,10 @@ body: dict | FilterRequestBody = None,
     def clear_known_duplicate_classification(
             self,
             element_guid: str,
-            body: dict | DeleteClassificationRequestBody = None,
+            body: Optional[dict | DeleteClassificationRequestBody] = None,
             for_lineage: bool = False,
             for_duplicate_processing: bool = False,
-            effective_time: str = None,
+            effective_time: Optional[str] = None,
             time_out: int = default_time_out,
     ) -> None:
         """
@@ -9909,10 +9909,10 @@ body: dict | FilterRequestBody = None,
     async def _async_clear_consolidated_duplicate_classification(
             self,
             element_guid: str,
-            body: dict | DeleteClassificationRequestBody = None,
+            body: Optional[dict | DeleteClassificationRequestBody] = None,
             for_lineage: bool = False,
             for_duplicate_processing: bool = False,
-            effective_time: str = None,
+            effective_time: Optional[str] = None,
             time_out: int = default_time_out,
     ) -> None:
         """
@@ -9972,10 +9972,10 @@ body: dict | FilterRequestBody = None,
     def clear_consolidated_duplicate_classification(
             self,
             element_guid: str,
-            body: dict | DeleteClassificationRequestBody = None,
+            body: Optional[dict | DeleteClassificationRequestBody] = None,
             for_lineage: bool = False,
             for_duplicate_processing: bool = False,
-            effective_time: str = None,
+            effective_time: Optional[str] = None,
             time_out: int = default_time_out,
     ) -> None:
         """
@@ -10400,10 +10400,10 @@ body: dict | FilterRequestBody = None,
             self,
             glossary_term_guid: str,
             element_guid: str,
-            body: dict | DeleteRelationshipRequestBody = None,
+            body: Optional[dict | DeleteRelationshipRequestBody] = None,
             for_lineage: bool = False,
             for_duplicate_processing: bool = False,
-            effective_time: str = None,
+            effective_time: Optional[str] = None,
             time_out: int = default_time_out,
     ) -> None:
         """
@@ -10469,10 +10469,10 @@ body: dict | FilterRequestBody = None,
             self,
             glossary_term_guid: str,
             element_guid: str,
-            body: dict | DeleteRelationshipRequestBody = None,
+            body: Optional[dict | DeleteRelationshipRequestBody] = None,
             for_lineage: bool = False,
             for_duplicate_processing: bool = False,
-            effective_time: str = None,
+            effective_time: Optional[str] = None,
             time_out: int = default_time_out,
     ) -> None:
         """
@@ -10651,7 +10651,7 @@ body: dict | FilterRequestBody = None,
             element_guid: str,
             for_lineage: bool = False,
             for_duplicate_processing: bool = False,
-            effective_time: str = None,
+            effective_time: Optional[str] = None,
             time_out: int = default_time_out,
     ) -> None:
         """
@@ -10705,7 +10705,7 @@ body: dict | FilterRequestBody = None,
             element_guid: str,
             for_lineage: bool = False,
             for_duplicate_processing: bool = False,
-            effective_time: str = None,
+            effective_time: Optional[str] = None,
             time_out: int = default_time_out,
     ) -> None:
         """

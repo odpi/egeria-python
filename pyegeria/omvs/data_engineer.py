@@ -14,6 +14,7 @@ from pyegeria.core.utils import dynamic_catch, transform_json_to_tabular
 from pyegeria.core._server_client import ServerClient
 from pyegeria.models import SearchStringRequestBody
 from pyegeria.view.output_formatter import _generate_default_output
+from typing import Any, Optional
 
 class DataEngineer(ServerClient):
     """
@@ -33,7 +34,7 @@ class DataEngineer(ServerClient):
         The password associated with the user_id. Defaults to None.
     """
     @dynamic_catch
-    def __init__(self, view_server: str, platform_url: str, user_id: str, user_pwd: str = None, token: str = None):
+    def __init__(self, view_server: str, platform_url: str, user_id: str, user_pwd: Optional[str] = None, token: str = None):
         """
         Initialize the DataEngineer client.
 
@@ -63,23 +64,23 @@ class DataEngineer(ServerClient):
     async def _async_find_tabular_data_sets(self, search_string: str = "*",
                                             starts_with: bool = True, ends_with: bool = False,
                                             ignore_case: bool = False,
-                                            anchor_domain: str = None,
+                                            anchor_domain: Optional[str] = None,
                                             metadata_element_type: str = "TabularDataSet",
-                                            metadata_element_subtypes: list[str] = None,
-                                            skip_relationships: list[str] = None,
-                                            include_only_relationships: list[str] = None,
+                                            metadata_element_subtypes: Optional[list[str]] = None,
+                                            skip_relationships: Optional[list[str]] = None,
+                                            include_only_relationships: Optional[list[str]] = None,
                                             skip_classified_elements: list[str] = ["Template"],
-                                            include_only_classified_elements: list[str] = None,
+                                            include_only_classified_elements: Optional[list[str]] = None,
                                             graph_query_depth: int = 3,
-                                            governance_zone_filter: list[str] = None, as_of_time: str = None,
-                                            effective_time: str = None, relationship_page_size: int = 0,
-                                            limit_results_by_status: list[str] = None, sequencing_order: str = None,
-                                            sequencing_property: str = None,
+                                            governance_zone_filter: Optional[list[str]] = None, as_of_time: Optional[str] = None,
+                                            effective_time: Optional[str] = None, relationship_page_size: int = 0,
+                                            limit_results_by_status: Optional[list[str]] = None, sequencing_order: Optional[str] = None,
+                                            sequencing_property: Optional[str] = None,
                                             output_format: str = "JSON",
                                             report_spec: str | dict = "Referenceable",
                                             start_from: int = 0, page_size: int = 100,
-                                            property_names: list[str] = None,
-                                            body: dict | SearchStringRequestBody = None) -> list | str:
+                                            property_names: Optional[list[str]] = None,
+                                            body: Optional[dict | SearchStringRequestBody] = None) -> list | str:
         """ Retrieve the list of tabular data set metadata elements that contain the search string. Async Version.
 
         Parameters
@@ -180,23 +181,23 @@ class DataEngineer(ServerClient):
     def find_tabular_data_sets(self, search_string: str = "*",
                                starts_with: bool = True, ends_with: bool = False,
                                ignore_case: bool = False,
-                               anchor_domain: str = None,
+                               anchor_domain: Optional[str] = None,
                                metadata_element_type: str = "TabularDataSet",
-                               metadata_element_subtypes: list[str] = None,
-                               skip_relationships: list[str] = None,
-                               include_only_relationships: list[str] = None,
+                               metadata_element_subtypes: Optional[list[str]] = None,
+                               skip_relationships: Optional[list[str]] = None,
+                               include_only_relationships: Optional[list[str]] = None,
                                skip_classified_elements: list[str] = ["Template"],
-                               include_only_classified_elements: list[str] = None,
+                               include_only_classified_elements: Optional[list[str]] = None,
                                graph_query_depth: int = 3,
-                               governance_zone_filter: list[str] = None, as_of_time: str = None,
-                               effective_time: str = None, relationship_page_size: int = 0,
-                               limit_results_by_status: list[str] = None, sequencing_order: str = None,
-                               sequencing_property: str = None,
+                               governance_zone_filter: Optional[list[str]] = None, as_of_time: Optional[str] = None,
+                               effective_time: Optional[str] = None, relationship_page_size: int = 0,
+                               limit_results_by_status: Optional[list[str]] = None, sequencing_order: Optional[str] = None,
+                               sequencing_property: Optional[str] = None,
                                output_format: str = "JSON",
                                report_spec: str | dict = "Referenceable",
                                start_from: int = 0, page_size: int = 100,
-                               property_names: list[str] = None,
-                               body: dict | SearchStringRequestBody = None) -> list | str:
+                               property_names: Optional[list[str]] = None,
+                               body: Optional[dict | SearchStringRequestBody] = None) -> list | str:
         """ Retrieve the list of tabular data set metadata elements that contain the search string.
 
         Parameters

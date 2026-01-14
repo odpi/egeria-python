@@ -7,7 +7,7 @@ Copyright Contributors to the ODPi Egeria project.
 """
 
 import asyncio
-
+from typing import Any, Optional
 from pyegeria.core._server_client import ServerClient
 from pyegeria.models import SearchStringRequestBody, ResultsRequestBody, FilterRequestBody, GetRequestBody, \
     DeleteElementRequestBody
@@ -44,9 +44,9 @@ class ValidMetadataManager(ServerClient):
         self,
         view_server: str,
         platform_url: str,
-        user_id: str = None,
-        user_pwd: str = None,
-        token: str = None,
+        user_id: Optional[str] = None,
+        user_pwd: Optional[str] = None,
+        token: Optional[str] = None,
     ):
         self.view_server = view_server
         self.platform_url = platform_url
@@ -94,7 +94,7 @@ class ValidMetadataManager(ServerClient):
     def _generate_referenceable_output(
         self,
         elements: dict | list[dict],
-        filter: str | None,
+        filter_string : str | None,
         element_type_name: str | None,
         output_format: str = "DICT",
         report_spec: dict | str | None = None,
@@ -178,7 +178,7 @@ class ValidMetadataManager(ServerClient):
     def _generate_valid_value_output(
         self,
         elements: dict | list[dict],
-        filter: str | None,
+        filter_string : str | None,
         element_type_name: str | None,
         output_format: str = "DICT",
         report_spec: dict | str | None = None,
@@ -245,7 +245,7 @@ class ValidMetadataManager(ServerClient):
     def _generate_entity_output(
         self,
         elements: dict | list[dict],
-        filter: str | None,
+        filter_string : str | None,
         element_type_name: str | None,
         output_format: str = "DICT",
         report_spec: dict | str | None = None,
@@ -1359,7 +1359,7 @@ class ValidMetadataManager(ServerClient):
     async def _async_get_valid_metadata_values(
         self,
         property_name: str,
-        type_name: str = None,
+        type_name: Optional[str] = None,
         start_from: int = 0,
         page_size: int = None,
         output_format: str = "JSON",
@@ -1425,7 +1425,7 @@ class ValidMetadataManager(ServerClient):
     def get_valid_metadata_values(
         self,
         property_name: str,
-        type_name: str = None,
+        type_name: Optional[str] = None,
         start_from: int = 0,
         page_size: int = None,
         output_format: str = "JSON",
@@ -2481,7 +2481,7 @@ class ValidMetadataManager(ServerClient):
         )
 
     async def _async_delete_specification_property(
-        self, spec_property_guid: str,  body: dict | DeleteElementRequestBody = None, cascade: bool = False)->None:
+        self, spec_property_guid: str,  body: Optional[dict | DeleteElementRequestBody] = None, cascade: bool = False)->None:
         """Create a replacementAttribute specification property and attach it to an element.
            There are several different payloads to support setting up different use cases.
            see https://egeria-project.org/services/omvs/valid-metadata/overview/?h=valid#maintaining-specification-properties
@@ -2569,23 +2569,23 @@ class ValidMetadataManager(ServerClient):
     async def _async_find_specification_property(self, search_string: str = "*",
                                                  starts_with: bool = True, ends_with: bool = False,
                                                  ignore_case: bool = False,
-                                                 anchor_domain: str = None,
-                                                 metadata_element_type: str = None,
-                                                 metadata_element_subtypes: list[str] = None,
-                                                 skip_relationships: list[str] = None,
-                                                 include_only_relationships: list[str] = None,
-                                                 skip_classified_elements: list[str] = None,
-                                                 include_only_classified_elements: list[str] = None,
+                                                 anchor_domain: Optional[str] = None,
+                                                 metadata_element_type: Optional[str] = None,
+                                                 metadata_element_subtypes: Optional[list[str]] = None,
+                                                 skip_relationships: Optional[list[str]] = None,
+                                                 include_only_relationships: Optional[list[str]] = None,
+                                                 skip_classified_elements: Optional[list[str]] = None,
+                                                 include_only_classified_elements: Optional[list[str]] = None,
                                                  graph_query_depth: int = 3,
-                                                 governance_zone_filter: list[str] = None, as_of_time: str = None,
-                                                 effective_time: str = None, relationship_page_size: int = 0,
-                                                 limit_results_by_status: list[str] = None, sequencing_order: str = None,
-                                                 sequencing_property: str = None,
+                                                 governance_zone_filter: Optional[list[str]] = None, as_of_time: Optional[str] = None,
+                                                 effective_time: Optional[str] = None, relationship_page_size: int = 0,
+                                                 limit_results_by_status: Optional[list[str]] = None, sequencing_order: Optional[str] = None,
+                                                 sequencing_property: Optional[str] = None,
                                                  output_format: str = "JSON",
                                                  report_spec: str | dict = "Referenceable",
                                                  start_from: int = 0, page_size: int = 100,
-                                                 property_names: list[str] = None,
-                                                 body: dict | SearchStringRequestBody = None) -> list | str:
+                                                 property_names: Optional[list[str]] = None,
+                                                 body: Optional[dict | SearchStringRequestBody] = None) -> list | str:
         """ Retrieve the list of specification property metadata elements that contain the search string. Async Version.
 
         Parameters
@@ -2687,23 +2687,23 @@ class ValidMetadataManager(ServerClient):
     def find_specification_property(self, search_string: str = "*",
                                     starts_with: bool = True, ends_with: bool = False,
                                     ignore_case: bool = False,
-                                    anchor_domain: str = None,
-                                    metadata_element_type: str = None,
-                                    metadata_element_subtypes: list[str] = None,
-                                    skip_relationships: list[str] = None,
-                                    include_only_relationships: list[str] = None,
-                                    skip_classified_elements: list[str] = None,
-                                    include_only_classified_elements: list[str] = None,
+                                    anchor_domain: Optional[str] = None,
+                                    metadata_element_type: Optional[str] = None,
+                                    metadata_element_subtypes: Optional[list[str]] = None,
+                                    skip_relationships: Optional[list[str]] = None,
+                                    include_only_relationships: Optional[list[str]] = None,
+                                    skip_classified_elements: Optional[list[str]] = None,
+                                    include_only_classified_elements: Optional[list[str]] = None,
                                     graph_query_depth: int = 3,
-                                    governance_zone_filter: list[str] = None, as_of_time: str = None,
-                                    effective_time: str = None, relationship_page_size: int = 0,
-                                    limit_results_by_status: list[str] = None, sequencing_order: str = None,
-                                    sequencing_property: str = None,
+                                    governance_zone_filter: Optional[list[str]] = None, as_of_time: Optional[str] = None,
+                                    effective_time: Optional[str] = None, relationship_page_size: int = 0,
+                                    limit_results_by_status: Optional[list[str]] = None, sequencing_order: Optional[str] = None,
+                                    sequencing_property: Optional[str] = None,
                                     output_format: str = "JSON",
                                     report_spec: str | dict = "Referenceable",
                                     start_from: int = 0, page_size: int = 100,
-                                    property_names: list[str] = None,
-                                    body: dict | SearchStringRequestBody = None) -> list | str:
+                                    property_names: Optional[list[str]] = None,
+                                    body: Optional[dict | SearchStringRequestBody] = None) -> list | str:
         """ Retrieve the list of specification property metadata elements that contain the search string.
 
         Parameters
@@ -2804,7 +2804,7 @@ class ValidMetadataManager(ServerClient):
                                                                                body=body))
 
     @dynamic_catch
-    async def _async_get_specification_property_by_type(self, spec_property_type: str, body: dict | ResultsRequestBody = None,
+    async def _async_get_specification_property_by_type(self, spec_property_type: str, body: Optional[dict | ResultsRequestBody] = None,
                                               start_from: int = 0,
                                               page_size: int = 0, output_format: str = "JSON",
                                               report_spec: str | dict = None) -> list | str:
@@ -2861,7 +2861,7 @@ class ValidMetadataManager(ServerClient):
 
         return response
 
-    def get_specification_property_by_type(self, spec_property_type:str, body: dict | ResultsRequestBody = None,
+    def get_specification_property_by_type(self, spec_property_type:str, body: Optional[dict | ResultsRequestBody] = None,
                                  start_from: int = 0,
                                  page_size: int = 0, output_format: str = "JSON",
                                  report_spec: str | dict = None) -> list | str:
@@ -2917,8 +2917,8 @@ class ValidMetadataManager(ServerClient):
                                                  output_format, report_spec))
     @dynamic_catch
     async def _async_get_specification_property_by_name(self, name: str, start_from: int = 0, page_size: int = 0,
-                                              category: str = None, classification_names: list[str]= None,
-                                              body: dict | FilterRequestBody = None, output_format: str = "JSON",
+                                              category: Optional[str] = None, classification_names: list[str]= None,
+                                              body: Optional[dict | FilterRequestBody] = None, output_format: str = "JSON",
                                               report_spec: str | dict = None) -> list | str:
         """ Return the list of specification properties containing the supplied name. Async version.
 
@@ -2979,8 +2979,8 @@ class ValidMetadataManager(ServerClient):
 
 
     def get_specification_property_by_name(self, name: str, start_from: int = 0, page_size: int = 0,
-                                              category: str = None, classification_names: list[str]= None,
-                                              body: dict | FilterRequestBody = None, output_format: str = "JSON",
+                                              category: Optional[str] = None, classification_names: list[str]= None,
+                                              body: Optional[dict | FilterRequestBody] = None, output_format: str = "JSON",
                                               report_spec: str | dict = None) -> list:
         """ Return the list of specification properties containing the supplied name.
 
@@ -3037,8 +3037,8 @@ class ValidMetadataManager(ServerClient):
         )
 
     @dynamic_catch
-    async def _async_get_specification_property_by_guid(self, spec_property_guid: str, element_type: str = None,
-                                            body: dict | GetRequestBody = None,
+    async def _async_get_specification_property_by_guid(self, spec_property_guid: str, element_type: Optional[str] = None,
+                                            body: Optional[dict | GetRequestBody] = None,
                                             output_format: str = 'JSON',
                                             report_spec: str | dict = None) -> dict | str:
         """Return the properties of a specific collection. Async version.
@@ -3089,7 +3089,7 @@ class ValidMetadataManager(ServerClient):
         return response
 
     @dynamic_catch
-    def get_specification_property_by_guid(self, spec_property_guid: str, element_type: str = None, body: dict | GetRequestBody= None,
+    def get_specification_property_by_guid(self, spec_property_guid: str, element_type: Optional[str] = None, body: dict | GetRequestBody= None,
                                output_format: str = 'JSON', report_spec: str | dict = None) -> dict | str:
         """ Return the properties of a specific collection. Async version.
 

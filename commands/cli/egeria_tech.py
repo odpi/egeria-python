@@ -524,7 +524,7 @@ def show_asset_types(ctx):
 @show_info.command("registered-services")
 @click.option(
     "--services",
-    type=click.Choice(
+    type_name = click.Choice(
         [
             "all",
             "access-services",

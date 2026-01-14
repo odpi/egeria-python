@@ -8,6 +8,7 @@ Copyright Contributors to the ODPi Egeria project.
 """
 
 import asyncio
+from typing import Any, Optional
 
 from pyegeria.core._globals import NO_ELEMENTS_FOUND
 from pyegeria.view.base_report_formats import select_report_spec
@@ -50,8 +51,8 @@ class ProjectManager(ServerClient):
             view_server: str,
             platform_url: str,
             user_id: str,
-            user_pwd: str = None,
-            token: str = None,
+            user_pwd: Optional[str] = None,
+            token: Optional[str] = None,
     ):
         self.view_server = view_server
         self.platform_url = platform_url
@@ -132,7 +133,7 @@ class ProjectManager(ServerClient):
     async def _async_get_linked_projects(
             self,
             parent_guid: str,
-            body: dict | GetRequestBody = None,
+            body: Optional[dict | GetRequestBody] = None,
             output_format: str = 'JSON',
             report_spec: str | dict = None,
     ) -> list | str:
@@ -188,7 +189,7 @@ class ProjectManager(ServerClient):
     def get_linked_projects(
             self,
             parent_guid: str,
-            body: dict | GetRequestBody = None,
+            body: Optional[dict | GetRequestBody] = None,
             output_format: str = 'JSON',
             report_spec: str | dict = None) -> str | dict:
 
@@ -249,7 +250,7 @@ class ProjectManager(ServerClient):
             page_size: int = 0,
             output_format: str = 'JSON',
             report_spec: str | dict = None,
-            body: dict | GetRequestBody = None,) -> str | dict:
+            body: Optional[dict | GetRequestBody] = None,) -> str | dict:
 
         """Returns the list of projects with a particular classification. The name of the classification is
             supplied in the request body. Examples of these classifications include StudyProject, PersonalProject,
@@ -301,7 +302,7 @@ class ProjectManager(ServerClient):
             page_size: int = 0,
             output_format: str = 'JSON',
             report_spec: str | dict = None,
-            body: dict | GetRequestBody = None,
+            body: Optional[dict | GetRequestBody] = None,
     ) -> str | dict:
         """Returns the list of projects with a particular classification. The name of the classification is
             supplied in the request body. Examples of these classifications include StudyProject, PersonalProject,
@@ -351,12 +352,12 @@ class ProjectManager(ServerClient):
     async def _async_get_project_team(
             self,
             project_guid: str,
-            team_role: str = None,
+            team_role: Optional[str] = None,
             start_from: int = 0,
             page_size: int = 0,
             output_format: str = 'JSON',
             report_spec: str | dict = None,
-            body: dict | FilterRequestBody = None,) -> str | dict:
+            body: Optional[dict | FilterRequestBody] = None,) -> str | dict:
 
         """Returns the list of actors that are linked off of the project.  This includes the project managers.
            The optional request body allows a teamRole to be specified as a filter.  To filter out the project managers,
@@ -410,12 +411,12 @@ class ProjectManager(ServerClient):
     def get_project_team(
             self,
             project_guid: str,
-            team_role: str = None,
+            team_role: Optional[str] = None,
             start_from: int = 0,
             page_size: int = 0,
             output_format: str = 'JSON',
             report_spec: str | dict = None,
-            body: dict | FilterRequestBody = None,
+            body: Optional[dict | FilterRequestBody] = None,
     ) -> str | dict:
         """Returns the list of actors that are linked off of the project.  This includes the project managers.
            The optional request body allows a teamRole to be specified as a filter.  To filter out the project managers,
@@ -457,23 +458,23 @@ class ProjectManager(ServerClient):
     async def _async_find_projects(self, search_string: str = "*",
                                    starts_with: bool = True, ends_with: bool = False,
                                    ignore_case: bool = False,
-                                   anchor_domain: str = None,
-                                   metadata_element_type: str = None,
-                                   metadata_element_subtypes: list[str] = None,
-                                   skip_relationships: list[str] = None,
-                                   include_only_relationships: list[str] = None,
-                                   skip_classified_elements: list[str] = None,
-                                   include_only_classified_elements: list[str] = None,
+                                   anchor_domain: Optional[str] = None,
+                                   metadata_element_type: Optional[str] = None,
+                                   metadata_element_subtypes: Optional[list[str]] = None,
+                                   skip_relationships: Optional[list[str]] = None,
+                                   include_only_relationships: Optional[list[str]] = None,
+                                   skip_classified_elements: Optional[list[str]] = None,
+                                   include_only_classified_elements: Optional[list[str]] = None,
                                    graph_query_depth: int = 3,
-                                   governance_zone_filter: list[str] = None, as_of_time: str = None,
-                                   effective_time: str = None, relationship_page_size: int = 0,
-                                   limit_results_by_status: list[str] = None, sequencing_order: str = None,
-                                   sequencing_property: str = None,
+                                   governance_zone_filter: Optional[list[str]] = None, as_of_time: Optional[str] = None,
+                                   effective_time: Optional[str] = None, relationship_page_size: int = 0,
+                                   limit_results_by_status: Optional[list[str]] = None, sequencing_order: Optional[str] = None,
+                                   sequencing_property: Optional[str] = None,
                                    output_format: str = "JSON",
                                    report_spec: str | dict = "Referenceable",
                                    start_from: int = 0, page_size: int = 100,
-                                   property_names: list[str] = None,
-                                   body: dict | SearchStringRequestBody = None) -> list | str:
+                                   property_names: Optional[list[str]] = None,
+                                   body: Optional[dict | SearchStringRequestBody] = None) -> list | str:
         """ Retrieve the list of project metadata elements that contain the search string. Async Version.
 
         Parameters
@@ -574,23 +575,23 @@ class ProjectManager(ServerClient):
     def find_projects(self, search_string: str = "*",
                       starts_with: bool = True, ends_with: bool = False,
                       ignore_case: bool = False,
-                      anchor_domain: str = None,
-                      metadata_element_type: str = None,
-                      metadata_element_subtypes: list[str] = None,
-                      skip_relationships: list[str] = None,
-                      include_only_relationships: list[str] = None,
-                      skip_classified_elements: list[str] = None,
-                      include_only_classified_elements: list[str] = None,
+                      anchor_domain: Optional[str] = None,
+                      metadata_element_type: Optional[str] = None,
+                      metadata_element_subtypes: Optional[list[str]] = None,
+                      skip_relationships: Optional[list[str]] = None,
+                      include_only_relationships: Optional[list[str]] = None,
+                      skip_classified_elements: Optional[list[str]] = None,
+                      include_only_classified_elements: Optional[list[str]] = None,
                       graph_query_depth: int = 3,
-                      governance_zone_filter: list[str] = None, as_of_time: str = None,
-                      effective_time: str = None, relationship_page_size: int = 0,
-                      limit_results_by_status: list[str] = None, sequencing_order: str = None,
-                      sequencing_property: str = None,
+                      governance_zone_filter: Optional[list[str]] = None, as_of_time: Optional[str] = None,
+                      effective_time: Optional[str] = None, relationship_page_size: int = 0,
+                      limit_results_by_status: Optional[list[str]] = None, sequencing_order: Optional[str] = None,
+                      sequencing_property: Optional[str] = None,
                       output_format: str = "JSON",
                       report_spec: str | dict = "Referenceable",
                       start_from: int = 0, page_size: int = 100,
-                      property_names: list[str] = None,
-                      body: dict | SearchStringRequestBody = None) -> list | str:
+                      property_names: Optional[list[str]] = None,
+                      body: Optional[dict | SearchStringRequestBody] = None) -> list | str:
         """ Retrieve the list of project metadata elements that contain the search string.
 
         Parameters
@@ -692,8 +693,8 @@ class ProjectManager(ServerClient):
 
     @dynamic_catch
     async def _async_get_projects_by_name(
-            self, filter_string: str = None, classification_names: list[str] = None,
-            body: dict | FilterRequestBody = None,
+            self, filter_string: Optional[str] = None, classification_names: Optional[list[str]] = None,
+            body: Optional[dict | FilterRequestBody] = None,
             start_from: int = 0, page_size: int = 0,
             output_format: str = 'JSON',
             report_spec: str | dict = None) -> list | str:
@@ -711,8 +712,8 @@ class ProjectManager(ServerClient):
 
     @dynamic_catch
     def get_projects_by_name(
-            self, filter_string: str = None, classification_names: list[str] = None,
-            body: dict | FilterRequestBody = None,
+            self, filter_string: Optional[str] = None, classification_names: Optional[list[str]] = None,
+            body: Optional[dict | FilterRequestBody] = None,
             start_from: int = 0, page_size: int = 0,
             output_format: str = 'JSON',
             report_spec: str | dict = None) -> list | str:
@@ -732,8 +733,8 @@ class ProjectManager(ServerClient):
         return resp
 
     @dynamic_catch
-    async def _async_get_project_by_guid(self, project_guid: str, element_type: str = None,
-                                         body: dict | GetRequestBody = None,
+    async def _async_get_project_by_guid(self, project_guid: str, element_type: Optional[str] = None,
+                                         body: Optional[dict | GetRequestBody] = None,
                                          output_format: str = 'JSON',
                                          report_spec: str | dict = None) -> dict | str:
         """Return the properties of a specific project. Async version.
@@ -791,8 +792,8 @@ class ProjectManager(ServerClient):
         return response
 
     @dynamic_catch
-    def get_project_by_guid(self, project_guid: str, element_type: str = None,
-                            body: dict | GetRequestBody = None,
+    def get_project_by_guid(self, project_guid: str, element_type: Optional[str] = None,
+                            body: Optional[dict | GetRequestBody] = None,
                             output_format: str = 'JSON',
                             report_spec: str | dict = None) -> dict | str:
         """Return the properties of a specific project.
@@ -848,8 +849,8 @@ class ProjectManager(ServerClient):
     async def _async_get_project_graph(
             self,
             project_guid: str,
-            element_type: str = None,
-            body: dict | GetRequestBody = None,
+            element_type: Optional[str] = None,
+            body: Optional[dict | GetRequestBody] = None,
             output_format: str = 'JSON',
             report_spec: str | dict = None,
     ) -> dict | str:
@@ -893,8 +894,8 @@ class ProjectManager(ServerClient):
     def get_project_graph(
             self,
             project_guid: str,
-            element_type: str = None,
-            body: dict | GetRequestBody = None,
+            element_type: Optional[str] = None,
+            body: Optional[dict | GetRequestBody] = None,
             output_format: str = 'JSON',
             report_spec: str | dict = None,
     ) -> dict | str:
@@ -1285,7 +1286,7 @@ class ProjectManager(ServerClient):
     @dynamic_catch
     async def _async_delete_project(
             self,
-            project_guid: str, cascade: bool = False, body: dict | DeleteElementRequestBody = None) -> None:
+            project_guid: str, cascade: bool = False, body: Optional[dict | DeleteElementRequestBody] = None) -> None:
         """Delete a project.  It is detected from all parent elements. Async version
 
         Parameters
@@ -1321,7 +1322,7 @@ class ProjectManager(ServerClient):
     @dynamic_catch
     def delete_project(
             self,
-            project_guid: str, cascade: bool = False, body: dict | DeleteElementRequestBody = None) -> None:
+            project_guid: str, cascade: bool = False, body: Optional[dict | DeleteElementRequestBody] = None) -> None:
         """Delete a project.  It is detected from all parent elements.
 
         Parameters
@@ -1355,7 +1356,7 @@ class ProjectManager(ServerClient):
     @dynamic_catch
     async def _async_set_project_dependency(self, project_guid: str,
                                             upstream_project_guid: str,
-                                            body: dict | NewRelationshipRequestBody = None):
+                                            body: Optional[dict | NewRelationshipRequestBody] = None):
         """ A project depends on an upstream project.
             Request body is optional. Async version.
 
@@ -1394,7 +1395,7 @@ class ProjectManager(ServerClient):
     @dynamic_catch
     def set_project_dependency(self, project_guid: str,
                                             upstream_project_guid: str,
-                                            body: dict | NewRelationshipRequestBody = None):
+                                            body: Optional[dict | NewRelationshipRequestBody] = None):
         """ Link two dependent digital products.  The linked elements are of type DigitalProduct.
             Request body is optional.
 
@@ -1432,7 +1433,7 @@ class ProjectManager(ServerClient):
     @dynamic_catch
     async def _async_clear_project_dependency(self, project_guid: str,
                                               upstream_project_guid: str,
-                                              body: dict | DeleteRelationshipRequestBody = None) -> None:
+                                              body: Optional[dict | DeleteRelationshipRequestBody] = None) -> None:
         """ Unlink two dependent projects.  Request body is optional. Async version.
 
         Parameters
@@ -1479,7 +1480,7 @@ class ProjectManager(ServerClient):
 
     @dynamic_catch
     def clear_project_dependency(self, project_guid: str, upstream_project_guid: str,
-                                 body: dict | DeleteRelationshipRequestBody = None):
+                                 body: Optional[dict | DeleteRelationshipRequestBody] = None):
         """ Unlink two dependent projects.  Request body is optional.
 
         Parameters
@@ -1523,7 +1524,7 @@ class ProjectManager(ServerClient):
     @dynamic_catch
     async def _async_set_project_hierarchy(self, project_guid: str,
                                            parent_project_guid: str,
-                                           body: dict | NewRelationshipRequestBody = None):
+                                           body: Optional[dict | NewRelationshipRequestBody] = None):
         """ Set a hierarchy relationship between two projects.
             Request body is optional. Async version.
 
@@ -1563,7 +1564,7 @@ class ProjectManager(ServerClient):
     @dynamic_catch
     def set_project_hierarchy(self, project_guid: str,
                               parent_project_guid: str,
-                              body: dict | NewRelationshipRequestBody = None):
+                              body: Optional[dict | NewRelationshipRequestBody] = None):
         """ Link two dependent digital products.  The linked elements are of type DigitalProduct.
             Request body is optional.
 
@@ -1601,7 +1602,7 @@ class ProjectManager(ServerClient):
     @dynamic_catch
     async def _async_clear_project_hierarchy(self, project_guid: str,
                                              parent_project_guid: str,
-                                             body: dict | DeleteRelationshipRequestBody = None) -> None:
+                                             body: Optional[dict | DeleteRelationshipRequestBody] = None) -> None:
         """ Unlink hierarchy relationship.  Request body is optional. Async version.
 
         Parameters
@@ -1648,7 +1649,7 @@ class ProjectManager(ServerClient):
 
     @dynamic_catch
     def clear_project_hierarchy(self, project_guid: str, parent_project_guid: str,
-                                body: dict | DeleteRelationshipRequestBody = None):
+                                body: Optional[dict | DeleteRelationshipRequestBody] = None):
         """ Unlink two dependent projects.  Request body is optional.
 
         Parameters
@@ -1694,9 +1695,9 @@ class ProjectManager(ServerClient):
             self,
             project_guid: str,
             actor_guid: str,
-            assignment_type: str = None,
-            description: str = None,
-            body: dict | NewRelationshipRequestBody = None
+            assignment_type: Optional[str] = None,
+            description: Optional[str] = None,
+            body: Optional[dict | NewRelationshipRequestBody] = None
     ) -> None:
         """Add an actor to a project. The request body is optional.  If supplied, it contains the name of the perspective that
         the actor plays in the project. Async version.
@@ -1753,9 +1754,9 @@ class ProjectManager(ServerClient):
             self,
             project_guid: str,
             actor_guid: str,
-            assignment_type: str = None,
-            description: str = None,
-            body: dict | NewRelationshipRequestBody = None
+            assignment_type: Optional[str] = None,
+            description: Optional[str] = None,
+            body: Optional[dict | NewRelationshipRequestBody] = None
     ) -> None:
         """Add an actor to a project. The request body is optional.  If supplied, it contains the name of the perspective that
         the actor plays in the project.
@@ -1804,7 +1805,7 @@ class ProjectManager(ServerClient):
             self,
             project_guid: str,
             actor_guid: str,
-            body: dict | DeleteRelationshipRequestBody = None
+            body: Optional[dict | DeleteRelationshipRequestBody] = None
     ) -> None:
         """Remove an actor from a project. Async version.
 
@@ -1844,7 +1845,7 @@ class ProjectManager(ServerClient):
             self,
             project_guid: str,
             actor_guid: str,
-            body: dict | DeleteRelationshipRequestBody = None
+            body: Optional[dict | DeleteRelationshipRequestBody] = None
     ) -> None:
         """Remove an actor from a project.
 

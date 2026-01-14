@@ -155,7 +155,7 @@ class AutomatedCurationScenarioTester:
                 # Get detailed info for a specific type
                 if type_count > 0:
                     console.print("\n  → Getting detailed information for first type...")
-                    detail = self.client.get_tech_type_detail(filter = all_types[0]['displayName'],output_format="JSON")
+                    detail = self.client.get_tech_type_detail(filter_string = all_types[0]['displayName'],output_format="JSON")
                     if detail:
                         console.print("  ✓ Retrieved technology type details")
                 
@@ -345,7 +345,7 @@ class AutomatedCurationScenarioTester:
             
             # Get technology type hierarchy
             console.print("  → Retrieving technology type hierarchy...")
-            root = self.client.get_tech_type_hierarchy(filter = '*',
+            root = self.client.get_tech_type_hierarchy(filter_string = '*',
                                                             output_format="JSON")
             hierarchy = root['subTypes']
             if isinstance(hierarchy, list):

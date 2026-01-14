@@ -9,7 +9,7 @@ This module provides access to the Solution Architect OMVS module.
 import asyncio
 import os
 import sys
-from typing import Dict, List, Union
+from typing import Dict, List, Union, Optional
 
 from httpx import Response
 from loguru import logger
@@ -78,8 +78,8 @@ class SolutionArchitect(ServerClient):
 
     """
 
-    def __init__(self, view_server: str, platform_url: str, user_id: str = None, user_pwd: str = None,
-                 token: str = None, ):
+    def __init__(self, view_server: str, platform_url: str, user_id: Optional[str] = None, user_pwd: Optional[str] = None,
+                 token: Optional[str] = None, ):
         self.view_server = view_server
         self.platform_url = platform_url
         self.user_id = user_id
@@ -1145,7 +1145,7 @@ class SolutionArchitect(ServerClient):
         loop.run_until_complete(self._async_update_info_supply_chain(guid, body))
 
     @dynamic_catch
-    async def _async_link_peer_info_supply_chains(self, peer1_guid: str, peer2_guid: str, body: dict | NewRelationshipRequestBody = None) -> None:
+    async def _async_link_peer_info_supply_chains(self, peer1_guid: str, peer2_guid: str, body: Optional[dict | NewRelationshipRequestBody] = None) -> None:
         """ Connect two peer information supply chains.  The linked elements are of type 'Referenceable' to
         allow significant data stores to be included in the definition of the information supply chain.
         Request body is optional. Async Version.
@@ -1252,7 +1252,7 @@ class SolutionArchitect(ServerClient):
 
     @dynamic_catch
     async def _async_unlink_peer_info_supply_chains(self, peer1_guid: str, peer2_guid: str,
-                                                       body: dict | DeleteRelationshipRequestBody = None) -> None:
+                                                       body: Optional[dict | DeleteRelationshipRequestBody] = None) -> None:
         """ Detach two peers in an information supply chain from one another.  The linked elements are of type
            'Referenceable' to allow significant data stores to be included in the definition of the information
            supply chain. Request body is optional. Async Version.
@@ -1348,7 +1348,7 @@ class SolutionArchitect(ServerClient):
 
     @dynamic_catch
     async def _async_compose_info_supply_chains(self, chain_guid: str, nested_chain_guid: str,
-                                                body: dict | NewRelationshipRequestBody = None) -> None:
+                                                body: Optional[dict | NewRelationshipRequestBody] = None) -> None:
         """ Connect a nested information supply chain to its parent. Request body is optional.
             Async Version.
 
@@ -1403,7 +1403,7 @@ class SolutionArchitect(ServerClient):
         logger.info(f"Linked {chain_guid} -> {nested_chain_guid}")
 
     @dynamic_catch
-    def compose_info_supply_chains(self, chain_guid: str, nested_chain_guid: str, body: dict | NewRelationshipRequestBody = None) -> None:
+    def compose_info_supply_chains(self, chain_guid: str, nested_chain_guid: str, body: Optional[dict | NewRelationshipRequestBody] = None) -> None:
         """ Connect a nested information supply chain to its parent. Request body is optional.
 
         Parameters
@@ -1503,7 +1503,7 @@ class SolutionArchitect(ServerClient):
 
     @dynamic_catch
     def decompose_info_supply_chains(self, chain_guid: str, nested_chain_guid: str,
-                                                       body: dict | DeleteRelationshipRequestBody = None) -> None:
+                                                       body: Optional[dict | DeleteRelationshipRequestBody] = None) -> None:
         """ Detach two peers in an information supply chain from one another.  Request body is optional.
 
         Parameters
@@ -1546,7 +1546,7 @@ class SolutionArchitect(ServerClient):
                                                                          nested_chain_guid, body))
 
     @dynamic_catch
-    async def _async_delete_info_supply_chain(self, guid: str, body: dict | DeleteElementRequestBody = None, cascade_delete: bool = False) -> None:
+    async def _async_delete_info_supply_chain(self, guid: str, body: Optional[dict | DeleteElementRequestBody] = None, cascade_delete: bool = False) -> None:
         """Delete an information supply chain. Async Version.
 
            Parameters
@@ -1636,22 +1636,22 @@ class SolutionArchitect(ServerClient):
     def find_all_information_supply_chains(self, add_implementation: bool = True,
                                            starts_with: bool = True, ends_with: bool = False,
                                            ignore_case: bool = False,
-                                           anchor_domain: str = None,
-                                           metadata_element_type: str = None,
-                                           metadata_element_subtypes: list[str] = None,
-                                           skip_relationships: list[str] = None,
-                                           include_only_relationships: list[str] = None,
-                                           skip_classified_elements: list[str] = None,
-                                           include_only_classified_elements: list[str] = None,
+                                           anchor_domain: Optional[str] = None,
+                                           metadata_element_type: Optional[str] = None,
+                                           metadata_element_subtypes: Optional[list[str]] = None,
+                                           skip_relationships: Optional[list[str]] = None,
+                                           include_only_relationships: Optional[list[str]] = None,
+                                           skip_classified_elements: Optional[list[str]] = None,
+                                           include_only_classified_elements: Optional[list[str]] = None,
                                            graph_query_depth: int = 3,
-                                           governance_zone_filter: list[str] = None, as_of_time: str = None,
-                                           effective_time: str = None, relationship_page_size: int = 0,
-                                           limit_results_by_status: list[str] = None, sequencing_order: str = None,
-                                           sequencing_property: str = None,
+                                           governance_zone_filter: Optional[list[str]] = None, as_of_time: Optional[str] = None,
+                                           effective_time: Optional[str] = None, relationship_page_size: int = 0,
+                                           limit_results_by_status: Optional[list[str]] = None, sequencing_order: Optional[str] = None,
+                                           sequencing_property: Optional[str] = None,
                                            output_format: str = "JSON", report_spec: str | dict = None,
                                            start_from: int = 0, page_size: int = 100,
-                                           property_names: list[str] = None,
-                                           body: dict | SearchStringRequestBody = None) -> (list[dict] | str):
+                                           property_names: Optional[list[str]] = None,
+                                           body: Optional[dict | SearchStringRequestBody] = None) -> (list[dict] | str):
         """ Retrieve a list of all information supply chains
              Parameters
                 ----------
@@ -1764,22 +1764,22 @@ class SolutionArchitect(ServerClient):
     async def _async_find_information_supply_chains(self, search_string: str = "*", add_implementation: bool = True,
                                                    starts_with: bool = True, ends_with: bool = False,
                                                    ignore_case: bool = False,
-                                                   anchor_domain: str = None,
-                                                   metadata_element_type: str = None,
-                                                   metadata_element_subtypes: list[str] = None,
-                                                   skip_relationships: list[str] = None,
-                                                   include_only_relationships: list[str] = None,
-                                                   skip_classified_elements: list[str] = None,
-                                                   include_only_classified_elements: list[str] = None,
+                                                   anchor_domain: Optional[str] = None,
+                                                   metadata_element_type: Optional[str] = None,
+                                                   metadata_element_subtypes: Optional[list[str]] = None,
+                                                   skip_relationships: Optional[list[str]] = None,
+                                                   include_only_relationships: Optional[list[str]] = None,
+                                                   skip_classified_elements: Optional[list[str]] = None,
+                                                   include_only_classified_elements: Optional[list[str]] = None,
                                                    graph_query_depth: int = 3,
-                                                   governance_zone_filter: list[str] = None, as_of_time: str = None,
-                                                   effective_time: str = None, relationship_page_size: int = 0,
-                                                   limit_results_by_status: list[str] = None, sequencing_order: str = None,
-                                                   sequencing_property: str = None,
+                                                   governance_zone_filter: Optional[list[str]] = None, as_of_time: Optional[str] = None,
+                                                   effective_time: Optional[str] = None, relationship_page_size: int = 0,
+                                                   limit_results_by_status: Optional[list[str]] = None, sequencing_order: Optional[str] = None,
+                                                   sequencing_property: Optional[str] = None,
                                                    output_format: str = "JSON", report_spec: str | dict = None,
                                                    start_from: int = 0, page_size: int = 100,
-                                                   property_names: list[str] = None,
-                                                   body: dict | SearchStringRequestBody = None) -> list[dict] | str:
+                                                   property_names: Optional[list[str]] = None,
+                                                   body: Optional[dict | SearchStringRequestBody] = None) -> list[dict] | str:
         """Retrieve the information supply chain metadata elements that contain the search string.
            https://egeria-project.org/concepts/information-supply-chain
            Async version.
@@ -1902,22 +1902,22 @@ class SolutionArchitect(ServerClient):
     def find_information_supply_chains(self, search_string: str = "*", add_implementation: bool = True,
                                        starts_with: bool = True, ends_with: bool = False,
                                        ignore_case: bool = False,
-                                       anchor_domain: str = None,
-                                       metadata_element_type: str = None,
-                                       metadata_element_subtypes: list[str] = None,
-                                       skip_relationships: list[str] = None,
-                                       include_only_relationships: list[str] = None,
-                                       skip_classified_elements: list[str] = None,
-                                       include_only_classified_elements: list[str] = None,
+                                       anchor_domain: Optional[str] = None,
+                                       metadata_element_type: Optional[str] = None,
+                                       metadata_element_subtypes: Optional[list[str]] = None,
+                                       skip_relationships: Optional[list[str]] = None,
+                                       include_only_relationships: Optional[list[str]] = None,
+                                       skip_classified_elements: Optional[list[str]] = None,
+                                       include_only_classified_elements: Optional[list[str]] = None,
                                        graph_query_depth: int = 3,
-                                       governance_zone_filter: list[str] = None, as_of_time: str = None,
-                                       effective_time: str = None, relationship_page_size: int = 0,
-                                       limit_results_by_status: list[str] = None, sequencing_order: str = None,
-                                       sequencing_property: str = None,
+                                       governance_zone_filter: Optional[list[str]] = None, as_of_time: Optional[str] = None,
+                                       effective_time: Optional[str] = None, relationship_page_size: int = 0,
+                                       limit_results_by_status: Optional[list[str]] = None, sequencing_order: Optional[str] = None,
+                                       sequencing_property: Optional[str] = None,
                                        output_format: str = "JSON", report_spec: str | dict = None,
                                        start_from: int = 0, page_size: int = 100,
-                                       property_names: list[str] = None,
-                                       body: dict | SearchStringRequestBody = None) -> list[dict] | str:
+                                       property_names: Optional[list[str]] = None,
+                                       body: Optional[dict | SearchStringRequestBody] = None) -> list[dict] | str:
         """Retrieve the information supply chain metadata elements that contain the search string.
           https://egeria-project.org/concepts/information-supply-chain
 
@@ -2835,7 +2835,7 @@ class SolutionArchitect(ServerClient):
         logger.info(f"Deleted Info Supply Chain  {guid} with cascade {cascade}")
 
     @dynamic_catch
-    def delete_solution_blueprint(self, guid: str, body: dict | DeleteElementRequestBody = None,
+    def delete_solution_blueprint(self, guid: str, body: Optional[dict | DeleteElementRequestBody] = None,
                                  cascade: bool = False) -> None:
         """ Delete an Solution Blueprint.
 
@@ -2983,7 +2983,7 @@ class SolutionArchitect(ServerClient):
 
     @dynamic_catch
     async def _async_detach_solution_component_from_blueprint(self, blueprint_guid: str, component_guid: str,
-                                                              body: dict | DeleteRelationshipRequestBody = None) -> None:
+                                                              body: Optional[dict | DeleteRelationshipRequestBody] = None) -> None:
         """ Detach a solution component from a solution blueprint.
             Async Version.
 
@@ -3033,7 +3033,7 @@ class SolutionArchitect(ServerClient):
 
     @dynamic_catch
     def detach_solution_component_from_blueprint(self, blueprint_guid: str, component_guid: str,
-                                                 body: dict | DeleteRelationshipRequestBody = None) -> None:
+                                                 body: Optional[dict | DeleteRelationshipRequestBody] = None) -> None:
         """ Detach a solution component from a solution blueprint.
 
         Parameters
@@ -3079,7 +3079,7 @@ class SolutionArchitect(ServerClient):
 
     @dynamic_catch
     async def _async_delete_solution_blueprint(self, blueprint_guid: str, cascade_delete: bool = False,
-                                               body: dict | DeleteElementRequestBody = None) -> None:
+                                               body: Optional[dict | DeleteElementRequestBody] = None) -> None:
         """Delete a solution blueprint. Async Version.
 
            Parameters
@@ -3127,7 +3127,7 @@ class SolutionArchitect(ServerClient):
         logger.info(f"Deleted Blueprint  {blueprint_guid} with cascade {cascade_delete}")
 
     @dynamic_catch
-    def delete_solution_blueprint(self, blueprint_guid: str, cascade_delete: bool = False, body: dict | DeleteElementRequestBody = None) -> None:
+    def delete_solution_blueprint(self, blueprint_guid: str, cascade_delete: bool = False, body: Optional[dict | DeleteElementRequestBody] = None) -> None:
         """ Delete a solution blueprint.
             Parameters
             ----------
@@ -3173,22 +3173,22 @@ class SolutionArchitect(ServerClient):
     async def _async_find_solution_blueprints(self, search_string: str = "*",
                                              starts_with: bool = True, ends_with: bool = False,
                                              ignore_case: bool = False,
-                                             anchor_domain: str = None,
-                                             metadata_element_type: str = None,
-                                             metadata_element_subtypes: list[str] = None,
-                                             skip_relationships: list[str] = None,
-                                             include_only_relationships: list[str] = None,
-                                             skip_classified_elements: list[str] = None,
-                                             include_only_classified_elements: list[str] = None,
+                                             anchor_domain: Optional[str] = None,
+                                             metadata_element_type: Optional[str] = None,
+                                             metadata_element_subtypes: Optional[list[str]] = None,
+                                             skip_relationships: Optional[list[str]] = None,
+                                             include_only_relationships: Optional[list[str]] = None,
+                                             skip_classified_elements: Optional[list[str]] = None,
+                                             include_only_classified_elements: Optional[list[str]] = None,
                                              graph_query_depth: int = 3,
-                                             governance_zone_filter: list[str] = None, as_of_time: str = None,
-                                             effective_time: str = None, relationship_page_size: int = 0,
-                                             limit_results_by_status: list[str] = None, sequencing_order: str = None,
-                                             sequencing_property: str = None,
+                                             governance_zone_filter: Optional[list[str]] = None, as_of_time: Optional[str] = None,
+                                             effective_time: Optional[str] = None, relationship_page_size: int = 0,
+                                             limit_results_by_status: Optional[list[str]] = None, sequencing_order: Optional[str] = None,
+                                             sequencing_property: Optional[str] = None,
                                              output_format: str = "JSON", report_spec: str | dict = "Solution-Blueprint",
                                              start_from: int = 0, page_size: int = 100,
-                                             property_names: list[str] = None,
-                                             body: dict | SearchStringRequestBody = None) -> list[dict] | str:
+                                             property_names: Optional[list[str]] = None,
+                                             body: Optional[dict | SearchStringRequestBody] = None) -> list[dict] | str:
         """Retrieve the solution blueprint elements that contain the search string.
            https://egeria-project.org/concepts/solution-blueprint
            Async version.
@@ -3307,28 +3307,28 @@ class SolutionArchitect(ServerClient):
     def find_solution_blueprints(self, search_string: str = "*",
                                  starts_with: bool = True, ends_with: bool = False,
                                  ignore_case: bool = False,
-                                 anchor_domain: str = None,
-                                 metadata_element_type: str = None,
-                                 metadata_element_subtypes: list[str] = None,
-                                 skip_relationships: list[str] = None,
-                                 include_only_relationships: list[str] = None,
-                                 skip_classified_elements: list[str] = None,
-                                 include_only_classified_elements: list[str] = None,
+                                 anchor_domain: Optional[str] = None,
+                                 metadata_element_type: Optional[str] = None,
+                                 metadata_element_subtypes: Optional[list[str]] = None,
+                                 skip_relationships: Optional[list[str]] = None,
+                                 include_only_relationships: Optional[list[str]] = None,
+                                 skip_classified_elements: Optional[list[str]] = None,
+                                 include_only_classified_elements: Optional[list[str]] = None,
                                  graph_query_depth: int = 3,
-                                 governance_zone_filter: list[str] = None, as_of_time: str = None,
-                                 effective_time: str = None, relationship_page_size: int = 0,
-                                 limit_results_by_status: list[str] = None, sequencing_order: str = None,
-                                 sequencing_property: str = None,
+                                 governance_zone_filter: Optional[list[str]] = None, as_of_time: Optional[str] = None,
+                                 effective_time: Optional[str] = None, relationship_page_size: int = 0,
+                                 limit_results_by_status: Optional[list[str]] = None, sequencing_order: Optional[str] = None,
+                                 sequencing_property: Optional[str] = None,
                                  output_format: str = "JSON", report_spec: str | dict = "Solution-Blueprint",
                                  start_from: int = 0, page_size: int = 100,
-                                 property_names: list[str] = None,
-                                 body: dict | SearchStringRequestBody = None) -> list[dict] | str:
+                                 property_names: Optional[list[str]] = None,
+                                 body: Optional[dict | SearchStringRequestBody] = None) -> list[dict] | str:
         """Retrieve the list of solution blueprint elements that contain the search string.
            https://egeria-project.org/concepts/solution-blueprint
 
         Parameters
         ----------
-        filter: str
+        filter_string : str
             - search_filterstring to search for.
         starts_with : bool, [default=False], optional
             Starts with the supplied string.
@@ -3403,12 +3403,12 @@ class SolutionArchitect(ServerClient):
                                                  property_names, body))
         return response
 
-    def find_all_solution_blueprints(self, classification_names: list[str] = None,
-                                    metadata_element_subtypes: list[str] = None,
+    def find_all_solution_blueprints(self, classification_names: Optional[list[str]] = None,
+                                    metadata_element_subtypes: Optional[list[str]] = None,
                                     starts_with: bool = True, ends_with: bool = False,
                                     ignore_case: bool = False, start_from: int = 0,
                                     page_size: int = 0, output_format: str = 'JSON',
-                                    report_spec: str = None,
+                                    report_spec: Optional[str] = None,
                                     body: dict| SearchStringRequestBody = None) -> list[dict] | str:
         """Retrieve a list of all solution blueprint elements
         https://egeria-project.org/concepts/solution-blueprint
@@ -4397,7 +4397,7 @@ class SolutionArchitect(ServerClient):
 
     @dynamic_catch
     async def _async_detach_solution_linking_wire(self, component1_guid: str, component2_guid: str,
-                                                  body: dict | DeleteRelationshipRequestBody = None) -> None:
+                                                  body: Optional[dict | DeleteRelationshipRequestBody] = None) -> None:
         """ Detach a solution component from a peer solution component.
             Async Version.
 
@@ -4446,7 +4446,7 @@ class SolutionArchitect(ServerClient):
             f"Detached solution linking wire between  {component1_guid} -> {component2_guid}")
 
     @dynamic_catch
-    def detach_solution_linking_wire(self, component1_guid: str, component2_guid: str, body: dict | DeleteRelationshipRequestBody = None) -> None:
+    def detach_solution_linking_wire(self, component1_guid: str, component2_guid: str, body: Optional[dict | DeleteRelationshipRequestBody] = None) -> None:
         """ Detach a solution component from a peer solution component.
                     Async Version.
 
@@ -4539,7 +4539,7 @@ class SolutionArchitect(ServerClient):
 
     @dynamic_catch
     def delete_solution_component(self, solution_component_guid: str, cascade_delete: bool = False,
-                                  body: dict | DeleteElementRequestBody = None) -> None:
+                                  body: Optional[dict | DeleteElementRequestBody] = None) -> None:
         """Delete a solution component.
            Parameters
            ----------
@@ -4582,22 +4582,22 @@ class SolutionArchitect(ServerClient):
     async def _async_find_solution_components(self, search_string: str = "*",
                                              starts_with: bool = True, ends_with: bool = False,
                                              ignore_case: bool = False,
-                                             anchor_domain: str = None,
-                                             metadata_element_type: str = None,
-                                             metadata_element_subtypes: list[str] = None,
-                                             skip_relationships: list[str] = None,
-                                             include_only_relationships: list[str] = None,
-                                             skip_classified_elements: list[str] = None,
-                                             include_only_classified_elements: list[str] = None,
+                                             anchor_domain: Optional[str] = None,
+                                             metadata_element_type: Optional[str] = None,
+                                             metadata_element_subtypes: Optional[list[str]] = None,
+                                             skip_relationships: Optional[list[str]] = None,
+                                             include_only_relationships: Optional[list[str]] = None,
+                                             skip_classified_elements: Optional[list[str]] = None,
+                                             include_only_classified_elements: Optional[list[str]] = None,
                                              graph_query_depth: int = 3,
-                                             governance_zone_filter: list[str] = None, as_of_time: str = None,
-                                             effective_time: str = None, relationship_page_size: int = 0,
-                                             limit_results_by_status: list[str] = None, sequencing_order: str = None,
-                                             sequencing_property: str = None,
+                                             governance_zone_filter: Optional[list[str]] = None, as_of_time: Optional[str] = None,
+                                             effective_time: Optional[str] = None, relationship_page_size: int = 0,
+                                             limit_results_by_status: Optional[list[str]] = None, sequencing_order: Optional[str] = None,
+                                             sequencing_property: Optional[str] = None,
                                              output_format: str = "JSON", report_spec: str | dict = None,
                                              start_from: int = 0, page_size: int = 100,
-                                             property_names: list[str] = None,
-                                             body: dict | SearchStringRequestBody = None) -> list[dict] | str:
+                                             property_names: Optional[list[str]] = None,
+                                             body: Optional[dict | SearchStringRequestBody] = None) -> list[dict] | str:
         """ Retrieve the solution component elements that contain the search string. The solutions components returned
             include information about consumers, actors, and other solution components that are associated with them.
             https://egeria-project.org/concepts/solution-components
@@ -4718,22 +4718,22 @@ class SolutionArchitect(ServerClient):
     def find_solution_components(self, search_string: str = "*",
                                  starts_with: bool = True, ends_with: bool = False,
                                  ignore_case: bool = False,
-                                 anchor_domain: str = None,
-                                 metadata_element_type: str = None,
-                                 metadata_element_subtypes: list[str] = None,
-                                 skip_relationships: list[str] = None,
-                                 include_only_relationships: list[str] = None,
-                                 skip_classified_elements: list[str] = None,
-                                 include_only_classified_elements: list[str] = None,
+                                 anchor_domain: Optional[str] = None,
+                                 metadata_element_type: Optional[str] = None,
+                                 metadata_element_subtypes: Optional[list[str]] = None,
+                                 skip_relationships: Optional[list[str]] = None,
+                                 include_only_relationships: Optional[list[str]] = None,
+                                 skip_classified_elements: Optional[list[str]] = None,
+                                 include_only_classified_elements: Optional[list[str]] = None,
                                  graph_query_depth: int = 3,
-                                 governance_zone_filter: list[str] = None, as_of_time: str = None,
-                                 effective_time: str = None, relationship_page_size: int = 0,
-                                 limit_results_by_status: list[str] = None, sequencing_order: str = None,
-                                 sequencing_property: str = None,
+                                 governance_zone_filter: Optional[list[str]] = None, as_of_time: Optional[str] = None,
+                                 effective_time: Optional[str] = None, relationship_page_size: int = 0,
+                                 limit_results_by_status: Optional[list[str]] = None, sequencing_order: Optional[str] = None,
+                                 sequencing_property: Optional[str] = None,
                                  output_format: str = "JSON", report_spec: str | dict = None,
                                  start_from: int = 0, page_size: int = 100,
-                                 property_names: list[str] = None,
-                                 body: dict | SearchStringRequestBody = None) -> list[dict] | str:
+                                 property_names: Optional[list[str]] = None,
+                                 body: Optional[dict | SearchStringRequestBody] = None) -> list[dict] | str:
         """ Retrieve the solution component elements that contain the search string. The solutions components returned
             include information about consumers, actors, and other solution components that are associated with them.
             https://egeria-project.org/concepts/solution-components
@@ -4812,12 +4812,12 @@ class SolutionArchitect(ServerClient):
                                                  property_names, body))
         return response
 
-    def find_all_solution_components(self, classification_names: list[str] = None,
-                                    metadata_element_subtypes: list[str] = None,
+    def find_all_solution_components(self, classification_names: Optional[list[str]] = None,
+                                    metadata_element_subtypes: Optional[list[str]] = None,
                                     starts_with: bool = True, ends_with: bool = False,
                                     ignore_case: bool = False, start_from: int = 0,
                                     page_size: int = 0, output_format: str = 'JSON',
-                                    report_spec: str = None,
+                                    report_spec: Optional[str] = None,
                                     body: dict| SearchStringRequestBody = None) -> list[dict] | str:
         """Retrieve a list of all solution component elements
         https://egeria-project.org/concepts/solution-components
@@ -5792,7 +5792,7 @@ class SolutionArchitect(ServerClient):
         loop.run_until_complete(self._async_link_component_to_actor(role_guid, component_guid, body))
 
     @dynamic_catch
-    async def _async_detach_component_actor(self, role_guid: str, component_guid: str, body: dict | DeleteRelationshipRequestBody = None) -> None:
+    async def _async_detach_component_actor(self, role_guid: str, component_guid: str, body: Optional[dict | DeleteRelationshipRequestBody] = None) -> None:
         """ Detach a solution role from a solution component.
             Async Version.
 
@@ -5930,7 +5930,7 @@ class SolutionArchitect(ServerClient):
         logger.info(f"Delete solution rule  {guid} with cascade {cascade_delete}")
 
     @dynamic_catch
-    def delete_solution_role(self, guid: str, body: dict | DeleteElementRequestBody = None,cascade_delete: bool = False) -> None:
+    def delete_solution_role(self, guid: str, body: Optional[dict | DeleteElementRequestBody] = None,cascade_delete: bool = False) -> None:
         """Delete a solution role. Async Version.
 
            Parameters
@@ -5974,22 +5974,22 @@ class SolutionArchitect(ServerClient):
     async def _async_find_solution_roles(self, search_string: str = "*",
                                          starts_with: bool = True, ends_with: bool = False,
                                          ignore_case: bool = False,
-                                         anchor_domain: str = None,
-                                         metadata_element_type: str = None,
-                                         metadata_element_subtypes: list[str] = None,
-                                         skip_relationships: list[str] = None,
-                                         include_only_relationships: list[str] = None,
-                                         skip_classified_elements: list[str] = None,
-                                         include_only_classified_elements: list[str] = None,
+                                         anchor_domain: Optional[str] = None,
+                                         metadata_element_type: Optional[str] = None,
+                                         metadata_element_subtypes: Optional[list[str]] = None,
+                                         skip_relationships: Optional[list[str]] = None,
+                                         include_only_relationships: Optional[list[str]] = None,
+                                         skip_classified_elements: Optional[list[str]] = None,
+                                         include_only_classified_elements: Optional[list[str]] = None,
                                          graph_query_depth: int = 3,
-                                         governance_zone_filter: list[str] = None, as_of_time: str = None,
-                                         effective_time: str = None, relationship_page_size: int = 0,
-                                         limit_results_by_status: list[str] = None, sequencing_order: str = None,
-                                         sequencing_property: str = None,
+                                         governance_zone_filter: Optional[list[str]] = None, as_of_time: Optional[str] = None,
+                                         effective_time: Optional[str] = None, relationship_page_size: int = 0,
+                                         limit_results_by_status: Optional[list[str]] = None, sequencing_order: Optional[str] = None,
+                                         sequencing_property: Optional[str] = None,
                                          output_format: str = "JSON", report_spec: str | dict = None,
                                          start_from: int = 0, page_size: int = 100,
-                                         property_names: list[str] = None,
-                                         body: dict | SearchStringRequestBody = None) -> list[dict] | str:
+                                         property_names: Optional[list[str]] = None,
+                                         body: Optional[dict | SearchStringRequestBody] = None) -> list[dict] | str:
         """Retrieve the solution role elements that contain the search string.
            https://egeria-project.org/concepts/actor
            Async version.
@@ -6110,22 +6110,22 @@ class SolutionArchitect(ServerClient):
     def find_solution_roles(self, search_string: str = "*",
                             starts_with: bool = True, ends_with: bool = False,
                             ignore_case: bool = False,
-                            anchor_domain: str = None,
-                            metadata_element_type: str = None,
-                            metadata_element_subtypes: list[str] = None,
-                            skip_relationships: list[str] = None,
-                            include_only_relationships: list[str] = None,
-                            skip_classified_elements: list[str] = None,
-                            include_only_classified_elements: list[str] = None,
+                            anchor_domain: Optional[str] = None,
+                            metadata_element_type: Optional[str] = None,
+                            metadata_element_subtypes: Optional[list[str]] = None,
+                            skip_relationships: Optional[list[str]] = None,
+                            include_only_relationships: Optional[list[str]] = None,
+                            skip_classified_elements: Optional[list[str]] = None,
+                            include_only_classified_elements: Optional[list[str]] = None,
                             graph_query_depth: int = 3,
-                            governance_zone_filter: list[str] = None, as_of_time: str = None,
-                            effective_time: str = None, relationship_page_size: int = 0,
-                            limit_results_by_status: list[str] = None, sequencing_order: str = None,
-                            sequencing_property: str = None,
+                            governance_zone_filter: Optional[list[str]] = None, as_of_time: Optional[str] = None,
+                            effective_time: Optional[str] = None, relationship_page_size: int = 0,
+                            limit_results_by_status: Optional[list[str]] = None, sequencing_order: Optional[str] = None,
+                            sequencing_property: Optional[str] = None,
                             output_format: str = "JSON", report_spec: str | dict = None,
                             start_from: int = 0, page_size: int = 100,
-                            property_names: list[str] = None,
-                            body: dict | SearchStringRequestBody = None) -> list[dict] | str:
+                            property_names: Optional[list[str]] = None,
+                            body: Optional[dict | SearchStringRequestBody] = None) -> list[dict] | str:
         """Retrieve the solution role elements that contain the search string.
            https://egeria-project.org/concepts/actor
 
@@ -6240,12 +6240,12 @@ class SolutionArchitect(ServerClient):
                                             property_names, body))
         return response
 
-    def find_all_solution_roles(self,  classification_names: list[str] = None,
-                                    metadata_element_subtypes: list[str] = None,
+    def find_all_solution_roles(self,  classification_names: Optional[list[str]] = None,
+                                    metadata_element_subtypes: Optional[list[str]] = None,
                                     starts_with: bool = True, ends_with: bool = False,
                                     ignore_case: bool = False, start_from: int = 0,
                                     page_size: int = 0, output_format: str = 'JSON',
-                                    report_spec: str = None,
+                                    report_spec: Optional[str] = None,
                                     body: dict| SearchStringRequestBody = None) -> list[dict] | str:
         """Retrieve a list of all solution blueprint elements
         https://egeria-project.org/concepts/actor

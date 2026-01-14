@@ -664,7 +664,7 @@ class TestActorManager:
             actor_client.update_contact_details(guid, update_body)
 
             # 4. Get by name
-            results = actor_client.get_contact_details_by_name(FilterRequestBody(class_="FilterRequestBody", filter=qname))
+            results = actor_client.get_contact_details_by_name(FilterRequestBody(class_="FilterRequestBody", filter_string = qname))
             assert len(results) > 0
 
             # 5. Delete

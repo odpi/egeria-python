@@ -7,6 +7,7 @@ Copyright Contributors to the ODPi Egeria project.
 """
 
 import json
+from typing import Any, Optional
 from pyegeria.core._exceptions import (
     PyegeriaInvalidParameterException,
     PyegeriaAPIException,
@@ -40,7 +41,7 @@ class FullServerConfig(CoreServerConfig):
         server_name: str,
         platform_url: str,
         user_id: str,
-        user_pwd: str = None,
+        user_pwd: Optional[str] = None,
     ):
         self.full_config_command_root: str
         CoreServerConfig.__init__(self, server_name, platform_url, user_id, user_pwd)
@@ -1241,7 +1242,7 @@ class FullServerConfig(CoreServerConfig):
         service_url_marker: str,
         integration_service_options: dict,
         connector_configs: list,
-        server_name: str = None,
+        server_name: Optional[str] = None,
     ) -> None:
         if server_name is None:
             server_name = self.server_name
@@ -1276,7 +1277,7 @@ class FullServerConfig(CoreServerConfig):
         remote_omag_platform_url: str,
         integration_service_options: dict,
         connector_configs: dict,
-        server_name: str = None,
+        server_name: Optional[str] = None,
     ) -> None:
         if server_name is None:
             server_name = self.server_name

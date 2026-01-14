@@ -159,7 +159,7 @@ def delete_todo(server, url, userid, password, timeout, todo_guid):
 @click.option("--timeout", default=60, help="Number of seconds to wait")
 @click.option(
     "--new-status",
-    type=click.Choice(
+    type_name = click.Choice(
         ["OPEN", "IN_PROGRESS", "WAITING", "COMPLETE", "ABANDONED"],
         case_sensitive="False",
     ),

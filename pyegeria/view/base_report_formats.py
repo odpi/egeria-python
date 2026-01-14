@@ -440,7 +440,7 @@ base_report_specs = FormatSetDict({
             )
         ],
         action=ActionParameter(
-            function="ActorManager.find_roles_profiles",
+            function="ActorManager.find_actor_roles",
             optional_params=OPTIONAL_FILTER_PARAMS + TIME_PARAMETERS,
             required_params=["search_string"],
             spec_params={},
@@ -1932,7 +1932,7 @@ def select_report_spec(kind: str, output_type: str) -> dict | None:
 
     # Step 3: If still not found, return None
     if element is None:
-        msg = f"No matching column set found for kind='{kind}' and output type='{output_type}'."
+        msg = f"No matching column set found for kind='{kind}' and output type_name = '{output_type}'."
         logger.error(msg)
         return None
     else:
@@ -1968,7 +1968,7 @@ def select_report_spec(kind: str, output_type: str) -> dict | None:
             return output_struct
 
     # Step 6: If no match is found, return None
-    logger.error(f"No matching format found for kind='{kind}' with output type='{output_type}'.")
+    logger.error(f"No matching format found for kind='{kind}' with output type_name = '{output_type}'.")
     return None
 
 
@@ -2591,7 +2591,7 @@ def _select_from_registry(registry: FormatSetDict, kind: str, output_type: str) 
                 element = value
                 break
     if element is None:
-        logger.error(f"No matching report format found for kind='{kind}' and output type='{output_type}'.")
+        logger.error(f"No matching report format found for kind='{kind}' and output type_name = '{output_type}'.")
         return None
 
     output_struct: dict = {
@@ -2618,7 +2618,7 @@ def _select_from_registry(registry: FormatSetDict, kind: str, output_type: str) 
         if "ALL" in fmt.types:
             output_struct["formats"] = fmt.dict()
             return output_struct
-    logger.error(f"No matching format found for kind='{kind}' with output type='{output_type}'.")
+    logger.error(f"No matching format found for kind='{kind}' with output type_name = '{output_type}'.")
     return None
 
 

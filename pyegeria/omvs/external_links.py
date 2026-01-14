@@ -65,7 +65,7 @@ class ExternalReferences(ServerClient):
 
     """
 
-    def __init__(self, view_server: str, platform_url: str, user_id: str, user_pwd: str = None, token: str = None, ):
+    def __init__(self, view_server: str, platform_url: str, user_id: str, user_pwd: Optional[str] = None, token: Optional[str] = None, ):
         self.view_server = view_server
         self.platform_url = platform_url
         self.user_id = user_id
@@ -78,7 +78,7 @@ class ExternalReferences(ServerClient):
             f"{self.platform_url}/servers/{self.view_server}/api/open-metadata/external-links")
 
     @dynamic_catch
-    async def _async_create_external_reference(self, body: dict | NewElementRequestBody = None) -> str:
+    async def _async_create_external_reference(self, body: Optional[dict | NewElementRequestBody] = None) -> str:
         """ Create a new generic external_reference. If the body is not present, the display_name, description, category,
             and classification will be used to create a simple, self-anchored external_reference.
             Collections: https://egeria-project.org/concepts/external_reference
@@ -162,7 +162,7 @@ class ExternalReferences(ServerClient):
         return await self._async_create_element_body_request(url, EXTERNAL_REFERENCE_PROPS, body)
 
     @dynamic_catch
-    def create_external_reference(self, body: dict | NewElementRequestBody = None) -> str:
+    def create_external_reference(self, body: Optional[dict | NewElementRequestBody] = None) -> str:
         """ Create a new generic external_reference. If the body is not present, the display_name, description, category,
              and classification will be used to create a simple, self-anchored external_reference.
              Collections: https://egeria-project.org/concepts/external_reference
@@ -287,7 +287,7 @@ class ExternalReferences(ServerClient):
     #######
 
     @dynamic_catch
-    async def _async_create_external_reference_from_template(self, body: TemplateRequestBody | dict) -> str:
+    async def _async_create_external_reference_from_template(self, body: Optional[dict | TemplateRequestBody] = None) -> str:
         """Create a new metadata element to represent a external_reference using an existing metadata element as a template.
         The template defines additional classifications and relationships that are added to the new external_reference.
         Async version.
@@ -356,7 +356,7 @@ class ExternalReferences(ServerClient):
         return resp.json().get("guid", NO_GUID_RETURNED)
 
     @dynamic_catch
-    def create_external_reference_from_template(self, body: dict) -> str:
+    def create_external_reference_from_template(self, body: Optional[dict | TemplateRequestBody] = None) -> str:
         """Create a new metadata element to represent a external_reference using an existing metadata element as a template.
         The template defines additional classifications and relationships that are added to the new external_reference.
     
@@ -533,7 +533,7 @@ class ExternalReferences(ServerClient):
 
     @dynamic_catch
     async def _async_link_external_reference(self, element_guid: str, ext_ref_guid: str,
-                                             body: dict | NewRelationshipRequestBody = None) -> None:
+                                             body: Optional[dict | NewRelationshipRequestBody] = None) -> None:
         """ Attach an element to an external reference.
             Async version.
     
@@ -586,7 +586,7 @@ class ExternalReferences(ServerClient):
 
     @dynamic_catch
     def link_external_reference(self, element_guid: str, ext_ref_guid: str,
-                                body: dict | NewRelationshipRequestBody = None):
+                                body: Optional[dict | NewRelationshipRequestBody] = None):
         """ Attach an element to an external reference.
     
             Parameters
@@ -635,7 +635,7 @@ class ExternalReferences(ServerClient):
 
     @dynamic_catch
     async def _async_detach_external_reference(self, element_guid: str, ext_ref_guid: str,
-                                               body: dict | DeleteRelationshipRequestBody = None) -> None:
+                                               body: Optional[dict | DeleteRelationshipRequestBody] = None) -> None:
         """ Detach an element from an external reference; body is optional. Async version.
     
         Parameters
@@ -677,7 +677,7 @@ class ExternalReferences(ServerClient):
         await self._async_delete_element_request(url, body)
         logger.info(f"Detached element {element_guid} from external reference {ext_ref_guid}")
 
-    def detach_external_reference(self, element_guid: str, ext_ref_guid: str, body: dict | DeleteRelationshipRequestBody = None):
+    def detach_external_reference(self, element_guid: str, ext_ref_guid: str, body: Optional[dict | DeleteRelationshipRequestBody] = None):
         """ Detach an element from an external reference. Request body is optional.
     
         Parameters
@@ -719,7 +719,7 @@ class ExternalReferences(ServerClient):
 
     @dynamic_catch
     async def _async_link_media_reference(self, element_guid: str, media_ref_guid: str,
-                                          body: dict | NewRelationshipRequestBody = None) -> None:
+                                          body: Optional[dict | NewRelationshipRequestBody] = None) -> None:
         """ Attach an element to a related media reference.
             Async version.
     
@@ -773,7 +773,7 @@ class ExternalReferences(ServerClient):
 
     @dynamic_catch
     def link_media_reference(self, element_guid: str, media_ref_guid: str,
-                             body: dict | NewRelationshipRequestBody = None):
+                             body: Optional[dict | NewRelationshipRequestBody] = None):
         """ Attach an element to an external media reference.
     
             Parameters
@@ -824,7 +824,7 @@ class ExternalReferences(ServerClient):
 
     @dynamic_catch
     async def _async_detach_media_reference(self, element_guid: str, media_ref_guid: str,
-                                            body: dict | DeleteRelationshipRequestBody = None) -> None:
+                                            body: Optional[dict | DeleteRelationshipRequestBody] = None) -> None:
         """ Detach an element from an external media reference; body is optional. Async version.
     
         Parameters
@@ -868,7 +868,7 @@ class ExternalReferences(ServerClient):
         logger.info(f"Detached element {element_guid} from external media reference {media_ref_guid}")
 
     @dynamic_catch
-    def detach_media_reference(self, element_guid: str, media_ref_guid: str, body: dict | DeleteRelationshipRequestBody = None):
+    def detach_media_reference(self, element_guid: str, media_ref_guid: str, body: Optional[dict | DeleteRelationshipRequestBody] = None):
         """ Detach an element from an external media reference. Request body is optional.
     
         Parameters
@@ -910,7 +910,7 @@ class ExternalReferences(ServerClient):
 
     @dynamic_catch
     async def _async_link_cited_document(self, element_guid: str, cited_doc_guid: str,
-                                         body: dict | NewRelationshipRequestBody = None) -> None:
+                                         body: Optional[dict | NewRelationshipRequestBody] = None) -> None:
         """ Attach an element to a cited document reference.
             Async version.
     
@@ -960,7 +960,7 @@ class ExternalReferences(ServerClient):
 
     @dynamic_catch
     def link_cited_document(self, element_guid: str, cited_doc_guid: str,
-                            body: dict | NewRelationshipRequestBody = None):
+                            body: Optional[dict | NewRelationshipRequestBody] = None):
         """ Attach an element to an external media reference.
     
             Parameters
@@ -1008,7 +1008,7 @@ class ExternalReferences(ServerClient):
 
     @dynamic_catch
     async def _async_detach_cited_document(self, element_guid: str, cited_doc_guid: str,
-                                           body: dict | DeleteRelationshipRequestBody = None) -> None:
+                                           body: Optional[dict | DeleteRelationshipRequestBody] = None) -> None:
         """ Detach an element from an cited document reference; body is optional. Async version.
     
         Parameters
@@ -1051,7 +1051,7 @@ class ExternalReferences(ServerClient):
         logger.info(f"Detached element {element_guid} from cited document reference {cited_doc_guid}")
 
     @dynamic_catch
-    def detach_cited_document(self, element_guid: str, cited_doc_guid: str, body: dict | DeleteRelationshipRequestBody = None):
+    def detach_cited_document(self, element_guid: str, cited_doc_guid: str, body: Optional[dict | DeleteRelationshipRequestBody] = None):
         """ Detach an element from acited document reference. Request body is optional.
     
         Parameters
@@ -1096,7 +1096,7 @@ class ExternalReferences(ServerClient):
     #
     @dynamic_catch
     async def _async_delete_external_reference(self, ext_ref_guid: str,
-                                               body: dict | DeleteRelationshipRequestBody = None,
+                                               body: Optional[dict | DeleteRelationshipRequestBody] = None,
                                                cascade: bool = False) -> None:
         """ Delete an external reference. Async Version.
     
@@ -1142,7 +1142,7 @@ class ExternalReferences(ServerClient):
         logger.info(f"Deleted collection {ext_ref_guid} with cascade {cascade}")
 
     @dynamic_catch
-    def delete_external_reference(self, ext_ref_guid: str, body: dict | DeleteElementRequestBody = None,
+    def delete_external_reference(self, ext_ref_guid: str, body: Optional[dict | DeleteElementRequestBody] = None,
                                   cascade: bool = False) -> None:
         """Delete an external reference..
     
@@ -1189,23 +1189,23 @@ class ExternalReferences(ServerClient):
     async def _async_find_external_references(self, search_string: str = "*",
                                               starts_with: bool = True, ends_with: bool = False,
                                               ignore_case: bool = False,
-                                              anchor_domain: str = None,
-                                              metadata_element_type: str = None,
+                                              anchor_domain: Optional[str] = None,
+                                              metadata_element_type: Optional[str] = None,
                                               metadata_element_subtypes: list[str] = EXTERNAL_REFERENCE_TYPES,
-                                              skip_relationships: list[str] = None,
-                                              include_only_relationships: list[str] = None,
-                                              skip_classified_elements: list[str] = None,
-                                              include_only_classified_elements: list[str] = None,
+                                              skip_relationships: Optional[list[str]] = None,
+                                              include_only_relationships: Optional[list[str]] = None,
+                                              skip_classified_elements: Optional[list[str]] = None,
+                                              include_only_classified_elements: Optional[list[str]] = None,
                                               graph_query_depth: int = 3,
-                                              governance_zone_filter: list[str] = None, as_of_time: str = None,
-                                              effective_time: str = None, relationship_page_size: int = 0,
-                                              limit_results_by_status: list[str] = None, sequencing_order: str = None,
-                                              sequencing_property: str = None,
+                                              governance_zone_filter: Optional[list[str]] = None, as_of_time: Optional[str] = None,
+                                              effective_time: Optional[str] = None, relationship_page_size: int = 0,
+                                              limit_results_by_status: Optional[list[str]] = None, sequencing_order: Optional[str] = None,
+                                              sequencing_property: Optional[str] = None,
                                               output_format: str = 'JSON',
                                               report_spec: str | dict = "ExternalReference",
                                               start_from: int = 0, page_size: int = 100,
-                                              property_names: list[str] = None,
-                                              body: dict | SearchStringRequestBody = None) -> list | str:
+                                              property_names: Optional[list[str]] = None,
+                                              body: Optional[dict | SearchStringRequestBody] = None) -> list | str:
         """ Retrieve the list of external reference metadata elements that contain the search string. Async Version.
 
         Parameters
@@ -1307,23 +1307,23 @@ class ExternalReferences(ServerClient):
     def find_external_references(self, search_string: str = "*",
                                  starts_with: bool = True, ends_with: bool = False,
                                  ignore_case: bool = False,
-                                 anchor_domain: str = None,
-                                 metadata_element_type: str = None,
+                                 anchor_domain: Optional[str] = None,
+                                 metadata_element_type: Optional[str] = None,
                                  metadata_element_subtypes: list[str] = EXTERNAL_REFERENCE_TYPES,
-                                 skip_relationships: list[str] = None,
-                                 include_only_relationships: list[str] = None,
-                                 skip_classified_elements: list[str] = None,
-                                 include_only_classified_elements: list[str] = None,
+                                 skip_relationships: Optional[list[str]] = None,
+                                 include_only_relationships: Optional[list[str]] = None,
+                                 skip_classified_elements: Optional[list[str]] = None,
+                                 include_only_classified_elements: Optional[list[str]] = None,
                                  graph_query_depth: int = 3,
-                                 governance_zone_filter: list[str] = None, as_of_time: str = None,
-                                 effective_time: str = None, relationship_page_size: int = 0,
-                                 limit_results_by_status: list[str] = None, sequencing_order: str = None,
-                                 sequencing_property: str = None,
+                                 governance_zone_filter: Optional[list[str]] = None, as_of_time: Optional[str] = None,
+                                 effective_time: Optional[str] = None, relationship_page_size: int = 0,
+                                 limit_results_by_status: Optional[list[str]] = None, sequencing_order: Optional[str] = None,
+                                 sequencing_property: Optional[str] = None,
                                  output_format: str = 'JSON',
                                  report_spec: str | dict = "ExternalReference",
                                  start_from: int = 0, page_size: int = 100,
-                                 property_names: list[str] = None,
-                                 body: dict | SearchStringRequestBody = None) -> list | str:
+                                 property_names: Optional[list[str]] = None,
+                                 body: Optional[dict | SearchStringRequestBody] = None) -> list | str:
         """ Retrieve the list of external reference metadata elements that contain the search string.
 
         Parameters
@@ -1424,9 +1424,9 @@ class ExternalReferences(ServerClient):
                                                                            body=body))
 
     @dynamic_catch
-    async def _async_get_external_references_by_name(self, filter_string: str = None,
-                                                     classification_names: list[str] = None,
-                                                     body: dict | FilterRequestBody = None,
+    async def _async_get_external_references_by_name(self, filter_string: Optional[str] = None,
+                                                     classification_names: Optional[list[str]] = None,
+                                                     body: Optional[dict | FilterRequestBody] = None,
                                                      start_from: int = 0, page_size: int = 0,
                                                      output_format: str = 'JSON',
                                                      report_spec: str | dict = "ExternalReference") -> list | str:
@@ -1477,8 +1477,8 @@ class ExternalReferences(ServerClient):
 
         return response
 
-    def get_external_references_by_name(self, filter_string: str = None, classification_names: list[str] = None,
-                                        body: dict | FilterRequestBody = None,
+    def get_external_references_by_name(self, filter_string: Optional[str] = None, classification_names: Optional[list[str]] = None,
+                                        body: Optional[dict | FilterRequestBody] = None,
                                         start_from: int = 0, page_size: int = 0, output_format: str = 'JSON',
                                         report_spec: str | dict = "ExternalReference") -> list | str:
         """Returns the list of external references matching the filter string. Async version.
@@ -1520,8 +1520,8 @@ class ExternalReferences(ServerClient):
                                                         output_format, report_spec))
 
     @dynamic_catch
-    async def _async_get_external_reference_by_guid(self, ext_ref_guid: str, element_type: str = None,
-                                                    body: dict | GetRequestBody = None,
+    async def _async_get_external_reference_by_guid(self, ext_ref_guid: str, element_type: Optional[str] = None,
+                                                    body: Optional[dict | GetRequestBody] = None,
                                                     output_format: str = 'JSON',
                                                     report_spec: str | dict = "ExternalReference") -> dict | str:
         """Return the properties of a specific external reference. Async version.
@@ -1578,8 +1578,8 @@ class ExternalReferences(ServerClient):
         return response
 
     @dynamic_catch
-    def get_external_reference_by_guid(self, ext_ref_guid: str, element_type: str = None,
-                                       body: dict | GetRequestBody = None,
+    def get_external_reference_by_guid(self, ext_ref_guid: str, element_type: Optional[str] = None,
+                                       body: Optional[dict | GetRequestBody] = None,
                                        output_format: str = 'JSON',
                                        report_spec: str | dict = "ExternalReference") -> dict | str:
         """ Return the properties of a specific external reference. Async version.
@@ -1690,7 +1690,7 @@ class ExternalReferences(ServerClient):
 
         return col_data
 
-    def _generate_external_reference_output(self, elements: dict | list[dict], filter: Optional[str],
+    def _generate_external_reference_output(self, elements: dict | list[dict], filter_string: Optional[str],
                                             element_type_name: Optional[str], output_format: str = "DICT",
                                             report_spec: dict | str = None) -> str | list[dict]:
         """ Generate output for external_references in the specified format.

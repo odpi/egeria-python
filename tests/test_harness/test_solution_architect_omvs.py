@@ -345,7 +345,7 @@ class TestSolutionArchitect:
 
 
     def test_find_information_supply_chains_body(self):
-        filter = "evil"
+        filter_string= "evil"
         try:
             s_client = SolutionArchitect(
                 self.view_server, self.platform_url, self.user, self.password
@@ -1387,7 +1387,7 @@ class TestSolutionArchitect:
             s_client.close_session()
 
     def test_find_solution_components(self):
-        filter = "*"
+        filter_string= "*"
         try:
             s_client = SolutionArchitect(
                 self.view_server, self.platform_url, self.user, self.password

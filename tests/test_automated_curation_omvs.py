@@ -1362,9 +1362,9 @@ class TestAutomatedCuration:
             token = a_client.create_egeria_bearer_token()
 
             start_time = time.perf_counter()
-            # filter = "CSV Data File"
-            filter = "File System Directory"
-            response = a_client.get_technology_type_elements(filter, get_templates=True, output_format="JSON",
+            # filter_string = "CSV Data File"
+            filter_string = "File System Directory"
+            response = a_client.get_technology_type_elements(filter_string, get_templates=True, output_format="JSON",
                                                              report_spec="Tech-Type-Elements")
                                                              # report_spec="Common-Mermaid")
             duration = time.perf_counter() - start_time
