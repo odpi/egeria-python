@@ -10,7 +10,7 @@ import asyncio
 import os
 import sys
 from typing import Annotated, Literal, Union
-from typing import Dict, List
+from typing import Dict, List, Optional
 
 from loguru import logger
 from pydantic import Field
@@ -88,8 +88,8 @@ class GovernanceOfficer(ServerClient):
         The password associated with the user_id. Defaults to None.
     """
 
-    def __init__(self, view_server: str, platform_url: str, user_id: str = None, user_pwd: str = None,
-                 token: str = None, ):
+    def __init__(self, view_server: str, platform_url: str, user_id: Optional[str] = None, user_pwd: Optional[str] = None,
+                 token: Optional[str] = None, ):
         self.view_server = view_server
         self.platform_url = platform_url
         self.user_id = user_id
@@ -101,7 +101,7 @@ class GovernanceOfficer(ServerClient):
     #
     # Extract properties functions
     #
-    def _generate_governance_definition_output(self, elements: list | dict, search_string: str, element_type_name: str = None,
+    def _generate_governance_definition_output(self, elements: list | dict, search_string: str, element_type_name: Optional[str] = None,
                                                output_format: str = 'DICT', report_spec: dict | str = None
                                                ) -> str | list:
         """
@@ -846,7 +846,7 @@ class GovernanceOfficer(ServerClient):
 
     @dynamic_catch
     async def _async_delete_governance_definition(self, definition_guid: str,
-                                                  body: dict | DeleteElementRequestBody = None,
+                                                  body: Optional[dict | DeleteElementRequestBody] = None,
                                                   cascade: bool = False) -> None:
         """ Delete a governance definition. Async Version.
 
@@ -892,7 +892,7 @@ class GovernanceOfficer(ServerClient):
         await self._async_delete_element_request(url, body, cascade)
         logger.info(f"Deleted collection {definition_guid} with cascade {cascade}")
 
-    def delete_governance_definition(self, definition_guid: str, body: dict | DeleteElementRequestBody = None,
+    def delete_governance_definition(self, definition_guid: str, body: Optional[dict | DeleteElementRequestBody] = None,
                                      cascade: bool = False) -> None:
         """Delete a governance definition.
 
@@ -1000,7 +1000,7 @@ class GovernanceOfficer(ServerClient):
 
     @dynamic_catch
     def link_peer_definitions(self, definition_guid1: str, relationship_type: str, definition_guid2: str,
-                              body: dict | NewElementRequestBody = None) -> None:
+                              body: Optional[dict | NewElementRequestBody] = None) -> None:
         """ Attach two peer governance definitions. Async Version.
 
         Parameters
@@ -1059,7 +1059,7 @@ class GovernanceOfficer(ServerClient):
 
     @dynamic_catch
     async def _async_detach_peer_definitions(self, definition_guid1: str, relationship_type: str, definition_guid2: str,
-                                             body: dict | DeleteRelationshipRequestBody = None) -> None:
+                                             body: Optional[dict | DeleteRelationshipRequestBody] = None) -> None:
         """ Detach two peer governance definitions. Request body is optional. Async Version.
 
         Parameters
@@ -1157,7 +1157,7 @@ class GovernanceOfficer(ServerClient):
     @dynamic_catch
     async def _async_attach_supporting_definitions(self, definition_guid1: str, relationship_type: str,
                                                    definition_guid2: str,
-                                                   body: dict | NewRelationshipRequestBody = None) -> None:
+                                                   body: Optional[dict | NewRelationshipRequestBody] = None) -> None:
         """ Attach a supporting governance definition. Request body is optional.
             The relationshipTypeNme can be:
             * GovernanceResponse between governance drivers (GovernanceStrategy, BusinessImperative, Regulation,
@@ -1221,7 +1221,7 @@ class GovernanceOfficer(ServerClient):
 
     @dynamic_catch
     def attach_supporting_definitions(self, definition_guid1: str, relationship_type: str, definition_guid2: str,
-                                      body: dict | NewRelationshipRequestBody = None) -> None:
+                                      body: Optional[dict | NewRelationshipRequestBody] = None) -> None:
         """ Attach a supporting governance definition. Request body is optional.
             The relationshipTypeNme can be:
             * GovernanceResponse between governance drivers (GovernanceStrategy, BusinessImperative, Regulation,
@@ -1281,7 +1281,7 @@ class GovernanceOfficer(ServerClient):
     @dynamic_catch
     async def _async_detach_supporting_definitions(self, definition_guid1: str, relationship_type: str,
                                                    definition_guid2: str,
-                                                   body: dict | DeleteRelationshipRequestBody = None) -> None:
+                                                   body: Optional[dict | DeleteRelationshipRequestBody] = None) -> None:
         """ Detach a governance definition from a supporting governance definition.
             Request body is optional. Async Version.
 
@@ -1332,7 +1332,7 @@ class GovernanceOfficer(ServerClient):
 
     @dynamic_catch
     def detach_supporting_definitions(self, definition_guid1: str, relationship_type: str, definition_guid2: str,
-                                      body: dict | DeleteRelationshipRequestBody = None) -> None:
+                                      body: Optional[dict | DeleteRelationshipRequestBody] = None) -> None:
         """ Detach a governance definition from a supporting governance definition.
             Request body is optional.
 
@@ -1380,7 +1380,7 @@ class GovernanceOfficer(ServerClient):
 
 
     async def _async_attach_governed_by_definition(self, element_guid: str, definition_guid: str,
-                                                   body: dict | NewRelationshipRequestBody = None) -> None:
+                                                   body: Optional[dict | NewRelationshipRequestBody] = None) -> None:
         """ Link a governance definition to an element using the GovernedBy relationship. Request body is optional.
 
         Async Version.
@@ -1430,7 +1430,7 @@ class GovernanceOfficer(ServerClient):
 
     @dynamic_catch
     def attach_governed_by_definition(self, element_guid: str, definition_guid: str,
-                                      body: dict | NewRelationshipRequestBody = None) -> None:
+                                      body: Optional[dict | NewRelationshipRequestBody] = None) -> None:
         """ Link a governance definition to an element using the GovernedBy relationship. Request body is optional.
 
         Parameters
@@ -1475,7 +1475,7 @@ class GovernanceOfficer(ServerClient):
 
     @dynamic_catch
     async def _async_detach_governed_by_definition(self, element_guid: str, definition_guid: str,
-                                                   body: dict | DeleteRelationshipRequestBody = None) -> None:
+                                                   body: Optional[dict | DeleteRelationshipRequestBody] = None) -> None:
         """ Detach a governance definition from a supporting governance definition.
             Request body is optional. Async Version.
 
@@ -1523,7 +1523,7 @@ class GovernanceOfficer(ServerClient):
 
     @dynamic_catch
     def detach_governed_by_definitio(self, element_guid: str, definition_guid: str,
-                                      body: dict | DeleteRelationshipRequestBody = None) -> None:
+                                      body: Optional[dict | DeleteRelationshipRequestBody] = None) -> None:
         """ Detach a governance definition from a supporting governance definition.
             Request body is optional.
 
@@ -1569,7 +1569,7 @@ class GovernanceOfficer(ServerClient):
 
 
     # @dynamic_catch
-    # async def _async_delete_governance_definition(self, guid: str, body: dict | DeleteElementRequestBody = None) -> None:
+    # async def _async_delete_governance_definition(self, guid: str, body: Optional[dict | DeleteElementRequestBody] = None) -> None:
     #     """ Delete an information supply. Async version.
 
     #     Parameters
@@ -1616,7 +1616,7 @@ class GovernanceOfficer(ServerClient):
 
 
     # @dynamic_catch
-    # def delete_governance_definition(self, guid: str, body: dict | DeleteElementRequestBody = None) -> None:
+    # def delete_governance_definition(self, guid: str, body: Optional[dict | DeleteElementRequestBody] = None) -> None:
     #     """ Delete an information supply. Request body is optional. Async version.
 
     #     Parameters
@@ -1664,23 +1664,23 @@ class GovernanceOfficer(ServerClient):
     async def _async_find_governance_definitions(self, search_string: str = "*",
                                                  starts_with: bool = True, ends_with: bool = False,
                                                  ignore_case: bool = False,
-                                                 anchor_domain: str = None,
-                                                 metadata_element_type: str = None,
-                                                 metadata_element_subtypes: list[str] = None,
-                                                 skip_relationships: list[str] = None,
-                                                 include_only_relationships: list[str] = None,
-                                                 skip_classified_elements: list[str] = None,
-                                                 include_only_classified_elements: list[str] = None,
+                                                 anchor_domain: Optional[str] = None,
+                                                 metadata_element_type: Optional[str] = None,
+                                                 metadata_element_subtypes: Optional[list[str]] = None,
+                                                 skip_relationships: Optional[list[str]] = None,
+                                                 include_only_relationships: Optional[list[str]] = None,
+                                                 skip_classified_elements: Optional[list[str]] = None,
+                                                 include_only_classified_elements: Optional[list[str]] = None,
                                                  graph_query_depth: int = 3,
-                                                 governance_zone_filter: list[str] = None, as_of_time: str = None,
-                                                 effective_time: str = None, relationship_page_size: int = 0,
-                                                 limit_results_by_status: list[str] = None, sequencing_order: str = None,
-                                                 sequencing_property: str = None,
+                                                 governance_zone_filter: Optional[list[str]] = None, as_of_time: Optional[str] = None,
+                                                 effective_time: Optional[str] = None, relationship_page_size: int = 0,
+                                                 limit_results_by_status: Optional[list[str]] = None, sequencing_order: Optional[str] = None,
+                                                 sequencing_property: Optional[str] = None,
                                                  output_format: str = "JSON",
                                                  report_spec: str | dict = None,
                                                  start_from: int = 0, page_size: int = 100,
-                                                 property_names: list[str] = None,
-                                                 body: dict | SearchStringRequestBody = None) -> list | str:
+                                                 property_names: Optional[list[str]] = None,
+                                                 body: Optional[dict | SearchStringRequestBody] = None) -> list | str:
         """ Retrieve the list of governance definition metadata elements that contain the search string. Async Version.
 
         Parameters
@@ -1784,23 +1784,23 @@ class GovernanceOfficer(ServerClient):
     def find_governance_definitions(self, search_string: str = "*",
                                     starts_with: bool = True, ends_with: bool = False,
                                     ignore_case: bool = False,
-                                    anchor_domain: str = None,
-                                    metadata_element_type: str = None,
-                                    metadata_element_subtypes: list[str] = None,
-                                    skip_relationships: list[str] = None,
-                                    include_only_relationships: list[str] = None,
-                                    skip_classified_elements: list[str] = None,
-                                    include_only_classified_elements: list[str] = None,
+                                    anchor_domain: Optional[str] = None,
+                                    metadata_element_type: Optional[str] = None,
+                                    metadata_element_subtypes: Optional[list[str]] = None,
+                                    skip_relationships: Optional[list[str]] = None,
+                                    include_only_relationships: Optional[list[str]] = None,
+                                    skip_classified_elements: Optional[list[str]] = None,
+                                    include_only_classified_elements: Optional[list[str]] = None,
                                     graph_query_depth: int = 3,
-                                    governance_zone_filter: list[str] = None, as_of_time: str = None,
-                                    effective_time: str = None, relationship_page_size: int = 0,
-                                    limit_results_by_status: list[str] = None, sequencing_order: str = None,
-                                    sequencing_property: str = None,
+                                    governance_zone_filter: Optional[list[str]] = None, as_of_time: Optional[str] = None,
+                                    effective_time: Optional[str] = None, relationship_page_size: int = 0,
+                                    limit_results_by_status: Optional[list[str]] = None, sequencing_order: Optional[str] = None,
+                                    sequencing_property: Optional[str] = None,
                                     output_format: str = "JSON",
                                     report_spec: str | dict = None,
                                     start_from: int = 0, page_size: int = 100,
-                                    property_names: list[str] = None,
-                                    body: dict | SearchStringRequestBody = None) -> list | str:
+                                    property_names: Optional[list[str]] = None,
+                                    body: Optional[dict | SearchStringRequestBody] = None) -> list | str:
         """ Retrieve the list of governance definition metadata elements that contain the search string.
 
         Parameters
@@ -1902,8 +1902,8 @@ class GovernanceOfficer(ServerClient):
 
     @dynamic_catch
     async def _async_get_governance_definitions_by_name(self, filter_string: str,
-                                                        classification_names: list[str] = None,
-                                                        body: dict | FilterRequestBody = None,
+                                                        classification_names: Optional[list[str]] = None,
+                                                        body: Optional[dict | FilterRequestBody] = None,
                                                         start_from: int = 0, page_size: int = 0,
                                                         output_format: str = "JSON",
                                                         report_spec: dict = None) -> list | str:
@@ -1970,8 +1970,8 @@ class GovernanceOfficer(ServerClient):
         return response
 
     @dynamic_catch
-    def get_governance_definitions_by_name(self, filter_string: str, classification_names: list[str] = None,
-                                           body: dict | FilterRequestBody = None,
+    def get_governance_definitions_by_name(self, filter_string: str, classification_names: Optional[list[str]] = None,
+                                           body: Optional[dict | FilterRequestBody] = None,
                                            start_from: int = 0, page_size: int = 0,
                                            output_format: str = "JSON",
                                            report_spec: dict = None) -> list | str:
@@ -2039,8 +2039,8 @@ class GovernanceOfficer(ServerClient):
  
 
     async def _async_get_governance_definition_by_guid(self, definition_guid: str, 
-                                                       element_type: str = None,
-                                                        body: dict | GetRequestBody = None,
+                                                       element_type: Optional[str] = None,
+                                                        body: Optional[dict | GetRequestBody] = None,
                                                         output_format: str = "JSON",
                                                         report_spec: dict = None) -> list | str:
         """ Returns the  governance definitions with a particular GUID. Async Version.
@@ -2108,8 +2108,8 @@ class GovernanceOfficer(ServerClient):
 
     @dynamic_catch
     def get_governance_definition_by_guid(self, definition_guid: str, 
-                                           element_type: str = None,
-                                           body: dict | GetRequestBody = None,
+                                           element_type: Optional[str] = None,
+                                           body: Optional[dict | GetRequestBody] = None,
                                            output_format: str = "JSON",
                                            report_spec: dict = None) -> list | str:
         """ Returns the a governance definitions with a particular GUID. 
@@ -2172,8 +2172,8 @@ class GovernanceOfficer(ServerClient):
 
 
     @dynamic_catch
-    async def _async_get_governance_process_graph(self, guid: str, element_type: str = None,
-                                                       body: dict | FilterRequestBody = None,
+    async def _async_get_governance_process_graph(self, guid: str, element_type: Optional[str] = None,
+                                                       body: Optional[dict | FilterRequestBody] = None,
                                                        output_format: str = "JSON",
                                                        report_spec: dict = None) -> dict | str:
 
@@ -2234,7 +2234,7 @@ class GovernanceOfficer(ServerClient):
         return response
 
     @dynamic_catch
-    def get_governance_process_graph(self, guid: str, element_type: str = None, body: dict = None,
+    def get_governance_process_graph(self, guid: str, element_type: Optional[str] = None, body: dict = None,
                                           output_format: str = "JSON",
                                           report_spec: dict = None) -> dict | str:
 
@@ -2289,7 +2289,7 @@ class GovernanceOfficer(ServerClient):
 
     @dynamic_catch
     async def _async_link_design_to_implementation(self, design_desc_guid: str, implementation_guid: str,
-                                                   body: dict | NewRelationshipRequestBody = None) -> None:
+                                                   body: Optional[dict | NewRelationshipRequestBody] = None) -> None:
         """ Attach a design object such as a solution component or governance definition to its implementation via the
             ImplementedBy relationship. Request body is optional. Async Version.
             https://egeria-project.org/types/7/0737-Solution-Implementation/
@@ -2346,7 +2346,7 @@ class GovernanceOfficer(ServerClient):
 
     @dynamic_catch
     def link_design_to_implementation(self, design_desc_guid: str, implementation_guid: str,
-                                      body: dict | NewRelationshipRequestBody = None) -> None:
+                                      body: Optional[dict | NewRelationshipRequestBody] = None) -> None:
         """ Attach a design object such as a solution component or governance definition to its implementation via the
             ImplementedBy relationship. Request body is optional.
             https://egeria-project.org/types/7/0737-Solution-Implementation/
@@ -2401,7 +2401,7 @@ class GovernanceOfficer(ServerClient):
 
     @dynamic_catch
     async def _async_detach_design_from_implementation(self, design_desc_guid: str, implementation_guid: str,
-                                                       body: dict | DeleteElementRequestBody = None) -> None:
+                                                       body: Optional[dict | DeleteElementRequestBody] = None) -> None:
         """ Detach a governance definition from its implementation. Async Version.
 
         Parameters
@@ -2448,7 +2448,7 @@ class GovernanceOfficer(ServerClient):
 
     @dynamic_catch
     def detach_design_from_implementation(self, design_desc_guid: str, implementation_guid: str,
-                                          body: dict | DeleteElementRequestBody = None) -> None:
+                                          body: Optional[dict | DeleteElementRequestBody] = None) -> None:
         """ Detach a governance definition from its implementation. Request body is optional.
 
         Parameters
@@ -2491,7 +2491,7 @@ class GovernanceOfficer(ServerClient):
 
     @dynamic_catch
     async def _async_link_implementation_resource(self, design_desc_guid: str, implementation_guid: str,
-                                                  body: dict | NewRelationshipRequestBody = None) -> None:
+                                                  body: Optional[dict | NewRelationshipRequestBody] = None) -> None:
         """ Attach a design object such as a solution component or governance definition to one of its implementation
             resource via the ImplementationResource relationship. Request body is optional.
             https://egeria-project.org/types/7/0737-Solution-Implementation/
@@ -2549,7 +2549,7 @@ class GovernanceOfficer(ServerClient):
 
     @dynamic_catch
     def link_implementation_resource(self, design_desc_guid: str, implementation_guid: str,
-                                     body: dict | NewRelationshipRequestBody = None) -> None:
+                                     body: Optional[dict | NewRelationshipRequestBody] = None) -> None:
         """ Attach a design object such as a solution component or governance definition to its implementation via the
             ImplementedBy relationship. Request body is optional.
             https://egeria-project.org/types/7/0737-Solution-Implementation/
@@ -2604,7 +2604,7 @@ class GovernanceOfficer(ServerClient):
 
     @dynamic_catch
     async def _async_detach_implementation_resource(self, design_desc_guid: str, implementation_guid: str,
-                                                    body: dict | DeleteRelationshipRequestBody = None) -> None:
+                                                    body: Optional[dict | DeleteRelationshipRequestBody] = None) -> None:
         """ Detach a design object such as a solution component or governance definition from one of its implementation
             resources. Request body is optional. Async version.
 
@@ -2651,7 +2651,7 @@ class GovernanceOfficer(ServerClient):
             f"Detached design from implementation resource: {design_desc_guid} -> {implementation_guid}")
 
     def detach_implementation_resource(self, design_desc_guid: str, implementation_guid: str,
-                                       body: dict | DeleteRelationshipRequestBody = None) -> None:
+                                       body: Optional[dict | DeleteRelationshipRequestBody] = None) -> None:
         """ Detach a design object such as a solution component or governance definition from one of its implementation
             resources. Request body is optional.
 
@@ -2696,7 +2696,7 @@ class GovernanceOfficer(ServerClient):
 
     @dynamic_catch
     async def _async_link_governance_results(self, gov_metric_guid: str, data_asset_guid: str,
-                                                  body: dict | NewRelationshipRequestBody = None) -> None:
+                                                  body: Optional[dict | NewRelationshipRequestBody] = None) -> None:
         """ Attach a governance metric to a data asset that describes where its measurements are kept.
             Request body is optional. https://egeria-project.org/concepts/governance-definition/
 
@@ -2748,7 +2748,7 @@ class GovernanceOfficer(ServerClient):
 
     @dynamic_catch
     def link_governance_results(self, gov_metric_guid: str, data_asset_guid: str,
-                                                  body: dict | NewRelationshipRequestBody = None) -> None:
+                                                  body: Optional[dict | NewRelationshipRequestBody] = None) -> None:
         """ Attach a governance metric to a data asset that describes where its measurements are kept.
             Request body is optional. https://egeria-project.org/concepts/governance-definition/
 
@@ -2794,7 +2794,7 @@ class GovernanceOfficer(ServerClient):
         loop.run_until_complete(self._async_link_governance_results(gov_metric_guid, data_asset_guid, body))
 
     @dynamic_catch
-    async def _async_detach_governance_results(self, gov_metric_guid: str, data_asset_guid: str, body: dict | DeleteRelationshipRequestBody = None) -> None:
+    async def _async_detach_governance_results(self, gov_metric_guid: str, data_asset_guid: str, body: Optional[dict | DeleteRelationshipRequestBody] = None) -> None:
         """ Detach an governance metric from its measurements data set. Request body is optional.
             https://egeria-project.org/concepts/governance-definition/ Async version.
 
@@ -2837,7 +2837,7 @@ class GovernanceOfficer(ServerClient):
             f"Detached governance metric from the asset where measurements were stored: {gov_metric_guid} -> {data_asset_guid}")
 
     def detach_governance_results(self, gov_metric_guid: str, data_asset_guid: str,
-                                  body: dict | DeleteRelationshipRequestBody = None) -> None:
+                                  body: Optional[dict | DeleteRelationshipRequestBody] = None) -> None:
         """ Detach an governance metric from its measurements data set. Request body is optional.
              https://egeria-project.org/concepts/governance-definition/
 

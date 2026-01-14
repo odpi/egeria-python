@@ -255,7 +255,7 @@ def process_output_command(egeria_client: EgeriaTech, txt: str, directive: str =
         search_string = attributes.get('Search String', {}).get('value', '*')
         output_format = attributes.get('Output Format', {}).get('value', 'LIST')
         report_spec = attributes.get('Report Spec', {}).get('value', object_type)
-        filter = attributes.get('Filter', {}).get('value', None)
+        filter_string = attributes.get('Filter', {}).get('value', None)
         kwargs = parsed_output.get("kwargs", {})
 
 

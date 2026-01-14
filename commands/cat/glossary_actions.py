@@ -99,7 +99,7 @@ def delete_glossary(server, url, userid, password, timeout, glossary_guid):
 @click.option("--usage", help="Usage notes", default=None)
 @click.option("--version", help="Version", default="1.0")
 @click.option("--status", help="Status",
-              type=click.Choice(TERM_STATUS, case_sensitive=False
+              type_name = click.Choice(TERM_STATUS, case_sensitive=False
             ), default="DRAFT")
 @click.option("--server", default=app_config.egeria_view_server, help="Egeria view server to use.")
 @click.option("--url", default=app_config.egeria_view_server_url,
@@ -207,7 +207,7 @@ def update_term(server, url, userid, password, term_name, summary, description, 
 @click.command("update-term-status")
 @click.option("--term-guid", help="GUID of the Term", required=True)
 @click.option("--status", help="Status",
-              type=click.Choice(TERM_STATUS, case_sensitive=False), default="DRAFT")
+              type_name = click.Choice(TERM_STATUS, case_sensitive=False), default="DRAFT")
 @click.option("--server", default=app_config.egeria_view_server, help="Egeria view server to use.")
 @click.option("--url", default=app_config.egeria_view_server_url,
               help="URL of Egeria platform to connect to")

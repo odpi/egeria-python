@@ -528,7 +528,7 @@ class DigitalBusiness(CollectionManager):
         page_size: int = 0,
         output_format: str = "JSON",
         report_spec: Optional[str | dict] = None,
-        property_names: list[str] = None,
+        property_names: Optional[list[str]] = None,
         body: Optional[dict] = None,
     ) -> list | str:
         """Returns the list of business capabilities matching the search string. Async version.
@@ -654,7 +654,7 @@ class DigitalBusiness(CollectionManager):
         page_size: int = 0,
         output_format: str = "JSON",
         report_spec: Optional[str | dict] = None,
-        property_names: list[str] = None,
+        property_names: Optional[list[str]] = None,
         body: Optional[dict] = None,
     ) -> list | str:
         """Returns the list of business capabilities matching the search string. Sync version.

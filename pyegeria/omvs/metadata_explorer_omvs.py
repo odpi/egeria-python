@@ -11,7 +11,7 @@ import asyncio
 
 from httpx import Response
 from loguru import logger
-
+from typing import Any, Optional
 from pyegeria.models import SearchStringRequestBody, FilterRequestBody, GetRequestBody, ResultsRequestBody
 from pyegeria.core.utils import body_slimmer, dynamic_catch
 from pyegeria.core._server_client import ServerClient, max_paging_size
@@ -85,9 +85,9 @@ class MetadataExplorer(ServerClient):
         self,
         view_server: str,
         platform_url: str,
-        user_id: str = None,
-        user_pwd: str = None,
-        token: str = None,
+        user_id: Optional[str] = None,
+        user_pwd: Optional[str] = None,
+        token: Optional[str] = None,
     ):
         self.view_server = view_server
         self.platform_url = platform_url
@@ -113,9 +113,9 @@ class MetadataExplorer(ServerClient):
         self,
         name: str,
         property_name: str,
-            as_of_time: str = None,
-        effective_time: str = None,
-            body: dict | FilterRequestBody = None
+            as_of_time: Optional[str] = None,
+        effective_time: Optional[str] = None,
+            body: Optional[dict | FilterRequestBody] = None
     ) -> str:
         """
             Retrieve the metadata element GUID using its unique name (typically the qualified name, but it is possible to
@@ -183,9 +183,9 @@ class MetadataExplorer(ServerClient):
         self,
         name: str,
         property_name: str,
-            as_of_time: str = None,
-        effective_time: str = None,
-            body: dict | FilterRequestBody = None,
+            as_of_time: Optional[str] = None,
+        effective_time: Optional[str] = None,
+            body: Optional[dict | FilterRequestBody] = None,
     ) -> str:
         """
             Retrieve the metadata element GUID using its unique name (typically the qualified name, but it is possible to
@@ -243,9 +243,9 @@ class MetadataExplorer(ServerClient):
     async def _async_get_metadata_element_by_guid(
         self,
         guid: str,
-        effective_time: str = None,
-        as_of_time: str = None,
-            body: dict | GetRequestBody = None,
+        effective_time: Optional[str] = None,
+        as_of_time: Optional[str] = None,
+            body: Optional[dict | GetRequestBody] = None,
     ) -> dict | str:
         """
         Retrieve the metadata element using its unique identifier. Async version.
@@ -304,9 +304,9 @@ class MetadataExplorer(ServerClient):
     def get_metadata_element_by_guid(
         self,
         guid: str,
-        effective_time: str = None,
-        as_of_time: str = None,
-            body: dict | GetRequestBody = None,
+        effective_time: Optional[str] = None,
+        as_of_time: Optional[str] = None,
+            body: Optional[dict | GetRequestBody] = None,
     ) -> dict | str:
         """
         Retrieve the metadata element using its unique identifier.
@@ -345,9 +345,9 @@ class MetadataExplorer(ServerClient):
         return response
 
     @dynamic_catch
-    async def _async_get_anchored_element_graph(self, guid: str, effective_time: str = None, as_of_time: str = None,
+    async def _async_get_anchored_element_graph(self, guid: str, effective_time: Optional[str] = None, as_of_time: Optional[str] = None,
                                                 mermaid_only: bool = False,
-                                                body: dict | GetRequestBody = None) -> dict | str:
+                                                body: Optional[dict | GetRequestBody] = None) -> dict | str:
         """
         Retrieve the metadata element and all of its anchored elements using its unique identifier. Async version.
 
@@ -411,10 +411,10 @@ class MetadataExplorer(ServerClient):
     def get_anchored_element_graph(
         self,
         guid: str,
-        effective_time: str = None,
-        as_of_time: str = None,
+        effective_time: Optional[str] = None,
+        as_of_time: Optional[str] = None,
             mermaid_only: bool = False,
-            body: dict | GetRequestBody = None
+            body: Optional[dict | GetRequestBody] = None
     ) -> dict | str:
         """
             Retrieve the metadata element and all of its anchored elements using its unique identifier.
@@ -471,7 +471,7 @@ class MetadataExplorer(ServerClient):
         self,
         name: str,
         property_name: str = "qualifiedName",
-        effective_time: str = None,
+        effective_time: Optional[str] = None,
             body: dict = None
     ) -> dict | str:
         """
@@ -543,7 +543,7 @@ class MetadataExplorer(ServerClient):
         self,
         name: str,
         property_name: str = "qualifiedName",
-        effective_time: str = None,
+        effective_time: Optional[str] = None,
             body: dict = None
     ) -> str:
         """
@@ -597,10 +597,10 @@ class MetadataExplorer(ServerClient):
     async def _async_get_element_history(
         self,
         guid: str,
-        effective_time: str = None,
+        effective_time: Optional[str] = None,
         oldest_first: bool = False,
-        from_time: str = None,
-        to_time: str = None,
+        from_time: Optional[str] = None,
+        to_time: Optional[str] = None,
         start_from: int = 0,
             page_size: int = 0,
             body: dict = None
@@ -687,10 +687,10 @@ class MetadataExplorer(ServerClient):
     def get_element_history(
         self,
         guid: str,
-        effective_time: str = None,
+        effective_time: Optional[str] = None,
         oldest_first: bool = False,
-        from_time: str = None,
-        to_time: str = None,
+        from_time: Optional[str] = None,
+        to_time: Optional[str] = None,
         start_from: int = 0,
         page_size: int = max_paging_size,
             body: dict = None
@@ -761,10 +761,10 @@ class MetadataExplorer(ServerClient):
         self,
             guid: str,
             classification_name: str,
-            effective_time: str = None,
+            effective_time: Optional[str] = None,
             oldest_first: bool = False,
-            from_time: str = None,
-            to_time: str = None,
+            from_time: Optional[str] = None,
+            to_time: Optional[str] = None,
         start_from: int = 0,
             page_size: int = 0,
             body: dict = None
@@ -857,10 +857,10 @@ class MetadataExplorer(ServerClient):
         self,
             guid: str,
             classification_name: str,
-            effective_time: str = None,
+            effective_time: Optional[str] = None,
             oldest_first: bool = False,
-            from_time: str = None,
-            to_time: str = None,
+            from_time: Optional[str] = None,
+            to_time: Optional[str] = None,
         start_from: int = 0,
         page_size: int = max_paging_size,
             body: dict = None
@@ -929,16 +929,16 @@ class MetadataExplorer(ServerClient):
     @dynamic_catch
     async def _async_find_metadata_elements_with_string(self, search_string: str = "*", starts_with: bool = True,
                                                         ends_with: bool = False, ignore_case: bool = False,
-                                                        anchor_domain: str = None,
-                                                        zone_filter=None, metadata_element_type: str = None,
+                                                        anchor_domain: Optional[str] = None,
+                                                        zone_filter=None, metadata_element_type: Optional[str] = None,
                                                         metadata_element_sub_type=None, skip_relationships=None,
                                                         include_only_relationships=None,
                                                         relationship_page_size: int = 10,
                                                         skip_classified_elements=None,
-                                                        include_only_classified_elements: list[str] = None,
+                                                        include_only_classified_elements: Optional[list[str]] = None,
                                                         graph_query_depth: int = 5,
-                                                        as_of_time: str = None, effective_time: str = None,
-                                                        limit_results_by_status: list[str] = None,
+                                                        as_of_time: Optional[str] = None, effective_time: Optional[str] = None,
+                                                        limit_results_by_status: Optional[list[str]] = None,
                                                         sequencing_order: str = "PROPERTY_ASCENDING",
                                                         sequencing_property: str = "qualifiedName",
                                                         start_from: int = 0, page_size: int = 0,
@@ -1026,15 +1026,15 @@ class MetadataExplorer(ServerClient):
     @dynamic_catch
     def find_metadata_elements_with_string(self, search_string: str = "*", starts_with: bool = True,
                                            ends_with: bool = False, ignore_case: bool = False,
-                                           anchor_domain: str = None,
-                                           zone_filter=None, metadata_element_type: str = None,
+                                           anchor_domain: Optional[str] = None,
+                                           zone_filter=None, metadata_element_type: Optional[str] = None,
                                            metadata_element_sub_type=None, skip_relationships=None,
                                            include_only_relationships=None, relationship_page_size: int = 10,
                                            skip_classified_elements=None,
-                                           include_only_classified_elements: list[str] = None,
+                                           include_only_classified_elements: Optional[list[str]] = None,
                                            graph_query_depth: int = 5,
-                                           as_of_time: str = None, effective_time: str = None,
-                                           limit_results_by_status: list[str] = None,
+                                           as_of_time: Optional[str] = None, effective_time: Optional[str] = None,
+                                           limit_results_by_status: Optional[list[str]] = None,
                                            sequencing_order: str = "PROPERTY_ASCENDING",
                                            sequencing_property: str = "qualifiedName",
                                            start_from: int = 0, page_size: int = 0,
@@ -1109,15 +1109,15 @@ class MetadataExplorer(ServerClient):
     async def _async_find_elements_for_anchor(self, anchor_guid: str, search_string: str = "*",
                                               starts_with: bool = True,
                                               ends_with: bool = False, ignore_case: bool = False,
-                                              anchor_domain: str = None,
-                                              zone_filter=None, metadata_element_type: str = None,
+                                              anchor_domain: Optional[str] = None,
+                                              zone_filter=None, metadata_element_type: Optional[str] = None,
                                               metadata_element_sub_type=None, skip_relationships=None,
                                               include_only_relationships=None, relationship_page_size: int = 10,
                                               skip_classified_elements=None,
-                                              include_only_classified_elements: list[str] = None,
+                                              include_only_classified_elements: Optional[list[str]] = None,
                                               graph_query_depth: int = 5,
-                                              as_of_time: str = None, effective_time: str = None,
-                                              limit_results_by_status: list[str] = None,
+                                              as_of_time: Optional[str] = None, effective_time: Optional[str] = None,
+                                              limit_results_by_status: Optional[list[str]] = None,
                                               sequencing_order: str = "PROPERTY_ASCENDING",
                                               sequencing_property: str = "qualifiedName",
                                               start_from: int = 0, page_size: int = 0,
@@ -1202,14 +1202,14 @@ class MetadataExplorer(ServerClient):
 
     @dynamic_catch
     def find_elements_for_anchor(self, anchor_guid: str, search_string: str = "*", starts_with: bool = True,
-                                 ends_with: bool = False, ignore_case: bool = False, anchor_domain: str = None,
-                                 zone_filter=None, metadata_element_type: str = None,
+                                 ends_with: bool = False, ignore_case: bool = False, anchor_domain: Optional[str] = None,
+                                 zone_filter=None, metadata_element_type: Optional[str] = None,
                                  metadata_element_sub_type=None, skip_relationships=None,
                                  include_only_relationships=None, relationship_page_size: int = 10,
                                  skip_classified_elements=None,
-                                 include_only_classified_elements: list[str] = None, graph_query_depth: int = 5,
-                                 as_of_time: str = None, effective_time: str = None,
-                                 limit_results_by_status: list[str] = None,
+                                 include_only_classified_elements: Optional[list[str]] = None, graph_query_depth: int = 5,
+                                 as_of_time: Optional[str] = None, effective_time: Optional[str] = None,
+                                 limit_results_by_status: Optional[list[str]] = None,
                                  sequencing_order: str = "PROPERTY_ASCENDING",
                                  sequencing_property: str = "qualifiedName",
                                  start_from: int = 0, page_size: int = 0,
@@ -1284,15 +1284,15 @@ class MetadataExplorer(ServerClient):
     async def _async_find_elements_in_anchor_domain(self, search_string: str = "*",
                                                     starts_with: bool = True,
                                                     ends_with: bool = False, ignore_case: bool = False,
-                                                    anchor_domain: str = None,
-                                                    zone_filter=None, metadata_element_type: str = None,
+                                                    anchor_domain: Optional[str] = None,
+                                                    zone_filter=None, metadata_element_type: Optional[str] = None,
                                                     metadata_element_sub_type=None, skip_relationships=None,
                                                     include_only_relationships=None, relationship_page_size: int = 10,
                                                     skip_classified_elements=None,
-                                                    include_only_classified_elements: list[str] = None,
+                                                    include_only_classified_elements: Optional[list[str]] = None,
                                                     graph_query_depth: int = 5,
-                                                    as_of_time: str = None, effective_time: str = None,
-                                                    limit_results_by_status: list[str] = None,
+                                                    as_of_time: Optional[str] = None, effective_time: Optional[str] = None,
+                                                    limit_results_by_status: Optional[list[str]] = None,
                                                     sequencing_order: str = "PROPERTY_ASCENDING",
                                                     sequencing_property: str = "qualifiedName",
                                                     start_from: int = 0, page_size: int = 0,
@@ -1379,14 +1379,14 @@ class MetadataExplorer(ServerClient):
 
     @dynamic_catch
     def find_elements_in_anchor_domain(self, search_string: str = "*", starts_with: bool = True,
-                                       ends_with: bool = False, ignore_case: bool = False, anchor_domain: str = None,
-                                       zone_filter=None, metadata_element_type: str = None,
+                                       ends_with: bool = False, ignore_case: bool = False, anchor_domain: Optional[str] = None,
+                                       zone_filter=None, metadata_element_type: Optional[str] = None,
                                        metadata_element_sub_type=None, skip_relationships=None,
                                        include_only_relationships=None, relationship_page_size: int = 10,
                                        skip_classified_elements=None,
-                                       include_only_classified_elements: list[str] = None, graph_query_depth: int = 5,
-                                       as_of_time: str = None, effective_time: str = None,
-                                       limit_results_by_status: list[str] = None,
+                                       include_only_classified_elements: Optional[list[str]] = None, graph_query_depth: int = 5,
+                                       as_of_time: Optional[str] = None, effective_time: Optional[str] = None,
+                                       limit_results_by_status: Optional[list[str]] = None,
                                        sequencing_order: str = "PROPERTY_ASCENDING",
                                        sequencing_property: str = "qualifiedName",
                                        start_from: int = 0, page_size: int = 0,
@@ -1460,15 +1460,15 @@ class MetadataExplorer(ServerClient):
     async def _async_find_elements_in_anchor_scope(self, anchor_scope_guid: str, search_string: str = "*",
                                                    starts_with: bool = True,
                                                    ends_with: bool = False, ignore_case: bool = False,
-                                                   anchor_domain: str = None,
-                                                   zone_filter=None, metadata_element_type: str = None,
+                                                   anchor_domain: Optional[str] = None,
+                                                   zone_filter=None, metadata_element_type: Optional[str] = None,
                                                    metadata_element_sub_type=None, skip_relationships=None,
                                                    include_only_relationships=None, relationship_page_size: int = 10,
                                                    skip_classified_elements=None,
-                                                   include_only_classified_elements: list[str] = None,
+                                                   include_only_classified_elements: Optional[list[str]] = None,
                                                    graph_query_depth: int = 5,
-                                                   as_of_time: str = None, effective_time: str = None,
-                                                   limit_results_by_status: list[str] = None,
+                                                   as_of_time: Optional[str] = None, effective_time: Optional[str] = None,
+                                                   limit_results_by_status: Optional[list[str]] = None,
                                                    sequencing_order: str = "PROPERTY_ASCENDING",
                                                    sequencing_property: str = "qualifiedName",
                                                    start_from: int = 0, page_size: int = 0,
@@ -1557,14 +1557,14 @@ class MetadataExplorer(ServerClient):
 
     @dynamic_catch
     def find_elements_in_anchor_scope(self, anchor_scope_guid: str, search_string: str = "*", starts_with: bool = True,
-                                      ends_with: bool = False, ignore_case: bool = False, anchor_domain: str = None,
-                                      zone_filter=None, metadata_element_type: str = None,
+                                      ends_with: bool = False, ignore_case: bool = False, anchor_domain: Optional[str] = None,
+                                      zone_filter=None, metadata_element_type: Optional[str] = None,
                                       metadata_element_sub_type=None, skip_relationships=None,
                                       include_only_relationships=None, relationship_page_size: int = 10,
                                       skip_classified_elements=None,
-                                      include_only_classified_elements: list[str] = None, graph_query_depth: int = 5,
-                                      as_of_time: str = None, effective_time: str = None,
-                                      limit_results_by_status: list[str] = None,
+                                      include_only_classified_elements: Optional[list[str]] = None, graph_query_depth: int = 5,
+                                      as_of_time: Optional[str] = None, effective_time: Optional[str] = None,
+                                      limit_results_by_status: Optional[list[str]] = None,
                                       sequencing_order: str = "PROPERTY_ASCENDING",
                                       sequencing_property: str = "qualifiedName",
                                       start_from: int = 0, page_size: int = 0,
@@ -1644,7 +1644,7 @@ class MetadataExplorer(ServerClient):
             page_size: int = 0,
             graph_query_depth: int = 5,
             relationships_page_size: int = 0,
-            body: dict | ResultsRequestBody = None,
+            body: Optional[dict | ResultsRequestBody] = None,
     ) -> list | str:
         """ Retrieve the metadata elements connected to the supplied element. Async Version.
 
@@ -1716,7 +1716,7 @@ class MetadataExplorer(ServerClient):
             page_size: int = max_paging_size,
             graph_query_depth: int = 5,
             relationships_page_size: int = 0,
-            body: dict | ResultsRequestBody = None,
+            body: Optional[dict | ResultsRequestBody] = None,
     ) -> list | str:
         """ Retrieve the metadata elements connected to the supplied element.
 
@@ -2690,8 +2690,8 @@ class MetadataExplorer(ServerClient):
     async def _async_get_relationship_by_guid(
         self,
         guid: str,
-        effective_time: str = None,
-        as_of_time: str = None,
+        effective_time: Optional[str] = None,
+        as_of_time: Optional[str] = None,
         for_lineage: bool = None,
         for_duplicate_processing: bool = None,
     ) -> dict | str:
@@ -2742,7 +2742,7 @@ class MetadataExplorer(ServerClient):
     def get_relationship_by_guid(
         self,
         guid: str,
-        effective_time: str = None,
+        effective_time: Optional[str] = None,
         for_lineage: bool = None,
         for_duplicate_processing: bool = None,
     ) -> dict | str:
@@ -2786,10 +2786,10 @@ class MetadataExplorer(ServerClient):
     async def _async_get_relationship_history(
         self,
         guid: str,
-        effective_time: str = None,
+        effective_time: Optional[str] = None,
         oldest_first: bool = False,
-        from_time: str = None,
-        to_time: str = None,
+        from_time: Optional[str] = None,
+        to_time: Optional[str] = None,
         for_lineage: bool = None,
         for_duplicate_processing: bool = None,
         start_from: int = 0,
@@ -2865,10 +2865,10 @@ class MetadataExplorer(ServerClient):
     def get_relationship_history(
         self,
         guid: str,
-        effective_time: str = None,
+        effective_time: Optional[str] = None,
         oldest_first: bool = False,
-        from_time: str = None,
-        to_time: str = None,
+        from_time: Optional[str] = None,
+        to_time: Optional[str] = None,
         for_lineage: bool = None,
         for_duplicate_processing: bool = None,
         start_from: int = 0,

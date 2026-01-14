@@ -74,7 +74,7 @@ def render_mermaid(mermaid_code):
     <div class="mermaid">
         {escaped_mermaid_code}
     </div>
-    <script type="text/javascript">
+    <script type_name = "text/javascript">
         if (window.mermaid) {{
     mermaid.initialize({{startOnLoad: true}});
     mermaid.contentLoaded();
