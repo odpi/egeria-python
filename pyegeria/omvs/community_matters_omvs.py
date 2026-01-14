@@ -12,7 +12,7 @@ validation and transport.
 """
 
 import asyncio
-from typing import Any
+from typing import Any, Optional
 
 from pyegeria.core._server_client import ServerClient
 from pyegeria.models import (
@@ -68,12 +68,12 @@ class CommunityMatters(ServerClient):
     # Create
     # -----------------------------
     @dynamic_catch
-    async def _async_create_community(self, body: dict | NewElementRequestBody = None) -> str:
+    async def _async_create_community(self, body: Optional[dict | NewElementRequestBody] = None) -> str:
         url = f"{self.community_command_base}/communities"
         return await self._async_create_element_body_request(url, ["CommunityProperties"], body)
 
     @dynamic_catch
-    def create_community(self, body: dict | NewElementRequestBody = None) -> str:
+    def create_community(self, body: Optional[dict | NewElementRequestBody] = None) -> str:
         loop = asyncio.get_event_loop()
         return loop.run_until_complete(self._async_create_community(body))
 
@@ -110,7 +110,7 @@ class CommunityMatters(ServerClient):
     async def _async_delete_community(
         self,
         community_guid: str,
-        body: dict | DeleteElementRequestBody = None,
+        body: Optional[dict | DeleteElementRequestBody] = None,
         cascade: bool = False,
     ) -> None:
         url = f"{self.community_command_base}/communities/{community_guid}/delete"
@@ -120,7 +120,7 @@ class CommunityMatters(ServerClient):
     def delete_community(
         self,
         community_guid: str,
-        body: dict | DeleteElementRequestBody = None,
+        body: Optional[dict | DeleteElementRequestBody] = None,
         cascade: bool = False,
     ) -> None:
         loop = asyncio.get_event_loop()
@@ -145,7 +145,7 @@ class CommunityMatters(ServerClient):
     async def _async_get_communities_by_name(
         self,
         filter_string: str | None = None,
-        body: dict | FilterRequestBody = None,
+        body: Optional[dict | FilterRequestBody] = None,
         start_from: int = 0,
         page_size: int = 0,
         output_format: str = "JSON",
@@ -169,7 +169,7 @@ class CommunityMatters(ServerClient):
     def get_communities_by_name(
         self,
         filter_string: str | None = None,
-        body: dict | FilterRequestBody = None,
+        body: Optional[dict | FilterRequestBody] = None,
         start_from: int = 0,
         page_size: int = 0,
         output_format: str = "JSON",
@@ -194,23 +194,23 @@ class CommunityMatters(ServerClient):
     async def _async_find_communities(self, search_string: str = "*",
                                       starts_with: bool = True, ends_with: bool = False,
                                       ignore_case: bool = False,
-                                      anchor_domain: str = None,
-                                      metadata_element_type: str = None,
-                                      metadata_element_subtypes: list[str] = None,
-                                      skip_relationships: list[str] = None,
-                                      include_only_relationships: list[str] = None,
-                                      skip_classified_elements: list[str] = None,
-                                      include_only_classified_elements: list[str] = None,
+                                      anchor_domain: Optional[str] = None,
+                                      metadata_element_type: Optional[str] = None,
+                                      metadata_element_subtypes: Optional[list[str]] = None,
+                                      skip_relationships: Optional[list[str]] = None,
+                                      include_only_relationships: Optional[list[str]] = None,
+                                      skip_classified_elements: Optional[list[str]] = None,
+                                      include_only_classified_elements: Optional[list[str]] = None,
                                       graph_query_depth: int = 3,
-                                      governance_zone_filter: list[str] = None, as_of_time: str = None,
-                                      effective_time: str = None, relationship_page_size: int = 0,
-                                      limit_results_by_status: list[str] = None, sequencing_order: str = None,
-                                      sequencing_property: str = None,
+                                      governance_zone_filter: Optional[list[str]] = None, as_of_time: Optional[str] = None,
+                                      effective_time: Optional[str] = None, relationship_page_size: int = 0,
+                                      limit_results_by_status: Optional[list[str]] = None, sequencing_order: Optional[str] = None,
+                                      sequencing_property: Optional[str] = None,
                                       output_format: str = "JSON",
                                       report_spec: str | dict = None,
                                       start_from: int = 0, page_size: int = 100,
-                                      property_names: list[str] = None,
-                                      body: dict | SearchStringRequestBody = None) -> list | str:
+                                      property_names: Optional[list[str]] = None,
+                                      body: Optional[dict | SearchStringRequestBody] = None) -> list | str:
         """ Retrieve the list of community metadata elements that contain the search string. Async Version.
 
         Parameters
@@ -311,23 +311,23 @@ class CommunityMatters(ServerClient):
     def find_communities(self, search_string: str = "*",
                          starts_with: bool = True, ends_with: bool = False,
                          ignore_case: bool = False,
-                         anchor_domain: str = None,
-                         metadata_element_type: str = None,
-                         metadata_element_subtypes: list[str] = None,
-                         skip_relationships: list[str] = None,
-                         include_only_relationships: list[str] = None,
-                         skip_classified_elements: list[str] = None,
-                         include_only_classified_elements: list[str] = None,
+                         anchor_domain: Optional[str] = None,
+                         metadata_element_type: Optional[str] = None,
+                         metadata_element_subtypes: Optional[list[str]] = None,
+                         skip_relationships: Optional[list[str]] = None,
+                         include_only_relationships: Optional[list[str]] = None,
+                         skip_classified_elements: Optional[list[str]] = None,
+                         include_only_classified_elements: Optional[list[str]] = None,
                          graph_query_depth: int = 3,
-                         governance_zone_filter: list[str] = None, as_of_time: str = None,
-                         effective_time: str = None, relationship_page_size: int = 0,
-                         limit_results_by_status: list[str] = None, sequencing_order: str = None,
-                         sequencing_property: str = None,
+                         governance_zone_filter: Optional[list[str]] = None, as_of_time: Optional[str] = None,
+                         effective_time: Optional[str] = None, relationship_page_size: int = 0,
+                         limit_results_by_status: Optional[list[str]] = None, sequencing_order: Optional[str] = None,
+                         sequencing_property: Optional[str] = None,
                          output_format: str = "JSON",
                          report_spec: str | dict = None,
                          start_from: int = 0, page_size: int = 100,
-                         property_names: list[str] = None,
-                         body: dict | SearchStringRequestBody = None) -> list | str:
+                         property_names: Optional[list[str]] = None,
+                         body: Optional[dict | SearchStringRequestBody] = None) -> list | str:
         """ Retrieve the list of community metadata elements that contain the search string.
 
         Parameters
@@ -434,7 +434,7 @@ class CommunityMatters(ServerClient):
     async def _async_get_community_by_guid(
         self,
         community_guid: str,
-        body: dict | GetRequestBody = None,
+        body: Optional[dict | GetRequestBody] = None,
         output_format: str = "JSON",
         report_spec: str | dict | None = None,
     ) -> dict | str:
@@ -453,7 +453,7 @@ class CommunityMatters(ServerClient):
     def get_community_by_guid(
         self,
         community_guid: str,
-        body: dict | GetRequestBody = None,
+        body: Optional[dict | GetRequestBody] = None,
         output_format: str = "JSON",
         report_spec: str | dict | None = None,
     ) -> dict | str:

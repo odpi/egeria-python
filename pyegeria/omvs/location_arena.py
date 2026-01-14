@@ -59,8 +59,8 @@ class Location(ServerClient):
             view_server: str,
             platform_url: str,
             user_id: str,
-            user_pwd: str = None,
-            token: str = None,
+            user_pwd: Optional[str] = None,
+            token: Optional[str] = None,
     ):
         self.view_server = view_server
         self.platform_url = platform_url
@@ -73,7 +73,7 @@ class Location(ServerClient):
         ServerClient.__init__(self, view_server, platform_url, user_id, user_pwd, token)
 
     @dynamic_catch
-    async def _async_create_location(self, body: dict | NewElementRequestBody = None) -> str:
+    async def _async_create_location(self, body: Optional[dict | NewElementRequestBody] = None) -> str:
         """Create a new location. Async version.
 
         Parameters
@@ -110,7 +110,7 @@ class Location(ServerClient):
         return await self._async_create_element_body_request(url, ["LocationProperties"], body)
 
     @dynamic_catch
-    def create_location(self, body: dict | NewElementRequestBody = None) -> str:
+    def create_location(self, body: Optional[dict | NewElementRequestBody] = None) -> str:
         """Create a new location.
 
         Parameters
@@ -148,7 +148,7 @@ class Location(ServerClient):
     #######
 
     @dynamic_catch
-    async def _async_create_location_from_template(self, body: TemplateRequestBody | dict) -> str:
+    async def _async_create_location_from_template(self, body: Optional[dict | TemplateRequestBody] = None) -> str:
         """ Create a new metadata element to represent a Location using an existing metadata element as a template.
             The template defines additional classifications and relationships that should be added to the new element.
             Async version.
@@ -206,7 +206,7 @@ class Location(ServerClient):
         return await self._async_create_element_from_template("POST", url, body)
 
     @dynamic_catch
-    def create_location_from_template(self, body: dict) -> str:
+    def create_location_from_template(self, body: Optional[dict | TemplateRequestBody] = None) -> str:
         """ Create a new metadata element to represent a Location using an existing metadata element as a template.
             The template defines additional classifications and relationships that should be added to the new element.
 
@@ -337,7 +337,7 @@ class Location(ServerClient):
 
     @dynamic_catch
     async def _async_link_peer_locations(self, location1_guid: str, location2_guid: str,
-                                         body: dict | NewRelationshipRequestBody = None) -> None:
+                                         body: Optional[dict | NewRelationshipRequestBody] = None) -> None:
         """Link peer locations. Async version.
 
         Parameters
@@ -378,7 +378,7 @@ class Location(ServerClient):
 
     @dynamic_catch
     def link_peer_locations(self, location1_guid: str, location2_guid: str,
-                            body: dict | NewRelationshipRequestBody = None):
+                            body: Optional[dict | NewRelationshipRequestBody] = None):
         """Link peer locations.
 
         Parameters
@@ -418,7 +418,7 @@ class Location(ServerClient):
 
     @dynamic_catch
     async def _async_detach_peer_locations(self, location1_guid: str, location2_guid: str,
-                                           body: dict | DeleteRelationshipRequestBody = None) -> None:
+                                           body: Optional[dict | DeleteRelationshipRequestBody] = None) -> None:
         """ Unlink peer locations. Async version.
     
         Parameters
@@ -462,7 +462,7 @@ class Location(ServerClient):
         logger.info(f"Unlink {location1_guid} from location {location2_guid}")
 
     def detach_peer_locations(self, location1_guid: str, location2_guid: str,
-                              body: dict | DeleteRelationshipRequestBody = None):
+                              body: Optional[dict | DeleteRelationshipRequestBody] = None):
         """ Unlink peer locations.
 
         Parameters
@@ -505,7 +505,7 @@ class Location(ServerClient):
 
     @dynamic_catch
     async def _async_link_nested_location(self, location_guid: str, nested_location_guid: str,
-                                          body: dict | NewRelationshipRequestBody = None) -> None:
+                                          body: Optional[dict | NewRelationshipRequestBody] = None) -> None:
         """ AAttach a super location to a nested location.
             Async version.
 
@@ -558,7 +558,7 @@ class Location(ServerClient):
 
     @dynamic_catch
     def link_nested_location(self, location_guid: str, nested_location_guid: str,
-                             body: dict | NewRelationshipRequestBody = None):
+                             body: Optional[dict | NewRelationshipRequestBody] = None):
         """ AAttach a super location to a nested location.
 
         Parameters
@@ -608,7 +608,7 @@ class Location(ServerClient):
 
     @dynamic_catch
     async def _async_detach_nested_location(self, location_guid: str, nested_location_guid: str,
-                                            body: dict | DeleteRelationshipRequestBody = None) -> None:
+                                            body: Optional[dict | DeleteRelationshipRequestBody] = None) -> None:
         """ Detach a nested location from a location. Async version.
 
         Parameters
@@ -653,7 +653,7 @@ class Location(ServerClient):
         logger.info(f"Detached location {location_guid} from nested location {nested_location_guid}")
 
     def detach_nested_location(self, location_guid: str, nested_location_guid: str,
-                               body: dict | DeleteRelationshipRequestBody = None):
+                               body: Optional[dict | DeleteRelationshipRequestBody] = None):
         """ Detach a nested location from a location.
 
         Parameters
@@ -696,7 +696,7 @@ class Location(ServerClient):
 
     @dynamic_catch
     async def _async_link_known_location(self, element_guid: str, location_guid: str,
-                                         body: dict | NewRelationshipRequestBody = None) -> None:
+                                         body: Optional[dict | NewRelationshipRequestBody] = None) -> None:
         """ Attach an element to its location.
             Async version.
 
@@ -749,7 +749,7 @@ class Location(ServerClient):
 
     @dynamic_catch
     def link_known_location(self, element_guid: str, location_guid: str,
-                            body: dict | NewRelationshipRequestBody = None):
+                            body: Optional[dict | NewRelationshipRequestBody] = None):
         """ Attach an element to its location.
             Async version.
 
@@ -800,7 +800,7 @@ class Location(ServerClient):
 
     @dynamic_catch
     async def _async_detach_known_location(self, element_guid: str, location_guid: str,
-                                           body: dict | DeleteRelationshipRequestBody = None) -> None:
+                                           body: Optional[dict | DeleteRelationshipRequestBody] = None) -> None:
         """ Detach an element from an known location. Async version.
 
         Parameters
@@ -844,7 +844,7 @@ class Location(ServerClient):
         logger.info(f"Detached element {element_guid} from location {location_guid}")
 
     def detach_known_location(self, element_guid: str, location_guid: str,
-                              body: dict | DeleteRelationshipRequestBody = None):
+                              body: Optional[dict | DeleteRelationshipRequestBody] = None):
         """ Detach an element from an known location. Async version.
 
         Parameters
@@ -887,7 +887,7 @@ class Location(ServerClient):
 
     @dynamic_catch
     async def _async_delete_location(self, location_guid: str,
-                                     body: dict | DeleteElementRequestBody = None,
+                                     body: Optional[dict | DeleteElementRequestBody] = None,
                                      cascade: bool = False) -> None:
         """Delete a location. Async version.
 
@@ -925,7 +925,7 @@ class Location(ServerClient):
         logger.info(f"Deleted location {location_guid} with cascade {cascade}")
 
     @dynamic_catch
-    def delete_location(self, location_guid: str, body: dict | DeleteElementRequestBody = None,
+    def delete_location(self, location_guid: str, body: Optional[dict | DeleteElementRequestBody] = None,
                         cascade: bool = False) -> None:
         """Delete a location.
 
@@ -964,23 +964,23 @@ class Location(ServerClient):
     async def _async_find_locations(self, search_string: str = "*",
                                     starts_with: bool = True, ends_with: bool = False,
                                     ignore_case: bool = False,
-                                    anchor_domain: str = None,
-                                    metadata_element_type: str = None,
-                                    metadata_element_subtypes: list[str] = None,
-                                    skip_relationships: list[str] = None,
-                                    include_only_relationships: list[str] = None,
-                                    skip_classified_elements: list[str] = None,
-                                    include_only_classified_elements: list[str] = None,
+                                    anchor_domain: Optional[str] = None,
+                                    metadata_element_type: Optional[str] = None,
+                                    metadata_element_subtypes: Optional[list[str]] = None,
+                                    skip_relationships: Optional[list[str]] = None,
+                                    include_only_relationships: Optional[list[str]] = None,
+                                    skip_classified_elements: Optional[list[str]] = None,
+                                    include_only_classified_elements: Optional[list[str]] = None,
                                     graph_query_depth: int = 3,
-                                    governance_zone_filter: list[str] = None, as_of_time: str = None,
-                                    effective_time: str = None, relationship_page_size: int = 0,
-                                    limit_results_by_status: list[str] = None, sequencing_order: str = None,
-                                    sequencing_property: str = None,
+                                    governance_zone_filter: Optional[list[str]] = None, as_of_time: Optional[str] = None,
+                                    effective_time: Optional[str] = None, relationship_page_size: int = 0,
+                                    limit_results_by_status: Optional[list[str]] = None, sequencing_order: Optional[str] = None,
+                                    sequencing_property: Optional[str] = None,
                                     output_format: str = "JSON",
                                     report_spec: str | dict = "Referenceable",
                                     start_from: int = 0, page_size: int = 100,
-                                    property_names: list[str] = None,
-                                    body: dict | SearchStringRequestBody = None) -> list | str:
+                                    property_names: Optional[list[str]] = None,
+                                    body: Optional[dict | SearchStringRequestBody] = None) -> list | str:
         """ Retrieve the list of location metadata elements that contain the search string. Async Version.
 
         Parameters
@@ -1081,23 +1081,23 @@ class Location(ServerClient):
     def find_locations(self, search_string: str = "*",
                        starts_with: bool = True, ends_with: bool = False,
                        ignore_case: bool = False,
-                       anchor_domain: str = None,
-                       metadata_element_type: str = None,
-                       metadata_element_subtypes: list[str] = None,
-                       skip_relationships: list[str] = None,
-                       include_only_relationships: list[str] = None,
-                       skip_classified_elements: list[str] = None,
-                       include_only_classified_elements: list[str] = None,
+                       anchor_domain: Optional[str] = None,
+                       metadata_element_type: Optional[str] = None,
+                       metadata_element_subtypes: Optional[list[str]] = None,
+                       skip_relationships: Optional[list[str]] = None,
+                       include_only_relationships: Optional[list[str]] = None,
+                       skip_classified_elements: Optional[list[str]] = None,
+                       include_only_classified_elements: Optional[list[str]] = None,
                        graph_query_depth: int = 3,
-                       governance_zone_filter: list[str] = None, as_of_time: str = None,
-                       effective_time: str = None, relationship_page_size: int = 0,
-                       limit_results_by_status: list[str] = None, sequencing_order: str = None,
-                       sequencing_property: str = None,
+                       governance_zone_filter: Optional[list[str]] = None, as_of_time: Optional[str] = None,
+                       effective_time: Optional[str] = None, relationship_page_size: int = 0,
+                       limit_results_by_status: Optional[list[str]] = None, sequencing_order: Optional[str] = None,
+                       sequencing_property: Optional[str] = None,
                        output_format: str = "JSON",
                        report_spec: str | dict = "Referenceable",
                        start_from: int = 0, page_size: int = 100,
-                       property_names: list[str] = None,
-                       body: dict | SearchStringRequestBody = None) -> list | str:
+                       property_names: Optional[list[str]] = None,
+                       body: Optional[dict | SearchStringRequestBody] = None) -> list | str:
         """ Retrieve the list of location metadata elements that contain the search string.
 
         Parameters
@@ -1198,9 +1198,9 @@ class Location(ServerClient):
                                                                  body=body))
 
     @dynamic_catch
-    async def _async_get_locations_by_name(self, filter_string: str = None,
-                                           classification_names: list[str] = None,
-                                           body: dict | FilterRequestBody = None,
+    async def _async_get_locations_by_name(self, filter_string: Optional[str] = None,
+                                           classification_names: Optional[list[str]] = None,
+                                           body: Optional[dict | FilterRequestBody] = None,
                                            start_from: int = 0, page_size: int = 0,
                                            output_format: str = 'JSON',
                                            report_spec: str | dict = "Locations") -> list | str:
@@ -1251,8 +1251,8 @@ class Location(ServerClient):
 
         return response
 
-    def get_locations_by_name(self, filter_string: str = None, classification_names: list[str] = None,
-                              body: dict | FilterRequestBody = None,
+    def get_locations_by_name(self, filter_string: Optional[str] = None, classification_names: Optional[list[str]] = None,
+                              body: Optional[dict | FilterRequestBody] = None,
                               start_from: int = 0, page_size: int = 0, output_format: str = 'JSON',
                               report_spec: str | dict = "Locations") -> list | str:
         """ Returns the list of Locations with a particular name.
@@ -1296,8 +1296,8 @@ class Location(ServerClient):
                                               output_format, report_spec))
 
     @dynamic_catch
-    async def _async_get_location_by_guid(self, location_guid: str, element_type: str = None,
-                                          body: dict | GetRequestBody = None, output_format: str = 'JSON',
+    async def _async_get_location_by_guid(self, location_guid: str, element_type: Optional[str] = None,
+                                          body: Optional[dict | GetRequestBody] = None, output_format: str = 'JSON',
                                           report_spec: str | dict = "Locations") -> dict | str:
         """Return the properties of a specific location. Async version.
 
@@ -1353,7 +1353,7 @@ class Location(ServerClient):
         return response
 
     @dynamic_catch
-    def get_location_by_guid(self, location_guid: str, element_type: str = None, body: dict | GetRequestBody = None,
+    def get_location_by_guid(self, location_guid: str, element_type: Optional[str] = None, body: Optional[dict | GetRequestBody] = None,
                              output_format: str = 'JSON', report_spec: str | dict = "Locations") -> dict | str:
         """Return the properties of a specific location. Async version.
 
@@ -1469,7 +1469,7 @@ class Location(ServerClient):
         return col_data
 
     @dynamic_catch
-    def _generate_location_output(self, elements: dict | list[dict], filter: Optional[str],
+    def _generate_location_output(self, elements: dict | list[dict], filter_string: Optional[str],
                                   element_type_name: Optional[str], output_format: str = "DICT",
                                   report_spec: dict | str = None) -> str | list[dict]:
         """ Generate output for locations in the specified format.

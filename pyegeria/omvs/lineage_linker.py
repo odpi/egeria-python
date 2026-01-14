@@ -101,8 +101,8 @@ class LineageLinker(ServerClient):
         view_server: str,
         platform_url: str,
         user_id: str,
-        user_pwd: str = None,
-        token: str = None,
+        user_pwd: Optional[str] = None,
+        token: Optional[str] = None,
     ):
         super().__init__(view_server, platform_url, user_id, user_pwd, token)
         self.view_server = view_server

@@ -20,7 +20,7 @@ from pyegeria.models import (SearchStringRequestBody, FilterRequestBody, GetRequ
 from pyegeria.view.output_formatter import (extract_mermaid_only, extract_basic_dict, populate_common_columns)
 from pyegeria.view.output_formatter import (generate_output)
 from pyegeria.core.utils import dynamic_catch
-
+from typing import Any, Optional
 
 def query_seperator(current_string):
     if current_string == "":
@@ -51,8 +51,8 @@ class DataDesigner(ServerClient):
       for a project and data classes for data quality validation.
     """
 
-    def __init__(self, view_server_name: str, platform_url: str, user_id: str = None, user_pwd: str = None,
-                 token: str = None, ):
+    def __init__(self, view_server_name: str, platform_url: str, user_id: Optional[str] = None, user_pwd: Optional[str] = None,
+                 token: Optional[str] = None, ):
         self.view_server = view_server_name
         self.platform_url = platform_url
         self.user_id = user_id
@@ -466,7 +466,7 @@ class DataDesigner(ServerClient):
 
     @dynamic_catch
     async def _async_link_member_data_field(self, parent_data_struct_guid: str, member_data_field_guid: str,
-                                            body: dict | NewRelationshipRequestBody = None) -> None:
+                                            body: Optional[dict | NewRelationshipRequestBody] = None) -> None:
         """
         Connect a data structure to a data field. Async version.
 
@@ -522,7 +522,7 @@ class DataDesigner(ServerClient):
 
     @dynamic_catch
     def link_member_data_field(self, parent_data_struct_guid: str, member_data_field_guid: str,
-                               body: dict | NewRelationshipRequestBody = None) -> None:
+                               body: Optional[dict | NewRelationshipRequestBody] = None) -> None:
         """
          Connect a data structure to a data field.
 
@@ -577,7 +577,7 @@ class DataDesigner(ServerClient):
 
     @dynamic_catch
     async def _async_detach_member_data_field(self, parent_data_struct_guid: str, member_data_field_guid: str,
-                                              body: dict | DeleteRelationshipRequestBody = None,
+                                              body: Optional[dict | DeleteRelationshipRequestBody] = None,
                                               cascade_delete: bool = False) -> None:
         """
         Detach a data class from a data structure. Request body is optional. Async version.
@@ -812,22 +812,22 @@ class DataDesigner(ServerClient):
     async def _async_find_data_structures(self, search_string: str,
                                           starts_with: bool = True, ends_with: bool = False,
                                           ignore_case: bool = False,
-                                          anchor_domain: str = None,
-                                          metadata_element_type: str = None,
-                                          metadata_element_subtypes: list[str] = None,
-                                          skip_relationships: list[str] = None,
-                                          include_only_relationships: list[str] = None,
-                                          skip_classified_elements: list[str] = None,
-                                          include_only_classified_elements: list[str] = None,
+                                          anchor_domain: Optional[str] = None,
+                                          metadata_element_type: Optional[str] = None,
+                                          metadata_element_subtypes: Optional[list[str]] = None,
+                                          skip_relationships: Optional[list[str]] = None,
+                                          include_only_relationships: Optional[list[str]] = None,
+                                          skip_classified_elements: Optional[list[str]] = None,
+                                          include_only_classified_elements: Optional[list[str]] = None,
                                           graph_query_depth: int = 3,
-                                          governance_zone_filter: list[str] = None, as_of_time: str = None,
-                                          effective_time: str = None, relationship_page_size: int = 0,
-                                          limit_results_by_status: list[str] = None, sequencing_order: str = None,
-                                          sequencing_property: str = None,
+                                          governance_zone_filter: Optional[list[str]] = None, as_of_time: Optional[str] = None,
+                                          effective_time: Optional[str] = None, relationship_page_size: int = 0,
+                                          limit_results_by_status: Optional[list[str]] = None, sequencing_order: Optional[str] = None,
+                                          sequencing_property: Optional[str] = None,
                                           output_format: str = "JSON", report_spec: str | dict = None,
                                           start_from: int = 0, page_size: int = 100,
-                                          property_names: list[str] = None,
-                                          body: dict | SearchStringRequestBody = None) -> list | str:
+                                          property_names: Optional[list[str]] = None,
+                                          body: Optional[dict | SearchStringRequestBody] = None) -> list | str:
         """ Find the list of data structure metadata elements that contain the search string.
             Async version.
 
@@ -949,22 +949,22 @@ class DataDesigner(ServerClient):
     def find_data_structures(self, search_string: str,
                              starts_with: bool = True, ends_with: bool = False,
                              ignore_case: bool = False,
-                             anchor_domain: str = None,
-                             metadata_element_type: str = None,
-                             metadata_element_subtypes: list[str] = None,
-                             skip_relationships: list[str] = None,
-                             include_only_relationships: list[str] = None,
-                             skip_classified_elements: list[str] = None,
-                             include_only_classified_elements: list[str] = None,
+                             anchor_domain: Optional[str] = None,
+                             metadata_element_type: Optional[str] = None,
+                             metadata_element_subtypes: Optional[list[str]] = None,
+                             skip_relationships: Optional[list[str]] = None,
+                             include_only_relationships: Optional[list[str]] = None,
+                             skip_classified_elements: Optional[list[str]] = None,
+                             include_only_classified_elements: Optional[list[str]] = None,
                              graph_query_depth: int = 3,
-                             governance_zone_filter: list[str] = None, as_of_time: str = None,
-                             effective_time: str = None, relationship_page_size: int = 0,
-                             limit_results_by_status: list[str] = None, sequencing_order: str = None,
-                             sequencing_property: str = None,
+                             governance_zone_filter: Optional[list[str]] = None, as_of_time: Optional[str] = None,
+                             effective_time: Optional[str] = None, relationship_page_size: int = 0,
+                             limit_results_by_status: Optional[list[str]] = None, sequencing_order: Optional[str] = None,
+                             sequencing_property: Optional[str] = None,
                              output_format: str = "JSON", report_spec: str | dict = None,
                              start_from: int = 0, page_size: int = 100,
-                             property_names: list[str] = None,
-                             body: dict | SearchStringRequestBody = None) -> list | str:
+                             property_names: Optional[list[str]] = None,
+                             body: Optional[dict | SearchStringRequestBody] = None) -> list | str:
         """ Find the list of data structure metadata elements that contain the search string.
 
         Parameters
@@ -1083,8 +1083,8 @@ class DataDesigner(ServerClient):
         return response
 
     @dynamic_catch
-    async def _async_get_data_structures_by_name(self, filter_string: str, classification_names: list[str] = None,
-                                                 body: dict | FilterRequestBody = None, start_from: int = 0,
+    async def _async_get_data_structures_by_name(self, filter_string: str, classification_names: Optional[list[str]] = None,
+                                                 body: Optional[dict | FilterRequestBody] = None, start_from: int = 0,
                                                  page_size: int = 0,
                                                  output_format: str = 'JSON',
                                                  report_spec: str | dict = None) -> list | str:
@@ -1093,7 +1093,7 @@ class DataDesigner(ServerClient):
 
         Parameters
         ----------
-        filter: str
+        filter_string : str
             - search string to filter on.
         body: dict, optional
             - a dictionary containing additional properties for the request.
@@ -1147,15 +1147,15 @@ class DataDesigner(ServerClient):
         return response
 
     @dynamic_catch
-    def get_data_structures_by_name(self, filter: str, classification_names: list[str] = None,
-                                    body: dict | FilterRequestBody = None, start_from: int = 0,
+    def get_data_structures_by_name(self, filter_string: str, classification_names: Optional[list[str]] = None,
+                                    body: Optional[dict | FilterRequestBody] = None, start_from: int = 0,
                                     page_size: int = max_paging_size, output_format: str = 'JSON',
                                     report_spec: str | dict = None) -> list | str:
         """ Get the list of data structure metadata elements with a matching name to the search string filter.
 
         Parameters
         ----------
-        filter: str
+        filter_string : str
             - search string to filter on.
         body: dict, optional
             - a dictionary containing additional properties for the request.
@@ -1192,8 +1192,8 @@ class DataDesigner(ServerClient):
         return response
 
     @dynamic_catch
-    async def _async_get_data_structure_by_guid(self, guid: str, element_type: str = None,
-                                                body: dict | GetRequestBody = None,
+    async def _async_get_data_structure_by_guid(self, guid: str, element_type: Optional[str] = None,
+                                                body: Optional[dict | GetRequestBody] = None,
                                                 output_format: str = 'JSON',
                                                 report_spec: str | dict = None) -> list | str:
         """ Get the  data structure metadata elements for the specified GUID.
@@ -1252,7 +1252,7 @@ class DataDesigner(ServerClient):
         return response
 
     @dynamic_catch
-    def get_data_structure_by_guid(self, guid: str, element_type: str = None, body: str = None,
+    def get_data_structure_by_guid(self, guid: str, element_type: Optional[str] = None, body: Optional[str] = None,
                                    output_format: str = 'JSON', report_spec: str | dict = None) -> list | str:
         """ Get the data structure metadata element with the specified unique identifier..
 
@@ -2049,7 +2049,7 @@ class DataDesigner(ServerClient):
 
     @dynamic_catch
     async def _async_link_nested_data_field(self, parent_data_field_guid: str, nested_data_field_guid: str,
-                                            body: dict | NewRelationshipRequestBody = None) -> None:
+                                            body: Optional[dict | NewRelationshipRequestBody] = None) -> None:
         """
         Connect a nested data field to a data field. Request body is optional. Async version.
 
@@ -2107,7 +2107,7 @@ class DataDesigner(ServerClient):
 
     @dynamic_catch
     def link_nested_data_field(self, parent_data_field_guid: str, nested_data_field_guid: str,
-                               body: dict | NewRelationshipRequestBody = None) -> None:
+                               body: Optional[dict | NewRelationshipRequestBody] = None) -> None:
         """
         Connect a nested data class to a data class. Request body is optional.
 
@@ -2163,7 +2163,7 @@ class DataDesigner(ServerClient):
 
     @dynamic_catch
     async def _async_detach_nested_data_field(self, parent_data_field_guid: str, nested_data_field_guid: str,
-                                              body: dict | DeleteRelationshipRequestBody = None) -> None:
+                                              body: Optional[dict | DeleteRelationshipRequestBody] = None) -> None:
         """
         Detach a nested data class from a data class. Request body is optional. Async version.
 
@@ -2214,7 +2214,7 @@ class DataDesigner(ServerClient):
 
     @dynamic_catch
     def detach_nested_data_field(self, parent_data_field_guid: str, nested_data_field_guid: str,
-                                 body: dict | DeleteRelationshipRequestBody = None) -> None:
+                                 body: Optional[dict | DeleteRelationshipRequestBody] = None) -> None:
         """
         Detach a nested data class from a data class. Request body is optional.
 
@@ -2261,7 +2261,7 @@ class DataDesigner(ServerClient):
             self._async_detach_nested_data_field(parent_data_field_guid, nested_data_field_guid, body))
 
     @dynamic_catch
-    async def _async_delete_data_field(self, data_field_guid: str, body: dict | DeleteElementRequestBody = None,
+    async def _async_delete_data_field(self, data_field_guid: str, body: Optional[dict | DeleteElementRequestBody] = None,
                                        cascade_delete: bool = False) -> None:
         """
         Delete a data class. Request body is optional. Async version.
@@ -2312,7 +2312,7 @@ class DataDesigner(ServerClient):
         logger.info(f"Data Field {data_field_guid} deleted.")
 
     @dynamic_catch
-    def delete_data_field(self, data_field_guid: str, body: dict | DeleteElementRequestBody = None,
+    def delete_data_field(self, data_field_guid: str, body: Optional[dict | DeleteElementRequestBody] = None,
                           cascade_delete: bool = False) -> None:
         """
         Delete a data class. Request body is optional.
@@ -2434,22 +2434,22 @@ class DataDesigner(ServerClient):
     async def _async_find_data_fields(self, search_string: str,
                                       starts_with: bool = True, ends_with: bool = False,
                                       ignore_case: bool = False,
-                                      anchor_domain: str = None,
-                                      metadata_element_type: str = None,
-                                      metadata_element_subtypes: list[str] = None,
-                                      skip_relationships: list[str] = None,
-                                      include_only_relationships: list[str] = None,
-                                      skip_classified_elements: list[str] = None,
-                                      include_only_classified_elements: list[str] = None,
+                                      anchor_domain: Optional[str] = None,
+                                      metadata_element_type: Optional[str] = None,
+                                      metadata_element_subtypes: Optional[list[str]] = None,
+                                      skip_relationships: Optional[list[str]] = None,
+                                      include_only_relationships: Optional[list[str]] = None,
+                                      skip_classified_elements: Optional[list[str]] = None,
+                                      include_only_classified_elements: Optional[list[str]] = None,
                                       graph_query_depth: int = 3,
-                                      governance_zone_filter: list[str] = None, as_of_time: str = None,
-                                      effective_time: str = None, relationship_page_size: int = 0,
-                                      limit_results_by_status: list[str] = None, sequencing_order: str = None,
-                                      sequencing_property: str = None,
+                                      governance_zone_filter: Optional[list[str]] = None, as_of_time: Optional[str] = None,
+                                      effective_time: Optional[str] = None, relationship_page_size: int = 0,
+                                      limit_results_by_status: Optional[list[str]] = None, sequencing_order: Optional[str] = None,
+                                      sequencing_property: Optional[str] = None,
                                       output_format: str = "JSON", report_spec: str | dict = None,
                                       start_from: int = 0, page_size: int = 100,
-                                      property_names: list[str] = None,
-                                      body: dict | SearchStringRequestBody = None) -> list | str:
+                                      property_names: Optional[list[str]] = None,
+                                      body: Optional[dict | SearchStringRequestBody] = None) -> list | str:
         """ Find the list of data class elements that contain the search string.
             Async version.
 
@@ -2552,22 +2552,22 @@ class DataDesigner(ServerClient):
     def find_data_fields(self, search_string: str,
                          starts_with: bool = True, ends_with: bool = False,
                          ignore_case: bool = False,
-                         anchor_domain: str = None,
-                         metadata_element_type: str = None,
-                         metadata_element_subtypes: list[str] = None,
-                         skip_relationships: list[str] = None,
-                         include_only_relationships: list[str] = None,
-                         skip_classified_elements: list[str] = None,
-                         include_only_classified_elements: list[str] = None,
+                         anchor_domain: Optional[str] = None,
+                         metadata_element_type: Optional[str] = None,
+                         metadata_element_subtypes: Optional[list[str]] = None,
+                         skip_relationships: Optional[list[str]] = None,
+                         include_only_relationships: Optional[list[str]] = None,
+                         skip_classified_elements: Optional[list[str]] = None,
+                         include_only_classified_elements: Optional[list[str]] = None,
                          graph_query_depth: int = 3,
-                         governance_zone_filter: list[str] = None, as_of_time: str = None,
-                         effective_time: str = None, relationship_page_size: int = 0,
-                         limit_results_by_status: list[str] = None, sequencing_order: str = None,
-                         sequencing_property: str = None,
+                         governance_zone_filter: Optional[list[str]] = None, as_of_time: Optional[str] = None,
+                         effective_time: Optional[str] = None, relationship_page_size: int = 0,
+                         limit_results_by_status: Optional[list[str]] = None, sequencing_order: Optional[str] = None,
+                         sequencing_property: Optional[str] = None,
                          output_format: str = "JSON", report_spec: str | dict = None,
                          start_from: int = 0, page_size: int = 100,
-                         property_names: list[str] = None,
-                         body: dict | SearchStringRequestBody = None) -> list | str:
+                         property_names: Optional[list[str]] = None,
+                         body: Optional[dict | SearchStringRequestBody] = None) -> list | str:
         """ Retrieve the list of data fields elements that contain the search string filter.
 
         Parameters
@@ -2668,7 +2668,7 @@ class DataDesigner(ServerClient):
         return response
 
     @dynamic_catch
-    async def _async_get_data_fields_by_name(self, filter_string: str, classification_names: list[str] = None,
+    async def _async_get_data_fields_by_name(self, filter_string: str, classification_names: Optional[list[str]] = None,
                                              body: dict = None | FilterRequestBody, start_from: int = 0,
                                              page_size: int = 0,
                                              output_format: str = 'JSON',
@@ -2678,7 +2678,7 @@ class DataDesigner(ServerClient):
 
         Parameters
         ----------
-        filter: str
+        filter_string : str
             - search string to filter on.
         body: dict, optional
             - a dictionary containing additional properties to use in the request.
@@ -2733,7 +2733,7 @@ class DataDesigner(ServerClient):
         return response
 
     @dynamic_catch
-    def get_data_fields_by_name(self, filter_string: str, classification_names: list[str] = None, body: dict = None,
+    def get_data_fields_by_name(self, filter_string: str, classification_names: Optional[list[str]] = None, body: dict = None,
                                 start_from: int = 0,
                                 page_size: int = max_paging_size, output_format: str = 'JSON',
                                 report_spec: str | dict = None) -> list | str:
@@ -2741,7 +2741,7 @@ class DataDesigner(ServerClient):
 
         Parameters
         ----------
-        filter: str
+        filter_string : str
             - search string to filter on.
         body: dict, optional
             - a dictionary containing additional properties to use in the request.
@@ -2792,8 +2792,8 @@ class DataDesigner(ServerClient):
         return response
 
     @dynamic_catch
-    async def _async_get_data_field_by_guid(self, guid: str, element_type: str = None,
-                                            body: dict | GetRequestBody = None,
+    async def _async_get_data_field_by_guid(self, guid: str, element_type: Optional[str] = None,
+                                            body: Optional[dict | GetRequestBody] = None,
                                             output_format: str = 'JSON',
                                             report_spec: str | dict = None) -> list | str:
         """ Get the  data class elements for the specified GUID.
@@ -2849,7 +2849,7 @@ class DataDesigner(ServerClient):
         return response
 
     @dynamic_catch
-    def get_data_field_by_guid(self, guid: str, element_type: str = None, body: str | GetRequestBody = None,
+    def get_data_field_by_guid(self, guid: str, element_type: Optional[str] = None, body: str | GetRequestBody = None,
                                output_format: str = 'JSON', report_spec: str | dict = None) -> list | str:
         """ Get the  data structure metadata element with the specified unique identifier..
 
@@ -3433,7 +3433,7 @@ class DataDesigner(ServerClient):
 
     @dynamic_catch
     async def _async_link_nested_data_class(self, parent_data_class_guid: str, child_data_class_guid: str,
-                                            body: dict | NewRelationshipRequestBody = None) -> None:
+                                            body: Optional[dict | NewRelationshipRequestBody] = None) -> None:
         """
         Connect two data classes to show that one is used by the other when it is validating (typically a complex
         data item). Request body is optional. Async version.
@@ -3484,7 +3484,7 @@ class DataDesigner(ServerClient):
 
     @dynamic_catch
     def link_nested_data_class(self, parent_data_class_guid: str, child_data_class_guid: str,
-                               body: dict | NewRelationshipRequestBody = None) -> None:
+                               body: Optional[dict | NewRelationshipRequestBody] = None) -> None:
         """
         Connect a nested data class to a data class. Request body is optional.
 
@@ -3531,7 +3531,7 @@ class DataDesigner(ServerClient):
 
     @dynamic_catch
     async def _async_detach_nested_data_class(self, parent_data_class_guid: str, child_data_class_guid: str,
-                                              body: dict | DeleteRelationshipRequestBody = None,
+                                              body: Optional[dict | DeleteRelationshipRequestBody] = None,
                                               cascade_delete: bool = False) -> None:
         """
         Detach two nested data classes from each other. Request body is optional. Async version.
@@ -3583,7 +3583,7 @@ class DataDesigner(ServerClient):
 
     @dynamic_catch
     def detach_nested_data_class(self, parent_data_class_guid: str, child_data_class_guid: str,
-                                 body: dict | DeleteRelationshipRequestBody = None, cascade_delete: bool = False) -> None:
+                                 body: Optional[dict | DeleteRelationshipRequestBody] = None, cascade_delete: bool = False) -> None:
         """
         Detach two nested data classes from each other. Request body is optional.
 
@@ -3631,7 +3631,7 @@ class DataDesigner(ServerClient):
 
     @dynamic_catch
     async def _async_link_specialized_data_class(self, parent_data_class_guid: str, child_data_class_guid: str,
-                                                 body: dict | NewRelationshipRequestBody = None, ) -> None:
+                                                 body: Optional[dict | NewRelationshipRequestBody] = None, ) -> None:
         """
         Connect two data classes to show that one provides a more specialist evaluation. Request body is optional.
         Async version.
@@ -3682,7 +3682,7 @@ class DataDesigner(ServerClient):
 
     @dynamic_catch
     def link_specialized_data_class(self, parent_data_class_guid: str, child_data_class_guid: str,
-                                    body: dict | NewRelationshipRequestBody = None) -> None:
+                                    body: Optional[dict | NewRelationshipRequestBody] = None) -> None:
         """
         Connect two data classes to show that one provides a more specialist evaluation. Request body is optional.
 
@@ -3730,7 +3730,7 @@ class DataDesigner(ServerClient):
 
     @dynamic_catch
     async def _async_detach_specialized_data_class(self, parent_data_class_guid: str, child_data_class_guid: str,
-                                                   body: dict | DeleteRelationshipRequestBody = None,
+                                                   body: Optional[dict | DeleteRelationshipRequestBody] = None,
                                                    cascade_delete: bool = False) -> None:
         """
         Detach two data classes from each other. Request body is optional. Async version.
@@ -3782,7 +3782,7 @@ class DataDesigner(ServerClient):
 
     @dynamic_catch
     def detach_specialized_data_class(self, parent_data_class_guid: str, child_data_class_guid: str,
-                                      body: dict | DeleteRelationshipRequestBody = None, cascade_delete: bool = False) -> None:
+                                      body: Optional[dict | DeleteRelationshipRequestBody] = None, cascade_delete: bool = False) -> None:
         """
         Detach two data classes from each other. Request body is optional.
 
@@ -3830,7 +3830,7 @@ class DataDesigner(ServerClient):
                                                       cascade_delete))
 
     @dynamic_catch
-    async def _async_delete_data_class(self, data_class_guid: str, body: dict | DeleteElementRequestBody = None,
+    async def _async_delete_data_class(self, data_class_guid: str, body: Optional[dict | DeleteElementRequestBody] = None,
                                        cascade_delete: bool = False) -> None:
         """
         Delete a data class. Request body is optional. Async version.
@@ -3883,7 +3883,7 @@ class DataDesigner(ServerClient):
     @dynamic_catch
     def delete_data_class(self,
                           data_class_guid: str,
-                          body: dict | DeleteElementRequestBody = None,
+                          body: Optional[dict | DeleteElementRequestBody] = None,
                           cascade_delete: bool = False) -> None:
         """
         Delete a data class. Request body is optional.
@@ -4010,22 +4010,22 @@ class DataDesigner(ServerClient):
     async def _async_find_data_classes(self, search_string: str,
                                        starts_with: bool = True, ends_with: bool = False,
                                        ignore_case: bool = False,
-                                       anchor_domain: str = None,
-                                       metadata_element_type: str = None,
-                                       metadata_element_subtypes: list[str] = None,
-                                       skip_relationships: list[str] = None,
-                                       include_only_relationships: list[str] = None,
-                                       skip_classified_elements: list[str] = None,
-                                       include_only_classified_elements: list[str] = None,
+                                       anchor_domain: Optional[str] = None,
+                                       metadata_element_type: Optional[str] = None,
+                                       metadata_element_subtypes: Optional[list[str]] = None,
+                                       skip_relationships: Optional[list[str]] = None,
+                                       include_only_relationships: Optional[list[str]] = None,
+                                       skip_classified_elements: Optional[list[str]] = None,
+                                       include_only_classified_elements: Optional[list[str]] = None,
                                        graph_query_depth: int = 3,
-                                       governance_zone_filter: list[str] = None, as_of_time: str = None,
-                                       effective_time: str = None, relationship_page_size: int = 0,
-                                       limit_results_by_status: list[str] = None, sequencing_order: str = None,
-                                       sequencing_property: str = None,
+                                       governance_zone_filter: Optional[list[str]] = None, as_of_time: Optional[str] = None,
+                                       effective_time: Optional[str] = None, relationship_page_size: int = 0,
+                                       limit_results_by_status: Optional[list[str]] = None, sequencing_order: Optional[str] = None,
+                                       sequencing_property: Optional[str] = None,
                                        output_format: str = "JSON", report_spec: str | dict = None,
                                        start_from: int = 0, page_size: int = 100,
-                                       property_names: list[str] = None,
-                                       body: dict | SearchStringRequestBody = None) -> list | str:
+                                       property_names: Optional[list[str]] = None,
+                                       body: Optional[dict | SearchStringRequestBody] = None) -> list | str:
         """ Find the list of data class elements that contain the search string.
             Async version.
 
@@ -4128,22 +4128,22 @@ class DataDesigner(ServerClient):
     def find_data_classes(self, search_string: str,
                           starts_with: bool = True, ends_with: bool = False,
                           ignore_case: bool = False,
-                          anchor_domain: str = None,
-                          metadata_element_type: str = None,
-                          metadata_element_subtypes: list[str] = None,
-                          skip_relationships: list[str] = None,
-                          include_only_relationships: list[str] = None,
-                          skip_classified_elements: list[str] = None,
-                          include_only_classified_elements: list[str] = None,
+                          anchor_domain: Optional[str] = None,
+                          metadata_element_type: Optional[str] = None,
+                          metadata_element_subtypes: Optional[list[str]] = None,
+                          skip_relationships: Optional[list[str]] = None,
+                          include_only_relationships: Optional[list[str]] = None,
+                          skip_classified_elements: Optional[list[str]] = None,
+                          include_only_classified_elements: Optional[list[str]] = None,
                           graph_query_depth: int = 3,
-                          governance_zone_filter: list[str] = None, as_of_time: str = None,
-                          effective_time: str = None, relationship_page_size: int = 0,
-                          limit_results_by_status: list[str] = None, sequencing_order: str = None,
-                          sequencing_property: str = None,
+                          governance_zone_filter: Optional[list[str]] = None, as_of_time: Optional[str] = None,
+                          effective_time: Optional[str] = None, relationship_page_size: int = 0,
+                          limit_results_by_status: Optional[list[str]] = None, sequencing_order: Optional[str] = None,
+                          sequencing_property: Optional[str] = None,
                           output_format: str = "JSON", report_spec: str | dict = None,
                           start_from: int = 0, page_size: int = 100,
-                          property_names: list[str] = None,
-                          body: dict | SearchStringRequestBody = None) -> list | str:
+                          property_names: Optional[list[str]] = None,
+                          body: Optional[dict | SearchStringRequestBody] = None) -> list | str:
         """ Retrieve the list of data classes elements that contain the search string filter.
 
         Parameters
@@ -4245,7 +4245,7 @@ class DataDesigner(ServerClient):
 
     @dynamic_catch
     async def _async_get_data_classes_by_name(self, filter_string: str, classification_names: list[str],
-                                              body: dict | FilterRequestBody = None, start_from: int = 0,
+                                              body: Optional[dict | FilterRequestBody] = None, start_from: int = 0,
                                               page_size: int = 0,
                                               output_format: str = 'JSON',
                                               report_spec: str | dict = None) -> list | str:
@@ -4254,7 +4254,7 @@ class DataDesigner(ServerClient):
 
         Parameters
         ----------
-        filter: str
+        filter_string : str
             - search string to filter on.
         body: dict, optional
             - a dictionary containing additional properties to use in the request.
@@ -4309,15 +4309,15 @@ class DataDesigner(ServerClient):
         return response
 
     @dynamic_catch
-    def get_data_classes_by_name(self, filter_string: str, classification_names: list[str] = None,
-                                 body: dict | FilterRequestBody = None, start_from: int = 0,
+    def get_data_classes_by_name(self, filter_string: str, classification_names: Optional[list[str]] = None,
+                                 body: Optional[dict | FilterRequestBody] = None, start_from: int = 0,
                                  page_size: int = max_paging_size, output_format: str = 'JSON',
                                  report_spec: str | dict = None) -> list | str:
         """ Get the list of data class elements with a matching name to the search string filter.
 
         Parameters
         ----------
-        filter: str
+        filter_string : str
             - search string to filter on.
         body: dict, optional
             - a dictionary containing additional properties to use in the request.
@@ -4369,8 +4369,8 @@ class DataDesigner(ServerClient):
         return response
 
     @dynamic_catch
-    async def _async_get_data_class_by_guid(self, guid: str, element_type: str = None,
-                                            body: dict | GetRequestBody = None,
+    async def _async_get_data_class_by_guid(self, guid: str, element_type: Optional[str] = None,
+                                            body: Optional[dict | GetRequestBody] = None,
                                             output_format: str = 'JSON',
                                             report_spec: str | dict = None) -> list | str:
         """ Get the  data class elements for the specified GUID.
@@ -4425,7 +4425,7 @@ class DataDesigner(ServerClient):
         return response
 
     @dynamic_catch
-    def get_data_class_by_guid(self, guid: str, element_type: str = None, body: dict | FilterRequestBody = None,
+    def get_data_class_by_guid(self, guid: str, element_type: Optional[str] = None, body: Optional[dict | FilterRequestBody] = None,
                                output_format: str = 'JSON',
                                report_spec: str | dict = None) -> list | str:
         """ Get the  data structure metadata element with the specified unique identifier..
@@ -4481,7 +4481,7 @@ class DataDesigner(ServerClient):
     #
     @dynamic_catch
     async def _async_link_data_class_definition(self, data_definition_guid: str, data_class_guid: str,
-                                                body: dict | NewRelationshipRequestBody = None) -> None:
+                                                body: Optional[dict | NewRelationshipRequestBody] = None) -> None:
         """
          Connect an element that is part of a data design to a data class to show that the data class should be used as
          the specification for the data values when interpreting the data definition. Request body is optional.
@@ -4532,7 +4532,7 @@ class DataDesigner(ServerClient):
 
     @dynamic_catch
     def link_data_class_definition(self, data_definition_guid: str, data_class_guid: str,
-                                   body: dict | NewRelationshipRequestBody = None) -> None:
+                                   body: Optional[dict | NewRelationshipRequestBody] = None) -> None:
         """
          Connect an element that is part of a data design to a data class to show that the data class should be used as
          the specification for the data values when interpreting the data definition. Request body is optional.
@@ -4580,7 +4580,7 @@ class DataDesigner(ServerClient):
 
     @dynamic_catch
     async def _async_detach_data_class_definition(self, data_definition_guid: str, data_class_guid: str,
-                                                  body: dict | DeleteRelationshipRequestBody = None,
+                                                  body: Optional[dict | DeleteRelationshipRequestBody] = None,
                                                   cascade_delete: bool = False) -> None:
         """
         Detach a data definition from a data class. Request body is optional. Async version.
@@ -4632,7 +4632,7 @@ class DataDesigner(ServerClient):
 
     @dynamic_catch
     def detach_data_class_definition(self, data_definition_guid: str, data_class_guid: str,
-                                     body: dict | DeleteRelationshipRequestBody = None, cascade_delete: bool = False) -> None:
+                                     body: Optional[dict | DeleteRelationshipRequestBody] = None, cascade_delete: bool = False) -> None:
         """
         Detach a data definition from a data class. Request body is optional.
 
@@ -4681,7 +4681,7 @@ class DataDesigner(ServerClient):
 
     @dynamic_catch
     async def _async_link_semantic_definition(self, data_definition_guid: str, glossary_term_guid: str,
-                                              body: dict | NewRelationshipRequestBody = None) -> None:
+                                              body: Optional[dict | NewRelationshipRequestBody] = None) -> None:
         """
         Connect an element that is part of a data design to a glossary term to show that the term should be used as
         the semantic definition for the data values when interpreting the data definition. Request body is optional.
@@ -4733,7 +4733,7 @@ class DataDesigner(ServerClient):
 
     @dynamic_catch
     def link_semantic_definition(self, data_definition_guid: str, glossary_term_guid: str,
-                                 body: dict | NewRelationshipRequestBody = None) -> None:
+                                 body: Optional[dict | NewRelationshipRequestBody] = None) -> None:
         """
         Connect an element that is part of a data design to a glossary term to show that the term should be used as
         the semantic definition for the data values when interpreting the data definition. Request body is optional.
@@ -4782,7 +4782,7 @@ class DataDesigner(ServerClient):
 
     @dynamic_catch
     async def _async_detach_semantic_definition(self, data_definition_guid: str, glossary_term_guid: str,
-                                                body: dict | DeleteRelationshipRequestBody = None,
+                                                body: Optional[dict | DeleteRelationshipRequestBody] = None,
                                                 cascade_delete: bool = False) -> None:
         """
         Detach a data definition from a glossary term. Request body is optional. Async version.
@@ -4833,7 +4833,7 @@ class DataDesigner(ServerClient):
 
     @dynamic_catch
     def detach_semantic_definition(self, data_definition_guid: str, glossary_term_guid: str,
-                                   body: dict | DeleteRelationshipRequestBody = None, cascade_delete: bool = False) -> None:
+                                   body: Optional[dict | DeleteRelationshipRequestBody] = None, cascade_delete: bool = False) -> None:
         """
         Detach a data definition from a glossary term. Request body is optional.
 
@@ -4883,7 +4883,7 @@ class DataDesigner(ServerClient):
 
 
     async def _async_link_certification_type_to_data_structure(self, certification_type_guid: str,
-                                                               data_structure_guid: str, body: dict | NewRelationshipRequestBody = None) -> None:
+                                                               data_structure_guid: str, body: Optional[dict | NewRelationshipRequestBody] = None) -> None:
         """
          Connect a certification type to a data structure to guide the survey action service (that checks the data
          quality of a data resource as part of certifying it with the supplied certification type) to the definition
@@ -4988,7 +4988,7 @@ class DataDesigner(ServerClient):
             self._async_link_certification_type_to_data_structure(certification_type_guid, data_structure_guid, body))
 
     async def _async_detach_certification_type_from_data_structure(self, certification_type_guid: str,
-                                                                   data_structure_guid: str, body: dict | DeleteRelationshipRequestBody = None, cascade_delete: bool = False) -> None:
+                                                                   data_structure_guid: str, body: Optional[dict | DeleteRelationshipRequestBody] = None, cascade_delete: bool = False) -> None:
         """
         Detach a data structure from a certification type. Request body is optional. Async version.
 
@@ -5244,7 +5244,7 @@ class DataDesigner(ServerClient):
         
         return col_data
 
-    def _generate_basic_structured_output(self, elements: dict, filter: str, type: str = None ,output_format: str = 'DICT',
+    def _generate_basic_structured_output(self, elements: dict, filter_string: str, type_name: str = None ,output_format: str = 'DICT',
                                           columns_struct: dict = None) -> str | list:
         """
         Generate output in the specified format for the given elements.
@@ -5286,7 +5286,7 @@ class DataDesigner(ServerClient):
                                    columns_struct,
                                    )
 
-    def _generate_data_structure_output(self, elements: dict | list[dict], filter: str = None, type: str = None,
+    def _generate_data_structure_output(self, elements: dict | list[dict], filter_string: Optional[str] = None, type: Optional[str] = None,
                                         output_format: str = "DICT",
                                         report_spec: str | dict = None) -> str | list:
         """
@@ -5321,7 +5321,7 @@ class DataDesigner(ServerClient):
                                output_formats,
                                )
 
-    def _generate_data_class_output(self, elements: dict | list[dict], filter: str = None, type: str = None, output_format: str = "DICT",
+    def _generate_data_class_output(self, elements: dict | list[dict], filter_string: Optional[str] = None, type: Optional[str] = None, output_format: str = "DICT",
                                     report_spec: str | dict = None) -> str | list:
         """
         Generate output for data classes in the specified format.
@@ -5356,7 +5356,7 @@ class DataDesigner(ServerClient):
                                output_formats,
                                )
 
-    def _generate_data_field_output(self, elements: dict | list[dict], filter: str = None, type: str = None, output_format: str = "DICT",
+    def _generate_data_field_output(self, elements: dict | list[dict], filter_string: Optional[str] = None, type: Optional[str] = None, output_format: str = "DICT",
                                     report_spec: str | dict = None) -> str | list:
         """
         Generate output for data fields in the specified format.

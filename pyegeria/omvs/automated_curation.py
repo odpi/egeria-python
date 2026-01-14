@@ -20,7 +20,8 @@ from pyegeria.core._validators import validate_guid, validate_name, validate_sea
 #     PyegeriaAPIException,
 #     PyegeriaUnauthorizedException,
 # )
-from pyegeria.models import GetRequestBody, FilterRequestBody, SearchStringRequestBody
+from pyegeria.models import GetRequestBody, FilterRequestBody, SearchStringRequestBody, TemplateRequestBody
+from typing import Any, Optional
 from pyegeria.core.utils import body_slimmer, dynamic_catch
 from pyegeria.core.config import settings
 from pyegeria.view.base_report_formats import select_report_format, get_report_spec_match
@@ -58,8 +59,8 @@ class AutomatedCuration(ServerClient):
             view_server: str,
             platform_url: str,
             user_id: str,
-            user_pwd: str = None,
-            token: str = None,
+            user_pwd: Optional[str] = None,
+            token: Optional[str] = None,
     ):
         self.view_server = view_server
         self.platform_url = platform_url
@@ -221,7 +222,7 @@ class AutomatedCuration(ServerClient):
     def _generate_tech_type_output(
         self,
         elements: dict | list[dict],
-        filter: str | None,
+        filter_string: str | None,
         element_type_name: str | None,
         output_format: str = "DICT",
         report_spec: dict | str | None = None,
@@ -259,7 +260,7 @@ class AutomatedCuration(ServerClient):
 
         return generate_output(
             elements,
-            filter,
+            filter_string,
             entity_type,
             output_format,
             self._extract_tech_type_properties,
@@ -270,7 +271,7 @@ class AutomatedCuration(ServerClient):
     def _generate_tech_type_element_output(
         self,
         elements: dict | list[dict],
-        filter: str | None,
+        filter_string: str | None,
         element_type_name: str | None,
         output_format: str = "DICT",
         report_spec: dict | str | None = None,
@@ -308,7 +309,7 @@ class AutomatedCuration(ServerClient):
 
         return generate_output(
             elements,
-            filter,
+            filter_string,
             entity_type,
             output_format,
             self._extract_tech_type_element_properties,
@@ -334,7 +335,7 @@ class AutomatedCuration(ServerClient):
                 break
         return col_data
 
-    def _generate_gov_action_type_output(self, elements: dict | list[dict], filter: str | None,
+    def _generate_gov_action_type_output(self, elements: dict | list[dict], filter_string: str | None,
                                          element_type_name: str | None, output_format: str = "DICT",
                                          report_format: dict | str | None = None,
                                          **kwargs) -> str | list[dict]:
@@ -362,7 +363,7 @@ class AutomatedCuration(ServerClient):
                 get_additional_props_func = getattr(self, method_name)
         return generate_output(
             elements,
-            filter,
+            filter_string,
             entity_type,
             output_format,
             self._extract_gov_action_type_properties,
@@ -388,7 +389,7 @@ class AutomatedCuration(ServerClient):
                 break
         return col_data
 
-    def _generate_catalog_target_output(self, elements: dict | list[dict], filter: str | None,
+    def _generate_catalog_target_output(self, elements: dict | list[dict], filter_string: str | None,
                                         element_type_name: str | None, output_format: str = "DICT",
                                         report_format: dict | str | None = None,
                                         **kwargs) -> str | list[dict]:
@@ -409,7 +410,7 @@ class AutomatedCuration(ServerClient):
             output_formats = select_report_format("Default", output_format)
         return generate_output(
             elements,
-            filter,
+            filter_string,
             entity_type,
             output_format,
             self._extract_catalog_target_properties,
@@ -466,7 +467,7 @@ class AutomatedCuration(ServerClient):
                 break
         return col_data
 
-    def _generate_engine_action_output(self, elements: dict | list[dict], filter: str | None,
+    def _generate_engine_action_output(self, elements: dict | list[dict], filter_string: str | None,
                                        element_type_name: str | None, output_format: str = "DICT",
                                        report_spec: dict | str | None = None) -> str | list[dict]:
         entity_type = element_type_name or self.ENGINE_ACTION_LABEL
@@ -491,7 +492,7 @@ class AutomatedCuration(ServerClient):
                 get_additional_props_func = getattr(self, method_name)
         return generate_output(
             elements,
-            filter,
+            filter_string,
             entity_type,
             output_format,
             self._extract_engine_action_properties,
@@ -534,7 +535,7 @@ class AutomatedCuration(ServerClient):
                 break
         return col_data
 
-    def _generate_gov_action_process_output(self, elements: dict | list[dict], filter: str | None,
+    def _generate_gov_action_process_output(self, elements: dict | list[dict], filter_string: str | None,
                                             element_type_name: str | None, output_format: str = "DICT",
                                             report_spec: dict | str | None = None) -> str | list[dict]:
         entity_type = element_type_name or self.GOV_ACTION_PROCESS_LABEL
@@ -552,7 +553,7 @@ class AutomatedCuration(ServerClient):
             output_formats = select_report_format("Default", output_format)
         return generate_output(
             elements,
-            filter,
+            filter_string,
             entity_type,
             output_format,
             self._extract_gov_action_process_properties,
@@ -560,7 +561,7 @@ class AutomatedCuration(ServerClient):
             output_formats,
         )
 
-    async def _async_create_elem_from_template(self, body: dict) -> str:
+    async def _async_create_elem_from_template(self, body: Optional[dict | TemplateRequestBody] = None) -> str:
         """Create a new metadata element from a template.  Async version.
         Parameters
         ----------
@@ -604,7 +605,7 @@ class AutomatedCuration(ServerClient):
         url = f"{self.curation_command_root}/catalog-templates/new-element"
         return await self._async_create_element_from_template(url, body)
 
-    def create_elem_from_template(self, body: dict) -> str:
+    def create_elem_from_template(self, body: Optional[dict | TemplateRequestBody] = None) -> str:
         """Create a new metadata element from a template.  Async version.
         Parameters
         ----------
@@ -659,7 +660,7 @@ class AutomatedCuration(ServerClient):
             kafka_server: str,
             host_name: str,
             port: str,
-            description: str = None,
+            description: Optional[str] = None,
     ) -> str:
         """Create a Kafka server element from a template. Async version.
 
@@ -704,7 +705,7 @@ class AutomatedCuration(ServerClient):
             kafka_server: str,
             host_name: str,
             port: str,
-            description: str = None,
+            description: Optional[str] = None,
     ) -> str:
         """Create a Kafka server element from a template.
 
@@ -745,8 +746,8 @@ class AutomatedCuration(ServerClient):
             version_identifier: str,
             file_encoding: str = "UTF-8",
             file_extension: str = "csv",
-            file_system_name: str = None,
-            description: str = None,
+            file_system_name: Optional[str] = None,
+            description: Optional[str] = None,
     ) -> str:
         """Create a CSV file element from a template. Async version.
 
@@ -802,8 +803,8 @@ class AutomatedCuration(ServerClient):
             version_identifier: str,
             file_encoding: str = "UTF-8",
             file_extension: str = "csv",
-            file_system_name: str = None,
-            description: str = None,
+            file_system_name: Optional[str] = None,
+            description: Optional[str] = None,
     ) -> str:
         """Create a CSV file element from a template. Async version.
 
@@ -848,8 +849,8 @@ class AutomatedCuration(ServerClient):
             version_identifier: str,
             file_encoding: str = "UTF-8",
             file_extension: str = "csv",
-            file_system_name: str = None,
-            description: str = None,
+            file_system_name: Optional[str] = None,
+            description: Optional[str] = None,
     ) -> str:
         """Create a CSV file element from a template if it doesn't exist. If it does exist,
            the guid will be returned. Async version.
@@ -907,8 +908,8 @@ class AutomatedCuration(ServerClient):
             version_identifier: str,
             file_encoding: str = "UTF-8",
             file_extension: str = "csv",
-            file_system_name: str = None,
-            description: str = None,
+            file_system_name: Optional[str] = None,
+            description: Optional[str] = None,
     ) -> str:
         """Create a CSV file element from a template if it doesn't exist. If it does exist,
            the guid will be returned.
@@ -953,7 +954,7 @@ class AutomatedCuration(ServerClient):
             port: str,
             db_user: str,
             db_pwd: str,
-            description: str = None,
+            description: Optional[str] = None,
     ) -> str:
         """Create a Postgres server element from a template. Async version.
 
@@ -1009,7 +1010,7 @@ class AutomatedCuration(ServerClient):
             port: str,
             db_user: str,
             db_pwd: str,
-            description: str = None,
+            description: Optional[str] = None,
     ) -> str:
         """Create a Postgres server element from a template.
 
@@ -1056,7 +1057,7 @@ class AutomatedCuration(ServerClient):
             port: str,
             db_user: str,
             db_pwd: str,
-            description: str = None,
+            description: Optional[str] = None,
     ) -> str:
         """Create a Postgres database element from a template. Async version.
 
@@ -1110,7 +1111,7 @@ class AutomatedCuration(ServerClient):
             port: str,
             db_user: str,
             db_pwd: str,
-            description: str = None,
+            description: Optional[str] = None,
     ) -> str:
         """Create a Postgres database element from a template. Async version.
 
@@ -1155,8 +1156,8 @@ class AutomatedCuration(ServerClient):
             path_name: str,
             folder_name: str,
             file_system: str,
-            description: str = None,
-            version: str = None,
+            description: Optional[str] = None,
+            version: Optional[str] = None,
     ) -> str:
         """Create a File folder element from a template.
         Async version.
@@ -1209,8 +1210,8 @@ class AutomatedCuration(ServerClient):
             path_name: str,
             folder_name: str,
             file_system: str,
-            description: str = None,
-            version: str = None,
+            description: Optional[str] = None,
+            version: Optional[str] = None,
     ) -> str:
         """Create a File folder element from a template.
 
@@ -1252,8 +1253,8 @@ class AutomatedCuration(ServerClient):
             server_name: str,
             host_url: str,
             port: str,
-            description: str = None,
-            version: str = None,
+            description: Optional[str] = None,
+            version: Optional[str] = None,
     ) -> str:
         """Create a Unity Catalog Server element from a template. Async version.
 
@@ -1304,8 +1305,8 @@ class AutomatedCuration(ServerClient):
             server_name: str,
             host_url: str,
             port: str,
-            description: str = None,
-            version: str = None,
+            description: Optional[str] = None,
+            version: Optional[str] = None,
     ) -> str:
         """Create a Unity Catalog Server element from a template. Async version.
 
@@ -1345,8 +1346,8 @@ class AutomatedCuration(ServerClient):
             self,
             uc_catalog: str,
             network_address: str,
-            description: str = None,
-            version: str = None,
+            description: Optional[str] = None,
+            version: Optional[str] = None,
     ) -> str:
         """Create a Unity Catalog Catalog element from a template. Async version.
 
@@ -1392,8 +1393,8 @@ class AutomatedCuration(ServerClient):
             self,
             uc_catalog: str,
             network_address: str,
-            description: str = None,
-            version: str = None,
+            description: Optional[str] = None,
+            version: Optional[str] = None,
     ) -> str:
         """Create a Unity Catalog Catalog element from a template.
 
@@ -1431,8 +1432,8 @@ class AutomatedCuration(ServerClient):
             uc_catalog: str,
             uc_schema: str,
             network_address: str,
-            description: str = None,
-            version: str = None,
+            description: Optional[str] = None,
+            version: Optional[str] = None,
     ) -> str:
         """Create a Unity Catalog schema element from a template. Async version.
 
@@ -1483,8 +1484,8 @@ class AutomatedCuration(ServerClient):
             uc_catalog: str,
             uc_schema: str,
             network_address: str,
-            description: str = None,
-            version: str = None,
+            description: Optional[str] = None,
+            version: Optional[str] = None,
     ) -> str:
         """Create a Unity Catalog schema element from a template. Async version.
 
@@ -1529,8 +1530,8 @@ class AutomatedCuration(ServerClient):
             uc_storage_loc: str,
             uc_data_source_format: str,
             network_address: str,
-            description: str = None,
-            version: str = None,
+            description: Optional[str] = None,
+            version: Optional[str] = None,
     ) -> str:
         """Create a Unity Catalog table element from a template. Async version.
 
@@ -1598,8 +1599,8 @@ class AutomatedCuration(ServerClient):
             uc_storage_loc: str,
             uc_data_source_format: str,
             network_address: str,
-            description: str = None,
-            version: str = None,
+            description: Optional[str] = None,
+            version: Optional[str] = None,
     ) -> str:
         """Create a Unity Catalog table element from a template.
 
@@ -1658,8 +1659,8 @@ class AutomatedCuration(ServerClient):
             uc_schema: str,
             uc_function: str,
             network_address: str,
-            description: str = None,
-            version: str = None,
+            description: Optional[str] = None,
+            version: Optional[str] = None,
     ) -> str:
         """Create a Unity Catalog function element from a template. Async version.
 
@@ -1715,8 +1716,8 @@ class AutomatedCuration(ServerClient):
             uc_schema: str,
             uc_function: str,
             network_address: str,
-            description: str = None,
-            version: str = None,
+            description: Optional[str] = None,
+            version: Optional[str] = None,
     ) -> str:
         """Create a Unity Catalog function element from a template.
 
@@ -1768,8 +1769,8 @@ class AutomatedCuration(ServerClient):
             uc_vol_type: str,
             uc_storage_loc: str,
             network_address: str,
-            description: str = None,
-            version: str = None,
+            description: Optional[str] = None,
+            version: Optional[str] = None,
     ) -> str:
         """Create a Unity Catalog volume element from a template. Async version.
 
@@ -1834,8 +1835,8 @@ class AutomatedCuration(ServerClient):
             uc_vol_type: str,
             uc_storage_loc: str,
             network_address: str,
-            description: str = None,
-            version: str = None,
+            description: Optional[str] = None,
+            version: Optional[str] = None,
     ) -> str:
         """Create a Unity Catalog volume element from a template. Async version.
 
@@ -2110,23 +2111,23 @@ class AutomatedCuration(ServerClient):
     async def _async_find_engine_actions(self, search_string: str = "*",
                                          starts_with: bool = True, ends_with: bool = False,
                                          ignore_case: bool = False,
-                                         anchor_domain: str = None,
-                                         metadata_element_type: str = None,
-                                         metadata_element_subtypes: list[str] = None,
-                                         skip_relationships: list[str] = None,
-                                         include_only_relationships: list[str] = None,
-                                         skip_classified_elements: list[str] = None,
-                                         include_only_classified_elements: list[str] = None,
+                                         anchor_domain: Optional[str] = None,
+                                         metadata_element_type: Optional[str] = None,
+                                         metadata_element_subtypes: Optional[list[str]] = None,
+                                         skip_relationships: Optional[list[str]] = None,
+                                         include_only_relationships: Optional[list[str]] = None,
+                                         skip_classified_elements: Optional[list[str]] = None,
+                                         include_only_classified_elements: Optional[list[str]] = None,
                                          graph_query_depth: int = 3,
-                                         governance_zone_filter: list[str] = None, as_of_time: str = None,
-                                         effective_time: str = None, relationship_page_size: int = 0,
-                                         limit_results_by_status: list[str] = None, sequencing_order: str = None,
-                                         sequencing_property: str = None,
+                                         governance_zone_filter: Optional[list[str]] = None, as_of_time: Optional[str] = None,
+                                         effective_time: Optional[str] = None, relationship_page_size: int = 0,
+                                         limit_results_by_status: Optional[list[str]] = None, sequencing_order: Optional[str] = None,
+                                         sequencing_property: Optional[str] = None,
                                          output_format: str = "JSON",
                                          report_spec: str | dict = "EngineAction",
                                          start_from: int = 0, page_size: int = 100,
-                                         property_names: list[str] = None,
-                                         body: dict | SearchStringRequestBody = None) -> list | str:
+                                         property_names: Optional[list[str]] = None,
+                                         body: Optional[dict | SearchStringRequestBody] = None) -> list | str:
         """ Retrieve the list of engine action metadata elements that contain the search string. Async Version.
 
         Parameters
@@ -2227,23 +2228,23 @@ class AutomatedCuration(ServerClient):
     def find_engine_actions(self, search_string: str = "*",
                             starts_with: bool = True, ends_with: bool = False,
                             ignore_case: bool = False,
-                            anchor_domain: str = None,
-                            metadata_element_type: str = None,
-                            metadata_element_subtypes: list[str] = None,
-                            skip_relationships: list[str] = None,
-                            include_only_relationships: list[str] = None,
-                            skip_classified_elements: list[str] = None,
-                            include_only_classified_elements: list[str] = None,
+                            anchor_domain: Optional[str] = None,
+                            metadata_element_type: Optional[str] = None,
+                            metadata_element_subtypes: Optional[list[str]] = None,
+                            skip_relationships: Optional[list[str]] = None,
+                            include_only_relationships: Optional[list[str]] = None,
+                            skip_classified_elements: Optional[list[str]] = None,
+                            include_only_classified_elements: Optional[list[str]] = None,
                             graph_query_depth: int = 3,
-                            governance_zone_filter: list[str] = None, as_of_time: str = None,
-                            effective_time: str = None, relationship_page_size: int = 0,
-                            limit_results_by_status: list[str] = None, sequencing_order: str = None,
-                            sequencing_property: str = None,
+                            governance_zone_filter: Optional[list[str]] = None, as_of_time: Optional[str] = None,
+                            effective_time: Optional[str] = None, relationship_page_size: int = 0,
+                            limit_results_by_status: Optional[list[str]] = None, sequencing_order: Optional[str] = None,
+                            sequencing_property: Optional[str] = None,
                             output_format: str = "JSON",
                             report_spec: str | dict = "EngineAction",
                             start_from: int = 0, page_size: int = 100,
-                            property_names: list[str] = None,
-                            body: dict | SearchStringRequestBody = None) -> list | str:
+                            property_names: Optional[list[str]] = None,
+                            body: Optional[dict | SearchStringRequestBody] = None) -> list | str:
         """ Retrieve the list of engine action metadata elements that contain the search string.
 
         Parameters
@@ -2355,8 +2356,8 @@ class AutomatedCuration(ServerClient):
             action_targets: list = None,
             start_time: datetime = None,
             request_parameters: dict = None,
-            orig_service_name: str = None,
-            orig_engine_name: str = None,
+            orig_service_name: Optional[str] = None,
+            orig_engine_name: Optional[str] = None,
     ) -> str:
         """Using the named governance action process as a template, initiate a chain of engine actions. Async version.
 
@@ -2412,8 +2413,8 @@ class AutomatedCuration(ServerClient):
             action_targets: [str] = None,
             start_time: datetime = None,
             request_parameters: dict = None,
-            orig_service_name: str = None,
-            orig_engine_name: str = None,
+            orig_service_name: Optional[str] = None,
+            orig_engine_name: Optional[str] = None,
     ) -> str:
         """Using the named governance action process as a template, initiate a chain of engine actions.
 
@@ -2465,8 +2466,8 @@ class AutomatedCuration(ServerClient):
             action_targets: list,
             start_time: datetime = None,
             request_parameters: dict = None,
-            orig_service_name: str = None,
-            orig_engine_name: str = None,
+            orig_service_name: Optional[str] = None,
+            orig_engine_name: Optional[str] = None,
     ) -> str:
         """Using the named governance action type as a template, initiate an engine action. Async version.
 
@@ -2519,8 +2520,8 @@ class AutomatedCuration(ServerClient):
             action_targets: list,
             start_time: datetime = None,
             request_parameters: dict = None,
-            orig_service_name: str = None,
-            orig_engine_name: str = None,
+            orig_service_name: Optional[str] = None,
+            orig_engine_name: Optional[str] = None,
     ) -> str:
         """Using the named governance action type as a template, initiate an engine action.
 
@@ -2896,9 +2897,9 @@ class AutomatedCuration(ServerClient):
             request_type: str,
             request_parameters: dict,
             process_name: str,
-            request_src_name: str = None,
-            originator_svc_name: str = None,
-            originator_eng_name: str = None,
+            request_src_name: Optional[str] = None,
+            originator_svc_name: Optional[str] = None,
+            originator_eng_name: Optional[str] = None,
     ) -> str:
         """Create an engine action in the metadata store that will trigger the governance service associated with
         the supplied request type. The engine action remains to act as a record of the actions taken for auditing.
@@ -2976,9 +2977,9 @@ class AutomatedCuration(ServerClient):
             request_type: str,
             request_parameters: dict,
             process_name: str,
-            request_src_name: str = None,
-            originator_svc_name: str = None,
-            originator_eng_name: str = None,
+            request_src_name: Optional[str] = None,
+            originator_svc_name: Optional[str] = None,
+            originator_eng_name: Optional[str] = None,
     ) -> str:
         """Create an engine action in the metadata store that will trigger the governance service associated with
         the supplied request type. The engine action remains to act as a record of the actions taken for auditing.
@@ -3116,7 +3117,7 @@ class AutomatedCuration(ServerClient):
     async def _async_get_catalog_target(self, relationship_guid: str,
                                         output_format: str = "JSON",
                                         report_spec: str | dict = "CatalogTarget",
-                                        body: dict | GetRequestBody = None) -> dict | str:
+                                        body: Optional[dict | GetRequestBody] = None) -> dict | str:
         """Retrieve a specific catalog target associated with an integration connector. Further Information:
         https://egeria-project.org/concepts/integration-connector/ .    Async version.
 
@@ -3153,7 +3154,7 @@ class AutomatedCuration(ServerClient):
     def get_catalog_target(self, relationship_guid: str,
                            output_format: str = "JSON",
                            report_spec: str | dict = "CatalogTarget",
-                           body: dict | GetRequestBody = None) -> dict | str:
+                           body: Optional[dict | GetRequestBody] = None) -> dict | str:
         """Retrieve a specific catalog target associated with an integration connector.  Further Information:
         https://egeria-project.org/concepts/integration-connector/ .
 
@@ -3188,8 +3189,8 @@ class AutomatedCuration(ServerClient):
             integ_connector_guid: str,
             metadata_element_guid: str,
             catalog_target_name: str,
-            connection_name: str = None,
-            metadata_src_qual_name: str = None,
+            connection_name: Optional[str] = None,
+            metadata_src_qual_name: Optional[str] = None,
             config_properties: dict = None,
             template_properties: dict = None,
             permitted_sync: str = "BOTH_DIRECTIONS",
@@ -3255,8 +3256,8 @@ class AutomatedCuration(ServerClient):
             integ_connector_guid: str,
             metadata_element_guid: str,
             catalog_target_name: str,
-            connection_name: str = None,
-            metadata_src_qual_name: str = None,
+            connection_name: Optional[str] = None,
+            metadata_src_qual_name: Optional[str] = None,
             config_properties: dict = None,
             template_properties: dict = None,
             permitted_sync: str = "BOTH_DIRECTIONS",
@@ -3315,8 +3316,8 @@ class AutomatedCuration(ServerClient):
             self,
             relationship_guid: str,
             catalog_target_name: str,
-            connection_name: str = None,
-            metadata_src_qual_name: str = None,
+            connection_name: Optional[str] = None,
+            metadata_src_qual_name: Optional[str] = None,
             config_properties: dict = None,
             template_properties: dict = None,
             permitted_sync: str = "BOTH_DIRECTIONS",
@@ -3377,8 +3378,8 @@ class AutomatedCuration(ServerClient):
             self,
             relationship_guid: str,
             catalog_target_name: str,
-            connection_name: str = None,
-            metadata_src_qual_name: str = None,
+            connection_name: Optional[str] = None,
+            metadata_src_qual_name: Optional[str] = None,
             config_properties: dict = None,
             template_properties: dict = None,
             permitted_sync: str = "BOTH_DIRECTIONS",
@@ -3563,14 +3564,14 @@ class AutomatedCuration(ServerClient):
         )
         return response
 
-    async def _async_get_tech_type_detail(self, filter: str = None, body: dict | FilterRequestBody = None,
+    async def _async_get_tech_type_detail(self, filter_string: Optional[str] = None, body: Optional[dict | FilterRequestBody] = None,
                                           output_format: str = "JSON", report_spec: str | dict = "TechType",
                                           **kwargs) -> list | str:
         """Retrieve the details of the named technology type. This name should be the name of the technology type
             and contain no wild cards. Async version.
         Parameters
         ----------
-        filter : str
+        filter_string : str
             The name of the technology type to retrieve detailed information for.
         body: dict | FilterRequestBody
             If provided, the information in the body supersedes the other parameters and allows more advanced requests.
@@ -3610,7 +3611,7 @@ class AutomatedCuration(ServerClient):
         if body is None:
             body = {
                 "class": "FilterRequestBody",
-                "filter": filter
+                "filter": filter_string
             }
 
         response = await self._async_make_request("POST", url, body)
@@ -3621,17 +3622,17 @@ class AutomatedCuration(ServerClient):
 
         if output_format != 'JSON':  # return a simplified markdown representation
             logger.info(f"Found elements, output format: {output_format} and report_spec: {report_spec}")
-            return self._generate_tech_type_output(element, filter, "ValidMetadataValue",
+            return self._generate_tech_type_output(element, filter_string, "ValidMetadataValue",
                                                    output_format, report_spec)
         return element
 
-    def get_tech_type_detail(self, filter: str = None, body: dict | FilterRequestBody = None,
+    def get_tech_type_detail(self, filter_string: Optional[str] = None, body: Optional[dict | FilterRequestBody] = None,
                              output_format: str = "JSON", report_spec: str | dict = "TechType", **kwargs) -> list | str:
         """Retrieve the details of the named technology type. This name should be the name of the technology type
                  and contain no wild cards.
              Parameters
              ----------
-             filter : str
+             filter_string : str
                  The name of the technology type to retrieve detailed information for.
              body: dict | FilterRequestBody
                  If provided, the information in the body supersedes the other parameters and allows more advanced requests.
@@ -3668,19 +3669,19 @@ class AutomatedCuration(ServerClient):
 
         loop = asyncio.get_event_loop()
         response = loop.run_until_complete(
-            self._async_get_tech_type_detail(filter, body=body, output_format=output_format, report_spec=report_spec)
+            self._async_get_tech_type_detail(filter_string, body=body, output_format=output_format, report_spec=report_spec)
         )
         return response
 
 
-    async def _async_get_tech_type_hierarchy(self, filter: str = None, body: dict | FilterRequestBody = None,
+    async def _async_get_tech_type_hierarchy(self, filter_string: Optional[str] = None, body: Optional[dict | FilterRequestBody] = None,
                                           output_format: str = "JSON", report_spec: str | dict = "TechType",
                                           **kwargs) -> list | str:
         """Retrieve the details of the named technology type. This name should be the name of the technology type
             and contain no wild cards. Async version.
         Parameters
         ----------
-        filter : str
+        filter_string : str
             The name of the technology type to retrieve detailed information for.
         body: dict | FilterRequestBody
             If provided, the information in the body supersedes the other parameters and allows more advanced requests.
@@ -3716,14 +3717,14 @@ class AutomatedCuration(ServerClient):
         """
 
         # validate_name(type_name)
-        if filter == "*":
-            filter = "Root Technology Type"
+        if filter_string == "*":
+            filter_string = "Root Technology Type"
 
         url = str(HttpUrl(f"{self.curation_command_root}/technology-types/hierarchy"))
         if body is None:
             body = {
                 "class": "FilterRequestBody",
-                "filter": filter
+                "filter": filter_string
             }
         body_s = body_slimmer(body)
         response = await self._async_make_request("POST", url, body_s)
@@ -3734,17 +3735,17 @@ class AutomatedCuration(ServerClient):
 
         if output_format != 'JSON':  # return a simplified markdown representation
             logger.info(f"Found elements, output format: {output_format} and report_spec: {report_spec}")
-            return self._generate_tech_type_output(element, filter, "ValidMetadataValue",
+            return self._generate_tech_type_output(element, filter_string, "ValidMetadataValue",
                                                    output_format, report_spec)
         return element
 
-    def get_tech_type_hierarchy(self, filter: str = None, body: dict | FilterRequestBody = None,
+    def get_tech_type_hierarchy(self, filter_string: Optional[str] = None, body: Optional[dict | FilterRequestBody] = None,
                              output_format: str = "JSON", report_spec: str | dict = "TechType", **kwargs) -> list | str:
         """Retrieve the details of the named technology type. This name should be the name of the technology type
                  and contain no wild cards.
              Parameters
              ----------
-             filter : str
+             filter_string : str
                  The name of the technology type to retrieve detailed information for.
              body: dict | FilterRequestBody
                  If provided, the information in the body supersedes the other parameters and allows more advanced requests.
@@ -3781,7 +3782,7 @@ class AutomatedCuration(ServerClient):
 
         loop = asyncio.get_event_loop()
         response = loop.run_until_complete(
-            self._async_get_tech_type_hierarchy(filter, body=body, output_format=output_format, report_spec=report_spec)
+            self._async_get_tech_type_hierarchy(filter_string, body=body, output_format=output_format, report_spec=report_spec)
         )
         return response
 
@@ -3810,17 +3811,17 @@ class AutomatedCuration(ServerClient):
         starts_with: bool = False,
         ends_with: bool = False,
         ignore_case: bool = True,
-        anchor_domain: str = None,
-        metadata_element_type: str = None,
-        metadata_element_subtypes: list[str] = None,
-        skip_relationships: list[str] = None,
-        include_only_relationships: list[str] = None,
-        skip_classified_elements: list[str] = None,
-        include_only_classified_elements: list[str] = None,
+        anchor_domain: Optional[str] = None,
+        metadata_element_type: Optional[str] = None,
+        metadata_element_subtypes: Optional[list[str]] = None,
+        skip_relationships: Optional[list[str]] = None,
+        include_only_relationships: Optional[list[str]] = None,
+        skip_classified_elements: Optional[list[str]] = None,
+        include_only_classified_elements: Optional[list[str]] = None,
         graph_query_depth: int = 3,
-        governance_zone_filter: list[str] = None,
-        as_of_time: str = None,
-        effective_time: str = None,
+        governance_zone_filter: Optional[list[str]] = None,
+        as_of_time: Optional[str] = None,
+        effective_time: Optional[str] = None,
         relationship_page_size: int = 0,
         limit_results_by_status: list[str] = ["ACTIVE"],
         sequencing_order: str = "PROPERTY_ASCENDING",
@@ -3829,8 +3830,8 @@ class AutomatedCuration(ServerClient):
         report_spec: str | dict = "TechType",
         start_from: int = 0,
         page_size: int = 0,
-        property_names: list[str] = None,
-        body: dict | SearchStringRequestBody = None,
+        property_names: Optional[list[str]] = None,
+        body: Optional[dict | SearchStringRequestBody] = None,
     ) -> list | str:
         """Retrieve the list of technology types that contain the search string. Async version.
 
@@ -3913,17 +3914,17 @@ class AutomatedCuration(ServerClient):
         starts_with: bool = False,
         ends_with: bool = False,
         ignore_case: bool = True,
-        anchor_domain: str = None,
-        metadata_element_type: str = None,
-        metadata_element_subtypes: list[str] = None,
-        skip_relationships: list[str] = None,
-        include_only_relationships: list[str] = None,
-        skip_classified_elements: list[str] = None,
-        include_only_classified_elements: list[str] = None,
+        anchor_domain: Optional[str] = None,
+        metadata_element_type: Optional[str] = None,
+        metadata_element_subtypes: Optional[list[str]] = None,
+        skip_relationships: Optional[list[str]] = None,
+        include_only_relationships: Optional[list[str]] = None,
+        skip_classified_elements: Optional[list[str]] = None,
+        include_only_classified_elements: Optional[list[str]] = None,
         graph_query_depth: int = 3,
-        governance_zone_filter: list[str] = None,
-        as_of_time: str = None,
-        effective_time: str = None,
+        governance_zone_filter: Optional[list[str]] = None,
+        as_of_time: Optional[str] = None,
+        effective_time: Optional[str] = None,
         relationship_page_size: int = 0,
         limit_results_by_status: list[str] = ["ACTIVE"],
         sequencing_order: str = "PROPERTY_ASCENDING",
@@ -3932,8 +3933,8 @@ class AutomatedCuration(ServerClient):
         report_spec: str | dict = "TechType",
         start_from: int = 0,
         page_size: int = 0,
-        property_names: list[str] = None,
-        body: dict | SearchStringRequestBody = None,
+        property_names: Optional[list[str]] = None,
+        body: Optional[dict | SearchStringRequestBody] = None,
     ) -> list | str:
         """Retrieve the list of technology types that contain the search string.
 
@@ -4012,17 +4013,17 @@ class AutomatedCuration(ServerClient):
         starts_with: bool = False,
         ends_with: bool = False,
         ignore_case: bool = True,
-        anchor_domain: str = None,
-        metadata_element_type: str = None,
-        metadata_element_subtypes: list[str] = None,
-        skip_relationships: list[str] = None,
-        include_only_relationships: list[str] = None,
-        skip_classified_elements: list[str] = None,
-        include_only_classified_elements: list[str] = None,
+        anchor_domain: Optional[str] = None,
+        metadata_element_type: Optional[str] = None,
+        metadata_element_subtypes: Optional[list[str]] = None,
+        skip_relationships: Optional[list[str]] = None,
+        include_only_relationships: Optional[list[str]] = None,
+        skip_classified_elements: Optional[list[str]] = None,
+        include_only_classified_elements: Optional[list[str]] = None,
         graph_query_depth: int = 3,
-        governance_zone_filter: list[str] = None,
-        as_of_time: str = None,
-        effective_time: str = None,
+        governance_zone_filter: Optional[list[str]] = None,
+        as_of_time: Optional[str] = None,
+        effective_time: Optional[str] = None,
         relationship_page_size: int = 0,
         limit_results_by_status: list[str] = ["ACTIVE"],
         sequencing_order: str = "PROPERTY_ASCENDING",
@@ -4031,8 +4032,8 @@ class AutomatedCuration(ServerClient):
         report_spec: str | dict = "TechType",
         start_from: int = 0,
         page_size: int = 0,
-        property_names: list[str] = None,
-        body: dict | SearchStringRequestBody = None,
+        property_names: Optional[list[str]] = None,
+        body: Optional[dict | SearchStringRequestBody] = None,
     ) -> list | str:
         """Retrieve the list of technology types that contain the search string. Async version.
 
@@ -4107,17 +4108,17 @@ class AutomatedCuration(ServerClient):
         starts_with: bool = False,
         ends_with: bool = False,
         ignore_case: bool = True,
-        anchor_domain: str = None,
-        metadata_element_type: str = None,
-        metadata_element_subtypes: list[str] = None,
-        skip_relationships: list[str] = None,
-        include_only_relationships: list[str] = None,
-        skip_classified_elements: list[str] = None,
-        include_only_classified_elements: list[str] = None,
+        anchor_domain: Optional[str] = None,
+        metadata_element_type: Optional[str] = None,
+        metadata_element_subtypes: Optional[list[str]] = None,
+        skip_relationships: Optional[list[str]] = None,
+        include_only_relationships: Optional[list[str]] = None,
+        skip_classified_elements: Optional[list[str]] = None,
+        include_only_classified_elements: Optional[list[str]] = None,
         graph_query_depth: int = 3,
-        governance_zone_filter: list[str] = None,
-        as_of_time: str = None,
-        effective_time: str = None,
+        governance_zone_filter: Optional[list[str]] = None,
+        as_of_time: Optional[str] = None,
+        effective_time: Optional[str] = None,
         relationship_page_size: int = 0,
         limit_results_by_status: list[str] = ["ACTIVE"],
         sequencing_order: str = "PROPERTY_ASCENDING",
@@ -4126,8 +4127,8 @@ class AutomatedCuration(ServerClient):
         report_spec: str | dict = "TechType",
         start_from: int = 0,
         page_size: int = 0,
-        property_names: list[str] = None,
-        body: dict | SearchStringRequestBody = None,
+        property_names: Optional[list[str]] = None,
+        body: Optional[dict | SearchStringRequestBody] = None,
     ) -> list | str:
         """Retrieve the list of technology types that contain the search string.
 
@@ -4280,13 +4281,13 @@ class AutomatedCuration(ServerClient):
 
     async def _async_get_technology_type_elements(
             self,
-            filter: str,
-            effective_time: str = None,
+            filter_string: str,
+            effective_time: Optional[str] = None,
             start_from: int = 0,
             page_size: int = 0,
             get_templates: bool = False,
             output_format: str = "JSON", report_spec: str = "Tech-Type-Elements",
-            body: dict | FilterRequestBody = None,
+            body: Optional[dict | FilterRequestBody] = None,
     ) -> list | str:
         """Retrieve the elements for the requested deployed implementation type. There are no wildcards allowed
         in the name. Async version.
@@ -4296,7 +4297,7 @@ class AutomatedCuration(ServerClient):
             report_spec ():
             body ():
         ----------
-        filter: str
+        filter_string: str
             The name of the deployed technology implementation type to retrieve elements for.
                 effective_time: datetime, [default=None], optional
             Effective time of the query. If not specified will default to any effective time. Time format is
@@ -4325,7 +4326,7 @@ class AutomatedCuration(ServerClient):
         """
 
         skip_templates = "Template" if not get_templates else ""
-        validate_name(filter)
+        validate_name(filter_string)
 
         url = (
             f"{self.curation_command_root}/technology-types/elements"
@@ -4333,26 +4334,26 @@ class AutomatedCuration(ServerClient):
         if body is None:
             body = {
                     "class" : "FilterRequestBody",
-                    "filter": filter,
+                    "filter": filter_string,
                     "effective_time": effective_time,
                     "skipClassifiedElements": [skip_templates],
                     "startFrom": start_from,
                     "pageSize": page_size
                     }
 
-        response = await self._async_get_name_request(url, "TechTypeElement",  self._generate_tech_type_element_output, filter, None, start_from, page_size, output_format, report_spec, body)
+        response = await self._async_get_name_request(url, "TechTypeElement",  self._generate_tech_type_element_output, filter_string, None, start_from, page_size, output_format, report_spec, body)
         return response
 
 
     def get_technology_type_elements(
             self,
-            filter: str,
-            effective_time: str = None,
+            filter_string: str,
+            effective_time: Optional[str] = None,
             start_from: int = 0,
             page_size: int = 0,
             get_templates: bool = False,
             output_format: str = "JSON", report_spec: str = "Tech-Type-Elements",
-            body: dict | FilterRequestBody = None,
+            body: Optional[dict | FilterRequestBody] = None,
     ) -> list | str:
         """Retrieve the elements for the requested deployed implementation type. There are no wildcards allowed
         in the name.
@@ -4362,7 +4363,7 @@ class AutomatedCuration(ServerClient):
             report_spec ():
             body ():
         ----------
-        filter: str
+        filter_string: str
             The name of the deployed technology implementation type to retrieve elements for.
                 effective_time: datetime, [default=None], optional
             Effective time of the query. If not specified will default to any effective time. Time format is
@@ -4392,7 +4393,7 @@ class AutomatedCuration(ServerClient):
 
         loop = asyncio.get_event_loop()
         response = loop.run_until_complete(
-            self._async_get_technology_type_elements(filter, effective_time, start_from, page_size, get_templates, output_format,
+            self._async_get_technology_type_elements(filter_string, effective_time, start_from, page_size, get_templates, output_format,
                                                      report_spec, body)
         )
         return response

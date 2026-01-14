@@ -7,7 +7,7 @@ Copyright Contributors to the ODPi Egeria project.
 """
 
 import asyncio
-from typing import Optional
+from typing import Optional, Any
 
 from loguru import logger
 from pydantic import HttpUrl
@@ -36,6 +36,21 @@ from pyegeria.core._server_client import ServerClient
 
 
 class ActorManager(ServerClient):
+    def _handle_optional_param(self, param: Any, default: Any) -> Any:
+        """Handle Optional parameters by providing a default value if None."""
+        return param if param is not None else default
+
+    def _handle_optional_list(self, param: Optional[list[str]]) -> list[str]:
+        """Handle Optional list parameters by providing an empty list if None."""
+        return param if param is not None else []
+
+    def _handle_optional_str(self, param: Optional[str]) -> str:
+        """Handle Optional string parameters by providing an empty string if None."""
+        return param if param is not None else ""
+
+    def _handle_optional_dict(self, param: Optional[dict]) -> dict:
+        """Handle Optional dict parameters by providing an empty dict if None."""
+        return param if param is not None else {}
     """
     Create and manage actor profiles.
 
@@ -57,20 +72,20 @@ class ActorManager(ServerClient):
 
     """
 
-    def __init__(self, view_server: str, platform_url: str, user_id: str, user_pwd: str = None, token: str = None, ):
+    def __init__(self, view_server: str, platform_url: str, user_id: str, user_pwd: Optional[str] = None, token: Optional[str] = None, ):
         self.view_server = view_server
         self.platform_url = platform_url
         self.user_id = user_id
         self.user_pwd = user_pwd
 
-        ServerClient.__init__(self, view_server, platform_url, user_id, user_pwd, token)
-        result = self.get_platform_origin()
+        # Handle Optional parameters for parent class
+        ServerClient.__init__(self, view_server, platform_url, user_id, user_pwd or "", token or "")
         logger.debug(f"{self.__class__} initialized, platform origin is: {result} ")
         self.command_root: str = (
             f"{self.platform_url}/servers/{self.view_server}/api/open-metadata/actor-manager")
 
     @dynamic_catch
-    async def _async_create_actor_profile(self, body: dict | NewElementRequestBody = None) -> str:
+    async def _async_create_actor_profile(self, body: Optional[dict | NewElementRequestBody] = None) -> str:
         """ Create a new actor profile. Async version.
 
         Parameters
@@ -121,10 +136,12 @@ class ActorManager(ServerClient):
     """
 
         url = f"{self.command_root}/actor-profiles"
-        return await self._async_create_element_body_request(url, ["ActorProfileProperties"], body)
+        # Handle Optional body parameter
+        body_to_use = body if body is not None else {}
+        return await self._async_create_element_body_request(url, ["ActorProfileProperties"], body_to_use)
 
     @dynamic_catch
-    def create_actor_profile(self, body: dict | NewElementRequestBody = None) -> str:
+    def create_actor_profile(self, body: Optional[dict | NewElementRequestBody] = None) -> str:
         """ Create a new actor profile.
 
                Parameters
@@ -176,7 +193,7 @@ class ActorManager(ServerClient):
     #######
 
     @dynamic_catch
-    async def _async_create_actor_profile_from_template(self, body: TemplateRequestBody | dict) -> str:
+    async def _async_create_actor_profile_from_template(self, body: Optional[dict | TemplateRequestBody] = None) -> str:
         """ Create a new metadata element to represent an actor profile using an existing metadata element as a template.
             The template defines additional classifications and relationships that should be added to the new element.
             Async version.
@@ -231,10 +248,12 @@ class ActorManager(ServerClient):
         """
         url = f"{self.command_root}/actor-profiles/from-template"
 
-        return await self._async_create_element_from_template("POST", url, body)
+        # Handle Optional body parameter
+        body_to_use = body if body is not None else {}
+        return await self._async_create_element_from_template("POST", url, body_to_use)
 
     @dynamic_catch
-    def create_actor_profile_from_template(self, body: dict) -> str:
+    def create_actor_profile_from_template(self, body: Optional[dict | TemplateRequestBody] = None) -> str:
         """ Create a new metadata element to represent an actor profile using an existing metadata element as a template.
             The template defines additional classifications and relationships that should be added to the new element.
 
@@ -413,7 +432,7 @@ class ActorManager(ServerClient):
 
     @dynamic_catch
     async def _async_link_asset_to_profile(self, asset_guid: str, it_profile_guid: str,
-                                           body: dict | NewRelationshipRequestBody = None) -> None:
+                                           body: Optional[dict | NewRelationshipRequestBody] = None) -> None:
         """ Attach an asset to an IT Profile. Async version.
     
         Parameters
@@ -465,7 +484,7 @@ class ActorManager(ServerClient):
 
     @dynamic_catch
     def link_asset_to_profile(self, asset_guid: str, it_profile_guid: str,
-                              body: dict | NewRelationshipRequestBody = None):
+                              body: Optional[dict | NewRelationshipRequestBody] = None):
         """ Attach an asset to an IT Profile.
             Parameters
             ----------
@@ -519,7 +538,7 @@ class ActorManager(ServerClient):
 
     @dynamic_catch
     async def _async_detach_asset_from_profile(self, asset_guid: str, it_profile_guid: str,
-                                               body: dict | DeleteRelationshipRequestBody = None) -> None:
+                                               body: Optional[dict | DeleteRelationshipRequestBody] = None) -> None:
         """ Detach an asset from an IT Profile. Async version.
     
         Parameters
@@ -564,7 +583,7 @@ class ActorManager(ServerClient):
         logger.debug(f"Detached asset {asset_guid} from it profile {it_profile_guid}")
 
     def detach_asset_from_profile(self, asset_guid: str, it_profile_guid: str,
-                                  body: dict | DeleteRelationshipRequestBody = None):
+                                  body: Optional[dict | DeleteRelationshipRequestBody] = None):
         """ Detach an asset from an IT Profile. Async version.
 
             Parameters
@@ -608,7 +627,7 @@ class ActorManager(ServerClient):
 
     @dynamic_catch
     async def _async_delete_actor_profile(self, actor_profile_guid: str,
-                                          body: dict | DeleteElementRequestBody = None,
+                                          body: Optional[dict | DeleteElementRequestBody] = None,
                                           cascade: bool = False) -> None:
         """ Delete an actor profile. Async Version.
     
@@ -654,7 +673,7 @@ class ActorManager(ServerClient):
         logger.debug(f"Deleted Actor Profile {actor_profile_guid} with cascade {cascade}")
 
     @dynamic_catch
-    def delete_actor_profile(self, actor_profile_guid: str, body: dict | DeleteElementRequestBody = None,
+    def delete_actor_profile(self, actor_profile_guid: str, body: Optional[dict | DeleteElementRequestBody] = None,
                              cascade: bool = False) -> None:
         """ Delete an actor profile. Async Version.
 
@@ -702,23 +721,23 @@ class ActorManager(ServerClient):
     async def _async_find_actor_profiles(self, search_string: str = "*",
                                          starts_with: bool = True, ends_with: bool = False,
                                          ignore_case: bool = False,
-                                         anchor_domain: str = None,
-                                         metadata_element_type: str = None,
-                                         metadata_element_subtypes: list[str] = None,
-                                         skip_relationships: list[str] = None,
-                                         include_only_relationships: list[str] = None,
-                                         skip_classified_elements: list[str] = None,
-                                         include_only_classified_elements: list[str] = None,
+                                         anchor_domain: Optional[str] = None,
+                                         metadata_element_type: Optional[str] = None,
+                                         metadata_element_subtypes: Optional[list[str]] = None,
+                                         skip_relationships: Optional[list[str]] = None,
+                                         include_only_relationships: Optional[list[str]] = None,
+                                         skip_classified_elements: Optional[list[str]] = None,
+                                         include_only_classified_elements: Optional[list[str]] = None,
                                          graph_query_depth: int = 3,
-                                         governance_zone_filter: list[str] = None, as_of_time: str = None,
-                                         effective_time: str = None, relationship_page_size: int = 0,
-                                         limit_results_by_status: list[str] = None, sequencing_order: str = None,
-                                         sequencing_property: str = None,
+                                         governance_zone_filter: Optional[list[str]] = None, as_of_time: Optional[str] = None,
+                                         effective_time: Optional[str] = None, relationship_page_size: int = 0,
+                                         limit_results_by_status: Optional[list[str]] = None, sequencing_order: Optional[str] = None,
+                                         sequencing_property: Optional[str] = None,
                                          output_format: str = 'JSON',
                                          report_spec: str | dict = "Actor-Profiles",
                                          start_from: int = 0, page_size: int = 100,
-                                         property_names: list[str] = None,
-                                         body: dict | SearchStringRequestBody = None) -> list | str:
+                                         property_names: Optional[list[str]] = None,
+                                         body: Optional[dict | SearchStringRequestBody] = None) -> list | str:
         """ Retrieve the list of actor profile metadata elements that contain the search string. Async Version.
 
         Parameters
@@ -795,23 +814,23 @@ class ActorManager(ServerClient):
     def find_actor_profiles(self, search_string: str = "*",
                             starts_with: bool = True, ends_with: bool = False,
                             ignore_case: bool = False,
-                            anchor_domain: str = None,
-                            metadata_element_type: str = None,
-                            metadata_element_subtypes: list[str] = None,
-                            skip_relationships: list[str] = None,
-                            include_only_relationships: list[str] = None,
-                            skip_classified_elements: list[str] = None,
-                            include_only_classified_elements: list[str] = None,
+                            anchor_domain: Optional[str] = None,
+                            metadata_element_type: Optional[str] = None,
+                            metadata_element_subtypes: Optional[list[str]] = None,
+                            skip_relationships: Optional[list[str]] = None,
+                            include_only_relationships: Optional[list[str]] = None,
+                            skip_classified_elements: Optional[list[str]] = None,
+                            include_only_classified_elements: Optional[list[str]] = None,
                             graph_query_depth: int = 3,
-                            governance_zone_filter: list[str] = None, as_of_time: str = None,
-                            effective_time: str = None, relationship_page_size: int = 0,
-                            limit_results_by_status: list[str] = None, sequencing_order: str = None,
-                            sequencing_property: str = None,
+                            governance_zone_filter: Optional[list[str]] = None, as_of_time: Optional[str] = None,
+                            effective_time: Optional[str] = None, relationship_page_size: int = 0,
+                            limit_results_by_status: Optional[list[str]] = None, sequencing_order: Optional[str] = None,
+                            sequencing_property: Optional[str] = None,
                             output_format: str = 'JSON',
                             report_spec: str | dict = "Actor-Profiles",
                             start_from: int = 0, page_size: int = 100,
-                            property_names: list[str] = None,
-                            body: dict | SearchStringRequestBody = None) -> list | str:
+                            property_names: Optional[list[str]] = None,
+                            body: Optional[dict | SearchStringRequestBody] = None) -> list | str:
         """ Retrieve the list of actor profile metadata elements that contain the search string.
 
           Parameters
@@ -913,9 +932,9 @@ class ActorManager(ServerClient):
                                                                        body=body))
 
     @dynamic_catch
-    async def _async_get_actor_profiles_by_name(self, filter_string: str = None,
-                                                classification_names: list[str] = None,
-                                                body: dict | FilterRequestBody = None,
+    async def _async_get_actor_profiles_by_name(self, filter_string: Optional[str] = None,
+                                                classification_names: Optional[list[str]] = None,
+                                                body: Optional[dict | FilterRequestBody] = None,
                                                 start_from: int = 0, page_size: int = 0,
                                                 output_format: str = 'JSON',
                                                 report_spec: str | dict = "Actor-Profiles") -> list | str:
@@ -986,8 +1005,8 @@ class ActorManager(ServerClient):
 
         return response
 
-    def get_actor_profiles_by_name(self, filter_string: str = None, classification_names: list[str] = None,
-                                   body: dict | FilterRequestBody = None,
+    def get_actor_profiles_by_name(self, filter_string: Optional[str] = None, classification_names: Optional[list[str]] = None,
+                                   body: Optional[dict | FilterRequestBody] = None,
                                    start_from: int = 0, page_size: int = 0, output_format: str = 'JSON',
                                    report_spec: str | dict = "Actor-Profiles") -> list | str:
         """ Retrieve the list of actor profile metadata elements with a particular name. Async Version.
@@ -1052,10 +1071,10 @@ class ActorManager(ServerClient):
                                                    output_format, report_spec))
 
     @dynamic_catch
-    async def _async_get_actor_profile_by_guid(self, actor_profile_guid: str, element_type: str = None,
-                                               body: dict | GetRequestBody = None,
+    async def _async_get_actor_profile_by_guid(self, actor_profile_guid: str, element_type: Optional[str] = None,
+                                               body: Optional[dict | GetRequestBody] = None,
                                                output_format: str = 'JSON',
-                                               report_spec: dict = "Actor-Profiles") -> dict | str:
+                                               report_spec: Optional[dict | str] = None) -> dict | str:
         """ Retrieve the properties of a specific actor profile. Async version.
 
         Parameters
@@ -1110,10 +1129,10 @@ class ActorManager(ServerClient):
         return response
 
     @dynamic_catch
-    def get_actor_profile_by_guid(self, actor_profile_guid: str, element_type: str = None,
-                                  body: dict | GetRequestBody = None,
+    def get_actor_profile_by_guid(self, actor_profile_guid: str, element_type: Optional[str] = None,
+                                  body: Optional[dict | GetRequestBody] = None,
                                   output_format: str = 'JSON',
-                                  report_spec: dict = "Actor-Profiles") -> dict | str:
+                                  report_spec: Optional[dict | str] = None) -> dict | str:
         """ Retrieve the properties of a specific actor profile.
 
         Parameters
@@ -1221,7 +1240,7 @@ class ActorManager(ServerClient):
 
         return col_data
 
-    def _generate_actor_profile_output(self, elements: dict | list[dict], filter: Optional[str],
+    def _generate_actor_profile_output(self, elements: dict | list[dict], filter_string: Optional[str],
                                        element_type_name: Optional[str], output_format: str = "DICT",
                                        report_spec: dict | str = "Actor-Profiles") -> str | list[dict]:
         """ Generate output for actor_profiles in the specified format.
@@ -1281,7 +1300,7 @@ class ActorManager(ServerClient):
     #
 
     @dynamic_catch
-    async def _async_create_actor_role(self, body: dict | NewElementRequestBody = None) -> str:
+    async def _async_create_actor_role(self, body: Optional[dict | NewElementRequestBody] = None) -> str:
         """ Create a new actor role. Async version.
 
         Parameters
@@ -1334,7 +1353,7 @@ class ActorManager(ServerClient):
         return await self._async_create_element_body_request(url, ["ActorRoleProperties"], body)
 
     @dynamic_catch
-    def create_actor_role(self, body: dict | NewElementRequestBody = None) -> str:
+    def create_actor_role(self, body: Optional[dict | NewElementRequestBody] = None) -> str:
         """ Create a new actor role.
 
            Parameters
@@ -1386,7 +1405,7 @@ class ActorManager(ServerClient):
         return asyncio.get_event_loop().run_until_complete(self._async_create_actor_role(body))
 
     @dynamic_catch
-    async def _async_create_actor_role_from_template(self, body: TemplateRequestBody | dict) -> str:
+    async def _async_create_actor_role_from_template(self, body: Optional[dict | TemplateRequestBody] = None) -> str:
         """ Create a new metadata element to represent an actor role using an existing metadata element as a template.
             The template defines additional classifications and relationships that should be added to the new element.
             Async version.
@@ -1441,10 +1460,12 @@ class ActorManager(ServerClient):
         """
         url = f"{self.command_root}/actor-roles/from-template"
 
-        return await self._async_create_element_from_template("POST", url, body)
+        # Handle Optional body parameter
+        body_to_use = body if body is not None else {}
+        return await self._async_create_element_from_template("POST", url, body_to_use)
 
     @dynamic_catch
-    def create_actor_role_from_template(self, body: dict | TemplateRequestBody) -> str:
+    def create_actor_role_from_template(self, body: Optional[dict | TemplateRequestBody] = None) -> str:
         """ Create a new metadata element to represent an actor role using an existing metadata element as a template.
             The template defines additional classifications and relationships that should be added to the new element.
 
@@ -1623,7 +1644,7 @@ class ActorManager(ServerClient):
 
     @dynamic_catch
     async def _async_link_person_role_to_profile(self, person_role_guid: str, person_profile_guid: str,
-                                                 body: dict | NewRelationshipRequestBody = None) -> None:
+                                                 body: Optional[dict | NewRelationshipRequestBody] = None) -> None:
         """ Attach a person role to a person profile. Async version.
 
         Parameters
@@ -1675,7 +1696,7 @@ class ActorManager(ServerClient):
 
     @dynamic_catch
     def link_person_role_to_profile(self, person_role_guid: str, person_profile_guid: str,
-                                    body: dict | NewRelationshipRequestBody = None):
+                                    body: Optional[dict | NewRelationshipRequestBody] = None):
         """ Attach a person role to a person profile.
             Parameters
             ----------
@@ -1723,7 +1744,7 @@ class ActorManager(ServerClient):
 
     @dynamic_catch
     async def _async_detach_person_role_from_profile(self, person_role_guid: str, person_profile_guid: str,
-                                                     body: dict | DeleteRelationshipRequestBody = None) -> None:
+                                                     body: Optional[dict | DeleteRelationshipRequestBody] = None) -> None:
         """ Detach a person role from a person profile. Async version.
 
         Parameters
@@ -1769,7 +1790,7 @@ class ActorManager(ServerClient):
         logger.debug(f"Detached Person Rolet {person_role_guid} from Person Profile {person_profile_guid}")
 
     def detach_person_role_from_profile(self, person_role_guid: str, person_profile_guid: str,
-                                        body: dict | DeleteRelationshipRequestBody = None):
+                                        body: Optional[dict | DeleteRelationshipRequestBody] = None):
         """ Detach a person role from a person profile. Async version.
 
             Parameters
@@ -1815,7 +1836,7 @@ class ActorManager(ServerClient):
     #
     @dynamic_catch
     async def _async_link_team_role_to_profile(self, team_role_guid: str, team_profile_guid: str,
-                                               body: dict | NewRelationshipRequestBody = None) -> None:
+                                               body: Optional[dict | NewRelationshipRequestBody] = None) -> None:
         """ Attach a team role to a team profile. Async version.
 
         Parameters
@@ -1867,7 +1888,7 @@ class ActorManager(ServerClient):
 
     @dynamic_catch
     def link_team_role_to_profile(self, team_role_guid: str, team_profile_guid: str,
-                                  body: dict | NewRelationshipRequestBody = None):
+                                  body: Optional[dict | NewRelationshipRequestBody] = None):
         """ Attach a team role to a team profile.
             Parameters
             ----------
@@ -1915,7 +1936,7 @@ class ActorManager(ServerClient):
 
     @dynamic_catch
     async def _async_detach_team_role_from_profile(self, team_role_guid: str, team_profile_guid: str,
-                                                   body: dict | DeleteRelationshipRequestBody = None) -> None:
+                                                   body: Optional[dict | DeleteRelationshipRequestBody] = None) -> None:
         """ Detach a person role from a person profile. Async version.
 
         Parameters
@@ -1960,7 +1981,7 @@ class ActorManager(ServerClient):
         logger.debug(f"Detached Team Role {team_role_guid} from Team Profile {team_profile_guid}")
 
     def detach_team_role_from_profile(self, team_role_guid: str, team_profile_guid: str,
-                                      body: dict | DeleteRelationshipRequestBody = None):
+                                      body: Optional[dict | DeleteRelationshipRequestBody] = None):
         """ Detach a person role from a person profile. Async version.
 
             Parameters
@@ -2005,7 +2026,7 @@ class ActorManager(ServerClient):
     #
     @dynamic_catch
     async def _async_link_it_profile_role_to_it_profile(self, it_profile_role_guid: str, it_profile_guid: str,
-                                                        body: dict | NewRelationshipRequestBody = None) -> None:
+                                                        body: Optional[dict | NewRelationshipRequestBody] = None) -> None:
         """ Attach an IT profile role to an IT profile. Async version.
 
         Parameters
@@ -2057,7 +2078,7 @@ class ActorManager(ServerClient):
 
     @dynamic_catch
     def link_it_profile_role_to_it_profile(self, it_profile_role_guid: str, it_profile_guid: str,
-                                           body: dict | NewRelationshipRequestBody = None):
+                                           body: Optional[dict | NewRelationshipRequestBody] = None):
         """ Attach a person role to a person profile.
             Parameters
             ----------
@@ -2106,7 +2127,7 @@ class ActorManager(ServerClient):
 
     @dynamic_catch
     async def _async_detach_it_profile_role_from_it_profile(self, it_profile_role_guid: str, it_profile_guid: str,
-                                                            body: dict | DeleteRelationshipRequestBody = None) -> None:
+                                                            body: Optional[dict | DeleteRelationshipRequestBody] = None) -> None:
         """ Detach an IT profile role from an IT profile. Async version.
 
         Parameters
@@ -2152,7 +2173,7 @@ class ActorManager(ServerClient):
         logger.debug(f"Detached IT Profile Role {it_profile_role_guid} from IT Profile {it_profile_guid}")
 
     def detach_it_profile_role_from_it_profile(self, it_profile_role_guid: str, it_profile_guid: str,
-                                               body: dict | DeleteRelationshipRequestBody = None):
+                                               body: Optional[dict | DeleteRelationshipRequestBody] = None):
         """ Detach an IT profile role from an IT profile.
 
             Parameters
@@ -2199,7 +2220,7 @@ class ActorManager(ServerClient):
 
     @dynamic_catch
     async def _async_delete_actor_role(self, actor_role_guid: str,
-                                       body: dict | DeleteElementRequestBody = None,
+                                       body: Optional[dict | DeleteElementRequestBody] = None,
                                        cascade: bool = False) -> None:
         """ Delete an actor role. Async Version.
 
@@ -2246,7 +2267,7 @@ class ActorManager(ServerClient):
         logger.debug(f"Deleted actor role {actor_role_guid} with cascade {cascade}")
 
     @dynamic_catch
-    def delete_actor_role(self, actor_role_guid: str, body: dict | DeleteElementRequestBody = None,
+    def delete_actor_role(self, actor_role_guid: str, body: Optional[dict | DeleteElementRequestBody] = None,
                           cascade: bool = False) -> None:
         """ Delete an actor role. Async Version.
 
@@ -2291,13 +2312,13 @@ class ActorManager(ServerClient):
         loop.run_until_complete(self._async_delete_actor_role(actor_role_guid, body, cascade))
 
     @dynamic_catch
-    async def _async_find_actor_roles(self, search_string: str = "*", classification_names: list[str] = None,
-                                      metadata_element_subtypes: list[str] = ACTOR_ROLE,
+    async def _async_find_actor_roles(self, search_string: str = "*", classification_names: Optional[list[str]] = None,
+                                      metadata_element_subtypes: Optional[list[str]] = None,
                                       starts_with: bool = True, ends_with: bool = False,
                                       ignore_case: bool = False,
                                       start_from: int = 0, page_size: int = 0, output_format: str = 'JSON',
                                       report_spec: str | dict = "Actor-Roles",
-                                      body: dict | SearchStringRequestBody = None) -> list | str:
+                                      body: Optional[dict | SearchStringRequestBody] = None) -> list | str:
         """ Retrieve the list of actor role metadata elements that contain the search string. Async Version.
 
         Parameters
@@ -2354,12 +2375,12 @@ class ActorManager(ServerClient):
         return response
 
     @dynamic_catch
-    def find_actor_roles(self, search_string: str = '*', classification_names: str = None,
-                         metadata_element_subtypes: list[str] = ACTOR_ROLE, starts_with: bool = True,
+    def find_actor_roles(self, search_string: str = '*', classification_names: Optional[list[str]] = None,
+                         metadata_element_subtypes: Optional[list[str]] = None, starts_with: bool = True,
                          ends_with: bool = False, ignore_case: bool = False,
                          start_from: int = 0, page_size: int = 0, output_format: str = 'JSON',
                          report_spec: str | dict = "Actor-Roles",
-                         body: dict | SearchStringRequestBody = None) -> list | str:
+                         body: Optional[dict | SearchStringRequestBody] = None) -> list | str:
         """ Retrieve the list of actor role metadata elements that contain the search string. Async Version.
 
           Parameters
@@ -2414,9 +2435,9 @@ class ActorManager(ServerClient):
                                          body))
 
     @dynamic_catch
-    async def _async_get_actor_roles_by_name(self, filter_string: str = None,
-                                             classification_names: list[str] = None,
-                                             body: dict | FilterRequestBody = None,
+    async def _async_get_actor_roles_by_name(self, filter_string: Optional[str] = None,
+                                             classification_names: Optional[list[str]] = None,
+                                             body: Optional[dict | FilterRequestBody] = None,
                                              start_from: int = 0, page_size: int = 0,
                                              output_format: str = 'JSON',
                                              report_spec: str | dict = "Actor-Roles") -> list | str:
@@ -2487,8 +2508,8 @@ class ActorManager(ServerClient):
 
         return response
 
-    def get_actor_roles_by_name(self, filter_string: str = None, classification_names: list[str] = None,
-                                body: dict | FilterRequestBody = None,
+    def get_actor_roles_by_name(self, filter_string: Optional[str] = None, classification_names: Optional[list[str]] = None,
+                                body: Optional[dict | FilterRequestBody] = None,
                                 start_from: int = 0, page_size: int = 0, output_format: str = 'JSON',
                                 report_spec: str | dict = "Actor-Roles") -> list | str:
         """ Retrieve the list of actor role metadata elements with a particular name. Async Version.
@@ -2553,10 +2574,10 @@ class ActorManager(ServerClient):
                                                 output_format, report_spec))
 
     @dynamic_catch
-    async def _async_get_actor_role_by_guid(self, actor_role_guid: str, element_type: str = None,
-                                            body: dict | GetRequestBody = None,
+    async def _async_get_actor_role_by_guid(self, actor_role_guid: str, element_type: Optional[str] = None,
+                                            body: Optional[dict | GetRequestBody] = None,
                                             output_format: str = 'JSON',
-                                            report_spec: dict = "Actor-Roles") -> dict | str:
+                                            report_spec: Optional[dict | str] = None) -> dict | str:
         """ Retrieve the properties of a specific actor role. Async version.
 
         Parameters
@@ -2611,10 +2632,10 @@ class ActorManager(ServerClient):
         return response
 
     @dynamic_catch
-    def get_actor_role_by_guid(self, actor_role_guid: str, element_type: str = None,
-                               body: dict | GetRequestBody = None,
+    def get_actor_role_by_guid(self, actor_role_guid: str, element_type: Optional[str] = None,
+                               body: Optional[dict | GetRequestBody] = None,
                                output_format: str = 'JSON',
-                               report_spec: dict = "Actor-Roles") -> dict | str:
+                               report_spec: Optional[dict | str] = None) -> dict | str:
         """ Retrieve the properties of a specific actor role. Async version.
 
         Parameters
@@ -2722,7 +2743,7 @@ class ActorManager(ServerClient):
 
         return col_data
 
-    def _generate_actor_role_output(self, elements: dict | list[dict], filter: Optional[str],
+    def _generate_actor_role_output(self, elements: dict | list[dict], filter_string: Optional[str],
                                     element_type_name: Optional[str], output_format: str = "DICT",
                                     report_spec: dict | str = "Actor-Roles") -> str | list[dict]:
         """ Generate output for actor_roles in the specified format.
@@ -2782,7 +2803,7 @@ class ActorManager(ServerClient):
     #
 
     @dynamic_catch
-    async def _async_create_user_identity(self, body: dict | NewElementRequestBody = None) -> str:
+    async def _async_create_user_identity(self, body: Optional[dict | NewElementRequestBody] = None) -> str:
         """ Create a new user identity. Async version.
 
         Parameters
@@ -2855,7 +2876,7 @@ class ActorManager(ServerClient):
         return await self._async_create_element_body_request(url, ["ActorProfileProperties"], body)
 
     @dynamic_catch
-    def create_user_identity(self, body: dict | NewElementRequestBody = None) -> str:
+    def create_user_identity(self, body: Optional[dict | NewElementRequestBody] = None) -> str:
         """ Create a new user identity.
 
                Parameters
@@ -2926,7 +2947,7 @@ class ActorManager(ServerClient):
         return asyncio.get_event_loop().run_until_complete(self._async_create_user_identity(body))
 
     @dynamic_catch
-    async def _async_create_user_identity_from_template(self, body: TemplateRequestBody | dict) -> str:
+    async def _async_create_user_identity_from_template(self, body: Optional[dict | TemplateRequestBody] = None) -> str:
         """ Create a new metadata element to represent a user identity using an existing metadata element as a template.
             The template defines additional classifications and relationships that should be added to the new element.
             Async version.
@@ -2984,7 +3005,7 @@ class ActorManager(ServerClient):
         return await self._async_create_element_from_template("POST", url, body)
 
     @dynamic_catch
-    def create_user_identity_from_template(self, body: dict | TemplateRequestBody) -> str:
+    def create_user_identity_from_template(self, body: Optional[dict | TemplateRequestBody] = None) -> str:
         """ Create a new metadata element to represent an user identity using an existing metadata element as a template.
             The template defines additional classifications and relationships that should be added to the new element.
 
@@ -3165,7 +3186,7 @@ class ActorManager(ServerClient):
 
     @dynamic_catch
     async def _async_link_identity_to_profile(self, user_identity_guid: str, actor_profile_guid: str,
-                                              body: dict | NewRelationshipRequestBody = None) -> None:
+                                              body: Optional[dict | NewRelationshipRequestBody] = None) -> None:
         """ Attach an actor profile to a user identity. Async version.
 
         Parameters
@@ -3217,7 +3238,7 @@ class ActorManager(ServerClient):
 
     @dynamic_catch
     def link_identity_to_profile(self, user_identity_guid: str, actor_profile_guid: str,
-                                 body: dict | NewRelationshipRequestBody = None):
+                                 body: Optional[dict | NewRelationshipRequestBody] = None):
         """ Attach an actor profile to a user identity.
 
         Parameters
@@ -3266,7 +3287,7 @@ class ActorManager(ServerClient):
 
     @dynamic_catch
     async def _async_detach_identity_from_profile(self, user_identity_guid: str, actor_profile_guid: str,
-                                                  body: dict | DeleteRelationshipRequestBody = None) -> None:
+                                                  body: Optional[dict | DeleteRelationshipRequestBody] = None) -> None:
         """ Detach an actor profile from a user identity. Async version.
 
         Parameters
@@ -3312,7 +3333,7 @@ class ActorManager(ServerClient):
 
     @dynamic_catch
     def detach_identity_from_profile(self, user_identity_guid: str, actor_profile_guid: str,
-                                     body: dict | DeleteRelationshipRequestBody = None):
+                                     body: Optional[dict | DeleteRelationshipRequestBody] = None):
         """ Detach an actor profile from a user identity.
 
             Parameters
@@ -3356,7 +3377,7 @@ class ActorManager(ServerClient):
 
     @dynamic_catch
     async def _async_link_assignment_scope(self, scope_element_guid: str, actor_guid: str,
-                                           body: dict | NewRelationshipRequestBody = None) -> None:
+                                           body: Optional[dict | NewRelationshipRequestBody] = None) -> None:
         """ Attach an actor to an element that describes its scope. Async version.
 
         Parameters
@@ -3408,7 +3429,7 @@ class ActorManager(ServerClient):
 
     @dynamic_catch
     def link_assignment_scope(self, scope_element_guid: str, actor_guid: str,
-                              body: dict | NewRelationshipRequestBody = None):
+                              body: Optional[dict | NewRelationshipRequestBody] = None):
         """ Attach an actor to an element that describes its scope.
 
         Parameters
@@ -3458,7 +3479,7 @@ class ActorManager(ServerClient):
 
     @dynamic_catch
     async def _async_detach_assignment_scope(self, scope_element_guid: str, actor_guid: str,
-                                             body: dict | DeleteRelationshipRequestBody = None) -> None:
+                                             body: Optional[dict | DeleteRelationshipRequestBody] = None) -> None:
         """ Detach an actor from the element that describes its scope. Async version.
 
         Parameters
@@ -3503,7 +3524,7 @@ class ActorManager(ServerClient):
 
     @dynamic_catch
     def detach_assignment_scope(self, scope_element_guid: str, actor_guid: str,
-                                body: dict | DeleteRelationshipRequestBody = None):
+                                body: Optional[dict | DeleteRelationshipRequestBody] = None):
         """ Detach an actor from the element that describes its scope.
 
         Parameters
@@ -3546,7 +3567,7 @@ class ActorManager(ServerClient):
 
     @dynamic_catch
     async def _async_add_security_group_membership(self, user_identity_guid: str, security_groups: list[str] = [""],
-                                                   body: dict | NewClassificationRequestBody = None) -> None:
+                                                   body: Optional[dict | NewClassificationRequestBody] = None) -> None:
         """ Add the SecurityGroupMembership classification to the user identity. Async version.
 
         Parameters
@@ -3598,7 +3619,7 @@ class ActorManager(ServerClient):
 
     @dynamic_catch
     def add_security_group_membership(self, user_identity_guid: str, security_groups: list[str] = [""],
-                                      body: dict | NewClassificationRequestBody = None):
+                                      body: Optional[dict | NewClassificationRequestBody] = None):
         """ Add the SecurityGroupMembership classification to the user identity.
 
         Parameters
@@ -3746,7 +3767,7 @@ class ActorManager(ServerClient):
 
     @dynamic_catch
     async def _async_remove_all_security_group_memberships(self, user_identity_guid: str,
-                                                           body: dict | DeleteClassificationRequestBody = None) -> None:
+                                                           body: Optional[dict | DeleteClassificationRequestBody] = None) -> None:
         """ Remove all security group classifications from a user identity. Async version.
 
         Parameters
@@ -3790,7 +3811,7 @@ class ActorManager(ServerClient):
 
     @dynamic_catch
     def remove_all_security_group_memberships(self, user_identity_guid: str,
-                                              body: dict | DeleteClassificationRequestBody = None):
+                                              body: Optional[dict | DeleteClassificationRequestBody] = None):
         """ Remove all security group classifications from a user identity.
 
             Parameters
@@ -3835,7 +3856,7 @@ class ActorManager(ServerClient):
     #
     @dynamic_catch
     async def _async_delete_user_identity(self, user_identity_guid: str,
-                                          body: dict | DeleteElementRequestBody = None,
+                                          body: Optional[dict | DeleteElementRequestBody] = None,
                                           cascade: bool = False) -> None:
         """ Delete an user identity. Async Version.
 
@@ -3882,7 +3903,7 @@ class ActorManager(ServerClient):
         logger.debug(f"Deleted user identity {user_identity_guid} with cascade {cascade}")
 
     @dynamic_catch
-    def delete_user_identity(self, user_identity_guid: str, body: dict | DeleteElementRequestBody = None,
+    def delete_user_identity(self, user_identity_guid: str, body: Optional[dict | DeleteElementRequestBody] = None,
                              cascade: bool = False) -> None:
         """ Delete an user identity. Async Version.
 
@@ -3927,13 +3948,13 @@ class ActorManager(ServerClient):
         loop.run_until_complete(self._async_delete_user_identity(user_identity_guid, body, cascade))
 
     @dynamic_catch
-    async def _async_find_user_identities(self, search_string: str = "*", classification_names: list[str] = None,
+    async def _async_find_user_identities(self, search_string: str = "*", classification_names: Optional[list[str]] = None,
                                           metadata_element_subtypes: list[str] = ["UserIdentity"],
                                           starts_with: bool = True, ends_with: bool = False,
                                           ignore_case: bool = False,
                                           start_from: int = 0, page_size: int = 0, output_format: str = 'JSON',
                                           report_spec: str | dict = "User-Identities",
-                                          body: dict | SearchStringRequestBody = None) -> list | str:
+                                          body: Optional[dict | SearchStringRequestBody] = None) -> list | str:
         """ Retrieve the list of user identity metadata elements that contain the search string. Async Version.
 
         Parameters
@@ -3991,12 +4012,12 @@ class ActorManager(ServerClient):
         return response
 
     @dynamic_catch
-    def find_user_identities(self, search_string: str = '*', classification_names: str = None,
+    def find_user_identities(self, search_string: str = '*', classification_names: Optional[str] = None,
                              metadata_element_subtypes: list[str] = ["UserIdentity"], starts_with: bool = True,
                              ends_with: bool = False, ignore_case: bool = False,
                              start_from: int = 0, page_size: int = 0, output_format: str = 'JSON',
                              report_spec: str | dict = "User-Identities",
-                             body: dict | SearchStringRequestBody = None) -> list | str:
+                             body: Optional[dict | SearchStringRequestBody] = None) -> list | str:
         """ Retrieve the list of user identity metadata elements that contain the search string. Async Version.
 
           Parameters
@@ -4051,9 +4072,9 @@ class ActorManager(ServerClient):
                                              body))
 
     @dynamic_catch
-    async def _async_get_user_identities_by_name(self, filter_string: str = None,
-                                                 classification_names: list[str] = None,
-                                                 body: dict | FilterRequestBody = None,
+    async def _async_get_user_identities_by_name(self, filter_string: Optional[str] = None,
+                                                 classification_names: Optional[list[str]] = None,
+                                                 body: Optional[dict | FilterRequestBody] = None,
                                                  start_from: int = 0, page_size: int = 0,
                                                  output_format: str = 'JSON',
                                                  report_spec: str | dict = "User-Identities") -> list | str:
@@ -4124,8 +4145,8 @@ class ActorManager(ServerClient):
 
         return response
 
-    def get_user_identities_by_name(self, filter_string: str = None, classification_names: list[str] = None,
-                                    body: dict | FilterRequestBody = None,
+    def get_user_identities_by_name(self, filter_string: Optional[str] = None, classification_names: Optional[list[str]] = None,
+                                    body: Optional[dict | FilterRequestBody] = None,
                                     start_from: int = 0, page_size: int = 0, output_format: str = 'JSON',
                                     report_spec: str | dict = "User-Identities") -> list | str:
         """ Retrieve the list of user identity metadata elements with a particular name. Async Version.
@@ -4190,8 +4211,8 @@ class ActorManager(ServerClient):
                                                     output_format, report_spec))
 
     @dynamic_catch
-    async def _async_get_user_identity_by_guid(self, user_identity_guid: str, element_type: str = None,
-                                               body: dict | GetRequestBody = None,
+    async def _async_get_user_identity_by_guid(self, user_identity_guid: str, element_type: Optional[str] = None,
+                                               body: Optional[dict | GetRequestBody] = None,
                                                output_format: str = 'JSON',
                                                report_spec: dict = "User-Identities") -> dict | str:
         """ Retrieve the properties of a specific user identity. Async version.
@@ -4248,8 +4269,8 @@ class ActorManager(ServerClient):
         return response
 
     @dynamic_catch
-    def get_user_identity_by_guid(self, user_identity_guid: str, element_type: str = None,
-                                  body: dict | GetRequestBody = None,
+    def get_user_identity_by_guid(self, user_identity_guid: str, element_type: Optional[str] = None,
+                                  body: Optional[dict | GetRequestBody] = None,
                                   output_format: str = 'JSON',
                                   report_spec: dict = "User-Identities") -> dict | str:
         """ Retrieve the properties of a specific user identity. Async version.
@@ -4361,7 +4382,7 @@ class ActorManager(ServerClient):
 
         return col_data
 
-    def _generate_user_identity_output(self, elements: dict | list[dict], filter: Optional[str],
+    def _generate_user_identity_output(self, elements: dict | list[dict], filter_string: Optional[str],
                                        element_type_name: Optional[str], output_format: str = "DICT",
                                        report_spec: dict | str = "User-Identities") -> str | list[dict]:
         """ Generate output for user_identitys in the specified format.
@@ -4418,7 +4439,7 @@ class ActorManager(ServerClient):
 
 
     @dynamic_catch
-    async def _async_create_contribution_record(self, actor_profile_guid: str, body: dict | NewAttachmentRequestBody = None) -> str:
+    async def _async_create_contribution_record(self, actor_profile_guid: str, body: Optional[dict | NewAttachmentRequestBody] = None) -> str:
         """ Create a new contribution record. Async version.
 
         Parameters
@@ -4495,7 +4516,7 @@ class ActorManager(ServerClient):
         return await self._async_create_attachment_body_request(url, ["ContributionRecordProperties"], body)
 
     @dynamic_catch
-    def create_contribution_record(self, actor_profile_guid: str, body: dict | NewAttachmentRequestBody = None) -> str:
+    def create_contribution_record(self, actor_profile_guid: str, body: Optional[dict | NewAttachmentRequestBody] = None) -> str:
         """ Create a new contribution record.
 
         Parameters
@@ -4569,7 +4590,7 @@ class ActorManager(ServerClient):
         return asyncio.run(self._async_create_contribution_record(actor_profile_guid, body))
 
     @dynamic_catch
-    async def _async_update_contribution_record(self, contribution_record_guid: str, body: dict | UpdateElementRequestBody = None) -> None:
+    async def _async_update_contribution_record(self, contribution_record_guid: str, body: Optional[dict | UpdateElementRequestBody] = None) -> None:
         """ Update a contribution record. Async version.
 
         Parameters
@@ -4630,7 +4651,7 @@ class ActorManager(ServerClient):
         await self._async_update_element_body_request(url, ["ContributionRecordProperties"], body)
 
     @dynamic_catch
-    def update_contribution_record(self, contribution_record_guid: str, body: dict | UpdateElementRequestBody = None) -> None:
+    def update_contribution_record(self, contribution_record_guid: str, body: Optional[dict | UpdateElementRequestBody] = None) -> None:
         """ Update a contribution record.
 
         Parameters
@@ -4690,7 +4711,7 @@ class ActorManager(ServerClient):
         return asyncio.run(self._async_update_contribution_record(contribution_record_guid, body))
 
     @dynamic_catch
-    async def _async_delete_contribution_record(self, contribution_record_guid: str, body: dict | DeleteRelationshipRequestBody = None) -> None:
+    async def _async_delete_contribution_record(self, contribution_record_guid: str, body: Optional[dict | DeleteRelationshipRequestBody] = None) -> None:
         """ Delete a contribution record. Async version.
 
         Parameters
@@ -4731,7 +4752,7 @@ class ActorManager(ServerClient):
         await self._async_delete_relationship_request(url, body)
 
     @dynamic_catch
-    def delete_contribution_record(self, contribution_record_guid: str, body: dict | DeleteRelationshipRequestBody = None) -> None:
+    def delete_contribution_record(self, contribution_record_guid: str, body: Optional[dict | DeleteRelationshipRequestBody] = None) -> None:
         """ Delete a contribution record.
 
         Parameters
@@ -4771,7 +4792,7 @@ class ActorManager(ServerClient):
         return asyncio.run(self._async_delete_contribution_record(contribution_record_guid, body))
 
     @dynamic_catch
-    async def _async_get_contribution_records_by_name(self, body: dict | FilterRequestBody = None) -> list[dict]:
+    async def _async_get_contribution_records_by_name(self, body: Optional[dict | FilterRequestBody] = None) -> list[dict]:
         """ Returns the list of contribution records with a particular name. Async version.
 
         Parameters
@@ -4814,7 +4835,7 @@ class ActorManager(ServerClient):
         return await self._async_get_results_body_request(url, "ContributionRecord", self._generate_referenceable_output, body=body)
 
     @dynamic_catch
-    def get_contribution_records_by_name(self, body: dict | FilterRequestBody = None) -> list[dict]:
+    def get_contribution_records_by_name(self, body: Optional[dict | FilterRequestBody] = None) -> list[dict]:
         """ Returns the list of contribution records with a particular name.
 
         Parameters
@@ -4856,7 +4877,7 @@ class ActorManager(ServerClient):
         return asyncio.run(self._async_get_contribution_records_by_name(body))
 
     @dynamic_catch
-    async def _async_find_contribution_records(self, body: dict | SearchStringRequestBody = None) -> list[dict]:
+    async def _async_find_contribution_records(self, body: Optional[dict | SearchStringRequestBody] = None) -> list[dict]:
         """ Retrieve the list of contribution records that contain the search string. Async version.
 
         Parameters
@@ -4902,7 +4923,7 @@ class ActorManager(ServerClient):
         return await self._async_get_results_body_request(url, "ContributionRecord", self._generate_referenceable_output, body=body)
 
     @dynamic_catch
-    def find_contribution_records(self, body: dict | SearchStringRequestBody = None) -> list[dict]:
+    def find_contribution_records(self, body: Optional[dict | SearchStringRequestBody] = None) -> list[dict]:
         """ Retrieve the list of contribution records that contain the search string.
 
         Parameters
@@ -4947,7 +4968,7 @@ class ActorManager(ServerClient):
         return asyncio.run(self._async_find_contribution_records(body))
 
     @dynamic_catch
-    async def _async_get_contribution_record_by_guid(self, contribution_record_guid: str, body: dict | GetRequestBody = None) -> dict:
+    async def _async_get_contribution_record_by_guid(self, contribution_record_guid: str, body: Optional[dict | GetRequestBody] = None) -> dict:
         """ Return the properties of a specific contribution record. Async version.
 
         Parameters
@@ -4986,7 +5007,7 @@ class ActorManager(ServerClient):
         return await self._async_get_guid_request(url, "ContributionRecord", self._generate_referenceable_output, body=body)
 
     @dynamic_catch
-    def get_contribution_record_by_guid(self, contribution_record_guid: str, body: dict | GetRequestBody = None) -> dict:
+    def get_contribution_record_by_guid(self, contribution_record_guid: str, body: Optional[dict | GetRequestBody] = None) -> dict:
         """ Return the properties of a specific contribution record.
 
         Parameters
@@ -5024,7 +5045,7 @@ class ActorManager(ServerClient):
         return asyncio.run(self._async_get_contribution_record_by_guid(contribution_record_guid, body))
 
     @dynamic_catch
-    async def _async_create_contact_details(self, body: dict | NewElementRequestBody = None) -> str:
+    async def _async_create_contact_details(self, body: Optional[dict | NewElementRequestBody] = None) -> str:
         """ Create a new contact details. Async version.
 
         Parameters
@@ -5098,7 +5119,7 @@ class ActorManager(ServerClient):
         return await self._async_create_element_body_request(url, ["ContactDetailsProperties"], body)
 
     @dynamic_catch
-    def create_contact_details(self, body: dict | NewElementRequestBody = None) -> str:
+    def create_contact_details(self, body: Optional[dict | NewElementRequestBody] = None) -> str:
         """ Create a new contact details.
 
         Parameters
@@ -5171,7 +5192,7 @@ class ActorManager(ServerClient):
         return asyncio.run(self._async_create_contact_details(body))
 
     @dynamic_catch
-    async def _async_create_contact_details_from_template(self, body: dict | TemplateRequestBody = None) -> str:
+    async def _async_create_contact_details_from_template(self, body: Optional[dict | TemplateRequestBody] = None) -> str:
         """ Create a new contact details from a template. Async version.
 
         Parameters
@@ -5240,7 +5261,7 @@ class ActorManager(ServerClient):
         return await self._async_create_element_body_request(url, ["ContactDetailsProperties"], body)
 
     @dynamic_catch
-    def create_contact_details_from_template(self, body: dict | TemplateRequestBody = None) -> str:
+    def create_contact_details_from_template(self, body: Optional[dict | TemplateRequestBody] = None) -> str:
         """ Create a new contact details from a template.
 
         Parameters
@@ -5308,7 +5329,7 @@ class ActorManager(ServerClient):
         return asyncio.run(self._async_create_contact_details_from_template(body))
 
     @dynamic_catch
-    async def _async_update_contact_details(self, contact_details_guid: str, body: dict | UpdateElementRequestBody = None) -> None:
+    async def _async_update_contact_details(self, contact_details_guid: str, body: Optional[dict | UpdateElementRequestBody] = None) -> None:
         """ Update a contact details. Async version.
 
         Parameters
@@ -5370,7 +5391,7 @@ class ActorManager(ServerClient):
         await self._async_update_element_body_request(url, ["ContactDetailsProperties"], body)
 
     @dynamic_catch
-    def update_contact_details(self, contact_details_guid: str, body: dict | UpdateElementRequestBody = None) -> None:
+    def update_contact_details(self, contact_details_guid: str, body: Optional[dict | UpdateElementRequestBody] = None) -> None:
         """ Update a contact details.
 
         Parameters
@@ -5431,7 +5452,7 @@ class ActorManager(ServerClient):
         return asyncio.run(self._async_update_contact_details(contact_details_guid, body))
 
     @dynamic_catch
-    async def _async_delete_contact_details(self, contact_details_guid: str, body: dict | DeleteElementRequestBody = None) -> None:
+    async def _async_delete_contact_details(self, contact_details_guid: str, body: Optional[dict | DeleteElementRequestBody] = None) -> None:
         """ Delete a contact details. Async version.
 
         Parameters
@@ -5472,7 +5493,7 @@ class ActorManager(ServerClient):
         await self._async_delete_element_request(url, body)
 
     @dynamic_catch
-    def delete_contact_details(self, contact_details_guid: str, body: dict | DeleteElementRequestBody = None) -> None:
+    def delete_contact_details(self, contact_details_guid: str, body: Optional[dict | DeleteElementRequestBody] = None) -> None:
         """ Delete a contact details.
 
         Parameters
@@ -5513,7 +5534,7 @@ class ActorManager(ServerClient):
 
     @dynamic_catch
     async def _async_link_contact_details(self, element_guid: str, contact_details_guid: str,
-                                          body: dict | NewRelationshipRequestBody = None) -> None:
+                                          body: Optional[dict | NewRelationshipRequestBody] = None) -> None:
         """ Attach an element to its contact details. Async version.
 
         Parameters
@@ -5564,7 +5585,7 @@ class ActorManager(ServerClient):
 
     @dynamic_catch
     def link_contact_details(self, element_guid: str, contact_details_guid: str,
-                             body: dict | NewRelationshipRequestBody = None):
+                             body: Optional[dict | NewRelationshipRequestBody] = None):
         """ Attach an element to its contact details.
 
         Parameters
@@ -5613,7 +5634,7 @@ class ActorManager(ServerClient):
 
     @dynamic_catch
     async def _async_detach_contact_details(self, element_guid: str, contact_details_guid: str,
-                                            body: dict | DeleteRelationshipRequestBody = None) -> None:
+                                            body: Optional[dict | DeleteRelationshipRequestBody] = None) -> None:
         """ Detach an element from its contact details. Async version.
 
         Parameters
@@ -5659,7 +5680,7 @@ class ActorManager(ServerClient):
 
     @dynamic_catch
     def detach_contact_details(self, element_guid: str, contact_details_guid: str,
-                               body: dict | DeleteRelationshipRequestBody = None):
+                               body: Optional[dict | DeleteRelationshipRequestBody] = None):
         """ Detach an element from its contact details.
 
         Parameters
@@ -5702,7 +5723,7 @@ class ActorManager(ServerClient):
         loop.run_until_complete(self._async_detach_contact_details(element_guid, contact_details_guid, body))
 
     @dynamic_catch
-    async def _async_get_contact_details_by_name(self, body: dict | FilterRequestBody = None) -> list[dict]:
+    async def _async_get_contact_details_by_name(self, body: Optional[dict | FilterRequestBody] = None) -> list[dict]:
         """ Returns the list of contact details with a particular name. Async version.
 
         Parameters
@@ -5745,7 +5766,7 @@ class ActorManager(ServerClient):
         return await self._async_get_results_body_request(url, "ContactDetails", self._generate_referenceable_output, body=body)
 
     @dynamic_catch
-    def get_contact_details_by_name(self, body: dict | FilterRequestBody = None) -> list[dict]:
+    def get_contact_details_by_name(self, body: Optional[dict | FilterRequestBody] = None) -> list[dict]:
         """ Returns the list of contact details with a particular name.
 
         Parameters
@@ -5787,7 +5808,7 @@ class ActorManager(ServerClient):
         return asyncio.run(self._async_get_contact_details_by_name(body))
 
     @dynamic_catch
-    async def _async_find_contact_details(self, body: dict | SearchStringRequestBody = None) -> list[dict]:
+    async def _async_find_contact_details(self, body: Optional[dict | SearchStringRequestBody] = None) -> list[dict]:
         """ Retrieve the list of contact details metadata elements that contain the search string. Async version.
 
         Parameters
@@ -5833,7 +5854,7 @@ class ActorManager(ServerClient):
         return await self._async_get_results_body_request(url, "ContactDetails", self._generate_referenceable_output, body=body)
 
     @dynamic_catch
-    def find_contact_details(self, body: dict | SearchStringRequestBody = None) -> list[dict]:
+    def find_contact_details(self, body: Optional[dict | SearchStringRequestBody] = None) -> list[dict]:
         """ Retrieve the list of contact details metadata elements that contain the search string.
 
         Parameters
@@ -5878,7 +5899,7 @@ class ActorManager(ServerClient):
         return asyncio.run(self._async_find_contact_details(body))
 
     @dynamic_catch
-    async def _async_get_contact_details_by_guid(self, contact_details_guid: str, body: dict | GetRequestBody = None) -> dict:
+    async def _async_get_contact_details_by_guid(self, contact_details_guid: str, body: Optional[dict | GetRequestBody] = None) -> dict:
         """ Return the properties of a specific contact details. Async version.
 
         Parameters
@@ -5917,7 +5938,7 @@ class ActorManager(ServerClient):
         return await self._async_get_guid_request(url, "ContactDetails", self._generate_referenceable_output, body=body)
 
     @dynamic_catch
-    def get_contact_details_by_guid(self, contact_details_guid: str, body: dict | GetRequestBody = None) -> dict:
+    def get_contact_details_by_guid(self, contact_details_guid: str, body: Optional[dict | GetRequestBody] = None) -> dict:
         """ Return the properties of a specific contact details.
 
         Parameters

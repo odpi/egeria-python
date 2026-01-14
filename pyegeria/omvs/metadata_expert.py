@@ -17,7 +17,7 @@ from pyegeria.models import (NewOpenMetadataElementRequestBody, TemplateRequestB
                              NewRelatedElementsRequestBody)
 from pyegeria.core.utils import dynamic_catch
 from pyegeria.core._server_client import ServerClient
-
+from typing import Any, Optional
 
 class MetadataExpert(ServerClient):
     """
@@ -36,7 +36,7 @@ class MetadataExpert(ServerClient):
             An optional bearer token
     """
 
-    def __init__(self, view_server: str, platform_url: str, user_id: str, user_pwd: str = None, token: str = None):
+    def __init__(self, view_server: str, platform_url: str, user_id: str, user_pwd: Optional[str] = None, token: str = None):
         self.view_server = view_server
         self.platform_url = platform_url
         self.user_id = user_id
@@ -47,7 +47,7 @@ class MetadataExpert(ServerClient):
             f"{self.platform_url}/servers/{self.view_server}/api/open-metadata/metadata-expert")
 
     @dynamic_catch
-    async def _async_create_metadata_element(self, body: dict | NewOpenMetadataElementRequestBody = None) -> str:
+    async def _async_create_metadata_element(self, body: Optional[dict | NewOpenMetadataElementRequestBody] = None) -> str:
         """
         Create a new metadata element in the metadata store. Async version.
         The type name comes from the open metadata types.
@@ -90,14 +90,14 @@ class MetadataExpert(ServerClient):
         return await self._async_create_open_metadata_element_body_request(url, body)
 
     @dynamic_catch
-    def create_metadata_element(self, body: dict | NewOpenMetadataElementRequestBody = None) -> str:
+    def create_metadata_element(self, body: Optional[dict | NewOpenMetadataElementRequestBody] = None) -> str:
         """
         Create a new metadata element in the metadata store.
         """
         return asyncio.run(self._async_create_metadata_element(body))
 
     @dynamic_catch
-    async def _async_create_metadata_element_from_template(self, body: dict | TemplateRequestBody = None) -> str:
+    async def _async_create_metadata_element_from_template(self, body: Optional[dict | TemplateRequestBody] = None) -> str:
         """
         Create a new metadata element in the metadata store using a template. Async version.
 
@@ -149,14 +149,14 @@ class MetadataExpert(ServerClient):
         return await self._async_create_element_from_template(url, body)
 
     @dynamic_catch
-    def create_metadata_element_from_template(self, body: dict | TemplateRequestBody = None) -> str:
+    def create_metadata_element_from_template(self, body: Optional[dict | TemplateRequestBody] = None) -> str:
         """
         Create a new metadata element in the metadata store using a template.
         """
         return asyncio.run(self._async_create_metadata_element_from_template(body))
 
     @dynamic_catch
-    async def _async_update_metadata_element_properties(self, metadata_element_guid: str, body: dict | UpdatePropertiesRequestBody = None) -> None:
+    async def _async_update_metadata_element_properties(self, metadata_element_guid: str, body: Optional[dict | UpdatePropertiesRequestBody] = None) -> None:
         """
         Update the properties of a specific metadata element. Async version.
 
@@ -194,14 +194,14 @@ class MetadataExpert(ServerClient):
         await self._async_update_properties_body_request(url, body)
 
     @dynamic_catch
-    def update_metadata_element_properties(self, metadata_element_guid: str, body: dict | UpdatePropertiesRequestBody = None) -> None:
+    def update_metadata_element_properties(self, metadata_element_guid: str, body: Optional[dict | UpdatePropertiesRequestBody] = None) -> None:
         """
         Update the properties of a specific metadata element.
         """
         return asyncio.run(self._async_update_metadata_element_properties(metadata_element_guid, body))
 
     @dynamic_catch
-    async def _async_publish_metadata_element(self, metadata_element_guid: str, body: dict | MetadataSourceRequestBody = None) -> None:
+    async def _async_publish_metadata_element(self, metadata_element_guid: str, body: Optional[dict | MetadataSourceRequestBody] = None) -> None:
         """
         Update the zone membership to increase its visibility. Async version.
 
@@ -228,14 +228,14 @@ class MetadataExpert(ServerClient):
         await self._async_metadata_source_body_request(url, body)
 
     @dynamic_catch
-    def publish_metadata_element(self, metadata_element_guid: str, body: dict | MetadataSourceRequestBody = None) -> None:
+    def publish_metadata_element(self, metadata_element_guid: str, body: Optional[dict | MetadataSourceRequestBody] = None) -> None:
         """
         Update the zone membership to increase its visibility.
         """
         return asyncio.run(self._async_publish_metadata_element(metadata_element_guid, body))
 
     @dynamic_catch
-    async def _async_withdraw_metadata_element(self, metadata_element_guid: str, body: dict | MetadataSourceRequestBody = None) -> None:
+    async def _async_withdraw_metadata_element(self, metadata_element_guid: str, body: Optional[dict | MetadataSourceRequestBody] = None) -> None:
         """
         Update the zone membership to decrease its visibility. Async version.
 
@@ -262,14 +262,14 @@ class MetadataExpert(ServerClient):
         await self._async_metadata_source_body_request(url, body)
 
     @dynamic_catch
-    def withdraw_metadata_element(self, metadata_element_guid: str, body: dict | MetadataSourceRequestBody = None) -> None:
+    def withdraw_metadata_element(self, metadata_element_guid: str, body: Optional[dict | MetadataSourceRequestBody] = None) -> None:
         """
         Update the zone membership to decrease its visibility.
         """
         return asyncio.run(self._async_withdraw_metadata_element(metadata_element_guid, body))
 
     @dynamic_catch
-    async def _async_update_metadata_element_effectivity(self, metadata_element_guid: str, body: dict | UpdateEffectivityDatesRequestBody = None) -> None:
+    async def _async_update_metadata_element_effectivity(self, metadata_element_guid: str, body: Optional[dict | UpdateEffectivityDatesRequestBody] = None) -> None:
         """
         Update the effectivity dates for a specific metadata element. Async version.
 
@@ -298,14 +298,14 @@ class MetadataExpert(ServerClient):
         await self._async_update_effectivity_dates_body_request(url, body)
 
     @dynamic_catch
-    def update_metadata_element_effectivity(self, metadata_element_guid: str, body: dict | UpdateEffectivityDatesRequestBody = None) -> None:
+    def update_metadata_element_effectivity(self, metadata_element_guid: str, body: Optional[dict | UpdateEffectivityDatesRequestBody] = None) -> None:
         """
         Update the effectivity dates for a specific metadata element.
         """
         return asyncio.run(self._async_update_metadata_element_effectivity(metadata_element_guid, body))
 
     @dynamic_catch
-    async def _async_delete_metadata_element(self, metadata_element_guid: str, body: dict | OpenMetadataDeleteRequestBody = None) -> None:
+    async def _async_delete_metadata_element(self, metadata_element_guid: str, body: Optional[dict | OpenMetadataDeleteRequestBody] = None) -> None:
         """
         Delete a specific metadata element. Async version.
 
@@ -332,14 +332,14 @@ class MetadataExpert(ServerClient):
         await self._async_open_metadata_delete_body_request(url, body)
 
     @dynamic_catch
-    def delete_metadata_element(self, metadata_element_guid: str, body: dict | OpenMetadataDeleteRequestBody = None) -> None:
+    def delete_metadata_element(self, metadata_element_guid: str, body: Optional[dict | OpenMetadataDeleteRequestBody] = None) -> None:
         """
         Delete a specific metadata element.
         """
         return asyncio.run(self._async_delete_metadata_element(metadata_element_guid, body))
 
     @dynamic_catch
-    async def _async_archive_metadata_element(self, metadata_element_guid: str, body: dict | ArchiveRequestBody = None) -> None:
+    async def _async_archive_metadata_element(self, metadata_element_guid: str, body: Optional[dict | ArchiveRequestBody] = None) -> None:
         """
         Archive a specific metadata element. Async version.
 
@@ -374,14 +374,14 @@ class MetadataExpert(ServerClient):
         await self._async_archive_body_request(url, body)
 
     @dynamic_catch
-    def archive_metadata_element(self, metadata_element_guid: str, body: dict | ArchiveRequestBody = None) -> None:
+    def archive_metadata_element(self, metadata_element_guid: str, body: Optional[dict | ArchiveRequestBody] = None) -> None:
         """
         Archive a specific metadata element.
         """
         return asyncio.run(self._async_archive_metadata_element(metadata_element_guid, body))
 
     @dynamic_catch
-    async def _async_classify_metadata_element(self, metadata_element_guid: str, classification_name: str, body: dict | NewClassificationRequestBody = None) -> None:
+    async def _async_classify_metadata_element(self, metadata_element_guid: str, classification_name: str, body: Optional[dict | NewClassificationRequestBody] = None) -> None:
         """
         Add a new classification to the metadata element. Async version.
 
@@ -410,14 +410,14 @@ class MetadataExpert(ServerClient):
         await self._async_new_classification_request(url, body=body)
 
     @dynamic_catch
-    def classify_metadata_element(self, metadata_element_guid: str, classification_name: str, body: dict | NewClassificationRequestBody = None) -> None:
+    def classify_metadata_element(self, metadata_element_guid: str, classification_name: str, body: Optional[dict | NewClassificationRequestBody] = None) -> None:
         """
         Add a new classification to the metadata element.
         """
         return asyncio.run(self._async_classify_metadata_element(metadata_element_guid, classification_name, body))
 
     @dynamic_catch
-    async def _async_reclassify_metadata_element(self, metadata_element_guid: str, classification_name: str, body: dict | UpdatePropertiesRequestBody = None) -> None:
+    async def _async_reclassify_metadata_element(self, metadata_element_guid: str, classification_name: str, body: Optional[dict | UpdatePropertiesRequestBody] = None) -> None:
         """
         Update the properties of a classification that is currently attached to a specific metadata element. Async version.
 
@@ -446,14 +446,14 @@ class MetadataExpert(ServerClient):
         await self._async_update_properties_body_request(url, body)
 
     @dynamic_catch
-    def reclassify_metadata_element(self, metadata_element_guid: str, classification_name: str, body: dict | UpdatePropertiesRequestBody = None) -> None:
+    def reclassify_metadata_element(self, metadata_element_guid: str, classification_name: str, body: Optional[dict | UpdatePropertiesRequestBody] = None) -> None:
         """
         Update the properties of a classification that is currently attached to a specific metadata element.
         """
         return asyncio.run(self._async_reclassify_metadata_element(metadata_element_guid, classification_name, body))
 
     @dynamic_catch
-    async def _async_update_classification_effectivity(self, metadata_element_guid: str, classification_name: str, body: dict | UpdateEffectivityDatesRequestBody = None) -> None:
+    async def _async_update_classification_effectivity(self, metadata_element_guid: str, classification_name: str, body: Optional[dict | UpdateEffectivityDatesRequestBody] = None) -> None:
         """
         Update the effectivity dates of a specific classification attached to a metadata element. Async version.
 
@@ -484,14 +484,14 @@ class MetadataExpert(ServerClient):
         await self._async_update_effectivity_dates_body_request(url, body)
 
     @dynamic_catch
-    def update_classification_effectivity(self, metadata_element_guid: str, classification_name: str, body: dict | UpdateEffectivityDatesRequestBody = None) -> None:
+    def update_classification_effectivity(self, metadata_element_guid: str, classification_name: str, body: Optional[dict | UpdateEffectivityDatesRequestBody] = None) -> None:
         """
         Update the effectivity dates of a specific classification attached to a metadata element.
         """
         return asyncio.run(self._async_update_classification_effectivity(metadata_element_guid, classification_name, body))
 
     @dynamic_catch
-    async def _async_declassify_metadata_element(self, metadata_element_guid: str, classification_name: str, body: dict | MetadataSourceRequestBody = None) -> None:
+    async def _async_declassify_metadata_element(self, metadata_element_guid: str, classification_name: str, body: Optional[dict | MetadataSourceRequestBody] = None) -> None:
         """
         Remove the named classification from a specific metadata element. Async version.
 
@@ -520,14 +520,14 @@ class MetadataExpert(ServerClient):
         await self._async_metadata_source_body_request(url, body)
 
     @dynamic_catch
-    def declassify_metadata_element(self, metadata_element_guid: str, classification_name: str, body: dict | MetadataSourceRequestBody = None) -> None:
+    def declassify_metadata_element(self, metadata_element_guid: str, classification_name: str, body: Optional[dict | MetadataSourceRequestBody] = None) -> None:
         """
         Remove the named classification from a specific metadata element.
         """
         return asyncio.run(self._async_declassify_metadata_element(metadata_element_guid, classification_name, body))
 
     @dynamic_catch
-    async def _async_create_related_elements(self, body: dict | NewRelatedElementsRequestBody = None) -> str:
+    async def _async_create_related_elements(self, body: Optional[dict | NewRelatedElementsRequestBody] = None) -> str:
         """
         Create a relationship between two metadata elements. Async version.
 
@@ -557,14 +557,14 @@ class MetadataExpert(ServerClient):
         return await self._async_create_related_elements_body_request(url, body)
 
     @dynamic_catch
-    def create_related_elements(self, body: dict | NewRelatedElementsRequestBody = None) -> str:
+    def create_related_elements(self, body: Optional[dict | NewRelatedElementsRequestBody] = None) -> str:
         """
         Create a relationship between two metadata elements.
         """
         return asyncio.run(self._async_create_related_elements(body))
 
     @dynamic_catch
-    async def _async_update_related_elements_properties(self, relationship_guid: str, body: dict | UpdatePropertiesRequestBody = None) -> None:
+    async def _async_update_related_elements_properties(self, relationship_guid: str, body: Optional[dict | UpdatePropertiesRequestBody] = None) -> None:
         """
         Update the properties associated with a relationship. Async version.
 
@@ -591,14 +591,14 @@ class MetadataExpert(ServerClient):
         await self._async_update_properties_body_request(url, body)
 
     @dynamic_catch
-    def update_related_elements_properties(self, relationship_guid: str, body: dict | UpdatePropertiesRequestBody = None) -> None:
+    def update_related_elements_properties(self, relationship_guid: str, body: Optional[dict | UpdatePropertiesRequestBody] = None) -> None:
         """
         Update the properties associated with a relationship.
         """
         return asyncio.run(self._async_update_related_elements_properties(relationship_guid, body))
 
     @dynamic_catch
-    async def _async_update_related_elements_effectivity(self, relationship_guid: str, body: dict | UpdateEffectivityDatesRequestBody = None) -> None:
+    async def _async_update_related_elements_effectivity(self, relationship_guid: str, body: Optional[dict | UpdateEffectivityDatesRequestBody] = None) -> None:
         """
         Update the effectivity dates of a specific relationship between metadata elements. Async version.
 
@@ -627,14 +627,14 @@ class MetadataExpert(ServerClient):
         await self._async_update_effectivity_dates_body_request(url, body)
 
     @dynamic_catch
-    def update_related_elements_effectivity(self, relationship_guid: str, body: dict | UpdateEffectivityDatesRequestBody = None) -> None:
+    def update_related_elements_effectivity(self, relationship_guid: str, body: Optional[dict | UpdateEffectivityDatesRequestBody] = None) -> None:
         """
         Update the effectivity dates of a specific relationship between metadata elements.
         """
         return asyncio.run(self._async_update_related_elements_effectivity(relationship_guid, body))
 
     @dynamic_catch
-    async def _async_delete_related_elements(self, relationship_guid: str, body: dict | OpenMetadataDeleteRequestBody = None) -> None:
+    async def _async_delete_related_elements(self, relationship_guid: str, body: Optional[dict | OpenMetadataDeleteRequestBody] = None) -> None:
         """
         Delete a relationship between two metadata elements. Async version.
 
@@ -661,7 +661,7 @@ class MetadataExpert(ServerClient):
         await self._async_open_metadata_delete_body_request(url, body)
 
     @dynamic_catch
-    def delete_related_elements(self, relationship_guid: str, body: dict | OpenMetadataDeleteRequestBody = None) -> None:
+    def delete_related_elements(self, relationship_guid: str, body: Optional[dict | OpenMetadataDeleteRequestBody] = None) -> None:
         """
         Delete a relationship between two metadata elements.
         """

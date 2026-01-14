@@ -41,7 +41,7 @@ class RegisteredInfo(ServerClient):
 
     Methods:
     -------
-        list_registered_svcs(self, kind: str = None, fmt: str = 'json', skinny: bool = True, wrap_len: int = 30)
+        list_registered_svcs(self, kind: Optional[str] = None, fmt: str = 'json', skinny: bool = True, wrap_len: int = 30)
             -> list | str
             Returns information about the different kinds of services as either JSON or a printable table.
 
@@ -57,8 +57,8 @@ class RegisteredInfo(ServerClient):
         view_server: str,
         platform_url: str,
         user_id: str,
-        user_pwd: str = None,
-        token: str = None,
+        user_pwd: Optional[str] = None,
+        token: Optional[str] = None,
     ):
         if view_server is None:
             server_name = "NA"
@@ -74,7 +74,7 @@ class RegisteredInfo(ServerClient):
 
     def list_registered_svcs(
         self,
-        kind: str = None,
+        kind: Optional[str] = None,
         *,
         output_format: str = "DICT",
         report_spec: str | dict = None,

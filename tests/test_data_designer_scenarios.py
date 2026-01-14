@@ -276,7 +276,7 @@ class DataDesignerScenarioTester:
             # SEARCH: Find the data structure
             console.print("  → Searching for data structure...")
             search_results = self.client.get_data_structures_by_name(
-                filter=display_name[:10]
+                filter_string=display_name[:10]
             )
             
             if isinstance(search_results, list) and len(search_results) > 0:
