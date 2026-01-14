@@ -105,6 +105,7 @@ class ActorManagerScenarioTester:
             return True
         except Exception as e:
             console.print(f"[bold red]✗ Setup failed: {str(e)}[/bold red]")
+            console.print(f" parameters: VIEW_SERVER={VIEW_SERVER}, PLATFORM_URL={PLATFORM_URL}, USER_ID={USER_ID}, USER_PWD={USER_PWD}")
             return False
     
     def teardown(self):

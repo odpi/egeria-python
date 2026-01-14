@@ -8,6 +8,7 @@ Copyright Contributors to the ODPi Egeria project.
 """
 
 import asyncio
+from typing import Any, Optional
 
 from pyegeria.view.base_report_formats import select_report_spec
 from pyegeria.core._server_client import ServerClient
@@ -58,8 +59,8 @@ class ReferenceDataManager(ServerClient):
             view_server: str,
             platform_url: str,
             user_id: str,
-            user_pwd: str = None,
-            token: str = None,
+            user_pwd: Optional[str] = None,
+            token: Optional[str] = None,
     ):
         self.view_server = view_server
         self.platform_url = platform_url
@@ -143,14 +144,14 @@ class ReferenceDataManager(ServerClient):
     @dynamic_catch
     async def _async_find_valid_value_definitions(
             self,
-            search_string: str, classification_names: list[str] = None, metadata_element_subtypes: list[str] = None,
+            search_string: str, classification_names: Optional[list[str]] = None, metadata_element_subtypes: Optional[list[str]] = None,
             starts_with: bool = False,
             ends_with: bool = False,
             ignore_case: bool = False,
             start_from: int = 0,
             page_size: int = 0,
             output_format: str = "json", report_spec: str | dict = None,
-            body: dict | SearchStringRequestBody = None
+            body: Optional[dict | SearchStringRequestBody] = None
     ) -> list | str:
         """ Returns the list of valid value definitions matching the search string.
             The search string is located in the request body and is interpreted as a plain string.
@@ -204,14 +205,14 @@ class ReferenceDataManager(ServerClient):
     @dynamic_catch
     def find_valid_value_definitions(
             self,
-            search_string: str, classification_names: list[str] = None, metadata_element_subtypes: list[str] = None,
+            search_string: str, classification_names: Optional[list[str]] = None, metadata_element_subtypes: Optional[list[str]] = None,
             starts_with: bool = False,
             ends_with: bool = False,
             ignore_case: bool = False,
             start_from: int = 0,
             page_size: int = 0,
             output_format: str = "json", report_spec: str | dict = None,
-            body: dict | SearchStringRequestBody = None
+            body: Optional[dict | SearchStringRequestBody] = None
     ) -> list | str:
 
         """ Returns the list of valid value definitions matching the search string.
@@ -270,8 +271,8 @@ class ReferenceDataManager(ServerClient):
 
     @dynamic_catch
     async def _async_get_valid_value_definitions_by_name(
-            self, filter_string: str = None, classification_names: list[str] = None,
-            body: dict | FilterRequestBody = None,
+            self, filter_string: Optional[str] = None, classification_names: Optional[list[str]] = None,
+            body: Optional[dict | FilterRequestBody] = None,
             start_from: int = 0, page_size: int = 0,
             output_format: str = 'JSON',
             report_spec: str | dict = None) -> list | str:
@@ -289,8 +290,8 @@ class ReferenceDataManager(ServerClient):
 
     @dynamic_catch
     def get_valid_value_definitions_by_name(
-            self, filter_string: str = None, classification_names: list[str] = None,
-            body: dict | FilterRequestBody = None,
+            self, filter_string: Optional[str] = None, classification_names: Optional[list[str]] = None,
+            body: Optional[dict | FilterRequestBody] = None,
             start_from: int = 0, page_size: int = 0,
             output_format: str = 'JSON',
             report_spec: str | dict = None) -> list | str:
@@ -310,8 +311,8 @@ class ReferenceDataManager(ServerClient):
         return resp
 
     @dynamic_catch
-    async def _async_get_valid_value_definition_by_guid(self, vv_def_guid: str, element_type: str = None,
-                                         body: dict | GetRequestBody = None,
+    async def _async_get_valid_value_definition_by_guid(self, vv_def_guid: str, element_type: Optional[str] = None,
+                                         body: Optional[dict | GetRequestBody] = None,
                                          output_format: str = 'JSON',
                                          report_spec: str | dict = None) -> dict | str:
         """Return the properties of a specific project. Async version.
@@ -363,8 +364,8 @@ class ReferenceDataManager(ServerClient):
         return response
 
     @dynamic_catch
-    def get_valid_value_definition_by_guid(self, vv_def_guid: str, element_type: str = None,
-                            body: dict | GetRequestBody = None,
+    def get_valid_value_definition_by_guid(self, vv_def_guid: str, element_type: Optional[str] = None,
+                            body: Optional[dict | GetRequestBody] = None,
                             output_format: str = 'JSON',
                             report_spec: str | dict = None) -> dict | str:
         """Return the properties of a specific project.
@@ -912,7 +913,7 @@ class ReferenceDataManager(ServerClient):
     @dynamic_catch
     def link_valid_value_definition(
             self,
-            vv_set_guid: str, vv_member_guid: str, body: dict | NewRelationshipRequestBody = None) -> None:
+            vv_set_guid: str, vv_member_guid: str, body: Optional[dict | NewRelationshipRequestBody] = None) -> None:
         """ Link a valid value definition to another valid value definition.
 
         Parameters
@@ -1008,7 +1009,7 @@ class ReferenceDataManager(ServerClient):
     @dynamic_catch
     def detach_valid_value_definition(
             self,
-            vv_set_guid: str, vv_member_guid: str, body: dict | DeleteRelationshipRequestBody = None) -> None:
+            vv_set_guid: str, vv_member_guid: str, body: Optional[dict | DeleteRelationshipRequestBody] = None) -> None:
         """ Detach a valid value definition from another valid value definition.
 
         Parameters
@@ -1050,7 +1051,7 @@ class ReferenceDataManager(ServerClient):
     @dynamic_catch
     async def _async_delete_valid_value_definition(
             self,
-            vv_def_guid: str, cascade_delete: bool = False, body: dict | DeleteElementRequestBody = None) -> None:
+            vv_def_guid: str, cascade_delete: bool = False, body: Optional[dict | DeleteElementRequestBody] = None) -> None:
         """Delete a valid value definition.  Async version
 
         Parameters
@@ -1094,7 +1095,7 @@ class ReferenceDataManager(ServerClient):
     @dynamic_catch
     def delete_valid_value_definition(
             self,
-            vv_def_guid: str, cascade_delete: bool = False, body: dict | DeleteElementRequestBody = None) -> None:
+            vv_def_guid: str, cascade_delete: bool = False, body: Optional[dict | DeleteElementRequestBody] = None) -> None:
         """Delete a valid value definition.
 
             Parameters

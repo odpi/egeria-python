@@ -63,8 +63,8 @@ class DataDiscovery(ServerClient):
         view_server: str,
         platform_url: str,
         user_id: str,
-        user_pwd: str = None,
-        token: str = None,
+        user_pwd: Optional[str] = None,
+        token: Optional[str] = None,
     ):
         super().__init__(view_server, platform_url, user_id, user_pwd, token)
         self.view_server = view_server
@@ -400,9 +400,9 @@ class DataDiscovery(ServerClient):
     @dynamic_catch
     async def _async_get_annotations_by_name(
         self,
-        filter_string: str = None,
-        classification_names: list[str] = None,
-        body: dict | FilterRequestBody = None,
+        filter_string: Optional[str] = None,
+        classification_names: Optional[list[str]] = None,
+        body: Optional[dict | FilterRequestBody] = None,
         start_from: int = 0,
         page_size: int = 0,
         output_format: str = "JSON",
@@ -465,9 +465,9 @@ class DataDiscovery(ServerClient):
 
     def get_annotations_by_name(
         self,
-        filter_string: str = None,
-        classification_names: list[str] = None,
-        body: dict | FilterRequestBody = None,
+        filter_string: Optional[str] = None,
+        classification_names: Optional[list[str]] = None,
+        body: Optional[dict | FilterRequestBody] = None,
         start_from: int = 0,
         page_size: int = 0,
         output_format: str = "JSON",
@@ -531,23 +531,23 @@ class DataDiscovery(ServerClient):
     async def _async_find_annotations(self, search_string: str = "*",
                                       starts_with: bool = True, ends_with: bool = False,
                                       ignore_case: bool = False,
-                                      anchor_domain: str = None,
-                                      metadata_element_type: str = None,
-                                      metadata_element_subtypes: list[str] = None,
-                                      skip_relationships: list[str] = None,
-                                      include_only_relationships: list[str] = None,
-                                      skip_classified_elements: list[str] = None,
-                                      include_only_classified_elements: list[str] = None,
+                                      anchor_domain: Optional[str] = None,
+                                      metadata_element_type: Optional[str] = None,
+                                      metadata_element_subtypes: Optional[list[str]] = None,
+                                      skip_relationships: Optional[list[str]] = None,
+                                      include_only_relationships: Optional[list[str]] = None,
+                                      skip_classified_elements: Optional[list[str]] = None,
+                                      include_only_classified_elements: Optional[list[str]] = None,
                                       graph_query_depth: int = 3,
-                                      governance_zone_filter: list[str] = None, as_of_time: str = None,
-                                      effective_time: str = None, relationship_page_size: int = 0,
-                                      limit_results_by_status: list[str] = None, sequencing_order: str = None,
-                                      sequencing_property: str = None,
+                                      governance_zone_filter: Optional[list[str]] = None, as_of_time: Optional[str] = None,
+                                      effective_time: Optional[str] = None, relationship_page_size: int = 0,
+                                      limit_results_by_status: Optional[list[str]] = None, sequencing_order: Optional[str] = None,
+                                      sequencing_property: Optional[str] = None,
                                       output_format: str = "JSON",
                                       report_spec: str | dict = "Referenceable",
                                       start_from: int = 0, page_size: int = 100,
-                                      property_names: list[str] = None,
-                                      body: dict | SearchStringRequestBody = None) -> list | str:
+                                      property_names: Optional[list[str]] = None,
+                                      body: Optional[dict | SearchStringRequestBody] = None) -> list | str:
         """ Retrieve the list of annotation metadata elements that contain the search string. Async Version.
 
         Parameters
@@ -648,23 +648,23 @@ class DataDiscovery(ServerClient):
     def find_annotations(self, search_string: str = "*",
                          starts_with: bool = True, ends_with: bool = False,
                          ignore_case: bool = False,
-                         anchor_domain: str = None,
-                         metadata_element_type: str = None,
-                         metadata_element_subtypes: list[str] = None,
-                         skip_relationships: list[str] = None,
-                         include_only_relationships: list[str] = None,
-                         skip_classified_elements: list[str] = None,
-                         include_only_classified_elements: list[str] = None,
+                         anchor_domain: Optional[str] = None,
+                         metadata_element_type: Optional[str] = None,
+                         metadata_element_subtypes: Optional[list[str]] = None,
+                         skip_relationships: Optional[list[str]] = None,
+                         include_only_relationships: Optional[list[str]] = None,
+                         skip_classified_elements: Optional[list[str]] = None,
+                         include_only_classified_elements: Optional[list[str]] = None,
                          graph_query_depth: int = 3,
-                         governance_zone_filter: list[str] = None, as_of_time: str = None,
-                         effective_time: str = None, relationship_page_size: int = 0,
-                         limit_results_by_status: list[str] = None, sequencing_order: str = None,
-                         sequencing_property: str = None,
+                         governance_zone_filter: Optional[list[str]] = None, as_of_time: Optional[str] = None,
+                         effective_time: Optional[str] = None, relationship_page_size: int = 0,
+                         limit_results_by_status: Optional[list[str]] = None, sequencing_order: Optional[str] = None,
+                         sequencing_property: Optional[str] = None,
                          output_format: str = "JSON",
                          report_spec: str | dict = "Referenceable",
                          start_from: int = 0, page_size: int = 100,
-                         property_names: list[str] = None,
-                         body: dict | SearchStringRequestBody = None) -> list | str:
+                         property_names: Optional[list[str]] = None,
+                         body: Optional[dict | SearchStringRequestBody] = None) -> list | str:
         """ Retrieve the list of annotation metadata elements that contain the search string.
 
         Parameters
@@ -769,7 +769,7 @@ class DataDiscovery(ServerClient):
         self,
         annotation_guid: str,
         element_type: str = "Annotation",
-        body: dict | GetRequestBody = None,
+        body: Optional[dict | GetRequestBody] = None,
         output_format: str = "JSON",
         report_spec: str | dict = "Annotations",
     ) -> dict | str:
@@ -822,7 +822,7 @@ class DataDiscovery(ServerClient):
         self,
         annotation_guid: str,
         element_type: str = "Annotation",
-        body: dict | GetRequestBody = None,
+        body: Optional[dict | GetRequestBody] = None,
         output_format: str = "JSON",
         report_spec: str | dict = "Annotations",
     ) -> dict | str:

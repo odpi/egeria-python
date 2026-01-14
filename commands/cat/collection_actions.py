@@ -92,7 +92,7 @@ def remove_element_from_collection(server, url, userid, password, timeout, eleme
 @click.command("create-collection")
 @click.option("--name", help="Collection Name",default = "", required=True)
 @click.option("--kind", help="Kind of Collection", default = "Collection",
-            type=click.Choice(COLLECTION_TYPES, case_sensitive=False))
+            type_name = click.Choice(COLLECTION_TYPES, case_sensitive=False))
 @click.option(
     "--description",
     help="Description of the Collection",

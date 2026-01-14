@@ -21,7 +21,7 @@ from pyegeria.view.output_formatter import populate_columns_from_properties, _ex
 from pyegeria.core.utils import body_slimmer, dynamic_catch
 from pyegeria.core._globals import max_paging_size
 from pyegeria.core._globals import NO_ELEMENTS_FOUND, NO_ASSETS_FOUND
-
+from typing import Any, Optional
 
 class AssetCatalog(ServerClient):
     """
@@ -42,7 +42,7 @@ class AssetCatalog(ServerClient):
         The password associated with the user_id. Defaults to None.
     """
 
-    def __init__(self, view_server: str, platform_url: str, user_id: str, user_pwd: str = None,
+    def __init__(self, view_server: str, platform_url: str, user_id: str, user_pwd: Optional[str] = None,
                  token: str = None):
         super().__init__(view_server, platform_url, user_id, user_pwd, token)
         self.view_server = view_server
@@ -89,7 +89,7 @@ class AssetCatalog(ServerClient):
                 break
         return col_data
 
-    def _generate_asset_output(self, elements: dict | list[dict], filter: str | None,
+    def _generate_asset_output(self, elements: dict | list[dict], filter_string: str | None,
                                             element_type_name: str | None, output_format: str = "DICT",
                                             report_spec: dict | str | None = None) -> str | list[dict]:
         entity_type = element_type_name
@@ -119,23 +119,23 @@ class AssetCatalog(ServerClient):
     async def _async_find_in_asset_domain(self, search_string: str = "*",
                                           starts_with: bool = True, ends_with: bool = False,
                                           ignore_case: bool = False,
-                                          anchor_domain: str = None,
-                                          metadata_element_type: str = None,
-                                          metadata_element_subtypes: list[str] = None,
-                                          skip_relationships: list[str] = None,
-                                          include_only_relationships: list[str] = None,
-                                          skip_classified_elements: list[str] = None,
-                                          include_only_classified_elements: list[str] = None,
+                                          anchor_domain: Optional[str] = None,
+                                          metadata_element_type: Optional[str] = None,
+                                          metadata_element_subtypes: Optional[list[str]] = None,
+                                          skip_relationships: Optional[list[str]] = None,
+                                          include_only_relationships: Optional[list[str]] = None,
+                                          skip_classified_elements: Optional[list[str]] = None,
+                                          include_only_classified_elements: Optional[list[str]] = None,
                                           graph_query_depth: int = 3,
-                                          governance_zone_filter: list[str] = None, as_of_time: str = None,
-                                          effective_time: str = None, relationship_page_size: int = 0,
-                                          limit_results_by_status: list[str] = None, sequencing_order: str = None,
-                                          sequencing_property: str = None,
+                                          governance_zone_filter: Optional[list[str]] = None, as_of_time: Optional[str] = None,
+                                          effective_time: Optional[str] = None, relationship_page_size: int = 0,
+                                          limit_results_by_status: Optional[list[str]] = None, sequencing_order: Optional[str] = None,
+                                          sequencing_property: Optional[str] = None,
                                           output_format: str = "JSON",
                                           report_spec: str | dict = "Referenceable",
                                           start_from: int = 0, page_size: int = 100,
-                                          property_names: list[str] = None,
-                                          body: dict | SearchStringRequestBody = None) -> list | str:
+                                          property_names: Optional[list[str]] = None,
+                                          body: Optional[dict | SearchStringRequestBody] = None) -> list | str:
         """ Retrieve the list of asset metadata elements that contain the search string. Async Version.
 
         Parameters
@@ -236,23 +236,23 @@ class AssetCatalog(ServerClient):
     def find_in_asset_domain(self, search_string: str = "*",
                              starts_with: bool = True, ends_with: bool = False,
                              ignore_case: bool = False,
-                             anchor_domain: str = None,
-                             metadata_element_type: str = None,
-                             metadata_element_subtypes: list[str] = None,
-                             skip_relationships: list[str] = None,
-                             include_only_relationships: list[str] = None,
-                             skip_classified_elements: list[str] = None,
-                             include_only_classified_elements: list[str] = None,
+                             anchor_domain: Optional[str] = None,
+                             metadata_element_type: Optional[str] = None,
+                             metadata_element_subtypes: Optional[list[str]] = None,
+                             skip_relationships: Optional[list[str]] = None,
+                             include_only_relationships: Optional[list[str]] = None,
+                             skip_classified_elements: Optional[list[str]] = None,
+                             include_only_classified_elements: Optional[list[str]] = None,
                              graph_query_depth: int = 3,
-                             governance_zone_filter: list[str] = None, as_of_time: str = None,
-                             effective_time: str = None, relationship_page_size: int = 0,
-                             limit_results_by_status: list[str] = None, sequencing_order: str = None,
-                             sequencing_property: str = None,
+                             governance_zone_filter: Optional[list[str]] = None, as_of_time: Optional[str] = None,
+                             effective_time: Optional[str] = None, relationship_page_size: int = 0,
+                             limit_results_by_status: Optional[list[str]] = None, sequencing_order: Optional[str] = None,
+                             sequencing_property: Optional[str] = None,
                              output_format: str = "JSON",
                              report_spec: str | dict = "Referenceable",
                              start_from: int = 0, page_size: int = 100,
-                             property_names: list[str] = None,
-                             body: dict | SearchStringRequestBody = None) -> list | str:
+                             property_names: Optional[list[str]] = None,
+                             body: Optional[dict | SearchStringRequestBody] = None) -> list | str:
         """ Retrieve the list of asset metadata elements that contain the search string.
 
         Parameters
@@ -359,7 +359,7 @@ class AssetCatalog(ServerClient):
         page_size: int = 0,
         output_format: str = "MERMAID",
         report_spec: str = "Common-Mermaid",
-        body: dict | ResultsRequestBody = None
+        body: Optional[dict | ResultsRequestBody] = None
     ) -> str | dict:
         """Return all the elements that are anchored to an asset plus relationships between these elements and to
         other elements. Async version.
@@ -407,7 +407,7 @@ class AssetCatalog(ServerClient):
         page_size: int = 0,
         output_format: str = "MERMAID",
         report_spec: str = "Common-Mermaid",
-        body: dict | ResultsRequestBody = None
+        body: Optional[dict | ResultsRequestBody] = None
     ) -> str | dict:
         """Return all the elements that are anchored to an asset plus relationships between these elements and to
         other elements.
@@ -486,11 +486,11 @@ class AssetCatalog(ServerClient):
     async def _async_get_asset_lineage_graph(
         self,
         asset_guid: str,
-        effective_time: str = None,
-        as_of_time: str = None,
+        effective_time: Optional[str] = None,
+        as_of_time: Optional[str] = None,
         relationship_types: [str] = None,
-        limit_to_isc_q_name: str = None,
-        hilight_isc_q_name: str = None,
+        limit_to_isc_q_name: Optional[str] = None,
+        hilight_isc_q_name: Optional[str] = None,
         all_anchors: bool = False,
         start_from: int = 0,
         page_size: int =0,
@@ -568,11 +568,11 @@ class AssetCatalog(ServerClient):
     def get_asset_lineage_graph(
         self,
         asset_guid: str,
-        effective_time: str = None,
-        as_of_time: str = None,
+        effective_time: Optional[str] = None,
+        as_of_time: Optional[str] = None,
         relationship_types: [str] = None,
-        limit_to_isc_q_name: str = None,
-        hilight_isc_q_name: str = None,
+        limit_to_isc_q_name: Optional[str] = None,
+        hilight_isc_q_name: Optional[str] = None,
         all_anchors: bool = False,
         start_from: int = 0,
         page_size: int = 0,
@@ -628,11 +628,11 @@ class AssetCatalog(ServerClient):
     def get_asset_lineage_mermaid_graph(
         self,
         asset_guid: str,
-        effective_time: str = None,
-        as_of_time: str = None,
+        effective_time: Optional[str] = None,
+        as_of_time: Optional[str] = None,
         relationship_types: [str] = None,
-        limit_to_isc_q_name: str = None,
-        hilight_isc_q_name: str = None,
+        limit_to_isc_q_name: Optional[str] = None,
+        hilight_isc_q_name: Optional[str] = None,
         start_from: int = 0,
         page_size: int = max_paging_size,
         ) -> str:
@@ -647,9 +647,9 @@ class AssetCatalog(ServerClient):
             as_of_time to query on. If not specified, the current time is used.
         relationship_types: [str], default is None,
             relationship types to include in the lineage graph. If not specified, all relationship types are included.
-        limit_to_isc_q_name: str = None,
+        limit_to_isc_q_name: Optional[str] = None,
             if specified, filters results to only include information supply chains with the given name.
-        hilight_isc_q_name: str = None,
+        hilight_isc_q_name: Optional[str] = None,
             if specified, highlights the information supply chain with the given name.
 
          start_from : int, optional
@@ -682,8 +682,8 @@ class AssetCatalog(ServerClient):
     async def _async_get_assets_by_metadata_collection_id(
         self,
         metadata_collection_id: str,
-        type_name: str = None,
-        effective_time: str = None,
+        type_name: Optional[str] = None,
+        effective_time: Optional[str] = None,
         start_from: int = 0,
         page_size: int = 0,
         output_format: str = "JSON",
@@ -745,8 +745,8 @@ class AssetCatalog(ServerClient):
     def get_assets_by_metadata_collection_id(
         self,
         metadata_collection_id: str,
-        type_name: str = None,
-        effective_time: str = None,
+        type_name: Optional[str] = None,
+        effective_time: Optional[str] = None,
         start_from: int = 0,
         page_size: int = max_paging_size,
         output_format: str = "JSON",

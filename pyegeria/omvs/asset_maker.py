@@ -8,7 +8,7 @@ The Asset Maker OMVS provides APIs for supporting the creation and editing of as
 """
 
 import asyncio
-
+from typing import Any, Optional
 from pyegeria.core._server_client import ServerClient
 from pyegeria.core._globals import max_paging_size, NO_ELEMENTS_FOUND, NO_GUID_RETURNED
 from pyegeria.core.config import settings as app_settings
@@ -700,17 +700,17 @@ class AssetMaker(ServerClient):
 
     @dynamic_catch
     async def _async_find_assets(self, search_string: str = "*", starts_with: bool = False, ends_with: bool = False,
-                                 ignore_case: bool = True, anchor_domain: str = None, metadata_element_type: str = None,
-                                 metadata_element_subtypes: list[str] = None, skip_relationships: list[str] = None,
-                                 include_only_relationships: list[str] = None,
-                                 skip_classified_elements: list[str] = None,
-                                 include_only_classified_elements: list[str] = None, graph_query_depth: int = 3,
-                                 governance_zone_filter: list[str] = None, as_of_time: str = None,
-                                 effective_time: str = None, relationship_page_size: int = 0,
-                                 limit_results_by_status: list[str] = None, sequencing_order: str = None,
-                                 sequencing_property: str = None, output_format: str = "DICT",
+                                 ignore_case: bool = True, anchor_domain: Optional[str] = None, metadata_element_type: Optional[str] = None,
+                                 metadata_element_subtypes: Optional[list[str]] = None, skip_relationships: Optional[list[str]] = None,
+                                 include_only_relationships: Optional[list[str]] = None,
+                                 skip_classified_elements: Optional[list[str]] = None,
+                                 include_only_classified_elements: Optional[list[str]] = None, graph_query_depth: int = 3,
+                                 governance_zone_filter: Optional[list[str]] = None, as_of_time: Optional[str] = None,
+                                 effective_time: Optional[str] = None, relationship_page_size: int = 0,
+                                 limit_results_by_status: Optional[list[str]] = None, sequencing_order: Optional[str] = None,
+                                 sequencing_property: Optional[str] = None, output_format: str = "DICT",
                                  report_spec: dict | str | None = None, start_from: int = 0,
-                                 page_size: int = 0, property_names: list[str] = None,
+                                 page_size: int = 0, property_names: Optional[list[str]] = None,
                                  body: dict | SearchStringRequestBody | None = None) -> list | dict | str:
         """Retrieve the list of asset metadata elements that contain the search string. Async version.
 
@@ -795,15 +795,15 @@ class AssetMaker(ServerClient):
 
     @dynamic_catch
     def find_assets(self, search_string: str = "*", starts_with: bool = False, ends_with: bool = False,
-                    ignore_case: bool = True, anchor_domain: str = None, metadata_element_type: str = None,
-                    metadata_element_subtypes: list[str] = None, skip_relationships: list[str] = None,
-                    include_only_relationships: list[str] = None, skip_classified_elements: list[str] = None,
-                    include_only_classified_elements: list[str] = None, graph_query_depth: int = 3,
-                    governance_zone_filter: list[str] = None, as_of_time: str = None, effective_time: str = None,
-                    relationship_page_size: int = 0, limit_results_by_status: list[str] = None,
-                    sequencing_order: str = None, sequencing_property: str = None, output_format: str = "DICT",
+                    ignore_case: bool = True, anchor_domain: Optional[str] = None, metadata_element_type: Optional[str] = None,
+                    metadata_element_subtypes: Optional[list[str]] = None, skip_relationships: Optional[list[str]] = None,
+                    include_only_relationships: Optional[list[str]] = None, skip_classified_elements: Optional[list[str]] = None,
+                    include_only_classified_elements: Optional[list[str]] = None, graph_query_depth: int = 3,
+                    governance_zone_filter: Optional[list[str]] = None, as_of_time: Optional[str] = None, effective_time: Optional[str] = None,
+                    relationship_page_size: int = 0, limit_results_by_status: Optional[list[str]] = None,
+                    sequencing_order: Optional[str] = None, sequencing_property: Optional[str] = None, output_format: str = "DICT",
                     report_spec: dict | str | None = None, start_from: int = 0, page_size: int = 0,
-                    property_names: list[str] = None, body: dict | SearchStringRequestBody | None = None) -> list | dict | str:
+                    property_names: Optional[list[str]] = None, body: dict | SearchStringRequestBody | None = None) -> list | dict | str:
         """Retrieve the list of asset metadata elements that contain the search string.
 
         Parameters
@@ -1505,7 +1505,7 @@ class AssetMaker(ServerClient):
         page_size: int = 0,
         output_format: str = "JSON",
         report_spec: str | dict = None,
-        body: dict | ContentStatusSearchString = None,
+        body: Optional[dict | ContentStatusSearchString] = None,
     ) -> list | str:
         """
         Returns the list of data assets matching the search string and optional content status. Async version.
@@ -1597,7 +1597,7 @@ class AssetMaker(ServerClient):
         page_size: int = 0,
         output_format: str = "JSON",
         report_spec: str | dict = None,
-        body: dict | ContentStatusSearchString = None,
+        body: Optional[dict | ContentStatusSearchString] = None,
     ) -> list | str:
         """
         Returns the list of data assets matching the search string and optional content status. Sync version.
@@ -1627,7 +1627,7 @@ class AssetMaker(ServerClient):
         page_size: int = 0,
         output_format: str = "JSON",
         report_spec: str | dict = None,
-        body: dict | ContentStatusFilterRequestBody = None,
+        body: Optional[dict | ContentStatusFilterRequestBody] = None,
     ) -> list | str:
         """
         Returns the list of data assets matching the category and optional content status. Async version.
@@ -1703,7 +1703,7 @@ class AssetMaker(ServerClient):
         page_size: int = 0,
         output_format: str = "JSON",
         report_spec: str | dict = None,
-        body: dict | ContentStatusFilterRequestBody = None,
+        body: Optional[dict | ContentStatusFilterRequestBody] = None,
     ) -> list | str:
         """
         Returns the list of data assets matching the category and optional content status. Sync version.
@@ -1731,7 +1731,7 @@ class AssetMaker(ServerClient):
         page_size: int = 0,
         output_format: str = "JSON",
         report_spec: str | dict = None,
-        body: dict | DeploymentStatusSearchString = None,
+        body: Optional[dict | DeploymentStatusSearchString] = None,
     ) -> list | str:
         """
         Returns the list of infrastructure assets matching the search string and optional deployment status. Async version.
@@ -1823,7 +1823,7 @@ class AssetMaker(ServerClient):
         page_size: int = 0,
         output_format: str = "JSON",
         report_spec: str | dict = None,
-        body: dict | DeploymentStatusSearchString = None,
+        body: Optional[dict | DeploymentStatusSearchString] = None,
     ) -> list | str:
         """
         Returns the list of infrastructure assets matching the search string and optional deployment status. Sync version.
@@ -1853,7 +1853,7 @@ class AssetMaker(ServerClient):
         page_size: int = 0,
         output_format: str = "JSON",
         report_spec: str | dict = None,
-        body: dict | DeploymentStatusFilterRequestBody = None,
+        body: Optional[dict | DeploymentStatusFilterRequestBody] = None,
     ) -> list | str:
         """
         Returns the list of infrastructure assets matching the category and optional deployment status. Async version.
@@ -1929,7 +1929,7 @@ class AssetMaker(ServerClient):
         page_size: int = 0,
         output_format: str = "JSON",
         report_spec: str | dict = None,
-        body: dict | DeploymentStatusFilterRequestBody = None,
+        body: Optional[dict | DeploymentStatusFilterRequestBody] = None,
     ) -> list | str:
         """
         Returns the list of infrastructure assets matching the category and optional deployment status. Sync version.
@@ -1957,7 +1957,7 @@ class AssetMaker(ServerClient):
         page_size: int = 0,
         output_format: str = "JSON",
         report_spec: str | dict = None,
-        body: dict | ActivityStatusSearchString = None,
+        body: Optional[dict | ActivityStatusSearchString] = None,
     ) -> list | str:
         """
         Retrieve the processes that match the search string and activity status. Async version.
@@ -2041,7 +2041,7 @@ class AssetMaker(ServerClient):
         page_size: int = 0,
         output_format: str = "JSON",
         report_spec: str | dict = None,
-        body: dict | ActivityStatusSearchString = None,
+        body: Optional[dict | ActivityStatusSearchString] = None,
     ) -> list | str:
         """
         Retrieve the processes that match the search string and activity status. Sync version.
@@ -2071,7 +2071,7 @@ class AssetMaker(ServerClient):
         page_size: int = 0,
         output_format: str = "JSON",
         report_spec: str | dict = None,
-        body: dict | ActivityStatusFilterRequestBody = None,
+        body: Optional[dict | ActivityStatusFilterRequestBody] = None,
     ) -> list | str:
         """
         Retrieve the processes that match the category name and status. Async version.
@@ -2140,7 +2140,7 @@ class AssetMaker(ServerClient):
         page_size: int = 0,
         output_format: str = "JSON",
         report_spec: str | dict = None,
-        body: dict | ActivityStatusFilterRequestBody = None,
+        body: Optional[dict | ActivityStatusFilterRequestBody] = None,
     ) -> list | str:
         """
         Retrieve the processes that match the category name and status. Sync version.
@@ -2492,7 +2492,7 @@ class AssetMaker(ServerClient):
         self,
         action_guid: str,
         actor_guid: str,
-        body: dict | NewRelationshipRequestBody = None,
+        body: Optional[dict | NewRelationshipRequestBody] = None,
     ) -> None:
         """
         Assign an action to an actor. Request body is optional. Async version.
@@ -2515,7 +2515,7 @@ class AssetMaker(ServerClient):
         self,
         action_guid: str,
         actor_guid: str,
-        body: dict | NewRelationshipRequestBody = None,
+        body: Optional[dict | NewRelationshipRequestBody] = None,
     ) -> None:
         """
         Assign an action to an actor. Sync version.
@@ -2528,7 +2528,7 @@ class AssetMaker(ServerClient):
         self,
         action_guid: str,
         actor_guid: str,
-        body: dict | NewRelationshipRequestBody = None,
+        body: Optional[dict | NewRelationshipRequestBody] = None,
     ) -> None:
         """
         Assign an action to a new actor. This will unassign all other actors previously assigned to the action. Async version.
@@ -2548,7 +2548,7 @@ class AssetMaker(ServerClient):
         self,
         action_guid: str,
         actor_guid: str,
-        body: dict | NewRelationshipRequestBody = None,
+        body: Optional[dict | NewRelationshipRequestBody] = None,
     ) -> None:
         """
         Assign an action to a new actor. Sync version.
@@ -2561,7 +2561,7 @@ class AssetMaker(ServerClient):
         self,
         action_guid: str,
         actor_guid: str,
-        body: dict | DeleteRelationshipRequestBody = None,
+        body: Optional[dict | DeleteRelationshipRequestBody] = None,
     ) -> None:
         """
         Remove an action from an actor. Async version.
@@ -2581,7 +2581,7 @@ class AssetMaker(ServerClient):
         self,
         action_guid: str,
         actor_guid: str,
-        body: dict | DeleteRelationshipRequestBody = None,
+        body: Optional[dict | DeleteRelationshipRequestBody] = None,
     ) -> None:
         """
         Remove an action from an actor. Sync version.
@@ -2720,7 +2720,7 @@ class AssetMaker(ServerClient):
     def _generate_referenceable_output(
         self,
         elements: list | dict,
-        filter: str | None,
+        filter_string : str | None,
         element_type_name: str | None,
         output_format: str = "DICT",
         report_spec: dict | str | None = None,
@@ -2729,7 +2729,7 @@ class AssetMaker(ServerClient):
         from pyegeria.view.output_formatter import generate_output
         return generate_output(
             elements,
-            filter=filter,
+            filter=filter_string,
             element_type_name=element_type_name,
             output_format=output_format,
             report_spec=report_spec,

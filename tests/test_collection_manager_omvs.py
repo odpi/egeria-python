@@ -306,7 +306,7 @@ class TestCollectionManager:
             collection_name = "myLocal::Folder::Ham-Radio-collection"
             filter_body = FilterRequestBody(
                 class_ = "FilterRequestBody",
-                filter = collection_name,
+                filter_string = collection_name,
                 include_only_classified_elements=None
                 )
             response = c_client.get_collections_by_name(body=filter_body, output_format="DICT",

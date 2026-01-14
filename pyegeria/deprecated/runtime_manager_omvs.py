@@ -1493,7 +1493,7 @@ class RuntimeManager(ServerClient):
 
     def get_platforms_by_name(
         self,
-        filter: str = None,
+        filter_string : str = None,
         effective_time: str = None,
         start_from: int = 0,
         page_size: int = max_paging_size,
@@ -1502,7 +1502,7 @@ class RuntimeManager(ServerClient):
 
         Parameters
         ----------
-        filter : str, opt
+        filter_string : str, opt
             Filter specifies the display name or qualified name of the platforms to return information for. If the
             value is None, we will default to the default_platform_name that comes from the core content pack.
         effective_time: str, optional
@@ -1533,7 +1533,7 @@ class RuntimeManager(ServerClient):
 
     async def _async_get_platforms_by_name(
         self,
-        filter: str = None,
+        filter_string : str = None,
         effective_time: str = None,
         start_from: int = 0,
         page_size: int = max_paging_size,
@@ -1542,7 +1542,7 @@ class RuntimeManager(ServerClient):
 
         Parameters
         ----------
-        filter : str, opt
+        filter_string : str, opt
             Filter specifies the display name or qualified name of the platforms to return information for. If the
             value is None, we will default to the default_platform_name that comes from the core content pack.
         effective_time: str, optional
@@ -1566,17 +1566,17 @@ class RuntimeManager(ServerClient):
 
         """
 
-        if filter is None:
-            filter = self.default_platform_name
+        if filter_string is None:
+            filter_string = self.default_platform_name
 
         url = (
             f"{self.runtime_command_root}/platforms/by-name?"
             f"startFrom={start_from}&pageSize={page_size}"
         )
         if effective_time is not None:
-            body = {"filter": filter, "effectiveTime": effective_time}
+            body = {"filter": filter_string, "effectiveTime": effective_time}
         else:
-            body = {"filter": filter}
+            body = {"filter": filter_string}
 
         response = await self._async_make_request("POST", url, body)
 
@@ -1584,7 +1584,7 @@ class RuntimeManager(ServerClient):
 
     async def _async_get_platforms_by_type(
         self,
-        filter: str = None,
+        filter_string : str = None,
         effective_time: str = None,
         start_from: int = 0,
         page_size: int = max_paging_size,
@@ -1594,7 +1594,7 @@ class RuntimeManager(ServerClient):
 
         Parameters
         ----------
-        filter : str, opt
+        filter_string : str, opt
             Filter specifies the kind of deployed implementation type of the platforms to return information for.
             If the value is None, we will default to the "OMAG Server Platform".
         effective_time: str, optional
@@ -1617,8 +1617,8 @@ class RuntimeManager(ServerClient):
 
         """
 
-        if filter is None:
-            filter = "OMAG Server Platform"
+        if filter_string is None:
+            filter_string = "OMAG Server Platform"
 
         url = (
             f"{self.runtime_command_root}/platforms/"
@@ -1636,7 +1636,7 @@ class RuntimeManager(ServerClient):
 
     def get_platforms_by_type(
         self,
-        filter: str = None,
+        filter_string : str = None,
         effective_time: str = None,
         start_from: int = 0,
         page_size: int = max_paging_size,
@@ -1646,7 +1646,7 @@ class RuntimeManager(ServerClient):
 
         Parameters
         ----------
-        filter : str, opt
+        filter_string : str, opt
             Filter specifies the kind of deployed implementation type of the platforms to return information for.
             If the value is None, we will default to the "OMAG Server Platform".
         effective_time: str, optional
@@ -1678,7 +1678,7 @@ class RuntimeManager(ServerClient):
 
     async def _async_get_platform_templates_by_type(
         self,
-        filter: str = None,
+        filter_string : str = None,
         effective_time: str = None,
         start_from: int = 0,
         page_size: int = max_paging_size,
@@ -1689,7 +1689,7 @@ class RuntimeManager(ServerClient):
 
         Parameters
         ----------
-        filter : str, opt
+        filter_string : str, opt
             Filter specifies the kind of deployed implementation type of the platforms to return information for.
             If the value is None, we will default to the "OMAG Server Platform".
         effective_time: str, optional
@@ -1712,8 +1712,8 @@ class RuntimeManager(ServerClient):
 
         """
 
-        if filter is None:
-            filter = "OMAG Server Platform"
+        if filter_string is None:
+            filter_string = "OMAG Server Platform"
 
         url = (
             f"{self.runtime_command_root}/platforms/"
@@ -1721,16 +1721,16 @@ class RuntimeManager(ServerClient):
         )
 
         if effective_time is not None:
-            body = {"filter": filter, "effectiveTime": effective_time}
+            body = {"filter": filter_string, "effectiveTime": effective_time}
         else:
-            body = {"filter": filter}
+            body = {"filter": filter_string}
 
         response = await self._async_make_request("POST", url, body)
         return response.json().get("elements", "No platforms found")
 
     def get_platform_templates_by_type(
         self,
-        filter: str = None,
+        filter_string : str = None,
         effective_time: str = None,
         start_from: int = 0,
         page_size: int = max_paging_size,
@@ -1740,7 +1740,7 @@ class RuntimeManager(ServerClient):
 
         Parameters
         ----------
-        filter : str, opt
+        filter_string : str, opt
             Filter specifies the kind of deployed implementation type of the platforms to return information for.
             If the value is None, we will default to the "OMAG Server Platform".
         effective_time: str, optional
@@ -1967,7 +1967,7 @@ class RuntimeManager(ServerClient):
 
     async def _async_get_servers_by_name(
         self,
-        filter: str,
+        filter_string : str,
         effective_time: str = None,
         start_from: int = 0,
         page_size: int = max_paging_size,
@@ -1976,7 +1976,7 @@ class RuntimeManager(ServerClient):
 
         Parameters
         ----------
-        filter : str, opt
+        filter_string : str, opt
             Filter specifies the kind of deployed implementation type of the platforms to return information for.
             If the value is None, we will default to the "OMAG Server Platform".
         effective_time: str, optional
@@ -2005,9 +2005,9 @@ class RuntimeManager(ServerClient):
         )
 
         if effective_time is None:
-            body = {"filter": filter, "limitResultsByStatus": ["PROPOSED"]}
+            body = {"filter": filter_string, "limitResultsByStatus": ["PROPOSED"]}
         else:
-            body = {"filter": filter,
+            body = {"filter": filter_string,
                     "effective_time": effective_time,
                     "limitResultsByStatus": []}
         response = await self._async_make_request("POST", url, body)
@@ -2015,13 +2015,13 @@ class RuntimeManager(ServerClient):
         return response.json().get("elements", "No servers found")
 
     def get_servers_by_name(
-        self, filter: str, effective_time: str = None
+        self, filter_string: str, effective_time: str = None
     ) -> str | list:
         """Returns the list of servers with a particular name.  The name is specified in the filter.
 
         Parameters
         ----------
-        filter : str, opt
+        filter_string : str, opt
             Filter specifies the kind of deployed implementation type of the platforms to return information for.
             If the value is None, we will default to the "OMAG Server Platform".
         effective_time: str, optional
@@ -2125,7 +2125,7 @@ class RuntimeManager(ServerClient):
 
     async def _async_get_server_templates_by_dep_impl_type(
         self,
-        filter: str = "*",
+        filter_string : str = "*",
         effective_time: str = None,
         start_from: int = 0,
         page_size: int = max_paging_size,
@@ -2136,7 +2136,7 @@ class RuntimeManager(ServerClient):
 
         Parameters
         ----------
-        filter : str, opt
+        filter_string : str, opt
             Filter specifies the kind of deployed implementation type of the platforms to return information for.
             If the value is None, we will default to the "OMAG Server Platform".
         effective_time: str, optional
@@ -2159,15 +2159,15 @@ class RuntimeManager(ServerClient):
 
         """
 
-        if filter == "*":
-            filter = None
+        if filter_string == "*":
+            filter_string = None
 
         url = (
             f"{self.runtime_command_root}/software-servers/"
             f"by-deployed-implementation-type?startFrom={start_from}&pageSize={page_size}&getTemplates=true"
         )
 
-        body = body_slimmer({"filter": filter, "effective_time": effective_time})
+        body = body_slimmer({"filter": filter_string, "effective_time": effective_time})
 
         response = await self._async_make_request("POST", url, body)
 
@@ -2175,7 +2175,7 @@ class RuntimeManager(ServerClient):
 
     def get_server_templates_by_dep_impl_type(
         self,
-        filter: str = "*",
+        filter_string : str = "*",
         effective_time: str = None,
         start_from: int = 0,
         page_size: int = max_paging_size,
@@ -2186,7 +2186,7 @@ class RuntimeManager(ServerClient):
 
         Parameters
         ----------
-        filter : str, opt
+        filter_string : str, opt
             Filter specifies the kind of deployed implementation type of the platforms to return information for.
             If the value is None, we will default to the "OMAG Server Platform".
         effective_time: str, optional

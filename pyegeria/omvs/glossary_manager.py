@@ -9,7 +9,7 @@ This module contains an initial version of the glossary_manager module.
 import asyncio
 import csv
 import os
-from typing import List, Annotated, Literal
+from typing import List, Annotated, Literal, Optional
 
 from loguru import logger
 from pydantic import Field
@@ -74,8 +74,8 @@ class GlossaryManager(CollectionManager):
             view_server: str,
             platform_url: str,
             user_id: str,
-            user_pwd: str = None,
-            token: str = None,
+            user_pwd: Optional[str] = None,
+            token: Optional[str] = None,
             ):
         self.view_server = view_server
         self.platform_url = platform_url
@@ -104,8 +104,8 @@ class GlossaryManager(CollectionManager):
 
 
     @dynamic_catch
-    async def _async_create_glossary(self, display_name: str, description: str = None, language: str = "English", usage: str = None,
-                        category: str = None, body: dict | NewElementRequestBody = None) -> str:
+    async def _async_create_glossary(self, display_name: str, description: Optional[str] = None, language: str = "English", usage: Optional[str] = None,
+                        category: Optional[str] = None, body: Optional[dict | NewElementRequestBody] = None) -> str:
         """Create a new glossary. Async version.
 
         Parameters
@@ -151,9 +151,9 @@ class GlossaryManager(CollectionManager):
         response = await self._async_create_collection(body=body)
         return response
 
-    def create_glossary(self, display_name: str, description: str = None, language: str = "English",
-                               usage: str = None,
-                               category: str = None, body: dict | NewElementRequestBody = None) -> str:
+    def create_glossary(self, display_name: str, description: Optional[str] = None, language: str = "English",
+                               usage: Optional[str] = None,
+                               category: Optional[str] = None, body: Optional[dict | NewElementRequestBody] = None) -> str:
         """Create a new glossary.
 
         Parameters
@@ -187,7 +187,7 @@ class GlossaryManager(CollectionManager):
             )
         return response
 
-    async def _async_delete_glossary(self, glossary_guid: str, body: dict | DeleteElementRequestBody = None,
+    async def _async_delete_glossary(self, glossary_guid: str, body: Optional[dict | DeleteElementRequestBody] = None,
                                      cascade: bool = False) -> None:
         """Delete glossary. Async version.
 
@@ -208,7 +208,7 @@ class GlossaryManager(CollectionManager):
 
         logger.info(f"Deleted glossary {glossary_guid} with cascade {cascade}")
 
-    def delete_glossary(self, glossary_guid: str, body: dict | DeleteElementRequestBody = None, cascade: bool = False) -> None:
+    def delete_glossary(self, glossary_guid: str, body: Optional[dict | DeleteElementRequestBody] = None, cascade: bool = False) -> None:
         """Delete a new glossary.
 
         Parameters
@@ -709,9 +709,9 @@ class GlossaryManager(CollectionManager):
             glossary_guid: str,
             glossary_term_guid: str,
             new_display_name: str,
-            version_id: str = None,
+            version_id: Optional[str] = None,
             term_status: str = "PROPOSED",
-            body: dict | TemplateRequestBody = None,
+            body: Optional[dict | TemplateRequestBody] = None,
             ) -> str:
         """Create a new term from an existing term.
 
@@ -790,9 +790,9 @@ class GlossaryManager(CollectionManager):
             glossary_guid: str,
             glossary_term_guid: str,
             new_display_name: str,
-            version_id: str = None,
+            version_id: Optional[str] = None,
             term_status: str = "PROPOSED",
-            body: dict | TemplateRequestBody = None,
+            body: Optional[dict | TemplateRequestBody] = None,
             ) -> str:
         """Create a new term from an existing term.
 
@@ -944,7 +944,7 @@ class GlossaryManager(CollectionManager):
             self,
             glossary_term_guid: str,
             term_status: str = "DRAFT",
-            body: dict | UpdateElementRequestBody = None,
+            body: Optional[dict | UpdateElementRequestBody] = None,
     ) -> None:
         """Update the status of a term. Async version.
 
@@ -983,7 +983,7 @@ class GlossaryManager(CollectionManager):
     def update_glossary_term_status(
             self,
             glossary_term_guid: str, term_status: str = "DRAFT",
-            body: dict | UpdateElementRequestBody = None,
+            body: Optional[dict | UpdateElementRequestBody] = None,
             ) -> None:
         """Add the data field values classification to a glossary term
 
@@ -1033,7 +1033,7 @@ class GlossaryManager(CollectionManager):
             self,
             term_guid: str,
             cascade: bool = False,
-            body: dict | DeleteElementRequestBody = None
+            body: Optional[dict | DeleteElementRequestBody] = None
             ) -> None:
         """Delete the glossary terms associated with the specified glossary. Async version.
 
@@ -1076,7 +1076,7 @@ class GlossaryManager(CollectionManager):
             self,
             term_guid: str,
             cascade: bool = False,
-            body: dict | DeleteElementRequestBody = None
+            body: Optional[dict | DeleteElementRequestBody] = None
             ) -> None:
         """Delete the glossary terms associated with the specified glossary.
 
@@ -1113,7 +1113,7 @@ class GlossaryManager(CollectionManager):
             self,
             term_guid: str,
             glossary_guid: str,
-            body: dict | DeleteRelationshipRequestBody = None
+            body: Optional[dict | DeleteRelationshipRequestBody] = None
             ) -> None:
         """Move the glossary terms to the specified glossary. Async version.
 
@@ -1153,7 +1153,7 @@ class GlossaryManager(CollectionManager):
             self,
             term_guid: str,
             glossary_guid: str,
-            body: dict | DeleteRelationshipRequestBody = None
+            body: Optional[dict | DeleteRelationshipRequestBody] = None
             ) -> None:
         """Move the glossary terms to the specified glossary.
 
@@ -1199,7 +1199,7 @@ class GlossaryManager(CollectionManager):
 
 
     async def _async_add_is_abstract_concepts(
-            self, term_guid: str, body: dict | NewClassificationRequestBody = None,
+            self, term_guid: str, body: Optional[dict | NewClassificationRequestBody] = None,
             ) -> None:
         """Add a relationship between terms. Async Version.
 
@@ -1264,7 +1264,7 @@ class GlossaryManager(CollectionManager):
 
 
     def add_is_abstract_concept(
-            self, term_guid: str,  body: dict | NewClassificationRequestBody = None,
+            self, term_guid: str,  body: Optional[dict | NewClassificationRequestBody] = None,
             ) -> None:
         """Add a relationship between terms.
 
@@ -1320,7 +1320,7 @@ class GlossaryManager(CollectionManager):
             )
 
     async def _async_remove_is_abstract_concepts(
-            self, term_guid: str, body: dict | DeleteClassificationRequestBody = None,
+            self, term_guid: str, body: Optional[dict | DeleteClassificationRequestBody] = None,
             ) -> None:
         """Add a relationship between terms. Async Version.
 
@@ -1375,7 +1375,7 @@ class GlossaryManager(CollectionManager):
         logger.info(f"Removed AbstractConcept classification to {term_guid}")
 
     def remove_is_abstract_concept(
-            self, term_guid: str, body: dict | DeleteClassificationRequestBody = None,
+            self, term_guid: str, body: Optional[dict | DeleteClassificationRequestBody] = None,
             ) -> None:
         """Add a relationship between terms.
 
@@ -1432,7 +1432,7 @@ class GlossaryManager(CollectionManager):
 
 
     async def _async_add_is_context_definition(
-            self, term_guid: str, body: dict | NewClassificationRequestBody = None,
+            self, term_guid: str, body: Optional[dict | NewClassificationRequestBody] = None,
             ) -> None:
         """Add a relationship between terms. Async Version.
 
@@ -1498,7 +1498,7 @@ class GlossaryManager(CollectionManager):
 
 
     def add_is_context_definition(
-            self, term_guid: str,  body: dict | NewClassificationRequestBody = None,
+            self, term_guid: str,  body: Optional[dict | NewClassificationRequestBody] = None,
             ) -> None:
         """Add a relationship between terms.
 
@@ -1554,7 +1554,7 @@ class GlossaryManager(CollectionManager):
             )
 
     async def _async_remove_is_context_definition(
-            self, term_guid: str, body: dict | DeleteClassificationRequestBody = None,
+            self, term_guid: str, body: Optional[dict | DeleteClassificationRequestBody] = None,
             ) -> None:
         """Add a relationship between terms. Async Version.
 
@@ -1609,7 +1609,7 @@ class GlossaryManager(CollectionManager):
         logger.info(f"Removed ContextDefinition classification to {term_guid}")
 
     def remove_is_context_definition(
-            self, term_guid: str, body: dict | DeleteClassificationRequestBody = None,
+            self, term_guid: str, body: Optional[dict | DeleteClassificationRequestBody] = None,
             ) -> None:
         """Add a relationship between terms.
 
@@ -1666,7 +1666,7 @@ class GlossaryManager(CollectionManager):
 
 
     async def _async_add_is_data_value(
-            self, term_guid: str, body: dict | NewClassificationRequestBody = None,
+            self, term_guid: str, body: Optional[dict | NewClassificationRequestBody] = None,
             ) -> None:
         """Add a relationship between terms. Async Version.
 
@@ -1732,7 +1732,7 @@ class GlossaryManager(CollectionManager):
 
 
     def add_is_data_value(
-            self, term_guid: str,  body: dict | NewClassificationRequestBody = None,
+            self, term_guid: str,  body: Optional[dict | NewClassificationRequestBody] = None,
             ) -> None:
         """Add a relationship between terms.
 
@@ -1788,7 +1788,7 @@ class GlossaryManager(CollectionManager):
             )
 
     async def _async_remove_is_data_value(
-            self, term_guid: str, body: dict | DeleteClassificationRequestBody = None,
+            self, term_guid: str, body: Optional[dict | DeleteClassificationRequestBody] = None,
             ) -> None:
         """Add a relationship between terms. Async Version.
 
@@ -1843,7 +1843,7 @@ class GlossaryManager(CollectionManager):
         logger.info(f"Removed DataValue classification to {term_guid}")
 
     def remove_is_data_value(
-            self, term_guid: str, body: dict | DeleteClassificationRequestBody = None,
+            self, term_guid: str, body: Optional[dict | DeleteClassificationRequestBody] = None,
             ) -> None:
         """Add a relationship between terms.
 
@@ -1900,7 +1900,7 @@ class GlossaryManager(CollectionManager):
         
         
     async def _async_add_activity_description(
-            self, term_guid: str, activity_type: int = None, body: dict | NewClassificationRequestBody = None,
+            self, term_guid: str, activity_type: int = None, body: Optional[dict | NewClassificationRequestBody] = None,
             ) -> None:
         """Add a relationship between terms. Async Version.
 
@@ -1966,7 +1966,7 @@ class GlossaryManager(CollectionManager):
 
 
     def add_activity_description(
-            self, term_guid: str,  activity_type: int = None, body: dict | NewClassificationRequestBody = None,
+            self, term_guid: str,  activity_type: int = None, body: Optional[dict | NewClassificationRequestBody] = None,
             ) -> None:
         """Add a relationship between terms.
 
@@ -2022,7 +2022,7 @@ class GlossaryManager(CollectionManager):
             )
 
     async def _async_remove_activity_description(
-            self, term_guid: str, body: dict | DeleteClassificationRequestBody = None,
+            self, term_guid: str, body: Optional[dict | DeleteClassificationRequestBody] = None,
             ) -> None:
         """Add a relationship between terms. Async Version.
 
@@ -2077,7 +2077,7 @@ class GlossaryManager(CollectionManager):
         logger.info(f"Removed ActivityDescription classification to {term_guid}")
 
     def remove_activity_description(
-            self, term_guid: str, body: dict | DeleteClassificationRequestBody = None,
+            self, term_guid: str, body: Optional[dict | DeleteClassificationRequestBody] = None,
             ) -> None:
         """Add a relationship between terms.
 
@@ -2137,7 +2137,7 @@ class GlossaryManager(CollectionManager):
     #
 
     async def _async_add_relationship_between_terms(
-            self, term1_guid: str, term2_guid: str, relationship_type: str, body: dict | NewRelationshipRequestBody = None,
+            self, term1_guid: str, term2_guid: str, relationship_type: str, body: Optional[dict | NewRelationshipRequestBody] = None,
             ) -> None:
         """Add a relationship between terms. Async Version.
 
@@ -2209,7 +2209,7 @@ class GlossaryManager(CollectionManager):
         logger.info(f"Added relationship between {term1_guid} and {term2_guid} of type {relationship_type}")
 
     def add_relationship_between_terms(
-            self, term1_guid: str, term2_guid: str, relationship_type: str, body: dict | NewRelationshipRequestBody = None,
+            self, term1_guid: str, term2_guid: str, relationship_type: str, body: Optional[dict | NewRelationshipRequestBody] = None,
             ) -> None:
         """Add a relationship between terms.
 
@@ -2266,7 +2266,7 @@ class GlossaryManager(CollectionManager):
             )
 
     async def _async_update_relationship_between_terms(
-            self, term1_guid: str, term2_guid: str, relationship_type: str, body: dict | UpdateRelationshipRequestBody = None
+            self, term1_guid: str, term2_guid: str, relationship_type: str, body: Optional[dict | UpdateRelationshipRequestBody] = None
             ) -> None:
 
         """Update a relationship between terms. Async Version.
@@ -2331,7 +2331,7 @@ class GlossaryManager(CollectionManager):
         logger.info(f"Updated relationship between {term1_guid} and {term2_guid} of type {relationship_type}")
 
     def update_relationship_between_terms(
-            self, term1_guid: str, term2_guid: str, relationship_type: str, body: dict | UpdateRelationshipRequestBody = None
+            self, term1_guid: str, term2_guid: str, relationship_type: str, body: Optional[dict | UpdateRelationshipRequestBody] = None
             ) -> None:
         """Update a relationship between terms.
 
@@ -2389,7 +2389,7 @@ class GlossaryManager(CollectionManager):
             )
 
     async def _async_remove_relationship_between_terms(
-            self, term1_guid: str, term2_guid: str, relationship_type: str, body: dict | DeleteRelationshipRequestBody = None,
+            self, term1_guid: str, term2_guid: str, relationship_type: str, body: Optional[dict | DeleteRelationshipRequestBody] = None,
             ) -> None:
         """Remove a relationship between terms. Async Version.
 
@@ -2436,7 +2436,7 @@ class GlossaryManager(CollectionManager):
         await self._async_delete_relationship_request(url, body)
 
     def remove_relationship_between_terms(
-            self, term1_guid: str, term2_guid: str, relationship_type: str, body: dict | DeleteRelationshipRequestBody = None) -> None:
+            self, term1_guid: str, term2_guid: str, relationship_type: str, body: Optional[dict | DeleteRelationshipRequestBody] = None) -> None:
 
         """Remove a relationship between terms.
 
@@ -2680,23 +2680,23 @@ class GlossaryManager(CollectionManager):
     async def _async_find_glossaries(self, search_string: str = "*",
                                      starts_with: bool = True, ends_with: bool = False,
                                      ignore_case: bool = False,
-                                     anchor_domain: str = None,
+                                     anchor_domain: Optional[str] = None,
                                      metadata_element_type: str = "Glossary",
-                                     metadata_element_subtypes: list[str] = None,
-                                     skip_relationships: list[str] = None,
-                                     include_only_relationships: list[str] = None,
-                                     skip_classified_elements: list[str] = None,
-                                     include_only_classified_elements: list[str] = None,
+                                     metadata_element_subtypes: Optional[list[str]] = None,
+                                     skip_relationships: Optional[list[str]] = None,
+                                     include_only_relationships: Optional[list[str]] = None,
+                                     skip_classified_elements: Optional[list[str]] = None,
+                                     include_only_classified_elements: Optional[list[str]] = None,
                                      graph_query_depth: int = 3,
-                                     governance_zone_filter: list[str] = None, as_of_time: str = None,
-                                     effective_time: str = None, relationship_page_size: int = 0,
-                                     limit_results_by_status: list[str] = None, sequencing_order: str = None,
-                                     sequencing_property: str = None,
+                                     governance_zone_filter: Optional[list[str]] = None, as_of_time: Optional[str] = None,
+                                     effective_time: Optional[str] = None, relationship_page_size: int = 0,
+                                     limit_results_by_status: Optional[list[str]] = None, sequencing_order: Optional[str] = None,
+                                     sequencing_property: Optional[str] = None,
                                      output_format: str = "JSON",
                                      report_spec: str | dict = None,
                                      start_from: int = 0, page_size: int = 100,
-                                     property_names: list[str] = None,
-                                     body: dict | SearchStringRequestBody = None) -> list | str:
+                                     property_names: Optional[list[str]] = None,
+                                     body: Optional[dict | SearchStringRequestBody] = None) -> list | str:
         """ Retrieve the list of glossary metadata elements that contain the search string. Async Version.
 
         Parameters
@@ -2794,23 +2794,23 @@ class GlossaryManager(CollectionManager):
     def find_glossaries(self, search_string: str = "*",
                         starts_with: bool = True, ends_with: bool = False,
                         ignore_case: bool = False,
-                        anchor_domain: str = None,
+                        anchor_domain: Optional[str] = None,
                         metadata_element_type: str = "Glossary",
-                        metadata_element_subtypes: list[str] = None,
-                        skip_relationships: list[str] = None,
-                        include_only_relationships: list[str] = None,
-                        skip_classified_elements: list[str] = None,
-                        include_only_classified_elements: list[str] = None,
+                        metadata_element_subtypes: Optional[list[str]] = None,
+                        skip_relationships: Optional[list[str]] = None,
+                        include_only_relationships: Optional[list[str]] = None,
+                        skip_classified_elements: Optional[list[str]] = None,
+                        include_only_classified_elements: Optional[list[str]] = None,
                         graph_query_depth: int = 3,
-                        governance_zone_filter: list[str] = None, as_of_time: str = None,
-                        effective_time: str = None, relationship_page_size: int = 0,
-                        limit_results_by_status: list[str] = None, sequencing_order: str = None,
-                        sequencing_property: str = None,
+                        governance_zone_filter: Optional[list[str]] = None, as_of_time: Optional[str] = None,
+                        effective_time: Optional[str] = None, relationship_page_size: int = 0,
+                        limit_results_by_status: Optional[list[str]] = None, sequencing_order: Optional[str] = None,
+                        sequencing_property: Optional[str] = None,
                         output_format: str = "JSON",
                         report_spec: str | dict = None,
                         start_from: int = 0, page_size: int = 100,
-                        property_names: list[str] = None,
-                        body: dict | SearchStringRequestBody = None) -> list | str:
+                        property_names: Optional[list[str]] = None,
+                        body: Optional[dict | SearchStringRequestBody] = None) -> list | str:
         """ Retrieve the list of glossary metadata elements that contain the search string.
 
         Parameters
@@ -2910,16 +2910,16 @@ class GlossaryManager(CollectionManager):
                                                                   property_names=property_names,
                                                                   body=body))
 
-    async def _async_get_glossaries_by_name(self, filter_string: str = None, classification_names: list[str] = None,
-                                             body: dict | FilterRequestBody = None,
+    async def _async_get_glossaries_by_name(self, filter_string: Optional[str] = None, classification_names: Optional[list[str]] = None,
+                                             body: Optional[dict | FilterRequestBody] = None,
                                              start_from: int = 0, page_size: int = 0,
                                              output_format: str = 'JSON',
                                              report_spec: str | dict = None) -> dict | str:
         return await self._async_get_collections_by_name(filter_string, classification_names, body, start_from, page_size, output_format, report_spec)
 
 
-    def get_glossaries_by_name(self, filter_string: str = None, classification_names: list[str] = None,
-                                             body: dict | FilterRequestBody = None,
+    def get_glossaries_by_name(self, filter_string: Optional[str] = None, classification_names: Optional[list[str]] = None,
+                                             body: Optional[dict | FilterRequestBody] = None,
                                              start_from: int = 0, page_size: int = 0,
                                              output_format: str = 'JSON',
                                              report_spec: str | dict = None) -> dict | str:
@@ -2929,7 +2929,7 @@ class GlossaryManager(CollectionManager):
                                                output_format, report_spec))
         return response
 
-    async def _async_get_glossary_by_guid(self, glossary_guid: str, element_type: str = "Glossary", body: dict | GetRequestBody = None,
+    async def _async_get_glossary_by_guid(self, glossary_guid: str, element_type: str = "Glossary", body: Optional[dict | GetRequestBody] = None,
                                           output_format: str = "JSON", report_spec: str | dict = None) -> dict | str:
 
         return await self._async_get_collection_by_guid(glossary_guid, element_type, body, output_format, report_spec)
@@ -2945,8 +2945,8 @@ class GlossaryManager(CollectionManager):
 
 
 
-    async def _async_get_terms_by_name(self, filter_string: str = None, classification_names: list[str] = None,
-                                             body: dict | FilterRequestBody = None,
+    async def _async_get_terms_by_name(self, filter_string: Optional[str] = None, classification_names: Optional[list[str]] = None,
+                                             body: Optional[dict | FilterRequestBody] = None,
                                              start_from: int = 0, page_size: int = 0,
                                              output_format: str = 'JSON',
                                              report_spec: str | dict = None) -> list:
@@ -2961,8 +2961,8 @@ class GlossaryManager(CollectionManager):
                                                       body=body)
         return response
 
-    def get_terms_by_name(self, filter_string: str = None, classification_names: list[str] = None,
-                                             body: dict | FilterRequestBody = None,
+    def get_terms_by_name(self, filter_string: Optional[str] = None, classification_names: Optional[list[str]] = None,
+                                             body: Optional[dict | FilterRequestBody] = None,
                                              start_from: int = 0, page_size: int = 0,
                                              output_format: str = 'JSON',
                                              report_spec: str | dict = None) -> list:
@@ -2992,23 +2992,23 @@ class GlossaryManager(CollectionManager):
     async def _async_find_glossary_terms(self, search_string: str = "*",
                                          starts_with: bool = True, ends_with: bool = False,
                                          ignore_case: bool = False,
-                                         anchor_domain: str = None,
+                                         anchor_domain: Optional[str] = None,
                                          metadata_element_type: str = "GlossaryTerm",
-                                         metadata_element_subtypes: list[str] = None,
-                                         skip_relationships: list[str] = None,
-                                         include_only_relationships: list[str] = None,
-                                         skip_classified_elements: list[str] = None,
-                                         include_only_classified_elements: list[str] = None,
+                                         metadata_element_subtypes: Optional[list[str]] = None,
+                                         skip_relationships: Optional[list[str]] = None,
+                                         include_only_relationships: Optional[list[str]] = None,
+                                         skip_classified_elements: Optional[list[str]] = None,
+                                         include_only_classified_elements: Optional[list[str]] = None,
                                          graph_query_depth: int = 3,
-                                         governance_zone_filter: list[str] = None, as_of_time: str = None,
-                                         effective_time: str = None, relationship_page_size: int = 0,
-                                         limit_results_by_status: list[str] = None, sequencing_order: str = None,
-                                         sequencing_property: str = None,
+                                         governance_zone_filter: Optional[list[str]] = None, as_of_time: Optional[str] = None,
+                                         effective_time: Optional[str] = None, relationship_page_size: int = 0,
+                                         limit_results_by_status: Optional[list[str]] = None, sequencing_order: Optional[str] = None,
+                                         sequencing_property: Optional[str] = None,
                                          output_format: str = "JSON",
                                          report_spec: str | dict = "Glossary-Term-DrE",
                                          start_from: int = 0, page_size: int = 100,
-                                         property_names: list[str] = None,
-                                         body: dict | SearchStringRequestBody = None) -> list | str:
+                                         property_names: Optional[list[str]] = None,
+                                         body: Optional[dict | SearchStringRequestBody] = None) -> list | str:
         """ Retrieve the list of glossary term metadata elements that contain the search string. Async Version.
 
         Parameters
@@ -3110,23 +3110,23 @@ class GlossaryManager(CollectionManager):
     def find_glossary_terms(self, search_string: str = "*",
                             starts_with: bool = True, ends_with: bool = False,
                             ignore_case: bool = False,
-                            anchor_domain: str = None,
+                            anchor_domain: Optional[str] = None,
                             metadata_element_type: str = "GlossaryTerm",
-                            metadata_element_subtypes: list[str] = None,
-                            skip_relationships: list[str] = None,
-                            include_only_relationships: list[str] = None,
-                            skip_classified_elements: list[str] = None,
-                            include_only_classified_elements: list[str] = None,
+                            metadata_element_subtypes: Optional[list[str]] = None,
+                            skip_relationships: Optional[list[str]] = None,
+                            include_only_relationships: Optional[list[str]] = None,
+                            skip_classified_elements: Optional[list[str]] = None,
+                            include_only_classified_elements: Optional[list[str]] = None,
                             graph_query_depth: int = 3,
-                            governance_zone_filter: list[str] = None, as_of_time: str = None,
-                            effective_time: str = None, relationship_page_size: int = 0,
-                            limit_results_by_status: list[str] = None, sequencing_order: str = None,
-                            sequencing_property: str = None,
+                            governance_zone_filter: Optional[list[str]] = None, as_of_time: Optional[str] = None,
+                            effective_time: Optional[str] = None, relationship_page_size: int = 0,
+                            limit_results_by_status: Optional[list[str]] = None, sequencing_order: Optional[str] = None,
+                            sequencing_property: Optional[str] = None,
                             output_format: str = "JSON",
                             report_spec: str | dict = "Glossary-Term-DrE",
                             start_from: int = 0, page_size: int = 100,
-                            property_names: list[str] = None,
-                            body: dict | SearchStringRequestBody = None) -> list | str:
+                            property_names: Optional[list[str]] = None,
+                            body: Optional[dict | SearchStringRequestBody] = None) -> list | str:
         """ Retrieve the list of glossary term metadata elements that contain the search string.
 
         Parameters

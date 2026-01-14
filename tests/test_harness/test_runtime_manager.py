@@ -358,7 +358,7 @@ class TestRuntimeManager:
             token = r_client.create_egeria_bearer_token()
 
             start_time = time.perf_counter()
-            filter = "qs-view-server"
+            filter_string = "qs-view-server"
             # filter = "simple-metadata-store"
 
             response = r_client.get_servers_by_name(filter)
@@ -466,7 +466,7 @@ class TestRuntimeManager:
             token = r_client.create_egeria_bearer_token()
 
             start_time = time.perf_counter()
-            filter = "*"
+            filter_string = "*"
             response = r_client.get_servers_by_dep_impl_type(filter)
             duration = time.perf_counter() - start_time
             print(f"Type of response: {type(response)}")
@@ -499,7 +499,7 @@ class TestRuntimeManager:
             token = r_client.create_egeria_bearer_token()
 
             start_time = time.perf_counter()
-            filter = "*"
+            filter_string = "*"
             response = r_client.get_server_templates_by_dep_impl_type(filter)
             duration = time.perf_counter() - start_time
             print(f"Type of response: {type(response)}")

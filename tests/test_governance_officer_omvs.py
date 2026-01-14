@@ -317,7 +317,7 @@ class TestGovernanceOfficer:
         s_client = GovernanceOfficer(
             self.view_server, self.platform_url, self.user, self.password
             )
-        filter = "*"
+        filter_string = "*"
         s_client.create_egeria_bearer_token()
         start_time = time.perf_counter()
         response = s_client.find_governance_definitions(filter, output_format='DICT')
@@ -326,7 +326,7 @@ class TestGovernanceOfficer:
             print(f"Deleted {item['GUID']}")
 
     def test_find_governance_definitions(self):
-        filter = "PostgreSQLServer:CreateAndSurveyGovernanceActionProcess"
+        filter_string= "PostgreSQLServer:CreateAndSurveyGovernanceActionProcess"
         try:
             s_client = GovernanceOfficer(
                 self.view_server, self.platform_url, self.user, self.password
@@ -383,7 +383,7 @@ class TestGovernanceOfficer:
             s_client = GovernanceOfficer(
                 self.view_server, self.platform_url, self.user, self.password
             )
-            filter = "*"
+            filter_string = "*"
             s_client.create_egeria_bearer_token()
             start_time = time.perf_counter()
             response = s_client.find_governance_definitions(filter, output_format='DICT')

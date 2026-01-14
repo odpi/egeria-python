@@ -372,7 +372,7 @@ def glossary_group(ctx):
 )
 @click.option(
     "--output-format",
-    type=click.Choice(["FORM", "REPORT", "TABLE"]),
+    type_name = click.Choice(["FORM", "REPORT", "TABLE"]),
     default="TABLE",
     help="Display on screen as table, or as FORM or REPORT file",
     )
@@ -387,7 +387,7 @@ def show_terms(ctx, search_string, glossary_guid, glossary_name, output_format):
 @click.option("--search_string", default="*", help="Name to search for glossaries")
 @click.option(
     "--output-format",
-    type=click.Choice(["FORM", "REPORT", "TABLE"]),
+    type_name = click.Choice(["FORM", "REPORT", "TABLE"]),
     default="TABLE",
     help="Display on screen as table, or as FORM or REPORT file",
     )
@@ -409,7 +409,7 @@ def glossaries(ctx, search_string, output_format):
 @click.option("--search_string", default="*", help="Name to search for categories")
 @click.option(
     "--output-format",
-    type=click.Choice(["FORM", "REPORT", "TABLE"]),
+    type_name = click.Choice(["FORM", "REPORT", "TABLE"]),
     default="TABLE",
     help="Display on screen as table, or as FORM or REPORT file",
     )
@@ -534,7 +534,7 @@ def show_project_dependencies(ctx, project):
 @click.option("--search-string", default="*", help="View the list of To-Do items")
 @click.option(
     "--status",
-    type=click.Choice(
+    type_name = click.Choice(
         ["OPEN", "IN_PROGRESS", "WAITING", "COMPLETE", "ABANDONED", "None"],
         case_sensitive=False,
     ),

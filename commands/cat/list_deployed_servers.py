@@ -129,7 +129,7 @@ def main():
     url = args.url if args.url is not None else app_config.egeria_view_server_url
     userid = args.userid if args.userid is not None else EGERIA_USER
     user_pass = args.password if args.password is not None else EGERIA_USER_PASSWORD
-    filter = Prompt.ask(
+    filter_string = Prompt.ask(
         "Name of deployed server type", default="View Server"
     )
     display_servers_by_dep_imp(filter, server, url, userid, user_pass)

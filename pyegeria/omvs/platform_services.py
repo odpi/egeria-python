@@ -10,7 +10,7 @@ import asyncio
 import inspect
 
 import httpx
-
+from typing import Any, Optional
 from pyegeria.core._base_platform_client import BasePlatformClient
 from pyegeria.core._globals import enable_ssl_check
 from pyegeria.core._exceptions import (
@@ -49,8 +49,8 @@ class Platform(BasePlatformClient):
         server_name: str,
         platform_url: str,
         user_id: str,
-        user_pwd: str = None,
-        token: str = None,
+        user_pwd: Optional[str] = None,
+        token: Optional[str] = None,
     ):
         validate_user_id(
             user_id
@@ -122,7 +122,7 @@ class Platform(BasePlatformClient):
             )
 
     async def _async_activate_server_stored_config(
-        self, server: str = None, timeout: int = 60
+        self, server: Optional[str] = None, timeout: int = 60
     ) -> None:
         """Activate a server on the associated platform with the stored configuration. Async version.
 
@@ -151,7 +151,7 @@ class Platform(BasePlatformClient):
         await self._async_make_request("POST", url, time_out=timeout)
 
     def activate_server_stored_config(
-        self, server: str = None, timeout: int = 90
+        self, server: Optional[str] = None, timeout: int = 90
     ) -> None:
         """Activate a server on the associated platform with the stored configuration.
 
@@ -180,7 +180,7 @@ class Platform(BasePlatformClient):
         return response
 
     async def _async_activate_server_supplied_config(
-        self, config_body: dict, server: str = None, timeout: int = 60
+        self, config_body: dict, server: Optional[str] = None, timeout: int = 60
     ) -> None:
         """Activate a server on the associated platform with the stored configuration. Async version.
 
@@ -213,7 +213,7 @@ class Platform(BasePlatformClient):
         await self._async_make_request("POST", url, config_body, time_out=timeout)
 
     def activate_server_supplied_config(
-        self, config_body: dict, server: str = None, timeout: int = 60
+        self, config_body: dict, server: Optional[str] = None, timeout: int = 60
     ) -> None:
         """Activate a server on the associated platform with the stored configuration.
 
