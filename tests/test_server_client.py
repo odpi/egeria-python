@@ -23,8 +23,22 @@ view_url: str = app_config.egeria_view_server_url
 user: str = EGERIA_USER
 user_pass: str = EGERIA_USER_PASSWORD
 
+def test_get_platform_origin():
+    try:
+        client = ServerClient(view_server, view_url, user, user_pass)
+        client.create_egeria_bearer_token()
+
+        # response = client.get_platform_origin()
+        response = client.check_connection()
+        print(f"\n{response}\n")
+        assert True
+    except (PyegeriaException,PyegeriaAPIException) as e:
+        print_basic_exception(e)
+        assert False
+
+
 def test_add_archive_file():
-    server_display_name = "qs-metadata-server"
+    server_display_name = "qs-metadata-store"
 
     try:
         client = ServerClient(view_server, view_url, user, user_pass)
@@ -40,7 +54,6 @@ def test_add_archive_file():
 
 def test_get_guid_for_name():
     name = "PostgreSQL Server"
-
 
     try:
         client = ServerClient(view_server, view_url, user, user_pass)

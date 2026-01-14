@@ -250,7 +250,7 @@ class ServerClient(BaseServerClient):
 
             result = await self._async_make_request("POST", url, body_slimmer(body))
             return result.json().get("guid", NO_ELEMENTS_FOUND)
-
+# todo put in branch for "resourceName" and "identifier"
         if (not qualified_name) and display_name:
             if (tech_type) and (property_name == "qualifiedName"):
                 name = f"{tech_type}::{display_name}"
@@ -635,7 +635,7 @@ class ServerClient(BaseServerClient):
         return response
 
     async def _async_get_guid_for_name(
-            self, name: str, property_name: list[str] = ["qualifiedName", "displayName"],
+            self, name: str, property_name: list[str] = ["qualifiedName", "displayName", "resourceName","identifier"],
             type_name: str = None
 
     ) -> list | str:
@@ -675,7 +675,7 @@ class ServerClient(BaseServerClient):
         return elements
 
     def get_guid_for_name(
-            self, name: str, property_name: list[str] = ["qualifiedName", "displayName"],
+            self, name: str, property_name: list[str] = ["qualifiedName", "displayName","resourceName","identifier"],
             type_name: str = "ValidMetadataValue"
     ) -> list | str:
         """
