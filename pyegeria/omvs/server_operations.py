@@ -9,7 +9,7 @@ Copyright Contributors to the ODPi Egeria project.
 import asyncio
 
 from requests import Response
-
+from typing import Any, Optional
 from pyegeria.omvs.platform_services import Platform
 from pyegeria.core._validators import validate_name
 
@@ -35,8 +35,8 @@ class ServerOps(Platform):
         server_name: str,
         platform_url: str,
         user_id: str,
-        user_pwd: str = None,
-        token: str = None,
+        user_pwd: Optional[str] = None,
+        token: Optional[str] = None,
     ):
         Platform.__init__(self, server_name, platform_url, user_id, user_pwd, token=token)
         self.ops_command_root = (
@@ -90,7 +90,7 @@ class ServerOps(Platform):
     #   Archive Files
     #
     async def _async_add_archive_file(
-        self, archive_file: str, server: str = None, timeout: int = 60
+        self, archive_file: str, server: Optional[str] = None, timeout: int = 60
     ) -> None:
         """
         Load the server with the contents of the indicated archive file.
@@ -119,7 +119,7 @@ class ServerOps(Platform):
         await self._async_make_request("POST-DATA", url, archive_file,  time_out=timeout)
 
     def add_archive_file(
-        self, archive_file: str, server: str = None, timeout: int = 30
+        self, archive_file: str, server: Optional[str] = None, timeout: int = 30
     ) -> None:
         """
         Load the server with the contents of the indicated archive file.
@@ -430,7 +430,7 @@ class ServerOps(Platform):
         return response
 
     async def _async_refresh_integration_connectors(
-        self, connector_name: str = "all", server: str = None, time_out: int = 60
+        self, connector_name: str = "all", server: Optional[str] = None, time_out: int = 60
     ) -> None:
         """Issue a refresh request to all connectors running in the integration daemon, or a specific connector
         if one is specified - async version"""
@@ -452,7 +452,7 @@ class ServerOps(Platform):
         return
 
     def refresh_integration_connectors(
-        self, connector_name: str, server: str = None, time_out: int = 60
+        self, connector_name: str, server: Optional[str] = None, time_out: int = 60
     ) -> None:
         """Restart the integration Connector specified by connector_name"""
         loop = asyncio.get_event_loop()

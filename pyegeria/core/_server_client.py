@@ -13,7 +13,7 @@ import re
 import time
 from collections.abc import Callable
 from datetime import datetime
-from typing import Any
+from typing import Any, Optional
 
 from httpx import Response
 from loguru import logger
@@ -130,7 +130,7 @@ class ServerClient(BaseServerClient):
 
     Methods
     -------
-        create_egeria_bearer_token(user_Id: str, password: str = None) -> str
+        create_egeria_bearer_token(user_Id: str, password: Optional[str] = None) -> str
            Create a bearer token using the simple Egeria token service - store the bearer token in the object instance.
 
         refresh_egeria_bearer_token()-> None
@@ -155,11 +155,11 @@ class ServerClient(BaseServerClient):
             self,
             server_name: str,
             platform_url: str,
-            user_id: str = None,
-            user_pwd: str = None,
-            token: str = None,
-            token_src: str = None,
-            api_key: str = None,
+            user_id: Optional[str] = None,
+            user_pwd: Optional[str] = None,
+            token: Optional[str] = None,
+            token_src: Optional[str] = None,
+            api_key: Optional[str] = None,
             page_size: int = max_paging_size,
     ):
 
@@ -210,11 +210,11 @@ class ServerClient(BaseServerClient):
     # @logger.catch
     async def __async_get_guid__(
             self,
-            guid: str = None,
-            display_name: str = None,
+            guid: Optional[str] = None,
+            display_name: Optional[str] = None,
             property_name: str = "qualifiedName",
-            qualified_name: str = None,
-            tech_type: str = None,
+            qualified_name: Optional[str] = None,
+            tech_type: Optional[str] = None,
     ) -> str:
         """Helper function to return a server_guid - one of server_guid, qualified_name or display_name should
         contain information. If all are None, an exception will be thrown. If all contain
@@ -300,11 +300,11 @@ class ServerClient(BaseServerClient):
 
     def __get_guid__(
             self,
-            guid: str = None,
-            display_name: str = None,
+            guid: Optional[str] = None,
+            display_name: Optional[str] = None,
             property_name: str = "qualifiedName",
-            qualified_name: str = None,
-            tech_type: str = None,
+            qualified_name: Optional[str] = None,
+            tech_type: Optional[str] = None,
     ) -> str:
         """Helper function to return a server_guid - one of server_guid, qualified_name or display_name should
         contain information. If all are None, an exception will be thrown. If all contain
@@ -324,8 +324,8 @@ class ServerClient(BaseServerClient):
         )
         return result
 
-    def __create_qualified_name__(self, type: str, display_name: str, local_qualifier: str = None,
-                                  version_identifier: str = None) -> str:
+    def __create_qualified_name__(self, type_name: str, display_name: str, local_qualifier: Optional[str] = None,
+                                  version_identifier: Optional[str] = None) -> str:
         """Helper function to create a qualified name for a given type and display name.
            If present, the local qualifier will be prepended to the qualified name."""
         EGERIA_LOCAL_QUALIFIER = os.environ.get("EGERIA_LOCAL_QUALIFIER", local_qualifier)
@@ -355,9 +355,9 @@ class ServerClient(BaseServerClient):
             relationship_type: str,
             property_value: str,
             property_names: list[str],
-            effective_time: str = None,
-            for_lineage: bool = None,
-            for_duplicate_processing: bool = None,
+            effective_time: Optional[str] = None,
+            for_lineage: Optional[bool] = None,
+            for_duplicate_processing: Optional[bool] = None,
             start_from: int = 0,
             page_size: int = max_paging_size,
             time_out: int = default_time_out,
@@ -437,9 +437,9 @@ class ServerClient(BaseServerClient):
             relationship_type: str,
             property_value: str,
             property_names: list[str],
-            effective_time: str = None,
-            for_lineage: bool = None,
-            for_duplicate_processing: bool = None,
+            effective_time: Optional[str] = None,
+            for_lineage: Optional[bool] = None,
+            for_duplicate_processing: Optional[bool] = None,
             start_from: int = 0,
             page_size: int = max_paging_size,
             time_out: int = default_time_out,
@@ -506,10 +506,10 @@ class ServerClient(BaseServerClient):
             self,
             property_value: str,
             property_names: list[str],
-            metadata_element_type_name: str = None,
-            effective_time: str = None,
-            for_lineage: bool = None,
-            for_duplicate_processing: bool = None,
+            metadata_element_type_name: Optional[str] = None,
+            effective_time: Optional[str] = None,
+            for_lineage: Optional[bool] = None,
+            for_duplicate_processing: Optional[bool] = None,
             start_from: int = 0,
             page_size: int = 0,
             time_out: int = default_time_out,
@@ -581,10 +581,10 @@ class ServerClient(BaseServerClient):
             self,
             property_value: str,
             property_names: list[str],
-            metadata_element_type_name: str = None,
-            effective_time: str = None,
-            for_lineage: bool = None,
-            for_duplicate_processing: bool = None,
+            metadata_element_type_name: Optional[str] = None,
+            effective_time: Optional[str] = None,
+            for_lineage: Optional[bool] = None,
+            for_duplicate_processing: Optional[bool] = None,
             start_from: int = 0,
             page_size: int = 0,
             time_out: int = default_time_out,
@@ -784,11 +784,11 @@ class ServerClient(BaseServerClient):
             relationship_type: str,
             property_value: str,
             property_names: list[str],
-            metadata_element_type_name: str = None,
+            metadata_element_type_name: Optional[str] = None,
             start_at_end: int = 1,
-            effective_time: str = None,
-            for_lineage: bool = None,
-            for_duplicate_processing: bool = None,
+            effective_time: Optional[str] = None,
+            for_lineage: Optional[bool] = None,
+            for_duplicate_processing: Optional[bool] = None,
             start_from: int = 0,
             page_size: int = 0,
             time_out: int = default_time_out,
@@ -908,9 +908,9 @@ class ServerClient(BaseServerClient):
     async def _async_add_archive_file(
             self,
             archive_file: str,
-            server_guid: str = None,
-            display_name: str = None,
-            qualified_name: str = None,
+            server_guid: Optional[str] = None,
+            display_name: Optional[str] = None,
+            qualified_name: Optional[str] = None,
             time_out: int = 120,
     ) -> None:
         """Add a new open metadata archive to running OMAG Server's repository.
@@ -963,9 +963,9 @@ class ServerClient(BaseServerClient):
     def add_archive_file(
             self,
             archive_file: str,
-            server_guid: str = None,
-            display_name: str = None,
-            qualified_name: str = None,
+            server_guid: Optional[str] = None,
+            display_name: Optional[str] = None,
+            qualified_name: Optional[str] = None,
             time_out: int = 120,
     ) -> None:
         """Add a new open metadata archive to running OMAG Server's repository.
@@ -1022,7 +1022,7 @@ class ServerClient(BaseServerClient):
     async def _async_add_comment_to_element(
             self,
             element_guid: str,
-            comment: str = None,
+            comment: Optional[str] = None,
             comment_type: str = "STANDARD_COMMENT",
             body: dict = None,
     ) -> dict | str:
@@ -1074,7 +1074,7 @@ class ServerClient(BaseServerClient):
     def add_comment_to_element(
             self,
             element_guid: str,
-            comment: str = None,
+            comment: Optional[str] = None,
             comment_type: str = "STANDARD_COMMENT",
             body: dict = None,
     ) -> dict | str:
@@ -1111,9 +1111,9 @@ class ServerClient(BaseServerClient):
     async def _async_update_comment(
             self,
             comment_guid: str,
-            comment: str = None,
+            comment: Optional[str] = None,
             comment_type: str = "STANDARD_COMMENT",
-            body: dict | UpdateElementRequestBody = None,
+            body: Optional[dict | UpdateElementRequestBody] = None,
             merge_update: bool = True,
     ) -> None:
         """
@@ -1166,9 +1166,9 @@ class ServerClient(BaseServerClient):
     def update_comment(
             self,
             comment_guid: str,
-            comment: str = None,
+            comment: Optional[str] = None,
             comment_type: str = "STANDARD_COMMENT",
-            body: dict | UpdateElementRequestBody = None,
+            body: Optional[dict | UpdateElementRequestBody] = None,
             merge_update: bool = True,
     ) -> None:
         """
@@ -1325,7 +1325,7 @@ class ServerClient(BaseServerClient):
     async def _async_remove_comment_from_element(
             self,
             comment_guid: str,
-            body: dict | DeleteElementRequestBody = None,
+            body: Optional[dict | DeleteElementRequestBody] = None,
             cascade_delete: bool = False,
     ) -> None:
         """
@@ -1361,7 +1361,7 @@ class ServerClient(BaseServerClient):
     def remove_comment_from_element(
             self,
             comment_guid: str,
-            body: dict | DeleteElementRequestBody = None,
+            body: Optional[dict | DeleteElementRequestBody] = None,
             cascade_delete: bool = False,
 
     ) -> None:
@@ -1395,9 +1395,9 @@ class ServerClient(BaseServerClient):
     async def _async_get_comment_by_guid(
             self,
             comment_guid: str, element_type: str = "Comment",
-            body: dict | GetRequestBody = None,
+            body: Optional[dict | GetRequestBody] = None,
             output_format: str = "JSON",
-            report_spec: str | dict = None
+            report_spec: Optional[str | dict] = None
     ) -> dict | str:
         """
         Return the requested comment.
@@ -1435,9 +1435,9 @@ class ServerClient(BaseServerClient):
     def get_comment_by_guid(
             self,
             comment_guid: str, element_type: str = "Comment",
-            body: dict | GetRequestBody = None,
+            body: Optional[dict | GetRequestBody] = None,
             output_format: str = "JSON",
-            report_spec: str | dict = None
+            report_spec: Optional[str | dict] = None
     ) -> dict | str:
         """
         Return the requested comment.
@@ -1487,7 +1487,7 @@ class ServerClient(BaseServerClient):
             start_from: int = 0,
             page_size: int = 0,
             output_format: str = "JSON",
-            report_spec: str | dict = None
+            report_spec: Optional[str | dict] = None
 
     ) -> dict | str:
         """
@@ -1526,12 +1526,12 @@ class ServerClient(BaseServerClient):
 
     def get_attached_comments(
             self, element_guid: str,
-            element_type: str = None,
+            element_type: Optional[str] = None,
             body: dict = {},
             start_from: int = 0,
             page_size: int = 0,
             output_format: str = "JSON",
-            report_spec: str | dict = None
+            report_spec: Optional[str | dict] = None
     ) -> dict | str:
         """
         Return the comments attached to an element.
@@ -1580,17 +1580,17 @@ class ServerClient(BaseServerClient):
 
     async def _async_find_comments(
             self,
-            search_string: str = None,
-            classification_names: list[str] = None,
+            search_string: Optional[str] = None,
+            classification_names: Optional[list[str]] = None,
             metadata_element_subtypes: list[str] = ["Comment"],
-            starts_with: bool = None,
-            ends_with: bool = None,
-            ignore_case: bool = None,
+            starts_with: Optional[bool] = None,
+            ends_with: Optional[bool] = None,
+            ignore_case: Optional[bool] = None,
             start_from: int = 0,
             page_size: int = max_paging_size,
             output_format: str = "JSON",
-            report_spec: str | dict = None,
-            body: dict | SearchStringRequestBody = None
+            report_spec: Optional[str | dict] = None,
+            body: Optional[dict | SearchStringRequestBody] = None
     ) -> dict | str:
 
         """
@@ -1642,16 +1642,16 @@ class ServerClient(BaseServerClient):
 
     def find_comments(
             self,
-            search_string: str = None,
-            classification_names: list[str] = None, metadata_element_subtypes: list[str] = ["Comment"],
+            search_string: Optional[str] = None,
+            classification_names: Optional[list[str]] = None, metadata_element_subtypes: list[str] = ["Comment"],
             starts_with: bool = True,
             ends_with: bool = False,
             ignore_case: bool = False,
             start_from: int = 0,
             page_size: int = max_paging_size,
             output_format: str = "JSON",
-            report_spec: str | dict = None,
-            body: dict | SearchStringRequestBody = None
+            report_spec: Optional[str | dict] = None,
+            body: Optional[dict | SearchStringRequestBody] = None
     ) -> dict | str:
         """
         Return the list of comments containing the supplied string. Async Version.
@@ -1733,9 +1733,9 @@ class ServerClient(BaseServerClient):
     @dynamic_catch
     async def _async_create_note_log(
             self,
-            element_guid: str = None,
-            display_name: str = None,
-            description: str = None,
+            element_guid: Optional[str] = None,
+            display_name: Optional[str] = None,
+            description: Optional[str] = None,
             body: dict = None,
     ) -> str:
         """
@@ -1860,9 +1860,9 @@ class ServerClient(BaseServerClient):
     @dynamic_catch
     def create_note_log(
             self,
-            element_guid: str = None,
-            display_name: str = None,
-            description: str = None,
+            element_guid: Optional[str] = None,
+            display_name: Optional[str] = None,
+            description: Optional[str] = None,
             body: dict = None,
     ) -> str:
         """
@@ -1959,8 +1959,8 @@ class ServerClient(BaseServerClient):
     async def _async_update_note_log(
             self,
             note_log_guid: str,
-            display_name: str = None,
-            description: str = None,
+            display_name: Optional[str] = None,
+            description: Optional[str] = None,
             body: dict = None,
             merge_update: bool = True,
     ) -> None:
@@ -2033,8 +2033,8 @@ class ServerClient(BaseServerClient):
     def update_note_log(
             self,
             note_log_guid: str,
-            display_name: str = None,
-            description: str = None,
+            display_name: Optional[str] = None,
+            description: Optional[str] = None,
             body: dict = None,
             merge_update: bool = True,
     ) -> None:
@@ -2095,7 +2095,7 @@ class ServerClient(BaseServerClient):
     async def _async_remove_note_log(
             self,
             note_log_guid: str,
-            body: dict | DeleteElementRequestBody = None,
+            body: Optional[dict | DeleteElementRequestBody] = None,
             cascade_delete: bool = False,
     ) -> None:
         """
@@ -2127,7 +2127,7 @@ class ServerClient(BaseServerClient):
     def remove_note_log(
             self,
             note_log_guid: str,
-            body: dict | DeleteElementRequestBody = None,
+            body: Optional[dict | DeleteElementRequestBody] = None,
             cascade_delete: bool = False,
 
     ) -> None:
@@ -2160,16 +2160,16 @@ class ServerClient(BaseServerClient):
     async def _async_find_note_logs(
             self,
             search_string: str,
-            classification_names: list[str] = None,
+            classification_names: Optional[list[str]] = None,
             metadata_element_subtypes: list[str] = ["NoteLog"],
-            starts_with: bool = None,
-            ends_with: bool = None,
-            ignore_case: bool = None,
+            starts_with: Optional[bool] = None,
+            ends_with: Optional[bool] = None,
+            ignore_case: Optional[bool] = None,
             start_from: int = 0,
             page_size: int = max_paging_size,
             output_format: str = "JSON",
-            report_spec: str | dict = None,
-            body: dict | SearchStringRequestBody = None
+            report_spec: Optional[str | dict] = None,
+            body: Optional[dict | SearchStringRequestBody] = None
     ) -> dict | str:
 
         """
@@ -2238,14 +2238,14 @@ class ServerClient(BaseServerClient):
     def find_note_logs(
             self,
             search_string: str,
-            classification_names: list[str] = None, metadata_element_subtypes: list[str] = ["NoteLog"],
+            classification_names: Optional[list[str]] = None, metadata_element_subtypes: list[str] = ["NoteLog"],
             starts_with: bool = True,
             ends_with: bool = False,
             ignore_case: bool = False,
             start_from: int = 0,
             page_size: int = max_paging_size,
-            output_format: str = "JSON", report_spec: str | dict = None,
-            body: dict | SearchStringRequestBody = None
+            output_format: str = "JSON", report_spec: Optional[str | dict] = None,
+            body: Optional[dict | SearchStringRequestBody] = None
     ) -> dict | str:
         """
         Return the list of comments containing the supplied string. Async Version.
@@ -2296,11 +2296,11 @@ class ServerClient(BaseServerClient):
 
     @dynamic_catch
     async def _async_get_note_logs_by_name(
-            self, filter: str,
+            self, filter_string: str,
             element_type: str = "NoteLog",
-            body: dict | FilterRequestBody = None,
+            body: Optional[dict | FilterRequestBody] = None,
             output_format: str = "JSON",
-            report_spec: str | dict = None,
+            report_spec: Optional[str | dict] = None,
             start_from: int = 0, page_size: int = 0
     ) -> dict | str:
         """
@@ -2308,7 +2308,7 @@ class ServerClient(BaseServerClient):
 
         Parameters
         ----------
-        filter: str
+        filter_string : str
             - the name to filter on.
         element_type: str
             - NoteLog element type.
@@ -2336,11 +2336,11 @@ class ServerClient(BaseServerClient):
 
     @dynamic_catch
     def get_note_logs_by_name(
-            self, filter: str,
+            self, filter_string: str,
             element_type: str = "NoteLog",
-            body: dict | FilterRequestBody = None,
+            body: Optional[dict | FilterRequestBody] = None,
             output_format: str = "JSON",
-            report_spec: str | dict = None,
+            report_spec: Optional[str | dict] = None,
             start_from: int = 0, page_size: int = 0
     ) -> dict | str:
         """
@@ -2348,7 +2348,7 @@ class ServerClient(BaseServerClient):
 
         Parameters
         ----------
-        filter: str
+        filter_string : str
             - the name to filter on.
         element_type: str
             - NoteLog element type.
@@ -2380,7 +2380,7 @@ class ServerClient(BaseServerClient):
             start_from: int = 0,
             page_size: int = 0,
             output_format: str = "JSON",
-            report_spec: str | dict = None
+            report_spec: Optional[str | dict] = None
 
     ) -> dict | str:
         """
@@ -2420,12 +2420,12 @@ class ServerClient(BaseServerClient):
     @dynamic_catch
     def get_attached_note_logs(
             self, element_guid: str,
-            element_type: str = None,
+            element_type: Optional[str] = None,
             body: dict = None,
             start_from: int = 0,
             page_size: int = 0,
             output_format: str = "JSON",
-            report_spec: str | dict = None
+            report_spec: Optional[str | dict] = None
     ) -> dict | str:
         """
         Return the Note Logs attached to an element.
@@ -2467,8 +2467,8 @@ class ServerClient(BaseServerClient):
         return response
 
     @dynamic_catch
-    async def _async_create_note(self, note_log_guid: str, display_name: str = None, description: str = None,
-                                 associated_element: str = None, body: dict | NewElementRequestBody = None) -> str:
+    async def _async_create_note(self, note_log_guid: str, display_name: Optional[str] = None, description: Optional[str] = None,
+                                 associated_element: Optional[str] = None, body: Optional[dict | NewElementRequestBody] = None) -> str:
         """
         Creates a new note for a note log and returns the unique identifier for it. Async version.
 
@@ -2564,8 +2564,8 @@ class ServerClient(BaseServerClient):
     @dynamic_catch
     def create_note(
             self, note_log_guid:
-            str, display_name: str = None, description: str = None,
-            body: dict | NewElementRequestBody = None) -> str:
+            str, display_name: Optional[str] = None, description: Optional[str] = None,
+            body: Optional[dict | NewElementRequestBody] = None) -> str:
         """
         Creates a new note for a note log and returns the unique identifier for it.
     
@@ -2635,10 +2635,10 @@ class ServerClient(BaseServerClient):
         return response
 
     @dynamic_catch
-    async def _async_add_journal_entry(self, note_log_qn: str = None, element_qn: str =  None,
-                                       note_log_display_name: str = None, journal_entry_display_name: str = None,
-                                       note_entry: str = None,
-                                       body: dict | NewElementRequestBody = None) -> str:
+    async def _async_add_journal_entry(self, note_log_qn: Optional[str] = None, element_qn: str =  None,
+                                       note_log_display_name: Optional[str] = None, journal_entry_display_name: Optional[str] = None,
+                                       note_entry: Optional[str] = None,
+                                       body: Optional[dict | NewElementRequestBody] = None) -> str:
         """
         Creates a new journal entry for a note log and returns the unique identifier for it. The note_log will be
         created if it does not exist. Async version.
@@ -2738,10 +2738,10 @@ class ServerClient(BaseServerClient):
         return journal_entry_guid
 
     @dynamic_catch
-    def add_journal_entry(self, note_log_qn: str = None, element_qn: str = None,
-                           note_log_display_name: str = None, journal_entry_display_name: str = None,
-                          note_entry: str = None,
-                           body: dict | NewElementRequestBody = None) -> str:
+    def add_journal_entry(self, note_log_qn: Optional[str] = None, element_qn: Optional[str] = None,
+                           note_log_display_name: Optional[str] = None, journal_entry_display_name: Optional[str] = None,
+                          note_entry: Optional[str] = None,
+                           body: Optional[dict | NewElementRequestBody] = None) -> str:
         """
         Creates a new journal entry for a note log and returns the unique identifier for it. The note_log will be
         created if it does not exist.
@@ -2819,8 +2819,8 @@ class ServerClient(BaseServerClient):
 
 
     @dynamic_catch
-    async def _async_update_note(self, note_guid: str, display_name: str = None, description: str = None,
-                                 body: dict | UpdateElementRequestBody = None, merge_update: bool = True) -> None:
+    async def _async_update_note(self, note_guid: str, display_name: Optional[str] = None, description: Optional[str] = None,
+                                 body: Optional[dict | UpdateElementRequestBody] = None, merge_update: bool = True) -> None:
         """
         Update a note for a note log and returns the unique identifier for it. Async Version.
 
@@ -2902,8 +2902,8 @@ class ServerClient(BaseServerClient):
 
     @dynamic_catch
     def update_note(
-            self, note_guid: str, display_name: str = None, description: str = None,
-            body: dict | UpdateElementRequestBody = None, merge_update: bool = True) -> None:
+            self, note_guid: str, display_name: Optional[str] = None, description: Optional[str] = None,
+            body: Optional[dict | UpdateElementRequestBody] = None, merge_update: bool = True) -> None:
         """
         Update a note for a note log and returns the unique identifier for it. Async Version.
 
@@ -2974,7 +2974,7 @@ class ServerClient(BaseServerClient):
     async def _async_remove_note(
             self,
             note_guid: str,
-            body: dict | DeleteElementRequestBody = None,
+            body: Optional[dict | DeleteElementRequestBody] = None,
 
     ) -> None:
         """
@@ -3040,8 +3040,8 @@ class ServerClient(BaseServerClient):
     @dynamic_catch
     async def _async_find_notes(
             self,
-            search_string: str = None,
-            body: dict | SearchStringRequestBody = None,
+            search_string: Optional[str] = None,
+            body: Optional[dict | SearchStringRequestBody] = None,
             starts_with: bool = True,
             ends_with: bool = False,
             ignore_case: bool = False,
@@ -3092,8 +3092,8 @@ class ServerClient(BaseServerClient):
 
     @dynamic_catch
     def find_notes(
-            self, search_string: str = None,
-            body: dict | SearchStringRequestBody = None,
+            self, search_string: Optional[str] = None,
+            body: Optional[dict | SearchStringRequestBody] = None,
             starts_with: bool = True,
             ends_with: bool = False,
             ignore_case: bool = False,
@@ -3148,9 +3148,9 @@ class ServerClient(BaseServerClient):
     async def _async_get_note_by_guid(
             self,
             note_guid: str,
-            body: dict | GetRequestBody = None,
+            body: Optional[dict | GetRequestBody] = None,
             output_format: str = "JSON",
-            report_spec: str = None,
+            report_spec: Optional[str] = None,
     ) -> dict | str:
         """
         Retrieve the note metadata element with the supplied unique identifier.
@@ -3183,9 +3183,9 @@ class ServerClient(BaseServerClient):
     def get_note_by_guid(
             self,
             note_guid: str,
-            body: dict | GetRequestBody = None,
+            body: Optional[dict | GetRequestBody] = None,
             output_format: str = "JSON",
-            report_spec: str = None,
+            report_spec: Optional[str] = None,
     ) -> dict | str:
         """
         Retrieve the note metadata element with the supplied unique identifier.
@@ -3218,10 +3218,10 @@ class ServerClient(BaseServerClient):
     async def _async_get_notes_for_note_log(
             self,
             note_log_guid: str,
-            body: dict | ResultsRequestBody = None,
+            body: Optional[dict | ResultsRequestBody] = None,
             start_from: int = 0, page_size: int = 0,
             output_format: str = "JSON",
-            report_spec: str = None,
+            report_spec: Optional[str] = None,
     ) -> dict | str:
         """
         Retrieve the notes for the note_name.
@@ -3255,10 +3255,10 @@ class ServerClient(BaseServerClient):
     def get_notes_for_note_log(
             self,
             note_log_guid: str,
-            body: dict | ResultsRequestBody = None,
+            body: Optional[dict | ResultsRequestBody] = None,
             start_from: int = 0, page_size: int = 0,
             output_format: str = "JSON",
-            report_spec: str = None,
+            report_spec: Optional[str] = None,
     ) -> dict | str:
         """
          Retrieve the notes for the note_name.
@@ -3503,9 +3503,9 @@ class ServerClient(BaseServerClient):
     async def _async_get_tag_by_guid(
             self,
             tag_guid: str,
-            body: dict | GetRequestBody = None,
+            body: Optional[dict | GetRequestBody] = None,
             output_format: str = "json",
-            report_spec: str = None) -> dict | str:
+            report_spec: Optional[str] = None) -> dict | str:
         """
         Return the informal tag for the supplied unique identifier (tag_guid).
 
@@ -3545,9 +3545,9 @@ class ServerClient(BaseServerClient):
     def get_tag_by_guid(
             self,
             tag_guid: str,
-            body: dict | GetRequestBody = None,
+            body: Optional[dict | GetRequestBody] = None,
             output_format: str = "json",
-            report_spec: str = None,
+            report_spec: Optional[str] = None,
     ) -> dict | str:
         """
                 Return the informal tag for the supplied unique identifier (tag_guid).
@@ -3581,11 +3581,11 @@ class ServerClient(BaseServerClient):
     async def _async_get_tags_by_name(
             self,
             tag_name: str,
-            body: dict | FilterRequestBody = None,
+            body: Optional[dict | FilterRequestBody] = None,
             start_from: int = 0,
             page_size: int = 0,
             output_format: str = "json",
-            report_spec: str = None,
+            report_spec: Optional[str] = None,
     ) -> dict | str:
         """
         Return the tags exactly matching the supplied name. Async Version.
@@ -3621,11 +3621,11 @@ class ServerClient(BaseServerClient):
     def get_tags_by_name(
             self,
             tag_name: str,
-            body: dict | FilterRequestBody = None,
+            body: Optional[dict | FilterRequestBody] = None,
             start_from: int = 0,
             page_size: int = 0,
             output_format: str = "json",
-            report_spec: str = None,
+            report_spec: Optional[str] = None,
     ) -> dict | str:
         """
         Return the tags exactly matching the supplied name.
@@ -3664,13 +3664,13 @@ class ServerClient(BaseServerClient):
     @dynamic_catch
     async def _async_find_tags(
             self,
-            search_string: str = None,
-            body: dict | SearchStringRequestBody = None,
+            search_string: Optional[str] = None,
+            body: Optional[dict | SearchStringRequestBody] = None,
             starts_with: bool = True,
             ends_with: bool = False,
             ignore_case: bool = False,
             start_from: int = 0,
-            page_size: int = max_paging_size, output_format: str = "json", report_spec: str = None,
+            page_size: int = max_paging_size, output_format: str = "json", report_spec: Optional[str] = None,
 
     ) -> dict | str:
         """
@@ -3714,13 +3714,13 @@ class ServerClient(BaseServerClient):
     @dynamic_catch
     def find_tags(
             self,
-            search_string: str = None,
-            body: dict | SearchStringRequestBody = None,
+            search_string: Optional[str] = None,
+            body: Optional[dict | SearchStringRequestBody] = None,
             starts_with: bool = True,
             ends_with: bool = False,
             ignore_case: bool = False,
             start_from: int = 0,
-            page_size: int = max_paging_size, output_format: str = "json", report_spec: str = None,
+            page_size: int = max_paging_size, output_format: str = "json", report_spec: Optional[str] = None,
     ) -> dict | str:
         """
         Return the list of informal tags containing the supplied string in their name or description. The search string
@@ -3763,11 +3763,11 @@ class ServerClient(BaseServerClient):
 
     async def _async_find_my_tags(
             self,
-            search_string: str = None,
-            body: dict | SearchStringRequestBody = None,
-            starts_with: bool = None,
-            ends_with: bool = None,
-            ignore_case: bool = None,
+            search_string: Optional[str] = None,
+            body: Optional[dict | SearchStringRequestBody] = None,
+            starts_with: Optional[bool] = None,
+            ends_with: Optional[bool] = None,
+            ignore_case: Optional[bool] = None,
             start_from: int = 0,
             page_size: int = max_paging_size,
 
@@ -3807,11 +3807,11 @@ class ServerClient(BaseServerClient):
 
     def find_my_tags(
             self,
-            search_string: str = None,
-            body: dict | SearchStringRequestBody = None,
-            starts_with: bool = None,
-            ends_with: bool = None,
-            ignore_case: bool = None,
+            search_string: Optional[str] = None,
+            body: Optional[dict | SearchStringRequestBody] = None,
+            starts_with: Optional[bool] = None,
+            ends_with: Optional[bool] = None,
+            ignore_case: Optional[bool] = None,
             start_from: int = 0,
             page_size: int = max_paging_size,
 
@@ -3870,7 +3870,7 @@ class ServerClient(BaseServerClient):
             element_guid: str,
             tag_guid: str,
             is_public: bool = False,
-            body: dict | NewRelationshipRequestBody = None,
+            body: Optional[dict | NewRelationshipRequestBody] = None,
 
     ) -> None:
         """
@@ -3906,7 +3906,7 @@ class ServerClient(BaseServerClient):
             element_guid: str,
             tag_guid: str,
             is_public: bool = False,
-            body: dict | NewRelationshipRequestBody = None,
+            body: Optional[dict | NewRelationshipRequestBody] = None,
 
     ) -> dict | str:
         """
@@ -4203,7 +4203,7 @@ class ServerClient(BaseServerClient):
     async def _async_add_search_keyword_to_element(
             self,
             element_guid: str,
-            keyword: str = None,
+            keyword: Optional[str] = None,
             body: dict = None
     ) -> str:
         """
@@ -4260,7 +4260,7 @@ class ServerClient(BaseServerClient):
     def add_search_keyword_to_element(
             self,
             element_guid: str,
-            keyword: str = None,
+            keyword: Optional[str] = None,
             body: dict = None,
     ) -> str:
         """
@@ -4309,7 +4309,7 @@ class ServerClient(BaseServerClient):
     async def _async_update_search_keyword(
             self,
             keyword_guid: str,
-            body: dict | UpdateElementRequestBody = None,
+            body: Optional[dict | UpdateElementRequestBody] = None,
     ) -> str:
         """
        Update the properties of a search keyword. Async Version.
@@ -4351,7 +4351,7 @@ class ServerClient(BaseServerClient):
     def update_search_keyword(
             self,
             keyword_guid: str,
-            body: dict | UpdateElementRequestBody = None,
+            body: Optional[dict | UpdateElementRequestBody] = None,
     ) -> None:
         """
         Update the properties of a search keyword.
@@ -4522,7 +4522,7 @@ class ServerClient(BaseServerClient):
             page_size: int = 0,
             output_format: str | None = "JSON",
             report_spec: dict | str = None,
-            body: dict | FilterRequestBody = None
+            body: Optional[dict | FilterRequestBody] = None
     ) -> dict | str:
         """
         Return information about the specified search keyword. Async Version.
@@ -4554,7 +4554,7 @@ class ServerClient(BaseServerClient):
         if body is None and keyword:
             body = {
                 "class": "FilterRequestBody",
-                "filter": filter,
+                "filter": filter_string,
                 "startFrom": start_from,
                 "pageSize": page_size
             }
@@ -4572,7 +4572,7 @@ class ServerClient(BaseServerClient):
             page_size: int = 0,
             output_format: str | None = "JSON",
             report_spec: dict | str = None,
-            body: dict | FilterRequestBody = None
+            body: Optional[dict | FilterRequestBody] = None
     ) -> dict | str:
         """
         Return information about the specified search keyword.
@@ -4614,7 +4614,7 @@ class ServerClient(BaseServerClient):
             page_size: int = 0,
             output_format: str | None = "JSON",
             report_spec: dict | str = None,
-            body: dict | SearchStringRequestBody = None
+            body: Optional[dict | SearchStringRequestBody] = None
     ) -> dict | str:
         """
         Return the list of search keywords containing the supplied string. The search string is located in the request
@@ -4649,7 +4649,7 @@ class ServerClient(BaseServerClient):
         if body is None and search_string:
             body = {
                 "class": "SearchStringRequestBody",
-                "filter": filter,
+                "filter": filter_string,
                 "startFrom": start_from,
                 "pageSize": page_size
             }
@@ -4666,7 +4666,7 @@ class ServerClient(BaseServerClient):
             page_size: int = 0,
             output_format: str | None = "JSON",
             report_spec: dict | str = None,
-            body: dict | SearchStringRequestBody = None
+            body: Optional[dict | SearchStringRequestBody] = None
     ) -> dict | str:
         """
         Return the list of search keywords containing the supplied string. The search string is located in the request
@@ -4799,7 +4799,7 @@ class ServerClient(BaseServerClient):
 
     @dynamic_catch
     def validate_new_attachment_request(self, body: dict | NewAttachmentRequestBody,
-                                        prop: list[str] = None) -> NewAttachmentRequestBody | None:
+                                        prop: Optional[list[str]] = None) -> NewAttachmentRequestBody | None:
         if isinstance(body, NewAttachmentRequestBody):
             validated_body = body
 
@@ -4811,7 +4811,7 @@ class ServerClient(BaseServerClient):
 
     @dynamic_catch
     def validate_new_element_request(self, body: dict | NewElementRequestBody,
-                                     prop: list[str] = None) -> NewElementRequestBody | None:
+                                     prop: Optional[list[str]] = None) -> NewElementRequestBody | None:
         if isinstance(body, NewElementRequestBody):
             # if body.properties.class_ in prop:
             validated_body = body
@@ -4844,7 +4844,7 @@ class ServerClient(BaseServerClient):
 
     @dynamic_catch
     def validate_new_relationship_request(self, body: dict | NewRelationshipRequestBody,
-                                          prop: list[str] = None) -> NewRelationshipRequestBody | None:
+                                          prop: Optional[list[str]] = None) -> NewRelationshipRequestBody | None:
         if isinstance(body, NewRelationshipRequestBody):
             if (prop and body.properties.get("class") in prop) or (prop is None):
                 validated_body = body
@@ -4883,7 +4883,7 @@ class ServerClient(BaseServerClient):
         return validated_body
 
     @dynamic_catch
-    def validate_delete_element_request(self, body: dict | DeleteElementRequestBody = None,
+    def validate_delete_element_request(self, body: Optional[dict | DeleteElementRequestBody] = None,
                                         cascade_delete: bool = False) -> DeleteElementRequestBody | None:
         if isinstance(body, DeleteElementRequestBody):
             validated_body = body
@@ -4930,7 +4930,7 @@ class ServerClient(BaseServerClient):
 
     @dynamic_catch
     def validate_update_element_request(self, body: dict | UpdateElementRequestBody,
-                                        prop: list[str] = None) -> UpdateElementRequestBody | None:
+                                        prop: Optional[list[str]] = None) -> UpdateElementRequestBody | None:
         if isinstance(body, UpdateElementRequestBody):
             if prop is None or (isinstance(body.properties, dict) and body.properties.get("class") in prop):
                 validated_body = body
@@ -5019,45 +5019,45 @@ class ServerClient(BaseServerClient):
         return validated_body
 
     @dynamic_catch
-    async def _async_create_open_metadata_element_body_request(self, url: str, body: dict | NewOpenMetadataElementRequestBody = None) -> str:
+    async def _async_create_open_metadata_element_body_request(self, url: str, body: Optional[dict | NewOpenMetadataElementRequestBody] = None) -> str:
         validated_body = self.validate_new_open_metadata_element_request(body)
         response = await self._async_make_request("POST", url, validated_body.model_dump(by_alias=True, exclude_none=True))
         return response.json().get("guid")
 
     @dynamic_catch
-    async def _async_update_properties_body_request(self, url: str, body: dict | UpdatePropertiesRequestBody = None) -> None:
+    async def _async_update_properties_body_request(self, url: str, body: Optional[dict | UpdatePropertiesRequestBody] = None) -> None:
         validated_body = self.validate_update_properties_request(body)
         await self._async_make_request("POST", url, validated_body.model_dump(by_alias=True, exclude_none=True))
 
     @dynamic_catch
-    async def _async_metadata_source_body_request(self, url: str, body: dict | MetadataSourceRequestBody = None) -> None:
+    async def _async_metadata_source_body_request(self, url: str, body: Optional[dict | MetadataSourceRequestBody] = None) -> None:
         validated_body = self.validate_metadata_source_request(body)
         await self._async_make_request("POST", url, validated_body.model_dump(by_alias=True, exclude_none=True))
 
     @dynamic_catch
-    async def _async_update_effectivity_dates_body_request(self, url: str, body: dict | UpdateEffectivityDatesRequestBody = None) -> None:
+    async def _async_update_effectivity_dates_body_request(self, url: str, body: Optional[dict | UpdateEffectivityDatesRequestBody] = None) -> None:
         validated_body = self.validate_update_effectivity_dates_request(body)
         await self._async_make_request("POST", url, validated_body.model_dump(by_alias=True, exclude_none=True))
 
     @dynamic_catch
-    async def _async_open_metadata_delete_body_request(self, url: str, body: dict | OpenMetadataDeleteRequestBody = None) -> None:
+    async def _async_open_metadata_delete_body_request(self, url: str, body: Optional[dict | OpenMetadataDeleteRequestBody] = None) -> None:
         validated_body = self.validate_open_metadata_delete_request(body)
         await self._async_make_request("POST", url, validated_body.model_dump(by_alias=True, exclude_none=True))
 
     @dynamic_catch
-    async def _async_archive_body_request(self, url: str, body: dict | ArchiveRequestBody = None) -> None:
+    async def _async_archive_body_request(self, url: str, body: Optional[dict | ArchiveRequestBody] = None) -> None:
         validated_body = self.validate_archive_request(body)
         await self._async_make_request("POST", url, validated_body.model_dump(by_alias=True, exclude_none=True))
 
     @dynamic_catch
-    async def _async_create_related_elements_body_request(self, url: str, body: dict | NewRelatedElementsRequestBody = None) -> str:
+    async def _async_create_related_elements_body_request(self, url: str, body: Optional[dict | NewRelatedElementsRequestBody] = None) -> str:
         validated_body = self.validate_new_related_elements_request(body)
         response = await self._async_make_request("POST", url, validated_body.model_dump(by_alias=True, exclude_none=True))
         return response.json().get("guid")
 
     # @dynamic_catch
-    # def validate_update_status_request(self, status: str = None, body: dict | UpdateStatusRequestBody = None,
-    #                                    prop: list[str] = None) -> UpdateStatusRequestBody | None:
+    # def validate_update_status_request(self, status: Optional[str] = None, body: Optional[dict | UpdateStatusRequestBody] = None,
+    #                                    prop: Optional[list[str]] = None) -> UpdateStatusRequestBody | None:
     #     if isinstance(body, UpdateStatusRequestBody):
     #         validated_body = body
     #
@@ -5098,21 +5098,21 @@ class ServerClient(BaseServerClient):
     @dynamic_catch
     async def _async_find_request(self, url: str, _type: str, _gen_output: Callable[..., Any], search_string: str,
                                   starts_with: bool = True, ends_with: bool = False, ignore_case: bool = False,
-                                  anchor_domain: str = None,
-                                  metadata_element_type: str = None,
-                                  metadata_element_subtypes: list[str] = None,
-                                  skip_relationships: list[str] = None,
-                                  include_only_relationships: list[str] = None,
-                                  skip_classified_elements: list[str] = None,
-                                  include_only_classified_elements: list[str] = None,
+                                  anchor_domain: Optional[str] = None,
+                                  metadata_element_type: Optional[str] = None,
+                                  metadata_element_subtypes: Optional[list[str]] = None,
+                                  skip_relationships: Optional[list[str]] = None,
+                                  include_only_relationships: Optional[list[str]] = None,
+                                  skip_classified_elements: Optional[list[str]] = None,
+                                  include_only_classified_elements: Optional[list[str]] = None,
                                   graph_query_depth: int = 3,
-                                  governance_zone_filter: list[str] = None, as_of_time: str = None,
-                                  effective_time: str = None, relationship_page_size: int = 0,
-                                  limit_results_by_status: list[str] = None, sequencing_order: str = None,
-                                  sequencing_property: str = None,
-                                  output_format: str = None, report_spec: str | dict = None,
+                                  governance_zone_filter: Optional[list[str]] = None, as_of_time: Optional[str] = None,
+                                  effective_time: Optional[str] = None, relationship_page_size: int = 0,
+                                  limit_results_by_status: Optional[list[str]] = None, sequencing_order: Optional[str] = None,
+                                  sequencing_property: Optional[str] = None,
+                                  output_format: Optional[str] = None, report_spec: Optional[str | dict] = None,
                                   start_from: int = 0, page_size: int | None = 100,
-                                  property_names: list[str] = None,
+                                  property_names: Optional[list[str]] = None,
                                   body: dict | SearchStringRequestBody | FindPropertyNamesRequestBody = None) -> Any:
 
         if isinstance(body, (SearchStringRequestBody, FindPropertyNamesRequestBody)):
@@ -5193,10 +5193,10 @@ class ServerClient(BaseServerClient):
 
     @dynamic_catch
     async def _async_get_name_request(self, url: str, _type: str, _gen_output: Callable[..., Any],
-                                      filter_string: str, classification_names: list[str] = None,
+                                      filter_string: str, classification_names: Optional[list[str]] = None,
                                       start_from: int = 0, page_size: int = 0, output_format: str = 'JSON',
-                                      report_spec: str | dict = None,
-                                      body: dict | FilterRequestBody = None) -> Any:
+                                      report_spec: Optional[str | dict] = None,
+                                      body: Optional[dict | FilterRequestBody] = None) -> Any:
 
         if isinstance(body, FilterRequestBody):
             validated_body = body
@@ -5233,8 +5233,8 @@ class ServerClient(BaseServerClient):
 
     @dynamic_catch
     async def _async_get_guid_request(self, url: str, _type: str, _gen_output: Callable[..., Any],
-                                      output_format: str = 'JSON', report_spec: str | dict = None,
-                                      body: dict | GetRequestBody = None) -> Any:
+                                      output_format: str = 'JSON', report_spec: Optional[str | dict] = None,
+                                      body: Optional[dict | GetRequestBody] = None) -> Any:
 
         if isinstance(body, GetRequestBody):
             validated_body = body
@@ -5266,8 +5266,8 @@ class ServerClient(BaseServerClient):
     @dynamic_catch
     async def _async_get_results_body_request(self, url: str, _type: str, _gen_output: Callable[..., Any],
                                               start_from: int = 0, page_size: int = 0, output_format: str = 'JSON',
-                                              report_spec: str | dict = None,
-                                              body: dict | ResultsRequestBody = None) -> Any:
+                                              report_spec: Optional[str | dict] = None,
+                                              body: Optional[dict | ResultsRequestBody] = None) -> Any:
         """Handles request; returns elements or formatted output"""
         if isinstance(body, ResultsRequestBody):
             validated_body = body
@@ -5301,8 +5301,8 @@ class ServerClient(BaseServerClient):
     @dynamic_catch
     async def _async_get_level_identifier_query_body_request(self, url: str, _gen_output: Callable[..., Any],
                                                              output_format: str = 'JSON',
-                                                             report_spec: str | dict = None,
-                                                             body: dict | ResultsRequestBody = None) -> Any:
+                                                             report_spec: Optional[str | dict] = None,
+                                                             body: Optional[dict | ResultsRequestBody] = None) -> Any:
         if isinstance(body, LevelIdentifierQueryBody):
             validated_body = body
         elif isinstance(body, dict):
@@ -5328,8 +5328,8 @@ class ServerClient(BaseServerClient):
         return elements
 
     @dynamic_catch
-    async def _async_create_attachment_body_request(self, url: str, prop: list[str] = None,
-                                                    body: dict | NewAttachmentRequestBody = None) -> str:
+    async def _async_create_attachment_body_request(self, url: str, prop: Optional[list[str]] = None,
+                                                    body: Optional[dict | NewAttachmentRequestBody] = None) -> str:
         validated_body = self.validate_new_attachment_request(body, prop)
         json_body = validated_body.model_dump_json(indent=2, exclude_none=True)
         logger.info(json_body)
@@ -5338,8 +5338,8 @@ class ServerClient(BaseServerClient):
         return response.json().get("guid", "NO_GUID_RETURNED")
 
     @dynamic_catch
-    async def _async_create_element_body_request(self, url: str, prop: list[str] = None,
-                                                 body: dict | NewElementRequestBody = None) -> str:
+    async def _async_create_element_body_request(self, url: str, prop: Optional[list[str]] = None,
+                                                 body: Optional[dict | NewElementRequestBody] = None) -> str:
         validated_body = self.validate_new_element_request(body, prop)
         json_body = validated_body.model_dump_json(indent=2, exclude_none=True)
         logger.info(json_body)
@@ -5348,7 +5348,7 @@ class ServerClient(BaseServerClient):
         return response.json().get("guid", "NO_GUID_RETURNED")
 
     @dynamic_catch
-    async def _async_create_element_from_template(self, url: str, body: dict | TemplateRequestBody = None) -> str:
+    async def _async_create_element_from_template(self, url: str, body: Optional[dict | TemplateRequestBody] = None) -> str:
         validated_body = self.validate_new_element_from_template_request(body)
         json_body = validated_body.model_dump_json(indent=2, exclude_none=True)
         logger.info(json_body)
@@ -5357,8 +5357,8 @@ class ServerClient(BaseServerClient):
         return response.json().get("guid", "NO_GUID_RETURNED")
 
     @dynamic_catch
-    async def _async_update_element_body_request(self, url: str, prop: list[str] = None,
-                                                 body: dict | UpdateElementRequestBody = None) -> None:
+    async def _async_update_element_body_request(self, url: str, prop: Optional[list[str]] = None,
+                                                 body: Optional[dict | UpdateElementRequestBody] = None) -> None:
         validated_body = self.validate_update_element_request(body, prop)
         json_body = validated_body.model_dump_json(indent=2, exclude_none=True)
         logger.info(json_body)
@@ -5366,8 +5366,8 @@ class ServerClient(BaseServerClient):
         logger.info(response.json())
 
     # @dynamic_catch
-    # async def _async_update_status_request(self, url: str, status: str = None,
-    #                                        body: dict | UpdateStatusRequestBody = None) -> None:
+    # async def _async_update_status_request(self, url: str, status: Optional[str] = None,
+    #                                        body: Optional[dict | UpdateStatusRequestBody] = None) -> None:
     #     validated_body = self.validate_update_status_request(status, body)
     #     json_body = validated_body.model_dump_json(indent=2, exclude_none=True)
     #     logger.info(json_body)
@@ -5375,8 +5375,8 @@ class ServerClient(BaseServerClient):
     #     logger.info(response.json())
 
     @dynamic_catch
-    async def _async_new_relationship_request(self, url: str, prop: list[str] = None,
-                                              body: dict | NewRelationshipRequestBody = None) -> None:
+    async def _async_new_relationship_request(self, url: str, prop: Optional[list[str]] = None,
+                                              body: Optional[dict | NewRelationshipRequestBody] = None) -> None:
         validated_body = self.validate_new_relationship_request(body, prop)
         if validated_body:
             json_body = validated_body.model_dump_json(indent=2, exclude_none=True)
@@ -5386,8 +5386,8 @@ class ServerClient(BaseServerClient):
             await self._async_make_request("POST", url)
 
     @dynamic_catch
-    async def _async_new_classification_request(self, url: str, prop: list[str] = None,
-                                                body: dict | NewClassificationRequestBody = None) -> None:
+    async def _async_new_classification_request(self, url: str, prop: Optional[list[str]] = None,
+                                                body: Optional[dict | NewClassificationRequestBody] = None) -> None:
         validated_body = self.validate_new_classification_request(body, prop)
         if validated_body:
             json_body = validated_body.model_dump_json(indent=2, exclude_none=True)
@@ -5397,7 +5397,7 @@ class ServerClient(BaseServerClient):
             await self._async_make_request("POST", url)
 
     @dynamic_catch
-    async def _async_delete_element_request(self, url: str, body: dict | DeleteElementRequestBody = None,
+    async def _async_delete_element_request(self, url: str, body: Optional[dict | DeleteElementRequestBody] = None,
                                             cascade_delete: bool = False) -> None:
         if body:
             validated_body = self.validate_delete_element_request(body, cascade_delete)
@@ -5409,7 +5409,7 @@ class ServerClient(BaseServerClient):
             await self._async_make_request("POST", url)
 
     @dynamic_catch
-    async def _async_delete_relationship_request(self, url: str, body: dict | DeleteRelationshipRequestBody = None,
+    async def _async_delete_relationship_request(self, url: str, body: Optional[dict | DeleteRelationshipRequestBody] = None,
                                                  cascade_delete: bool = False) -> None:
         validated_body = self.validate_delete_relationship_request(body, cascade_delete)
         if validated_body:
@@ -5420,7 +5420,7 @@ class ServerClient(BaseServerClient):
             await self._async_make_request("POST", url)
 
     @dynamic_catch
-    async def _async_delete_classification_request(self, url: str, body: dict | DeleteClassificationRequestBody = None,
+    async def _async_delete_classification_request(self, url: str, body: Optional[dict | DeleteClassificationRequestBody] = None,
                                                    cascade_delete: bool = False) -> None:
         validated_body = self.validate_delete_classification_request(body, cascade_delete)
         if validated_body:
@@ -5431,8 +5431,8 @@ class ServerClient(BaseServerClient):
             await self._async_make_request("POST", url)
 
     @dynamic_catch
-    async def _async_update_relationship_request(self, url: str, prop: list[str] = None,
-                                                 body: dict | UpdateRelationshipRequestBody = None) -> None:
+    async def _async_update_relationship_request(self, url: str, prop: Optional[list[str]] = None,
+                                                 body: Optional[dict | UpdateRelationshipRequestBody] = None) -> None:
         validated_body = self.validate_update_relationship_request(body, prop)
         if validated_body:
             json_body = validated_body.model_dump_json(indent=2, exclude_none=True)
@@ -5442,8 +5442,8 @@ class ServerClient(BaseServerClient):
             await self._async_make_request("POST", url)
 
     # @dynamic_catch
-    # async def _async_update_element_status(self, guid: str, status: str = None,
-    #                                        body: dict | UpdateStatusRequestBody = None) -> None:
+    # async def _async_update_element_status(self, guid: str, status: Optional[str] = None,
+    #                                        body: Optional[dict | UpdateStatusRequestBody] = None) -> None:
     #     """ Update the status of an element. Async version.
     #
     #        Parameters
@@ -5484,8 +5484,8 @@ class ServerClient(BaseServerClient):
     #     await self._async_update_status_request(url, status, body)
     #
     # @dynamic_catch
-    # def update_element_status(self, guid: str, status: str = None,
-    #                           body: dict | UpdateStatusRequestBody = None) -> None:
+    # def update_element_status(self, guid: str, status: Optional[str] = None,
+    #                           body: Optional[dict | UpdateStatusRequestBody] = None) -> None:
     #     """ Update the status of an element. Async version.
     #
     #        Parameters
@@ -5524,7 +5524,7 @@ class ServerClient(BaseServerClient):
     #     loop.run_until_complete(self._async_update_element_status(guid, status, body))
 
     @dynamic_catch
-    async def _async_update_element_effectivity(self, guid: str, effectivity_time: str = None,
+    async def _async_update_element_effectivity(self, guid: str, effectivity_time: Optional[str] = None,
                                                 body: dict = None) -> None:
         """ Update the status of an element. Async version.
 
@@ -5572,7 +5572,7 @@ class ServerClient(BaseServerClient):
         await self._async_make_request("POST", url, body)
 
     @dynamic_catch
-    def update_element_effectivity(self, guid: str, status: str = None,
+    def update_element_effectivity(self, guid: str, status: Optional[str] = None,
                                    body: dict = None) -> None:
         """ Update the status of an element. Async version.
 
@@ -5646,7 +5646,7 @@ class ServerClient(BaseServerClient):
         return await self._async_create_element_body_request(url, asset_type, body)
 
     @dynamic_catch
-    def create_asset(self, asset_type: list[str] = None, body: dict | NewElementRequestBody | None = None) -> str:
+    def create_asset(self, asset_type: Optional[list[str]] = None, body: dict | NewElementRequestBody | None = None) -> str:
         """Create an asset.
 
         Parameters
@@ -5838,15 +5838,15 @@ class ServerClient(BaseServerClient):
 
     @dynamic_catch
     async def _async_find_assets(self, search_string: str = "*", starts_with: bool = False, ends_with: bool = False,
-                                 ignore_case: bool = True, anchor_domain: str = None, metadata_element_type: str = None,
-                                 metadata_element_subtypes: list[str] = None, skip_relationships: list[str] = None,
-                                 include_only_relationships: list[str] = None,
-                                 skip_classified_elements: list[str] = None,
-                                 include_only_classified_elements: list[str] = None, graph_query_depth: int = 3,
-                                 governance_zone_filter: list[str] = None, as_of_time: str = None,
-                                 effective_time: str = None, relationship_page_size: int = 0,
-                                 limit_results_by_status: list[str] = None, sequencing_order: str = None,
-                                 sequencing_property: str = None, output_format: str = "DICT",
+                                 ignore_case: bool = True, anchor_domain: Optional[str] = None, metadata_element_type: Optional[str] = None,
+                                 metadata_element_subtypes: Optional[list[str]] = None, skip_relationships: Optional[list[str]] = None,
+                                 include_only_relationships: Optional[list[str]] = None,
+                                 skip_classified_elements: Optional[list[str]] = None,
+                                 include_only_classified_elements: Optional[list[str]] = None, graph_query_depth: int = 3,
+                                 governance_zone_filter: Optional[list[str]] = None, as_of_time: Optional[str] = None,
+                                 effective_time: Optional[str] = None, relationship_page_size: int = 0,
+                                 limit_results_by_status: Optional[list[str]] = None, sequencing_order: Optional[str] = None,
+                                 sequencing_property: Optional[str] = None, output_format: str = "DICT",
                                  report_spec: dict | str | None = None, start_from: int = 0, page_size: int = 0,
                                  body: dict | SearchStringRequestBody | None = None) -> list | dict | str:
         """Retrieve the list of asset metadata elements that contain the search string. Async version.
@@ -5919,13 +5919,13 @@ class ServerClient(BaseServerClient):
 
     @dynamic_catch
     def find_assets(self, search_string: str = "*", starts_with: bool = False, ends_with: bool = False,
-                    ignore_case: bool = True, anchor_domain: str = None, metadata_element_type: str = None,
-                    metadata_element_subtypes: list[str] = None, skip_relationships: list[str] = None,
-                    include_only_relationships: list[str] = None, skip_classified_elements: list[str] = None,
-                    include_only_classified_elements: list[str] = None, graph_query_depth: int = 3,
-                    governance_zone_filter: list[str] = None, as_of_time: str = None, effective_time: str = None,
-                    relationship_page_size: int = 0, limit_results_by_status: list[str] = None,
-                    sequencing_order: str = None, sequencing_property: str = None, output_format: str = "DICT",
+                    ignore_case: bool = True, anchor_domain: Optional[str] = None, metadata_element_type: Optional[str] = None,
+                    metadata_element_subtypes: Optional[list[str]] = None, skip_relationships: Optional[list[str]] = None,
+                    include_only_relationships: Optional[list[str]] = None, skip_classified_elements: Optional[list[str]] = None,
+                    include_only_classified_elements: Optional[list[str]] = None, graph_query_depth: int = 3,
+                    governance_zone_filter: Optional[list[str]] = None, as_of_time: Optional[str] = None, effective_time: Optional[str] = None,
+                    relationship_page_size: int = 0, limit_results_by_status: Optional[list[str]] = None,
+                    sequencing_order: Optional[str] = None, sequencing_property: Optional[str] = None, output_format: str = "DICT",
                     report_spec: dict | str | None = None, start_from: int = 0, page_size: int = 0,
                     body: dict | SearchStringRequestBody | None = None) -> list | dict | str:
         """Retrieve the list of asset metadata elements that contain the search string.

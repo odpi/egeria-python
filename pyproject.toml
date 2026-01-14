@@ -41,6 +41,7 @@ dependencies = [
     "pytest-asyncio>=1.2.0",
     "python-dotenv>=1.1.1",
     "pytest>=8.4.2",
+    "optional>=0.0.1",
 ]
 
 [project.scripts]

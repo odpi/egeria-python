@@ -305,14 +305,23 @@ def populate_columns_from_properties(element: dict, columns_struct: dict) -> dic
     if not isinstance(columns, list):
         return columns_struct
 
+    # Pre-compute snake_case to camelCase mapping for all columns (cache for performance)
+    key_mapping = {}
+    for col in columns:
+        if isinstance(col, dict):
+            key_snake = col.get('key')
+            if key_snake:
+                key_mapping[key_snake] = to_camel_case(key_snake)
+
+    # Single pass to populate values
     for col in columns:
         try:
             key_snake = col.get('key') if isinstance(col, dict) else None
             if not key_snake:
                 continue
-            # Convert the snake_case key to camelCase to look up in properties
-            key_camel = to_camel_case(key_snake)
-            if key_camel in props:
+            # Use pre-computed camelCase key
+            key_camel = key_mapping.get(key_snake)
+            if key_camel and key_camel in props:
                 col['value'] = props.get(key_camel)
         except Exception as e:
             # Be resilient; log and continue
@@ -369,10 +378,12 @@ def populate_feedback(element: dict, columns_struct: dict) -> dict:
 
     return columns_struct
 
-
 def get_required_relationships(element: dict, columns_struct: dict) -> dict:
     """
     Populate relationship-derived column values in columns_struct based on top-level keys in the element.
+    
+    NOTE: This function is now a lightweight wrapper around the optimized logic in populate_common_columns.
+    For best performance, use populate_common_columns directly with include_relationships=True.
 
     This function inspects the requested columns in columns_struct, converts each column key from
     snake_case to camelCase, and if a matching top-level key exists in the element, parses that value
@@ -399,73 +410,50 @@ def get_required_relationships(element: dict, columns_struct: dict) -> dict:
     if not isinstance(columns, list):
         return columns_struct
 
-    def _extract_name_from_item(item: Any) -> Optional[str]:
-        """Best-effort extraction of a display/qualified name from a relationship item."""
-        try:
-            if isinstance(item, dict):
-                # Common pattern: item['relatedElement']['properties']['qualifiedName']
-                related = item.get('relatedElement') or item.get('related_element')
-                if isinstance(related, dict):
-                    props = related.get('properties') or {}
-                    name = (
-                        props.get('qualifiedName')
-                        or props.get('displayName')
-                        or props.get('name')
-                    )
-                    if name:
-                        return name
-                # Sometimes the properties may be at the top level of the item
-                name = (
-                    item.get('qualifiedName')
-                    or item.get('displayName')
-                    or item.get('name')
-                )
-                if name:
-                    return name
-            elif isinstance(item, str):
-                return item
-        except Exception as e:
-            logger.debug(f"get_required_relationships: error extracting name from item: {e}")
-        return None
-
+    # Pre-compute relationship values for efficiency
+    relationship_values = {}
     for col in columns:
-        try:
-            if not isinstance(col, dict):
-                continue
-            key_snake = col.get('key')
-            if not key_snake:
-                continue
-            # If already has a non-empty value, don't overwrite
-            if col.get('value') not in (None, ""):
-                continue
-
-            # Convert the snake_case key to camelCase to look up in top-level element
-            key_camel = to_camel_case(key_snake)
-            if key_camel not in element:
-                continue
-
-            top_val = element.get(key_camel)
-            derived_value: str = ""
-            if isinstance(top_val, list):
-                names: List[str] = []
-                for item in top_val:
-                    nm = _extract_name_from_item(item)
-                    if nm:
-                        names.append(nm)
-                derived_value = ", ".join(names)
-            elif isinstance(top_val, dict):
-                nm = _extract_name_from_item(top_val)
-                derived_value = nm or ""
-            else:
-                # Primitive or unexpected type; coerce to string if not None
-                derived_value = str(top_val) if top_val is not None else ""
-
-            col['value'] = derived_value
-        except Exception as e:
-            logger.debug(f"get_required_relationships: skipping column due to error: {e}")
+        if not isinstance(col, dict):
+            continue
+        key_snake = col.get('key')
+        if not key_snake:
+            continue
+        # If already has a non-empty value, don't overwrite
+        if col.get('value') not in (None, ""):
+            continue
+            
+        key_camel = to_camel_case(key_snake)
+        if key_camel not in element:
             continue
 
+        top_val = element.get(key_camel)
+        derived_value = ""
+        if isinstance(top_val, list):
+            names = []
+            for item in top_val:
+                nm = _extract_name_from_relationship_item(item)
+                if nm:
+                    names.append(nm)
+            derived_value = ", ".join(names)
+        elif isinstance(top_val, dict):
+            nm = _extract_name_from_relationship_item(top_val)
+            derived_value = nm or ""
+        else:
+            derived_value = str(top_val) if top_val is not None else ""
+        
+        if derived_value:
+            relationship_values[key_snake] = derived_value
+
+    # Apply the values
+    for col in columns:
+        if isinstance(col, dict):
+            key = col.get('key')
+            if key and key in relationship_values and col.get('value') in (None, ""):
+                col['value'] = relationship_values[key]
+
     return columns_struct
+
+
 
 
 def generate_entity_md(elements: List[Dict], 
@@ -596,12 +584,12 @@ def generate_entity_md(elements: List[Dict],
 
     return elements_md
 
-def generate_entity_md_table(elements: List[Dict], 
-                            search_string: str, 
-                            entity_type: str, 
+def generate_entity_md_table(elements: List[Dict],
+                            search_string: str,
+                            entity_type: str,
                             extract_properties_func: Callable,
                             columns_struct: dict,
-                            get_additional_props_func: Optional[Callable] = None, 
+                            get_additional_props_func: Optional[Callable] = None,
                             output_format: str = 'LIST') -> str:
     """
     Generic method to generate a markdown table for entities.
@@ -648,13 +636,19 @@ def generate_entity_md_table(elements: List[Dict],
     elements_md += header_row + "\n"
     elements_md += separator_row + "\n"
 
-
     for element in elements:
         guid = element.get('elementHeader', {}).get('guid', None)
 
         # Extractor returns columns_struct with values when possible
-        # Use a local copy of columns_struct to prevent data leakage between rows
-        local_columns_struct = copy.deepcopy(columns_struct)
+        # Use shallow copy and reset only column values for performance
+        local_columns_struct = columns_struct.copy()
+        if 'formats' in local_columns_struct and 'attributes' in local_columns_struct['formats']:
+            # Create new list of columns with reset values
+            local_columns_struct['formats'] = local_columns_struct['formats'].copy()
+            local_columns_struct['formats']['attributes'] = [
+                {**col, 'value': None} if isinstance(col, dict) else col
+                for col in local_columns_struct['formats']['attributes']
+            ]
         try:
             returned_struct = extract_properties_func(element, local_columns_struct)
         except TypeError:
@@ -747,8 +741,17 @@ def generate_entity_dict(elements: List[Dict],
 
         guid = element.get('elementHeader', {}).get('guid')
 
-        # Work on a per-element deep copy of the columns structure to avoid value leakage across rows
-        local_columns_struct = copy.deepcopy(columns_struct) if columns_struct is not None else None
+        # Use shallow copy and reset only column values for performance
+        local_columns_struct = None
+        if columns_struct is not None:
+            local_columns_struct = columns_struct.copy()
+            if 'formats' in local_columns_struct and 'attributes' in local_columns_struct['formats']:
+                # Create new list of columns with reset values
+                local_columns_struct['formats'] = local_columns_struct['formats'].copy()
+                local_columns_struct['formats']['attributes'] = [
+                    {**col, 'value': None} if isinstance(col, dict) else col
+                    for col in local_columns_struct['formats']['attributes']
+                ]
 
         returned_struct = None
         if local_columns_struct is not None:
@@ -936,58 +939,138 @@ def populate_common_columns(
     - If a column with key == mermaid_dest_key is present, set it from mermaid_source_key
     - Do not overwrite non-empty values already set
     """
-    # 1) Base properties
-    col_data = populate_columns_from_properties(element, columns_struct)
-    columns_list = col_data.get('formats', {}).get('attributes', [])
-    # Get any Feedback Values that have been requested
-    col_data = populate_feedback(element, columns_struct)
-    # 2) Header overlay
+    # Pre-compute values that will be reused
+    props = element.get('properties', {}) if isinstance(element, dict) else {}
     header_props = _extract_referenceable_properties(element) if include_header else {}
     guid = header_props.get('GUID') if include_header else None
-    if include_header:
-        for column in columns_list:
-            if not isinstance(column, dict):
-                continue
-            key = column.get('key')
-            if not key:
-                continue
-            if column.get('value') not in (None, ""):
-                continue
-            if key in header_props:
-                column['value'] = header_props.get(key)
-            elif isinstance(key, str) and key.lower() == 'guid':
-                column['value'] = guid
-
-    # 3) Relationships
-    if include_relationships:
-        col_data = get_required_relationships(element, col_data)
-
-    # 4) Subject area
+    
+    # Pre-compute subject area value
+    subject_area_val = ""
     if include_subject_area:
         try:
             subject_area = element.get('elementHeader', {}).get('subjectArea') or ""
-            subj_val = ""
             if isinstance(subject_area, dict):
-                subj_val = subject_area.get('classificationProperties', {}).get('subjectAreaName', '')
-            for column in columns_list:
-                if column.get('key') == 'subject_area' and column.get('value') in (None, ""):
-                    column['value'] = subj_val
+                subject_area_val = subject_area.get('classificationProperties', {}).get('subjectAreaName', '')
         except Exception as e:
             logger.debug(f"populate_common_columns: subject_area handling error: {e}")
-
-    # 5) Mermaid
-    try:
-        mermaid_val = element.get(mermaid_source_key, '') or ''
-        for column in columns_list:
-            column_key = column.get('key')
-            if column.get('key') == mermaid_dest_key and column.get('value') in (None, ""):
-                column['value'] = mermaid_val
-            if (column_key in MERMAID_GRAPHS and mermaid_dest_key not in MERMAID_GRAPHS):
-                column['value'] = element.get(column_key, '')
-    except Exception as e:
-        logger.debug(f"populate_common_columns: mermaid handling error: {e}")
-
+    
+    # Pre-compute mermaid value
+    mermaid_val = element.get(mermaid_source_key, '') or ''
+    
+    # Pre-compute relationship values for efficiency
+    relationship_values = {}
+    if include_relationships:
+        formats = columns_struct.get('formats') or {}
+        columns = formats.get('attributes') if isinstance(formats, dict) else None
+        if isinstance(columns, list):
+            for col in columns:
+                if not isinstance(col, dict):
+                    continue
+                key_snake = col.get('key')
+                if not key_snake:
+                    continue
+                key_camel = to_camel_case(key_snake)
+                if key_camel in element:
+                    top_val = element.get(key_camel)
+                    derived_value = ""
+                    if isinstance(top_val, list):
+                        names = []
+                        for item in top_val:
+                            nm = _extract_name_from_relationship_item(item)
+                            if nm:
+                                names.append(nm)
+                        derived_value = ", ".join(names)
+                    elif isinstance(top_val, dict):
+                        nm = _extract_name_from_relationship_item(top_val)
+                        derived_value = nm or ""
+                    else:
+                        derived_value = str(top_val) if top_val is not None else ""
+                    if derived_value:
+                        relationship_values[key_snake] = derived_value
+    
+    # Single pass through columns - consolidate all operations
+    col_data = columns_struct
+    columns_list = col_data.get('formats', {}).get('attributes', [])
+    
+    for column in columns_list:
+        if not isinstance(column, dict):
+            continue
+        
+        key = column.get('key')
+        if not key:
+            continue
+        
+        # Skip if already has a value
+        if column.get('value') not in (None, ""):
+            continue
+        
+        # 1) Try properties (camelCase conversion)
+        key_camel = to_camel_case(key)
+        if key_camel in props:
+            column['value'] = props.get(key_camel)
+            continue
+        
+        # 2) Try header properties
+        if include_header:
+            if key in header_props:
+                column['value'] = header_props.get(key)
+                continue
+            elif isinstance(key, str) and key.lower() == 'guid':
+                column['value'] = guid
+                continue
+        
+        # 3) Try relationship values
+        if include_relationships and key in relationship_values:
+            column['value'] = relationship_values[key]
+            continue
+        
+        # 4) Try subject area
+        if include_subject_area and key == 'subject_area':
+            column['value'] = subject_area_val
+            continue
+        
+        # 5) Try mermaid
+        if key == mermaid_dest_key:
+            column['value'] = mermaid_val
+            continue
+        if key in MERMAID_GRAPHS and mermaid_dest_key not in MERMAID_GRAPHS:
+            column['value'] = element.get(key, '')
+            continue
+    
+    # Get any Feedback Values that have been requested (kept separate as it may have side effects)
+    col_data = populate_feedback(element, col_data)
+    
     return col_data
+
+
+def _extract_name_from_relationship_item(item: Any) -> Optional[str]:
+    """Best-effort extraction of a display/qualified name from a relationship item."""
+    try:
+        if isinstance(item, dict):
+            # Common pattern: item['relatedElement']['properties']['qualifiedName']
+            related = item.get('relatedElement') or item.get('related_element')
+            if isinstance(related, dict):
+                props = related.get('properties') or {}
+                name = (
+                    props.get('qualifiedName')
+                    or props.get('displayName')
+                    or props.get('name')
+                )
+                if name:
+                    return name
+            # Sometimes the properties may be at the top level of the item
+            name = (
+                item.get('qualifiedName')
+                or item.get('displayName')
+                or item.get('name')
+            )
+            if name:
+                return name
+        elif isinstance(item, str):
+            return item
+    except Exception as e:
+        logger.debug(f"_extract_name_from_relationship_item: error extracting name: {e}")
+    return None
 
 
 def extract_mermaid_only(elements: Union[Dict, List[Dict]]) -> Union[str, List[str]]:

@@ -9,6 +9,7 @@ module.
 import asyncio
 import json
 import time
+from typing import Any, Optional
 
 # import json
 from pyegeria.core._server_client import ServerClient, max_paging_size
@@ -123,8 +124,8 @@ class FeedbackManager(ServerClient):
         view_server: str,
         platform_url: str,
         user_id: str,
-        user_pwd: str = None,
-        token: str = None,
+        user_pwd: Optional[str] = None,
+        token: Optional[str] = None,
     ):
         self.admin_command_root: str = f"{platform_url}/servers/{view_server}api/open-metadata/feedback-manager/"
         self.view_server = view_server
@@ -160,8 +161,8 @@ class FeedbackManager(ServerClient):
         element_guid: str,
         is_public: bool = True,
         body: dict = {},
-        view_service_url_marker: str = None,
-        access_service_url_marker: str = None,
+        view_service_url_marker: Optional[str] = None,
+        access_service_url_marker: Optional[str] = None,
     ) -> dict | str:
         """
         Creates a "like" object and attaches it to an element.
@@ -212,8 +213,8 @@ class FeedbackManager(ServerClient):
         element_guid: str,
         is_public: bool = True,
         body: dict = {},
-        view_service_url_marker: str = None,
-        access_service_url_marker: str = None,
+        view_service_url_marker: Optional[str] = None,
+        access_service_url_marker: Optional[str] = None,
     ) -> dict | str:
         """
         Creates a "like" object and attaches it to an element.
@@ -266,8 +267,8 @@ class FeedbackManager(ServerClient):
         element_guid: str,
         is_public: bool = True,
         body: dict = {},
-        view_service_url_marker: str = None,
-        access_service_url_marker: str = None,
+        view_service_url_marker: Optional[str] = None,
+        access_service_url_marker: Optional[str] = None,
     ) -> dict | str:
         """
         Adds a star rating and optional review text to the element.
@@ -317,8 +318,8 @@ class FeedbackManager(ServerClient):
         element_guid: str,
         is_public: bool = True,
         body: dict = {},
-        view_service_url_marker: str = None,
-        access_service_url_marker: str = None,
+        view_service_url_marker: Optional[str] = None,
+        access_service_url_marker: Optional[str] = None,
     ) -> dict | str:
         """
         Adds a star rating and optional review text to the element.
@@ -388,8 +389,8 @@ class FeedbackManager(ServerClient):
         body: dict = {},
         start_from: int = 0,
         page_size: int = max_paging_size,
-        view_service_url_marker: str = None,
-        access_service_url_marker: str = None,
+        view_service_url_marker: Optional[str] = None,
+        access_service_url_marker: Optional[str] = None,
         detailed_response: bool = False,
     ) -> dict | str:
         """
@@ -446,8 +447,8 @@ class FeedbackManager(ServerClient):
         body: dict = {},
         start_from: int = 0,
         page_size: int = max_paging_size,
-        view_service_url_marker: str = None,
-        access_service_url_marker: str = None,
+        view_service_url_marker: Optional[str] = None,
+        access_service_url_marker: Optional[str] = None,
         detailed_response: bool = False,
     ) -> dict | str:
         """
@@ -508,8 +509,8 @@ class FeedbackManager(ServerClient):
         body: dict = {},
         start_from: int = 0,
         page_size: int = max_paging_size,
-        view_service_url_marker: str = None,
-        access_service_url_marker: str = None,
+        view_service_url_marker: Optional[str] = None,
+        access_service_url_marker: Optional[str] = None,
         detailed_response: bool = False,
     ) -> dict | str:
         """
@@ -564,8 +565,8 @@ class FeedbackManager(ServerClient):
         body: dict = {},
         start_from: int = 0,
         page_size: int = max_paging_size,
-        view_service_url_marker: str = None,
-        access_service_url_marker: str = None,
+        view_service_url_marker: Optional[str] = None,
+        access_service_url_marker: Optional[str] = None,
         detailed_response: bool = False,
     ) -> dict | str:
         """
@@ -628,8 +629,8 @@ class FeedbackManager(ServerClient):
         self,
         element_guid: str,
         body: dict = {},
-        view_service_url_marker: str = None,
-        access_service_url_marker: str = None,
+        view_service_url_marker: Optional[str] = None,
+        access_service_url_marker: Optional[str] = None,
     ) -> dict | str:
         """
         Removes a "Like" added to the element by this user.
@@ -674,8 +675,8 @@ class FeedbackManager(ServerClient):
         self,
         element_guid: str,
         body: dict = {},
-        view_service_url_marker: str = None,
-        access_service_url_marker: str = None,
+        view_service_url_marker: Optional[str] = None,
+        access_service_url_marker: Optional[str] = None,
     ) -> dict | str:
         """
         Removes a "Like" added to the element by this user.
@@ -735,8 +736,8 @@ class FeedbackManager(ServerClient):
         self,
         element_guid: str,
         body: dict = {},
-        view_service_url_marker: str = None,
-        access_service_url_marker: str = None,
+        view_service_url_marker: Optional[str] = None,
+        access_service_url_marker: Optional[str] = None,
     ) -> dict | str:
         """
         Removes of a star rating/review that was added to the element by this user.
@@ -781,8 +782,8 @@ class FeedbackManager(ServerClient):
         self,
         element_guid: str,
         body: dict = {},
-        view_service_url_marker: str = None,
-        access_service_url_marker: str = None,
+        view_service_url_marker: Optional[str] = None,
+        access_service_url_marker: Optional[str] = None,
     ) -> dict | str:
         """
         Removes of a star rating/review that was added to the element by this user.

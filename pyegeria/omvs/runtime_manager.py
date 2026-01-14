@@ -12,7 +12,7 @@ from requests import Response
 from pyegeria.core.utils import body_slimmer
 from pyegeria.core._server_client import ServerClient
 from pyegeria.core._globals import max_paging_size,default_time_out
-
+from typing import Any, Optional
 
 class RuntimeManager(ServerClient):
     """
@@ -41,8 +41,8 @@ class RuntimeManager(ServerClient):
         view_server: str,
         platform_url: str,
         user_id: str,
-        user_pwd: str = None,
-        token: str = None,
+        user_pwd: Optional[str] = None,
+        token: Optional[str] = None,
         time_out: int = default_time_out,
     ):
         self.view_server = view_server
@@ -61,8 +61,8 @@ class RuntimeManager(ServerClient):
     async def _async_connect_to_cohort(
         self,
         cohort_name: str,
-        server_guid: str = None,
-        qualified_name: str = None,
+        server_guid: Optional[str] = None,
+        qualified_name: Optional[str] = None,
     ) -> None:
         """A new server needs to register the metadataCollectionId for its metadata repository with the other servers
             in the open metadata repository. It only needs to do this once and uses a timestamp to record that the
@@ -102,8 +102,8 @@ class RuntimeManager(ServerClient):
     def connect_to_cohort(
         self,
         cohort_name: str,
-        server_guid: str = None,
-        qualified_name: str = None,
+        server_guid: Optional[str] = None,
+        qualified_name: Optional[str] = None,
     ) -> None:
         """A new server needs to register the metadataCollectionId for its metadata repository with the other servers
             in the open metadata repository. It only needs to do this once and uses a timestamp to record that the
@@ -141,8 +141,8 @@ class RuntimeManager(ServerClient):
     async def _async_disconnect_from_cohort(
         self,
         cohort_name: str,
-        server_guid: str = None,
-        qualified_name: str = None,
+        server_guid: Optional[str] = None,
+        qualified_name: Optional[str] = None,
     ) -> None:
         """Disconnect communications from a specific cohort.  Async version.
 
@@ -179,8 +179,8 @@ class RuntimeManager(ServerClient):
     def disconnect_from_cohort(
         self,
         cohort_name: str,
-        server_guid: str = None,
-        qualified_name: str = None,
+        server_guid: Optional[str] = None,
+        qualified_name: Optional[str] = None,
     ) -> None:
         """Disconnect communications from a specific cohort.
 
@@ -215,8 +215,8 @@ class RuntimeManager(ServerClient):
     async def _async_unregister_from_cohort(
         self,
         cohort_name: str,
-        server_guid: str = None,
-        qualified_name: str = None,
+        server_guid: Optional[str] = None,
+        qualified_name: Optional[str] = None,
     ) -> None:
         """Unregister from a specific cohort and disconnect from cohort communications.  Async version.
 
@@ -253,8 +253,8 @@ class RuntimeManager(ServerClient):
     def unregister_from_cohort(
         self,
         cohort_name: str,
-        server_guid: str = None,
-        qualified_name: str = None,
+        server_guid: Optional[str] = None,
+        qualified_name: Optional[str] = None,
     ) -> None:
         """Unregister from a specific cohort and disconnect from cohort communications.
             https://egeria-project.org/concepts/cohort-member/
@@ -291,10 +291,10 @@ class RuntimeManager(ServerClient):
 
     async def _async_refresh_gov_eng_config(
         self,
-        gov_engine_name: str = None,
-        server_guid: str = None,
-        display_name: str = None,
-        qualified_name: str = None,
+        gov_engine_name: Optional[str] = None,
+        server_guid: Optional[str] = None,
+        display_name: Optional[str] = None,
+        qualified_name: Optional[str] = None,
     ) -> None:
         """Request that the governance engine refresh its configuration by calling the metadata server. This request is
             useful if the metadata server has an outage, particularly while the governance server is initializing.
@@ -345,10 +345,10 @@ class RuntimeManager(ServerClient):
 
     def refresh_gov_eng_config(
         self,
-        gov_engine_name: str = None,
-        server_guid: str = None,
-        display_name: str = None,
-        qualified_name: str = None,
+        gov_engine_name: Optional[str] = None,
+        server_guid: Optional[str] = None,
+        display_name: Optional[str] = None,
+        qualified_name: Optional[str] = None,
     ) -> None:
         """Request that the governance engine refresh its configuration by calling the metadata server. This request is
             useful if the metadata server has an outage, particularly while the governance server is initializing.
@@ -395,9 +395,9 @@ class RuntimeManager(ServerClient):
     async def _async_get_integ_connector_config_properties(
         self,
         connector_name: str,
-        server_guid: str = None,
-        display_name: str = None,
-        qualified_name: str = None,
+        server_guid: Optional[str] = None,
+        display_name: Optional[str] = None,
+        qualified_name: Optional[str] = None,
     ) -> dict | str:
         """Retrieve the configuration properties of the named integration connector running in the integration daemon.
             Async version.
@@ -443,9 +443,9 @@ class RuntimeManager(ServerClient):
     def get_integ_connector_config_properties(
         self,
         connector_name: str,
-        server_guid: str = None,
-        display_name: str = None,
-        qualified_name: str = None,
+        server_guid: Optional[str] = None,
+        display_name: Optional[str] = None,
+        qualified_name: Optional[str] = None,
     ) -> dict | str:
         """Retrieve the configuration properties of the named integration connector running in the integration daemon.
             Async version.
@@ -483,10 +483,10 @@ class RuntimeManager(ServerClient):
 
     async def _async_update_connector_configuration(
         self,
-        connector_name: str = None,
-        server_guid: str = None,
-        display_name: str = None,
-        qualified_name: str = None,
+        connector_name: Optional[str] = None,
+        server_guid: Optional[str] = None,
+        display_name: Optional[str] = None,
+        qualified_name: Optional[str] = None,
         merge_update: bool = True,
         config_properties: dict = None,
     ) -> None:
@@ -548,9 +548,9 @@ class RuntimeManager(ServerClient):
     def update_connector_configuration(
         self,
         connector_name: str,
-        server_guid: str = None,
-        display_name: str = None,
-        qualified_name: str = None,
+        server_guid: Optional[str] = None,
+        display_name: Optional[str] = None,
+        qualified_name: Optional[str] = None,
         merge_update: bool = False,
         config_properties: dict = None,
     ) -> None:
@@ -603,9 +603,9 @@ class RuntimeManager(ServerClient):
         self,
         connector_name: str,
         endpoint_address: str,
-        server_guid: str = None,
-        display_name: str = None,
-        qualified_name: str = None,
+        server_guid: Optional[str] = None,
+        display_name: Optional[str] = None,
+        qualified_name: Optional[str] = None,
     ) -> None:
         """Update the endpoint network address for a specific integration connector.  Typically used for discovery.
             This update is in memory and will not persist over a server restart. Async version.
@@ -656,9 +656,9 @@ class RuntimeManager(ServerClient):
         self,
         connector_name: str,
         endpoint_address: str,
-        server_guid: str = None,
-        display_name: str = None,
-        qualified_name: str = None,
+        server_guid: Optional[str] = None,
+        display_name: Optional[str] = None,
+        qualified_name: Optional[str] = None,
     ) -> None:
         """Update the endpoint network address for a specific integration connector.  Typically used for discovery.
             This update is in memory and will not persist over a server restart. Async version.
@@ -704,10 +704,10 @@ class RuntimeManager(ServerClient):
 
     async def _async_refresh_integration_connectors(
         self,
-        connector_name: str = None,
-        server_guid: str = None,
-        display_name: str = None,
-        qualified_name: str = None,
+        connector_name: Optional[str] = None,
+        server_guid: Optional[str] = None,
+        display_name: Optional[str] = None,
+        qualified_name: Optional[str] = None,
     ) -> None:
         """Issue a refresh() request on all connectors running in the integration daemon, or a specific connector if
             the connector name is specified. Async version.
@@ -757,10 +757,10 @@ class RuntimeManager(ServerClient):
 
     def refresh_integration_connectors(
         self,
-        connector_name: str = None,
-        server_guid: str = None,
-        display_name: str = None,
-        qualified_name: str = None,
+        connector_name: Optional[str] = None,
+        server_guid: Optional[str] = None,
+        display_name: Optional[str] = None,
+        qualified_name: Optional[str] = None,
     ) -> None:
         """Issue a refresh() request on all connectors running in the integration daemon, or a specific connector if
             the connector name is specified.
@@ -799,10 +799,10 @@ class RuntimeManager(ServerClient):
 
     async def _async_restart_integration_connectors(
         self,
-        connector_name: str = None,
-        server_guid: str = None,
-        display_name: str = None,
-        qualified_name: str = None,
+        connector_name: Optional[str] = None,
+        server_guid: Optional[str] = None,
+        display_name: Optional[str] = None,
+        qualified_name: Optional[str] = None,
     ) -> None:
         """Issue a restart() request on all connectors running in the integration daemon, or a specific connector if
             the connector name is specified. Async version.
@@ -852,10 +852,10 @@ class RuntimeManager(ServerClient):
 
     def restart_integration_connectors(
         self,
-        connector_name: str = None,
-        server_guid: str = None,
-        display_name: str = None,
-        qualified_name: str = None,
+        connector_name: Optional[str] = None,
+        server_guid: Optional[str] = None,
+        display_name: Optional[str] = None,
+        qualified_name: Optional[str] = None,
     ) -> None:
         """Issue a restart() request on all connectors running in the integration daemon, or a specific connector if
             the connector name is specified.
@@ -894,10 +894,10 @@ class RuntimeManager(ServerClient):
 
     async def _async_refresh_integ_group_config(
         self,
-        integ_group_name: str = None,
-        server_guid: str = None,
-        display_name: str = None,
-        qualified_name: str = None,
+        integ_group_name: Optional[str] = None,
+        server_guid: Optional[str] = None,
+        display_name: Optional[str] = None,
+        qualified_name: Optional[str] = None,
     ) -> None:
         """Request that the integration group refresh its configuration by calling the metadata access server.
             Changes to the connector configuration will result in the affected connectors being restarted.
@@ -945,10 +945,10 @@ class RuntimeManager(ServerClient):
 
     def refresh_integ_group_config(
         self,
-        integ_group_name: str = None,
-        server_guid: str = None,
-        display_name: str = None,
-        qualified_name: str = None,
+        integ_group_name: Optional[str] = None,
+        server_guid: Optional[str] = None,
+        display_name: Optional[str] = None,
+        qualified_name: Optional[str] = None,
     ) -> None:
         """Request that the integration group refresh its configuration by calling the metadata access server.
             Changes to the connector configuration will result in the affected connectors being restarted.
@@ -993,9 +993,9 @@ class RuntimeManager(ServerClient):
     async def _async_publish_open_lineage_event(
         self,
         ol_event: dict,
-        server_guid: str = None,
-        display_name: str = None,
-        qualified_name: str = None,
+        server_guid: Optional[str] = None,
+        display_name: Optional[str] = None,
+        qualified_name: Optional[str] = None,
     ) -> None:
         """Send an Open Lineage event to the integration daemon. It will pass it on to the integration connectors that
             have registered a listener for open lineage events. Async version.
@@ -1039,9 +1039,9 @@ class RuntimeManager(ServerClient):
     def publish_open_lineage_event(
         self,
         ol_event: dict,
-        server_guid: str = None,
-        display_name: str = None,
-        qualified_name: str = None,
+        server_guid: Optional[str] = None,
+        display_name: Optional[str] = None,
+        qualified_name: Optional[str] = None,
     ) -> None:
         """Send an Open Lineage event to the integration daemon. It will pass it on to the integration connectors that
             have registered a listener for open lineage events.
@@ -1079,9 +1079,9 @@ class RuntimeManager(ServerClient):
     async def _async_add_archive_content(
         self,
         archive_content: dict,
-        server_guid: str = None,
-        display_name: str = None,
-        qualified_name: str = None,
+        server_guid: Optional[str] = None,
+        display_name: Optional[str] = None,
+        qualified_name: Optional[str] = None,
         time_out: int = 60,
     ) -> None:
         """An open metadata archive contains metadata types and instances.
@@ -1132,9 +1132,9 @@ class RuntimeManager(ServerClient):
     def add_archive_content(
         self,
         archive_content: dict,
-        server_guid: str = None,
-        display_name: str = None,
-        qualified_name: str = None,
+        server_guid: Optional[str] = None,
+        display_name: Optional[str] = None,
+        qualified_name: Optional[str] = None,
         time_out: int = 60,
     ) -> None:
         """An open metadata archive contains metadata types and instances.
@@ -1178,9 +1178,9 @@ class RuntimeManager(ServerClient):
     async def _async_add_archive_file(
         self,
         archive_file: str,
-        server_guid: str = None,
-        display_name: str = None,
-        qualified_name: str = None,
+        server_guid: Optional[str] = None,
+        display_name: Optional[str] = None,
+        qualified_name: Optional[str] = None,
         time_out: int = 120,
     ) -> None:
         """Add a new open metadata archive to running OMAG Server's repository.
@@ -1232,9 +1232,9 @@ class RuntimeManager(ServerClient):
     def add_archive_file(
         self,
         archive_file: str,
-        server_guid: str = None,
-        display_name: str = None,
-        qualified_name: str = None,
+        server_guid: Optional[str] = None,
+        display_name: Optional[str] = None,
+        qualified_name: Optional[str] = None,
         time_out: int = 120,
     ) -> None:
         """Add a new open metadata archive to running OMAG Server's repository.
@@ -1281,8 +1281,8 @@ class RuntimeManager(ServerClient):
     #
     async def _async_shutdown_and_unregister_server(
         self,
-        server_guid: str = None,
-        qualified_name: str = None,
+        server_guid: Optional[str] = None,
+        qualified_name: Optional[str] = None,
     ) -> None:
         """Shutdown the named OMAG server. The server will also be removed from any open metadata repository cohorts
             it has registered with.  Async version.
@@ -1316,7 +1316,7 @@ class RuntimeManager(ServerClient):
         return
 
     def shutdown_and_unregister_server(
-        self, server_guid: str = None, qualified_name: str = None
+        self, server_guid: Optional[str] = None, qualified_name: str = None
     ) -> None:
         """Shutdown the named OMAG server. The server will also be removed from any open metadata repository cohorts
             it has registered with.
@@ -1347,9 +1347,9 @@ class RuntimeManager(ServerClient):
 
     async def _async_activate_server_with_stored_config(
         self,
-        server_guid: str = None,
-        display_name: str = None,
-        qualified_name: str = None,
+        server_guid: Optional[str] = None,
+        display_name: Optional[str] = None,
+        qualified_name: Optional[str] = None,
         timeout: int = 240,
     ) -> None:
         """Activate the named OMAG server using the appropriate configuration document found in the
@@ -1389,9 +1389,9 @@ class RuntimeManager(ServerClient):
 
     def activate_server_with_stored_config(
         self,
-        server_guid: str = None,
-        display_name: str = None,
-        qualified_name: str = None,
+        server_guid: Optional[str] = None,
+        display_name: Optional[str] = None,
+        qualified_name: Optional[str] = None,
         timeout: int = 240,
     ) -> None:
         """Activate the named OMAG server using the appropriate configuration document found in the
@@ -1427,7 +1427,7 @@ class RuntimeManager(ServerClient):
         return
 
     async def _async_shutdown_server(
-        self, server_guid: str = None, qualified_name: str = None
+        self, server_guid: Optional[str] = None, qualified_name: str = None
     ) -> None:
         """Temporarily shutdown the named OMAG server. This server can be restarted as a later time.  Async version.
 
@@ -1460,7 +1460,7 @@ class RuntimeManager(ServerClient):
         return
 
     def shutdown_server(
-        self, server_guid: str = None, qualified_name: str = None
+        self, server_guid: Optional[str] = None, qualified_name: str = None
     ) -> None:
         """Temporarily shutdown the named OMAG server. This server can be restarted as a later time.
 
@@ -1491,8 +1491,8 @@ class RuntimeManager(ServerClient):
 
     def get_platforms_by_name(
         self,
-        filter: str = None,
-        effective_time: str = None,
+        filter: Optional[str] = None,
+        effective_time: Optional[str] = None,
         start_from: int = 0,
         page_size: int = max_paging_size,
     ) -> str | list:
@@ -1500,7 +1500,7 @@ class RuntimeManager(ServerClient):
 
         Parameters
         ----------
-        filter : str, opt
+        filter_string : str, opt
             Filter specifies the display name or qualified name of the platforms to return information for. If the
             value is None, we will default to the default_platform_name that comes from the core content pack.
         effective_time: str, optional
@@ -1531,8 +1531,8 @@ class RuntimeManager(ServerClient):
 
     async def _async_get_platforms_by_name(
         self,
-        filter: str = None,
-        effective_time: str = None,
+        filter: Optional[str] = None,
+        effective_time: Optional[str] = None,
         start_from: int = 0,
         page_size: int = max_paging_size,
     ) -> str | list:
@@ -1540,7 +1540,7 @@ class RuntimeManager(ServerClient):
 
         Parameters
         ----------
-        filter : str, opt
+        filter_string : str, opt
             Filter specifies the display name or qualified name of the platforms to return information for. If the
             value is None, we will default to the default_platform_name that comes from the core content pack.
         effective_time: str, optional
@@ -1564,16 +1564,16 @@ class RuntimeManager(ServerClient):
 
         """
 
-        if filter is None:
-            filter = self.default_platform_name
+        if filter_string is None:
+            filter_string = self.default_platform_name
 
         url = (
             f"{self.runtime_command_root}/platforms/by-name"
         )
         if effective_time is not None:
-            body = {"filter": filter, "effectiveTime": effective_time}
+            body = {"filter": filter_string, "effectiveTime": effective_time}
         else:
-            body = {"filter": filter}
+            body = {"filter": filter_string}
 
         response = await self._async_make_request("POST", url, body)
 
@@ -1581,8 +1581,8 @@ class RuntimeManager(ServerClient):
 
     async def _async_get_platforms_by_type(
         self,
-        filter: str = None,
-        effective_time: str = None,
+        filter: Optional[str] = None,
+        effective_time: Optional[str] = None,
         start_from: int = 0,
         page_size: int = max_paging_size,
     ) -> str | list:
@@ -1591,7 +1591,7 @@ class RuntimeManager(ServerClient):
 
         Parameters
         ----------
-        filter : str, opt
+        filter_string : str, opt
             Filter specifies the kind of deployed implementation type of the platforms to return information for.
             If the value is None, we will default to the "OMAG Server Platform".
         effective_time: str, optional
@@ -1614,8 +1614,8 @@ class RuntimeManager(ServerClient):
 
         """
 
-        if filter is None:
-            filter = "OMAG Server Platform"
+        if filter_string is None:
+            filter_string = "OMAG Server Platform"
 
         url = (
             f"{self.runtime_command_root}/platforms/"
@@ -1624,17 +1624,17 @@ class RuntimeManager(ServerClient):
 
         if effective_time is not None:
             body = {
-                "filter": filter, "effectiveTime": effective_time}
+                "filter": filter_string, "effectiveTime": effective_time}
         else:
-            body = {"filter": filter}
+            body = {"filter": filter_string}
 
         response = await self._async_make_request("POST", url, body)
         return response.json().get("elements", "No platforms found")
 
     def get_platforms_by_type(
         self,
-        filter: str = None,
-        effective_time: str = None,
+        filter: Optional[str] = None,
+        effective_time: Optional[str] = None,
         start_from: int = 0,
         page_size: int = max_paging_size,
     ) -> str | list:
@@ -1643,7 +1643,7 @@ class RuntimeManager(ServerClient):
 
         Parameters
         ----------
-        filter : str, opt
+        filter_string : str, opt
             Filter specifies the kind of deployed implementation type of the platforms to return information for.
             If the value is None, we will default to the "OMAG Server Platform".
         effective_time: str, optional
@@ -1675,8 +1675,8 @@ class RuntimeManager(ServerClient):
 
     async def _async_get_platform_templates_by_type(
         self,
-        filter: str = None,
-        effective_time: str = None,
+        filter: Optional[str] = None,
+        effective_time: Optional[str] = None,
         start_from: int = 0,
         page_size: int = max_paging_size,
     ) -> str | list:
@@ -1686,7 +1686,7 @@ class RuntimeManager(ServerClient):
 
         Parameters
         ----------
-        filter : str, opt
+        filter_string : str, opt
             Filter specifies the kind of deployed implementation type of the platforms to return information for.
             If the value is None, we will default to the "OMAG Server Platform".
         effective_time: str, optional
@@ -1709,8 +1709,8 @@ class RuntimeManager(ServerClient):
 
         """
 
-        if filter is None:
-            filter = "OMAG Server Platform"
+        if filter_string is None:
+            filter_string = "OMAG Server Platform"
 
         url = (
             f"{self.runtime_command_root}/platforms/"
@@ -1718,17 +1718,17 @@ class RuntimeManager(ServerClient):
         )
 
         if effective_time is not None:
-            body = {"filter": filter, "effectiveTime": effective_time}
+            body = {"filter": filter_string, "effectiveTime": effective_time}
         else:
-            body = {"filter": filter}
+            body = {"filter": filter_string}
 
         response = await self._async_make_request("POST", url, body)
         return response.json().get("elements", "No platforms found")
 
     def get_platform_templates_by_type(
         self,
-        filter: str = None,
-        effective_time: str = None,
+        filter: Optional[str] = None,
+        effective_time: Optional[str] = None,
         start_from: int = 0,
         page_size: int = max_paging_size,
     ) -> str | list:
@@ -1737,7 +1737,7 @@ class RuntimeManager(ServerClient):
 
         Parameters
         ----------
-        filter : str, opt
+        filter_string : str, opt
             Filter specifies the kind of deployed implementation type of the platforms to return information for.
             If the value is None, we will default to the "OMAG Server Platform".
         effective_time: str, optional
@@ -1768,7 +1768,7 @@ class RuntimeManager(ServerClient):
         return response
 
     async def _async_get_platform_report(
-        self, platform_guid: str = None, platform_name: str = None
+        self, platform_guid: Optional[str] = None, platform_name: str = None
     ) -> str | list:
         """Returns details about the running platform. Async version.
 
@@ -1799,7 +1799,7 @@ class RuntimeManager(ServerClient):
         return response.json().get("element", "No platforms found")
 
     def get_platform_report(
-        self, platform_guid: str = None, platform_name: str = None
+        self, platform_guid: Optional[str] = None, platform_name: str = None
     ) -> str | list:
         """Returns details about the running platform.
 
@@ -1830,7 +1830,7 @@ class RuntimeManager(ServerClient):
     async def _async_get_platform_by_guid(
         self,
         platform_guid: str,
-        effective_time: str = None,
+        effective_time: Optional[str] = None,
     ) -> str | list:
         """Returns details about the platform's catalog entry (asset). Async version.
 
@@ -1863,7 +1863,7 @@ class RuntimeManager(ServerClient):
     def get_platform_by_guid(
         self,
         platform_guid: str,
-        effective_time: str = None,
+        effective_time: Optional[str] = None,
     ) -> str | list:
         """Returns details about the platform's catalog entry (asset).
 
@@ -1894,8 +1894,8 @@ class RuntimeManager(ServerClient):
 
     async def _async_get_server_by_guid(
         self,
-        server_guid: str = None,
-        effective_time: str = None,
+        server_guid: Optional[str] = None,
+        effective_time: Optional[str] = None,
     ) -> str | dict:
         """Returns details about the server's catalog entry (asset). Async version.
 
@@ -1932,8 +1932,8 @@ class RuntimeManager(ServerClient):
 
     def get_server_by_guid(
         self,
-        server_guid: str = None,
-        effective_time: str = None,
+        server_guid: Optional[str] = None,
+        effective_time: Optional[str] = None,
     ) -> str | dict:
         """Returns details about the platform's catalog entry (asset).
 
@@ -1964,8 +1964,8 @@ class RuntimeManager(ServerClient):
 
     async def _async_get_servers_by_name(
         self,
-        filter: str,
-        effective_time: str = None,
+        filter_string : str,
+        effective_time: Optional[str] = None,
         start_from: int = 0,
         page_size: int = max_paging_size,
     ) -> str | list:
@@ -1973,7 +1973,7 @@ class RuntimeManager(ServerClient):
 
         Parameters
         ----------
-        filter : str, opt
+        filter_string : str, opt
             Filter specifies the kind of deployed implementation type of the platforms to return information for.
             If the value is None, we will default to the "OMAG Server Platform".
         effective_time: str, optional
@@ -2002,9 +2002,9 @@ class RuntimeManager(ServerClient):
         )
 
         if effective_time is None:
-            body = {"filter": filter, "limitResultsByStatus": ["PROPOSED"]}
+            body = {"filter": filter_string, "limitResultsByStatus": ["PROPOSED"]}
         else:
-            body = {"filter": filter,
+            body = {"filter": filter_string,
                     "effective_time": effective_time,
                     "limitResultsByStatus": []}
         response = await self._async_make_request("POST", url, body)
@@ -2012,13 +2012,13 @@ class RuntimeManager(ServerClient):
         return response.json().get("elements", "No servers found")
 
     def get_servers_by_name(
-        self, filter: str, effective_time: str = None
+        self, filter_string: str, effective_time: str = None
     ) -> str | list:
         """Returns the list of servers with a particular name.  The name is specified in the filter.
 
         Parameters
         ----------
-        filter : str, opt
+        filter_string : str, opt
             Filter specifies the kind of deployed implementation type of the platforms to return information for.
             If the value is None, we will default to the "OMAG Server Platform".
         effective_time: str, optional
@@ -2042,7 +2042,7 @@ class RuntimeManager(ServerClient):
         )
         return response
 
-    async def _async_get_servers_by_dep_impl_type(self, search_string: str = "*", effective_time: str = None,
+    async def _async_get_servers_by_dep_impl_type(self, search_string: str = "*", effective_time: Optional[str] = None,
                                                   start_from: int = 0, page_size: int = max_paging_size) -> str | list:
         """Returns the list of servers with a particular deployed implementation type. The value is specified
             in the filter. If it is null, or no request body is supplied, all servers are returned.
@@ -2084,7 +2084,7 @@ class RuntimeManager(ServerClient):
 
         return response.json().get("elements", "No servers found")
 
-    def get_servers_by_dep_impl_type(self, search_string: str = "*", effective_time: str = None, start_from: int = 0,
+    def get_servers_by_dep_impl_type(self, search_string: str = "*", effective_time: Optional[str] = None, start_from: int = 0,
                                      page_size: int = max_paging_size) -> str | list:
         """Returns the list of servers with a particular deployed implementation type.
             The value is specified in the filter. If it is null, or no request body is supplied,
@@ -2122,8 +2122,8 @@ class RuntimeManager(ServerClient):
 
     async def _async_get_server_templates_by_dep_impl_type(
         self,
-        filter: str = "*",
-        effective_time: str = None,
+        filter_string : str = "*",
+        effective_time: Optional[str] = None,
         start_from: int = 0,
         page_size: int = max_paging_size,
     ) -> str | list:
@@ -2133,7 +2133,7 @@ class RuntimeManager(ServerClient):
 
         Parameters
         ----------
-        filter : str, opt
+        filter_string : str, opt
             Filter specifies the kind of deployed implementation type of the platforms to return information for.
             If the value is None, we will default to the "OMAG Server Platform".
         effective_time: str, optional
@@ -2156,15 +2156,15 @@ class RuntimeManager(ServerClient):
 
         """
 
-        if filter == "*":
-            filter = None
+        if filter_string == "*":
+            filter_string = None
 
         url = (
             f"{self.runtime_command_root}/software-servers/"
             f"by-deployed-implementation-type?startFrom={start_from}&pageSize={page_size}&getTemplates=true"
         )
 
-        body = body_slimmer({"filter": filter, "effective_time": effective_time})
+        body = body_slimmer({"filter": filter_string, "effective_time": effective_time})
 
         response = await self._async_make_request("POST", url, body)
 
@@ -2172,8 +2172,8 @@ class RuntimeManager(ServerClient):
 
     def get_server_templates_by_dep_impl_type(
         self,
-        filter: str = "*",
-        effective_time: str = None,
+        filter_string : str = "*",
+        effective_time: Optional[str] = None,
         start_from: int = 0,
         page_size: int = max_paging_size,
     ) -> str | list:
@@ -2183,7 +2183,7 @@ class RuntimeManager(ServerClient):
 
         Parameters
         ----------
-        filter : str, opt
+        filter_string : str, opt
             Filter specifies the kind of deployed implementation type of the platforms to return information for.
             If the value is None, we will default to the "OMAG Server Platform".
         effective_time: str, optional
@@ -2214,7 +2214,7 @@ class RuntimeManager(ServerClient):
         return response
 
     async def _async_get_server_report(
-        self, server_guid: str = None, server_name: str = None
+        self, server_guid: Optional[str] = None, server_name: str = None
     ) -> str | list:
         """Returns details about the running server. Async version.
 
@@ -2247,7 +2247,7 @@ class RuntimeManager(ServerClient):
         return response.json().get("element", "No server found")
 
     def get_server_report(
-        self, server_guid: str = None, server_name: str = None
+        self, server_guid: Optional[str] = None, server_name: str = None
     ) -> str | list:
         """Returns details about the running server.
 

@@ -8,7 +8,7 @@ Copyright Contributors to the ODPi Egeria project.
 """
 
 import asyncio
-
+from typing import Any, Optional
 from pyegeria.core._server_client import ServerClient
 from pyegeria.core._globals import default_time_out
 from pyegeria.core.utils import dynamic_catch
@@ -42,8 +42,8 @@ class TemplateManager(ServerClient):
         view_server: str,
         platform_url: str,
         user_id: str,
-        user_pwd: str = None,
-        token: str = None,
+        user_pwd: Optional[str] = None,
+        token: Optional[str] = None,
         time_out: int = default_time_out,
     ):
         self.view_server = view_server
@@ -52,7 +52,7 @@ class TemplateManager(ServerClient):
         self.command_root = f"{self.platform_url}/servers/{self.view_server}/api/open-metadata/template-manager"
 
     @dynamic_catch
-    async def _async_link_sourced_from(self, element_guid: str, template_guid: str, body: dict | NewRelationshipRequestBody = None) -> None:
+    async def _async_link_sourced_from(self, element_guid: str, template_guid: str, body: Optional[dict | NewRelationshipRequestBody] = None) -> None:
         """Attach a template to an element that was created from it.
         Async version.
 
@@ -85,12 +85,12 @@ class TemplateManager(ServerClient):
         await self._async_new_relationship_request(url, body=body)
 
     @dynamic_catch
-    def link_sourced_from(self, element_guid: str, template_guid: str, body: dict | NewRelationshipRequestBody = None) -> None:
+    def link_sourced_from(self, element_guid: str, template_guid: str, body: Optional[dict | NewRelationshipRequestBody] = None) -> None:
         """Attach a template to an element that was created from it."""
         return asyncio.get_event_loop().run_until_complete(self._async_link_sourced_from(element_guid, template_guid, body))
 
     @dynamic_catch
-    async def _async_detach_sourced_from(self, element_guid: str, template_guid: str, body: dict | DeleteRelationshipRequestBody = None) -> None:
+    async def _async_detach_sourced_from(self, element_guid: str, template_guid: str, body: Optional[dict | DeleteRelationshipRequestBody] = None) -> None:
         """Detach the source template for an element.
         Async version.
 
@@ -107,12 +107,12 @@ class TemplateManager(ServerClient):
         await self._async_delete_relationship_request(url, body=body)
 
     @dynamic_catch
-    def detach_sourced_from(self, element_guid: str, template_guid: str, body: dict | DeleteRelationshipRequestBody = None) -> None:
+    def detach_sourced_from(self, element_guid: str, template_guid: str, body: Optional[dict | DeleteRelationshipRequestBody] = None) -> None:
         """Detach the source template for an element."""
         return asyncio.get_event_loop().run_until_complete(self._async_detach_sourced_from(element_guid, template_guid, body))
 
     @dynamic_catch
-    async def _async_link_catalog_template(self, element_guid: str, template_guid: str, body: dict | NewRelationshipRequestBody = None) -> None:
+    async def _async_link_catalog_template(self, element_guid: str, template_guid: str, body: Optional[dict | NewRelationshipRequestBody] = None) -> None:
         """Attach a template to an element that was created from it.
         Async version.
 
@@ -129,12 +129,12 @@ class TemplateManager(ServerClient):
         await self._async_new_relationship_request(url, body=body)
 
     @dynamic_catch
-    def link_catalog_template(self, element_guid: str, template_guid: str, body: dict | NewRelationshipRequestBody = None) -> None:
+    def link_catalog_template(self, element_guid: str, template_guid: str, body: Optional[dict | NewRelationshipRequestBody] = None) -> None:
         """Attach a template to an element that was created from it."""
         return asyncio.get_event_loop().run_until_complete(self._async_link_catalog_template(element_guid, template_guid, body))
 
     @dynamic_catch
-    async def _async_detach_catalog_template(self, element_guid: str, template_guid: str, body: dict | DeleteRelationshipRequestBody = None) -> None:
+    async def _async_detach_catalog_template(self, element_guid: str, template_guid: str, body: Optional[dict | DeleteRelationshipRequestBody] = None) -> None:
         """Detach a template for an element that this template is relevant to.
         Async version.
 
@@ -151,12 +151,12 @@ class TemplateManager(ServerClient):
         await self._async_delete_relationship_request(url, body=body)
 
     @dynamic_catch
-    def detach_catalog_template(self, element_guid: str, template_guid: str, body: dict | DeleteRelationshipRequestBody = None) -> None:
+    def detach_catalog_template(self, element_guid: str, template_guid: str, body: Optional[dict | DeleteRelationshipRequestBody] = None) -> None:
         """Detach a template for an element that this template is relevant to."""
         return asyncio.get_event_loop().run_until_complete(self._async_detach_catalog_template(element_guid, template_guid, body))
 
     @dynamic_catch
-    async def _async_add_template_classification(self, element_guid: str, body: dict | NewClassificationRequestBody = None) -> None:
+    async def _async_add_template_classification(self, element_guid: str, body: Optional[dict | NewClassificationRequestBody] = None) -> None:
         """Classify an element as suitable to be used as a template for cataloguing elements of similar types.
         Async version.
 
@@ -171,12 +171,12 @@ class TemplateManager(ServerClient):
         await self._async_new_classification_request(url, body=body)
 
     @dynamic_catch
-    def add_template_classification(self, element_guid: str, body: dict | NewClassificationRequestBody = None) -> None:
+    def add_template_classification(self, element_guid: str, body: Optional[dict | NewClassificationRequestBody] = None) -> None:
         """Classify an element as suitable to be used as a template for cataloguing elements of similar types."""
         return asyncio.get_event_loop().run_until_complete(self._async_add_template_classification(element_guid, body))
 
     @dynamic_catch
-    async def _async_remove_template_classification(self, element_guid: str, body: dict | DeleteClassificationRequestBody = None) -> None:
+    async def _async_remove_template_classification(self, element_guid: str, body: Optional[dict | DeleteClassificationRequestBody] = None) -> None:
         """Remove the Template classification from the element.
         Async version.
 
@@ -191,12 +191,12 @@ class TemplateManager(ServerClient):
         await self._async_delete_classification_request(url, body=body)
 
     @dynamic_catch
-    def remove_template_classification(self, element_guid: str, body: dict | DeleteClassificationRequestBody = None) -> None:
+    def remove_template_classification(self, element_guid: str, body: Optional[dict | DeleteClassificationRequestBody] = None) -> None:
         """Remove the Template classification from the element."""
         return asyncio.get_event_loop().run_until_complete(self._async_remove_template_classification(element_guid, body))
 
     @dynamic_catch
-    async def _async_add_template_substitute_classification(self, element_guid: str, body: dict | NewClassificationRequestBody = None) -> None:
+    async def _async_add_template_substitute_classification(self, element_guid: str, body: Optional[dict | NewClassificationRequestBody] = None) -> None:
         """Classify an element as suitable to be used as a template substitute for cataloguing elements of similar types.
         Async version.
 
@@ -211,12 +211,12 @@ class TemplateManager(ServerClient):
         await self._async_new_classification_request(url, body=body)
 
     @dynamic_catch
-    def add_template_substitute_classification(self, element_guid: str, body: dict | NewClassificationRequestBody = None) -> None:
+    def add_template_substitute_classification(self, element_guid: str, body: Optional[dict | NewClassificationRequestBody] = None) -> None:
         """Classify an element as suitable to be used as a template substitute for cataloguing elements of similar types."""
         return asyncio.get_event_loop().run_until_complete(self._async_add_template_substitute_classification(element_guid, body))
 
     @dynamic_catch
-    async def _async_remove_template_substitute_classification(self, element_guid: str, body: dict | DeleteClassificationRequestBody = None) -> None:
+    async def _async_remove_template_substitute_classification(self, element_guid: str, body: Optional[dict | DeleteClassificationRequestBody] = None) -> None:
         """Remove the TemplateSubstitute classification from the element.
         Async version.
 
@@ -231,6 +231,6 @@ class TemplateManager(ServerClient):
         await self._async_delete_classification_request(url, body=body)
 
     @dynamic_catch
-    def remove_template_substitute_classification(self, element_guid: str, body: dict | DeleteClassificationRequestBody = None) -> None:
+    def remove_template_substitute_classification(self, element_guid: str, body: Optional[dict | DeleteClassificationRequestBody] = None) -> None:
         """Remove the TemplateSubstitute classification from the element."""
         return asyncio.get_event_loop().run_until_complete(self._async_remove_template_substitute_classification(element_guid, body))

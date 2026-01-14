@@ -132,7 +132,7 @@ class CollectionManager(ServerClient):
     """
 
 
-    def __init__(self, view_server: str, platform_url: str, user_id: str, user_pwd: str = None, token: str = None, ):
+    def __init__(self, view_server: str, platform_url: str, user_id: str, user_pwd: Optional[str] = None, token: Optional[str] = None, ):
         self.view_server = view_server
         self.platform_url = platform_url
         self.user_id = user_id
@@ -151,8 +151,8 @@ class CollectionManager(ServerClient):
 
     @dynamic_catch
     async def _async_get_attached_collections(self, parent_guid: str, start_from: int = 0, page_size: int = 0,
-                                              category: str = None, classification_names: list[str]= None,
-                                              body: dict | FilterRequestBody = None, output_format: str = "JSON",
+                                              category: Optional[str] = None, classification_names: list[str]= None,
+                                              body: Optional[dict | FilterRequestBody] = None, output_format: str = "JSON",
                                               report_spec: str | dict = None) -> list | str:
         """Returns the list of collections that are linked off of the supplied element using the ResourceList
            relationship. Async version.
@@ -285,23 +285,23 @@ class CollectionManager(ServerClient):
     async def _async_find_collections(self, search_string: str = "*",
                                       starts_with: bool = True, ends_with: bool = False,
                                       ignore_case: bool = False,
-                                      anchor_domain: str = None,
-                                      metadata_element_type: str = None,
-                                      metadata_element_subtypes: list[str] = None,
-                                      skip_relationships: list[str] = None,
-                                      include_only_relationships: list[str] = None,
-                                      skip_classified_elements: list[str] = None,
-                                      include_only_classified_elements: list[str] = None,
+                                      anchor_domain: Optional[str] = None,
+                                      metadata_element_type: Optional[str] = None,
+                                      metadata_element_subtypes: Optional[list[str]] = None,
+                                      skip_relationships: Optional[list[str]] = None,
+                                      include_only_relationships: Optional[list[str]] = None,
+                                      skip_classified_elements: Optional[list[str]] = None,
+                                      include_only_classified_elements: Optional[list[str]] = None,
                                       graph_query_depth: int = 3,
-                                      governance_zone_filter: list[str] = None, as_of_time: str = None,
-                                      effective_time: str = None, relationship_page_size: int = 0,
-                                      limit_results_by_status: list[str] = None, sequencing_order: str = None,
-                                      sequencing_property: str = None,
+                                      governance_zone_filter: Optional[list[str]] = None, as_of_time: Optional[str] = None,
+                                      effective_time: Optional[str] = None, relationship_page_size: int = 0,
+                                      limit_results_by_status: Optional[list[str]] = None, sequencing_order: Optional[str] = None,
+                                      sequencing_property: Optional[str] = None,
                                       output_format: str = "JSON",
                                       report_spec: str | dict = None,
                                       start_from: int = 0, page_size: int = 100,
-                                      property_names: list[str] = None,
-                                      body: dict | SearchStringRequestBody = None,
+                                      property_names: Optional[list[str]] = None,
+                                      body: Optional[dict | SearchStringRequestBody] = None,
                                       _type: str = "Collection") -> list | str:
         """ Retrieve the list of collection metadata elements that contain the search string. Async Version.
 
@@ -405,23 +405,23 @@ class CollectionManager(ServerClient):
     def find_collections(self, search_string: str = "*",
                          starts_with: bool = True, ends_with: bool = False,
                          ignore_case: bool = False,
-                         anchor_domain: str = None,
-                         metadata_element_type: str = None,
-                         metadata_element_subtypes: list[str] = None,
-                         skip_relationships: list[str] = None,
-                         include_only_relationships: list[str] = None,
-                         skip_classified_elements: list[str] = None,
-                         include_only_classified_elements: list[str] = None,
+                         anchor_domain: Optional[str] = None,
+                         metadata_element_type: Optional[str] = None,
+                         metadata_element_subtypes: Optional[list[str]] = None,
+                         skip_relationships: Optional[list[str]] = None,
+                         include_only_relationships: Optional[list[str]] = None,
+                         skip_classified_elements: Optional[list[str]] = None,
+                         include_only_classified_elements: Optional[list[str]] = None,
                          graph_query_depth: int = 3,
-                         governance_zone_filter: list[str] = None, as_of_time: str = None,
-                         effective_time: str = None, relationship_page_size: int = 0,
-                         limit_results_by_status: list[str] = None, sequencing_order: str = None,
-                         sequencing_property: str = None,
+                         governance_zone_filter: Optional[list[str]] = None, as_of_time: Optional[str] = None,
+                         effective_time: Optional[str] = None, relationship_page_size: int = 0,
+                         limit_results_by_status: Optional[list[str]] = None, sequencing_order: Optional[str] = None,
+                         sequencing_property: Optional[str] = None,
                          output_format: str = "JSON",
                          report_spec: str | dict = None,
                          start_from: int = 0, page_size: int = 100,
-                         property_names: list[str] = None,
-                         body: dict | SearchStringRequestBody = None,
+                         property_names: Optional[list[str]] = None,
+                         body: Optional[dict | SearchStringRequestBody] = None,
                          _type: str = "Collection") -> list | str:
         """ Retrieve the list of collection metadata elements that contain the search string.
 
@@ -530,7 +530,7 @@ class CollectionManager(ServerClient):
     async def _async_find_digital_products(
         self,
         search_string: str = "*",
-        deployment_status: str = None,
+        deployment_status: Optional[str] = None,
         starts_with: bool = True,
         ends_with: bool = False,
         ignore_case: bool = False,
@@ -538,7 +538,7 @@ class CollectionManager(ServerClient):
         page_size: int = 100,
         output_format: str = "JSON",
         report_spec: str | dict = None,
-        body: dict | DeploymentStatusSearchString = None,
+        body: Optional[dict | DeploymentStatusSearchString] = None,
     ) -> list | str:
         """
         Returns the list of digital products matching the search string and optional deployment status.
@@ -625,7 +625,7 @@ class CollectionManager(ServerClient):
     def find_digital_products(
         self,
         search_string: str = "*",
-        deployment_status: str = None,
+        deployment_status: Optional[str] = None,
         starts_with: bool = True,
         ends_with: bool = False,
         ignore_case: bool = False,
@@ -633,7 +633,7 @@ class CollectionManager(ServerClient):
         page_size: int = 100,
         output_format: str = "JSON",
         report_spec: str | dict = None,
-        body: dict | DeploymentStatusSearchString = None,
+        body: Optional[dict | DeploymentStatusSearchString] = None,
     ) -> list | str:
         """
         Returns the list of digital products matching the search string and optional deployment status. Sync version.
@@ -659,12 +659,12 @@ class CollectionManager(ServerClient):
     async def _async_get_digital_products_by_category(
         self,
         category: str,
-        deployment_status: str = None,
+        deployment_status: Optional[str] = None,
         start_from: int = 0,
         page_size: int = 100,
         output_format: str = "JSON",
         report_spec: str | dict = None,
-        body: dict | DeploymentStatusFilterRequestBody = None,
+        body: Optional[dict | DeploymentStatusFilterRequestBody] = None,
     ) -> list | str:
         """
         Returns the list of digital products matching the category and optional deployment status.
@@ -738,12 +738,12 @@ class CollectionManager(ServerClient):
     def get_digital_products_by_category(
         self,
         category: str,
-        deployment_status: str = None,
+        deployment_status: Optional[str] = None,
         start_from: int = 0,
         page_size: int = 100,
         output_format: str = "JSON",
         report_spec: str | dict = None,
-        body: dict | DeploymentStatusFilterRequestBody = None,
+        body: Optional[dict | DeploymentStatusFilterRequestBody] = None,
     ) -> list | str:
         """
         Returns the list of digital products matching the category and optional deployment status. Sync version.
@@ -763,8 +763,8 @@ class CollectionManager(ServerClient):
         )
 
     @dynamic_catch
-    async def _async_get_collections_by_name(self, filter_string: str = None, classification_names: list[str] = None,
-                                             body: dict | FilterRequestBody = None,
+    async def _async_get_collections_by_name(self, filter_string: Optional[str] = None, classification_names: Optional[list[str]] = None,
+                                             body: Optional[dict | FilterRequestBody] = None,
                                              start_from: int = 0, page_size: int = 0,
                                              output_format: str = 'JSON',
                                              report_spec: str | dict = None) -> list | str:
@@ -815,8 +815,8 @@ class CollectionManager(ServerClient):
         return response
 
 
-    def get_collections_by_name(self, filter_string: str = None, classification_names: list[str] = None,
-                                body: dict | FilterRequestBody = None,
+    def get_collections_by_name(self, filter_string: Optional[str] = None, classification_names: Optional[list[str]] = None,
+                                body: Optional[dict | FilterRequestBody] = None,
                                 start_from: int = 0, page_size: int = 0, output_format: str = 'JSON',
                                 report_spec: str | dict = None) -> list | str:
         """Returns the list of collections matching the search string. Async version.
@@ -858,8 +858,8 @@ class CollectionManager(ServerClient):
 
 
     @dynamic_catch
-    async def _async_get_collections_by_category(self, category: str, classification_names: list[str] = None,
-                                             body: dict | FilterRequestBody = None, start_from: int = 0, page_size: int = 0,
+    async def _async_get_collections_by_category(self, category: str, classification_names: Optional[list[str]] = None,
+                                             body: Optional[dict | FilterRequestBody] = None, start_from: int = 0, page_size: int = 0,
                                              output_format: str = 'JSON',
                                              report_spec: str | dict = None) -> list | str:
         """Returns the list of collections with a particular category. This is an optional text field in the
@@ -923,8 +923,8 @@ class CollectionManager(ServerClient):
 
 
 
-    def get_collections_by_category(self, category: str, classification_names: list[str] = None,
-                                body: dict | FilterRequestBody = None,
+    def get_collections_by_category(self, category: str, classification_names: Optional[list[str]] = None,
+                                body: Optional[dict | FilterRequestBody] = None,
                                 start_from: int = 0, page_size: int = 0, output_format: str = 'JSON',
                                 report_spec: str | dict = None) -> list | str:
         """Returns the list of collections with a particular collectionType. This is an optional text field in the
@@ -989,8 +989,8 @@ class CollectionManager(ServerClient):
 
 
     @dynamic_catch
-    async def _async_get_collection_by_guid(self, collection_guid: str, element_type: str = None,
-                                            body: dict | GetRequestBody = None,
+    async def _async_get_collection_by_guid(self, collection_guid: str, element_type: Optional[str] = None,
+                                            body: Optional[dict | GetRequestBody] = None,
                                             output_format: str = 'JSON',
                                             report_spec: str | dict = None) -> dict | str:
         """Return the properties of a specific collection. Async version.
@@ -1049,7 +1049,7 @@ class CollectionManager(ServerClient):
 
 
 
-    def get_collection_by_guid(self, collection_guid: str, element_type: str = None, body: dict | GetRequestBody= None,
+    def get_collection_by_guid(self, collection_guid: str, element_type: Optional[str] = None, body: dict | GetRequestBody= None,
                                output_format: str = 'JSON', report_spec: str | dict = None) -> dict | str:
         """ Return the properties of a specific collection. Async version.
 
@@ -1100,8 +1100,8 @@ class CollectionManager(ServerClient):
 
 
     @dynamic_catch
-    async def _async_get_collection_members(self, collection_guid: str = None, collection_name: str = None,
-                                            collection_qname: str = None, body: dict | ResultsRequestBody = None, start_from: int = 0,
+    async def _async_get_collection_members(self, collection_guid: Optional[str] = None, collection_name: Optional[str] = None,
+                                            collection_qname: Optional[str] = None, body: Optional[dict | ResultsRequestBody] = None, start_from: int = 0,
                                             page_size: int = 0, output_format: str = "JSON",
                                             report_spec: str | dict = None) -> list | str:
         """Return a list of elements that are a member of a collection. Async version.
@@ -1174,8 +1174,8 @@ class CollectionManager(ServerClient):
         return response
 
 
-    def get_collection_members(self, collection_guid: str = None, collection_name: str = None,
-                               collection_qname: str = None, body: dict = None, start_from: int = 0,
+    def get_collection_members(self, collection_guid: Optional[str] = None, collection_name: Optional[str] = None,
+                               collection_qname: Optional[str] = None, body: dict = None, start_from: int = 0,
                                page_size: int = 0,
                                output_format: str = "JSON", report_spec: str | dict = None) -> list | str:
         """Return a list of elements that are a member of a collection.
@@ -1240,7 +1240,7 @@ class CollectionManager(ServerClient):
 
 
     @dynamic_catch
-    async def _async_get_collection_hierarchy(self, collection_guid: str, body: dict | ResultsRequestBody = None, start_from: int = 0,
+    async def _async_get_collection_hierarchy(self, collection_guid: str, body: Optional[dict | ResultsRequestBody] = None, start_from: int = 0,
                                           page_size: int = 0, output_format: str = "JSON",
                                           report_spec: str | dict = None) -> list | str:
         """ Return a hierarchy of nested collections. Request body is optional Async version.
@@ -1303,7 +1303,7 @@ class CollectionManager(ServerClient):
 
         return response
 
-    def get_collection_hierarchy(self, collection_guid: str = None, body: dict| ResultsRequestBody = None, start_from: int = 0,
+    def get_collection_hierarchy(self, collection_guid: Optional[str] = None, body: dict| ResultsRequestBody = None, start_from: int = 0,
                              page_size: int = 0, output_format: str = "JSON",
                              report_spec: str | dict = None) -> list | str:
         """ Return a graph of elements that are the nested members of a collection along
@@ -1361,9 +1361,9 @@ class CollectionManager(ServerClient):
 
 
     @dynamic_catch
-    async def _async_create_collection(self, display_name: str = None, description: str = None,
-                                       category: str = None, initial_classifications: list[str] = None, prop: list[str] = ["Collection"],
-                                       body: dict | NewElementRequestBody = None) -> str:
+    async def _async_create_collection(self, display_name: Optional[str] = None, description: Optional[str] = None,
+                                       category: Optional[str] = None, initial_classifications: Optional[list[str]] = None, prop: list[str] = ["Collection"],
+                                       body: Optional[dict | NewElementRequestBody] = None) -> str:
         """ Create a new generic collection. If the body is not present, the display_name, description, category
             and classification will be used to create a simple, self-anchored collection.
             Collections: https://egeria-project.org/concepts/collection
@@ -1516,9 +1516,9 @@ class CollectionManager(ServerClient):
         return response
 
 
-    def create_collection(self, display_name: str = None, description: str = None,
-                                category: str = None, initial_classifications: list[str] = None, prop:list[str]=["Collection"],
-                                body: dict | NewElementRequestBody = None) -> str:
+    def create_collection(self, display_name: Optional[str] = None, description: Optional[str] = None,
+                                category: Optional[str] = None, initial_classifications: Optional[list[str]] = None, prop:list[str]=["Collection"],
+                                body: Optional[dict | NewElementRequestBody] = None) -> str:
         """ Create a new generic collection. If the body is not present, the display_name, description, category
             and classification will be used to create a simple, self-anchored collection.
             Collections: https://egeria-project.org/concepts/collection
@@ -1629,8 +1629,8 @@ class CollectionManager(ServerClient):
 
 
     @dynamic_catch
-    def create_root_collection(self, display_name: str = None, description: str = None,
-                                      category: str = None,  body: dict | NewElementRequestBody = None) -> str:
+    def create_root_collection(self, display_name: Optional[str] = None, description: Optional[str] = None,
+                                      category: Optional[str] = None,  body: Optional[dict | NewElementRequestBody] = None) -> str:
         """ Create a new collection with the RootCollection classification.  Used to identify the top of a
             collection hierarchy.
             Create Collections: https://egeria-project.org/concepts/collection
@@ -1668,8 +1668,8 @@ class CollectionManager(ServerClient):
                                          initial_classifications = [], prop = [prop], body=body))
 
     @dynamic_catch
-    def create_folder_collection(self, display_name: str = None, description: str = None,
-                                      category: str = None, body: dict | NewElementRequestBody = None) -> str:
+    def create_folder_collection(self, display_name: Optional[str] = None, description: Optional[str] = None,
+                                      category: Optional[str] = None, body: Optional[dict | NewElementRequestBody] = None) -> str:
         """ Create a new collection with the RootCollection classification.  Used to identify the top of a
             collection hierarchy.
             Create Collections: https://egeria-project.org/concepts/collection
@@ -1707,8 +1707,8 @@ class CollectionManager(ServerClient):
                                           initial_classifications=[], prop=[prop], body=body))
 
     @dynamic_catch
-    def create_reference_list_collection(self, display_name: str = None, description: str = None,
-                                      category: str = None, body: dict | NewElementRequestBody = None) -> str:
+    def create_reference_list_collection(self, display_name: Optional[str] = None, description: Optional[str] = None,
+                                      category: Optional[str] = None, body: Optional[dict | NewElementRequestBody] = None) -> str:
         """ Create a new collection with the RootCollection classification.  Used to identify the top of a
             collection hierarchy.
             Create Collections: https://egeria-project.org/concepts/collection
@@ -1745,8 +1745,8 @@ class CollectionManager(ServerClient):
                                           ["ReferenceList"], body))
 
     @dynamic_catch
-    def create_context_event_collection(self, display_name: str = None, description: str = None,
-                                      category: str = None, body: dict | NewElementRequestBody = None) -> str:
+    def create_context_event_collection(self, display_name: Optional[str] = None, description: Optional[str] = None,
+                                      category: Optional[str] = None, body: Optional[dict | NewElementRequestBody] = None) -> str:
         """ Create a new collection with the RootCollection classification.  Used to identify the top of a
             collection hierarchy.
             Create Collections: https://egeria-project.org/concepts/collection
@@ -1783,8 +1783,8 @@ class CollectionManager(ServerClient):
                                           ["ContextEvent"], body))
 
     # @dynamic_catch
-    # def create_glossary(self, display_name: str, description: str = None, language: str = "English", usage: str = None,
-    #                     category: str = None, body: dict | NewElementRequestBody = None) -> str:
+    # def create_glossary(self, display_name: str, description: Optional[str] = None, language: str = "English", usage: Optional[str] = None,
+    #                     category: Optional[str] = None, body: Optional[dict | NewElementRequestBody] = None) -> str:
     #     """Create a new glossary with optional classification. """
     #     if body is None:
     #
@@ -1806,9 +1806,9 @@ class CollectionManager(ServerClient):
     #     return response
 
     @dynamic_catch
-    async def _async_create_data_spec_collection(self, display_name: str = None, description: str = None,
-                                                category: str = None, classification_name: str = None,
-                                                 body: dict | NewElementRequestBody = None) -> str:
+    async def _async_create_data_spec_collection(self, display_name: Optional[str] = None, description: Optional[str] = None,
+                                                category: Optional[str] = None, classification_name: Optional[str] = None,
+                                                 body: Optional[dict | NewElementRequestBody] = None) -> str:
         """ Create a new generic collection. If the body is not present, the display_name, description, category
             and classification will be used to create a simple, self-anchored collection.
             Collections: https://egeria-project.org/concepts/collection
@@ -1951,9 +1951,9 @@ class CollectionManager(ServerClient):
         return resp.json().get("guid", NO_GUID_RETURNED)
 
     @dynamic_catch
-    def create_data_spec_collection(self, display_name: str = None, description: str = None,
-                                category: str = None, classification_name: str = None,
-                                body: dict | NewElementRequestBody = None) -> str:
+    def create_data_spec_collection(self, display_name: Optional[str] = None, description: Optional[str] = None,
+                                category: Optional[str] = None, classification_name: Optional[str] = None,
+                                body: Optional[dict | NewElementRequestBody] = None) -> str:
         """ Create a new generic collection. If the body is not present, the display_name, description, category
             and classification will be used to create a simple, self-anchored collection.
             Collections: https://egeria-project.org/concepts/collection
@@ -2063,9 +2063,9 @@ class CollectionManager(ServerClient):
 
 
     @dynamic_catch
-    async def _async_create_data_dictionary_collection(self, display_name: str = None, description: str = None,
-                                                category: str = None, classification_name: str = None,
-                                                 body: dict | NewElementRequestBody = None) -> str:
+    async def _async_create_data_dictionary_collection(self, display_name: Optional[str] = None, description: Optional[str] = None,
+                                                category: Optional[str] = None, classification_name: Optional[str] = None,
+                                                 body: Optional[dict | NewElementRequestBody] = None) -> str:
         """ Create a new generic collection. If the body is not present, the display_name, description, category
             and classification will be used to create a simple, self-anchored collection.
             Collections: https://egeria-project.org/concepts/collection
@@ -2206,9 +2206,9 @@ class CollectionManager(ServerClient):
         return resp.json().get("guid", NO_GUID_RETURNED)
 
     @dynamic_catch
-    def create_data_dictionary_collection(self, display_name: str = None, description: str = None,
-                                category: str = None, classification_name: str = None,
-                                body: dict | NewElementRequestBody = None) -> str:
+    def create_data_dictionary_collection(self, display_name: Optional[str] = None, description: Optional[str] = None,
+                                category: Optional[str] = None, classification_name: Optional[str] = None,
+                                body: Optional[dict | NewElementRequestBody] = None) -> str:
         """ Create a new generic collection. If the body is not present, the display_name, description, category
             and classification will be used to create a simple, self-anchored collection.
             Collections: https://egeria-project.org/concepts/collection
@@ -2325,7 +2325,7 @@ class CollectionManager(ServerClient):
 
 
     @dynamic_catch
-    async def _async_create_collection_from_template(self, body: TemplateRequestBody | dict) -> str:
+    async def _async_create_collection_from_template(self, body: Optional[dict | TemplateRequestBody] = None) -> str:
         """Create a new metadata element to represent a collection using an existing metadata element as a template.
         The template defines additional classifications and relationships that are added to the new collection.
         Async version.
@@ -2399,7 +2399,7 @@ class CollectionManager(ServerClient):
         return resp.json().get("guid", NO_GUID_RETURNED)
 
 
-    def create_collection_from_template(self, body: dict) -> str:
+    def create_collection_from_template(self, body: Optional[dict | TemplateRequestBody] = None) -> str:
         """Create a new metadata element to represent a collection using an existing metadata element as a template.
         The template defines additional classifications and relationships that are added to the new collection.
 
@@ -2648,7 +2648,7 @@ class CollectionManager(ServerClient):
 
 
     @dynamic_catch
-    def create_digital_product(self, body: dict | NewElementRequestBody = None) -> str:
+    def create_digital_product(self, body: Optional[dict | NewElementRequestBody] = None) -> str:
         """ Create a new collection that represents a digital product.
 
             Parameters
@@ -2769,7 +2769,7 @@ class CollectionManager(ServerClient):
 
 
     @dynamic_catch
-    def create_digital_product_catalog(self, body: dict | NewElementRequestBody = None) -> str:
+    def create_digital_product_catalog(self, body: Optional[dict | NewElementRequestBody] = None) -> str:
         """ Create a new collection that represents a digital product.
 
             Parameters
@@ -2956,7 +2956,7 @@ class CollectionManager(ServerClient):
     # @dynamic_catch
     # async def _async_link_digital_product_dependency(self, upstream_digital_prod_guid: str,
     #                                                  downstream_digital_prod_guid: str,
-    #                                                  body: dict | NewRelationshipRequestBody = None):
+    #                                                  body: Optional[dict | NewRelationshipRequestBody] = None):
     #     """ Link two dependent digital products.  The linked elements are of type DigitalProduct.
     #         Request body is optional. Async version.
     #
@@ -3065,7 +3065,7 @@ class CollectionManager(ServerClient):
     # @dynamic_catch
     # async def _async_detach_digital_product_dependency(self, upstream_digital_prod_guid: str,
     #                                                    downstream_digital_prod_guid: str,
-    #                                                    body: dict | DeleteRelationshipRequestBody = None)-> None:
+    #                                                    body: Optional[dict | DeleteRelationshipRequestBody] = None)-> None:
     #     """ Unlink two dependent digital products.  The linked elements are of type DigitalProduct.
     #         Request body is optional. Async version.
     #
@@ -3163,7 +3163,7 @@ class CollectionManager(ServerClient):
 
     # @dynamic_catch
     # async def _async_link_product_manager(self, digital_prod_guid: str, digital_prod_manager_guid: str,
-    #                                       body: dict | NewRelationshipRequestBody = None) -> None:
+    #                                       body: Optional[dict | NewRelationshipRequestBody] = None) -> None:
     #     """ Attach a product manager to a digital product. Request body is optional.
     #         Request body is optional. Async version.
     #
@@ -3215,7 +3215,7 @@ class CollectionManager(ServerClient):
     #     logger.info(f"Attached digital product manager {digital_prod_guid} -> {digital_prod_manager_guid}")
     #
     #
-    # def link_product_manager(self, digital_prod_guid: str, digital_prod_manager_guid: str, body: dict | NewRelationshipRequestBody = None):
+    # def link_product_manager(self, digital_prod_guid: str, digital_prod_manager_guid: str, body: Optional[dict | NewRelationshipRequestBody] = None):
     #     """ Attach a product manager to a digital product. Request body is optional.
     #             Request body is optional.
     #
@@ -3266,7 +3266,7 @@ class CollectionManager(ServerClient):
     # @dynamic_catch
     # async def _async_detach_product_manager(self, digital_prod_guid: str,
     #                                          digital_prod_manager_guid: str,
-    #                                          body: dict | DeleteRelationshipRequestBody = None)-> None:
+    #                                          body: Optional[dict | DeleteRelationshipRequestBody] = None)-> None:
     #     """ Detach a digital product manager from a digital product.
     #         Request body is optional. Async version.
     #
@@ -3425,7 +3425,7 @@ class CollectionManager(ServerClient):
         return await self._async_create_element_body_request(url, "AgreementProperties", body)
 
     @dynamic_catch
-    def create_agreement(self, body: dict | NewElementRequestBody = None) -> str:
+    def create_agreement(self, body: Optional[dict | NewElementRequestBody] = None) -> str:
         """ Create a new collection that represents an agreement..
 
             Parameters
@@ -3554,7 +3554,7 @@ class CollectionManager(ServerClient):
     #     return await self._async_create_element_body_request(url, "AgreementProperties", body)
     #
     # @dynamic_catch
-    # def create_data_sharing_agreement(self, body: dict | NewElementRequestBody = None) -> str:
+    # def create_data_sharing_agreement(self, body: Optional[dict | NewElementRequestBody] = None) -> str:
     #     """ Create a new collection that represents a digital product.
     #
     #         Parameters
@@ -3738,7 +3738,7 @@ class CollectionManager(ServerClient):
 
     @dynamic_catch
     async def _async_link_agreement_actor(self, agreement_guid: str, actor_guid: str,
-                                          body: dict | NewRelationshipRequestBody = None) -> None:
+                                          body: Optional[dict | NewRelationshipRequestBody] = None) -> None:
         """ Attach an actor to an agreement.  The actor element may be an actor profile (person, team or IT profile);
             actor role (person role, team role or IT profile role); or user identity. Request body is optional.
             Request body is optional. Async version.
@@ -3793,7 +3793,7 @@ class CollectionManager(ServerClient):
         logger.info(f"Attached digital product manager {agreement_guid} -> {actor_guid}")
 
 
-    def link_agreement_actor(self, agreement_guid: str, actor_guid: str, body: dict | NewRelationshipRequestBody = None):
+    def link_agreement_actor(self, agreement_guid: str, actor_guid: str, body: Optional[dict | NewRelationshipRequestBody] = None):
         """ Attach an actor to an agreement.  The actor element may be an actor profile (person, team or IT profile);
             actor role (person role, team role or IT profile role); or user identity. Request body is optional.
             Async version.
@@ -3848,7 +3848,7 @@ class CollectionManager(ServerClient):
     @dynamic_catch
     async def _async_detach_agreement_actor(self, agreement_guid: str,
                                              actor_guid: str,
-                                             body: dict | DeleteRelationshipRequestBody = None)-> None:
+                                             body: Optional[dict | DeleteRelationshipRequestBody] = None)-> None:
         """ Detach an actor from an agreement.
             Request body is optional. Async Version.
 
@@ -4081,7 +4081,7 @@ class CollectionManager(ServerClient):
 
     @dynamic_catch
     async def _async_detach_agreement_item(self, agreement_guid: str, agreement_item_guid: str,
-                                           body: dict | DeleteRelationshipRequestBody = None) -> None:
+                                           body: Optional[dict | DeleteRelationshipRequestBody] = None) -> None:
         """Detach an agreement item from an agreement. Request body is optional. Async version.
 
         Parameters
@@ -4169,7 +4169,7 @@ class CollectionManager(ServerClient):
 
     @dynamic_catch
     async def _async_link_contract(self, agreement_guid: str, external_ref_guid: str,
-                                   body: dict | NewRelationshipRequestBody = None) -> None:
+                                   body: Optional[dict | NewRelationshipRequestBody] = None) -> None:
         """ Attach an agreement to an external reference element that describes the location of the contract
         documents.
             Request body is optional. Async version.
@@ -4659,7 +4659,7 @@ class CollectionManager(ServerClient):
 
     @dynamic_catch
     async def _async_link_subscriber(self, subscriber_guid: str, subscription_guid: str,
-                                     body: dict | NewRelationshipRequestBody = None)-> None:
+                                     body: Optional[dict | NewRelationshipRequestBody] = None)-> None:
         """ Attach a subscriber to a subscription.  The subscriber is of type 'Referenceable' to allow digital
             products, team or business capabilities to be the subscriber. The subscription is an element of type
             DigitalSubscription.
@@ -4714,7 +4714,7 @@ class CollectionManager(ServerClient):
 
     @dynamic_catch
     def link_subscriber(self, subscriber_guid: str, subscription_guid: str,
-                        body: dict | NewRelationshipRequestBody = None):
+                        body: Optional[dict | NewRelationshipRequestBody] = None):
         """ Attach a subscriber to a subscription.  The subscriber is of type 'Referenceable' to allow digital
             products, team or business capabilities to be the subscriber. The subscription is an element of type
             DigitalSubscription.
@@ -4766,7 +4766,7 @@ class CollectionManager(ServerClient):
 
     @dynamic_catch
     async def _async_detach_subscriber(self, subscriber_guid: str, subscription_guid: str,
-                                       body: dict | DeleteRelationshipRequestBody = None) -> None:
+                                       body: Optional[dict | DeleteRelationshipRequestBody] = None) -> None:
         """ Detach a subscriber from a subscription Request body is optional. Async version.
 
         Parameters
@@ -4918,7 +4918,7 @@ class CollectionManager(ServerClient):
 
     @dynamic_catch
     def attach_collection(self, parent_guid: str, collection_guid: str,
-                          body: dict | NewRelationshipRequestBody = None):
+                          body: Optional[dict | NewRelationshipRequestBody] = None):
         """ Connect an existing collection to an element using the ResourceList relationship (0019).
 
             Parameters
@@ -4974,7 +4974,7 @@ class CollectionManager(ServerClient):
 
     @dynamic_catch
     async def _async_detach_collection(self, parent_guid: str, collection_guid: str,
-                                       body: dict | DeleteRelationshipRequestBody = None):
+                                       body: Optional[dict | DeleteRelationshipRequestBody] = None):
         """ Detach an existing collection from an element. If the collection is anchored to the element,
         it is delete.
             Async version.
@@ -5024,7 +5024,7 @@ class CollectionManager(ServerClient):
 
 
     def detach_collection(self, parent_guid: str, collection_guid: str,
-                          body: dict | DeleteRelationshipRequestBody = None):
+                          body: Optional[dict | DeleteRelationshipRequestBody] = None):
         """ Detach an existing collection from an element. If the collection is anchored to the element,
         it is delete.
 
@@ -5118,7 +5118,7 @@ class CollectionManager(ServerClient):
         logger.info(f"Deleted collection {collection_guid} with cascade {cascade}")
 
 
-    def delete_collection(self, collection_guid: str, body: dict | DeleteElementRequestBody = None,
+    def delete_collection(self, collection_guid: str, body: Optional[dict | DeleteElementRequestBody] = None,
                           cascade: bool = False) -> None:
         """Delete a collection.  It is deleted from all parent elements.  If members are anchored to the collection
         then they are also deleted.
@@ -5161,7 +5161,7 @@ class CollectionManager(ServerClient):
 
     @dynamic_catch
     async def _async_add_to_collection(self, collection_guid: str, element_guid: str,
-                                       body: dict | NewRelationshipRequestBody = None, ) -> None:
+                                       body: Optional[dict | NewRelationshipRequestBody] = None, ) -> None:
         """Add an element to a collection.  The request body is optional. Async version.
 
         Parameters
@@ -5282,7 +5282,7 @@ class CollectionManager(ServerClient):
         loop.run_until_complete(self._async_add_to_collection(element_guid, collection_guid, body))
 
     def add_term_to_folder(self, folder_guid: str, term_guid: str,
-                             body: dict | NewRelationshipRequestBody = None) -> None:
+                             body: Optional[dict | NewRelationshipRequestBody] = None) -> None:
         """Add a term to a category.  The request body is optional."""
         loop = asyncio.get_event_loop()
         loop.run_until_complete(self._async_add_to_collection(folder_guid, term_guid, body))
@@ -5414,7 +5414,7 @@ class CollectionManager(ServerClient):
 
     @dynamic_catch
     async def _async_remove_from_collection(self, collection_guid: str, element_guid: str,
-                                            body: dict | DeleteRelationshipRequestBody = None) -> None:
+                                            body: Optional[dict | DeleteRelationshipRequestBody] = None) -> None:
         """Remove an element from a collection. Async version.
 
         Parameters
@@ -5538,8 +5538,8 @@ class CollectionManager(ServerClient):
 
 
     @dynamic_catch
-    async def _async_get_member_list(self, collection_guid: str = None, collection_name: str = None,
-                                     collection_qname: str = None, ) -> list | str:
+    async def _async_get_member_list(self, collection_guid: Optional[str] = None, collection_name: Optional[str] = None,
+                                     collection_qname: Optional[str] = None, ) -> list | str:
         """Get the member list for the collection - async version.
         Parameters
         ----------
@@ -5590,8 +5590,8 @@ class CollectionManager(ServerClient):
         return member_list if len(member_list) > 0 else "No members found"
 
 
-    def get_member_list(self, collection_guid: str = None, collection_name: str = None,
-                        collection_qname: str = None, ) -> list | bool:
+    def get_member_list(self, collection_guid: Optional[str] = None, collection_name: Optional[str] = None,
+                        collection_qname: Optional[str] = None, ) -> list | bool:
         """Get the member list for a collection - async version.
         Parameters
         ----------
@@ -5718,7 +5718,7 @@ class CollectionManager(ServerClient):
         return col_data
 
 
-    def _generate_collection_output(self, elements: dict|list[dict], filter: Optional[str],
+    def _generate_collection_output(self, elements: dict|list[dict], filter_string: Optional[str],
                                     element_type_name: Optional[str], output_format: str = "DICT",
                                     report_spec: dict | str = None) -> str | list[dict]:
         """ Generate output for collections in the specified format.
