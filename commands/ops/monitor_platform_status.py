@@ -80,15 +80,15 @@ def display_status(
                 sys.exit(1)
 
             for platform in platform_list:
-                platform_name = platform["properties"].get("displayName", "---")
-                platform_guid = platform["elementHeader"]["guid"]
-                platform_desc = platform["properties"].get("description", "---")
+                platform_name = platform.get("display_name", platform.get("properties", {}).get("displayName", "---"))
+                platform_guid = platform.get("guid", platform.get("elementHeader", {}).get("guid"))
+                platform_desc = platform.get("description", platform.get("properties", {}).get("description", "---"))
                 server_list = ""
 
                 platform_report = r_client.get_platform_report(platform_guid)
-                platform_url = platform_report.get("platformURLRoot", " ")
-                platform_origin = platform_report.get("platformOrigin", " ")
-                platform_build = platform_report.get("platformBuildProperties", " ")
+                platform_url = platform_report.get("platform_url_root", platform_report.get("platformURLRoot", " "))
+                platform_origin = platform_report.get("platform_origin", platform_report.get("platformOrigin", " "))
+                platform_build = platform_report.get("platform_build_properties", platform_report.get("platformBuildProperties", " "))
                 platform_build_md = ""
                 if type(platform_build) is dict:
                     for prop in platform_build:

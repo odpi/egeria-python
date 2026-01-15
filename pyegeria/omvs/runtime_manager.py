@@ -9,10 +9,20 @@ Runtime manager is a view service that supports user interaction with the runnin
 import asyncio
 
 from requests import Response
-from pyegeria.core.utils import body_slimmer
+from pyegeria.core.utils import body_slimmer, dynamic_catch
 from pyegeria.core._server_client import ServerClient
 from pyegeria.core._globals import max_paging_size,default_time_out
 from typing import Any, Optional
+from pyegeria.view.base_report_formats import get_report_spec_match
+from pyegeria.view.base_report_formats import select_report_spec
+from pyegeria.models import (
+    SearchStringRequestBody, FilterRequestBody, GetRequestBody, NewElementRequestBody,
+    TemplateRequestBody, UpdateElementRequestBody, NewRelationshipRequestBody,
+    DeleteElementRequestBody, DeleteRelationshipRequestBody,
+    ArchiveRequestBody, NewOpenMetadataElementRequestBody, FindRequestBody
+)
+from pyegeria.view.output_formatter import generate_output, populate_columns_from_properties, \
+    _extract_referenceable_properties, get_required_relationships
 
 class RuntimeManager(ServerClient):
     """
@@ -55,349 +65,20 @@ class RuntimeManager(ServerClient):
             "Default Local OMAG Server Platform"  # this from the core content archive
         )
 
-    #
-    #   Cohorts
-    #
-    async def _async_connect_to_cohort(
-        self,
-        cohort_name: str,
-        server_guid: Optional[str] = None,
-        qualified_name: Optional[str] = None,
-    ) -> None:
-        """A new server needs to register the metadataCollectionId for its metadata repository with the other servers
-            in the open metadata repository. It only needs to do this once and uses a timestamp to record that the
-            registration event has been sent. If the server has already registered in the past, it sends a
-            reregistration request.  Async version.
-
-        https://egeria-project.org/concepts/cohort-member/
-
-        Parameters
-        ----------
-        server_guid : str, default = None
-            Identity of the server to act on. If not specified, server_name must be.
-        qualified_name: str, default = None
-            Unique name of server to act on. If not specified, server_guid must be.
-        cohort_name : str
-            Name of the cohort to join
-
-        Returns
-        -------
-           None
-
-        Raises
-        ------
-        PyegeriaInvalidParameterException
-        PyegeriaAPIException
-        PyegeriaUnauthorizedException
-
-        """
-        server_guid = self.__get_guid__(server_guid, qualified_name=qualified_name)
-        url = (
-            f"{self.runtime_command_root}/cohort-members/"
-            f"{server_guid}/cohorts/{cohort_name}/connect"
-        )
-        await self._async_make_request("GET", url)
-        return
-
-    def connect_to_cohort(
-        self,
-        cohort_name: str,
-        server_guid: Optional[str] = None,
-        qualified_name: Optional[str] = None,
-    ) -> None:
-        """A new server needs to register the metadataCollectionId for its metadata repository with the other servers
-            in the open metadata repository. It only needs to do this once and uses a timestamp to record that the
-            registration event has been sent. If the server has already registered in the past, it sends a
-            reregistration request.
-
-        https://egeria-project.org/concepts/cohort-member/
-
-        Parameters
-        ----------
-        server_guid : str, default = None
-            Identity of the server to act on. If not specified, server_name must be.
-        qualified_name: str, default = None
-            Unique name of server to act on. If not specified, server_guid must be.
-        cohort_name: str
-            Name of the cohort to join
-
-        Returns
-        -------
-           None
-
-        Raises
-        ------
-        PyegeriaInvalidParameterException
-        PyegeriaAPIException
-        PyegeriaUnauthorizedException
-
-        """
-        loop = asyncio.get_event_loop()
-        loop.run_until_complete(
-            self._async_connect_to_cohort(cohort_name, server_guid, qualified_name)
-        )
-        return
-
-    async def _async_disconnect_from_cohort(
-        self,
-        cohort_name: str,
-        server_guid: Optional[str] = None,
-        qualified_name: Optional[str] = None,
-    ) -> None:
-        """Disconnect communications from a specific cohort.  Async version.
-
-            https://egeria-project.org/concepts/cohort-member/
-
-        Parameters
-        ----------
-        server_guid : str, default = None
-            Identity of the server to act on. If not specified, server_name must be.
-        qualified_name: str, default = None
-            Unique name of server to act on. If not specified, server_guid must be.
-        cohort_name : str
-            Name of the cohort to join
-
-        Returns
-        -------
-           None
-
-        Raises
-        ------
-        PyegeriaInvalidParameterException
-        PyegeriaAPIException
-        PyegeriaUnauthorizedException
-
-        """
-        server_guid = self.__get_guid__(server_guid, qualified_name=qualified_name)
-        url = (
-            f"{self.runtime_command_root}/runtime-manager/cohort-members/"
-            f"{server_guid}/cohorts/{cohort_name}/disconnect"
-        )
-        await self._async_make_request("GET", url)
-        return
-
-    def disconnect_from_cohort(
-        self,
-        cohort_name: str,
-        server_guid: Optional[str] = None,
-        qualified_name: Optional[str] = None,
-    ) -> None:
-        """Disconnect communications from a specific cohort.
-
-            https://egeria-project.org/concepts/cohort-member/
-
-        Parameters
-        ----------
-        server_guid : str, default = None
-            Identity of the server to act on. If not specified, server_name must be.
-        qualified_name: str, default = None
-            Unique name of server to act on. If not specified, server_guid must be.
-        cohort_name: str
-            Name of the cohort to join
-
-        Returns
-        -------
-           None
-
-        Raises
-        ------
-        PyegeriaInvalidParameterException
-        PyegeriaAPIException
-        PyegeriaUnauthorizedException
-
-        """
-        loop = asyncio.get_event_loop()
-        loop.run_until_complete(
-            self._async_disconnect_from_cohort(cohort_name, server_guid, qualified_name)
-        )
-        return
-
-    async def _async_unregister_from_cohort(
-        self,
-        cohort_name: str,
-        server_guid: Optional[str] = None,
-        qualified_name: Optional[str] = None,
-    ) -> None:
-        """Unregister from a specific cohort and disconnect from cohort communications.  Async version.
-
-            https://egeria-project.org/concepts/cohort-member/
-
-        Parameters
-        ----------
-         server_guid : str, default = None
-            Identity of the server to act on. If not specified, server_name must be.
-        qualified_name: str, default = None
-            Unique name of server to act on. If not specified, server_guid must be.
-        cohort_name : str
-            Name of the cohort to join
-
-        Returns
-        -------
-           None
-
-        Raises
-        ------
-        PyegeriaInvalidParameterException
-        PyegeriaAPIException
-        PyegeriaUnauthorizedException
-
-        """
-        server_guid = self.__get_guid__(server_guid, qualified_name=qualified_name)
-        url = (
-            f"{self.runtime_command_root}/cohort-members/"
-            f"{server_guid}/cohorts/{cohort_name}/unregister"
-        )
-        await self._async_make_request("GET", url)
-        return
-
-    def unregister_from_cohort(
-        self,
-        cohort_name: str,
-        server_guid: Optional[str] = None,
-        qualified_name: Optional[str] = None,
-    ) -> None:
-        """Unregister from a specific cohort and disconnect from cohort communications.
-            https://egeria-project.org/concepts/cohort-member/
-
-        Parameters
-        ----------
-        server_guid : str, default = None
-            Identity of the server to act on. If not specified, server_name must be.
-        qualified_name: str, default = None
-            Unique name of server to act on. If not specified, server_guid must be.
-        cohort_name: str
-            Name of the cohort to join
-
-        Returns
-        -------
-           None
-
-        Raises
-        ------
-        PyegeriaInvalidParameterException
-        PyegeriaAPIException
-        PyegeriaUnauthorizedException
-
-        """
-        loop = asyncio.get_event_loop()
-        loop.run_until_complete(
-            self._async_disconnect_from_cohort(cohort_name, server_guid, qualified_name)
-        )
-        return
-
-    #
-    #   Governance Engines
-    #
-
-    async def _async_refresh_gov_eng_config(
-        self,
-        gov_engine_name: Optional[str] = None,
-        server_guid: Optional[str] = None,
-        display_name: Optional[str] = None,
-        qualified_name: Optional[str] = None,
-    ) -> None:
-        """Request that the governance engine refresh its configuration by calling the metadata server. This request is
-            useful if the metadata server has an outage, particularly while the governance server is initializing.
-            This request just ensures that the latest configuration is in use. If gov_engine_name is None, all engines
-            will be refreshed. Async version.
-
-            https://egeria-project.org/concepts/governance-engine-definition/
-
-        Parameters
-        ----------
-        gov_engine_name: str, default = None
-            If None, then all engines will be refreshed - this is the normal case. If an engine is specified only this
-            engine will be refreshed.
-        server_guid : str, default = None
-            Identity of the server to act on. If not specified, qualified_name or display_name must be.
-        display_name: str, default = None
-            Name of server to act on. If not specified, server_guid or qualified_name must be.
-        qualified_name: str, opt, default is None.
-                        Identity of the server to act on. Either the server_guid , qualified_name, or server_name must
-                        be provided.
-
-        Returns
-        -------
-           None
-
-        Raises
-        ------
-        PyegeriaInvalidParameterException
-        PyegeriaAPIException
-        PyegeriaUnauthorizedException
-
-        """
-        server_guid = self.__get_guid__(
-            server_guid, display_name, "resourceName", qualified_name, tech_type="Engine Host"
-        )
-        if gov_engine_name is None:
-            url = (
-                f"{self.runtime_command_root}/engine-hosts/"
-                f"{server_guid}/governance-engines/refresh-config"
-            )
-        else:
-            url = (
-                f"{self.runtime_command_root}/engine-hosts/"
-                f"{server_guid}/governance-engines/{gov_engine_name}/refresh-config"
-            )
-        await self._async_make_request("GET", url)
-        return
-
-    def refresh_gov_eng_config(
-        self,
-        gov_engine_name: Optional[str] = None,
-        server_guid: Optional[str] = None,
-        display_name: Optional[str] = None,
-        qualified_name: Optional[str] = None,
-    ) -> None:
-        """Request that the governance engine refresh its configuration by calling the metadata server. This request is
-            useful if the metadata server has an outage, particularly while the governance server is initializing.
-            This request just ensures that the latest configuration is in use. If gov_engine_name is None, all engines
-            will be refreshed. Async version.
-
-            https://egeria-project.org/concepts/governance-engine-definition/
-
-        Parameters
-        ----------
-        gov_engine_name: str, default = None
-            If None, then all engines will be refreshed - this is the normal case. If an engine is specified only this
-            engine will be refreshed.
-        server_guid : str, default = None
-            Identity of the server to act on. If not specified, qualified_name or display_name must be.
-        display_name: str, default = None
-            Name of server to act on. If not specified, server_guid or qualified_name must be.
-        qualified_name: str, opt, default is None.
-                        Identity of the server to act on. Either the server_guid , qualified_name, or server_name must
-                        be provided.
-
-        Returns
-        -------
-           None
-
-        Raises
-        ------
-        PyegeriaInvalidParameterException
-        PyegeriaAPIException
-        PyegeriaUnauthorizedException
-
-        """
-        loop = asyncio.get_event_loop()
-        loop.run_until_complete(
-            self._async_refresh_gov_eng_config(
-                gov_engine_name, server_guid, display_name, qualified_name
-            )
-        )
-        return
 
     #
     #   Integration Connector Methods
     #
+    @dynamic_catch
     async def _async_get_integ_connector_config_properties(
         self,
         connector_name: str,
         server_guid: Optional[str] = None,
         display_name: Optional[str] = None,
         qualified_name: Optional[str] = None,
+        output_format: str = "JSON",
+        report_spec: str | dict = "IntegrationConnector",
+        body: Optional[dict | GetRequestBody] = None,
     ) -> dict | str:
         """Retrieve the configuration properties of the named integration connector running in the integration daemon.
             Async version.
@@ -406,14 +87,21 @@ class RuntimeManager(ServerClient):
 
         Parameters
         ----------
+        connector_name : str
+            Name of the integration connector to retrieve properties for.
         server_guid : str, default = None
             Identity of the server to act on. If not specified, qualified_name or server_name must be.
         display_name: str, default = None
             Name of server to act on. If not specified, server_guid or qualified_name must be.
         qualified_name: str, default = None
             Unique name of server to act on. If not specified, server_guid or server_name must be.
-        connector_name : str
-            Name of the integration connector to retrieve properties for.
+        output_format: str, optional
+            The format of the output. Default is "JSON".
+        report_spec: str | dict, optional
+            The report specification to use. Default is "IntegrationConnector".
+
+        body : dict | GetRequestBody, optional
+            Request body to pass directly to the API.
 
         Returns
         -------
@@ -437,8 +125,40 @@ class RuntimeManager(ServerClient):
             f"{self.runtime_command_root}/integration-daemon/"
             f"{server_guid}/integration-connectors/{connector_name}/configuration-properties"
         )
-        response = await self._async_make_request("GET", url)
-        return response.json().get("properties", "No properties found")
+        response = await self._async_make_request("GET", url, body=body)
+        props = response.json().get("properties", {})
+        
+        if output_format == "DICT":
+            return props
+            
+        # Convert to Key/Value list for other formats
+        elements = [{"Property": k, "Value": v} for k, v in props.items()] if props else []
+        
+        # Use a simple dynamic report spec for properties
+        columns_struct = {
+            "formats": {
+                "attributes": [
+                    {"key": "Property", "label": "Property", "value": ""},
+                    {"key": "Value", "label": "Value", "value": ""}
+                ]
+            }
+        }
+        
+        def extract_kv(elem, cols):
+            c_data = populate_columns_from_properties(elem, cols)
+            c_list = c_data.get("formats", {}).get("attributes", [])
+            for c in c_list:
+                c['value'] = elem.get(c['key'])
+            return c_data
+
+        return generate_output(
+            elements=elements,
+            search_string=connector_name,
+            entity_type="Properties",
+            output_format=output_format,
+            extract_properties_func=extract_kv,
+            columns_struct=columns_struct
+        )
 
     def get_integ_connector_config_properties(
         self,
@@ -446,9 +166,11 @@ class RuntimeManager(ServerClient):
         server_guid: Optional[str] = None,
         display_name: Optional[str] = None,
         qualified_name: Optional[str] = None,
+        output_format: str = "JSON",
+        report_spec: str | dict = "IntegrationConnector",
+        body: Optional[dict | GetRequestBody] = None,
     ) -> dict | str:
         """Retrieve the configuration properties of the named integration connector running in the integration daemon.
-            Async version.
 
             https://egeria-project.org/concepts/integration-connector/
 
@@ -462,9 +184,17 @@ class RuntimeManager(ServerClient):
             Name of server to act on. If not specified, server_guid or qualified_name must be.
         qualified_name: str, default = None
             Unique name of server to act on. If not specified, server_guid or server_name must be.
+        output_format: str, optional
+            The format of the output. Default is "JSON".
+        report_spec: str | dict, optional
+            The report specification to use. Default is "IntegrationConnector".
+
+        body : dict | GetRequestBody, optional
+            Request body to pass directly to the API.
+
         Returns
         -------
-           None
+           Dict of the connector configuration properties.
 
         Raises
         ------
@@ -476,7 +206,7 @@ class RuntimeManager(ServerClient):
         loop = asyncio.get_event_loop()
         response = loop.run_until_complete(
             self._async_get_integ_connector_config_properties(
-                connector_name, server_guid, display_name, qualified_name
+                connector_name, server_guid, display_name, qualified_name, output_format, report_spec, body
             )
         )
         return response
@@ -489,6 +219,7 @@ class RuntimeManager(ServerClient):
         qualified_name: Optional[str] = None,
         merge_update: bool = True,
         config_properties: dict = None,
+        body: Optional[dict | FilterRequestBody] = None,
     ) -> None:
         """Update the configuration properties of the integration connectors, or specific integration connector
             if a connector name is supplied.  This update is in memory and will not persist over a server restart.
@@ -513,6 +244,9 @@ class RuntimeManager(ServerClient):
         config_properties : dict, optional, default = None
             A dict of Property Name, Property Value pairs.
 
+        body : dict | FilterRequestBody, optional
+            Request body to pass directly to the API.
+
         Returns
         -------
            None
@@ -536,12 +270,13 @@ class RuntimeManager(ServerClient):
             f"{server_guid}/integration-connectors/configuration-properties"
         )
 
-        body = {
-            "class": "ConnectorConfigPropertiesRequestBody",
-            "connectorName": connector_name,
-            "mergeUpdate": merge_update,
-            "configurationProperties": config_properties,
-        }
+        if body is None:
+            body = {
+                "class": "ConnectorConfigPropertiesRequestBody",
+                "connectorName": connector_name,
+                "mergeUpdate": merge_update,
+                "configurationProperties": config_properties,
+            }
         await self._async_make_request("POST", url, body_slimmer(body))
         return
 
@@ -553,6 +288,7 @@ class RuntimeManager(ServerClient):
         qualified_name: Optional[str] = None,
         merge_update: bool = False,
         config_properties: dict = None,
+        body: Optional[dict] = None,
     ) -> None:
         """Update the configuration properties of the integration connectors, or specific integration connector
             if a connector name is supplied.  This update is in memory and will not persist over a server restart.
@@ -575,6 +311,9 @@ class RuntimeManager(ServerClient):
         config_properties : dict, optional, default = None
             A dict of Property Name, Property Value pairs.
 
+        body : dict, optional
+            Request body to pass directly to the API.
+
         Returns
         -------
            None
@@ -595,6 +334,7 @@ class RuntimeManager(ServerClient):
                 qualified_name,
                 merge_update,
                 config_properties,
+                body,
             )
         )
         return
@@ -606,6 +346,7 @@ class RuntimeManager(ServerClient):
         server_guid: Optional[str] = None,
         display_name: Optional[str] = None,
         qualified_name: Optional[str] = None,
+        body: Optional[dict] = None,
     ) -> None:
         """Update the endpoint network address for a specific integration connector.  Typically used for discovery.
             This update is in memory and will not persist over a server restart. Async version.
@@ -625,6 +366,9 @@ class RuntimeManager(ServerClient):
         endpoint_address : str
             Specifies the new network endpoint address. This is the full address string - can include protocol,
             port, operation, etc.
+
+        body : dict, optional
+            Request body to pass directly to the API.
 
         Returns
         -------
@@ -645,10 +389,11 @@ class RuntimeManager(ServerClient):
             f"{server_guid}/integration-connectors/{connector_name}/endpoint-network-address"
         )
 
-        body = {
-            "class": "StringRequestBody",
-            "string": endpoint_address,
-        }
+        if body is None:
+            body = {
+                "class": "StringRequestBody",
+                "string": endpoint_address,
+            }
         await self._async_make_request("POST", url, body)
         return
 
@@ -659,6 +404,7 @@ class RuntimeManager(ServerClient):
         server_guid: Optional[str] = None,
         display_name: Optional[str] = None,
         qualified_name: Optional[str] = None,
+        body: Optional[dict] = None,
     ) -> None:
         """Update the endpoint network address for a specific integration connector.  Typically used for discovery.
             This update is in memory and will not persist over a server restart. Async version.
@@ -679,6 +425,9 @@ class RuntimeManager(ServerClient):
             Specifies the new network endpoint address. This is the full address string - can include protocol,
             port, operation, etc.
 
+        body : dict, optional
+            Request body to pass directly to the API.
+
         Returns
         -------
            None
@@ -698,32 +447,34 @@ class RuntimeManager(ServerClient):
                 server_guid,
                 display_name,
                 qualified_name,
+                body,
             )
         )
         return
 
-    async def _async_refresh_integration_connectors(
+    async def _async_stop_connector(
         self,
         connector_name: Optional[str] = None,
         server_guid: Optional[str] = None,
         display_name: Optional[str] = None,
         qualified_name: Optional[str] = None,
+        body: Optional[dict | FilterRequestBody] = None,
     ) -> None:
-        """Issue a refresh() request on all connectors running in the integration daemon, or a specific connector if
-            the connector name is specified. Async version.
-
-            https://egeria-project.org/concepts/integration-connector/
+        """Stop the named integration connector OR all connectors if connector name is None.  Async version.
 
         Parameters
         ----------
+        connector_name : str, default = None
+            Name of the integration connector to stop. If none, all connectors will be stopped.
         server_guid : str, default = None
             Identity of the server to act on. If not specified, qualified_name or server_name must be.
         display_name: str, default = None
             Name of server to act on. If not specified, server_guid or qualified_name must be.
         qualified_name: str, default = None
             Unique name of server to act on. If not specified, server_guid or server_name must be.
-        connector_name : str, opt
-            Name of the integration connector to retrieve properties for. If None, all connectors refreshed.
+
+        body : dict | FilterRequestBody, optional
+            Request body to pass directly to the API.
 
         Returns
         -------
@@ -743,40 +494,44 @@ class RuntimeManager(ServerClient):
             qualified_name,
             "Integration Daemon",
         )
-        url = (
-            f"{self.runtime_command_root}/integration-daemon/"
-            f"{server_guid}/integration-connectors/refresh"
-        )
 
-        body = {
-            "class": "NameRequestBody",
-            "string": connector_name,
-        }
-        await self._async_make_request("POST", url, body_slimmer(body))
+        if connector_name is None:
+            url = (
+                f"{self.runtime_command_root}/integration-daemon/"
+                f"{server_guid}/integration-connectors/stop"
+            )
+        else:
+            url = (
+                f"{self.runtime_command_root}/integration-daemon/"
+                f"{server_guid}/integration-connectors/{connector_name}/stop"
+            )
+
+        await self._async_make_request("GET", url, body=body)
         return
 
-    def refresh_integration_connectors(
+    def stop_connector(
         self,
         connector_name: Optional[str] = None,
         server_guid: Optional[str] = None,
         display_name: Optional[str] = None,
         qualified_name: Optional[str] = None,
+        body: Optional[dict | FilterRequestBody] = None,
     ) -> None:
-        """Issue a refresh() request on all connectors running in the integration daemon, or a specific connector if
-            the connector name is specified.
-
-            https://egeria-project.org/concepts/integration-connector/
+        """Stop the named integration connector OR all connectors if connector name is None.
 
         Parameters
         ----------
+        connector_name : str, default = None
+            Name of the integration connector to stop. If none, all connectors will be stopped.
         server_guid : str, default = None
             Identity of the server to act on. If not specified, qualified_name or server_name must be.
         display_name: str, default = None
             Name of server to act on. If not specified, server_guid or qualified_name must be.
         qualified_name: str, default = None
             Unique name of server to act on. If not specified, server_guid or server_name must be.
-        connector_name : str, opt
-            Name of the integration connector to retrieve properties for. If None, all connectors refreshed.
+
+        body : dict | FilterRequestBody, optional
+            Request body to pass directly to the API.
 
         Returns
         -------
@@ -791,34 +546,35 @@ class RuntimeManager(ServerClient):
         """
         loop = asyncio.get_event_loop()
         loop.run_until_complete(
-            self._async_refresh_integration_connectors(
-                connector_name, server_guid, display_name, qualified_name
+            self._async_stop_connector(
+                connector_name, server_guid, display_name, qualified_name, body
             )
         )
         return
 
-    async def _async_restart_integration_connectors(
+    async def _async_start_connector(
         self,
         connector_name: Optional[str] = None,
         server_guid: Optional[str] = None,
         display_name: Optional[str] = None,
         qualified_name: Optional[str] = None,
+        body: Optional[dict | FilterRequestBody] = None,
     ) -> None:
-        """Issue a restart() request on all connectors running in the integration daemon, or a specific connector if
-            the connector name is specified. Async version.
-
-            https://egeria-project.org/concepts/integration-connector/
+        """Start the named integration connector OR all connectors if connector name is None.  Async version.
 
         Parameters
         ----------
+        connector_name : str, default = None
+            Name of the integration connector to start. If none, all connectors will be started.
         server_guid : str, default = None
             Identity of the server to act on. If not specified, qualified_name or server_name must be.
         display_name: str, default = None
             Name of server to act on. If not specified, server_guid or qualified_name must be.
         qualified_name: str, default = None
             Unique name of server to act on. If not specified, server_guid or server_name must be.
-        connector_name : str, opt
-            Name of the integration connector to retrieve properties for. If None, all connectors restarted.
+
+        body : dict | FilterRequestBody, optional
+            Request body to pass directly to the API.
 
         Returns
         -------
@@ -838,40 +594,44 @@ class RuntimeManager(ServerClient):
             qualified_name,
             "Integration Daemon",
         )
-        url = (
-            f"{self.runtime_command_root}/integration-daemon/"
-            f"{server_guid}/integration-connectors/restart"
-        )
 
-        body = {
-            "class": "NameRequestBody",
-            "string": connector_name,
-        }
-        await self._async_make_request("POST", url, body_slimmer(body))
+        if connector_name is None:
+            url = (
+                f"{self.runtime_command_root}/integration-daemon/"
+                f"{server_guid}/integration-connectors/start"
+            )
+        else:
+            url = (
+                f"{self.runtime_command_root}/integration-daemon/"
+                f"{server_guid}/integration-connectors/{connector_name}/start"
+            )
+
+        await self._async_make_request("GET", url, body=body)
         return
 
-    def restart_integration_connectors(
+    def start_connector(
         self,
         connector_name: Optional[str] = None,
         server_guid: Optional[str] = None,
         display_name: Optional[str] = None,
         qualified_name: Optional[str] = None,
+        body: Optional[dict | FilterRequestBody] = None,
     ) -> None:
-        """Issue a restart() request on all connectors running in the integration daemon, or a specific connector if
-            the connector name is specified.
-
-            https://egeria-project.org/concepts/integration-connector/
+        """Start the named integration connector OR all connectors if connector name is None.
 
         Parameters
         ----------
+        connector_name : str, default = None
+            Name of the integration connector to start. If none, all connectors will be started.
         server_guid : str, default = None
             Identity of the server to act on. If not specified, qualified_name or server_name must be.
         display_name: str, default = None
             Name of server to act on. If not specified, server_guid or qualified_name must be.
         qualified_name: str, default = None
             Unique name of server to act on. If not specified, server_guid or server_name must be.
-        connector_name : str, opt
-            Name of the integration connector to retrieve properties for. If None, all connectors restarted.
+
+        body : dict | FilterRequestBody, optional
+            Request body to pass directly to the API.
 
         Returns
         -------
@@ -886,10 +646,290 @@ class RuntimeManager(ServerClient):
         """
         loop = asyncio.get_event_loop()
         loop.run_until_complete(
-            self._async_restart_integration_connectors(
-                connector_name, server_guid, display_name, qualified_name
+            self._async_start_connector(
+                connector_name, server_guid, display_name, qualified_name, body
             )
         )
+        return
+
+    async def _async_connect_to_cohort(
+        self, cohort_name: str, server_guid: str = None, server_name: str = None, body: Optional[dict | FilterRequestBody] = None
+    ) -> None:
+        """Request the named OMAG server to register with the named cohort.  Async version.
+
+        Parameters
+        ----------
+        cohort_name : str
+            Name of the cohort to register with.
+        server_guid : str, opt
+            Identity of the server to act on. If not specified, server_name must be.
+        server_name: str, opt
+            Name of server to act on. If not specified, server_guid must be.
+
+        body : dict | FilterRequestBody, optional
+            Request body to pass directly to the API.
+
+        Returns
+        -------
+           None
+
+        Raises
+        ------
+        PyegeriaInvalidParameterException
+        PyegeriaAPIException
+        PyegeriaUnauthorizedException
+
+        """
+        server_guid = self.__get_guid__(
+            server_guid, server_name, "resourceName", tech_type="OMAG Server"
+        )
+        url = (
+            f"{self.runtime_command_root}/omag-servers/"
+            f"{server_guid}/cohorts/{cohort_name}"
+        )
+        await self._async_make_request("POST", url, body=body)
+        return
+
+    def connect_to_cohort(
+        self, cohort_name: str, server_guid: str = None, server_name: str = None, body: Optional[dict | FilterRequestBody] = None
+    ) -> None:
+        """Request the named OMAG server to register with the named cohort.
+
+        Parameters
+        ----------
+        cohort_name : str
+            Name of the cohort to register with.
+        server_guid : str, opt
+            Identity of the server to act on. If not specified, server_name must be.
+        server_name: str, opt
+            Name of server to act on. If not specified, server_guid must be.
+
+        body : dict | FilterRequestBody, optional
+            Request body to pass directly to the API.
+
+        Returns
+        -------
+           None
+
+        Raises
+        ------
+        PyegeriaInvalidParameterException
+        PyegeriaAPIException
+        PyegeriaUnauthorizedException
+
+        """
+        loop = asyncio.get_event_loop()
+        loop.run_until_complete(
+            self._async_connect_to_cohort(cohort_name, server_guid, server_name, body)
+        )
+        return
+
+    async def _async_disconnect_from_cohort(
+        self, cohort_name: str, server_guid: str = None, server_name: str = None, body: Optional[dict | FilterRequestBody] = None
+    ) -> None:
+        """Request the named OMAG server to disconnect from the named cohort. Async version.
+
+        Parameters
+        ----------
+        cohort_name : str
+            Name of the cohort to register with.
+        server_guid : str, opt
+            Identity of the server to act on. If not specified, server_name must be.
+        server_name: str, opt
+            Name of server to act on. If not specified, server_guid must be.
+
+        body : dict | FilterRequestBody, optional
+            Request body to pass directly to the API.
+
+        Returns
+        -------
+           None
+
+        Raises
+        ------
+        PyegeriaInvalidParameterException
+        PyegeriaAPIException
+        PyegeriaUnauthorizedException
+
+        """
+        server_guid = self.__get_guid__(
+            server_guid, server_name, "resourceName", tech_type="OMAG Server"
+        )
+        url = (
+            f"{self.runtime_command_root}/omag-servers/"
+            f"{server_guid}/cohorts/{cohort_name}"
+        )
+        await self._async_make_request("DELETE", url, body=body)
+        return
+
+    def disconnect_from_cohort(
+        self, cohort_name: str, server_guid: str = None, server_name: str = None, body: Optional[dict | FilterRequestBody] = None
+    ) -> None:
+        """Request the named OMAG server to disconnect from the named cohort.
+
+        Parameters
+        ----------
+        cohort_name : str
+            Name of the cohort to register with.
+        server_guid : str, opt
+            Identity of the server to act on. If not specified, server_name must be.
+        server_name: str, opt
+            Name of server to act on. If not specified, server_guid must be.
+
+        body : dict | FilterRequestBody, optional
+            Request body to pass directly to the API.
+
+        Returns
+        -------
+           None
+
+        Raises
+        ------
+        PyegeriaInvalidParameterException
+        PyegeriaAPIException
+        PyegeriaUnauthorizedException
+
+        """
+        loop = asyncio.get_event_loop()
+        loop.run_until_complete(
+            self._async_disconnect_from_cohort(cohort_name, server_guid, server_name, body)
+        )
+        return
+
+    async def _async_unregister_from_cohort(
+        self, cohort_name: str, server_guid: str = None, server_name: str = None, body: Optional[dict | FilterRequestBody] = None
+    ) -> None:
+        """Request the named OMAG server to unregister from the named cohort. Async version.
+
+        Parameters
+        ----------
+        cohort_name : str
+            Name of the cohort to register with.
+        server_guid : str, opt
+            Identity of the server to act on. If not specified, server_name must be.
+        server_name: str, opt
+            Name of server to act on. If not specified, server_guid must be.
+
+        body : dict | FilterRequestBody, optional
+            Request body to pass directly to the API.
+
+        Returns
+        -------
+           None
+
+        Raises
+        ------
+        PyegeriaInvalidParameterException
+        PyegeriaAPIException
+        PyegeriaUnauthorizedException
+
+        """
+        server_guid = self.__get_guid__(
+            server_guid, server_name, "resourceName", tech_type="OMAG Server"
+        )
+        url = (
+            f"{self.runtime_command_root}/omag-servers/"
+            f"{server_guid}/cohorts/{cohort_name}/unregister"
+        )
+        await self._async_make_request("POST", url, body=body)
+        return
+
+    def unregister_from_cohort(
+        self, cohort_name: str, server_guid: str = None, server_name: str = None, body: Optional[dict | FilterRequestBody] = None
+    ) -> None:
+        """Request the named OMAG server to unregister from the named cohort.
+
+        Parameters
+        ----------
+        cohort_name : str
+            Name of the cohort to register with.
+        server_guid : str, opt
+            Identity of the server to act on. If not specified, server_name must be.
+        server_name: str, opt
+            Name of server to act on. If not specified, server_guid must be.
+
+        body : dict | FilterRequestBody, optional
+            Request body to pass directly to the API.
+
+        Returns
+        -------
+           None
+
+        Raises
+        ------
+        PyegeriaInvalidParameterException
+        PyegeriaAPIException
+        PyegeriaUnauthorizedException
+
+        """
+        loop = asyncio.get_event_loop()
+        loop.run_until_complete(
+            self._async_unregister_from_cohort(cohort_name, server_guid, server_name, body)
+        )
+        return
+
+    async def _async_refresh_gov_eng_config(
+        self,
+        gov_engine_name: Optional[str] = None,
+        server_guid: Optional[str] = None,
+        display_name: Optional[str] = None,
+        qualified_name: Optional[str] = None,
+        body: Optional[dict | FilterRequestBody] = None,
+    ) -> None:
+        """Request that the governance engine refresh its configuration by calling the metadata server. This request is
+            useful if the metadata server has an outage, particularly while the governance server is initializing.
+            This request just ensures that the latest configuration is in use. If gov_engine_name is None, all engines
+            will be refreshed. Async version.
+
+            https://egeria-project.org/concepts/governance-engine-definition/
+
+        Parameters
+        ----------
+        gov_engine_name: str, default = None
+            If None, then all engines will be refreshed - this is the normal case. If an engine is specified only this
+            engine will be refreshed.
+        server_guid : str, default = None
+            Identity of the server to act on. If not specified, qualified_name or display_name must be.
+        display_name: str, default = None
+            Name of server to act on. If not specified, server_guid or qualified_name must be.
+        qualified_name: str, opt, default is None.
+                        Identity of the server to act on. Either the server_guid , qualified_name, or server_name must
+                        be provided.
+
+        body : dict | FilterRequestBody, optional
+            Request body to pass directly to the API.
+
+        Returns
+        -------
+           None
+
+        Raises
+        ------
+        PyegeriaInvalidParameterException
+        PyegeriaAPIException
+        PyegeriaUnauthorizedException
+
+        """
+        server_guid = self.__get_guid__(
+            server_guid,
+            display_name,
+            "qualifiedName",
+            qualified_name,
+            "Governance Engine",
+        )
+
+        if gov_engine_name is None:
+            url = (
+                f"{self.runtime_command_root}/governance-engines/"
+                f"{server_guid}/refresh-config"
+            )
+        else:
+            url = (
+                f"{self.runtime_command_root}/governance-engines/"
+                f"{server_guid}/governance-engines/{gov_engine_name}/refresh-config"
+            )
+
+        await self._async_make_request("GET", url, body=body)
         return
 
     async def _async_refresh_integ_group_config(
@@ -898,6 +938,7 @@ class RuntimeManager(ServerClient):
         server_guid: Optional[str] = None,
         display_name: Optional[str] = None,
         qualified_name: Optional[str] = None,
+        body: Optional[dict | FilterRequestBody] = None,
     ) -> None:
         """Request that the integration group refresh its configuration by calling the metadata access server.
             Changes to the connector configuration will result in the affected connectors being restarted.
@@ -915,7 +956,9 @@ class RuntimeManager(ServerClient):
         qualified_name: str, default = None
             Unique name of server to act on. If not specified, server_guid or server_name must be.
         integ_group_name : str, opt, default = None
-            Name of the integration group to refresh. If None, all groups are refreshed.
+
+        body : dict, optional
+            Request body to pass directly to the API.
 
         Returns
         -------
@@ -940,7 +983,7 @@ class RuntimeManager(ServerClient):
             f"{server_guid}/integration-groups/{integ_group_name}/refresh-config"
         )
 
-        await self._async_make_request("GET", url)
+        await self._async_make_request("GET", url, body=body)
         return
 
     def refresh_integ_group_config(
@@ -949,6 +992,7 @@ class RuntimeManager(ServerClient):
         server_guid: Optional[str] = None,
         display_name: Optional[str] = None,
         qualified_name: Optional[str] = None,
+        body: Optional[dict] = None,
     ) -> None:
         """Request that the integration group refresh its configuration by calling the metadata access server.
             Changes to the connector configuration will result in the affected connectors being restarted.
@@ -968,6 +1012,9 @@ class RuntimeManager(ServerClient):
         integ_group_name : str, opt, default = None
             Name of the integration group to refresh. If None, all groups are refreshed.
 
+        body : dict, optional
+            Request body to pass directly to the API.
+
         Returns
         -------
            None
@@ -982,7 +1029,7 @@ class RuntimeManager(ServerClient):
         loop = asyncio.get_event_loop()
         loop.run_until_complete(
             self._async_refresh_integ_group_config(
-                integ_group_name, server_guid, display_name, qualified_name
+                integ_group_name, server_guid, display_name, qualified_name, body
             )
         )
         return
@@ -996,6 +1043,7 @@ class RuntimeManager(ServerClient):
         server_guid: Optional[str] = None,
         display_name: Optional[str] = None,
         qualified_name: Optional[str] = None,
+        body: Optional[dict | FilterRequestBody] = None,
     ) -> None:
         """Send an Open Lineage event to the integration daemon. It will pass it on to the integration connectors that
             have registered a listener for open lineage events. Async version.
@@ -1012,6 +1060,9 @@ class RuntimeManager(ServerClient):
             Unique name of server to act on. If not specified, server_guid or server_name must be.
         ol_event : dict
             Dict containing the user specified Open Lineage event.
+
+        body : dict | FilterRequestBody, optional
+            Request body to pass directly to the API.
 
         Returns
         -------
@@ -1034,7 +1085,8 @@ class RuntimeManager(ServerClient):
             f"{self.runtime_command_root}/integration-daemons/{server_guid}/open-lineage-events/publish-event-string"
         )
 
-        await self._async_make_request("POST", url, ol_event)
+        payload = body if body else ol_event
+        await self._async_make_request("POST", url, payload)
 
     def publish_open_lineage_event(
         self,
@@ -1042,6 +1094,7 @@ class RuntimeManager(ServerClient):
         server_guid: Optional[str] = None,
         display_name: Optional[str] = None,
         qualified_name: Optional[str] = None,
+        body: Optional[dict | FilterRequestBody] = None,
     ) -> None:
         """Send an Open Lineage event to the integration daemon. It will pass it on to the integration connectors that
             have registered a listener for open lineage events.
@@ -1059,6 +1112,9 @@ class RuntimeManager(ServerClient):
         ol_event : dict
             Dict containing the user specified Open Lineage event.
 
+        body : dict | FilterRequestBody, optional
+            Request body to pass directly to the API.
+
         Returns
         -------
            None
@@ -1072,7 +1128,7 @@ class RuntimeManager(ServerClient):
         """
         loop = asyncio.get_event_loop()
         loop.run_until_complete(
-            self._async_publish_open_lineage_event(ol_event, server_guid, display_name)
+            self._async_publish_open_lineage_event(ol_event, server_guid, display_name, qualified_name, body)
         )
 
 
@@ -1083,6 +1139,7 @@ class RuntimeManager(ServerClient):
         display_name: Optional[str] = None,
         qualified_name: Optional[str] = None,
         time_out: int = 60,
+        body: Optional[dict | ArchiveRequestBody] = None,
     ) -> None:
         """An open metadata archive contains metadata types and instances.
             This operation loads the supplied open metadata archive into the local repository. It can be used with OMAG
@@ -1102,6 +1159,9 @@ class RuntimeManager(ServerClient):
             A dict containing the content of the archive to load.
         time_out : int, optional, default = 60 seconds
             Timeout for the REST call.
+
+        body : dict | ArchiveRequestBody, optional
+            Request body to pass directly to the API.
 
         Returns
         -------
@@ -1126,7 +1186,8 @@ class RuntimeManager(ServerClient):
             f"archive-content"
         )
 
-        await self._async_make_request("POST", url, archive_content, time_out=time_out)
+        payload = body if body else archive_content
+        await self._async_make_request("POST", url, payload, time_out=time_out)
         return
 
     def add_archive_content(
@@ -1136,6 +1197,7 @@ class RuntimeManager(ServerClient):
         display_name: Optional[str] = None,
         qualified_name: Optional[str] = None,
         time_out: int = 60,
+        body: Optional[dict | ArchiveRequestBody] = None,
     ) -> None:
         """An open metadata archive contains metadata types and instances.
             This operation loads the supplied open metadata archive into the local repository. It can be used with OMAG
@@ -1156,6 +1218,9 @@ class RuntimeManager(ServerClient):
         time_out : int, optional, default = 60 seconds
             Timeout for the REST call.
 
+        body : dict | ArchiveRequestBody, optional
+            Request body to pass directly to the API.
+
         Returns
         -------
         None
@@ -1170,7 +1235,7 @@ class RuntimeManager(ServerClient):
         loop = asyncio.get_event_loop()
         loop.run_until_complete(
             self._async_add_archive_content(
-                archive_content, server_guid, display_name, qualified_name, time_out
+                archive_content, server_guid, display_name, qualified_name, time_out, body
             )
         )
         return
@@ -1182,6 +1247,7 @@ class RuntimeManager(ServerClient):
         display_name: Optional[str] = None,
         qualified_name: Optional[str] = None,
         time_out: int = 120,
+        body: Optional[dict | ArchiveRequestBody] = None,
     ) -> None:
         """Add a new open metadata archive to running OMAG Server's repository.
             An open metadata archive contains metadata types and instances.  This operation loads an open metadata archive
@@ -1202,6 +1268,9 @@ class RuntimeManager(ServerClient):
             Unique name of server to act on. If not specified, server_guid or server_name must be.
         time_out: int, optional
            Time out for the rest call.
+
+        body : dict | ArchiveRequestBody, optional
+            Request body to pass directly to the API.
 
         Returns
         -------
@@ -1224,8 +1293,9 @@ class RuntimeManager(ServerClient):
         )
         url = f"{self.runtime_command_root}/metadata-access-stores/{server_guid}/instance/load/open-metadata-archives/file"
 
+        payload = body if body else archive_file
         await self._async_make_request(
-            "POST-DATA", url, archive_file, time_out=time_out
+            "POST-DATA", url, payload, time_out=time_out
         )
         return
 
@@ -1236,6 +1306,7 @@ class RuntimeManager(ServerClient):
         display_name: Optional[str] = None,
         qualified_name: Optional[str] = None,
         time_out: int = 120,
+        body: Optional[dict | ArchiveRequestBody] = None,
     ) -> None:
         """Add a new open metadata archive to running OMAG Server's repository.
             An open metadata archive contains metadata types and instances.  This operation loads an open metadata archive
@@ -1255,6 +1326,9 @@ class RuntimeManager(ServerClient):
             Unique name of server to act on. If not specified, server_guid or server_name must be.
         time_out: int, optional, default = 60 seconds
 
+        body : dict | ArchiveRequestBody, optional
+            Request body to pass directly to the API.
+
         Returns
         -------
         Response
@@ -1271,7 +1345,7 @@ class RuntimeManager(ServerClient):
         loop = asyncio.get_event_loop()
         loop.run_until_complete(
             self._async_add_archive_file(
-                archive_file, server_guid, display_name, qualified_name, time_out
+                archive_file, server_guid, display_name, qualified_name, time_out, body
             )
         )
         return
@@ -1283,6 +1357,7 @@ class RuntimeManager(ServerClient):
         self,
         server_guid: Optional[str] = None,
         qualified_name: Optional[str] = None,
+        body: Optional[dict | FilterRequestBody] = None,
     ) -> None:
         """Shutdown the named OMAG server. The server will also be removed from any open metadata repository cohorts
             it has registered with.  Async version.
@@ -1293,6 +1368,9 @@ class RuntimeManager(ServerClient):
             Identity of the server to act on. If not specified, qualified_name  must be.
         qualified_name: str, default = None
             Unique name of server to act on. If not specified, server_guid  must be.
+
+        body : dict | FilterRequestBody, optional
+            Request body to pass directly to the API.
 
         Returns
         -------
@@ -1311,12 +1389,12 @@ class RuntimeManager(ServerClient):
         )
         url = f"{self.runtime_command_root}/omag-servers/{server_guid}"
 
-        await self._async_make_request("DELETE", url)
+        await self._async_make_request("DELETE", url, body=body)
 
         return
 
     def shutdown_and_unregister_server(
-        self, server_guid: Optional[str] = None, qualified_name: str = None
+        self, server_guid: Optional[str] = None, qualified_name: str = None, body: Optional[dict | FilterRequestBody] = None
     ) -> None:
         """Shutdown the named OMAG server. The server will also be removed from any open metadata repository cohorts
             it has registered with.
@@ -1327,6 +1405,9 @@ class RuntimeManager(ServerClient):
             Identity of the server to act on. If not specified, qualified_name  must be.
         qualified_name: str, default = None
             Unique name of server to act on. If not specified, server_guid  must be.
+        body : dict | FilterRequestBody, optional
+            Request body to pass directly to the API.
+
         Returns
         -------
         Response
@@ -1341,7 +1422,7 @@ class RuntimeManager(ServerClient):
         """
         loop = asyncio.get_event_loop()
         loop.run_until_complete(
-            self._async_shutdown_and_unregister_server(server_guid, qualified_name)
+            self._async_shutdown_and_unregister_server(server_guid, qualified_name, body)
         )
         return
 
@@ -1351,6 +1432,7 @@ class RuntimeManager(ServerClient):
         display_name: Optional[str] = None,
         qualified_name: Optional[str] = None,
         timeout: int = 240,
+        body: Optional[dict | FilterRequestBody] = None,
     ) -> None:
         """Activate the named OMAG server using the appropriate configuration document found in the
             configuration store. Async version.
@@ -1366,6 +1448,9 @@ class RuntimeManager(ServerClient):
         qualified_name: str, default = None
             Unique name of server to act on. If not specified, server_guid  must be.
         timeout: int, optional, default = 240 seconds
+
+        body : dict | FilterRequestBody, optional
+            Request body to pass directly to the API.
 
         Returns
         -------
@@ -1384,7 +1469,7 @@ class RuntimeManager(ServerClient):
 
         url = f"{self.runtime_command_root}/omag-servers/{server_guid}/instance"
 
-        await self._async_make_request("POST", url, time_out=timeout)
+        await self._async_make_request("POST", url, body=body, time_out=timeout)
         return
 
     def activate_server_with_stored_config(
@@ -1393,6 +1478,7 @@ class RuntimeManager(ServerClient):
         display_name: Optional[str] = None,
         qualified_name: Optional[str] = None,
         timeout: int = 240,
+        body: Optional[dict | FilterRequestBody] = None,
     ) -> None:
         """Activate the named OMAG server using the appropriate configuration document found in the
             configuration store.
@@ -1406,6 +1492,9 @@ class RuntimeManager(ServerClient):
         display_name: str, default = None
             Name of server to act on. If not specified, server_guid must be.
         timeout: int, optional, default = 240 seconds
+
+        body : dict | FilterRequestBody, optional
+            Request body to pass directly to the API.
 
         Returns
         -------
@@ -1421,13 +1510,13 @@ class RuntimeManager(ServerClient):
         loop = asyncio.get_event_loop()
         loop.run_until_complete(
             self._async_activate_server_with_stored_config(
-                server_guid, display_name, timeout
+                server_guid, display_name, qualified_name, timeout, body
             )
         )
         return
 
     async def _async_shutdown_server(
-        self, server_guid: Optional[str] = None, qualified_name: str = None
+        self, server_guid: Optional[str] = None, qualified_name: str = None, body: Optional[dict | FilterRequestBody] = None
     ) -> None:
         """Temporarily shutdown the named OMAG server. This server can be restarted as a later time.  Async version.
 
@@ -1437,6 +1526,9 @@ class RuntimeManager(ServerClient):
             Identity of the server to act on. If not specified, qualified_name must be.
         qualified_name: str, default = None
             Qualified name of server to act on. If not specified, server_guid must be.
+
+        body : dict | FilterRequestBody, optional
+            Request body to pass directly to the API.
 
         Returns
         -------
@@ -1455,12 +1547,12 @@ class RuntimeManager(ServerClient):
         )
         url = f"{self.runtime_command_root}/omag-servers/{server_guid}/instance"
 
-        await self._async_make_request("DELETE", url)
+        await self._async_make_request("DELETE", url, body=body)
 
         return
 
     def shutdown_server(
-        self, server_guid: Optional[str] = None, qualified_name: str = None
+        self, server_guid: Optional[str] = None, qualified_name: str = None, body: Optional[dict | FilterRequestBody] = None
     ) -> None:
         """Temporarily shutdown the named OMAG server. This server can be restarted as a later time.
 
@@ -1470,6 +1562,9 @@ class RuntimeManager(ServerClient):
             Identity of the server to act on. If not specified, qualified_name must be.
         qualified_name: str, default = None
             Qualified name of server to act on. If not specified, server_guid must be.
+
+        body : dict | FilterRequestBody, optional
+            Request body to pass directly to the API.
 
         Returns
         -------
@@ -1485,17 +1580,20 @@ class RuntimeManager(ServerClient):
         """
         loop = asyncio.get_event_loop()
         loop.run_until_complete(
-            self._async_shutdown_server(server_guid, qualified_name)
+            self._async_shutdown_server(server_guid, qualified_name, body)
         )
         return
 
     def get_platforms_by_name(
         self,
-        filter: Optional[str] = None,
+        filter_string: Optional[str] = None,
         effective_time: Optional[str] = None,
         start_from: int = 0,
         page_size: int = max_paging_size,
-    ) -> str | list:
+        output_format: str = "JSON",
+        report_spec: str | dict = "Platforms",
+        body: Optional[dict | SearchStringRequestBody] = None,
+    ) -> str | list | dict:
         """Returns the list of platforms with a particular name. The name is specified in the filter.
 
         Parameters
@@ -1509,33 +1607,38 @@ class RuntimeManager(ServerClient):
            The index from which to start fetching the engine actions. Default is 0.
         page_size : int, optional
            The maximum number of engine actions to fetch in a single request. Default is `max_paging_size`.
+        output_format: str, optional
+            The format of the output. Default is "JSON".
+        report_spec: str | dict, optional
+            The report specification to use. Default is "Platforms".
+
+        body : dict, optional
+            Request body to pass directly to the API.
 
         Returns
         -------
         Response
-           A lit of json dict with the platform reports.
-
-        Raises
-        ------
-        PyegeriaInvalidParameterException
-        PyegeriaAPIException
-        PyegeriaUnauthorizedException
+           A list of json dict with the platform reports.
         """
         loop = asyncio.get_event_loop()
         response = loop.run_until_complete(
             self._async_get_platforms_by_name(
-                filter, effective_time, start_from, page_size
+                filter_string, effective_time, start_from, page_size, output_format, report_spec, body
             )
         )
         return response
 
+    @dynamic_catch
     async def _async_get_platforms_by_name(
         self,
-        filter: Optional[str] = None,
+        filter_string: Optional[str] = None,
         effective_time: Optional[str] = None,
         start_from: int = 0,
         page_size: int = max_paging_size,
-    ) -> str | list:
+        output_format: str = "JSON",
+        report_spec: str | dict = "Platforms",
+        body: Optional[dict | SearchStringRequestBody] = None,
+    ) -> str | list | dict:
         """Returns the list of platforms with a particular name. The name is specified in the filter.  Async version.
 
         Parameters
@@ -1550,6 +1653,13 @@ class RuntimeManager(ServerClient):
 
         page_size : int, optional
            The maximum number of engine actions to fetch in a single request. Default is `max_paging_size`.
+        output_format: str, optional
+            The format of the output. Default is "JSON".
+        report_spec: str | dict, optional
+            The report specification to use. Default is "Platforms".
+
+        body : dict, optional
+            Request body to pass directly to the API.
 
         Returns
         -------
@@ -1570,22 +1680,35 @@ class RuntimeManager(ServerClient):
         url = (
             f"{self.runtime_command_root}/platforms/by-name"
         )
-        if effective_time is not None:
-            body = {"filter": filter_string, "effectiveTime": effective_time}
-        else:
-            body = {"filter": filter_string}
+        if body is None:
+             if effective_time is not None:
+                  body = {"filter": filter_string, "effectiveTime": effective_time}
+             else:
+                  body = {"filter": filter_string}
+            
+        return await self._async_get_name_request(
+            url,
+            _type="Platforms",
+            _gen_output=self._generate_platform_output,
+            filter_string=filter_string,
+            start_from=start_from,
+            page_size=page_size,
+            output_format=output_format,
+            report_spec=report_spec,
+            body=body
+        )
 
-        response = await self._async_make_request("POST", url, body)
-
-        return response.json().get("elements", "No platforms found")
-
+    @dynamic_catch
     async def _async_get_platforms_by_type(
         self,
-        filter: Optional[str] = None,
+        filter_string: Optional[str] = None,
         effective_time: Optional[str] = None,
         start_from: int = 0,
         page_size: int = max_paging_size,
-    ) -> str | list:
+        output_format: str = "JSON",
+        report_spec: str | dict = "Platforms",
+        body: Optional[dict | GetRequestBody] = None,
+    ) -> str | list | dict:
         """Returns the list of platforms with a particular deployed implementation type.  The value is specified in
             the filter. If it is null, or no request body is supplied, all platforms are returned.  Async version.
 
@@ -1597,14 +1720,22 @@ class RuntimeManager(ServerClient):
         effective_time: str, optional
             Timeframe to return information for. Time format is "YYYY-MM-DDTHH:MM:SS" (ISO 8601).
         start_from : int, optional
-               The index from which to start fetching the engine actions. Default is 0.
+           The index from which to start fetching the engine actions. Default is 0.
+
         page_size : int, optional
            The maximum number of engine actions to fetch in a single request. Default is `max_paging_size`.
+        output_format: str, optional
+            The format of the output. Default is "JSON".
+        report_spec: str | dict, optional
+            The report specification to use. Default is "Platforms".
+
+        body : dict | GetRequestBody, optional
+            Request body to pass directly to the API.
 
         Returns
         -------
         Response
-           A lit of json dict with the platform reports.
+           A list of json dict with the platform reports.
 
         Raises
         ------
@@ -1618,26 +1749,36 @@ class RuntimeManager(ServerClient):
             filter_string = "OMAG Server Platform"
 
         url = (
-            f"{self.runtime_command_root}/platforms/"
-            f"by-deployed-implementation-type"
+            f"{self.runtime_command_root}/platforms/by-deployed-implementation-type"
         )
-
-        if effective_time is not None:
-            body = {
-                "filter": filter_string, "effectiveTime": effective_time}
-        else:
-            body = {"filter": filter_string}
-
-        response = await self._async_make_request("POST", url, body)
-        return response.json().get("elements", "No platforms found")
+        if body is None:
+             if effective_time is not None:
+                  body = {"filter": filter_string, "effectiveTime": effective_time}
+             else:
+                  body = {"filter": filter_string}
+            
+        return await self._async_get_name_request(
+            url,
+            _type="Platforms",
+            _gen_output=self._generate_platform_output,
+            filter_string=filter_string,
+            start_from=start_from,
+            page_size=page_size,
+            output_format=output_format,
+            report_spec=report_spec,
+            body=body
+        )
 
     def get_platforms_by_type(
         self,
-        filter: Optional[str] = None,
+        filter_string: Optional[str] = None,
         effective_time: Optional[str] = None,
         start_from: int = 0,
         page_size: int = max_paging_size,
-    ) -> str | list:
+        output_format: str = "JSON",
+        report_spec: str | dict = "Platforms",
+        body: Optional[dict | GetRequestBody] = None,
+    ) -> str | list | dict:
         """Returns the list of platforms with a particular deployed implementation type.  The value is specified in
             the filter. If it is null, or no request body is supplied, all platforms are returned.
 
@@ -1652,11 +1793,18 @@ class RuntimeManager(ServerClient):
            The index from which to start fetching the engine actions. Default is 0.
         page_size : int, optional
            The maximum number of engine actions to fetch in a single request. Default is `max_paging_size`.
+        output_format: str, optional
+            The format of the output. Default is "JSON".
+        report_spec: str | dict, optional
+            The report specification to use. Default is "Platforms".
+
+        body : dict, optional
+            Request body to pass directly to the API.
 
         Returns
         -------
         Response
-           A lit of json dict with the platform reports.
+           A list of json dict with the platform reports.
 
         Raises
         ------
@@ -1666,19 +1814,19 @@ class RuntimeManager(ServerClient):
 
         """
         loop = asyncio.get_event_loop()
-        response = loop.run_until_complete(
+        return loop.run_until_complete(
             self._async_get_platforms_by_type(
-                filter, effective_time, start_from, page_size
+                filter_string, effective_time, start_from, page_size, output_format, report_spec, body
             )
         )
-        return response
 
     async def _async_get_platform_templates_by_type(
         self,
-        filter: Optional[str] = None,
+        filter_string: Optional[str] = None,
         effective_time: Optional[str] = None,
         start_from: int = 0,
         page_size: int = max_paging_size,
+        body: Optional[dict | TemplateRequestBody] = None,
     ) -> str | list:
         """Returns the list of platform templates for a particular deployed implementation type.  The value is
             specified in the filter. If it is null, or no request body is supplied, all platforms are returned.
@@ -1695,6 +1843,9 @@ class RuntimeManager(ServerClient):
                The index from which to start fetching the engine actions. Default is 0.
         page_size : int, optional
            The maximum number of engine actions to fetch in a single request. Default is `max_paging_size`.
+
+        body : dict | TemplateRequestBody, optional
+            Request body to pass directly to the API.
 
         Returns
         -------
@@ -1717,20 +1868,22 @@ class RuntimeManager(ServerClient):
             f"by-deployed-implementation-type?startFrom={start_from}&pageSize={page_size}&getTemplates=true"
         )
 
-        if effective_time is not None:
-            body = {"filter": filter_string, "effectiveTime": effective_time}
-        else:
-            body = {"filter": filter_string}
+        if body is None:
+            if effective_time is not None:
+                body = {"filter": filter_string, "effectiveTime": effective_time}
+            else:
+                body = {"filter": filter_string}
 
         response = await self._async_make_request("POST", url, body)
         return response.json().get("elements", "No platforms found")
 
     def get_platform_templates_by_type(
         self,
-        filter: Optional[str] = None,
+        filter_string: Optional[str] = None,
         effective_time: Optional[str] = None,
         start_from: int = 0,
         page_size: int = max_paging_size,
+        body: Optional[dict | TemplateRequestBody] = None,
     ) -> str | list:
         """Returns the list of platform templates with a particular deployed implementation type.  The value is
             specified in the filter. If it is null, or no request body is supplied, all platforms are returned.
@@ -1747,6 +1900,9 @@ class RuntimeManager(ServerClient):
         page_size : int, optional
            The maximum number of engine actions to fetch in a single request. Default is `max_paging_size`.
 
+        body : dict | TemplateRequestBody, optional
+            Request body to pass directly to the API.
+
         Returns
         -------
         Response
@@ -1761,15 +1917,21 @@ class RuntimeManager(ServerClient):
         """
         loop = asyncio.get_event_loop()
         response = loop.run_until_complete(
-            self._async_get_platforms_by_type(
-                filter, effective_time, start_from, page_size
+            self._async_get_platform_templates_by_type(
+                filter_string, effective_time, start_from, page_size, body
             )
         )
         return response
 
+    @dynamic_catch
     async def _async_get_platform_report(
-        self, platform_guid: Optional[str] = None, platform_name: str = None
-    ) -> str | list:
+        self, 
+        platform_guid: Optional[str] = None, 
+        platform_name: str = None,
+        output_format: str = "JSON",
+        report_spec: str | dict = "Platforms",
+        body: Optional[dict | GetRequestBody] = None,
+    ) -> str | list | dict:
         """Returns details about the running platform. Async version.
 
         Parameters
@@ -1778,6 +1940,13 @@ class RuntimeManager(ServerClient):
             The unique identifier for the platform. If not specified, platform_name must be.
         platform_name: str, default = None
             Name of server to act on. If not specified, platform_guid must be.
+        output_format: str, optional
+            The format of the output. Default is "JSON".
+        report_spec: str | dict, optional
+            The report specification to use. Default is "Platforms".
+
+        body : dict | GetRequestBody, optional
+            Request body to pass directly to the API.
 
         Returns
         -------
@@ -1791,16 +1960,26 @@ class RuntimeManager(ServerClient):
         PyegeriaUnauthorizedException
 
         """
-        platform_guid = self.__get_guid__(platform_guid, platform_name, "displayName")
+        platform_guid = self.get_guid_for_name(name= platform_name, property_name =["displayName","resourceName"])
         url = f"{self.runtime_command_root}/platforms/{platform_guid}/report"
 
-        response = await self._async_make_request("GET", url)
-
-        return response.json().get("element", "No platforms found")
+        return await self._async_get_guid_request(
+             url,
+             _type="Platforms",
+             _gen_output=self._generate_platform_output,
+             output_format=output_format,
+             report_spec=report_spec,
+             body=body
+        )
 
     def get_platform_report(
-        self, platform_guid: Optional[str] = None, platform_name: str = None
-    ) -> str | list:
+        self, 
+        platform_guid: Optional[str] = None, 
+        platform_name: str = None,
+        output_format: str = "JSON",
+        report_spec: str | dict = "Platforms",
+        body: Optional[dict | GetRequestBody] = None,
+    ) -> str | list | dict:
         """Returns details about the running platform.
 
         Parameters
@@ -1809,6 +1988,14 @@ class RuntimeManager(ServerClient):
             The unique identifier for the platform. If not specified, platform_name must be.
         platform_name: str, default = None
             Name of server to act on. If not specified, platform_guid must be.
+        output_format: str, optional
+            The format of the output. Default is "JSON".
+        report_spec: str | dict, optional
+            The report specification to use. Default is "Platforms".
+
+        body : dict, optional
+            Request body to pass directly to the API.
+
         Returns
         -------
         Response
@@ -1819,18 +2006,17 @@ class RuntimeManager(ServerClient):
         PyegeriaInvalidParameterException
         PyegeriaAPIException
         PyegeriaUnauthorizedException
-
         """
         loop = asyncio.get_event_loop()
-        response = loop.run_until_complete(
-            self._async_get_platform_report(platform_guid, platform_name)
+        return loop.run_until_complete(
+            self._async_get_platform_report(platform_guid, platform_name, output_format, report_spec, body)
         )
-        return response
 
     async def _async_get_platform_by_guid(
         self,
         platform_guid: str,
         effective_time: Optional[str] = None,
+        body: Optional[dict | GetRequestBody] = None,
     ) -> str | list:
         """Returns details about the platform's catalog entry (asset). Async version.
 
@@ -1842,6 +2028,9 @@ class RuntimeManager(ServerClient):
             Timeframe to return information for. Time format is "YYYY-MM-DDTHH:MM:SS" (ISO 8601).
 
 
+        body : dict | GetRequestBody, optional
+            Request body to pass directly to the API.
+
         Returns
         -------
         Response
@@ -1851,12 +2040,10 @@ class RuntimeManager(ServerClient):
 
         url = f"{self.runtime_command_root}/platforms/{platform_guid}"
 
-        if effective_time is not None:
+        if body is None and effective_time is not None:
             body = {"effectiveTime": effective_time}
-            response = await self._async_make_request("POST", url, body)
-
-        else:
-            response = await self._async_make_request("POST", url)
+            
+        response = await self._async_make_request("POST", url, body=body)
 
         return response.json().get("element", "No platforms found")
 
@@ -1864,6 +2051,7 @@ class RuntimeManager(ServerClient):
         self,
         platform_guid: str,
         effective_time: Optional[str] = None,
+        body: Optional[dict | GetRequestBody] = None,
     ) -> str | list:
         """Returns details about the platform's catalog entry (asset).
 
@@ -1873,6 +2061,9 @@ class RuntimeManager(ServerClient):
             Identity of the platform to return details about.
         effective_time: str, optional
             Timeframe to return information for. Time format is "YYYY-MM-DDTHH:MM:SS" (ISO 8601).
+
+        body : dict | GetRequestBody, optional
+            Request body to pass directly to the API.
 
         Returns
         -------
@@ -1888,7 +2079,7 @@ class RuntimeManager(ServerClient):
         """
         loop = asyncio.get_event_loop()
         response = loop.run_until_complete(
-            self._async_get_platform_by_guid(platform_guid, effective_time)
+            self._async_get_platform_by_guid(platform_guid, effective_time, body)
         )
         return response
 
@@ -1896,6 +2087,7 @@ class RuntimeManager(ServerClient):
         self,
         server_guid: Optional[str] = None,
         effective_time: Optional[str] = None,
+        body: Optional[dict | GetRequestBody] = None,
     ) -> str | dict:
         """Returns details about the server's catalog entry (asset). Async version.
 
@@ -1905,6 +2097,9 @@ class RuntimeManager(ServerClient):
             The unique identifier for the platform.
         effective_time: str, optional
             Timeframe to return information for. Time format is "YYYY-MM-DDTHH:MM:SS" (ISO 8601).
+
+        body : dict | GetRequestBody, optional
+            Request body to pass directly to the API.
 
         Returns
         -------
@@ -1921,12 +2116,10 @@ class RuntimeManager(ServerClient):
 
         url = f"{self.runtime_command_root}/software-servers/{server_guid}"
 
-        if effective_time is not None:
+        if body is None and effective_time is not None:
             body = {"effectiveTime": effective_time}
-            response = await self._async_make_request("POST", url, body)
-
-        else:
-            response = await self._async_make_request("POST", url)
+            
+        response = await self._async_make_request("POST", url, body=body)
 
         return response.json().get("element", "No server found")
 
@@ -1934,6 +2127,7 @@ class RuntimeManager(ServerClient):
         self,
         server_guid: Optional[str] = None,
         effective_time: Optional[str] = None,
+        body: Optional[dict | GetRequestBody] = None,
     ) -> str | dict:
         """Returns details about the platform's catalog entry (asset).
 
@@ -1943,6 +2137,9 @@ class RuntimeManager(ServerClient):
             The unique identifier for the platform.
         effective_time: str, optional
             Timeframe to return information for. Time format is "YYYY-MM-DDTHH:MM:SS" (ISO 8601).
+
+        body : dict, optional
+            Request body to pass directly to the API.
 
         Returns
         -------
@@ -1958,17 +2155,21 @@ class RuntimeManager(ServerClient):
         """
         loop = asyncio.get_event_loop()
         response = loop.run_until_complete(
-            self._async_get_server_by_guid(server_guid, effective_time)
+            self._async_get_server_by_guid(server_guid, effective_time, body)
         )
         return response
 
+    @dynamic_catch
     async def _async_get_servers_by_name(
         self,
-        filter_string : str,
+        filter_string: Optional[str] = None,
         effective_time: Optional[str] = None,
         start_from: int = 0,
         page_size: int = max_paging_size,
-    ) -> str | list:
+        output_format: str = "JSON",
+        report_spec: str | dict = "OMAGServers",
+        body: Optional[dict | SearchStringRequestBody] = None,
+    ) -> str | list | dict:
         """Returns the list of servers with a particular name.  The name is specified in the filter. Async version.
 
         Parameters
@@ -1982,11 +2183,18 @@ class RuntimeManager(ServerClient):
            The index from which to start fetching the engine actions. Default is 0.
         page_size : int, optional
            The maximum number of engine actions to fetch in a single request. Default is `max_paging_size`.
+        output_format: str, optional
+            The format of the output. Default is "JSON".
+        report_spec: str | dict, optional
+            The report specification to use. Default is "OMAGServers".
+
+        body : dict | SearchStringRequestBody, optional
+            Request body to pass directly to the API.
 
         Returns
         -------
         Response
-           A lit of json dict with the platform reports.
+           A list of json dict with the server reports.
 
         Raises
         ------
@@ -1996,24 +2204,38 @@ class RuntimeManager(ServerClient):
 
         """
 
-        url = (
-            f"{self.runtime_command_root}/software-servers/by-name?"
-            f"startFrom={start_from}&pageSize={page_size}"
+        url = f"{self.runtime_command_root}/software-servers/by-name"
+
+        if body is None:
+            if effective_time is None:
+                body = {"filter": filter_string, "limitResultsByStatus": ["PROPOSED"]}
+            else:
+                body = {"filter": filter_string,
+                        "effective_time": effective_time,
+                        "limitResultsByStatus": []}
+        
+        return await self._async_get_name_request(
+             url,
+             _type="OMAGServers",
+             _gen_output=self._generate_omag_server_output,
+             filter_string=filter_string,
+             start_from=start_from,
+             page_size=page_size,
+             output_format=output_format,
+             report_spec=report_spec,
+             body=body
         )
 
-        if effective_time is None:
-            body = {"filter": filter_string, "limitResultsByStatus": ["PROPOSED"]}
-        else:
-            body = {"filter": filter_string,
-                    "effective_time": effective_time,
-                    "limitResultsByStatus": []}
-        response = await self._async_make_request("POST", url, body)
-
-        return response.json().get("elements", "No servers found")
-
     def get_servers_by_name(
-        self, filter_string: str, effective_time: str = None
-    ) -> str | list:
+        self, 
+        filter_string: str, 
+        effective_time: str = None,
+        start_from: int = 0,
+        page_size: int = max_paging_size,
+        output_format: str = "JSON",
+        report_spec: str | dict = "OMAGServers",
+        body: Optional[dict | SearchStringRequestBody] = None,
+    ) -> str | list | dict:
         """Returns the list of servers with a particular name.  The name is specified in the filter.
 
         Parameters
@@ -2023,11 +2245,22 @@ class RuntimeManager(ServerClient):
             If the value is None, we will default to the "OMAG Server Platform".
         effective_time: str, optional
             Timeframe to return information for. Time format is "YYYY-MM-DDTHH:MM:SS" (ISO 8601).
+        start_from : int, optional
+            The index from which to start fetching the engine actions. Default is 0.
+        page_size : int, optional
+            The maximum number of engine actions to fetch in a single request. Default is `max_paging_size`.
+        output_format: str, optional
+            The format of the output. Default is "JSON".
+        report_spec: str | dict, optional
+            The report specification to use. Default is "OMAGServers".
+
+        body : dict | SearchStringRequestBody, optional
+            Request body to pass directly to the API.
 
         Returns
         -------
         Response
-           A lit of json dict with the platform reports.
+           A list of json dict with the server reports.
 
         Raises
         ------
@@ -2038,12 +2271,14 @@ class RuntimeManager(ServerClient):
         """
         loop = asyncio.get_event_loop()
         response = loop.run_until_complete(
-            self._async_get_servers_by_name(filter, effective_time)
+            self._async_get_servers_by_name(
+                filter_string, effective_time, start_from, page_size, output_format, report_spec, body
+            )
         )
         return response
 
     async def _async_get_servers_by_dep_impl_type(self, search_string: str = "*", effective_time: Optional[str] = None,
-                                                  start_from: int = 0, page_size: int = max_paging_size) -> str | list:
+                                                  start_from: int = 0, page_size: int = max_paging_size, body: Optional[dict | GetRequestBody] = None) -> str | list:
         """Returns the list of servers with a particular deployed implementation type. The value is specified
             in the filter. If it is null, or no request body is supplied, all servers are returned.
             Async version.
@@ -2059,6 +2294,8 @@ class RuntimeManager(ServerClient):
            The index from which to start fetching the engine actions. Default is 0.
         page_size : int, optional
            The maximum number of engine actions to fetch in a single request. Default is `max_paging_size`.
+        body : dict | GetRequestBody, optional
+            Request body to pass directly to the API.
 
         Returns
         -------
@@ -2078,14 +2315,17 @@ class RuntimeManager(ServerClient):
 
         url = f"{self.runtime_command_root}/software-servers/by-deployed-implementation-type"
 
-        body = body_slimmer({"filter": search_string, "effective_time": effective_time})
+        if body is None:
+            body = body_slimmer({"filter": search_string, "effective_time": effective_time})
+        else:
+            body = body_slimmer(body)
 
         response = await self._async_make_request("POST", url, body)
 
         return response.json().get("elements", "No servers found")
 
     def get_servers_by_dep_impl_type(self, search_string: str = "*", effective_time: Optional[str] = None, start_from: int = 0,
-                                     page_size: int = max_paging_size) -> str | list:
+                                     page_size: int = max_paging_size, body: Optional[dict | GetRequestBody] = None) -> str | list:
         """Returns the list of servers with a particular deployed implementation type.
             The value is specified in the filter. If it is null, or no request body is supplied,
             all servers are returned.
@@ -2101,6 +2341,8 @@ class RuntimeManager(ServerClient):
            The index from which to start fetching the engine actions. Default is 0.
         page_size : int, optional
            The maximum number of engine actions to fetch in a single request. Default is `max_paging_size`.
+        body : dict | GetRequestBody, optional
+            Request body to pass directly to the API.
 
         Returns
         -------
@@ -2116,7 +2358,7 @@ class RuntimeManager(ServerClient):
         """
         loop = asyncio.get_event_loop()
         response = loop.run_until_complete(
-            self._async_get_servers_by_dep_impl_type(search_string, effective_time, start_from, page_size)
+            self._async_get_servers_by_dep_impl_type(search_string, effective_time, start_from, page_size, body)
         )
         return response
 
@@ -2126,6 +2368,7 @@ class RuntimeManager(ServerClient):
         effective_time: Optional[str] = None,
         start_from: int = 0,
         page_size: int = max_paging_size,
+        body: Optional[dict | TemplateRequestBody] = None,
     ) -> str | list:
         """Returns the list of server templates with a particular deployed implementation type.   The value is
             specified in the filter. If it is null, or no request body is supplied, all servers are returned.
@@ -2142,6 +2385,8 @@ class RuntimeManager(ServerClient):
            The index from which to start fetching the engine actions. Default is 0.
         page_size : int, optional
            The maximum number of engine actions to fetch in a single request. Default is `max_paging_size`.
+        body : dict | TemplateRequestBody, optional
+            Request body to pass directly to the API.
 
         Returns
         -------
@@ -2164,7 +2409,10 @@ class RuntimeManager(ServerClient):
             f"by-deployed-implementation-type?startFrom={start_from}&pageSize={page_size}&getTemplates=true"
         )
 
-        body = body_slimmer({"filter": filter_string, "effective_time": effective_time})
+        if body is None:
+            body = body_slimmer({"filter": filter_string, "effective_time": effective_time})
+        else:
+            body = body_slimmer(body)
 
         response = await self._async_make_request("POST", url, body)
 
@@ -2176,6 +2424,7 @@ class RuntimeManager(ServerClient):
         effective_time: Optional[str] = None,
         start_from: int = 0,
         page_size: int = max_paging_size,
+        body: Optional[dict | TemplateRequestBody] = None,
     ) -> str | list:
         """Returns the list of server templates with a particular deployed implementation type.
             The value is specified in the filter. If it is null, or no request body is supplied,
@@ -2193,6 +2442,9 @@ class RuntimeManager(ServerClient):
         page_size : int, optional
            The maximum number of engine actions to fetch in a single request. Default is `max_paging_size`.
 
+        body : dict | TemplateRequestBody, optional
+            Request body to pass directly to the API.
+
         Returns
         -------
         Response
@@ -2208,14 +2460,20 @@ class RuntimeManager(ServerClient):
         loop = asyncio.get_event_loop()
         response = loop.run_until_complete(
             self._async_get_server_templates_by_dep_impl_type(
-                filter, effective_time, start_from, page_size
+                filter_string, effective_time, start_from, page_size, body
             )
         )
         return response
 
+    @dynamic_catch
     async def _async_get_server_report(
-        self, server_guid: Optional[str] = None, server_name: str = None
-    ) -> str | list:
+        self, 
+        server_guid: Optional[str] = None, 
+        server_name: str = None,
+        output_format: str = "JSON",
+        report_spec: str | dict = "OMAGServers",
+        body: Optional[dict | GetRequestBody] = None,
+    ) -> str | list | dict:
         """Returns details about the running server. Async version.
 
         Parameters
@@ -2224,11 +2482,18 @@ class RuntimeManager(ServerClient):
             Identity of the server to act on. If not specified, server_name must be.
         server_name: str, default = None
             Name of server to act on. If not specified, server_guid must be.
+        output_format: str, optional
+            The format of the output. Default is "JSON".
+        report_spec: str | dict, optional
+            The report specification to use. Default is "OMAGServers".
+
+        body : dict | GetRequestBody, optional
+            Request body to pass directly to the API.
 
         Returns
         -------
         Response
-           A list of json dict with the platform reports.
+           A list of json dict with the server reports.
 
         Raises
         ------
@@ -2242,13 +2507,23 @@ class RuntimeManager(ServerClient):
         )
         url = f"{self.runtime_command_root}/omag-servers/{server_guid}/instance/report"
 
-        response = await self._async_make_request("GET", url)
-
-        return response.json().get("element", "No server found")
+        return await self._async_get_guid_request(
+             url,
+             _type="OMAGServers",
+             _gen_output=self._generate_omag_server_output,
+             output_format=output_format,
+             report_spec=report_spec,
+             body=body
+        )
 
     def get_server_report(
-        self, server_guid: Optional[str] = None, server_name: str = None
-    ) -> str | list:
+        self, 
+        server_guid: Optional[str] = None, 
+        server_name: str = None,
+        output_format: str = "JSON",
+        report_spec: str | dict = "OMAGServers",
+        body: Optional[dict | GetRequestBody] = None,
+    ) -> str | list | dict:
         """Returns details about the running server.
 
         Parameters
@@ -2257,11 +2532,18 @@ class RuntimeManager(ServerClient):
             Identity of the server to act on. If not specified, server_name must be.
         server_name: str, default = None
             Name of server to act on. If not specified, server_guid must be.
+        output_format: str, optional
+            The format of the output. Default is "JSON".
+        report_spec: str | dict, optional
+            The report specification to use. Default is "OMAGServers".
+
+        body : dict | GetRequestBody, optional
+            Request body to pass directly to the API.
 
         Returns
         -------
         Response
-           A list of json dict with the platform reports.
+           A list of json dict with the server reports.
 
         Raises
         ------
@@ -2271,10 +2553,204 @@ class RuntimeManager(ServerClient):
 
         """
         loop = asyncio.get_event_loop()
-        response = loop.run_until_complete(
-            self._async_get_server_report(server_guid, server_name)
+        return loop.run_until_complete(
+            self._async_get_server_report(server_guid, server_name, output_format, report_spec, body)
         )
-        return response
+
+    def _extract_platform_properties(self, element: dict, columns_struct: dict) -> dict:
+        """
+        Extract common properties from a Platform element.
+        """
+        # First, populate from element.properties using the utility
+        col_data = populate_columns_from_properties(element, columns_struct)
+        columns_list = col_data.get("formats", {}).get("attributes", [])
+
+        if "platformUrlRoot" in element:
+             for column in columns_list:
+                key = column.get('key')
+                if key == 'platform_url_root':
+                    column['value'] = element.get('platformUrlRoot')
+                elif key == 'version':
+                    column['value'] = element.get('version')
+                elif key == 'platform_origin':
+                    column['value'] = element.get('platformOrigin')
+                elif key == 'platform_start_time':
+                    column['value'] = element.get('startTime')
+                elif key == 'platform_build_properties':
+                    column['value'] = element.get('platformBuildProperties')
+                elif key == 'omagservers':
+                    column['value'] = element.get('omagservers', element.get('omagServers'))
+                elif key == 'guid':
+                    column['value'] = element.get('guid', element.get('elementHeader', {}).get('guid', ''))
+        else:
+            header_props = _extract_referenceable_properties(element)
+            for column in columns_list:
+                key = column.get('key')
+                if key in header_props:
+                    column['value'] = header_props.get(key)
+                elif key == 'guid':
+                    column['value'] = header_props.get('GUID')
+        
+        return col_data
+
+    @dynamic_catch
+    def _generate_platform_output(self, elements: dict | list[dict], filter_string: Optional[str],
+                                  element_type_name: Optional[str], output_format: str = "DICT",
+                                  report_spec: dict | str = None) -> str | list[dict]:
+        """ Generate output for Platform elements. """
+        if element_type_name is None:
+            entity_type = "Platforms"
+        else:
+            entity_type = element_type_name
+            
+        get_additional_props_func = None
+        output_formats = None
+        
+        if report_spec:
+             if isinstance(report_spec, str):
+                output_formats = select_report_spec(report_spec, output_format)
+             elif isinstance(report_spec, dict):
+                output_formats = get_report_spec_match(report_spec, output_format)
+        
+        if not output_formats:
+             output_formats = select_report_spec(entity_type, output_format)
+        
+        if output_formats is None:
+            output_formats = select_report_spec("Default", output_format)
+
+        return generate_output(
+            elements,
+            filter_string,
+            entity_type,
+            output_format,
+            self._extract_platform_properties,
+            get_additional_props_func,
+            output_formats
+        )
+
+    def _extract_omag_server_properties(self, element: dict, columns_struct: dict) -> dict:
+        """
+        Extract common properties from an OMAG Server element.
+        """
+        col_data = populate_columns_from_properties(element, columns_struct)
+        columns_list = col_data.get("formats", {}).get("attributes", [])
+        
+        if "serverName" in element:
+             for column in columns_list:
+                key = column.get('key')
+                if key == 'server_name':
+                    column['value'] = element.get('serverName')
+                elif key == 'server_type':
+                    column['value'] = element.get('serverType')
+                elif key == 'server_active_status':
+                    column['value'] = element.get('serverActiveStatus')
+                elif key == 'server_configuration':
+                    column['value'] = str(element.get('serverConfiguration', ''))
+                elif key == 'guid':
+                     column['value'] = element.get('guid', '') 
+        else:
+            header_props = _extract_referenceable_properties(element)
+            for column in columns_list:
+                key = column.get('key')
+                if key in header_props:
+                    column['value'] = header_props.get(key)
+                elif key == 'guid':
+                    column['value'] = header_props.get('GUID')
+
+        return col_data
+
+    @dynamic_catch
+    def _generate_omag_server_output(self, elements: dict | list[dict], filter_string: Optional[str],
+                                  element_type_name: Optional[str], output_format: str = "DICT",
+                                  report_spec: dict | str = None) -> str | list[dict]:
+        """ Generate output for OMAGServer elements. """
+        if element_type_name is None:
+            entity_type = "OMAGServers"
+        else:
+            entity_type = element_type_name
+            
+        get_additional_props_func = None
+        output_formats = None
+
+        if report_spec:
+             if isinstance(report_spec, str):
+                output_formats = select_report_spec(report_spec, output_format)
+             elif isinstance(report_spec, dict):
+                output_formats = get_report_spec_match(report_spec, output_format)
+        
+        if not output_formats:
+             output_formats = select_report_spec(entity_type, output_format)
+        
+        if output_formats is None:
+            output_formats = select_report_spec("Default", output_format)
+
+        return generate_output(
+            elements,
+            filter_string,
+            entity_type,
+            output_format,
+            self._extract_omag_server_properties,
+            get_additional_props_func,
+            output_formats
+        )
+
+    def _extract_integration_connector_properties(self, element: dict, columns_struct: dict) -> dict:
+        """ Extract common properties from an Integration Connector element. """
+        col_data = populate_columns_from_properties(element, columns_struct)
+        columns_list = col_data.get("formats", {}).get("attributes", [])
+        
+        if "connectorName" in element:
+             for column in columns_list:
+                key = column.get('key')
+                if key == 'connector_name':
+                    column['value'] = element.get('connectorName')
+                elif key == 'connector_type':
+                    column['value'] = element.get('connectorType', {}).get('displayName', '')
+                elif key == 'metadata_source_qualified_name':
+                    column['value'] = element.get('metadataSourceQualifiedName')
+                elif key == 'status':
+                    column['value'] = element.get('status')
+                elif key == 'last_status_change':
+                    column['value'] = element.get('lastStatusChange')
+                elif key == 'guid':
+                    column['value'] = element.get('guid', '')
+        
+        return col_data
+
+    @dynamic_catch
+    def _generate_integration_connector_output(self, elements: dict | list[dict], filter_string: Optional[str],
+                                  element_type_name: Optional[str], output_format: str = "DICT",
+                                  report_spec: dict | str = None) -> str | list[dict]:
+        """ Generate output for IntegrationConnector elements. """
+        if element_type_name is None:
+            entity_type = "IntegrationConnectors"
+        else:
+            entity_type = element_type_name
+            
+        get_additional_props_func = None
+        output_formats = None
+        
+        if report_spec:
+             if isinstance(report_spec, str):
+                output_formats = select_report_spec(report_spec, output_format)
+             elif isinstance(report_spec, dict):
+                output_formats = get_report_spec_match(report_spec, output_format)
+        
+        if not output_formats:
+             output_formats = select_report_spec(entity_type, output_format)
+        
+        if output_formats is None:
+            output_formats = select_report_spec("Default", output_format)
+
+        return generate_output(
+            elements,
+            filter_string,
+            entity_type,
+            output_format,
+            self._extract_integration_connector_properties,
+            get_additional_props_func,
+            output_formats
+        )
 
 
 if __name__ == "__main__":
