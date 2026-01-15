@@ -1,0 +1,537 @@
+{
+  "Command Specifications": {
+    "Create Data Dictionary": {
+      "display_name": "Data Dictionary",
+      "qn_prefix": "DataDict",
+      "alternate_names": "Data Dict",
+      "family": "Data Designer",
+      "description": "A Data Dictionary is an organized and curated collection of data definitions that can serve as a reference for data professionals",
+      "verb": "Create",
+      "find_method": "CollectionManager.find_collections",
+      "find_constraints": "{\"metadata_element_subtypes\": [\"DataDictionary\"]}",
+      "Attributes": [
+        {
+          "Display Name": {
+            "variable_name": "display_name",
+            "attr_labels": "Name; Data Dictionary; Data Dict; Data Dictionary Name; Dictionary Name",
+            "description": "Name of the Data Dictionary",
+            "style": "ID",
+            "input_required": true,
+            "min_cardinality": 1
+          }
+        },
+        {
+          "Description": {
+            "variable_name": "description",
+            "attr_labels": "",
+            "description": "A description of the Data Dictionary."
+          }
+        }
+      ]
+    },
+    "Create Data Specification": {
+      "display_name": "Data Specification",
+      "qn_prefix": "DataSpec",
+      "alternate_names": "Data Spec",
+      "family": "Data Designer",
+      "description": "A Data Specification defines the data requirements for a project or initiative. This includes the data structures , data fields and data classes.",
+      "verb": "Create",
+      "ReferenceURL": "https://egeria-project.org/concepts/data-specification",
+      "find_method": "CollectionManager.find_collections",
+      "find_constraints": "{\"metadata_element_subtypes\": [\"DataSpec\"]}",
+      "Attributes": [
+        {
+          "Display Name": {
+            "variable_name": "display_name",
+            "attr_labels": "Data Spec; Name; Display Name; Data Specification Name; Data Specification",
+            "examples": "Data Specification for Teddy Bear Drop Foot Clinical Trial",
+            "description": "Name of the Data Specification.",
+            "style": "ID",
+            "input_required": true,
+            "min_cardinality": 1
+          }
+        },
+        {
+          "Description": {
+            "variable_name": "description",
+            "attr_labels": "",
+            "description": "A description of the Data Specification."
+          }
+        }
+      ]
+    },
+    "Create Data Structure": {
+      "display_name": "Data Structure",
+      "qn_prefix": "DataStruct",
+      "family": "Data Designer",
+      "description": "A collection of data fields that for a data specification for a data source.",
+      "verb": "Create",
+      "find_method": "DataDesigner.find_data_structures",
+      "Attributes": [
+        {
+          "Display Name": {
+            "variable_name": "display_name",
+            "attr_labels": "Name; Display Name; Data Struct; Data Structure Name",
+            "examples": "Incoming Weekly Measurement Data",
+            "description": "Name of the data structure.",
+            "style": "ID",
+            "input_required": true,
+            "min_cardinality": 1
+          }
+        },
+        {
+          "Description": {
+            "variable_name": "description",
+            "attr_labels": "",
+            "description": "A description of the data structure.",
+            "min_cardinality": 1
+          }
+        },
+        {
+          "Namespace": {
+            "variable_name": "namespace",
+            "attr_labels": "",
+            "examples": "Shipping Department",
+            "description": "Optional namespace that scopes the structure.",
+            "level": "Advanced"
+          }
+        },
+        {
+          "In Data Specification": {
+            "variable_name": "in_data_spec",
+            "attr_labels": "In Data Spec",
+            "existing_element": "DataSpecification",
+            "description": "The data specifications this structure is a member of.",
+            "style": "Reference Name List",
+            "max_cardinality": -1
+          }
+        },
+        {
+          "In Data Dictionary": {
+            "variable_name": "in_data_dictionary",
+            "attr_labels": "",
+            "examples": "Shipping Data Dictionary",
+            "existing_element": "DataDictionary",
+            "description": "What data dictionaries is this data structure in?",
+            "style": "Reference Name List",
+            "max_cardinality": -1
+          }
+        }
+      ]
+    },
+    "Create Data Field": {
+      "display_name": "Data Field",
+      "qn_prefix": "DataField",
+      "family": "Data Designer",
+      "description": "A data field is a fundamental building block for a data structure.",
+      "verb": "Create",
+      "find_method": "DataDesigner.find_data_fields",
+      "Journal Entry": "\n\n",
+      "Attributes": [
+        {
+          "Display Name": {
+            "variable_name": "display_name",
+            "attr_labels": "Name; Data Field Name",
+            "examples": "PatientId",
+            "description": "Name of the Data Field",
+            "style": "ID",
+            "input_required": true,
+            "min_cardinality": 1
+          }
+        },
+        {
+          "Description": {
+            "variable_name": "description",
+            "attr_labels": "",
+            "description": "A description of the Data Field"
+          }
+        },
+        {
+          "Data Type": {
+            "variable_name": "data_type",
+            "attr_labels": "",
+            "examples": "string, int, list",
+            "default_value": "string",
+            "valid_values": "string; int; long; date; boolean; char; byte; float; double; biginteger; bigdecimal; array<string>; array<int>; map<string,string>; map<string, boolean>; map<string, int>; map<string, long>; map<string,double>; map<string, date> map<string, object>; short; map<string, array<string>>; other",
+            "description": "The data type of the data field. Point to data type valid value list if exists.",
+            "style": "Valid Value",
+            "input_required": true,
+            "min_cardinality": 1
+          }
+        },
+        {
+          "Position": {
+            "variable_name": "position",
+            "attr_labels": "",
+            "default_value": "0",
+            "description": "Position of the data field in the data structure. If 0, position is irrelevant.",
+            "style": "Ordered Int"
+          }
+        },
+        {
+          "Minimum Cardinality": {
+            "variable_name": "min_cardinality",
+            "attr_labels": "Min Cardinality; min cardinality",
+            "default_value": "1",
+            "description": "The minimum cardinality for a data element.",
+            "style": "Simple Int"
+          }
+        },
+        {
+          "Maximum Cardinality": {
+            "variable_name": "max_cardinality",
+            "attr_labels": "max cardinality; Max Cardinality",
+            "default_value": "1",
+            "description": "The maximum cardinality for a data element.",
+            "style": "Simple Int"
+          }
+        },
+        {
+          "In Data Structure": {
+            "variable_name": "in_data_structure",
+            "attr_labels": "Data Structure",
+            "examples": "US_Address",
+            "existing_element": "DataStructure",
+            "description": "The data structure this field is a member of. If display name is not unique, use qualified name.",
+            "style": "Reference Name List",
+            "max_cardinality": -1
+          }
+        },
+        {
+          "In Data Dictionary": {
+            "variable_name": "in_data_dictionary",
+            "attr_labels": "",
+            "examples": "Shipping Data Dictionary",
+            "existing_element": "DataDictionary",
+            "description": "What data dictionaries is this data field in?",
+            "style": "Reference Name List",
+            "max_cardinality": -1
+          }
+        },
+        {
+          "Data Class": {
+            "variable_name": "data_class",
+            "attr_labels": "",
+            "examples": "zip code",
+            "existing_element": "DataClass",
+            "description": "The data class that values of this data field conform to.",
+            "style": "Reference Name"
+          }
+        },
+        {
+          "Aliases": {
+            "variable_name": "aliases",
+            "attr_labels": "",
+            "description": "",
+            "style": "Simple List",
+            "max_cardinality": -1,
+            "level": "Advanced"
+          }
+        },
+        {
+          "Name Patterns": {
+            "variable_name": "name_patterns",
+            "attr_labels": "",
+            "description": "Name patterns  for the field.",
+            "style": "Simple List",
+            "max_cardinality": -1,
+            "level": "Advanced"
+          }
+        },
+        {
+          "Namespace": {
+            "variable_name": "namespace",
+            "attr_labels": "",
+            "examples": "Shipping Department",
+            "description": "Optional namespace that scopes the field.",
+            "level": "Advanced"
+          }
+        },
+        {
+          "isNullable": {
+            "variable_name": "is_nullable",
+            "attr_labels": "Nullable",
+            "default_value": "true",
+            "description": "Can the values within the dataclass be absent?",
+            "style": "Bool"
+          }
+        },
+        {
+          "Minimum Length": {
+            "variable_name": "min_length",
+            "attr_labels": "Min Length",
+            "description": "",
+            "style": "Simple Int"
+          }
+        },
+        {
+          "Length": {
+            "variable_name": "length",
+            "attr_labels": "",
+            "description": "The length of a value for a field.",
+            "style": "Simple Int"
+          }
+        },
+        {
+          "Precision": {
+            "variable_name": "precision",
+            "attr_labels": "",
+            "description": "The precision of a numeric",
+            "Journal Entry": "How do we express precision?"
+          }
+        },
+        {
+          "Ordered Values": {
+            "variable_name": "ordered_values",
+            "attr_labels": "",
+            "description": "is this field in an ordered list?",
+            "style": "Bool",
+            "Journal Entry": "Need good examples of this. Not sure I understand how to interpret."
+          }
+        },
+        {
+          "Units": {
+            "variable_name": "units",
+            "attr_labels": "gradians",
+            "description": "An optional string indicating the units of the field."
+          }
+        },
+        {
+          "Sort Order": {
+            "variable_name": "sort_order",
+            "attr_labels": "",
+            "description": "Method by which this field should be sorted?",
+            "level": "Advanced",
+            "Journal Entry": "Need examples of this."
+          }
+        },
+        {
+          "Default Value": {
+            "variable_name": "default_value",
+            "attr_labels": "Default",
+            "description": "Specify a default value for the data class."
+          }
+        }
+      ]
+    },
+    "Create Data Class": {
+      "display_name": "Data Class",
+      "qn_prefix": "DataClass",
+      "family": "Data Designer",
+      "description": "Describes the data values that may be stored in data fields. Can be used to configure quality validators and data field classifiers.",
+      "verb": "Create",
+      "find_method": "DataDesigner.find_data_classes",
+      "Attributes": [
+        {
+          "Display Name": {
+            "variable_name": "display_name",
+            "attr_labels": "Data Class; Display Name; Name; Data Class Name",
+            "examples": "Incoming Weekly Measurement Data",
+            "description": "Name of the data structure.",
+            "style": "ID",
+            "input_required": true,
+            "min_cardinality": 1
+          }
+        },
+        {
+          "Description": {
+            "variable_name": "description",
+            "attr_labels": "",
+            "description": "A description of the data class.",
+            "min_cardinality": 1
+          }
+        },
+        {
+          "Namespace": {
+            "variable_name": "namespace",
+            "attr_labels": "",
+            "examples": "Shipping Department",
+            "description": "Optional namespace that scopes the field.",
+            "min_cardinality": 1
+          }
+        },
+        {
+          "Match Property Names": {
+            "variable_name": "match_property_names",
+            "attr_labels": "",
+            "default_value": "Can be determined by Dr. Egeria?",
+            "description": "Names of the properties that are set.",
+            "generated": true,
+            "style": "Simple List",
+            "min_cardinality": 1,
+            "max_cardinality": 0
+          }
+        },
+        {
+          "Match Threshold": {
+            "variable_name": "match_threshold",
+            "attr_labels": "",
+            "description": "Percent of values that must match the data class specification.",
+            "style": "Simple Int"
+          }
+        },
+        {
+          "IsCaseSensitive": {
+            "variable_name": "is_case_sensitive",
+            "attr_labels": "",
+            "default_value": "False",
+            "description": "Are field values case sensitive?",
+            "style": "Bool",
+            "min_cardinality": 1
+          }
+        },
+        {
+          "Specification": {
+            "variable_name": "specification",
+            "attr_labels": "",
+            "description": "Rules language",
+            "min_cardinality": 1,
+            "level": "Advanced"
+          }
+        },
+        {
+          "Specification Details": {
+            "variable_name": "spec_details",
+            "attr_labels": "",
+            "description": "Values for a rule.",
+            "min_cardinality": 1,
+            "level": "Advanced"
+          }
+        },
+        {
+          "Data Type": {
+            "variable_name": "data_type",
+            "attr_labels": "",
+            "valid_values": "string; int; long; date; boolean; char; byte; float; double; biginteger; bigdecimal; array<string>; array<int>; map<string,string>; map<string, boolean>; map<string, int>; map<string, long>; map<string,double>; map<string, date> map<string, object>; short; map<string, array<string>>; other",
+            "description": "Data type for the data class.",
+            "style": "Valid Value",
+            "input_required": true,
+            "min_cardinality": 1
+          }
+        },
+        {
+          "Allow Duplicate Values": {
+            "variable_name": "duplicates_allowed",
+            "attr_labels": "",
+            "default_value": "true",
+            "description": "Allow duplicate values within the data class?",
+            "style": "Bool",
+            "min_cardinality": 1
+          }
+        },
+        {
+          "isNullable": {
+            "variable_name": "is_nullable",
+            "attr_labels": "Nullable",
+            "default_value": "true",
+            "description": "Can the values within the dataclass be absent?",
+            "style": "Bool",
+            "min_cardinality": 1
+          }
+        },
+        {
+          "isCaseSensitive": {
+            "variable_name": "is_case_sensitive",
+            "attr_labels": "Case Sensitive",
+            "description": "Indicates if the values in a  data class are case sensitive.",
+            "style": "Bool",
+            "min_cardinality": 1
+          }
+        },
+        {
+          "Default Value": {
+            "variable_name": "default_value",
+            "attr_labels": "Default",
+            "description": "Specify a default value for the data class.",
+            "min_cardinality": 1
+          }
+        },
+        {
+          "Average Value": {
+            "variable_name": "avg_value",
+            "attr_labels": "Average",
+            "description": "Average value for the data class.",
+            "min_cardinality": 1
+          }
+        },
+        {
+          "Value List": {
+            "variable_name": "value_list",
+            "attr_labels": "",
+            "description": "",
+            "style": "Simple List",
+            "min_cardinality": 1
+          }
+        },
+        {
+          "Value Range From": {
+            "variable_name": "value_range_from",
+            "attr_labels": "Range From",
+            "examples": "10",
+            "description": "Beginning range of legal values.",
+            "style": "Simple Int",
+            "min_cardinality": 1
+          }
+        },
+        {
+          "Value Range To": {
+            "variable_name": "value_range_to",
+            "attr_labels": "Range To",
+            "examples": "100",
+            "description": "End of valid range for value.",
+            "style": "Simple Int",
+            "min_cardinality": 1
+          }
+        },
+        {
+          "Sample Values": {
+            "variable_name": "sample_values",
+            "attr_labels": "Samples",
+            "examples": "12",
+            "description": "Sample values of the data class.",
+            "min_cardinality": 1
+          }
+        },
+        {
+          "Data Patterns": {
+            "variable_name": "data_patterns",
+            "attr_labels": "",
+            "examples": "/^4[0-9]{12}(?:[0-9]{3})?$/",
+            "description": "prescribed format of a data field - e.g. credit card numbers. Often expressed as a regular expression.",
+            "min_cardinality": 1
+          }
+        },
+        {
+          "In Data Dictionary": {
+            "variable_name": "in_data_dictionary",
+            "attr_labels": "",
+            "examples": "Shipping Data Dictionary",
+            "existing_element": "DataDictionary",
+            "description": "What data dictionaries is this data field in?",
+            "style": "Reference Name List",
+            "max_cardinality": -1
+          }
+        },
+        {
+          "Containing Data Class": {
+            "variable_name": "containing_data_class",
+            "attr_labels": "Containing Class",
+            "examples": "US_Address",
+            "existing_element": "DataClass",
+            "description": "Data classes this is part of.",
+            "style": "Reference Name List"
+          }
+        },
+        {
+          "Specializes Data Class": {
+            "variable_name": "specializes_data_class",
+            "attr_labels": "",
+            "examples": "zip code specializes postal code",
+            "description": "Specializes a parent  data class.",
+            "style": "Reference Name"
+          }
+        }
+      ]
+    }
+  }
+}

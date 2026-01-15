@@ -1,0 +1,366 @@
+{
+  "Command Specifications": {
+    "Create Information Supply Chain": {
+      "display_name": "Information Supply Chain",
+      "qn_prefix": "SupplyChain",
+      "alternate_names": "Supply Chain",
+      "family": "Solution Architect",
+      "description": "The flow of a particular type of data across a digital landscape.",
+      "verb": "Create",
+      "find_method": "SolutionArchitect.find_information_supply_chains",
+      "Attributes": [
+        {
+          "Display Name": {
+            "variable_name": "display_name",
+            "attr_labels": "Name; Display Name; Supply Chain; Supply Chain Name",
+            "examples": "Clinical Trial Subject Onboarding",
+            "description": "Name of the Information Supply Chain",
+            "style": "ID",
+            "input_required": true,
+            "min_cardinality": 1
+          }
+        },
+        {
+          "Description": {
+            "variable_name": "description",
+            "attr_labels": "",
+            "description": "A description of the data structure.",
+            "min_cardinality": 1
+          }
+        },
+        {
+          "Scope": {
+            "variable_name": "scope",
+            "attr_labels": "",
+            "examples": "Within Project",
+            "description": "Scope of the supply chain."
+          }
+        },
+        {
+          "Purposes": {
+            "variable_name": "purposes",
+            "attr_labels": "Purpose, Purposes",
+            "examples": "Ensure patient subject is aware of the process and potential risks in participation.",
+            "description": "A list of purposes.",
+            "style": "Simple List"
+          }
+        },
+        {
+          "Nested Information Supply Chains": {
+            "variable_name": "nested_info_supply_chains",
+            "attr_labels": "Nested Supply Chains",
+            "existing_element": "InformationSupplyChain",
+            "description": "A list of supply chains that compose this supply chain.",
+            "style": "Reference Name List",
+            "max_cardinality": -1
+          }
+        },
+        {
+          "In Information Supply Chain": {
+            "variable_name": "in_supply_chain",
+            "attr_labels": "In Supply Chain; In Supply Chains; In Information Supply Chains",
+            "existing_element": "InformationSupplyChain",
+            "description": "Supply chains that this supply chain is in.",
+            "style": "Reference Name List"
+          }
+        }
+      ]
+    },
+    "Create Solution Blueprint": {
+      "display_name": "Solution Blueprint",
+      "qn_prefix": "SolutionBlueprint",
+      "family": "Solution Architect",
+      "description": "A solution blueprint describes the architecture of a digital service in terms of solution components.",
+      "verb": "Create",
+      "find_method": "SolutionArchitect.find_solution_blueprints",
+      "Attributes": [
+        {
+          "Display Name": {
+            "variable_name": "display_name",
+            "attr_labels": "Name; Display Name; Blueprint; Blueprint Name",
+            "description": "Name of the Information Supply Chain",
+            "style": "ID",
+            "input_required": true,
+            "min_cardinality": 1
+          }
+        },
+        {
+          "Description": {
+            "variable_name": "description",
+            "attr_labels": "",
+            "description": "A description of the data structure.",
+            "min_cardinality": 1
+          }
+        },
+        {
+          "Solution Components": {
+            "variable_name": "solution_components",
+            "attr_labels": "Components; Solution Component; Component",
+            "existing_element": "SolutionComponent",
+            "description": "Solution components that make up the blueprint.",
+            "style": "Reference Name List"
+          }
+        }
+      ]
+    },
+    "Create Solution Component": {
+      "display_name": "Solution Component",
+      "qn_prefix": "SolutionComponent",
+      "family": "Solution Architect",
+      "description": "A reusable solution component.",
+      "verb": "Create",
+      "find_method": "SolutionArchitect.find_solution_components",
+      "Attributes": [
+        {
+          "Display Name": {
+            "variable_name": "display_name",
+            "attr_labels": "Name; Display Name; Solution Component Name; Component Name",
+            "description": "Name of the solution component.",
+            "style": "ID",
+            "input_required": true,
+            "min_cardinality": 1
+          }
+        },
+        {
+          "Description": {
+            "variable_name": "description",
+            "attr_labels": "",
+            "description": "A description of the data structure."
+          }
+        },
+        {
+          "Solution Component Type": {
+            "variable_name": "soln_comp_type",
+            "attr_labels": "Soln Component Type",
+            "description": "Type of solution component."
+          }
+        },
+        {
+          "Planned Deployed Implementation Type": {
+            "variable_name": "planned_deployed_impl_type",
+            "attr_labels": "Planned Deployed Impl Type",
+            "description": "The planned implementation type for deployment."
+          }
+        },
+        {
+          "Solution SubComponents": {
+            "variable_name": "solution_sub_components",
+            "attr_labels": "SubComponents; Sub-Components",
+            "existing_element": "SolutionComponent",
+            "description": "Solution components that include this one.",
+            "style": "Reference Name List",
+            "max_cardinality": -1,
+            "level": "INVISIBLE",
+            "Journal Entry": "In our current approach, the parent doesn\u2019t specify the sub-components but rather the components can specify one or more parents."
+          }
+        },
+        {
+          "In Solution Components": {
+            "variable_name": "in_components",
+            "attr_labels": "In Solution Component; In Component",
+            "existing_element": "SolutionComponent",
+            "description": "Solution components that include this one.",
+            "style": "Reference Name List",
+            "max_cardinality": -1
+          }
+        },
+        {
+          "In Solution Blueprints": {
+            "variable_name": "solution_blueprints",
+            "attr_labels": "In Solution Blueprints",
+            "existing_element": "SolnBlueprint",
+            "description": "Solution Blueprints that contain this component.",
+            "style": "Reference Name List"
+          }
+        },
+        {
+          "In Information Supply Chains": {
+            "variable_name": "in_supply_chains",
+            "attr_labels": "In Supply Chains; In Supply Chain; In Information Supply Chain",
+            "existing_element": "InformationSupplyChain",
+            "description": "The Information Supply Chains that this component is a member of.",
+            "style": "Reference Name List",
+            "max_cardinality": -1
+          }
+        },
+        {
+          "Actors": {
+            "variable_name": "actors",
+            "attr_labels": "",
+            "existing_element": "SolutionRole",
+            "description": "Actors associated with this component.",
+            "style": "Reference Name List",
+            "max_cardinality": -1
+          }
+        }
+      ]
+    },
+    "Link Solution Component Peers": {
+      "display_name": "Wires",
+      "qn_prefix": "",
+      "alternate_names": "Link Solution Components; Link Components; Wire Solution Components; Wire Components",
+      "family": "Solution Architect",
+      "description": "This command can be used to link or unlink wires between components.",
+      "verb": "Link",
+      "upsert": false,
+      "attach": true,
+      "find_method": "",
+      "Attributes": [
+        {
+          "Component1": {
+            "variable_name": "component1",
+            "attr_labels": "Solution Component 1; Comp 1",
+            "existing_element": "SolutionComponent",
+            "description": "The  first component to link.",
+            "style": "Reference Name",
+            "input_required": true,
+            "min_cardinality": 1
+          }
+        },
+        {
+          "Component2": {
+            "variable_name": "component2",
+            "attr_labels": "Solution Component 2; Comp 2",
+            "existing_element": "SolutionComponent",
+            "description": "The  second component to link.",
+            "style": "Reference Name",
+            "input_required": true,
+            "min_cardinality": 1
+          }
+        },
+        {
+          "Wire Label": {
+            "variable_name": "link_label",
+            "attr_labels": "Label",
+            "description": "Labels the link between two components."
+          }
+        },
+        {
+          "Description": {
+            "variable_name": "description",
+            "attr_labels": "",
+            "description": "A description of the wire."
+          }
+        }
+      ]
+    },
+    "Create Solution Role": {
+      "display_name": "Solution Role",
+      "qn_prefix": "SolutionRole",
+      "family": "Solution Architect",
+      "description": "A collection of data fields that for a data specification for a data source.",
+      "verb": "Create",
+      "find_method": "SolutionArchitect.find_solution_roles",
+      "Attributes": [
+        {
+          "Name": {
+            "variable_name": "name",
+            "attr_labels": "Role; Solution Role; Solution Role Name; Role Name",
+            "description": "Name of the role.",
+            "style": "ID",
+            "input_required": true,
+            "min_cardinality": 1
+          }
+        },
+        {
+          "Description": {
+            "variable_name": "description",
+            "attr_labels": "",
+            "description": "A description of the data structure.",
+            "min_cardinality": 1
+          }
+        },
+        {
+          "Title": {
+            "variable_name": "title",
+            "attr_labels": "",
+            "examples": "Clinical Trial Manager",
+            "description": "Title of the role."
+          }
+        },
+        {
+          "Scope": {
+            "variable_name": "scope",
+            "attr_labels": "",
+            "description": "Scope of the role.",
+            "min_cardinality": 1
+          }
+        },
+        {
+          "identifier": {
+            "variable_name": "identifier",
+            "attr_labels": "",
+            "description": "role identifier",
+            "min_cardinality": 1
+          }
+        },
+        {
+          "Domain Identifier": {
+            "variable_name": "domain_identifier",
+            "attr_labels": "",
+            "default_value": "0",
+            "description": "Governance domain identifier",
+            "style": "Simple Int"
+          }
+        },
+        {
+          "Role Type": {
+            "variable_name": "",
+            "attr_labels": "Role Type Name",
+            "examples": "GovernanceRole",
+            "default_value": "GovernanceRole",
+            "description": "Type of the role.  Currently must be GovernanceRole."
+          }
+        }
+      ]
+    },
+    "Link Information Supply Chain Peers": {
+      "display_name": "Segments",
+      "qn_prefix": "",
+      "alternate_names": "Information Supply Chain Segments; Supply Chain Segments; Supply Chain Peers",
+      "family": "Solution Architect",
+      "description": "This command can be used to link or unlink information supply chain segments.",
+      "verb": "Link",
+      "upsert": false,
+      "attach": true,
+      "find_method": "",
+      "Attributes": [
+        {
+          "Segment1": {
+            "variable_name": "segment1",
+            "attr_labels": "Segment 1; Information Supply Chain Segment 1; Info Supply Chain Segment 1",
+            "description": "The  first segment to link.",
+            "style": "Reference Name",
+            "input_required": true,
+            "min_cardinality": 1
+          }
+        },
+        {
+          "Segment2": {
+            "variable_name": "segment2",
+            "attr_labels": "Segment 2; Information Supply Chain Segment 2; Info Supply Chain Segment 2",
+            "description": "The  second segment to link.",
+            "style": "Reference Name",
+            "input_required": true,
+            "min_cardinality": 1
+          }
+        },
+        {
+          "Link Label": {
+            "variable_name": "link_label",
+            "attr_labels": "Label",
+            "description": "Labels the link between two information supply chain segments."
+          }
+        },
+        {
+          "Description": {
+            "variable_name": "description",
+            "attr_labels": "",
+            "description": "A description of the data structure.",
+            "min_cardinality": 1
+          }
+        }
+      ]
+    }
+  }
+}
