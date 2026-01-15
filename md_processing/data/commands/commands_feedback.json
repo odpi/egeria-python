@@ -1,0 +1,155 @@
+{
+  "Command Specifications": {
+    "Create Comment": {
+      "display_name": "Comment",
+      "qn_prefix": "Comment",
+      "family": "Feedback Manager",
+      "description": "Add a comment to an associated element.",
+      "verb": "Create",
+      "find_method": "GovernanceOfficer.find_governance_definitions",
+      "Attributes": [
+        {
+          "Display Name": {
+            "variable_name": "display_name",
+            "attr_labels": "Name",
+            "description": "Name of the  Comment."
+          }
+        },
+        {
+          "Associated Element": {
+            "variable_name": "associated_element",
+            "attr_labels": "Element",
+            "description": "The element the comment is attached to. To reply to a previous comment, you would use the ID of the previous comment as the associated element.",
+            "style": "Reference Name",
+            "input_required": true,
+            "min_cardinality": 1
+          }
+        },
+        {
+          "Comment Text": {
+            "variable_name": "comment_text",
+            "attr_labels": "Comment, Description",
+            "description": "The Comment text.",
+            "input_required": true
+          }
+        },
+        {
+          "Comment Type": {
+            "variable_name": "comment_type",
+            "attr_labels": "",
+            "default_value": "STANDARD_COMMENT",
+            "valid_values": "STANDARD_COMMENT; QUESTION; ANSWER; SUGGESTION; USAGE_EXPERIENCE; REQUIREMENT; OTHER",
+            "description": "A user specified category name that can be used for example, to define product types or agreement types.",
+            "style": "Valid Value"
+          }
+        }
+      ]
+    },
+    "Create Journal Entry": {
+      "display_name": "NoteLog",
+      "qn_prefix": "NoteLog",
+      "alternate_names": "Note Log; Journal",
+      "family": "Feedback Manager",
+      "description": "Allows a sequence of notes to be attached to an associated element.",
+      "verb": "Create",
+      "find_method": "Client2.find_notes",
+      "Attributes": [
+        {
+          "Journal Name": {
+            "variable_name": "display_name",
+            "attr_labels": "Name; Title",
+            "description": "Name of the  NoteLog or Journal.",
+            "style": "ID",
+            "input_required": true
+          }
+        },
+        {
+          "Associated Element": {
+            "variable_name": "associated_element",
+            "attr_labels": "Element",
+            "description": "The element the NoteLog is attached to.",
+            "style": "Reference Name",
+            "min_cardinality": 1
+          }
+        },
+        {
+          "Journal Description": {
+            "variable_name": "journal_description",
+            "attr_labels": "",
+            "description": "Description of the NoteLog."
+          }
+        },
+        {
+          "Note Entry": {
+            "variable_name": "note_entry",
+            "attr_labels": "Note; Journal Entry",
+            "description": "The text of the journal entry.",
+            "input_required": true,
+            "min_cardinality": 1
+          }
+        }
+      ]
+    },
+    "Create Informal Tag": {
+      "display_name": "Informal Tag",
+      "qn_prefix": "InformalTag",
+      "family": "Feedback Manager",
+      "description": "Creates an informal tag that can be attached to elements. ",
+      "verb": "Create",
+      "find_method": "Client2.find_tags",
+      "Attributes": [
+        {
+          "Display Name": {
+            "variable_name": "display_name",
+            "attr_labels": "Name, Tag Name",
+            "description": "Name of the informal tag.",
+            "style": "ID",
+            "input_required": true
+          }
+        },
+        {
+          "Description": {
+            "variable_name": "description",
+            "attr_labels": "",
+            "description": "Description of the Informal Tag."
+          }
+        }
+      ]
+    },
+    "Link Tag->Element": {
+      "display_name": "Tag Element",
+      "qn_prefix": "",
+      "alternate_names": "Attach Tag; Tag Element",
+      "family": "Feedback Manager",
+      "description": "Used to attach an informal tag to an element.",
+      "verb": "Link",
+      "upsert": false,
+      "attach": true,
+      "find_method": "",
+      "Attributes": [
+        {
+          "Tag ID": {
+            "variable_name": "tag_id",
+            "attr_labels": "",
+            "existing_element": "Informal Tag",
+            "description": "Identity (usually qualified name) of the tag to attach.",
+            "style": "Reference Name",
+            "input_required": true,
+            "min_cardinality": 1
+          }
+        },
+        {
+          "Element ID": {
+            "variable_name": "element_id",
+            "attr_labels": "",
+            "existing_element": "Element GUID",
+            "description": "Identity (usually qualified name) of the element you are tagging.",
+            "style": "Reference Name",
+            "input_required": true,
+            "min_cardinality": 1
+          }
+        }
+      ]
+    }
+  }
+}

@@ -1,0 +1,218 @@
+{
+  "Command Specifications": {
+    "Create Glossary": {
+      "display_name": "Glossary",
+      "qn_prefix": "Glossary",
+      "family": "Glossary",
+      "description": "A grouping of definitions.",
+      "verb": "Create",
+      "find_method": "CollectionManager.find_collections",
+      "find_constraints": "{\"metadata_element_subtypes\": [\"Glossary\"]}",
+      "Attributes": [
+        {
+          "Display Name": {
+            "variable_name": "display_name",
+            "attr_labels": "Glossary; Glossary Name",
+            "description": "The name of the glossary to create or update.",
+            "style": "ID",
+            "input_required": true,
+            "min_cardinality": 1
+          }
+        },
+        {
+          "Description": {
+            "variable_name": "description",
+            "attr_labels": "",
+            "description": "A description of the Glossary."
+          }
+        },
+        {
+          "Language": {
+            "variable_name": "language",
+            "attr_labels": "",
+            "examples": "English",
+            "description": "The language of the glossary. Note that multilingual descriptions are supported. Please see web site for details."
+          }
+        },
+        {
+          "Usage": {
+            "variable_name": "",
+            "attr_labels": "",
+            "examples": "usage",
+            "description": "A description of how the glossary is to be used."
+          }
+        }
+      ]
+    },
+    "Create Glossary Term": {
+      "display_name": "Glossary Term",
+      "qn_prefix": "Term",
+      "alternate_names": "Term",
+      "family": "Glossary",
+      "description": "",
+      "verb": "Create",
+      "upsert": false,
+      "find_method": "GlossaryManager.find_glossary_terms",
+      "Attributes": [
+        {
+          "Display Name": {
+            "variable_name": "term_name",
+            "attr_labels": "Glossary Term ; Name; Term Name; Term",
+            "description": "The name of the term to create or update.",
+            "style": "ID",
+            "input_required": true,
+            "min_cardinality": 1
+          }
+        },
+        {
+          "Glossary": {
+            "variable_name": "glossary_name",
+            "attr_labels": "Glossaries; Glossary Name; Glossary Collection; Owning Glossary",
+            "existing_element": "Glossary Collection",
+            "description": "Zeroor more existing glossaries that a term is a member of.",
+            "style": "Reference Name"
+          }
+        },
+        {
+          "Summary": {
+            "variable_name": "summary",
+            "attr_labels": "",
+            "description": "A summary description of the term."
+          }
+        },
+        {
+          "Description": {
+            "variable_name": "description",
+            "attr_labels": "",
+            "description": "A description of the term."
+          }
+        },
+        {
+          "Folders": {
+            "variable_name": "folders",
+            "attr_labels": "Folder",
+            "existing_element": "Folder Collection",
+            "description": "Exixting folder collections that you'd like to make the term a member of.",
+            "style": "Reference Name List"
+          }
+        },
+        {
+          "Abbreviation": {
+            "variable_name": "abbreviation",
+            "attr_labels": "",
+            "examples": "CO2",
+            "description": "An abbreviation for the term."
+          }
+        },
+        {
+          "Example": {
+            "variable_name": "example",
+            "attr_labels": "",
+            "description": "An example of how the term is used."
+          }
+        },
+        {
+          "Usage": {
+            "variable_name": "usage",
+            "attr_labels": "",
+            "examples": "usage",
+            "description": "A description of how the term is to be used."
+          }
+        }
+      ]
+    },
+    "Link Term-Term Relationship": {
+      "display_name": "Term-Term Relationship",
+      "qn_prefix": "",
+      "alternate_names": "Terms",
+      "family": "Glossary",
+      "description": "Create a relationship between terms.",
+      "verb": "Link",
+      "upsert": false,
+      "attach": true,
+      "find_method": "",
+      "Attributes": [
+        {
+          "Term 1": {
+            "variable_name": "term_1",
+            "attr_labels": "Term Name 1; Term1",
+            "description": "The name of the first term term to connect.",
+            "style": "ID",
+            "input_required": true,
+            "min_cardinality": 1
+          }
+        },
+        {
+          "Term 2": {
+            "variable_name": "term_2",
+            "attr_labels": "Term Name 2; Term2",
+            "description": "The name of the second term term to connect.",
+            "style": "ID",
+            "input_required": true,
+            "min_cardinality": 1
+          }
+        },
+        {
+          "Relationship": {
+            "variable_name": "relationship",
+            "attr_labels": "",
+            "valid_values": "Synonym;  Translation;  PreferredTerm; TermISATYPEOFRelationship;  TermTYPEDBYRelationship;  Antonym; ReplacementTerm;  ValidValue; TermHASARelationship; RelatedTerm;   ISARelationship",
+            "description": "The type of relationship to connecting the two terms.",
+            "style": "Valid Value",
+            "input_required": true,
+            "min_cardinality": 1
+          }
+        },
+        {
+          "Description": {
+            "variable_name": "description",
+            "attr_labels": "",
+            "description": "A description of the Relationship."
+          }
+        },
+        {
+          "Expression": {
+            "variable_name": "expression",
+            "attr_labels": "",
+            "description": "An expression describing the relationship.",
+            "min_cardinality": 1,
+            "level": "Advance"
+          }
+        },
+        {
+          "Confidence": {
+            "variable_name": "confidence",
+            "attr_labels": "",
+            "description": "Percent confidence in the relationship.",
+            "style": "Simple Int",
+            "level": "Advanced"
+          }
+        },
+        {
+          "Status": {
+            "variable_name": "",
+            "attr_labels": "",
+            "description": "",
+            "min_cardinality": 1
+          }
+        },
+        {
+          "Steward": {
+            "variable_name": "steward",
+            "attr_labels": "",
+            "description": "Steward responsible.",
+            "level": "Advance"
+          }
+        },
+        {
+          "Source": {
+            "variable_name": "source",
+            "attr_labels": "",
+            "description": "Source of the relationship",
+            "level": "Advance"
+          }
+        }
+      ]
+    }
+  }
+}

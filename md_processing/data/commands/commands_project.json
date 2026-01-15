@@ -1,0 +1,642 @@
+{
+  "Command Specifications": {
+    "Create Project": {
+      "display_name": "Project",
+      "qn_prefix": "Project",
+      "family": "Project",
+      "description": "An organized set of work.",
+      "verb": "Create",
+      "find_method": "ProjectManager.find_projects",
+      "Attributes": [
+        {
+          "Display Name": {
+            "variable_name": "display_name",
+            "attr_labels": "Project; Project Name; Name",
+            "description": "The name of the project to create or update.",
+            "style": "ID",
+            "input_required": true,
+            "min_cardinality": 1
+          }
+        },
+        {
+          "Description": {
+            "variable_name": "description",
+            "attr_labels": "",
+            "description": "A description of the Project."
+          }
+        },
+        {
+          "Project Type": {
+            "variable_name": "project_type",
+            "attr_labels": "",
+            "examples": "Campaign; Task; PersonalProject; StudyProject",
+            "description": "A string classifiying the project. Current;y supported values are Campaign, Task. PersonalProject and StudyProject.",
+            "min_cardinality": 1
+          }
+        },
+        {
+          "Identifier": {
+            "variable_name": "project_identifier",
+            "attr_labels": "",
+            "examples": "English",
+            "description": "A user asigned identifier."
+          }
+        },
+        {
+          "Mission": {
+            "variable_name": "mission",
+            "attr_labels": "",
+            "examples": "Improve Privacy",
+            "description": "The project mission."
+          }
+        },
+        {
+          "Purposes": {
+            "variable_name": "purposes",
+            "attr_labels": "",
+            "description": "A list of  project purposes.",
+            "style": "Simple List"
+          }
+        },
+        {
+          "Start Date": {
+            "variable_name": "start_date",
+            "attr_labels": "",
+            "examples": "2025/03/03",
+            "description": "Project start date as an ISO 8601 string."
+          }
+        },
+        {
+          "Planned End Date": {
+            "variable_name": "end_date",
+            "attr_labels": "",
+            "examples": "2025/03/03",
+            "description": "Planned project end date as an ISO 8601 string."
+          }
+        },
+        {
+          "Priority": {
+            "variable_name": "priority",
+            "attr_labels": "",
+            "examples": "1",
+            "description": "An integer priority for the project.",
+            "style": "Simple Int"
+          }
+        },
+        {
+          "Project Phase": {
+            "variable_name": "project_phase",
+            "attr_labels": "",
+            "examples": "Planning",
+            "description": "A string describing the phase of the project."
+          }
+        },
+        {
+          "Project Status": {
+            "variable_name": "project_status",
+            "attr_labels": "",
+            "description": "A string representing the project status."
+          }
+        },
+        {
+          "Project Health": {
+            "variable_name": "project_health",
+            "attr_labels": "",
+            "examples": "Green",
+            "description": "A string representing the health of the project."
+          }
+        }
+      ]
+    },
+    "Create Campaign": {
+      "display_name": "Campaign",
+      "qn_prefix": "Campaign",
+      "family": "Project",
+      "description": "An organized set of work.",
+      "verb": "Create",
+      "find_method": "ProjectManager.find_projects",
+      "find_constraints": "{\"classification_names\": [\"Campaign\"]}",
+      "Attributes": [
+        {
+          "Display Name": {
+            "variable_name": "display_name",
+            "attr_labels": "Project; Project Name; Name",
+            "description": "The name of the project to create or update.",
+            "style": "ID",
+            "input_required": true,
+            "min_cardinality": 1
+          }
+        },
+        {
+          "Description": {
+            "variable_name": "description",
+            "attr_labels": "",
+            "description": "A description of the Project."
+          }
+        },
+        {
+          "Project Type": {
+            "variable_name": "project_type",
+            "attr_labels": "",
+            "examples": "Campaign; Task; PersonalProject; StudyProject",
+            "description": "A string classifiying the project. Current;y supported values are Campaign, Task. PersonalProject and StudyProject.",
+            "min_cardinality": 1
+          }
+        },
+        {
+          "Identifier": {
+            "variable_name": "project_identifier",
+            "attr_labels": "",
+            "examples": "English",
+            "description": "A user asigned identifier."
+          }
+        },
+        {
+          "Mission": {
+            "variable_name": "mission",
+            "attr_labels": "",
+            "examples": "Improve Privacy",
+            "description": "The project mission."
+          }
+        },
+        {
+          "Purposes": {
+            "variable_name": "purposes",
+            "attr_labels": "",
+            "description": "A list of  project purposes.",
+            "style": "Simple List"
+          }
+        },
+        {
+          "Start Date": {
+            "variable_name": "start_date",
+            "attr_labels": "",
+            "examples": "2025/03/03",
+            "description": "Project start date as an ISO 8601 string."
+          }
+        },
+        {
+          "Planned End Date": {
+            "variable_name": "end_date",
+            "attr_labels": "",
+            "examples": "2025/03/03",
+            "description": "Planned project end date as an ISO 8601 string."
+          }
+        },
+        {
+          "Priority": {
+            "variable_name": "priority",
+            "attr_labels": "",
+            "examples": "1",
+            "description": "An integer priority for the project.",
+            "style": "Simple Int"
+          }
+        },
+        {
+          "Project Phase": {
+            "variable_name": "project_phase",
+            "attr_labels": "",
+            "examples": "Planning",
+            "description": "A string describing the phase of the project."
+          }
+        },
+        {
+          "Project Status": {
+            "variable_name": "project_status",
+            "attr_labels": "",
+            "description": "A string representing the project status."
+          }
+        },
+        {
+          "Project Health": {
+            "variable_name": "project_health",
+            "attr_labels": "",
+            "examples": "Green",
+            "description": "A string representing the health of the project."
+          }
+        }
+      ]
+    },
+    "Create Task": {
+      "display_name": "Task",
+      "qn_prefix": "Task",
+      "family": "Project",
+      "description": "A smaller  set of work.",
+      "verb": "Create",
+      "find_method": "ProjectManager.find_projects",
+      "find_constraints": "{\"classification_names\": [\"Task\"]}",
+      "Attributes": [
+        {
+          "Display Name": {
+            "variable_name": "display_name",
+            "attr_labels": "Project; Project Name; Name",
+            "description": "The name of the project to create or update.",
+            "style": "ID",
+            "input_required": true,
+            "min_cardinality": 1
+          }
+        },
+        {
+          "Description": {
+            "variable_name": "description",
+            "attr_labels": "",
+            "description": "A description of the Project."
+          }
+        },
+        {
+          "Project Type": {
+            "variable_name": "project_type",
+            "attr_labels": "",
+            "examples": "Campaign; Task; PersonalProject; StudyProject",
+            "description": "A string classifiying the project. Current;y supported values are Campaign, Task. PersonalProject and StudyProject.",
+            "min_cardinality": 1
+          }
+        },
+        {
+          "Identifier": {
+            "variable_name": "project_identifier",
+            "attr_labels": "",
+            "examples": "English",
+            "description": "A user asigned identifier."
+          }
+        },
+        {
+          "Mission": {
+            "variable_name": "mission",
+            "attr_labels": "",
+            "examples": "Improve Privacy",
+            "description": "The project mission."
+          }
+        },
+        {
+          "Purposes": {
+            "variable_name": "purposes",
+            "attr_labels": "",
+            "description": "A list of  project purposes.",
+            "style": "Simple List"
+          }
+        },
+        {
+          "Start Date": {
+            "variable_name": "start_date",
+            "attr_labels": "",
+            "examples": "2025/03/03",
+            "description": "Project start date as an ISO 8601 string."
+          }
+        },
+        {
+          "Planned End Date": {
+            "variable_name": "end_date",
+            "attr_labels": "",
+            "examples": "2025/03/03",
+            "description": "Planned project end date as an ISO 8601 string."
+          }
+        },
+        {
+          "Priority": {
+            "variable_name": "priority",
+            "attr_labels": "",
+            "examples": "1",
+            "description": "An integer priority for the project.",
+            "style": "Simple Int"
+          }
+        },
+        {
+          "Project Phase": {
+            "variable_name": "project_phase",
+            "attr_labels": "",
+            "examples": "Planning",
+            "description": "A string describing the phase of the project."
+          }
+        },
+        {
+          "Project Status": {
+            "variable_name": "project_status",
+            "attr_labels": "",
+            "description": "A string representing the project status."
+          }
+        },
+        {
+          "Project Health": {
+            "variable_name": "project_health",
+            "attr_labels": "",
+            "examples": "Green",
+            "description": "A string representing the health of the project."
+          }
+        }
+      ]
+    },
+    "Create Personal Project": {
+      "display_name": "Personal Project",
+      "qn_prefix": "PersonalProject",
+      "family": "Project",
+      "description": "A personal project.",
+      "verb": "Create",
+      "find_method": "ProjectManager.find_projects",
+      "find_constraints": "{\"classification_names\": [\"PersonalProject\"]}",
+      "Attributes": [
+        {
+          "Display Name": {
+            "variable_name": "display_name",
+            "attr_labels": "Project; Project Name; Name",
+            "description": "The name of the project to create or update.",
+            "style": "ID",
+            "input_required": true,
+            "min_cardinality": 1
+          }
+        },
+        {
+          "Description": {
+            "variable_name": "description",
+            "attr_labels": "",
+            "description": "A description of the Project."
+          }
+        },
+        {
+          "Project Type": {
+            "variable_name": "project_type",
+            "attr_labels": "",
+            "examples": "Campaign; Task; PersonalProject; StudyProject",
+            "description": "A string classifiying the project. Current;y supported values are Campaign, Task. PersonalProject and StudyProject.",
+            "min_cardinality": 1
+          }
+        },
+        {
+          "Identifier": {
+            "variable_name": "project_identifier",
+            "attr_labels": "",
+            "examples": "English",
+            "description": "A user asigned identifier."
+          }
+        },
+        {
+          "Mission": {
+            "variable_name": "mission",
+            "attr_labels": "",
+            "examples": "Improve Privacy",
+            "description": "The project mission."
+          }
+        },
+        {
+          "Purposes": {
+            "variable_name": "purposes",
+            "attr_labels": "",
+            "description": "A list of  project purposes.",
+            "style": "Simple List"
+          }
+        },
+        {
+          "Start Date": {
+            "variable_name": "start_date",
+            "attr_labels": "",
+            "examples": "2025/03/03",
+            "description": "Project start date as an ISO 8601 string."
+          }
+        },
+        {
+          "Planned End Date": {
+            "variable_name": "end_date",
+            "attr_labels": "",
+            "examples": "2025/03/03",
+            "description": "Planned project end date as an ISO 8601 string."
+          }
+        },
+        {
+          "Priority": {
+            "variable_name": "priority",
+            "attr_labels": "",
+            "examples": "1",
+            "description": "An integer priority for the project.",
+            "style": "Simple Int"
+          }
+        },
+        {
+          "Project Phase": {
+            "variable_name": "project_phase",
+            "attr_labels": "",
+            "examples": "Planning",
+            "description": "A string describing the phase of the project."
+          }
+        },
+        {
+          "Project Status": {
+            "variable_name": "project_status",
+            "attr_labels": "",
+            "description": "A string representing the project status."
+          }
+        },
+        {
+          "Project Health": {
+            "variable_name": "project_health",
+            "attr_labels": "",
+            "examples": "Green",
+            "description": "A string representing the health of the project."
+          }
+        }
+      ]
+    },
+    "Create Study Project": {
+      "display_name": "Study Project",
+      "qn_prefix": "StudyProject",
+      "family": "Project",
+      "description": "A personal project.",
+      "verb": "Create",
+      "find_method": "ProjectManager.find_projects",
+      "find_constraints": "{\"classification_names\": [\"StudyProject\"]}",
+      "Attributes": [
+        {
+          "Display Name": {
+            "variable_name": "display_name",
+            "attr_labels": "Project; Project Name; Name",
+            "description": "The name of the project to create or update.",
+            "style": "ID",
+            "input_required": true,
+            "min_cardinality": 1
+          }
+        },
+        {
+          "Description": {
+            "variable_name": "description",
+            "attr_labels": "",
+            "description": "A description of the Project."
+          }
+        },
+        {
+          "Project Type": {
+            "variable_name": "project_type",
+            "attr_labels": "",
+            "examples": "Campaign; Task; PersonalProject; StudyProject",
+            "description": "A string classifiying the project. Current;y supported values are Campaign, Task. PersonalProject and StudyProject.",
+            "min_cardinality": 1
+          }
+        },
+        {
+          "Identifier": {
+            "variable_name": "project_identifier",
+            "attr_labels": "",
+            "examples": "English",
+            "description": "A user asigned identifier."
+          }
+        },
+        {
+          "Mission": {
+            "variable_name": "mission",
+            "attr_labels": "",
+            "examples": "Improve Privacy",
+            "description": "The project mission."
+          }
+        },
+        {
+          "Purposes": {
+            "variable_name": "purposes",
+            "attr_labels": "",
+            "description": "A list of  project purposes.",
+            "style": "Simple List"
+          }
+        },
+        {
+          "Start Date": {
+            "variable_name": "start_date",
+            "attr_labels": "",
+            "examples": "2025/03/03",
+            "description": "Project start date as an ISO 8601 string."
+          }
+        },
+        {
+          "Planned End Date": {
+            "variable_name": "end_date",
+            "attr_labels": "",
+            "examples": "2025/03/03",
+            "description": "Planned project end date as an ISO 8601 string."
+          }
+        },
+        {
+          "Priority": {
+            "variable_name": "priority",
+            "attr_labels": "",
+            "examples": "1",
+            "description": "An integer priority for the project.",
+            "style": "Simple Int"
+          }
+        },
+        {
+          "Project Phase": {
+            "variable_name": "project_phase",
+            "attr_labels": "",
+            "examples": "Planning",
+            "description": "A string describing the phase of the project."
+          }
+        },
+        {
+          "Project Status": {
+            "variable_name": "project_status",
+            "attr_labels": "",
+            "description": "A string representing the project status."
+          }
+        },
+        {
+          "Project Health": {
+            "variable_name": "project_health",
+            "attr_labels": "",
+            "examples": "Green",
+            "description": "A string representing the health of the project."
+          }
+        }
+      ]
+    },
+    "Link Project Hierarchy": {
+      "display_name": "Link Parent Project",
+      "alternate_names": "Parent Project",
+      "family": "Project",
+      "description": "Links or unlinks a parent project and child project.",
+      "verb": "Link",
+      "upsert": false,
+      "attach": true,
+      "style": "",
+      "Attributes": [
+        {
+          "Parent Project": {
+            "variable_name": "parent_project",
+            "attr_labels": "Parent",
+            "description": "The id of the parent project",
+            "style": "Reference Name",
+            "input_required": true,
+            "min_cardinality": 1
+          }
+        },
+        {
+          "Child Project": {
+            "variable_name": "child_project",
+            "attr_labels": "Child",
+            "description": "The id of the child project",
+            "style": "Reference Name",
+            "input_required": true,
+            "min_cardinality": 1
+          }
+        },
+        {
+          "Description": {
+            "variable_name": "description",
+            "attr_labels": "",
+            "description": "A description of the relationship.."
+          }
+        },
+        {
+          "Label": {
+            "variable_name": "label",
+            "attr_labels": "",
+            "description": "A user asigned label for this relationship.",
+            "min_cardinality": 1
+          }
+        }
+      ]
+    },
+    "Link Project Dependency": {
+      "display_name": "Link Project Dependency",
+      "alternate_names": "Project Dependency",
+      "family": "Project",
+      "description": "Links or unlinks a  project and dependent project.",
+      "verb": "Link",
+      "upsert": false,
+      "attach": true,
+      "style": "",
+      "Attributes": [
+        {
+          "Parent Project": {
+            "variable_name": "parent_project",
+            "attr_labels": "Parent; Depended On Project",
+            "description": "The id of the project being depended on.",
+            "style": "Reference Name",
+            "input_required": true,
+            "min_cardinality": 1
+          }
+        },
+        {
+          "Child Project": {
+            "variable_name": "child_project",
+            "attr_labels": "Child; Dependent Project",
+            "description": "The id of the dependent project.",
+            "style": "Reference Name",
+            "input_required": true,
+            "min_cardinality": 1
+          }
+        },
+        {
+          "Description": {
+            "variable_name": "description",
+            "attr_labels": "",
+            "description": "A description of the relationship."
+          }
+        },
+        {
+          "Label": {
+            "variable_name": "label",
+            "attr_labels": "",
+            "description": "A user asigned label for this relationship.",
+            "min_cardinality": 1
+          }
+        }
+      ]
+    }
+  }
+}

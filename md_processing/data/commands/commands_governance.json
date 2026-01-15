@@ -1,0 +1,3678 @@
+{
+  "Command Specifications": {
+    "Create Governance Driver": {
+      "display_name": "Governance Driver",
+      "qn_prefix": "GovDriver",
+      "family": "Governance Officer",
+      "description": "A motivating topic leading to governance work.",
+      "verb": "Create",
+      "find_method": "GovernanceOfficer.find_governance_definitions",
+      "find_constraints": "{\"metadata_element_subtypes\": [\"GovernanceDriver\"]}",
+      "Attributes": [
+        {
+          "Usage": {
+            "variable_name": "usage",
+            "attr_labels": "",
+            "description": "How the governance definition will be used."
+          }
+        },
+        {
+          "Summary": {
+            "variable_name": "summary",
+            "attr_labels": "",
+            "description": "Summary of the definition."
+          }
+        },
+        {
+          "Scope": {
+            "variable_name": "scope",
+            "attr_labels": "",
+            "description": "Scope of the definition."
+          }
+        },
+        {
+          "Results": {
+            "variable_name": "results",
+            "attr_labels": "",
+            "examples": "No regulatory violations.",
+            "description": "A list of expected results.",
+            "style": "Simple List"
+          }
+        },
+        {
+          "Outcomes": {
+            "variable_name": "outcomes",
+            "attr_labels": "",
+            "description": "List of desired outcomes.",
+            "style": "Simple List",
+            "max_cardinality": -1
+          }
+        },
+        {
+          "Importance": {
+            "variable_name": "importance",
+            "attr_labels": "",
+            "description": "Importance of the definition."
+          }
+        },
+        {
+          "Implications": {
+            "variable_name": "implications",
+            "attr_labels": "",
+            "description": "List of implications.",
+            "style": "Simple List",
+            "max_cardinality": -1
+          }
+        },
+        {
+          "Identifier": {
+            "variable_name": "identifier",
+            "attr_labels": "Doc Id",
+            "description": "A user supplied identifier for the governance definition."
+          }
+        }
+      ]
+    },
+    "Create Governance Strategy": {
+      "display_name": "Governance Strategy",
+      "qn_prefix": "GovStrategy",
+      "family": "Governance Officer",
+      "description": "The strategy used in the development of the governance domains activities. How the governance domain supports the business strategy.",
+      "verb": "Create",
+      "find_method": "GovernanceOfficer.find_governance_definitions",
+      "find_constraints": "{\"metadata_element_subtypes\": [\"GovernanceStrategy\"]}",
+      "Attributes": [
+        {
+          "Display Name": {
+            "variable_name": "display_name",
+            "attr_labels": "Name",
+            "description": "Name of the  definition.",
+            "style": "ID",
+            "input_required": true,
+            "min_cardinality": 1
+          }
+        },
+        {
+          "Summary": {
+            "variable_name": "summary",
+            "attr_labels": "",
+            "description": "Summary of the definition."
+          }
+        },
+        {
+          "Description": {
+            "variable_name": "description",
+            "attr_labels": "",
+            "description": "Description of the contents of the definition."
+          }
+        },
+        {
+          "Domain Identifier": {
+            "variable_name": "domain_identifier",
+            "attr_labels": "",
+            "default_value": "0",
+            "description": "Integer representing the governance domain. All domains is 0.",
+            "style": "Simple Int",
+            "min_cardinality": 1
+          }
+        },
+        {
+          "Identifier": {
+            "variable_name": "identifier",
+            "attr_labels": "Doc Id",
+            "description": "A user supplied identifier for the governance definition."
+          }
+        },
+        {
+          "Usage": {
+            "variable_name": "usage",
+            "attr_labels": "",
+            "description": "How the governance definition will be used."
+          }
+        },
+        {
+          "Scope": {
+            "variable_name": "scope",
+            "attr_labels": "",
+            "description": "Scope of the definition."
+          }
+        },
+        {
+          "Importance": {
+            "variable_name": "importance",
+            "attr_labels": "",
+            "description": "Importance of the definition."
+          }
+        },
+        {
+          "Implications": {
+            "variable_name": "implications",
+            "attr_labels": "",
+            "description": "List of implications.",
+            "style": "Simple List",
+            "max_cardinality": -1
+          }
+        },
+        {
+          "Outcomes": {
+            "variable_name": "outcomes",
+            "attr_labels": "",
+            "description": "List of desired outcomes.",
+            "style": "Simple List",
+            "max_cardinality": -1
+          }
+        },
+        {
+          "Results": {
+            "variable_name": "results",
+            "attr_labels": "",
+            "examples": "No regulatory violations.",
+            "description": "A list of expected results.",
+            "style": "Simple List"
+          }
+        }
+      ]
+    },
+    "Create Business Imperative": {
+      "display_name": "Business Imperative",
+      "qn_prefix": "BusinessImperative",
+      "family": "Governance Officer",
+      "description": "The BusinessImperative entity defines a business goal that is critical to the success of the organization.",
+      "verb": "Create",
+      "find_method": "GovernanceOfficer.find_governance_definitions",
+      "find_constraints": "{\"metadata_element_subtypes\": [\"GovernanceDriver\"]}",
+      "Attributes": [
+        {
+          "Display Name": {
+            "variable_name": "display_name",
+            "attr_labels": "Name",
+            "description": "Name of the  definition.",
+            "style": "ID",
+            "input_required": true,
+            "min_cardinality": 1
+          }
+        },
+        {
+          "Summary": {
+            "variable_name": "summary",
+            "attr_labels": "",
+            "description": "Summary of the definition."
+          }
+        },
+        {
+          "Description": {
+            "variable_name": "description",
+            "attr_labels": "",
+            "description": "Description of the contents of the definition."
+          }
+        },
+        {
+          "Domain Identifier": {
+            "variable_name": "domain_identifier",
+            "attr_labels": "",
+            "default_value": "0",
+            "description": "Integer representing the governance domain. All domains is 0.",
+            "style": "Simple Int"
+          }
+        },
+        {
+          "Identifier": {
+            "variable_name": "identifier",
+            "attr_labels": "Doc Id",
+            "description": "A user supplied identifier for the governance definition."
+          }
+        },
+        {
+          "Usage": {
+            "variable_name": "usage",
+            "attr_labels": "",
+            "description": "How the governance definition will be used."
+          }
+        },
+        {
+          "Scope": {
+            "variable_name": "scope",
+            "attr_labels": "",
+            "description": "Scope of the definition."
+          }
+        },
+        {
+          "Importance": {
+            "variable_name": "importance",
+            "attr_labels": "",
+            "description": "Importance of the definition."
+          }
+        },
+        {
+          "Implications": {
+            "variable_name": "implications",
+            "attr_labels": "",
+            "description": "List of implications.",
+            "style": "Simple List",
+            "max_cardinality": -1
+          }
+        },
+        {
+          "Outcomes": {
+            "variable_name": "outcomes",
+            "attr_labels": "",
+            "description": "List of desired outcomes.",
+            "style": "Simple List",
+            "max_cardinality": -1
+          }
+        },
+        {
+          "Results": {
+            "variable_name": "results",
+            "attr_labels": "",
+            "examples": "No regulatory violations.",
+            "description": "A list of expected results.",
+            "style": "Simple List"
+          }
+        }
+      ]
+    },
+    "Create Regulation": {
+      "display_name": "Regulation",
+      "qn_prefix": "Regulation",
+      "alternate_names": "Create Regulation; Regulation Definition",
+      "family": "Governance Officer",
+      "description": "Defines a relevant legal regulation that the business operation must comply with. Often regulations are divided into regulation articles.",
+      "verb": "Create",
+      "find_method": "GovernanceOfficer.find_governance_definitions",
+      "find_constraints": "{\"metadata_element_subtypes\": [\"Regulation\"]}",
+      "Attributes": [
+        {
+          "Display Name": {
+            "variable_name": "display_name",
+            "attr_labels": "Name",
+            "description": "Name of the  definition.",
+            "style": "ID",
+            "input_required": true,
+            "min_cardinality": 1
+          }
+        },
+        {
+          "Summary": {
+            "variable_name": "summary",
+            "attr_labels": "",
+            "description": "Summary of the definition."
+          }
+        },
+        {
+          "Description": {
+            "variable_name": "description",
+            "attr_labels": "",
+            "description": "Description of the contents of the definition."
+          }
+        },
+        {
+          "Domain Identifier": {
+            "variable_name": "domain_identifier",
+            "attr_labels": "",
+            "default_value": "0",
+            "description": "Integer representing the governance domain. All domains is 0.",
+            "style": "Simple Int",
+            "min_cardinality": 1
+          }
+        },
+        {
+          "Identifier": {
+            "variable_name": "identifier",
+            "attr_labels": "Doc Id",
+            "description": "A user supplied identifier for the governance definition."
+          }
+        },
+        {
+          "Usage": {
+            "variable_name": "usage",
+            "attr_labels": "",
+            "description": "How the governance definition will be used."
+          }
+        },
+        {
+          "Scope": {
+            "variable_name": "scope",
+            "attr_labels": "",
+            "description": "Scope of the definition."
+          }
+        },
+        {
+          "Importance": {
+            "variable_name": "importance",
+            "attr_labels": "",
+            "description": "Importance of the definition."
+          }
+        },
+        {
+          "Regulation Source": {
+            "variable_name": "regulation_source",
+            "attr_labels": "",
+            "examples": "BASEL Committee",
+            "description": " The source of the regulation - often, an authority."
+          }
+        },
+        {
+          "Regulators": {
+            "variable_name": "regulators",
+            "attr_labels": "",
+            "description": "A list of regulators.",
+            "style": "Simple List"
+          }
+        },
+        {
+          "Implications": {
+            "variable_name": "implications",
+            "attr_labels": "",
+            "description": "List of implications.",
+            "style": "Simple List",
+            "max_cardinality": -1
+          }
+        },
+        {
+          "Outcomes": {
+            "variable_name": "outcomes",
+            "attr_labels": "",
+            "description": "List of desired outcomes.",
+            "style": "Simple List",
+            "max_cardinality": -1
+          }
+        },
+        {
+          "Results": {
+            "variable_name": "results",
+            "attr_labels": "",
+            "examples": "No regulatory violations.",
+            "description": "A list of expected results.",
+            "style": "Simple List"
+          }
+        }
+      ]
+    },
+    "Create Regulation Article": {
+      "display_name": "Regulation Article",
+      "qn_prefix": "RegArticle",
+      "family": "Governance Officer",
+      "description": "A RegulationArticle entity is an article in a regulation. Dividing a regulation  simplifies planning and execution.",
+      "verb": "Create",
+      "find_method": "GovernanceOfficer.find_governance_definitions",
+      "find_constraints": "{\"metadata_element_subtypes\": [\"RegulationArticle\"]}",
+      "Attributes": [
+        {
+          "Display Name": {
+            "variable_name": "display_name",
+            "attr_labels": "Name",
+            "description": "Name of the  definition.",
+            "style": "ID",
+            "input_required": true,
+            "min_cardinality": 1
+          }
+        },
+        {
+          "Summary": {
+            "variable_name": "summary",
+            "attr_labels": "",
+            "description": "Summary of the definition."
+          }
+        },
+        {
+          "Description": {
+            "variable_name": "description",
+            "attr_labels": "",
+            "description": "Description of the contents of the definition."
+          }
+        },
+        {
+          "Domain Identifier": {
+            "variable_name": "domain_identifier",
+            "attr_labels": "",
+            "default_value": "0",
+            "description": "Integer representing the governance domain. All domains is 0.",
+            "style": "Simple Int",
+            "min_cardinality": 1
+          }
+        },
+        {
+          "Identifier": {
+            "variable_name": "identifier",
+            "attr_labels": "Doc Id",
+            "description": "A user supplied identifier for the governance definition."
+          }
+        },
+        {
+          "Usage": {
+            "variable_name": "usage",
+            "attr_labels": "",
+            "description": "How the governance definition will be used."
+          }
+        },
+        {
+          "Scope": {
+            "variable_name": "scope",
+            "attr_labels": "",
+            "description": "Scope of the definition."
+          }
+        },
+        {
+          "Importance": {
+            "variable_name": "importance",
+            "attr_labels": "",
+            "description": "Importance of the definition."
+          }
+        },
+        {
+          "Implications": {
+            "variable_name": "implications",
+            "attr_labels": "",
+            "description": "List of implications.",
+            "style": "Simple List",
+            "max_cardinality": -1
+          }
+        },
+        {
+          "Outcomes": {
+            "variable_name": "outcomes",
+            "attr_labels": "",
+            "description": "List of desired outcomes.",
+            "style": "Simple List",
+            "max_cardinality": -1
+          }
+        },
+        {
+          "Results": {
+            "variable_name": "results",
+            "attr_labels": "",
+            "examples": "No regulatory violations.",
+            "description": "A list of expected results.",
+            "style": "Simple List"
+          }
+        }
+      ]
+    },
+    "Create Threat Definition": {
+      "display_name": "Threat Definition",
+      "qn_prefix": "ThreatDef",
+      "family": "Governance Officer",
+      "description": "The Threat entity describes a particular threat to the organization's operations that must either be guarded against or accommodated to reduce its impact.",
+      "verb": "Create",
+      "find_method": "GovernanceOfficer.find_governance_definitions",
+      "find_constraints": "{\"metadata_element_subtypes\": [\"ThreatDefinition\"]}",
+      "Attributes": [
+        {
+          "Display Name": {
+            "variable_name": "display_name",
+            "attr_labels": "Name",
+            "description": "Name of the  definition.",
+            "style": "ID",
+            "input_required": true,
+            "min_cardinality": 1
+          }
+        },
+        {
+          "Summary": {
+            "variable_name": "summary",
+            "attr_labels": "",
+            "description": "Summary of the definition."
+          }
+        },
+        {
+          "Description": {
+            "variable_name": "description",
+            "attr_labels": "",
+            "description": "Description of the contents of the definition."
+          }
+        },
+        {
+          "Domain Identifier": {
+            "variable_name": "domain_identifier",
+            "attr_labels": "",
+            "default_value": "0",
+            "description": "Integer representing the governance domain. All domains is 0.",
+            "style": "Simple Int",
+            "min_cardinality": 1
+          }
+        },
+        {
+          "Identifier": {
+            "variable_name": "identifier",
+            "attr_labels": "Doc Id",
+            "description": "A user supplied identifier for the governance definition."
+          }
+        },
+        {
+          "Usage": {
+            "variable_name": "usage",
+            "attr_labels": "",
+            "description": "How the governance definition will be used."
+          }
+        },
+        {
+          "Scope": {
+            "variable_name": "scope",
+            "attr_labels": "",
+            "description": "Scope of the definition."
+          }
+        },
+        {
+          "Importance": {
+            "variable_name": "importance",
+            "attr_labels": "",
+            "description": "Importance of the definition."
+          }
+        },
+        {
+          "Implications": {
+            "variable_name": "implications",
+            "attr_labels": "",
+            "description": "List of implications.",
+            "style": "Simple List",
+            "max_cardinality": -1
+          }
+        },
+        {
+          "Outcomes": {
+            "variable_name": "outcomes",
+            "attr_labels": "",
+            "description": "List of desired outcomes.",
+            "style": "Simple List",
+            "max_cardinality": -1
+          }
+        },
+        {
+          "Results": {
+            "variable_name": "results",
+            "attr_labels": "",
+            "examples": "No regulatory violations.",
+            "description": "A list of expected results.",
+            "style": "Simple List"
+          }
+        }
+      ]
+    },
+    "Create Governance Policy": {
+      "display_name": "Governance Policy",
+      "qn_prefix": "GovPolicy",
+      "family": "Governance Officer",
+      "description": "Policies  created in response to governance drivers. There are several types of policies.",
+      "verb": "Create",
+      "find_method": "GovernanceOfficer.find_governance_definitions",
+      "find_constraints": "{\"metadata_element_subtypes\": [\"GovernancePolicy\"]}",
+      "Attributes": [
+        {
+          "Display Name": {
+            "variable_name": "display_name",
+            "attr_labels": "Name",
+            "description": "Name of the  definition.",
+            "style": "ID",
+            "input_required": true,
+            "min_cardinality": 1
+          }
+        },
+        {
+          "Summary": {
+            "variable_name": "summary",
+            "attr_labels": "",
+            "description": "Summary of the definition."
+          }
+        },
+        {
+          "Description": {
+            "variable_name": "description",
+            "attr_labels": "",
+            "description": "Description of the contents of the definition."
+          }
+        },
+        {
+          "Domain Identifier": {
+            "variable_name": "domain_identifier",
+            "attr_labels": "",
+            "default_value": "0",
+            "description": "Integer representing the governance domain. All domains is 0.",
+            "style": "Simple Int",
+            "min_cardinality": 1
+          }
+        },
+        {
+          "Identifier": {
+            "variable_name": "identifier",
+            "attr_labels": "Doc Id",
+            "description": "A user supplied identifier for the governance definition."
+          }
+        },
+        {
+          "Usage": {
+            "variable_name": "usage",
+            "attr_labels": "",
+            "description": "How the governance definition will be used."
+          }
+        },
+        {
+          "Scope": {
+            "variable_name": "scope",
+            "attr_labels": "",
+            "description": "Scope of the definition."
+          }
+        },
+        {
+          "Importance": {
+            "variable_name": "importance",
+            "attr_labels": "",
+            "description": "Importance of the definition."
+          }
+        },
+        {
+          "Implications": {
+            "variable_name": "implications",
+            "attr_labels": "",
+            "description": "List of implications.",
+            "style": "Simple List",
+            "max_cardinality": -1
+          }
+        },
+        {
+          "Outcomes": {
+            "variable_name": "outcomes",
+            "attr_labels": "",
+            "description": "List of desired outcomes.",
+            "style": "Simple List",
+            "max_cardinality": -1
+          }
+        },
+        {
+          "Results": {
+            "variable_name": "results",
+            "attr_labels": "",
+            "examples": "No regulatory violations.",
+            "description": "A list of expected results.",
+            "style": "Simple List"
+          }
+        }
+      ]
+    },
+    "Create Governance Principle": {
+      "display_name": "Governance Principle",
+      "qn_prefix": "GovPrinciple",
+      "family": "Governance Officer",
+      "description": "The GovernancePrinciple entity defines a policy that describes an end state that the organization aims to achieve. ",
+      "verb": "Create",
+      "find_method": "GovernanceOfficer.find_governance_definitions",
+      "find_constraints": "{\"metadata_element_subtypes\": [\"GovernancePrinciple\"]}",
+      "Attributes": [
+        {
+          "Display Name": {
+            "variable_name": "display_name",
+            "attr_labels": "Name",
+            "description": "Name of the  definition.",
+            "style": "ID",
+            "input_required": true,
+            "min_cardinality": 1
+          }
+        },
+        {
+          "Summary": {
+            "variable_name": "summary",
+            "attr_labels": "",
+            "description": "Summary of the definition."
+          }
+        },
+        {
+          "Description": {
+            "variable_name": "description",
+            "attr_labels": "",
+            "description": "Description of the contents of the definition."
+          }
+        },
+        {
+          "Domain Identifier": {
+            "variable_name": "domain_identifier",
+            "attr_labels": "",
+            "default_value": "0",
+            "description": "Integer representing the governance domain. All domains is 0.",
+            "style": "Simple Int",
+            "min_cardinality": 1
+          }
+        },
+        {
+          "Identifier": {
+            "variable_name": "identifier",
+            "attr_labels": "Doc Id",
+            "description": "A user supplied identifier for the governance definition."
+          }
+        },
+        {
+          "Usage": {
+            "variable_name": "usage",
+            "attr_labels": "",
+            "description": "How the governance definition will be used."
+          }
+        },
+        {
+          "Scope": {
+            "variable_name": "scope",
+            "attr_labels": "",
+            "description": "Scope of the definition."
+          }
+        },
+        {
+          "Importance": {
+            "variable_name": "importance",
+            "attr_labels": "",
+            "description": "Importance of the definition."
+          }
+        },
+        {
+          "Implications": {
+            "variable_name": "implications",
+            "attr_labels": "",
+            "description": "List of implications.",
+            "style": "Simple List",
+            "max_cardinality": -1
+          }
+        },
+        {
+          "Outcomes": {
+            "variable_name": "outcomes",
+            "attr_labels": "",
+            "description": "List of desired outcomes.",
+            "style": "Simple List",
+            "max_cardinality": -1
+          }
+        },
+        {
+          "Results": {
+            "variable_name": "results",
+            "attr_labels": "",
+            "examples": "No regulatory violations.",
+            "description": "A list of expected results.",
+            "style": "Simple List"
+          }
+        }
+      ]
+    },
+    "Create Governance Obligation": {
+      "display_name": "Governance Obligation",
+      "qn_prefix": "GovObligation",
+      "family": "Governance Officer",
+      "description": "The GovernanceObligation entity defines a policy that describes a requirement that must be met.",
+      "verb": "Create",
+      "find_method": "GovernanceOfficer.find_governance_definitions",
+      "find_constraints": "{\"metadata_element_subtypes\": [\"GovernanceObligation\"]}",
+      "Attributes": [
+        {
+          "Display Name": {
+            "variable_name": "display_name",
+            "attr_labels": "Name",
+            "description": "Name of the  definition.",
+            "style": "ID",
+            "input_required": true,
+            "min_cardinality": 1
+          }
+        },
+        {
+          "Summary": {
+            "variable_name": "summary",
+            "attr_labels": "",
+            "description": "Summary of the definition."
+          }
+        },
+        {
+          "Description": {
+            "variable_name": "description",
+            "attr_labels": "",
+            "description": "Description of the contents of the definition."
+          }
+        },
+        {
+          "Domain Identifier": {
+            "variable_name": "domain_identifier",
+            "attr_labels": "",
+            "default_value": "0",
+            "description": "Integer representing the governance domain. All domains is 0.",
+            "style": "Simple Int",
+            "min_cardinality": 1
+          }
+        },
+        {
+          "Identifier": {
+            "variable_name": "identifier",
+            "attr_labels": "Doc Id",
+            "description": "A user supplied identifier for the governance definition."
+          }
+        },
+        {
+          "Usage": {
+            "variable_name": "usage",
+            "attr_labels": "",
+            "description": "How the governance definition will be used."
+          }
+        },
+        {
+          "Scope": {
+            "variable_name": "scope",
+            "attr_labels": "",
+            "description": "Scope of the definition."
+          }
+        },
+        {
+          "Importance": {
+            "variable_name": "importance",
+            "attr_labels": "",
+            "description": "Importance of the definition."
+          }
+        },
+        {
+          "Implications": {
+            "variable_name": "implications",
+            "attr_labels": "",
+            "description": "List of implications.",
+            "style": "Simple List",
+            "max_cardinality": -1
+          }
+        },
+        {
+          "Outcomes": {
+            "variable_name": "outcomes",
+            "attr_labels": "",
+            "description": "List of desired outcomes.",
+            "style": "Simple List",
+            "max_cardinality": -1
+          }
+        },
+        {
+          "Results": {
+            "variable_name": "results",
+            "attr_labels": "",
+            "examples": "No regulatory violations.",
+            "description": "A list of expected results.",
+            "style": "Simple List"
+          }
+        }
+      ]
+    },
+    "Create Governance Approach": {
+      "display_name": "Governance Approach",
+      "qn_prefix": "GovApproach",
+      "family": "Governance Officer",
+      "description": "The GovernanceApproach entity defines a policy that describes a method that should be used for a particular activity.",
+      "verb": "Create",
+      "find_method": "GovernanceOfficer.find_governance_definitions",
+      "find_constraints": "{\"metadata_element_subtypes\": [\"GovernanceApproach\"]}",
+      "Attributes": [
+        {
+          "Display Name": {
+            "variable_name": "display_name",
+            "attr_labels": "Name",
+            "description": "Name of the  definition.",
+            "style": "ID",
+            "input_required": true,
+            "min_cardinality": 1
+          }
+        },
+        {
+          "Summary": {
+            "variable_name": "summary",
+            "attr_labels": "",
+            "description": "Summary of the definition."
+          }
+        },
+        {
+          "Description": {
+            "variable_name": "description",
+            "attr_labels": "",
+            "description": "Description of the contents of the definition."
+          }
+        },
+        {
+          "Domain Identifier": {
+            "variable_name": "domain_identifier",
+            "attr_labels": "",
+            "default_value": "0",
+            "description": "Integer representing the governance domain. All domains is 0.",
+            "style": "Simple Int",
+            "min_cardinality": 1
+          }
+        },
+        {
+          "Identifier": {
+            "variable_name": "identifier",
+            "attr_labels": "Doc Id",
+            "description": "A user supplied identifier for the governance definition."
+          }
+        },
+        {
+          "Usage": {
+            "variable_name": "usage",
+            "attr_labels": "",
+            "description": "How the governance definition will be used."
+          }
+        },
+        {
+          "Scope": {
+            "variable_name": "scope",
+            "attr_labels": "",
+            "description": "Scope of the definition."
+          }
+        },
+        {
+          "Importance": {
+            "variable_name": "importance",
+            "attr_labels": "",
+            "description": "Importance of the definition."
+          }
+        },
+        {
+          "Implications": {
+            "variable_name": "implications",
+            "attr_labels": "",
+            "description": "List of implications.",
+            "style": "Simple List",
+            "max_cardinality": -1
+          }
+        },
+        {
+          "Outcomes": {
+            "variable_name": "outcomes",
+            "attr_labels": "",
+            "description": "List of desired outcomes.",
+            "style": "Simple List",
+            "max_cardinality": -1
+          }
+        },
+        {
+          "Results": {
+            "variable_name": "results",
+            "attr_labels": "",
+            "examples": "No regulatory violations.",
+            "description": "A list of expected results.",
+            "style": "Simple List"
+          }
+        }
+      ]
+    },
+    "Create Governance Control": {
+      "display_name": "Governance Control",
+      "qn_prefix": "GovControl",
+      "family": "Governance Officer",
+      "description": "A governance control describes how a particular governance policy should be implemented. There are many types of controls.",
+      "verb": "Create",
+      "find_method": "GovernanceOfficer.find_governance_definitions",
+      "find_constraints": "{\"metadata_element_subtypes\": [\"GovernanceControl\"]}",
+      "Attributes": [
+        {
+          "Display Name": {
+            "variable_name": "display_name",
+            "attr_labels": "Name",
+            "description": "Name of the  definition.",
+            "style": "ID",
+            "input_required": true,
+            "min_cardinality": 1
+          }
+        },
+        {
+          "Summary": {
+            "variable_name": "summary",
+            "attr_labels": "",
+            "description": "Summary of the definition."
+          }
+        },
+        {
+          "Description": {
+            "variable_name": "description",
+            "attr_labels": "",
+            "description": "Description of the contents of the definition."
+          }
+        },
+        {
+          "Domain Identifier": {
+            "variable_name": "domain_identifier",
+            "attr_labels": "",
+            "default_value": "0",
+            "description": "Integer representing the governance domain. All domains is 0.",
+            "style": "Simple Int",
+            "min_cardinality": 1
+          }
+        },
+        {
+          "Identifier": {
+            "variable_name": "identifier",
+            "attr_labels": "Doc Id",
+            "description": "A user supplied identifier for the governance definition."
+          }
+        },
+        {
+          "Usage": {
+            "variable_name": "usage",
+            "attr_labels": "",
+            "description": "How the governance definition will be used."
+          }
+        },
+        {
+          "Scope": {
+            "variable_name": "scope",
+            "attr_labels": "",
+            "description": "Scope of the definition."
+          }
+        },
+        {
+          "Importance": {
+            "variable_name": "importance",
+            "attr_labels": "",
+            "description": "Importance of the definition."
+          }
+        },
+        {
+          "Implications": {
+            "variable_name": "implications",
+            "attr_labels": "",
+            "description": "List of implications.",
+            "style": "Simple List",
+            "max_cardinality": -1
+          }
+        },
+        {
+          "Outcomes": {
+            "variable_name": "outcomes",
+            "attr_labels": "",
+            "description": "List of desired outcomes.",
+            "style": "Simple List",
+            "max_cardinality": -1
+          }
+        },
+        {
+          "Results": {
+            "variable_name": "results",
+            "attr_labels": "",
+            "examples": "No regulatory violations.",
+            "description": "A list of expected results.",
+            "style": "Simple List"
+          }
+        }
+      ]
+    },
+    "Create Governance Metric": {
+      "display_name": "Governance Control",
+      "qn_prefix": "GovControl",
+      "family": "Governance Officer",
+      "description": "A governance control describes how a particular governance policy should be implemented. There are many types of controls.",
+      "verb": "Create",
+      "find_method": "GovernanceOfficer.find_governance_definitions",
+      "find_constraints": "{\"metadata_element_subtypes\": [\"GovernanceMetric\"]}",
+      "Attributes": [
+        {
+          "Display Name": {
+            "variable_name": "display_name",
+            "attr_labels": "Name",
+            "description": "Name of the  definition.",
+            "style": "ID",
+            "input_required": true,
+            "min_cardinality": 1
+          }
+        },
+        {
+          "Summary": {
+            "variable_name": "summary",
+            "attr_labels": "",
+            "description": "Summary of the definition."
+          }
+        },
+        {
+          "Description": {
+            "variable_name": "description",
+            "attr_labels": "",
+            "description": "Description of the contents of the definition."
+          }
+        },
+        {
+          "Domain Identifier": {
+            "variable_name": "domain_identifier",
+            "attr_labels": "",
+            "default_value": "0",
+            "description": "Integer representing the governance domain. All domains is 0.",
+            "style": "Simple Int",
+            "min_cardinality": 1
+          }
+        },
+        {
+          "Identifier": {
+            "variable_name": "identifier",
+            "attr_labels": "Doc Id",
+            "description": "A user supplied identifier for the governance definition."
+          }
+        },
+        {
+          "Usage": {
+            "variable_name": "usage",
+            "attr_labels": "",
+            "description": "How the governance definition will be used."
+          }
+        },
+        {
+          "Scope": {
+            "variable_name": "scope",
+            "attr_labels": "",
+            "description": "Scope of the definition."
+          }
+        },
+        {
+          "Importance": {
+            "variable_name": "importance",
+            "attr_labels": "",
+            "description": "Importance of the definition."
+          }
+        },
+        {
+          "measurement": {
+            "variable_name": "measurement",
+            "attr_labels": "",
+            "description": "A measurement for a governance metric."
+          }
+        },
+        {
+          "target": {
+            "variable_name": "target",
+            "attr_labels": "",
+            "description": "Target values for a measurement."
+          }
+        },
+        {
+          "Implications": {
+            "variable_name": "implications",
+            "attr_labels": "",
+            "description": "List of implications.",
+            "style": "Simple List",
+            "max_cardinality": -1
+          }
+        },
+        {
+          "Outcomes": {
+            "variable_name": "outcomes",
+            "attr_labels": "",
+            "description": "List of desired outcomes.",
+            "style": "Simple List",
+            "max_cardinality": -1
+          }
+        },
+        {
+          "Results": {
+            "variable_name": "results",
+            "attr_labels": "",
+            "examples": "No regulatory violations.",
+            "description": "A list of expected results.",
+            "style": "Simple List"
+          }
+        }
+      ]
+    },
+    "Create Governance Action": {
+      "display_name": "Governance Action",
+      "qn_prefix": "GovAction",
+      "family": "Governance Officer",
+      "description": "An executable action, or sequence of actions to support a governance requirement.",
+      "verb": "Create",
+      "find_method": "GovernanceOfficer.find_governance_definitions",
+      "find_constraints": "{\"metadata_element_subtypes\": [\"GovernanceAction\"]}",
+      "Attributes": [
+        {
+          "Display Name": {
+            "variable_name": "display_name",
+            "attr_labels": "Name",
+            "description": "Name of the  definition.",
+            "style": "ID",
+            "input_required": true,
+            "min_cardinality": 1
+          }
+        },
+        {
+          "Summary": {
+            "variable_name": "summary",
+            "attr_labels": "",
+            "description": "Summary of the definition."
+          }
+        },
+        {
+          "Description": {
+            "variable_name": "description",
+            "attr_labels": "",
+            "description": "Description of the contents of the definition."
+          }
+        },
+        {
+          "Domain Identifier": {
+            "variable_name": "domain_identifier",
+            "attr_labels": "",
+            "default_value": "0",
+            "description": "Integer representing the governance domain. All domains is 0.",
+            "style": "Simple Int",
+            "min_cardinality": 1
+          }
+        },
+        {
+          "Identifier": {
+            "variable_name": "identifier",
+            "attr_labels": "Doc Id",
+            "description": "A user supplied identifier for the governance definition."
+          }
+        },
+        {
+          "Usage": {
+            "variable_name": "usage",
+            "attr_labels": "",
+            "description": "How the governance definition will be used."
+          }
+        },
+        {
+          "Scope": {
+            "variable_name": "scope",
+            "attr_labels": "",
+            "description": "Scope of the definition."
+          }
+        },
+        {
+          "Importance": {
+            "variable_name": "importance",
+            "attr_labels": "",
+            "description": "Importance of the definition."
+          }
+        },
+        {
+          "Implications": {
+            "variable_name": "implications",
+            "attr_labels": "",
+            "description": "List of implications.",
+            "style": "Simple List",
+            "max_cardinality": -1
+          }
+        },
+        {
+          "Outcomes": {
+            "variable_name": "outcomes",
+            "attr_labels": "",
+            "description": "List of desired outcomes.",
+            "style": "Simple List",
+            "max_cardinality": -1
+          }
+        },
+        {
+          "Results": {
+            "variable_name": "results",
+            "attr_labels": "",
+            "examples": "No regulatory violations.",
+            "description": "A list of expected results.",
+            "style": "Simple List"
+          }
+        }
+      ]
+    },
+    "Create Data Processing Purpose": {
+      "display_name": "Data Processing Purpose",
+      "qn_prefix": "ProcessingPurpose",
+      "alternate_names": "Processing Purpose",
+      "family": "Governance Officer",
+      "description": "Privacy regulations such as  (GDPR) require data subjects to agree the processing that is permitted on their data. ",
+      "verb": "Create",
+      "find_method": "GovernanceOfficer.find_governance_definitions",
+      "find_constraints": "{\"metadata_element_subtypes\": [\"DataProcessingPurpose\"]}",
+      "Attributes": [
+        {
+          "Display Name": {
+            "variable_name": "display_name",
+            "attr_labels": "Name",
+            "description": "Name of the  definition.",
+            "style": "ID",
+            "input_required": true,
+            "min_cardinality": 1
+          }
+        },
+        {
+          "Summary": {
+            "variable_name": "summary",
+            "attr_labels": "",
+            "description": "Summary of the definition."
+          }
+        },
+        {
+          "Description": {
+            "variable_name": "description",
+            "attr_labels": "",
+            "description": "Description of the contents of the definition."
+          }
+        },
+        {
+          "Domain Identifier": {
+            "variable_name": "domain_identifier",
+            "attr_labels": "",
+            "default_value": "0",
+            "description": "Integer representing the governance domain. All domains is 0.",
+            "style": "Simple Int",
+            "min_cardinality": 1
+          }
+        },
+        {
+          "Identifier": {
+            "variable_name": "identifier",
+            "attr_labels": "Doc Id",
+            "description": "A user supplied identifier for the governance definition."
+          }
+        },
+        {
+          "Usage": {
+            "variable_name": "usage",
+            "attr_labels": "",
+            "description": "How the governance definition will be used."
+          }
+        },
+        {
+          "Scope": {
+            "variable_name": "scope",
+            "attr_labels": "",
+            "description": "Scope of the definition."
+          }
+        },
+        {
+          "Importance": {
+            "variable_name": "importance",
+            "attr_labels": "",
+            "description": "Importance of the definition."
+          }
+        },
+        {
+          "Implications": {
+            "variable_name": "implications",
+            "attr_labels": "",
+            "description": "List of implications.",
+            "style": "Simple List",
+            "max_cardinality": -1
+          }
+        },
+        {
+          "Outcomes": {
+            "variable_name": "outcomes",
+            "attr_labels": "",
+            "description": "List of desired outcomes.",
+            "style": "Simple List",
+            "max_cardinality": -1
+          }
+        },
+        {
+          "Results": {
+            "variable_name": "results",
+            "attr_labels": "",
+            "examples": "No regulatory violations.",
+            "description": "A list of expected results.",
+            "style": "Simple List"
+          }
+        }
+      ]
+    },
+    "Create Governance Rule": {
+      "display_name": "Governance Rule",
+      "qn_prefix": "GovRule",
+      "family": "Governance Officer",
+      "description": "An executable rule that can be deployed at particular points in the operations.",
+      "verb": "Create",
+      "find_method": "GovernanceOfficer.find_governance_definitions",
+      "find_constraints": "{\"metadata_element_subtypes\": [\"GovernanceRule\"]}",
+      "Attributes": [
+        {
+          "Display Name": {
+            "variable_name": "display_name",
+            "attr_labels": "Name",
+            "description": "Name of the  definition.",
+            "style": "ID",
+            "input_required": true,
+            "min_cardinality": 1
+          }
+        },
+        {
+          "Summary": {
+            "variable_name": "summary",
+            "attr_labels": "",
+            "description": "Summary of the definition."
+          }
+        },
+        {
+          "Description": {
+            "variable_name": "description",
+            "attr_labels": "",
+            "description": "Description of the contents of the definition."
+          }
+        },
+        {
+          "Domain Identifier": {
+            "variable_name": "domain_identifier",
+            "attr_labels": "",
+            "default_value": "0",
+            "description": "Integer representing the governance domain. All domains is 0.",
+            "style": "Simple Int",
+            "min_cardinality": 1
+          }
+        },
+        {
+          "Document Identifier": {
+            "variable_name": "document_identifier",
+            "attr_labels": "Doc Id",
+            "description": "A user supplied identifier for the governance document."
+          }
+        },
+        {
+          "Scope": {
+            "variable_name": "scope",
+            "attr_labels": "",
+            "description": "Scope of the definition."
+          }
+        },
+        {
+          "Importance": {
+            "variable_name": "importance",
+            "attr_labels": "",
+            "description": "Importance of the definition."
+          }
+        },
+        {
+          "Implementation Description": {
+            "variable_name": "implementation_description",
+            "attr_labels": "Implementation",
+            "description": "Describes how this governance control is implemnted."
+          }
+        },
+        {
+          "Supports Policies": {
+            "variable_name": "supports_policies",
+            "attr_labels": "Policies Supported; Policy Supported",
+            "existing_element": "Policies - Governance Principles; Governance Obligations; Governance Approaches",
+            "description": "The policies that this governance control supports.",
+            "style": "Reference Name List",
+            "min_cardinality": 1
+          }
+        },
+        {
+          "Implications": {
+            "variable_name": "implications",
+            "attr_labels": "",
+            "description": "List of implications.",
+            "style": "Simple List",
+            "max_cardinality": -1
+          }
+        },
+        {
+          "Outcomes": {
+            "variable_name": "outcomes",
+            "attr_labels": "",
+            "description": "List of desired outcomes.",
+            "style": "Simple List",
+            "max_cardinality": -1
+          }
+        },
+        {
+          "Results": {
+            "variable_name": "results",
+            "attr_labels": "",
+            "examples": "No regulatory violations.",
+            "description": "A list of expected results.",
+            "style": "Simple List"
+          }
+        }
+      ]
+    },
+    "Create Service Level Objectives": {
+      "display_name": "Service Level Objectives",
+      "qn_prefix": "ServiceLevelObj",
+      "family": "Governance Officer",
+      "description": "Defines the performance, availability and quality levels expected by the element attached.",
+      "verb": "Create",
+      "find_method": "GovernanceOfficer.find_governance_definitions",
+      "find_constraints": "{\"metadata_element_subtypes\": [\"ServiceLevelObjectives\"]}",
+      "Attributes": [
+        {
+          "Display Name": {
+            "variable_name": "display_name",
+            "attr_labels": "Name",
+            "description": "Name of the  definition.",
+            "style": "ID",
+            "input_required": true,
+            "min_cardinality": 1
+          }
+        },
+        {
+          "Summary": {
+            "variable_name": "summary",
+            "attr_labels": "",
+            "description": "Summary of the definition."
+          }
+        },
+        {
+          "Description": {
+            "variable_name": "description",
+            "attr_labels": "",
+            "description": "Description of the contents of the definition."
+          }
+        },
+        {
+          "Domain Identifier": {
+            "variable_name": "domain_identifier",
+            "attr_labels": "",
+            "default_value": "0",
+            "description": "Integer representing the governance domain. All domains is 0.",
+            "style": "Simple Int",
+            "min_cardinality": 1
+          }
+        },
+        {
+          "Document Identifier": {
+            "variable_name": "document_identifier",
+            "attr_labels": "Doc Id",
+            "description": "A user supplied identifier for the governance document."
+          }
+        },
+        {
+          "Scope": {
+            "variable_name": "scope",
+            "attr_labels": "",
+            "description": "Scope of the definition."
+          }
+        },
+        {
+          "Importance": {
+            "variable_name": "importance",
+            "attr_labels": "",
+            "description": "Importance of the definition."
+          }
+        },
+        {
+          "Implementation Description": {
+            "variable_name": "implementation_description",
+            "attr_labels": "Implementation",
+            "description": "Describes how this governance control is implemnted."
+          }
+        },
+        {
+          "Supports Policies": {
+            "variable_name": "supports_policies",
+            "attr_labels": "Policies Supported; Policy Supported",
+            "existing_element": "Policies - Governance Principles; Governance Obligations; Governance Approaches",
+            "description": "The policies that this governance control supports.",
+            "style": "Reference Name List",
+            "min_cardinality": 1
+          }
+        },
+        {
+          "Implications": {
+            "variable_name": "implications",
+            "attr_labels": "",
+            "description": "List of implications.",
+            "style": "Simple List",
+            "max_cardinality": -1
+          }
+        },
+        {
+          "Outcomes": {
+            "variable_name": "outcomes",
+            "attr_labels": "",
+            "description": "List of desired outcomes.",
+            "style": "Simple List",
+            "max_cardinality": -1
+          }
+        },
+        {
+          "Results": {
+            "variable_name": "results",
+            "attr_labels": "",
+            "examples": "No regulatory violations.",
+            "description": "A list of expected results.",
+            "style": "Simple List"
+          }
+        },
+        {
+          "Is Own Anchor": {
+            "variable_name": "is_own_anchor",
+            "attr_labels": "Own Anchor",
+            "default_value": "True",
+            "description": "Generally true. ",
+            "style": "Bool",
+            "min_cardinality": 1,
+            "level": "Advanced"
+          }
+        },
+        {
+          "Parent Relationship Type Name": {
+            "variable_name": "parent_rel_type_name",
+            "attr_labels": "",
+            "description": "The kind of the relationship to the parent element.",
+            "level": "Advanced",
+            "Journal Entry": "Any restrictions?"
+          }
+        }
+      ]
+    },
+    "Create Governance Responsibility": {
+      "display_name": "Governance Responsibility",
+      "qn_prefix": "GovResponsibility",
+      "family": "Governance Officer",
+      "description": "A responsibility assigned to an actor or team. It could be a requirement to take a certain action in specific circumstances or to make decisions or give approvals for actions.",
+      "verb": "Create",
+      "find_method": "GovernanceOfficer.find_governance_definitions",
+      "find_constraints": "{\"metadata_element_subtypes\": [\"GovernanceResponsibility\"]}",
+      "Attributes": [
+        {
+          "Display Name": {
+            "variable_name": "display_name",
+            "attr_labels": "Name",
+            "description": "Name of the  definition.",
+            "style": "ID",
+            "input_required": true,
+            "min_cardinality": 1
+          }
+        },
+        {
+          "Summary": {
+            "variable_name": "summary",
+            "attr_labels": "",
+            "description": "Summary of the definition."
+          }
+        },
+        {
+          "Description": {
+            "variable_name": "description",
+            "attr_labels": "",
+            "description": "Description of the contents of the definition."
+          }
+        },
+        {
+          "Domain Identifier": {
+            "variable_name": "domain_identifier",
+            "attr_labels": "",
+            "default_value": "0",
+            "description": "Integer representing the governance domain. All domains is 0.",
+            "style": "Simple Int",
+            "min_cardinality": 1
+          }
+        },
+        {
+          "Document Identifier": {
+            "variable_name": "document_identifier",
+            "attr_labels": "Doc Id",
+            "description": "A user supplied identifier for the governance document."
+          }
+        },
+        {
+          "Scope": {
+            "variable_name": "scope",
+            "attr_labels": "",
+            "description": "Scope of the definition."
+          }
+        },
+        {
+          "Importance": {
+            "variable_name": "importance",
+            "attr_labels": "",
+            "description": "Importance of the definition."
+          }
+        },
+        {
+          "Implementation Description": {
+            "variable_name": "implementation_description",
+            "attr_labels": "Implementation",
+            "description": "Describes how this governance control is implemnted."
+          }
+        },
+        {
+          "Supports Policies": {
+            "variable_name": "supports_policies",
+            "attr_labels": "Policies Supported; Policy Supported",
+            "existing_element": "Policies - Governance Principles; Governance Obligations; Governance Approaches",
+            "description": "The policies that this governance control supports.",
+            "style": "Reference Name List",
+            "min_cardinality": 1
+          }
+        },
+        {
+          "Implications": {
+            "variable_name": "implications",
+            "attr_labels": "",
+            "description": "List of implications.",
+            "style": "Simple List",
+            "max_cardinality": -1
+          }
+        },
+        {
+          "Outcomes": {
+            "variable_name": "outcomes",
+            "attr_labels": "",
+            "description": "List of desired outcomes.",
+            "style": "Simple List",
+            "max_cardinality": -1
+          }
+        },
+        {
+          "Results": {
+            "variable_name": "results",
+            "attr_labels": "",
+            "examples": "No regulatory violations.",
+            "description": "A list of expected results.",
+            "style": "Simple List"
+          }
+        },
+        {
+          "Is Own Anchor": {
+            "variable_name": "is_own_anchor",
+            "attr_labels": "Own Anchor",
+            "default_value": "True",
+            "description": "Generally true. ",
+            "style": "Bool",
+            "min_cardinality": 1,
+            "level": "Advanced"
+          }
+        },
+        {
+          "Parent Relationship Type Name": {
+            "variable_name": "parent_rel_type_name",
+            "attr_labels": "",
+            "description": "The kind of the relationship to the parent element.",
+            "level": "Advanced",
+            "Journal Entry": "Any restrictions?"
+          }
+        }
+      ]
+    },
+    "Create Governance Procedure": {
+      "display_name": "Governance Procedure",
+      "qn_prefix": "GovProcedure",
+      "family": "Governance Officer",
+      "description": "A manual procedure that is performed under certain circumstances.",
+      "verb": "Create",
+      "find_method": "GovernanceOfficer.find_governance_definitions",
+      "find_constraints": "{\"metadata_element_subtypes\": [\"GovernanceProcedure\"]}",
+      "Attributes": [
+        {
+          "Display Name": {
+            "variable_name": "display_name",
+            "attr_labels": "Name",
+            "description": "Name of the  definition.",
+            "style": "ID",
+            "input_required": true,
+            "min_cardinality": 1
+          }
+        },
+        {
+          "Summary": {
+            "variable_name": "summary",
+            "attr_labels": "",
+            "description": "Summary of the definition."
+          }
+        },
+        {
+          "Summary": {
+            "variable_name": "summary",
+            "attr_labels": "",
+            "description": "Summary of the definition."
+          }
+        },
+        {
+          "Description": {
+            "variable_name": "description",
+            "attr_labels": "",
+            "description": "Description of the contents of the definition."
+          }
+        },
+        {
+          "Domain Identifier": {
+            "variable_name": "domain_identifier",
+            "attr_labels": "",
+            "default_value": "0",
+            "description": "Integer representing the governance domain. All domains is 0.",
+            "style": "Simple Int",
+            "min_cardinality": 1
+          }
+        },
+        {
+          "Document Identifier": {
+            "variable_name": "document_identifier",
+            "attr_labels": "Doc Id",
+            "description": "A user supplied identifier for the governance document."
+          }
+        },
+        {
+          "Scope": {
+            "variable_name": "scope",
+            "attr_labels": "",
+            "description": "Scope of the definition."
+          }
+        },
+        {
+          "Importance": {
+            "variable_name": "importance",
+            "attr_labels": "",
+            "description": "Importance of the definition."
+          }
+        },
+        {
+          "Implementation Description": {
+            "variable_name": "implementation_description",
+            "attr_labels": "Implementation",
+            "description": "Describes how this governance control is implemnted."
+          }
+        },
+        {
+          "Supports Policies": {
+            "variable_name": "supports_policies",
+            "attr_labels": "Policies Supported; Policy Supported",
+            "existing_element": "Policies - Governance Principles; Governance Obligations; Governance Approaches",
+            "description": "The policies that this governance control supports.",
+            "style": "Reference Name List",
+            "min_cardinality": 1
+          }
+        },
+        {
+          "Implications": {
+            "variable_name": "implications",
+            "attr_labels": "",
+            "description": "List of implications.",
+            "style": "Simple List",
+            "max_cardinality": -1
+          }
+        },
+        {
+          "Outcomes": {
+            "variable_name": "outcomes",
+            "attr_labels": "",
+            "description": "List of desired outcomes.",
+            "style": "Simple List",
+            "max_cardinality": -1
+          }
+        },
+        {
+          "Results": {
+            "variable_name": "results",
+            "attr_labels": "",
+            "examples": "No regulatory violations.",
+            "description": "A list of expected results.",
+            "style": "Simple List"
+          }
+        },
+        {
+          "Is Own Anchor": {
+            "variable_name": "is_own_anchor",
+            "attr_labels": "Own Anchor",
+            "default_value": "True",
+            "description": "Generally true. ",
+            "style": "Bool",
+            "min_cardinality": 1,
+            "level": "Advanced"
+          }
+        },
+        {
+          "Parent Relationship Type Name": {
+            "variable_name": "parent_rel_type_name",
+            "attr_labels": "",
+            "description": "The kind of the relationship to the parent element.",
+            "level": "Advanced",
+            "Journal Entry": "Any restrictions?"
+          }
+        }
+      ]
+    },
+    "Create Security Access Control": {
+      "display_name": "Security Access Control",
+      "qn_prefix": "SecurityAccessCtl",
+      "alternate_names": "Access Control",
+      "family": "Governance Officer",
+      "description": "A technical control that defines the access control lists that an actor must belong to be entitled to perform a specific action.",
+      "verb": "Create",
+      "find_method": "GovernanceOfficer.find_governance_definitions",
+      "find_constraints": "{\"metadata_element_subtypes\": [\"SecurityAccessControl\"]}",
+      "Attributes": [
+        {
+          "Display Name": {
+            "variable_name": "display_name",
+            "attr_labels": "Name",
+            "description": "Name of the  definition.",
+            "style": "ID",
+            "input_required": true,
+            "min_cardinality": 1
+          }
+        },
+        {
+          "Summary": {
+            "variable_name": "summary",
+            "attr_labels": "",
+            "description": "Summary of the definition."
+          }
+        },
+        {
+          "Description": {
+            "variable_name": "description",
+            "attr_labels": "",
+            "description": "Description of the contents of the definition."
+          }
+        },
+        {
+          "Domain Identifier": {
+            "variable_name": "domain_identifier",
+            "attr_labels": "",
+            "default_value": "0",
+            "description": "Integer representing the governance domain. All domains is 0.",
+            "style": "Simple Int",
+            "min_cardinality": 1
+          }
+        },
+        {
+          "Identifier": {
+            "variable_name": "identifier",
+            "attr_labels": "Doc Id",
+            "description": "A user supplied identifier for the governance definition."
+          }
+        },
+        {
+          "Usage": {
+            "variable_name": "usage",
+            "attr_labels": "",
+            "description": "How the governance definition will be used."
+          }
+        },
+        {
+          "Scope": {
+            "variable_name": "scope",
+            "attr_labels": "",
+            "description": "Scope of the definition."
+          }
+        },
+        {
+          "Importance": {
+            "variable_name": "importance",
+            "attr_labels": "",
+            "description": "Importance of the definition."
+          }
+        },
+        {
+          "Implications": {
+            "variable_name": "implications",
+            "attr_labels": "",
+            "description": "List of implications.",
+            "style": "Simple List",
+            "max_cardinality": -1
+          }
+        },
+        {
+          "Outcomes": {
+            "variable_name": "outcomes",
+            "attr_labels": "",
+            "description": "List of desired outcomes.",
+            "style": "Simple List",
+            "max_cardinality": -1
+          }
+        },
+        {
+          "Results": {
+            "variable_name": "results",
+            "attr_labels": "",
+            "examples": "No regulatory violations.",
+            "description": "A list of expected results.",
+            "style": "Dictionary"
+          }
+        },
+        {
+          "Is Own Anchor": {
+            "variable_name": "is_own_anchor",
+            "attr_labels": "Own Anchor",
+            "default_value": "True",
+            "description": "Generally true. ",
+            "style": "Bool",
+            "min_cardinality": 1,
+            "level": "Advanced"
+          }
+        },
+        {
+          "Parent Relationship Type Name": {
+            "variable_name": "parent_rel_type_name",
+            "attr_labels": "",
+            "description": "The kind of the relationship to the parent element.",
+            "level": "Advanced",
+            "Journal Entry": "Any restrictions?"
+          }
+        }
+      ]
+    },
+    "Create Governance Zone": {
+      "display_name": "security_access_control",
+      "qn_prefix": "GovZone",
+      "alternate_names": "Zone",
+      "family": "Governance Officer",
+      "description": "A collection of assets that are used or processed in a specific way. Policies and controls can be attached to zones using the GovernedBy relationship.",
+      "verb": "Create",
+      "find_method": "GovernanceOfficer.find_governance_definitions",
+      "find_constraints": "{\"metadata_element_subtypes\": [\"GovernanceZone\"]}",
+      "Attributes": [
+        {
+          "Display Name": {
+            "variable_name": "display_name",
+            "attr_labels": "Name",
+            "description": "Name of the  definition.",
+            "style": "ID",
+            "input_required": true,
+            "min_cardinality": 1
+          }
+        },
+        {
+          "Summary": {
+            "variable_name": "summary",
+            "attr_labels": "",
+            "description": "Summary of the definition."
+          }
+        },
+        {
+          "Description": {
+            "variable_name": "description",
+            "attr_labels": "",
+            "description": "Description of the contents of the definition."
+          }
+        },
+        {
+          "Domain Identifier": {
+            "variable_name": "domain_identifier",
+            "attr_labels": "",
+            "default_value": "0",
+            "description": "Integer representing the governance domain. All domains is 0.",
+            "style": "Simple Int",
+            "min_cardinality": 1
+          }
+        },
+        {
+          "Identifier": {
+            "variable_name": "identifier",
+            "attr_labels": "Doc Id",
+            "description": "A user supplied identifier for the governance definition."
+          }
+        },
+        {
+          "Usage": {
+            "variable_name": "usage",
+            "attr_labels": "",
+            "description": "How the governance definition will be used."
+          }
+        },
+        {
+          "Scope": {
+            "variable_name": "scope",
+            "attr_labels": "",
+            "description": "Scope of the definition."
+          }
+        },
+        {
+          "Importance": {
+            "variable_name": "importance",
+            "attr_labels": "",
+            "description": "Importance of the definition."
+          }
+        },
+        {
+          "criteria": {
+            "variable_name": "criteria",
+            "attr_labels": "",
+            "description": "The criteria for membership in a governance zone."
+          }
+        },
+        {
+          "Implications": {
+            "variable_name": "implications",
+            "attr_labels": "",
+            "description": "List of implications.",
+            "style": "Simple List",
+            "max_cardinality": -1
+          }
+        },
+        {
+          "Outcomes": {
+            "variable_name": "outcomes",
+            "attr_labels": "",
+            "description": "List of desired outcomes.",
+            "style": "Simple List",
+            "max_cardinality": -1
+          }
+        },
+        {
+          "Results": {
+            "variable_name": "results",
+            "attr_labels": "",
+            "examples": "No regulatory violations.",
+            "description": "A list of expected results.",
+            "style": "Dictionary"
+          }
+        },
+        {
+          "Is Own Anchor": {
+            "variable_name": "is_own_anchor",
+            "attr_labels": "Own Anchor",
+            "default_value": "True",
+            "description": "Generally true. ",
+            "style": "Bool",
+            "min_cardinality": 1,
+            "level": "Advanced"
+          }
+        },
+        {
+          "Parent Relationship Type Name": {
+            "variable_name": "parent_rel_type_name",
+            "attr_labels": "",
+            "description": "The kind of the relationship to the parent element.",
+            "level": "Advanced",
+            "Journal Entry": "Any restrictions?"
+          }
+        }
+      ]
+    },
+    "Create Security Group": {
+      "display_name": "Security Group",
+      "qn_prefix": "SecurityGroup",
+      "alternate_names": "Access Control",
+      "family": "Governance Officer",
+      "description": "A group of actors that need to be given the same access to a specific set of resources.",
+      "verb": "Create",
+      "find_method": "GovernanceOfficer.find_governance_definitions",
+      "find_constraints": "{\"metadata_element_subtypes\": [\"SEcurityGroup\"]}",
+      "Attributes": [
+        {
+          "Display Name": {
+            "variable_name": "display_name",
+            "attr_labels": "Name",
+            "description": "Name of the  definition.",
+            "style": "ID",
+            "input_required": true,
+            "min_cardinality": 1
+          }
+        },
+        {
+          "Summary": {
+            "variable_name": "summary",
+            "attr_labels": "",
+            "description": "Summary of the definition."
+          }
+        },
+        {
+          "Description": {
+            "variable_name": "description",
+            "attr_labels": "",
+            "description": "Description of the contents of the definition."
+          }
+        },
+        {
+          "Domain Identifier": {
+            "variable_name": "domain_identifier",
+            "attr_labels": "",
+            "default_value": "0",
+            "description": "Integer representing the governance domain. All domains is 0.",
+            "style": "Simple Int",
+            "min_cardinality": 1
+          }
+        },
+        {
+          "Identifier": {
+            "variable_name": "identifier",
+            "attr_labels": "Doc Id",
+            "description": "A user supplied identifier for the governance definition."
+          }
+        },
+        {
+          "Usage": {
+            "variable_name": "usage",
+            "attr_labels": "",
+            "description": "How the governance definition will be used."
+          }
+        },
+        {
+          "Scope": {
+            "variable_name": "scope",
+            "attr_labels": "",
+            "description": "Scope of the definition."
+          }
+        },
+        {
+          "Importance": {
+            "variable_name": "importance",
+            "attr_labels": "",
+            "description": "Importance of the definition."
+          }
+        },
+        {
+          "Implications": {
+            "variable_name": "implications",
+            "attr_labels": "",
+            "description": "List of implications.",
+            "style": "Simple List",
+            "max_cardinality": -1
+          }
+        },
+        {
+          "Outcomes": {
+            "variable_name": "outcomes",
+            "attr_labels": "",
+            "description": "List of desired outcomes.",
+            "style": "Simple List",
+            "max_cardinality": -1
+          }
+        },
+        {
+          "Results": {
+            "variable_name": "results",
+            "attr_labels": "",
+            "examples": "No regulatory violations.",
+            "description": "A list of expected results.",
+            "style": "Dictionary"
+          }
+        },
+        {
+          "Is Own Anchor": {
+            "variable_name": "is_own_anchor",
+            "attr_labels": "Own Anchor",
+            "default_value": "True",
+            "description": "Generally true. ",
+            "style": "Bool",
+            "min_cardinality": 1,
+            "level": "Advanced"
+          }
+        },
+        {
+          "Parent Relationship Type Name": {
+            "variable_name": "parent_rel_type_name",
+            "attr_labels": "",
+            "description": "The kind of the relationship to the parent element.",
+            "level": "Advanced",
+            "Journal Entry": "Any restrictions?"
+          }
+        }
+      ]
+    },
+    "Create Naming Standard Rule": {
+      "display_name": "Naming Standard Rule",
+      "qn_prefix": "NamingStandard",
+      "alternate_names": "Naming Standard",
+      "family": "Governance Officer",
+      "description": "A standard for naming specific kinds of resources.",
+      "verb": "Create",
+      "find_method": "GovernanceOfficer.find_governance_definitions",
+      "find_constraints": "{\"metadata_element_subtypes\": [\"NamingStandardRule\"]}",
+      "Attributes": [
+        {
+          "Display Name": {
+            "variable_name": "display_name",
+            "attr_labels": "Name",
+            "description": "Name of the  definition.",
+            "style": "ID",
+            "input_required": true,
+            "min_cardinality": 1
+          }
+        },
+        {
+          "Summary": {
+            "variable_name": "summary",
+            "attr_labels": "",
+            "description": "Summary of the definition."
+          }
+        },
+        {
+          "Description": {
+            "variable_name": "description",
+            "attr_labels": "",
+            "description": "Description of the contents of the definition."
+          }
+        },
+        {
+          "Domain Identifier": {
+            "variable_name": "domain_identifier",
+            "attr_labels": "",
+            "default_value": "0",
+            "description": "Integer representing the governance domain. All domains is 0.",
+            "style": "Simple Int",
+            "min_cardinality": 1
+          }
+        },
+        {
+          "Document Identifier": {
+            "variable_name": "document_identifier",
+            "attr_labels": "Doc Id",
+            "description": "A user supplied identifier for the governance document."
+          }
+        },
+        {
+          "Scope": {
+            "variable_name": "scope",
+            "attr_labels": "",
+            "description": "Scope of the definition."
+          }
+        },
+        {
+          "Importance": {
+            "variable_name": "importance",
+            "attr_labels": "",
+            "description": "Importance of the definition."
+          }
+        },
+        {
+          "Implementation Description": {
+            "variable_name": "implementation_description",
+            "attr_labels": "Implementation",
+            "description": "Describes how this governance control is implemnted."
+          }
+        },
+        {
+          "Supports Policies": {
+            "variable_name": "supports_policies",
+            "attr_labels": "Policies Supported; Policy Supported",
+            "existing_element": "Policies - Governance Principles; Governance Obligations; Governance Approaches",
+            "description": "The policies that this governance control supports.",
+            "style": "Reference Name List",
+            "min_cardinality": 1
+          }
+        },
+        {
+          "Name Patterns": {
+            "variable_name": "implications",
+            "attr_labels": "",
+            "description": "List of implications.",
+            "style": "Simple List",
+            "max_cardinality": -1
+          }
+        },
+        {
+          "Outcomes": {
+            "variable_name": "outcomes",
+            "attr_labels": "",
+            "description": "List of desired outcomes.",
+            "style": "Simple List",
+            "max_cardinality": -1
+          }
+        },
+        {
+          "Results": {
+            "variable_name": "results",
+            "attr_labels": "",
+            "examples": "No regulatory violations.",
+            "description": "A list of expected results.",
+            "style": "Simple List"
+          }
+        },
+        {
+          "Is Own Anchor": {
+            "variable_name": "is_own_anchor",
+            "attr_labels": "Own Anchor",
+            "default_value": "True",
+            "description": "Generally true. ",
+            "style": "Bool",
+            "min_cardinality": 1,
+            "level": "Advanced"
+          }
+        },
+        {
+          "Parent Relationship Type Name": {
+            "variable_name": "parent_rel_type_name",
+            "attr_labels": "",
+            "description": "The kind of the relationship to the parent element.",
+            "level": "Advanced",
+            "Journal Entry": "Any restrictions?"
+          }
+        }
+      ]
+    },
+    "Link Terms & Conditions": {
+      "display_name": "Terms & Conditions",
+      "qn_prefix": "T&C",
+      "family": "Governance Officer",
+      "alternate_names": "T&C",
+      "description": "Attach or detach an agreement to a defined set of terms and conditions.",
+      "verb": "Link",
+      "upsert": false,
+      "attach": true,
+      "style": "",
+      "Attributes": [
+        {
+          "Display Name": {
+            "variable_name": "display_name",
+            "attr_labels": "T&C",
+            "description": "Terms and Conditions are a form of governance control.",
+            "style": "ID",
+            "input_required": true,
+            "min_cardinality": 1
+          }
+        },
+        {
+          "Identifier": {
+            "variable_name": "identifier",
+            "attr_labels": "Doc Id",
+            "description": "A user supplied identifier for the governance definition."
+          }
+        },
+        {
+          "Domain Identifier": {
+            "variable_name": "domain_identifier",
+            "attr_labels": "",
+            "default_value": "0",
+            "description": "Integer representing the governance domain. All domains is 0.",
+            "style": "Simple Int",
+            "min_cardinality": 1
+          }
+        },
+        {
+          "Summary": {
+            "variable_name": "summary",
+            "attr_labels": "",
+            "description": "Summary of the definition."
+          }
+        },
+        {
+          "Scope": {
+            "variable_name": "scope",
+            "attr_labels": "",
+            "description": "Scope of the definition."
+          }
+        },
+        {
+          "Usage": {
+            "variable_name": "usage",
+            "attr_labels": "",
+            "description": "How the governance definition will be used."
+          }
+        },
+        {
+          "Importance": {
+            "variable_name": "importance",
+            "attr_labels": "",
+            "description": "Importance of the definition."
+          }
+        },
+        {
+          "Implications": {
+            "variable_name": "implications",
+            "attr_labels": "",
+            "description": "List of implications.",
+            "style": "Simple List",
+            "max_cardinality": -1
+          }
+        },
+        {
+          "Outcomes": {
+            "variable_name": "outcomes",
+            "attr_labels": "",
+            "description": "List of desired outcomes.",
+            "style": "Simple List",
+            "max_cardinality": -1
+          }
+        },
+        {
+          "Results": {
+            "variable_name": "results",
+            "attr_labels": "",
+            "examples": "No regulatory violations.",
+            "description": "A list of expected results.",
+            "style": "Simple List"
+          }
+        },
+        {
+          "Description": {
+            "variable_name": "description",
+            "attr_labels": "",
+            "description": "Description of the contents of the definition."
+          }
+        },
+        {
+          "Identifier": {
+            "variable_name": "identifier",
+            "attr_labels": "",
+            "description": "A user specified  identifier."
+          }
+        },
+        {
+          "Domain Identifier": {
+            "variable_name": "domain_identifier",
+            "attr_labels": "Domain",
+            "examples": "ALL=0; DATA=1; PRIVACY=2; SECURITY=3; ...",
+            "default_value": "All",
+            "description": "The governance domain of the governance definition.",
+            "min_cardinality": 1
+          }
+        },
+        {
+          "Restrictions": {
+            "variable_name": "restrictions",
+            "attr_labels": "",
+            "examples": "forbidden to resell ",
+            "description": "A dictionary of property:value pairs describing restrictions.",
+            "style": "Dictionary"
+          }
+        },
+        {
+          "Obligations": {
+            "variable_name": "obligations",
+            "attr_labels": "",
+            "examples": "required to report on usage",
+            "description": "A dictionary of property:value pairs describing obligations.",
+            "style": "Dictionary"
+          }
+        },
+        {
+          "Entitlements": {
+            "variable_name": "Entitlements",
+            "attr_labels": "",
+            "examples": "Allowed to use within the organization.",
+            "description": "A dictionary of property:value pairs describing entitlements.",
+            "style": "Dictionary"
+          }
+        }
+      ]
+    },
+    "Create Certification Type": {
+      "display_name": "Certification Type",
+      "qn_prefix": "CertType",
+      "family": "Governance Officer",
+      "description": "A type of certification.",
+      "verb": "Create",
+      "find_method": "GovernanceOfficer.find_governance_definitions",
+      "find_constraints": "{\"metadata_element_subtypes\": [\"CertificationType\"]}",
+      "Attributes": [
+        {
+          "Display Name": {
+            "variable_name": "display_name",
+            "attr_labels": "Name",
+            "description": "Name of the  definition.",
+            "style": "ID",
+            "input_required": true,
+            "min_cardinality": 1
+          }
+        },
+        {
+          "Summary": {
+            "variable_name": "summary",
+            "attr_labels": "",
+            "description": "Summary of the definition."
+          }
+        },
+        {
+          "Description": {
+            "variable_name": "description",
+            "attr_labels": "",
+            "description": "Description of the contents of the definition."
+          }
+        },
+        {
+          "Domain Identifier": {
+            "variable_name": "domain_identifier",
+            "attr_labels": "",
+            "default_value": "0",
+            "description": "Integer representing the governance domain. All domains is 0.",
+            "style": "Simple Int",
+            "min_cardinality": 1
+          }
+        },
+        {
+          "Document Identifier": {
+            "variable_name": "document_identifier",
+            "attr_labels": "Doc Id",
+            "description": "A user supplied identifier for the governance document."
+          }
+        },
+        {
+          "Scope": {
+            "variable_name": "scope",
+            "attr_labels": "",
+            "description": "Scope of the definition."
+          }
+        },
+        {
+          "Usage": {
+            "variable_name": "usage",
+            "attr_labels": "",
+            "description": "How the governance definition will be used."
+          }
+        },
+        {
+          "Importance": {
+            "variable_name": "importance",
+            "attr_labels": "",
+            "description": "Importance of the definition."
+          }
+        },
+        {
+          "Details": {
+            "variable_name": "details",
+            "attr_labels": "",
+            "description": "Details of the certification.",
+            "min_cardinality": 1
+          }
+        },
+        {
+          "Implications": {
+            "variable_name": "implications",
+            "attr_labels": "",
+            "description": "List of implications.",
+            "style": "Simple List",
+            "max_cardinality": -1
+          }
+        },
+        {
+          "Outcomes": {
+            "variable_name": "outcomes",
+            "attr_labels": "",
+            "description": "List of desired outcomes.",
+            "style": "Simple List",
+            "max_cardinality": -1
+          }
+        },
+        {
+          "Results": {
+            "variable_name": "results",
+            "attr_labels": "",
+            "examples": "No regulatory violations.",
+            "description": "A list of expected results.",
+            "style": "Simple List"
+          }
+        },
+        {
+          "Restrictions": {
+            "variable_name": "restrictions",
+            "attr_labels": "",
+            "examples": "forbidden to resell ",
+            "description": "A dictionary of property:value pairs describing restrictions.",
+            "style": "Dictionary"
+          }
+        },
+        {
+          "Obligations": {
+            "variable_name": "obligations",
+            "attr_labels": "",
+            "examples": "required to report on usage",
+            "description": "A dictionary of property:value pairs describing obligations.",
+            "style": "Dictionary"
+          }
+        },
+        {
+          "Entitlements": {
+            "variable_name": "Entitlements",
+            "attr_labels": "",
+            "examples": "Allowed to use within the organization.",
+            "description": "A dictionary of property:value pairs describing entitlements.",
+            "style": "Dictionary"
+          }
+        },
+        {
+          "Is Own Anchor": {
+            "variable_name": "is_own_anchor",
+            "attr_labels": "Own Anchor",
+            "default_value": "True",
+            "description": "Generally true. ",
+            "style": "Bool",
+            "min_cardinality": 1,
+            "level": "Advanced"
+          }
+        },
+        {
+          "Parent Relationship Type Name": {
+            "variable_name": "parent_rel_type_name",
+            "attr_labels": "",
+            "description": "The kind of the relationship to the parent element.",
+            "level": "Advanced",
+            "Journal Entry": "Any restrictions?"
+          }
+        }
+      ]
+    },
+    "Create License Type": {
+      "display_name": "License Type",
+      "qn_prefix": "LicenseType",
+      "family": "Governance Officer",
+      "description": "A type of license.",
+      "verb": "Create",
+      "find_method": "GovernanceOfficer.find_governance_definitions",
+      "Attributes": [
+        {
+          "Display Name": {
+            "variable_name": "display_name",
+            "attr_labels": "Name",
+            "description": "Name of the  definition.",
+            "style": "ID",
+            "input_required": true,
+            "min_cardinality": 1
+          }
+        },
+        {
+          "Document Identifier": {
+            "variable_name": "document_identifier",
+            "attr_labels": "Doc Id",
+            "description": "A user supplied identifier for the governance document."
+          }
+        },
+        {
+          "Domain Identifier": {
+            "variable_name": "domain_identifier",
+            "attr_labels": "",
+            "default_value": "0",
+            "description": "Integer representing the governance domain. All domains is 0.",
+            "style": "Simple Int",
+            "min_cardinality": 1
+          }
+        },
+        {
+          "Summary": {
+            "variable_name": "summary",
+            "attr_labels": "",
+            "description": "Summary of the definition."
+          }
+        },
+        {
+          "Scope": {
+            "variable_name": "scope",
+            "attr_labels": "",
+            "description": "Scope of the definition."
+          }
+        },
+        {
+          "Usage": {
+            "variable_name": "usage",
+            "attr_labels": "",
+            "description": "How the governance definition will be used."
+          }
+        },
+        {
+          "Importance": {
+            "variable_name": "importance",
+            "attr_labels": "",
+            "description": "Importance of the definition."
+          }
+        },
+        {
+          "Implications": {
+            "variable_name": "implications",
+            "attr_labels": "",
+            "description": "List of implications.",
+            "style": "Simple List",
+            "max_cardinality": -1
+          }
+        },
+        {
+          "Outcomes": {
+            "variable_name": "outcomes",
+            "attr_labels": "",
+            "description": "List of desired outcomes.",
+            "style": "Simple List",
+            "max_cardinality": -1
+          }
+        },
+        {
+          "Results": {
+            "variable_name": "results",
+            "attr_labels": "",
+            "examples": "No regulatory violations.",
+            "description": "A list of expected results.",
+            "style": "Simple List"
+          }
+        },
+        {
+          "Description": {
+            "variable_name": "description",
+            "attr_labels": "",
+            "description": "Description of the contents of the definition."
+          }
+        },
+        {
+          "Details": {
+            "variable_name": "details",
+            "attr_labels": "",
+            "description": "Details of the license.",
+            "min_cardinality": 1
+          }
+        },
+        {
+          "Restrictions": {
+            "variable_name": "restrictions",
+            "attr_labels": "",
+            "examples": "forbidden to resell ",
+            "description": "A dictionary of property:value pairs describing restrictions.",
+            "style": "Dictionary"
+          }
+        },
+        {
+          "Obligations": {
+            "variable_name": "obligations",
+            "attr_labels": "",
+            "examples": "required to report on usage",
+            "description": "A dictionary of property:value pairs describing obligations.",
+            "style": "Dictionary"
+          }
+        },
+        {
+          "Entitlements": {
+            "variable_name": "Entitlements",
+            "attr_labels": "",
+            "examples": "Allowed to use within the organization.",
+            "description": "A dictionary of property:value pairs describing entitlements.",
+            "style": "Dictionary"
+          }
+        },
+        {
+          "Is Own Anchor": {
+            "variable_name": "is_own_anchor",
+            "attr_labels": "Own Anchor",
+            "default_value": "True",
+            "description": "Generally true. ",
+            "style": "Bool",
+            "min_cardinality": 1,
+            "level": "Advanced"
+          }
+        },
+        {
+          "Parent Relationship Type Name": {
+            "variable_name": "parent_rel_type_name",
+            "attr_labels": "",
+            "description": "The kind of the relationship to the parent element.",
+            "level": "Advanced",
+            "Journal Entry": "Any restrictions?"
+          }
+        }
+      ]
+    },
+    "Link Governed By": {
+      "display_name": "Governed By",
+      "qn_prefix": "",
+      "alternate_names": "GovernedBy",
+      "family": "Governance Officer",
+      "description": "A referenceable element can be governed by one or more governance definitions. ",
+      "verb": "Link",
+      "upsert": false,
+      "attach": true,
+      "find_method": "",
+      "Attributes": [
+        {
+          "Governance Definition": {
+            "variable_name": "governance_definition",
+            "attr_labels": "Governance Definition",
+            "existing_element": "Governance Definition",
+            "description": "The governance definition providing governance.",
+            "style": "Reference Name",
+            "input_required": true,
+            "min_cardinality": 1
+          }
+        },
+        {
+          "Referenceable": {
+            "variable_name": "referencable",
+            "attr_labels": "element",
+            "examples": "a dataset",
+            "existing_element": "Referenceable",
+            "description": "The object being governed.",
+            "style": "Reference Name",
+            "input_required": true,
+            "min_cardinality": 1
+          }
+        },
+        {
+          "Link Label": {
+            "variable_name": "link_label",
+            "attr_labels": "Label",
+            "description": "Labels the link between two elements."
+          }
+        },
+        {
+          "Description": {
+            "variable_name": "description",
+            "attr_labels": "",
+            "description": "A description of the relationship.",
+            "min_cardinality": 1
+          }
+        }
+      ]
+    },
+    "Link License": {
+      "display_name": "License",
+      "qn_prefix": "",
+      "family": "Governance Officer",
+      "description": "A license relationship between a license type and a Referencable element.",
+      "verb": "Link",
+      "upsert": false,
+      "attach": true,
+      "find_method": "",
+      "Attributes": [
+        {
+          "License Type": {
+            "variable_name": "license_type",
+            "attr_labels": "",
+            "examples": "Apache 2'",
+            "existing_element": "License Type",
+            "description": "The license type being used for the license.",
+            "style": "Reference Name",
+            "input_required": true,
+            "min_cardinality": 1
+          }
+        },
+        {
+          "Referenceable": {
+            "variable_name": "referencable",
+            "attr_labels": "element",
+            "examples": "a dataset",
+            "existing_element": "Referenceable",
+            "description": "The object being licensed.",
+            "style": "Reference Name",
+            "input_required": true,
+            "min_cardinality": 1
+          }
+        },
+        {
+          "License GUID": {
+            "variable_name": "license_guid",
+            "attr_labels": "",
+            "description": "Unique identifier of the license.",
+            "unique": true
+          }
+        },
+        {
+          "Start Date": {
+            "variable_name": "start_date",
+            "attr_labels": "",
+            "description": "Date at which the license takes effect."
+          }
+        },
+        {
+          "End Date": {
+            "variable_name": "end_date",
+            "attr_labels": "",
+            "description": "Date at which the license expires."
+          }
+        },
+        {
+          "Conditions": {
+            "variable_name": "conditions",
+            "attr_labels": "",
+            "description": "License conditions."
+          }
+        },
+        {
+          "Licensed By": {
+            "variable_name": "licensed_by",
+            "attr_labels": "",
+            "description": ""
+          }
+        },
+        {
+          "Licensed By Type Name": {
+            "variable_name": "licensed_by_type_name",
+            "attr_labels": "",
+            "description": ""
+          }
+        },
+        {
+          "Licensed By Property Name": {
+            "variable_name": "licensed_by_property_name",
+            "attr_labels": "",
+            "description": "",
+            "min_cardinality": 1
+          }
+        },
+        {
+          "Custodian": {
+            "variable_name": "custodian",
+            "attr_labels": "",
+            "description": "Custodian of the license."
+          }
+        },
+        {
+          "Custodian Type Name": {
+            "variable_name": "custodian_type_name",
+            "attr_labels": "",
+            "description": ""
+          }
+        },
+        {
+          "Custodian Property Name": {
+            "variable_name": "custodian_property_name",
+            "attr_labels": "",
+            "description": ""
+          }
+        },
+        {
+          "Licensee": {
+            "variable_name": "licensee",
+            "attr_labels": "",
+            "description": "The licensee."
+          }
+        },
+        {
+          "Licensee Type Name": {
+            "variable_name": "licensee_type_name",
+            "attr_labels": "",
+            "description": "",
+            "min_cardinality": 1
+          }
+        },
+        {
+          "Licensee Property Name": {
+            "variable_name": "licensee_property_name",
+            "attr_labels": "",
+            "description": ""
+          }
+        },
+        {
+          "Entitlements": {
+            "variable_name": "entitlements",
+            "attr_labels": "",
+            "description": "What the license grants to the licensee.",
+            "style": "Dictionary"
+          }
+        },
+        {
+          "Restrictions": {
+            "variable_name": "restrictions",
+            "attr_labels": "",
+            "description": "Restrictions imposed by the license.",
+            "style": "Dictionary"
+          }
+        },
+        {
+          "Obligations": {
+            "variable_name": "obligations",
+            "attr_labels": "",
+            "description": "Obligations defined by the license.",
+            "style": "Dictionary"
+          }
+        },
+        {
+          "Notes": {
+            "variable_name": "notes",
+            "attr_labels": "",
+            "description": "Notes about the license."
+          }
+        },
+        {
+          "Link Label": {
+            "variable_name": "link_label",
+            "attr_labels": "Label",
+            "description": "Labels the link between two elements.",
+            "level": "INVISIBLE"
+          }
+        },
+        {
+          "Description": {
+            "variable_name": "description",
+            "attr_labels": "",
+            "description": "A description of the relationship.",
+            "min_cardinality": 1,
+            "level": "INVISIBLE"
+          }
+        }
+      ]
+    },
+    "Link Certification": {
+      "display_name": "Certification",
+      "qn_prefix": "",
+      "family": "Governance Officer",
+      "description": "A certification relationship between a certification type and a referenceable element.",
+      "verb": "Link",
+      "upsert": false,
+      "attach": true,
+      "find_method": "",
+      "Attributes": [
+        {
+          "Certification Type": {
+            "variable_name": "certification_type",
+            "attr_labels": "",
+            "examples": "Apache 2'",
+            "existing_element": "License Type",
+            "description": "The license type being used for the license.",
+            "style": "Reference Name",
+            "input_required": true,
+            "min_cardinality": 1
+          }
+        },
+        {
+          "Referenceable": {
+            "variable_name": "referencable",
+            "attr_labels": "element",
+            "examples": "a dataset",
+            "existing_element": "Referenceable",
+            "description": "The object being certified.",
+            "style": "Reference Name",
+            "input_required": true,
+            "min_cardinality": 1
+          }
+        },
+        {
+          "Certificate GUID": {
+            "variable_name": "certificate_guid",
+            "attr_labels": "",
+            "description": "Unique identifier of the certificate.",
+            "unique": true
+          }
+        },
+        {
+          "Start Date": {
+            "variable_name": "start_date",
+            "attr_labels": "",
+            "description": "Date at which the certification takes effect."
+          }
+        },
+        {
+          "End Date": {
+            "variable_name": "end_date",
+            "attr_labels": "",
+            "description": "Date at which the certification expires."
+          }
+        },
+        {
+          "Conditions": {
+            "variable_name": "conditions",
+            "attr_labels": "",
+            "description": "Certification conditions."
+          }
+        },
+        {
+          "Certified By": {
+            "variable_name": "certified_by",
+            "attr_labels": "",
+            "description": ""
+          }
+        },
+        {
+          "Certified By Type Name": {
+            "variable_name": "certified_by_type_name",
+            "attr_labels": "",
+            "description": ""
+          }
+        },
+        {
+          "Certified By Property Name": {
+            "variable_name": "certified_by_property_name",
+            "attr_labels": "",
+            "description": "",
+            "min_cardinality": 1
+          }
+        },
+        {
+          "Custodian": {
+            "variable_name": "custodian",
+            "attr_labels": "",
+            "description": "Custodian of the certification."
+          }
+        },
+        {
+          "Custodian Type Name": {
+            "variable_name": "custodian_type_name",
+            "attr_labels": "",
+            "description": ""
+          }
+        },
+        {
+          "Custodian Property Name": {
+            "variable_name": "custodian_property_name",
+            "attr_labels": "",
+            "description": ""
+          }
+        },
+        {
+          "Recipient": {
+            "variable_name": "recipient",
+            "attr_labels": "",
+            "description": "The receiver of the certification."
+          }
+        },
+        {
+          "Recipient Type Name": {
+            "variable_name": "recipient_type_name",
+            "attr_labels": "",
+            "description": "",
+            "min_cardinality": 1
+          }
+        },
+        {
+          "Recipient Property Name": {
+            "variable_name": "recipient_property_name",
+            "attr_labels": "",
+            "description": ""
+          }
+        },
+        {
+          "Notes": {
+            "variable_name": "notes",
+            "attr_labels": "",
+            "description": "Notes about the certification."
+          }
+        },
+        {
+          "Link Label": {
+            "variable_name": "link_label",
+            "attr_labels": "Label",
+            "description": "Labels the link between two elements.",
+            "level": "INVISIBLE"
+          }
+        },
+        {
+          "Description": {
+            "variable_name": "description",
+            "attr_labels": "",
+            "description": "A description of the relationship.",
+            "min_cardinality": 1,
+            "level": "INVISIBLE"
+          }
+        }
+      ]
+    },
+    "Link Regulation Certification Type": {
+      "display_name": "Regulation Certification Type",
+      "qn_prefix": "",
+      "family": "Governance Officer",
+      "description": "A certification type addressing a specific regulation.",
+      "verb": "Link",
+      "upsert": false,
+      "attach": true,
+      "find_method": "",
+      "Attributes": [
+        {
+          "Certification Type": {
+            "variable_name": "certification_type",
+            "attr_labels": "",
+            "examples": "Apache 2'",
+            "existing_element": "License Type",
+            "description": "The license type being used for the license.",
+            "style": "Reference Name",
+            "input_required": true,
+            "min_cardinality": 1
+          }
+        },
+        {
+          "Regulation": {
+            "variable_name": "regulation",
+            "attr_labels": "",
+            "examples": "GPDR",
+            "existing_element": "Regulation",
+            "description": "The regulation that a certification type addresses.",
+            "style": "Reference Name",
+            "input_required": true,
+            "min_cardinality": 1
+          }
+        },
+        {
+          "Link Label": {
+            "variable_name": "link_label",
+            "attr_labels": "Label",
+            "description": "Labels the link between two elements.",
+            "level": "INVISIBLE"
+          }
+        },
+        {
+          "Description": {
+            "variable_name": "description",
+            "attr_labels": "",
+            "description": "A description of the relationship.",
+            "min_cardinality": 1,
+            "level": "INVISIBLE"
+          }
+        }
+      ]
+    },
+    "Link Governance Drivers": {
+      "display_name": "governance_drivers",
+      "qn_prefix": "",
+      "alternate_names": "Driver-Driver",
+      "family": "Governance Officer",
+      "description": "Link peer governance drivers with the GovernanceDriverLink relationship. Drivers are: GovernanceStrategy, BusinessImperitive, Regulation, RegulationArticle, Threat.",
+      "verb": "Link",
+      "upsert": false,
+      "attach": true,
+      "find_method": "",
+      "Attributes": [
+        {
+          "Definition 1": {
+            "variable_name": "definition1",
+            "attr_labels": "Driver 1; Governance Driver 1",
+            "existing_element": "GovernanceStrategy, BusinessImperitive, Regulation, RegulationArticle, Threat",
+            "description": "The  first governance driver to link.",
+            "style": "Reference Name",
+            "input_required": true,
+            "min_cardinality": 1
+          }
+        },
+        {
+          "Definition 2": {
+            "variable_name": "definition2",
+            "attr_labels": "Driver 2; Governance Driver 2",
+            "existing_element": "GovernanceStrategy, BusinessImperitive, Regulation, RegulationArticle, Threat",
+            "description": "The  second governance driver to link.",
+            "style": "Reference Name",
+            "input_required": true,
+            "min_cardinality": 1
+          }
+        },
+        {
+          "Link Label": {
+            "variable_name": "link_label",
+            "attr_labels": "Label",
+            "description": "Labels the link between two governance defninitions."
+          }
+        },
+        {
+          "Description": {
+            "variable_name": "description",
+            "attr_labels": "",
+            "description": "A description of the relationship.",
+            "min_cardinality": 1
+          }
+        }
+      ]
+    },
+    "Link Governance Response": {
+      "display_name": "Governance Response",
+      "qn_prefix": "",
+      "alternate_names": "Driver->Policy",
+      "family": "Governance Officer",
+      "description": "Links Policies as a response to governance Drivers.",
+      "verb": "Link",
+      "upsert": false,
+      "attach": true,
+      "find_method": "",
+      "Attributes": [
+        {
+          "Definition 1": {
+            "variable_name": "definition1",
+            "attr_labels": "Driver 1; Governance Driver 1",
+            "existing_element": "GovernanceStrategy, BusinessImperitive, Regulation, RegulationArticle, Threat",
+            "description": "The  first governance driver to link.",
+            "style": "Reference Name",
+            "input_required": true,
+            "min_cardinality": 1
+          }
+        },
+        {
+          "Definition 2": {
+            "variable_name": "definition2",
+            "attr_labels": "Driver 2; Governance Driver 2",
+            "existing_element": "GovernanceStrategy, BusinessImperitive, Regulation, RegulationArticle, Threat",
+            "description": "The  second governance driver to link.",
+            "style": "Reference Name",
+            "input_required": true,
+            "min_cardinality": 1
+          }
+        },
+        {
+          "Link Label": {
+            "variable_name": "link_label",
+            "attr_labels": "Label",
+            "description": "Labels the link between two governance defninitions."
+          }
+        },
+        {
+          "Description": {
+            "variable_name": "description",
+            "attr_labels": "",
+            "description": "A description of the relationship.",
+            "min_cardinality": 1
+          }
+        },
+        {
+          "Rationale": {
+            "variable_name": "rationale",
+            "attr_labels": "",
+            "description": "The rationale for using this control to  support this policy."
+          }
+        }
+      ]
+    },
+    "Link Security Group -> Security Access Control": {
+      "display_name": "Associated Group",
+      "qn_prefix": "",
+      "alternate_names": "Security Group to Security Access Control",
+      "family": "Governance Officer",
+      "description": "Establishes that a Security Access Control applies to this Security Group.",
+      "verb": "Link",
+      "upsert": false,
+      "attach": true,
+      "find_method": "",
+      "Attributes": [
+        {
+          "Definition 1": {
+            "variable_name": "definition1",
+            "attr_labels": "Policy 1; Governance Policy 1",
+            "existing_element": "GovernancePrinciple, GovernanceObligation, GovernanceApproach.",
+            "description": "The  first governance policy to link.",
+            "style": "Reference Name",
+            "input_required": true,
+            "min_cardinality": 1
+          }
+        },
+        {
+          "Definition 2": {
+            "variable_name": "definition2",
+            "attr_labels": "Policy 2; Governance Policy 2",
+            "existing_element": "GovernancePrinciple, GovernanceObligation, GovernanceApproach.",
+            "description": "The  second governance policy to link.",
+            "style": "Reference Name",
+            "input_required": true,
+            "min_cardinality": 1
+          }
+        },
+        {
+          "Link Label": {
+            "variable_name": "link_label",
+            "attr_labels": "Label",
+            "description": "Labels the link between two governance defninitions."
+          }
+        },
+        {
+          "Description": {
+            "variable_name": "description",
+            "attr_labels": "",
+            "description": "A description of the relationship.",
+            "min_cardinality": 1
+          }
+        },
+        {
+          "Operation Name": {
+            "variable_name": "operation_name",
+            "attr_labels": "",
+            "description": "The name of the operation controled by the SecurityAccessControl."
+          }
+        }
+      ]
+    },
+    "Link Governance Policies": {
+      "display_name": "governance_policies",
+      "qn_prefix": "",
+      "alternate_names": "Policy-Policy; Policies",
+      "family": "Governance Officer",
+      "description": "Link peer governance policies with the GovernancePolicyLink relationship. Policies types are: GovernancePrinciple, GovernanceObligation, GovernanceApproach.",
+      "verb": "Link",
+      "upsert": false,
+      "attach": true,
+      "find_method": "",
+      "Attributes": [
+        {
+          "Definition 1": {
+            "variable_name": "definition1",
+            "attr_labels": "Policy 1; Governance Policy 1",
+            "existing_element": "GovernancePrinciple, GovernanceObligation, GovernanceApproach.",
+            "description": "The  first governance policy to link.",
+            "style": "Reference Name",
+            "input_required": true,
+            "min_cardinality": 1
+          }
+        },
+        {
+          "Definition 2": {
+            "variable_name": "definition2",
+            "attr_labels": "Policy 2; Governance Policy 2",
+            "existing_element": "GovernancePrinciple, GovernanceObligation, GovernanceApproach.",
+            "description": "The  second governance policy to link.",
+            "style": "Reference Name",
+            "input_required": true,
+            "min_cardinality": 1
+          }
+        },
+        {
+          "Link Label": {
+            "variable_name": "link_label",
+            "attr_labels": "Label",
+            "description": "Labels the link between two governance defninitions."
+          }
+        },
+        {
+          "Description": {
+            "variable_name": "description",
+            "attr_labels": "",
+            "description": "A description of the relationship.",
+            "min_cardinality": 1
+          }
+        }
+      ]
+    },
+    "Link Governance Mechanism": {
+      "display_name": "Governance Mechanism",
+      "qn_prefix": "",
+      "alternate_names": "Policy->Control; Mechanism",
+      "family": "Governance Officer",
+      "description": "Link a governance policy to a governance control that supports it. The GovernanceMechanism relationship is used.",
+      "verb": "Link",
+      "upsert": false,
+      "attach": true,
+      "find_method": "",
+      "Attributes": [
+        {
+          "Definition 1": {
+            "variable_name": "definition1",
+            "attr_labels": "Policy 1; Governance Policy 1",
+            "existing_element": "GovernancePrinciple, GovernanceObligation, GovernanceApproach.",
+            "description": "The  first governance policy to link.",
+            "style": "Reference Name",
+            "input_required": true,
+            "min_cardinality": 1
+          }
+        },
+        {
+          "Definition 2": {
+            "variable_name": "definition2",
+            "attr_labels": "Policy 2; Governance Policy 2",
+            "existing_element": "GovernancePrinciple, GovernanceObligation, GovernanceApproach.",
+            "description": "The  second governance policy to link.",
+            "style": "Reference Name",
+            "input_required": true,
+            "min_cardinality": 1
+          }
+        },
+        {
+          "Link Label": {
+            "variable_name": "link_label",
+            "attr_labels": "Label",
+            "description": "Labels the link between two governance defninitions."
+          }
+        },
+        {
+          "Description": {
+            "variable_name": "description",
+            "attr_labels": "",
+            "description": "A description of the relationship.",
+            "min_cardinality": 1
+          }
+        },
+        {
+          "Rationale": {
+            "variable_name": "rationale",
+            "attr_labels": "",
+            "description": "The rationale for using this control to  support this policy."
+          }
+        }
+      ]
+    },
+    "Link Governance Controls": {
+      "display_name": "governance_controls",
+      "qn_prefix": "",
+      "alternate_names": "Control-Control",
+      "family": "Governance Officer",
+      "description": "Link peer governance controls with the GovernanceControlLink relationship. Controls types are: GovernanceRule, GovernanceProcess, GovernanceResponsibility, GovernanceProcedure, SecurityAccessControl, SecurityGroup.",
+      "verb": "Link",
+      "upsert": false,
+      "attach": true,
+      "find_method": "",
+      "Attributes": [
+        {
+          "Control Definition 1": {
+            "variable_name": "control_definition1",
+            "attr_labels": "Control 1; Governance Control 1 ",
+            "existing_element": "GovernanceRule, GovernanceProcess, GovernanceResponsibility, GovernanceProcedure, SecurityAccessControl, SecurityGroup",
+            "description": "The  first governance control to link.",
+            "style": "Reference Name",
+            "input_required": true,
+            "min_cardinality": 1
+          }
+        },
+        {
+          "Control Definition 2": {
+            "variable_name": "control_definition2",
+            "attr_labels": "Control 2; Governance Control 2 ",
+            "existing_element": "GovernanceRule, GovernanceProcess, GovernanceResponsibility, GovernanceProcedure, SecurityAccessControl, SecurityGroup",
+            "description": "The  fsecond governance control to link.",
+            "style": "Reference Name",
+            "input_required": true,
+            "min_cardinality": 1
+          }
+        },
+        {
+          "Link Label": {
+            "variable_name": "link_label",
+            "attr_labels": "Label",
+            "description": "Labels the link between two governance defninitions."
+          }
+        },
+        {
+          "Description": {
+            "variable_name": "description",
+            "attr_labels": "",
+            "description": "A description of the relationship.",
+            "min_cardinality": 1
+          }
+        }
+      ]
+    },
+    "Link Zone->Zone": {
+      "display_name": "Zone Hierarchy",
+      "qn_prefix": "",
+      "alternate_names": "Zones; Parent Zone to Child Zone",
+      "family": "Governance Officer",
+      "description": "Links child governance zones to parent governance zone.",
+      "verb": "Link",
+      "upsert": false,
+      "attach": true,
+      "find_method": "",
+      "Attributes": [
+        {
+          "Control Definition 1": {
+            "variable_name": "control_definition1",
+            "attr_labels": "Control 1; Governance Control 1 ",
+            "existing_element": "GovernanceRule, GovernanceProcess, GovernanceResponsibility, GovernanceProcedure, SecurityAccessControl, SecurityGroup",
+            "description": "The  first governance control to link.",
+            "style": "Reference Name",
+            "input_required": true,
+            "min_cardinality": 1
+          }
+        },
+        {
+          "Control Definition 2": {
+            "variable_name": "control_definition2",
+            "attr_labels": "Control 2; Governance Control 2 ",
+            "existing_element": "GovernanceRule, GovernanceProcess, GovernanceResponsibility, GovernanceProcedure, SecurityAccessControl, SecurityGroup",
+            "description": "The  fsecond governance control to link.",
+            "style": "Reference Name",
+            "input_required": true,
+            "min_cardinality": 1
+          }
+        },
+        {
+          "Link Label": {
+            "variable_name": "link_label",
+            "attr_labels": "Label",
+            "description": "Labels the link between two governance defninitions."
+          }
+        },
+        {
+          "Description": {
+            "variable_name": "description",
+            "attr_labels": "",
+            "description": "A description of the relationship.",
+            "min_cardinality": 1
+          }
+        }
+      ]
+    }
+  }
+}
