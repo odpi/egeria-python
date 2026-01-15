@@ -1,0 +1,865 @@
+{
+  "Command Specifications": {
+    "Create Collection": {
+      "display_name": "Collection",
+      "qn_prefix": "Collection",
+      "alternate_names": "Folder; Create Root Collection; Create Folder",
+      "family": "Digital Product Manager",
+      "description": "Create or update a generic collection. While it can be used to create specific kinds of collections, you cannot set the collection-specific properties - so use the appropriate Dr.Egeria command to set all of the properties.",
+      "verb": "Create",
+      "find_method": "CollectionManager.find_collections",
+      "Attributes": [
+        {
+          "Display Name": {
+            "variable_name": "display_name",
+            "attr_labels": "Name; Folder Name; Collection Name; Collection",
+            "description": "Name of the digital product",
+            "style": "ID",
+            "input_required": true,
+            "min_cardinality": 1
+          }
+        },
+        {
+          "Description": {
+            "variable_name": "description",
+            "attr_labels": "",
+            "description": "Description of the contents of a product."
+          }
+        }
+      ]
+    },
+    "Create Digital Product Catalog": {
+      "display_name": "Digital Product Catalog",
+      "qn_prefix": "DigProdCatalog",
+      "alternate_names": "Product Catalog",
+      "family": "Digital Product Manager",
+      "description": "Create or update a Digital Product Catalog. ",
+      "verb": "Create",
+      "find_method": "CollectionManager.find_collections",
+      "find_constraints": "{\"metadata_element_subtypes\": [\"DigitalProductCatalog\"]}",
+      "Attributes": [
+        {
+          "Display Name": {
+            "variable_name": "display_name",
+            "attr_labels": "Name; Catalog Name; Marketplace",
+            "description": "Name of a catalog of digital products.",
+            "style": "ID",
+            "input_required": true,
+            "min_cardinality": 1
+          }
+        },
+        {
+          "Description": {
+            "variable_name": "description",
+            "attr_labels": "",
+            "description": "Description of the contents of a product catalog."
+          }
+        }
+      ]
+    },
+    "Create Digital Product": {
+      "display_name": "Digital Product",
+      "qn_prefix": "DigitalProduct",
+      "alternate_names": "Data Product",
+      "family": "Digital Product Manager",
+      "description": "A Digital Product represents artifacts that can be subscribed to and consumed by users.",
+      "verb": "Create",
+      "find_method": "CollectionManager.find_collections",
+      "find_constraints": "{\"metadata_element_subtypes\": [\"DigitalProduct\"]}",
+      "Attributes": [
+        {
+          "Display Name": {
+            "variable_name": "display_name",
+            "attr_labels": "Name",
+            "description": "Name of the digital product",
+            "style": "ID",
+            "input_required": true,
+            "min_cardinality": 1
+          }
+        },
+        {
+          "Description": {
+            "variable_name": "description",
+            "attr_labels": "",
+            "description": "Description of the contents of a product."
+          }
+        },
+        {
+          "Product Name": {
+            "variable_name": "product_name",
+            "attr_labels": "",
+            "examples": "2020 Coco Pharmaceuticals Sustainability Report ",
+            "description": "The external name of the digital product."
+          }
+        },
+        {
+          "Identifier": {
+            "variable_name": "identifier",
+            "attr_labels": "",
+            "description": "User specified product identifier."
+          }
+        },
+        {
+          "Maturity": {
+            "variable_name": "maturity",
+            "attr_labels": "",
+            "description": "Product maturity - user defined."
+          }
+        },
+        {
+          "Service Life": {
+            "variable_name": "service_life",
+            "attr_labels": "",
+            "description": "Estimated service lifetime of the product."
+          }
+        },
+        {
+          "Introduction Date": {
+            "variable_name": "introduction_date",
+            "attr_labels": "",
+            "description": "Date of product introduction in ISO 8601 format. Either all of the dates (introduction, next version, withdrawal) dates need to be supplied or none of them. Otherwise an error will occur."
+          }
+        },
+        {
+          "Next Version Date": {
+            "variable_name": "next_version_date",
+            "attr_labels": "",
+            "description": "Date of  the next version,  in ISO 8601 format. Either all of the dates (introduction, next version, withdrawal) dates need to be supplied or none of them. Otherwise an error will occur."
+          }
+        },
+        {
+          "Withdrawal Date": {
+            "variable_name": "withdrawal_date",
+            "attr_labels": "",
+            "description": "Date of planned product withdrawal in ISO 8601 format. Either all of the dates (introduction, next version, withdrawal) dates need to be supplied or none of them. Otherwise an error will occur."
+          }
+        },
+        {
+          "Product Manager": {
+            "variable_name": "product_manager",
+            "attr_labels": "",
+            "examples": "consumability_product_mgr_group",
+            "existing_element": "ProductManager",
+            "description": "Actors responsible for managing this product. Actors may be individuals, automations, etc.",
+            "style": "Reference Name List"
+          }
+        },
+        {
+          "Agreements": {
+            "variable_name": "agreements",
+            "attr_labels": "",
+            "existing_element": "Agreements",
+            "description": "A list of agreements associated with this product.  The agreements must already exist.",
+            "style": "Reference Name List"
+          }
+        },
+        {
+          "Digital Subscriptions": {
+            "variable_name": "",
+            "attr_labels": "",
+            "description": "",
+            "style": "Reference Name List",
+            "min_cardinality": 1
+          }
+        }
+      ]
+    },
+    "Link Product-Product": {
+      "display_name": "Digital Product - Digital Product",
+      "qn_prefix": "",
+      "alternate_names": "Digital Product - Digital Product; Digital Product to Digital Product; Digital Products",
+      "family": "Digital Product Manager",
+      "description": "Link digital product dependency between two digital products.",
+      "verb": "Link",
+      "upsert": false,
+      "attach": true,
+      "find_method": "",
+      "Attributes": [
+        {
+          "Digital Product 1": {
+            "variable_name": "digital_product_1",
+            "attr_labels": "Product 1",
+            "existing_element": "DigitalProduct",
+            "description": "The  first product to link.",
+            "style": "Reference Name",
+            "input_required": true,
+            "min_cardinality": 1
+          }
+        },
+        {
+          "Digital Product 2": {
+            "variable_name": "digital_product_2",
+            "attr_labels": "Product 2",
+            "existing_element": "DigitalProduct",
+            "description": "The  second product to link.",
+            "style": "Reference Name",
+            "input_required": true,
+            "min_cardinality": 1
+          }
+        },
+        {
+          "Label": {
+            "variable_name": "link_label",
+            "attr_labels": "",
+            "description": "Labels the link between two digital products."
+          }
+        },
+        {
+          "Description": {
+            "variable_name": "description",
+            "attr_labels": "",
+            "description": "A description of the link."
+          }
+        }
+      ]
+    },
+    "Create Agreement": {
+      "display_name": "Agreement",
+      "qn_prefix": "Agreement",
+      "alternate_names": "Data Sharing Agreement",
+      "family": "Digital Product Manager",
+      "description": "A kind of collection that represents an Agreement. This is for generic agreements. Specific kinds of agreements have their own commands.",
+      "verb": "Create",
+      "find_method": "CollectionManager.find_collections",
+      "find_constraints": "{\"metadata_element_subtypes\": [\"Agreement\"]}",
+      "extra_find": "CollectionManager._extract_agreement_properties",
+      "Attributes": [
+        {
+          "Display Name": {
+            "variable_name": "display_name",
+            "attr_labels": "Name",
+            "description": "Name of the  agreement.",
+            "style": "ID",
+            "input_required": true,
+            "min_cardinality": 1
+          }
+        },
+        {
+          "Description": {
+            "variable_name": "description",
+            "attr_labels": "",
+            "description": "Description of the contents of the agreement."
+          }
+        },
+        {
+          "Identifier": {
+            "variable_name": "agreement_identifier",
+            "attr_labels": "Agreement Identifier",
+            "description": "A user specified agreement identifier."
+          }
+        },
+        {
+          "Agreement Actors": {
+            "variable_name": "agreement_actors",
+            "attr_labels": "",
+            "existing_element": "Actors",
+            "description": "A list of actors with responsibilities for the agreement.",
+            "style": "Reference Name List"
+          }
+        }
+      ]
+    },
+    "Create Data Sharing Agreement": {
+      "display_name": "Data Sharing Agreement",
+      "qn_prefix": "DataSharing",
+      "family": "Digital Product Manager",
+      "description": "Create a new collection with the DataSharingAgreement classification. ",
+      "verb": "Create",
+      "find_method": "CollectionManager.find_collections",
+      "find_constraints": "{\"classification_names\": [\"DataSharingAgreement\"]}",
+      "Attributes": [
+        {
+          "Display Name": {
+            "variable_name": "display_name",
+            "attr_labels": "Name",
+            "description": "Name of the  agreement.",
+            "style": "ID",
+            "input_required": true,
+            "min_cardinality": 1
+          }
+        },
+        {
+          "Description": {
+            "variable_name": "description",
+            "attr_labels": "",
+            "description": "Description of the contents of the agreement."
+          }
+        },
+        {
+          "Identifier": {
+            "variable_name": "identifier",
+            "attr_labels": "",
+            "description": "A user specified agreement identifier."
+          }
+        },
+        {
+          "Product Manager": {
+            "variable_name": "product_manager",
+            "attr_labels": "",
+            "examples": "consumability_product_mgr_group",
+            "existing_element": "ProductManager",
+            "description": "An actor responsible for managing this product. Actors may be individuals, automations, etc.",
+            "style": "Reference Name"
+          }
+        },
+        {
+          "Digital Subscriptions": {
+            "variable_name": "",
+            "attr_labels": "",
+            "description": "",
+            "style": "Reference Name List",
+            "min_cardinality": 1
+          }
+        }
+      ]
+    },
+    "Create Digital Subscription": {
+      "display_name": "Digital Subscription",
+      "qn_prefix": "Subscription",
+      "alternate_names": "Create Product Subscription",
+      "family": "Digital Product Manager",
+      "description": "A type of agreement for a digital subscription.",
+      "verb": "Create",
+      "find_method": "CollectionManager.find_collections",
+      "find_constraints": "{\"metadata_element_subtypes\": [\"DigitalSubscription\"]}",
+      "Attributes": [
+        {
+          "Display Name": {
+            "variable_name": "display_name",
+            "attr_labels": "Name",
+            "description": "Name of the  agreement.",
+            "style": "ID",
+            "input_required": true,
+            "min_cardinality": 1
+          }
+        },
+        {
+          "Description": {
+            "variable_name": "description",
+            "attr_labels": "",
+            "description": "Description of the contents of the agreement."
+          }
+        },
+        {
+          "Identifier": {
+            "variable_name": "identifier",
+            "attr_labels": "",
+            "description": "A user specified agreement identifier."
+          }
+        },
+        {
+          "Support Level": {
+            "variable_name": "support_level",
+            "attr_labels": "",
+            "description": "Level of support agreed or requested."
+          }
+        },
+        {
+          "Service Levels": {
+            "variable_name": "service_levels",
+            "attr_labels": "",
+            "description": "A dictionary of name:value pairs describing the service levels.",
+            "style": "Dictionary"
+          }
+        }
+      ]
+    },
+    "Create CSV File": {
+      "display_name": "CSV File",
+      "qn_prefix": "CSVFile",
+      "alternate_names": "Create CSV",
+      "family": "Digital Product Manager",
+      "description": "Create a CSV File asset",
+      "verb": "Create",
+      "find_method": "",
+      "Attributes": [
+        {
+          "Display Name": {
+            "variable_name": "display_name",
+            "attr_labels": "File Name",
+            "description": "Name of the CSV File",
+            "style": "ID",
+            "input_required": true,
+            "min_cardinality": 1
+          }
+        },
+        {
+          "Description": {
+            "variable_name": "description",
+            "attr_labels": "",
+            "description": "Description of the CSV file."
+          }
+        },
+        {
+          "File Path": {
+            "variable_name": "file_path",
+            "attr_labels": "File Path Name",
+            "examples": "/home/mumble.csv",
+            "description": "Path to the file including file name. File system name is pre-pended if set."
+          }
+        },
+        {
+          "File Encoding": {
+            "variable_name": "file_encoding",
+            "attr_labels": "",
+            "default_value": "UTF-8",
+            "description": "Encoding of the file."
+          }
+        },
+        {
+          "File Extension": {
+            "variable_name": "file_extension",
+            "attr_labels": "",
+            "default_value": "csv",
+            "description": "Typically CSV."
+          }
+        },
+        {
+          "File System Name": {
+            "variable_name": "file_system_name",
+            "attr_labels": "",
+            "description": "Optional  file system name to be prepended in front of the path name."
+          }
+        }
+      ]
+    },
+    "Link Agreement->Item": {
+      "display_name": "Agreement Item",
+      "qn_prefix": "",
+      "family": "Digital Product Manager",
+      "description": "Attach or detach an agreement to an element referenced in its definition. Agreement item can be any referencable element.",
+      "verb": "Link",
+      "upsert": false,
+      "attach": true,
+      "style": "",
+      "Attributes": [
+        {
+          "Agreement Name": {
+            "variable_name": "agreement_name",
+            "attr_labels": "Agreement",
+            "existing_element": "Agreement",
+            "description": "The name of the agreement to add an item to. Using qualified names is recommended.",
+            "style": "Reference Name",
+            "input_required": true,
+            "min_cardinality": 1
+          }
+        },
+        {
+          "Item Name": {
+            "variable_name": "item_name",
+            "attr_labels": "Item",
+            "existing_element": "Referenceable",
+            "description": "The name of the referenceable  item to add to an agreement  Using qualified names is recommended.",
+            "style": "Reference Name",
+            "input_required": true,
+            "min_cardinality": 1
+          }
+        },
+        {
+          "Agreement Item Id": {
+            "variable_name": "agreement_item_id",
+            "attr_labels": "",
+            "description": "A user specified agreement item identifier."
+          }
+        },
+        {
+          "Agreement Start": {
+            "variable_name": "agreement_start",
+            "attr_labels": "Start Date",
+            "description": "The start date of the agreement as an ISO 8601 string."
+          }
+        },
+        {
+          "Agreement End": {
+            "variable_name": "agreement_end",
+            "attr_labels": "End Date",
+            "description": "The end date of the agreement as an ISO 8601 string."
+          }
+        },
+        {
+          "Restrictions": {
+            "variable_name": "restrictions",
+            "attr_labels": "",
+            "examples": "forbidden to resell ",
+            "description": "A dictionary of property:value pairs describing restrictions.",
+            "style": "Dictionary"
+          }
+        },
+        {
+          "Obligations": {
+            "variable_name": "obligations",
+            "attr_labels": "",
+            "examples": "required to report on usage",
+            "description": "A dictionary of property:value pairs describing obligations.",
+            "style": "Dictionary"
+          }
+        },
+        {
+          "Entitlements": {
+            "variable_name": "Entitlements",
+            "attr_labels": "",
+            "examples": "Allowed to use within the organization.",
+            "description": "A dictionary of property:value pairs describing entitlements.",
+            "style": "Dictionary"
+          }
+        },
+        {
+          "Usage Measurements": {
+            "variable_name": "usage_measurements",
+            "attr_labels": "",
+            "description": "A dictionary of property:value pairs describing usage measurements.",
+            "style": "Dictionary"
+          }
+        }
+      ]
+    },
+    "Link Contracts": {
+      "display_name": "Contracts",
+      "qn_prefix": "",
+      "alternate_names": "Contract",
+      "family": "Digital Product Manager",
+      "description": "Attach or detach an agreement to an element describing the location of the contract documents.",
+      "verb": "Link",
+      "upsert": false,
+      "attach": true,
+      "find_method": "",
+      "Attributes": [
+        {
+          "Contract Id": {
+            "variable_name": "contract_id",
+            "attr_labels": "",
+            "description": "Contract identifier."
+          }
+        },
+        {
+          "Contract Liaison": {
+            "variable_name": "contract_liaison",
+            "inUpdate": false,
+            "attr_labels": "",
+            "description": "Name of the liaison for the contract."
+          }
+        },
+        {
+          "Contract Liaison Type": {
+            "variable_name": "contract_liaison_type",
+            "inUpdate": false,
+            "attr_labels": "",
+            "description": "type of liaison."
+          }
+        },
+        {
+          "Contract Liaison Property Name": {
+            "variable_name": "contract_liaison_property_name",
+            "inUpdate": false,
+            "attr_labels": "",
+            "description": "",
+            "min_cardinality": 1
+          }
+        }
+      ]
+    },
+    "Link Subscriber->Subscription": {
+      "display_name": "Subscriber to Subscription",
+      "qn_prefix": "",
+      "alternate_names": "Subscriber to Subscription; Subscribers",
+      "family": "Digital Product Manager",
+      "description": "Attach or detach a subscriber to a subscription. Subscriber can be any type of element.",
+      "verb": "Link",
+      "upsert": false,
+      "attach": true,
+      "find_method": "",
+      "Attributes": [
+        {
+          "Subscriber Id": {
+            "variable_name": "subscriber_id",
+            "attr_labels": "Subscriber",
+            "description": " identifier of a subscriber. Initially, will let this be an arbitrary string - could harden this to a qualified name later if needed.",
+            "style": "ID"
+          }
+        },
+        {
+          "Subscription": {
+            "variable_name": "subscription_name",
+            "attr_labels": "Subscription Name",
+            "existing_element": "DigitalSubscription",
+            "description": "Name of the  subscription agreement. Recommend using qualified name.",
+            "style": "ID",
+            "input_required": true,
+            "min_cardinality": 1
+          }
+        }
+      ]
+    },
+    "Link Collection->Resource": {
+      "display_name": "Collection->Resource",
+      "qn_prefix": "",
+      "alternate_names": "Collection to Resource",
+      "family": "Digital Product Manager",
+      "description": "Connect an existing collection to an element using the ResourceList relationship.",
+      "verb": "Link",
+      "upsert": false,
+      "attach": true,
+      "find_method": "",
+      "Attributes": [
+        {
+          "Collection Id": {
+            "variable_name": "collection_id",
+            "attr_labels": "Collection Id; Agreement Id; Subscription Id",
+            "existing_element": "Collection",
+            "description": "An element of base type collection (e.g. collection, agreement; subscription, ...)",
+            "style": "Reference Name",
+            "input_required": true,
+            "min_cardinality": 1
+          }
+        },
+        {
+          "Resource Id": {
+            "variable_name": "resource",
+            "attr_labels": "",
+            "description": "The name of the resource to attach to.",
+            "style": "Reference Name",
+            "input_required": true,
+            "min_cardinality": 1
+          }
+        },
+        {
+          "Resource Use": {
+            "variable_name": "resource_use",
+            "attr_labels": "",
+            "description": "Describes the relationship between the resource and the collection."
+          }
+        },
+        {
+          "Resource Description": {
+            "variable_name": "resource_description",
+            "attr_labels": "Description",
+            "description": "A description of the resource being attached."
+          }
+        },
+        {
+          "Resource Properties": {
+            "variable_name": "resource_properties",
+            "attr_labels": "",
+            "description": "A dictionary of name:value pairs describing properties of the resource use.",
+            "style": "Dictionary"
+          }
+        }
+      ]
+    },
+    "Add Member->Collection": {
+      "display_name": "Element->Collection",
+      "qn_prefix": "",
+      "alternate_names": "Member; Member to Collection; Member to Folder",
+      "family": "Digital Product Manager",
+      "description": "Add/Remove a member to/from a collection.",
+      "verb": "Add",
+      "upsert": false,
+      "attach": true,
+      "find_method": "",
+      "Attributes": [
+        {
+          "Element Id": {
+            "variable_name": "element_id",
+            "attr_labels": "Member; Member Id",
+            "description": "The name of the element to add to the collection.",
+            "style": "Reference Name",
+            "input_required": true
+          }
+        },
+        {
+          "Collection Id": {
+            "variable_name": "collection_id",
+            "attr_labels": "Parent; Parent Id; Collection Id; Agreement Id; Subscription Id; Digital Product Id; Folder; Folder Id",
+            "description": "The name of the collection to link to. There are many collection types, including Digital Products, Agreements and Subscriptions.",
+            "style": "Reference Name",
+            "input_required": true,
+            "min_cardinality": 1
+          }
+        },
+        {
+          "Membership Rationale": {
+            "variable_name": "membership_rationale",
+            "attr_labels": "Rationale",
+            "description": "Rationale for membership."
+          }
+        },
+        {
+          "Expression": {
+            "variable_name": "expression",
+            "attr_labels": "",
+            "description": "Expression that describes why the element is part of this collection.",
+            "level": "Advanced"
+          }
+        },
+        {
+          "Confidence": {
+            "variable_name": "confidence",
+            "attr_labels": "",
+            "description": "A percent confidence in the proposed adding of the member.",
+            "style": "Simple Int",
+            "level": "Advanced"
+          }
+        },
+        {
+          "Membership Status": {
+            "variable_name": "membership_status",
+            "attr_labels": "",
+            "default_value": "VALIDATED",
+            "valid_values": "UNKNOWN; DISCOVERED; PROPOSED; IMPORTED; VALIDATED; DEPRECATED; OBSOLETE; OTHER",
+            "description": "The status of adding a member to a collection.",
+            "style": "Valid Value",
+            "min_cardinality": 1
+          }
+        },
+        {
+          "Steward": {
+            "variable_name": "steward",
+            "attr_labels": "",
+            "description": "Name of the steward reviewing the proposed membership. Initially, just a string.",
+            "level": "Advanced"
+          }
+        },
+        {
+          "Steward Type Name": {
+            "variable_name": "steward_type",
+            "attr_labels": "",
+            "description": "Type of steward.",
+            "level": "Advanced"
+          }
+        },
+        {
+          "Steward Property Name": {
+            "variable_name": "steward_property_name",
+            "attr_labels": "",
+            "description": "Property name to discern the type of the steward.",
+            "level": "Advanced"
+          }
+        },
+        {
+          "Source": {
+            "variable_name": "source",
+            "attr_labels": "",
+            "description": "Source of the member.",
+            "level": "Advanced"
+          }
+        },
+        {
+          "Notes": {
+            "variable_name": "notes",
+            "attr_labels": "",
+            "description": "Notes about the membership addition.",
+            "level": "Advanced"
+          }
+        }
+      ]
+    },
+    "Link Agreement->T&C": {
+      "display_name": "T&C",
+      "qn_prefix": "",
+      "alternate_names": "Terms & Conditions",
+      "family": "Digital Product Manager",
+      "description": "Attach or detach an agreement to a defined set of terms and conditions.",
+      "verb": "Link",
+      "upsert": false,
+      "attach": true,
+      "find_method": "",
+      "Attributes": [
+        {
+          "Agreement Name": {
+            "variable_name": "agreement_name",
+            "attr_labels": "Agreement",
+            "existing_element": "Agreement",
+            "description": "The name of the agreement to add an item to. Using qualified names is recommended.",
+            "style": "Reference Name",
+            "input_required": true,
+            "min_cardinality": 1
+          }
+        },
+        {
+          "Identifier": {
+            "variable_name": "identifier",
+            "attr_labels": "",
+            "description": "A user specified  identifier."
+          }
+        },
+        {
+          "Domain Identifier": {
+            "variable_name": "domain_identifier",
+            "attr_labels": "Domain",
+            "examples": "ALL=0; DATA=1; PRIVACY=2; SECURITY=3; ...",
+            "default_value": "1",
+            "description": "The governance domain of the governance definition.",
+            "min_cardinality": 1
+          }
+        },
+        {
+          "T&C Definition Name": {
+            "variable_name": "t&c_definition_name",
+            "attr_labels": "T&C",
+            "existing_element": "Referenceable",
+            "description": "The name of the Terms and Conditions definition that governans an agreement.  Using qualified names is recommended.",
+            "style": "Reference Name",
+            "input_required": true,
+            "min_cardinality": 1
+          }
+        },
+        {
+          "Implementation Description": {
+            "variable_name": "implementation_description",
+            "attr_labels": "implementation",
+            "description": "How the Terms and Conditions are implemented."
+          }
+        },
+        {
+          "Agreement Start": {
+            "variable_name": "agreement_start",
+            "attr_labels": "Start Date",
+            "description": "The start date of the agreement as an ISO 8601 string."
+          }
+        },
+        {
+          "Agreement End": {
+            "variable_name": "agreement_end",
+            "attr_labels": "End Date",
+            "description": "The end date of the agreement as an ISO 8601 string."
+          }
+        },
+        {
+          "Restrictions": {
+            "variable_name": "restrictions",
+            "attr_labels": "",
+            "examples": "forbidden to resell ",
+            "description": "A dictionary of property:value pairs describing restrictions.",
+            "style": "Dictionary"
+          }
+        },
+        {
+          "Obligations": {
+            "variable_name": "obligations",
+            "attr_labels": "",
+            "examples": "required to report on usage",
+            "description": "A dictionary of property:value pairs describing obligations.",
+            "style": "Dictionary"
+          }
+        },
+        {
+          "Entitlements": {
+            "variable_name": "Entitlements",
+            "attr_labels": "",
+            "examples": "Allowed to use within the organization.",
+            "description": "A dictionary of property:value pairs describing entitlements.",
+            "style": "Dictionary"
+          }
+        },
+        {
+          "Usage Measurements": {
+            "variable_name": "usage_measurements",
+            "attr_labels": "",
+            "description": "A dictionary of property:value pairs describing usage measurements.",
+            "style": "Dictionary"
+          }
+        }
+      ]
+    }
+  }
+}
