@@ -132,7 +132,7 @@ def main():
     filter_string = Prompt.ask(
         "Name of deployed server type", default="View Server"
     )
-    display_servers_by_dep_imp(filter, server, url, userid, user_pass)
+    display_servers_by_dep_imp(filter_string, server, url, userid, user_pass)
 
 
 if __name__ == "__main__":

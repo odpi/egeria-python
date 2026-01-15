@@ -33,7 +33,7 @@ config_logging()
 
 
 def find_elements_by_classification_by_prop_value(
-    om_type: str,
+    metadata_element_type_name: str,
     classification: str,
     property_value: str,
     property_names: [str],
@@ -47,10 +47,10 @@ def find_elements_by_classification_by_prop_value(
     c_client = EgeriaTech(server, url, user_id=username, user_pwd=password)
     token = c_client.create_egeria_bearer_token()
 
-    om_typedef = c_client.get_typedef_by_name(om_type)
+    om_typedef = c_client.get_typedef_by_name(metadata_element_type_name)
     if type(om_typedef) is str:
         print(
-            f"The type name '{om_type}' is not known to the Egeria platform at {url} - {server}"
+            f"The type name '{metadata_element_type_name}' is not known to the Egeria platform at {url} - {server}"
         )
         sys.exit(0)
 
@@ -62,7 +62,7 @@ def find_elements_by_classification_by_prop_value(
         sys.exit(0)
 
     elements = c_client.find_elements_by_classification_with_property_value(
-        classification, property_value, property_names, om_type
+        classification, property_value, property_names, metadata_element_type_name
     )
     c = classification
 
@@ -77,7 +77,7 @@ def find_elements_by_classification_by_prop_value(
             caption_style="white on black",
             show_lines=True,
             box=box.ROUNDED,
-            title=f"Elements for Classification: {c}, Open Metadata Type: {om_type}, property value: {property_value}, "
+            title=f"Elements for Classification: {c}, Open Metadata Type: {metadata_element_type_name}, property value: {property_value}, "
             f"properties: {property_names}",
             expand=True,
             width=width,
@@ -169,7 +169,7 @@ def main():
         classification = Prompt.ask(
             "Enter the Classification to filter on", default="Anchors"
         )
-        om_type = Prompt.ask(
+        metadata_element_type_name = Prompt.ask(
             "Enter the Open Metadata Type to find elements of", default="Referenceable"
         )
         property_value = Prompt.ask("Enter the property value to search for")
@@ -177,7 +177,7 @@ def main():
             "Enter a comma seperated list of properties to search"
         )
         find_elements_by_classification_by_prop_value(
-            om_type,
+            metadata_element_type_name,
             classification,
             property_value,
             [property_names],
