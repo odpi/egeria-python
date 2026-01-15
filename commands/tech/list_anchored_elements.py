@@ -81,13 +81,13 @@ def display_anchored_elements(
         table.add_column("Matching Elements")
 
         classification = "Anchors"
-        open_type_name = None
+        metadata_element_type_name = None
         property_value = property_value
 
         property_names = prop_list
 
         elements = g_client.find_elements_by_classification_with_property_value(
-            classification, property_value, property_names, open_type_name
+            classification, property_value, property_names, metadata_element_type_name
         )
         if type(elements) is str:
             return table
