@@ -79,8 +79,7 @@ class ActorManager(ServerClient):
         self.user_pwd = user_pwd
 
         # Handle Optional parameters for parent class
-        ServerClient.__init__(self, view_server, platform_url, user_id, user_pwd or "", token or "")
-        logger.debug(f"{self.__class__} initialized, platform origin is: {result} ")
+        ServerClient.__init__(self, view_server, platform_url, user_id, user_pwd, token)
         self.command_root: str = (
             f"{self.platform_url}/servers/{self.view_server}/api/open-metadata/actor-manager")
 
