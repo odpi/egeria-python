@@ -1187,7 +1187,7 @@ class DataDesigner(ServerClient):
 
         loop = asyncio.get_event_loop()
         response = loop.run_until_complete(
-            self._async_get_data_structures_by_name(filter, classification_names, body, start_from, page_size,
+            self._async_get_data_structures_by_name(filter_string, classification_names, body, start_from, page_size,
                                                     output_format, report_spec))
         return response
 
