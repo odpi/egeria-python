@@ -36,7 +36,7 @@ from pyegeria.models import (SearchStringRequestBody, FilterRequestBody, GetRequ
                              LevelIdentifierQueryBody, UpdatePropertiesRequestBody, MetadataSourceRequestBody,
                              UpdateEffectivityDatesRequestBody, OpenMetadataDeleteRequestBody, ArchiveRequestBody,
                              NewOpenMetadataElementRequestBody, NewRelatedElementsRequestBody,
-                             FindPropertyNamesRequestBody,
+                             FindPropertyNamesRequestBody, FindRequestBody,
                              ContentStatusSearchString, ContentStatusFilterRequestBody,
                              ActivityStatusSearchString, ActivityStatusFilterRequestBody,
                              ActivityStatusRequestBody, ActionRequestBody)
@@ -72,6 +72,7 @@ from pyegeria.models.models import (
     NewOpenMetadataElementRequestBody,
     NewRelatedElementsRequestBody,
     FindPropertyNamesRequestBody,
+    FindRequestBody,
     ContentStatusSearchString,
     ContentStatusFilterRequestBody,
     ActivityStatusSearchString,
@@ -190,6 +191,7 @@ class ServerClient(BaseServerClient):
         self._new_open_metadata_element_request_adapter = TypeAdapter(NewOpenMetadataElementRequestBody)
         self._new_related_elements_request_adapter = TypeAdapter(NewRelatedElementsRequestBody)
         self._find_property_names_request_adapter = TypeAdapter(FindPropertyNamesRequestBody)
+        self._find_request_adapter = TypeAdapter(FindRequestBody)
         self._deployment_status_search_request_adapter = TypeAdapter(DeploymentStatusSearchString)
         self._deployment_status_filter_request_adapter = TypeAdapter(DeploymentStatusFilterRequestBody)
         self._content_status_search_request_adapter = TypeAdapter(ContentStatusSearchString)
@@ -248,7 +250,7 @@ class ServerClient(BaseServerClient):
 
             result = await self._async_make_request("POST", url, body_slimmer(body))
             return result.json().get("guid", NO_ELEMENTS_FOUND)
-
+# todo put in branch for "resourceName" and "identifier"
         if (not qualified_name) and display_name:
             if (tech_type) and (property_name == "qualifiedName"):
                 name = f"{tech_type}::{display_name}"
@@ -633,7 +635,7 @@ class ServerClient(BaseServerClient):
         return response
 
     async def _async_get_guid_for_name(
-            self, name: str, property_name: list[str] = ["qualifiedName", "displayName"],
+            self, name: str, property_name: list[str] = ["qualifiedName", "displayName", "resourceName","identifier"],
             type_name: str = None
 
     ) -> list | str:
@@ -673,7 +675,7 @@ class ServerClient(BaseServerClient):
         return elements
 
     def get_guid_for_name(
-            self, name: str, property_name: list[str] = ["qualifiedName", "displayName"],
+            self, name: str, property_name: list[str] = ["qualifiedName", "displayName","resourceName","identifier"],
             type_name: str = "ValidMetadataValue"
     ) -> list | str:
         """
