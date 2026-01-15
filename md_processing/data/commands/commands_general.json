@@ -1,0 +1,204 @@
+{
+  "Command Specifications": {
+    "View Report": {
+      "display_name": "View Report",
+      "qn_prefix": "",
+      "alternate_names": "View MD; View FORM; View DICT; View LIST; View HTML",
+      "family": "General",
+      "description": "This can be used to produce a report using any output format set.",
+      "verb": "View",
+      "upsert": false,
+      "find_method": "",
+      "Attributes": [
+        {
+          "Search String": {
+            "variable_name": "",
+            "attr_labels": "Filter",
+            "default_value": "*",
+            "description": "An optional search string to filter results by."
+          }
+        },
+        {
+          "Output Format": {
+            "variable_name": "",
+            "attr_labels": "Format",
+            "examples": "LIST, FORM",
+            "default_value": "LIST",
+            "valid_values": "LIST; FORM; REPORT; MERMAID; DICT",
+            "description": "Optional specification of output format for the query.",
+            "style": "Valid Value"
+          }
+        },
+        {
+          "Report Spec": {
+            "variable_name": "report_spec",
+            "attr_labels": "Output Format Set; Report",
+            "examples": "Collections, Agreements",
+            "default_value": "Referenceable",
+            "description": "Optional specification of an report  that defines the attributes/columns that will be returned.",
+            "input_required": true
+          }
+        },
+        {
+          "Starts With": {
+            "variable_name": "starts_with",
+            "inUpdate": false,
+            "attr_labels": "",
+            "default_value": "True",
+            "description": "If true, look for matches with the search string starting from the beginning of  a field.",
+            "style": "Bool",
+            "min_cardinality": 1
+          }
+        },
+        {
+          "Ends With": {
+            "variable_name": "ends_with",
+            "inUpdate": false,
+            "attr_labels": "",
+            "default_value": "False",
+            "description": "If true, look for matches with the search string starting from the end of  a field.",
+            "style": "Bool",
+            "min_cardinality": 1
+          }
+        },
+        {
+          "Ignore Case": {
+            "variable_name": "",
+            "attr_labels": "",
+            "default_value": "False",
+            "existing_element": "ignore_case",
+            "description": "If true, ignore the difference between upper and lower characters when matching the search string.",
+            "style": "Bool",
+            "min_cardinality": 1
+          }
+        },
+        {
+          "Limit Result by Status": {
+            "variable_name": "",
+            "attr_labels": "",
+            "default_value": "['ACTIVE']",
+            "valid_values": "'UNKNOWN'; 'DRAFT'; 'PREPARED'; 'PROPOSED'; 'APPROVED'; 'REJECTED';   'APPROVED_CONCEPT'; 'UNDER_DEVELOPMENT'; 'DEVELOPMENT_COMPLETE';                              'APPROVED_FOR_DEPLOYMENT'; 'STANDBY'; 'ACTIVE'; 'FAILED'; 'DISABLED'; 'COMPLETE';    'DEPRECATED'; 'OTHER' ; 'DELETED",
+            "description": "One of the status values from a list of valid values.",
+            "style": "Valid Value",
+            "min_cardinality": 1,
+            "level": "Advanced"
+          }
+        },
+        {
+          "Metadata Element Subtype Names": {
+            "variable_name": "metadata_element_subtype_names",
+            "attr_labels": "",
+            "description": "Filter results by the list of metadata elements. If none are provided, then no status filtering will be performed.",
+            "style": "Simple List"
+          }
+        },
+        {
+          "Metadata Element Type Name": {
+            "variable_name": "metadata_element_type_name",
+            "attr_labels": "",
+            "description": "Optionally filter results by the type of metadata element."
+          }
+        },
+        {
+          "Skip Relationshjps": {
+            "variable_name": "skip_relationships",
+            "attr_labels": "",
+            "description": "Allow listed relationships to be skipped in the output returned.",
+            "style": "Simple List",
+            "level": "Advanced"
+          }
+        },
+        {
+          "Include Only Relationships": {
+            "variable_name": "include_only_relationships",
+            "attr_labels": "",
+            "description": "Include information only about specified relationships.",
+            "style": "Simple List",
+            "level": "Advanced"
+          }
+        },
+        {
+          "Skip Classified Elements": {
+            "variable_name": "skip_classified_elements",
+            "attr_labels": "",
+            "description": "Skip elements with the any of the specified classifications.",
+            "style": "Simple List"
+          }
+        },
+        {
+          "Include Only Classified Elements": {
+            "variable_name": "include_only_classified_elements",
+            "attr_labels": "",
+            "description": "Include only elements with the specified classifications.",
+            "style": "Simple List"
+          }
+        },
+        {
+          "Governance Zone Filter": {
+            "variable_name": "governance_zone_filter",
+            "attr_labels": "",
+            "description": "Include only elements in one of the specified governance zones.",
+            "style": "Simple List",
+            "level": "Advanced"
+          }
+        },
+        {
+          "Graph Query Depth": {
+            "variable_name": "graph_query_depth",
+            "attr_labels": "",
+            "default_value": "1",
+            "description": "The depth of the hierarchy to return. Default is 5. Specifying 0 returns only the top level attributes. ",
+            "style": "Simple Int",
+            "level": "Advanced"
+          }
+        },
+        {
+          "AsOfTime": {
+            "variable_name": "as_of_time",
+            "attr_labels": "As Of Time",
+            "description": "An ISO-8601 string representing the time to view the state of the repository.",
+            "min_cardinality": 1
+          }
+        },
+        {
+          "Sort Order": {
+            "variable_name": "sort_order",
+            "inUpdate": false,
+            "attr_labels": "",
+            "examples": "LAST_UPDATE_RECENT",
+            "valid_values": "ANY; CREATION_DATE_RECENT; CREATION_DATA_OLDEST; LAST_UPDATE_RECENT; LAST_UPDATE_OLDEST; PROPERTY_ASCENDING; PROPERTY_DESCENDING",
+            "description": "How to order the results. The sort order can be selected from a list of valid value.",
+            "style": "Valid Value"
+          }
+        },
+        {
+          "Order Property Name": {
+            "variable_name": "order_property_name",
+            "inUpdate": false,
+            "attr_labels": "",
+            "existing_element": "order_property_name",
+            "description": "The property to use for sorting if the sort_order_property is PROPERTY_ASCENDING or PROPERTY_DESCENDING"
+          }
+        },
+        {
+          "Page Size": {
+            "variable_name": "page_size",
+            "attr_labels": "",
+            "default_value": "0",
+            "description": "The number of elements returned per page.",
+            "style": "Simple Int"
+          }
+        },
+        {
+          "Start From": {
+            "variable_name": "start_from",
+            "attr_labels": "",
+            "default_value": "0",
+            "description": "When paging through results, the starting point of the results to return.",
+            "style": "Simple Int"
+          }
+        }
+      ]
+    }
+  }
+}

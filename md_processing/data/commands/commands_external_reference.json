@@ -1,0 +1,733 @@
+{
+  "Command Specifications": {
+    "Create External Reference": {
+      "display_name": "External Reference",
+      "qn_prefix": "ExtRef",
+      "family": "External Reference",
+      "description": "Create or update External Reference Elements - or sub-types Related Media, Cited Documents, External Data Source and External Model Source.",
+      "verb": "Create",
+      "find_method": "ExternalReference.find_external_references",
+      "Attributes": [
+        {
+          "Display Name": {
+            "variable_name": "display_name",
+            "attr_labels": "Name",
+            "description": "Name of the external reference.",
+            "style": "ID",
+            "input_required": true,
+            "min_cardinality": 1
+          }
+        },
+        {
+          "Description": {
+            "variable_name": "description",
+            "attr_labels": "",
+            "description": "Description of the contents of a product."
+          }
+        },
+        {
+          "Reference Title": {
+            "variable_name": "reference_title",
+            "attr_labels": "Title",
+            "description": "Title of the external reference."
+          }
+        },
+        {
+          "Reference Abstract": {
+            "variable_name": "reference_abstract",
+            "attr_labels": "Abstract",
+            "description": "Abstract for the remote reference."
+          }
+        },
+        {
+          "Authors": {
+            "variable_name": "authors",
+            "attr_labels": "Author",
+            "description": "A list of authors.",
+            "style": "Simple List"
+          }
+        },
+        {
+          "Organization": {
+            "variable_name": "organization",
+            "attr_labels": "",
+            "description": "Organization owning the external reference."
+          }
+        },
+        {
+          "Sources": {
+            "variable_name": "reference_sources",
+            "attr_labels": "Reference Sources",
+            "description": "A map of source strings.",
+            "style": "Dictionary"
+          }
+        },
+        {
+          "License": {
+            "variable_name": "license",
+            "attr_labels": "",
+            "description": "The license associated with the external reference."
+          }
+        },
+        {
+          "Copyright": {
+            "variable_name": "copyright",
+            "attr_labels": "",
+            "description": "The copy right associated with the external reference."
+          }
+        },
+        {
+          "Attribution": {
+            "variable_name": "category",
+            "attr_labels": "",
+            "description": "Attribution string to describe the external reference."
+          }
+        }
+      ]
+    },
+    "Create External Data Source": {
+      "display_name": "External Data Source",
+      "qn_prefix": "ExtDataSource",
+      "family": "External Reference",
+      "description": "An external data source.",
+      "verb": "Create",
+      "find_method": "ExternalReference.find_external_references",
+      "find_constraints": "{\"metadata_element_subtypes\": [\"ExternalDataSource\"]}",
+      "Attributes": [
+        {
+          "Display Name": {
+            "variable_name": "display_name",
+            "attr_labels": "Name",
+            "description": "Name of the External Data Source",
+            "style": "ID",
+            "input_required": true,
+            "min_cardinality": 1
+          }
+        },
+        {
+          "Description": {
+            "variable_name": "description",
+            "attr_labels": "",
+            "description": "Description of the contents of a product."
+          }
+        },
+        {
+          "Reference Title": {
+            "variable_name": "reference_title",
+            "attr_labels": "Title",
+            "description": "Title of the external reference."
+          }
+        },
+        {
+          "Reference Abstract": {
+            "variable_name": "reference_abstract",
+            "attr_labels": "Abstract",
+            "description": "Abstract for the remote reference."
+          }
+        },
+        {
+          "Authors": {
+            "variable_name": "authors",
+            "attr_labels": "Author",
+            "description": "A list of authors.",
+            "style": "Simple List"
+          }
+        },
+        {
+          "Organization": {
+            "variable_name": "organization",
+            "attr_labels": "Category Name",
+            "description": "Organization owning the external reference."
+          }
+        },
+        {
+          "Sources": {
+            "variable_name": "reference_sources",
+            "attr_labels": "Reference Sources",
+            "description": "A map of source strings.",
+            "style": "Dictionary"
+          }
+        },
+        {
+          "License": {
+            "variable_name": "license",
+            "attr_labels": "",
+            "description": "The license associated with the external reference."
+          }
+        },
+        {
+          "Copyright": {
+            "variable_name": "copyright",
+            "attr_labels": "",
+            "description": "The copy right associated with the external reference."
+          }
+        },
+        {
+          "Attribution": {
+            "variable_name": "category",
+            "attr_labels": "",
+            "description": "Attribution string to describe the external reference."
+          }
+        }
+      ]
+    },
+    "Create External Model Source": {
+      "display_name": "External Reference",
+      "qn_prefix": "ExtModelSource",
+      "family": "External Reference",
+      "description": "An external model.",
+      "verb": "Create",
+      "find_method": "ExternalReference.find_external_references",
+      "find_constraints": "{\"metadata_element_subtypes\": [\"ExternalModelSource\"]}",
+      "Attributes": [
+        {
+          "Display Name": {
+            "variable_name": "display_name",
+            "attr_labels": "Name",
+            "description": "Name of the External Model Source",
+            "style": "ID",
+            "input_required": true,
+            "min_cardinality": 1
+          }
+        },
+        {
+          "Description": {
+            "variable_name": "description",
+            "attr_labels": "",
+            "description": "Description of the contents of a product."
+          }
+        },
+        {
+          "Reference Title": {
+            "variable_name": "reference_title",
+            "attr_labels": "Title",
+            "description": "Title of the external reference."
+          }
+        },
+        {
+          "Reference Abstract": {
+            "variable_name": "reference_abstract",
+            "attr_labels": "Abstract",
+            "description": "Abstract for the remote reference."
+          }
+        },
+        {
+          "Authors": {
+            "variable_name": "authors",
+            "attr_labels": "Author",
+            "description": "A list of authors.",
+            "style": "Simple List"
+          }
+        },
+        {
+          "Organization": {
+            "variable_name": "organization",
+            "attr_labels": "Category Name",
+            "description": "Organization owning the external reference."
+          }
+        },
+        {
+          "Sources": {
+            "variable_name": "reference_sources",
+            "attr_labels": "Reference Sources",
+            "description": "A map of source strings.",
+            "style": "Dictionary"
+          }
+        },
+        {
+          "License": {
+            "variable_name": "license",
+            "attr_labels": "",
+            "description": "The license associated with the external reference."
+          }
+        },
+        {
+          "Copyright": {
+            "variable_name": "copyright",
+            "attr_labels": "",
+            "description": "The copy right associated with the external reference."
+          }
+        },
+        {
+          "Attribution": {
+            "variable_name": "category",
+            "attr_labels": "",
+            "description": "Attribution string to describe the external reference."
+          }
+        }
+      ]
+    },
+    "Create Related Media": {
+      "display_name": "External Reference",
+      "qn_prefix": "RelatedMedia",
+      "alternate_names": "Media",
+      "family": "External Reference",
+      "description": "Related external media.",
+      "verb": "Create",
+      "find_method": "ExternalReference.find_external_references",
+      "find_constraints": "{\"metadata_element_subtypes\": [\"RelatedMedia\"]}",
+      "Attributes": [
+        {
+          "Display Name": {
+            "variable_name": "display_name",
+            "attr_labels": "Name",
+            "description": "Name of the Related Media",
+            "style": "ID",
+            "input_required": true,
+            "min_cardinality": 1
+          }
+        },
+        {
+          "Description": {
+            "variable_name": "description",
+            "attr_labels": "",
+            "description": "Description of the contents of a product."
+          }
+        },
+        {
+          "Reference Title": {
+            "variable_name": "reference_title",
+            "attr_labels": "Title",
+            "description": "Title of the external reference."
+          }
+        },
+        {
+          "Reference Abstract": {
+            "variable_name": "reference_abstract",
+            "attr_labels": "Abstract",
+            "description": "Abstract for the remote reference."
+          }
+        },
+        {
+          "Authors": {
+            "variable_name": "authors",
+            "attr_labels": "Author",
+            "description": "A list of authors.",
+            "style": "Simple List"
+          }
+        },
+        {
+          "Organization": {
+            "variable_name": "organization",
+            "attr_labels": "Category Name",
+            "description": "Organization owning the external reference."
+          }
+        },
+        {
+          "Sources": {
+            "variable_name": "reference_sources",
+            "attr_labels": "Reference Sources",
+            "description": "A map of source strings.",
+            "style": "Dictionary"
+          }
+        },
+        {
+          "License": {
+            "variable_name": "license",
+            "attr_labels": "",
+            "description": "The license associated with the external reference."
+          }
+        },
+        {
+          "Copyright": {
+            "variable_name": "copyright",
+            "attr_labels": "",
+            "description": "The copy right associated with the external reference."
+          }
+        },
+        {
+          "Attribution": {
+            "variable_name": "category",
+            "attr_labels": "",
+            "description": "Attribution string to describe the external reference."
+          }
+        },
+        {
+          "Media Type": {
+            "variable_name": "media_type",
+            "attr_labels": "",
+            "valid_values": "IMAGE; AUDIO; DOCUMENT; VIDEO; OTHER",
+            "description": "Type of media.",
+            "style": "Valid Value"
+          }
+        },
+        {
+          "Media Type Other Id": {
+            "variable_name": "media_type_other_id",
+            "attr_labels": "",
+            "description": "An id associated with the media type."
+          }
+        },
+        {
+          "Default Media Usage": {
+            "variable_name": "default_media_usage",
+            "attr_labels": "",
+            "valid_values": "ICON; THUMBNAIL; ILLUSTRATION; USAGE_GUIDANCE; OTHER",
+            "description": "How the media is being used.",
+            "style": "Valid Value"
+          }
+        },
+        {
+          "default Media Usage Other Id": {
+            "variable_name": "default_media_usage_other_id",
+            "attr_labels": "",
+            "description": "An id associated with the media usage."
+          }
+        }
+      ]
+    },
+    "Create Cited Document": {
+      "display_name": "External Reference",
+      "qn_prefix": "CitedDoc",
+      "family": "External Reference",
+      "description": "A cited document",
+      "verb": "Create",
+      "find_method": "ExternalReference.find_external_references",
+      "find_constraints": "{\"metadata_element_subtypes\": [\"CitedDocument\"]}",
+      "Attributes": [
+        {
+          "Display Name": {
+            "variable_name": "display_name",
+            "attr_labels": "Name",
+            "description": "Name of the Cited Document",
+            "style": "ID",
+            "input_required": true,
+            "min_cardinality": 1
+          }
+        },
+        {
+          "Description": {
+            "variable_name": "description",
+            "attr_labels": "",
+            "description": "Description of the contents of a product."
+          }
+        },
+        {
+          "Reference Title": {
+            "variable_name": "reference_title",
+            "attr_labels": "Title",
+            "description": "Title of the external reference."
+          }
+        },
+        {
+          "Reference Abstract": {
+            "variable_name": "reference_abstract",
+            "attr_labels": "Abstract",
+            "description": "Abstract for the remote reference."
+          }
+        },
+        {
+          "Authors": {
+            "variable_name": "authors",
+            "attr_labels": "Author",
+            "description": "A list of authors.",
+            "style": "Simple List"
+          }
+        },
+        {
+          "Organization": {
+            "variable_name": "organization",
+            "attr_labels": "Category Name",
+            "description": "Organization owning the external reference."
+          }
+        },
+        {
+          "Sources": {
+            "variable_name": "reference_sources",
+            "attr_labels": "Reference Sources",
+            "description": "A map of source strings.",
+            "style": "Dictionary"
+          }
+        },
+        {
+          "License": {
+            "variable_name": "license",
+            "attr_labels": "",
+            "description": "The license associated with the external reference."
+          }
+        },
+        {
+          "Copyright": {
+            "variable_name": "copyright",
+            "attr_labels": "",
+            "description": "The copy right associated with the external reference."
+          }
+        },
+        {
+          "Attribution": {
+            "variable_name": "category",
+            "attr_labels": "",
+            "description": "Attribution string to describe the external reference."
+          }
+        },
+        {
+          "Number of Pages": {
+            "variable_name": "number_of_pages",
+            "attr_labels": "",
+            "description": "The number of pages in the document.",
+            "style": "Simple Int"
+          }
+        },
+        {
+          "Page Range": {
+            "variable_name": "page_range",
+            "attr_labels": "",
+            "description": "The range of pages cited."
+          }
+        },
+        {
+          "Publication Series": {
+            "variable_name": "publication_series",
+            "attr_labels": "Series",
+            "description": "The series this publication is part of."
+          }
+        },
+        {
+          "Publication Series Volume": {
+            "variable_name": "pub_series_volume",
+            "attr_labels": "",
+            "description": "The volume in the series that contains the citation."
+          }
+        },
+        {
+          "Publisher": {
+            "variable_name": "publisher",
+            "attr_labels": "",
+            "description": "The name of the publisher.",
+            "min_cardinality": 1
+          }
+        },
+        {
+          "Edition": {
+            "variable_name": "",
+            "attr_labels": "",
+            "description": "The edition being cited.",
+            "min_cardinality": 1
+          }
+        },
+        {
+          "First Publication Date": {
+            "variable_name": "first_pub_date",
+            "attr_labels": "",
+            "description": "Date of first publication written as an ISO string - 2025-01-31"
+          }
+        },
+        {
+          "Publication Date": {
+            "variable_name": "pub_date",
+            "attr_labels": "",
+            "description": "Publication date.  In ISO 8601 format - 2025-02-23."
+          }
+        },
+        {
+          "Publication City": {
+            "variable_name": "pub_city",
+            "attr_labels": "",
+            "description": "City of publication."
+          }
+        },
+        {
+          "Publication Year": {
+            "variable_name": "pub_year",
+            "attr_labels": "",
+            "description": "Year of publication.",
+            "min_cardinality": 1
+          }
+        },
+        {
+          "Publication Numbers": {
+            "variable_name": "pub_numbers",
+            "attr_labels": "",
+            "description": "Identification numbers of the publication, if relevant.",
+            "style": "Simple List",
+            "min_cardinality": 1
+          }
+        }
+      ]
+    },
+    "Link External Reference Link": {
+      "display_name": "External Reference Link",
+      "qn_prefix": "",
+      "alternate_names": "Referenceable->External Reference; External Reference;  External Data Source; External Model Source",
+      "family": "External Reference",
+      "description": "Link an external reference to a referenceable.",
+      "verb": "Link",
+      "upsert": false,
+      "attach": true,
+      "find_method": "",
+      "Attributes": [
+        {
+          "Element Name": {
+            "variable_name": "element_name",
+            "attr_labels": "Referenceable",
+            "existing_element": "Referenceable",
+            "description": "A referenceable to link.",
+            "style": "Reference Name",
+            "input_required": true,
+            "min_cardinality": 1
+          }
+        },
+        {
+          "External Reference": {
+            "variable_name": "external_reference",
+            "attr_labels": "",
+            "existing_element": "ExternalReference",
+            "description": "The external reference to link to.",
+            "style": "Reference Name",
+            "input_required": true,
+            "min_cardinality": 1
+          }
+        },
+        {
+          "Label": {
+            "variable_name": "label",
+            "attr_labels": "",
+            "description": "Labels the link between the referenceable and the external reference."
+          }
+        },
+        {
+          "Description": {
+            "variable_name": "description",
+            "attr_labels": "",
+            "description": "A description of the link."
+          }
+        }
+      ]
+    },
+    "Link Media Reference Link": {
+      "display_name": "Media Reference Link",
+      "qn_prefix": "",
+      "alternate_names": "Referenceable->Media Reference; Media Reference",
+      "family": "External Reference",
+      "description": "Link a medial reference to a referenceable.",
+      "verb": "Link",
+      "upsert": false,
+      "attach": true,
+      "find_method": "",
+      "Attributes": [
+        {
+          "Element Name": {
+            "variable_name": "element_name",
+            "attr_labels": "Referenceable",
+            "existing_element": "Referenceable",
+            "description": "A referenceable to link.",
+            "style": "Reference Name",
+            "input_required": true,
+            "min_cardinality": 1
+          }
+        },
+        {
+          "Media Reference": {
+            "variable_name": "media_reference",
+            "attr_labels": "",
+            "existing_element": "MediaReference",
+            "description": "The media reference to link to.",
+            "style": "Reference Name",
+            "input_required": true,
+            "min_cardinality": 1
+          }
+        },
+        {
+          "Label": {
+            "variable_name": "label",
+            "attr_labels": "",
+            "description": "Labels the link between the referenceable and the media reference."
+          }
+        },
+        {
+          "Description": {
+            "variable_name": "description",
+            "attr_labels": "",
+            "description": "A description of the link."
+          }
+        },
+        {
+          "Media Id": {
+            "variable_name": "media_id",
+            "attr_labels": "",
+            "description": "An identifier of the media to link to."
+          }
+        },
+        {
+          "Media Usage": {
+            "variable_name": "media_usage",
+            "attr_labels": "",
+            "valid_values": "ICON; THUMBNAIL; ILLUSTRATION; USAGE_GUIDANCE; OTHER",
+            "description": "How the media is being used.",
+            "style": "Valid Value"
+          }
+        },
+        {
+          "Media Usage Other Id": {
+            "variable_name": "default_media_usage_other_id",
+            "attr_labels": "",
+            "description": "An id associated with the media usage."
+          }
+        }
+      ]
+    },
+    "Link Cited Document Link": {
+      "display_name": "Cited Document Link",
+      "qn_prefix": "",
+      "alternate_names": "Link Referenceable->Cited Document; Link Cited Document",
+      "family": "External Reference",
+      "description": "Link a cited document reference to a referenceable.",
+      "verb": "Link",
+      "upsert": false,
+      "attach": true,
+      "find_method": "",
+      "Attributes": [
+        {
+          "Element Name": {
+            "variable_name": "element_name",
+            "attr_labels": "Referenceable",
+            "existing_element": "Referenceable",
+            "description": "A referenceable to link.",
+            "style": "Reference Name",
+            "input_required": true,
+            "min_cardinality": 1
+          }
+        },
+        {
+          "Cited Document": {
+            "variable_name": "cited_document",
+            "attr_labels": "",
+            "existing_element": "CitedDocument",
+            "description": "The cited document to link to.",
+            "style": "Reference Name",
+            "input_required": true,
+            "min_cardinality": 1
+          }
+        },
+        {
+          "Label": {
+            "variable_name": "label",
+            "attr_labels": "",
+            "description": "Labels the link between the referenceable and the media reference."
+          }
+        },
+        {
+          "Description": {
+            "variable_name": "description",
+            "attr_labels": "",
+            "description": "A description of the link."
+          }
+        },
+        {
+          "Reference  Id": {
+            "variable_name": "reference_id",
+            "attr_labels": "",
+            "description": "An identifier of the cited document to link to."
+          }
+        },
+        {
+          "Pages": {
+            "variable_name": "pages",
+            "attr_labels": "",
+            "description": "The pages referenced."
+          }
+        }
+      ]
+    }
+  }
+}
