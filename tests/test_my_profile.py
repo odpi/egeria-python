@@ -29,7 +29,7 @@ class TestMyProfile:
             profile = profile_client.get_my_profile()
             assert isinstance(profile, (dict, list, str))
 
-            profile_dict = profile_client.get_my_profile(output_format="DICT", report_spec="Referenceable")
+            profile_dict = profile_client.get_my_profile(output_format="JSON", report_spec="Referenceable")
             assert isinstance(profile_dict, (dict, list, str))
             print(f"\nRetrieved profile (DICT): {json.dumps(profile_dict, indent=2)}")
         except PyegeriaException as e:

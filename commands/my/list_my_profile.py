@@ -94,7 +94,7 @@ def display_my_profile(
 
         contact_methods = my_profiles["contactDetails"]
         for method in contact_methods:
-            contact = method["properties"]
+            contact = method['relatedElement']["properties"]
             contact_methods_md = ""
             for key in contact.keys():
                 contact_methods_md += f"* {key}: {contact[key]}\n"
@@ -104,23 +104,24 @@ def display_my_profile(
                 )
             )
 
-        my_roles = my_profiles["roles"]
-        table = Table(
-            title=f" Roles of {name}",
-            show_lines=True,
-            box=box.ROUNDED,
-            expand=True,
-        )
-        table.add_column("Role Type")
-        table.add_column("Role")
-        table.add_column("Role GUID")
-        for a_role in my_roles:
-            my_role_props = a_role["properties"]
-            role_type = my_role_props["typeName"]
-            role = my_role_props.get("title", " ")
-            role_guid = a_role["elementHeader"]["guid"]
-            table.add_row(role_type, role, role_guid)
-        t4 = tree.add(Panel(table, title="Roles", expand=False), expanded=True)
+        my_roles = my_profiles.get("performsRoles","No roles found")
+        if isinstance(my_roles, dict|list):
+            table = Table(
+                title=f" Roles of {name}",
+                show_lines=True,
+                box=box.ROUNDED,
+                expand=True,
+            )
+            table.add_column("Role Type")
+            table.add_column("Role")
+            table.add_column("Role GUID")
+            for a_role in my_roles:
+                my_role_props = a_role['relatedElement']["properties"]
+                role_type = my_role_props["typeName"]
+                role = my_role_props.get("displayName", " ")
+                role_guid = a_role['relatedElement']["elementHeader"]["guid"]
+                table.add_row(role_type, role, role_guid)
+            t4 = tree.add(Panel(table, title="Roles", expand=False), expanded=True)
 
         print(tree)
 
