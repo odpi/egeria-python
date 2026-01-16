@@ -189,7 +189,8 @@ class TestRuntimeManager:
             token = r_client.create_egeria_bearer_token()
 
             start_time = time.perf_counter()
-            response = r_client.get_platforms_by_name("Local OMAG Server Platform")
+            response = r_client.get_platforms_by_name("Local OMAG Server Platform", output_format="DICT",report_spec="Platform")
+            duration = time.perf_counter() - start_time
             duration = time.perf_counter() - start_time
             print(f"Type of response: {type(response)}")
             print(f"\n\tDuration was {duration} seconds")
@@ -221,7 +222,7 @@ class TestRuntimeManager:
             token = r_client.create_egeria_bearer_token()
 
             start_time = time.perf_counter()
-            response = r_client.get_platforms_by_type("OMAG Server Platform")
+            response = r_client.get_platforms_by_type("OMAG Server Platform", output_format="DICT",report_spec="Platform")
             duration = time.perf_counter() - start_time
             print(f"Type of response: {type(response)}")
             print(f"\n\tDuration was {duration} seconds")
@@ -284,7 +285,7 @@ class TestRuntimeManager:
                 user_pwd="secret",
             )
             token = r_client.create_egeria_bearer_token()
-            platform_guid = "c757acd4-9b40-4110-8f6b-5ff8a6ba9827"
+            platform_guid = "cdead3a3-36c9-422e-a4e9-51479319dd2e"
             start_time = time.perf_counter()
             response = r_client.get_platform_by_guid(platform_guid)
 
@@ -317,9 +318,9 @@ class TestRuntimeManager:
                 user_pwd="secret",
             )
             token = r_client.create_egeria_bearer_token()
-            platform_guid = "c757acd4-9b40-4110-8f6b-5ff8a6ba9827"
+            platform_guid = "cdead3a3-36c9-422e-a4e9-51479319dd2e"
             platform_name = "Local OMAG Server Platform"
-            platform_guid = None
+            # platform_guid = None
             start_time = time.perf_counter()
             response = r_client.get_platform_report(
                 platform_guid, platform_name
@@ -361,7 +362,7 @@ class TestRuntimeManager:
             filter_string = "qs-view-server"
             # filter = "simple-metadata-store"
 
-            response = r_client.get_servers_by_name(filter)
+            response = r_client.get_servers_by_name(filter_string, output_format="DICT",report_spec="OMAGServers")
             if type(response) is list:
                 print(f"Servers:\n{json.dumps(response, indent=4)}")
             else:
@@ -396,7 +397,7 @@ class TestRuntimeManager:
                 user_pwd="secret",
             )
             token = r_client.create_egeria_bearer_token()
-            server_guid = "61b8ba29-4312-43c8-b518-1695749c7c3c"
+            server_guid = "3fc09bcc-a5bc-464f-b2fd-0f9d6bfd8cc8"
             start_time = time.perf_counter()
             response = r_client.get_server_by_guid(server_guid)
 

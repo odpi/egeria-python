@@ -800,7 +800,7 @@ base_report_specs = FormatSetDict({
                     Column(name="Platform Origin", key='platform_origin'),
                     Column(name="Platform Start Time", key='platform_start_time'),
                     Column(name="Build Properties", key="platform_build_properties"),
-                    Column(name="Servers", key="omagservers"),
+                    Column(name="Servers", key="omag_servers"),
                 ],
             )
         ],

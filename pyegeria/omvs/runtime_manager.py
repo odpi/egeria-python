@@ -8,10 +8,11 @@ Runtime manager is a view service that supports user interaction with the runnin
 
 import asyncio
 
+from loguru import logger
 from requests import Response
 from pyegeria.core.utils import body_slimmer, dynamic_catch
 from pyegeria.core._server_client import ServerClient
-from pyegeria.core._globals import max_paging_size,default_time_out
+from pyegeria.core._globals import max_paging_size, default_time_out, NO_ELEMENTS_FOUND
 from typing import Any, Optional
 from pyegeria.view.base_report_formats import get_report_spec_match
 from pyegeria.view.base_report_formats import select_report_spec
@@ -1587,12 +1588,11 @@ class RuntimeManager(ServerClient):
     def get_platforms_by_name(
         self,
         filter_string: Optional[str] = None,
-        effective_time: Optional[str] = None,
         start_from: int = 0,
         page_size: int = max_paging_size,
         output_format: str = "JSON",
         report_spec: str | dict = "Platforms",
-        body: Optional[dict | SearchStringRequestBody] = None,
+        body: Optional[dict | FilterRequestBody] = None,
     ) -> str | list | dict:
         """Returns the list of platforms with a particular name. The name is specified in the filter.
 
@@ -1601,8 +1601,6 @@ class RuntimeManager(ServerClient):
         filter_string : str, opt
             Filter specifies the display name or qualified name of the platforms to return information for. If the
             value is None, we will default to the default_platform_name that comes from the core content pack.
-        effective_time: str, optional
-            Timeframe to return information for. Time format is "YYYY-MM-DDTHH:MM:SS" (ISO 8601).
         start_from : int, optional
            The index from which to start fetching the engine actions. Default is 0.
         page_size : int, optional
@@ -1612,7 +1610,7 @@ class RuntimeManager(ServerClient):
         report_spec: str | dict, optional
             The report specification to use. Default is "Platforms".
 
-        body : dict, optional
+        body : dict | FilterRequestBody, optional
             Request body to pass directly to the API.
 
         Returns
@@ -1623,7 +1621,7 @@ class RuntimeManager(ServerClient):
         loop = asyncio.get_event_loop()
         response = loop.run_until_complete(
             self._async_get_platforms_by_name(
-                filter_string, effective_time, start_from, page_size, output_format, report_spec, body
+                filter_string, start_from, page_size, output_format, report_spec, body
             )
         )
         return response
@@ -1632,12 +1630,11 @@ class RuntimeManager(ServerClient):
     async def _async_get_platforms_by_name(
         self,
         filter_string: Optional[str] = None,
-        effective_time: Optional[str] = None,
         start_from: int = 0,
-        page_size: int = max_paging_size,
+        page_size: int = 0,
         output_format: str = "JSON",
         report_spec: str | dict = "Platforms",
-        body: Optional[dict | SearchStringRequestBody] = None,
+        body: Optional[dict | FilterRequestBody] = None,
     ) -> str | list | dict:
         """Returns the list of platforms with a particular name. The name is specified in the filter.  Async version.
 
@@ -1646,8 +1643,7 @@ class RuntimeManager(ServerClient):
         filter_string : str, opt
             Filter specifies the display name or qualified name of the platforms to return information for. If the
             value is None, we will default to the default_platform_name that comes from the core content pack.
-        effective_time: str, optional
-           Timeframe to return information for. Time format is "YYYY-MM-DDTHH:MM:SS" (ISO 8601).
+
         start_from : int, optional
            The index from which to start fetching the engine actions. Default is 0.
 
@@ -1658,13 +1654,13 @@ class RuntimeManager(ServerClient):
         report_spec: str | dict, optional
             The report specification to use. Default is "Platforms".
 
-        body : dict, optional
+        body : dict | FilterRequestBody, optional
             Request body to pass directly to the API.
 
         Returns
         -------
         Response
-           A lit of json dict with the platform reports.
+           A list of json dict with the platform reports.
 
         Raises
         ------
@@ -1680,12 +1676,7 @@ class RuntimeManager(ServerClient):
         url = (
             f"{self.runtime_command_root}/platforms/by-name"
         )
-        if body is None:
-             if effective_time is not None:
-                  body = {"filter": filter_string, "effectiveTime": effective_time}
-             else:
-                  body = {"filter": filter_string}
-            
+
         return await self._async_get_name_request(
             url,
             _type="Platforms",
@@ -1702,12 +1693,11 @@ class RuntimeManager(ServerClient):
     async def _async_get_platforms_by_type(
         self,
         filter_string: Optional[str] = None,
-        effective_time: Optional[str] = None,
         start_from: int = 0,
         page_size: int = max_paging_size,
         output_format: str = "JSON",
         report_spec: str | dict = "Platforms",
-        body: Optional[dict | GetRequestBody] = None,
+        body: Optional[dict | FilterRequestBody] = None,
     ) -> str | list | dict:
         """Returns the list of platforms with a particular deployed implementation type.  The value is specified in
             the filter. If it is null, or no request body is supplied, all platforms are returned.  Async version.
@@ -1717,8 +1707,6 @@ class RuntimeManager(ServerClient):
         filter_string : str, opt
             Filter specifies the kind of deployed implementation type of the platforms to return information for.
             If the value is None, we will default to the "OMAG Server Platform".
-        effective_time: str, optional
-            Timeframe to return information for. Time format is "YYYY-MM-DDTHH:MM:SS" (ISO 8601).
         start_from : int, optional
            The index from which to start fetching the engine actions. Default is 0.
 
@@ -1751,12 +1739,7 @@ class RuntimeManager(ServerClient):
         url = (
             f"{self.runtime_command_root}/platforms/by-deployed-implementation-type"
         )
-        if body is None:
-             if effective_time is not None:
-                  body = {"filter": filter_string, "effectiveTime": effective_time}
-             else:
-                  body = {"filter": filter_string}
-            
+
         return await self._async_get_name_request(
             url,
             _type="Platforms",
@@ -1772,7 +1755,6 @@ class RuntimeManager(ServerClient):
     def get_platforms_by_type(
         self,
         filter_string: Optional[str] = None,
-        effective_time: Optional[str] = None,
         start_from: int = 0,
         page_size: int = max_paging_size,
         output_format: str = "JSON",
@@ -1787,8 +1769,6 @@ class RuntimeManager(ServerClient):
         filter_string : str, opt
             Filter specifies the kind of deployed implementation type of the platforms to return information for.
             If the value is None, we will default to the "OMAG Server Platform".
-        effective_time: str, optional
-            Timeframe to return information for. Time format is "YYYY-MM-DDTHH:MM:SS" (ISO 8601).
         start_from : int, optional
            The index from which to start fetching the engine actions. Default is 0.
         page_size : int, optional
@@ -1816,7 +1796,7 @@ class RuntimeManager(ServerClient):
         loop = asyncio.get_event_loop()
         return loop.run_until_complete(
             self._async_get_platforms_by_type(
-                filter_string, effective_time, start_from, page_size, output_format, report_spec, body
+                filter_string, start_from, page_size, output_format, report_spec, body
             )
         )
 
@@ -1929,8 +1909,7 @@ class RuntimeManager(ServerClient):
         platform_guid: Optional[str] = None, 
         platform_name: str = None,
         output_format: str = "JSON",
-        report_spec: str | dict = "Platforms",
-        body: Optional[dict | GetRequestBody] = None,
+        report_spec: str | dict = "Platform-Report"
     ) -> str | list | dict:
         """Returns details about the running platform. Async version.
 
@@ -1943,10 +1922,7 @@ class RuntimeManager(ServerClient):
         output_format: str, optional
             The format of the output. Default is "JSON".
         report_spec: str | dict, optional
-            The report specification to use. Default is "Platforms".
-
-        body : dict | GetRequestBody, optional
-            Request body to pass directly to the API.
+            The report specification to use. Default is "Platform-Report".
 
         Returns
         -------
@@ -1960,25 +1936,28 @@ class RuntimeManager(ServerClient):
         PyegeriaUnauthorizedException
 
         """
-        platform_guid = self.get_guid_for_name(name= platform_name, property_name =["displayName","resourceName"])
+        platform_guid = await self.__async_get_guid__(guid=platform_guid, display_name= platform_name, property_name="displayName")
         url = f"{self.runtime_command_root}/platforms/{platform_guid}/report"
 
-        return await self._async_get_guid_request(
-             url,
-             _type="Platforms",
-             _gen_output=self._generate_platform_output,
-             output_format=output_format,
-             report_spec=report_spec,
-             body=body
-        )
+        response =  await self._async_make_request("GET",url)
+        elements = response.json().get("element", NO_ELEMENTS_FOUND)
+        if type(elements) is str:
+            elements = response.json().get("elementGraph", NO_ELEMENTS_FOUND)
+            if type(elements) is str:
+                logger.info(NO_ELEMENTS_FOUND)
+                return NO_ELEMENTS_FOUND
+
+        if output_format != 'JSON':  # return a simplified markdown representation
+            logger.info(f"Found elements, output format: {output_format} and report_spec: {report_spec}")
+            return self._generate_platform_report_output(elements, "None", "Platform-Report", output_format, report_spec)
+        return elements
 
     def get_platform_report(
         self, 
         platform_guid: Optional[str] = None, 
         platform_name: str = None,
         output_format: str = "JSON",
-        report_spec: str | dict = "Platforms",
-        body: Optional[dict | GetRequestBody] = None,
+        report_spec: str | dict = "Platform-Report",
     ) -> str | list | dict:
         """Returns details about the running platform.
 
@@ -1991,10 +1970,7 @@ class RuntimeManager(ServerClient):
         output_format: str, optional
             The format of the output. Default is "JSON".
         report_spec: str | dict, optional
-            The report specification to use. Default is "Platforms".
-
-        body : dict, optional
-            Request body to pass directly to the API.
+            The report specification to use. Default is "Platform-Report".
 
         Returns
         -------
@@ -2009,14 +1985,15 @@ class RuntimeManager(ServerClient):
         """
         loop = asyncio.get_event_loop()
         return loop.run_until_complete(
-            self._async_get_platform_report(platform_guid, platform_name, output_format, report_spec, body)
+            self._async_get_platform_report(platform_guid, platform_name, output_format, report_spec)
         )
 
     async def _async_get_platform_by_guid(
         self,
         platform_guid: str,
-        effective_time: Optional[str] = None,
-        body: Optional[dict | GetRequestBody] = None,
+        output_format: str = "JSON",
+        report_spec: str | dict = "Platforms",
+        body: Optional[dict | GetRequestBody] = None
     ) -> str | list:
         """Returns details about the platform's catalog entry (asset). Async version.
 
@@ -2024,10 +2001,10 @@ class RuntimeManager(ServerClient):
         ----------
         platform_guid : str
             Unique id of the platform to return details of.
-        effective_time: str, optional
-            Timeframe to return information for. Time format is "YYYY-MM-DDTHH:MM:SS" (ISO 8601).
-
-
+        output_format: str, optional
+            - The format of the output. Default is "JSON".
+        report_spec: str | dict, optional
+            - The specification of the report to generate. Default is "Platforms".
         body : dict | GetRequestBody, optional
             Request body to pass directly to the API.
 
@@ -2039,18 +2016,21 @@ class RuntimeManager(ServerClient):
         """
 
         url = f"{self.runtime_command_root}/platforms/{platform_guid}"
-
-        if body is None and effective_time is not None:
-            body = {"effectiveTime": effective_time}
             
-        response = await self._async_make_request("POST", url, body=body)
-
-        return response.json().get("element", "No platforms found")
+        response = await self._async_get_guid_request(
+            url=url,
+            _type="SoftwareServerPlatform",
+            _gen_output=self._generate_platform_output,
+            output_format=output_format,
+            report_spec=report_spec,
+            body=body
+        )
+        return response
 
     def get_platform_by_guid(
         self,
         platform_guid: str,
-        effective_time: Optional[str] = None,
+        output_format: str = "JSON", report_spec: str | dict = "Platforms",
         body: Optional[dict | GetRequestBody] = None,
     ) -> str | list:
         """Returns details about the platform's catalog entry (asset).
@@ -2059,16 +2039,17 @@ class RuntimeManager(ServerClient):
         ----------
         platform_guid : str, opt
             Identity of the platform to return details about.
-        effective_time: str, optional
-            Timeframe to return information for. Time format is "YYYY-MM-DDTHH:MM:SS" (ISO 8601).
+        output_format: str, optional
+        - The format of the output. Default is "JSON".
+        report_spec: str | dict, optional
+        - The specification of the report to generate. Default is "Platforms".
 
         body : dict | GetRequestBody, optional
             Request body to pass directly to the API.
 
         Returns
         -------
-        Response
-           A lit of json dict with the platform reports.
+        List of JSON dict with the platform reports.
 
         Raises
         ------
@@ -2079,14 +2060,16 @@ class RuntimeManager(ServerClient):
         """
         loop = asyncio.get_event_loop()
         response = loop.run_until_complete(
-            self._async_get_platform_by_guid(platform_guid, effective_time, body)
+            self._async_get_platform_by_guid(platform_guid, output_format, report_spec, body)
         )
         return response
 
+    @dynamic_catch
     async def _async_get_server_by_guid(
         self,
         server_guid: Optional[str] = None,
-        effective_time: Optional[str] = None,
+        output_format: str = "JSON",
+        report_spec: str | dict = "OMAGServers",
         body: Optional[dict | GetRequestBody] = None,
     ) -> str | dict:
         """Returns details about the server's catalog entry (asset). Async version.
@@ -2095,38 +2078,42 @@ class RuntimeManager(ServerClient):
         ----------
         server_guid : str
             The unique identifier for the platform.
-        effective_time: str, optional
-            Timeframe to return information for. Time format is "YYYY-MM-DDTHH:MM:SS" (ISO 8601).
-
+        output_format: str, optional
+        - The format of the output. Default is "JSON".
+        report_spec: str | dict, optional
+        - The specification of the report to generate. Default is "OMAGServers".
         body : dict | GetRequestBody, optional
             Request body to pass directly to the API.
 
         Returns
         -------
-        Response
-           A lit of json dict with the platform reports.
+           List of JSON dict with the platform reports.
 
         Raises
         ------
         PyegeriaInvalidParameterException
         PyegeriaAPIException
         PyegeriaUnauthorizedException
-
         """
 
         url = f"{self.runtime_command_root}/software-servers/{server_guid}"
+        response = await self._async_get_guid_request(
+            url=url,
+            _type="SoftwareServer",
+            _gen_output=self._generate_omag_server_output,
+            output_format=output_format,
+            report_spec=report_spec,
+            body=body
+        )
+        return response
 
-        if body is None and effective_time is not None:
-            body = {"effectiveTime": effective_time}
-            
-        response = await self._async_make_request("POST", url, body=body)
 
-        return response.json().get("element", "No server found")
-
+    @dynamic_catch
     def get_server_by_guid(
         self,
         server_guid: Optional[str] = None,
-        effective_time: Optional[str] = None,
+        output_format: str = "JSON",
+        report_spec: str | dict = "OMAGServers",
         body: Optional[dict | GetRequestBody] = None,
     ) -> str | dict:
         """Returns details about the platform's catalog entry (asset).
@@ -2135,16 +2122,16 @@ class RuntimeManager(ServerClient):
         ----------
         server_guid : str
             The unique identifier for the platform.
-        effective_time: str, optional
-            Timeframe to return information for. Time format is "YYYY-MM-DDTHH:MM:SS" (ISO 8601).
-
-        body : dict, optional
+        output_format: str, optional
+        - The format of the output. Default is "JSON".
+        report_spec: str | dict, optional
+        - The specification of the report to generate. Default is "OMAGServers".
+        body : dict | GetRequestBody, optional
             Request body to pass directly to the API.
 
         Returns
         -------
-        Response
-           A lit of json dict with the platform reports.
+           List of JSON dict with the platform reports.
 
         Raises
         ------
@@ -2155,7 +2142,8 @@ class RuntimeManager(ServerClient):
         """
         loop = asyncio.get_event_loop()
         response = loop.run_until_complete(
-            self._async_get_server_by_guid(server_guid, effective_time, body)
+            self._async_get_server_by_guid(server_guid, output_format=output_format,
+                                           report_spec=report_spec, body=body)
         )
         return response
 
@@ -2163,12 +2151,11 @@ class RuntimeManager(ServerClient):
     async def _async_get_servers_by_name(
         self,
         filter_string: Optional[str] = None,
-        effective_time: Optional[str] = None,
         start_from: int = 0,
         page_size: int = max_paging_size,
         output_format: str = "JSON",
         report_spec: str | dict = "OMAGServers",
-        body: Optional[dict | SearchStringRequestBody] = None,
+        body: Optional[dict | FilterRequestBody] = None,
     ) -> str | list | dict:
         """Returns the list of servers with a particular name.  The name is specified in the filter. Async version.
 
@@ -2177,8 +2164,6 @@ class RuntimeManager(ServerClient):
         filter_string : str, opt
             Filter specifies the kind of deployed implementation type of the platforms to return information for.
             If the value is None, we will default to the "OMAG Server Platform".
-        effective_time: str, optional
-            Timeframe to return information for. Time format is "YYYY-MM-DDTHH:MM:SS" (ISO 8601).
         start_from : int, optional
            The index from which to start fetching the engine actions. Default is 0.
         page_size : int, optional
@@ -2188,13 +2173,12 @@ class RuntimeManager(ServerClient):
         report_spec: str | dict, optional
             The report specification to use. Default is "OMAGServers".
 
-        body : dict | SearchStringRequestBody, optional
+        body : dict | FilterRequestBody, optional
             Request body to pass directly to the API.
 
         Returns
         -------
-        Response
-           A list of json dict with the server reports.
+        List of JSON dict with the server reports.
 
         Raises
         ------
@@ -2206,17 +2190,10 @@ class RuntimeManager(ServerClient):
 
         url = f"{self.runtime_command_root}/software-servers/by-name"
 
-        if body is None:
-            if effective_time is None:
-                body = {"filter": filter_string, "limitResultsByStatus": ["PROPOSED"]}
-            else:
-                body = {"filter": filter_string,
-                        "effective_time": effective_time,
-                        "limitResultsByStatus": []}
         
         return await self._async_get_name_request(
              url,
-             _type="OMAGServers",
+             _type="SoftwareServer",
              _gen_output=self._generate_omag_server_output,
              filter_string=filter_string,
              start_from=start_from,
@@ -2226,10 +2203,10 @@ class RuntimeManager(ServerClient):
              body=body
         )
 
+    @dynamic_catch
     def get_servers_by_name(
         self, 
-        filter_string: str, 
-        effective_time: str = None,
+        filter_string: str,
         start_from: int = 0,
         page_size: int = max_paging_size,
         output_format: str = "JSON",
@@ -2243,8 +2220,6 @@ class RuntimeManager(ServerClient):
         filter_string : str, opt
             Filter specifies the kind of deployed implementation type of the platforms to return information for.
             If the value is None, we will default to the "OMAG Server Platform".
-        effective_time: str, optional
-            Timeframe to return information for. Time format is "YYYY-MM-DDTHH:MM:SS" (ISO 8601).
         start_from : int, optional
             The index from which to start fetching the engine actions. Default is 0.
         page_size : int, optional
@@ -2259,8 +2234,7 @@ class RuntimeManager(ServerClient):
 
         Returns
         -------
-        Response
-           A list of json dict with the server reports.
+           List of JSON dict with the server reports.
 
         Raises
         ------
@@ -2272,35 +2246,35 @@ class RuntimeManager(ServerClient):
         loop = asyncio.get_event_loop()
         response = loop.run_until_complete(
             self._async_get_servers_by_name(
-                filter_string, effective_time, start_from, page_size, output_format, report_spec, body
+                filter_string, start_from, page_size, output_format, report_spec, body
             )
         )
         return response
 
-    async def _async_get_servers_by_dep_impl_type(self, search_string: str = "*", effective_time: Optional[str] = None,
-                                                  start_from: int = 0, page_size: int = max_paging_size, body: Optional[dict | GetRequestBody] = None) -> str | list:
+    @dynamic_catch
+    async def _async_get_servers_by_dep_impl_type(self, filter_string: str,
+                                                  start_from: int = 0, page_size: int = 0, output_format:str="JSON",
+                                                  report_spec: str = "OMAGServers",
+                                                  body: Optional[dict | FilterRequestBody] = None) -> str | list:
         """Returns the list of servers with a particular deployed implementation type. The value is specified
             in the filter. If it is null, or no request body is supplied, all servers are returned.
             Async version.
 
         Parameters
         ----------
-        search_string : str, opt
+        filter_string : str, opt
             Filter specifies the kind of deployed implementation type of the platforms to return information for.
             If the value is None, we will default to the "OMAG Server Platform".
-        effective_time: str, optional
-            Timeframe to return information for. Time format is "YYYY-MM-DDTHH:MM:SS" (ISO 8601).
         start_from : int, optional
            The index from which to start fetching the engine actions. Default is 0.
         page_size : int, optional
            The maximum number of engine actions to fetch in a single request. Default is `max_paging_size`.
-        body : dict | GetRequestBody, optional
+        body : dict | FilterRequestBody, optional
             Request body to pass directly to the API.
 
         Returns
         -------
-        Response
-           A lit of json dict with the platform reports.
+           List of JSON dict with the platform reports.
 
         Raises
         ------
@@ -2310,20 +2284,25 @@ class RuntimeManager(ServerClient):
 
         """
 
-        if search_string == "*":
-            search_string = None
+        if filter_string == "*":
+            filter_string = None
 
         url = f"{self.runtime_command_root}/software-servers/by-deployed-implementation-type"
 
-        if body is None:
-            body = body_slimmer({"filter": search_string, "effective_time": effective_time})
-        else:
-            body = body_slimmer(body)
+        return await self._async_get_name_request(
+            url,
+            _type="OMAGServers",
+            _gen_output=self._generate_omag_server_output,
+            filter_string=filter_string,
+            start_from=start_from,
+            page_size=page_size,
+            output_format=output_format,
+            report_spec=report_spec,
+            body=body
+        )
 
-        response = await self._async_make_request("POST", url, body)
 
-        return response.json().get("elements", "No servers found")
-
+    @dynamic_catch
     def get_servers_by_dep_impl_type(self, search_string: str = "*", effective_time: Optional[str] = None, start_from: int = 0,
                                      page_size: int = max_paging_size, body: Optional[dict | GetRequestBody] = None) -> str | list:
         """Returns the list of servers with a particular deployed implementation type.
@@ -2472,7 +2451,6 @@ class RuntimeManager(ServerClient):
         server_name: str = None,
         output_format: str = "JSON",
         report_spec: str | dict = "OMAGServers",
-        body: Optional[dict | GetRequestBody] = None,
     ) -> str | list | dict:
         """Returns details about the running server. Async version.
 
@@ -2487,13 +2465,10 @@ class RuntimeManager(ServerClient):
         report_spec: str | dict, optional
             The report specification to use. Default is "OMAGServers".
 
-        body : dict | GetRequestBody, optional
-            Request body to pass directly to the API.
 
         Returns
         -------
-        Response
-           A list of json dict with the server reports.
+           List of JSON dict with the server reports.
 
         Raises
         ------
@@ -2507,14 +2482,18 @@ class RuntimeManager(ServerClient):
         )
         url = f"{self.runtime_command_root}/omag-servers/{server_guid}/instance/report"
 
-        return await self._async_get_guid_request(
-             url,
-             _type="OMAGServers",
-             _gen_output=self._generate_omag_server_output,
-             output_format=output_format,
-             report_spec=report_spec,
-             body=body
-        )
+        response = await self._async_make_request("GET",url)
+        elements = response.json().get("element", NO_ELEMENTS_FOUND)
+        if type(elements) is str:
+            elements = response.json().get("elementGraph", NO_ELEMENTS_FOUND)
+            if type(elements) is str:
+                logger.info(NO_ELEMENTS_FOUND)
+                return NO_ELEMENTS_FOUND
+
+        if output_format != 'JSON':  # return a simplified markdown representation
+            logger.info(f"Found elements, output format: {output_format} and report_spec: {report_spec}")
+            return self._generate_server_report_output(elements, "None", "Server-Report", output_format, report_spec)
+        return elements
 
     def get_server_report(
         self, 
@@ -2522,7 +2501,6 @@ class RuntimeManager(ServerClient):
         server_name: str = None,
         output_format: str = "JSON",
         report_spec: str | dict = "OMAGServers",
-        body: Optional[dict | GetRequestBody] = None,
     ) -> str | list | dict:
         """Returns details about the running server.
 
@@ -2537,13 +2515,9 @@ class RuntimeManager(ServerClient):
         report_spec: str | dict, optional
             The report specification to use. Default is "OMAGServers".
 
-        body : dict | GetRequestBody, optional
-            Request body to pass directly to the API.
-
         Returns
         -------
-        Response
-           A list of json dict with the server reports.
+           List of JSON dict with the server reports.
 
         Raises
         ------
@@ -2554,7 +2528,7 @@ class RuntimeManager(ServerClient):
         """
         loop = asyncio.get_event_loop()
         return loop.run_until_complete(
-            self._async_get_server_report(server_guid, server_name, output_format, report_spec, body)
+            self._async_get_server_report(server_guid, server_name, output_format, report_spec)
         )
 
     def _extract_platform_properties(self, element: dict, columns_struct: dict) -> dict:
@@ -2628,6 +2602,40 @@ class RuntimeManager(ServerClient):
             output_formats
         )
 
+    def _generate_platform_report_output(self, elements: dict | list[dict], filter_string: Optional[str],
+                                  element_type_name: Optional[str], output_format: str = "DICT",
+                                  report_spec: dict | str = None) -> str | list[dict]:
+        """ Generate output for Platform Report elements. """
+        if element_type_name is None:
+            entity_type = "SoftwareServerPlatform"
+        else:
+            entity_type = element_type_name
+
+        get_additional_props_func = None
+        output_formats = None
+
+        if report_spec:
+            if isinstance(report_spec, str):
+                output_formats = select_report_spec(report_spec, output_format)
+            elif isinstance(report_spec, dict):
+                output_formats = get_report_spec_match(report_spec, output_format)
+
+        if not output_formats:
+            output_formats = select_report_spec(entity_type, output_format)
+
+        if output_formats is None:
+            output_formats = select_report_spec("Default", output_format)
+
+        return generate_output(
+            elements,
+            filter_string,
+            entity_type,
+            output_format,
+            self._extract_platform_properties,
+            get_additional_props_func,
+            output_formats
+        )
+
     def _extract_omag_server_properties(self, element: dict, columns_struct: dict) -> dict:
         """
         Extract common properties from an OMAG Server element.
@@ -2681,6 +2689,40 @@ class RuntimeManager(ServerClient):
         if not output_formats:
              output_formats = select_report_spec(entity_type, output_format)
         
+        if output_formats is None:
+            output_formats = select_report_spec("Default", output_format)
+
+        return generate_output(
+            elements,
+            filter_string,
+            entity_type,
+            output_format,
+            self._extract_omag_server_properties,
+            get_additional_props_func,
+            output_formats
+        )
+
+    def _generate_server_report_output(self, elements: dict | list[dict], filter_string: Optional[str],
+                                     element_type_name: Optional[str], output_format: str = "DICT",
+                                     report_spec: dict | str = None) -> str | list[dict]:
+        """ Generate output for OMAGServer elements. """
+        if element_type_name is None:
+            entity_type = "OMAGServers"
+        else:
+            entity_type = element_type_name
+
+        get_additional_props_func = None
+        output_formats = None
+
+        if report_spec:
+            if isinstance(report_spec, str):
+                output_formats = select_report_spec(report_spec, output_format)
+            elif isinstance(report_spec, dict):
+                output_formats = get_report_spec_match(report_spec, output_format)
+
+        if not output_formats:
+            output_formats = select_report_spec(entity_type, output_format)
+
         if output_formats is None:
             output_formats = select_report_spec("Default", output_format)
 

@@ -734,7 +734,7 @@ class TestActorManager:
             # For scope element, we'll use a dummy GUID or another element if available.
             # In a real test we'd create a scope element (e.g. a Project or a Glossary)
             # For now, we'll just test the method call structure.
-            scope_element_guid = "550e8400-e29b-41d4-a716-446655440000"
+            scope_element_guid = "55a54f3c-5062-4d62-892c-dc414151f88e"
 
             # 1. Link
             body = NewRelationshipRequestBody(

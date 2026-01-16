@@ -4554,7 +4554,7 @@ class ServerClient(BaseServerClient):
         if body is None and keyword:
             body = {
                 "class": "FilterRequestBody",
-                "filter": filter_string,
+                "filter": keyword,
                 "startFrom": start_from,
                 "pageSize": page_size
             }
@@ -4609,7 +4609,7 @@ class ServerClient(BaseServerClient):
 
     async def _async_find_search_keywords(
             self,
-            search_string: str,
+            filter_string: str,
             start_from: int = 0,
             page_size: int = 0,
             output_format: str | None = "JSON",
@@ -4646,7 +4646,7 @@ class ServerClient(BaseServerClient):
         PyegeriaException
 
         """
-        if body is None and search_string:
+        if body is None and filter_string:
             body = {
                 "class": "SearchStringRequestBody",
                 "filter": filter_string,
