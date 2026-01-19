@@ -86,9 +86,9 @@ def display_status(
             sys.exit(1)
 
         for platform in platform_list:
-            platform_name = platform["properties"].get("displayName", "---")
-            platform_guid = platform["elementHeader"]["guid"]
-            platform_desc = platform["properties"].get("resourceDescription", "---")
+            platform_name = platform.get("display_name", platform.get("properties", {}).get("displayName", "---"))
+            platform_guid = platform.get("guid", platform.get("elementHeader", {}).get("guid"))
+            platform_desc = platform.get("description", platform.get("properties", {}).get("resourceDescription", "---"))
             p_server_list = ""
 
             platform_report = p_client.get_platform_report(platform_guid)

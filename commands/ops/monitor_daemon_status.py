@@ -139,25 +139,24 @@ def display_integration_daemon_status(
             last_refresh_time = connector.get("lastRefreshTime", "---")[:-10]
             refresh_interval = str(connector.get("minMinutesBetweenRefresh", "---"))
             exception_msg = connector.get("failingExceptionMessage", " ")
+            tgt_tab="---"
             if connector_guid != "---":
                 targets = s_client.get_catalog_targets(connector_guid)
                 tgt_tab = Table()
                 tgt_tab.add_column("Target")
-                tgt_tab.add_column("UniqueName")
-                tgt_tab.add_column("Relationship GUID", no_wrap=True)
+                tgt_tab.add_column("Display Name")
 
                 if type(targets) == list:
                     targets_md = True
                     for target in targets:
-                        t_name = target.get("catalogTargetName",None)
+                        t_name = target['relatedBy']['relationshipProperties'].get("catalogTargetName",None)
                         # t_sync = target["permittedSynchronization"]
                         if t_name:
-                            t_unique_name = target["catalogTargetElement"]["uniqueName"]
+                            t_unique_name = target["properties"].get("displayName","---")
                         else:
                             t_unique_name = "---"
-                        t_rel_guid = target.get("relationshipGUID","---")
-                        # targets_m += f"* Target Name: __{t_name}__\n* Sync: {t_sync}\n* Unique Name: {t_unique_name}\n\n"
-                        tgt_tab.add_row(t_name, t_unique_name, t_rel_guid)
+
+                        tgt_tab.add_row(t_name, t_unique_name)
                     # targets_md = Markdown(targets_m)
                 else:
                     targets_md = False

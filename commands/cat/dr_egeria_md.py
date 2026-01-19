@@ -40,7 +40,7 @@ EGERIA_OUTBOX_PATH = os.environ.get("EGERIA_OUTBOX_PATH", "md_processing/dr_eger
               prompt=False)
 @click.option("--output-folder", help="Output folder.", default="", required=False)
 @click.option("--directive", default="process", help="How to process the file",
-              type_name = click.Choice(["display", "validate", "process"], case_sensitive=False), prompt=False, )
+              type = click.Choice(["display", "validate", "process"], case_sensitive=False), prompt=False, )
 @click.option("--server", default=EGERIA_VIEW_SERVER, help="Egeria view server to use.")
 @click.option("--url", default=EGERIA_VIEW_SERVER_URL, help="URL of Egeria platform to connect to")
 @click.option("--userid", default=EGERIA_USER, help="Egeria user")

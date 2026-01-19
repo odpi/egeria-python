@@ -244,7 +244,7 @@ class ServerClient(BaseServerClient):
                 "effectiveTime": None,
             }
             url = (
-                f"{self.platform_url}/servers/{self.server_name}/api/open-metadata/classification-manager/"
+                f"{self.platform_url}/servers/{self.server_name}/api/open-metadata/classification-explorer/"
                 f"elements/guid-by-unique-name"
             )
 
@@ -263,8 +263,8 @@ class ServerClient(BaseServerClient):
                     "effectiveTime": None,
                 }
                 url = (
-                    f"{self.platform_url}/servers/{view_server}/api/open-metadata/classification-manager/"
-                    f"elements/guid-by-unique-name?forLineage=false&forDuplicateProcessing=false"
+                    f"{self.platform_url}/servers/{view_server}/api/open-metadata/classification-explorer/"
+                    f"elements/guid-by-unique-name"
                 )
 
                 result = await self._async_make_request("POST", url, body_slimmer(body))
@@ -663,7 +663,7 @@ class ServerClient(BaseServerClient):
 
         elements = await self._async_get_elements_by_property_value(name, property_name, type_name)
 
-        if type(elements) is list:
+        if isinstance(elements, list|dict):
             if len(elements) == 0:
                 return NO_ELEMENTS_FOUND
             elif len(elements) > 1:
@@ -676,7 +676,7 @@ class ServerClient(BaseServerClient):
 
     def get_guid_for_name(
             self, name: str, property_name: list[str] = ["qualifiedName", "displayName","resourceName","identifier"],
-            type_name: str = "ValidMetadataValue"
+            type_name: str = None
     ) -> list | str:
         """
         Retrieve the guid associated with the supplied element name.
@@ -4554,7 +4554,7 @@ class ServerClient(BaseServerClient):
         if body is None and keyword:
             body = {
                 "class": "FilterRequestBody",
-                "filter": filter_string,
+                "filter": keyword,
                 "startFrom": start_from,
                 "pageSize": page_size
             }
@@ -4609,7 +4609,7 @@ class ServerClient(BaseServerClient):
 
     async def _async_find_search_keywords(
             self,
-            search_string: str,
+            filter_string: str,
             start_from: int = 0,
             page_size: int = 0,
             output_format: str | None = "JSON",
@@ -4646,7 +4646,7 @@ class ServerClient(BaseServerClient):
         PyegeriaException
 
         """
-        if body is None and search_string:
+        if body is None and filter_string:
             body = {
                 "class": "SearchStringRequestBody",
                 "filter": filter_string,

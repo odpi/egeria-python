@@ -784,6 +784,66 @@ base_report_specs = FormatSetDict({
             spec_params={},
         )
     ),
+    "Platforms": FormatSet(
+        target_type="Platform",
+        heading="OMAG Server Platform",
+        description="Details of an OMAG Server Platform",
+        annotations={},
+        family="RuntimeManager",
+        formats=[
+            Format(
+                types=["ALL", "TABLE", "DICT"],
+                attributes=COMMON_COLUMNS + [
+                    Column(name="GUID", key='guid'),
+                    Column(name="Platform URL", key='platform_url_root'),
+                    Column(name="Platform Version", key='version'),
+                    Column(name="Platform Origin", key='platform_origin'),
+                    Column(name="Platform Start Time", key='platform_start_time'),
+                    Column(name="Build Properties", key="platform_build_properties"),
+                    Column(name="Servers", key="omag_servers"),
+                ],
+            )
+        ],
+    ),
+    "OMAGServers": FormatSet(
+        target_type="OMAGServer",
+        heading="OMAG Server",
+        description="Details of an OMAG Server",
+        annotations={},
+        family="RuntimeManager",
+        formats=[
+            Format(
+                types=["ALL", "TABLE", "DICT"],
+                attributes=COMMON_COLUMNS + [
+                    Column(name="GUID", key='guid'),
+                    Column(name="Server Name", key='server_name'),
+                    Column(name="Server Type", key='server_type'),
+                    Column(name="Server Status", key='server_active_status'),
+                    Column(name="Server Config", key='server_configuration'),
+                ],
+            )
+        ],
+    ),
+    "IntegrationConnectors": FormatSet(
+        target_type="IntegrationConnector",
+        heading="Integration Connector",
+        description="Details of an Integration Connector",
+        annotations={},
+        family="RuntimeManager",
+        formats=[
+            Format(
+                types=["ALL", "TABLE", "DICT"],
+                attributes=COMMON_COLUMNS + [
+                    Column(name="GUID", key='guid'),
+                    Column(name="Connector Name", key='connector_name'),
+                    Column(name="Connector Type", key='connector_type'),
+                    Column(name="Metadata Source", key='metadata_source_qualified_name'),
+                    Column(name="Status", key='status'),
+                    Column(name="Last Status Change", key='last_status_change'),
+                ],
+            )
+        ],
+    ),
 
     "Journal-Entry-DrE": FormatSet(
         target_type="Notification",
