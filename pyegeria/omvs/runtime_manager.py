@@ -71,7 +71,7 @@ class RuntimeManager(ServerClient):
     #   Integration Connector Methods
     #
     @dynamic_catch
-    async def _async_get_integ_connector_config_properties(
+    async def _async_get_integration_connector_config_properties(
         self,
         connector_name: str,
         server_guid: Optional[str] = None,
@@ -118,7 +118,7 @@ class RuntimeManager(ServerClient):
         server_guid = self.__get_guid__(
             server_guid,
             display_name,
-            "qualifiedName",
+            "displayName",
             qualified_name,
             "Integration Daemon",
         )
@@ -126,7 +126,7 @@ class RuntimeManager(ServerClient):
             f"{self.runtime_command_root}/integration-daemon/"
             f"{server_guid}/integration-connectors/{connector_name}/configuration-properties"
         )
-        response = await self._async_make_request("GET", url, body=body)
+        response = await self._async_make_request("GET", url)
         props = response.json().get("properties", {})
         
         if output_format == "DICT":
@@ -161,7 +161,7 @@ class RuntimeManager(ServerClient):
             columns_struct=columns_struct
         )
 
-    def get_integ_connector_config_properties(
+    def get_integration_connector_config_properties(
         self,
         connector_name: str,
         server_guid: Optional[str] = None,
@@ -206,7 +206,7 @@ class RuntimeManager(ServerClient):
         """
         loop = asyncio.get_event_loop()
         response = loop.run_until_complete(
-            self._async_get_integ_connector_config_properties(
+            self._async_get_integration_connector_config_properties(
                 connector_name, server_guid, display_name, qualified_name, output_format, report_spec, body
             )
         )
@@ -1616,7 +1616,7 @@ class RuntimeManager(ServerClient):
         Returns
         -------
         Response
-           A list of json dict with the platform reports.
+           A list of JSONdict with the platform reports.
         """
         loop = asyncio.get_event_loop()
         response = loop.run_until_complete(
@@ -1660,7 +1660,7 @@ class RuntimeManager(ServerClient):
         Returns
         -------
         Response
-           A list of json dict with the platform reports.
+           A list of JSONdict with the platform reports.
 
         Raises
         ------
@@ -1723,7 +1723,7 @@ class RuntimeManager(ServerClient):
         Returns
         -------
         Response
-           A list of json dict with the platform reports.
+           A list of JSONdict with the platform reports.
 
         Raises
         ------
@@ -1783,8 +1783,7 @@ class RuntimeManager(ServerClient):
 
         Returns
         -------
-        Response
-           A list of json dict with the platform reports.
+           A list of JSON dict with the platform reports.
 
         Raises
         ------
@@ -1806,7 +1805,8 @@ class RuntimeManager(ServerClient):
         effective_time: Optional[str] = None,
         start_from: int = 0,
         page_size: int = max_paging_size,
-        body: Optional[dict | TemplateRequestBody] = None,
+        output_format: str = "JSON", report_spec: str | dict = "Platforms",
+        body: Optional[dict | FilterRequestBody] = None,
     ) -> str | list:
         """Returns the list of platform templates for a particular deployed implementation type.  The value is
             specified in the filter. If it is null, or no request body is supplied, all platforms are returned.
@@ -1823,14 +1823,16 @@ class RuntimeManager(ServerClient):
                The index from which to start fetching the engine actions. Default is 0.
         page_size : int, optional
            The maximum number of engine actions to fetch in a single request. Default is `max_paging_size`.
-
-        body : dict | TemplateRequestBody, optional
+        output_format: str, optional
+            The format of the output. Default is "JSON".
+        report_spec: str | dict, optional
+            The specification of the report to generate. Default is "Platforms".
+        body : dict | FilterRequestBody, optional
             Request body to pass directly to the API.
 
         Returns
         -------
-        Response
-           A lit of json dict with the platform reports.
+        List of JSON dict with the platform reports.
 
         Raises
         ------
@@ -1844,18 +1846,22 @@ class RuntimeManager(ServerClient):
             filter_string = "OMAG Server Platform"
 
         url = (
-            f"{self.runtime_command_root}/platforms/"
-            f"by-deployed-implementation-type?startFrom={start_from}&pageSize={page_size}&getTemplates=true"
+            f"{self.runtime_command_root}/platforms/by-deployed-implementation-type"
         )
 
-        if body is None:
-            if effective_time is not None:
-                body = {"filter": filter_string, "effectiveTime": effective_time}
-            else:
-                body = {"filter": filter_string}
 
-        response = await self._async_make_request("POST", url, body)
-        return response.json().get("elements", "No platforms found")
+        return await self._async_get_name_request(
+            url,
+            _type="Platforms",
+            _gen_output=self._generate_platform_output,
+            filter_string=filter_string,
+            classification_names=["Template"],
+            start_from=start_from,
+            page_size=page_size,
+            output_format=output_format,
+            report_spec=report_spec,
+            body=body
+        )
 
     def get_platform_templates_by_type(
         self,
@@ -1863,7 +1869,8 @@ class RuntimeManager(ServerClient):
         effective_time: Optional[str] = None,
         start_from: int = 0,
         page_size: int = max_paging_size,
-        body: Optional[dict | TemplateRequestBody] = None,
+        output_format: str = "JSON", report_spec: str | dict = "Platforms",
+        body: Optional[dict | FilterRequestBody] = None,
     ) -> str | list:
         """Returns the list of platform templates with a particular deployed implementation type.  The value is
             specified in the filter. If it is null, or no request body is supplied, all platforms are returned.
@@ -1879,14 +1886,16 @@ class RuntimeManager(ServerClient):
            The index from which to start fetching the engine actions. Default is 0.
         page_size : int, optional
            The maximum number of engine actions to fetch in a single request. Default is `max_paging_size`.
-
-        body : dict | TemplateRequestBody, optional
+        output_format: str, optional
+            The format of the output. Default is "JSON".
+        report_spec: str | dict, optional
+            The specification of the report to generate. Default is "Platforms".
+        body : dict | FilterRequestBody, optional
             Request body to pass directly to the API.
 
         Returns
         -------
-        Response
-           A lit of json dict with the platform reports.
+        List of JSON dict with the platform reports.
 
         Raises
         ------
@@ -1897,9 +1906,7 @@ class RuntimeManager(ServerClient):
         """
         loop = asyncio.get_event_loop()
         response = loop.run_until_complete(
-            self._async_get_platform_templates_by_type(
-                filter_string, effective_time, start_from, page_size, body
-            )
+            self._async_get_platform_templates_by_type(filter_string, effective_time, start_from, page_size, body=body)
         )
         return response
 
@@ -1927,7 +1934,7 @@ class RuntimeManager(ServerClient):
         Returns
         -------
         Response
-           A json dict with the platform report.
+           A JSONdict with the platform report.
 
         Raises
         ------
@@ -1975,7 +1982,7 @@ class RuntimeManager(ServerClient):
         Returns
         -------
         Response
-           A json dict with the platform report.
+           A JSONdict with the platform report.
 
         Raises
         ------
@@ -2011,7 +2018,7 @@ class RuntimeManager(ServerClient):
         Returns
         -------
         Response
-           A list of json dict with the platform reports.
+           A list of JSONdict with the platform reports.
 
         """
 
@@ -2208,7 +2215,7 @@ class RuntimeManager(ServerClient):
         self, 
         filter_string: str,
         start_from: int = 0,
-        page_size: int = max_paging_size,
+        page_size: int = 0,
         output_format: str = "JSON",
         report_spec: str | dict = "OMAGServers",
         body: Optional[dict | SearchStringRequestBody] = None,
@@ -2304,7 +2311,8 @@ class RuntimeManager(ServerClient):
 
     @dynamic_catch
     def get_servers_by_dep_impl_type(self, search_string: str = "*", effective_time: Optional[str] = None, start_from: int = 0,
-                                     page_size: int = max_paging_size, body: Optional[dict | GetRequestBody] = None) -> str | list:
+                                     page_size: int = 0, output_format: str = "JSON", report_spec: str | dict = "OMAGServers",
+                                     body: Optional[dict | FilterRequestBody] = None) -> str | list:
         """Returns the list of servers with a particular deployed implementation type.
             The value is specified in the filter. If it is null, or no request body is supplied,
             all servers are returned.
@@ -2326,7 +2334,7 @@ class RuntimeManager(ServerClient):
         Returns
         -------
         Response
-           A lit of json dict with the platform reports.
+           A lit of JSONdict with the platform reports.
 
         Raises
         ------
@@ -2334,20 +2342,25 @@ class RuntimeManager(ServerClient):
         PyegeriaAPIException
         PyegeriaUnauthorizedException
 
+        Args:
+            output_format ():
+            report_spec ():
+
         """
         loop = asyncio.get_event_loop()
         response = loop.run_until_complete(
-            self._async_get_servers_by_dep_impl_type(search_string, effective_time, start_from, page_size, body)
+            self._async_get_servers_by_dep_impl_type(search_string, start_from,page_size,
+                                                     output_format, report_spec, body)
         )
         return response
 
     async def _async_get_server_templates_by_dep_impl_type(
         self,
-        filter_string : str = "*",
-        effective_time: Optional[str] = None,
+        filter_string : str,
         start_from: int = 0,
-        page_size: int = max_paging_size,
-        body: Optional[dict | TemplateRequestBody] = None,
+        page_size: int = 0,
+        output_format: str = "JSON", report_spec: dict = "OMAGServers",
+        body: Optional[dict | FilterRequestBody] = None,
     ) -> str | list:
         """Returns the list of server templates with a particular deployed implementation type.   The value is
             specified in the filter. If it is null, or no request body is supplied, all servers are returned.
@@ -2355,7 +2368,7 @@ class RuntimeManager(ServerClient):
 
         Parameters
         ----------
-        filter_string : str, opt
+        filter_string : str, optional
             Filter specifies the kind of deployed implementation type of the platforms to return information for.
             If the value is None, we will default to the "OMAG Server Platform".
         effective_time: str, optional
@@ -2364,13 +2377,16 @@ class RuntimeManager(ServerClient):
            The index from which to start fetching the engine actions. Default is 0.
         page_size : int, optional
            The maximum number of engine actions to fetch in a single request. Default is `max_paging_size`.
-        body : dict | TemplateRequestBody, optional
+        output_format: str, optional
+            The format of the output. Default is "JSON".
+        report_spec: dict, optional
+            The specification of the report to generate. Default is "OMAGServers".
+        body : dict | FilterRequestBody, optional
             Request body to pass directly to the API.
 
         Returns
         -------
-        Response
-           A lit of json dict with the platform reports.
+        List of JSONdict with the platform reports.
 
         Raises
         ------
@@ -2380,30 +2396,32 @@ class RuntimeManager(ServerClient):
 
         """
 
-        if filter_string == "*":
-            filter_string = None
-
         url = (
             f"{self.runtime_command_root}/software-servers/"
             f"by-deployed-implementation-type?startFrom={start_from}&pageSize={page_size}&getTemplates=true"
         )
 
-        if body is None:
-            body = body_slimmer({"filter": filter_string, "effective_time": effective_time})
-        else:
-            body = body_slimmer(body)
+        return await self._async_get_name_request(
+            url,
+            _type="OMAGServers",
+            _gen_output=self._generate_omag_server_output,
+            classification_names = ["Template"],
+            filter_string=filter_string,
+            start_from=start_from,
+            page_size=page_size,
+            output_format=output_format,
+            report_spec=report_spec,
+            body=body
+        )
 
-        response = await self._async_make_request("POST", url, body)
-
-        return response.json().get("elements", "No platforms found")
 
     def get_server_templates_by_dep_impl_type(
         self,
-        filter_string : str = "*",
-        effective_time: Optional[str] = None,
+        filter_string : str,
         start_from: int = 0,
         page_size: int = max_paging_size,
-        body: Optional[dict | TemplateRequestBody] = None,
+        output_format: str = "JSON", report_spec: dict = "OMAGServers",
+        body: Optional[dict | FilterRequestBody] = None,
     ) -> str | list:
         """Returns the list of server templates with a particular deployed implementation type.
             The value is specified in the filter. If it is null, or no request body is supplied,
@@ -2414,20 +2432,20 @@ class RuntimeManager(ServerClient):
         filter_string : str, opt
             Filter specifies the kind of deployed implementation type of the platforms to return information for.
             If the value is None, we will default to the "OMAG Server Platform".
-        effective_time: str, optional
-            Timeframe to return information for. Time format is "YYYY-MM-DDTHH:MM:SS" (ISO 8601).
         start_from : int, optional
            The index from which to start fetching the engine actions. Default is 0.
         page_size : int, optional
            The maximum number of engine actions to fetch in a single request. Default is `max_paging_size`.
-
-        body : dict | TemplateRequestBody, optional
+        output_format: str, optional
+            The format of the output. Default is "JSON".
+        report_spec: dict, optional
+            The specification of the report to generate. Default is "OMAGServers".
+        body : dict | FilterRequestBody, optional
             Request body to pass directly to the API.
 
         Returns
         -------
-        Response
-           A lit of json dict with the platform reports.
+        List of JSON dict with the platform reports.
 
         Raises
         ------
@@ -2439,7 +2457,7 @@ class RuntimeManager(ServerClient):
         loop = asyncio.get_event_loop()
         response = loop.run_until_complete(
             self._async_get_server_templates_by_dep_impl_type(
-                filter_string, effective_time, start_from, page_size, body
+                filter_string, start_from, page_size, output_format,report_spec,body
             )
         )
         return response

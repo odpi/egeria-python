@@ -58,22 +58,22 @@ class TestRuntimeManager:
     @pytest.mark.parametrize(
         "display_name, qualified_name, parameter_name, guid, tech_type, expectation",
         [
-            # (
-            #     "integration-daemon",
-            #     None,
-            #     "qualifiedName",
-            #     None,
-            #     "Integration Daemon",
-            #     does_not_raise(),
-            # ),
-            # (
-            #     "integration-daemon",
-            #     "integration-daemon",
-            #     "qualifiedName",
-            #     None,
-            #     "Integration Daemon",
-            #     does_not_raise(),
-            # ),
+            (
+                "integration-daemon",
+                None,
+                "displayName",
+                None,
+                "Integration Daemon",
+                does_not_raise(),
+            ),
+            (
+                "integration-daemon",
+                "Integration Daemon:qs-integration-daemon",
+                "qualifiedName",
+                None,
+                "Integration Daemon",
+                does_not_raise(),
+            ),
             (
                 None,
                 "Integration Daemon:qs-integration-daemon",
@@ -122,7 +122,7 @@ class TestRuntimeManager:
             )
             token = r_client.create_egeria_bearer_token()
             print(
-                f"\ndisplay_name: {display_name} qualified_name: {qualified_name} parameter_name: {parameter_name}"
+                f"\n\ndisplay_name: {display_name} qualified_name: {qualified_name} parameter_name: {parameter_name}"
                 f" incoming guid: {guid} tech_type: {tech_type}\n"
             )
             start_time = time.perf_counter()
@@ -133,17 +133,25 @@ class TestRuntimeManager:
                 tech_type=tech_type,
                 qualified_name=qualified_name,
             )
-
+            response2 = r_client.get_guid_for_name(name=display_name,property_name=["qualifiedName", "displayName", "resourceName","identifier"])
             duration = time.perf_counter() - start_time
-
+            print("\n__get_guid__")
             if type(response) is dict:
-                print(f"Config Properties:\n{json.dumps(response, indent=4)}")
+                print(f"\nConfig Properties:\n{json.dumps(response, indent=4)}\n")
             elif type(response) is str:
                 print(f"String response was {response} duration was {duration} seconds")
             assert True
+            print("\nget_guid_for_name")
+            if type(response2) is dict:
+                print(f"Config Properties:\n{json.dumps(response2, indent=4)}")
+            elif type(response2) is str:
+                print(f"String response was {response2} duration was {duration} seconds")
+            assert True
+
 
         if excinfo:
             console.print(excinfo.value)
+            print_basic_exception(excinfo)
             assert False, "Invalid request"
 
     def test_refresh_gov_eng_config(self):
@@ -362,7 +370,7 @@ class TestRuntimeManager:
             filter_string = "qs-view-server"
             # filter = "simple-metadata-store"
 
-            response = r_client.get_servers_by_name(filter_string, output_format="DICT",report_spec="OMAGServers")
+            response = r_client.get_servers_by_name(filter_string, output_format="JSON",report_spec="OMAGServers")
             if type(response) is list:
                 print(f"Servers:\n{json.dumps(response, indent=4)}")
             else:
@@ -459,7 +467,7 @@ class TestRuntimeManager:
     def test_get_servers_by_dep_imp_type(self):
         try:
             r_client = EgeriaTech(
-                self.good_view_server_1,
+                self.good_view_server_2,
                 self.good_platform1_url,
                 user_id=self.good_user_1,
                 user_pwd="secret",
@@ -467,8 +475,8 @@ class TestRuntimeManager:
             token = r_client.create_egeria_bearer_token()
 
             start_time = time.perf_counter()
-            filter_string = "*"
-            response = r_client.get_servers_by_dep_impl_type(filter)
+            filter_string = "View Server"
+            response = r_client.get_servers_by_dep_impl_type(filter_string)
             duration = time.perf_counter() - start_time
             print(f"Type of response: {type(response)}")
             print(f"\n\tDuration was {duration} seconds")
@@ -483,7 +491,7 @@ class TestRuntimeManager:
             PyegeriaAPIException,
             PyegeriaUnauthorizedException,
         ) as e:
-            print_exception_response(e)
+            print_basic_exception(e)
             assert False, "Invalid request"
 
         finally:
@@ -492,7 +500,7 @@ class TestRuntimeManager:
     def test_get_server_templates_by_dep_imp_type(self):
         try:
             r_client = EgeriaTech(
-                self.good_view_server_1,
+                self.good_view_server_2,
                 self.good_platform1_url,
                 user_id=self.good_user_1,
                 user_pwd="secret",
@@ -500,8 +508,8 @@ class TestRuntimeManager:
             token = r_client.create_egeria_bearer_token()
 
             start_time = time.perf_counter()
-            filter_string = "*"
-            response = r_client.get_server_templates_by_dep_impl_type(filter)
+            filter_string = "View Server"
+            response = r_client.get_server_templates_by_dep_impl_type(filter_string)
             duration = time.perf_counter() - start_time
             print(f"Type of response: {type(response)}")
             print(f"\n\tDuration was {duration} seconds")
@@ -516,7 +524,7 @@ class TestRuntimeManager:
             PyegeriaAPIException,
             PyegeriaUnauthorizedException,
         ) as e:
-            print_exception_response(e)
+            print_basic_exception(e)
             assert False, "Invalid request"
 
         finally:
@@ -525,7 +533,7 @@ class TestRuntimeManager:
     def test_get_integ_connector_config_properties(self):
         try:
             r_client = RuntimeManager(
-                self.good_view_server_1,
+                self.good_view_server_2,
                 self.good_platform1_url,
                 user_id=self.good_user_1,
                 user_pwd="secret",
@@ -536,7 +544,7 @@ class TestRuntimeManager:
             connector_name = "UnityCatalogServerSynchronizer"
             server_guid = None
             server_name = "integration-daemon"
-            response = r_client.get_integ_connector_config_properties(
+            response = r_client.get_integration_connector_config_properties(
                 connector_name, display_name=server_name
             )
 
@@ -554,7 +562,7 @@ class TestRuntimeManager:
             PyegeriaAPIException,
             PyegeriaUnauthorizedException,
         ) as e:
-            print_exception_response(e)
+            print_basic_exception(e)
             assert False, "Invalid request"
 
         finally:
@@ -764,6 +772,70 @@ class TestRuntimeManager:
 
             duration = time.perf_counter() - start_time
 
+            print(f"\n\tDuration was {duration} seconds")
+
+            assert True
+
+        except (
+            PyegeriaInvalidParameterException,
+            PyegeriaAPIException,
+            PyegeriaUnauthorizedException,
+        ) as e:
+            print_exception_response(e)
+            assert False, "Invalid request"
+
+        finally:
+            r_client.close_session()
+
+    def test_get_active_engine_actionse(self):
+        try:
+            r_client = EgeriaTech(
+                self.good_view_server_2,
+                self.good_platform1_url,
+                user_id=self.good_user_1,
+                user_pwd="secret",
+            )
+            token = r_client.create_egeria_bearer_token()
+
+
+            start_time = time.perf_counter()
+            response = r_client.get_active_engine_actions()
+
+            duration = time.perf_counter() - start_time
+
+            print(f"\n\tDuration was {duration} seconds")
+            if isinstance(response, (dict, list)):
+                print(f"Engine Actionst:\n{json.dumps(response, indent=4)}")
+
+            assert True
+
+        except (
+            PyegeriaInvalidParameterException,
+            PyegeriaAPIException,
+            PyegeriaUnauthorizedException,
+        ) as e:
+            print_exception_response(e)
+            assert False, "Invalid request"
+
+        finally:
+            r_client.close_session()
+
+    def test_find_engine_actions(self):
+        try:
+            r_client = EgeriaTech(
+                self.good_view_server_2,
+                self.good_platform1_url,
+                user_id=self.good_user_1,
+                user_pwd="secret",
+            )
+            token = r_client.create_egeria_bearer_token()
+
+            start_time = time.perf_counter()
+            response = r_client.find_engine_actions()
+
+            duration = time.perf_counter() - start_time
+            if isinstance(response, (dict, list)):
+                print(f"Engine Actions:\n{json.dumps(response, indent=4)}")
             print(f"\n\tDuration was {duration} seconds")
 
             assert True
