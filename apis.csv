@@ -1,0 +1,1147 @@
+operationId,tags,url
+addTypeDefGallery,Repository Services - Local Repository,/servers/{serverName}/open-metadata/repository-services/users/{userId}/types
+findTypeDefsByCategory,Repository Services - Local Repository,/servers/{serverName}/open-metadata/repository-services/users/{userId}/types/typedefs/by-category
+addTypeDef,Repository Services - Local Repository,/servers/{serverName}/open-metadata/repository-services/users/{userId}/types/typedef
+reIdentifyTypeDef,Repository Services - Local Repository,/servers/{serverName}/open-metadata/repository-services/users/{userId}/types/typedef/{originalTypeDefGUID}/identifier
+deleteTypeDef,Repository Services - Local Repository,/servers/{serverName}/open-metadata/repository-services/users/{userId}/types/typedef/{guid}/delete
+updateTypeDef,Repository Services - Local Repository,/servers/{serverName}/open-metadata/repository-services/users/{userId}/types/typedef/update
+verifyTypeDef,Repository Services - Local Repository,/servers/{serverName}/open-metadata/repository-services/users/{userId}/types/typedef/compatibility
+findAttributeTypeDefsByCategory,Repository Services - Local Repository,/servers/{serverName}/open-metadata/repository-services/users/{userId}/types/attribute-typedefs/by-category
+addAttributeTypeDef,Repository Services - Local Repository,/servers/{serverName}/open-metadata/repository-services/users/{userId}/types/attribute-typedef
+reIdentifyAttributeTypeDef,Repository Services - Local Repository,/servers/{serverName}/open-metadata/repository-services/users/{userId}/types/attribute-typedef/{originalAttributeTypeDefGUID}/identifier
+deleteAttributeTypeDef,Repository Services - Local Repository,/servers/{serverName}/open-metadata/repository-services/users/{userId}/types/attribute-typedef/{guid}/delete
+verifyAttributeTypeDef,Repository Services - Local Repository,/servers/{serverName}/open-metadata/repository-services/users/{userId}/types/attribute-typedef/compatibility
+saveInstanceReferenceCopies,Repository Services - Local Repository,/servers/{serverName}/open-metadata/repository-services/users/{userId}/instances
+findRelationships,Repository Services - Local Repository,/servers/{serverName}/open-metadata/repository-services/users/{userId}/instances/relationships
+saveRelationshipReferenceCopy,Repository Services - Local Repository,/servers/{serverName}/open-metadata/repository-services/users/{userId}/instances/relationships/reference-copy
+refreshRelationshipReferenceCopy,Repository Services - Local Repository,/servers/{serverName}/open-metadata/repository-services/users/{userId}/instances/relationships/reference-copy/{relationshipGUID}/refresh
+purgeRelationshipReferenceCopy,Repository Services - Local Repository,/servers/{serverName}/open-metadata/repository-services/users/{userId}/instances/relationships/reference-copy/{relationshipGUID}/purge
+purgeRelationshipReferenceCopy_1,Repository Services - Local Repository,/servers/{serverName}/open-metadata/repository-services/users/{userId}/instances/relationships/reference-copy/purge
+deleteRelationshipReferenceCopy,Repository Services - Local Repository,/servers/{serverName}/open-metadata/repository-services/users/{userId}/instances/relationships/reference-copy/delete
+findRelationshipsByHistory,Repository Services - Local Repository,/servers/{serverName}/open-metadata/repository-services/users/{userId}/instances/relationships/history
+findRelationshipsByProperty,Repository Services - Local Repository,/servers/{serverName}/open-metadata/repository-services/users/{userId}/instances/relationships/by-property
+findRelationshipsByPropertyHistory,Repository Services - Local Repository,/servers/{serverName}/open-metadata/repository-services/users/{userId}/instances/relationships/by-property/history
+findRelationshipsByPropertyValue,Repository Services - Local Repository,/servers/{serverName}/open-metadata/repository-services/users/{userId}/instances/relationships/by-property-value
+findRelationshipsByPropertyValueHistory,Repository Services - Local Repository,/servers/{serverName}/open-metadata/repository-services/users/{userId}/instances/relationships/by-property-value/history
+addRelationship,Repository Services - Local Repository,/servers/{serverName}/open-metadata/repository-services/users/{userId}/instances/relationship
+reTypeRelationship,Repository Services - Local Repository,/servers/{serverName}/open-metadata/repository-services/users/{userId}/instances/relationship/{relationshipGUID}/type
+updateRelationshipProperties,Repository Services - Local Repository,/servers/{serverName}/open-metadata/repository-services/users/{userId}/instances/relationship/{relationshipGUID}/properties
+reIdentifyRelationship,Repository Services - Local Repository,/servers/{serverName}/open-metadata/repository-services/users/{userId}/instances/relationship/{relationshipGUID}/identity
+reHomeRelationship,Repository Services - Local Repository,/servers/{serverName}/open-metadata/repository-services/users/{userId}/instances/relationship/{relationshipGUID}/home/{homeMetadataCollectionId}
+deleteRelationship,Repository Services - Local Repository,/servers/{serverName}/open-metadata/repository-services/users/{userId}/instances/relationship/{obsoleteRelationshipGUID}/delete
+getRelationship,Repository Services - Local Repository,/servers/{serverName}/open-metadata/repository-services/users/{userId}/instances/relationship/{guid}/history
+getRelationshipHistory,Repository Services - Local Repository,/servers/{serverName}/open-metadata/repository-services/users/{userId}/instances/relationship/{guid}/history/all
+purgeRelationship,Repository Services - Local Repository,/servers/{serverName}/open-metadata/repository-services/users/{userId}/instances/relationship/{deletedRelationshipGUID}/purge
+addExternalRelationship,Repository Services - Local Repository,/servers/{serverName}/open-metadata/repository-services/users/{userId}/instances/relationship/external
+addEntity,Repository Services - Local Repository,/servers/{serverName}/open-metadata/repository-services/users/{userId}/instances/entity
+deleteEntity,Repository Services - Local Repository,/servers/{serverName}/open-metadata/repository-services/users/{userId}/instances/entity/{obsoleteEntityGUID}/delete
+getEntityDetail,Repository Services - Local Repository,/servers/{serverName}/open-metadata/repository-services/users/{userId}/instances/entity/{guid}/history
+getEntityDetailHistory,Repository Services - Local Repository,/servers/{serverName}/open-metadata/repository-services/users/{userId}/instances/entity/{guid}/history/all
+getClassificationHistory,Repository Services - Local Repository,/servers/{serverName}/open-metadata/repository-services/users/{userId}/instances/entity/{guid}/classification/{classificationName}/history/all
+reTypeEntity,Repository Services - Local Repository,/servers/{serverName}/open-metadata/repository-services/users/{userId}/instances/entity/{entityGUID}/type
+getRelationshipsForEntity,Repository Services - Local Repository,/servers/{serverName}/open-metadata/repository-services/users/{userId}/instances/entity/{entityGUID}/relationships
+getRelationshipsForEntityHistory,Repository Services - Local Repository,/servers/{serverName}/open-metadata/repository-services/users/{userId}/instances/entity/{entityGUID}/relationships/history
+updateEntityProperties,Repository Services - Local Repository,/servers/{serverName}/open-metadata/repository-services/users/{userId}/instances/entity/{entityGUID}/properties
+reIdentifyEntity,Repository Services - Local Repository,/servers/{serverName}/open-metadata/repository-services/users/{userId}/instances/entity/{entityGUID}/identity
+reHomeEntity,Repository Services - Local Repository,/servers/{serverName}/open-metadata/repository-services/users/{userId}/instances/entity/{entityGUID}/home/{homeMetadataCollectionId}
+getHomeClassifications,Repository Services - Local Repository,/servers/{serverName}/open-metadata/repository-services/users/{userId}/instances/entity/{entityGUID}/home-classifications/history
+classifyEntity,Repository Services - Local Repository,/servers/{serverName}/open-metadata/repository-services/users/{userId}/instances/entity/{entityGUID}/classification/{classificationName}
+updateEntityClassification,Repository Services - Local Repository,/servers/{serverName}/open-metadata/repository-services/users/{userId}/instances/entity/{entityGUID}/classification/{classificationName}/properties
+classifyEntity_1,Repository Services - Local Repository,/servers/{serverName}/open-metadata/repository-services/users/{userId}/instances/entity/{entityGUID}/classification/{classificationName}/detailed
+declassifyEntity,Repository Services - Local Repository,/servers/{serverName}/open-metadata/repository-services/users/{userId}/instances/entity/{entityGUID}/classification/{classificationName}/delete
+purgeEntity,Repository Services - Local Repository,/servers/{serverName}/open-metadata/repository-services/users/{userId}/instances/entity/{deletedEntityGUID}/purge
+addExternalEntity,Repository Services - Local Repository,/servers/{serverName}/open-metadata/repository-services/users/{userId}/instances/entity/external
+classifyEntity_2,Repository Services - Local Repository,/servers/{serverName}/open-metadata/repository-services/users/{userId}/instances/entity/classification/{classificationName}
+updateEntityClassification_1,Repository Services - Local Repository,/servers/{serverName}/open-metadata/repository-services/users/{userId}/instances/entity/classification/{classificationName}/properties
+classifyEntity_3,Repository Services - Local Repository,/servers/{serverName}/open-metadata/repository-services/users/{userId}/instances/entity/classification/{classificationName}/detailed
+declassifyEntity_1,Repository Services - Local Repository,/servers/{serverName}/open-metadata/repository-services/users/{userId}/instances/entity/classification/{classificationName}/delete
+addEntityProxy,Repository Services - Local Repository,/servers/{serverName}/open-metadata/repository-services/users/{userId}/instances/entity-proxy
+findEntities,Repository Services - Local Repository,/servers/{serverName}/open-metadata/repository-services/users/{userId}/instances/entities
+saveEntityReferenceCopy,Repository Services - Local Repository,/servers/{serverName}/open-metadata/repository-services/users/{userId}/instances/entities/reference-copy
+refreshEntityReferenceCopy,Repository Services - Local Repository,/servers/{serverName}/open-metadata/repository-services/users/{userId}/instances/entities/reference-copy/{entityGUID}/refresh
+purgeEntityReferenceCopy,Repository Services - Local Repository,/servers/{serverName}/open-metadata/repository-services/users/{userId}/instances/entities/reference-copy/{entityGUID}/purge
+purgeEntityReferenceCopy_1,Repository Services - Local Repository,/servers/{serverName}/open-metadata/repository-services/users/{userId}/instances/entities/reference-copy/purge
+deleteEntityReferenceCopy,Repository Services - Local Repository,/servers/{serverName}/open-metadata/repository-services/users/{userId}/instances/entities/reference-copy/delete
+findEntitiesByHistory,Repository Services - Local Repository,/servers/{serverName}/open-metadata/repository-services/users/{userId}/instances/entities/history
+saveClassificationReferenceCopy,Repository Services - Local Repository,/servers/{serverName}/open-metadata/repository-services/users/{userId}/instances/entities/classifications/reference-copy
+purgeClassificationReferenceCopy,Repository Services - Local Repository,/servers/{serverName}/open-metadata/repository-services/users/{userId}/instances/entities/classifications/reference-copy/purge
+findEntitiesByProperty,Repository Services - Local Repository,/servers/{serverName}/open-metadata/repository-services/users/{userId}/instances/entities/by-property
+findEntitiesByPropertyHistory,Repository Services - Local Repository,/servers/{serverName}/open-metadata/repository-services/users/{userId}/instances/entities/by-property/history
+findEntitiesByPropertyValue,Repository Services - Local Repository,/servers/{serverName}/open-metadata/repository-services/users/{userId}/instances/entities/by-property-value
+findEntitiesByPropertyValueHistory,Repository Services - Local Repository,/servers/{serverName}/open-metadata/repository-services/users/{userId}/instances/entities/by-property-value/history
+findEntitiesByClassification,Repository Services - Local Repository,/servers/{serverName}/open-metadata/repository-services/users/{userId}/instances/entities/by-classification/{classificationName}
+findEntitiesByClassificationHistory,Repository Services - Local Repository,/servers/{serverName}/open-metadata/repository-services/users/{userId}/instances/entities/by-classification/{classificationName}/history
+findTypeDefsByCategory_1,Repository Services - Enterprise,/servers/{serverName}/open-metadata/repository-services/users/{userId}/enterprise/types/typedefs/by-category
+verifyTypeDef_1,Repository Services - Enterprise,/servers/{serverName}/open-metadata/repository-services/users/{userId}/enterprise/types/typedef/compatibility
+findAttributeTypeDefsByCategory_1,Repository Services - Enterprise,/servers/{serverName}/open-metadata/repository-services/users/{userId}/enterprise/types/attribute-typedefs/by-category
+verifyAttributeTypeDef_1,Repository Services - Enterprise,/servers/{serverName}/open-metadata/repository-services/users/{userId}/enterprise/types/attribute-typedef/compatibility
+findRelationships_1,Repository Services - Enterprise,/servers/{serverName}/open-metadata/repository-services/users/{userId}/enterprise/instances/relationships
+findRelationshipsByHistory_1,Repository Services - Enterprise,/servers/{serverName}/open-metadata/repository-services/users/{userId}/enterprise/instances/relationships/history
+findRelationshipsByProperty_1,Repository Services - Enterprise,/servers/{serverName}/open-metadata/repository-services/users/{userId}/enterprise/instances/relationships/by-property
+findRelationshipsByPropertyHistory_1,Repository Services - Enterprise,/servers/{serverName}/open-metadata/repository-services/users/{userId}/enterprise/instances/relationships/by-property/history
+findRelationshipsByPropertyValue_1,Repository Services - Enterprise,/servers/{serverName}/open-metadata/repository-services/users/{userId}/enterprise/instances/relationships/by-property-value
+findRelationshipsByPropertyValueHistory_1,Repository Services - Enterprise,/servers/{serverName}/open-metadata/repository-services/users/{userId}/enterprise/instances/relationships/by-property-value/history
+addRelationship_1,Repository Services - Enterprise,/servers/{serverName}/open-metadata/repository-services/users/{userId}/enterprise/instances/relationship
+updateRelationshipProperties_1,Repository Services - Enterprise,/servers/{serverName}/open-metadata/repository-services/users/{userId}/enterprise/instances/relationship/{relationshipGUID}/properties
+deleteRelationship_1,Repository Services - Enterprise,/servers/{serverName}/open-metadata/repository-services/users/{userId}/enterprise/instances/relationship/{obsoleteRelationshipGUID}/delete
+getRelationship_1,Repository Services - Enterprise,/servers/{serverName}/open-metadata/repository-services/users/{userId}/enterprise/instances/relationship/{guid}/history
+getRelationshipHistory_1,Repository Services - Enterprise,/servers/{serverName}/open-metadata/repository-services/users/{userId}/enterprise/instances/relationship/{guid}/history/all
+purgeRelationship_1,Repository Services - Enterprise,/servers/{serverName}/open-metadata/repository-services/users/{userId}/enterprise/instances/relationship/{deletedRelationshipGUID}/purge
+addExternalRelationship_1,Repository Services - Enterprise,/servers/{serverName}/open-metadata/repository-services/users/{userId}/enterprise/instances/relationship/external
+addEntity_1,Repository Services - Enterprise,/servers/{serverName}/open-metadata/repository-services/users/{userId}/enterprise/instances/entity
+deleteEntity_1,Repository Services - Enterprise,/servers/{serverName}/open-metadata/repository-services/users/{userId}/enterprise/instances/entity/{obsoleteEntityGUID}/delete
+getEntityDetail_1,Repository Services - Enterprise,/servers/{serverName}/open-metadata/repository-services/users/{userId}/enterprise/instances/entity/{guid}/history
+getEntityDetailHistory_1,Repository Services - Enterprise,/servers/{serverName}/open-metadata/repository-services/users/{userId}/enterprise/instances/entity/{guid}/history/all
+getClassificationHistory_1,Repository Services - Enterprise,/servers/{serverName}/open-metadata/repository-services/users/{userId}/enterprise/instances/entity/{guid}/classification/{classificationName}/history/all
+getRelationshipsForEntity_1,Repository Services - Enterprise,/servers/{serverName}/open-metadata/repository-services/users/{userId}/enterprise/instances/entity/{entityGUID}/relationships
+getRelationshipsForEntityHistory_1,Repository Services - Enterprise,/servers/{serverName}/open-metadata/repository-services/users/{userId}/enterprise/instances/entity/{entityGUID}/relationships/history
+updateEntityProperties_1,Repository Services - Enterprise,/servers/{serverName}/open-metadata/repository-services/users/{userId}/enterprise/instances/entity/{entityGUID}/properties
+classifyEntity_4,Repository Services - Enterprise,/servers/{serverName}/open-metadata/repository-services/users/{userId}/enterprise/instances/entity/{entityGUID}/classification/{classificationName}
+updateEntityClassification_2,Repository Services - Enterprise,/servers/{serverName}/open-metadata/repository-services/users/{userId}/enterprise/instances/entity/{entityGUID}/classification/{classificationName}/properties
+classifyEntity_5,Repository Services - Enterprise,/servers/{serverName}/open-metadata/repository-services/users/{userId}/enterprise/instances/entity/{entityGUID}/classification/{classificationName}/detailed
+declassifyEntity_2,Repository Services - Enterprise,/servers/{serverName}/open-metadata/repository-services/users/{userId}/enterprise/instances/entity/{entityGUID}/classification/{classificationName}/delete
+purgeEntity_1,Repository Services - Enterprise,/servers/{serverName}/open-metadata/repository-services/users/{userId}/enterprise/instances/entity/{deletedEntityGUID}/purge
+addExternalEntity_1,Repository Services - Enterprise,/servers/{serverName}/open-metadata/repository-services/users/{userId}/enterprise/instances/entity/external
+classifyEntity_6,Repository Services - Enterprise,/servers/{serverName}/open-metadata/repository-services/users/{userId}/enterprise/instances/entity/classification/{classificationName}
+updateEntityClassification_3,Repository Services - Enterprise,/servers/{serverName}/open-metadata/repository-services/users/{userId}/enterprise/instances/entity/classification/{classificationName}/properties
+classifyEntity_7,Repository Services - Enterprise,/servers/{serverName}/open-metadata/repository-services/users/{userId}/enterprise/instances/entity/classification/{classificationName}/detailed
+declassifyEntity_3,Repository Services - Enterprise,/servers/{serverName}/open-metadata/repository-services/users/{userId}/enterprise/instances/entity/classification/{classificationName}/delete
+addEntityProxy_1,Repository Services - Enterprise,/servers/{serverName}/open-metadata/repository-services/users/{userId}/enterprise/instances/entity-proxy
+findEntities_1,Repository Services - Enterprise,/servers/{serverName}/open-metadata/repository-services/users/{userId}/enterprise/instances/entities
+findEntitiesByHistory_1,Repository Services - Enterprise,/servers/{serverName}/open-metadata/repository-services/users/{userId}/enterprise/instances/entities/history
+findEntitiesByProperty_1,Repository Services - Enterprise,/servers/{serverName}/open-metadata/repository-services/users/{userId}/enterprise/instances/entities/by-property
+findEntitiesByPropertyHistory_1,Repository Services - Enterprise,/servers/{serverName}/open-metadata/repository-services/users/{userId}/enterprise/instances/entities/by-property/history
+findEntitiesByPropertyValue_1,Repository Services - Enterprise,/servers/{serverName}/open-metadata/repository-services/users/{userId}/enterprise/instances/entities/by-property-value
+findEntitiesByPropertyValueHistory_1,Repository Services - Enterprise,/servers/{serverName}/open-metadata/repository-services/users/{userId}/enterprise/instances/entities/by-property-value/history
+findEntitiesByClassification_1,Repository Services - Enterprise,/servers/{serverName}/open-metadata/repository-services/users/{userId}/enterprise/instances/entities/by-classification/{classificationName}
+findEntitiesByClassificationHistory_1,Repository Services - Enterprise,/servers/{serverName}/open-metadata/repository-services/users/{userId}/enterprise/instances/entities/by-classification/{classificationName}/history
+publishOpenLineageEvent,Integration Daemon Services,/servers/{serverName}/open-metadata/integration-daemon/publish-open-lineage-event
+updateEndpointNetworkAddress,Integration Daemon Services,/servers/{serverName}/open-metadata/integration-daemon/integration-connectors/{connectorName}/endpoint-network-address
+updateConnectorConnection,Integration Daemon Services,/servers/{serverName}/open-metadata/integration-daemon/integration-connectors/{connectorName}/connection
+restartConnectors,Integration Daemon Services,/servers/{serverName}/open-metadata/integration-daemon/integration-connectors/restart
+refreshConnectors,Integration Daemon Services,/servers/{serverName}/open-metadata/integration-daemon/integration-connectors/refresh
+updateConfigurationProperties,Integration Daemon Services,/servers/{serverName}/open-metadata/integration-daemon/integration-connectors/configuration-properties
+getRelationshipHistory_2,Metadata Access Services: Open Metadata Store Services,/servers/{serverName}/open-metadata/access-services/open-metadata-store/users/{userId}/relationships/{relationshipGUID}/history
+findRelationshipsBetweenMetadataElements,Metadata Access Services: Open Metadata Store Services,/servers/{serverName}/open-metadata/access-services/open-metadata-store/users/{userId}/relationships/by-search-conditions
+getRelationshipByGUID_2,Metadata Access Services: Open Metadata Store Services,/servers/{serverName}/open-metadata/access-services/open-metadata-store/users/{userId}/relationships/by-guid/{relationshipGUID}
+getRelationshipByGUID,Metadata Access Services: Open Metadata Store Services,/servers/{serverName}/open-metadata/access-services/open-metadata-store/users/{userId}/relationships/by-guid/{relationshipGUID}
+createRelatedElementsInStore,Metadata Access Services: Open Metadata Store Services,/servers/{serverName}/open-metadata/access-services/open-metadata-store/users/{userId}/related-elements
+updateRelatedElementsInStore,Metadata Access Services: Open Metadata Store Services,/servers/{serverName}/open-metadata/access-services/open-metadata-store/users/{userId}/related-elements/{relationshipGUID}/update-properties
+updateRelatedElementsEffectivityInStore,Metadata Access Services: Open Metadata Store Services,/servers/{serverName}/open-metadata/access-services/open-metadata-store/users/{userId}/related-elements/{relationshipGUID}/update-effectivity
+deleteRelationshipInStore,Metadata Access Services: Open Metadata Store Services,/servers/{serverName}/open-metadata/access-services/open-metadata-store/users/{userId}/related-elements/{relationshipGUID}/delete
+getRelatedMetadataElements,Metadata Access Services: Open Metadata Store Services,/servers/{serverName}/open-metadata/access-services/open-metadata-store/users/{userId}/related-elements/{elementGUID}/type/{relationshipTypeName}
+getAllRelatedMetadataElements,Metadata Access Services: Open Metadata Store Services,/servers/{serverName}/open-metadata/access-services/open-metadata-store/users/{userId}/related-elements/{elementGUID}/any-type
+setTranslation,Metadata Access Services: Open Metadata Store Services,/servers/{serverName}/open-metadata/access-services/open-metadata-store/users/{userId}/multi-language/set-translation/{elementGUID}
+clearTranslation,Metadata Access Services: Open Metadata Store Services,/servers/{serverName}/open-metadata/access-services/open-metadata-store/users/{userId}/multi-language/clear-translation/{elementGUID}
+createMetadataElementInStore,Metadata Access Services: Open Metadata Store Services,/servers/{serverName}/open-metadata/access-services/open-metadata-store/users/{userId}/metadata-elements
+withdrawMetadataElement,Metadata Access Services: Open Metadata Store Services,/servers/{serverName}/open-metadata/access-services/open-metadata-store/users/{userId}/metadata-elements/{metadataElementGUID}/withdraw
+updateMetadataElementInStore,Metadata Access Services: Open Metadata Store Services,/servers/{serverName}/open-metadata/access-services/open-metadata-store/users/{userId}/metadata-elements/{metadataElementGUID}/update-properties
+updateMetadataElementEffectivityInStore,Metadata Access Services: Open Metadata Store Services,/servers/{serverName}/open-metadata/access-services/open-metadata-store/users/{userId}/metadata-elements/{metadataElementGUID}/update-effectivity
+publishMetadataElement,Metadata Access Services: Open Metadata Store Services,/servers/{serverName}/open-metadata/access-services/open-metadata-store/users/{userId}/metadata-elements/{metadataElementGUID}/publish
+deleteMetadataElementInStore,Metadata Access Services: Open Metadata Store Services,/servers/{serverName}/open-metadata/access-services/open-metadata-store/users/{userId}/metadata-elements/{metadataElementGUID}/delete
+classifyMetadataElementInStore,Metadata Access Services: Open Metadata Store Services,/servers/{serverName}/open-metadata/access-services/open-metadata-store/users/{userId}/metadata-elements/{metadataElementGUID}/classifications/{classificationName}
+reclassifyMetadataElementInStore,Metadata Access Services: Open Metadata Store Services,/servers/{serverName}/open-metadata/access-services/open-metadata-store/users/{userId}/metadata-elements/{metadataElementGUID}/classifications/{classificationName}/update-properties
+updateClassificationEffectivityInStore,Metadata Access Services: Open Metadata Store Services,/servers/{serverName}/open-metadata/access-services/open-metadata-store/users/{userId}/metadata-elements/{metadataElementGUID}/classifications/{classificationName}/update-effectivity
+declassifyMetadataElementInStore,Metadata Access Services: Open Metadata Store Services,/servers/{serverName}/open-metadata/access-services/open-metadata-store/users/{userId}/metadata-elements/{metadataElementGUID}/classifications/{classificationName}/delete
+archiveMetadataElementInStore,Metadata Access Services: Open Metadata Store Services,/servers/{serverName}/open-metadata/access-services/open-metadata-store/users/{userId}/metadata-elements/{metadataElementGUID}/archive
+getMetadataElementRelationships,Metadata Access Services: Open Metadata Store Services,/servers/{serverName}/open-metadata/access-services/open-metadata-store/users/{userId}/metadata-elements/{metadataElementAtEnd1GUID}/linked-by-type/{relationshipTypeName}/to-elements/{metadataElementAtEnd2GUID}
+getAllMetadataElementRelationships,Metadata Access Services: Open Metadata Store Services,/servers/{serverName}/open-metadata/access-services/open-metadata-store/users/{userId}/metadata-elements/{metadataElementAtEnd1GUID}/linked-by-any-type/to-elements/{metadataElementAtEnd2GUID}
+getMetadataElementByGUID_3,Metadata Access Services: Open Metadata Store Services,/servers/{serverName}/open-metadata/access-services/open-metadata-store/users/{userId}/metadata-elements/{elementGUID}
+getMetadataElementByGUID,Metadata Access Services: Open Metadata Store Services,/servers/{serverName}/open-metadata/access-services/open-metadata-store/users/{userId}/metadata-elements/{elementGUID}
+getAnchoredElementsGraph,Metadata Access Services: Open Metadata Store Services,/servers/{serverName}/open-metadata/access-services/open-metadata-store/users/{userId}/metadata-elements/{elementGUID}/with-anchored-elements
+getMetadataElementHistory,Metadata Access Services: Open Metadata Store Services,/servers/{serverName}/open-metadata/access-services/open-metadata-store/users/{userId}/metadata-elements/{elementGUID}/history
+getClassificationHistory_2,Metadata Access Services: Open Metadata Store Services,/servers/{serverName}/open-metadata/access-services/open-metadata-store/users/{userId}/metadata-elements/{elementGUID}/classifications/{classificationName}/history
+getMetadataElementGUIDByUniqueName,Metadata Access Services: Open Metadata Store Services,/servers/{serverName}/open-metadata/access-services/open-metadata-store/users/{userId}/metadata-elements/guid-by-unique-name
+createMetadataElementFromTemplate,Metadata Access Services: Open Metadata Store Services,/servers/{serverName}/open-metadata/access-services/open-metadata-store/users/{userId}/metadata-elements/from-template
+getMetadataElementByUniqueName,Metadata Access Services: Open Metadata Store Services,/servers/{serverName}/open-metadata/access-services/open-metadata-store/users/{userId}/metadata-elements/by-unique-name
+findMetadataElementsWithString,Metadata Access Services: Open Metadata Store Services,/servers/{serverName}/open-metadata/access-services/open-metadata-store/users/{userId}/metadata-elements/by-search-string
+findElementsInAnchorScope,Metadata Access Services: Open Metadata Store Services,/servers/{serverName}/open-metadata/access-services/open-metadata-store/users/{userId}/metadata-elements/by-search-string/in-anchor-scope/{anchorScopeGUID}
+findElementsInAnchorDomain,Metadata Access Services: Open Metadata Store Services,/servers/{serverName}/open-metadata/access-services/open-metadata-store/users/{userId}/metadata-elements/by-search-string/in-anchor-domain/{anchorDomainName}
+findElementsForAnchor,Metadata Access Services: Open Metadata Store Services,/servers/{serverName}/open-metadata/access-services/open-metadata-store/users/{userId}/metadata-elements/by-search-string/for-anchor/{anchorGUID}
+findMetadataElements,Metadata Access Services: Open Metadata Store Services,/servers/{serverName}/open-metadata/access-services/open-metadata-store/users/{userId}/metadata-elements/by-search-conditions
+logAssetAuditMessage,Metadata Access Services: Open Metadata Store Services,/servers/{serverName}/open-metadata/access-services/open-metadata-store/users/{userId}/assets/{assetGUID}/log-records/{callingService}
+initiateEngineAction,Metadata Access Services: Open Governance Service,/servers/{serverName}/open-metadata/access-services/open-governance-service/users/{userId}/governance-engines/{governanceEngineName}/engine-actions/initiate
+initiateGovernanceActionType,Metadata Access Services: Open Governance Service,/servers/{serverName}/open-metadata/access-services/open-governance-service/users/{userId}/governance-action-types/initiate
+getGovernanceActionProcessGraph,Metadata Access Services: Open Governance Service,/servers/{serverName}/open-metadata/access-services/open-governance-service/users/{userId}/governance-action-processes/{processGUID}/graph
+initiateGovernanceActionProcess,Metadata Access Services: Open Governance Service,/servers/{serverName}/open-metadata/access-services/open-governance-service/users/{userId}/governance-action-processes/initiate
+cancelEngineAction,Metadata Access Services: Open Governance Service,/servers/{serverName}/open-metadata/access-services/open-governance-service/users/{userId}/engine-actions/{engineActionGUID}/cancel
+recordCompletionStatus,Metadata Access Services: Governance Context Service,/servers/{serverName}/open-metadata/access-services/governance-context-service/users/{userId}/engine-actions/{governanceActionGUID}/completion-status
+updateEngineActionStatus,Metadata Access Services: Governance Context Service,/servers/{serverName}/open-metadata/access-services/governance-context-service/users/{userId}/engine-actions/{engineActionGUID}/status/update
+claimEngineAction,Metadata Access Services: Governance Context Service,/servers/{serverName}/open-metadata/access-services/governance-context-service/users/{userId}/engine-actions/{engineActionGUID}/claim
+updateActionTargetStatus,Metadata Access Services: Governance Context Service,/servers/{serverName}/open-metadata/access-services/governance-context-service/users/{userId}/engine-actions/action-targets/update
+getGovernanceEngineByName,Metadata Access Services: Governance Configuration Service,/servers/{serverName}/open-metadata/access-services/governance-configuration-service/users/{userId}/governance-engines/by-name
+saveConnectionForAsset,Metadata Access Services: Connected Asset Services,/servers/{serverName}/open-metadata/access-services/connected-asset/users/{userId}/connections
+serverToken,API: User Security Services,/servers/{serverName}/api/token
+setConsistentMetadataValues,API: Valid Metadata,/servers/{serverName}/api/open-metadata/{urlMarker}/{propertyName1}/consistent-metadata-values/{propertyName2}
+createUserIdentity,API: Actor Manager,/servers/{serverName}/api/open-metadata/{urlMarker}/user-identities
+updateUserIdentity,API: Actor Manager,/servers/{serverName}/api/open-metadata/{urlMarker}/user-identities/{userIdentityGUID}/update
+updateSecurityGroupMembership,API: Actor Manager,/servers/{serverName}/api/open-metadata/{urlMarker}/user-identities/{userIdentityGUID}/security-group-memberships/reclassify
+removeAllSecurityGroupMembership,API: Actor Manager,/servers/{serverName}/api/open-metadata/{urlMarker}/user-identities/{userIdentityGUID}/security-group-memberships/declassify
+addSecurityGroupMembership,API: Actor Manager,/servers/{serverName}/api/open-metadata/{urlMarker}/user-identities/{userIdentityGUID}/security-group-memberships/classify
+getUserIdentityByGUID,API: Actor Manager,/servers/{serverName}/api/open-metadata/{urlMarker}/user-identities/{userIdentityGUID}/retrieve
+detachProfileIdentity,API: Actor Manager,/servers/{serverName}/api/open-metadata/{urlMarker}/user-identities/{userIdentityGUID}/profile-identity/{profileGUID}/detach
+linkIdentityToProfile,API: Actor Manager,/servers/{serverName}/api/open-metadata/{urlMarker}/user-identities/{userIdentityGUID}/profile-identity/{profileGUID}/attach
+deleteUserIdentity,API: Actor Manager,/servers/{serverName}/api/open-metadata/{urlMarker}/user-identities/{userIdentityGUID}/delete
+createUserIdentityFromTemplate,API: Actor Manager,/servers/{serverName}/api/open-metadata/{urlMarker}/user-identities/from-template
+findUserIdentities,API: Actor Manager,/servers/{serverName}/api/open-metadata/{urlMarker}/user-identities/by-search-string
+getUserIdentitiesByName,API: Actor Manager,/servers/{serverName}/api/open-metadata/{urlMarker}/user-identities/by-name
+getTechnologyTypeHierarchy,API: Automated Curation,/servers/{serverName}/api/open-metadata/{urlMarker}/technology-types/hierarchy
+getTechnologyTypeElements,API: Automated Curation,/servers/{serverName}/api/open-metadata/{urlMarker}/technology-types/elements
+findTechnologyTypes,API: Automated Curation,/servers/{serverName}/api/open-metadata/{urlMarker}/technology-types/by-search-string
+getTechnologyTypeDetail,API: Automated Curation,/servers/{serverName}/api/open-metadata/{urlMarker}/technology-types/by-name
+createInformalTag,API: Feedback Manager,/servers/{serverName}/api/open-metadata/{urlMarker}/tags
+updateTagDescription,API: Feedback Manager,/servers/{serverName}/api/open-metadata/{urlMarker}/tags/{tagGUID}/update
+getTag,API: Feedback Manager,/servers/{serverName}/api/open-metadata/{urlMarker}/tags/{tagGUID}/retrieve
+deleteTag,API: Feedback Manager,/servers/{serverName}/api/open-metadata/{urlMarker}/tags/{tagGUID}/remove
+findMyTags,API: Feedback Manager,/servers/{serverName}/api/open-metadata/{urlMarker}/tags/private/by-search-string
+findTags,API: Feedback Manager,/servers/{serverName}/api/open-metadata/{urlMarker}/tags/by-search-string
+getTagsByName,API: Feedback Manager,/servers/{serverName}/api/open-metadata/{urlMarker}/tags/by-name
+detachSubscriber,API: Collection Manager,/servers/{serverName}/api/open-metadata/{urlMarker}/subscribers/{digitalSubscriberGUID}/subscriptions/{digitalSubscriptionGUID}/detach
+getSpecificationPropertyByGUID,API: Valid Metadata,/servers/{serverName}/api/open-metadata/{urlMarker}/specification-properties/{specificationPropertyGUID}/retrieve
+deleteSpecificationProperty,API: Valid Metadata,/servers/{serverName}/api/open-metadata/{urlMarker}/specification-properties/{specificationPropertyGUID}/delete
+getSpecificationPropertyByType,API: Valid Metadata,/servers/{serverName}/api/open-metadata/{urlMarker}/specification-properties/by-type
+findSpecificationProperties,API: Valid Metadata,/servers/{serverName}/api/open-metadata/{urlMarker}/specification-properties/by-search-string
+getSpecificationPropertyByName,API: Valid Metadata,/servers/{serverName}/api/open-metadata/{urlMarker}/specification-properties/by-name
+updateActorRole,API: Actor Manager,/servers/{serverName}/api/open-metadata/{urlMarker}/solution-roles/{actorRoleGUID}/update
+updateActorRole_1,API: Actor Manager,/servers/{serverName}/api/open-metadata/{urlMarker}/actor-roles/{actorRoleGUID}/update
+getActorRoleByGUID,API: Actor Manager,/servers/{serverName}/api/open-metadata/{urlMarker}/actor-roles/{actorRoleGUID}/retrieve
+getActorRoleByGUID_1,API: Actor Manager,/servers/{serverName}/api/open-metadata/{urlMarker}/solution-roles/{actorRoleGUID}/retrieve
+deleteActorRole,API: Actor Manager,/servers/{serverName}/api/open-metadata/{urlMarker}/actor-roles/{actorRoleGUID}/delete
+deleteActorRole_1,API: Actor Manager,/servers/{serverName}/api/open-metadata/{urlMarker}/solution-roles/{actorRoleGUID}/delete
+createActorRoleFromTemplate,API: Actor Manager,/servers/{serverName}/api/open-metadata/{urlMarker}/solution-roles/from-template
+createActorRoleFromTemplate_1,API: Actor Manager,/servers/{serverName}/api/open-metadata/{urlMarker}/actor-roles/from-template
+findActorRoles,API: Actor Manager,/servers/{serverName}/api/open-metadata/{urlMarker}/solution-roles/by-search-string
+findActorRoles_1,API: Actor Manager,/servers/{serverName}/api/open-metadata/{urlMarker}/actor-roles/by-search-string
+getActorRolesByName,API: Actor Manager,/servers/{serverName}/api/open-metadata/{urlMarker}/solution-roles/by-name
+getActorRolesByName_1,API: Actor Manager,/servers/{serverName}/api/open-metadata/{urlMarker}/actor-roles/by-name
+createActorRole,API: Actor Manager,/servers/{serverName}/api/open-metadata/{urlMarker}/actor-roles
+createActorRole_1,API: Actor Manager,/servers/{serverName}/api/open-metadata/{urlMarker}/solution-roles
+setUpValidMetadataValue,API: Valid Metadata,/servers/{serverName}/api/open-metadata/{urlMarker}/setup-value/{propertyName}
+setUpValidMetadataMapValue,API: Valid Metadata,/servers/{serverName}/api/open-metadata/{urlMarker}/setup-map-value/{propertyName}/{mapName}
+setUpValidMetadataMapName,API: Valid Metadata,/servers/{serverName}/api/open-metadata/{urlMarker}/setup-map-name/{propertyName}
+updateSearchKeyword,API: Classification Manager,/servers/{serverName}/api/open-metadata/{urlMarker}/search-keywords/{searchKeywordGUID}/update
+getSearchKeywordByGUID,API: Classification Explorer,/servers/{serverName}/api/open-metadata/{urlMarker}/search-keywords/{searchKeywordGUID}/retrieve
+removeSearchKeywordFromElement,API: Classification Manager,/servers/{serverName}/api/open-metadata/{urlMarker}/search-keywords/{searchKeywordGUID}/remove
+findSearchKeywords,API: Classification Explorer,/servers/{serverName}/api/open-metadata/{urlMarker}/search-keywords/by-search-string
+getSearchKeywordByKeyword,API: Classification Explorer,/servers/{serverName}/api/open-metadata/{urlMarker}/search-keywords/by-keyword
+createSchemaType,API: Schema Maker,/servers/{serverName}/api/open-metadata/{urlMarker}/schema-types
+updateSchemaType,API: Schema Maker,/servers/{serverName}/api/open-metadata/{urlMarker}/schema-types/{schemaTypeGUID}/update
+getSchemaTypeByGUID,API: Schema Maker,/servers/{serverName}/api/open-metadata/{urlMarker}/schema-types/{schemaTypeGUID}/retrieve
+deleteSchemaType,API: Schema Maker,/servers/{serverName}/api/open-metadata/{urlMarker}/schema-types/{schemaTypeGUID}/delete
+createSchemaTypeFromTemplate,API: Schema Maker,/servers/{serverName}/api/open-metadata/{urlMarker}/schema-types/from-template
+findSchemaTypes,API: Schema Maker,/servers/{serverName}/api/open-metadata/{urlMarker}/schema-types/by-search-string
+getSchemaTypesByName,API: Schema Maker,/servers/{serverName}/api/open-metadata/{urlMarker}/schema-types/by-name
+createSchemaAttribute,API: Schema Maker,/servers/{serverName}/api/open-metadata/{urlMarker}/schema-attributes
+updateSchemaAttribute,API: Schema Maker,/servers/{serverName}/api/open-metadata/{urlMarker}/schema-attributes/{schemaAttributeGUID}/update
+getSchemaAttributeByGUID,API: Schema Maker,/servers/{serverName}/api/open-metadata/{urlMarker}/schema-attributes/{schemaAttributeGUID}/retrieve
+deleteSchemaAttribute,API: Schema Maker,/servers/{serverName}/api/open-metadata/{urlMarker}/schema-attributes/{schemaAttributeGUID}/delete
+createSchemaAttributeFromTemplate,API: Schema Maker,/servers/{serverName}/api/open-metadata/{urlMarker}/schema-attributes/from-template
+findSchemaAttributes,API: Schema Maker,/servers/{serverName}/api/open-metadata/{urlMarker}/schema-attributes/by-search-string
+getSchemaAttributesByName,API: Schema Maker,/servers/{serverName}/api/open-metadata/{urlMarker}/schema-attributes/by-name
+getRelationships,API: Classification Explorer,/servers/{serverName}/api/open-metadata/{urlMarker}/relationships
+getRelationships_1,API: Classification Explorer,/servers/{serverName}/api/open-metadata/{urlMarker}/relationships/{relationshipTypeName}
+findRelationshipsWithPropertyValue,API: Classification Explorer,/servers/{serverName}/api/open-metadata/{urlMarker}/relationships/{relationshipTypeName}/with-property-value-search
+getRelationshipsWithPropertyValue,API: Classification Explorer,/servers/{serverName}/api/open-metadata/{urlMarker}/relationships/{relationshipTypeName}/with-exact-property-value
+getRelationshipHistory_3,API: Metadata Explorer,/servers/{serverName}/api/open-metadata/{urlMarker}/relationships/{relationshipGUID}/history
+updateLineage,API: Lineage Linker,/servers/{serverName}/api/open-metadata/{urlMarker}/relationships/{lineageRelationshipGUID}/update
+detachLineage,API: Lineage Linker,/servers/{serverName}/api/open-metadata/{urlMarker}/relationships/{lineageRelationshipGUID}/detach
+findRelationshipsWithPropertyValue_1,API: Classification Explorer,/servers/{serverName}/api/open-metadata/{urlMarker}/relationships/with-property-value-search
+getRelationshipsWithPropertyValue_1,API: Classification Explorer,/servers/{serverName}/api/open-metadata/{urlMarker}/relationships/with-exact-property-value
+findRelationshipsBetweenMetadataElements_1,API: Metadata Explorer,/servers/{serverName}/api/open-metadata/{urlMarker}/relationships/by-search-conditions
+getRelationshipByGUID_1,API: Metadata Explorer,/servers/{serverName}/api/open-metadata/{urlMarker}/relationships/by-guid/{relationshipGUID}
+createRelatedElementsInStore_1,API: Metadata Expert,/servers/{serverName}/api/open-metadata/{urlMarker}/related-elements
+updateRelatedElementsInStore_1,API: Metadata Expert,/servers/{serverName}/api/open-metadata/{urlMarker}/related-elements/{relationshipGUID}/update-properties
+updateRelatedElementsEffectivityInStore_1,API: Metadata Expert,/servers/{serverName}/api/open-metadata/{urlMarker}/related-elements/{relationshipGUID}/update-effectivity
+deleteRelatedElementsInStore,API: Metadata Expert,/servers/{serverName}/api/open-metadata/{urlMarker}/related-elements/{relationshipGUID}/delete
+detachRelatedElementsInStore,API: Metadata Expert,/servers/{serverName}/api/open-metadata/{urlMarker}/related-elements/{metadataElement1GUID}/{relationshipTypeName}/{metadataElement2GUID}/detach-all
+getRelatedMetadataElements_1,API: Metadata Explorer,/servers/{serverName}/api/open-metadata/{urlMarker}/related-elements/{elementGUID}/type/{relationshipTypeName}
+unlinkElementsAsPeerDuplicates,API: Classification Manager,/servers/{serverName}/api/open-metadata/{urlMarker}/related-elements/{elementGUID}/peer-duplicate/{peerDuplicateGUID}/detach
+linkElementsAsPeerDuplicates,API: Classification Manager,/servers/{serverName}/api/open-metadata/{urlMarker}/related-elements/{elementGUID}/peer-duplicate/{peerDuplicateGUID}/attach
+unlinkConsolidatedDuplicateFromSourceElement,API: Classification Manager,/servers/{serverName}/api/open-metadata/{urlMarker}/related-elements/{elementGUID}/consolidated-duplicate-source/{sourceElementGUID}/detach
+linkConsolidatedDuplicateToSource,API: Classification Manager,/servers/{serverName}/api/open-metadata/{urlMarker}/related-elements/{elementGUID}/consolidated-duplicate-source/{sourceElementGUID}/attach
+getAllRelatedMetadataElements_1,API: Metadata Explorer,/servers/{serverName}/api/open-metadata/{urlMarker}/related-elements/{elementGUID}/any-type
+findProcesses,API: Asset Maker,/servers/{serverName}/api/open-metadata/{urlMarker}/processes/find-by-search-string
+getProcessesByCategory,API: Asset Maker,/servers/{serverName}/api/open-metadata/{urlMarker}/processes/by-category
+getTechnologyTypesForOpenMetadataType,API: Automated Curation,/servers/{serverName}/api/open-metadata/{urlMarker}/open-metadata-types/{typeName}/technology-types
+createNoteLog,API: Feedback Manager,/servers/{serverName}/api/open-metadata/{urlMarker}/note-logs
+updateNoteLog,API: Feedback Manager,/servers/{serverName}/api/open-metadata/{urlMarker}/note-logs/{noteLogGUID}
+getNoteLogByGUID,API: Feedback Manager,/servers/{serverName}/api/open-metadata/{urlMarker}/note-logs/{noteLogGUID}/retrieve
+removeNoteLog,API: Feedback Manager,/servers/{serverName}/api/open-metadata/{urlMarker}/note-logs/{noteLogGUID}/remove
+getNotesForNoteLog,API: Feedback Manager,/servers/{serverName}/api/open-metadata/{urlMarker}/note-logs/{noteLogGUID}/notes/retrieve
+findNoteLogs,API: Feedback Manager,/servers/{serverName}/api/open-metadata/{urlMarker}/note-logs/by-search-string
+getNoteLogsByName,API: Feedback Manager,/servers/{serverName}/api/open-metadata/{urlMarker}/note-logs/by-name
+createMetadataElementInStore_1,API: Metadata Expert,/servers/{serverName}/api/open-metadata/{urlMarker}/metadata-elements
+detachDataDescription,API: Collection Manager,/servers/{serverName}/api/open-metadata/{urlMarker}/metadata-elements/{parentGUID}/data-descriptions/{collectionGUID}/detach
+attachDataDescription,API: Collection Manager,/servers/{serverName}/api/open-metadata/{urlMarker}/metadata-elements/{parentGUID}/data-descriptions/{collectionGUID}/attach
+getAttachedCollections,API: Collection Manager,/servers/{serverName}/api/open-metadata/{urlMarker}/metadata-elements/{parentGUID}/collections
+detachCollection,API: Collection Manager,/servers/{serverName}/api/open-metadata/{urlMarker}/metadata-elements/{parentGUID}/collections/{collectionGUID}/detach
+attachCollection,API: Collection Manager,/servers/{serverName}/api/open-metadata/{urlMarker}/metadata-elements/{parentGUID}/collections/{collectionGUID}/attach
+withdrawMetadataElement_1,API: Metadata Expert,/servers/{serverName}/api/open-metadata/{urlMarker}/metadata-elements/{metadataElementGUID}/withdraw
+updateMetadataElementInStore_1,API: Metadata Expert,/servers/{serverName}/api/open-metadata/{urlMarker}/metadata-elements/{metadataElementGUID}/update-properties
+updateMetadataElementEffectivityInStore_1,API: Metadata Expert,/servers/{serverName}/api/open-metadata/{urlMarker}/metadata-elements/{metadataElementGUID}/update-effectivity
+publishMetadataElement_1,API: Metadata Expert,/servers/{serverName}/api/open-metadata/{urlMarker}/metadata-elements/{metadataElementGUID}/publish
+deleteMetadataElementInStore_1,API: Metadata Expert,/servers/{serverName}/api/open-metadata/{urlMarker}/metadata-elements/{metadataElementGUID}/delete
+classifyMetadataElementInStore_1,API: Metadata Expert,/servers/{serverName}/api/open-metadata/{urlMarker}/metadata-elements/{metadataElementGUID}/classifications/{classificationName}
+reclassifyMetadataElementInStore_1,API: Metadata Expert,/servers/{serverName}/api/open-metadata/{urlMarker}/metadata-elements/{metadataElementGUID}/classifications/{classificationName}/update-properties
+updateClassificationEffectivityInStore_1,API: Metadata Expert,/servers/{serverName}/api/open-metadata/{urlMarker}/metadata-elements/{metadataElementGUID}/classifications/{classificationName}/update-effectivity
+declassifyMetadataElementInStore_1,API: Metadata Expert,/servers/{serverName}/api/open-metadata/{urlMarker}/metadata-elements/{metadataElementGUID}/classifications/{classificationName}/delete
+archiveMetadataElementInStore_1,API: Metadata Expert,/servers/{serverName}/api/open-metadata/{urlMarker}/metadata-elements/{metadataElementGUID}/archive
+getMetadataElementRelationships_1,API: Metadata Explorer,/servers/{serverName}/api/open-metadata/{urlMarker}/metadata-elements/{metadataElementAtEnd1GUID}/linked-by-type/{relationshipTypeName}/to-elements/{metadataElementAtEnd2GUID}
+getAllMetadataElementRelationships_1,API: Metadata Explorer,/servers/{serverName}/api/open-metadata/{urlMarker}/metadata-elements/{metadataElementAtEnd1GUID}/linked-by-any-type/to-elements/{metadataElementAtEnd2GUID}
+getMetadataElementByGUID_1,API: Metadata Explorer,/servers/{serverName}/api/open-metadata/{urlMarker}/metadata-elements/{elementGUID}
+getAnchoredElementsGraph_1,API: Metadata Explorer,/servers/{serverName}/api/open-metadata/{urlMarker}/metadata-elements/{elementGUID}/with-anchored-elements
+getMetadataElementHistory_1,API: Metadata Explorer,/servers/{serverName}/api/open-metadata/{urlMarker}/metadata-elements/{elementGUID}/history
+getClassificationHistory_3,API: Metadata Explorer,/servers/{serverName}/api/open-metadata/{urlMarker}/metadata-elements/{elementGUID}/classifications/{classificationName}/history
+getMetadataElementGUIDByUniqueName_1,API: Metadata Explorer,/servers/{serverName}/api/open-metadata/{urlMarker}/metadata-elements/guid-by-unique-name
+createMetadataElementFromTemplate_1,API: Metadata Expert,/servers/{serverName}/api/open-metadata/{urlMarker}/metadata-elements/from-template
+getMetadataElementByUniqueName_1,API: Metadata Explorer,/servers/{serverName}/api/open-metadata/{urlMarker}/metadata-elements/by-unique-name
+findMetadataElementsWithString_1,API: Metadata Explorer,/servers/{serverName}/api/open-metadata/{urlMarker}/metadata-elements/by-search-string
+findElementsInAnchorScope_1,API: Metadata Explorer,/servers/{serverName}/api/open-metadata/{urlMarker}/metadata-elements/by-search-string/in-anchor-scope/{anchorScopeGUID}
+findElementsInAnchorDomain_1,API: Metadata Explorer,/servers/{serverName}/api/open-metadata/{urlMarker}/metadata-elements/by-search-string/in-anchor-domain/{anchorDomainName}
+findElementsForAnchor_1,API: Metadata Explorer,/servers/{serverName}/api/open-metadata/{urlMarker}/metadata-elements/by-search-string/for-anchor/{anchorGUID}
+findMetadataElements_1,API: Metadata Explorer,/servers/{serverName}/api/open-metadata/{urlMarker}/metadata-elements/by-search-conditions
+updateLicense,API: Governance Officer,/servers/{serverName}/api/open-metadata/{urlMarker}/licenses/{licenseGUID}/update
+unlicenseElement,API: Governance Officer,/servers/{serverName}/api/open-metadata/{urlMarker}/licenses/{licenseGUID}/delete
+addCatalogTarget,API: Asset Maker,/servers/{serverName}/api/open-metadata/{urlMarker}/integration-connectors/{integrationConnectorGUID}/catalog-targets/{metadataElementGUID}
+removeCatalogTarget,API: Asset Maker,/servers/{serverName}/api/open-metadata/{urlMarker}/integration-connectors/{integrationConnectorGUID}/catalog-targets/{metadataElementGUID}/detach
+findInfrastructure,API: Asset Maker,/servers/{serverName}/api/open-metadata/{urlMarker}/infrstructure-assets/by-search-string
+getInfrastructureByCategory,API: Asset Maker,/servers/{serverName}/api/open-metadata/{urlMarker}/infrastructure-assets/by-category
+retrieveInstanceForGUID,API: Classification Explorer,/servers/{serverName}/api/open-metadata/{urlMarker}/guids/{guid}
+detachGovernanceResults,API: Governance Officer,/servers/{serverName}/api/open-metadata/{urlMarker}/governance-metrics/{governanceMetricGUID}/measurements/{dataSourceGUID}/detach
+linkGovernanceResults,API: Governance Officer,/servers/{serverName}/api/open-metadata/{urlMarker}/governance-metrics/{governanceMetricGUID}/measurements/{dataSourceGUID}/attach
+initiateEngineAction_1,API: Automated Curation,/servers/{serverName}/api/open-metadata/{urlMarker}/governance-engines/{governanceEngineName}/engine-actions/initiate
+createGovernanceDefinition,API: Governance Officer,/servers/{serverName}/api/open-metadata/{urlMarker}/governance-definitions
+detachSupportingDefinition,API: Governance Officer,/servers/{serverName}/api/open-metadata/{urlMarker}/governance-definitions/{governanceDefinitionOneGUID}/supporting-definitions/{relationshipTypeName}/{governanceDefinitionTwoGUID}/detach
+attachSupportingDefinition,API: Governance Officer,/servers/{serverName}/api/open-metadata/{urlMarker}/governance-definitions/{governanceDefinitionOneGUID}/supporting-definitions/{relationshipTypeName}/{governanceDefinitionTwoGUID}/attach
+detachPeerDefinitions,API: Governance Officer,/servers/{serverName}/api/open-metadata/{urlMarker}/governance-definitions/{governanceDefinitionOneGUID}/peer-definitions/{relationshipTypeName}/{governanceDefinitionTwoGUID}/detach
+linkPeerDefinitions,API: Governance Officer,/servers/{serverName}/api/open-metadata/{urlMarker}/governance-definitions/{governanceDefinitionOneGUID}/peer-definitions/{relationshipTypeName}/{governanceDefinitionTwoGUID}/attach
+updateGovernanceDefinition,API: Governance Officer,/servers/{serverName}/api/open-metadata/{urlMarker}/governance-definitions/{governanceDefinitionGUID}/update
+getGovernanceDefinitionByGUID,API: Governance Officer,/servers/{serverName}/api/open-metadata/{urlMarker}/governance-definitions/{governanceDefinitionGUID}/retrieve
+deleteGovernanceDefinition,API: Governance Officer,/servers/{serverName}/api/open-metadata/{urlMarker}/governance-definitions/{governanceDefinitionGUID}/delete
+createGovernanceDefinitionFromTemplate,API: Governance Officer,/servers/{serverName}/api/open-metadata/{urlMarker}/governance-definitions/from-template
+findGovernanceDefinitions,API: Governance Officer,/servers/{serverName}/api/open-metadata/{urlMarker}/governance-definitions/by-search-string
+getGovernanceDefinitionsByName,API: Governance Officer,/servers/{serverName}/api/open-metadata/{urlMarker}/governance-definitions/by-name
+initiateGovernanceActionType_1,API: Automated Curation,/servers/{serverName}/api/open-metadata/{urlMarker}/governance-action-types/initiate
+getGovernanceActionProcessGraph_1,API: Governance Officer,/servers/{serverName}/api/open-metadata/{urlMarker}/governance-action-processes/{processGUID}/graph
+initiateGovernanceActionProcess_1,API: Automated Curation,/servers/{serverName}/api/open-metadata/{urlMarker}/governance-action-processes/initiate
+getMeanings,API: Classification Explorer,/servers/{serverName}/api/open-metadata/{urlMarker}/glossaries/terms/by-semantic-assignment/{elementGUID}
+linkLineage,API: Lineage Linker,/servers/{serverName}/api/open-metadata/{urlMarker}/from-elements/{elementOneGUID}/via/{relationshipTypeName}/to-elements/{elementTwoGUID}/attach
+createExternalReference,API: External Links,/servers/{serverName}/api/open-metadata/{urlMarker}/external-references
+updateExternalReference,API: External Links,/servers/{serverName}/api/open-metadata/{urlMarker}/external-references/{externalReferenceGUID}/update
+getExternalReferenceByGUID,API: External Links,/servers/{serverName}/api/open-metadata/{urlMarker}/external-references/{externalReferenceGUID}/retrieve
+deleteExternalReference,API: External Links,/servers/{serverName}/api/open-metadata/{urlMarker}/external-references/{externalReferenceGUID}/delete
+createExternalReferenceFromTemplate,API: External Links,/servers/{serverName}/api/open-metadata/{urlMarker}/external-references/from-template
+findExternalReferences,API: External Links,/servers/{serverName}/api/open-metadata/{urlMarker}/external-references/by-search-string
+getExternalReferencesByName,API: External Links,/servers/{serverName}/api/open-metadata/{urlMarker}/external-references/by-name
+updateExternalIdentifier,API: External Links,/servers/{serverName}/api/open-metadata/{urlMarker}/external-identifiers/{externalIdGUID}/update
+getExternalIdByGUID,API: External Links,/servers/{serverName}/api/open-metadata/{urlMarker}/external-identifiers/{externalIdGUID}/retrieve
+deleteExternalIdentifier,API: External Links,/servers/{serverName}/api/open-metadata/{urlMarker}/external-identifiers/{externalIdGUID}/delete
+confirmSynchronization,API: External Links,/servers/{serverName}/api/open-metadata/{urlMarker}/external-identifiers/links/{externalIdLinkGUID}/synchronized
+findExternalIds,API: External Links,/servers/{serverName}/api/open-metadata/{urlMarker}/external-identifiers/by-search-string
+getExternalIdsByName,API: External Links,/servers/{serverName}/api/open-metadata/{urlMarker}/external-identifiers/by-name
+cancelEngineAction_1,API: Automated Curation,/servers/{serverName}/api/open-metadata/{urlMarker}/engine-actions/{engineActionGUID}/cancel
+createEndpoint,API: Connection Maker,/servers/{serverName}/api/open-metadata/{urlMarker}/endpoints
+updateEndpoint,API: Connection Maker,/servers/{serverName}/api/open-metadata/{urlMarker}/endpoints/{endpointGUID}/update
+getEndpointByGUID,API: Connection Maker,/servers/{serverName}/api/open-metadata/{urlMarker}/endpoints/{endpointGUID}/retrieve
+deleteEndpoint,API: Connection Maker,/servers/{serverName}/api/open-metadata/{urlMarker}/endpoints/{endpointGUID}/delete
+createEndpointFromTemplate,API: Connection Maker,/servers/{serverName}/api/open-metadata/{urlMarker}/endpoints/from-template
+findEndpoints,API: Connection Maker,/servers/{serverName}/api/open-metadata/{urlMarker}/endpoints/by-search-string
+getEndpointsByNetworkAddress,API: Connection Maker,/servers/{serverName}/api/open-metadata/{urlMarker}/endpoints/by-network-address
+getEndpointsByName,API: Connection Maker,/servers/{serverName}/api/open-metadata/{urlMarker}/endpoints/by-name
+linkContextEventTimelineEffect,API: Time Keeper,/servers/{serverName}/api/open-metadata/{urlMarker}/elements/{timelineAffectedElementGUID}/context-events-describing-timeline-effects/{contextEventGUID}/attach
+detachContextEventTimelineEffect,API: Time Keeper,/servers/{serverName}/api/open-metadata/{urlMarker}/elements/{timelineAffectedElementGUID}/context-events-describing-timeline-effect/{contextEventGUID}/detach
+detachAssignmentScope,API: Actor Manager,/servers/{serverName}/api/open-metadata/{urlMarker}/elements/{scopeElementGUID}/actors/{actorGUID}/detach
+linkAssignmentScope,API: Actor Manager,/servers/{serverName}/api/open-metadata/{urlMarker}/elements/{scopeElementGUID}/actors/{actorGUID}/attach
+getMetadataElementByGUID_2,API: Classification Explorer,/servers/{serverName}/api/open-metadata/{urlMarker}/elements/{elementGUID}
+addZoneMembership,API: Classification Manager,/servers/{serverName}/api/open-metadata/{urlMarker}/elements/{elementGUID}/zone-membership
+clearZoneMembership,API: Classification Manager,/servers/{serverName}/api/open-metadata/{urlMarker}/elements/{elementGUID}/zone-membership/remove
+addTagToElement,API: Feedback Manager,/servers/{serverName}/api/open-metadata/{urlMarker}/elements/{elementGUID}/tags/{tagGUID}
+removeTagFromElement,API: Feedback Manager,/servers/{serverName}/api/open-metadata/{urlMarker}/elements/{elementGUID}/tags/{tagGUID}/remove
+getAttachedTags,API: Feedback Manager,/servers/{serverName}/api/open-metadata/{urlMarker}/elements/{elementGUID}/tags/retrieve
+getActionsForSponsor,API: Asset Maker,/servers/{serverName}/api/open-metadata/{urlMarker}/elements/{elementGUID}/sponsored/actions
+setUpSpecificationProperty,API: Valid Metadata,/servers/{serverName}/api/open-metadata/{urlMarker}/elements/{elementGUID}/specification-properties
+getElementsSourcedFrom,API: Classification Explorer,/servers/{serverName}/api/open-metadata/{urlMarker}/elements/{elementGUID}/sourced-from
+getSourceElements,API: Classification Explorer,/servers/{serverName}/api/open-metadata/{urlMarker}/elements/{elementGUID}/source
+clearSemanticAssignment,API: Classification Manager,/servers/{serverName}/api/open-metadata/{urlMarker}/elements/{elementGUID}/semantic-assignment/terms/{glossaryTermGUID}/detach
+setupSemanticAssignment,API: Classification Manager,/servers/{serverName}/api/open-metadata/{urlMarker}/elements/{elementGUID}/semantic-assignment/terms/{glossaryTermGUID}/attach
+addSecurityTags,API: Classification Manager,/servers/{serverName}/api/open-metadata/{urlMarker}/elements/{elementGUID}/security-tags
+clearSecurityTags,API: Classification Manager,/servers/{serverName}/api/open-metadata/{urlMarker}/elements/{elementGUID}/security-tags/remove
+addSearchKeywordToElement,API: Classification Manager,/servers/{serverName}/api/open-metadata/{urlMarker}/elements/{elementGUID}/search-keywords
+getScopes,API: Classification Explorer,/servers/{serverName}/api/open-metadata/{urlMarker}/elements/{elementGUID}/scoped-by
+removeScopeFromElement,API: Classification Manager,/servers/{serverName}/api/open-metadata/{urlMarker}/elements/{elementGUID}/scoped-by/{scopeGUID}/detach
+addScopeToElement,API: Classification Manager,/servers/{serverName}/api/open-metadata/{urlMarker}/elements/{elementGUID}/scoped-by/{scopeGUID}/attach
+setRetentionClassification,API: Classification Manager,/servers/{serverName}/api/open-metadata/{urlMarker}/elements/{elementGUID}/retention
+clearRetentionClassification,API: Classification Manager,/servers/{serverName}/api/open-metadata/{urlMarker}/elements/{elementGUID}/retention/remove
+getResourceList,API: Classification Explorer,/servers/{serverName}/api/open-metadata/{urlMarker}/elements/{elementGUID}/resource-list
+removeResourceListFromElement,API: Classification Manager,/servers/{serverName}/api/open-metadata/{urlMarker}/elements/{elementGUID}/resource-list/{resourceGUID}/detach
+addResourceListToElement,API: Classification Manager,/servers/{serverName}/api/open-metadata/{urlMarker}/elements/{elementGUID}/resource-list/{resourceGUID}/attach
+addRatingToElement,API: Feedback Manager,/servers/{serverName}/api/open-metadata/{urlMarker}/elements/{elementGUID}/ratings
+getAttachedRatings,API: Feedback Manager,/servers/{serverName}/api/open-metadata/{urlMarker}/elements/{elementGUID}/ratings/retrieve
+removeRatingFromElement,API: Feedback Manager,/servers/{serverName}/api/open-metadata/{urlMarker}/elements/{elementGUID}/ratings/remove
+addOwnership,API: Classification Manager,/servers/{serverName}/api/open-metadata/{urlMarker}/elements/{elementGUID}/ownership
+clearOwnership,API: Classification Manager,/servers/{serverName}/api/open-metadata/{urlMarker}/elements/{elementGUID}/ownership/remove
+createNoteLog_1,API: Feedback Manager,/servers/{serverName}/api/open-metadata/{urlMarker}/elements/{elementGUID}/note-logs
+getNoteLogsForElement,API: Feedback Manager,/servers/{serverName}/api/open-metadata/{urlMarker}/elements/{elementGUID}/note-logs/retrieve
+removeMoreInformationFromElement,API: Classification Manager,/servers/{serverName}/api/open-metadata/{urlMarker}/elements/{elementGUID}/more-information/{resourceGUID}/detach
+addMoreInformationToElement,API: Classification Manager,/servers/{serverName}/api/open-metadata/{urlMarker}/elements/{elementGUID}/more-information/{resourceGUID}/attach
+detachMediaReference,API: External Links,/servers/{serverName}/api/open-metadata/{urlMarker}/elements/{elementGUID}/media-references/{externalReferenceGUID}/detach
+linkMediaReference,API: External Links,/servers/{serverName}/api/open-metadata/{urlMarker}/elements/{elementGUID}/media-references/{externalReferenceGUID}/attach
+addLikeToElement,API: Feedback Manager,/servers/{serverName}/api/open-metadata/{urlMarker}/elements/{elementGUID}/likes
+getAttachedLikes,API: Feedback Manager,/servers/{serverName}/api/open-metadata/{urlMarker}/elements/{elementGUID}/likes/retrieve
+removeLikeFromElement,API: Feedback Manager,/servers/{serverName}/api/open-metadata/{urlMarker}/elements/{elementGUID}/likes/remove
+getLicenses,API: Classification Explorer,/servers/{serverName}/api/open-metadata/{urlMarker}/elements/{elementGUID}/licenses
+licenseElement,API: Governance Officer,/servers/{serverName}/api/open-metadata/{urlMarker}/elements/{elementGUID}/license-types/{licenseTypeGUID}/license
+setKnownDuplicateClassification,API: Classification Manager,/servers/{serverName}/api/open-metadata/{urlMarker}/elements/{elementGUID}/known-duplicate
+clearKnownDuplicateClassification,API: Classification Manager,/servers/{serverName}/api/open-metadata/{urlMarker}/elements/{elementGUID}/known-duplicate/remove
+setImpactClassification,API: Classification Manager,/servers/{serverName}/api/open-metadata/{urlMarker}/elements/{elementGUID}/impact
+clearImpactClassification,API: Classification Manager,/servers/{serverName}/api/open-metadata/{urlMarker}/elements/{elementGUID}/impact/remove
+getGovernedByDefinitions,API: Classification Explorer,/servers/{serverName}/api/open-metadata/{urlMarker}/elements/{elementGUID}/governed-by
+removeGovernanceDefinitionFromElement,API: Governance Officer,/servers/{serverName}/api/open-metadata/{urlMarker}/elements/{elementGUID}/governed-by/definition/{definitionGUID}/detach
+addGovernanceDefinitionToElement,API: Governance Officer,/servers/{serverName}/api/open-metadata/{urlMarker}/elements/{elementGUID}/governed-by/definition/{definitionGUID}/attach
+addGovernanceMeasurements,API: Classification Manager,/servers/{serverName}/api/open-metadata/{urlMarker}/elements/{elementGUID}/governance-measurements
+updateGovernanceMeasurements,API: Classification Manager,/servers/{serverName}/api/open-metadata/{urlMarker}/elements/{elementGUID}/governance-measurements/update
+clearGovernanceMeasurements,API: Classification Manager,/servers/{serverName}/api/open-metadata/{urlMarker}/elements/{elementGUID}/governance-measurements/remove
+addGovernanceExpectations,API: Classification Manager,/servers/{serverName}/api/open-metadata/{urlMarker}/elements/{elementGUID}/governance-expectations
+updateGovernanceExpectations,API: Classification Manager,/servers/{serverName}/api/open-metadata/{urlMarker}/elements/{elementGUID}/governance-expectations/update
+clearGovernanceExpectations,API: Classification Manager,/servers/{serverName}/api/open-metadata/{urlMarker}/elements/{elementGUID}/governance-expectations/remove
+detachExternalReference,API: External Links,/servers/{serverName}/api/open-metadata/{urlMarker}/elements/{elementGUID}/external-references/{externalReferenceGUID}/detach
+linkExternalReference,API: External Links,/servers/{serverName}/api/open-metadata/{urlMarker}/elements/{elementGUID}/external-references/{externalReferenceGUID}/attach
+addExternalIdentifier,API: External Links,/servers/{serverName}/api/open-metadata/{urlMarker}/elements/{elementGUID}/external-identifiers/add
+addDigitalResourceOrigin,API: Classification Manager,/servers/{serverName}/api/open-metadata/{urlMarker}/elements/{elementGUID}/digital-resource-origin
+clearDigitalResourceOrigin,API: Classification Manager,/servers/{serverName}/api/open-metadata/{urlMarker}/elements/{elementGUID}/digital-resource-origin/remove
+setCriticalityClassification,API: Classification Manager,/servers/{serverName}/api/open-metadata/{urlMarker}/elements/{elementGUID}/criticality
+clearCriticalityClassification,API: Classification Manager,/servers/{serverName}/api/open-metadata/{urlMarker}/elements/{elementGUID}/criticality/remove
+detachContactDetails,API: Actor Manager,/servers/{serverName}/api/open-metadata/{urlMarker}/elements/{elementGUID}/contact-details/{contactDetailsGUID}/detach
+linkContactDetails,API: Actor Manager,/servers/{serverName}/api/open-metadata/{urlMarker}/elements/{elementGUID}/contact-details/{contactDetailsGUID}/attach
+setConsolidatedDuplicateClassification,API: Classification Manager,/servers/{serverName}/api/open-metadata/{urlMarker}/elements/{elementGUID}/consolidated-duplicate
+clearConsolidatedDuplicateClassification,API: Classification Manager,/servers/{serverName}/api/open-metadata/{urlMarker}/elements/{elementGUID}/consolidated-duplicate/remove
+setConfidentialityClassification,API: Classification Manager,/servers/{serverName}/api/open-metadata/{urlMarker}/elements/{elementGUID}/confidentiality
+clearConfidentialityClassification,API: Classification Manager,/servers/{serverName}/api/open-metadata/{urlMarker}/elements/{elementGUID}/confidentiality/remove
+setConfidenceClassification,API: Classification Manager,/servers/{serverName}/api/open-metadata/{urlMarker}/elements/{elementGUID}/confidence
+clearConfidenceClassification,API: Classification Manager,/servers/{serverName}/api/open-metadata/{urlMarker}/elements/{elementGUID}/confidence/remove
+addCommentToElement,API: Feedback Manager,/servers/{serverName}/api/open-metadata/{urlMarker}/elements/{elementGUID}/comments
+getAttachedComments,API: Feedback Manager,/servers/{serverName}/api/open-metadata/{urlMarker}/elements/{elementGUID}/comments/retrieve
+detachCitedDocumentReference,API: External Links,/servers/{serverName}/api/open-metadata/{urlMarker}/elements/{elementGUID}/cited-document-references/{externalReferenceGUID}/detach
+linkCitedDocumentReference,API: External Links,/servers/{serverName}/api/open-metadata/{urlMarker}/elements/{elementGUID}/cited-document-references/{externalReferenceGUID}/attach
+getCertifications,API: Classification Explorer,/servers/{serverName}/api/open-metadata/{urlMarker}/elements/{elementGUID}/certifications
+certifyElement,API: Governance Officer,/servers/{serverName}/api/open-metadata/{urlMarker}/elements/{elementGUID}/certification-types/{certificationTypeGUID}/certify
+getRelatedElements,API: Classification Explorer,/servers/{serverName}/api/open-metadata/{urlMarker}/elements/{elementGUID}/by-relationship
+getRelatedElements_1,API: Classification Explorer,/servers/{serverName}/api/open-metadata/{urlMarker}/elements/{elementGUID}/by-relationship/{relationshipTypeName}
+findRelatedElementsWithPropertyValue,API: Classification Explorer,/servers/{serverName}/api/open-metadata/{urlMarker}/elements/{elementGUID}/by-relationship/{relationshipTypeName}/with-property-value-search
+getRelatedElementsWithPropertyValue,API: Classification Explorer,/servers/{serverName}/api/open-metadata/{urlMarker}/elements/{elementGUID}/by-relationship/{relationshipTypeName}/with-exact-property-value
+unassignActorFromElement,API: Classification Manager,/servers/{serverName}/api/open-metadata/{urlMarker}/elements/{elementGUID}/assigned-to-actor/{actorGUID}/detach
+assignActorToElement,API: Classification Manager,/servers/{serverName}/api/open-metadata/{urlMarker}/elements/{elementGUID}/assigned-to-actor/{actorGUID}/attach
+getActionsForActionTarget,API: Asset Maker,/servers/{serverName}/api/open-metadata/{urlMarker}/elements/{elementGUID}/action-targets/actions
+getScopedElements,API: Classification Explorer,/servers/{serverName}/api/open-metadata/{urlMarker}/elements/scoped-by/{scopeGUID}
+getSupportedByResource,API: Classification Explorer,/servers/{serverName}/api/open-metadata/{urlMarker}/elements/resource-list/{resourceGUID}
+getLicensedElements,API: Classification Explorer,/servers/{serverName}/api/open-metadata/{urlMarker}/elements/licenses/{licenseTypeGUID}
+getMetadataElementGUIDByUniqueName_2,API: Classification Explorer,/servers/{serverName}/api/open-metadata/{urlMarker}/elements/guid-by-unique-name
+getGovernedElements,API: Classification Explorer,/servers/{serverName}/api/open-metadata/{urlMarker}/elements/governed-by/{governanceDefinitionGUID}
+geCertifiedElements,API: Classification Explorer,/servers/{serverName}/api/open-metadata/{urlMarker}/elements/certifications/{certificationTypeGUID}
+getMetadataElementByUniqueName_2,API: Classification Explorer,/servers/{serverName}/api/open-metadata/{urlMarker}/elements/by-unique-name
+getElements,API: Classification Explorer,/servers/{serverName}/api/open-metadata/{urlMarker}/elements/by-type
+getElementsByTag,API: Feedback Manager,/servers/{serverName}/api/open-metadata/{urlMarker}/elements/by-tag/{tagGUID}/retrieve
+getSemanticAssignees,API: Classification Explorer,/servers/{serverName}/api/open-metadata/{urlMarker}/elements/by-semantic-assignment/{glossaryTermGUID}
+getSecurityTaggedElements,API: Classification Explorer,/servers/{serverName}/api/open-metadata/{urlMarker}/elements/by-security-tags
+getRetentionClassifiedElements,API: Classification Explorer,/servers/{serverName}/api/open-metadata/{urlMarker}/elements/by-retention
+findElementsByPropertyValue,API: Classification Explorer,/servers/{serverName}/api/open-metadata/{urlMarker}/elements/by-property-value-search
+getOwnersElements,API: Classification Explorer,/servers/{serverName}/api/open-metadata/{urlMarker}/elements/by-ownership
+getImpactClassifiedElements,API: Classification Explorer,/servers/{serverName}/api/open-metadata/{urlMarker}/elements/by-impact
+getElementsByPropertyValue,API: Classification Explorer,/servers/{serverName}/api/open-metadata/{urlMarker}/elements/by-exact-property-value
+getElementsByOrigin,API: Classification Explorer,/servers/{serverName}/api/open-metadata/{urlMarker}/elements/by-digital-resource-origin
+getCriticalityClassifiedElements,API: Classification Explorer,/servers/{serverName}/api/open-metadata/{urlMarker}/elements/by-criticality
+getConfidentialityClassifiedElements,API: Classification Explorer,/servers/{serverName}/api/open-metadata/{urlMarker}/elements/by-confidentiality
+getConfidenceClassifiedElements,API: Classification Explorer,/servers/{serverName}/api/open-metadata/{urlMarker}/elements/by-confidence
+findRootElements,API: Classification Explorer,/servers/{serverName}/api/open-metadata/{urlMarker}/elements/by-complex-query
+getElementsByClassification,API: Classification Explorer,/servers/{serverName}/api/open-metadata/{urlMarker}/elements/by-classification/{classificationName}
+findElementsByClassificationWithPropertyValue,API: Classification Explorer,/servers/{serverName}/api/open-metadata/{urlMarker}/elements/by-classification/{classificationName}/with-property-value-search
+getElementsByClassificationWithPropertyValue,API: Classification Explorer,/servers/{serverName}/api/open-metadata/{urlMarker}/elements/by-classification/{classificationName}/with-exact-property-value
+getElementsByCategory,API: Classification Explorer,/servers/{serverName}/api/open-metadata/{urlMarker}/elements/by-category
+findDigitalProducts,API: Collection Manager,/servers/{serverName}/api/open-metadata/{urlMarker}/digital-products/by-search-string
+getDigitalProductByCategory,API: Collection Manager,/servers/{serverName}/api/open-metadata/{urlMarker}/digital-products/by-category
+detachDesignFromImplementation,API: Governance Officer,/servers/{serverName}/api/open-metadata/{urlMarker}/designs/{designGUID}/implementations/{implementationGUID}/detach
+linkDesignToImplementation,API: Governance Officer,/servers/{serverName}/api/open-metadata/{urlMarker}/designs/{designGUID}/implementations/{implementationGUID}/attach
+detachImplementationResource,API: Governance Officer,/servers/{serverName}/api/open-metadata/{urlMarker}/designs/{designGUID}/implementation-resources/{implementationResourceGUID}/detach
+linkImplementationResource,API: Governance Officer,/servers/{serverName}/api/open-metadata/{urlMarker}/designs/{designGUID}/implementation-resources/{implementationResourceGUID}/attach
+detachDataSetContent,API: Asset Maker,/servers/{serverName}/api/open-metadata/{urlMarker}/data-sets/{dataSetGUID}/data-set-content/{dataContentAssetGUID}/detach
+linkDataSetContent,API: Asset Maker,/servers/{serverName}/api/open-metadata/{urlMarker}/data-sets/{dataSetGUID}/data-set-content/{dataContentAssetGUID}/attach
+findDataAssets,API: Asset Maker,/servers/{serverName}/api/open-metadata/{urlMarker}/data-assets/by-search-string
+getDataAssetsByCategory,API: Asset Maker,/servers/{serverName}/api/open-metadata/{urlMarker}/data-assets/by-category
+updateContributionRecord,API: Actor Manager,/servers/{serverName}/api/open-metadata/{urlMarker}/contribution-records/{contributionRecordGUID}
+getContributionRecordByGUID,API: Actor Manager,/servers/{serverName}/api/open-metadata/{urlMarker}/contribution-records/{contributionRecordGUID}/retrieve
+deleteContributionRecord,API: Actor Manager,/servers/{serverName}/api/open-metadata/{urlMarker}/contribution-records/{contributionRecordGUID}/delete
+findContributionRecords,API: Actor Manager,/servers/{serverName}/api/open-metadata/{urlMarker}/contribution-records/by-search-string
+getContributionRecordsByName,API: Actor Manager,/servers/{serverName}/api/open-metadata/{urlMarker}/contribution-records/by-name
+createContextEvent,API: Time Keeper,/servers/{serverName}/api/open-metadata/{urlMarker}/context-events
+detachDependentContextEvents,API: Time Keeper,/servers/{serverName}/api/open-metadata/{urlMarker}/context-events/{parentContextEventGUID}/dependent-context-events/{childContextEventGUID}/detach
+linkDependentContextEvents,API: Time Keeper,/servers/{serverName}/api/open-metadata/{urlMarker}/context-events/{parentContextEventGUID}/dependent-context-events/{childContextEventGUID}/attach
+detachRelatedContextEvents,API: Time Keeper,/servers/{serverName}/api/open-metadata/{urlMarker}/context-events/{contextEventOneGUID}/related-context-events/{contextEventTwoGUID}/detach
+linkRelatedContextEvents,API: Time Keeper,/servers/{serverName}/api/open-metadata/{urlMarker}/context-events/{contextEventOneGUID}/related-context-events/{contextEventTwoGUID}/attach
+updateContextEvent,API: Time Keeper,/servers/{serverName}/api/open-metadata/{urlMarker}/context-events/{contextEventGUID}/update
+getContextEventByGUID,API: Time Keeper,/servers/{serverName}/api/open-metadata/{urlMarker}/context-events/{contextEventGUID}/retrieve
+detachContextEventImpact,API: Time Keeper,/servers/{serverName}/api/open-metadata/{urlMarker}/context-events/{contextEventGUID}/impacts/{impactedElementGUID}/detach
+linkContextEventImpact,API: Time Keeper,/servers/{serverName}/api/open-metadata/{urlMarker}/context-events/{contextEventGUID}/impacts/{impactedElementGUID}/attach
+detachContextEventEvidence,API: Time Keeper,/servers/{serverName}/api/open-metadata/{urlMarker}/context-events/{contextEventGUID}/evidence/{evidenceGUID}/detach
+linkContextEventEvidence,API: Time Keeper,/servers/{serverName}/api/open-metadata/{urlMarker}/context-events/{contextEventGUID}/evidence/{evidenceGUID}/attach
+deleteContextEvent,API: Time Keeper,/servers/{serverName}/api/open-metadata/{urlMarker}/context-events/{contextEventGUID}/delete
+createContextEventFromTemplate,API: Time Keeper,/servers/{serverName}/api/open-metadata/{urlMarker}/context-events/from-template
+findContextEvents,API: Time Keeper,/servers/{serverName}/api/open-metadata/{urlMarker}/context-events/by-search-string
+getContextEventsByName,API: Time Keeper,/servers/{serverName}/api/open-metadata/{urlMarker}/context-events/by-name
+createContactDetails,API: Actor Manager,/servers/{serverName}/api/open-metadata/{urlMarker}/contact-details
+updateContactDetails,API: Actor Manager,/servers/{serverName}/api/open-metadata/{urlMarker}/contact-details/{contactDetailsGUID}/update
+getContactDetailsByGUID,API: Actor Manager,/servers/{serverName}/api/open-metadata/{urlMarker}/contact-details/{contactDetailsGUID}/retrieve
+deleteContactDetails,API: Actor Manager,/servers/{serverName}/api/open-metadata/{urlMarker}/contact-details/{contactDetailsGUID}/delete
+createContactDetailsFromTemplate,API: Actor Manager,/servers/{serverName}/api/open-metadata/{urlMarker}/contact-details/from-template
+findContactDetails,API: Actor Manager,/servers/{serverName}/api/open-metadata/{urlMarker}/contact-details/by-search-string
+getContactDetailsByName,API: Actor Manager,/servers/{serverName}/api/open-metadata/{urlMarker}/contact-details/by-name
+createConnectorType,API: Connection Maker,/servers/{serverName}/api/open-metadata/{urlMarker}/connector-types
+updateConnectorType,API: Connection Maker,/servers/{serverName}/api/open-metadata/{urlMarker}/connector-types/{connectorTypeGUID}/update
+getConnectorTypeByGUID,API: Connection Maker,/servers/{serverName}/api/open-metadata/{urlMarker}/connector-types/{connectorTypeGUID}/retrieve
+deleteConnectorType,API: Connection Maker,/servers/{serverName}/api/open-metadata/{urlMarker}/connector-types/{connectorTypeGUID}/delete
+createConnectorTypeFromTemplate,API: Connection Maker,/servers/{serverName}/api/open-metadata/{urlMarker}/connector-types/from-template
+findConnectorTypes,API: Connection Maker,/servers/{serverName}/api/open-metadata/{urlMarker}/connector-types/by-search-string
+getConnectorTypesByName,API: Connection Maker,/servers/{serverName}/api/open-metadata/{urlMarker}/connector-types/by-name
+getConnectorTypesByConnectorProvider,API: Connection Maker,/servers/{serverName}/api/open-metadata/{urlMarker}/connector-types/by-connector-provider-class-name
+createConnection,API: Connection Maker,/servers/{serverName}/api/open-metadata/{urlMarker}/connections
+updateConnection,API: Connection Maker,/servers/{serverName}/api/open-metadata/{urlMarker}/connections/{connectionGUID}/update
+getConnectionByGUID,API: Connection Maker,/servers/{serverName}/api/open-metadata/{urlMarker}/connections/{connectionGUID}/retrieve
+detachConnectionEndpoint,API: Connection Maker,/servers/{serverName}/api/open-metadata/{urlMarker}/connections/{connectionGUID}/endpoints/{endpointGUID}/detach
+linkConnectionEndpoint,API: Connection Maker,/servers/{serverName}/api/open-metadata/{urlMarker}/connections/{connectionGUID}/endpoints/{endpointGUID}/attach
+detachEmbeddedConnection,API: Connection Maker,/servers/{serverName}/api/open-metadata/{urlMarker}/connections/{connectionGUID}/embedded-connections/{embeddedConnectionGUID}/detach
+linkEmbeddedConnection,API: Connection Maker,/servers/{serverName}/api/open-metadata/{urlMarker}/connections/{connectionGUID}/embedded-connections/{embeddedConnectionGUID}/attach
+deleteConnection,API: Connection Maker,/servers/{serverName}/api/open-metadata/{urlMarker}/connections/{connectionGUID}/delete
+detachConnectionConnectorType,API: Connection Maker,/servers/{serverName}/api/open-metadata/{urlMarker}/connections/{connectionGUID}/connector-types/{connectorTypeGUID}/detach
+linkConnectionConnectorType,API: Connection Maker,/servers/{serverName}/api/open-metadata/{urlMarker}/connections/{connectionGUID}/connector-types/{connectorTypeGUID}/attach
+createConnectionFromTemplate,API: Connection Maker,/servers/{serverName}/api/open-metadata/{urlMarker}/connections/from-template
+findConnections,API: Connection Maker,/servers/{serverName}/api/open-metadata/{urlMarker}/connections/by-search-string
+getConnectionsByName,API: Connection Maker,/servers/{serverName}/api/open-metadata/{urlMarker}/connections/by-name
+updateComment,API: Feedback Manager,/servers/{serverName}/api/open-metadata/{urlMarker}/comments/{commentGUID}/update
+getComment,API: Feedback Manager,/servers/{serverName}/api/open-metadata/{urlMarker}/comments/{commentGUID}/retrieve
+removeCommentFromElement,API: Feedback Manager,/servers/{serverName}/api/open-metadata/{urlMarker}/comments/{commentGUID}/remove
+setupAcceptedAnswer,API: Feedback Manager,/servers/{serverName}/api/open-metadata/{urlMarker}/comments/questions/{questionCommentGUID}/answers/{answerCommentGUID}
+clearAcceptedAnswer,API: Feedback Manager,/servers/{serverName}/api/open-metadata/{urlMarker}/comments/questions/{questionCommentGUID}/answers/{answerCommentGUID}/remove
+findComments,API: Feedback Manager,/servers/{serverName}/api/open-metadata/{urlMarker}/comments/by-search-string
+createCollection,API: Collection Manager,/servers/{serverName}/api/open-metadata/{urlMarker}/collections
+updateCollection,API: Collection Manager,/servers/{serverName}/api/open-metadata/{urlMarker}/collections/{collectionGUID}/update
+getCollectionByGUID,API: Collection Manager,/servers/{serverName}/api/open-metadata/{urlMarker}/collections/{collectionGUID}/retrieve
+getCollectionMembers,API: Collection Manager,/servers/{serverName}/api/open-metadata/{urlMarker}/collections/{collectionGUID}/members
+updateCollectionMembership,API: Collection Manager,/servers/{serverName}/api/open-metadata/{urlMarker}/collections/{collectionGUID}/members/{elementGUID}/update
+removeFromCollection,API: Collection Manager,/servers/{serverName}/api/open-metadata/{urlMarker}/collections/{collectionGUID}/members/{elementGUID}/detach
+addToCollection,API: Collection Manager,/servers/{serverName}/api/open-metadata/{urlMarker}/collections/{collectionGUID}/members/{elementGUID}/attach
+setStagingCollection,API: Collection Manager,/servers/{serverName}/api/open-metadata/{urlMarker}/collections/{collectionGUID}/is-staging-collection
+clearStagingCollection,API: Collection Manager,/servers/{serverName}/api/open-metadata/{urlMarker}/collections/{collectionGUID}/is-staging-collection/delete
+setScopingCollection,API: Collection Manager,/servers/{serverName}/api/open-metadata/{urlMarker}/collections/{collectionGUID}/is-scoping-collection
+clearScopingCollection,API: Collection Manager,/servers/{serverName}/api/open-metadata/{urlMarker}/collections/{collectionGUID}/is-scoping-collection/delete
+setEditingCollection,API: Collection Manager,/servers/{serverName}/api/open-metadata/{urlMarker}/collections/{collectionGUID}/is-editing-collection
+clearEditingCollection,API: Collection Manager,/servers/{serverName}/api/open-metadata/{urlMarker}/collections/{collectionGUID}/is-editing-collection/delete
+getCollectionHierarchy,API: Collection Manager,/servers/{serverName}/api/open-metadata/{urlMarker}/collections/{collectionGUID}/hierarchy
+deleteCollection,API: Collection Manager,/servers/{serverName}/api/open-metadata/{urlMarker}/collections/{collectionGUID}/delete
+linkSubscriber,API: Collection Manager,/servers/{serverName}/api/open-metadata/{urlMarker}/collections/subscribers/{digitalSubscriberGUID}/subscriptions/{digitalSubscriptionGUID}/attach
+createCollectionFromTemplate,API: Collection Manager,/servers/{serverName}/api/open-metadata/{urlMarker}/collections/from-template
+findCollections,API: Collection Manager,/servers/{serverName}/api/open-metadata/{urlMarker}/collections/by-search-string
+getCollectionsByName,API: Collection Manager,/servers/{serverName}/api/open-metadata/{urlMarker}/collections/by-name
+getCollectionsByType,API: Collection Manager,/servers/{serverName}/api/open-metadata/{urlMarker}/collections/by-collection-category
+detachContract,API: Collection Manager,/servers/{serverName}/api/open-metadata/{urlMarker}/collections/agreements/{agreementGUID}/contract-links/{externalReferenceGUID}/detach
+linkContract,API: Collection Manager,/servers/{serverName}/api/open-metadata/{urlMarker}/collections/agreements/{agreementGUID}/contract-links/{externalReferenceGUID}/attach
+detachAgreementItem,API: Collection Manager,/servers/{serverName}/api/open-metadata/{urlMarker}/collections/agreements/{agreementGUID}/agreement-items/{agreementItemGUID}/detach
+linkAgreementItem,API: Collection Manager,/servers/{serverName}/api/open-metadata/{urlMarker}/collections/agreements/{agreementGUID}/agreement-items/{agreementItemGUID}/attach
+linkAgreementActor,API: Collection Manager,/servers/{serverName}/api/open-metadata/{urlMarker}/collections/agreements/{agreementGUID}/agreement-actors/{actorGUID}/attach
+detachAgreementActor,API: Collection Manager,/servers/{serverName}/api/open-metadata/{urlMarker}/collection/agreements/agreement-actors/{agreementActorRelationshipGUID}/detach
+clearValidMetadataValue,API: Valid Metadata,/servers/{serverName}/api/open-metadata/{urlMarker}/clear-value/{propertyName}
+clearValidMetadataMapValue,API: Valid Metadata,/servers/{serverName}/api/open-metadata/{urlMarker}/clear-map-value/{propertyName}/{mapName}
+clearValidMetadataMapName,API: Valid Metadata,/servers/{serverName}/api/open-metadata/{urlMarker}/clear-map-name/{propertyName}
+updateCertification,API: Governance Officer,/servers/{serverName}/api/open-metadata/{urlMarker}/certifications/{certificationGUID}/update
+decertifyElement,API: Governance Officer,/servers/{serverName}/api/open-metadata/{urlMarker}/certifications/{certificationGUID}/delete
+createElementFromTemplate,API: Automated Curation,/servers/{serverName}/api/open-metadata/{urlMarker}/catalog-templates/new-element
+getCatalogTarget,API: Asset Maker,/servers/{serverName}/api/open-metadata/{urlMarker}/catalog-targets/{relationshipGUID}
+updateCatalogTarget,API: Asset Maker,/servers/{serverName}/api/open-metadata/{urlMarker}/catalog-targets/{relationshipGUID}/update
+removeCatalogTarget_1,API: Asset Maker,/servers/{serverName}/api/open-metadata/{urlMarker}/catalog-targets/{relationshipGUID}/remove
+findAuthoredElements,API: Classification Explorer,/servers/{serverName}/api/open-metadata/{urlMarker}/authored-elements/by-search-string
+getAuthoredElementsByCategory,API: Classification Explorer,/servers/{serverName}/api/open-metadata/{urlMarker}/authored-elements/by-category
+createAsset,API: Asset Maker,/servers/{serverName}/api/open-metadata/{urlMarker}/assets
+getEndpointsForInfrastructure,API: Connection Maker,/servers/{serverName}/api/open-metadata/{urlMarker}/assets/{infrastructureGUID}/endpoints/retrieve
+updateAsset,API: Asset Maker,/servers/{serverName}/api/open-metadata/{urlMarker}/assets/{assetGUID}/update
+detachSoftwareCapability,API: Asset Maker,/servers/{serverName}/api/open-metadata/{urlMarker}/assets/{assetGUID}/supported-software-capabilities/{capabilityGUID}/detach
+linkSoftwareCapability,API: Asset Maker,/servers/{serverName}/api/open-metadata/{urlMarker}/assets/{assetGUID}/supported-software-capabilities/{capabilityGUID}/attach
+getAssetByGUID,API: Asset Maker,/servers/{serverName}/api/open-metadata/{urlMarker}/assets/{assetGUID}/retrieve
+detachAssetFromProfile,API: Actor Manager,/servers/{serverName}/api/open-metadata/{urlMarker}/assets/{assetGUID}/it-profiles/{itProfileGUID}/detach
+linkAssetToProfile,API: Actor Manager,/servers/{serverName}/api/open-metadata/{urlMarker}/assets/{assetGUID}/it-profiles/{itProfileGUID}/attach
+linkEndpointToITAsset,API: Connection Maker,/servers/{serverName}/api/open-metadata/{urlMarker}/assets/{assetGUID}/endpoints/{endpointGUID}/attach
+unDeployITAsset,API: Asset Maker,/servers/{serverName}/api/open-metadata/{urlMarker}/assets/{assetGUID}/deployed-on/{destinationGUID}/detach
+deployITAsset,API: Asset Maker,/servers/{serverName}/api/open-metadata/{urlMarker}/assets/{assetGUID}/deployed-on/{destinationGUID}/attach
+deleteAsset,API: Asset Maker,/servers/{serverName}/api/open-metadata/{urlMarker}/assets/{assetGUID}/delete
+detachEndpointFromITAsset,API: Connection Maker,/servers/{serverName}/api/open-metadata/{urlMarker}/assets/{assetGUID}/connections/{endpointGUID}/detach
+detachAssetFromConnection,API: Connection Maker,/servers/{serverName}/api/open-metadata/{urlMarker}/assets/{assetGUID}/connections/{connectionGUID}/detach
+linkAssetToConnection,API: Connection Maker,/servers/{serverName}/api/open-metadata/{urlMarker}/assets/{assetGUID}/connections/{connectionGUID}/attach
+createAssetFromTemplate,API: Asset Maker,/servers/{serverName}/api/open-metadata/{urlMarker}/assets/from-template
+findAssets,API: Asset Maker,/servers/{serverName}/api/open-metadata/{urlMarker}/assets/by-search-string
+getAssetsByName,API: Asset Maker,/servers/{serverName}/api/open-metadata/{urlMarker}/assets/by-name
+getAssignedActions,API: Asset Maker,/servers/{serverName}/api/open-metadata/{urlMarker}/actors/{actorGUID}/assigned/actions
+detachTeamRoleFromProfile,API: Actor Manager,/servers/{serverName}/api/open-metadata/{urlMarker}/actor-roles/{teamRoleGUID}/team-role-appointments/{teamProfileGUID}/detach
+linkTeamRoleToProfile,API: Actor Manager,/servers/{serverName}/api/open-metadata/{urlMarker}/actor-roles/{teamRoleGUID}/team-role-appointments/{teamProfileGUID}/attach
+detachPersonRoleFromProfile,API: Actor Manager,/servers/{serverName}/api/open-metadata/{urlMarker}/actor-roles/{personRoleGUID}/person-role-appointments/{personProfileGUID}/detach
+linkPersonRoleToProfile,API: Actor Manager,/servers/{serverName}/api/open-metadata/{urlMarker}/actor-roles/{personRoleGUID}/person-role-appointments/{personProfileGUID}/attach
+detachITProfileRoleFromProfile,API: Actor Manager,/servers/{serverName}/api/open-metadata/{urlMarker}/actor-roles/{itProfileRoleGUID}/it-profile-role-appointments/{itProfileGUID}/detach
+linkITProfileRoleToProfile,API: Actor Manager,/servers/{serverName}/api/open-metadata/{urlMarker}/actor-roles/{itProfileRoleGUID}/it-profile-role-appointments/{itProfileGUID}/attach
+createActorProfile,API: Actor Manager,/servers/{serverName}/api/open-metadata/{urlMarker}/actor-profiles
+updateActorProfile,API: Actor Manager,/servers/{serverName}/api/open-metadata/{urlMarker}/actor-profiles/{actorProfileGUID}/update
+getActorProfileByGUID,API: Actor Manager,/servers/{serverName}/api/open-metadata/{urlMarker}/actor-profiles/{actorProfileGUID}/retrieve
+deleteActorProfile,API: Actor Manager,/servers/{serverName}/api/open-metadata/{urlMarker}/actor-profiles/{actorProfileGUID}/delete
+createContributionRecord,API: Actor Manager,/servers/{serverName}/api/open-metadata/{urlMarker}/actor-profiles/{actorProfileGUID}/contribution-records
+createActorProfileFromTemplate,API: Actor Manager,/servers/{serverName}/api/open-metadata/{urlMarker}/actor-profiles/from-template
+findActorProfiles,API: Actor Manager,/servers/{serverName}/api/open-metadata/{urlMarker}/actor-profiles/by-search-string
+getActorProfilesByName,API: Actor Manager,/servers/{serverName}/api/open-metadata/{urlMarker}/actor-profiles/by-name
+createAction,API: Asset Maker,/servers/{serverName}/api/open-metadata/{urlMarker}/actions
+unassignAction,API: Asset Maker,/servers/{serverName}/api/open-metadata/{urlMarker}/actions/{actionGUID}/unassign/{actorGUID}
+reassignAction,API: Asset Maker,/servers/{serverName}/api/open-metadata/{urlMarker}/actions/{actionGUID}/reassign/{actorGUID}
+assignAction,API: Asset Maker,/servers/{serverName}/api/open-metadata/{urlMarker}/actions/{actionGUID}/assign/{actorGUID}
+getActionTargets,API: Asset Maker,/servers/{serverName}/api/open-metadata/{urlMarker}/actions/{actionGUID}/action-targets
+addActionTarget,API: Asset Maker,/servers/{serverName}/api/open-metadata/{urlMarker}/actions/{actionGUID}/action-targets/{metadataElementGUID}/attach
+updateActionTargetProperties,API: Asset Maker,/servers/{serverName}/api/open-metadata/{urlMarker}/actions/action-targets/{actionTargetGUID}/update
+getActionTarget,API: Asset Maker,/servers/{serverName}/api/open-metadata/{urlMarker}/actions/action-targets/{actionTargetGUID}/retrieve
+addTemplateClassification,API: Template Manager,/servers/{serverName}/api/open-metadata/template-manager/elements/{elementGUID}/template
+removeTemplateClassification,API: Template Manager,/servers/{serverName}/api/open-metadata/template-manager/elements/{elementGUID}/template/remove
+addTemplateSubstituteClassification,API: Template Manager,/servers/{serverName}/api/open-metadata/template-manager/elements/{elementGUID}/template-substitute
+removeTemplateSubstituteClassification,API: Template Manager,/servers/{serverName}/api/open-metadata/template-manager/elements/{elementGUID}/template-substitute/remove
+detachSourcedFrom,API: Template Manager,/servers/{serverName}/api/open-metadata/template-manager/elements/{elementGUID}/sourced-from/{templateGUID}/detach
+linkSourcedFrom,API: Template Manager,/servers/{serverName}/api/open-metadata/template-manager/elements/{elementGUID}/sourced-from/{templateGUID}/attach
+detachCatalogTemplate,API: Template Manager,/servers/{serverName}/api/open-metadata/template-manager/elements/{elementGUID}/catalog-template/{templateGUID}/detach
+linkCatalogTemplate,API: Template Manager,/servers/{serverName}/api/open-metadata/template-manager/elements/{elementGUID}/catalog-template/{templateGUID}/attach
+linkSubjectAreas,API: Subject Area,/servers/{serverName}/api/open-metadata/subject-area/subject-areas/{subjectAreaGUID}/subject-area-hierarchies/{nestedSubjectAreaGUID}/attach
+detachSubjectAreas,API: Subject Area,/servers/{serverName}/api/open-metadata/subject-area/subject-areas/{parentSubjectAreaGUID}/subject-area-hierarchies/{nestedSubjectAreaGUID}/detach
+detachSolutionComponentActor,API: Solution Architect,/servers/{serverName}/api/open-metadata/solution-architect/solution-roles/{solutionRoleGUID}/solution-component-actors/{solutionComponentGUID}/detach
+linkSolutionComponentActor,API: Solution Architect,/servers/{serverName}/api/open-metadata/solution-architect/solution-roles/{solutionRoleGUID}/solution-component-actors/{dataFieldGUID}/attach
+createSolutionComponent,API: Solution Architect,/servers/{serverName}/api/open-metadata/solution-architect/solution-components
+detachSolutionLinkingWire,API: Solution Architect,/servers/{serverName}/api/open-metadata/solution-architect/solution-components/{solutionComponentOneGUID}/wired-to/{solutionComponentTwoGUID}/detach
+linkSolutionLinkingWire,API: Solution Architect,/servers/{serverName}/api/open-metadata/solution-architect/solution-components/{solutionComponentOneGUID}/wired-to/{solutionComponentTwoGUID}/attach
+updateSolutionComponent,API: Solution Architect,/servers/{serverName}/api/open-metadata/solution-architect/solution-components/{solutionComponentGUID}/update
+linkSubcomponent,API: Solution Architect,/servers/{serverName}/api/open-metadata/solution-architect/solution-components/{solutionComponentGUID}/subcomponents/{subcomponentGUID}/attach
+getSolutionComponentByGUID,API: Solution Architect,/servers/{serverName}/api/open-metadata/solution-architect/solution-components/{solutionComponentGUID}/retrieve
+getSolutionComponentImplementations,API: Solution Architect,/servers/{serverName}/api/open-metadata/solution-architect/solution-components/{solutionComponentGUID}/implementations
+deleteSolutionComponent,API: Solution Architect,/servers/{serverName}/api/open-metadata/solution-architect/solution-components/{solutionComponentGUID}/delete
+detachSubcomponent,API: Solution Architect,/servers/{serverName}/api/open-metadata/solution-architect/solution-components/{parentSolutionComponentGUID}/subcomponents/{subcomponentGUID}/detach
+createSolutionComponentFromTemplate,API: Solution Architect,/servers/{serverName}/api/open-metadata/solution-architect/solution-components/from-template
+findSolutionComponents,API: Solution Architect,/servers/{serverName}/api/open-metadata/solution-architect/solution-components/by-search-string
+getSolutionComponentsByName,API: Solution Architect,/servers/{serverName}/api/open-metadata/solution-architect/solution-components/by-name
+createSolutionBlueprint,API: Solution Architect,/servers/{serverName}/api/open-metadata/solution-architect/solution-blueprints
+updateSolutionBlueprint,API: Solution Architect,/servers/{serverName}/api/open-metadata/solution-architect/solution-blueprints/{solutionBlueprintGUID}/update
+getSolutionBlueprintByGUID,API: Solution Architect,/servers/{serverName}/api/open-metadata/solution-architect/solution-blueprints/{solutionBlueprintGUID}/retrieve
+deleteSolutionBlueprint,API: Solution Architect,/servers/{serverName}/api/open-metadata/solution-architect/solution-blueprints/{solutionBlueprintGUID}/delete
+detachSolutionComponentFromBlueprint,API: Solution Architect,/servers/{serverName}/api/open-metadata/solution-architect/solution-blueprints/{parentSolutionBlueprintGUID}/solution-components/{solutionComponentGUID}/detach
+linkSolutionComponentToBlueprint,API: Solution Architect,/servers/{serverName}/api/open-metadata/solution-architect/solution-blueprints/{parentSolutionBlueprintGUID}/solution-components/{solutionComponentGUID}/attach
+createSolutionBlueprintFromTemplate,API: Solution Architect,/servers/{serverName}/api/open-metadata/solution-architect/solution-blueprints/from-template
+findSolutionBlueprints,API: Solution Architect,/servers/{serverName}/api/open-metadata/solution-architect/solution-blueprints/by-search-string
+getSolutionBlueprintsByName,API: Solution Architect,/servers/{serverName}/api/open-metadata/solution-architect/solution-blueprints/by-name
+createInformationSupplyChain,API: Solution Architect,/servers/{serverName}/api/open-metadata/solution-architect/information-supply-chains
+unlinkPeerInformationSupplyChains,API: Solution Architect,/servers/{serverName}/api/open-metadata/solution-architect/information-supply-chains/{peerOneGUID}/peer-links/{peerTwoGUID}/detach
+linkPeersInInformationSupplyChain,API: Solution Architect,/servers/{serverName}/api/open-metadata/solution-architect/information-supply-chains/{peerOneGUID}/peer-links/{peerTwoGUID}/attach
+updateInformationSupplyChain,API: Solution Architect,/servers/{serverName}/api/open-metadata/solution-architect/information-supply-chains/{informationSupplyChainGUID}/update
+getInformationSupplyChainByGUID,API: Solution Architect,/servers/{serverName}/api/open-metadata/solution-architect/information-supply-chains/{informationSupplyChainGUID}/retrieve
+deleteInformationSupplyChain,API: Solution Architect,/servers/{serverName}/api/open-metadata/solution-architect/information-supply-chains/{informationSupplyChainGUID}/delete
+decomposeInformationSupplyChains,API: Solution Architect,/servers/{serverName}/api/open-metadata/solution-architect/information-supply-chains/{informationSupplyChainGUID}/compositions/{nestedInformationSupplyChainGUID}/detach
+composeInformationSupplyChains,API: Solution Architect,/servers/{serverName}/api/open-metadata/solution-architect/information-supply-chains/{informationSupplyChainGUID}/compositions/{nestedInformationSupplyChainGUID}/attach
+createInformationSupplyChainFromTemplate,API: Solution Architect,/servers/{serverName}/api/open-metadata/solution-architect/information-supply-chains/from-template
+findInformationSupplyChains,API: Solution Architect,/servers/{serverName}/api/open-metadata/solution-architect/information-supply-chains/by-search-string
+getInformationSupplyChainsByName,API: Solution Architect,/servers/{serverName}/api/open-metadata/solution-architect/information-supply-chains/by-name
+detachSolutionDesign,API: Solution Architect,/servers/{serverName}/api/open-metadata/solution-architect/elements/{parentGUID}/solution-designs/{solutionBlueprintGUID}/detach
+linkSolutionDesign,API: Solution Architect,/servers/{serverName}/api/open-metadata/solution-architect/elements/{parentGUID}/solution-designs/{solutionBlueprintGUID}/attach
+detachGovernanceZones,API: Security Officer,/servers/{serverName}/api/open-metadata/security-officer/governance-zones/{parentGovernanceZoneGUID}/governance-zone-hierarchies/{memberDataFieldGUID}/detach
+linkGovernanceZones,API: Security Officer,/servers/{serverName}/api/open-metadata/security-officer/governance-zones/{governanceZoneGUID}/governance-zone-hierarchies/{nestedGovernanceZoneGUID}/attach
+getServerByGUID,API: Runtime Manager,/servers/{serverName}/api/open-metadata/runtime-manager/software-servers/{serverGUID}
+getServersByName,API: Runtime Manager,/servers/{serverName}/api/open-metadata/runtime-manager/software-servers/by-name
+getServersByDeployedImplType,API: Runtime Manager,/servers/{serverName}/api/open-metadata/runtime-manager/software-servers/by-deployed-implementation-type
+getPlatformByGUID,API: Runtime Manager,/servers/{serverName}/api/open-metadata/runtime-manager/platforms/{platformGUID}
+getPlatformsByName,API: Runtime Manager,/servers/{serverName}/api/open-metadata/runtime-manager/platforms/by-name
+getPlatformsByDeployedImplType,API: Runtime Manager,/servers/{serverName}/api/open-metadata/runtime-manager/platforms/by-deployed-implementation-type
+activateWithStoredConfig,API: Runtime Manager,/servers/{serverName}/api/open-metadata/runtime-manager/omag-servers/{serverGUID}/instance
+shutdownServer,API: Runtime Manager,/servers/{serverName}/api/open-metadata/runtime-manager/omag-servers/{serverGUID}/instance
+createMetadataRepositoryCohort,API: Runtime Manager,/servers/{serverName}/api/open-metadata/runtime-manager/metadata-repository-cohorts
+updateMetadataRepositoryCohort,API: Runtime Manager,/servers/{serverName}/api/open-metadata/runtime-manager/metadata-repository-cohorts/{metadataRepositoryCohortGUID}/update
+getMetadataRepositoryCohortByGUID,API: Runtime Manager,/servers/{serverName}/api/open-metadata/runtime-manager/metadata-repository-cohorts/{metadataRepositoryCohortGUID}/retrieve
+deleteMetadataRepositoryCohort,API: Runtime Manager,/servers/{serverName}/api/open-metadata/runtime-manager/metadata-repository-cohorts/{metadataRepositoryCohortGUID}/delete
+detachCohortMember,API: Runtime Manager,/servers/{serverName}/api/open-metadata/runtime-manager/metadata-repository-cohorts/{cohortGUID}/cohort-members/{cohortMemberGUID}/detach
+linkCohortMember,API: Runtime Manager,/servers/{serverName}/api/open-metadata/runtime-manager/metadata-repository-cohorts/{cohortGUID}/cohort-members/{cohortMemberGUID}/attach
+createMetadataRepositoryCohortFromTemplate,API: Runtime Manager,/servers/{serverName}/api/open-metadata/runtime-manager/metadata-repository-cohorts/from-template
+findMetadataRepositoryCohorts,API: Runtime Manager,/servers/{serverName}/api/open-metadata/runtime-manager/metadata-repository-cohorts/by-search-string
+getMetadataRepositoryCohortsByName,API: Runtime Manager,/servers/{serverName}/api/open-metadata/runtime-manager/metadata-repository-cohorts/by-name
+addOpenMetadataArchiveFile,API: Runtime Manager,/servers/{serverName}/api/open-metadata/runtime-manager/omag-servers/{serverGUID}/instance/load/open-metadata-archives/file
+addOpenMetadataArchiveFile_1,API: Runtime Manager,/servers/{serverName}/api/open-metadata/runtime-manager/metadata-access-stores/{serverGUID}/instance/load/open-metadata-archives/file
+addOpenMetadataArchive,API: Runtime Manager,/servers/{serverName}/api/open-metadata/runtime-manager/omag-servers/{serverGUID}/instance/load/open-metadata-archives/archive-content
+addOpenMetadataArchive_1,API: Runtime Manager,/servers/{serverName}/api/open-metadata/runtime-manager/metadata-access-stores/{serverGUID}/instance/load/open-metadata-archives/archive-content
+publishOpenLineageEvent_1,API: Runtime Manager,/servers/{serverName}/api/open-metadata/runtime-manager/integration-daemons/{serverGUID}/open-lineage-events/publish-event
+publishOpenLineageEvent_2,API: Runtime Manager,/servers/{serverName}/api/open-metadata/runtime-manager/integration-daemons/{serverGUID}/open-lineage-events/publish-event-string
+updateEndpointNetworkAddress_1,API: Runtime Manager,/servers/{serverName}/api/open-metadata/runtime-manager/integration-daemons/{serverGUID}/integration-connectors/{connectorName}/endpoint-network-address
+updateConnectorConnection_1,API: Runtime Manager,/servers/{serverName}/api/open-metadata/runtime-manager/integration-daemons/{serverGUID}/integration-connectors/{connectorName}/connection
+restartConnectors_1,API: Runtime Manager,/servers/{serverName}/api/open-metadata/runtime-manager/integration-daemons/{serverGUID}/integration-connectors/restart
+refreshConnectors_1,API: Runtime Manager,/servers/{serverName}/api/open-metadata/runtime-manager/integration-daemons/{serverGUID}/integration-connectors/refresh
+updateConfigurationProperties_1,API: Runtime Manager,/servers/{serverName}/api/open-metadata/runtime-manager/integration-daemons/{serverGUID}/integration-connectors/configuration-properties
+unregisterFromCohortGet,API: Runtime Manager,/servers/{serverName}/api/open-metadata/runtime-manager/cohort-members/{serverGUID}/cohorts/{cohortName}/unregister
+unregisterFromCohortPost,API: Runtime Manager,/servers/{serverName}/api/open-metadata/runtime-manager/cohort-members/{serverGUID}/cohorts/{cohortName}/unregister
+disconnectFromCohortGet,API: Runtime Manager,/servers/{serverName}/api/open-metadata/runtime-manager/cohort-members/{serverGUID}/cohorts/{cohortName}/disconnect
+disconnectFromCohortPost,API: Runtime Manager,/servers/{serverName}/api/open-metadata/runtime-manager/cohort-members/{serverGUID}/cohorts/{cohortName}/disconnect
+connectToCohortGet,API: Runtime Manager,/servers/{serverName}/api/open-metadata/runtime-manager/cohort-members/{serverGUID}/cohorts/{cohortName}/connect
+connectToCohortPost,API: Runtime Manager,/servers/{serverName}/api/open-metadata/runtime-manager/cohort-members/{serverGUID}/cohorts/{cohortName}/connect
+detachMappedValidValues,API: Reference Data,/servers/{serverName}/api/open-metadata/reference-data/valid-values/{validValueDefinitionOneGUID}/mapped-valid-values/{validValueDefinitionTwoGUID}/detach
+linkMappedValidValues,API: Reference Data,/servers/{serverName}/api/open-metadata/reference-data/valid-values/{validValueDefinitionOneGUID}/mapped-valid-values/{validValueDefinitionTwoGUID}/attach
+detachConsistentValidValues,API: Reference Data,/servers/{serverName}/api/open-metadata/reference-data/valid-values/{validValueDefinitionOneGUID}/consistent-valid-values/{validValueDefinitionTwoGUID}/detach
+linkConsistentValidValues,API: Reference Data,/servers/{serverName}/api/open-metadata/reference-data/valid-values/{validValueDefinitionOneGUID}/consistent-valid-values/{validValueDefinitionTwoGUID}/attach
+detachAssociatedValidValues,API: Reference Data,/servers/{serverName}/api/open-metadata/reference-data/valid-values/{validValueDefinitionOneGUID}/associated-valid-values/{validValueDefinitionTwoGUID}/detach
+linkAssociatedValidValues,API: Reference Data,/servers/{serverName}/api/open-metadata/reference-data/valid-values/{validValueDefinitionOneGUID}/associated-valid-values/{validValueDefinitionTwoGUID}/attach
+detachValidValueMember,API: Reference Data,/servers/{serverName}/api/open-metadata/reference-data/valid-values/{validValueDefinitionGUID}/members/{nestedValidValueDefinitionGUID}/detach
+linkValidValueMember,API: Reference Data,/servers/{serverName}/api/open-metadata/reference-data/valid-values/{validValueDefinitionGUID}/members/{nestedValidValueDefinitionGUID}/attach
+detachValidValueImplementation,API: Reference Data,/servers/{serverName}/api/open-metadata/reference-data/valid-values/{validValueDefinitionGUID}/implementation/elements/{elementGUID}/detach
+linkValidValueImplementation,API: Reference Data,/servers/{serverName}/api/open-metadata/reference-data/valid-values/{validValueDefinitionGUID}/implementation/elements/{elementGUID}/attach
+createValidValueDefinition,API: Reference Data,/servers/{serverName}/api/open-metadata/reference-data/valid-value-definitions
+updateValidValueDefinition,API: Reference Data,/servers/{serverName}/api/open-metadata/reference-data/valid-value-definitions/{validValueDefinitionGUID}/update
+getValidValueDefinitionByGUID,API: Reference Data,/servers/{serverName}/api/open-metadata/reference-data/valid-value-definitions/{validValueDefinitionGUID}/retrieve
+deleteValidValueDefinition,API: Reference Data,/servers/{serverName}/api/open-metadata/reference-data/valid-value-definitions/{validValueDefinitionGUID}/delete
+createValidValueDefinitionFromTemplate,API: Reference Data,/servers/{serverName}/api/open-metadata/reference-data/valid-value-definitions/from-template
+findValidValueDefinitions,API: Reference Data,/servers/{serverName}/api/open-metadata/reference-data/valid-value-definitions/by-search-string
+getValidValueDefinitionsByName,API: Reference Data,/servers/{serverName}/api/open-metadata/reference-data/valid-value-definitions/by-name
+detachValidValuesAssignment,API: Reference Data,/servers/{serverName}/api/open-metadata/reference-data/elements/{elementGUID}/valid-values-assignment/{validValueDefinitionGUID}/detach
+linkValidValuesAssignment,API: Reference Data,/servers/{serverName}/api/open-metadata/reference-data/elements/{elementGUID}/valid-values-assignment/{validValueDefinitionGUID}/attach
+detachReferenceValueAssignment,API: Reference Data,/servers/{serverName}/api/open-metadata/reference-data/elements/{elementGUID}/reference-value-assignment/{validValueDefinitionGUID}/detach
+linkReferenceValueAssignment,API: Reference Data,/servers/{serverName}/api/open-metadata/reference-data/elements/{elementGUID}/reference-value-assignment/{validValueDefinitionGUID}/attach
+createProject,API: Project Manager,/servers/{serverName}/api/open-metadata/project-manager/projects
+getProject,API: Project Manager,/servers/{serverName}/api/open-metadata/project-manager/projects/{projectGUID}
+updateProject,API: Project Manager,/servers/{serverName}/api/open-metadata/project-manager/projects/{projectGUID}/update
+getProjectTeam,API: Project Manager,/servers/{serverName}/api/open-metadata/project-manager/projects/{projectGUID}/team
+createTaskProject,API: Project Manager,/servers/{serverName}/api/open-metadata/project-manager/projects/{projectGUID}/task
+clearProjectHierarchy,API: Project Manager,/servers/{serverName}/api/open-metadata/project-manager/projects/{projectGUID}/project-hierarchies/{managedProjectGUID}/detach
+setupProjectHierarchy,API: Project Manager,/servers/{serverName}/api/open-metadata/project-manager/projects/{projectGUID}/project-hierarchies/{managedProjectGUID}/attach
+clearProjectDependency,API: Project Manager,/servers/{serverName}/api/open-metadata/project-manager/projects/{projectGUID}/project-dependencies/{dependsOnProjectGUID}/detach
+setupProjectDependency,API: Project Manager,/servers/{serverName}/api/open-metadata/project-manager/projects/{projectGUID}/project-dependencies/{dependsOnProjectGUID}/attach
+removeFromProjectTeam,API: Project Manager,/servers/{serverName}/api/open-metadata/project-manager/projects/{projectGUID}/members/{actorGUID}/detach
+addToProjectTeam,API: Project Manager,/servers/{serverName}/api/open-metadata/project-manager/projects/{projectGUID}/members/{actorGUID}/attach
+getProjectHierarchy,API: Project Manager,/servers/{serverName}/api/open-metadata/project-manager/projects/{projectGUID}/hierarchy
+getProjectGraph,API: Project Manager,/servers/{serverName}/api/open-metadata/project-manager/projects/{projectGUID}/graph
+deleteProject,API: Project Manager,/servers/{serverName}/api/open-metadata/project-manager/projects/{projectGUID}/delete
+createProjectFromTemplate,API: Project Manager,/servers/{serverName}/api/open-metadata/project-manager/projects/from-template
+findProjects,API: Project Manager,/servers/{serverName}/api/open-metadata/project-manager/projects/by-search-string
+getProjectsByName,API: Project Manager,/servers/{serverName}/api/open-metadata/project-manager/projects/by-name
+getClassifiedProjects,API: Project Manager,/servers/{serverName}/api/open-metadata/project-manager/projects/by-classifications
+getLinkedProjects,API: Project Manager,/servers/{serverName}/api/open-metadata/project-manager/metadata-elements/{parentGUID}/projects
+detachProductManager,API: Product Manager,/servers/{serverName}/api/open-metadata/product-manager/digital-products/{digitalProductGUID}/product-managers/{digitalProductManagerRoleGUID}/detach
+linkProductManager,API: Product Manager,/servers/{serverName}/api/open-metadata/product-manager/digital-products/{digitalProductGUID}/product-managers/{digitalProductManagerRoleGUID}/attach
+detachDigitalProductDependency,API: Product Manager,/servers/{serverName}/api/open-metadata/product-manager/digital-products/{consumerDigitalProductGUID}/product-dependencies/{consumedDigitalProductGUID}/detach
+linkDigitalProductDependency,API: Product Manager,/servers/{serverName}/api/open-metadata/product-manager/digital-products/{consumerDigitalProductGUID}/product-dependencies/{consumedDigitalProductGUID}/attach
+detachTeamStructure,API: People Organizer,/servers/{serverName}/api/open-metadata/people-organizer/actor-profiles/{superTeamGUID}/team-structures/{subteamGUID}/detach
+linkTeamStructure,API: People Organizer,/servers/{serverName}/api/open-metadata/people-organizer/actor-profiles/{superTeamGUID}/team-structures/{subteamGUID}/attach
+detachPeerPerson,API: People Organizer,/servers/{serverName}/api/open-metadata/people-organizer/actor-profiles/{personOneGUID}/peer-persons/{personTwoGUID}/detach
+linkPeerPerson,API: People Organizer,/servers/{serverName}/api/open-metadata/people-organizer/actor-profiles/{personOneGUID}/peer-persons/{personTwoGUID}/attach
+detachNotificationSubscriber,API: Notification Manager,/servers/{serverName}/api/open-metadata/notification-manager/notification-types/{notificationTypeGUID}/notification-subscribers/{elementGUID}/detach
+linkNotificationSubscriber,API: Notification Manager,/servers/{serverName}/api/open-metadata/notification-manager/notification-types/{notificationTypeGUID}/notification-subscribers/{elementGUID}/attach
+detachMonitoredResource,API: Notification Manager,/servers/{serverName}/api/open-metadata/notification-manager/notification-types/{notificationTypeGUID}/monitored-resources/{elementGUID}/detach
+linkMonitoredResource,API: Notification Manager,/servers/{serverName}/api/open-metadata/notification-manager/notification-types/{notificationTypeGUID}/monitored-resources/{elementGUID}/attach
+getMyProfile,API: My Profile,/servers/{serverName}/api/open-metadata/my-profile
+addMyProfile,API: My Profile,/servers/{serverName}/api/open-metadata/my-profile
+getMyResources,API: My Profile,/servers/{serverName}/api/open-metadata/my-profile/assigned-resources
+getMyActors,API: My Profile,/servers/{serverName}/api/open-metadata/my-profile/actors
+getMyUserIdentities,API: My Profile,/servers/{serverName}/api/open-metadata/my-profile/actors/user-identities
+getMyRoles,API: My Profile,/servers/{serverName}/api/open-metadata/my-profile/actors/assigned-roles
+createLocation,API: Location Arena,/servers/{serverName}/api/open-metadata/location-arena/locations
+detachPeerLocations,API: Location Arena,/servers/{serverName}/api/open-metadata/location-arena/locations/{locationOneGUID}/adjacent-locations/{locationTwoGUID}/detach
+linkPeerLocation,API: Location Arena,/servers/{serverName}/api/open-metadata/location-arena/locations/{locationOneGUID}/adjacent-locations/{locationTwoGUID}/attach
+updateLocation,API: Location Arena,/servers/{serverName}/api/open-metadata/location-arena/locations/{locationGUID}/update
+getLocationByGUID,API: Location Arena,/servers/{serverName}/api/open-metadata/location-arena/locations/{locationGUID}/retrieve
+detachNestedLocation,API: Location Arena,/servers/{serverName}/api/open-metadata/location-arena/locations/{locationGUID}/nested-locations/{nestedLocationGUID}/detach
+linkNestedLocation,API: Location Arena,/servers/{serverName}/api/open-metadata/location-arena/locations/{locationGUID}/nested-locations/{nestedLocationGUID}/attach
+deleteLocation,API: Location Arena,/servers/{serverName}/api/open-metadata/location-arena/locations/{locationGUID}/delete
+createLocationFromTemplate,API: Location Arena,/servers/{serverName}/api/open-metadata/location-arena/locations/from-template
+findLocations,API: Location Arena,/servers/{serverName}/api/open-metadata/location-arena/locations/by-search-string
+getLocationsByName,API: Location Arena,/servers/{serverName}/api/open-metadata/location-arena/locations/by-name
+detachKnownLocation,API: Location Arena,/servers/{serverName}/api/open-metadata/location-arena/elements/{elementGUID}/known-locations/{locationGUID}/detach
+linkKnownLocation,API: Location Arena,/servers/{serverName}/api/open-metadata/location-arena/elements/{elementGUID}/known-locations/{locationGUID}/attach
+setGlossaryAsTaxonomy,API: Glossary Manager,/servers/{serverName}/api/open-metadata/glossary-manager/glossaries/{glossaryGUID}/is-taxonomy
+clearGlossaryAsTaxonomy,API: Glossary Manager,/servers/{serverName}/api/open-metadata/glossary-manager/glossaries/{glossaryGUID}/is-taxonomy/remove
+setGlossaryAsCanonical,API: Glossary Manager,/servers/{serverName}/api/open-metadata/glossary-manager/glossaries/{glossaryGUID}/is-canonical-vocabulary
+clearGlossaryAsCanonical,API: Glossary Manager,/servers/{serverName}/api/open-metadata/glossary-manager/glossaries/{glossaryGUID}/is-canonical-vocabulary/remove
+createGlossaryTerm,API: Glossary Manager,/servers/{serverName}/api/open-metadata/glossary-manager/glossaries/terms
+setupTermRelationship,API: Glossary Manager,/servers/{serverName}/api/open-metadata/glossary-manager/glossaries/terms/{glossaryTermOneGUID}/relationships/{relationshipTypeName}/terms/{glossaryTermTwoGUID}
+updateTermRelationship,API: Glossary Manager,/servers/{serverName}/api/open-metadata/glossary-manager/glossaries/terms/{glossaryTermOneGUID}/relationships/{relationshipTypeName}/terms/{glossaryTermTwoGUID}/update
+clearTermRelationship,API: Glossary Manager,/servers/{serverName}/api/open-metadata/glossary-manager/glossaries/terms/{glossaryTermOneGUID}/relationships/{relationshipTypeName}/terms/{glossaryTermTwoGUID}/remove
+getGlossaryTermByGUID,API: Glossary Manager,/servers/{serverName}/api/open-metadata/glossary-manager/glossaries/terms/{glossaryTermGUID}
+updateGlossaryTerm,API: Glossary Manager,/servers/{serverName}/api/open-metadata/glossary-manager/glossaries/terms/{glossaryTermGUID}/update
+updateGlossaryTermFromTemplate,API: Glossary Manager,/servers/{serverName}/api/open-metadata/glossary-manager/glossaries/terms/{glossaryTermGUID}/update/from-template/{templateGUID}
+moveGlossaryTerm,API: Glossary Manager,/servers/{serverName}/api/open-metadata/glossary-manager/glossaries/terms/{glossaryTermGUID}/move-to/{glossaryGUID}
+setTermAsDataValue,API: Glossary Manager,/servers/{serverName}/api/open-metadata/glossary-manager/glossaries/terms/{glossaryTermGUID}/is-data-value
+clearTermAsDataValue,API: Glossary Manager,/servers/{serverName}/api/open-metadata/glossary-manager/glossaries/terms/{glossaryTermGUID}/is-data-value/remove
+setTermAsContext,API: Glossary Manager,/servers/{serverName}/api/open-metadata/glossary-manager/glossaries/terms/{glossaryTermGUID}/is-context-definition
+clearTermAsContext,API: Glossary Manager,/servers/{serverName}/api/open-metadata/glossary-manager/glossaries/terms/{glossaryTermGUID}/is-context-definition/delete
+setTermAsActivity,API: Glossary Manager,/servers/{serverName}/api/open-metadata/glossary-manager/glossaries/terms/{glossaryTermGUID}/is-activity
+clearTermAsActivity,API: Glossary Manager,/servers/{serverName}/api/open-metadata/glossary-manager/glossaries/terms/{glossaryTermGUID}/is-activity/remove
+setTermAsAbstractConcept,API: Glossary Manager,/servers/{serverName}/api/open-metadata/glossary-manager/glossaries/terms/{glossaryTermGUID}/is-abstract-concept
+clearTermAsAbstractConcept,API: Glossary Manager,/servers/{serverName}/api/open-metadata/glossary-manager/glossaries/terms/{glossaryTermGUID}/is-abstract-concept/delete
+deleteGlossaryTerm,API: Glossary Manager,/servers/{serverName}/api/open-metadata/glossary-manager/glossaries/terms/{glossaryTermGUID}/delete
+createGlossaryTermFromTemplate,API: Glossary Manager,/servers/{serverName}/api/open-metadata/glossary-manager/glossaries/terms/from-template/{templateGUID}
+findGlossaryTerms,API: Glossary Manager,/servers/{serverName}/api/open-metadata/glossary-manager/glossaries/terms/by-search-string
+getGlossaryTermsByName,API: Glossary Manager,/servers/{serverName}/api/open-metadata/glossary-manager/glossaries/terms/by-name
+setBusinessSignificant,API: Digital Business,/servers/{serverName}/api/open-metadata/digital-business/elements/{elementGUID}/business-significant
+clearBusinessSignificance,API: Digital Business,/servers/{serverName}/api/open-metadata/digital-business/elements/{elementGUID}/business-significant/remove
+detachDigitalSupport,API: Digital Business,/servers/{serverName}/api/open-metadata/digital-business/business-capabilities/{businessCapabilityGUID}/digital-support/{elementGUID}/detach
+linkDigitalSupport,API: Digital Business,/servers/{serverName}/api/open-metadata/digital-business/business-capabilities/{businessCapabilityGUID}/digital-support/{elementGUID}/attach
+detachBusinessCapabilityDependency,API: Digital Business,/servers/{serverName}/api/open-metadata/digital-business/business-capabilities/{businessCapabilityGUID}/dependencies/{supportingBusinessCapabilityGUID}/detach
+linkBusinessCapabilityDependency,API: Digital Business,/servers/{serverName}/api/open-metadata/digital-business/business-capabilities/{businessCapabilityGUID}/dependencies/{supportingBusinessCapabilityGUID}/attach
+getNewAnnotations,API: Data Discovery,/servers/{serverName}/api/open-metadata/data-discovery/survey-reports/{surveyReportGUID}/new-annotations
+detachAnnotationFromReport,API: Data Discovery,/servers/{serverName}/api/open-metadata/data-discovery/survey-reports/{surveyReportGUID}/new-annotations/{newAnnotationGUID}/detach
+attachAnnotationToReport,API: Data Discovery,/servers/{serverName}/api/open-metadata/data-discovery/survey-reports/{surveyReportGUID}/new-annotations/{newAnnotationGUID}/attach
+getAnnotationsForElement,API: Data Discovery,/servers/{serverName}/api/open-metadata/data-discovery/elements/{elementGUID}/associated-annotations
+detachAnnotationFromDescribedElement,API: Data Discovery,/servers/{serverName}/api/open-metadata/data-discovery/elements/{elementGUID}/associated-annotations/{annotationGUID}/detach
+linkAnnotationToDescribedElement,API: Data Discovery,/servers/{serverName}/api/open-metadata/data-discovery/elements/{elementGUID}/associated-annotations/{annotationGUID}/attach
+createAnnotation,API: Data Discovery,/servers/{serverName}/api/open-metadata/data-discovery/annotations
+detachAnnotationFromItsPredecessor,API: Data Discovery,/servers/{serverName}/api/open-metadata/data-discovery/annotations/{previousAnnotationGUID}/later-annotations/{newAnnotationGUID}/detach
+linkAnnotationToItsPredecessor,API: Data Discovery,/servers/{serverName}/api/open-metadata/data-discovery/annotations/{previousAnnotationGUID}/later-annotations/{newAnnotationGUID}/attach
+updateAnnotation,API: Data Discovery,/servers/{serverName}/api/open-metadata/data-discovery/annotations/{annotationGUID}/update
+getAnnotationByGUID,API: Data Discovery,/servers/{serverName}/api/open-metadata/data-discovery/annotations/{annotationGUID}/retrieve
+detachResourceProfileData,API: Data Discovery,/servers/{serverName}/api/open-metadata/data-discovery/annotations/{annotationGUID}/resource-profile-data-assets/{assetGUID}/detach
+linkResourceProfileData,API: Data Discovery,/servers/{serverName}/api/open-metadata/data-discovery/annotations/{annotationGUID}/resource-profile-data-assets/{assetGUID}/attach
+detachRequestForActionTarget,API: Data Discovery,/servers/{serverName}/api/open-metadata/data-discovery/annotations/{annotationGUID}/request-for-action-targets/{elementGUID}/detach
+linkRequestForActionTarget,API: Data Discovery,/servers/{serverName}/api/open-metadata/data-discovery/annotations/{annotationGUID}/request-for-action-targets/{elementGUID}/attach
+getPreviousAnnotations,API: Data Discovery,/servers/{serverName}/api/open-metadata/data-discovery/annotations/{annotationGUID}/previous-annotations
+detachDataClassMatch,API: Data Discovery,/servers/{serverName}/api/open-metadata/data-discovery/annotations/{annotationGUID}/matched-data-classes/{dataClassGUID}/detach
+linkDataClassMatch,API: Data Discovery,/servers/{serverName}/api/open-metadata/data-discovery/annotations/{annotationGUID}/matched-data-classes/{dataClassGUID}/attach
+detachDiscoveredSchemaType,API: Data Discovery,/servers/{serverName}/api/open-metadata/data-discovery/annotations/{annotationGUID}/discovered-schema-type/{schemaTypeGUID}/detach
+linkDiscoveredSchemaType,API: Data Discovery,/servers/{serverName}/api/open-metadata/data-discovery/annotations/{annotationGUID}/discovered-schema-type/{schemaTypeGUID}/attach
+deleteAnnotation,API: Data Discovery,/servers/{serverName}/api/open-metadata/data-discovery/annotations/{annotationGUID}/delete
+getAnnotationExtensions,API: Data Discovery,/servers/{serverName}/api/open-metadata/data-discovery/annotations/{annotationGUID}/annotation-extensions
+createAnnotationFromTemplate,API: Data Discovery,/servers/{serverName}/api/open-metadata/data-discovery/annotations/from-template
+findAnnotations,API: Data Discovery,/servers/{serverName}/api/open-metadata/data-discovery/annotations/by-search-string
+getAnnotationsByName,API: Data Discovery,/servers/{serverName}/api/open-metadata/data-discovery/annotations/by-name
+getAnnotationsByAnnotationType,API: Data Discovery,/servers/{serverName}/api/open-metadata/data-discovery/annotations/by-annotation-type
+getAnnotationsByAnalysisStep,API: Data Discovery,/servers/{serverName}/api/open-metadata/data-discovery/annotations/by-analysis-step
+createDataStructure,API: Data Designer,/servers/{serverName}/api/open-metadata/data-designer/data-structures
+detachMemberDataField,API: Data Designer,/servers/{serverName}/api/open-metadata/data-designer/data-structures/{parentDataStructureGUID}/member-data-fields/{memberDataFieldGUID}/detach
+updateDataStructure,API: Data Designer,/servers/{serverName}/api/open-metadata/data-designer/data-structures/{dataStructureGUID}/update
+getDataStructureByGUID,API: Data Designer,/servers/{serverName}/api/open-metadata/data-designer/data-structures/{dataStructureGUID}/retrieve
+linkMemberDataField,API: Data Designer,/servers/{serverName}/api/open-metadata/data-designer/data-structures/{dataStructureGUID}/member-data-fields/{dataFieldGUID}/attach
+deleteDataStructure,API: Data Designer,/servers/{serverName}/api/open-metadata/data-designer/data-structures/{dataStructureGUID}/delete
+createDataStructureFromTemplate,API: Data Designer,/servers/{serverName}/api/open-metadata/data-designer/data-structures/from-template
+findDataStructures,API: Data Designer,/servers/{serverName}/api/open-metadata/data-designer/data-structures/by-search-string
+getDataStructuresByName,API: Data Designer,/servers/{serverName}/api/open-metadata/data-designer/data-structures/by-name
+createDataField,API: Data Designer,/servers/{serverName}/api/open-metadata/data-designer/data-fields
+detachNestedDataFields,API: Data Designer,/servers/{serverName}/api/open-metadata/data-designer/data-fields/{parentDataFieldGUID}/nested-data-fields/{nestedDataFieldGUID}/detach
+linkNestedDataFields,API: Data Designer,/servers/{serverName}/api/open-metadata/data-designer/data-fields/{parentDataFieldGUID}/nested-data-fields/{nestedDataFieldGUID}/attach
+updateDataField,API: Data Designer,/servers/{serverName}/api/open-metadata/data-designer/data-fields/{dataFieldGUID}/update
+getDataFieldByGUID,API: Data Designer,/servers/{serverName}/api/open-metadata/data-designer/data-fields/{dataFieldGUID}/retrieve
+deleteDataField,API: Data Designer,/servers/{serverName}/api/open-metadata/data-designer/data-fields/{dataFieldGUID}/delete
+createDataFieldFromTemplate,API: Data Designer,/servers/{serverName}/api/open-metadata/data-designer/data-fields/from-template
+findDataFields,API: Data Designer,/servers/{serverName}/api/open-metadata/data-designer/data-fields/by-search-string
+getDataFieldsByName,API: Data Designer,/servers/{serverName}/api/open-metadata/data-designer/data-fields/by-name
+detachSemanticDefinition,API: Data Designer,/servers/{serverName}/api/open-metadata/data-designer/data-definitions/{dataDefinitionGUID}/semantic-definition/{glossaryTermGUID}/detach
+linkSemanticDefinition,API: Data Designer,/servers/{serverName}/api/open-metadata/data-designer/data-definitions/{dataDefinitionGUID}/semantic-definition/{glossaryTermGUID}/attach
+detachDataClassDefinition,API: Data Designer,/servers/{serverName}/api/open-metadata/data-designer/data-definitions/{dataDefinitionGUID}/data-class-definition/{dataClassGUID}/detach
+linkDataClassDefinition,API: Data Designer,/servers/{serverName}/api/open-metadata/data-designer/data-definitions/{dataDefinitionGUID}/data-class-definition/{dataClassGUID}/attach
+createDataClass,API: Data Designer,/servers/{serverName}/api/open-metadata/data-designer/data-classes
+detachSpecializedDataClass,API: Data Designer,/servers/{serverName}/api/open-metadata/data-designer/data-classes/{parentDataClassGUID}/specialized-data-classes/{childDataClassGUID}/detach
+linkSpecializedDataClass,API: Data Designer,/servers/{serverName}/api/open-metadata/data-designer/data-classes/{parentDataClassGUID}/specialized-data-classes/{childDataClassGUID}/attach
+detachNestedDataClass,API: Data Designer,/servers/{serverName}/api/open-metadata/data-designer/data-classes/{parentDataClassGUID}/nested-data-classes/{childDataClassGUID}/detach
+linkNestedDataClass,API: Data Designer,/servers/{serverName}/api/open-metadata/data-designer/data-classes/{parentDataClassGUID}/nested-data-classes/{childDataClassGUID}/attach
+updateDataClass,API: Data Designer,/servers/{serverName}/api/open-metadata/data-designer/data-classes/{dataClassGUID}/update
+getDataClassByGUID,API: Data Designer,/servers/{serverName}/api/open-metadata/data-designer/data-classes/{dataClassGUID}/retrieve
+deleteDataClass,API: Data Designer,/servers/{serverName}/api/open-metadata/data-designer/data-classes/{dataClassGUID}/delete
+createDataClassFromTemplate,API: Data Designer,/servers/{serverName}/api/open-metadata/data-designer/data-classes/from-template
+findDataClasses,API: Data Designer,/servers/{serverName}/api/open-metadata/data-designer/data-classes/by-search-string
+getDataClassesByName,API: Data Designer,/servers/{serverName}/api/open-metadata/data-designer/data-classes/by-name
+detachCertificationTypeToDataStructure,API: Data Designer,/servers/{serverName}/api/open-metadata/data-designer/certification-types/{certificationTypeGUID}/data-structure-definition/{dataStructureGUID}/detach
+linkCertificationTypeToDataStructure,API: Data Designer,/servers/{serverName}/api/open-metadata/data-designer/certification-types/{certificationTypeGUID}/data-structure-definition/{dataStructureGUID}/attach
+createCommunity,API: Community Matters,/servers/{serverName}/api/open-metadata/community-matters/communities
+updateCommunity,API: Community Matters,/servers/{serverName}/api/open-metadata/community-matters/communities/{communityGUID}/update
+getCommunityByGUID,API: Community Matters,/servers/{serverName}/api/open-metadata/community-matters/communities/{communityGUID}/retrieve
+deleteCommunity,API: Community Matters,/servers/{serverName}/api/open-metadata/community-matters/communities/{communityGUID}/delete
+createCommunityFromTemplate,API: Community Matters,/servers/{serverName}/api/open-metadata/community-matters/communities/from-template
+findCommunities,API: Community Matters,/servers/{serverName}/api/open-metadata/community-matters/communities/by-search-string
+getCommunitiesByName,API: Community Matters,/servers/{serverName}/api/open-metadata/community-matters/communities/by-name
+getAssetLineageGraph,API: Asset Catalog,/servers/{serverName}/api/open-metadata/asset-catalog/assets/{assetGUID}/as-lineage-graph
+getAssetGraph,API: Asset Catalog,/servers/{serverName}/api/open-metadata/asset-catalog/assets/{assetGUID}/as-graph
+findInAssetDomain,API: Asset Catalog,/servers/{serverName}/api/open-metadata/asset-catalog/assets/in-domain/by-search-string
+getAssetsByMetadataCollectionId,API: Asset Catalog,/servers/{serverName}/api/open-metadata/asset-catalog/assets/by-metadata-collection-id/{metadataCollectionId}
+detachTargetForGovernanceAction,API: Action Author,/servers/{serverName}/api/open-metadata/action-author/governance-actions/{governanceActionGUID}/action-targets/{elementGUID}/detach
+linkTargetForGovernanceAction,API: Action Author,/servers/{serverName}/api/open-metadata/action-author/governance-actions/{governanceActionGUID}/action-targets/{elementGUID}/attach
+detachGovernanceActionExecutor,API: Action Author,/servers/{serverName}/api/open-metadata/action-author/governance-action-types/{governanceActionTypeGUID}/governance-engine-executor/{governanceEngineGUID}/detach
+linkGovernanceActionExecutor,API: Action Author,/servers/{serverName}/api/open-metadata/action-author/governance-action-types/{governanceActionTypeGUID}/governance-engine-executor/{governanceEngineGUID}/attach
+setupFirstActionProcessStep,API: Action Author,/servers/{serverName}/api/open-metadata/action-author/governance-action-processes/{processGUID}/first-process-step/{processStepGUID}/attach
+removeFirstProcessStep,API: Action Author,/servers/{serverName}/api/open-metadata/action-author/governance-action-processes/{processGUID}/first-process-step/{firstProcessStepGUID}/detach
+setupNextActionProcessStep,API: Action Author,/servers/{serverName}/api/open-metadata/action-author/governance-action-process-steps/{currentProcessStepGUID}/next-process-steps/{nextProcessStepGUID}/attach
+updateNextActionProcessStep,API: Action Author,/servers/{serverName}/api/open-metadata/action-author/governance-action-process-steps/next-process-steps/{nextProcessStepLinkGUID}/update
+removeNextActionProcessStep,API: Action Author,/servers/{serverName}/api/open-metadata/action-author/governance-action-process-steps/next-process-step/{relationshipGUID}/detach
+addOpenMetadataArchiveFile_2,Server Operations,/open-metadata/server-operations/servers/{serverName}/instance/open-metadata-archives/file
+addOpenMetadataArchive_2,Server Operations,/open-metadata/server-operations/servers/{serverName}/instance/open-metadata-archives/connection
+addOpenMetadataArchive_3,Server Operations,/open-metadata/server-operations/servers/{serverName}/instance/open-metadata-archives/archive-content
+activateWithStoredConfig_1,Platform Services,/open-metadata/platform-services/server-platform/servers/{serverName}/instance
+shutdownServer_1,Platform Services,/open-metadata/platform-services/server-platform/servers/{serverName}/instance
+addOpenMetadataArchiveFile_3,Platform Services,/open-metadata/platform-services/server-platform/servers/{serverName}/instance/open-metadata-archives/file
+addOpenMetadataArchive_4,Platform Services,/open-metadata/platform-services/server-platform/servers/{serverName}/instance/open-metadata-archives/connection
+getActiveConfiguration_1,Platform Services,/open-metadata/platform-services/server-platform/servers/{serverName}/instance/configuration
+activateWithSuppliedConfig,Platform Services,/open-metadata/platform-services/server-platform/servers/{serverName}/instance/configuration
+getPlatformSecurityConnection,Platform Services,/open-metadata/platform-services/server-platform/security/connection
+setPlatformSecurityConnection,Platform Services,/open-metadata/platform-services/server-platform/security/connection
+clearPlatformSecurityConnection,Platform Services,/open-metadata/platform-services/server-platform/security/connection
+getPlaceholderVariables,Set up Configuration Document Store,/open-metadata/admin-services/stores/placeholder-variables
+setPlaceholderVariables,Set up Configuration Document Store,/open-metadata/admin-services/stores/placeholder-variables
+clearPlaceholderVariables,Set up Configuration Document Store,/open-metadata/admin-services/stores/placeholder-variables
+getDefaultOMAGServerConfig,Set up Configuration Document Store,/open-metadata/admin-services/stores/default-configuration-document
+setDefaultOMAGServerConfig,Set up Configuration Document Store,/open-metadata/admin-services/stores/default-configuration-document
+clearDefaultOMAGServerConfig,Set up Configuration Document Store,/open-metadata/admin-services/stores/default-configuration-document
+getConfigurationStoreConnection,Set up Configuration Document Store,/open-metadata/admin-services/stores/connection
+setConfigurationStoreConnection,Set up Configuration Document Store,/open-metadata/admin-services/stores/connection
+clearConfigurationStoreConnection,Set up Configuration Document Store,/open-metadata/admin-services/stores/connection
+getConfiguredViewServices,Server Configuration,/open-metadata/admin-services/servers/{serverName}/view-services
+configureAllViewServices,Server Configuration,/open-metadata/admin-services/servers/{serverName}/view-services
+clearAllViewServices,Server Configuration,/open-metadata/admin-services/servers/{serverName}/view-services
+getViewServiceConfig,Server Configuration,/open-metadata/admin-services/servers/{serverName}/view-services/{serviceURLMarker}
+configureViewService,Server Configuration,/open-metadata/admin-services/servers/{serverName}/view-services/{serviceURLMarker}
+clearViewService,Server Configuration,/open-metadata/admin-services/servers/{serverName}/view-services/{serviceURLMarker}
+getViewServicesConfiguration,Server Configuration,/open-metadata/admin-services/servers/{serverName}/view-services/configuration
+setViewServicesConfiguration,Server Configuration,/open-metadata/admin-services/servers/{serverName}/view-services/configuration
+setServerUserId,Server Configuration,/open-metadata/admin-services/servers/{serverName}/server-user-id
+setServerRootURL,Server Configuration,/open-metadata/admin-services/servers/{serverName}/server-url-root-for-caller
+getBasicServerProperties,Server Configuration,/open-metadata/admin-services/servers/{serverName}/server-properties
+setBasicServerProperties,Server Configuration,/open-metadata/admin-services/servers/{serverName}/server-properties
+setServerDescription,Server Configuration,/open-metadata/admin-services/servers/{serverName}/server-description
+getServerSecurityConnection,Server Configuration,/open-metadata/admin-services/servers/{serverName}/security/connection
+setServerSecurityConnection,Server Configuration,/open-metadata/admin-services/servers/{serverName}/security/connection
+clearServerSecurityConnection,Server Configuration,/open-metadata/admin-services/servers/{serverName}/security/connection
+setOrganizationName,Server Configuration,/open-metadata/admin-services/servers/{serverName}/organization-name
+getOpenMetadataArchives,Server Configuration,/open-metadata/admin-services/servers/{serverName}/open-metadata-archives
+setOpenMetadataArchives,Server Configuration,/open-metadata/admin-services/servers/{serverName}/open-metadata-archives
+clearOpenMetadataArchives,Server Configuration,/open-metadata/admin-services/servers/{serverName}/open-metadata-archives
+addStartUpOpenMetadataArchiveFile,Server Configuration,/open-metadata/admin-services/servers/{serverName}/open-metadata-archives/file
+setMaxPageSize,Server Configuration,/open-metadata/admin-services/servers/{serverName}/max-page-size
+setRepositoryProxyConnection,Server Configuration,/open-metadata/admin-services/servers/{serverName}/local-repository/mode/repository-proxy/details
+setRepositoryProxyConnection_1,Server Configuration,/open-metadata/admin-services/servers/{serverName}/local-repository/mode/repository-proxy/connection
+setReadOnlyLocalRepository,Server Configuration,/open-metadata/admin-services/servers/{serverName}/local-repository/mode/read-only-repository
+setPostgresLocalRepository,Server Configuration,/open-metadata/admin-services/servers/{serverName}/local-repository/mode/postgres-repository
+setPluginRepositoryConnection,Server Configuration,/open-metadata/admin-services/servers/{serverName}/local-repository/mode/plugin-repository/details
+setPluginRepositoryConnection_1,Server Configuration,/open-metadata/admin-services/servers/{serverName}/local-repository/mode/plugin-repository/connection
+setInMemLocalRepository,Server Configuration,/open-metadata/admin-services/servers/{serverName}/local-repository/mode/in-memory-repository
+setLocalMetadataCollectionName,Server Configuration,/open-metadata/admin-services/servers/{serverName}/local-repository/metadata-collection-name/{name}
+getLocalMetadataCollectionId,Server Configuration,/open-metadata/admin-services/servers/{serverName}/local-repository/metadata-collection-id
+setLocalMetadataCollectionId,Server Configuration,/open-metadata/admin-services/servers/{serverName}/local-repository/metadata-collection-id
+setRepositoryProxyEventMapper,Server Configuration,/open-metadata/admin-services/servers/{serverName}/local-repository/event-mapper-details
+setRepositoryProxyEventMapper_1,Server Configuration,/open-metadata/admin-services/servers/{serverName}/local-repository/event-mapper-connection
+getLocalRepositoryConfig,Server Configuration,/open-metadata/admin-services/servers/{serverName}/local-repository/configuration
+setLocalRepositoryConfig,Server Configuration,/open-metadata/admin-services/servers/{serverName}/local-repository/configuration
+clearLocalRepositoryConfig,Server Configuration,/open-metadata/admin-services/servers/{serverName}/local-repository/configuration
+resetRemoteCohortURL,Server Configuration,/open-metadata/admin-services/servers/{serverName}/local-repository/configuration/remote-repository-connector-url
+getIntegrationGroupsConfiguration,Server Configuration,/open-metadata/admin-services/servers/{serverName}/integration-groups/configuration
+configureIntegrationGroup,Server Configuration,/open-metadata/admin-services/servers/{serverName}/integration-groups/configuration
+setIntegrationGroupsConfig,Server Configuration,/open-metadata/admin-services/servers/{serverName}/integration-groups/configuration/all
+getIntegrationDaemonServicesConfiguration,Server Configuration,/open-metadata/admin-services/servers/{serverName}/integration-daemon-services
+setIntegrationDaemonServicesConfig,Server Configuration,/open-metadata/admin-services/servers/{serverName}/integration-daemon-services
+clearIntegrationDaemonServicesConfig,Server Configuration,/open-metadata/admin-services/servers/{serverName}/integration-daemon-services
+getEngineHostServicesConfiguration,Server Configuration,/open-metadata/admin-services/servers/{serverName}/governance-engines
+setEngineHostServicesConfig,Server Configuration,/open-metadata/admin-services/servers/{serverName}/governance-engines
+clearEngineHostServicesConfig,Server Configuration,/open-metadata/admin-services/servers/{serverName}/governance-engines
+getEventBus,Server Configuration,/open-metadata/admin-services/servers/{serverName}/event-bus
+setEventBus,Server Configuration,/open-metadata/admin-services/servers/{serverName}/event-bus
+deleteEventBus,Server Configuration,/open-metadata/admin-services/servers/{serverName}/event-bus
+addRemoteEnterpriseTopic,Server Configuration,/open-metadata/admin-services/servers/{serverName}/enterprise-access/remote-topic
+setEnterpriseAccessConfig,Server Configuration,/open-metadata/admin-services/servers/{serverName}/enterprise-access/configuration
+addEngine,Server Configuration,/open-metadata/admin-services/servers/{serverName}/engine
+enableRepositoryConformanceSuiteWorkbench,Server Configuration,/open-metadata/admin-services/servers/{serverName}/conformance-suite-workbenches/repository-workbench/repositories
+enableRepositoryPerformanceSuiteWorkbench,Server Configuration,/open-metadata/admin-services/servers/{serverName}/conformance-suite-workbenches/repository-workbench/performance
+enablePlatformConformanceSuiteWorkbench,Server Configuration,/open-metadata/admin-services/servers/{serverName}/conformance-suite-workbenches/platform-workbench/platforms
+getStoredConfiguration,Server Configuration,/open-metadata/admin-services/servers/{serverName}/configuration
+setOMAGServerConfig,Server Configuration,/open-metadata/admin-services/servers/{serverName}/configuration
+clearOMAGServerConfig,Server Configuration,/open-metadata/admin-services/servers/{serverName}/configuration
+deployOMAGServerConfig,Server Configuration,/open-metadata/admin-services/servers/{serverName}/configuration/deploy
+getCohortConfig,Server Configuration,/open-metadata/admin-services/servers/{serverName}/cohorts/{cohortName}
+addCohortRegistration,Server Configuration,/open-metadata/admin-services/servers/{serverName}/cohorts/{cohortName}
+clearCohortConfig,Server Configuration,/open-metadata/admin-services/servers/{serverName}/cohorts/{cohortName}
+overrideTypesCohortTopicName,Server Configuration,/open-metadata/admin-services/servers/{serverName}/cohorts/{cohortName}/topic-name-override/types
+overrideRegistrationCohortTopicName,Server Configuration,/open-metadata/admin-services/servers/{serverName}/cohorts/{cohortName}/topic-name-override/registration
+overrideInstancesCohortTopicName,Server Configuration,/open-metadata/admin-services/servers/{serverName}/cohorts/{cohortName}/topic-name-override/instances
+setCohortConfig,Server Configuration,/open-metadata/admin-services/servers/{serverName}/cohorts/{cohortName}/configuration
+getAuditLogDestinations,Server Configuration,/open-metadata/admin-services/servers/{serverName}/audit-log-destinations
+setAuditLogDestinations,Server Configuration,/open-metadata/admin-services/servers/{serverName}/audit-log-destinations
+clearAuditLogDestinations,Server Configuration,/open-metadata/admin-services/servers/{serverName}/audit-log-destinations
+addSLF4JAuditLogDestination,Server Configuration,/open-metadata/admin-services/servers/{serverName}/audit-log-destinations/slf4j
+addPostgreSQLDatabaseAuditLogDestination,Server Configuration,/open-metadata/admin-services/servers/{serverName}/audit-log-destinations/postgres
+addFileAuditLogDestination,Server Configuration,/open-metadata/admin-services/servers/{serverName}/audit-log-destinations/files
+addEventTopicAuditLogDestination,Server Configuration,/open-metadata/admin-services/servers/{serverName}/audit-log-destinations/event-topic
+setDefaultAuditLog,Server Configuration,/open-metadata/admin-services/servers/{serverName}/audit-log-destinations/default
+addConsoleAuditLogDestination,Server Configuration,/open-metadata/admin-services/servers/{serverName}/audit-log-destinations/console
+addAuditLogDestination,Server Configuration,/open-metadata/admin-services/servers/{serverName}/audit-log-destinations/connection
+updateAuditLogDestination,Server Configuration,/open-metadata/admin-services/servers/{serverName}/audit-log-destinations/connection/{connectionName}
+clearAuditLogDestination,Server Configuration,/open-metadata/admin-services/servers/{serverName}/audit-log-destinations/connection/{connectionName}
+getConfiguredAccessServices,Server Configuration,/open-metadata/admin-services/servers/{serverName}/access-services
+configureAllAccessServices,Server Configuration,/open-metadata/admin-services/servers/{serverName}/access-services
+clearAllAccessServices,Server Configuration,/open-metadata/admin-services/servers/{serverName}/access-services
+getAccessServiceConfig,Server Configuration,/open-metadata/admin-services/servers/{serverName}/access-services/{serviceURLMarker}
+configureAccessService,Server Configuration,/open-metadata/admin-services/servers/{serverName}/access-services/{serviceURLMarker}
+clearAccessService,Server Configuration,/open-metadata/admin-services/servers/{serverName}/access-services/{serviceURLMarker}
+overrideAccessServiceOutTopicName,Server Configuration,/open-metadata/admin-services/servers/{serverName}/access-services/{serviceURLMarker}/topic-names/out-topic
+configureAccessServiceNoTopics,Server Configuration,/open-metadata/admin-services/servers/{serverName}/access-services/{serviceURLMarker}/no-topics
+configureAllAccessServicesNoTopics,Server Configuration,/open-metadata/admin-services/servers/{serverName}/access-services/no-topics
+getAccessServicesConfiguration,Server Configuration,/open-metadata/admin-services/servers/{serverName}/access-services/configuration
+setAccessServicesConfig,Server Configuration,/open-metadata/admin-services/servers/{serverName}/access-services/configuration
+platformToken,API: User Security Services,/api/token
+findTypeDefsByProperty,Repository Services - Local Repository,/servers/{serverName}/open-metadata/repository-services/users/{userId}/types/typedefs/by-property
+searchForTypeDefs,Repository Services - Local Repository,/servers/{serverName}/open-metadata/repository-services/users/{userId}/types/typedefs/by-property-value
+findTypesByExternalID,Repository Services - Local Repository,/servers/{serverName}/open-metadata/repository-services/users/{userId}/types/typedefs/by-external-id
+getTypeDefByGUID,Repository Services - Local Repository,/servers/{serverName}/open-metadata/repository-services/users/{userId}/types/typedef/{guid}
+getTypeDefByName,Repository Services - Local Repository,/servers/{serverName}/open-metadata/repository-services/users/{userId}/types/typedef/name/{name}
+findTypesByName,Repository Services - Local Repository,/servers/{serverName}/open-metadata/repository-services/users/{userId}/types/by-name
+getAttributeTypeDefByGUID,Repository Services - Local Repository,/servers/{serverName}/open-metadata/repository-services/users/{userId}/types/attribute-typedef/{guid}
+getAttributeTypeDefByName,Repository Services - Local Repository,/servers/{serverName}/open-metadata/repository-services/users/{userId}/types/attribute-typedef/name/{name}
+getAllTypes,Repository Services - Local Repository,/servers/{serverName}/open-metadata/repository-services/users/{userId}/types/all
+getMetadataCollectionId,Repository Services - Local Repository,/servers/{serverName}/open-metadata/repository-services/users/{userId}/metadata-collection-id
+undoRelationshipUpdate,Repository Services - Local Repository,/servers/{serverName}/open-metadata/repository-services/users/{userId}/instances/relationship/{relationshipGUID}/previous
+getRelationship_2,Repository Services - Local Repository,/servers/{serverName}/open-metadata/repository-services/users/{userId}/instances/relationship/{guid}
+isRelationshipKnown,Repository Services - Local Repository,/servers/{serverName}/open-metadata/repository-services/users/{userId}/instances/relationship/{guid}/existence
+restoreRelationship,Repository Services - Local Repository,/servers/{serverName}/open-metadata/repository-services/users/{userId}/instances/relationship/{deletedRelationshipGUID}/restore
+getEntityDetail_2,Repository Services - Local Repository,/servers/{serverName}/open-metadata/repository-services/users/{userId}/instances/entity/{guid}
+getEntitySummary,Repository Services - Local Repository,/servers/{serverName}/open-metadata/repository-services/users/{userId}/instances/entity/{guid}/summary
+isEntityKnown,Repository Services - Local Repository,/servers/{serverName}/open-metadata/repository-services/users/{userId}/instances/entity/{guid}/existence
+undoEntityUpdate,Repository Services - Local Repository,/servers/{serverName}/open-metadata/repository-services/users/{userId}/instances/entity/{entityGUID}/previous
+getHomeClassifications_1,Repository Services - Local Repository,/servers/{serverName}/open-metadata/repository-services/users/{userId}/instances/entity/{entityGUID}/home-classifications
+restoreEntity,Repository Services - Local Repository,/servers/{serverName}/open-metadata/repository-services/users/{userId}/instances/entity/{deletedEntityGUID}/restore
+findTypeDefsByProperty_1,Repository Services - Enterprise,/servers/{serverName}/open-metadata/repository-services/users/{userId}/enterprise/types/typedefs/by-property
+searchForTypeDefs_1,Repository Services - Enterprise,/servers/{serverName}/open-metadata/repository-services/users/{userId}/enterprise/types/typedefs/by-property-value
+findTypesByExternalID_1,Repository Services - Enterprise,/servers/{serverName}/open-metadata/repository-services/users/{userId}/enterprise/types/typedefs/by-external-id
+getTypeDefByGUID_1,Repository Services - Enterprise,/servers/{serverName}/open-metadata/repository-services/users/{userId}/enterprise/types/typedef/{guid}
+getTypeDefByName_1,Repository Services - Enterprise,/servers/{serverName}/open-metadata/repository-services/users/{userId}/enterprise/types/typedef/name/{name}
+findTypesByName_1,Repository Services - Enterprise,/servers/{serverName}/open-metadata/repository-services/users/{userId}/enterprise/types/by-name
+getAttributeTypeDefByGUID_1,Repository Services - Enterprise,/servers/{serverName}/open-metadata/repository-services/users/{userId}/enterprise/types/attribute-typedef/{guid}
+getAttributeTypeDefByName_1,Repository Services - Enterprise,/servers/{serverName}/open-metadata/repository-services/users/{userId}/enterprise/types/attribute-typedef/name/{name}
+getAllTypes_1,Repository Services - Enterprise,/servers/{serverName}/open-metadata/repository-services/users/{userId}/enterprise/types/all
+getEnterpriseOMRSTopicConnection,Repository Services - Enterprise,/servers/{serverName}/open-metadata/repository-services/users/{userId}/enterprise/remote-topic-connection
+getMetadataCollectionId_1,Repository Services - Enterprise,/servers/{serverName}/open-metadata/repository-services/users/{userId}/enterprise/metadata-collection-id
+undoRelationshipUpdate_1,Repository Services - Enterprise,/servers/{serverName}/open-metadata/repository-services/users/{userId}/enterprise/instances/relationship/{relationshipGUID}/previous
+getRelationship_3,Repository Services - Enterprise,/servers/{serverName}/open-metadata/repository-services/users/{userId}/enterprise/instances/relationship/{guid}
+isRelationshipKnown_1,Repository Services - Enterprise,/servers/{serverName}/open-metadata/repository-services/users/{userId}/enterprise/instances/relationship/{guid}/existence
+restoreRelationship_1,Repository Services - Enterprise,/servers/{serverName}/open-metadata/repository-services/users/{userId}/enterprise/instances/relationship/{deletedRelationshipGUID}/restore
+getEntityDetail_3,Repository Services - Enterprise,/servers/{serverName}/open-metadata/repository-services/users/{userId}/enterprise/instances/entity/{guid}
+getEntitySummary_1,Repository Services - Enterprise,/servers/{serverName}/open-metadata/repository-services/users/{userId}/enterprise/instances/entity/{guid}/summary
+isEntityKnown_1,Repository Services - Enterprise,/servers/{serverName}/open-metadata/repository-services/users/{userId}/enterprise/instances/entity/{guid}/existence
+undoEntityUpdate_1,Repository Services - Enterprise,/servers/{serverName}/open-metadata/repository-services/users/{userId}/enterprise/instances/entity/{entityGUID}/previous
+restoreEntity_1,Repository Services - Enterprise,/servers/{serverName}/open-metadata/repository-services/users/{userId}/enterprise/instances/entity/{deletedEntityGUID}/restore
+getLocalRegistration,Repository Services - Metadata Highway,/servers/{serverName}/open-metadata/repository-services/metadata-highway/local-registration
+unregisterFromCohort,Repository Services - Metadata Highway,/servers/{serverName}/open-metadata/repository-services/metadata-highway/cohorts/{cohortName}/unregister
+getRemoteRegistrations,Repository Services - Metadata Highway,/servers/{serverName}/open-metadata/repository-services/metadata-highway/cohorts/{cohortName}/remote-members
+getLocalRegistration_1,Repository Services - Metadata Highway,/servers/{serverName}/open-metadata/repository-services/metadata-highway/cohorts/{cohortName}/local-registration
+disconnectFromCohort,Repository Services - Metadata Highway,/servers/{serverName}/open-metadata/repository-services/metadata-highway/cohorts/{cohortName}/disconnect
+connectToCohort,Repository Services - Metadata Highway,/servers/{serverName}/open-metadata/repository-services/metadata-highway/cohorts/{cohortName}/connect
+getCohorts,Repository Services - Metadata Highway,/servers/{serverName}/open-metadata/repository-services/metadata-highway/cohort-descriptions
+getSeverityList,Repository Services - Audit Log,/servers/{serverName}/open-metadata/repository-services/audit-log/severity-definitions
+getAuditLogReport,Repository Services - Audit Log,/servers/{serverName}/open-metadata/repository-services/audit-log/report
+validateConnector,Integration Daemon Services,/servers/{serverName}/open-metadata/integration-daemon/validate-connector/{connectorProviderClassName}
+getIntegrationDaemonStatus,Integration Daemon Services,/servers/{serverName}/open-metadata/integration-daemon/status
+getIntegrationGroupSummary,Integration Daemon Services,/servers/{serverName}/open-metadata/integration-daemon/integration-groups/{integrationGroupName}/summary
+refreshIntegrationGroupConfig,Integration Daemon Services,/servers/{serverName}/open-metadata/integration-daemon/integration-groups/{integrationGroupName}/refresh-config
+getIntegrationGroupSummaries,Integration Daemon Services,/servers/{serverName}/open-metadata/integration-daemon/integration-groups/summary
+getConfigurationProperties,Integration Daemon Services,/servers/{serverName}/open-metadata/integration-daemon/integration-connectors/{connectorName}/configuration-properties
+validateConnector_1,Engine Host: Watchdog Action OMES,/servers/{serverName}/open-metadata/engine-services/watchdog-action/validate-connector/{connectorProviderClassName}
+validateConnector_2,Engine Host: Survey Action OMES,/servers/{serverName}/open-metadata/engine-services/survey-action/validate-connector/{connectorProviderClassName}
+validateConnector_3,Engine Host: Repository Governance OMES,/servers/{serverName}/open-metadata/engine-services/repository-governance/validate-connector/{connectorProviderClassName}
+validateConnector_4,Engine Host: Governance Action OMES,/servers/{serverName}/open-metadata/engine-services/governance-action/validate-connector/{connectorProviderClassName}
+getGovernanceEngineSummary,Engine Host Services,/servers/{serverName}/open-metadata/engine-host/governance-engines/{governanceEngineName}/summary
+refreshConfig,Engine Host Services,/servers/{serverName}/open-metadata/engine-host/governance-engines/{governanceEngineName}/refresh-config
+getGovernanceEngineSummaries,Engine Host Services,/servers/{serverName}/open-metadata/engine-host/governance-engines/summary
+refreshConfig_1,Engine Host Services,/servers/{serverName}/open-metadata/engine-host/governance-engines/refresh-config
+getWorkbenchStatus,Conformance Suite,/servers/{serverName}/open-metadata/conformance-suite/users/{userId}/status/workbenches/{workbenchId}
+getConformanceReport,Conformance Suite,/servers/{serverName}/open-metadata/conformance-suite/users/{userId}/report
+getWorkbenchReport,Conformance Suite,/servers/{serverName}/open-metadata/conformance-suite/users/{userId}/report/workbenches/{workbenchId}
+getTestCaseIds,Conformance Suite,/servers/{serverName}/open-metadata/conformance-suite/users/{userId}/report/test-cases
+getTestCaseReport,Conformance Suite,/servers/{serverName}/open-metadata/conformance-suite/users/{userId}/report/test-cases/{testCaseId}
+getFailedTestCaseReport,Conformance Suite,/servers/{serverName}/open-metadata/conformance-suite/users/{userId}/report/test-cases/failed
+getConformanceSummaryReport,Conformance Suite,/servers/{serverName}/open-metadata/conformance-suite/users/{userId}/report/summary
+getProfileNames,Conformance Suite,/servers/{serverName}/open-metadata/conformance-suite/users/{userId}/report/profiles
+getProfileReport,Conformance Suite,/servers/{serverName}/open-metadata/conformance-suite/users/{userId}/report/profiles/{profileName}
+getOutTopicConnection,Metadata Access Services: Open Metadata Store Services,/servers/{serverName}/open-metadata/access-services/open-metadata-store/users/{userId}/topics/out-topic-connection/{callerId}
+getAllTypes_2,Metadata Access Services: Open Metadata Store Services,/servers/{serverName}/open-metadata/access-services/open-metadata-store/users/{userId}/open-metadata-types
+getSubTypes,Metadata Access Services: Open Metadata Store Services,/servers/{serverName}/open-metadata/access-services/open-metadata-store/users/{userId}/open-metadata-types/sub-types
+getRelationshipDefs,Metadata Access Services: Open Metadata Store Services,/servers/{serverName}/open-metadata/access-services/open-metadata-store/users/{userId}/open-metadata-types/relationship-defs
+getTypeDefByName_2,Metadata Access Services: Open Metadata Store Services,/servers/{serverName}/open-metadata/access-services/open-metadata-store/users/{userId}/open-metadata-types/name/{name}
+getTypeDefByGUID_2,Metadata Access Services: Open Metadata Store Services,/servers/{serverName}/open-metadata/access-services/open-metadata-store/users/{userId}/open-metadata-types/guid/{guid}
+findTypesByExternalId,Metadata Access Services: Open Metadata Store Services,/servers/{serverName}/open-metadata/access-services/open-metadata-store/users/{userId}/open-metadata-types/external-id
+getEntityDefs,Metadata Access Services: Open Metadata Store Services,/servers/{serverName}/open-metadata/access-services/open-metadata-store/users/{userId}/open-metadata-types/entity-defs
+getClassificationDefs,Metadata Access Services: Open Metadata Store Services,/servers/{serverName}/open-metadata/access-services/open-metadata-store/users/{userId}/open-metadata-types/classification-defs
+getAttributeTypeDefByName_2,Metadata Access Services: Open Metadata Store Services,/servers/{serverName}/open-metadata/access-services/open-metadata-store/users/{userId}/open-metadata-attribute-types/name/{name}
+getAttributeTypeDefByGUID_2,Metadata Access Services: Open Metadata Store Services,/servers/{serverName}/open-metadata/access-services/open-metadata-store/users/{userId}/open-metadata-attribute-types/guid/{guid}
+getTranslations,Metadata Access Services: Open Metadata Store Services,/servers/{serverName}/open-metadata/access-services/open-metadata-store/users/{userId}/multi-language/get-translations/{elementGUID}
+getTranslation,Metadata Access Services: Open Metadata Store Services,/servers/{serverName}/open-metadata/access-services/open-metadata-store/users/{userId}/multi-language/get-translation/{elementGUID}
+getEngineAction,Metadata Access Services: Open Governance Service,/servers/{serverName}/open-metadata/access-services/open-governance-service/users/{userId}/engine-actions/{engineActionGUID}
+getActiveEngineActions,Metadata Access Services: Open Governance Service,/servers/{serverName}/open-metadata/access-services/open-governance-service/users/{userId}/engine-actions/active
+getActiveClaimedEngineActions,Metadata Access Services: Governance Context Service,/servers/{serverName}/open-metadata/access-services/governance-context-service/users/{userId}/governance-engines/{governanceEngineGUID}/active-engine-actions
+getRegisteredIntegrationConnectors,Metadata Access Services: Governance Configuration Service,/servers/{serverName}/open-metadata/access-services/governance-configuration-service/users/{userId}/integration-groups/{integrationGroupGUID}/integration-connectors
+getRegisteredIntegrationConnector,Metadata Access Services: Governance Configuration Service,/servers/{serverName}/open-metadata/access-services/governance-configuration-service/users/{userId}/integration-groups/{integrationGroupGUID}/integration-connectors/{integrationConnectorGUID}
+getIntegrationGroupByName,Metadata Access Services: Governance Configuration Service,/servers/{serverName}/open-metadata/access-services/governance-configuration-service/users/{userId}/integration-groups/by-name/{name}
+getIntegrationConnectorRegistrations,Metadata Access Services: Governance Configuration Service,/servers/{serverName}/open-metadata/access-services/governance-configuration-service/users/{userId}/integration-connectors/{guid}/registrations
+getRegisteredGovernanceServices,Metadata Access Services: Governance Configuration Service,/servers/{serverName}/open-metadata/access-services/governance-configuration-service/users/{userId}/governance-engines/{governanceEngineGUID}/governance-services
+getRegisteredGovernanceService,Metadata Access Services: Governance Configuration Service,/servers/{serverName}/open-metadata/access-services/governance-configuration-service/users/{userId}/governance-engines/{governanceEngineGUID}/governance-services/{governanceServiceGUID}
+getConnectionByGUID_1,Metadata Access Services: Connected Asset Services,/servers/{serverName}/open-metadata/access-services/connected-asset/users/{userId}/connections/{guid}
+getConnectionByName,Metadata Access Services: Connected Asset Services,/servers/{serverName}/open-metadata/access-services/connected-asset/users/{userId}/connections/by-name/{name}
+getConnectionForAsset,Metadata Access Services: Connected Asset Services,/servers/{serverName}/open-metadata/access-services/connected-asset/users/{userId}/assets/{assetGUID}/connection
+serverLogout,API: User Security Services,/servers/{serverName}/api/token/logout
+getConsistentMetadataValues,API: Valid Metadata,/servers/{serverName}/api/open-metadata/{urlMarker}/{propertyName}/consistent-metadata-values
+validateMetadataValue,API: Valid Metadata,/servers/{serverName}/api/open-metadata/{urlMarker}/validate-value/{propertyName}
+validateMetadataMapValue,API: Valid Metadata,/servers/{serverName}/api/open-metadata/{urlMarker}/validate-map-value/{propertyName}/{mapName}
+validateMetadataMapName,API: Valid Metadata,/servers/{serverName}/api/open-metadata/{urlMarker}/validate-map-name/{propertyName}
+getSpecificationPropertyTypes,API: Valid Metadata,/servers/{serverName}/api/open-metadata/{urlMarker}/specification-properties/type-names
+getAllTypes_3,API: Valid Metadata,/servers/{serverName}/api/open-metadata/{urlMarker}/open-metadata-types
+getValidRelationshipTypes,API: Valid Metadata,/servers/{serverName}/api/open-metadata/{urlMarker}/open-metadata-types/{typeName}/attached-relationships
+getValidClassificationTypes,API: Valid Metadata,/servers/{serverName}/api/open-metadata/{urlMarker}/open-metadata-types/{typeName}/attached-classifications
+getSubTypes_1,API: Valid Metadata,/servers/{serverName}/api/open-metadata/{urlMarker}/open-metadata-types/sub-types/{typeName}
+getRelationshipDefs_1,API: Valid Metadata,/servers/{serverName}/api/open-metadata/{urlMarker}/open-metadata-types/relationship-defs
+getTypeDefByName_3,API: Valid Metadata,/servers/{serverName}/api/open-metadata/{urlMarker}/open-metadata-types/name/{name}
+getEntityDefs_1,API: Valid Metadata,/servers/{serverName}/api/open-metadata/{urlMarker}/open-metadata-types/entity-defs
+getClassificationDefs_1,API: Valid Metadata,/servers/{serverName}/api/open-metadata/{urlMarker}/open-metadata-types/classification-defs
+getCatalogTargets,API: Asset Maker,/servers/{serverName}/api/open-metadata/{urlMarker}/integration-connectors/{integrationConnectorGUID}/catalog-targets
+getValidMetadataValue,API: Valid Metadata,/servers/{serverName}/api/open-metadata/{urlMarker}/get-value/{propertyName}
+getValidMetadataValues,API: Valid Metadata,/servers/{serverName}/api/open-metadata/{urlMarker}/get-valid-metadata-values/{propertyName}
+getValidMetadataMapValue,API: Valid Metadata,/servers/{serverName}/api/open-metadata/{urlMarker}/get-map-value/{propertyName}/{mapName}
+getValidMetadataMapName,API: Valid Metadata,/servers/{serverName}/api/open-metadata/{urlMarker}/get-map-name/{propertyName}
+getActiveEngineActions_1,API: Automated Curation,/servers/{serverName}/api/open-metadata/{urlMarker}/engine-actions/active
+getPlatformReport,API: Runtime Manager,/servers/{serverName}/api/open-metadata/runtime-manager/platforms/{platformGUID}/report
+getServerReport,API: Runtime Manager,/servers/{serverName}/api/open-metadata/runtime-manager/omag-servers/{serverGUID}/instance/report
+refreshIntegrationGroupConfig_1,API: Runtime Manager,/servers/{serverName}/api/open-metadata/runtime-manager/integration-daemons/{serverGUID}/integration-groups/{integrationGroupName}/refresh-config
+getConfigurationProperties_1,API: Runtime Manager,/servers/{serverName}/api/open-metadata/runtime-manager/integration-daemons/{serverGUID}/integration-connectors/{connectorName}/configuration-properties
+refreshConfig_2,API: Runtime Manager,/servers/{serverName}/api/open-metadata/runtime-manager/engine-hosts/{serverGUID}/governance-engines/{governanceEngineName}/refresh-config
+refreshConfig_3,API: Runtime Manager,/servers/{serverName}/api/open-metadata/runtime-manager/engine-hosts/{serverGUID}/governance-engines/refresh-config
+getGlossaryTermStatuses,API: Glossary Manager,/servers/{serverName}/api/open-metadata/glossary-manager/glossaries/terms/status-list
+getTermRelationshipTypeNames,API: Glossary Manager,/servers/{serverName}/api/open-metadata/glossary-manager/glossaries/terms/relationships/type-names
+getGlossaryTermRelationshipStatuses,API: Glossary Manager,/servers/{serverName}/api/open-metadata/glossary-manager/glossaries/terms/relationships/status-list
+getGlossaryTermActivityTypes,API: Glossary Manager,/servers/{serverName}/api/open-metadata/glossary-manager/glossaries/terms/activity-types
+getTabularDataSetReport,API: Data Engineer,/servers/{serverName}/api/open-metadata/data-engineer/tabular-data-sets/{tabularDataSetGUID}/report
+getAssetTypes,API: Asset Catalog,/servers/{serverName}/api/open-metadata/asset-catalog/assets/types
+getActiveServices,Server Operations,/open-metadata/server-operations/servers/{serverName}/services
+getActiveServerStatus,Server Operations,/open-metadata/server-operations/servers/{serverName}/instance/status
+getActiveConfiguration,Server Operations,/open-metadata/server-operations/servers/{serverName}/instance/configuration
+getPlatformStartTime,Platform Services,/open-metadata/platform-services/server-platform/start-time
+getKnownServerList,Platform Services,/open-metadata/platform-services/server-platform/servers
+shutdownAndUnregisterAllServers,Platform Services,/open-metadata/platform-services/server-platform/servers
+getServerStatus,Platform Services,/open-metadata/platform-services/server-platform/servers/{serverName}/status
+getActiveServicesForServer,Platform Services,/open-metadata/platform-services/server-platform/servers/{serverName}/services
+isServerKnown,Platform Services,/open-metadata/platform-services/server-platform/servers/{serverName}/is-known
+getActiveServerStatus_1,Platform Services,/open-metadata/platform-services/server-platform/servers/{serverName}/instance/status
+getActiveServerList,Platform Services,/open-metadata/platform-services/server-platform/servers/active
+getAllRegisteredServices,Platform Services,/open-metadata/platform-services/server-platform/registered-services
+getRegisteredViewServices,Platform Services,/open-metadata/platform-services/server-platform/registered-services/view-services
+getRegisteredGovernanceServices_1,Platform Services,/open-metadata/platform-services/server-platform/registered-services/governance-services
+getRegisteredEngineServices,Platform Services,/open-metadata/platform-services/server-platform/registered-services/engine-services
+getRegisteredCommonServices,Platform Services,/open-metadata/platform-services/server-platform/registered-services/common-services
+getRegisteredAccessServices,Platform Services,/open-metadata/platform-services/server-platform/registered-services/access-services
+getServerPlatformOrigin,Platform Services,/open-metadata/platform-services/server-platform/origin
+getServerPlatformOrganizationName,Platform Services,/open-metadata/platform-services/server-platform/organization-name
+getConnectorType,Platform Services,/open-metadata/platform-services/server-platform/connector-types/{connectorProviderClassName}
+getServerTypeClassification,Server Configuration,/open-metadata/admin-services/servers/{serverName}/server-type-classification
+getLocalMetadataCollectionName,Server Configuration,/open-metadata/admin-services/servers/{serverName}/local-repository/metadata-collection-name
+getResolvedConfiguration,Server Configuration,/open-metadata/admin-services/servers/{serverName}/configuration/resolved
+getDedicatedCohortTopicNames,Server Configuration,/open-metadata/admin-services/servers/{serverName}/cohorts/{cohortName}/topic-names
+getAccessServiceTopicNames,Server Configuration,/open-metadata/admin-services/servers/{serverName}/access-services/{serviceURLMarker}/topic-names
+getAllAccessServiceTopicNames,Server Configuration,/open-metadata/admin-services/servers/{serverName}/access-services/topic-names
+getStoredConfigurations,Server Configuration,/open-metadata/admin-services/configurations
+platformLogout,API: User Security Services,/api/token/logout
+getApplicationInformation,API: User Security Services,/api/public/app/info
+getBuildProperties,API: User Security Services,/api/about
+shutdownAndUnregisterServer,API: Runtime Manager,/servers/{serverName}/api/open-metadata/runtime-manager/omag-servers/{serverGUID}
+shutdownAndUnregisterServer_1,Platform Services,/open-metadata/platform-services/server-platform/servers/{serverName}
+shutdownAllServers,Platform Services,/open-metadata/platform-services/server-platform/servers/instance
+shutdownPlatform,Platform Services,/open-metadata/platform-services/server-platform/instance
+setNoRepositoryMode,Server Configuration,/open-metadata/admin-services/servers/{serverName}/local-repository
+clearAllIntegrationGroups,Server Configuration,/open-metadata/admin-services/servers/{serverName}/integration-groups
+clearIntegrationGroup,Server Configuration,/open-metadata/admin-services/servers/{serverName}/integration-groups/{groupQualifiedName}
+disableAllConformanceSuiteWorkbenches,Server Configuration,/open-metadata/admin-services/servers/{serverName}/conformance-suite-workbenches
+disableRepositoryConformanceSuiteServices,Server Configuration,/open-metadata/admin-services/servers/{serverName}/conformance-suite-workbenches/repository-workbench
+disablePlatformConformanceSuiteServices,Server Configuration,/open-metadata/admin-services/servers/{serverName}/conformance-suite-workbenches/platform-workbench

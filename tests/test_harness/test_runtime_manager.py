@@ -535,7 +535,7 @@ class TestRuntimeManager:
             connector_name = "UnityCatalogServerSynchronizer"
             server_guid = None
             server_name = "integration-daemon"
-            response = r_client.get_integ_connector_config_properties(
+            response = r_client.get_integration_connector_config_properties(
                 connector_name, display_name=server_name
             )
 
