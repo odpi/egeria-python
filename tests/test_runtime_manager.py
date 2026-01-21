@@ -367,7 +367,7 @@ class TestRuntimeManager:
             token = r_client.create_egeria_bearer_token()
 
             start_time = time.perf_counter()
-            filter_string = "qs-view-server"
+            filter_string = "qs-integration-daemon"
             # filter = "simple-metadata-store"
 
             response = r_client.get_servers_by_name(filter_string, output_format="JSON",report_spec="OMAGServers")

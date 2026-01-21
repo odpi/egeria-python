@@ -366,7 +366,7 @@ class TestAutomatedCuration:
 
 
             start_time = time.perf_counter()
-            response = a_client.get_active_engine_actions()
+            response = a_client.get_engine_actions()
             duration = time.perf_counter() - start_time
             print(f"\n\tDuration was {duration} seconds")
             print(f"The type of response is: {type(response)}")
@@ -488,7 +488,7 @@ class TestAutomatedCuration:
     def test_get_engine_actions_by_name(self):
         try:
             a_client = AutomatedCuration(
-                self.good_view_server_1,
+                self.good_view_server_2,
                 self.good_platform1_url,
                 user_id=self.good_user_2,
                 user_pwd="secret",
@@ -496,7 +496,7 @@ class TestAutomatedCuration:
             token = a_client.create_egeria_bearer_token()
 
             start_time = time.perf_counter()
-            response = a_client.get_engine_actions_by_name("JDBCDatabaseCataloguer")
+            response = a_client.get_engine_actions_by_name("Award Karma Points Action")
             duration = time.perf_counter() - start_time
             print(f"\n\tDuration was {duration} seconds")
             print(f"\n Type of response is {type(response)}")
@@ -531,7 +531,7 @@ class TestAutomatedCuration:
             token = a_client.create_egeria_bearer_token()
 
             start_time = time.perf_counter()
-            response = a_client.find_engine_actions("*", output_format = "DICT", report_spec = "Referenceable")
+            response = a_client.find_engine_actions("*", output_format = "JSON", report_spec = "Referenceable", page_size=2)
             duration = time.perf_counter() - start_time
             print(f"\n\tDuration was {duration} seconds")
             if type(response) is list:
@@ -1008,16 +1008,16 @@ class TestAutomatedCuration:
                 user_pwd="secret",
             )
             token = a_client.create_egeria_bearer_token()
-            postgres_server_connector_guid = a_client.get_connector_guid('PostgreSQLServerCataloguer')
+            element_guid = a_client.get_connector_guid('JacquardHarvester')
 
-            element_guid = "061a4fb3-7d41-4e52-9080-65e9c61084d2"
+            # element_guid = "79f97f8d-7b7a-464e-8d34-7cfab9d17dbf"
             relationship_guid = "6be6e470-7aa2-4f50-8142-246866037523"
             # t = INTEGRATION_GUIDS['SampleDataFilesMonitor']
-            t = a_client.get_connector_guid('UnityCatalogServerSynchronizer')
+            # t = a_client.get_connector_guid('UnityCatalogServerSynchronizer')
             # t = INTEGRATION_GUIDS["UnityCatalogServerSynchronizer"]
             start_time = time.perf_counter()
 
-            response = a_client.get_catalog_targets(postgres_server_connector_guid)
+            response = a_client.get_catalog_targets(element_guid)
             duration = time.perf_counter() - start_time
             print(f"Type of response was {type(response)}")
             print(f"\n\tDuration was {duration} seconds")
@@ -1027,7 +1027,7 @@ class TestAutomatedCuration:
                 console.log(f"Found {count} elements")
                 print_json(out)
             elif type(response) is str:
-                print(f"\n\nfor {t} got response {response} ")
+                print(f"\n\nfor {element_guid} got response {response} ")
             assert True
 
         except (

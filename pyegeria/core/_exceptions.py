@@ -158,6 +158,8 @@ class PyegeriaException(Exception):
 
     def __init__(self, response:Response = None, error_code: PyegeriaErrorCode = None,
                  context: dict = None, additional_info:dict = None, e:Exception = None) -> None:
+        self.response_egeria_msg_id = ""
+        self.response_egeria_msg = ""
         if response:
             self.response = response
             self.response_url = getattr(response, "url", "unknown URL") if response else additional_info.get("endpoint",                                                                                             "")
@@ -401,8 +403,12 @@ def print_basic_exception(e: PyegeriaException):
     table.add_column("Facet", justify="center")
     table.add_column("Item", justify="left", width=80)
     if e.response:
-        related_response = e.response.json() if isinstance(e, PyegeriaException) else None
-        exception_msg_id = related_response.get("exceptionErrorMessageId", None)
+        if isinstance(e.response, dict|Response):
+            related_response = e.response.json()
+            exception_msg_id = related_response.get("exceptionErrorMessageId", None)
+        else:
+            related_response = e.response or '---'
+
     else:
         exception_msg_id = ""
 
@@ -426,10 +432,14 @@ def print_basic_exception(e: PyegeriaException):
                           format_dict_to_string(related_response.get('exceptionErrorMessage',"")))
                 elif isinstance(related_response, str):
                     table.add_row(related_response,)
+            table.add_row("Egeria Message", )
+            if isinstance(related_response, dict):
+                user_action = format_dict_to_string(related_response.get("exceptionUserAction", ""))
 
-            table.add_row("Egeria User Action",
-                          format_dict_to_string(related_response.get('exceptionUserAction',"")) if isinstance(related_response,dict) else related_response)
-
+                table.add_row("Egeria User Action",
+                          format_dict_to_string(user_action))
+            else:
+                table.add_row("Egeria User Action",related_response)
             exception_msg_id = related_response.get("exceptionErrorMessageId", None) if isinstance(related_response,dict) else related_response
         table.add_row("Egeria Exception Message Id", exception_msg_id)
         table.add_row("Pyegeria Message", e.message)

@@ -87,28 +87,30 @@ def display_catalog_targets(
 
         # table.add_column("Relationship GUID", no_wrap=True)
         table.add_column("Configuration Properties")
-        table.add_column("Template Properties")
+        table.add_column("Templates")
         table.add_column("Operational Instructions", max_width=20)
         # table.add_column("Delete Method")
 
         if type(cat_targets) is list:
             for target in cat_targets:
-                target_name = target['properties'].get("catalogTargetName", "---")
-                target_source = target.get("metadataSourceQualifiedName", "---")
-                target_rel = target.get("relationshipGUID", "---")
-                target_sync = target.get("permittedSynchronization")
-                target_delete = target.get("deleteMethod", "---")
+                tgt_prop = target.get('relatedBy',{}).get('relationshipProperties',{})
+                target_name = tgt_prop.get("catalogTargetName", "---")
+                target_source = tgt_prop.get("metadataSourceQualifiedName", "---")
+                target_rel = target['relatedBy']['relationshipHeader']['guid']
+                target_sync = tgt_prop.get("permittedSynchronization")
+                target_delete = tgt_prop.get("deleteMethod", "---")
                 op_instruct = f"* {target_sync}\n* {target_delete}"
                 op_instruct_out = Markdown(op_instruct)
-                # target_guid = target['catalogTargetElement']['guid']
-                connector_unique = target["catalogTargetElement"]["uniqueName"]
+
+                connector_unique = target['properties'].get("displayName",None)
+                connector_unique = connector_unique if connector_unique else target['properties']['qualifiedName']
 
                 cat_target_out = Markdown(
                     f"* Target Name: {target_name}\n* Target Source: {target_source}\n"
                     f"* Relationship Guid: {target_rel}"
                 )
 
-                config_props = target.get("configurationProperties", "---")
+                config_props = tgt_prop.get("configurationProperties", "---")
                 if type(config_props) is dict:
                     config_props_md = ""
                     for prop in config_props:
@@ -117,7 +119,7 @@ def display_catalog_targets(
                 else:
                     config_props_out = "---"
 
-                template_props = target.get("templateProperties", "---")
+                template_props = tgt_prop.get("templates", "---")
                 if type(template_props) is dict:
                     template_props_md = ""
                     for prop in template_props:

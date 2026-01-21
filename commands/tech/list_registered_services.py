@@ -72,36 +72,32 @@ def display_registered_svcs(
             caption=f"Registered Services from Server '{server}' @ Platform - {url}",
             expand=True,
         )
-        table.add_column("Service Id")
         table.add_column("Service Name")
+        table.add_column("Service Type")
         table.add_column("Service  Development Status")
         table.add_column("URL Marker")
         table.add_column("Description")
         table.add_column("Wiki", no_wrap=True)
-        table.add_column("Server Type")
-        table.add_column("Partner Service Name")
-        table.add_column("Partner Service Type")
+        table.add_column("Conformance Profile")
 
         if type(svc_list) is list:
             for svc in svc_list:
-                svc_id = str(svc.get("serviceId", " "))
-                svc_name = svc.get("serviceName", "b")
-                svc_dev_status = svc.get("serviceDevelopmentStatus", " ")
-                svc_url_marker = svc.get("serviceUrlMarker", " ")
-                svc_description = svc.get("serviceDescription", " ")
-                svc_wiki = svc.get("serviceWiki", " ")
-                svc_partner_svc_name = svc.get("partnerServiceName", " ")
-                svc_partner_svc_type = svc.get("partnerServiceType", " ")
+                svc_name = svc.get("Service Name", "---")
+                svc_type = svc.get("Service Type","---")
+                svc_dev_status = svc.get("serviceDevelopmentStatus", "---")
+                svc_url_marker = svc.get("Url Marker", "---")
+                svc_description = svc.get("Description", "---")
+                svc_wiki = svc.get("Wiki", "---")
+                svc_conf = svc.get("Conformance Profile","---")
 
                 table.add_row(
-                    svc_id,
                     svc_name,
+                    svc_type,
                     svc_dev_status,
                     svc_url_marker,
                     svc_description,
                     svc_wiki,
-                    svc_partner_svc_name,
-                    svc_partner_svc_type,
+                    svc_conf,
                 )
             return table
         elif type(svc_list) is str:
@@ -127,7 +123,7 @@ def display_registered_svcs(
     console = Console(width=width, force_terminal=not jupyter)
     try:
         a_client = RegisteredInfo(server, url, username)
-        # token = a_client.create_egeria_bearer_token(username, password)
+        token = a_client.create_egeria_bearer_token(username, password)
         svc_list = a_client.list_registered_svcs(service)
 
         with console.pager(styles=True):

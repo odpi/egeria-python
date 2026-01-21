@@ -63,9 +63,9 @@ def display_relationship_types(
 
         table.add_column("Name")
         table.add_column("Status")
-        table.add_column("Description")
-        table.add_column("Description Wiki", no_wrap=True)
-        table.add_column("Attributes", min_width=50)
+        table.add_column("Description", width=15)
+        table.add_column("Description Wiki")
+        table.add_column("Attributes", min_width=80)
 
         types_list = p_client.get_valid_relationship_types(type_name)
 
@@ -79,7 +79,7 @@ def display_relationship_types(
             print(types_list)
             raise ValueError("-->This is not a known Type")
         else:
-            for types in types_list:
+            for types in types_list['typeDefs']:
                 name = types["name"]
                 # guid = types['guid']
                 status = types["initialStatus"]
@@ -104,9 +104,9 @@ def display_relationship_types(
 
                 else:
                     att_md = False
-            att_out = att_table if att_md else " "
+                att_out = att_table if att_md else " "
 
-            table.add_row(name, status, description, description_wiki, att_out)
+                table.add_row(name, status, description, description_wiki, att_out)
         p_client.close_session()
         return table
 

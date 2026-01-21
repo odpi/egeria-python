@@ -1948,6 +1948,98 @@ class AutomatedCuration(ServerClient):
         loop.run_until_complete(self._async_cancel_engine_action(engine_action_guid))
         return
 
+    @dynamic_catch
+    async def _async_get_engine_actions(
+            self,
+            start_from: int = 0,
+            page_size: int = 0,
+            output_format: str = "JSON",
+            report_spec: str | dict = "EngineAction",
+            body: Optional[dict | FilterRequestBody] = None,
+    ) -> list | str:
+        """Retrieve the list of engine action metadata elements. Async Version.
+
+        Parameters
+        ----------
+        start_from : int, optional
+            The index to start retrieving engine actions from. If not provided, the default value will be used.
+        page_size : int, optional
+            The maximum number of engine actions to retrieve in a single request. If not provided, the default global
+            maximum paging size will be used.
+        output_format: str, default = "JSON"
+            - one of "DICT", "MERMAID" or "JSON"
+        report_spec: dict , optional, default = None
+            The desired output columns/fields to include.
+        body: dict, optional, default = None
+            Provides, a full request body.
+
+        Returns
+        -------
+        list of dict | str
+            A list of dictionaries representing the retrieved engine actions.
+        Raises:
+        ------
+        PyegeriaException
+        Notes
+        -----
+        For more information see: https://egeria-project.org/concepts/engine-action
+
+        """
+
+        url = (
+            f"{self.curation_command_root}/engine-actions"
+        )
+        response = await self._async_get_name_request(url, _type=self.ENGINE_ACTION_LABEL,
+                                                      _gen_output=self._generate_engine_action_output,
+                                                      filter_string=None,
+                                                      start_from=start_from, page_size=page_size,
+                                                      output_format=output_format, report_spec=report_spec,
+                                                      body=body)
+        return response
+
+    def get_engine_actions(
+            self,
+            start_from: int = 0,
+            page_size: int = 0,
+            output_format: str = "JSON",
+            report_spec: str | dict = "EngineAction",
+            body: Optional[dict | FilterRequestBody] = None,
+    ) -> list | str:
+        """Retrieve the list of engine action metadata elements.
+
+        Parameters
+        ----------
+        start_from : int, optional
+            The index to start retrieving engine actions from. If not provided, the default value will be used.
+        page_size : int, optional
+            The maximum number of engine actions to retrieve in a single request. If not provided, the default global
+             maximum paging size will be used.
+        output_format: str, default = "JSON"
+            - one of "DICT", "MERMAID" or "JSON"
+        report_spec: dict , optional, default = None
+            The desired output columns/fields to include.
+        body: dict, optional, default = None
+            Provides, a full request body.
+
+        Returns
+        -------
+        list of dict | str
+            A list of dictionaries representing the retrieved engine actions.
+        Raises:
+        ------
+        PyegeriaException
+        Notes
+        -----
+        For more information see: https://egeria-project.org/concepts/engine-action
+
+        """
+        loop = asyncio.get_event_loop()
+        response = loop.run_until_complete(
+            self._async_get_engine_actions(start_from, page_size, output_format, report_spec, body)
+        )
+        return response
+
+    @dynamic_catch
     async def _async_get_active_engine_actions(
             self, start_from: int = 0, page_size: int = 0,
             output_format: str = "JSON", report_spec: str | dict = "Engine-Actions") -> list | str:
@@ -1960,6 +2052,10 @@ class AutomatedCuration(ServerClient):
             The starting index of the actions to retrieve. Default is 0.
         page_size : int, optional
             The maximum number of actions to retrieve per page. Default is the global maximum paging size.
+        output_format: str, default = "JSON"
+            - one of "DICT", "MERMAID" or "JSON"
+        report_spec: dict , optional, default = None
+            The desired output columns/fields to include.
 
         Returns:
         -------
@@ -1980,17 +2076,13 @@ class AutomatedCuration(ServerClient):
             f"{self.curation_command_root}/engine-actions/active"
         )
 
-        response = await self._async_make_request("GET", url)
-        elements = response.json().get("elements", "No actions found")
-        if type(elements) is str:
-            logger.info("No Actions Found")
-            return "No Actions Found"
+        response = await self._async_get_name_request(url, _type=self.ENGINE_ACTION_LABEL,
+                                                      _gen_output=self._generate_engine_action_output,
+                                                      filter_string=None,
+                                                      start_from=start_from, page_size=page_size,
+                                                      output_format=output_format, report_spec=report_spec)
 
-        if output_format.upper() != 'JSON':  # return a simplified markdown representation
-            # logger.info(f"Found elements, output format: {output_format} and report_spec: {report_spec}")
-            return self._generate_engine_action_output(elements, None, "EngineAction",
-                               output_format, report_spec)
-        return elements
+        return response
 
     def get_active_engine_actions(
             self, start_from: int = 0, page_size: int = 0,
@@ -2026,11 +2118,15 @@ class AutomatedCuration(ServerClient):
         )
         return response
 
+    @dynamic_catch
     async def _async_get_engine_actions_by_name(
             self,
             name: str,
             start_from: int = 0,
             page_size: int = 0,
+            output_format: str = "JSON",
+            report_spec: str | dict = "EngineAction",
+            body: Optional[dict | FilterRequestBody] = None,
     ) -> list | str:
         """Retrieve the list of engine action metadata elements with a matching qualified or display name.
         There are no wildcards supported on this request. Async Version.
@@ -2044,6 +2140,12 @@ class AutomatedCuration(ServerClient):
         page_size : int, optional
             The maximum number of engine actions to retrieve in a single request. If not provided, the default global
             maximum paging size will be used.
+        output_format: str, default = "JSON"
+            - one of "DICT", "MERMAID" or "JSON"
+        report_spec: dict , optional, default = None
+            The desired output columns/fields to include.
+        body: dict, optional, default = None
+            Provides, a full request body. If specified, the body supercedes the name parameter.
 
         Returns
         -------
@@ -2062,17 +2164,24 @@ class AutomatedCuration(ServerClient):
         validate_name(name)
 
         url = (
-            f"{self.curation_command_root}/engine-actions/by-name"
+            f"{self.curation_command_root}/assets/by-name"
         )
-        body = {"filter": name}
-        response = await self._async_make_request("POST", url, body)
-        return response.json().get("elements", "no actions")
+        response = await self._async_get_name_request(url, _type=self.ENGINE_ACTION_LABEL,
+                                                      _gen_output=self._generate_engine_action_output,
+                                                      filter_string=name,
+                                                      start_from=start_from, page_size=page_size,
+                                                      output_format=output_format, report_spec=report_spec,
+                                                      body=body)
+        return response
 
     def get_engine_actions_by_name(
             self,
             name: str,
             start_from: int = 0,
             page_size: int = 0,
+            output_format: str = "JSON",
+            report_spec: str | dict = "EngineAction",
+            body: Optional[dict | FilterRequestBody] = None,
     ) -> list | str:
         """Retrieve the list of engine action metadata elements with a matching qualified or display name.
         There are no wildcards supported on this request.
@@ -2087,6 +2196,12 @@ class AutomatedCuration(ServerClient):
         page_size : int, optional
             The maximum number of engine actions to retrieve in a single request. If not provided, the default global
              maximum paging size will be used.
+        output_format: str, default = "JSON"
+            - one of "DICT", "MERMAID" or "JSON"
+        report_spec: dict , optional, default = None
+            The desired output columns/fields to include.
+        body: dict, optional, default = None
+            Provides, a full request body. If specified, the body supercedes the name parameter.
 
         Returns
         -------
@@ -2103,7 +2218,7 @@ class AutomatedCuration(ServerClient):
         """
         loop = asyncio.get_event_loop()
         response = loop.run_until_complete(
-            self._async_get_engine_actions_by_name(name, start_from, page_size)
+            self._async_get_engine_actions_by_name(name, start_from, page_size, output_format, report_spec, body)
         )
         return response
 
@@ -2112,7 +2227,6 @@ class AutomatedCuration(ServerClient):
                                          starts_with: bool = True, ends_with: bool = False,
                                          ignore_case: bool = False,
                                          anchor_domain: Optional[str] = None,
-                                         metadata_element_type: Optional[str] = None,
                                          metadata_element_subtypes: Optional[list[str]] = None,
                                          skip_relationships: Optional[list[str]] = None,
                                          include_only_relationships: Optional[list[str]] = None,
@@ -2142,8 +2256,6 @@ class AutomatedCuration(ServerClient):
             Ignore case when searching
         anchor_domain: str, optional
             The anchor domain to search in.
-        metadata_element_type: str, optional
-            The type of metadata element to search for.
         metadata_element_subtypes: list[str], optional
             The subtypes of metadata element to search for.
         skip_relationships: list[str], optional
@@ -2205,7 +2317,7 @@ class AutomatedCuration(ServerClient):
                                                   search_string=search_string, starts_with=starts_with,
                                                   ends_with=ends_with, ignore_case=ignore_case,
                                                   anchor_domain=anchor_domain,
-                                                  metadata_element_type=metadata_element_type,
+                                                  metadata_element_type='EngineAction',
                                                   metadata_element_subtypes=metadata_element_subtypes,
                                                   skip_relationships=skip_relationships,
                                                   include_only_relationships=include_only_relationships,
@@ -2229,7 +2341,6 @@ class AutomatedCuration(ServerClient):
                             starts_with: bool = True, ends_with: bool = False,
                             ignore_case: bool = False,
                             anchor_domain: Optional[str] = None,
-                            metadata_element_type: Optional[str] = None,
                             metadata_element_subtypes: Optional[list[str]] = None,
                             skip_relationships: Optional[list[str]] = None,
                             include_only_relationships: Optional[list[str]] = None,
@@ -2259,8 +2370,6 @@ class AutomatedCuration(ServerClient):
             Ignore case when searching
         anchor_domain: str, optional
             The anchor domain to search in.
-        metadata_element_type: str, optional
-            The type of metadata element to search for.
         metadata_element_subtypes: list[str], optional
             The subtypes of metadata element to search for.
         skip_relationships: list[str], optional
@@ -2323,7 +2432,6 @@ class AutomatedCuration(ServerClient):
                                                                       ends_with=ends_with,
                                                                       ignore_case=ignore_case,
                                                                       anchor_domain=anchor_domain,
-                                                                      metadata_element_type=metadata_element_type,
                                                                       metadata_element_subtypes=metadata_element_subtypes,
                                                                       skip_relationships=skip_relationships,
                                                                       include_only_relationships=include_only_relationships,
@@ -3037,6 +3145,7 @@ class AutomatedCuration(ServerClient):
         )
         return response
 
+    @dynamic_catch
     async def _async_get_catalog_targets(
             self,
             integ_connector_guid: str,
@@ -3044,6 +3153,7 @@ class AutomatedCuration(ServerClient):
             page_size: int = 0,
             output_format: str = "JSON",
             report_spec: str | dict = "CatalogTarget",
+            body: Optional[dict | FilterRequestBody] = None,
     ) -> list | str:
         """Retrieve the details of the metadata elements identified as catalog targets with an integration connector.
         Async version.
@@ -3052,6 +3162,16 @@ class AutomatedCuration(ServerClient):
         ----------
             integ_connector_guid: str
               The GUID (Globally Unique Identifier) of the integration connector used to retrieve catalog targets.
+            start_from : int, optional
+                The starting index of the actions to retrieve. Default is 0.
+            page_size : int, optional
+                The maximum number of actions to retrieve per page. Default is the global maximum paging size.
+            output_format: str, default = "JSON"
+                - one of "DICT", "MERMAID" or "JSON"
+            report_spec: dict , optional, default = None
+                The desired output columns/fields to include.
+            body: dict, optional, default = None
+                Provides, a full request body. If specified, the body supercedes the name parameter.
         Returns:
         -------
             [dict]: The list of catalog targets JSON objects.
@@ -3068,17 +3188,14 @@ class AutomatedCuration(ServerClient):
 
         url = f"{self.curation_command_root}/integration-connectors/{integ_connector_guid}/catalog-targets"
 
+        response = await self._async_get_name_request(url, _type=self.CATALOG_TARGET_LABEL,
+                                                      _gen_output=self._generate_catalog_target_output,
+                                                      filter_string=None,
+                                                      start_from=start_from, page_size=page_size,
+                                                      output_format=output_format, report_spec=report_spec,
+                                                      body=body)
 
-        response = await self._async_make_request("GET", url)
-        elements = response.json().get("elements", "no targets")
-        if isinstance(elements, str):
-            logger.info("No catalog targets found for this integration connector.")
-            return elements
-        if output_format != "JSON":
-            logger.info(f"Found targets, output_format: {output_format}, and report_spec: {report_spec}")
-            return self._generate_catalog_target_output(elements, None, self.CATALOG_TARGET_LABEL,
-                                                    output_format=output_format,report_spec=report_spec)
-        return elements
+        return response
 
     def get_catalog_targets(
             self,
@@ -3087,6 +3204,7 @@ class AutomatedCuration(ServerClient):
             page_size: int = 0,
             output_format: str = "JSON",
             report_spec: str | dict = "CatalogTarget",
+            body: Optional[dict | FilterRequestBody] = None,
     ) -> list | str:
         """Retrieve the details of the metadata elements identified as catalog targets with an integration connector.
 
@@ -3094,6 +3212,16 @@ class AutomatedCuration(ServerClient):
         ----------
             integ_connector_guid: str
               The GUID (Globally Unique Identifier) of the integration connector used to retrieve catalog targets.
+            start_from : int, optional
+                The starting index of the actions to retrieve. Default is 0.
+            page_size : int, optional
+                The maximum number of actions to retrieve per page. Default is the global maximum paging size.
+            output_format: str, default = "JSON"
+                - one of "DICT", "MERMAID" or "JSON"
+            report_spec: dict , optional, default = None
+                The desired output columns/fields to include.
+            body: dict, optional, default = None
+                Provides, a full request body. If specified, the body supercedes the name parameter.
         Returns:
         -------
             [dict]: The list of catalog targets JSON objects.
@@ -3110,7 +3238,7 @@ class AutomatedCuration(ServerClient):
         response = loop.run_until_complete(
             self._async_get_catalog_targets(integ_connector_guid, start_from, page_size,
                                             output_format=output_format,
-                                            report_spec=report_spec)
+                                            report_spec=report_spec, body=body)
         )
         return response
 
@@ -3481,12 +3609,16 @@ class AutomatedCuration(ServerClient):
     #   Get information about technologies
     #
 
+    @dynamic_catch
     async def _async_get_tech_types_for_open_metadata_type(
             self,
             type_name: str,
             tech_name: str,
             start_from: int = 0,
             page_size: int = 0,
+            output_format: str = "JSON",
+            report_spec: str | dict = "TechType",
+            body: Optional[dict | FilterRequestBody] = None,
     ) -> list | str:
         """Retrieve the list of deployed implementation type metadata elements linked to a particular
         open metadata type.. Async version.
@@ -3497,6 +3629,17 @@ class AutomatedCuration(ServerClient):
             The technology type we are looking for.
         tech_name: str
             The technology name we are looking for.
+        start_from: int, [default=0], optional
+                    When multiple pages of results are available, the page number to start from.
+        page_size: int, [default=None]
+            The number of items to return in a single page. If not specified, the default will be taken from
+            the class instance.
+        output_format: str, default = "JSON"
+            - one of "DICT", "MERMAID" or "JSON"
+        report_spec: dict , optional, default = None
+            The desired output columns/fields to include.
+        body: dict, optional, default = None
+            Provides, a full request body. If specified, the body supercedes the name parameter.
 
         Returns:
         -------
@@ -3519,10 +3662,14 @@ class AutomatedCuration(ServerClient):
             f"{self.curation_command_root}/open-metadata-types/"
             f"{type_name}/technology-types"
         )
-        body = {"filter": tech_name}
+        response = await self._async_get_name_request(url, _type=self.TECH_TYPE_ENTITY_LABEL,
+                                                      _gen_output=self._generate_tech_type_output,
+                                                      filter_string=tech_name,
+                                                      start_from=start_from, page_size=page_size,
+                                                      output_format=output_format, report_spec=report_spec,
+                                                      body=body)
 
-        response = await self._async_make_request("POST", url, body)
-        return response.json().get("elements", "no tech found")
+        return response
 
     def get_tech_types_for_open_metadata_type(
             self,
@@ -3530,6 +3677,9 @@ class AutomatedCuration(ServerClient):
             tech_name: str,
             start_from: int = 0,
             page_size: int = 0,
+            output_format: str = "JSON",
+            report_spec: str | dict = "TechType",
+            body: Optional[dict | FilterRequestBody] = None,
     ) -> list | str:
         """Retrieve the list of deployed implementation type metadata elements linked to a particular
         open metadata type.
@@ -3540,6 +3690,17 @@ class AutomatedCuration(ServerClient):
             The technology type we are looking for.
         tech_name: str
             The technology name we are looking for.
+        start_from: int, [default=0], optional
+                    When multiple pages of results are available, the page number to start from.
+        page_size: int, [default=None]
+            The number of items to return in a single page. If not specified, the default will be taken from
+            the class instance.
+        output_format: str, default = "JSON"
+            - one of "DICT", "MERMAID" or "JSON"
+        report_spec: dict , optional, default = None
+            The desired output columns/fields to include.
+        body: dict, optional, default = None
+            Provides, a full request body. If specified, the body supercedes the name parameter.
 
         Returns:
         -------
@@ -3559,7 +3720,7 @@ class AutomatedCuration(ServerClient):
         loop = asyncio.get_event_loop()
         response = loop.run_until_complete(
             self._async_get_tech_types_for_open_metadata_type(
-                type_name, tech_name, start_from, page_size
+                type_name, tech_name, start_from, page_size, output_format, report_spec, body
             )
         )
         return response

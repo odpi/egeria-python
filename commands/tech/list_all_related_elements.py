@@ -82,7 +82,7 @@ def list_related_elements(
 
         if type(elements) is list:
             for element in elements:
-                header = element["relationshipHeader"]
+                header = element["elementHeader"]
                 el_type = header["type"]["typeName"]
                 el_home = header["origin"]["homeMetadataCollectionName"]
                 el_create_time = header["versions"]["createTime"][:-10]
@@ -119,8 +119,10 @@ def list_related_elements(
                                 c_md += f"  * **{prop}**: {class_props[prop]}\n"
                 c_md_out = Markdown(c_md)
 
-                rel_element = element["relatedElement"]
-                rel_el_header = rel_element["elementHeader"]
+                rel_element = element.get("relatedBy",None)
+                if rel_element is None:
+                    continue
+                rel_el_header = rel_element["relationshipHeader"]
                 rel_type = rel_el_header["type"]["typeName"]
                 rel_home = rel_el_header["origin"]["homeMetadataCollectionName"]
                 rel_guid = rel_el_header["guid"]
@@ -129,9 +131,9 @@ def list_related_elements(
                 rel_el_header_out = Markdown(rel_el_header_md)
 
                 rel_el_props_md = ""
-                for prop in rel_element["properties"].keys():
+                for prop in rel_element["relationshipProperties"].keys():
                     rel_el_props_md += (
-                        f"* **{prop}**: {rel_element['properties'][prop]}\n"
+                        f"* **{prop}**: {rel_element['relationshipProperties'][prop]}\n"
                     )
                 rel_el_props_out = Markdown(rel_el_props_md)
 

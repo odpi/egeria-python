@@ -78,6 +78,7 @@ class TestRegisteredInfoServices:
             r_client = RegisteredInfo(
                 self.good_server_1, self.good_platform1_url, self.good_user_1
             )
+            token = r_client.create_egeria_bearer_token(self.good_user_1, "secret")
             service_kind = "all"
             response = r_client.list_registered_svcs(service_kind, output_format="LIST", report_spec = "Registered-Services")
 
@@ -104,7 +105,8 @@ class TestRegisteredInfoServices:
             r_client = RegisteredInfo(
                 self.good_server_3, self.good_platform1_url, user_id=self.good_user_1
             )
-            output_format = "LIST"
+            token = r_client.create_egeria_bearer_token(self.good_user_1, "secret")
+            output_format = "JSON"
             response = r_client.list_severity_definitions(output_format=output_format, report_spec = "Severity-Definitions")
             console = Console(width = 130)
 
