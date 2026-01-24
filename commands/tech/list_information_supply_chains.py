@@ -38,7 +38,7 @@ EGERIA_USER = os.environ.get("EGERIA_USER", "erinoverview")
 EGERIA_USER_PASSWORD = os.environ.get("EGERIA_USER_PASSWORD", "secret")
 EGERIA_MERMAID_FOLDER = os.path.join(app_config.pyegeria_root, app_config.egeria_mermaid_folder)
 conf = load_app_config(config_path)
-print(f"Loading config from {config_path} and mermaid folder is {EGERIA_MERMAID_FOLDER}")
+# print(f"Loading config from {config_path} and mermaid folder is {EGERIA_MERMAID_FOLDER}")
 console = Console(width=app_config.console_width)
 config_logging()
 

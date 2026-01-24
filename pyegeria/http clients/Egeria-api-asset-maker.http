@@ -2,7 +2,7 @@
 # The Asset Maker OMVS provides APIs for supporting the creation and editing of assets.
 
 @baseURL=https://localhost:9443
-@viewServer=view-server
+@viewServer=qs-view-server
 
 ###
 # =====================================================================================================================
@@ -410,7 +410,14 @@ Authorization: Bearer {{token}}
 Content-Type: application/json
 
 {
-  "class" : "ActionRequestBody"
+  "class" : "ActionRequestBody",
+  "properties": {
+    "class": "ToDoProperties",
+    "qualifiedName": "make-coffee-1",
+    "displayName": "Make-Coffee",
+    "activityStatus": "REQUESTED",
+    "description": "Make coffee for the team meeting"
+  }
 }
 
 ###

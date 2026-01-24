@@ -162,7 +162,9 @@ app_settings = settings
 app_config = app_settings.Environment
 # config_logging()
 
-@tui()
+TUI_RUN_STRING = f"{sys.executable} -m commands.cli.egeria"
+
+@tui(name=TUI_RUN_STRING)
 # @tui('menu', 'menu', 'A textual object_action line interface')
 @click.version_option("5.4 ", prog_name="hey_egeria")
 @click.group()
@@ -489,8 +491,7 @@ def list_anchored_elements(ctx, property_value: str, prop_list: str):
         property_names = prop_list
     else:
         property_names = []
-        print(f"\nError --> Invalid property list - must be a string or list")
-        sys.exit(4)
+        raise click.ClickException(f"Error --> Invalid property list - must be a string or list")
     display_anchored_elements(
         property_value,
         [property_names],
@@ -756,7 +757,7 @@ def show_asset_types(ctx):
 @show_tech_info.command("registered-services")
 @click.option(
     "--services",
-    type_name = click.Choice(
+    type = click.Choice(
         [
             "all",
             "access-services",
@@ -854,12 +855,12 @@ def show_relationships(ctx, relationship):
 @click.pass_context
 @click.option("--property", default="projectHealth", help="Metadata property to query")
 @click.option("--type-name", default="Project", help="Metadata type to query")
-def valid_metadata_values(ctx, property, type_name):
+def valid_metadata_values(ctx, property, type):
     """Display the valid metadata values for a property and type"""
     c = ctx.obj
     display_metadata_values(
         property,
-        type_name,
+        type,
         c.view_server,
         c.view_server_url,
         c.userid,
@@ -1163,15 +1164,7 @@ def show_asset_graph(ctx, asset_guid):
 
     """
     c = ctx.obj
-    asset_viewer(
-        asset_guid,
-        c.view_server,
-        c.view_server_url,
-        c.userid,
-        c.password,
-        c.jupyter,
-        c.width,
-    )
+    asset_viewer(asset_guid, "TABLE", c.view_server, c.view_server_url, c.userid, c.password, c.jupyter, c.width)
 
 
 @show_cat.group("glossary")
@@ -1199,7 +1192,7 @@ def glossary_group(ctx):
 )
 @click.option(
     "--output-format",
-    type_name = click.Choice(["FORM", "REPORT", "TABLE"]),
+    type = click.Choice(["FORM", "REPORT", "TABLE"]),
     default="TABLE",
     help="Display on screen as table, or as FORM or REPORT file",
     )
@@ -1216,7 +1209,7 @@ def show_terms(ctx, search_string, glossary_guid, glossary_name, output_format):
 @click.option("--search_string", default="*", help="Name to search for glossaries")
 @click.option(
     "--output-format",
-    type_name = click.Choice(["FORM", "REPORT", "TABLE"]),
+    type = click.Choice(["FORM", "REPORT", "TABLE"]),
     default="TABLE",
     help="Display on screen as table, or as FORM or REPORT file",
     )
@@ -1349,7 +1342,7 @@ def show_project_dependencies(ctx, project):
 @click.option("--search-string", default="*", help="View the list of To-Do items")
 @click.option(
     "--status",
-    type_name = click.Choice(
+    type = click.Choice(
         ["OPEN", "IN_PROGRESS", "WAITING", "COMPLETE", "ABANDONED", "None"],
         case_sensitive=False,
     ),
@@ -1587,15 +1580,8 @@ def show_asset_graph(ctx, asset_guid):
 
     """
     c = ctx.obj
-    asset_viewer(
-        asset_guid,
-        c.view_server,
-        c.view_server_url,
-        c.userid,
-        c.password,
-        c.jupyter,
-        c.width,
-    )
+    asset_viewer( asset_guid, "TABLE", c.view_server,c.view_server_url, c.userid,
+                  c.password, c.jupyter, c.width, render_table=True)
 
 
 @asset_group.command("tech-type-elements")
@@ -1635,7 +1621,7 @@ def show_projects(ctx, search_string):
 @click.option("--search-string", default="*", help="View the list of To-Do items")
 @click.option(
     "--status",
-    type_name = click.Choice(
+    type = click.Choice(
         ["OPEN", "IN_PROGRESS", "WAITING", "COMPLETE", "ABANDONED", "None"],
         case_sensitive=False,
     ),
@@ -2064,12 +2050,25 @@ def repository(ctx):
     """Group of md_commands to a repository"""
     pass
 
-
 repository.add_command(load_archive)
 
 if __name__ == "__main__":
-    while True:
-        try:
-            cli()
-        except Exception as e:
-            click.echo(f"Error: {e}")
+    try:
+        script_path = os.path.abspath(__file__)
+
+        # The args Click should parse (do NOT include the script path)
+        click_args = sys.argv[1:]
+        if click_args and os.path.abspath(click_args[0]) == script_path:
+            click_args = click_args[1:]
+
+        # The argv Trogon should re-exec (python + script + click args)
+        sys.argv = [sys.executable, script_path, *click_args]
+
+        # IMPORTANT: run Click with explicit args so it does not treat script_path as a command
+        cli.main(args=click_args, prog_name=os.path.basename(script_path))
+    except click.ClickException as e:
+        e.show()
+        raise SystemExit(1)
+    except Exception as e:
+        click.echo(f"Unexpected error: {e}")
+        raise SystemExit(1)

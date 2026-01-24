@@ -221,8 +221,8 @@ class TestProjectManager:
             start_time = time.perf_counter()
             # team_role = "ProjectManagement"
             team_role = None
-            project_guid = "91589680-75a7-481a-a2d1-53a63def65aa"
-            response = p_client.get_project_team(project_guid, team_role, output_format="DICT", report_spec = "Referenceable")
+            project_guid = "36636125-338e-402a-b8fa-dfe69e008a56"
+            response = p_client.get_project_team(project_guid, team_role, output_format="DICT", report_spec = "Projects")
 
             duration = time.perf_counter() - start_time
 

@@ -43,8 +43,9 @@ class TestValidMetadataLists:
             vml_client.create_egeria_bearer_token(self.good_user_2, USER_PWD)
             
             try:
-                response = vml_client.get_valid_metadata_values(property_name="fileType")
+                response = vml_client.get_valid_metadata_values(property_name="relationshipType")
                 assert response is not None
+                print(response)
             except (PyegeriaInvalidParameterException, PyegeriaNotFoundException, PyegeriaAPIException):
                 pass
 

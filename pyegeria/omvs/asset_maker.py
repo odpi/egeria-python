@@ -78,6 +78,7 @@ class AssetMaker(ServerClient):
         user_pwd: str | None = None,
         token: str | None = None,
     ):
+        """Initialize an AssetMaker client."""
         self.view_server = view_server
         self.platform_url = platform_url
         self.user_id = user_id
@@ -556,6 +557,7 @@ class AssetMaker(ServerClient):
     async def _async_get_assets_by_name(
         self,
         filter_string: str,
+        classification_names: Optional[list[str]] = None,
         body: dict | FilterRequestBody | None = None,
         start_from: int = 0,
         page_size: int = 0,
@@ -568,6 +570,8 @@ class AssetMaker(ServerClient):
         ----------
         filter_string: str
             String to find in the asset properties.
+        classification_names: list[str], optional
+            Classification/type filters to include in the request body.
         body: dict | FilterRequestBody, optional
             Additional filter parameters.
         start_from: int, optional
@@ -621,6 +625,7 @@ class AssetMaker(ServerClient):
             _type="Asset",
             _gen_output=self._generate_referenceable_output,
             filter_string=filter_string,
+            classification_names=classification_names,
             start_from=start_from,
             page_size=page_size,
             output_format=output_format,
@@ -632,6 +637,7 @@ class AssetMaker(ServerClient):
     def get_assets_by_name(
         self,
         filter_string: str,
+        classification_names: Optional[list[str]] = None,
         body: dict | FilterRequestBody | None = None,
         start_from: int = 0,
         page_size: int = 0,
@@ -644,6 +650,8 @@ class AssetMaker(ServerClient):
         ----------
         filter_string: str
             String to find in the asset properties.
+        classification_names: list[str], optional
+            Classification/type filters to include in the request body.
         body: dict | FilterRequestBody, optional
             Additional filter parameters.
         start_from: int, optional
@@ -694,7 +702,13 @@ class AssetMaker(ServerClient):
         loop = asyncio.get_event_loop()
         return loop.run_until_complete(
             self._async_get_assets_by_name(
-                filter_string, body, start_from, page_size, output_format, report_spec
+                filter_string,
+                classification_names,
+                body,
+                start_from,
+                page_size,
+                output_format,
+                report_spec,
             )
         )
 
@@ -885,6 +899,7 @@ class AssetMaker(ServerClient):
     async def _async_get_asset_by_guid(
         self,
         asset_guid: str,
+        element_type: Optional[str] = None,
         body: dict | GetRequestBody | None = None,
         output_format: str = "DICT",
         report_spec: dict | str | None = None,
@@ -895,6 +910,8 @@ class AssetMaker(ServerClient):
         ----------
         asset_guid: str
             Unique identifier of the asset.
+        element_type: str, optional
+            Metadata element type name to include in the request body.
         body: dict | GetRequestBody, optional
             Additional parameters for the request.
         output_format: str, optional
@@ -935,7 +952,7 @@ class AssetMaker(ServerClient):
         url = f"{self.asset_command_root}/assets/{asset_guid}/retrieve"
         return await self._async_get_guid_request(
             url,
-            _type="Asset",
+            _type=element_type or "Asset",
             _gen_output=self._generate_referenceable_output,
             output_format=output_format,
             report_spec=report_spec,
@@ -946,6 +963,7 @@ class AssetMaker(ServerClient):
     def get_asset_by_guid(
         self,
         asset_guid: str,
+        element_type: Optional[str] = None,
         body: dict | GetRequestBody | None = None,
         output_format: str = "DICT",
         report_spec: dict | str | None = None,
@@ -956,6 +974,8 @@ class AssetMaker(ServerClient):
         ----------
         asset_guid: str
             Unique identifier of the asset.
+        element_type: str, optional
+            Metadata element type name to include in the request body.
         body: dict | GetRequestBody, optional
             Additional parameters for the request.
         output_format: str, optional
@@ -995,7 +1015,7 @@ class AssetMaker(ServerClient):
         """
         loop = asyncio.get_event_loop()
         return loop.run_until_complete(
-            self._async_get_asset_by_guid(asset_guid, body, output_format, report_spec)
+            self._async_get_asset_by_guid(asset_guid, element_type, body, output_format, report_spec)
         )
 
     #
@@ -1501,6 +1521,21 @@ class AssetMaker(ServerClient):
         starts_with: bool = False,
         ends_with: bool = False,
         ignore_case: bool = True,
+        anchor_domain: Optional[str] = None,
+        metadata_element_type: Optional[str] = None,
+        metadata_element_subtypes: Optional[list[str]] = None,
+        skip_relationships: Optional[list[str]] = None,
+        include_only_relationships: Optional[list[str]] = None,
+        skip_classified_elements: Optional[list[str]] = None,
+        include_only_classified_elements: Optional[list[str]] = None,
+        graph_query_depth: int = 3,
+        governance_zone_filter: Optional[list[str]] = None,
+        as_of_time: Optional[str] = None,
+        effective_time: Optional[str] = None,
+        relationship_page_size: int = 0,
+        limit_results_by_status: Optional[list[str]] = None,
+        sequencing_order: Optional[str] = None,
+        sequencing_property: Optional[str] = None,
         start_from: int = 0,
         page_size: int = 0,
         output_format: str = "JSON",
@@ -1522,6 +1557,36 @@ class AssetMaker(ServerClient):
             - if True, the search string must match the end of the property value
         ignore_case: bool, default = True
             - if True, the search is case-insensitive
+        anchor_domain: str, optional
+            - optional anchor domain filter
+        metadata_element_type: str, optional
+            - optional metadata element type filter
+        metadata_element_subtypes: list[str], optional
+            - optional metadata element subtypes filter
+        skip_relationships: list[str], optional
+            - relationships to skip
+        include_only_relationships: list[str], optional
+            - relationships to include
+        skip_classified_elements: list[str], optional
+            - classifications to skip
+        include_only_classified_elements: list[str], optional
+            - classifications to include
+        graph_query_depth: int, default = 3
+            - depth for relationship traversal
+        governance_zone_filter: list[str], optional
+            - governance zone filter
+        as_of_time: str, optional
+            - as-of time filter
+        effective_time: str, optional
+            - effective time filter
+        relationship_page_size: int, default = 0
+            - page size for relationships
+        limit_results_by_status: list[str], optional
+            - status filter for results
+        sequencing_order: str, optional
+            - sequencing order for results
+        sequencing_property: str, optional
+            - sequencing property for results
         start_from: int, default = 0
             - the starting point in the results list
         page_size: int, default = 0
@@ -1553,37 +1618,36 @@ class AssetMaker(ServerClient):
         }
         """
         url = f"{self.asset_command_root}/data-assets/by-search-string"
-
-        if isinstance(body, ContentStatusSearchString):
-            validated_body = body
-        elif isinstance(body, dict):
-            validated_body = self._content_status_search_request_adapter.validate_python(body)
-        else:
-            search_string = None if search_string == "*" else search_string
-            body_dict = {
-                "class": "ContentStatusSearchString",
-                "searchString": search_string,
-                "contentStatus": content_status,
-                "startsWith": starts_with,
-                "endsWith": ends_with,
-                "ignoreCase": ignore_case,
-                "startFrom": start_from,
-                "pageSize": page_size,
-            }
-            validated_body = ContentStatusSearchString.model_validate(body_dict)
-
-        json_body = validated_body.model_dump_json(indent=2, exclude_none=True)
-        response = await self._async_make_request("POST", url, json_body)
-        elements = response.json().get("elements", NO_ELEMENTS_FOUND)
-
-        if type(elements) is str or len(elements) == 0:
-            return NO_ELEMENTS_FOUND
-
-        if output_format.upper() != "JSON":
-            return self._generate_referenceable_output(
-                elements, search_string, "DataAsset", output_format, report_spec
-            )
-        return elements
+        return await self._async_content_status_search_request(
+            url,
+            _type="DataAsset",
+            _gen_output=self._generate_referenceable_output,
+            search_string=search_string,
+            content_status=content_status,
+            starts_with=starts_with,
+            ends_with=ends_with,
+            ignore_case=ignore_case,
+            anchor_domain=anchor_domain,
+            metadata_element_type=metadata_element_type,
+            metadata_element_subtypes=metadata_element_subtypes,
+            skip_relationships=skip_relationships,
+            include_only_relationships=include_only_relationships,
+            skip_classified_elements=skip_classified_elements,
+            include_only_classified_elements=include_only_classified_elements,
+            graph_query_depth=graph_query_depth,
+            governance_zone_filter=governance_zone_filter,
+            as_of_time=as_of_time,
+            effective_time=effective_time,
+            relationship_page_size=relationship_page_size,
+            limit_results_by_status=limit_results_by_status,
+            sequencing_order=sequencing_order,
+            sequencing_property=sequencing_property,
+            output_format=output_format,
+            report_spec=report_spec,
+            start_from=start_from,
+            page_size=page_size,
+            body=body,
+        )
 
     @dynamic_catch
     def find_data_assets(
@@ -1593,6 +1657,21 @@ class AssetMaker(ServerClient):
         starts_with: bool = False,
         ends_with: bool = False,
         ignore_case: bool = True,
+        anchor_domain: Optional[str] = None,
+        metadata_element_type: Optional[str] = None,
+        metadata_element_subtypes: Optional[list[str]] = None,
+        skip_relationships: Optional[list[str]] = None,
+        include_only_relationships: Optional[list[str]] = None,
+        skip_classified_elements: Optional[list[str]] = None,
+        include_only_classified_elements: Optional[list[str]] = None,
+        graph_query_depth: int = 3,
+        governance_zone_filter: Optional[list[str]] = None,
+        as_of_time: Optional[str] = None,
+        effective_time: Optional[str] = None,
+        relationship_page_size: int = 0,
+        limit_results_by_status: Optional[list[str]] = None,
+        sequencing_order: Optional[str] = None,
+        sequencing_property: Optional[str] = None,
         start_from: int = 0,
         page_size: int = 0,
         output_format: str = "JSON",
@@ -1601,6 +1680,78 @@ class AssetMaker(ServerClient):
     ) -> list | str:
         """
         Returns the list of data assets matching the search string and optional content status. Sync version.
+
+        Parameters
+        ----------
+        search_string: str, default = "*"
+            - the search string to use to find matching data assets
+        content_status: str, default = "ACTIVE"
+            - optional content status to filter by (e.g., ACTIVE)
+        starts_with: bool, default = False
+            - if True, the search string must match the start of the property value
+        ends_with: bool, default = False
+            - if True, the search string must match the end of the property value
+        ignore_case: bool, default = True
+            - if True, the search is case-insensitive
+        anchor_domain: str, optional
+            - optional anchor domain filter
+        metadata_element_type: str, optional
+            - optional metadata element type filter
+        metadata_element_subtypes: list[str], optional
+            - optional metadata element subtypes filter
+        skip_relationships: list[str], optional
+            - relationships to skip
+        include_only_relationships: list[str], optional
+            - relationships to include
+        skip_classified_elements: list[str], optional
+            - classifications to skip
+        include_only_classified_elements: list[str], optional
+            - classifications to include
+        graph_query_depth: int, default = 3
+            - depth for relationship traversal
+        governance_zone_filter: list[str], optional
+            - governance zone filter
+        as_of_time: str, optional
+            - as-of time filter
+        effective_time: str, optional
+            - effective time filter
+        relationship_page_size: int, default = 0
+            - page size for relationships
+        limit_results_by_status: list[str], optional
+            - status filter for results
+        sequencing_order: str, optional
+            - sequencing order for results
+        sequencing_property: str, optional
+            - sequencing property for results
+        start_from: int, default = 0
+            - the starting point in the results list
+        page_size: int, default = 0
+            - the maximum number of results to return
+        output_format: str, default = "JSON"
+            - the format of the output (JSON, DICT, etc.)
+        report_spec: str | dict, optional
+            - the report specification to use for the output
+        body: dict | ContentStatusSearchString, optional
+            - the request body to use for the request. If specified, this takes precedence over other parameters.
+
+        Returns
+        -------
+        list | str
+            - a list of data assets or a string message if no assets are found
+
+        Note:
+        -----
+        Sample body:
+        {
+          "class" : "ContentStatusSearchString",
+          "searchString" : "xxx",
+          "contentStatus" : "ACTIVE",
+          "startsWith" : false,
+          "endsWith" : false,
+          "ignoreCase" : true,
+          "startFrom" : 0,
+          "pageSize": 0
+        }
         """
         loop = asyncio.get_event_loop()
         return loop.run_until_complete(
@@ -1610,6 +1761,21 @@ class AssetMaker(ServerClient):
                 starts_with,
                 ends_with,
                 ignore_case,
+                anchor_domain,
+                metadata_element_type,
+                metadata_element_subtypes,
+                skip_relationships,
+                include_only_relationships,
+                skip_classified_elements,
+                include_only_classified_elements,
+                graph_query_depth,
+                governance_zone_filter,
+                as_of_time,
+                effective_time,
+                relationship_page_size,
+                limit_results_by_status,
+                sequencing_order,
+                sequencing_property,
                 start_from,
                 page_size,
                 output_format,
@@ -1666,33 +1832,18 @@ class AssetMaker(ServerClient):
         }
         """
         url = f"{self.asset_command_root}/data-assets/by-category"
-
-        if isinstance(body, ContentStatusFilterRequestBody):
-            validated_body = body
-        elif isinstance(body, dict):
-            validated_body = self._content_status_filter_request_adapter.validate_python(body)
-        else:
-            body_dict = {
-                "class": "ContentStatusFilterRequestBody",
-                "filter": category,
-                "contentStatus": content_status,
-                "startFrom": start_from,
-                "pageSize": page_size,
-            }
-            validated_body = ContentStatusFilterRequestBody.model_validate(body_dict)
-
-        json_body = validated_body.model_dump_json(indent=2, exclude_none=True)
-        response = await self._async_make_request("POST", url, json_body)
-        elements = response.json().get("elements", NO_ELEMENTS_FOUND)
-
-        if type(elements) is str or len(elements) == 0:
-            return NO_ELEMENTS_FOUND
-
-        if output_format.upper() != "JSON":
-            return self._generate_referenceable_output(
-                elements, category, "DataAsset", output_format, report_spec
-            )
-        return elements
+        return await self._async_content_status_filter_request(
+            url,
+            _type="DataAsset",
+            _gen_output=self._generate_referenceable_output,
+            filter_string=category,
+            content_status=content_status,
+            start_from=start_from,
+            page_size=page_size,
+            output_format=output_format,
+            report_spec=report_spec,
+            body=body,
+        )
 
     @dynamic_catch
     def get_data_assets_by_category(
@@ -1707,6 +1858,39 @@ class AssetMaker(ServerClient):
     ) -> list | str:
         """
         Returns the list of data assets matching the category and optional content status. Sync version.
+
+        Parameters
+        ----------
+        category: str
+            - category name to filter by
+        content_status: str, default = "ACTIVE"
+            - optional content status to filter by (e.g., ACTIVE)
+        start_from: int, default = 0
+            - the starting point in the results list
+        page_size: int, default = 0
+            - the maximum number of results to return
+        output_format: str, default = "JSON"
+            - the format of the output (JSON, DICT, etc.)
+        report_spec: str | dict, optional
+            - the report specification to use for the output
+        body: dict | ContentStatusFilterRequestBody, optional
+            - the request body to use for the request. If specified, this takes precedence over other parameters.
+
+        Returns
+        -------
+        list | str
+            - a list of data assets or a string message if no assets are found
+
+        Note:
+        -----
+        Sample body:
+        {
+          "class" : "ContentStatusFilterRequestBody",
+          "filter" : "xxx",
+          "contentStatus" : "ACTIVE",
+          "startFrom" : 0,
+          "pageSize": 0
+        }
         """
         loop = asyncio.get_event_loop()
         return loop.run_until_complete(
@@ -1727,6 +1911,21 @@ class AssetMaker(ServerClient):
         starts_with: bool = False,
         ends_with: bool = False,
         ignore_case: bool = True,
+        anchor_domain: Optional[str] = None,
+        metadata_element_type: Optional[str] = None,
+        metadata_element_subtypes: Optional[list[str]] = None,
+        skip_relationships: Optional[list[str]] = None,
+        include_only_relationships: Optional[list[str]] = None,
+        skip_classified_elements: Optional[list[str]] = None,
+        include_only_classified_elements: Optional[list[str]] = None,
+        graph_query_depth: int = 3,
+        governance_zone_filter: Optional[list[str]] = None,
+        as_of_time: Optional[str] = None,
+        effective_time: Optional[str] = None,
+        relationship_page_size: int = 0,
+        limit_results_by_status: Optional[list[str]] = None,
+        sequencing_order: Optional[str] = None,
+        sequencing_property: Optional[str] = None,
         start_from: int = 0,
         page_size: int = 0,
         output_format: str = "JSON",
@@ -1748,6 +1947,36 @@ class AssetMaker(ServerClient):
             - if True, the search string must match the end of the property value
         ignore_case: bool, default = True
             - if True, the search is case-insensitive
+        anchor_domain: str, optional
+            - optional anchor domain filter
+        metadata_element_type: str, optional
+            - optional metadata element type filter
+        metadata_element_subtypes: list[str], optional
+            - optional metadata element subtypes filter
+        skip_relationships: list[str], optional
+            - relationships to skip
+        include_only_relationships: list[str], optional
+            - relationships to include
+        skip_classified_elements: list[str], optional
+            - classifications to skip
+        include_only_classified_elements: list[str], optional
+            - classifications to include
+        graph_query_depth: int, default = 3
+            - depth for relationship traversal
+        governance_zone_filter: list[str], optional
+            - governance zone filter
+        as_of_time: str, optional
+            - as-of time filter
+        effective_time: str, optional
+            - effective time filter
+        relationship_page_size: int, default = 0
+            - page size for relationships
+        limit_results_by_status: list[str], optional
+            - status filter for results
+        sequencing_order: str, optional
+            - sequencing order for results
+        sequencing_property: str, optional
+            - sequencing property for results
         start_from: int, default = 0
             - the starting point in the results list
         page_size: int, default = 0
@@ -1779,37 +2008,36 @@ class AssetMaker(ServerClient):
         }
         """
         url = f"{self.asset_command_root}/infrastructure-assets/by-search-string"
-
-        if isinstance(body, DeploymentStatusSearchString):
-            validated_body = body
-        elif isinstance(body, dict):
-            validated_body = self._deployment_status_search_request_adapter.validate_python(body)
-        else:
-            search_string = None if search_string == "*" else search_string
-            body_dict = {
-                "class": "DeploymentStatusSearchString",
-                "searchString": search_string,
-                "deploymentStatus": deployment_status,
-                "startsWith": starts_with,
-                "endsWith": ends_with,
-                "ignoreCase": ignore_case,
-                "startFrom": start_from,
-                "pageSize": page_size,
-            }
-            validated_body = DeploymentStatusSearchString.model_validate(body_dict)
-
-        json_body = validated_body.model_dump_json(indent=2, exclude_none=True)
-        response = await self._async_make_request("POST", url, json_body)
-        elements = response.json().get("elements", NO_ELEMENTS_FOUND)
-
-        if type(elements) is str or len(elements) == 0:
-            return NO_ELEMENTS_FOUND
-
-        if output_format.upper() != "JSON":
-            return self._generate_referenceable_output(
-                elements, search_string, "Infrastructure", output_format, report_spec
-            )
-        return elements
+        return await self._async_deployment_status_search_request(
+            url,
+            _type="Infrastructure",
+            _gen_output=self._generate_referenceable_output,
+            search_string=search_string,
+            deployment_status=deployment_status,
+            starts_with=starts_with,
+            ends_with=ends_with,
+            ignore_case=ignore_case,
+            anchor_domain=anchor_domain,
+            metadata_element_type=metadata_element_type,
+            metadata_element_subtypes=metadata_element_subtypes,
+            skip_relationships=skip_relationships,
+            include_only_relationships=include_only_relationships,
+            skip_classified_elements=skip_classified_elements,
+            include_only_classified_elements=include_only_classified_elements,
+            graph_query_depth=graph_query_depth,
+            governance_zone_filter=governance_zone_filter,
+            as_of_time=as_of_time,
+            effective_time=effective_time,
+            relationship_page_size=relationship_page_size,
+            limit_results_by_status=limit_results_by_status,
+            sequencing_order=sequencing_order,
+            sequencing_property=sequencing_property,
+            output_format=output_format,
+            report_spec=report_spec,
+            start_from=start_from,
+            page_size=page_size,
+            body=body,
+        )
 
     @dynamic_catch
     def find_infrastructure(
@@ -1819,6 +2047,21 @@ class AssetMaker(ServerClient):
         starts_with: bool = False,
         ends_with: bool = False,
         ignore_case: bool = True,
+        anchor_domain: Optional[str] = None,
+        metadata_element_type: Optional[str] = None,
+        metadata_element_subtypes: Optional[list[str]] = None,
+        skip_relationships: Optional[list[str]] = None,
+        include_only_relationships: Optional[list[str]] = None,
+        skip_classified_elements: Optional[list[str]] = None,
+        include_only_classified_elements: Optional[list[str]] = None,
+        graph_query_depth: int = 3,
+        governance_zone_filter: Optional[list[str]] = None,
+        as_of_time: Optional[str] = None,
+        effective_time: Optional[str] = None,
+        relationship_page_size: int = 0,
+        limit_results_by_status: Optional[list[str]] = None,
+        sequencing_order: Optional[str] = None,
+        sequencing_property: Optional[str] = None,
         start_from: int = 0,
         page_size: int = 0,
         output_format: str = "JSON",
@@ -1827,6 +2070,48 @@ class AssetMaker(ServerClient):
     ) -> list | str:
         """
         Returns the list of infrastructure assets matching the search string and optional deployment status. Sync version.
+
+        Parameters
+        ----------
+        search_string: str, default = "*"
+            - the search string to use to find matching infrastructure assets
+        deployment_status: str, default = "ACTIVE"
+            - optional deployment status to filter by (e.g., ACTIVE)
+        starts_with: bool, default = False
+            - if True, the search string must match the start of the property value
+        ends_with: bool, default = False
+            - if True, the search string must match the end of the property value
+        ignore_case: bool, default = True
+            - if True, the search is case-insensitive
+        start_from: int, default = 0
+            - the starting point in the results list
+        page_size: int, default = 0
+            - the maximum number of results to return
+        output_format: str, default = "JSON"
+            - the format of the output (JSON, DICT, etc.)
+        report_spec: str | dict, optional
+            - the report specification to use for the output
+        body: dict | DeploymentStatusSearchString, optional
+            - the request body to use for the request. If specified, this takes precedence over other parameters.
+
+        Returns
+        -------
+        list | str
+            - a list of infrastructure assets or a string message if no assets are found
+
+        Note:
+        -----
+        Sample body:
+        {
+          "class" : "DeploymentStatusSearchString",
+          "searchString" : "xxx",
+          "deploymentStatus" : "ACTIVE",
+          "startsWith" : false,
+          "endsWith" : false,
+          "ignoreCase" : true,
+          "startFrom" : 0,
+          "pageSize": 0
+        }
         """
         loop = asyncio.get_event_loop()
         return loop.run_until_complete(
@@ -1836,6 +2121,21 @@ class AssetMaker(ServerClient):
                 starts_with,
                 ends_with,
                 ignore_case,
+                anchor_domain,
+                metadata_element_type,
+                metadata_element_subtypes,
+                skip_relationships,
+                include_only_relationships,
+                skip_classified_elements,
+                include_only_classified_elements,
+                graph_query_depth,
+                governance_zone_filter,
+                as_of_time,
+                effective_time,
+                relationship_page_size,
+                limit_results_by_status,
+                sequencing_order,
+                sequencing_property,
                 start_from,
                 page_size,
                 output_format,
@@ -1892,33 +2192,18 @@ class AssetMaker(ServerClient):
         }
         """
         url = f"{self.asset_command_root}/infrastructure-assets/by-category"
-
-        if isinstance(body, DeploymentStatusFilterRequestBody):
-            validated_body = body
-        elif isinstance(body, dict):
-            validated_body = self._deployment_status_filter_request_adapter.validate_python(body)
-        else:
-            body_dict = {
-                "class": "DeploymentStatusFilterRequestBody",
-                "filter": category,
-                "deploymentStatus": deployment_status,
-                "startFrom": start_from,
-                "pageSize": page_size,
-            }
-            validated_body = DeploymentStatusFilterRequestBody.model_validate(body_dict)
-
-        json_body = validated_body.model_dump_json(indent=2, exclude_none=True)
-        response = await self._async_make_request("POST", url, json_body)
-        elements = response.json().get("elements", NO_ELEMENTS_FOUND)
-
-        if type(elements) is str or len(elements) == 0:
-            return NO_ELEMENTS_FOUND
-
-        if output_format.upper() != "JSON":
-            return self._generate_referenceable_output(
-                elements, category, "Infrastructure", output_format, report_spec
-            )
-        return elements
+        return await self._async_deployment_status_filter_request(
+            url,
+            _type="Infrastructure",
+            _gen_output=self._generate_referenceable_output,
+            filter_string=category,
+            deployment_status=deployment_status,
+            start_from=start_from,
+            page_size=page_size,
+            output_format=output_format,
+            report_spec=report_spec,
+            body=body,
+        )
 
     @dynamic_catch
     def get_infrastructure_by_category(
@@ -1933,6 +2218,39 @@ class AssetMaker(ServerClient):
     ) -> list | str:
         """
         Returns the list of infrastructure assets matching the category and optional deployment status. Sync version.
+
+        Parameters
+        ----------
+        category: str
+            - category name to filter by
+        deployment_status: str, default = "ACTIVE"
+            - optional deployment status to filter by (e.g., ACTIVE)
+        start_from: int, default = 0
+            - the starting point in the results list
+        page_size: int, default = 0
+            - the maximum number of results to return
+        output_format: str, default = "JSON"
+            - the format of the output (JSON, DICT, etc.)
+        report_spec: str | dict, optional
+            - the report specification to use for the output
+        body: dict | DeploymentStatusFilterRequestBody, optional
+            - the request body to use for the request. If specified, this takes precedence over other parameters.
+
+        Returns
+        -------
+        list | str
+            - a list of infrastructure assets or a string message if no assets are found
+
+        Note:
+        -----
+        Sample body:
+        {
+          "class" : "DeploymentStatusFilterRequestBody",
+          "filter" : "xxx",
+          "deploymentStatus" : "ACTIVE",
+          "startFrom" : 0,
+          "pageSize": 0
+        }
         """
         loop = asyncio.get_event_loop()
         return loop.run_until_complete(
@@ -1953,6 +2271,21 @@ class AssetMaker(ServerClient):
         starts_with: bool = False,
         ends_with: bool = False,
         ignore_case: bool = True,
+        anchor_domain: Optional[str] = None,
+        metadata_element_type: Optional[str] = None,
+        metadata_element_subtypes: Optional[list[str]] = None,
+        skip_relationships: Optional[list[str]] = None,
+        include_only_relationships: Optional[list[str]] = None,
+        skip_classified_elements: Optional[list[str]] = None,
+        include_only_classified_elements: Optional[list[str]] = None,
+        graph_query_depth: int = 3,
+        governance_zone_filter: Optional[list[str]] = None,
+        as_of_time: Optional[str] = None,
+        effective_time: Optional[str] = None,
+        relationship_page_size: int = 0,
+        limit_results_by_status: Optional[list[str]] = None,
+        sequencing_order: Optional[str] = None,
+        sequencing_property: Optional[str] = None,
         start_from: int = 0,
         page_size: int = 0,
         output_format: str = "JSON",
@@ -1997,37 +2330,36 @@ class AssetMaker(ServerClient):
         }
         """
         url = f"{self.asset_command_root}/processes/find-by-search-string"
-
-        if isinstance(body, ActivityStatusSearchString):
-            validated_body = body
-        elif isinstance(body, dict):
-            validated_body = self._activity_status_search_request_adapter.validate_python(body)
-        else:
-            search_string = None if search_string == "*" else search_string
-            body_dict = {
-                "class": "ActivityStatusSearchString",
-                "searchString": search_string,
-                "activityStatus": activity_status,
-                "startsWith": starts_with,
-                "endsWith": ends_with,
-                "ignoreCase": ignore_case,
-                "startFrom": start_from,
-                "pageSize": page_size,
-            }
-            validated_body = ActivityStatusSearchString.model_validate(body_dict)
-
-        json_body = validated_body.model_dump_json(indent=2, exclude_none=True)
-        response = await self._async_make_request("POST", url, json_body)
-        elements = response.json().get("elements", NO_ELEMENTS_FOUND)
-
-        if type(elements) is str or len(elements) == 0:
-            return NO_ELEMENTS_FOUND
-
-        if output_format.upper() != "JSON":
-            return self._generate_referenceable_output(
-                elements, search_string, "Process", output_format, report_spec
-            )
-        return elements
+        return await self._async_activity_status_search_request(
+            url,
+            _type="Process",
+            _gen_output=self._generate_referenceable_output,
+            search_string=search_string,
+            activity_status=activity_status,
+            starts_with=starts_with,
+            ends_with=ends_with,
+            ignore_case=ignore_case,
+            anchor_domain=anchor_domain,
+            metadata_element_type=metadata_element_type,
+            metadata_element_subtypes=metadata_element_subtypes,
+            skip_relationships=skip_relationships,
+            include_only_relationships=include_only_relationships,
+            skip_classified_elements=skip_classified_elements,
+            include_only_classified_elements=include_only_classified_elements,
+            graph_query_depth=graph_query_depth,
+            governance_zone_filter=governance_zone_filter,
+            as_of_time=as_of_time,
+            effective_time=effective_time,
+            relationship_page_size=relationship_page_size,
+            limit_results_by_status=limit_results_by_status,
+            sequencing_order=sequencing_order,
+            sequencing_property=sequencing_property,
+            output_format=output_format,
+            report_spec=report_spec,
+            start_from=start_from,
+            page_size=page_size,
+            body=body,
+        )
 
     @dynamic_catch
     def find_processes(
@@ -2037,6 +2369,21 @@ class AssetMaker(ServerClient):
         starts_with: bool = False,
         ends_with: bool = False,
         ignore_case: bool = True,
+        anchor_domain: Optional[str] = None,
+        metadata_element_type: Optional[str] = None,
+        metadata_element_subtypes: Optional[list[str]] = None,
+        skip_relationships: Optional[list[str]] = None,
+        include_only_relationships: Optional[list[str]] = None,
+        skip_classified_elements: Optional[list[str]] = None,
+        include_only_classified_elements: Optional[list[str]] = None,
+        graph_query_depth: int = 3,
+        governance_zone_filter: Optional[list[str]] = None,
+        as_of_time: Optional[str] = None,
+        effective_time: Optional[str] = None,
+        relationship_page_size: int = 0,
+        limit_results_by_status: Optional[list[str]] = None,
+        sequencing_order: Optional[str] = None,
+        sequencing_property: Optional[str] = None,
         start_from: int = 0,
         page_size: int = 0,
         output_format: str = "JSON",
@@ -2045,6 +2392,48 @@ class AssetMaker(ServerClient):
     ) -> list | str:
         """
         Retrieve the processes that match the search string and activity status. Sync version.
+
+        Parameters
+        ----------
+        search_string: str, default = "*"
+            - the search string to use to find matching processes
+        activity_status: str, default = "IN_PROGRESS"
+            - optional activity status to filter by (e.g., IN_PROGRESS)
+        starts_with: bool, default = False
+            - if True, the search string must match the start of the property value
+        ends_with: bool, default = False
+            - if True, the search string must match the end of the property value
+        ignore_case: bool, default = True
+            - if True, the search is case-insensitive
+        start_from: int, default = 0
+            - the starting point in the results list
+        page_size: int, default = 0
+            - the maximum number of results to return
+        output_format: str, default = "JSON"
+            - the format of the output (JSON, DICT, etc.)
+        report_spec: str | dict, optional
+            - the report specification to use for the output
+        body: dict | ActivityStatusSearchString, optional
+            - the request body to use for the request. If specified, this takes precedence over other parameters.
+
+        Returns
+        -------
+        list | str
+            - a list of processes or a string message if no processes are found
+
+        Note:
+        -----
+        Sample body:
+        {
+          "class" : "ActivityStatusSearchString",
+          "searchString" : "xxx",
+          "activityStatus" : "IN_PROGRESS",
+          "startsWith" : false,
+          "endsWith" : false,
+          "ignoreCase" : true,
+          "startFrom" : 0,
+          "pageSize": 0
+        }
         """
         loop = asyncio.get_event_loop()
         return loop.run_until_complete(
@@ -2054,6 +2443,21 @@ class AssetMaker(ServerClient):
                 starts_with,
                 ends_with,
                 ignore_case,
+                anchor_domain,
+                metadata_element_type,
+                metadata_element_subtypes,
+                skip_relationships,
+                include_only_relationships,
+                skip_classified_elements,
+                include_only_classified_elements,
+                graph_query_depth,
+                governance_zone_filter,
+                as_of_time,
+                effective_time,
+                relationship_page_size,
+                limit_results_by_status,
+                sequencing_order,
+                sequencing_property,
                 start_from,
                 page_size,
                 output_format,
@@ -2103,33 +2507,18 @@ class AssetMaker(ServerClient):
         }
         """
         url = f"{self.asset_command_root}/processes/by-category"
-
-        if isinstance(body, ActivityStatusFilterRequestBody):
-            validated_body = body
-        elif isinstance(body, dict):
-            validated_body = self._activity_status_filter_request_adapter.validate_python(body)
-        else:
-            body_dict = {
-                "class": "ActivityStatusFilterRequestBody",
-                "filter": category,
-                "activityStatus": activity_status,
-                "startFrom": start_from,
-                "pageSize": page_size,
-            }
-            validated_body = ActivityStatusFilterRequestBody.model_validate(body_dict)
-
-        json_body = validated_body.model_dump_json(indent=2, exclude_none=True)
-        response = await self._async_make_request("POST", url, json_body)
-        elements = response.json().get("elements", NO_ELEMENTS_FOUND)
-
-        if type(elements) is str or len(elements) == 0:
-            return NO_ELEMENTS_FOUND
-
-        if output_format.upper() != "JSON":
-            return self._generate_referenceable_output(
-                elements, category, "Process", output_format, report_spec
-            )
-        return elements
+        return await self._async_activity_status_filter_request(
+            url,
+            _type="Process",
+            _gen_output=self._generate_referenceable_output,
+            filter_string=category,
+            activity_status=activity_status,
+            start_from=start_from,
+            page_size=page_size,
+            output_format=output_format,
+            report_spec=report_spec,
+            body=body,
+        )
 
     @dynamic_catch
     def get_processes_by_category(
@@ -2144,6 +2533,39 @@ class AssetMaker(ServerClient):
     ) -> list | str:
         """
         Retrieve the processes that match the category name and status. Sync version.
+
+        Parameters
+        ----------
+        category: str
+            - category name to filter by
+        activity_status: str, default = "IN_PROGRESS"
+            - optional activity status to filter by (e.g., IN_PROGRESS)
+        start_from: int, default = 0
+            - the starting point in the results list
+        page_size: int, default = 0
+            - the maximum number of results to return
+        output_format: str, default = "JSON"
+            - the format of the output (JSON, DICT, etc.)
+        report_spec: str | dict, optional
+            - the report specification to use for the output
+        body: dict | ActivityStatusFilterRequestBody, optional
+            - the request body to use for the request. If specified, this takes precedence over other parameters.
+
+        Returns
+        -------
+        list | str
+            - list of processes
+
+        Note:
+        -----
+        Sample body:
+        {
+          "class" : "ActivityStatusFilterRequestBody",
+          "filter" : "xxx",
+          "activityStatus" : "IN_PROGRESS",
+          "startFrom" : 0,
+          "pageSize": 0
+        }
         """
         loop = asyncio.get_event_loop()
         return loop.run_until_complete(
@@ -2200,6 +2622,23 @@ class AssetMaker(ServerClient):
     def create_action(self, body: dict | ActionRequestBody) -> str:
         """
         Create a new action and link it to the supplied actor and targets (if applicable). Sync version.
+
+        Parameters
+        ----------
+        body: dict | ActionRequestBody
+            - properties of the action
+
+        Returns
+        -------
+        str
+            - unique identifier of the action
+
+        Note:
+        -----
+        Sample body:
+        {
+          "class" : "ActionRequestBody"
+        }
         """
         loop = asyncio.get_event_loop()
         return loop.run_until_complete(self._async_create_action(body))
@@ -2261,6 +2700,39 @@ class AssetMaker(ServerClient):
     ) -> str:
         """
         Add an element to an action's workload. Sync version.
+
+        Parameters
+        ----------
+        action_guid: str
+            - unique identifier of the action
+        metadata_element_guid: str
+            - unique identifier of the metadata element that is a target
+        body: dict | NewRelationshipRequestBody, optional
+
+        Returns
+        -------
+        str
+            - unique identifier of the relationship
+
+        Note:
+        -----
+        Sample body:
+        {
+          "class" : "NewRelationshipRequestBody",
+           "properties" : {
+             "class": "ActionTargetProperties",
+             "activityStatus" : "IN_PROGRESS",
+             "actionTargetName" : "add label here",
+             "startTime" : "{{$isoTimestamp}}",
+             "completionTime" : "{{$isoTimestamp}}",
+             "completionMessage" : "Add message here"
+          },
+           "externalSourceGUID": "Add guid here",
+           "externalSourceName": "Add qualified name here",
+           "forLineage": false,
+           "forDuplicateProcessing": false,
+           "effectiveTime" : "{{$isoTimestamp}}"
+        }
         """
         loop = asyncio.get_event_loop()
         return loop.run_until_complete(
@@ -2304,6 +2776,37 @@ class AssetMaker(ServerClient):
     ) -> None:
         """
         Update the properties associated with an Action Target for an action. Sync version.
+
+        Parameters
+        ----------
+        action_target_guid: str
+            - unique identifier of the action target relationship
+        body: dict | UpdateRelationshipRequestBody
+
+        Returns
+        -------
+        None
+
+        Note:
+        -----
+        Sample body:
+        {
+          "class" : "UpdateRelationshipRequestBody",
+          "properties": {
+            "class": "ActionTargetProperties",
+             "activityStatus" : "IN_PROGRESS",
+             "actionTargetName" : "add label here",
+             "startTime" : "{{$isoTimestamp}}",
+             "completionTime" : "{{$isoTimestamp}}",
+             "completionMessage" : "Add message here"
+          },
+          "mergeUpdate": true,
+          "externalSourceGUID": "",
+          "externalSourceName": "",
+          "forLineage": false,
+          "forDuplicateProcessing": true,
+          "effectiveTime": "{{$isoTimestamp}}"
+        }
         """
         loop = asyncio.get_event_loop()
         loop.run_until_complete(
@@ -2353,6 +2856,28 @@ class AssetMaker(ServerClient):
     ) -> list | dict | str:
         """
         Retrieve a specific action target associated with an action. Sync version.
+
+        Parameters
+        ----------
+        action_target_guid: str
+        body: dict | GetRequestBody, optional
+        output_format: str, default = "JSON"
+        report_spec: str | dict, optional
+
+        Returns
+        -------
+        list | dict | str
+
+        Note:
+        -----
+        Sample body:
+        {
+          "class" : "GetRequestBody",
+          "asOfTime" : "{{$isoTimestamp}}",
+          "effectiveTime" : "{{$isoTimestamp}}",
+          "forLineage" : false,
+          "forDuplicateProcessing" : false
+        }
         """
         loop = asyncio.get_event_loop()
         return loop.run_until_complete(
@@ -2364,6 +2889,11 @@ class AssetMaker(ServerClient):
         self,
         action_guid: str,
         activity_status: str = "IN_PROGRESS",
+        start_from: int = 0,
+        page_size: int = 0,
+        limit_results_by_status: Optional[list[str]] = None,
+        sequencing_order: Optional[str] = None,
+        sequencing_property: Optional[str] = None,
         body: dict | ActivityStatusRequestBody | None = None,
         output_format: str = "JSON",
         report_spec: str | dict = None,
@@ -2384,25 +2914,19 @@ class AssetMaker(ServerClient):
         list | dict | str
         """
         url = f"{self.asset_command_root}/actions/{action_guid}/action-targets"
-
-        if isinstance(body, ActivityStatusRequestBody):
-            validated_body = body
-        elif isinstance(body, dict):
-            validated_body = self._activity_status_request_adapter.validate_python(body)
-        else:
-            body_dict = {
-                "class": "ActivityStatusRequestBody",
-                "activityStatus": activity_status,
-            }
-            validated_body = ActivityStatusRequestBody.model_validate(body_dict)
-
-        return await self._async_get_results_body_request(
+        return await self._async_activity_status_request(
             url,
             _type="ActionTarget",
             _gen_output=self._generate_referenceable_output,
+            activity_status=activity_status,
+            start_from=start_from,
+            page_size=page_size,
+            limit_results_by_status=limit_results_by_status,
+            sequencing_order=sequencing_order,
+            sequencing_property=sequencing_property,
             output_format=output_format,
             report_spec=report_spec,
-            body=validated_body,
+            body=body,
         )
 
     @dynamic_catch
@@ -2410,16 +2934,57 @@ class AssetMaker(ServerClient):
         self,
         action_guid: str,
         activity_status: str = "IN_PROGRESS",
+        start_from: int = 0,
+        page_size: int = 0,
+        limit_results_by_status: Optional[list[str]] = None,
+        sequencing_order: Optional[str] = None,
+        sequencing_property: Optional[str] = None,
         body: dict | ActivityStatusRequestBody | None = None,
         output_format: str = "JSON",
         report_spec: str | dict = None,
     ) -> list | dict | str:
         """
         Return a list of elements that are target elements for an action. Sync version.
+
+        Parameters
+        ----------
+        action_guid: str
+        activity_status: str, default = "IN_PROGRESS"
+        start_from: int, default = 0
+        page_size: int, default = 0
+        limit_results_by_status: list[str], optional
+        sequencing_order: str, optional
+        sequencing_property: str, optional
+        body: dict | ActivityStatusRequestBody, optional
+        output_format: str, default = "JSON"
+        report_spec: str | dict, optional
+
+        Returns
+        -------
+        list | dict | str
+
+        Note:
+        -----
+        Sample body:
+        {
+          "class" : "ActivityStatusRequestBody",
+          "activityStatus": "IN_PROGRESS"
+        }
         """
         loop = asyncio.get_event_loop()
         return loop.run_until_complete(
-            self._async_get_action_targets(action_guid, activity_status, body, output_format, report_spec)
+            self._async_get_action_targets(
+                action_guid,
+                activity_status,
+                start_from,
+                page_size,
+                limit_results_by_status,
+                sequencing_order,
+                sequencing_property,
+                body,
+                output_format,
+                report_spec,
+            )
         )
 
     @dynamic_catch
@@ -2427,6 +2992,11 @@ class AssetMaker(ServerClient):
         self,
         metadata_element_guid: str,
         activity_status: str = "IN_PROGRESS",
+        start_from: int = 0,
+        page_size: int = 0,
+        limit_results_by_status: Optional[list[str]] = None,
+        sequencing_order: Optional[str] = None,
+        sequencing_property: Optional[str] = None,
         body: dict | ActivityStatusRequestBody | None = None,
         output_format: str = "JSON",
         report_spec: str | dict = None,
@@ -2447,25 +3017,19 @@ class AssetMaker(ServerClient):
         list | dict | str
         """
         url = f"{self.asset_command_root}/elements/{metadata_element_guid}/action-targets/actions"
-
-        if isinstance(body, ActivityStatusRequestBody):
-            validated_body = body
-        elif isinstance(body, dict):
-            validated_body = self._activity_status_request_adapter.validate_python(body)
-        else:
-            body_dict = {
-                "class": "ActivityStatusRequestBody",
-                "activityStatus": activity_status,
-            }
-            validated_body = ActivityStatusRequestBody.model_validate(body_dict)
-
-        return await self._async_get_results_body_request(
+        return await self._async_activity_status_request(
             url,
             _type="Action",
             _gen_output=self._generate_referenceable_output,
+            activity_status=activity_status,
+            start_from=start_from,
+            page_size=page_size,
+            limit_results_by_status=limit_results_by_status,
+            sequencing_order=sequencing_order,
+            sequencing_property=sequencing_property,
             output_format=output_format,
             report_spec=report_spec,
-            body=validated_body,
+            body=body,
         )
 
     @dynamic_catch
@@ -2473,17 +3037,56 @@ class AssetMaker(ServerClient):
         self,
         metadata_element_guid: str,
         activity_status: str = "IN_PROGRESS",
+        start_from: int = 0,
+        page_size: int = 0,
+        limit_results_by_status: Optional[list[str]] = None,
+        sequencing_order: Optional[str] = None,
+        sequencing_property: Optional[str] = None,
         body: dict | ActivityStatusRequestBody | None = None,
         output_format: str = "JSON",
         report_spec: str | dict = None,
     ) -> list | dict | str:
         """
         Retrieve the "Actions" that are chained off of an action target element. Sync version.
+
+        Parameters
+        ----------
+        metadata_element_guid: str
+        activity_status: str, default = "IN_PROGRESS"
+        start_from: int, default = 0
+        page_size: int, default = 0
+        limit_results_by_status: list[str], optional
+        sequencing_order: str, optional
+        sequencing_property: str, optional
+        body: dict | ActivityStatusRequestBody, optional
+        output_format: str, default = "JSON"
+        report_spec: str | dict, optional
+
+        Returns
+        -------
+        list | dict | str
+
+        Note:
+        -----
+        Sample body:
+        {
+          "class" : "ActivityStatusRequestBody",
+          "activityStatus": "IN_PROGRESS"
+        }
         """
         loop = asyncio.get_event_loop()
         return loop.run_until_complete(
             self._async_get_actions_for_action_target(
-                metadata_element_guid, activity_status, body, output_format, report_spec
+                metadata_element_guid,
+                activity_status,
+                start_from,
+                page_size,
+                limit_results_by_status,
+                sequencing_order,
+                sequencing_property,
+                body,
+                output_format,
+                report_spec,
             )
         )
 
@@ -2519,6 +3122,32 @@ class AssetMaker(ServerClient):
     ) -> None:
         """
         Assign an action to an actor. Sync version.
+
+        Parameters
+        ----------
+        action_guid: str
+            - unique identifier of the action
+        actor_guid: str
+            - actor to assign the action to
+        body: dict | NewRelationshipRequestBody, optional
+            - request body
+
+        Note:
+        -----
+        Sample body:
+        {
+           "class" : "NewRelationshipRequestBody",
+           "properties" : {
+             "class": "AssignmentScopeProperties",
+             "label" : "add label here",
+             "description" : "Add description here"
+          },
+           "externalSourceGUID": "Add guid here",
+           "externalSourceName": "Add qualified name here",
+           "forLineage": false,
+           "forDuplicateProcessing": false,
+           "effectiveTime" : "{{$isoTimestamp}}"
+        }
         """
         loop = asyncio.get_event_loop()
         loop.run_until_complete(self._async_assign_action(action_guid, actor_guid, body))
@@ -2552,6 +3181,29 @@ class AssetMaker(ServerClient):
     ) -> None:
         """
         Assign an action to a new actor. Sync version.
+
+        Parameters
+        ----------
+        action_guid: str
+        actor_guid: str
+        body: dict | NewRelationshipRequestBody, optional
+
+        Note:
+        -----
+        Sample body:
+        {
+           "class" : "NewRelationshipRequestBody",
+           "properties" : {
+             "class": "AssignmentScopeProperties",
+             "label" : "add label here",
+             "description" : "Add description here"
+          },
+           "externalSourceGUID": "Add guid here",
+           "externalSourceName": "Add qualified name here",
+           "forLineage": false,
+           "forDuplicateProcessing": false,
+           "effectiveTime" : "{{$isoTimestamp}}"
+        }
         """
         loop = asyncio.get_event_loop()
         loop.run_until_complete(self._async_reassign_action(action_guid, actor_guid, body))
@@ -2585,6 +3237,24 @@ class AssetMaker(ServerClient):
     ) -> None:
         """
         Remove an action from an actor. Sync version.
+
+        Parameters
+        ----------
+        action_guid: str
+        actor_guid: str
+        body: dict | DeleteRelationshipRequestBody, optional
+
+        Note:
+        -----
+        Sample body:
+        {
+           "class" : "DeleteRelationshipRequestBody",
+           "externalSourceGUID": "Add guid here",
+           "externalSourceName": "Add qualified name here",
+           "forLineage": false,
+           "forDuplicateProcessing": false,
+           "effectiveTime" : "{{$isoTimestamp}}"
+        }
         """
         loop = asyncio.get_event_loop()
         loop.run_until_complete(self._async_unassign_action(action_guid, actor_guid, body))
@@ -2594,6 +3264,11 @@ class AssetMaker(ServerClient):
         self,
         actor_guid: str,
         activity_status: str = "IN_PROGRESS",
+        start_from: int = 0,
+        page_size: int = 0,
+        limit_results_by_status: Optional[list[str]] = None,
+        sequencing_order: Optional[str] = None,
+        sequencing_property: Optional[str] = None,
         body: dict | ActivityStatusRequestBody | None = None,
         output_format: str = "JSON",
         report_spec: str | dict = None,
@@ -2614,25 +3289,19 @@ class AssetMaker(ServerClient):
         list | dict | str
         """
         url = f"{self.asset_command_root}/actors/{actor_guid}/assigned/actions"
-
-        if isinstance(body, ActivityStatusRequestBody):
-            validated_body = body
-        elif isinstance(body, dict):
-            validated_body = self._activity_status_request_adapter.validate_python(body)
-        else:
-            body_dict = {
-                "class": "ActivityStatusRequestBody",
-                "activityStatus": activity_status,
-            }
-            validated_body = ActivityStatusRequestBody.model_validate(body_dict)
-
-        return await self._async_get_results_body_request(
+        return await self._async_activity_status_request(
             url,
             _type="Action",
             _gen_output=self._generate_referenceable_output,
+            activity_status=activity_status,
+            start_from=start_from,
+            page_size=page_size,
+            limit_results_by_status=limit_results_by_status,
+            sequencing_order=sequencing_order,
+            sequencing_property=sequencing_property,
             output_format=output_format,
             report_spec=report_spec,
-            body=validated_body,
+            body=body,
         )
 
     @dynamic_catch
@@ -2640,16 +3309,57 @@ class AssetMaker(ServerClient):
         self,
         actor_guid: str,
         activity_status: str = "IN_PROGRESS",
+        start_from: int = 0,
+        page_size: int = 0,
+        limit_results_by_status: Optional[list[str]] = None,
+        sequencing_order: Optional[str] = None,
+        sequencing_property: Optional[str] = None,
         body: dict | ActivityStatusRequestBody | None = None,
         output_format: str = "JSON",
         report_spec: str | dict = None,
     ) -> list | dict | str:
         """
         Retrieve the actions for a particular actor. Sync version.
+
+        Parameters
+        ----------
+        actor_guid: str
+        activity_status: str, default = "IN_PROGRESS"
+        start_from: int, default = 0
+        page_size: int, default = 0
+        limit_results_by_status: list[str], optional
+        sequencing_order: str, optional
+        sequencing_property: str, optional
+        body: dict | ActivityStatusRequestBody, optional
+        output_format: str, default = "JSON"
+        report_spec: str | dict, optional
+
+        Returns
+        -------
+        list | dict | str
+
+        Note:
+        -----
+        Sample body:
+        {
+          "class" : "ActivityStatusRequestBody",
+          "activityStatus": "IN_PROGRESS"
+        }
         """
         loop = asyncio.get_event_loop()
         return loop.run_until_complete(
-            self._async_get_assigned_actions(actor_guid, activity_status, body, output_format, report_spec)
+            self._async_get_assigned_actions(
+                actor_guid,
+                activity_status,
+                start_from,
+                page_size,
+                limit_results_by_status,
+                sequencing_order,
+                sequencing_property,
+                body,
+                output_format,
+                report_spec,
+            )
         )
 
     @dynamic_catch
@@ -2657,6 +3367,11 @@ class AssetMaker(ServerClient):
         self,
         metadata_element_guid: str,
         activity_status: str = "IN_PROGRESS",
+        start_from: int = 0,
+        page_size: int = 0,
+        limit_results_by_status: Optional[list[str]] = None,
+        sequencing_order: Optional[str] = None,
+        sequencing_property: Optional[str] = None,
         body: dict | ActivityStatusRequestBody | None = None,
         output_format: str = "JSON",
         report_spec: str | dict = None,
@@ -2677,25 +3392,19 @@ class AssetMaker(ServerClient):
         list | dict | str
         """
         url = f"{self.asset_command_root}/elements/{metadata_element_guid}/sponsored/actions"
-
-        if isinstance(body, ActivityStatusRequestBody):
-            validated_body = body
-        elif isinstance(body, dict):
-            validated_body = self._activity_status_request_adapter.validate_python(body)
-        else:
-            body_dict = {
-                "class": "ActivityStatusRequestBody",
-                "activityStatus": activity_status,
-            }
-            validated_body = ActivityStatusRequestBody.model_validate(body_dict)
-
-        return await self._async_get_results_body_request(
+        return await self._async_activity_status_request(
             url,
             _type="Action",
             _gen_output=self._generate_referenceable_output,
+            activity_status=activity_status,
+            start_from=start_from,
+            page_size=page_size,
+            limit_results_by_status=limit_results_by_status,
+            sequencing_order=sequencing_order,
+            sequencing_property=sequencing_property,
             output_format=output_format,
             report_spec=report_spec,
-            body=validated_body,
+            body=body,
         )
 
     @dynamic_catch
@@ -2703,17 +3412,56 @@ class AssetMaker(ServerClient):
         self,
         metadata_element_guid: str,
         activity_status: str = "IN_PROGRESS",
+        start_from: int = 0,
+        page_size: int = 0,
+        limit_results_by_status: Optional[list[str]] = None,
+        sequencing_order: Optional[str] = None,
+        sequencing_property: Optional[str] = None,
         body: dict | ActivityStatusRequestBody | None = None,
         output_format: str = "JSON",
         report_spec: str | dict = None,
     ) -> list | dict | str:
         """
         Retrieve the "Actions" that are chained off of a sponsor's element. Sync version.
+
+        Parameters
+        ----------
+        metadata_element_guid: str
+        activity_status: str, default = "IN_PROGRESS"
+        start_from: int, default = 0
+        page_size: int, default = 0
+        limit_results_by_status: list[str], optional
+        sequencing_order: str, optional
+        sequencing_property: str, optional
+        body: dict | ActivityStatusRequestBody, optional
+        output_format: str, default = "JSON"
+        report_spec: str | dict, optional
+
+        Returns
+        -------
+        list | dict | str
+
+        Note:
+        -----
+        Sample body:
+        {
+          "class" : "ActivityStatusRequestBody",
+          "activityStatus": "IN_PROGRESS"
+        }
         """
         loop = asyncio.get_event_loop()
         return loop.run_until_complete(
             self._async_get_actions_for_sponsor(
-                metadata_element_guid, activity_status, body, output_format, report_spec
+                metadata_element_guid,
+                activity_status,
+                start_from,
+                page_size,
+                limit_results_by_status,
+                sequencing_order,
+                sequencing_property,
+                body,
+                output_format,
+                report_spec,
             )
         )
 

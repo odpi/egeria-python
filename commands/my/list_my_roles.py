@@ -13,10 +13,12 @@ import os
 import sys
 import time
 
+import click
 from rich import box
 from rich.console import Console
 from rich.table import Table
 
+from pyegeria import PyegeriaException, print_basic_exception
 from pyegeria.omvs.my_profile import MyProfile
 
 disable_ssl_warnings = True
@@ -51,24 +53,23 @@ def display_my_roles(
     token = m_client.create_egeria_bearer_token(username, user_pass)
     my_profiles = m_client.get_my_profile()
     if type(my_profiles) is str:
-        print(f"No profiles found for {username}")
-        sys.exit(1)
+        raise click.ClickException(f"No roles found for {username}")
 
     def generate_table() -> Table:
         """Make a new table."""
         table = Table(
-            title=f"My Profile Information {url} @ {time.asctime()}",
+            title=f"My Role Information {url} @ {time.asctime()}",
             # style = "black on grey66",
             header_style="white on dark_blue",
             show_lines=True,
             box=box.ROUNDED,
-            caption=f"My Profile from Server '{server}' @ Platform - {url}\n Press 'q' to Quit",
+            caption=f"My Roles from Server '{server}' @ Platform - {url}\n Press 'q' to Quit",
             expand=True,
         )
 
         table.add_column("Name")
         table.add_column("Job Title")
-        table.add_column("userId")
+        table.add_column("Identifier")
         table.add_column("myGUID")
         table.add_column("Role Type")
         table.add_column("Role")
@@ -77,30 +78,29 @@ def display_my_roles(
         if len(my_profiles) == 0:
             name = " "
             job_title = " "
-            user_id = " "
+            id = " "
             my_guid = " "
             role_type = " "
             role = " "
             role_guid = " "
         else:
-            name = my_profiles["profileProperties"]["fullName"]
-            job_title = my_profiles["profileProperties"]["jobTitle"]
-            id_list = " "
-            for identities in my_profiles["userIdentities"]:
-                id_list = (
-                    f"{identities['userIdentity']['properties']['userId']} {id_list}"
-                )
+
+            name = my_profiles["properties"].get('displayName','---')
+            job_title = my_profiles["properties"].get("jobTitle",'---')
 
             my_guid = my_profiles["elementHeader"]["guid"]
+            my_roles = my_profiles.get('performsRoles', [])
 
-            my_roles = my_profiles["roles"]
+            if not isinstance(my_roles, list):
+                raise click.ClickException(f"No roles found for {username}")
             for a_role in my_roles:
-                my_role_props = a_role["properties"]
+                my_role_props = a_role['relatedElement']["properties"]
                 role_type = my_role_props["typeName"]
-                role = my_role_props.get("title", " ")
-                role_guid = a_role["elementHeader"]["guid"]
+                role = my_role_props.get("displayName",'---')
+                id = my_role_props.get("identifier", '---')
+                role_guid = a_role["relationshipHeader"]["guid"]
                 table.add_row(
-                    name, job_title, str(id_list), my_guid, role_type, role, role_guid
+                    name, job_title, str(id), my_guid, role_type, role, role_guid
                 )
 
         m_client.close_session()
@@ -116,11 +116,9 @@ def display_my_roles(
             console.print(generate_table())
 
     except (
-        InvalidParameterException,
-        PropertyServerException,
-        UserNotAuthorizedException,
+        PyegeriaException
     ) as e:
-        print_exception_response(e)
+        print_basic_exception(e)
         assert e.related_http_code != "200", "Invalid parameters"
 
 

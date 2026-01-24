@@ -17,7 +17,8 @@ import click
 from pyegeria import MyProfile
 from pyegeria.core._exceptions import (
     PyegeriaAPIException as PropertyServerException,
-    print_basic_exception as print_exception_response,
+    print_basic_exception as print_exception_response, PyegeriaException, print_basic_exception,
+    PyegeriaException,
 )
 
 erins_guid = "dcfd7e32-8074-4cdf-bdc5-9a6f28818a9d"
@@ -114,8 +115,8 @@ def create_todo(
         # elif type(resp) is dict:
         #     click.echo(json.dumps(resp), indent = 2)
 
-    except (InvalidParameterException, PropertyServerException) as e:
-        print_exception_response(e)
+    except (PyegeriaException) as e:
+        print_basic_exception(e)
     finally:
         m_client.close_session()
 
@@ -140,8 +141,8 @@ def delete_todo(server, url, userid, password, timeout, todo_guid):
 
         click.echo(f"Deleted Todo item {todo_guid}")
 
-    except (InvalidParameterException, PropertyServerException) as e:
-        print_exception_response(e)
+    except (PyegeriaException) as e:
+        print_basic_exception(e)
     finally:
         m_client.close_session()
 
@@ -159,7 +160,7 @@ def delete_todo(server, url, userid, password, timeout, todo_guid):
 @click.option("--timeout", default=60, help="Number of seconds to wait")
 @click.option(
     "--new-status",
-    type_name = click.Choice(
+    type = click.Choice(
         ["OPEN", "IN_PROGRESS", "WAITING", "COMPLETE", "ABANDONED"],
         case_sensitive="False",
     ),
@@ -177,7 +178,7 @@ def change_todo_status(server, url, userid, password, timeout, todo_guid, new_st
 
         click.echo(f"Changed todo item {todo_guid} status to {new_status}.")
 
-    except (InvalidParameterException, PropertyServerException) as e:
+    except (PyegeriaException, PropertyServerException) as e:
         print_exception_response(e)
     finally:
         m_client.close_session()
@@ -209,7 +210,7 @@ def mark_todo_complete(server, url, userid, password, timeout, todo_guid):
 
         click.echo(f"Marked todo item {todo_guid} as complete.")
 
-    except (InvalidParameterException, PropertyServerException) as e:
+    except (PyegeriaException, PropertyServerException) as e:
         print_exception_response(e)
     finally:
         m_client.close_session()
@@ -236,7 +237,7 @@ def reassign_todo(server, url, userid, password, timeout, todo_guid, new_actor_g
 
         click.echo(f"Reassigned Todo item {todo_guid} to {new_actor_guid}")
 
-    except (InvalidParameterException, PropertyServerException) as e:
+    except (PyegeriaException, PropertyServerException) as e:
         print_exception_response(e)
     finally:
         m_client.close_session()

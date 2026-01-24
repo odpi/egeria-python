@@ -68,8 +68,8 @@ class RegisteredInfo(ServerClient):
         self.user_id = user_id
         self.user_pwd = user_pwd
         self.reg_command_root = (
-            f"{self.platform_url}/open-metadata/platform-services/users/"
-            f"{self.user_id}/server-platform/registered-services"
+            f"{self.platform_url}/open-metadata/platform-services/"
+            f"server-platform/registered-services"
         )
 
     def list_registered_svcs(
@@ -147,7 +147,7 @@ class RegisteredInfo(ServerClient):
     def list_severity_definitions(
         self,
         *,
-        output_format: str = "DICT",
+        output_format: str = "JSON",
         report_spec: str | dict = None,
     ) -> list | str:
         """Get the registered severities for the OMAG Server
@@ -171,7 +171,7 @@ class RegisteredInfo(ServerClient):
         """
         url = (
             f"{self.platform_url}/servers/{self.view_server}/open-metadata/repository-services"
-            f"/users/{self.user_id}/audit-log/severity-definitions"
+            f"/audit-log/severity-definitions"
         )
         response = self.make_request("GET", url)
         elements = response.json().get("severities", [])

@@ -97,8 +97,12 @@ def list_tech_elements(
             tech_created_by = header["versions"]["createdBy"]
             tech_created_at = header["versions"]["createTime"]
             tech_guid = header["guid"]
-            tech_classifications = header["otherClassifications"]
-            class_md = build_classifications(tech_classifications)
+            tech_classifications = header.get("anchor","---")
+            if isinstance(tech_classifications, list):
+                class_md = build_classifications(tech_classifications)
+            elif isinstance(tech_classifications, dict):
+                class_md = (f"* Classification Name: {tech_classifications.get('classificationName')}\n"
+                            f"* Type: {tech_classifications.get('classificationProperties',{}).get('anchorTypeName','---')}\n")
 
             referenceables = element["properties"]
             tech_qualified_name = referenceables["qualifiedName"]

@@ -274,12 +274,12 @@ def test_find_elements_by_property_value():
     # metadata_element_type_name = "ValidValueDefinition"
     # metadata_element_type_name = None
     # metadata_element_type_name = "ArchiveFile"
-    open_metadata_type_name = "GovernanceActionProcess"
+    open_metadata_type_name = "DigitalProduct"
     # metadata_element_type_name = None
     # property_names = ["name"]
     # property_value = "Set up new clinical trial"
     property_names = ["displayName"]
-    property_value = "FileDirectory"
+    property_value = "Open Metadata Digital Product Data Dictionary"
 
     try:
         c_client = EgeriaTech(view_server, platform_url, user, password)
@@ -288,7 +288,7 @@ def test_find_elements_by_property_value():
         start_time = time.perf_counter()
         result = c_client.find_elements_by_property_value(
             property_value, property_names, open_metadata_type_name,
-            output_format="DICT", report_spec="Referenceable"
+            output_format="JSON", report_spec="Referenceable"
         )
         duration = time.perf_counter() - start_time
         print(f"\n\tDuration was {duration} seconds")
@@ -392,16 +392,16 @@ def test_get_element_guid_by_unique_name():
     # property_value = "Person:UK:324713"
     # property_value = "simple-metadata-store"
     # property_value = "FileDirectory:CreateAndSurveyGovernanceActionProcess"
-    property_value = "Campaign:Sustainability"
+    property_value = "Open Metadata Digital Product Data Dictionary"
 
     c_client = ClassificationManager(view_server, platform_url)
     try:
         bearer_token = c_client.create_egeria_bearer_token(user, password)
         start_time = time.perf_counter()
-        result = c_client.get_element_guid_by_unique_name(property_value, "qualifiedName")
+        result = c_client.get_element_guid_by_unique_name(property_value, "displayName")
         duration = time.perf_counter() - start_time
         print(f"\n\tDuration was {duration} seconds")
-        if type(result) is list:
+        if isinstance(result, list|dict):
             print(f"\n\tElement count is: {len(result)}")
             print_json(data=result)
         elif type(result) is str:
@@ -497,29 +497,33 @@ def test_find_elements_by_classification_with_property_value():
     # property_value = "Clinical Trials"
     # property_names = ["name", "qualifiedName"]
     #
-    classification = "Campaign"
+    classification = "Anchor"
     # metadata_element_type_name = "Project"
-    open_metadata_type_name = "Project"
-    property_value = ""
+    open_metadata_type_name = "DigitalProduct"
+    property_value = "Open Metadata Digital Product Data Dictionary"
     property_names = ["displayName"]
-    c_client = ClassificationManager(view_server, platform_url)
+    try:
+        c_client = ClassificationManager(view_server, platform_url)
 
-    bearer_token = c_client.create_egeria_bearer_token(user, password)
+        bearer_token = c_client.create_egeria_bearer_token(user, password)
 
-    start_time = time.perf_counter()
-    response = c_client.find_elements_by_classification_with_property_value(
-        classification, property_value, property_names, open_metadata_type_name
-    )
-    duration = time.perf_counter() - start_time
-    print(
-        f"\n\tDuration was {duration:.2f} seconds, Type: {type(response)}, Element count is {len(response)}"
-    )
-    if type(response) is list:
-        print_json(data=response)
-    elif type(response) is str:
-        console.print("\n\n\t Response is: " + response)
+        start_time = time.perf_counter()
+        response = c_client.find_elements_by_classification_with_property_value(
+            classification, property_value, property_names, open_metadata_type_name
+        )
+        duration = time.perf_counter() - start_time
+        print(
+            f"\n\tDuration was {duration:.2f} seconds, Type: {type(response)}, Element count is {len(response)}"
+        )
+        if type(response) is list:
+            print_json(data=response)
+        elif type(response) is str:
+            console.print("\n\n\t Response is: " + response)
 
-    assert True
+        assert True
+    except PyegeriaException as e:
+        print_basic_exception(e)
+        assert False
 
 
 def test_find_anchored_elements_with_property_value():
@@ -549,8 +553,9 @@ def test_get_all_related_elements():
     open_metadata_type_name = None
     c_client = ClassificationManager(view_server, platform_url)
     # element_guid = "d156faa6-90cf-4be8-b3c1-c002f3e9a0e5" # branch database
-    element_guid = "da0442bf-818f-406b-99dc-83b72605cc98"
+    # element_guid = "da0442bf-818f-406b-99dc-83b72605cc98"
     # element_guid = "8b9cce34-ff42-4f9d-b4b3-6317c8a767c3"  # Retail schema
+    element_guid = "0182bacf-32c4-40f0-91b5-2462dfeab50c"
     bearer_token = c_client.create_egeria_bearer_token(user, password)
     response = c_client.get_related_elements(
         element_guid, None, open_metadata_type_name
@@ -567,14 +572,15 @@ def test_get_all_related_elements():
 
 def test_get_related_elements():
     # metadata_element_type_name = 'CertificationType'
-    element_guid = '2ce8d10d-08a2-4fca-b0c2-1d5a335d00fc'
+    # element_guid = '2ce8d10d-08a2-4fca-b0c2-1d5a335d00fc'
+    element_guid = "10662294-52d0-43c5-9aa3-19922e478e69"
     # metadata_element_type_name = "Organization"
     # metadata_element_type_name = "CSVFile"
     # metadata_element_type_name = "InformationSupplyChain"
-    open_metadata_type_name = None
+    open_metadata_type_name = "Referenceable"
     # element_guid = "8dca6e76-d454-4344-9c93-faa837a1a898"
     # relationship_type = "DataContentForDataSet"
-    relationship_type = "ResourceList"
+    relationship_type = "CollectionMembership"
     # relationship_type = "InformationSupplyChainComposition"
     c_client = ClassificationManager(view_server, platform_url)
     try:

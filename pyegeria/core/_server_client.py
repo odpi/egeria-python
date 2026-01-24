@@ -4609,7 +4609,7 @@ class ServerClient(BaseServerClient):
 
     async def _async_find_search_keywords(
             self,
-            filter_string: str,
+            search_string: str,
             start_from: int = 0,
             page_size: int = 0,
             output_format: str | None = "JSON",
@@ -4646,10 +4646,10 @@ class ServerClient(BaseServerClient):
         PyegeriaException
 
         """
-        if body is None and filter_string:
+        if body is None and search_string:
             body = {
                 "class": "SearchStringRequestBody",
-                "filter": filter_string,
+                "filter": search_string,
                 "startFrom": start_from,
                 "pageSize": page_size
             }
@@ -5108,7 +5108,8 @@ class ServerClient(BaseServerClient):
                                   graph_query_depth: int = 3,
                                   governance_zone_filter: Optional[list[str]] = None, as_of_time: Optional[str] = None,
                                   effective_time: Optional[str] = None, relationship_page_size: int = 0,
-                                  limit_results_by_status: Optional[list[str]] = None, sequencing_order: Optional[str] = None,
+                                  limit_results_by_status: Optional[list[str]] = None,
+                                  sequencing_order: Optional[str] = None,
                                   sequencing_property: Optional[str] = None,
                                   output_format: Optional[str] = None, report_spec: Optional[str | dict] = None,
                                   start_from: int = 0, page_size: int | None = 100,
@@ -5261,6 +5262,433 @@ class ServerClient(BaseServerClient):
         if output_format != 'JSON':  # return a simplified markdown representation
             logger.info(f"Found elements, output format: {output_format} and report_spec: {report_spec}")
             return _gen_output(elements, "GUID", _type, output_format, report_spec)
+        return elements
+
+    @dynamic_catch
+    async def _async_get_request_body_request(self, url: str, _type: str, _gen_output: Callable[..., Any],
+                                              output_format: str = 'JSON',
+                                              report_spec: Optional[str | dict] = None,
+                                              body: Optional[dict | GetRequestBody] = None) -> Any:
+        """Handles request; returns elements or formatted output"""
+        if isinstance(body, GetRequestBody):
+            validated_body = body
+        elif isinstance(body, dict):
+            validated_body = self._get_request_adapter.validate_python(body)
+        else:
+            body = {"class": "GetRequestBody"}
+            validated_body = GetRequestBody.model_validate(body)
+
+        json_body = validated_body.model_dump_json(indent=2, exclude_none=True)
+
+        response = await self._async_make_request("POST", url, json_body)
+        elements = response.json().get("elements", None)
+        if elements is None:
+            elements = response.json().get("element", NO_ELEMENTS_FOUND)
+
+        if type(elements) is str:
+            logger.info(NO_ELEMENTS_FOUND)
+            return NO_ELEMENTS_FOUND
+
+        if output_format != 'JSON':  # return a simplified markdown representation
+            logger.info(f"Found elements, output format: {output_format} and report_spec: {report_spec}")
+            return _gen_output(elements, "Members", _type, output_format, report_spec)
+        return elements
+
+    @dynamic_catch
+    async def _async_activity_status_search_request(
+        self,
+        url: str,
+        _type: str,
+        _gen_output: Callable[..., Any],
+        search_string: str,
+        activity_status: Optional[str] = None,
+        starts_with: bool = True,
+        ends_with: bool = False,
+        ignore_case: bool = False,
+        anchor_domain: Optional[str] = None,
+        metadata_element_type: Optional[str] = None,
+        metadata_element_subtypes: Optional[list[str]] = None,
+        skip_relationships: Optional[list[str]] = None,
+        include_only_relationships: Optional[list[str]] = None,
+        skip_classified_elements: Optional[list[str]] = None,
+        include_only_classified_elements: Optional[list[str]] = None,
+        graph_query_depth: int = 3,
+        governance_zone_filter: Optional[list[str]] = None,
+        as_of_time: Optional[str] = None,
+        effective_time: Optional[str] = None,
+        relationship_page_size: int = 0,
+        limit_results_by_status: Optional[list[str]] = None,
+        sequencing_order: Optional[str] = None,
+        sequencing_property: Optional[str] = None,
+        output_format: Optional[str] = None,
+        report_spec: Optional[str | dict] = None,
+        start_from: int = 0,
+        page_size: int | None = 100,
+        body: dict | ActivityStatusSearchString | None = None,
+    ) -> Any:
+        if isinstance(body, ActivityStatusSearchString):
+            validated_body = body
+        elif isinstance(body, dict):
+            validated_body = self._activity_status_search_request_adapter.validate_python(body)
+        else:
+            search_string = None if search_string == "*" else search_string
+            if page_size is None:
+                page_size = 0
+            body = {
+                "class": "ActivityStatusSearchString",
+                "searchString": search_string,
+                "activityStatus": activity_status,
+                "startWith": starts_with,
+                "endWith": ends_with,
+                "ignoreCase": ignore_case,
+                "anchorDomain": anchor_domain,
+                "zoneFilter": governance_zone_filter,
+                "metadataElementTypeName": metadata_element_type,
+                "metadataElementSubtypeNames": metadata_element_subtypes,
+                "skipRelationships": skip_relationships,
+                "includeOnlyRelationships": include_only_relationships,
+                "relationshipPageSize": relationship_page_size,
+                "skipClassifiedElements": skip_classified_elements,
+                "includeOnlyClassifiedElements": include_only_classified_elements,
+                "graphQueryDepth": graph_query_depth,
+                "asOfTime": as_of_time,
+                "effectiveTime": effective_time,
+                "limitResultsByStatus": limit_results_by_status,
+                "sequencingOrder": sequencing_order,
+                "sequencingProperty": sequencing_property,
+                "start_from": start_from,
+                "pageSize": page_size,
+            }
+            validated_body = ActivityStatusSearchString.model_validate(body)
+
+        json_body = validated_body.model_dump_json(indent=2, exclude_none=True)
+        response = await self._async_make_request("POST", url, json_body, time_out=90)
+        elements = response.json().get("elements", NO_ELEMENTS_FOUND)
+        if type(elements) is str:
+            logger.info(NO_ELEMENTS_FOUND)
+            return NO_ELEMENTS_FOUND
+
+        if output_format.upper() != "JSON":
+            return _gen_output(elements, search_string, _type, output_format, report_spec)
+        return elements
+
+    @dynamic_catch
+    async def _async_activity_status_filter_request(
+        self,
+        url: str,
+        _type: str,
+        _gen_output: Callable[..., Any],
+        filter_string: str,
+        activity_status: Optional[str] = None,
+        start_from: int = 0,
+        page_size: int = 0,
+        output_format: str = "JSON",
+        report_spec: Optional[str | dict] = None,
+        body: Optional[dict | ActivityStatusFilterRequestBody] = None,
+    ) -> Any:
+        if isinstance(body, ActivityStatusFilterRequestBody):
+            validated_body = body
+        elif isinstance(body, dict):
+            validated_body = self._activity_status_filter_request_adapter.validate_python(body)
+        else:
+            filter_string = None if filter_string == "*" else filter_string
+            body = {
+                "class": "ActivityStatusFilterRequestBody",
+                "filter": filter_string,
+                "activityStatus": activity_status,
+                "startFrom": start_from,
+                "pageSize": page_size,
+            }
+            validated_body = ActivityStatusFilterRequestBody.model_validate(body)
+
+        json_body = validated_body.model_dump_json(indent=2, exclude_none=True)
+        response = await self._async_make_request("POST", url, json_body)
+        elements = response.json().get("elements", NO_ELEMENTS_FOUND)
+        if type(elements) is str or len(elements) == 0:
+            logger.info(NO_ELEMENTS_FOUND)
+            return NO_ELEMENTS_FOUND
+
+        if output_format.upper() != "JSON":
+            return _gen_output(elements, filter_string, _type, output_format, report_spec)
+        return elements
+
+    @dynamic_catch
+    async def _async_activity_status_request(
+        self,
+        url: str,
+        _type: str,
+        _gen_output: Callable[..., Any],
+        activity_status: Optional[str] = None,
+        start_from: int = 0,
+        page_size: int = 0,
+        limit_results_by_status: Optional[list[str]] = None,
+        sequencing_order: Optional[str] = None,
+        sequencing_property: Optional[str] = None,
+        output_format: str = "JSON",
+        report_spec: Optional[str | dict] = None,
+        body: Optional[dict | ActivityStatusRequestBody] = None,
+    ) -> Any:
+        if isinstance(body, ActivityStatusRequestBody):
+            validated_body = body
+        elif isinstance(body, dict):
+            validated_body = self._activity_status_request_adapter.validate_python(body)
+        else:
+            body = {
+                "class": "ActivityStatusRequestBody",
+                "activityStatus": activity_status,
+                "startFrom": start_from,
+                "pageSize": page_size,
+                "limitResultsByStatus": limit_results_by_status,
+                "sequencingOrder": sequencing_order,
+                "sequencingProperty": sequencing_property,
+            }
+            validated_body = ActivityStatusRequestBody.model_validate(body)
+
+        json_body = validated_body.model_dump_json(indent=2, exclude_none=True)
+        response = await self._async_make_request("POST", url, json_body)
+        elements = response.json().get("elements", NO_ELEMENTS_FOUND)
+        if type(elements) is str:
+            logger.info(NO_ELEMENTS_FOUND)
+            return NO_ELEMENTS_FOUND
+
+        if output_format.upper() != "JSON":
+            return _gen_output(elements, "Members", _type, output_format, report_spec)
+        return elements
+
+    @dynamic_catch
+    async def _async_content_status_search_request(
+        self,
+        url: str,
+        _type: str,
+        _gen_output: Callable[..., Any],
+        search_string: str,
+        content_status: Optional[str] = None,
+        starts_with: bool = True,
+        ends_with: bool = False,
+        ignore_case: bool = False,
+        anchor_domain: Optional[str] = None,
+        metadata_element_type: Optional[str] = None,
+        metadata_element_subtypes: Optional[list[str]] = None,
+        skip_relationships: Optional[list[str]] = None,
+        include_only_relationships: Optional[list[str]] = None,
+        skip_classified_elements: Optional[list[str]] = None,
+        include_only_classified_elements: Optional[list[str]] = None,
+        graph_query_depth: int = 3,
+        governance_zone_filter: Optional[list[str]] = None,
+        as_of_time: Optional[str] = None,
+        effective_time: Optional[str] = None,
+        relationship_page_size: int = 0,
+        limit_results_by_status: Optional[list[str]] = None,
+        sequencing_order: Optional[str] = None,
+        sequencing_property: Optional[str] = None,
+        output_format: Optional[str] = None,
+        report_spec: Optional[str | dict] = None,
+        start_from: int = 0,
+        page_size: int | None = 100,
+        body: dict | ContentStatusSearchString | None = None,
+    ) -> Any:
+        if isinstance(body, ContentStatusSearchString):
+            validated_body = body
+        elif isinstance(body, dict):
+            validated_body = self._content_status_search_request_adapter.validate_python(body)
+        else:
+            search_string = None if search_string == "*" else search_string
+            if page_size is None:
+                page_size = 0
+            body = {
+                "class": "ContentStatusSearchString",
+                "searchString": search_string,
+                "contentStatus": content_status,
+                "startWith": starts_with,
+                "endWith": ends_with,
+                "ignoreCase": ignore_case,
+                "anchorDomain": anchor_domain,
+                "zoneFilter": governance_zone_filter,
+                "metadataElementTypeName": metadata_element_type,
+                "metadataElementSubtypeNames": metadata_element_subtypes,
+                "skipRelationships": skip_relationships,
+                "includeOnlyRelationships": include_only_relationships,
+                "relationshipPageSize": relationship_page_size,
+                "skipClassifiedElements": skip_classified_elements,
+                "includeOnlyClassifiedElements": include_only_classified_elements,
+                "graphQueryDepth": graph_query_depth,
+                "asOfTime": as_of_time,
+                "effectiveTime": effective_time,
+                "limitResultsByStatus": limit_results_by_status,
+                "sequencingOrder": sequencing_order,
+                "sequencingProperty": sequencing_property,
+                "start_from": start_from,
+                "pageSize": page_size,
+            }
+            validated_body = ContentStatusSearchString.model_validate(body)
+
+        json_body = validated_body.model_dump_json(indent=2, exclude_none=True)
+        response = await self._async_make_request("POST", url, json_body, time_out=90)
+        elements = response.json().get("elements", NO_ELEMENTS_FOUND)
+        if type(elements) is str:
+            logger.info(NO_ELEMENTS_FOUND)
+            return NO_ELEMENTS_FOUND
+
+        if output_format.upper() != "JSON":
+            return _gen_output(elements, search_string, _type, output_format, report_spec)
+        return elements
+
+    @dynamic_catch
+    async def _async_content_status_filter_request(
+        self,
+        url: str,
+        _type: str,
+        _gen_output: Callable[..., Any],
+        filter_string: str,
+        content_status: Optional[str] = None,
+        start_from: int = 0,
+        page_size: int = 0,
+        output_format: str = "JSON",
+        report_spec: Optional[str | dict] = None,
+        body: Optional[dict | ContentStatusFilterRequestBody] = None,
+    ) -> Any:
+        if isinstance(body, ContentStatusFilterRequestBody):
+            validated_body = body
+        elif isinstance(body, dict):
+            validated_body = self._content_status_filter_request_adapter.validate_python(body)
+        else:
+            filter_string = None if filter_string == "*" else filter_string
+            body = {
+                "class": "ContentStatusFilterRequestBody",
+                "filter": filter_string,
+                "contentStatus": content_status,
+                "startFrom": start_from,
+                "pageSize": page_size,
+            }
+            validated_body = ContentStatusFilterRequestBody.model_validate(body)
+
+        json_body = validated_body.model_dump_json(indent=2, exclude_none=True)
+        response = await self._async_make_request("POST", url, json_body)
+        elements = response.json().get("elements", NO_ELEMENTS_FOUND)
+        if type(elements) is str or len(elements) == 0:
+            logger.info(NO_ELEMENTS_FOUND)
+            return NO_ELEMENTS_FOUND
+
+        if output_format.upper() != "JSON":
+            return _gen_output(elements, filter_string, _type, output_format, report_spec)
+        return elements
+
+    @dynamic_catch
+    async def _async_deployment_status_search_request(
+        self,
+        url: str,
+        _type: str,
+        _gen_output: Callable[..., Any],
+        search_string: str,
+        deployment_status: Optional[str] = None,
+        starts_with: bool = True,
+        ends_with: bool = False,
+        ignore_case: bool = False,
+        anchor_domain: Optional[str] = None,
+        metadata_element_type: Optional[str] = None,
+        metadata_element_subtypes: Optional[list[str]] = None,
+        skip_relationships: Optional[list[str]] = None,
+        include_only_relationships: Optional[list[str]] = None,
+        skip_classified_elements: Optional[list[str]] = None,
+        include_only_classified_elements: Optional[list[str]] = None,
+        graph_query_depth: int = 3,
+        governance_zone_filter: Optional[list[str]] = None,
+        as_of_time: Optional[str] = None,
+        effective_time: Optional[str] = None,
+        relationship_page_size: int = 0,
+        limit_results_by_status: Optional[list[str]] = None,
+        sequencing_order: Optional[str] = None,
+        sequencing_property: Optional[str] = None,
+        output_format: Optional[str] = None,
+        report_spec: Optional[str | dict] = None,
+        start_from: int = 0,
+        page_size: int | None = 100,
+        body: dict | DeploymentStatusSearchString | None = None,
+    ) -> Any:
+        if isinstance(body, DeploymentStatusSearchString):
+            validated_body = body
+        elif isinstance(body, dict):
+            validated_body = self._deployment_status_search_request_adapter.validate_python(body)
+        else:
+            search_string = None if search_string == "*" else search_string
+            if page_size is None:
+                page_size = 0
+            body = {
+                "class": "DeploymentStatusSearchString",
+                "searchString": search_string,
+                "deploymentStatus": deployment_status,
+                "startWith": starts_with,
+                "endWith": ends_with,
+                "ignoreCase": ignore_case,
+                "anchorDomain": anchor_domain,
+                "zoneFilter": governance_zone_filter,
+                "metadataElementTypeName": metadata_element_type,
+                "metadataElementSubtypeNames": metadata_element_subtypes,
+                "skipRelationships": skip_relationships,
+                "includeOnlyRelationships": include_only_relationships,
+                "relationshipPageSize": relationship_page_size,
+                "skipClassifiedElements": skip_classified_elements,
+                "includeOnlyClassifiedElements": include_only_classified_elements,
+                "graphQueryDepth": graph_query_depth,
+                "asOfTime": as_of_time,
+                "effectiveTime": effective_time,
+                "limitResultsByStatus": limit_results_by_status,
+                "sequencingOrder": sequencing_order,
+                "sequencingProperty": sequencing_property,
+                "start_from": start_from,
+                "pageSize": page_size,
+            }
+            validated_body = DeploymentStatusSearchString.model_validate(body)
+
+        json_body = validated_body.model_dump_json(indent=2, exclude_none=True)
+        response = await self._async_make_request("POST", url, json_body, time_out=90)
+        elements = response.json().get("elements", NO_ELEMENTS_FOUND)
+        if type(elements) is str:
+            logger.info(NO_ELEMENTS_FOUND)
+            return NO_ELEMENTS_FOUND
+
+        if output_format.upper() != "JSON":
+            return _gen_output(elements, search_string, _type, output_format, report_spec)
+        return elements
+
+    @dynamic_catch
+    async def _async_deployment_status_filter_request(
+        self,
+        url: str,
+        _type: str,
+        _gen_output: Callable[..., Any],
+        filter_string: str,
+        deployment_status: Optional[str] = None,
+        start_from: int = 0,
+        page_size: int = 0,
+        output_format: str = "JSON",
+        report_spec: Optional[str | dict] = None,
+        body: Optional[dict | DeploymentStatusFilterRequestBody] = None,
+    ) -> Any:
+        if isinstance(body, DeploymentStatusFilterRequestBody):
+            validated_body = body
+        elif isinstance(body, dict):
+            validated_body = self._deployment_status_filter_request_adapter.validate_python(body)
+        else:
+            filter_string = None if filter_string == "*" else filter_string
+            body = {
+                "class": "DeploymentStatusFilterRequestBody",
+                "filter": filter_string,
+                "deploymentStatus": deployment_status,
+                "startFrom": start_from,
+                "pageSize": page_size,
+            }
+            validated_body = DeploymentStatusFilterRequestBody.model_validate(body)
+
+        json_body = validated_body.model_dump_json(indent=2, exclude_none=True)
+        response = await self._async_make_request("POST", url, json_body)
+        elements = response.json().get("elements", NO_ELEMENTS_FOUND)
+        if type(elements) is str or len(elements) == 0:
+            logger.info(NO_ELEMENTS_FOUND)
+            return NO_ELEMENTS_FOUND
+
+        if output_format.upper() != "JSON":
+            return _gen_output(elements, filter_string, _type, output_format, report_spec)
         return elements
 
     @dynamic_catch

@@ -95,7 +95,7 @@ def display_glossaries(
             file_name = f"Glossaries-{time.strftime('%Y-%m-%d-%H-%M-%S')}-{action}.md"
             full_file_path = os.path.join(file_path, file_name)
             os.makedirs(os.path.dirname(full_file_path), exist_ok=True)
-            output = m_client.find_glossaries(search_string,  None, output_format=output_format)
+            output = m_client.find_glossaries(search_string, output_format=output_format)
             if output == "NO_GLOSSARIES_FOUND":
                 print(f"\n==> No glossaries found for search string '{search_string}'")
                 return

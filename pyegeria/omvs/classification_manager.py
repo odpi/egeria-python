@@ -2767,7 +2767,7 @@ body: Optional[dict | FilterRequestBody] = None,
         """
         if body is None:
             body = {
-                "class": "FindPropertyNamesRequestBody",
+                "class": "FindPropertyNamesProperties",
                 "metadataElementTypeName": metadata_element_type_name,
                 "propertyValue": property_value,
                 "propertyNames": property_names,
@@ -2778,7 +2778,7 @@ body: Optional[dict | FilterRequestBody] = None,
                 "effectiveTime": effective_time,
             }
 
-        url = f"{base_path(self, self.view_server)}/elements/by-property-value-search"
+        url = f"{self.platform_url}/servers/{self.view_server}/api/open-metadata/classification-explorer/elements/by-property-value-search"
 
         return await self._async_find_request(
             url,
@@ -3675,7 +3675,7 @@ body: Optional[dict | FilterRequestBody] = None,
 
         url = (
             f"{base_path(self, self.view_server)}/elements/by-classification/{classification_name}/"
-            f"by-property-value-search"
+            f"with-property-value-search"
         )
 
         return await self._async_find_request(
