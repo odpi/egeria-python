@@ -15,6 +15,8 @@ import os
 import sys
 import time
 from datetime import datetime
+
+import click
 from rich import box
 from rich.console import Console
 from rich.live import Live
@@ -189,8 +191,7 @@ def display_engine_activity_c(
                     core_results_out,
                 )
         else:
-            print("Egeria integration daemon not running")
-            sys.exit()
+            raise click.ClickException("Egeria integration daemon not running")
         g_client.refresh_egeria_bearer_token()
         return table
 

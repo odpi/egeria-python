@@ -151,7 +151,7 @@ def main():
     time_out = args.time_out if args.time_out is not None else 60
     try:
         search_string = Prompt.ask(
-            "Enter an asset search string:", default="Certification"
+            "Enter a relationship search string:", default="Certification"
         )
 
         list_relationships(search_string, server, url, userid, user_pass, time_out)

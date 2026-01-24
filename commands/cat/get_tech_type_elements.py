@@ -39,7 +39,7 @@ def tech_viewer(
     try:
         list_generic(report_spec = "Tech-Type-Elements", output_format = "TABLE", view_server = server_name,
                  view_url= platform_url, user = user, user_pass = user_pass, prompt_missing = True,
-                     params = {"filter": tech_name},
+                     params = {"filter_string": tech_name},
                  render_table=True, table_caption="Tech Type Elements", use_pager=True, width=width, jupyter=jupyter)
 
     except (PyegeriaAPIException, PyegeriaClientException) as e:

@@ -2678,7 +2678,8 @@ class GlossaryManager(CollectionManager):
 
     @dynamic_catch
     async def _async_find_glossaries(self, search_string: str = "*",
-                                     starts_with: bool = True, ends_with: bool = False,
+                                     starts_with: bool = True,
+                                     ends_with: bool = False,
                                      ignore_case: bool = False,
                                      anchor_domain: Optional[str] = None,
                                      metadata_element_type: str = "Glossary",

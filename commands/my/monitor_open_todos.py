@@ -13,6 +13,7 @@ import os
 import sys
 import time
 
+import click
 from rich import box
 from rich.console import Console
 from rich.live import Live
@@ -86,8 +87,7 @@ def display_todos(
 
         todo_items = m_client.find_to_do("*", starts_with=True)
         if type(todo_items) is str:
-            print("===> No To Do items found")
-            sys.exit()
+            raise click.ClickException("===>No To Do items found")
         if todo_items is None:
             name = " "
             type_name = " "

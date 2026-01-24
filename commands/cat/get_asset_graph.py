@@ -29,21 +29,11 @@ guid_list = []
 console = Console(width=app_config.console_width, force_terminal=(not app_config.egeria_jupyter))
 
 
-def asset_viewer(
-    output_format: str = "TABLE",
-    asset_guid: str = None,
-    view_server: str = app_config.egeria_view_server,
-    view_url: str = app_config.egeria_view_server_url,
-    user: str = EGERIA_USER,
-    user_pass: str = EGERIA_USER_PASSWORD,
-    jupyter: bool = app_config.egeria_jupyter,
-    width: int = app_config.console_width,
-    prompt_missing: bool = False,
-    write_file: bool = False,
-    render_table: bool = False,
-    table_caption: str | None = None,
-    use_pager: bool = True,
-):
+def asset_viewer(asset_guid: str, output_format: str = "TABLE", view_server: str = app_config.egeria_view_server,
+                 view_url: str = app_config.egeria_view_server_url, user: str = EGERIA_USER,
+                 user_pass: str = EGERIA_USER_PASSWORD, jupyter: bool = app_config.egeria_jupyter,
+                 width: int = app_config.console_width, prompt_missing: bool = False, write_file: bool = False,
+                 render_table: bool = False, table_caption: str | None = None, use_pager: bool = True):
     try:
         list_generic(report_spec="Asset-Graph", output_format=output_format, view_server=view_server,
                  view_url=view_url, user=user, user_pass=user_pass, params={"asset_guid": asset_guid},
@@ -75,9 +65,8 @@ def main():
     try:
         asset_guid = Prompt.ask("Enter the Asset GUID to view:", default="")
         output_format = Prompt.ask("Enter the output format:", default="TABLE")
-        asset_viewer(output_format, asset_guid, server, url, userid,
-                     user_pass, prompt_missing=True, write_file=True, render_table=True,
-                     table_caption="Asset Graph")
+        asset_viewer(asset_guid, output_format, server, url, userid, user_pass, prompt_missing=True, write_file=True,
+                     render_table=True, table_caption="Asset Graph")
     except KeyboardInterrupt as e:
         # console.print_exception()
         pass

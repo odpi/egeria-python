@@ -10,7 +10,8 @@ A running Egeria environment is needed to run these tests.
 import time
 
 import pytest
-from rich import console
+
+from rich.console import Console
 
 from pyegeria import (
     PyegeriaException,
@@ -20,7 +21,7 @@ from pyegeria.omvs.asset_maker import AssetMaker
 
 disable_ssl_warnings = True
 
-
+console = Console()
 class TestAssetMaker:
     good_platform1_url = "https://127.0.0.1:9443"
     good_platform2_url = "https://oak.local:9443"
@@ -292,7 +293,12 @@ class TestAssetMaker:
             a_client = AssetMaker(self.good_view_server_2, self.good_platform1_url, user_id=self.good_user_2,
                                   user_pwd=self.good_user_2_pwd)
             a_client.create_egeria_bearer_token(self.good_user_2, self.good_user_2_pwd)
-            response = a_client.find_processes(search_string="*", output_format="JSON")
+            response = a_client.find_processes(search_string="*", activity_status=None, metadata_element_type ="Process",output_format="JSON")
+            console.print(f"Response type {type(response)}, num elements {len(response)}\n")
+            if isinstance(response, dict|list):
+                console.print_json(data=response)
+            else:
+                console.print(response)
             assert response is not None
         except PyegeriaException as e:
             print_exception_table(e)
@@ -309,9 +315,11 @@ class TestAssetMaker:
             body = {
                 "class": "ActionRequestBody",
                 "properties": {
-                    "class": "ActionProperties",
-                    "qualifiedName": f"test-action-{int(time.time())}",
-                    "displayName": "Test Action"
+                    "class": "ToDoProperties",
+                    "qualifiedName": f"make-coffee-{int(time.time())}",
+                    "displayName": "make-coffee",
+                    "activityStatus": "REQUESTED",
+                    "description": "Make coffee for the team",
                 }
             }
             response = a_client.create_action(body=body)
@@ -330,7 +338,11 @@ class TestAssetMaker:
                                   user_pwd=self.good_user_2_pwd)
             a_client.create_egeria_bearer_token(self.good_user_2, self.good_user_2_pwd)
             # Using a dummy GUID
-            response = a_client.get_assigned_actions(actor_guid="dummy-guid", output_format="JSON")
+            response = a_client.get_assigned_actions(actor_guid="fc43ce51-342c-4251-8e78-a29dcf30a553", output_format="JSON")
+            if isinstance(response, dict | list):
+                console.print_json(data=response)
+            else:
+                console.print(response)
             assert response is not None
         except PyegeriaException as e:
             print_exception_table(e)

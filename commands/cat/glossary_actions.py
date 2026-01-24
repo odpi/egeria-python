@@ -99,7 +99,7 @@ def delete_glossary(server, url, userid, password, timeout, glossary_guid):
 @click.option("--usage", help="Usage notes", default=None)
 @click.option("--version", help="Version", default="1.0")
 @click.option("--status", help="Status",
-              type_name = click.Choice(TERM_STATUS, case_sensitive=False
+              type = click.Choice(TERM_STATUS, case_sensitive=False
             ), default="DRAFT")
 @click.option("--server", default=app_config.egeria_view_server, help="Egeria view server to use.")
 @click.option("--url", default=app_config.egeria_view_server_url,
@@ -118,8 +118,7 @@ def create_term(server, url, userid, password, glossary_name, term_name, summary
     try:
         glossary_guid = m_client.__get_guid__(display_name = glossary_name, property_name = "displayName")
         if glossary_guid == NO_ELEMENTS_FOUND:
-            click.echo(f"The glossary name {glossary_name} was not found..exiting\n")
-            sys.exit(0)
+            raise click.ClickException("The glossary name was not found..exiting")
 
         body = {
             "class": "NewElementRequestBody",
@@ -207,7 +206,7 @@ def update_term(server, url, userid, password, term_name, summary, description, 
 @click.command("update-term-status")
 @click.option("--term-guid", help="GUID of the Term", required=True)
 @click.option("--status", help="Status",
-              type_name = click.Choice(TERM_STATUS, case_sensitive=False), default="DRAFT")
+              type = click.Choice(TERM_STATUS, case_sensitive=False), default="DRAFT")
 @click.option("--server", default=app_config.egeria_view_server, help="Egeria view server to use.")
 @click.option("--url", default=app_config.egeria_view_server_url,
               help="URL of Egeria platform to connect to")

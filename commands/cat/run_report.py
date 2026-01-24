@@ -23,6 +23,7 @@ import sys
 import time
 from typing import Any, Dict, List, Mapping, Sequence
 
+import click
 from rich import box
 from rich.console import Console
 from rich.table import Table
@@ -131,13 +132,16 @@ def list_generic(
 
     # Normalize/augment response
     if result is None:
+        click.echo(f"\nNo data returned for report: {report_spec}\n")
         return {
             "kind": "empty",
             "heading": get_report_spec_heading(report_spec) or f"Report: {report_spec}",
             "required": required_params,
             "optional": optional_params,
         }
+
     if result.get("kind") == "empty":
+        click.echo(f"No data returned for report: {report_spec}")
         return {
             "kind": "empty",
             "heading": get_report_spec_heading(report_spec) or f"Report: {report_spec}",

@@ -67,8 +67,7 @@ def load_archive(file_name, server_name, view_server, url, userid, password, tim
         server_guid = s_client.__get_guid__(display_name = server_name, property_name = "resourceName", tech_type = "MetadataStore")
         file_name = file_name.strip()
         if server_guid == "No elements found":
-            print("Didn't find the metadata store")
-            sys.exit(0)
+            raise click.ClickException("Didn't find the metadata store")
 
         s_client.add_archive_file(file_name, server_guid, server_name, time_out=timeout)
 

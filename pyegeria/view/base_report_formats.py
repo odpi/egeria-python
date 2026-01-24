@@ -142,10 +142,11 @@ USER_FORMAT_SETS_DIR = os.getenv("PYEGERIA_USER_REPORT_SPECS_DIR", os.getenv("PY
 MD_SEPARATOR = "\n---\n\n"
 
 # Standard optional parameters for search functions
-OPTIONAL_SEARCH_PARAMS = ["page_size", "start_from", "starts_with", "ends_with", "ignore_case"]
-OPTIONAL_FILTER_PARAMS = ["page_size", "start_from"]
-
+OPTIONAL_SEQUENCING_PARAMS = ["sequencing_order", "sequencing_property"]
+OPTIONAL_SEARCH_PARAMS = OPTIONAL_SEQUENCING_PARAMS + ["page_size", "start_from", "starts_with", "ends_with", "ignore_case"]
+OPTIONAL_FILTER_PARAMS = OPTIONAL_SEQUENCING_PARAMS + ["page_size", "start_from"]
 # Define shared elements
+
 COMMON_COLUMNS = [
     Column(name='Display Name', key='display_name'),
     Column(name='Qualified Name', key='qualified_name', format=False),
@@ -659,7 +660,7 @@ base_report_specs = FormatSetDict({
         action=ActionParameter(
             function="EgeriaTech.get_technology_type_elements",
             optional_params=OPTIONAL_FILTER_PARAMS + TIME_PARAMETERS + ["get_templates"],
-            required_params=["filter"],
+            required_params=["filter_string"],
             spec_params={},
         )
     ),
@@ -715,7 +716,7 @@ base_report_specs = FormatSetDict({
         action=ActionParameter(
             function="ServerClient.get_tech_type_detail",
             optional_params=OPTIONAL_FILTER_PARAMS + TIME_PARAMETERS,
-            required_params=["filter"],
+            required_params=["filter_string"],
             spec_params={},
         )
     ),
@@ -755,7 +756,7 @@ base_report_specs = FormatSetDict({
         action=ActionParameter(
             function="ServerClient.get_tech_type_detail",
             optional_params=OPTIONAL_FILTER_PARAMS + TIME_PARAMETERS,
-            required_params=["filter"],
+            required_params=["filter_string"],
             spec_params={},
         )
     ),
@@ -1586,7 +1587,7 @@ base_report_specs = FormatSetDict({
         aliases=["Data Field", "Data Fields", "DataFields"],
         annotations={"wikilinks": ["[[Data Field]]"]},
         family="Data Designer",
-        formats=[Format(types=["MD", "FORM", "DICT", "LIST"], attributes=COMMON_COLUMNS + [
+        formats=[Format(types=["MD", "FORM", "DICT", "LIST","TABLE"], attributes=COMMON_COLUMNS + [
             Column(name="Data Type", key='data_type'),
             Column(name="Specification", key='specification'),
             Column(name="In Data Dictionaries", key='in_data_dictionary'),

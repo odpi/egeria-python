@@ -4,7 +4,7 @@
 # https://egeria-project.org/concepts/personal-profile
 
 @baseURL=https://localhost:9443
-@viewServer=view-server
+@viewServer=qs-view-server
 
 ###
 # =====================================================================================================================
@@ -142,29 +142,20 @@ Content-Type: application/json
   "isOwnAnchor": true,
   "properties": {
     "class" : "PersonProperties",
-    "qualifiedName": "add unique name here",
-    "displayName": "add preferred name here",
-    "courtesyTitle" : "",
+    "qualifiedName": "puddy1",
+    "displayName": "Puddy",
+    "courtesyTitle" : "Miss",
     "initials" : "",
-    "givenNames" : "",
-    "surname" : "",
-    "fullName" : "",
+    "givenNames" : "Hey You",
+    "surname" : "Cat",
+    "fullName" : "Puddy",
     "pronouns" : "",
-    "jobTitle" : "",
+    "jobTitle" : "Troublemaker",
     "employeeNumber" : "",
     "employeeType" : "",
     "preferredLanguage" : "",
     "residentCountry" : "",
     "timeZone" : "",
-    "description": "add description here",
-    "additionalProperties": {
-      "property1" : "propertyValue1",
-      "property2" : "propertyValue2"
-    }
-  },
-  "externalSourceGUID": "add guid here",
-  "externalSourceName": "add qualified name here",
-  "effectiveTime" : "{{$isoTimestamp}}",
-  "forLineage" : false,
-  "forDuplicateProcessing" : false
+    "description": "Wanderer"
+  }
 }

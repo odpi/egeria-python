@@ -11,6 +11,7 @@ import os
 import sys
 import time
 
+import click
 from rich import box
 from rich.console import Console
 from rich.markdown import Markdown
@@ -51,10 +52,7 @@ def display_anchored_elements(
 ):
     console = Console(width=width, force_terminal=not jupyter, soft_wrap=True)
     if (property_value is None) or (len(property_value) < 3):
-        print(
-            "\nError --> Invalid Search String - must be greater than four characters long"
-        )
-        sys.exit(3)
+        raise click.ClickException("Invalid Search String - must be greater than four characters long")
     g_client = EgeriaTech(server, url, username, user_password)
     token = g_client.create_egeria_bearer_token()
     print(f"search value is {property_value} and prop_list is {prop_list}\n")
@@ -180,11 +178,9 @@ def main():
             "Enter the list of properties to search", default="anchorTypeName"
         )
         if property_value == "":
-            print("\nError --> Search string can't be empty")
-            sys.exit(1)
+            raise click.ClickException("Search string can't be empty")
         elif len(property_value) <= 4:
-            print("\nError --> Search string must be greater than four characters long")
-            sys.exit(2)
+            raise click.ClickException("Search string must be greater than four characters long")
         else:
             display_anchored_elements(
                 property_value, [prop_list], server, url, userid, user_pass, time_out
