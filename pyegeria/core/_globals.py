@@ -58,3 +58,5 @@ MERMAID_GRAPH_TITLES = ["Anchor Mermaid Graph", "Information Supply Chain Mermai
                   "Specification Mermaid Graph", "Solution Blueprint Mermaid Graph","Mermaid Graph",
                   "Solution Subcomponent Mermaid Graph"]
 TERM_STATUS = ["DRAFT", "PREPARED","PROPOSED","APPROVED", "REJECTED", "ACTIVE", "DEPRECATED", "DELETED", "OTHER"]
+ACTIVITY_STATUS = ["REQUESTED", "APPROVED", "WAITING", "ACTIVATING", "IN_PROGRESS", "PAUSED","FOR_INFO","COMPLETED",
+                   "INVALID","IGNORED","FAILED","CANCELLED", "ABANDONED","OTHER"]

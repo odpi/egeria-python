@@ -26,6 +26,7 @@ from pyegeria.core._globals import (
     NO_SERVERS_FOUND,
     NO_TERMS_FOUND,
     TERM_STATUS,
+    ACTIVITY_STATUS,
 )
 
 if disable_ssl_warnings:
@@ -153,6 +154,7 @@ __all__ = [
     "NO_SERVERS_FOUND",
     "NO_TERMS_FOUND",
     "TERM_STATUS",
+    "ACTIVITY_STATUS",
     # OMVS Module Clients
     "ActionAuthor",
     "ActorManager",

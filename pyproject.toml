@@ -3,7 +3,7 @@
 
 [project]
 name = "pyegeria"
-version = "5.5.3.5"
+version = "5.5.3.6"
 license = 'Apache-2.0'
 license-files = ["LICENSE"]
 authors = [{name = "Dan Wolfson", email = "dan.wolfson@pdr-associates.com"},]
@@ -121,8 +121,7 @@ dependencies = [
 
     list_my_profile = "commands.my.list_my_profile:main"
     list_my_roles = "commands.my.list_my_roles:main"
-    monitor_open_todos = "commands.my.monitor_open_todos:main"
-    monitor_my_todos = "commands.my.monitor_my_todos:main"
+    monitor_my_actions = "commands.my.monitor_my_actions:main"
     create_todo = "commands.my.todo_actions:create_todo"
     delete_todo = "commands.my.todo_actions:delete_todo"
     change_todo_status = "commands.my.todo_actions:change_todo_status"
@@ -131,9 +130,6 @@ dependencies = [
 
 
     hey_egeria_ops = "commands.cli.egeria_ops:cli"
-    hey_egeria_cat = "commands.cli.egeria_cat:cli"
-    hey_egeria_tech = "commands.cli.egeria_tech:cli"
-    hey_egeria_my = "commands.cli.egeria_my:cli"
     hey_egeria = "commands.cli.egeria:cli"
     egeria_login = "commands.cli.egeria_login_tui:login"
 

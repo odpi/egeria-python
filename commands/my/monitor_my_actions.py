@@ -16,8 +16,10 @@ from rich import box
 from rich.console import Console
 from rich.live import Live
 from rich.markdown import Markdown
+from rich.prompt import Prompt
 from rich.table import Table
 
+from pyegeria import print_basic_exception, PyegeriaException, EgeriaTech, ACTIVITY_STATUS
 from pyegeria.omvs.my_profile import MyProfile
 
 EGERIA_METADATA_STORE = os.environ.get("EGERIA_METADATA_STORE", "active-metadata-store")
@@ -42,20 +44,21 @@ disable_ssl_warnings = True
 
 
 def display_my_todos(
+
     server: str,
     url: str,
     user: str,
     user_pass: str,
     jupyter: bool = EGERIA_JUPYTER,
     width: int = EGERIA_WIDTH,
+    status_filter: list = []
 ):
-    console = Console(width=width, force_terminal=not jupyter)
 
-    m_client = MyProfile(server, url, user_id=user)
+    m_client = EgeriaTech(server, url, user_id=user, user_pwd=user_pass)
     token = m_client.create_egeria_bearer_token(user, user_pass)
 
     def add_rows(table: Table, guid: str, identity: str) -> None:
-        todo_items = m_client.get_assigned_actions(guid)
+        todo_items = m_client.get_assigned_actions(actor_guid = guid, activity_status_list=status_filter)
         if type(todo_items) is str:
             return
 
@@ -73,21 +76,22 @@ def display_my_todos(
                 sponsor = " "
             else:
                 props = item["properties"]
-                name = props["name"]
-                todo_type_name = props.get("toDoType", " ")
+                name = props["displayName"]
+                todo_type_name = item["elementHeader"]["type"].get("typeName", "---")
                 todo_guid = item["elementHeader"].get("guid", "---")
-                created = props.get("creationTime", "---")
+                created = props.get("requestedTime", "---")
+                requested_start_time = props.get("requestedStartTime", "---")
                 priority = str(props.get("priority", "---"))
-                due = props.get("dueTime", " ")
+                due = props.get("dueTime", "---")
                 completed = props.get("completionTime", "---")
-                status = props.get("toDoStatus")
+                status = props.get("activityStatus")
 
                 for actor in item["assignedActors"]:
-                    assigned_actors += f"{actor.get("uniqueName", "NoOne")}\n"
+                    assigned_actors += f"{actor.get("uniqueName", "---")}\n"
                 assigned_actors_out = Markdown(assigned_actors)
                 if status in ("WAITING", "OPEN"):
                     status = f"[yellow]{status}"
-                elif status in ("INPROGRESS", "COMPLETE"):
+                elif status in ("IN_PROGRESS", "COMPLETE"):
                     status = f"[green]{status}"
                 else:
                     status = f"[red]{status}"
@@ -97,7 +101,8 @@ def display_my_todos(
                 name,
                 todo_type_name,
                 todo_guid,
-                created,
+                created[:16],
+                requested_start_time[:16],
                 priority,
                 due,
                 completed,
@@ -108,19 +113,21 @@ def display_my_todos(
     def generate_table() -> Table:
         """Make a new table."""
         table = Table(
-            title=f"Open ToDos for Platform {url} @ {time.asctime()}",
+            title=f"My Open Personal Actions for Platform {url} @ {time.asctime()}",
             # style = "black on grey66",
             header_style="white on dark_blue",
             show_lines=True,
             box=box.ROUNDED,
             caption=f"ToDos for Server '{server}' @ Platform - {url}",
             expand=True,
+            width=EGERIA_WIDTH,
         )
         table.add_column("Actor")
-        table.add_column("ToDo Name")
-        table.add_column("Type Name")
-        table.add_column("GUID")
+        table.add_column("Action")
+        table.add_column("Action Type")
+        table.add_column("GUID", no_wrap=True)
         table.add_column("Created")
+        table.add_column("RequestedTime", no_wrap=True)
         table.add_column("Priority")
         table.add_column("Due")
         table.add_column("Completion")
@@ -130,14 +137,14 @@ def display_my_todos(
         my_profile = m_client.get_my_profile()
         my_guid = my_profile["elementHeader"].get("guid", "---")
         my_ids = my_profile["userIdentities"]
-        my_title = my_profile["profileProperties"].get("jobTitle", "No Title")
+        my_title = my_profile["properties"].get("jobTitle", "No Title")
         user_ids = []
         for id in my_ids:
-            user_ids.append(id["userIdentity"]["properties"].get("userid", "NoOne"))
+            user_ids.append(id["relatedElement"]["properties"].get("userid", "NoOne"))
             add_rows(
                 table,
-                id["userIdentity"]["elementHeader"]["guid"],
-                id["userIdentity"]["properties"]["userId"],
+                id["relatedElement"]["elementHeader"]["guid"],
+                id["relatedElement"]["properties"]["userId"],
             )
 
         add_rows(table, my_guid, user_ids)
@@ -146,11 +153,11 @@ def display_my_todos(
         # user_id_name = my_profile["userIdentity"]["properties"]["userid"]
         # add_rows(table, user_id_guid, user_id_name)
 
-        my_roles = my_profile["roles"]
+        my_roles = my_profile["performsRoles"]
         if type(my_roles) is list:
             for role in my_roles:
-                role_guid = role["elementHeader"]["guid"]
-                role_id = role["properties"].get("roleId", "No Role Id")
+                role_guid = role['relatedElement']["elementHeader"]["guid"]
+                role_id = role['relatedElement']["properties"].get("roleId", "No Role Id")
                 add_rows(table, role_guid, role_id)
 
         token = m_client.refresh_egeria_bearer_token()
@@ -163,11 +170,9 @@ def display_my_todos(
                 live.update(generate_table())
 
     except (
-        InvalidParameterException,
-        PropertyServerException,
-        UserNotAuthorizedException,
+        PyegeriaException
     ) as e:
-        print_exception_response(e)
+        print_basic_exception(e)
 
     except KeyboardInterrupt:
         pass
@@ -181,16 +186,21 @@ def main():
     parser.add_argument("--url", help="URL Platform to connect to")
     parser.add_argument("--userid", help="User Id")
     parser.add_argument("--password", help="User Password")
+
     args = parser.parse_args()
 
     server = args.server if args.server is not None else EGERIA_VIEW_SERVER
     url = args.url if args.url is not None else EGERIA_PLATFORM_URL
-    userid = args.userid if args.userid is not None else "peterprofile"
+    userid = args.userid if args.userid is not None else "erinoverview"
     user_pass = args.password if args.password is not None else EGERIA_USER_PASSWORD
 
     try:
+        status_filter = Prompt.ask("Enter the activity statuses to filter on:",
+                                   choices=ACTIVITY_STATUS,default="REQUESTED")
+        status_filter_list = status_filter.split(",")
+
         print(f"Starting display_todos with {server}, {url}, {userid}")
-        display_my_todos(server=server, url=url, user=userid, user_pass=user_pass)
+        display_my_todos(server=server, url=url, user=userid, user_pass=user_pass, status_filter=status_filter_list)
     except KeyboardInterrupt:
         pass
 

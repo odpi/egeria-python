@@ -4005,7 +4005,8 @@ class ActorManager(ServerClient):
         url = str(HttpUrl(f"{self.command_root}/user-identities/by-search-string"))
         response = await self._async_find_request(url, _type="UserIdentity",
                                                   _gen_output=self._generate_user_identity_output,
-                                                  search_string=search_string, output_format="JSON", page_size=0,
+                                                  search_string=search_string, output_format=output_format,
+                                                  report_spec=report_spec, page_size=0,
                                                   body=body)
 
         return response

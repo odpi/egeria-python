@@ -603,7 +603,11 @@ def get_element_by_name(egeria_client, element_type: str, element_name: str) -> 
     # Haven't seen this element before
     property_names = ['qualifiedName', 'name', 'displayName']
     open_metadata_type_name = None
-    details = egeria_client.get_elements_by_property_value(element_name, property_names, open_metadata_type_name)
+    details = egeria_client.get_elements_by_property_value(
+        element_name,
+        property_names,
+        metadata_element_type_name=open_metadata_type_name,
+    )
     if isinstance(details, str):
         msg = f"{element_type} `{element_name}` not found in Egeria"
         print_msg("DEBUG-INFO", msg, debug_level)
@@ -2144,4 +2148,3 @@ def process_term_revision_history_command(egeria_client: EgeriaTech, txt: str, d
             return None
     else:
         return None
-

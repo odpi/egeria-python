@@ -95,7 +95,7 @@ Content-Type: application/json
 # Returns unique identifier of the new metadata element
 #  InvalidParameterException  one of the parameters is invalid
 #  UserNotAuthorizedException the user is not authorized to issue this request
-#  PropertyServerException    there is a problem reported in the open metadata server(s)
+#  PropertyServerException    a problem reported in the open metadata server(s)
 #
 POST {{baseURL}}/servers/{{viewServer}}/api/open-metadata/asset-maker/assets/from-template
 Authorization: Bearer {{token}}
@@ -217,7 +217,7 @@ Content-Type: application/json
 # Returns list of matching metadata elements or
 #  InvalidParameterException  one of the parameters is invalid
 #  UserNotAuthorizedException the user is not authorized to issue this request
-#  PropertyServerException    there is a problem reported in the open metadata server(s)
+#  PropertyServerException    a problem reported in the open metadata server(s)
 #
 POST {{baseURL}}/servers/{{viewServer}}/api/open-metadata/asset-maker/assets/by-name
 Authorization: Bearer {{token}}
@@ -255,7 +255,7 @@ Content-Type: application/json
 # Returns list of matching metadata elements or
 #  InvalidParameterException  one of the parameters is invalid
 #  UserNotAuthorizedException the user is not authorized to issue this request
-#  PropertyServerException    there is a problem reported in the open metadata server(s)
+#  PropertyServerException    a problem reported in the open metadata server(s)
 #
 POST {{baseURL}}/servers/{{viewServer}}/api/open-metadata/asset-maker/assets/by-search-string
 Authorization: Bearer {{token}}
@@ -297,7 +297,7 @@ Content-Type: application/json
 # Returns list of matching metadata elements or
 #  InvalidParameterException  one of the parameters is invalid
 #  UserNotAuthorizedException the user is not authorized to issue this request
-#  PropertyServerException    there is a problem reported in the open metadata server(s)
+#  PropertyServerException    a problem reported in the open metadata server(s)
 #
 POST {{baseURL}}/servers/{{viewServer}}/api/open-metadata/asset-maker/assets/{{assetGUID}}/retrieve
 Authorization: Bearer {{token}}
@@ -343,7 +343,7 @@ Content-Type: application/json
 {
   "class" : "ActivityStatusSearchString",
   "searchString" : "xxx",
-  "activityStatus" : "IN_PROGRESS",
+  "activityStatusList" : [],
   "startsWith" : false,
   "endsWith" : false,
   "ignoreCase" : true,
@@ -377,7 +377,8 @@ Content-Type: application/json
 {
   "class" : "ActivityStatusFilterRequestBody",
   "filter" : "xxx",
-  "activityStatus" : "IN_PROGRESS",
+  "activityStatusList" : [ "IN_PROGRESS" ],
+  "category" : "Governance",
   "startFrom" : 0,
   "pageSize": 0,
   "asOfTime" : "{{$isoTimestamp}}",
@@ -411,13 +412,300 @@ Content-Type: application/json
 
 {
   "class" : "ActionRequestBody",
-  "properties": {
-    "class": "ToDoProperties",
-    "qualifiedName": "make-coffee-1",
-    "displayName": "Make-Coffee",
+      "properties" : {
+        "class" : "ActionProperties",
+        "qualifiedName": "make-cocoa",
+        "identifier": "cocoa",
+        "displayName": "Make Cocoa",
+        "description": "Cocoa is warm",
+        "requestedTime": "{{$isoTimestamp}}",
+        "requestedStartTime": "{{$isoTimestamp}}",
+        "priority": 0,
+        "activityStatus": "REQUESTED"
+      },
+  "originatorGUID" : "dfe5c382-9ec4-4972-8481-35fd61cb4feb",
+  "actionSponsorGUID" : "7b5cf4fa-23a8-4cf5-aaa6-02bcf58214f8",
+  "assignToActorGUID" : "dcfd7e32-8074-4cdf-bdc5-9a6f28818a9d"
+}
+
+
+###
+# @name createAction (Meeting)
+# Create a new action and link it to the supplied actor and targets (if applicable).
+#
+# @param serverName name of the server instances for this request
+# @param urlMarker  view service URL marker
+# @param requestBody properties of the action
+#
+# @return unique identifier of the action or
+# InvalidParameterException a parameter is invalid
+# PropertyServerException the server is not available
+# UserNotAuthorizedException the calling user is not authorized to issue the call
+POST {{baseURL}}/servers/{{viewServer}}/api/open-metadata/asset-maker/actions
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "class" : "ActionRequestBody",
+  "initialClassifications" : {
+    "ZoneMembership" : {
+      "class" : "ZoneMembershipProperties",
+      "zoneMembership" : "governance"
+    }
+  },
+  "newActionTargets" : [
+    {
+      "actionTargetGUID" : "add guid here",
+      "actionTargetName": "add name here"
+    }
+  ],
+  "properties" : {
+    "class" : "MeetingProperties",
+    "qualifiedName": "",
+    "identifier": "",
+    "displayName": "",
+    "description": "",
+    "versionIdentifier": "",
+    "category": "",
+    "url": "",
+    "resourceName": "",
+    "namespace": "",
+    "deployedImplementationType": "",
+    "source": "",
+    "expectedBehaviour": "",
+    "requestedTime": "{{$isoTimestamp}}",
+    "requestedStartTime": "{{$isoTimestamp}}",
+    "startTime": "{{$isoTimestamp}}",
+    "dueTime": "{{$isoTimestamp}}",
+    "lastReviewTime": "{{$isoTimestamp}}",
+    "lastPauseTime": "{{$isoTimestamp}}",
+    "lastResumeTime": "{{$isoTimestamp}}",
+    "completionTime": "{{$isoTimestamp}}",
+    "priority": 0,
+    "formula": "",
+    "formulaType": "",
     "activityStatus": "REQUESTED",
-    "description": "Make coffee for the team meeting"
-  }
+    "userDefinedActivityStatus": "",
+    "situation": "",
+    "objective": "",
+    "minutes": [""],
+    "decisions": [""],
+    "additionalProperties" : {
+      "property1" : "propertyValue1",
+      "property2" : "propertyValue2"
+    }
+  },
+  "originatorGUID" : "add guid of requester (ActionRequester relationship)",
+  "actionSponsorGUID" : "add guid of sponsor (Actions relationship)",
+  "assignToActorGUID" : "add guid of actor that will be assigned this action (AssignmentScope relationship)"
+}
+
+
+###
+# @name createAction (To Do)
+# Create a new action and link it to the supplied actor and targets (if applicable).
+#
+# @param serverName name of the server instances for this request
+# @param urlMarker  view service URL marker
+# @param requestBody properties of the action
+#
+# @return unique identifier of the action or
+# InvalidParameterException a parameter is invalid
+# PropertyServerException the server is not available
+# UserNotAuthorizedException the calling user is not authorized to issue the call
+POST {{baseURL}}/servers/{{viewServer}}/api/open-metadata/asset-maker/actions
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "class" : "ActionRequestBody",
+  "initialClassifications" : {
+    "ZoneMembership" : {
+      "class" : "ZoneMembershipProperties",
+      "zoneMembership" : "governance"
+    }
+  },
+  "newActionTargets" : [
+    {
+      "actionTargetGUID" : "add guid here",
+      "actionTargetName": "add name here"
+    }
+  ],
+  "properties" : {
+    "class" : "ToDoProperties",
+    "qualifiedName": "",
+    "identifier": "",
+    "displayName": "",
+    "description": "",
+    "versionIdentifier": "",
+    "category": "",
+    "url": "",
+    "resourceName": "",
+    "namespace": "",
+    "deployedImplementationType": "",
+    "source": "",
+    "expectedBehaviour": "",
+    "requestedTime": "{{$isoTimestamp}}",
+    "requestedStartTime": "{{$isoTimestamp}}",
+    "startTime": "{{$isoTimestamp}}",
+    "dueTime": "{{$isoTimestamp}}",
+    "lastReviewTime": "{{$isoTimestamp}}",
+    "lastPauseTime": "{{$isoTimestamp}}",
+    "lastResumeTime": "{{$isoTimestamp}}",
+    "completionTime": "{{$isoTimestamp}}",
+    "priority": 0,
+    "formula": "",
+    "formulaType": "",
+    "activityStatus": "REQUESTED",
+    "userDefinedActivityStatus": "",
+    "situation": "",
+    "additionalProperties" : {
+      "property1" : "propertyValue1",
+      "property2" : "propertyValue2"
+    }
+  },
+  "originatorGUID" : "add guid of requester (ActionRequester relationship)",
+  "actionSponsorGUID" : "add guid of sponsor (Actions relationship)",
+  "assignToActorGUID" : "add guid of actor that will be assigned this action (AssignmentScope relationship)"
+}
+
+###
+# @name createAction (Notification)
+# Create a new action and link it to the supplied actor and targets (if applicable).
+#
+# @param serverName name of the server instances for this request
+# @param urlMarker  view service URL marker
+# @param requestBody properties of the action
+#
+# @return unique identifier of the action or
+# InvalidParameterException a parameter is invalid
+# PropertyServerException the server is not available
+# UserNotAuthorizedException the calling user is not authorized to issue the call
+POST {{baseURL}}/servers/{{viewServer}}/api/open-metadata/asset-maker/actions
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "class" : "ActionRequestBody",
+  "initialClassifications" : {
+    "ZoneMembership" : {
+      "class" : "ZoneMembershipProperties",
+      "zoneMembership" : "governance"
+    }
+  },
+  "newActionTargets" : [
+    {
+      "actionTargetGUID" : "add guid here",
+      "actionTargetName": "add name here"
+    }
+  ],
+  "properties" : {
+    "class" : "NotificationProperties",
+    "qualifiedName": "",
+    "identifier": "",
+    "displayName": "",
+    "description": "",
+    "versionIdentifier": "",
+    "category": "",
+    "url": "",
+    "resourceName": "",
+    "namespace": "",
+    "deployedImplementationType": "",
+    "source": "",
+    "expectedBehaviour": "",
+    "requestedTime": "{{$isoTimestamp}}",
+    "requestedStartTime": "{{$isoTimestamp}}",
+    "startTime": "{{$isoTimestamp}}",
+    "dueTime": "{{$isoTimestamp}}",
+    "lastReviewTime": "{{$isoTimestamp}}",
+    "lastPauseTime": "{{$isoTimestamp}}",
+    "lastResumeTime": "{{$isoTimestamp}}",
+    "completionTime": "{{$isoTimestamp}}",
+    "priority": 0,
+    "formula": "",
+    "formulaType": "",
+    "activityStatus": "REQUESTED",
+    "userDefinedActivityStatus": "",
+    "situation": "",
+    "additionalProperties" : {
+      "property1" : "propertyValue1",
+      "property2" : "propertyValue2"
+    }
+  },
+  "originatorGUID" : "add guid of requester (ActionRequester relationship)",
+  "actionSponsorGUID" : "add guid of sponsor (Actions relationship)",
+  "assignToActorGUID" : "add guid of actor that will be assigned this action (AssignmentScope relationship)"
+}
+
+
+###
+# @name createAction
+# Create a new action and link it to the supplied actor and targets (if applicable).
+#
+# @param serverName name of the server instances for this request
+# @param urlMarker  view service URL marker
+# @param requestBody properties of the action
+#
+# @return unique identifier of the action or
+# InvalidParameterException a parameter is invalid
+# PropertyServerException the server is not available
+# UserNotAuthorizedException the calling user is not authorized to issue the call
+POST {{baseURL}}/servers/{{viewServer}}/api/open-metadata/asset-maker/actions
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "class" : "ActionRequestBody",
+  "initialClassifications" : {
+    "ZoneMembership" : {
+      "class" : "ZoneMembershipProperties",
+      "zoneMembership" : "governance"
+    }
+  },
+  "newActionTargets" : [
+    {
+      "actionTargetGUID" : "add guid here",
+      "actionTargetName": "add name here"
+    }
+  ],
+  "properties" : {
+    "class" : "ReviewProperties",
+    "qualifiedName": "",
+    "identifier": "",
+    "displayName": "",
+    "description": "",
+    "versionIdentifier": "",
+    "category": "",
+    "url": "",
+    "resourceName": "",
+    "namespace": "",
+    "deployedImplementationType": "",
+    "source": "",
+    "expectedBehaviour": "",
+    "requestedTime": "{{$isoTimestamp}}",
+    "requestedStartTime": "{{$isoTimestamp}}",
+    "startTime": "{{$isoTimestamp}}",
+    "dueTime": "{{$isoTimestamp}}",
+    "lastReviewTime": "{{$isoTimestamp}}",
+    "lastPauseTime": "{{$isoTimestamp}}",
+    "lastResumeTime": "{{$isoTimestamp}}",
+    "completionTime": "{{$isoTimestamp}}",
+    "priority": 0,
+    "formula": "",
+    "formulaType": "",
+    "activityStatus": "REQUESTED",
+    "userDefinedActivityStatus": "",
+    "situation": "",
+    "reviewDate" : "{{$isoTimestamp}}",
+    "comment" : "",
+    "additionalProperties" : {
+      "property1" : "propertyValue1",
+      "property2" : "propertyValue2"
+    }
+  },
+  "originatorGUID" : "add guid of requester (ActionRequester relationship)",
+  "actionSponsorGUID" : "add guid of sponsor (Actions relationship)",
+  "assignToActorGUID" : "add guid of actor that will be assigned this action (AssignmentScope relationship)"
 }
 
 ###
@@ -535,7 +823,7 @@ Content-Type: application/json
 
 {
   "class" : "ActivityStatusRequestBody",
-  "activityStatus": "IN_PROGRESS"
+  "activityStatusList": ["REQUESTED", "WAITING", "IN_PROGRESS"]
 }
 
 ###
@@ -557,7 +845,7 @@ Content-Type: application/json
 
 {
   "class" : "ActivityStatusRequestBody",
-  "activityStatus": "IN_PROGRESS"
+  "activityStatusList": ["REQUESTED", "WAITING", "IN_PROGRESS"]
 }
 
 
@@ -687,12 +975,12 @@ Content-Type: application/json
 
 {
   "class" : "ActivityStatusRequestBody",
-  "activityStatus": "IN_PROGRESS"
+  "activityStatusList": ["REQUESTED", "WAITING", "IN_PROGRESS"]
 }
 
 ###
 # @name getActionsForSponsor
-# Retrieve the "Actions" that are chained off of a sponsor's element.
+# Retrieve the "Actions" that are chained off a sponsor's element. (Actions relationship)
 #
 # @param serverName name of the server instances for this request
 # @param urlMarker  view service URL marker
@@ -709,7 +997,30 @@ Content-Type: application/json
 
 {
   "class" : "ActivityStatusRequestBody",
-  "activityStatus": "IN_PROGRESS"
+  "activityStatusList": ["REQUESTED", "WAITING", "IN_PROGRESS"]
+}
+
+
+###
+# @name getActionsForSponsor
+# Retrieve the "Actions" that are chained off the requester's element. (ActionRequester relationship)
+#
+# @param serverName name of the server instances for this request
+# @param urlMarker  view service URL marker
+# @param metadataElementGUID unique identifier of the element to start with
+# @param requestBody     status of the action (null means current active)
+#
+# @return list of action beans or
+# InvalidParameterException a parameter is invalid
+# PropertyServerException the server is not available
+# UserNotAuthorizedException the calling user is not authorized to issue the call
+POST {{baseURL}}/servers/{{viewServer}}/api/open-metadata/asset-maker/elements/{{metadataElementGUID}}/requested/actions
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "class" : "ActivityStatusRequestBody",
+  "activityStatusList": ["REQUESTED", "WAITING", "IN_PROGRESS"]
 }
 
 
@@ -740,7 +1051,7 @@ Content-Type: application/json
 {
   "class" : "DeploymentStatusSearchString",
   "searchString" : "xxx",
-  "deploymentStatus" : "ACTIVE",
+  "deploymentStatusList" : ["ACTIVE"],
   "startsWith" : false,
   "endsWith" : false,
   "ignoreCase" : true,
@@ -776,7 +1087,7 @@ Content-Type: application/json
 {
   "class" : "DeploymentStatusFilterRequestBody",
   "filter" : "xxx",
-  "deploymentStatus" : "ACTIVE",
+  "deploymentStatusList" : ["ACTIVE"],
   "startFrom" : 0,
   "pageSize": 0,
   "asOfTime" : "{{$isoTimestamp}}",
@@ -807,7 +1118,7 @@ Content-Type: application/json
 # @return  void or
 # InvalidParameterException  one of the parameters is invalid
 # UserNotAuthorizedException the user is not authorized to issue this request
-# PropertyServerException    there is a problem reported in the open metadata server(s)
+# PropertyServerException    a problem reported in the open metadata server(s)
 #
 POST {{baseURL}}/servers/{{viewServer}}/api/open-metadata/asset-maker/assets/{{infrastructureAssetGUID}}/deployed-on/{{destinationGUID}}/attach
 Authorization: Bearer {{token}}
@@ -844,7 +1155,7 @@ Content-Type: application/json
 # @return void or
 # InvalidParameterException  one of the parameters is invalid
 # UserNotAuthorizedException the user is not authorized to issue this request
-# PropertyServerException    there is a problem reported in the open metadata server(s)
+# PropertyServerException    a problem reported in the open metadata server(s)
 POST {{baseURL}}/servers/{{viewServer}}/api/open-metadata/asset-maker/assets/{{infrastructureAssetGUID}}/deployed-on/{{destinationGUID}}/detach
 Authorization: Bearer {{token}}
 Content-Type: application/json
@@ -871,7 +1182,7 @@ Content-Type: application/json
 # @return  void or
 # InvalidParameterException  one of the parameters is invalid
 # UserNotAuthorizedException the user is not authorized to issue this request
-# PropertyServerException    there is a problem reported in the open metadata server(s)
+# PropertyServerException    a problem reported in the open metadata server(s)
 POST {{baseURL}}/servers/{{viewServer}}/api/open-metadata/asset-maker/assets/{{infrastructureAssetGUID}}/supported-software-capabilities/{{capabilityGUID}}/attach
 Authorization: Bearer {{token}}
 Content-Type: application/json
@@ -907,7 +1218,7 @@ Content-Type: application/json
 # @return void or
 # InvalidParameterException  one of the parameters is invalid
 # UserNotAuthorizedException the user is not authorized to issue this request
-# PropertyServerException    there is a problem reported in the open metadata server(s)
+# PropertyServerException    a problem reported in the open metadata server(s)
 POST {{baseURL}}/servers/{{viewServer}}/api/open-metadata/asset-maker/assets/{{infrastructureAssetGUID}}/supported-software-capabilities/{{capabilityGUID}}/detach
 Authorization: Bearer {{token}}
 Content-Type: application/json
@@ -948,7 +1259,7 @@ Content-Type: application/json
 {
   "class" : "ContentStatusSearchString",
   "searchString" : "xxx",
-  "contentStatus" : "ACTIVE",
+  "contentStatusList" : ["ACTIVE"],
   "startsWith" : false,
   "endsWith" : false,
   "ignoreCase" : true,
@@ -984,7 +1295,7 @@ Content-Type: application/json
 {
   "class" : "ContentStatusFilterRequestBody",
   "filter" : "xxx",
-  "contentStatus" : "ACTIVE",
+  "contentStatusList" : ["ACTIVE"],
   "startFrom" : 0,
   "pageSize": 0,
   "asOfTime" : "{{$isoTimestamp}}",
@@ -1014,7 +1325,7 @@ Content-Type: application/json
 # @return  void or
 # InvalidParameterException  one of the parameters is invalid
 # UserNotAuthorizedException the user is not authorized to issue this request
-# PropertyServerException    there is a problem reported in the open metadata server(s)
+# PropertyServerException    a problem reported in the open metadata server(s)
 POST {{baseURL}}/servers/{{viewServer}}/api/open-metadata/asset-maker/data-sets/{{dataSetGUID}}/data-set-content/{{dataContentAssetGUID}}/attach
 Authorization: Bearer {{token}}
 Content-Type: application/json
@@ -1050,7 +1361,7 @@ Content-Type: application/json
 # @return void or
 # InvalidParameterException  one of the parameters is invalid
 # UserNotAuthorizedException the user is not authorized to issue this request
-# PropertyServerException    there is a problem reported in the open metadata server(s)
+# PropertyServerException    a problem reported in the open metadata server(s)
 POST {{baseURL}}/servers/{{viewServer}}/api/open-metadata/asset-maker/data-sets/{{dataSetGUID}}/data-set-content/{{dataContentAssetGUID}}/detach
 Authorization: Bearer {{token}}
 Content-Type: application/json
@@ -1077,7 +1388,7 @@ Content-Type: application/json
 # @name addCatalogTarget
 # Add a catalog target to an integration connector.
 # Further Information: https://egeria-project.org/concepts/integration-connector/
-POST {{baseURL}}/servers/{{viewServer}}/api/open-metadata/automated-curation/integration-connectors/{{integrationConnectorGUID}}/catalog-targets/{{metadataElementGUID}}
+POST {{baseURL}}/servers/{{viewServer}}/api/open-metadata/asset-maker/integration-connectors/{{integrationConnectorGUID}}/catalog-targets/{{metadataElementGUID}}
 Authorization: Bearer {{token}}
 Content-Type: application/json
 
@@ -1127,7 +1438,7 @@ Content-Type: application/json
 # @name updateCatalogTarget
 # Update a catalog target for an integration connector.
 # Further Information: https://egeria-project.org/concepts/integration-connector/
-POST {{baseURL}}/servers/{{viewServer}}/api/open-metadata/automated-curation/catalog-targets/{{relationshipGUID}}/update
+POST {{baseURL}}/servers/{{viewServer}}/api/open-metadata/asset-maker/catalog-targets/{{relationshipGUID}}/update
 Authorization: Bearer {{token}}
 Content-Type: application/json
 
@@ -1159,25 +1470,37 @@ Content-Type: application/json
 # @name getCatalogTarget
 # Retrieve a specific catalog target associated with an integration connector.
 # Further Information: https://egeria-project.org/concepts/integration-connector/
-GET {{baseURL}}/servers/{{viewServer}}/api/open-metadata/automated-curation/catalog-targets/{{relationshipGUID}}
+POST {{baseURL}}/servers/{{viewServer}}/api/open-metadata/asset-maker/catalog-targets/{{relationshipGUID}}
 Authorization: Bearer {{token}}
 Content-Type: application/json
+
+{
+  "class" : "GetRequestBody"
+}
 
 
 ###
 # @name getCatalogTargets
 # Retrieve the details of the metadata elements identified as catalog targets with an integration connector.
 # Further Information: https://egeria-project.org/concepts/integration-connector/
-GET {{baseURL}}/servers/{{viewServer}}/api/open-metadata/automated-curation/integration-connectors/{{integrationConnectorGUID}}/catalog-targets?startFrom=0&pageSize=0
+POST {{baseURL}}/servers/{{viewServer}}/api/open-metadata/asset-maker/integration-connectors/{{integrationConnectorGUID}}/catalog-targets
 Authorization: Bearer {{token}}
 Content-Type: application/json
 
+{
+  "class" : "ResultsRequestBody",
+  "startFrom": 0,
+  "pageSize": 10
+}
 
 ###
 # @name removeCatalogTarget
 # Unregister a catalog target from the integration connector.
 # Further Information: https://egeria-project.org/concepts/integration-connector/
-POST {{baseURL}}/servers/{{viewServer}}/api/open-metadata/automated-curation/catalog-targets/{{relationshipGUID}}/remove
+POST {{baseURL}}/servers/{{viewServer}}/api/open-metadata/asset-maker/catalog-targets/{{relationshipGUID}}/remove
 Authorization: Bearer {{token}}
 Content-Type: application/json
 
+{
+  "class" : "DeleteRelationshipRequestBody"
+}

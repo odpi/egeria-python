@@ -19,6 +19,7 @@ from pyegeria.core._globals import (
     is_debug,
     max_paging_size,
     NO_ELEMENTS_FOUND,
+    ACTIVITY_STATUS,
 )
 
 __all__ = [
@@ -37,4 +38,5 @@ __all__ = [
     "is_debug",
     "max_paging_size",
     "NO_ELEMENTS_FOUND",
+    "ACTIVITY_STATUS"
 ]

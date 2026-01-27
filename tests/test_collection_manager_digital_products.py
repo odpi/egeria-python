@@ -36,7 +36,11 @@ class TestCollectionManagerDigitalProducts:
             start_time = time.perf_counter()
             search_string = "activityStatus Valid Values"
             # Test with parameters
-            response = c_client.find_digital_products(search_string=search_string, deployment_status="ACTIVE", output_format="JSON")
+            response = c_client.find_digital_products(
+                search_string=search_string,
+                deployment_status_list=["ACTIVE"],
+                output_format="JSON",
+            )
             duration = time.perf_counter() - start_time
             print(f"\nfind_digital_products duration: {duration} seconds")
             
@@ -85,7 +89,10 @@ class TestCollectionManagerDigitalProducts:
         try:
             c_client.create_egeria_bearer_token(self.good_user_1, USER_PWD)
             
-            response = c_client.get_digital_products_by_category(category="TestCategory", deployment_status="ACTIVE")
+            response = c_client.get_digital_products_by_category(
+                category="TestCategory",
+                deployment_status_list=["ACTIVE"],
+            )
             assert response is not None
             
         except (PyegeriaException, ValidationError) as e:
@@ -104,7 +111,7 @@ class TestCollectionManagerDigitalProducts:
             body = DeploymentStatusFilterRequestBody(
                 class_="DeploymentStatusFilterRequestBody",
                 filter="TestCategory",
-                deployment_status="ACTIVE"
+                deployment_status_list=["ACTIVE"]
             )
             
             response = c_client.get_digital_products_by_category(category="TestCategory", body=body)

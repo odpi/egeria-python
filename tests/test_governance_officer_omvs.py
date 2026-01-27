@@ -115,6 +115,56 @@ class TestGovernanceOfficer:
         finally:
             s_client.close_session()
 
+    def test_create_data_lens(self):
+        try:
+            s_client = GovernanceOfficer(
+                self.view_server, self.platform_url, self.user, self.password
+            )
+            s_client.create_egeria_bearer_token()
+            display_name = "sample-data-lens"
+            q_name = s_client.__create_qualified_name__("DataLens", display_name)
+
+            body = {
+                "class": "NewElementRequestBody",
+                "properties": {
+                    "class": "DataLensProperties",
+                    "domainIdentifier": 0,
+                    "qualifiedName": q_name,
+                    "displayName": display_name,
+                    "summary": "sample data lens",
+                    "description": "sample data lens description",
+                    "scope": "Global",
+                    "importance": "Moderate",
+                    "businessImperatives": [],
+                    "implications": [],
+                    "outcomes": [],
+                    "results": [],
+                },
+            }
+
+            start_time = time.perf_counter()
+            response = s_client.create_data_lens(body)
+            duration = time.perf_counter() - start_time
+            print(
+                f"\n\tDuration was {duration:.2f} seconds, Type: {type(response)}, Element count is {len(response)}"
+            )
+            if isinstance(response, (list, dict)):
+                print_json(data=response)
+            elif type(response) is str:
+                print("\n\n\t Response is: " + response)
+
+            assert True
+        except (
+                PyegeriaInvalidParameterException,
+                PyegeriaAPIException,
+                PyegeriaUnauthorizedException,
+        ) as e:
+            print_basic_exception(e)
+            assert False, "Invalid request"
+
+        finally:
+            s_client.close_session()
+
     def test_create_governance_strategy_definition(self):
         try:
             s_client = GovernanceOfficer(
@@ -197,8 +247,8 @@ class TestGovernanceOfficer:
                 self.view_server, self.platform_url, self.user, self.password
                 )
             s_client.create_egeria_bearer_token()
-            display_name = "Talmudic"
-            qualified_name = "GovPrinciple::Talmudic"
+            # display_name = "Talmudic"
+            # qualified_name = "GovPrinciple::Talmudic"
             body = {
                       "class" : "UpdateElementRequestBody",
                       # "externalSourceGUID": "add guid here",
@@ -208,16 +258,18 @@ class TestGovernanceOfficer:
                       "forDuplicateProcessing" : False,
                       "mergeUpdate" : True,
                       "properties": {
-                        "class" : "GovernancePrincipleProperties",
-                        "typeName" : "GovernancePrinciple",
-                        "qualifiedName": qualified_name,
-                        "displayName": display_name,
-                        "description": "Somewhat more chaotic"
+                        # "class" : "GovernancePrincipleProperties",
+                        # "typeName" : "GovernancePrinciple",
+                        # "qualifiedName": qualified_name,
+                        # "displayName": display_name,
+                        # "description": "Somewhat more chaotic"
+                          "class": "DataLensProperties",
+                          "scope": "Jester"
                       }
                     }
 
             start_time = time.perf_counter()
-            guid = "fd95c9dc-c882-4c3f-8436-aa85e74276fb"
+            guid = "70f6f485-d8b5-413f-8a89-ac248f63d4de"
             s_client.update_governance_definition(guid,body)
             duration = time.perf_counter() - start_time
             print(
@@ -699,5 +751,4 @@ class TestGovernanceOfficer:
 
         finally:
             s_client.close_session()
-
 
