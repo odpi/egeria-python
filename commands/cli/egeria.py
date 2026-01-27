@@ -16,7 +16,7 @@ import click
 from trogon import tui
 from loguru import logger
 
-from pyegeria import config_logging,  settings
+from pyegeria import config_logging,  settings, ACTIVITY_STATUS
 
 from commands.cat.my_reports import start_exp2
 from commands.cat.run_report import list_generic
@@ -58,7 +58,7 @@ from commands.cat.list_deployed_servers import display_servers_by_dep_imp
 from commands.cat.list_tech_type_elements import list_tech_elements
 from commands.cat.list_tech_types import display_tech_types
 from commands.cat.list_terms import display_glossary_terms
-from commands.cat.list_todos import display_to_dos as list_todos
+from commands.cat.list_user_actions import display_user_actions
 from commands.cat.list_user_ids import list_user_ids
 
 from commands.cat.dr_egeria_md import process_markdown_file
@@ -66,8 +66,7 @@ from commands.cat.dr_egeria_md import process_markdown_file
 from commands.cli.ops_config import Config
 from commands.my.list_my_profile import display_my_profile
 from commands.my.list_my_roles import display_my_roles
-from commands.my.monitor_my_todos import display_my_todos
-from commands.my.monitor_open_todos import display_todos
+from commands.my.monitor_my_actions import display_my_todos
 from commands.my.todo_actions import (
     change_todo_status,
     create_todo,
@@ -362,28 +361,28 @@ def show_my_roles(ctx):
     )
 
 
-@my_show.command("my-to-dos")
+@my_show.command("my-actions")
+@click.option(
+    "--activity-status",
+    default=["REQUESTED"],
+    type = click.Choice(
+        ACTIVITY_STATUS,
+        case_sensitive=False,
+    ),
+    multiple=True,
+    help="Which activity statuses to display",
+)
 @click.pass_context
-def show_my_todos(ctx):
+def show_my_actions(ctx, activity_status):
     """Show my To-Dos
 
-    Usage: show my-to-dos
+    Usage: show my-actions
 
     """
     c = ctx.obj
-    display_my_todos(
-        c.view_server, c.view_server_url, c.userid, c.password, c.jupyter, c.width
-    )
+    display_my_todos(c.view_server, c.view_server_url, c.userid, c.password, c.jupyter,
+                     c.width, activity_status)
 
-
-@my_show.command("open-to-dos")
-@click.pass_context
-def show_open_todos(ctx):
-    """Display Open Todo items"""
-    c = ctx.obj
-    display_todos(
-        c.view_server, c.view_server_url, c.userid, c.password, c.jupyter, c.width
-    )
 
 
 #
@@ -1338,29 +1337,30 @@ def show_project_dependencies(ctx, project):
     )
 
 
-@show_cat_info.command("to-dos")
+@show_cat_info.command("user-actions")
 @click.option("--search-string", default="*", help="View the list of To-Do items")
 @click.option(
-    "--status",
+    "--activity-status",
+    default=["REQUESTED"],
     type = click.Choice(
-        ["OPEN", "IN_PROGRESS", "WAITING", "COMPLETE", "ABANDONED", "None"],
+        ACTIVITY_STATUS,
         case_sensitive=False,
     ),
-    help="Enter an optional status filter",
-    required=False,
-    default="NONE",
+    multiple=True,
+    help="Which activity statuses to display",
 )
 @click.pass_context
-def show_todos(ctx, search_string, status):
+def show_user_act(ctx, search_string, activity_status):
     """Display list of To Dost"""
     c = ctx.obj
-    list_todos(
+    status_list = activity_status
+    display_user_actions(
         search_string,
-        status,
         c.view_server,
         c.view_server_url,
         c.userid,
         c.password,
+        status_list,
         c.jupyter,
         c.width,
     )
@@ -1368,7 +1368,7 @@ def show_todos(ctx, search_string, status):
 
 @show_cat_info.command("user-ids")
 @click.pass_context
-def show_todos(ctx):
+def show_user_ids(ctx):
     """Display a list of known user-ids"""
     c = ctx.obj
     list_user_ids(
@@ -1617,32 +1617,7 @@ def show_projects(ctx, search_string):
     )
 
 
-@show_cat_info.command("to-dos")
-@click.option("--search-string", default="*", help="View the list of To-Do items")
-@click.option(
-    "--status",
-    type = click.Choice(
-        ["OPEN", "IN_PROGRESS", "WAITING", "COMPLETE", "ABANDONED", "None"],
-        case_sensitive=False,
-    ),
-    help="Enter an optional status filter, default='OPEN'",
-    required=False,
-    default="OPEN",
-)
-@click.pass_context
-def show_todos(ctx, search_string, status):
-    """Display a list of To Dos"""
-    c = ctx.obj
-    list_todos(
-        search_string,
-        status,
-        c.view_server,
-        c.view_server_url,
-        c.userid,
-        c.password,
-        c.jupyter,
-        c.width,
-    )
+
 
 
 @show_cat_info.command("user-ids")

@@ -4929,10 +4929,12 @@ class ServerClient(BaseServerClient):
         return validated_body
 
     @dynamic_catch
-    def validate_update_element_request(self, body: dict | UpdateElementRequestBody,
+    def validate_update_element_request(self, body: dict | UpdateElementRequestBody | UpdateClassificationRequestBody,
                                         prop: Optional[list[str]] = None) -> UpdateElementRequestBody | None:
-        if isinstance(body, UpdateElementRequestBody):
-            if prop is None or (isinstance(body.properties, dict) and body.properties.get("class") in prop):
+        if isinstance(body, UpdateElementRequestBody | UpdateClassificationRequestBody):
+            validated_body = body
+        elif isinstance(body, dict):
+            if prop is None or (isinstance(body['properties'], dict) and body['properties'].get("class") in prop):
                 validated_body = body
             else:
                 raise PyegeriaInvalidParameterException(additional_info=
@@ -5301,7 +5303,7 @@ class ServerClient(BaseServerClient):
         _type: str,
         _gen_output: Callable[..., Any],
         search_string: str,
-        activity_status: Optional[str] = None,
+        activity_status_list: Optional[list[str]] = None,
         starts_with: bool = True,
         ends_with: bool = False,
         ignore_case: bool = False,
@@ -5337,7 +5339,7 @@ class ServerClient(BaseServerClient):
             body = {
                 "class": "ActivityStatusSearchString",
                 "searchString": search_string,
-                "activityStatus": activity_status,
+                "activityStatusList": activity_status_list,
                 "startWith": starts_with,
                 "endWith": ends_with,
                 "ignoreCase": ignore_case,
@@ -5379,7 +5381,7 @@ class ServerClient(BaseServerClient):
         _type: str,
         _gen_output: Callable[..., Any],
         filter_string: str,
-        activity_status: Optional[str] = None,
+        activity_status_list: Optional[list[str]] = None,
         start_from: int = 0,
         page_size: int = 0,
         output_format: str = "JSON",
@@ -5395,7 +5397,7 @@ class ServerClient(BaseServerClient):
             body = {
                 "class": "ActivityStatusFilterRequestBody",
                 "filter": filter_string,
-                "activityStatus": activity_status,
+                "activityStatusList": activity_status_list,
                 "startFrom": start_from,
                 "pageSize": page_size,
             }
@@ -5418,7 +5420,7 @@ class ServerClient(BaseServerClient):
         url: str,
         _type: str,
         _gen_output: Callable[..., Any],
-        activity_status: Optional[str] = None,
+        activity_status_list: Optional[list[str]] = None,
         start_from: int = 0,
         page_size: int = 0,
         limit_results_by_status: Optional[list[str]] = None,
@@ -5435,7 +5437,7 @@ class ServerClient(BaseServerClient):
         else:
             body = {
                 "class": "ActivityStatusRequestBody",
-                "activityStatus": activity_status,
+                "activityStatusList": activity_status_list,
                 "startFrom": start_from,
                 "pageSize": page_size,
                 "limitResultsByStatus": limit_results_by_status,
@@ -5462,7 +5464,7 @@ class ServerClient(BaseServerClient):
         _type: str,
         _gen_output: Callable[..., Any],
         search_string: str,
-        content_status: Optional[str] = None,
+        content_status_list: Optional[list[str]] = None,
         starts_with: bool = True,
         ends_with: bool = False,
         ignore_case: bool = False,
@@ -5498,7 +5500,7 @@ class ServerClient(BaseServerClient):
             body = {
                 "class": "ContentStatusSearchString",
                 "searchString": search_string,
-                "contentStatus": content_status,
+                "contentStatusList": content_status_list,
                 "startWith": starts_with,
                 "endWith": ends_with,
                 "ignoreCase": ignore_case,
@@ -5540,7 +5542,7 @@ class ServerClient(BaseServerClient):
         _type: str,
         _gen_output: Callable[..., Any],
         filter_string: str,
-        content_status: Optional[str] = None,
+        content_status_list: Optional[list[str]] = None,
         start_from: int = 0,
         page_size: int = 0,
         output_format: str = "JSON",
@@ -5556,7 +5558,7 @@ class ServerClient(BaseServerClient):
             body = {
                 "class": "ContentStatusFilterRequestBody",
                 "filter": filter_string,
-                "contentStatus": content_status,
+                "contentStatusList": content_status_list,
                 "startFrom": start_from,
                 "pageSize": page_size,
             }
@@ -5580,7 +5582,7 @@ class ServerClient(BaseServerClient):
         _type: str,
         _gen_output: Callable[..., Any],
         search_string: str,
-        deployment_status: Optional[str] = None,
+        deployment_status_list: Optional[list[str]] = None,
         starts_with: bool = True,
         ends_with: bool = False,
         ignore_case: bool = False,
@@ -5616,7 +5618,7 @@ class ServerClient(BaseServerClient):
             body = {
                 "class": "DeploymentStatusSearchString",
                 "searchString": search_string,
-                "deploymentStatus": deployment_status,
+                "deploymentStatusList": deployment_status_list,
                 "startWith": starts_with,
                 "endWith": ends_with,
                 "ignoreCase": ignore_case,
@@ -5658,7 +5660,7 @@ class ServerClient(BaseServerClient):
         _type: str,
         _gen_output: Callable[..., Any],
         filter_string: str,
-        deployment_status: Optional[str] = None,
+        deployment_status_list: Optional[list[str]] = None,
         start_from: int = 0,
         page_size: int = 0,
         output_format: str = "JSON",
@@ -5674,7 +5676,7 @@ class ServerClient(BaseServerClient):
             body = {
                 "class": "DeploymentStatusFilterRequestBody",
                 "filter": filter_string,
-                "deploymentStatus": deployment_status,
+                "deploymentStatusList": deployment_status_list,
                 "startFrom": start_from,
                 "pageSize": page_size,
             }
@@ -5704,6 +5706,7 @@ class ServerClient(BaseServerClient):
         else:
             body = {
                 "class": "ResultsRequestBody",
+                "metadataElementTypeName": _type,
                 "start_from": start_from,
                 "page_size": page_size,
             }
@@ -5786,9 +5789,12 @@ class ServerClient(BaseServerClient):
 
     @dynamic_catch
     async def _async_update_element_body_request(self, url: str, prop: Optional[list[str]] = None,
-                                                 body: Optional[dict | UpdateElementRequestBody] = None) -> None:
-        validated_body = self.validate_update_element_request(body, prop)
-        json_body = validated_body.model_dump_json(indent=2, exclude_none=True)
+                                                 body: Optional[dict | UpdateElementRequestBody | UpdateClassificationRequestBody] = None) -> None:
+        if isinstance(body,dict):
+            json_body = body_slimmer(body)
+        else:
+            validated_body = self.validate_update_element_request(body, prop)
+            json_body = validated_body.model_dump_json(indent=2, exclude_none=True)
         logger.info(json_body)
         response = await self._async_make_request("POST", url, json_body)
         logger.info(response.json())
@@ -5811,7 +5817,13 @@ class ServerClient(BaseServerClient):
             logger.info(json_body)
             await self._async_make_request("POST", url, json_body)
         else:
-            await self._async_make_request("POST", url)
+            body = {
+                "class": "NewRelationshipRequestBody",
+                "properties": {
+                    "class": "AssignmentScopeProperties"
+                }
+            }
+            await self._async_make_request("POST", url, body)
 
     @dynamic_catch
     async def _async_new_classification_request(self, url: str, prop: Optional[list[str]] = None,
@@ -5839,11 +5851,12 @@ class ServerClient(BaseServerClient):
     @dynamic_catch
     async def _async_delete_relationship_request(self, url: str, body: Optional[dict | DeleteRelationshipRequestBody] = None,
                                                  cascade_delete: bool = False) -> None:
-        validated_body = self.validate_delete_relationship_request(body, cascade_delete)
-        if validated_body:
-            json_body = validated_body.model_dump_json(indent=2, exclude_none=True)
-            logger.info(json_body)
-            await self._async_make_request("POST", url, json_body)
+        if body:
+            validated_body = self.validate_delete_relationship_request(body, cascade_delete)
+            if validated_body:
+                json_body = validated_body.model_dump_json(indent=2, exclude_none=True)
+                logger.info(json_body)
+                await self._async_make_request("POST", url, json_body)
         else:
             await self._async_make_request("POST", url)
 

@@ -207,8 +207,13 @@ def test_get_elements():
         c_client = ClassificationManager(view_server, platform_url)
 
         bearer_token = c_client.create_egeria_bearer_token(user, password)
-        response = c_client.get_elements(open_metadata_type_name, output_format="DICT",
-                                         report_spec="Referenceable")
+        body = {
+            "class": "ResultsRequestBody",
+            "metadataElementTypeName": open_metadata_type_name,
+        }
+        response = c_client.get_elements(output_format="DICT",
+                                         report_spec="Referenceable",
+                                         body=body)
 
         if type(response) is list:
             print(f"\n\tElement count is: {len(response)}")
@@ -248,7 +253,12 @@ def test_get_elements_by_property_value():
 
         bearer_token = c_client.create_egeria_bearer_token(user, password)
         start_time = time.perf_counter()
-        result = c_client.get_elements_by_property_value(property_value, property_names, metadata_element_type_name, as_of_time = "2025-12-01")
+        result = c_client.get_elements_by_property_value(
+            property_value,
+            property_names,
+            metadata_element_type_name=metadata_element_type_name,
+            as_of_time="2025-12-01",
+        )
         duration = time.perf_counter() - start_time
         print(f"\n\tDuration was {duration} seconds")
         if type(result) is list:
@@ -442,8 +452,12 @@ def test_get_elements_by_classification():
     c_client = ClassificationManager(view_server, platform_url)
 
     bearer_token = c_client.create_egeria_bearer_token(user, password)
+    body = {
+        "class": "ResultsRequestBody",
+        "metadataElementTypeName": open_metadata_type_name,
+    }
     response = c_client.get_elements_by_classification(
-        classification, open_metadata_type_name, output_format="DICT", report_spec="Collections"
+        classification, output_format="DICT", report_spec="Collections", body=body
     )
 
     if type(response) is list:
@@ -468,7 +482,10 @@ def test_get_elements_by_classification_with_property_value():
 
         bearer_token = c_client.create_egeria_bearer_token(user, password)
         result = c_client.get_elements_by_classification_with_property_value(
-            classification, property_value, property_names, open_metadata_type_name
+            classification,
+            property_value,
+            property_names,
+            metadata_element_type_name=open_metadata_type_name,
         )
 
         if type(result) is list:
@@ -547,9 +564,7 @@ def test_get_all_related_elements():
     element_guid = "da0442bf-818f-406b-99dc-83b72605cc98"
     # element_guid = "8b9cce34-ff42-4f9d-b4b3-6317c8a767c3"  # Retail schema
     bearer_token = c_client.create_egeria_bearer_token(user, password)
-    response = c_client.get_related_elements(
-        element_guid, None, open_metadata_type_name
-    )
+    response = c_client.get_related_elements(element_guid, relationship_type=None)
 
     if type(response) is list:
         print(f"\n\tElement count is: {len(response)}")
@@ -574,8 +589,12 @@ def test_get_related_elements():
     c_client = ClassificationManager(view_server, platform_url)
     try:
         bearer_token = c_client.create_egeria_bearer_token(user, password)
+        body = {
+            "class": "ResultsRequestBody",
+            "metadataElementTypeName": open_metadata_type_name,
+        }
         response = c_client.get_related_elements(
-            element_guid, relationship_type, open_metadata_type_name
+            element_guid, relationship_type, body=body
         )
 
         if type(response) is list:
@@ -607,7 +626,7 @@ def test_get_related_elements_with_property_value():
             relationship_type,
             property_value,
             property_names,
-            open_metadata_type_name,
+            metadata_element_type_name=open_metadata_type_name,
         )
 
         if type(result) is list:
@@ -678,8 +697,12 @@ def test_get_relationships_with_property_value():
         c_client = ClassificationManager(view_server, platform_url)
 
         bearer_token = c_client.create_egeria_bearer_token(user, password)
-        result = c_client.get_relationships_with_property_value(relationship_type, property_value, property_names,
-                                                                output_format=JSON)
+        result = c_client.get_relationships_with_property_value(
+            property_value,
+            property_names,
+            relationship_type=relationship_type,
+            output_format=JSON,
+        )
 
         if type(result) is list:
             print_json(data=result)
@@ -706,7 +729,9 @@ def test_find_relationships_with_property_value():
 
     bearer_token = c_client.create_egeria_bearer_token(user, password)
     response = c_client.find_relationships_with_property_value(
-        relationship_type, property_value, property_names
+        property_value,
+        property_names,
+        relationship_type=relationship_type,
     )
 
     if type(response) is list:

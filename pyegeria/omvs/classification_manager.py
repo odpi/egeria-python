@@ -1663,7 +1663,7 @@ body: Optional[dict | FilterRequestBody] = None,
         """
 
         url = (f"{self.platform_url}/servers/{self.view_server}/api/open-metadata/"
-               f"classification-explorer/glossaries/elements/{element_guid}/scoped-by")
+               f"classification-explorer/elements/{element_guid}/scoped-by")
 
         response = await self._async_get_results_body_request(url, "Referenceable", self._generate_referenceable_output,
                                                               start_from, page_size, output_format,
@@ -2371,15 +2371,12 @@ body: Optional[dict | FilterRequestBody] = None,
     #
     async def _async_get_elements(
             self,
-            metadata_element_type_name: Optional[str] = None,
-            effective_time: Optional[str] = None,
-            for_lineage: bool = False,
-            for_duplicate_processing: bool = False,
+            metadata_element_type: str,
             start_from: int = 0,
             page_size: int = 0,
-            time_out: int = default_time_out,
             output_format: str = "JSON",
             report_spec: dict | str = None,
+            body: Optional[dict | ResultsRequestBody] = None,
     ) -> list | str:
         """
         Retrieve elements of the requested type name. If no type name is specified, then any type of element may
@@ -2389,22 +2386,18 @@ body: Optional[dict | FilterRequestBody] = None,
 
         Parameters
         ----------
-        metadata_element_type_name : str, default = None
-            - open metadata type to be used to restrict the search
-        effective_time: str, default = None
-            - Time format is "YYYY-MM-DDTHH:MM:SS" (ISO 8601)
-        for_lineage: bool, default is set by server
-            - determines if elements classified as Memento should be returned - normally false
-        for_duplicate_processing: bool, default is set by server
-            - Normally false. Set true when the caller is part of a deduplication function
+        metadata_element_type: str
+            - type of metadata element to retrieve.
         start_from: int, default = 0
             - index of the list to start from (0 for start).
         page_size
             - maximum number of elements to return.
-
-
-        time_out: int, default = default_time_out
-            - http request timeout for this request
+        output_format: str, default = "JSON"
+            - Type of output to return.
+        report_spec: dict | str, default = None
+            - Output format set to use. If None, the default output format set is used.
+        body: dict | ResultsRequestBody, optional
+            - full request specification - if provided, overrides other parameters.
 
         Returns
         -------
@@ -2414,49 +2407,29 @@ body: Optional[dict | FilterRequestBody] = None,
         Raises
         ------
         PyegeriaException
-
-        Args:
-            output_format ():
-            report_spec ():
         """
 
-        body = {
-            "class": "FindProperties",
-            "metadataElementTypeName": metadata_element_type_name,
-            "effectiveTime": effective_time,
-            "forLineage": for_lineage,
-            "forDuplicateProcessing": for_duplicate_processing,
-            "startFrom": start_from,
-            "pageSize": page_size
-        }
-
         url = f"{base_path(self, self.view_server)}/elements/by-type"
-        response: Response = await self._async_make_request(
-            "POST", url, body_slimmer(body), time_out=time_out
+        return await self._async_get_results_body_request(
+            url,
+            metadata_element_type,
+            self._generate_referenceable_output,
+            start_from=start_from,
+            page_size=page_size,
+            output_format=output_format,
+            report_spec=report_spec,
+            body=body,
         )
-        elements = response.json().get("elements", NO_ELEMENTS_FOUND)
-        if type(elements) is list and len(elements) == 0:
-            return NO_ELEMENTS_FOUND
-        if output_format != 'JSON':  # return a simplified markdown representation
-            logger.info(f"Found elements, output format: {output_format} and report_spec: {report_spec}")
-            return self._generate_referenceable_output(elements = elements, filter_string = metadata_element_type_name,
-                                                       element_type_name = "Referenceable", output_format=output_format,
-                                                       report_spec=report_spec,
-                                                       )
-        return elements
 
 
     def get_elements(
             self,
-            metadata_element_type_name: Optional[str] = None,
-            effective_time: Optional[str] = None,
-            for_lineage: bool = False,
-            for_duplicate_processing: bool = False,
+            metadata_element_type: str,
             start_from: int = 0,
             page_size: int = 0,
-            time_out: int = default_time_out,
             output_format: str = "JSON",
             report_spec: dict | str = None,
+            body: Optional[dict | ResultsRequestBody] = None,
     ) -> list | str:
         """
         Retrieve elements of the requested type name. If no type name is specified, then any type of element may
@@ -2466,24 +2439,18 @@ body: Optional[dict | FilterRequestBody] = None,
 
         Parameters
         ----------
-        metadata_element_type_name : str, default = None
-            - open metadata type to be used to restrict the search
-        effective_time: str, default = None
-            - Time format is "YYYY-MM-DDTHH:MM:SS" (ISO 8601)
-        for_lineage: bool, default is set by server
-            - determines if elements classified as Memento should be returned - normally false
-        for_duplicate_processing: bool, default is set by server
-            - Normally false. Set true when the caller is part of a deduplication function
+        metadata_element_type: str
+            - type of metadata element to retrieve.
         start_from: int, default = 0
             - index of the list to start from (0 for start).
         page_size
             - maximum number of elements to return.
-        time_out: int, default = default_time_out
-            - http request timeout for this request
         output_format: str, default = "JSON"
             - Type of output to return.
         report_spec: dict | str, default = None
             - Output format set to use. If None, the default output format set is used.
+        body: dict | ResultsRequestBody, optional
+            - full request specification - if provided, overrides other parameters.
 
         Returns
         -------
@@ -2497,19 +2464,46 @@ body: Optional[dict | FilterRequestBody] = None,
 
         loop = asyncio.get_event_loop()
         response = loop.run_until_complete(
-            self._async_get_elements(metadata_element_type_name, effective_time, for_lineage, for_duplicate_processing,
-                                     start_from, page_size, time_out, output_format, report_spec)
+            self._async_get_elements(
+                metadata_element_type,
+                start_from,
+                page_size,
+                output_format,
+                report_spec,
+                body,
+            )
         )
 
         return response
 
-    async def _async_get_elements_by_property_value(self, property_value: str, property_names: list[str],
-                                                    metadata_element_type_name: Optional[str] = None, effective_time: Optional[str] = None,
-                                                    as_of_time: Optional[str] = None, for_lineage: bool = False,
-                                                     for_duplicate_processing: bool = False,
-                                                    start_from: int = 0, page_size: int = 0,
-                                                    time_out: int = default_time_out, output_format: str = "JSON",
-                                                    report_spec: str | dict = None) -> list | str:
+    async def _async_get_elements_by_property_value(
+            self,
+            property_value: str,
+            property_names: Optional[list[str]] = None,
+            metadata_element_type_name: Optional[str] = None,
+            starts_with: bool = True,
+            ends_with: bool = False,
+            ignore_case: bool = False,
+            anchor_domain: Optional[str] = None,
+            metadata_element_subtypes: Optional[list[str]] = None,
+            skip_relationships: Optional[list[str]] = None,
+            include_only_relationships: Optional[list[str]] = None,
+            skip_classified_elements: Optional[list[str]] = None,
+            include_only_classified_elements: Optional[list[str]] = None,
+            graph_query_depth: int = 3,
+            governance_zone_filter: Optional[list[str]] = None,
+            as_of_time: Optional[str] = None,
+            effective_time: Optional[str] = None,
+            relationship_page_size: int = 0,
+            limit_results_by_status: Optional[list[str]] = None,
+            sequencing_order: Optional[str] = None,
+            sequencing_property: Optional[str] = None,
+            output_format: str = "JSON",
+            report_spec: str | dict = None,
+            start_from: int = 0,
+            page_size: int = 0,
+            body: Optional[dict | FindPropertyNamesRequestBody | SearchStringRequestBody] = None,
+    ) -> list | str:
         """
         Retrieve elements by a value found in one of the properties specified.  The value must match exactly.
         An open metadata type name may be supplied to restrict the results. Async version.
@@ -2524,30 +2518,55 @@ body: Optional[dict | FilterRequestBody] = None,
             - property names to search in.
         metadata_element_type_name : str, default = None
             - open metadata type to be used to restrict the search
-        effective_time: str, default = None
-            - Time format is "YYYY-MM-DDTHH:MM:SS" (ISO 8601)
+        starts_with : bool, default = True
+            - Whether to match only at the start.
+        ends_with : bool, default = False
+            - Whether to match only at the end.
+        ignore_case : bool, default = False
+            - Whether to ignore case in matching.
+        anchor_domain: str, default = None
+            - The anchor domain to restrict the search.
+        metadata_element_subtypes: list[str], default = None
+            - The subtypes of metadata elements to restrict the search.
+        skip_relationships: list[str], default = None
+            - The relationship types to skip.
+        include_only_relationships: list[str], default = None
+            - The relationship types to include.
+        skip_classified_elements: list[str], default = None
+            - The classification types to skip.
+        include_only_classified_elements: list[str], default = None
+            - The classification types to include.
+        graph_query_depth: int, default = 3
+            - The graph query depth.
+        governance_zone_filter: list[str], default = None
+            - The governance zones to filter by.
         as_of_time: str, default = None
            - Time format is "YYYY-MM-DDTHH:MM:SS" (ISO 8601)
-        for_lineage: bool, default is set by server
-            - determines if elements classified as Memento should be returned - normally false
-        for_duplicate_processing: bool, default is set by server
-            - Normally false. Set true when the caller is part of a deduplication function
+        effective_time: str, default = None
+            - Time format is "YYYY-MM-DDTHH:MM:SS" (ISO 8601)
+        relationship_page_size: int, default = 0
+            - The relationship page size.
+        limit_results_by_status: list[str], default = None
+            - Limit results by status.
+        sequencing_order: str, default = None
+            - The sequencing order to use.
+        sequencing_property: str, default = None
+            - The sequencing property to use.
         start_from: int, default = 0
             - index of the list to start from (0 for start).
         page_size
             - maximum number of elements to return.
-        time_out: int, default = default_time_out
-            - http request timeout for this request
         output_format: str, default = "JSON"
             - Type of output to return.
         report_spec: dict | str, default = None
             - Output format set to use. If None, the default output format set is used.
-
+        body: dict | FindPropertyNamesRequestBody | SearchStringRequestBody, default = None
+            - Body of the request. If None, the default body is used.
 
         Returns
         -------
         [dict] | str
-            Returns a string if no elements found and a list of dict of elements with the results.
+            Returns a string if "No elements found" and a list of dict of elements with the results.
 
         Raises
         ------
@@ -2562,42 +2581,68 @@ body: Optional[dict | FilterRequestBody] = None,
             context['reason'] = "Invalid property value"
             raise PyegeriaInvalidParameterException(context=context)
 
-        body = {
-            "class": "FindPropertyNamesProperties",
-            "metadataElementTypeName": metadata_element_type_name,
-            "propertyValue": property_value,
-            "propertyNames": property_names,
-            "effectiveTime": effective_time,
-            "asOfTime": as_of_time,
-            "startFrom": start_from,
-            "pageSize": page_size,
-            "forLineage": for_lineage,
-            "forDuplicateProcessing": for_duplicate_processing
-        }
 
         url = f"{base_path(self, self.view_server)}/elements/by-exact-property-value"
 
-        response: Response = await self._async_make_request(
-            "POST", url, body_slimmer(body), time_out=time_out
+        return await self._async_find_request(
+            url,
+            "Referenceable",
+            self._generate_referenceable_output,
+            property_value,
+            starts_with=starts_with,
+            ends_with=ends_with,
+            ignore_case=ignore_case,
+            anchor_domain=anchor_domain,
+            metadata_element_type=metadata_element_type_name,
+            metadata_element_subtypes=metadata_element_subtypes,
+            skip_relationships=skip_relationships,
+            include_only_relationships=include_only_relationships,
+            skip_classified_elements=skip_classified_elements,
+            include_only_classified_elements=include_only_classified_elements,
+            graph_query_depth=graph_query_depth,
+            governance_zone_filter=governance_zone_filter,
+            as_of_time=as_of_time,
+            effective_time=effective_time,
+            relationship_page_size=relationship_page_size,
+            limit_results_by_status=limit_results_by_status,
+            sequencing_order=sequencing_order,
+            sequencing_property=sequencing_property,
+            output_format=output_format,
+            report_spec=report_spec,
+            start_from=start_from,
+            page_size=page_size,
+            property_names=property_names,
+            body=body,
         )
 
-        elements = response.json().get("elements", NO_ELEMENTS_FOUND)
-        if type(elements) is list and len(elements) == 0:
-            return NO_ELEMENTS_FOUND
-
-        if output_format != 'JSON':  # return a simplified markdown representation
-            logger.info(f"Found elements, output format: {output_format} and report_spec: {report_spec}")
-            return self._generate_referenceable_output(elements = elements, filter_string = property_value,
-                                                       element_type_name = "Referenceable",
-                                                       output_format = output_format, report_spec = report_spec)
-        return elements
-
-    def get_elements_by_property_value(self, property_value: str, property_names: list[str],
-                                       metadata_element_type_name: Optional[str] = None, effective_time: Optional[str] = None,
-                                       as_of_time: Optional[str] = None, for_lineage: bool = False, for_duplicate_processing: bool = False,
-                                       start_from: int = 0, page_size: int = 0,
-                                       time_out: int = default_time_out, output_format: str = "JSON",
-                                       report_spec: str | dict = None) -> list | str:
+    def get_elements_by_property_value(
+            self,
+            property_value: str,
+            property_names: Optional[list[str]] = None,
+            metadata_element_type_name: Optional[str] = None,
+            starts_with: bool = True,
+            ends_with: bool = False,
+            ignore_case: bool = False,
+            anchor_domain: Optional[str] = None,
+            metadata_element_subtypes: Optional[list[str]] = None,
+            skip_relationships: Optional[list[str]] = None,
+            include_only_relationships: Optional[list[str]] = None,
+            skip_classified_elements: Optional[list[str]] = None,
+            include_only_classified_elements: Optional[list[str]] = None,
+            graph_query_depth: int = 3,
+            governance_zone_filter: Optional[list[str]] = None,
+            as_of_time: Optional[str] = None,
+            effective_time: Optional[str] = None,
+            relationship_page_size: int = 0,
+            limit_results_by_status: Optional[list[str]] = None,
+            sequencing_order: Optional[str] = None,
+            sequencing_property: Optional[str] = None,
+            output_format: str = "JSON",
+            report_spec: str | dict = None,
+            start_from: int = 0,
+            page_size: int = 0,
+            body: Optional[dict | FindPropertyNamesRequestBody | SearchStringRequestBody] = None,
+    ) -> list | str:
         """
         Retrieve elements by a value found in one of the properties specified.  The value must match exactly.
         An open metadata type name may be supplied to restrict the results.
@@ -2612,14 +2657,40 @@ body: Optional[dict | FilterRequestBody] = None,
             - property names to search in.
         metadata_element_type_name : str, default = None
             - open metadata type to be used to restrict the search
-        effective_time: str, default = None
-            - Time format is "YYYY-MM-DDTHH:MM:SS" (ISO 8601)
+        starts_with : bool, default = True
+            - Whether to match only at the start.
+        ends_with : bool, default = False
+            - Whether to match only at the end.
+        ignore_case : bool, default = False
+            - Whether to ignore case in matching.
+        anchor_domain: str, default = None
+            - The anchor domain to restrict the search.
+        metadata_element_subtypes: list[str], default = None
+            - The subtypes of metadata elements to restrict the search.
+        skip_relationships: list[str], default = None
+            - The relationship types to skip.
+        include_only_relationships: list[str], default = None
+            - The relationship types to include.
+        skip_classified_elements: list[str], default = None
+            - The classification types to skip.
+        include_only_classified_elements: list[str], default = None
+            - The classification types to include.
+        graph_query_depth: int, default = 3
+            - The graph query depth.
+        governance_zone_filter: list[str], default = None
+            - The governance zones to filter by.
         as_of_time: str, default = None
            - Time format is "YYYY-MM-DDTHH:MM:SS" (ISO 8601)
-        for_lineage: bool, default is set by server
-            - determines if elements classified as Memento should be returned - normally false
-        for_duplicate_processing: bool, default is set by server
-            - Normally false. Set true when the caller is part of a deduplication function
+        effective_time: str, default = None
+            - Time format is "YYYY-MM-DDTHH:MM:SS" (ISO 8601)
+        relationship_page_size: int, default = 0
+            - The relationship page size.
+        limit_results_by_status: list[str], default = None
+            - Limit results by status.
+        sequencing_order: str, default = None
+            - The sequencing order to use.
+        sequencing_property: str, default = None
+            - The sequencing property to use.
         start_from: int, default = 0
             - index of the list to start from (0 for start).
         page_size
@@ -2628,8 +2699,8 @@ body: Optional[dict | FilterRequestBody] = None,
             - Type of output to return.
         report_spec: dict | str, default = None
             - Output format set to use. If None, the default output format set is used.
-        time_out: int, default = default_time_out
-            - http request timeout for this request
+        body: dict | FindPropertyNamesRequestBody | SearchStringRequestBody, default = None
+            - Body of the request. If None, the default body is used.
 
         Returns
         -------
@@ -2643,9 +2714,33 @@ body: Optional[dict | FilterRequestBody] = None,
 
         loop = asyncio.get_event_loop()
         response = loop.run_until_complete(
-            self._async_get_elements_by_property_value(property_value, property_names, metadata_element_type_name,
-                                                       effective_time, as_of_time, for_lineage, for_duplicate_processing,
-                                                       start_from, page_size, time_out, output_format, report_spec)
+            self._async_get_elements_by_property_value(
+                property_value,
+                property_names,
+                metadata_element_type_name,
+                starts_with,
+                ends_with,
+                ignore_case,
+                anchor_domain,
+                metadata_element_subtypes,
+                skip_relationships,
+                include_only_relationships,
+                skip_classified_elements,
+                include_only_classified_elements,
+                graph_query_depth,
+                governance_zone_filter,
+                as_of_time,
+                effective_time,
+                relationship_page_size,
+                limit_results_by_status,
+                sequencing_order,
+                sequencing_property,
+                output_format,
+                report_spec,
+                start_from,
+                page_size,
+                body,
+            )
         )
         return response
 
@@ -3284,15 +3379,11 @@ body: Optional[dict | FilterRequestBody] = None,
     async def _async_get_elements_by_classification(
             self,
             classification_name: str,
-            metadata_element_type_name: Optional[str] = None,
-            effective_time: Optional[str] = None,
-            for_lineage: bool = False,
-            for_duplicate_processing: bool = False,
             start_from: int = 0,
             page_size: int = 0,
-            time_out: int = default_time_out,
             output_format: str = "JSON",
             report_spec: str | dict = None,
+            body: Optional[dict | ResultsRequestBody] = None,
     ) -> list | str:
         """
          Retrieve elements with the requested classification name. It is also possible to limit the results
@@ -3305,22 +3396,16 @@ body: Optional[dict | FilterRequestBody] = None,
         ----------
         classification_name: str
             - the classification name to retrieve elements for.
-        metadata_element_type_name : str, default = None
-            - open metadata type to be used to restrict the search
-        effective_time: str, default = None
-            - Time format is "YYYY-MM-DD THH:MM:SS" (ISO 8601)
-        for_lineage: bool, default is set by server
-            - determines if elements classified as Memento should be returned - normally false
-        for_duplicate_processing: bool, default is set by server
-            - Normally false. Set true when the caller is part of a deduplication function
         start_from: int, default = 0
             - index of the list to start from (0 for start).
         page_size
             - maximum number of elements to return.
-
-
-        time_out: int, default = default_time_out
-            - http request timeout for this request
+        output_format: str, default = "JSON"
+            - Type of output to return.
+        report_spec: dict | str, default = None
+            - Output format set to use. If None, the default output format set is used.
+        body: dict | ResultsRequestBody, optional
+            - full request specification - if provided, overrides other parameters.
 
         Returns
         -------
@@ -3336,42 +3421,27 @@ body: Optional[dict | FilterRequestBody] = None,
             report_spec ():
         """
 
-        body = {
-            "class": "ResultsRequestBody",
-            "metadataElementTypeName": metadata_element_type_name,
-            "effectiveTime": effective_time,
-            "forLineage": for_lineage,
-            "forDuplicateProcessing": for_duplicate_processing,
-            "startFrom": start_from,
-            "pageSize": page_size
-        }
-
         url = f"{base_path(self, self.view_server)}/elements/by-classification/{classification_name}"
 
-        response = await self._async_make_request(
-            "POST", url, body_slimmer(body), time_out=time_out
+        return await self._async_get_results_body_request(
+            url,
+            "Referenceable",
+            self._generate_referenceable_output,
+            start_from=start_from,
+            page_size=page_size,
+            output_format=output_format,
+            report_spec=report_spec,
+            body=body,
         )
-        elements = response.json().get("elements", NO_ELEMENTS_FOUND)
-        if type(elements) is list and len(elements) == 0:
-            return NO_ELEMENTS_FOUND
-        if output_format != 'JSON':  # return a simplified markdown representation
-            logger.info(f"Found elements, output format: {output_format} and report_spec: {report_spec}")
-            return self._generate_referenceable_output(elements, "", "Referenceable",
-                                                       output_format, report_spec)
-        return elements
 
     def get_elements_by_classification(
             self,
             classification_name: str,
-            metadata_element_type_name: Optional[str] = None,
-            effective_time: Optional[str] = None,
-            for_lineage: bool = False,
-            for_duplicate_processing: bool = False,
             start_from: int = 0,
             page_size: int = 0,
-            time_out: int = default_time_out,
             output_format: str = "JSON",
             report_spec: dict | str = None,
+            body: Optional[dict | ResultsRequestBody] = None,
     ) -> list | str:
         """
         Retrieve elements with the requested classification name. It is also possible to limit the results
@@ -3384,24 +3454,16 @@ body: Optional[dict | FilterRequestBody] = None,
         ----------
         classification_name: str
             - the classification name to retrieve elements for.
-        metadata_element_type_name : str, default = None
-            - open metadata type to be used to restrict the search
-        effective_time: str, default = None
-            - Time format is "YYYY-MM-DDTHH:MM:SS" (ISO 8601)
-        for_lineage: bool, default is set by server
-            - determines if elements classified as Memento should be returned - normally false
-        for_duplicate_processing: bool, default is set by server
-            - Normally false. Set true when the caller is part of a deduplication function
         start_from: int, default = 0
             - index of the list to start from (0 for start).
         page_size: int, default = 0
             - maximum number of elements to return.
-        time_out: int, default = default_time_out
-            - http request timeout for this request
         output_format: str, default = "JSON"
             - Type of output to return.
         report_spec: dict | str, default = None
             - Output format set to use. If None, the default output format set is used.
+        body: dict | ResultsRequestBody, optional
+            - full request specification - if provided, overrides other parameters.
 
         Returns
         -------
@@ -3415,9 +3477,14 @@ body: Optional[dict | FilterRequestBody] = None,
 
         loop = asyncio.get_event_loop()
         response = loop.run_until_complete(
-            self._async_get_elements_by_classification(classification_name, metadata_element_type_name, effective_time,
-                                                       for_lineage, for_duplicate_processing, start_from, page_size,
-                                                       time_out, output_format, report_spec)
+            self._async_get_elements_by_classification(
+                classification_name,
+                start_from,
+                page_size,
+                output_format,
+                report_spec,
+                body,
+            )
         )
         return response
 
@@ -3426,16 +3493,30 @@ body: Optional[dict | FilterRequestBody] = None,
             self,
             classification_name: str,
             property_value: str,
-            property_names: list[str],
+            property_names: Optional[list[str]] = None,
             metadata_element_type_name: Optional[str] = None,
+            starts_with: bool = True,
+            ends_with: bool = False,
+            ignore_case: bool = False,
+            anchor_domain: Optional[str] = None,
+            metadata_element_subtypes: Optional[list[str]] = None,
+            skip_relationships: Optional[list[str]] = None,
+            include_only_relationships: Optional[list[str]] = None,
+            skip_classified_elements: Optional[list[str]] = None,
+            include_only_classified_elements: Optional[list[str]] = None,
+            graph_query_depth: int = 3,
+            governance_zone_filter: Optional[list[str]] = None,
+            as_of_time: Optional[str] = None,
             effective_time: Optional[str] = None,
-            for_lineage: bool = False,
-            for_duplicate_processing: bool = False,
-            start_from: int = 0,
-            page_size: int = 0,
-            time_out: int = default_time_out,
+            relationship_page_size: int = 0,
+            limit_results_by_status: Optional[list[str]] = None,
+            sequencing_order: Optional[str] = None,
+            sequencing_property: Optional[str] = None,
             output_format: str = "JSON",
             report_spec: dict | str = None,
+            start_from: int = 0,
+            page_size: int = 0,
+            body: Optional[dict | FindPropertyNamesRequestBody | SearchStringRequestBody] = None,
     ) -> list | str:
         """
         Retrieve elements with the requested classification name and with the requested a value found in one of the
@@ -3454,20 +3535,50 @@ body: Optional[dict | FilterRequestBody] = None,
              - property names to search in.
          metadata_element_type_name : str, default = None
              - open metadata type to be used to restrict the search
+         starts_with : bool, default = True
+             - Whether to match only at the start.
+         ends_with : bool, default = False
+             - Whether to match only at the end.
+         ignore_case : bool, default = False
+             - Whether to ignore case in matching.
+         anchor_domain: str, default = None
+             - The anchor domain to restrict the search.
+         metadata_element_subtypes: list[str], default = None
+             - The subtypes of metadata elements to restrict the search.
+         skip_relationships: list[str], default = None
+             - The relationship types to skip.
+         include_only_relationships: list[str], default = None
+             - The relationship types to include.
+         skip_classified_elements: list[str], default = None
+             - The classification types to skip.
+         include_only_classified_elements: list[str], default = None
+             - The classification types to include.
+         graph_query_depth: int, default = 3
+             - The graph query depth.
+         governance_zone_filter: list[str], default = None
+             - The governance zones to filter by.
+         as_of_time: str, default = None
+            - Time format is "YYYY-MM-DDTHH:MM:SS" (ISO 8601)
          effective_time: str, default = None
              - Time format is "YYYY-MM-DDTHH:MM:SS" (ISO 8601)
-         for_lineage: bool, default is set by server
-             - determines if elements classified as Memento should be returned - normally false
-         for_duplicate_processing: bool, default is set by server
-             - Normally false. Set true when the caller is part of a deduplication function
+         relationship_page_size: int, default = 0
+             - The relationship page size.
+         limit_results_by_status: list[str], default = None
+             - Limit results by status.
+         sequencing_order: str, default = None
+             - The sequencing order to use.
+         sequencing_property: str, default = None
+             - The sequencing property to use.
          start_from: int, default = 0
              - index of the list to start from (0 for start).
          page_size
              - maximum number of elements to return.
-
-
-         time_out: int, default = default_time_out
-             - http request timeout for this request
+         output_format: str, default = "JSON"
+             - Type of output to return.
+         report_spec: dict | str, default = None
+             - Output format set to use. If None, the default output format set is used.
+         body: dict | FindPropertyNamesRequestBody | SearchStringRequestBody, optional
+             - full request specification - if provided, overrides other parameters.
 
          Returns
          -------
@@ -3488,48 +3599,69 @@ body: Optional[dict | FilterRequestBody] = None,
             report_spec ():
         """
 
-        body = {
-            "class": "FindPropertyNamesProperties",
-            "metadataElementTypeName": metadata_element_type_name,
-            "propertyValue": property_value,
-            "propertyNames": property_names,
-            "effectiveTime": effective_time,
-            "forLineage": for_lineage,
-            "forDuplicateProcessing": for_duplicate_processing,
-            "startFrom": start_from,
-            "pageSize": page_size
-        }
-
         url = (
             f"{base_path(self, self.view_server)}/elements/by-classification/{classification_name}/"
             f"with-exact-property-value"
         )
-        response = await self._async_make_request(
-            "POST", url, body_slimmer(body), time_out=time_out
+        return await self._async_find_request(
+            url,
+            "Referenceable",
+            self._generate_referenceable_output,
+            property_value,
+            starts_with=starts_with,
+            ends_with=ends_with,
+            ignore_case=ignore_case,
+            anchor_domain=anchor_domain,
+            metadata_element_type=metadata_element_type_name,
+            metadata_element_subtypes=metadata_element_subtypes,
+            skip_relationships=skip_relationships,
+            include_only_relationships=include_only_relationships,
+            skip_classified_elements=skip_classified_elements,
+            include_only_classified_elements=include_only_classified_elements,
+            graph_query_depth=graph_query_depth,
+            governance_zone_filter=governance_zone_filter,
+            as_of_time=as_of_time,
+            effective_time=effective_time,
+            relationship_page_size=relationship_page_size,
+            limit_results_by_status=limit_results_by_status,
+            sequencing_order=sequencing_order,
+            sequencing_property=sequencing_property,
+            output_format=output_format,
+            report_spec=report_spec,
+            start_from=start_from,
+            page_size=page_size,
+            property_names=property_names,
+            body=body,
         )
-        elements = response.json().get("elements", NO_ELEMENTS_FOUND)
-        if type(elements) is list and len(elements) == 0:
-            return NO_ELEMENTS_FOUND
-        if output_format != 'JSON':  # return a simplified markdown representation
-            logger.info(f"Found elements, output format: {output_format} and report_spec: {report_spec}")
-            return self._generate_referenceable_output(elements,  "Referenceable",
-                                                       output_format, report_spec)
-        return elements
 
     def get_elements_by_classification_with_property_value(
             self,
             classification_name: str,
             property_value: str,
-            property_names: list[str],
+            property_names: Optional[list[str]] = None,
             metadata_element_type_name: Optional[str] = None,
+            starts_with: bool = True,
+            ends_with: bool = False,
+            ignore_case: bool = False,
+            anchor_domain: Optional[str] = None,
+            metadata_element_subtypes: Optional[list[str]] = None,
+            skip_relationships: Optional[list[str]] = None,
+            include_only_relationships: Optional[list[str]] = None,
+            skip_classified_elements: Optional[list[str]] = None,
+            include_only_classified_elements: Optional[list[str]] = None,
+            graph_query_depth: int = 3,
+            governance_zone_filter: Optional[list[str]] = None,
+            as_of_time: Optional[str] = None,
             effective_time: Optional[str] = None,
-            for_lineage: bool = False,
-            for_duplicate_processing: bool = False,
-            start_from: int = 0,
-            page_size: int = 0,
-            time_out: int = default_time_out,
+            relationship_page_size: int = 0,
+            limit_results_by_status: Optional[list[str]] = None,
+            sequencing_order: Optional[str] = None,
+            sequencing_property: Optional[str] = None,
             output_format: str = "JSON",
             report_spec: dict | str = None,
+            start_from: int = 0,
+            page_size: int = 0,
+            body: Optional[dict | FindPropertyNamesRequestBody | SearchStringRequestBody] = None,
     ) -> list | str:
         """
         Retrieve elements by a value found in one of the properties specified.  The value must match exactly.
@@ -3547,22 +3679,50 @@ body: Optional[dict | FilterRequestBody] = None,
             - property names to search in.
         metadata_element_type_name : str, default = None
             - open metadata type to be used to restrict the search
+        starts_with : bool, default = True
+            - Whether to match only at the start.
+        ends_with : bool, default = False
+            - Whether to match only at the end.
+        ignore_case : bool, default = False
+            - Whether to ignore case in matching.
+        anchor_domain: str, default = None
+            - The anchor domain to restrict the search.
+        metadata_element_subtypes: list[str], default = None
+            - The subtypes of metadata elements to restrict the search.
+        skip_relationships: list[str], default = None
+            - The relationship types to skip.
+        include_only_relationships: list[str], default = None
+            - The relationship types to include.
+        skip_classified_elements: list[str], default = None
+            - The classification types to skip.
+        include_only_classified_elements: list[str], default = None
+            - The classification types to include.
+        graph_query_depth: int, default = 3
+            - The graph query depth.
+        governance_zone_filter: list[str], default = None
+            - The governance zones to filter by.
+        as_of_time: str, default = None
+           - Time format is "YYYY-MM-DDTHH:MM:SS" (ISO 8601)
         effective_time: str, default = None
             - Time format is "YYYY-MM-DDTHH:MM:SS" (ISO 8601)
-        for_lineage: bool, default is set by server
-            - determines if elements classified as Memento should be returned - normally false
-        for_duplicate_processing: bool, default is set by server
-            - Normally false. Set true when the caller is part of a deduplication function
+        relationship_page_size: int, default = 0
+            - The relationship page size.
+        limit_results_by_status: list[str], default = None
+            - Limit results by status.
+        sequencing_order: str, default = None
+            - The sequencing order to use.
+        sequencing_property: str, default = None
+            - The sequencing property to use.
         start_from: int, default = 0
             - index of the list to start from (0 for start).
         page_size: int, default = 0
             - maximum number of elements to return.
-        time_out: int, default = default_time_out
-            - http request timeout for this request
         output_format: str, default = "JSON"
             - Type of output to return.
         report_spec: dict | str, default = None
             - Output format set to use. If None, the default output format set is used.
+        body: dict | FindPropertyNamesRequestBody | SearchStringRequestBody, optional
+            - full request specification - if provided, overrides other parameters.
 
         Returns
         -------
@@ -3576,11 +3736,34 @@ body: Optional[dict | FilterRequestBody] = None,
 
         loop = asyncio.get_event_loop()
         response = loop.run_until_complete(
-            self._async_get_elements_by_classification_with_property_value(classification_name, property_value,
-                                                                           property_names, metadata_element_type_name,
-                                                                           effective_time, for_lineage,
-                                                                           for_duplicate_processing, start_from,
-                                                                           page_size, time_out, output_format, report_spec)
+            self._async_get_elements_by_classification_with_property_value(
+                classification_name,
+                property_value,
+                property_names,
+                metadata_element_type_name,
+                starts_with,
+                ends_with,
+                ignore_case,
+                anchor_domain,
+                metadata_element_subtypes,
+                skip_relationships,
+                include_only_relationships,
+                skip_classified_elements,
+                include_only_classified_elements,
+                graph_query_depth,
+                governance_zone_filter,
+                as_of_time,
+                effective_time,
+                relationship_page_size,
+                limit_results_by_status,
+                sequencing_order,
+                sequencing_property,
+                output_format,
+                report_spec,
+                start_from,
+                page_size,
+                body,
+            )
         )
         return response
 
@@ -3824,16 +4007,12 @@ body: Optional[dict | FilterRequestBody] = None,
             self,
             element_guid: str,
             relationship_type: Optional[str] = None,
-            metadata_element_type_name: Optional[str] = None,
             start_at_end: int = 1,
-            effective_time: Optional[str] = None,
-            for_lineage: bool = False,
-            for_duplicate_processing: bool = False,
             start_from: int = 0,
             page_size: int = 0,
-            time_out: int = default_time_out,
             output_format: str = "JSON",
-            report_spec: dict | str = None
+            report_spec: dict | str = None,
+            body: Optional[dict | ResultsRequestBody] = None,
     ) -> list | str:
         """
         Retrieve elements linked by relationship type name. If the relationship type is None, then all related elements
@@ -3849,24 +4028,18 @@ body: Optional[dict | FilterRequestBody] = None,
         relationship_type: str, optional, default = None
             - the type of relationship to navigate to related elements.
               If None, then all related elements will be returned.
-        metadata_element_type_name : str, default = None
-            - open metadata type to be used to restrict the search
         start_at_end: int, default = 1
             - The end of the relationship to start from - typically End1
-        effective_time: str, default = None
-            - Time format is "YYYY-MM-DDTHH:MM:SS" (ISO 8601)
-        for_lineage: bool, default is set by server
-            - determines if elements classified as Memento should be returned - normally false
-        for_duplicate_processing: bool, default is set by server
-            - Normally false. Set true when the caller is part of a deduplication function
         start_from: int, default = 0
             - index of the list to start from (0 for start).
         page_size
             - maximum number of elements to return.
-
-
-        time_out: int, default = default_time_out
-            - http request timeout for this request
+        output_format: str, default = "JSON"
+            - Type of output to return.
+        report_spec: dict | str, default = None
+            - Output format set to use. If None, the default output format set is used.
+        body: dict | ResultsRequestBody, optional
+            - full request specification - if provided, overrides other parameters.
 
         Returns
         -------
@@ -3876,21 +4049,7 @@ body: Optional[dict | FilterRequestBody] = None,
         Raises
         ------
         PyegeriaException
-
-        Args:
-            output_format ():
-            report_spec ():
         """
-
-        body = {
-            "class": "FindProperties",
-            "metadataElementTypeName": metadata_element_type_name,
-            "effectiveTime": effective_time,
-            "forLineage": for_lineage,
-            "forDuplicateProcessing": for_duplicate_processing,
-            "startFrom": start_from,
-            "pageSize": page_size
-        }
 
         if relationship_type is None:
             url = (
@@ -3902,32 +4061,27 @@ body: Optional[dict | FilterRequestBody] = None,
                 f"{relationship_type}?startAtEnd={start_at_end}"
             )
 
-        response: Response = await self._async_make_request(
-            "POST", url, body_slimmer(body), time_out=time_out
+        return await self._async_get_results_body_request(
+            url,
+            "Referenceable",
+            self._generate_referenceable_output,
+            start_from=start_from,
+            page_size=page_size,
+            output_format=output_format,
+            report_spec=report_spec,
+            body=body,
         )
-        elements = response.json().get("elements", NO_ELEMENTS_FOUND)
-        if type(elements) is list and len(elements) == 0:
-            return NO_ELEMENTS_FOUND
-        if output_format != 'JSON':  # return a simplified markdown representation
-            logger.info(f"Found elements, output format: {output_format} and report_spec: {report_spec}")
-            return self._generate_referenceable_output(elements, "Referenceable",
-                                                       output_format, report_spec)
-        return elements
 
     def get_related_elements(
             self,
             element_guid: str,
             relationship_type: Optional[str] = None,
-            metadata_element_type_name: Optional[str] = None,
             start_at_end: int = 1,
-            effective_time: Optional[str] = None,
-            for_lineage: bool = False,
-            for_duplicate_processing: bool = False,
             start_from: int = 0,
             page_size: int = 0,
-            time_out: int = default_time_out,
             output_format: str = "JSON",
             report_spec: dict | str = None,
+            body: Optional[dict | ResultsRequestBody] = None,
     ) -> list | str:
         """
         Retrieve elements linked by relationship type name. If the relationship type is None, then all related elements
@@ -3942,26 +4096,18 @@ body: Optional[dict | FilterRequestBody] = None,
             - the base element to get related elements for
         relationship_type: str
             - the type of relationship to navigate to related elements
-        metadata_element_type_name : str, default = None
-            - open metadata type to be used to restrict the search
         start_at_end: int, default = 1
             - The end of the relationship to start from - typically End1
-        effective_time: str, default = None
-            - Time format is "YYYY-MM-DDTHH:MM:SS" (ISO 8601)
-        for_lineage: bool, default is set by server
-            - determines if elements classified as Memento should be returned - normally false
-        for_duplicate_processing: bool, default is set by server
-            - Normally false. Set true when the caller is part of a deduplication function
         start_from: int, default = 0
             - index of the list to start from (0 for start).
         page_size: int, default = 0
             - maximum number of elements to return.
-        time_out: int, default = default_time_out
-            - http request timeout for this request
         output_format: str, default = "JSON"
             - Type of output to return.
         report_spec: dict | str, default = None
             - Output format set to use. If None, the default output format set is used.
+        body: dict | ResultsRequestBody, optional
+            - full request specification - if provided, overrides other parameters.
 
         Returns
         -------
@@ -3975,9 +4121,16 @@ body: Optional[dict | FilterRequestBody] = None,
 
         loop = asyncio.get_event_loop()
         response = loop.run_until_complete(
-            self._async_get_related_elements(element_guid, relationship_type, metadata_element_type_name, start_at_end,
-                                             effective_time, for_lineage, for_duplicate_processing, start_from,
-                                             page_size, time_out, output_format, report_spec)
+            self._async_get_related_elements(
+                element_guid,
+                relationship_type,
+                start_at_end,
+                start_from,
+                page_size,
+                output_format,
+                report_spec,
+                body,
+            )
         )
         return response
 
@@ -3986,17 +4139,31 @@ body: Optional[dict | FilterRequestBody] = None,
             element_guid: str,
             relationship_type: str,
             property_value: str,
-            property_names: list[str],
+            property_names: Optional[list[str]] = None,
             metadata_element_type_name: Optional[str] = None,
             start_at_end: int = 1,
+            starts_with: bool = True,
+            ends_with: bool = False,
+            ignore_case: bool = False,
+            anchor_domain: Optional[str] = None,
+            metadata_element_subtypes: Optional[list[str]] = None,
+            skip_relationships: Optional[list[str]] = None,
+            include_only_relationships: Optional[list[str]] = None,
+            skip_classified_elements: Optional[list[str]] = None,
+            include_only_classified_elements: Optional[list[str]] = None,
+            graph_query_depth: int = 3,
+            governance_zone_filter: Optional[list[str]] = None,
+            as_of_time: Optional[str] = None,
             effective_time: Optional[str] = None,
-            for_lineage: bool = False,
-            for_duplicate_processing: bool = False,
-            start_from: int = 0,
-            page_size: int = 0,
-            time_out: int = default_time_out,
+            relationship_page_size: int = 0,
+            limit_results_by_status: Optional[list[str]] = None,
+            sequencing_order: Optional[str] = None,
+            sequencing_property: Optional[str] = None,
             output_format: str = "JSON",
             report_spec: dict | str = None,
+            start_from: int = 0,
+            page_size: int = 0,
+            body: Optional[dict | FindPropertyNamesRequestBody | SearchStringRequestBody] = None,
     ) -> list | str:
         """
         Retrieve elements linked via the requested relationship type name and with the requested a value found in one of
@@ -4019,20 +4186,50 @@ body: Optional[dict | FilterRequestBody] = None,
             - restrict search to elements of this open metadata type
         start_at_end: int, default = 1
             - The end of the relationship to start from - typically End1
+        starts_with : bool, default = True
+            - Whether to match only at the start.
+        ends_with : bool, default = False
+            - Whether to match only at the end.
+        ignore_case : bool, default = False
+            - Whether to ignore case in matching.
+        anchor_domain: str, default = None
+            - The anchor domain to restrict the search.
+        metadata_element_subtypes: list[str], default = None
+            - The subtypes of metadata elements to restrict the search.
+        skip_relationships: list[str], default = None
+            - The relationship types to skip.
+        include_only_relationships: list[str], default = None
+            - The relationship types to include.
+        skip_classified_elements: list[str], default = None
+            - The classification types to skip.
+        include_only_classified_elements: list[str], default = None
+            - The classification types to include.
+        graph_query_depth: int, default = 3
+            - The graph query depth.
+        governance_zone_filter: list[str], default = None
+            - The governance zones to filter by.
+        as_of_time: str, default = None
+           - Time format is "YYYY-MM-DDTHH:MM:SS" (ISO 8601)
         effective_time: str, default = None
             - Time format is "YYYY-MM-DDTHH:MM:SS" (ISO 8601)
-        for_lineage: bool, default is set by server
-            - determines if elements classified as Memento should be returned - normally false
-        for_duplicate_processing: bool, default is set by server
-            - Normally false. Set true when the caller is part of a deduplication function
+        relationship_page_size: int, default = 0
+            - The relationship page size.
+        limit_results_by_status: list[str], default = None
+            - Limit results by status.
+        sequencing_order: str, default = None
+            - The sequencing order to use.
+        sequencing_property: str, default = None
+            - The sequencing property to use.
         start_from: int, default = 0
             - index of the list to start from (0 for start).
         page_size
             - maximum number of elements to return.
-
-
-        time_out: int, default = default_time_out
-            - http request timeout for this request
+        output_format: str, default = "JSON"
+            - Type of output to return.
+        report_spec: dict | str, default = None
+            - Output format set to use. If None, the default output format set is used.
+        body: dict | FindPropertyNamesRequestBody | SearchStringRequestBody, optional
+            - full request specification - if provided, overrides other parameters.
 
         Returns
         -------
@@ -4048,51 +4245,72 @@ body: Optional[dict | FilterRequestBody] = None,
             report_spec ():
         """
 
-        body = {
-            "class": "FindPropertyNamesProperties",
-            "metadataElementTypeName": metadata_element_type_name,
-            "propertyValue": property_value,
-            "propertyNames": property_names,
-            "effectiveTime": effective_time,
-            "forLineage": for_lineage,
-            "forDuplicateProcessing": for_duplicate_processing,
-            "startFrom": start_from,
-            "pageSize": page_size
-        }
-
         url = (
             f"{base_path(self, self.view_server)}/elements/{element_guid}/by-relationship/"
-            f"{relationship_type}/with-exact-property-value"
+            f"{relationship_type}/with-exact-property-value?startAtEnd={start_at_end}"
         )
 
-        response: Response = await self._async_make_request(
-            "POST", url, body_slimmer(body), time_out=time_out
+        return await self._async_find_request(
+            url,
+            "Referenceable",
+            self._generate_referenceable_output,
+            property_value,
+            starts_with=starts_with,
+            ends_with=ends_with,
+            ignore_case=ignore_case,
+            anchor_domain=anchor_domain,
+            metadata_element_type=metadata_element_type_name,
+            metadata_element_subtypes=metadata_element_subtypes,
+            skip_relationships=skip_relationships,
+            include_only_relationships=include_only_relationships,
+            skip_classified_elements=skip_classified_elements,
+            include_only_classified_elements=include_only_classified_elements,
+            graph_query_depth=graph_query_depth,
+            governance_zone_filter=governance_zone_filter,
+            as_of_time=as_of_time,
+            effective_time=effective_time,
+            relationship_page_size=relationship_page_size,
+            limit_results_by_status=limit_results_by_status,
+            sequencing_order=sequencing_order,
+            sequencing_property=sequencing_property,
+            output_format=output_format,
+            report_spec=report_spec,
+            start_from=start_from,
+            page_size=page_size,
+            property_names=property_names,
+            body=body,
         )
-        elements = response.json().get("elements", NO_ELEMENTS_FOUND)
-        if type(elements) is list and len(elements) == 0:
-            return NO_ELEMENTS_FOUND
-        if output_format != 'JSON':  # return a simplified markdown representation
-            logger.info(f"Found elements, output format: {output_format} and report_spec: {report_spec}")
-            return self._generate_referenceable_output(elements, "Referenceable",
-                                                       output_format, report_spec)
-        return elements
 
     def get_related_elements_with_property_value(
             self,
             element_guid: str,
             relationship_type: str,
             property_value: str,
-            property_names: list[str],
+            property_names: Optional[list[str]] = None,
             metadata_element_type_name: Optional[str] = None,
             start_at_end: int = 1,
+            starts_with: bool = True,
+            ends_with: bool = False,
+            ignore_case: bool = False,
+            anchor_domain: Optional[str] = None,
+            metadata_element_subtypes: Optional[list[str]] = None,
+            skip_relationships: Optional[list[str]] = None,
+            include_only_relationships: Optional[list[str]] = None,
+            skip_classified_elements: Optional[list[str]] = None,
+            include_only_classified_elements: Optional[list[str]] = None,
+            graph_query_depth: int = 3,
+            governance_zone_filter: Optional[list[str]] = None,
+            as_of_time: Optional[str] = None,
             effective_time: Optional[str] = None,
-            for_lineage: bool = False,
-            for_duplicate_processing: bool = False,
-            start_from: int = 0,
-            page_size: int = 0,
-            time_out: int = default_time_out,
+            relationship_page_size: int = 0,
+            limit_results_by_status: Optional[list[str]] = None,
+            sequencing_order: Optional[str] = None,
+            sequencing_property: Optional[str] = None,
             output_format: str = "JSON",
             report_spec: dict | str = None,
+            start_from: int = 0,
+            page_size: int = 0,
+            body: Optional[dict | FindPropertyNamesRequestBody | SearchStringRequestBody] = None,
     ) -> list | str:
         """
         Retrieve elements linked via the requested relationship type name and with the requested a value found in one of
@@ -4144,11 +4362,36 @@ body: Optional[dict | FilterRequestBody] = None,
 
         loop = asyncio.get_event_loop()
         response = loop.run_until_complete(
-            self._async_get_related_elements_with_property_value(element_guid, relationship_type, property_value,
-                                                                 property_names, metadata_element_type_name,
-                                                                 start_at_end, effective_time, for_lineage,
-                                                                 for_duplicate_processing, start_from, page_size,
-                                                                 time_out, output_format, report_spec)
+            self._async_get_related_elements_with_property_value(
+                element_guid,
+                relationship_type,
+                property_value,
+                property_names,
+                metadata_element_type_name,
+                start_at_end,
+                starts_with,
+                ends_with,
+                ignore_case,
+                anchor_domain,
+                metadata_element_subtypes,
+                skip_relationships,
+                include_only_relationships,
+                skip_classified_elements,
+                include_only_classified_elements,
+                graph_query_depth,
+                governance_zone_filter,
+                as_of_time,
+                effective_time,
+                relationship_page_size,
+                limit_results_by_status,
+                sequencing_order,
+                sequencing_property,
+                output_format,
+                report_spec,
+                start_from,
+                page_size,
+                body,
+            )
         )
         return response
 
@@ -4407,37 +4650,30 @@ body: Optional[dict | FilterRequestBody] = None,
 
     async def _async_get_relationships(
             self,
-            relationship_type: str,
-            effective_time: Optional[str] = None,
-            for_lineage: bool = False,
-            for_duplicate_processing: bool = False,
+            relationship_type: Optional[str] = None,
             start_from: int = 0,
             page_size: int = 0,
-            time_out: int = default_time_out,
             output_format: str = "JSON",
             report_spec: dict | str = None,
+            body: Optional[dict | ResultsRequestBody] = None,
     ) -> list | str:
         """
         Retrieve relationships of the requested relationship type name. Async version.
 
         Parameters
         ----------
-        relationship_type: str
-            - the type of relationship to navigate to related elements
-        effective_time: str, default = None
-            - Time format is "YYYY-MM-DDTHH:MM:SS" (ISO 8601)
-        for_lineage: bool, default is set by server
-            - determines if elements classified as Memento should be returned - normally false
-        for_duplicate_processing: bool, default is set by server
-            - Normally false. Set true when the caller is part of a deduplication function
+        relationship_type: str, optional
+            - the type of relationship to retrieve (None for all types)
         start_from: int, default = 0
             - index of the list to start from (0 for start).
         page_size
             - maximum number of elements to return.
-
-
-        time_out: int, default = default_time_out
-            - http request timeout for this request
+        output_format: str, default = "JSON"
+            - Type of output to return.
+        report_spec: dict | str, default = None
+            - Output format set to use. If None, the default output format set is used.
+        body: dict | ResultsRequestBody, optional
+            - full request specification - if provided, overrides other parameters.
 
         Returns
         -------
@@ -4453,19 +4689,20 @@ body: Optional[dict | FilterRequestBody] = None,
             report_spec ():
         """
 
-        body = {
-            "class": "FindProperties",
-            "effectiveTime": effective_time,
-            "forLineage": for_lineage,
-            "forDuplicateProcessing": for_duplicate_processing,
-            "startFrom": start_from,
-            "pageSize": page_size
-        }
+        if body is None:
+            body = {
+                "class": "ResultsRequestBody",
+                "startFrom": start_from,
+                "pageSize": page_size
+            }
 
-        url = f"{base_path(self, self.view_server)}/relationships/{relationship_type}"
+        if relationship_type is None:
+            url = f"{base_path(self, self.view_server)}/relationships"
+        else:
+            url = f"{base_path(self, self.view_server)}/relationships/{relationship_type}"
 
         response: Response = await self._async_make_request(
-            "POST", url, body_slimmer(body), time_out=time_out
+            "POST", url, body_slimmer(body)
         )
         rels = response.json().get("relationships", "No relationships found")
 
@@ -4480,37 +4717,30 @@ body: Optional[dict | FilterRequestBody] = None,
 
     def get_relationships(
             self,
-            relationship_type: str,
-            effective_time: Optional[str] = None,
-            for_lineage: bool = False,
-            for_duplicate_processing: bool = False,
+            relationship_type: Optional[str] = None,
             start_from: int = 0,
             page_size: int = 0,
-            time_out: int = default_time_out,
             output_format: str = "JSON",
             report_spec: dict | str = None,
+            body: Optional[dict | ResultsRequestBody] = None,
     ) -> list | str:
         """
         Retrieve relationships of the requested relationship type name.
 
         Parameters
         ----------
-        relationship_type: str
-            - the type of relationship to navigate to related elements
-        effective_time: str, default = None
-            - Time format is "YYYY-MM-DDTHH:MM:SS" (ISO 8601)
-        for_lineage: bool, default is set by server
-            - determines if elements classified as Memento should be returned - normally false
-        for_duplicate_processing: bool, default is set by server
-            - Normally false. Set true when the caller is part of a deduplication function
+        relationship_type: str, optional
+            - the type of relationship to retrieve (None for all types)
         start_from: int, default = 0
             - index of the list to start from (0 for start).
         page_size
             - maximum number of elements to return.
-
-
-        time_out: int, default = default_time_out
-            - http request timeout for this request
+        output_format: str, default = "JSON"
+            - Type of output to return.
+        report_spec: dict | str, default = None
+            - Output format set to use. If None, the default output format set is used.
+        body: dict | ResultsRequestBody, optional
+            - full request specification - if provided, overrides other parameters.
 
         Returns
         -------
@@ -4528,16 +4758,22 @@ body: Optional[dict | FilterRequestBody] = None,
 
         loop = asyncio.get_event_loop()
         response = loop.run_until_complete(
-            self._async_get_relationships(relationship_type, effective_time, for_lineage, for_duplicate_processing,
-                                          start_from, page_size, time_out, output_format, report_spec)
+            self._async_get_relationships(
+                relationship_type,
+                start_from,
+                page_size,
+                output_format,
+                report_spec,
+                body,
+            )
         )
         return response
 
     async def _async_get_relationships_with_property_value(
             self,
-            relationship_type: str,
             property_value: str,
             property_names: list[str],
+            relationship_type: Optional[str] = None,
             effective_time: Optional[str] = None,
             for_lineage: bool = False,
             for_duplicate_processing: bool = False,
@@ -4554,12 +4790,12 @@ body: Optional[dict | FilterRequestBody] = None,
 
         Parameters
         ----------
-        relationship_type: str
-            - the type of relationship to navigate to related elements
         property_value: str
             - property value to be searched.
         property_names: list[str]
             - property names to search in.
+        relationship_type: str, optional
+            - the type of relationship to retrieve (None for all types)
         effective_time: str, default = None
             - Time format is "YYYY-MM-DDTHH:MM:SS" (ISO 8601)
         for_lineage: bool, default is set by server
@@ -4591,7 +4827,6 @@ body: Optional[dict | FilterRequestBody] = None,
 
         body = {
             "class": "FindPropertyNamesProperties",
-            "openMetadataType": relationship_type,
             "propertyValue": property_value,
             "propertyNames": property_names,
             "effectiveTime": effective_time,
@@ -4601,10 +4836,16 @@ body: Optional[dict | FilterRequestBody] = None,
             "pageSize": page_size
         }
 
-        url = (
-            f"{base_path(self, self.view_server)}/relationships/"
-            f"with-exact-property-value"
-        )
+        if relationship_type is None:
+            url = (
+                f"{base_path(self, self.view_server)}/relationships/"
+                f"with-exact-property-value"
+            )
+        else:
+            url = (
+                f"{base_path(self, self.view_server)}/relationships/"
+                f"{relationship_type}/with-exact-property-value"
+            )
 
         response: Response = await self._async_make_request(
             "POST", url, body_slimmer(body), time_out=time_out
@@ -4621,9 +4862,9 @@ body: Optional[dict | FilterRequestBody] = None,
 
     def get_relationships_with_property_value(
             self,
-            relationship_type: str,
             property_value: str,
             property_names: list[str],
+            relationship_type: Optional[str] = None,
             effective_time: Optional[str] = None,
             for_lineage: bool = False,
             for_duplicate_processing: bool = False,
@@ -4639,12 +4880,12 @@ body: Optional[dict | FilterRequestBody] = None,
 
         Parameters
         ----------
-        relationship_type: str
-            - the type of relationship to navigate to related elements
         property_value: str
             - property value to be searched.
         property_names: list[str]
             - property names to search in.
+        relationship_type: str, optional
+            - the type of relationship to retrieve (None for all types)
         effective_time: str, default = None
             - Time format is "YYYY-MM-DDTHH:MM:SS" (ISO 8601)
         for_lineage: bool, default is set by server
@@ -4676,17 +4917,27 @@ body: Optional[dict | FilterRequestBody] = None,
 
         loop = asyncio.get_event_loop()
         response = loop.run_until_complete(
-            self._async_get_relationships_with_property_value(relationship_type, property_value, property_names,
-                                                              effective_time, for_lineage, for_duplicate_processing,
-                                                              start_from, page_size, time_out, output_format, report_spec)
+            self._async_get_relationships_with_property_value(
+                property_value,
+                property_names,
+                relationship_type,
+                effective_time,
+                for_lineage,
+                for_duplicate_processing,
+                start_from,
+                page_size,
+                time_out,
+                output_format,
+                report_spec,
+            )
         )
         return response
 
     async def _async_find_relationships_with_property_value(
             self,
-            relationship_type: str,
             property_value: str,
             property_names: list[str],
+            relationship_type: Optional[str] = None,
             starts_with: bool = True,
             ends_with: bool = False,
             ignore_case: bool = False,
@@ -4708,7 +4959,6 @@ body: Optional[dict | FilterRequestBody] = None,
             report_spec: dict | str = None,
             start_from: int = 0,
             page_size: int = 0,
-            time_out: int = default_time_out,
             body: Optional[dict | SearchStringRequestBody] = None,
     ) -> list | str:
         """
@@ -4720,12 +4970,12 @@ body: Optional[dict | FilterRequestBody] = None,
 
         Parameters
         ----------
-        relationship_type: str
-            - the type of relationship to navigate to related elements
         property_value: str
             - property value to be searched.
         property_names: list[str]
             - property names to search in.
+        relationship_type: str, optional
+            - the type of relationship to retrieve (None for all types)
         starts_with : bool, default = True
             - Whether to match only at the start.
         ends_with : bool, default = False
@@ -4764,8 +5014,6 @@ body: Optional[dict | FilterRequestBody] = None,
             - index of the list to start from (0 for start).
         page_size
             - maximum number of elements to return.
-        time_out: int, default = default_time_out
-            - http request timeout for this request
         output_format: str, default = "JSON"
             - Type of output to return.
         report_spec: dict | str = None
@@ -4797,21 +5045,27 @@ body: Optional[dict | FilterRequestBody] = None,
         }
         """
 
-        url = (
-            f"{base_path(self, self.view_server)}/relationships/"
-            f"by-property-value-search"
-        )
+        if relationship_type is None:
+            url = (
+                f"{base_path(self, self.view_server)}/relationships/"
+                f"with-property-value-search"
+            )
+        else:
+            url = (
+                f"{base_path(self, self.view_server)}/relationships/"
+                f"{relationship_type}/with-property-value-search"
+            )
 
         return await self._async_find_request(
             url,
-            _type=relationship_type,
+            _type=relationship_type or "Relationship",
             _gen_output=self._generate_referenceable_output,
             search_string=property_value,
             starts_with=starts_with,
             ends_with=ends_with,
             ignore_case=ignore_case,
             anchor_domain=anchor_domain,
-            metadata_element_type=relationship_type,
+            metadata_element_type=None,
             metadata_element_subtypes=metadata_element_subtypes,
             skip_relationships=skip_relationships,
             include_only_relationships=include_only_relationships,
@@ -4835,9 +5089,9 @@ body: Optional[dict | FilterRequestBody] = None,
 
     def find_relationships_with_property_value(
             self,
-            relationship_type: str,
             property_value: str,
             property_names: list[str],
+            relationship_type: Optional[str] = None,
             starts_with: bool = True,
             ends_with: bool = False,
             ignore_case: bool = False,
@@ -4859,7 +5113,6 @@ body: Optional[dict | FilterRequestBody] = None,
             report_spec: dict | str = None,
             start_from: int = 0,
             page_size: int = 0,
-            time_out: int = default_time_out,
             body: Optional[dict | SearchStringRequestBody] = None,
     ) -> list | str:
         """
@@ -4869,12 +5122,12 @@ body: Optional[dict | FilterRequestBody] = None,
 
         Parameters
         ----------
-        relationship_type: str
-            - the type of relationship to navigate to related elements
         property_value: str
             - property value to be searched.
         property_names: list[str]
             - property names to search in.
+        relationship_type: str, optional
+            - the type of relationship to retrieve (None for all types)
         starts_with : bool, default = True
             - Whether to match only at the start.
         ends_with : bool, default = False
@@ -4913,8 +5166,6 @@ body: Optional[dict | FilterRequestBody] = None,
             - index of the list to start from (0 for start).
         page_size
             - maximum number of elements to return.
-        time_out: int, default = default_time_out
-            - http request timeout for this request
         output_format: str, default = "JSON"
             - Type of output to return.
         report_spec: dict | str = None
@@ -4935,9 +5186,9 @@ body: Optional[dict | FilterRequestBody] = None,
         loop = asyncio.get_event_loop()
         response = loop.run_until_complete(
             self._async_find_relationships_with_property_value(
-                relationship_type,
                 property_value,
                 property_names,
+                relationship_type,
                 starts_with=starts_with,
                 ends_with=ends_with,
                 ignore_case=ignore_case,
@@ -4959,7 +5210,6 @@ body: Optional[dict | FilterRequestBody] = None,
                 report_spec=report_spec,
                 start_from=start_from,
                 page_size=page_size,
-                time_out=time_out,
                 body=body,
             )
         )
@@ -5283,9 +5533,7 @@ body: Optional[dict | FilterRequestBody] = None,
                 "forDuplicateProcessing": for_duplicate_processing,
             }
 
-        await self._async_make_request(
-            "POST", url, body_slimmer(body), time_out=time_out
-        )
+        await self._async_delete_classification_request(url, body)
 
     def clear_confidence_classification(
             self,
@@ -5551,9 +5799,7 @@ body: Optional[dict | FilterRequestBody] = None,
             body = {"class": "DeleteClassificationRequestBody", "effectiveTime": effective_time,
                     "forLineage": for_lineage, "forDuplicateProcessing": for_duplicate_processing}
 
-        await self._async_make_request(
-            "POST", url, body_slimmer(body), time_out=time_out
-        )
+        await self._async_delete_classification_request(url, body)
 
     def clear_confidentiality_classification(
             self,
@@ -5816,9 +6062,7 @@ body: Optional[dict | FilterRequestBody] = None,
             body = {"class": "DeleteClassificationRequestBody", "effectiveTime": effective_time,
                     "forLineage": for_lineage, "forDuplicateProcessing": for_duplicate_processing}
 
-        await self._async_make_request(
-            "POST", url, body_slimmer(body), time_out=time_out
-        )
+        await self._async_delete_classification_request(url, body)
 
     def clear_impact_classification(
             self,
@@ -6080,9 +6324,7 @@ body: Optional[dict | FilterRequestBody] = None,
             body = {"class": "DeleteClassificationRequestBody", "effectiveTime": effective_time, "forLineage": for_lineage,
                     "forDuplicateProcessing": for_duplicate_processing}
 
-        await self._async_make_request(
-            "POST", url, body_slimmer(body), time_out=time_out
-        )
+        await self._async_delete_classification_request(url, body)
 
     def clear_criticality_classification(
             self,
@@ -6155,10 +6397,7 @@ body: Optional[dict | FilterRequestBody] = None,
             self,
             definition_guid: str,
             element_guid: str,
-            effective_time: Optional[str] = None,
-            for_lineage: bool = False,
-            for_duplicate_processing: bool = False,
-            time_out: int = default_time_out,
+            body: Optional[dict | NewRelationshipRequestBody] = None,
     ) -> None:
         """
         Link a governance definition to an element using the GovernedBy relationship. Async version.
@@ -6171,16 +6410,8 @@ body: Optional[dict | FilterRequestBody] = None,
             - identity of the governance definition to add
         element_guid: str
             - the identity of the element to update
-        effective_time: str, default is None
-            - None means ignore, otherwise the time that the element must be effective
-        for_lineage: bool, default is set by server
-            - determines if elements classified as Memento should be returned - normally false
-        for_duplicate_processing: bool, default is set by server
-            - Normally false. Set true when the caller is part of a deduplication function
-
-
-        time_out: int, default = default_time_out
-            - http request timeout for this request
+        body: dict | NewRelationshipRequestBody, optional
+            - structure containing governed-by information - see Notes
 
         Returns
         -------
@@ -6190,6 +6421,23 @@ body: Optional[dict | FilterRequestBody] = None,
         ------
         PyegeriaException
 
+        Notes
+        -----
+        Sample body:
+        {
+           "class" : "NewRelationshipRequestBody",
+           "properties" : {
+             "class" : "GovernedByProperties",
+             "label" : "add label here",
+             "description" : "add description here"
+           },
+           "externalSourceGUID": "Add guid here",
+           "externalSourceName": "Add qualified name here",
+           "forLineage": false,
+           "forDuplicateProcessing": false,
+           "effectiveTime" : "{{$isoTimestamp}}"
+        }
+
         """
 
         url = (
@@ -6197,21 +6445,15 @@ body: Optional[dict | FilterRequestBody] = None,
             f""
         )
 
-        body = {"class": "RelationshipRequestBody", "effectiveTime": effective_time, "forLineage": for_lineage,
-                "forDuplicateProcessing": for_duplicate_processing}
-
-        await self._async_make_request(
-            "POST", url, body_slimmer(body), time_out=time_out
+        await self._async_new_relationship_request(
+            url, prop=["GovernedByProperties"], body=body
         )
 
     def add_gov_definition_to_element(
             self,
             definition_guid: str,
             element_guid: str,
-            effective_time: Optional[str] = None,
-            for_lineage: bool = False,
-            for_duplicate_processing: bool = False,
-            time_out: int = default_time_out,
+            body: Optional[dict | NewRelationshipRequestBody] = None,
     ) -> None:
         """
         Link a governance definition to an element using the GovernedBy relationship.
@@ -6224,16 +6466,8 @@ body: Optional[dict | FilterRequestBody] = None,
             - identity of the governance definition to add
         element_guid: str
             - the identity of the element to update
-        effective_time: str, default is None
-            - None means ignore, otherwise the time that the element must be effective
-        for_lineage: bool, default is set by server
-            - determines if elements classified as Memento should be returned - normally false
-        for_duplicate_processing: bool, default is set by server
-            - Normally false. Set true when the caller is part of a deduplication function
-
-
-        time_out: int, default = default_time_out
-            - http request timeout for this request
+        body: dict | NewRelationshipRequestBody, optional
+            - structure containing governed-by information - see Notes
 
         Returns
         -------
@@ -6243,6 +6477,23 @@ body: Optional[dict | FilterRequestBody] = None,
         ------
         PyegeriaException
 
+        Notes
+        -----
+        Sample body:
+        {
+           "class" : "NewRelationshipRequestBody",
+           "properties" : {
+             "class" : "GovernedByProperties",
+             "label" : "add label here",
+             "description" : "add description here"
+           },
+           "externalSourceGUID": "Add guid here",
+           "externalSourceName": "Add qualified name here",
+           "forLineage": false,
+           "forDuplicateProcessing": false,
+           "effectiveTime" : "{{$isoTimestamp}}"
+        }
+
         """
 
         loop = asyncio.get_event_loop()
@@ -6250,21 +6501,16 @@ body: Optional[dict | FilterRequestBody] = None,
             self._async_add_gov_definition_to_element(
                 definition_guid,
                 element_guid,
-                effective_time,
-                for_lineage,
-                for_duplicate_processing,
-                time_out,
+                body,
             )
         )
 
-    async def _async_clear_gov_definition_from_element(
+    async def _async_remove_gov_definition_from_element(
             self,
-            definition_guid,
+            definition_guid: str,
             element_guid: str,
-            for_lineage: bool = False,
-            for_duplicate_processing: bool = False,
-            effective_time: Optional[str] = None,
-
+            body: Optional[dict | DeleteRelationshipRequestBody] = None,
+            cascade_delete: bool = False,
     ) -> None:
         """
         Remove the GovernedBy relationship between a governance definition and an element. Async Version.
@@ -6277,12 +6523,10 @@ body: Optional[dict | FilterRequestBody] = None,
             - identity of the governance definition to add
         element_guid: str
             - the identity of the element to update
-        for_lineage: bool, default is set by server
-            - determines if elements classified as Memento should be returned - normally false
-        for_duplicate_processing: bool, default is set by server
-            - Normally false. Set true when the caller is part of a deduplication function
-        effective_time: str, default = None
-            - Time format is "YYYY-MM-DDTHH:MM:SS" (ISO 8601)
+        body: dict | DeleteRelationshipRequestBody, default = None
+            - a dictionary or Pydantic model containing the properties for the request - see note below
+        cascade_delete: bool, default = False
+            - cascade the deletion through related elements
 
         Returns
         -------
@@ -6293,6 +6537,18 @@ body: Optional[dict | FilterRequestBody] = None,
         ------
         PyegeriaException
 
+        Note:
+        -----
+        Sample body:
+
+        {
+           "class" : "DeleteRelationshipRequestBody",
+           "externalSourceGUID": "Add guid here",
+           "externalSourceName": "Add qualified name here",
+           "forLineage": false,
+           "forDuplicateProcessing": false,
+           "effectiveTime" : "{{$isoTimestamp}}"
+        }
 
         """
 
@@ -6301,38 +6557,30 @@ body: Optional[dict | FilterRequestBody] = None,
             f"{definition_guid}/detach"
         )
 
-        body = {"class": "ClassificationRequestBody", "effectiveTime": effective_time, "forLineage": for_lineage,
-                "forDuplicateProcessing": for_duplicate_processing}
+        await self._async_delete_relationship_request(url, body, cascade_delete=cascade_delete)
 
-        await self._async_make_request(
-            "POST", url, body_slimmer(body)
-        )
-
-    def clear_gov_definition_from_element(
+    def remove_gov_definition_from_element(
             self,
-            scoped_by_guid,
+            definition_guid: str,
             element_guid: str,
-            for_lineage: bool = False,
-            for_duplicate_processing: bool = False,
-            effective_time: Optional[str] = None,
+            body: Optional[dict | DeleteRelationshipRequestBody] = None,
+            cascade_delete: bool = False,
     ) -> None:
         """
-        Remove the GovernedBy relationship between a governance definition and an element. Async Version.
+        Remove the GovernedBy relationship between a governance definition and an element.
 
         Governance Action Classifications: https://egeria-project.org/types/4/0422-Governance-Action-Classifications/
 
         Parameters
         ----------
-        scoped_by_guid: str
+        definition_guid: str
             - identity of the governance definition to add
         element_guid: str
             - the identity of the element to update
-        for_lineage: bool, default is set by server
-            - determines if elements classified as Memento should be returned - normally false
-        for_duplicate_processing: bool, default is set by server
-            - Normally false. Set true when the caller is part of a deduplication function
-        effective_time: str, default = None
-            - Time format is "YYYY-MM-DDTHH:MM:SS" (ISO 8601)
+        body: dict | DeleteRelationshipRequestBody, default = None
+            - a dictionary or Pydantic model containing the properties for the request - see note below
+        cascade_delete: bool, default = False
+            - cascade the deletion through related elements
 
         Returns
         -------
@@ -6348,8 +6596,12 @@ body: Optional[dict | FilterRequestBody] = None,
 
         loop = asyncio.get_event_loop()
         loop.run_until_complete(
-            self._async_clear_gov_definition_from_element(scoped_by_guid, element_guid, for_lineage,
-                                                         for_duplicate_processing, effective_time)
+            self._async_remove_gov_definition_from_element(
+                definition_guid,
+                element_guid,
+                body,
+                cascade_delete,
+            )
         )
 
     async def _async_add_scope_to_element(
@@ -6417,7 +6669,7 @@ body: Optional[dict | FilterRequestBody] = None,
             )
         )
 
-    async def _async_remove_scope_from_element(
+    async def _async_clear_scope_from_element(
             self,
             scoped_by_guid,
             element_guid: str,
@@ -6452,7 +6704,7 @@ body: Optional[dict | FilterRequestBody] = None,
 
         await self._async_delete_relationship_request(url, body_slimmer(body))
 
-    def remove_scope_from_element(
+    def clear_scope_from_element(
             self,
             scoped_by_guid,
             element_guid: str,
@@ -6485,7 +6737,218 @@ body: Optional[dict | FilterRequestBody] = None,
 
         loop = asyncio.get_event_loop()
         loop.run_until_complete(
-            self._async_remove_scope_from_element(scoped_by_guid, element_guid, body)
+            self._async_clear_scope_from_element(scoped_by_guid, element_guid, body)
+        )
+
+    async def _async_assign_actor_to_element(
+            self,
+            element_guid: str,
+            actor_guid: str,
+            body: Optional[dict | NewRelationshipRequestBody] = None,
+    ) -> None:
+        """
+        Attach an actor to an element. Async version.
+
+        Assignments: https://egeria-project.org/types/1/0120-Assignment-Scopes/
+
+        Parameters
+        ----------
+        element_guid: str
+            - unique identifier of the element (project, product, etc.)
+        actor_guid: str
+            - unique identifier of the actor
+        body: dict | NewRelationshipRequestBody, optional
+            - properties for relationship request - see Notes
+
+        Returns
+        -------
+        None
+
+        Raises
+        ------
+        PyegeriaException
+
+        Notes
+        -----
+        Sample body:
+
+        {
+           "class" : "NewRelationshipRequestBody",
+           "properties" : {},
+           "externalSourceGUID": "Add guid here",
+           "externalSourceName": "Add qualified name here",
+           "forLineage": false,
+           "forDuplicateProcessing": false,
+           "effectiveTime" : "{{$isoTimestamp}}"
+        }
+
+        """
+
+        url = (
+            f"{base_path(self, self.view_server)}/elements/{element_guid}/assigned-to-actor/{actor_guid}/attach"
+        )
+
+        await self._async_new_relationship_request(url, body=body)
+
+    def assign_actor_to_element(
+            self,
+            element_guid: str,
+            actor_guid: str,
+            body: Optional[dict | NewRelationshipRequestBody] = None,
+    ) -> None:
+        """
+        Attach an actor to an element.
+
+        Assignments: https://egeria-project.org/types/1/0120-Assignment-Scopes/
+
+        Parameters
+        ----------
+        element_guid: str
+            - unique identifier of the element (project, product, etc.)
+        actor_guid: str
+            - unique identifier of the actor
+        body: dict | NewRelationshipRequestBody, optional
+            - properties for relationship request - see Notes
+
+        Returns
+        -------
+        None
+
+        Raises
+        ------
+        PyegeriaException
+
+        Notes
+        -----
+        Sample body:
+
+        {
+           "class" : "NewRelationshipRequestBody",
+           "properties" : {},
+           "externalSourceGUID": "Add guid here",
+           "externalSourceName": "Add qualified name here",
+           "forLineage": false,
+           "forDuplicateProcessing": false,
+           "effectiveTime" : "{{$isoTimestamp}}"
+        }
+
+        """
+
+        loop = asyncio.get_event_loop()
+        loop.run_until_complete(
+            self._async_assign_actor_to_element(
+                element_guid,
+                actor_guid,
+                body,
+            )
+        )
+
+    async def _async_unassign_actor_from_element(
+            self,
+            element_guid: str,
+            actor_guid: str,
+            body: Optional[dict | DeleteRelationshipRequestBody] = None,
+            cascade_delete: bool = False,
+    ) -> None:
+        """
+        Detach an actor from an element. Async version.
+
+        Assignments: https://egeria-project.org/types/1/0120-Assignment-Scopes/
+
+        Parameters
+        ----------
+        element_guid: str
+            - unique identifier of the element (project, product, etc.)
+        actor_guid: str
+            - unique identifier of the actor
+        body: dict | DeleteRelationshipRequestBody, optional
+            - properties for relationship request - see Notes
+        cascade_delete: bool, default = False
+            - cascade the deletion through related elements
+
+        Returns
+        -------
+        None
+
+        Raises
+        ------
+        PyegeriaException
+
+        Notes
+        -----
+        Sample body:
+
+        {
+           "class" : "DeleteRelationshipRequestBody",
+           "externalSourceGUID": "Add guid here",
+           "externalSourceName": "Add qualified name here",
+           "forLineage": false,
+           "forDuplicateProcessing": false,
+           "effectiveTime" : "{{$isoTimestamp}}"
+        }
+
+        """
+
+        url = (
+            f"{base_path(self, self.view_server)}/elements/{element_guid}/assigned-to-actor/{actor_guid}/detach"
+        )
+
+        await self._async_delete_relationship_request(url, body, cascade_delete=cascade_delete)
+
+    def unassign_actor_from_element(
+            self,
+            element_guid: str,
+            actor_guid: str,
+            body: Optional[dict | DeleteRelationshipRequestBody] = None,
+            cascade_delete: bool = False,
+    ) -> None:
+        """
+        Detach an actor from an element.
+
+        Assignments: https://egeria-project.org/types/1/0120-Assignment-Scopes/
+
+        Parameters
+        ----------
+        element_guid: str
+            - unique identifier of the element (project, product, etc.)
+        actor_guid: str
+            - unique identifier of the actor
+        body: dict | DeleteRelationshipRequestBody, optional
+            - properties for relationship request - see Notes
+        cascade_delete: bool, default = False
+            - cascade the deletion through related elements
+
+        Returns
+        -------
+        None
+
+        Raises
+        ------
+        PyegeriaException
+
+        Notes
+        -----
+        Sample body:
+
+        {
+           "class" : "DeleteRelationshipRequestBody",
+           "externalSourceGUID": "Add guid here",
+           "externalSourceName": "Add qualified name here",
+           "forLineage": false,
+           "forDuplicateProcessing": false,
+           "effectiveTime" : "{{$isoTimestamp}}"
+        }
+
+        """
+
+        loop = asyncio.get_event_loop()
+        loop.run_until_complete(
+            self._async_unassign_actor_from_element(
+                element_guid,
+                actor_guid,
+                body,
+                cascade_delete,
+            )
         )
 
 
@@ -6855,7 +7318,7 @@ body: Optional[dict | FilterRequestBody] = None,
 
         """
 
-        url = f"{base_path(self, self.view_server)}/elements/{element_guid}/licensed-types/{license_type_guid}/license"
+        url = f"{base_path(self, self.view_server)}/elements/{element_guid}/license-types/{license_type_guid}/license"
 
         response = await self._async_make_request("POST",url, body_slimmer(body))
         return response.json().get('guid','Relationship was not created')
@@ -7280,9 +7743,7 @@ body: Optional[dict | FilterRequestBody] = None,
         body = {"class": "DeleteClassificationRequestBody", "effectiveTime": effective_time, "forLineage": for_lineage,
                 "forDuplicateProcessing": for_duplicate_processing}
 
-        await self._async_make_request(
-            "POST", url, body_slimmer(body), time_out=time_out
-        )
+        await self._async_delete_classification_request(url, body)
 
     def clear_ownership_from_element(
             self,
@@ -7895,9 +8356,7 @@ body: Optional[dict | FilterRequestBody] = None,
             body = {"class": "DeleteClassificationRequestBody", "effectiveTime": effective_time, "forLineage": for_lineage,
                     "forDuplicateProcessing": for_duplicate_processing}
 
-        await self._async_make_request(
-            "POST", url, body_slimmer(body), time_out=time_out
-        )
+        await self._async_delete_classification_request(url, body)
 
     def clear_retention_classification(
             self,
@@ -8162,9 +8621,7 @@ body: Optional[dict | FilterRequestBody] = None,
             body = {"class": "DeleteClassificationRequestBody", "effectiveTime": effective_time, "forLineage": for_lineage,
                     "forDuplicateProcessing": for_duplicate_processing}
 
-        await self._async_make_request(
-            "POST", url, body_slimmer(body), time_out=time_out
-        )
+        await self._async_delete_classification_request(url, body)
 
     def clear_governance_expectation(
         self,
@@ -8704,9 +9161,7 @@ body: Optional[dict | FilterRequestBody] = None,
                 "effectiveTime": effective_time
             }
 
-        await self._async_make_request(
-            "POST", url, body_slimmer(body), time_out=time_out
-        )
+        await self._async_delete_classification_request(url, body)
 
     def clear_governance_measurements(
             self,
@@ -8759,6 +9214,398 @@ body: Optional[dict | FilterRequestBody] = None,
         loop = asyncio.get_event_loop()
         loop.run_until_complete(
             self._async_clear_governance_measurements(
+                element_guid,
+                body,
+                for_lineage,
+                for_duplicate_processing,
+                effective_time,
+                time_out,
+            )
+        )
+
+    async def _async_add_data_scope(
+            self,
+            element_guid: str,
+            body: dict | NewClassificationRequestBody,
+            time_out: int = default_time_out,
+    ) -> None:
+        """
+        Add the data scope classification to an element. Async version.
+
+        Data Scope: https://egeria-project.org/types/2/0210-Data-Stores/
+
+        Parameters
+        ----------
+        element_guid: str
+            - the identity of the element to update
+        body: dict | NewClassificationRequestBody
+            - a dictionary or Pydantic model containing the properties to set - see note below
+        time_out: int, default = default_time_out
+            - http request timeout for this request
+
+        Returns
+        -------
+        None
+
+        Raises
+        ------
+        PyegeriaException
+
+        Note:
+        -----
+        Sample body:
+
+        {
+           "class" : "NewClassificationRequestBody",
+           "properties" : {
+               "class" : "DataScopeProperties",
+               "dataCollectionStartTime" : "isoTimestamp",
+               "dataCollectionEndTime" : "isoTimestamp",
+               "minLongitude" : 0,
+               "minLatitude" : 0,
+               "maxLongitude" : 0,
+               "maxLatitude" : 0,
+               "minHeight" : 0,
+               "maxHeight" : 0,
+               "scopeElements" : {},
+               "additionalProperties" : {}
+           },
+           "externalSourceGUID": "Add guid here",
+           "externalSourceName": "Add qualified name here",
+           "forLineage": false,
+           "forDuplicateProcessing": false,
+           "effectiveTime" : "isoTimestamp"
+        }
+        """
+
+        url = (
+            f"{base_path(self, self.view_server)}/elements/{element_guid}/data-scope"
+        )
+
+        await self._async_new_classification_request(
+            url, prop=["DataScopeProperties"], body=body
+        )
+
+    def add_data_scope(
+            self,
+            element_guid: str,
+            body: dict | NewClassificationRequestBody,
+            time_out: int = default_time_out,
+    ) -> None:
+        """
+        Add the data scope classification to an element.
+
+        Data Scope: https://egeria-project.org/types/2/0210-Data-Stores/
+
+        Parameters
+        ----------
+        element_guid: str
+            - the identity of the element to update
+        body: dict | NewClassificationRequestBody
+            - a dictionary or Pydantic model containing the properties to set - see note below
+        time_out: int, default = default_time_out
+            - http request timeout for this request
+
+        Returns
+        -------
+        None
+
+        Raises
+        ------
+        PyegeriaException
+
+        Note:
+        -----
+        Sample body:
+
+        {
+           "class" : "NewClassificationRequestBody",
+           "properties" : {
+               "class" : "DataScopeProperties",
+               "dataCollectionStartTime" : "isoTimestamp",
+               "dataCollectionEndTime" : "isoTimestamp",
+               "minLongitude" : 0,
+               "minLatitude" : 0,
+               "maxLongitude" : 0,
+               "maxLatitude" : 0,
+               "minHeight" : 0,
+               "maxHeight" : 0,
+               "scopeElements" : {},
+               "additionalProperties" : {}
+           },
+           "externalSourceGUID": "Add guid here",
+           "externalSourceName": "Add qualified name here",
+           "forLineage": false,
+           "forDuplicateProcessing": false,
+           "effectiveTime" : "isoTimestamp"
+        }
+        """
+
+        loop = asyncio.get_event_loop()
+        loop.run_until_complete(
+            self._async_add_data_scope(
+                element_guid,
+                body,
+                time_out,
+            )
+        )
+
+    async def _async_update_data_scope(
+            self,
+            element_guid: str,
+            body: dict | UpdateClassificationRequestBody,
+            time_out: int = default_time_out,
+    ) -> None:
+        """
+        Update the data scope classification to an element. Async version.
+
+        Data Scope: https://egeria-project.org/types/2/0210-Data-Stores/
+
+        Parameters
+        ----------
+        element_guid: str
+            - the identity of the element to update
+        body: dict | UpdateClassificationRequestBody
+            - a dictionary or Pydantic model containing the properties to set - see note below
+        time_out: int, default = default_time_out
+            - http request timeout for this request
+
+        Returns
+        -------
+        None
+
+        Raises
+        ------
+        PyegeriaException
+
+        Note:
+        -----
+        Sample body:
+
+        {
+           "class" : "UpdateClassificationRequestBody",
+           "mergeUpdate" : true,
+           "properties" : {
+               "class" : "DataScopeProperties",
+               "dataCollectionStartTime" : "isoTimestamp",
+               "dataCollectionEndTime" : "isoTimestamp",
+               "minLongitude" : 0,
+               "minLatitude" : 0,
+               "maxLongitude" : 0,
+               "maxLatitude" : 0,
+               "minHeight" : 0,
+               "maxHeight" : 0,
+               "scopeElements" : {
+                   "add scope element name" : "add scope element GUID"
+               },
+               "additionalProperties" : {
+                   "property1" : "propertyValue1",
+                   "property2" : "propertyValue2"
+               }
+           },
+           "externalSourceGUID": "Add guid here",
+           "externalSourceName": "Add qualified name here",
+           "forLineage": false,
+           "forDuplicateProcessing": false,
+           "effectiveTime" : "isoTimestamp"
+        }
+        """
+
+        url = (
+            f"{base_path(self, self.view_server)}/elements/{element_guid}/data-scope/update"
+        )
+
+        await self._async_update_element_body_request(
+            url, prop=["DataScopeProperties"], body=body
+        )
+
+    def update_data_scope(
+            self,
+            element_guid: str,
+            body: dict | UpdateClassificationRequestBody,
+            time_out: int = default_time_out,
+    ) -> None:
+        """
+        Update the data scope classification to an element.
+
+        Data Scope: https://egeria-project.org/types/2/0210-Data-Stores/
+
+        Parameters
+        ----------
+        element_guid: str
+            - the identity of the element to update
+        body: dict | UpdateClassificationRequestBody
+            - a dictionary or Pydantic model containing the properties to set - see note below
+        time_out: int, default = default_time_out
+            - http request timeout for this request
+
+        Returns
+        -------
+        None
+
+        Raises
+        ------
+        PyegeriaException
+
+        Note:
+        -----
+        Sample body:
+
+        {
+           "class" : "UpdateClassificationRequestBody",
+           "mergeUpdate" : true,
+           "properties" : {
+               "class" : "DataScopeProperties",
+               "dataCollectionStartTime" : "isoTimestamp",
+               "dataCollectionEndTime" : "isoTimestamp",
+               "minLongitude" : 0,
+               "minLatitude" : 0,
+               "maxLongitude" : 0,
+               "maxLatitude" : 0,
+               "minHeight" : 0,
+               "maxHeight" : 0,
+               "scopeElements" : {
+                   "add scope element name" : "add scope element GUID"
+               },
+               "additionalProperties" : {
+                   "property1" : "propertyValue1",
+                   "property2" : "propertyValue2"
+               }
+           },
+           "externalSourceGUID": "Add guid here",
+           "externalSourceName": "Add qualified name here",
+           "forLineage": false,
+           "forDuplicateProcessing": false,
+           "effectiveTime" : "isoTimestamp"
+        }
+        """
+
+        loop = asyncio.get_event_loop()
+        loop.run_until_complete(
+            self._async_update_data_scope(
+                element_guid,
+                body,
+                time_out,
+            )
+        )
+
+    async def _async_clear_data_scope(
+            self,
+            element_guid: str,
+            body: Optional[dict | DeleteClassificationRequestBody] = None,
+            for_lineage: bool = False,
+            for_duplicate_processing: bool = False,
+            effective_time: Optional[str] = None,
+            time_out: int = default_time_out,
+    ) -> None:
+        """
+        Remove the data scope classification from an element. Async version.
+
+        Data Scope: https://egeria-project.org/types/2/0210-Data-Stores/
+
+        Parameters
+        ----------
+        element_guid: str
+            - the identity of the element to update
+        body: dict | DeleteClassificationRequestBody, default = None
+            - a dictionary or Pydantic model containing the properties for the request - see note below
+        for_lineage: bool, default = False
+            - determines if elements classified as Memento should be returned
+        for_duplicate_processing: bool, default = False
+            - Normally false. Set true when the caller is part of a deduplication function
+        effective_time: str, default = None
+           - Time format is "YYYY-MM-DDTHH:MM:SS" (ISO 8601)
+        time_out: int, default = default_time_out
+            - http request timeout for this request
+
+        Returns
+        -------
+        None
+
+        Raises
+        ------
+        PyegeriaException
+
+        Note:
+        -----
+        Sample body:
+
+        {
+           "class" : "DeleteClassificationRequestBody",
+           "externalSourceGUID": "Add guid here",
+           "externalSourceName": "Add qualified name here",
+           "forLineage": false,
+           "forDuplicateProcessing": false,
+           "effectiveTime" : "isoTimestamp"
+        }
+
+        """
+
+        url = (
+            f"{base_path(self, self.view_server)}/elements/{element_guid}/data-scope/remove"
+        )
+
+        if body is None:
+            body = {
+                "class": "DeleteClassificationRequestBody",
+                "forLineage": for_lineage,
+                "forDuplicateProcessing": for_duplicate_processing,
+                "effectiveTime": effective_time
+            }
+
+        await self._async_delete_classification_request(url, body)
+
+    def clear_data_scope(
+            self,
+            element_guid: str,
+            body: Optional[dict | DeleteClassificationRequestBody] = None,
+            for_lineage: bool = False,
+            for_duplicate_processing: bool = False,
+            effective_time: Optional[str] = None,
+            time_out: int = default_time_out,
+    ) -> None:
+        """
+        Remove the data scope classification from an element.
+
+        Data Scope: https://egeria-project.org/types/2/0210-Data-Stores/
+
+        Parameters
+        ----------
+        element_guid: str
+            - the identity of the element to update
+        body: dict | DeleteClassificationRequestBody, default = None
+            - a dictionary or Pydantic model containing the properties for the request - see note below
+        for_lineage: bool, default = False
+        for_duplicate_processing: bool, default = False
+        effective_time: str, default = None
+        time_out: int, default = default_time_out
+
+        Returns
+        -------
+        None
+
+        Raises
+        ------
+        PyegeriaException
+
+        Note:
+        -----
+        Sample body:
+
+        {
+           "class" : "DeleteClassificationRequestBody",
+           "externalSourceGUID": "Add guid here",
+           "externalSourceName": "Add qualified name here",
+           "forLineage": false,
+           "forDuplicateProcessing": false,
+           "effectiveTime" : "isoTimestamp"
+        }
+
+        """
+
+        loop = asyncio.get_event_loop()
+        loop.run_until_complete(
+            self._async_clear_data_scope(
                 element_guid,
                 body,
                 for_lineage,
@@ -8956,9 +9803,7 @@ body: Optional[dict | FilterRequestBody] = None,
             body = {"class": "DeleteClassificationRequestBody", "effectiveTime": effective_time, "forLineage": for_lineage,
                     "forDuplicateProcessing": for_duplicate_processing}
 
-        await self._async_make_request(
-            "POST", url, body_slimmer(body), time_out=time_out
-        )
+        await self._async_delete_classification_request(url, body)
 
     def clear_security_tags_classification(
             self,
@@ -9269,9 +10114,7 @@ body: Optional[dict | FilterRequestBody] = None,
             f"{base_path(self, self.view_server)}/search-keywords/{search_keyword_guid}/remove"
         )
 
-        await self._async_make_request(
-            "POST", url, None, time_out=time_out
-        )
+        await self._async_delete_element_request(url)
 
     def remove_search_keyword_from_element(
             self,
@@ -9479,9 +10322,7 @@ body: Optional[dict | FilterRequestBody] = None,
                 "effectiveTime": effective_time
             }
 
-        await self._async_make_request(
-            "POST", url, body_slimmer(body), time_out=time_out
-        )
+        await self._async_delete_relationship_request(url, body)
 
     def clear_known_duplicate_classification(
             self,
@@ -9725,9 +10566,7 @@ body: Optional[dict | FilterRequestBody] = None,
             f"{base_path(self, self.view_server)}/elements/{element_guid}/peer-duplicate/{peer_duplicate_guid}/detach"
         )
 
-        await self._async_make_request(
-            "POST", url, body_slimmer(body), time_out=time_out
-        )
+        await self._async_delete_classification_request(url, body)
 
     def unlink_elements_as_peer_duplicates(
             self,
@@ -9966,9 +10805,7 @@ body: Optional[dict | FilterRequestBody] = None,
                 "effectiveTime": effective_time
             }
 
-        await self._async_make_request(
-            "POST", url, body_slimmer(body), time_out=time_out
-        )
+        await self._async_delete_relationship_request(url, body)
 
     def clear_consolidated_duplicate_classification(
             self,
@@ -10200,9 +11037,7 @@ body: Optional[dict | FilterRequestBody] = None,
             f"{base_path(self, self.view_server)}/elements/{element_guid}/consolidated-duplicate-source/{source_element_guid}/detach"
         )
 
-        await self._async_make_request(
-            "POST", url, body_slimmer(body), time_out=time_out
-        )
+        await self._async_delete_relationship_request(url, body)
 
     def unlink_consolidated_duplicate_from_source_element(
             self,
@@ -10462,9 +11297,7 @@ body: Optional[dict | FilterRequestBody] = None,
             body = {"class": "DeleteRelationshipRequestBody", "effectiveTime": effective_time,
                     "forLineage": for_lineage, "forDuplicateProcessing": for_duplicate_processing}
 
-        await self._async_make_request(
-            "POST", url, body_slimmer(body), time_out=time_out
-        )
+        await self._async_delete_relationship_request(url, body)
 
     def clear_semantic_assignment_classification(
             self,
@@ -10694,12 +11527,10 @@ body: Optional[dict | FilterRequestBody] = None,
             f"/remove"
         )
 
-        body = {"class": "NewClassificationRequestBody", "effectiveTime": effective_time, "forLineage": for_lineage,
+        body = {"class": "DeleteClassificationRequestBody", "effectiveTime": effective_time, "forLineage": for_lineage,
                 "forDuplicateProcessing": for_duplicate_processing}
 
-        await self._async_make_request(
-            "POST", url, body_slimmer(body), time_out=time_out
-        )
+        await self._async_delete_classification_request(url, body)
 
     def remove_element_from_subject_area(
             self,
@@ -10915,15 +11746,29 @@ body: Optional[dict | FilterRequestBody] = None,
     async def _async_find_authored_elements(
         self,
         search_string: str = "*",
-        content_status: str = "ACTIVE",
+        content_status_list: list[str] = ["ACTIVE"],
         starts_with: bool = True,
         ends_with: bool = False,
         ignore_case: bool = False,
+        anchor_domain: Optional[str] = None,
+        metadata_element_type: Optional[str] = None,
+        metadata_element_subtypes: Optional[list[str]] = None,
+        skip_relationships: Optional[list[str]] = None,
+        include_only_relationships: Optional[list[str]] = None,
+        skip_classified_elements: Optional[list[str]] = None,
+        include_only_classified_elements: Optional[list[str]] = None,
+        graph_query_depth: int = 3,
+        governance_zone_filter: Optional[list[str]] = None,
+        as_of_time: Optional[str] = None,
+        effective_time: Optional[str] = None,
+        relationship_page_size: int = 0,
+        limit_results_by_status: Optional[list[str]] = None,
+        sequencing_order: Optional[str] = None,
+        sequencing_property: Optional[str] = None,
         start_from: int = 0,
         page_size: int = 0,
         output_format: str = "JSON",
         report_spec: str | dict = None,
-        time_out: int = default_time_out,
         body: dict | ContentStatusSearchString = None,
     ) -> list | str:
         """Returns the list of authored elements matching the search string and optional content status.
@@ -10933,8 +11778,8 @@ body: Optional[dict | FilterRequestBody] = None,
         ----------
         search_string: str, default = "*"
             - the search string to use to find matching authored elements
-        content_status: str, default = "ACTIVE"
-            - optional content status to filter by (e.g., ACTIVE)
+        content_status_list: list[str], default = ["ACTIVE"]
+            - optional content status list to filter by
         starts_with: bool, default = True
             - if True, the search string must match the start of the property value
         ends_with: bool, default = False
@@ -10949,8 +11794,6 @@ body: Optional[dict | FilterRequestBody] = None,
             - the format of the output (JSON, DICT, etc.)
         report_spec: str | dict, optional
             - the report specification to use for the output
-        time_out: int, default = default_time_out
-            - http request timeout for this request
         body: dict | ContentStatusSearchString, optional
             - the request body to use for the request. If specified, this takes precedence over other parameters.
 
@@ -10965,7 +11808,7 @@ body: Optional[dict | FilterRequestBody] = None,
         {
           "class" : "ContentStatusSearchString",
           "searchString" : "xxx",
-          "contentStatus" : "ACTIVE",
+          "contentStatusList" : ["ACTIVE"],
           "startsWith" : false,
           "endsWith" : false,
           "ignoreCase" : true,
@@ -10977,51 +11820,64 @@ body: Optional[dict | FilterRequestBody] = None,
             f"{base_path(self, self.view_server)}/authored-elements/by-search-string"
         )
 
-        if isinstance(body, ContentStatusSearchString):
-            validated_body = body
-        elif isinstance(body, dict):
-            validated_body = self._content_status_search_request_adapter.validate_python(body)
-        else:
-            # search_string = None if search_string == "*" else search_string
-            body_dict = {
-                "class": "ContentStatusSearchString",
-                "searchString": search_string,
-                "contentStatus": content_status,
-                "startsWith": starts_with,
-                "endsWith": ends_with,
-                "ignoreCase": ignore_case,
-                "startFrom": start_from,
-                "pageSize": page_size,
-            }
-            validated_body = ContentStatusSearchString.model_validate(body_dict)
-
-        json_body = validated_body.model_dump_json(indent=2, exclude_none=True)
-        response = await self._async_make_request("POST", url, json_body, time_out=time_out)
-        elements = response.json().get("elements", NO_ELEMENTS_FOUND)
-
-        if type(elements) is str or len(elements) == 0:
-            logger.info(NO_ELEMENTS_FOUND)
-            return NO_ELEMENTS_FOUND
-
-        if output_format.upper() != "JSON":
-            return self._generate_referenceable_output(
-                elements, search_string, "Referenceable", output_format, report_spec
-            )
-        return elements
+        return await self._async_content_status_search_request(
+            url,
+            "Referenceable",
+            self._generate_referenceable_output,
+            search_string,
+            content_status_list=content_status_list,
+            starts_with=starts_with,
+            ends_with=ends_with,
+            ignore_case=ignore_case,
+            anchor_domain=anchor_domain,
+            metadata_element_type=metadata_element_type,
+            metadata_element_subtypes=metadata_element_subtypes,
+            skip_relationships=skip_relationships,
+            include_only_relationships=include_only_relationships,
+            skip_classified_elements=skip_classified_elements,
+            include_only_classified_elements=include_only_classified_elements,
+            graph_query_depth=graph_query_depth,
+            governance_zone_filter=governance_zone_filter,
+            as_of_time=as_of_time,
+            effective_time=effective_time,
+            relationship_page_size=relationship_page_size,
+            limit_results_by_status=limit_results_by_status,
+            sequencing_order=sequencing_order,
+            sequencing_property=sequencing_property,
+            start_from=start_from,
+            page_size=page_size,
+            output_format=output_format,
+            report_spec=report_spec,
+            body=body,
+        )
 
     @dynamic_catch
     def find_authored_elements(
         self,
         search_string: str = "*",
-        content_status: str = "ACTIVE",
+        content_status_list: list[str] = ["ACTIVE"],
         starts_with: bool = True,
         ends_with: bool = False,
         ignore_case: bool = False,
+        anchor_domain: Optional[str] = None,
+        metadata_element_type: Optional[str] = None,
+        metadata_element_subtypes: Optional[list[str]] = None,
+        skip_relationships: Optional[list[str]] = None,
+        include_only_relationships: Optional[list[str]] = None,
+        skip_classified_elements: Optional[list[str]] = None,
+        include_only_classified_elements: Optional[list[str]] = None,
+        graph_query_depth: int = 3,
+        governance_zone_filter: Optional[list[str]] = None,
+        as_of_time: Optional[str] = None,
+        effective_time: Optional[str] = None,
+        relationship_page_size: int = 0,
+        limit_results_by_status: Optional[list[str]] = None,
+        sequencing_order: Optional[str] = None,
+        sequencing_property: Optional[str] = None,
         start_from: int = 0,
         page_size: int = 0,
         output_format: str = "JSON",
         report_spec: str | dict = None,
-        time_out: int = default_time_out,
         body: dict | ContentStatusSearchString = None,
     ) -> list | str:
         """Returns the list of authored elements matching the search string and optional content status.
@@ -11030,8 +11886,8 @@ body: Optional[dict | FilterRequestBody] = None,
         ----------
         search_string: str, default = "*"
             - the search string to use to find matching authored elements
-        content_status: str, default = "ACTIVE"
-            - optional content status to filter by (e.g., ACTIVE)
+        content_status_list: list[str], default = ["ACTIVE"]
+            - optional content status list to filter by
         starts_with: bool, default = True
             - if True, the search string must match the start of the property value
         ends_with: bool, default = False
@@ -11046,8 +11902,6 @@ body: Optional[dict | FilterRequestBody] = None,
             - the format of the output (JSON, DICT, etc.)
         report_spec: str | dict, optional
             - the report specification to use for the output
-        time_out: int, default = default_time_out
-            - http request timeout for this request
         body: dict | ContentStatusSearchString, optional
             - the request body to use for the request. If specified, this takes precedence over other parameters.
 
@@ -11060,15 +11914,29 @@ body: Optional[dict | FilterRequestBody] = None,
         return loop.run_until_complete(
             self._async_find_authored_elements(
                 search_string,
-                content_status,
+                content_status_list,
                 starts_with,
                 ends_with,
                 ignore_case,
+                anchor_domain,
+                metadata_element_type,
+                metadata_element_subtypes,
+                skip_relationships,
+                include_only_relationships,
+                skip_classified_elements,
+                include_only_classified_elements,
+                graph_query_depth,
+                governance_zone_filter,
+                as_of_time,
+                effective_time,
+                relationship_page_size,
+                limit_results_by_status,
+                sequencing_order,
+                sequencing_property,
                 start_from,
                 page_size,
                 output_format,
                 report_spec,
-                time_out,
                 body,
             )
         )
@@ -11077,12 +11945,11 @@ body: Optional[dict | FilterRequestBody] = None,
     async def _async_find_authored_elements_by_category(
         self,
         filter_string: str = "*",
-        content_status: str = "ACTIVE",
+        content_status_list: list[str] = ["ACTIVE"],
         start_from: int = 0,
         page_size: int = 0,
         output_format: str = "JSON",
         report_spec: str | dict = None,
-        time_out: int = default_time_out,
         body: dict | ContentStatusFilterRequestBody = None,
     ) -> list | str:
         """Returns the list of authored elements matching the category and optional content status.
@@ -11092,8 +11959,8 @@ body: Optional[dict | FilterRequestBody] = None,
         ----------
         filter_string: str, default = "*"
             - the category value to use to find matching authored elements
-        content_status: str, default = "ACTIVE"
-            - optional content status to filter by (e.g., ACTIVE)
+        content_status_list: list[str], default = ["ACTIVE"]
+            - optional content status list to filter by
         start_from: int, default = 0
             - the starting point in the results list
         page_size: int, default = 0
@@ -11102,8 +11969,6 @@ body: Optional[dict | FilterRequestBody] = None,
             - the format of the output (JSON, DICT, etc.)
         report_spec: str | dict, optional
             - the report specification to use for the output
-        time_out: int, default = default_time_out
-            - http request timeout for this request
         body: dict | ContentStatusFilterRequestBody, optional
             - the request body to use for the request. If specified, this takes precedence over other parameters.
 
@@ -11118,7 +11983,7 @@ body: Optional[dict | FilterRequestBody] = None,
         {
           "class" : "ContentStatusFilterRequestBody",
           "filter" : "xxx",
-          "contentStatus" : "ACTIVE",
+          "contentStatusList" : ["ACTIVE"],
           "startFrom" : 0,
           "pageSize": 0
         }
@@ -11127,45 +11992,28 @@ body: Optional[dict | FilterRequestBody] = None,
             f"{base_path(self, self.view_server)}/authored-elements/by-category"
         )
 
-        if isinstance(body, ContentStatusFilterRequestBody):
-            validated_body = body
-        elif isinstance(body, dict):
-            validated_body = self._content_status_filter_request_adapter.validate_python(body)
-        else:
-            # filter_string = None if filter_string == "*" else filter_string
-            body_dict = {
-                "class": "ContentStatusFilterRequestBody",
-                "filter": filter_string,
-                "contentStatus": content_status,
-                "startFrom": start_from,
-                "pageSize": page_size,
-            }
-            validated_body = ContentStatusFilterRequestBody.model_validate(body_dict)
-
-        json_body = validated_body.model_dump_json(indent=2, exclude_none=True)
-        response = await self._async_make_request("POST", url, json_body, time_out=time_out)
-        elements = response.json().get("elements", NO_ELEMENTS_FOUND)
-
-        if type(elements) is str or len(elements) == 0:
-            logger.info(NO_ELEMENTS_FOUND)
-            return NO_ELEMENTS_FOUND
-
-        if output_format.upper() != "JSON":
-            return self._generate_referenceable_output(
-                elements, filter_string, "Referenceable", output_format, report_spec
-            )
-        return elements
+        return await self._async_content_status_filter_request(
+            url,
+            "Referenceable",
+            self._generate_referenceable_output,
+            filter_string,
+            content_status_list=content_status_list,
+            start_from=start_from,
+            page_size=page_size,
+            output_format=output_format,
+            report_spec=report_spec,
+            body=body,
+        )
 
     @dynamic_catch
     def find_authored_elements_by_category(
         self,
         filter_string: str = "*",
-        content_status: str = "ACTIVE",
+        content_status_list: list[str] = ["ACTIVE"],
         start_from: int = 0,
         page_size: int = 0,
         output_format: str = "JSON",
         report_spec: str | dict = None,
-        time_out: int = default_time_out,
         body: dict | ContentStatusFilterRequestBody = None,
     ) -> list | str:
         """Returns the list of authored elements matching the category and optional content status.
@@ -11174,8 +12022,8 @@ body: Optional[dict | FilterRequestBody] = None,
         ----------
         filter_string: str, default = "*"
             - the category value to use to find matching authored elements
-        content_status: str, default = "ACTIVE"
-            - optional content status to filter by (e.g., ACTIVE)
+        content_status_list: list[str], default = ["ACTIVE"]
+            - optional content status list to filter by
         start_from: int, default = 0
             - the starting point in the results list
         page_size: int, default = 0
@@ -11184,8 +12032,6 @@ body: Optional[dict | FilterRequestBody] = None,
             - the format of the output (JSON, DICT, etc.)
         report_spec: str | dict, optional
             - the report specification to use for the output
-        time_out: int, default = default_time_out
-            - http request timeout for this request
         body: dict | ContentStatusFilterRequestBody, optional
             - the request body to use for the request. If specified, this takes precedence over other parameters.
 
@@ -11198,12 +12044,11 @@ body: Optional[dict | FilterRequestBody] = None,
         return loop.run_until_complete(
             self._async_find_authored_elements_by_category(
                 filter_string,
-                content_status,
+                content_status_list,
                 start_from,
                 page_size,
                 output_format,
                 report_spec,
-                time_out,
                 body,
             )
         )

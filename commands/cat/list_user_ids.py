@@ -13,7 +13,8 @@ from rich.table import Table
 
 from pyegeria import (
     ClassificationManager,
-PyegeriaAPIException, PyegeriaClientException, print_basic_exception, print_exception_table
+    PyegeriaAPIException, PyegeriaClientException, print_basic_exception, print_exception_table, ActorManager,
+    EgeriaTech
 )
 
 console = Console()
@@ -41,9 +42,12 @@ def list_user_ids(
     jupyter: bool = EGERIA_JUPYTER,
     width: int = EGERIA_WIDTH,
 ):
-    c_client = ClassificationManager(server, url, user_id=username, user_pwd=password)
+    c_client = EgeriaTech(server, url, user_id=username, user_pwd=password)
     token = c_client.create_egeria_bearer_token()
-    elements = c_client.get_elements("UserIdentity")
+    elements = c_client.find_user_identities(
+        search_string="*",
+        output_format="JSON"
+    )
 
     def generate_table() -> Table:
         """Make a new table."""
@@ -80,13 +84,11 @@ def list_user_ids(
                 full_name = ""
                 job = ""
 
-                profile = c_client.get_related_elements(el_guid, "ProfileIdentity")
-                if type(profile) is list:
-                    for rel in profile:
-                        full_name = rel["relatedElement"]["properties"].get(
-                            "fullName", "---"
-                        )
-                        job = rel["relatedElement"]["properties"].get("jobTitle", "---")
+                # profile = c_client.get_related_elements(el_guid, "ProfileIdentity")
+                profile = element.get('userProfile',{})
+
+                full_name = profile["relatedElement"]["properties"].get("fullName", "---")
+                job = profile["relatedElement"]["properties"].get("jobTitle", "---")
 
                 table.add_row(
                     full_name,

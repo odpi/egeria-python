@@ -165,7 +165,7 @@ class TestActorManager:
             search_string = "*"
             response = actor_client.find_actor_profiles(
                 search_string,
-                output_format="DICT", report_spec = "Actor-Profiles"
+                output_format="DICT", report_spec = "Actor-Profiles", metadata_element_type="Organization"
             )
             duration = time.perf_counter() - start_time
 
@@ -560,6 +560,47 @@ class TestActorManager:
             print(f"\n\nCreated user identity with GUID: {response}")
             assert type(response) is str
             assert len(response) > 0
+
+        except (
+                PyegeriaInvalidParameterException,
+                PyegeriaAPIException,
+                PyegeriaUnauthorizedException,
+                PyegeriaNotFoundException,
+        ) as e:
+            print_exception_table(e)
+            assert False, "Invalid request"
+        except ValidationError as e:
+            print_validation_error(e)
+            assert False, "Invalid request"
+        except PyegeriaConnectionException as e:
+            print_basic_exception(e)
+            assert False, "Connection error"
+        finally:
+            if actor_client:
+                actor_client.close_session()
+
+    def test_find_user_ids(self):
+        """Test finding user ids with search string"""
+        actor_client = None
+        try:
+            actor_client = ActorManager(self.good_view_server_2, self.good_platform1_url, user_id=self.good_user_2)
+            token = actor_client.create_egeria_bearer_token(self.good_user_2, "secret")
+            start_time = time.perf_counter()
+
+            search_string = "erin"
+            response = actor_client.find_user_identities(
+                search_string,
+                output_format="JSON", report_spec="User-Identities", page_size=2,
+            )
+            duration = time.perf_counter() - start_time
+
+            print(f"\n\tDuration was {duration} seconds")
+            if type(response) is list:
+                print(f"Found {len(response)} user identities")
+                print("\n\n" + json.dumps(response, indent=2))
+            elif type(response) is str:
+                print("\n\nResponse: " + response)
+            assert True
 
         except (
                 PyegeriaInvalidParameterException,

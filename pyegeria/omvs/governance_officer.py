@@ -37,7 +37,8 @@ GOV_DEF_PROPERTIES_LIST = ["GovernanceDefinitionProperties", "GovernanceStrategy
                            "GovernanceControlProperties", "SecurityGroupProperties", "NamingStandardRuleProperties",
                            "CertificationTypeProperties", "LicenseTypeProperties", "GovernanceApproachProperties",
                            "GovernanceStrategyProperties", "GovernanceProcessingPurposeProperties",
-                           "BusinessImperativeProperties", "RegulationArticleProperties", "ThreatProperties",]
+                           "BusinessImperativeProperties", "RegulationArticleProperties", "ThreatProperties",
+                           "DataLensProperties",]
 
 GOV_BASIC_TYPES = ["BusinessImperative", "RegulationArticle", "Threat", "GovernancePrinciple", "GovernanceObligation",
                    "GovernanceApproach", "GovernanceProcessingPurpose"]
@@ -550,6 +551,167 @@ class GovernanceOfficer(ServerClient):
         loop = asyncio.get_event_loop()
         response = loop.run_until_complete(self._async_create_governance_definition(body))
         return response
+
+    @dynamic_catch
+    async def _async_create_data_lens(self, body: dict | NewElementRequestBody) -> str:
+        """Create a data lens governance definition. Async version.
+
+        Parameters
+        ----------
+        body: dict
+            A dict representing the details of the data lens to create.
+
+        Returns
+        -------
+        str - the guid of the created data lens.
+
+        Raises
+        ------
+        PyegeriaException
+        ValidationError
+
+        Notes
+        ----
+        Body structure like:
+        {
+          "class" : "NewElementRequestBody",
+          "anchorGUID" : "add guid here",
+          "isOwnAnchor": false,
+          "parentGUID": "add guid here",
+          "parentRelationshipTypeName": "add type name here",
+          "parentRelationshipProperties": {
+            "class": "RelationshipElementProperties",
+            "propertyValueMap" : {
+              "description" : {
+                "class": "PrimitiveTypePropertyValue",
+                "typeName": "string",
+                "primitiveValue" : "New description"
+              }
+            }
+          },
+          "parentAtEnd1": false,
+          "properties": {
+            "class" : "DataLensProperties",
+            "domainIdentifier": 0,
+            "qualifiedName": "add unique name here",
+            "displayName": "add short name here",
+            "summary": "add summary here",
+            "description": "add description here",
+            "scope": "add scope of effect for this definition",
+            "importance": "add importance for this definition",
+            "businessImperatives" : [],
+            "implications": [],
+            "outcomes": [],
+            "results": [],
+            "dataCollectionStartTime" : "{{$isoTimestamp}}",
+            "dataCollectionEndTime" : "{{$isoTimestamp}}",
+            "minLongitude" : 0,
+            "minLatitude" : 0,
+            "maxLongitude" : 0,
+            "maxLatitude" : 0,
+            "minHeight" : 0,
+            "maxHeight" : 0,
+            "scopeElements" : {
+              "add scope element name" : "add scope element GUID"
+            },
+            "additionalProperties": {
+              "property1" : "propertyValue1",
+              "property2" : "propertyValue2"
+            },
+            "effectiveFrom": "{{$isoTimestamp}}",
+            "effectiveTo": "{{$isoTimestamp}}"
+          },
+          "externalSourceGUID": "add guid here",
+          "externalSourceName": "add qualified name here",
+          "effectiveTime" : "{{$isoTimestamp}}",
+          "forLineage" : false,
+          "forDuplicateProcessing" : false
+        }
+        """
+
+        url = (f"{self.platform_url}/servers/{self.view_server}/api/open-metadata/"
+               f"{self.url_marker}/governance-definitions")
+        return await self._async_create_element_body_request(url, ["DataLensProperties"], body)
+
+    @dynamic_catch
+    def create_data_lens(self, body: dict | NewElementRequestBody) -> str:
+        """Create a data lens governance definition.
+
+        Parameters
+        ----------
+        body: dict
+            A dict representing the details of the data lens to create.
+
+        Returns
+        -------
+        str - the guid of the created data lens.
+
+        Raises
+        ------
+        PyegeriaException
+        ValidationError
+
+        Notes
+        ----
+        Body structure like:
+        {
+          "class" : "NewElementRequestBody",
+          "anchorGUID" : "add guid here",
+          "isOwnAnchor": false,
+          "parentGUID": "add guid here",
+          "parentRelationshipTypeName": "add type name here",
+          "parentRelationshipProperties": {
+            "class": "RelationshipElementProperties",
+            "propertyValueMap" : {
+              "description" : {
+                "class": "PrimitiveTypePropertyValue",
+                "typeName": "string",
+                "primitiveValue" : "New description"
+              }
+            }
+          },
+          "parentAtEnd1": false,
+          "properties": {
+            "class" : "DataLensProperties",
+            "domainIdentifier": 0,
+            "qualifiedName": "add unique name here",
+            "displayName": "add short name here",
+            "summary": "add summary here",
+            "description": "add description here",
+            "scope": "add scope of effect for this definition",
+            "importance": "add importance for this definition",
+            "businessImperatives" : [],
+            "implications": [],
+            "outcomes": [],
+            "results": [],
+            "dataCollectionStartTime" : "{{$isoTimestamp}}",
+            "dataCollectionEndTime" : "{{$isoTimestamp}}",
+            "minLongitude" : 0,
+            "minLatitude" : 0,
+            "maxLongitude" : 0,
+            "maxLatitude" : 0,
+            "minHeight" : 0,
+            "maxHeight" : 0,
+            "scopeElements" : {
+              "add scope element name" : "add scope element GUID"
+            },
+            "additionalProperties": {
+              "property1" : "propertyValue1",
+              "property2" : "propertyValue2"
+            },
+            "effectiveFrom": "{{$isoTimestamp}}",
+            "effectiveTo": "{{$isoTimestamp}}"
+          },
+          "externalSourceGUID": "add guid here",
+          "externalSourceName": "add qualified name here",
+          "effectiveTime" : "{{$isoTimestamp}}",
+          "forLineage" : false,
+          "forDuplicateProcessing" : false
+        }
+        """
+
+        loop = asyncio.get_event_loop()
+        return loop.run_until_complete(self._async_create_data_lens(body))
 
     @dynamic_catch
     async def _async_create_governance_definition_from_template(self, body: dict | TemplateRequestBody) -> str:

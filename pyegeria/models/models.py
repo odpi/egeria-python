@@ -476,44 +476,52 @@ class FindPropertyNamesRequestBody(ResultsRequestBody):
 class DeploymentStatusSearchString(SearchStringRequestBody):
     class_: Annotated[Literal["DeploymentStatusSearchString"], Field(alias="class")]
     deployment_status: Optional[str] = Field(None, alias="deploymentStatus")
+    deployment_status_list: Optional[list[str]] = Field(None, alias="deploymentStatusList")
 
 
 class DeploymentStatusFilterRequestBody(FilterRequestBody):
     class_: Annotated[Literal["DeploymentStatusFilterRequestBody"], Field(alias="class")]
     deployment_status: Optional[str] = Field(None, alias="deploymentStatus")
+    deployment_status_list: Optional[list[str]] = Field(None, alias="deploymentStatusList")
 
 
 class ContentStatusSearchString(SearchStringRequestBody):
     class_: Annotated[Literal["ContentStatusSearchString"], Field(alias="class")]
     content_status: Optional[str] = Field(None, alias="contentStatus")
+    content_status_list: Optional[list[str]] = Field(None, alias="contentStatusList")
 
 
 class ContentStatusFilterRequestBody(FilterRequestBody):
     class_: Annotated[Literal["ContentStatusFilterRequestBody"], Field(alias="class")]
     content_status: Optional[str] = Field(None, alias="contentStatus")
+    content_status_list: Optional[list[str]] = Field(None, alias="contentStatusList")
 
 
 class ActivityStatusSearchString(SearchStringRequestBody):
     class_: Annotated[Literal["ActivityStatusSearchString"], Field(alias="class")]
     activity_status: Optional[str] = Field(None, alias="activityStatus")
+    activity_status_list: Optional[list[str]] = Field(None, alias="activityStatusList")
 
 
 class ActivityStatusFilterRequestBody(FilterRequestBody):
     class_: Annotated[Literal["ActivityStatusFilterRequestBody"], Field(alias="class")]
     activity_status: Optional[str] = Field(None, alias="activityStatus")
+    activity_status_list: Optional[list[str]] = Field(None, alias="activityStatusList")
 
 
 class ActivityStatusRequestBody(ResultsRequestBody):
     class_: Annotated[Literal["ActivityStatusRequestBody"], Field(alias="class")]
     activity_status: Optional[str] = Field(None, alias="activityStatus")
+    activity_status_list: Optional[list[str]] = Field(None, alias="activityStatusList")
 
 
 class ActionRequestBody(RequestBody):
     class_: Annotated[Literal["ActionRequestBody"], Field(alias="class")]
     properties: Optional[dict] = None
     action_sponsor_guid: Optional[str] = Field(None, alias="actionSponsorGUID")
-    action_executor_guid: Optional[str] = Field(None, alias="actionExecutorGUID")
-    action_target_guids: Optional[list[str]] = Field(None, alias="actionTargetGUIDs")
+    originator_guid: Optional[str] = Field(None, alias="originatorGUID")
+    assign_to_actor_guid: Optional[str] = Field(None, alias="assignToActorGUID")
+    action_target_guids: Optional[list[dict[str,str]]] = Field(None, alias="actionTargetGUIDs")
 
 
 

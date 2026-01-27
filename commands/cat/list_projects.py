@@ -23,7 +23,7 @@ from pyegeria import (
     ClassificationManager,
     ProjectManager,
     PyegeriaAPIException, PyegeriaClientException,
-    print_basic_exception, print_validation_error,
+    print_basic_exception, print_validation_error, PyegeriaException,
 )
 
 EGERIA_METADATA_STORE = os.environ.get("EGERIA_METADATA_STORE", "active-metadata-store")

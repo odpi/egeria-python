@@ -532,7 +532,7 @@ class CollectionManager(ServerClient):
     async def _async_find_digital_products(
         self,
         search_string: str = "*",
-        deployment_status: Optional[str] = None,
+        deployment_status_list: Optional[list[str]] = None,
         starts_with: bool = True,
         ends_with: bool = False,
         ignore_case: bool = False,
@@ -549,8 +549,8 @@ class CollectionManager(ServerClient):
         ----------
         search_string: str, default = "*"
             - the search string to use to find matching digital products
-        deployment_status: str, optional
-            - optional deployment status to filter by (e.g., ACTIVE)
+        deployment_status_list: list[str], optional
+            - optional deployment status list to filter by
         starts_with: bool, default = True
             - if True, the search string must match the start of the property value
         ends_with: bool, default = False
@@ -579,7 +579,7 @@ class CollectionManager(ServerClient):
         {
           "class": "DeploymentStatusSearchString",
           "searchString" : "add search string here",
-          "deploymentStatus" : "ACTIVE",
+          "deploymentStatusList" : ["ACTIVE"],
           "startsWith" : false,
           "endsWith" : false,
           "ignoreCase" : true,
@@ -601,7 +601,7 @@ class CollectionManager(ServerClient):
             body_dict = {
                 "class": "DeploymentStatusSearchString",
                 "searchString": search_string,
-                "deploymentStatus": deployment_status,
+                "deploymentStatusList": deployment_status_list,
                 "startsWith": starts_with,
                 "endsWith": ends_with,
                 "ignoreCase": ignore_case,
@@ -627,7 +627,7 @@ class CollectionManager(ServerClient):
     def find_digital_products(
         self,
         search_string: str = "*",
-        deployment_status: Optional[str] = None,
+        deployment_status_list: Optional[list[str]] = None,
         starts_with: bool = True,
         ends_with: bool = False,
         ignore_case: bool = False,
@@ -645,7 +645,7 @@ class CollectionManager(ServerClient):
         return asyncio.get_event_loop().run_until_complete(
             self._async_find_digital_products(
                 search_string,
-                deployment_status,
+                deployment_status_list,
                 starts_with,
                 ends_with,
                 ignore_case,
@@ -661,7 +661,7 @@ class CollectionManager(ServerClient):
     async def _async_get_digital_products_by_category(
         self,
         category: str,
-        deployment_status: Optional[str] = None,
+        deployment_status_list: Optional[list[str]] = None,
         start_from: int = 0,
         page_size: int = 100,
         output_format: str = "JSON",
@@ -675,8 +675,8 @@ class CollectionManager(ServerClient):
         ----------
         category: str
             - the category to use to find matching digital products
-        deployment_status: str, optional
-            - optional deployment status to filter by (e.g., ACTIVE)
+        deployment_status_list: list[str], optional
+            - optional deployment status list to filter by
         start_from: int, default = 0
             - the starting point in the results list
         page_size: int, default = 100
@@ -699,7 +699,7 @@ class CollectionManager(ServerClient):
         {
           "class" : "DeploymentStatusFilterRequestBody",
           "filter" : "xxx",
-          "deploymentStatus" : "ACTIVE",
+          "deploymentStatusList" : ["ACTIVE"],
           "startFrom" : 0,
           "pageSize": 0
         }
@@ -717,7 +717,7 @@ class CollectionManager(ServerClient):
             body_dict = {
                 "class": "DeploymentStatusFilterRequestBody",
                 "filter": category,
-                "deploymentStatus": deployment_status,
+                "deploymentStatusList": deployment_status_list,
                 "startFrom": start_from,
                 "pageSize": page_size,
             }
@@ -740,7 +740,7 @@ class CollectionManager(ServerClient):
     def get_digital_products_by_category(
         self,
         category: str,
-        deployment_status: Optional[str] = None,
+        deployment_status_list: Optional[list[str]] = None,
         start_from: int = 0,
         page_size: int = 100,
         output_format: str = "JSON",
@@ -755,7 +755,7 @@ class CollectionManager(ServerClient):
         return asyncio.get_event_loop().run_until_complete(
             self._async_get_digital_products_by_category(
                 category,
-                deployment_status,
+                deployment_status_list,
                 start_from,
                 page_size,
                 output_format,

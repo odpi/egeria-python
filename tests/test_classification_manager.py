@@ -39,7 +39,8 @@ password = "secret"
 # element_guid = "a2915132-9d9a-4449-846f-43a871b5a6a0"
 # element_guid = "b359e297-a565-414a-8213-fa423312ab36" # clinical trials management
 # element_guid = "25b1791f-c2fb-4b93-b236-cad53739a9a2"  # Approved Hospital
-element_guid = "e656f7ca-c11a-4d05-a5ed-adc69abbf0fd"  # a digital product glossary
+# element_guid = "e656f7ca-c11a-4d05-a5ed-adc69abbf0fd"  # a digital product glossary
+element_guid = "c28ea54e-060a-4738-9d8c-1b4000442d7e"
 relationship_type = "GovernedBy"
 
 # bearer_token = c_client.create_egeria_bearer_token(user, password)
@@ -202,13 +203,19 @@ def test_get_elements():
     # metadata_element_type_name = 'CertificationType'
     #
     # metadata_element_type_name = "DeployedDatabaseSchema"
-    open_metadata_type_name = "ArchiveFile"
+    open_metadata_type_name = "UserIdentity"
     try:
         c_client = ClassificationManager(view_server, platform_url)
 
         bearer_token = c_client.create_egeria_bearer_token(user, password)
-        response = c_client.get_elements(open_metadata_type_name, output_format="DICT",
-                                         report_spec="Referenceable")
+        body = {
+            "class": "ResultsRequestBody",
+            "metadataElementTypeName": open_metadata_type_name,
+        }
+        response = c_client.get_elements(metadata_element_type = open_metadata_type_name,
+                                         output_format="DICT",
+                                         report_spec="Referenceable",
+                                         body=body)
 
         if type(response) is list:
             print(f"\n\tElement count is: {len(response)}")
@@ -248,7 +255,12 @@ def test_get_elements_by_property_value():
 
         bearer_token = c_client.create_egeria_bearer_token(user, password)
         start_time = time.perf_counter()
-        result = c_client.get_elements_by_property_value(property_value, property_names, metadata_element_type_name, as_of_time = "2025-12-01")
+        result = c_client.get_elements_by_property_value(
+            property_value,
+            property_names,
+            metadata_element_type_name=metadata_element_type_name,
+            as_of_time="2025-12-01",
+        )
         duration = time.perf_counter() - start_time
         print(f"\n\tDuration was {duration} seconds")
         if type(result) is list:
@@ -447,8 +459,13 @@ def test_get_elements_by_classification():
     c_client = ClassificationManager(view_server, platform_url)
 
     bearer_token = c_client.create_egeria_bearer_token(user, password)
+    body = {
+        "class": "ResultsRequestBody",
+        "metadataElementTypeName": open_metadata_type_name,
+        "pageSize": 10,
+    }
     response = c_client.get_elements_by_classification(
-        classification, open_metadata_type_name, output_format="JSON", report_spec="Collections", page_size=10
+        classification, output_format="JSON", report_spec="Collections", body=body
     )
 
     if type(response) is list:
@@ -473,7 +490,10 @@ def test_get_elements_by_classification_with_property_value():
 
         bearer_token = c_client.create_egeria_bearer_token(user, password)
         result = c_client.get_elements_by_classification_with_property_value(
-            classification, property_value, property_names, open_metadata_type_name
+            classification,
+            property_value,
+            property_names,
+            metadata_element_type_name=open_metadata_type_name,
         )
 
         if type(result) is list:
@@ -557,9 +577,7 @@ def test_get_all_related_elements():
     # element_guid = "8b9cce34-ff42-4f9d-b4b3-6317c8a767c3"  # Retail schema
     element_guid = "0182bacf-32c4-40f0-91b5-2462dfeab50c"
     bearer_token = c_client.create_egeria_bearer_token(user, password)
-    response = c_client.get_related_elements(
-        element_guid, None, open_metadata_type_name
-    )
+    response = c_client.get_related_elements(element_guid, relationship_type=None)
 
     if type(response) is list:
         print(f"\n\tElement count is: {len(response)}")
@@ -585,8 +603,12 @@ def test_get_related_elements():
     c_client = ClassificationManager(view_server, platform_url)
     try:
         bearer_token = c_client.create_egeria_bearer_token(user, password)
+        body = {
+            "class": "ResultsRequestBody",
+            "metadataElementTypeName": open_metadata_type_name,
+        }
         response = c_client.get_related_elements(
-            element_guid, relationship_type, open_metadata_type_name
+            element_guid, relationship_type, body=body
         )
 
         if type(response) is list:
@@ -618,7 +640,7 @@ def test_get_related_elements_with_property_value():
             relationship_type,
             property_value,
             property_names,
-            open_metadata_type_name,
+            metadata_element_type_name=open_metadata_type_name,
         )
 
         if type(result) is list:
@@ -689,8 +711,12 @@ def test_get_relationships_with_property_value():
         c_client = ClassificationManager(view_server, platform_url)
 
         bearer_token = c_client.create_egeria_bearer_token(user, password)
-        result = c_client.get_relationships_with_property_value(relationship_type, property_value, property_names,
-                                                                output_format="JSON")
+        result = c_client.get_relationships_with_property_value(
+            property_value,
+            property_names,
+            relationship_type=relationship_type,
+            output_format="JSON",
+        )
 
         if type(result) is list:
             print_json(data=result)
@@ -717,7 +743,9 @@ def test_find_relationships_with_property_value():
 
     bearer_token = c_client.create_egeria_bearer_token(user, password)
     response = c_client.find_relationships_with_property_value(
-        relationship_type, property_value, property_names
+        property_value,
+        property_names,
+        relationship_type=relationship_type,
     )
 
     if type(response) is list:
@@ -886,7 +914,12 @@ def test_get_scopes():
         c_client = ClassificationManager(view_server, platform_url)
         bearer_token = c_client.create_egeria_bearer_token(user, password)
         response = c_client.get_scopes(element_guid)
-        assert True
+        if isinstance(response, list|dict):
+            print(f"\n\tElement count is: {len(response)}")
+            print(json.dumps(response, indent=2))
+            assert True
+        else:
+            print(f"Expected list, got {type(response).__name__}, {response}")
     except PyegeriaException as e:
         print_basic_exception(e)
     finally:
@@ -1032,7 +1065,7 @@ def test_gov_definition_to_element():
         # using dummy GUIDs for now, expecting potential 404 but testing call pattern
         def_guid = "dummy-def-guid"
         c_client.add_gov_definition_to_element(def_guid, element_guid)
-        c_client.clear_gov_definition_from_element(def_guid, element_guid)
+        c_client.remove_gov_definition_from_element(def_guid, element_guid)
         assert True
     except PyegeriaException as e:
         print_basic_exception(e)
@@ -1044,9 +1077,25 @@ def test_scope_to_element():
     try:
         c_client = ClassificationManager(view_server, platform_url)
         bearer_token = c_client.create_egeria_bearer_token(user, password)
-        scope_guid = "dummy-scope-guid"
+        scope_guid = "17f9bcd9-ede6-431e-9cec-1b8474f31e4b"
+
         c_client.add_scope_to_element(scope_guid, element_guid)
-        c_client.remove_scope_from_element(scope_guid, element_guid)
+        c_client.clear_scope_from_element(scope_guid, element_guid)
+        assert True
+    except PyegeriaException as e:
+        print_basic_exception(e)
+    finally:
+        c_client.close_session()
+
+
+def test_assign_actor_to_element():
+    try:
+        c_client = ClassificationManager(view_server, platform_url)
+        bearer_token = c_client.create_egeria_bearer_token(user, password)
+        actor_guid = "dummy-actor-guid"
+
+        c_client.assign_actor_to_element(element_guid, actor_guid)
+        c_client.unassign_actor_from_element(element_guid, actor_guid)
         assert True
     except PyegeriaException as e:
         print_basic_exception(e)
@@ -1259,6 +1308,33 @@ def test_governance_measurements():
         c_client.close_session()
 
 
+def test_data_scope_classification():
+    body = {
+        "class": "NewClassificationRequestBody",
+        "properties": {
+            "class": "DataScopeProperties",
+        }
+    }
+    update_body = {
+        "class": "UpdateClassificationRequestBody",
+        "mergeUpdate": True,
+        "properties": {
+            "class": "DataScopeProperties",
+        }
+    }
+    try:
+        c_client = ClassificationManager(view_server, platform_url)
+        bearer_token = c_client.create_egeria_bearer_token(user, password)
+        c_client.add_data_scope(element_guid, body)
+        c_client.update_data_scope(element_guid, update_body)
+        c_client.clear_data_scope(element_guid)
+        assert True
+    except PyegeriaException as e:
+        print_basic_exception(e)
+    finally:
+        c_client.close_session()
+
+
 def test_search_keywords():
     body = {
         "class": "NewAttachmentRequestBody",
@@ -1377,4 +1453,3 @@ def test_action_actor_linking():
         print_basic_exception(e)
     finally:
         c_client.close_session()
-

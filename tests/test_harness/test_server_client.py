@@ -101,7 +101,11 @@ def test_get_user_guid() :
     try:
         client = ServerClient(view_server, view_url, user, user_pass)
         client.create_egeria_bearer_token()
-        response = client.get_elements_by_property_value(user_id,['userId', 'displayName','fullName'],None)
+        response = client.get_elements_by_property_value(
+            user_id,
+            ["userId", "displayName", "fullName"],
+            metadata_element_type_name=None,
+        )
         if isinstance(response, dict | list):
             print(json.dumps(response, indent = 2))
         else:

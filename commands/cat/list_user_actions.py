@@ -4,10 +4,8 @@ SPDX-Lic
 ense-Identifier: Apache-2.0
 Copyright Contributors to the ODPi Egeria project.
 
-Unit tests for the Utils helper functions using the Pytest framework.
 
-
-A simple display for glossary terms
+Display user actions
 """
 import argparse
 import os
@@ -20,8 +18,9 @@ from rich.prompt import Prompt
 from rich.table import Table
 
 from pyegeria import (
-    PyegeriaAPIException, PyegeriaClientException, print_basic_exception, print_exception_table
+    PyegeriaAPIException, PyegeriaClientException, print_basic_exception, ACTIVITY_STATUS, EgeriaTech,
 )
+from pyegeria.core.utils import list_actors
 from pyegeria.omvs.my_profile import MyProfile
 
 EGERIA_METADATA_STORE = os.environ.get("EGERIA_METADATA_STORE", "active-metadata-store")
@@ -43,35 +42,37 @@ EGERIA_JUPYTER = bool(os.environ.get("EGERIA_JUPYTER", "False"))
 EGERIA_WIDTH = int(os.environ.get("EGERIA_WIDTH", "200"))
 
 
-def display_to_dos(
+def display_user_actions(
     search_string: str,
-    status_filter: str,
     server: str,
     url: str,
     username: str,
     user_pass: str,
+    status_filter: list,
     jupyter: bool = EGERIA_JUPYTER,
     width: int = EGERIA_WIDTH,
 ):
-    m_client = MyProfile(server, url, user_id=username)
+    m_client = EgeriaTech(server, url, user_id=username)
     token = m_client.create_egeria_bearer_token(username, user_pass)
 
     def generate_table(search_string: str = "*") -> Table:
         """Make a new table."""
         table = Table(
-            title=f"Open ToDos for Platform {url} @ {time.asctime()}",
+            title=f"User Actions for Platform {url} @ {time.asctime()}",
             # style = "black on grey66",
             header_style="white on dark_blue",
             show_lines=True,
             box=box.ROUNDED,
             caption=f"ToDos for Server '{server}' @ Platform - {url}",
             expand=True,
+            width=width,
         )
 
-        table.add_column("Name")
-        table.add_column("Type Name")
+
+        table.add_column("Action Name")
+        table.add_column("Action Type")
         table.add_column("GUID", no_wrap=True)
-        table.add_column("Created")
+        table.add_column("Requested Time", no_wrap=True)
         table.add_column("Priority")
         table.add_column("Due")
         table.add_column("Completion")
@@ -79,9 +80,11 @@ def display_to_dos(
         table.add_column("Sponsor")
         table.add_column("Assigned")
 
-        todo_items = m_client.find_to_do(search_string, status=status_filter)
+        action_items = m_client.find_processes(search_string, activity_status_list=status_filter, metadata_element_type="Action",
+                                               metadata_element_subtypes=["ToDo","Meeting","Notification","Review"],
+                                               graph_query_depth=5, relationship_page_size=10)
 
-        if type(todo_items) is str:
+        if type(action_items) is str:
             name = " "
             type_name = " "
             created = " "
@@ -93,27 +96,25 @@ def display_to_dos(
             sponsor = " "
             assigned_out = ""
         else:
-            for item in todo_items:
+            for item in action_items:
                 guid = item["elementHeader"]["guid"]
                 props = item["properties"]
-                name = props["name"]
-                type_name = props.get("toDoType", " ")
-                created = props.get("creationTime", " ")[:-19]
-                priority = str(props.get("priority", " "))
-                due = props.get("dueTime", "          ")[:-19]
-                completed = props.get("completionTime", "           ")[:-10]
-                status = props.get("toDoStatus", "---")
+                name = props.get("displayName",'---')
+                type_name = props.get("typeName", "---")
+                requested = props.get("requestedTime", "---")[:-16]
+                priority = str(props.get("priority", "---"))
+                due = props.get("dueTime", "---")[:-16]
+                completed = props.get("completionTime", "---")[:-16]
+                status = props.get("activityStatus", "---")
 
                 assigned_out = ""
-                assigned_actors = item.get("assignedActors", "---")
-                if type(assigned_actors) is list:
-                    assigned_md = ""
-                    for actor in assigned_actors:
-                        assigned_md += f"* {actor['uniqueName'].split(',')[0]}\n"
-                    assigned_out = Markdown(assigned_md)
+                assigned_actors = item.get("assignedActors", None)
+                assigned_out = list_actors(assigned_actors)
+                sponsor_out = ""
+                sponsors = item.get('actionCause', None)
+                sponsor_out = list_actors(sponsors)
 
-                sponsor = "erinoverview"
-                if status in ("WAITING", "OPEN"):
+                if status in ("WAITING", "REQUESTED"):
                     status = f"[yellow]{status}"
                 elif status in ("IN_PROGRESS", "COMPLETE"):
                     status = f"[green]{status}"
@@ -124,12 +125,12 @@ def display_to_dos(
                     name,
                     type_name,
                     guid,
-                    created,
+                    requested,
                     priority,
                     due,
                     completed,
                     status,
-                    sponsor,
+                    sponsor_out,
                     assigned_out,
                 )
 
@@ -167,13 +168,11 @@ def main():
     userid = args.userid if args.userid is not None else EGERIA_USER
     user_pass = args.password if args.password is not None else EGERIA_USER_PASSWORD
     try:
-        search_string = Prompt.ask("Enter the ToDo you are searching for", default="*")
-        status_filter = Prompt.ask(
-            "Enter an optional status filter ['OPEN','IN_PROGRESS','WAITING','COMPLETE',"
-            "'ABANDONED', 'None']",
-            default=None,
-        )
-        display_to_dos(search_string, status_filter, server, url, userid, user_pass)
+        search_string = Prompt.ask("Enter the Action you are searching for", default="*")
+        status_filter = Prompt.ask("Enter the activity statuses to filter on:",
+                                   choices=ACTIVITY_STATUS,default="REQUESTED")
+        status_filter_list = status_filter.split(",")
+        display_user_actions(search_string, server, url, userid, user_pass, status_filter_list)
     except KeyboardInterrupt:
         pass
 

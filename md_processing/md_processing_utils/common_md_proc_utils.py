@@ -190,6 +190,7 @@ def parse_upsert_command(egeria_client: EgeriaTech, object_type: str, object_act
                         parsed_output['guid'] = parsed_attributes[key]['value']
                 elif style == 'Ordered Int':
                     parsed_attributes[key] = proc_simple_attribute(txt, object_action, labels, if_missing)
+
                 elif style == 'Simple Int':
                     parsed_attributes[key] = proc_simple_attribute(txt, object_action, labels, if_missing, default_value, "int")
                 elif style == 'Simple List':
@@ -225,6 +226,9 @@ def parse_upsert_command(egeria_client: EgeriaTech, object_type: str, object_act
                     parsed_attributes[key]['value'] = None
                 if key == "Display Name":
                     display_name = parsed_attributes[key]['value']
+                if parsed_attributes[key]['valid'] is False:
+                    parsed_output['valid'] = False
+                    parsed_output['reason'] += f"Invalid attribute value for `{key}`: {parsed_attributes[key]['reason']}\n"
 
                 value = parsed_attributes[key].get('value', None)
 
@@ -560,7 +564,14 @@ def proc_simple_attribute(txt: str, action: str, labels: set, if_missing: str = 
         return {"status": if_missing, "reason": msg, "value": None, "valid": valid, "exists": False}
 
     if attribute and simp_type == "int" :
-        attribute = int(attribute)
+        try:
+            attribute = int(attribute)
+        except ValueError:
+            msg = f"Invalid integer value for attribute with labels `{labels}`: {attribute}"
+            valid = False
+            logger.error(msg)
+            return {"status": ERROR, "reason": msg, "value": None, "valid": valid, "exists": True}
+
     # elif attribute and simp_type == "list":
     #     if isinstance(attribute, str):
     #         attribute = [piece.strip() for piece in re.split(r'[,\n]', attribute) if piece.strip()]

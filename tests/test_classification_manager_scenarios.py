@@ -66,6 +66,7 @@ class ClassificationManagerScenarioTester:
         self.results: List[TestResult] = []
         self.test_run_id = datetime.now().strftime("%Y%m%d_%H%M%S")
         self.created_guids: List[str] = []
+        self.data_scope_term_guid: Optional[str] = None
         
     def setup(self) -> bool:
         """Initialize connection to Egeria and create test data"""
@@ -148,6 +149,7 @@ class ClassificationManagerScenarioTester:
                         ).model_dump(exclude_none=True, by_alias=True)
                     )
                     console.print(f"  - Applied Origin classification")
+                    self.data_scope_term_guid = term_guid
 
             return True
 
@@ -514,6 +516,73 @@ class ClassificationManagerScenarioTester:
                 message=str(e)[:100],
                 error=e
             )
+
+    def scenario_manage_data_scope_classification(self) -> TestResult:
+        """Scenario: Add, update, and clear DataScope classification"""
+        scenario_name = "Manage Data Scope Classification"
+        start_time = time.perf_counter()
+
+        try:
+            console.print(f"\n[bold blue]▶ Running: {scenario_name}[/bold blue]")
+
+            if not self.data_scope_term_guid:
+                duration = time.perf_counter() - start_time
+                return TestResult(
+                    scenario_name=scenario_name,
+                    status="WARNING",
+                    duration=duration,
+                    message="No term available for data scope classification"
+                )
+
+            body = {
+                "class": "NewClassificationRequestBody",
+                "properties": {
+                    "class": "DataScopeProperties",
+                }
+            }
+            update_body = {
+                "class": "UpdateClassificationRequestBody",
+                "mergeUpdate": True,
+                "properties": {
+                    "class": "DataScopeProperties",
+                }
+            }
+
+            console.print("  → Adding DataScope classification...")
+            self.client.add_data_scope(self.data_scope_term_guid, body)
+            console.print("  → Updating DataScope classification...")
+            self.client.update_data_scope(self.data_scope_term_guid, update_body)
+            console.print("  → Clearing DataScope classification...")
+            self.client.clear_data_scope(self.data_scope_term_guid)
+
+            duration = time.perf_counter() - start_time
+            return TestResult(
+                scenario_name=scenario_name,
+                status="PASSED",
+                duration=duration,
+                message="DataScope classification added, updated, and cleared"
+            )
+        except PyegeriaAPIException as e:
+            duration = time.perf_counter() - start_time
+            console.print(f"  [yellow]⚠ API Exception: {str(e)}[/yellow]")
+            return TestResult(
+                scenario_name=scenario_name,
+                status="WARNING",
+                duration=duration,
+                message=f"API Exception: {str(e)[:100]}",
+                error=e
+            )
+        except Exception as e:
+            duration = time.perf_counter() - start_time
+            console.print(f"  [red]✗ Error: {str(e)}[/red]")
+            print_exception_table(e) if isinstance(e, PyegeriaException) else console.print_exception()
+            return TestResult(
+                scenario_name=scenario_name,
+                status="FAILED",
+                duration=duration,
+                message=str(e)[:100],
+                error=e
+            )
     
     def run_all_scenarios(self):
         """Execute all test scenarios"""
@@ -532,6 +601,7 @@ class ClassificationManagerScenarioTester:
             self.results.append(self.scenario_explore_classified_elements())
             self.results.append(self.scenario_explore_owned_elements())
             self.results.append(self.scenario_explore_elements_by_origin())
+            self.results.append(self.scenario_manage_data_scope_classification())
             self.results.append(self.scenario_query_elements_by_property())
             
             # Print summary

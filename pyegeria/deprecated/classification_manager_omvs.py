@@ -6,13 +6,14 @@ This module provides access to the classification_manager_omvs module.
 """
 
 import asyncio
+from typing import Optional
 
 from httpx import Response
 
 # import json
 from pyegeria.core._server_client import ServerClient
 from pyegeria.core._globals import default_time_out, NO_ELEMENTS_FOUND
-from pyegeria.models import LevelIdentifierQueryBody
+from pyegeria.models import LevelIdentifierQueryBody, NewRelationshipRequestBody, DeleteRelationshipRequestBody
 from pyegeria.core.utils import body_slimmer
 
 
@@ -3645,9 +3646,7 @@ class ClassificationManager(ServerClient):
             self,
             definition_guid: str,
             element_guid: str,
-            effective_time: str = None,
-            for_lineage: bool = None,
-            for_duplicate_processing: bool = None,
+            body: Optional[dict | NewRelationshipRequestBody] = None,
             time_out: int = default_time_out,
     ) -> None:
         """
@@ -3661,14 +3660,8 @@ class ClassificationManager(ServerClient):
             - identity of the governance definition to add
         element_guid: str
             - the identity of the element to update
-        effective_time: str, default is None
-            - None means ignore, otherwise the time that the element must be effective
-        for_lineage: bool, default is set by server
-            - determines if elements classified as Memento should be returned - normally false
-        for_duplicate_processing: bool, default is set by server
-            - Normally false. Set true when the caller is part of a deduplication function
-
-
+        body: dict | NewRelationshipRequestBody, optional
+            - structure containing governed-by information - see Notes
         time_out: int, default = default_time_out
             - http request timeout for this request
 
@@ -3680,6 +3673,23 @@ class ClassificationManager(ServerClient):
         ------
         PyegeriaException
 
+        Notes
+        -----
+        Sample body:
+        {
+           "class" : "NewRelationshipRequestBody",
+           "properties" : {
+             "class" : "GovernedByProperties",
+             "label" : "add label here",
+             "description" : "add description here"
+           },
+           "externalSourceGUID": "Add guid here",
+           "externalSourceName": "Add qualified name here",
+           "forLineage": false,
+           "forDuplicateProcessing": false,
+           "effectiveTime" : "{{$isoTimestamp}}"
+        }
+
         """
 
         url = (
@@ -3687,20 +3697,15 @@ class ClassificationManager(ServerClient):
             f""
         )
 
-        body = {"class": "RelationshipRequestBody", "effectiveTime": effective_time, "forLineage": for_lineage,
-                "forDuplicateProcessing": for_duplicate_processing}
-
-        await self._async_make_request(
-            "POST", url, body_slimmer(body), time_out=time_out
+        await self._async_new_relationship_request(
+            url, prop=["GovernedByProperties"], body=body
         )
 
     def add_gov_definition_to_element(
             self,
             definition_guid: str,
             element_guid: str,
-            effective_time: str = None,
-            for_lineage: bool = None,
-            for_duplicate_processing: bool = None,
+            body: Optional[dict | NewRelationshipRequestBody] = None,
             time_out: int = default_time_out,
     ) -> None:
         """
@@ -3714,14 +3719,8 @@ class ClassificationManager(ServerClient):
             - identity of the governance definition to add
         element_guid: str
             - the identity of the element to update
-        effective_time: str, default is None
-            - None means ignore, otherwise the time that the element must be effective
-        for_lineage: bool, default is set by server
-            - determines if elements classified as Memento should be returned - normally false
-        for_duplicate_processing: bool, default is set by server
-            - Normally false. Set true when the caller is part of a deduplication function
-
-
+        body: dict | NewRelationshipRequestBody, optional
+            - structure containing governed-by information - see Notes
         time_out: int, default = default_time_out
             - http request timeout for this request
 
@@ -3733,6 +3732,23 @@ class ClassificationManager(ServerClient):
         ------
         PyegeriaException
 
+        Notes
+        -----
+        Sample body:
+        {
+           "class" : "NewRelationshipRequestBody",
+           "properties" : {
+             "class" : "GovernedByProperties",
+             "label" : "add label here",
+             "description" : "add description here"
+           },
+           "externalSourceGUID": "Add guid here",
+           "externalSourceName": "Add qualified name here",
+           "forLineage": false,
+           "forDuplicateProcessing": false,
+           "effectiveTime" : "{{$isoTimestamp}}"
+        }
+
         """
 
         loop = asyncio.get_event_loop()
@@ -3740,17 +3756,16 @@ class ClassificationManager(ServerClient):
             self.async_add_gov_definition_to_element(
                 definition_guid,
                 element_guid,
-                effective_time,
-                for_lineage,
-                for_duplicate_processing,
+                body,
                 time_out,
             )
         )
 
-    async def async_clear_gov_definition_from_element(
+    async def async_remove_gov_definition_from_element(
             self,
-            definition_guid,
+            definition_guid: str,
             element_guid: str,
+            body: Optional[dict | DeleteRelationshipRequestBody] = None,
             for_lineage: bool = None,
             for_duplicate_processing: bool = None,
             effective_time: str = None,
@@ -3767,6 +3782,8 @@ class ClassificationManager(ServerClient):
             - identity of the governance definition to add
         element_guid: str
             - the identity of the element to update
+        body: dict | DeleteRelationshipRequestBody, default = None
+            - a dictionary or Pydantic model containing the properties for the request - see note below
         for_lineage: bool, default is set by server
             - determines if elements classified as Memento should be returned - normally false
         for_duplicate_processing: bool, default is set by server
@@ -3787,6 +3804,18 @@ class ClassificationManager(ServerClient):
         ------
         PyegeriaException
 
+        Note:
+        -----
+        Sample body:
+
+        {
+           "class" : "DeleteRelationshipRequestBody",
+           "externalSourceGUID": "Add guid here",
+           "externalSourceName": "Add qualified name here",
+           "forLineage": false,
+           "forDuplicateProcessing": false,
+           "effectiveTime" : "{{$isoTimestamp}}"
+        }
 
         """
 
@@ -3795,24 +3824,28 @@ class ClassificationManager(ServerClient):
             f"{definition_guid}/detach"
         )
 
-        body = {"class": "ClassificationRequestBody", "effectiveTime": effective_time, "forLineage": for_lineage,
-                "forDuplicateProcessing": for_duplicate_processing}
+        if body is None:
+            body = {
+                "class": "DeleteRelationshipRequestBody",
+                "effectiveTime": effective_time,
+                "forLineage": for_lineage,
+                "forDuplicateProcessing": for_duplicate_processing,
+            }
 
-        await self._async_make_request(
-            "POST", url, body_slimmer(body), time_out=time_out
-        )
+        await self._async_delete_relationship_request(url, body)
 
-    def clear_gov_definition_from_element(
+    def remove_gov_definition_from_element(
             self,
-            definition_guid,
+            definition_guid: str,
             element_guid: str,
+            body: Optional[dict | DeleteRelationshipRequestBody] = None,
             for_lineage: bool = None,
             for_duplicate_processing: bool = None,
             effective_time: str = None,
             time_out: int = default_time_out,
     ) -> None:
         """
-        Remove the GovernedBy relationship between a governance definition and an element. Async Version.
+        Remove the GovernedBy relationship between a governance definition and an element.
 
         Governance Action Classifications: https://egeria-project.org/types/4/0422-Governance-Action-Classifications/
 
@@ -3822,6 +3855,8 @@ class ClassificationManager(ServerClient):
             - identity of the governance definition to add
         element_guid: str
             - the identity of the element to update
+        body: dict | DeleteRelationshipRequestBody, default = None
+            - a dictionary or Pydantic model containing the properties for the request - see note below
         for_lineage: bool, default is set by server
             - determines if elements classified as Memento should be returned - normally false
         for_duplicate_processing: bool, default is set by server
@@ -3847,8 +3882,10 @@ class ClassificationManager(ServerClient):
 
         loop = asyncio.get_event_loop()
         loop.run_until_complete(
-            self.async_clear_criticality_classification(
+            self.async_remove_gov_definition_from_element(
+                definition_guid,
                 element_guid,
+                body,
                 for_lineage,
                 for_duplicate_processing,
                 effective_time,

@@ -10,15 +10,15 @@ Execute ToDo actions.
 
 import os
 import time
-from datetime import datetime
+from datetime import datetime, timezone
 
 import click
 
-from pyegeria import MyProfile
+from pyegeria import EgeriaTech, ACTIVITY_STATUS
 from pyegeria.core._exceptions import (
     PyegeriaAPIException as PropertyServerException,
     print_basic_exception as print_exception_response, PyegeriaException, print_basic_exception,
-    PyegeriaException,
+    PyegeriaException, PyegeriaInvalidParameterException
 )
 
 erins_guid = "dcfd7e32-8074-4cdf-bdc5-9a6f28818a9d"
@@ -51,14 +51,13 @@ EGERIA_USER_PASSWORD = os.environ.get("EGERIA_USER_PASSWORD", "secret")
 )
 @click.option("--userid", default=EGERIA_USER, help="Egeria user")
 @click.option("--password", default=EGERIA_USER_PASSWORD, help="Egeria user password")
-@click.option("--timeout", default=60, help="Number of seconds to wait")
 @click.option("--name", help="Name of Todo", required=True)
 @click.option(
     "--description",
     help="Brief description of To Do item",
     required=True,
 )
-@click.option("--type", help="Type of Todo", required=True, default="forMe")
+@click.option("--category", help="User-defined category", required=False, default=None)
 @click.option(
     "--priority",
     type=int,
@@ -78,38 +77,46 @@ EGERIA_USER_PASSWORD = os.environ.get("EGERIA_USER_PASSWORD", "secret")
     required=True,
     default=peter_guid,
 )
+@click.option(
+    "--sponsor",
+    help="Sponsor of the ToDo item",
+    required=False,
+    default=None,
+)
 def create_todo(
     server,
     url,
     userid,
     password,
-    timeout,
     name,
     description,
-    type,
+    category,
     priority,
     due,
     assigned_to,
+    sponsor
 ):
     """Create a new ToDo item"""
-    m_client = MyProfile(server, url, user_id=userid, user_pwd=password)
+    m_client = EgeriaTech(server, url, user_id=userid, user_pwd=password)
     m_client.create_egeria_bearer_token()
     try:
         body = {
+            "class": "ActionRequestBody",
             "properties": {
                 "class": "ToDoProperties",
                 "qualifiedName": f"{name}-{time.asctime()}",
-                "name": name,
+                "displayName": name,
                 "description": description,
-                "toDoType": type,
+                "category": category,
                 "priority": priority,
                 "dueTime": due,
-                "status": "OPEN",
+                "activityStatus": "REQUESTED",
             },
             "assignToActorGUID": assigned_to,
+            "actionSponsorGUID": sponsor
         }
 
-        resp = m_client.create_to_do(body)
+        resp = m_client.create_action(body)
         # if type(resp) is str:
         click.echo(f"Response was {resp}")
         # elif type(resp) is dict:
@@ -134,10 +141,10 @@ def create_todo(
 @click.argument("todo-guid")
 def delete_todo(server, url, userid, password, timeout, todo_guid):
     """Delete the todo item specified"""
-    m_client = MyProfile(server, url, user_id=userid, user_pwd=password)
+    m_client = EgeriaTech(server, url, user_id=userid, user_pwd=password)
     m_client.create_egeria_bearer_token()
     try:
-        m_client.delete_to_do(todo_guid)
+        m_client.delete_asset(todo_guid)
 
         click.echo(f"Deleted Todo item {todo_guid}")
 
@@ -161,7 +168,7 @@ def delete_todo(server, url, userid, password, timeout, todo_guid):
 @click.option(
     "--new-status",
     type = click.Choice(
-        ["OPEN", "IN_PROGRESS", "WAITING", "COMPLETE", "ABANDONED"],
+        ACTIVITY_STATUS,
         case_sensitive="False",
     ),
     help="Enter the new ToDo item status",
@@ -169,12 +176,21 @@ def delete_todo(server, url, userid, password, timeout, todo_guid):
 )
 def change_todo_status(server, url, userid, password, timeout, todo_guid, new_status):
     """Update a ToDo item status"""
-    m_client = MyProfile(server, url, user_id=userid, user_pwd=password)
+    m_client = EgeriaTech(server, url, user_id=userid, user_pwd=password)
     m_client.create_egeria_bearer_token()
     try:
-        body = {"class": "ToDoProperties", "toDoStatus": new_status}
+        if new_status not in ACTIVITY_STATUS:
+            raise PyegeriaInvalidParameterException(context={"reason":"Invalid activity status"})
+        body = {
+            "class": "UpdataElementRequestBody",
+            "properties": {
+                "class": "ToDoProperties",
+                "activityStatus": new_status
+            },
+            "mergeUpdate": True
+        }
 
-        m_client.update_to_do(todo_guid, body, is_merge_update=True)
+        m_client.update_asset(todo_guid, body)
 
         click.echo(f"Changed todo item {todo_guid} status to {new_status}.")
 
@@ -197,16 +213,21 @@ def change_todo_status(server, url, userid, password, timeout, todo_guid, new_st
 @click.argument("todo-guid")
 def mark_todo_complete(server, url, userid, password, timeout, todo_guid):
     """Mark the specified todo as complete"""
-    m_client = MyProfile(server, url, user_id=userid, user_pwd=password)
+    m_client = EgeriaTech(server, url, user_id=userid, user_pwd=password)
     try:
+
         m_client.create_egeria_bearer_token()
         body = {
-            "class": "ToDoProperties",
-            "completionTime": time.asctime(),
-            "toDoStatus": "COMPLETE",
+            "class": "UpdataElementRequestBody",
+            "properties": {
+                "class": "ToDoProperties",
+                "activityStatus": "COMPLETED",
+                "completionTime": datetime.now(timezone.utc).isoformat()
+            },
+            "mergeUpdate": True
         }
 
-        m_client.update_to_do(todo_guid, body, is_merge_update=True)
+        m_client.update_asset(todo_guid, body)
 
         click.echo(f"Marked todo item {todo_guid} as complete.")
 
@@ -230,10 +251,10 @@ def mark_todo_complete(server, url, userid, password, timeout, todo_guid):
 @click.argument("new-actor-guid")
 def reassign_todo(server, url, userid, password, timeout, todo_guid, new_actor_guid):
     """Reassign ToDo item to new actor"""
-    m_client = MyProfile(server, url, user_id=userid, user_pwd=password)
+    m_client = EgeriaTech(server, url, user_id=userid, user_pwd=password)
     m_client.create_egeria_bearer_token()
     try:
-        m_client.reassign_to_do(todo_guid, new_actor_guid)
+        m_client.reassign_action(todo_guid, new_actor_guid)
 
         click.echo(f"Reassigned Todo item {todo_guid} to {new_actor_guid}")
 

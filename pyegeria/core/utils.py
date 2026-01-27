@@ -9,6 +9,8 @@ General utility functions in support of the Egeria Python Client package.
 from loguru import logger
 from rich import print, print_json
 from rich.console import Console
+from rich.markdown import Markdown
+
 from pyegeria.core.config import settings as app_settings
 from typing import Callable, TypeVar
 
@@ -207,6 +209,23 @@ def dict_to_markdown_list(data: dict, level: int = 0) -> str:
             markdown_str += f"{indent}* **{key}**: {value}\n"
 
     return markdown_str
+
+
+def list_actors(actor_list: list[dict])-> str | Markdown | None:
+    if actor_list:
+        assigned_md = ""
+        for actor in actor_list:
+            actor_props = actor['relatedElement']['properties']
+            actor_name = actor_props.get("displayName", None)
+            if not actor_name:
+                actor_name = actor_props.get("userId", None)
+            if not actor_name:
+                actor_name = actor_props.get("qualifiedName", None)
+            assigned_md += f"* {actor_name}\n"
+        assigned_out = Markdown(assigned_md)
+        return assigned_out
+    else:
+        return None
 
 
 import csv

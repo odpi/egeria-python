@@ -15,11 +15,14 @@ from rich.console import Console
 
 from pyegeria import (
     PyegeriaException,
-    print_exception_table,
+    print_exception_table, print_basic_exception,
 )
 from pyegeria.omvs.asset_maker import AssetMaker
 
 disable_ssl_warnings = True
+erin_guid = "dcfd7e32-8074-4cdf-bdc5-9a6f28818a9d"  # Erin
+gary_guid = "dfe5c382-9ec4-4972-8481-35fd61cb4feb"
+lemme_guid = "7b5cf4fa-23a8-4cf5-aaa6-02bcf58214f8"
 
 console = Console()
 class TestAssetMaker:
@@ -245,6 +248,35 @@ class TestAssetMaker:
         finally:
             a_client.close_session()
 
+    def test_delete_asset(self):
+        """Test deleting an asset"""
+        try:
+            a_client = AssetMaker(
+                self.good_view_server_2,
+                self.good_platform1_url,
+                user_id=self.good_user_2,
+                user_pwd=self.good_user_2_pwd,
+            )
+
+            token = a_client.create_egeria_bearer_token(
+                self.good_user_2, self.good_user_2_pwd
+            )
+
+            # First create an asset to update
+
+            asset_guid = "de072a19-68c5-40bd-ba61-8cf5d99cb1a2"
+            delete_body = {"class": "DeleteElementRequestBody"}
+            a_client.delete_asset(asset_guid, delete_body)
+            print(f"Cleaned up test asset: {asset_guid}")
+
+            assert  True, "Asset should be deleted"
+
+        except PyegeriaException as e:
+            print_exception_table(e)
+            assert False, "Invalid request"
+        finally:
+            a_client.close_session()
+
     def test_find_data_assets(self):
         """Test finding data assets"""
         try:
@@ -293,7 +325,15 @@ class TestAssetMaker:
             a_client = AssetMaker(self.good_view_server_2, self.good_platform1_url, user_id=self.good_user_2,
                                   user_pwd=self.good_user_2_pwd)
             a_client.create_egeria_bearer_token(self.good_user_2, self.good_user_2_pwd)
-            response = a_client.find_processes(search_string="*", activity_status=None, metadata_element_type ="Process",output_format="JSON")
+            response = a_client.find_processes(
+                search_string="HAM",
+                activity_status_list=[],
+                metadata_element_type="ToDo",
+                output_format="JSON",
+                page_size = 10,
+                graph_query_depth=5,
+                relationship_page_size=10,
+            )
             console.print(f"Response type {type(response)}, num elements {len(response)}\n")
             if isinstance(response, dict|list):
                 console.print_json(data=response)
@@ -312,6 +352,8 @@ class TestAssetMaker:
             a_client = AssetMaker(self.good_view_server_2, self.good_platform1_url, user_id=self.good_user_2,
                                   user_pwd=self.good_user_2_pwd)
             a_client.create_egeria_bearer_token(self.good_user_2, self.good_user_2_pwd)
+
+
             body = {
                 "class": "ActionRequestBody",
                 "properties": {
@@ -320,9 +362,13 @@ class TestAssetMaker:
                     "displayName": "make-coffee",
                     "activityStatus": "REQUESTED",
                     "description": "Make coffee for the team",
-                }
+                },
+                "assignToActorGUID": gary_guid,
+                "originatorGUID": erin_guid,
+                "actionSponsorGUID": lemme_guid,
             }
             response = a_client.create_action(body=body)
+            print(response)
             assert response is not None
         except PyegeriaException as e:
             print_exception_table(e)
@@ -331,6 +377,24 @@ class TestAssetMaker:
         finally:
             a_client.close_session()
 
+    def test_assign_actions(self):
+        """Test assigning actions for an actor"""
+        try:
+            a_client = AssetMaker(self.good_view_server_2, self.good_platform1_url, user_id=self.good_user_2,
+                                  user_pwd=self.good_user_2_pwd)
+            a_client.create_egeria_bearer_token(self.good_user_2, self.good_user_2_pwd)
+            # Using a dummy GUID
+            a_client.assign_action(action_guid = "59fb7c88-89bf-4f9d-a792-3c06cf2f4fb7",
+                                                 actor_guid=erin_guid)
+
+            assert True
+        except PyegeriaException as e:
+            print_basic_exception(e)
+
+        finally:
+            a_client.close_session()
+
+
     def test_get_assigned_actions(self):
         """Test getting assigned actions for an actor"""
         try:
@@ -338,7 +402,7 @@ class TestAssetMaker:
                                   user_pwd=self.good_user_2_pwd)
             a_client.create_egeria_bearer_token(self.good_user_2, self.good_user_2_pwd)
             # Using a dummy GUID
-            response = a_client.get_assigned_actions(actor_guid="fc43ce51-342c-4251-8e78-a29dcf30a553", output_format="JSON")
+            response = a_client.get_assigned_actions(actor_guid="59f0232c-f834-4365-8e06-83695d238d2d", activity_status_list=[],output_format="JSON")
             if isinstance(response, dict | list):
                 console.print_json(data=response)
             else:
@@ -350,6 +414,25 @@ class TestAssetMaker:
         finally:
             a_client.close_session()
 
+
+    def test_get_actions_for_sponsor(self):
+        """Test getting assigned actions for an actor"""
+        try:
+            a_client = AssetMaker(self.good_view_server_2, self.good_platform1_url, user_id=self.good_user_2,
+                                  user_pwd=self.good_user_2_pwd)
+            a_client.create_egeria_bearer_token(self.good_user_2, self.good_user_2_pwd)
+            # Using a dummy GUID
+            response = a_client.get_actions_for_sponsor(metadata_element_guid=lemme_guid, activity_status_list=["REQUESTED"],output_format="JSON")
+            if isinstance(response, dict | list):
+                console.print_json(data=response)
+            else:
+                console.print(response)
+            assert response is not None
+        except PyegeriaException as e:
+            print_exception_table(e)
+            pass
+        finally:
+            a_client.close_session()
 
 if __name__ == "__main__":
     pytest.main([__file__, "-v", "-s"])
