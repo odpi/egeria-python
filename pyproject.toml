@@ -119,7 +119,7 @@ dependencies = [
     stop_daemon = "commands.ops.engine_actions:stop_daemon"
     list_archives = "commands.ops.list_archives:main"
 
-    list_my_profile = "commands.my.list_my_profile:main"
+    list_my_profile = "commands.my.get_my_profile:main"
     list_my_roles = "commands.my.list_my_roles:main"
     monitor_my_actions = "commands.my.monitor_my_actions:main"
     create_todo = "commands.my.todo_actions:create_todo"

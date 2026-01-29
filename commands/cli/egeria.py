@@ -64,7 +64,7 @@ from commands.cat.list_user_ids import list_user_ids
 from commands.cat.dr_egeria_md import process_markdown_file
 
 from commands.cli.ops_config import Config
-from commands.my.list_my_profile import display_my_profile
+from commands.my.get_my_profile import display_my_profile
 from commands.my.list_my_roles import display_my_roles
 from commands.my.monitor_my_actions import display_my_todos
 from commands.my.todo_actions import (
@@ -327,9 +327,9 @@ def my_show(ctx):
 @my_show.command("my-reports")
 @click.pass_context
 def show_my_reports(ctx):
-    """Display my profiles
+    """Display my reports
 
-    Usage: show my-profile
+    Usage: show my-reports
 
     """
     c = ctx.obj
@@ -338,8 +338,13 @@ def show_my_reports(ctx):
     )
 
 @my_show.command("my-profile")
+@click.option(
+    "--username",
+    default=EGERIA_USER,
+    help="Username to use",
+)
 @click.pass_context
-def show_my_profile(ctx):
+def show_my_profile(ctx, username):
     """Display my profiles
 
     Usage: show my-profile
@@ -347,7 +352,7 @@ def show_my_profile(ctx):
     """
     c = ctx.obj
     display_my_profile(
-        c.view_server, c.view_server_url, c.userid, c.password, c.jupyter, c.width
+        c.view_server, c.view_server_url, username, c.password, c.jupyter, c.width
     )
 
 
