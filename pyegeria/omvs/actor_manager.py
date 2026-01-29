@@ -2367,8 +2367,13 @@ class ActorManager(ServerClient):
 
         """
         url = str(HttpUrl(f"{self.command_root}/actor-roles/by-search-string"))
-        response = await self._async_find_request(url, _type="ActorRole", _gen_output=self._generate_actor_role_output,
-                                                  search_string=search_string, output_format="JSON", page_size=0,
+        response = await self._async_find_request(url, _type="ActorRole",
+                                                  metadata_element_subtypes=metadata_element_subtypes,
+                                                  include_only_classified_elements=classification_names,
+                                                  _gen_output=self._generate_actor_role_output,
+                                                  search_string=search_string, starts_with=starts_with, ends_with=ends_with,
+                                                  ignore_case=ignore_case, start_from=start_from, page_size=page_size,
+                                                  output_format=output_format, report_spec=report_spec ,
                                                   body=body)
 
         return response

@@ -326,13 +326,13 @@ class TestAssetMaker:
                                   user_pwd=self.good_user_2_pwd)
             a_client.create_egeria_bearer_token(self.good_user_2, self.good_user_2_pwd)
             response = a_client.find_processes(
-                search_string="HAM",
+                # search_string="*",
                 activity_status_list=[],
-                metadata_element_type="ToDo",
+                metadata_element_subtypes=['ToDo'],
                 output_format="JSON",
-                page_size = 10,
-                graph_query_depth=5,
-                relationship_page_size=10,
+                page_size = 100,
+                graph_query_depth=2,
+                relationship_page_size=2,
             )
             console.print(f"Response type {type(response)}, num elements {len(response)}\n")
             if isinstance(response, dict|list):

@@ -342,18 +342,9 @@ Content-Type: application/json
 
 {
   "class" : "ActivityStatusSearchString",
-  "searchString" : "xxx",
+  "searchString" : "make",
   "activityStatusList" : [],
-  "startsWith" : false,
-  "endsWith" : false,
-  "ignoreCase" : true,
-  "startFrom" : 0,
-  "pageSize": 0,
-  "asOfTime" : "{{$isoTimestamp}}",
-  "effectiveTime" : "{{$isoTimestamp}}",
-  "forLineage" : false,
-  "forDuplicateProcessing" : false,
-  "limitResultsByStatus" : ["ACTIVE"],
+  "metadataElementSubtypeNames": ["ToDo"],
   "sequencingOrder" : "PROPERTY_ASCENDING",
   "sequencingProperty" : "qualifiedName"
 }

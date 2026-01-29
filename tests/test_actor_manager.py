@@ -755,6 +755,49 @@ class TestActorManager:
             if actor_client:
                 actor_client.close_session()
 
+    def test_find_actor_roles(self):
+        """Test finding user ids with search string"""
+        actor_client = None
+        try:
+            actor_client = ActorManager(self.good_view_server_2, self.good_platform1_url, user_id=self.good_user_2)
+            token = actor_client.create_egeria_bearer_token(self.good_user_2, "secret")
+            start_time = time.perf_counter()
+
+            search_string = "Project"
+            response = actor_client.find_actor_roles(
+                search_string = search_string,
+                output_format="DICT", report_spec="Actor-Roles", page_size=10,
+            )
+            duration = time.perf_counter() - start_time
+
+            print(f"\n\tDuration was {duration} seconds")
+            if type(response) is list:
+                console.print(f"Found {len(response)} user identities")
+                console.print_json(json.dumps(response, indent=2))
+            elif type(response) is str:
+                print("\n\nResponse: " + response)
+            assert True
+
+        except (
+                PyegeriaInvalidParameterException,
+                PyegeriaAPIException,
+                PyegeriaUnauthorizedException,
+                PyegeriaNotFoundException,
+        ) as e:
+            print_exception_table(e)
+            assert False, "Invalid request"
+        except ValidationError as e:
+            print_validation_error(e)
+            assert False, "Invalid request"
+        except PyegeriaConnectionException as e:
+            print_basic_exception(e)
+            assert False, "Connection error"
+        finally:
+            if actor_client:
+                actor_client.close_session()
+
+
+
     def test_assignment_scope_link_detach(self):
         """Test linking and detaching assignment scope"""
         actor_client = None
