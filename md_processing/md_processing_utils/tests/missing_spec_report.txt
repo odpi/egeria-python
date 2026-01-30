@@ -1,0 +1,206 @@
+Missing command specs:
+- Add Member
+- Add to Folder
+- Attach Cited Document
+- Attach Cited Document Link
+- Attach Media Reference Link
+- Attach Related Media
+- Create Agreements
+- Create Blueprint
+- Create Collections
+- Create Context Event Collection
+- Create Context Event Collections
+- Create Data Products
+- Create Data Sharing Agreements
+- Create Digital Product Catalogs
+- Create Digital Subscriptions
+- Create Event Set Collection
+- Create Event Set Collections
+- Create Folders
+- Create Governance Control:
+- Create Governance Process
+- Create Governance Rule:
+- Create Home Collection
+- Create Home Collections
+- Create Name Space Collection
+- Create Name Space Collections
+- Create Namespace
+- Create Namespaces
+- Create Naming Standard Ruleset
+- Create Naming Standard Rulesets
+- Create Note
+- Create Recent Access
+- Create Recent Accesses
+- Create Reference List
+- Create Reference Lists
+- Create Regulation Article Definition
+- Create Result Set
+- Create Result Sets
+- Create Root Collection
+- Create Root Collections
+- Create Service Level Objective
+- Create Subscription
+- Create Subscriptions
+- Create Term-Term Relationship
+- Create Work Item List
+- Create Work Item Lists
+- Detach Agreement->Item
+- Detach Cited Document
+- Detach Cited Document Link
+- Detach Collection->Resource
+- Detach Controls
+- Detach Drivers
+- Detach External Reference Link
+- Detach Governance Controls
+- Detach Governance Drivers
+- Detach Governance Mechanism
+- Detach Governance Policies
+- Detach Governance Response
+- Detach Governed By
+- Detach Media Reference Link
+- Detach Member->Collection
+- Detach NoteLog
+- Detach Product-Product
+- Detach Related Media
+- Detach Related Media Link
+- Detach Solution Component Peers
+- Detach Solution Components
+- Detach Subscriber->Subscription
+- Detach Tag
+- Detach Term-Term Relationship
+- Link Cited Document
+- Link Controls
+- Link Drivers
+- Link Information Supply Chains
+- Link NoteLog
+- Link Referenceable->Related Media
+- Link Related Media
+- Link Supply Chains
+- Link Tag
+- Link Termss
+- List Agreements
+- List Business ImperativesList Regulations
+- List Certification Types
+- List Collections
+- List Data Dictionaries
+- List Data Processing Purposes
+- List Data Specifications
+- List Data Specs
+- List Folders
+- List Glossaries
+- List Glossary Terms
+- List Governance Approaches
+- List Governance Controls
+- List Governance Definitions
+- List Governance Drivers
+- List Governance Metrics
+- List Governance Obligations
+- List Governance Policies
+- List Governance Principles
+- List Governance Procedures
+- List Governance Responsibilities
+- List Governance Rules
+- List Governance Strategies
+- List License Types
+- List Methodologies
+- List Naming Standard Rulesets
+- List Notification Types
+- List Products
+- List Projects
+- List Regulation Articles
+- List Regulation Definitions
+- List Regulations
+- List Security Access Controls
+- List Security Groups
+- List Service Level Objectives
+- List Subject Area Definitions
+- List Subscriptions
+- List Terms and Conditions
+- List Threats
+- Remove Member
+- Remove from Folder
+- Unlink Information Supply Chain Peers
+- Unlink Information Supply Chains
+- Unlink Solution Components
+- Unlink Supply Chains
+- Update Agreements
+- Update Blueprint
+- Update Collections
+- Update Context Event Collection
+- Update Context Event Collections
+- Update Data Products
+- Update Data Sharing Agreements
+- Update Digital Product Catalogs
+- Update Digital Subscriptions
+- Update Event Set Collection
+- Update Event Set Collections
+- Update Folders
+- Update Governance Process
+- Update Home Collection
+- Update Home Collections
+- Update Name Space Collection
+- Update Name Space Collections
+- Update Namespace
+- Update Namespaces
+- Update Naming Standard Ruleset
+- Update Naming Standard Rulesets
+- Update Note
+- Update Recent Access
+- Update Recent Accesses
+- Update Reference List
+- Update Reference Lists
+- Update Regulation Article Definition
+- Update Result Set
+- Update Result Sets
+- Update Root Collection
+- Update Root Collections
+- Update Service Level Objective
+- Update Subscription
+- Update Subscriptions
+- Update Term-Term Relationship
+- Update Work Item List
+- Update Work Item Lists
+- View Agreements
+- View Certification Types
+- View Collections
+- View Data Class
+- View Data Classes
+- View Data Dictionaries
+- View Data Dictionary
+- View Data Field
+- View Data Fields
+- View Data Processing Purposes
+- View Data Specifications
+- View Data Specs
+- View Data Structure
+- View Data Structures
+- View Folders
+- View Glossaries
+- View Glossary Terms
+- View Governance Approaches
+- View Governance Controls
+- View Governance Definitions
+- View Governance Drivers
+- View Governance Metrics
+- View Governance Obligations
+- View Governance Policies
+- View Governance Principles
+- View Governance Procedures
+- View Governance Responsibilities
+- View Governance Rules
+- View Governance Strategies
+- View License Types
+- View Methodologies
+- View Naming Standard Rulesets
+- View Notification Types
+- View Products
+- View Projects
+- View Regulation Definitions
+- View Regulations
+- View Security Access Controls
+- View Security Groups
+- View Service Level Objectives
+- View Subject Area Definitions
+- View Subscriptions
+- View Terms and Conditions
+- Wire Solution Components

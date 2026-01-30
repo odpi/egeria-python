@@ -840,7 +840,7 @@ def process_component_link_unlink_command(egeria_client: EgeriaTech, txt: str,
 
     elif directive == "process":
         try:
-            if object_action == "Unlink":
+            if object_action in ["Detach", "Unlink", "Remove"]:
                 if not exists:
                     msg = (f" Link `{label}` does not exist! Updating result document with Link "
                            f"object_action\n")
@@ -870,7 +870,7 @@ def process_component_link_unlink_command(egeria_client: EgeriaTech, txt: str,
                 return (out)
 
 
-            elif object_action == "Link":
+            elif object_action in ["Link", "Attach", "Add"]:
                 if valid is False and exists:
                     msg = (f"-->  Link called `{label}` already exists and result document updated changing "
                            f"`Link` to `Detach` in processed output\n")
@@ -1114,7 +1114,7 @@ def process_information_supply_chain_link_unlink_command(egeria_client: EgeriaTe
 
     elif directive == "process":
         try:
-            if object_action == "Unlink":
+            if object_action in ["Detach", "Unlink", "Remove"]:
                 if not exists:
                     msg = (f" Link `{label}` does not exist! Updating result document with Link "
                            f"object_action\n")
@@ -1144,7 +1144,7 @@ def process_information_supply_chain_link_unlink_command(egeria_client: EgeriaTe
                 return (out)
 
 
-            elif object_action == "Link":
+            elif object_action in ["Link", "Attach", "Add"]:
                 if valid is False and exists:
                     msg = (f"-->  Link called `{label}` already exists and result document updated changing "
                            f"`Link` to `Detach` in processed output\n")
@@ -1181,4 +1181,3 @@ def process_information_supply_chain_link_unlink_command(egeria_client: EgeriaTe
             return None
     else:
         return None
-

@@ -103,7 +103,9 @@ def process_project_upsert_command(egeria_client: EgeriaTech, txt: str, directiv
                     logger.error(msg)
                     return update_a_command(txt, object_action, object_type, qualified_name, guid)
                 elif not valid:
-                    msg = ("  The input data is invalid and cannot be processed. \nPlease review")
+                    msg = ("  The input data is invalid and cannot be processed. "
+                           f"Reason:{parsed_output.get('reason','Not Provided')}\n"
+                           f"Please review")
                     logger.error(msg)
                     print(Markdown(f"==> Validation of {command} failed!!\n"))
                     print(Markdown(msg))
@@ -217,7 +219,7 @@ def process_link_project_hierarchy_command(egeria_client: EgeriaTech, txt: str, 
 
 
         try:
-            if object_action == "Detach":
+            if object_action in ["Detach", "Unlink", "Remove"]:
                 if not exists:
                     msg = (f" Link `{label}` does not exist! Updating result document with Link "
                            f"object_action\n")
@@ -239,7 +241,7 @@ def process_link_project_hierarchy_command(egeria_client: EgeriaTech, txt: str, 
                     return (out)
 
 
-            elif object_action == "Link":
+            elif object_action in ["Link", "Attach", "Add"]:
                 if valid is False and exists:
                     msg = (f"-->  Link called `{label}` already exists and result document updated changing "
                            f"`Link` to `Detach` in processed output\n")
@@ -323,7 +325,7 @@ def process_link_project_dependency_command(egeria_client: EgeriaTech, txt: str,
 
 
         try:
-            if object_action == "Detach":
+            if object_action in ["Detach", "Unlink", "Remove"]:
                 if not exists:
                     msg = (f" Link `{label}` does not exist! Updating result document with Link "
                            f"object_action\n")
@@ -345,7 +347,7 @@ def process_link_project_dependency_command(egeria_client: EgeriaTech, txt: str,
                     return (out)
 
 
-            elif object_action == "Link":
+            elif object_action in ["Link", "Attach", "Add"]:
                 if valid is False and exists:
                     msg = (f"-->  Link called `{label}` already exists and result document updated changing "
                            f"`Link` to `Detach` in processed output\n")

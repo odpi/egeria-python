@@ -654,7 +654,7 @@ def process_link_term_term_relationship_command(egeria_client: EgeriaTech, txt: 
             if not valid:  # First validate the term before we process it
                 return None
 
-            if object_action == "Link":
+            if object_action in ["Link", "Attach", "Add"]:
                 if not exists:
                     msg = f"  Term `{term1_guid}` or {term2_guid} does not exist! "
                     logger.error(msg)
@@ -680,5 +680,4 @@ def process_link_term_term_relationship_command(egeria_client: EgeriaTech, txt: 
             return None
     else:
         return None
-
 

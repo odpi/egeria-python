@@ -364,7 +364,7 @@ class TestCollectionManager:
             c_client = CollectionManager(self.good_view_server_1, self.good_platform1_url, user_id=self.good_user_2, )
             token = c_client.create_egeria_bearer_token(self.good_user_2, "secret")
             start_time = time.perf_counter()
-            collection_guid = "5f4ed132-407a-4047-ac65-dee8ca09c057"
+            collection_guid = "4bc1ed51-5319-4efa-8210-88d66a7de8be"
             element_type = None
             response = c_client.get_collection_by_guid(collection_guid, element_type,
                                                        output_format="JSON", report_spec="Folders")
@@ -1373,18 +1373,17 @@ class TestCollectionManager:
 
             token = c_client.create_egeria_bearer_token(self.good_user_2, "secret")
             start_time = time.perf_counter()
-            collection_guid =  '660bfc21-12b5-4de1-a8f3-63239fbb58a0'# folder
-            element_guid = '98c4c362-fd39-42fc-85e9-0718ab527131' # agreement
+            collection_guid =  '4bc1ed51-5319-4efa-8210-88d66a7de8be'# product catalog
+            element_guid = '71e67a50-ced4-40ed-b25e-98142a009604' # product
             body = {
                 "class": "NewRelationshipRequestBody", "properties": {
                     "class": "CollectionMembershipProperties", "membershipRationale": "test purposes",
-                    "expression": "just testing", "confidence": 50,  "userDefinedStatus": "Maybe",
-                    "steward": "peterprofile", "stewardTypeName": "a type name?",
-                    "stewardPropertyName": "a property name?", "source": "clinical data", "notes": "just an experiment"
+                    "expression": "just testing", "confidence": 50,
+                     "notes": "just an experiment"
                     }
                 }
 
-            c_client.add_to_collection(collection_guid, element_guid, None)
+            c_client.add_to_collection(collection_guid, element_guid, body)
 
             duration = time.perf_counter() - start_time
             # resp_str = json.loads(response)
@@ -1404,12 +1403,12 @@ class TestCollectionManager:
 
             token = c_client.create_egeria_bearer_token(self.good_user_2, "secret")
             start_time = time.perf_counter()
-            collection_guid = "88cc4aa5-4741-448a-a026-69da51fc2cb1"
-            element_guid = "c646820d-4044-431f-8452-a2c7c61d3752"
+            collection_guid = '4bc1ed51-5319-4efa-8210-88d66a7de8be'
+            element_guid = '71e67a50-ced4-40ed-b25e-98142a009604'
             body = {
                 "class": "DeleteRelationshipRequestBody"
             }
-            c_client.remove_from_collection(collection_guid, element_guid, body)
+            c_client.remove_from_collection(  collection_guid,element_guid,body)
 
             duration = time.perf_counter() - start_time
             # resp_str = json.loads(response)

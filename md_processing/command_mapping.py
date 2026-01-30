@@ -108,10 +108,6 @@ def setup_dispatcher() -> CommandDispatcher:
     # Output / List / View
     for cmd in LIST_COMMANDS:
         dispatcher.register(cmd, process_output_command)
-        
-    for cmd in ["List Glossaries", "List Terms", "List Glossary Terms", "View Glossaries",
-                "View Terms", "View Glossary Terms", "View Report"]:
-        dispatcher.register(cmd, process_output_command)
 
     # Projects
     for cmd in PROJECT_COMMANDS:

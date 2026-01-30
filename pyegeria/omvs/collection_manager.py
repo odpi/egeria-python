@@ -5281,7 +5281,7 @@ class CollectionManager(ServerClient):
 
         """
         loop = asyncio.get_event_loop()
-        loop.run_until_complete(self._async_add_to_collection(element_guid, collection_guid, body))
+        loop.run_until_complete(self._async_add_to_collection( collection_guid, element_guid, body))
 
     def add_term_to_folder(self, folder_guid: str, term_guid: str,
                              body: Optional[dict | NewRelationshipRequestBody] = None) -> None:

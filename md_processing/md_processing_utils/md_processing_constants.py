@@ -82,38 +82,7 @@ SIMPLE_BASE_COLLECTIONS: set = {"Collection", "Home Collection", "Digital Produc
                                 # "Data Dictionaries", "Data Dictionaries",
                                 "Event Set Collection", "Naming Standard Ruleset", "Digital Product Catalog"
                                 }
-LIST_COMMANDS = {"List Collections", "View Collections", "List Agreements", "View Agreements",
-                 "List Digital Products", "View Digital Products", "List Products", "View Products",
-                 "List Subscriptions", "View Subscriptions", "List Folders", "View Folders",
-                 "List Data Specifications", "View Data Specifications", "List Data Specs", "View Data Specs",
-                 "List Data Dictionaries", "View Data Dictionaries",
-                 "List Governance Definitions", "View Governance Definitions", "List Governance Drivers",
-                 "View Governance Drivers",
-                 "List Governance Policies", "View Governance Policies", "List Governance Controls",
-                 "View Governance Controls",
-                 "List Governance Rules", "View Governance Rules", "List Governance Principles",
-                 "View Governance Principles",
-                 "List Governance Obligations", "View Governance Obligations", "List Governance Approaches",
-                 "View Governance Approaches",
-                 "List Governance Strategies", "View Governance Strategies", "List Regulations", "View Regulations",
-                 "List Regulation Definitions", "View Regulation Definitions",
-                 "List Naming Standard Rulesets", "View Naming Standard Rulesets", "List Governance Drivers",
-                 "List Governance Strategies", "List Business Imperatives" "List Regulations",
-                 "List Regulation Articles", "List Threats",
-                 "List Governance Metrics", "View Governance Metrics", "List Service Level Objectives",
-                 "View Service Level Objectives",
-                 "List Governance Rules", "View Governance Rules", "List Notification Types", "View Notification Types",
-                 "List Security Access Controls", "View Security Access Controls", "List Security Groups",
-                 "View Security Groups",
-                 "List Governance Procedures", "View Governance Procedures", "List Methodologies", "View Methodologies",
-                 "List Governance Responsibilities", "View Governance Responsibilities", "List Terms and Conditions",
-                 "View Terms and Conditions", "List License Types", "View License Types", "List Certification Types",
-                 "View Certification Types",
-                 "List Subject Area Definitions", "View Subject Area Definitions", "List Data Processing Purposes",
-                 "View Data Processing Purposes",
-                 "List Projects", "View Projects",
-
-                 }
+LIST_COMMANDS = {"Run Report"}
 
 SIMPLE_COLLECTIONS: set = set()
 for element in SIMPLE_BASE_COLLECTIONS:
@@ -123,23 +92,7 @@ for element in SIMPLE_BASE_COLLECTIONS:
     SIMPLE_COLLECTIONS.add(f"Create {plural}")
     SIMPLE_COLLECTIONS.add(f"Update {plural}")
 
-COLLECTIONS_LIST = ["List Collections", "View Collections", "List Digital Products", "View Digital Products",
-                    "List Data Products", "View Data Products",
-                    "List Data Sharing Agreements", "View Data Sharing Agreements",
-                    "List Agreements", "View Agreements",
-                    "List Digital Subscriptions", "View Digital Subscriptions",
-                    "List Subscriptions", "View Subscriptions",
-                    "List Root Collections", "View Root Collections",
-                    "List Data Specifications", "View Data Specifications", "List Data Specs", "View Data Specs",
-                    "List Data Dictionaries", "View Data Dictionaries",
-                    "List Folders", "View Folders",
-                    "List Context Event Collections", "View Context Event Collections",
-                    "List Name Space Collections", "View Name Space Collections",
-                    "List Event Set Collections", "View Event Set Collections",
-                    "List Naming Standard Rulesets", "View Naming Standard Rulesets", "List External Reference",
-                    "List Related Media", "List Cited Document", "List External Data Source",
-                    "List External Model Source",
-                    "List Digital Product Catalogs", "View Digital Product Catalogs", ]
+COLLECTIONS_LIST = []
 
 PROJECT_COMMANDS = ["Create Project", "Update Project", "Create Campaign", "Update Campaign",
                     "Create Task", "Update Task", "Create Study Project", "Update Study Project",
@@ -259,6 +212,7 @@ command_list.extend(EXT_REF_COMMANDS)
 command_list.extend(["Link Governance Response", "Detach Governance Response",
                      "Link Governance Mechanism", "Detach Governance Mechanism"])
 command_list.extend(FEEDBACK_COMMANDS)
+command_list = [c for c in command_list if not (c.startswith(("List ", "View ")) and c != "Run Report")]
 pre_command = "\n---\n==> Processing object_action:"
 command_seperator = Markdown("\n---\n")
 EXISTS_REQUIRED = "Exists Required"
@@ -461,7 +415,7 @@ def find_alternate_names(command: str) -> str | None:
     for key, value in comm_spec.items():
         if isinstance(value, dict):
             v = value.get('alternate_names', "")
-            v = v.split(';') if v else ""
+            v = [item.strip() for item in v.split(';') if item.strip()] if v else []
             verb = command.split()[0] if command else ""
             normalized_command = " ".join(command.split())
             # normalized_alternates = (" ".join(s.split()) for s in v)
@@ -469,6 +423,10 @@ def find_alternate_names(command: str) -> str | None:
                 return key
             elif does_command_match(normalized_command, v):
                 return key
+            else:
+                key_parts = key.split(maxsplit=1)
+                if len(key_parts) == 2 and does_command_match(normalized_command, [key_parts[1]]):
+                    return key
     return None
 
 

@@ -1,5 +1,5 @@
 
-# Create Campaign
+# Update Campaign
 >	An organized set of work.
 
 ## Display Name
@@ -8,7 +8,7 @@
 >	**Description**: The name of the project to create or update.
 
 >	**Alternative Labels**: Project; Project Name; Name
-Sales Forecasting AI Assistant
+Sales Forecasting Advisor
 
 ## Description
 >	**Input Required**: False
@@ -16,17 +16,12 @@ Sales Forecasting AI Assistant
 >	**Description**: A description of the Project.
 After our recent merger and subsequent restructuring of regional sales, we need to provide a coherent, normalized sales forecasting approach across all regions.
 
-## Project Type
->	**Input Required**: False
-
->	**Description**: A string classifiying the project. Current;y supported values are Campaign, Task. PersonalProject and StudyProject.
-
 
 ## Identifier
 >	**Input Required**: False
 
->	**Description**: A user asigned identifier.
-
+>	**Description**: A user assigned identifier.
+SFA
 
 ## Mission
 >	**Input Required**: False
@@ -47,20 +42,20 @@ Normalizing Sales Forecasting is a key step in our transition to a multinational
 
 >	**Description**: Project start date as an ISO 8601 string.
 
-03/10/2026
+2026-01-29
 
 ## Planned End Date
 >	**Input Required**: False
 
 >	**Description**: Planned project end date as an ISO 8601 string.
 
-08/1/2026
+2026-03-01 
 ## Priority
 >	**Input Required**: False
 
 >	**Description**: An integer priority for the project.
 
-High
+1
 ## Project Phase
 >	**Input Required**: False
 
@@ -72,18 +67,13 @@ Planning
 
 >	**Description**: A string representing the project status.
 
-
+Planning
 ## Project Health
 >	**Input Required**: False
 
 >	**Description**: A string representing the health of the project.
 
-
-## User Defined Status
->	**Input Required**: False
-
->	**Description**: Only valid if Product Status is set to OTHER. User defined & managed status values.
-
+Good
 
 ## Category
 >	**Input Required**: False
@@ -92,39 +82,105 @@ Planning
 
 >	**Alternative Labels**: Category Name
 
+AI
 
-## Version Identifier
+## Journal Entry
 >	**Input Required**: False
 
->	**Description**: Published product version identifier.
+>	**Description**: 
 
->	**Default Value**: 1.0
+A key step in planning the Sales Forecasting project
 
-
-## URL
+## Search Keywords
 >	**Input Required**: False
 
->	**Description**: Link to supporting information
+>	**Description**: Keywords to facilitate finding the element
+SalesForecast, AI
 
+____
 
+# Update Task
+>	An organized set of work.
+
+## Display Name
+>	**Input Required**: True
+
+>	**Description**: The name of the project to create or update.
+
+>	**Alternative Labels**: Project; Project Name; Name
+Forecasting Survey
+
+## Description
+>	**Input Required**: False
+
+>	**Description**: A description of the Project.
+Survey Existing Forecasting Methods
 ## Identifier
 >	**Input Required**: False
 
->	**Description**: role identifier
+>	**Description**: A user assigned identifier.
+SFA-Survey
 
-
-## Qualified Name
+## Mission
 >	**Input Required**: False
 
->	**Description**: A unique qualified name for the element. Generated using the qualified name pattern  if not user specified.
-
-
-## GUID
+>	**Description**: The project mission.
+Understand Existing Forecasting Methods
+> 
+## Purposes
 >	**Input Required**: False
 
->	**Description**: A system generated unique identifier.
+>	**Description**: A list of  project purposes.
 
->	**Alternative Labels**: Guid; guid
+Plan for evolving forecasting techniques.
+
+## Start Date
+>	**Input Required**: False
+
+>	**Description**: Project start date as an ISO 8601 string.
+
+2026-01-29
+
+## Planned End Date
+>	**Input Required**: False
+
+>	**Description**: Planned project end date as an ISO 8601 string.
+
+2026-03-01 
+## Priority
+>	**Input Required**: False
+
+>	**Description**: An integer priority for the project.
+
+1
+## Project Phase
+>	**Input Required**: False
+
+>	**Description**: A string describing the phase of the project.
+Planning
+
+## Project Status
+>	**Input Required**: False
+
+>	**Description**: A string representing the project status.
+
+Planning
+## Project Health
+>	**Input Required**: False
+
+>	**Description**: A string representing the health of the project.
+
+Good
+
+## Category
+>	**Input Required**: False
+
+>	**Description**: A user specified category name that can be used for example, to define product types or agreement types.
+
+>	**Alternative Labels**: Category Name
+
+AI
+
 
 
 ## Journal Entry
@@ -132,15 +188,13 @@ Planning
 
 >	**Description**: 
 
-
-## URL
->	**Input Required**: False
-
->	**Description**: Link to supporting information
-
+First we need to understand the existing forecasting methods in use across the company. This will help us identify gaps and opportunities for improvement.
 
 ## Search Keywords
 >	**Input Required**: False
 
 >	**Description**: Keywords to facilitate finding the element
+SalesForecast, AI
+____
 
+Link 

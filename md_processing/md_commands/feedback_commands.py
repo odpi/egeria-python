@@ -449,7 +449,7 @@ def process_attach_note_log_command(egeria_client: EgeriaTech, txt: str, directi
 
 
         try:
-            if object_action == "Detach":
+            if object_action in ["Detach", "Unlink", "Remove"]:
                 if not exists:
                     msg = (f" Link `{label}` does not exist! Updating result document with Link "
                            f"object_action\n")
@@ -471,7 +471,7 @@ def process_attach_note_log_command(egeria_client: EgeriaTech, txt: str, directi
                     return (out)
 
 
-            elif object_action == "Link":
+            elif object_action in ["Link", "Attach", "Add"]:
                 if valid is False and exists:
                     msg = (f"-->  Link called `{label}` already exists and result document updated changing "
                            f"`Link` to `Detach` in processed output\n")
@@ -667,7 +667,7 @@ def process_tag_element_command(egeria_client: EgeriaTech, txt: str, directive: 
     elif directive == "process":
 
         try:
-            if object_action == "Detach":
+            if object_action in ["Detach", "Unlink", "Remove"]:
                 if not exists:
                     msg = (f" The tag or element do not exist! Updating result document with Link "
                            f"object_action\n")
@@ -688,7 +688,7 @@ def process_tag_element_command(egeria_client: EgeriaTech, txt: str, directive: 
                     return (out)
 
 
-            elif object_action == "Link":
+            elif object_action in ["Link", "Attach", "Add"]:
                 if valid is False and exists:
                     msg = ("-->  Link already exists and result document updated changing "
                            "`Link` to `Detach` in processed output\n")
@@ -722,5 +722,4 @@ def process_tag_element_command(egeria_client: EgeriaTech, txt: str, directive: 
             return None
     else:
         return None
-
 

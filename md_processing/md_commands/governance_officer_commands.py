@@ -255,7 +255,7 @@ def process_gov_def_link_detach_command(egeria_client: EgeriaTech, txt: str,
         gov_peer_relationship_type = f"Governance{singular_word}Link"
 
     try:
-        if object_action == "Detach":
+        if object_action in ["Detach", "Unlink", "Remove"]:
             if not exists:
                 msg = (f" Link `{label}` does not exist! Updating result document with Link "
                        f"object_action\n")
@@ -278,7 +278,7 @@ def process_gov_def_link_detach_command(egeria_client: EgeriaTech, txt: str,
             return (out)
 
 
-        elif object_action == "Link":
+        elif object_action in ["Link", "Attach", "Add"]:
             if valid is False and exists:
                 msg = (f"-->  Link called `{label}` already exists and result document updated changing "
                        f"`Link` to `Detach` in processed output\n")
@@ -360,7 +360,7 @@ def process_supporting_gov_def_link_detach_command(egeria_client: EgeriaTech, tx
         relationship_type_name = object_type.replace(' ', '')
         print(f"relationship_type_name: {relationship_type_name}")
     try:
-        if object_action == "Detach":
+        if object_action in ["Detach", "Unlink", "Remove"]:
             if not exists:
                 msg = (f" Link `{label}` does not exist! Updating result document with Link "
                        f"object_action\n")
@@ -383,7 +383,7 @@ def process_supporting_gov_def_link_detach_command(egeria_client: EgeriaTech, tx
             return (out)
 
 
-        elif object_action == "Link":
+        elif object_action in ["Link", "Attach", "Add"]:
             if valid is False and exists:
                 msg = (f"-->  Link called `{label}` already exists and result document updated changing "
                        f"`Link` to `Detach` in processed output\n")
@@ -472,7 +472,7 @@ def process_governed_by_link_detach_command(egeria_client: EgeriaTech, txt: str,
 
 
         try:
-            if object_action == "Detach":
+            if object_action in ["Detach", "Unlink", "Remove"]:
                 if not exists:
                     msg = (f" Link `{label}` does not exist! Updating result document with Link "
                            f"object_action\n")
@@ -494,7 +494,7 @@ def process_governed_by_link_detach_command(egeria_client: EgeriaTech, txt: str,
                 return (out)
 
 
-            elif object_action == "Link":
+            elif object_action in ["Link", "Attach", "Add"]:
                 if valid is False and exists:
                     msg = (f"-->  Link called `{label}` already exists and result document updated changing "
                            f"`Link` to `Detach` in processed output\n")

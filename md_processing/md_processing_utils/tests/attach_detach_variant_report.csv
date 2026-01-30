@@ -1,0 +1,136 @@
+spec_file,missing_variant,link_spec
+commands_external_reference.json,Add Cited Document Link,Link Cited Document Link
+commands_external_reference.json,Add External Reference Link,Link External Reference Link
+commands_external_reference.json,Add Media Reference Link,Link Media Reference Link
+commands_external_reference.json,Attach Cited Document Link,Link Cited Document Link
+commands_external_reference.json,Attach External Reference Link,Link External Reference Link
+commands_external_reference.json,Attach Media Reference Link,Link Media Reference Link
+commands_external_reference.json,Detach Cited Document Link,Link Cited Document Link
+commands_external_reference.json,Detach External Reference Link,Link External Reference Link
+commands_external_reference.json,Detach Media Reference Link,Link Media Reference Link
+commands_external_reference.json,Remove Cited Document Link,Link Cited Document Link
+commands_external_reference.json,Remove External Reference Link,Link External Reference Link
+commands_external_reference.json,Remove Media Reference Link,Link Media Reference Link
+commands_external_reference.json,Unlink Cited Document Link,Link Cited Document Link
+commands_external_reference.json,Unlink External Reference Link,Link External Reference Link
+commands_external_reference.json,Unlink Media Reference Link,Link Media Reference Link
+commands_feedback.json,Add Tag->Element,Link Tag->Element
+commands_feedback.json,Attach Tag->Element,Link Tag->Element
+commands_feedback.json,Detach Tag->Element,Link Tag->Element
+commands_feedback.json,Remove Tag->Element,Link Tag->Element
+commands_feedback.json,Unlink Tag->Element,Link Tag->Element
+commands_glossary.json,Add Term-Term Relationship,Link Term-Term Relationship
+commands_glossary.json,Attach Term-Term Relationship,Link Term-Term Relationship
+commands_glossary.json,Detach Term-Term Relationship,Link Term-Term Relationship
+commands_glossary.json,Remove Term-Term Relationship,Link Term-Term Relationship
+commands_glossary.json,Unlink Term-Term Relationship,Link Term-Term Relationship
+commands_governance.json,Add Certification,Link Certification
+commands_governance.json,Add Governance Controls,Link Governance Controls
+commands_governance.json,Add Governance Drivers,Link Governance Drivers
+commands_governance.json,Add Governance Mechanism,Link Governance Mechanism
+commands_governance.json,Add Governance Policies,Link Governance Policies
+commands_governance.json,Add Governance Response,Link Governance Response
+commands_governance.json,Add Governed By,Link Governed By
+commands_governance.json,Add License,Link License
+commands_governance.json,Add Regulation Certification Type,Link Regulation Certification Type
+commands_governance.json,Add Security Group -> Security Access Control,Link Security Group -> Security Access Control
+commands_governance.json,Add Terms & Conditions,Link Terms & Conditions
+commands_governance.json,Add Zone->Zone,Link Zone->Zone
+commands_governance.json,Attach Certification,Link Certification
+commands_governance.json,Attach Governance Controls,Link Governance Controls
+commands_governance.json,Attach Governance Drivers,Link Governance Drivers
+commands_governance.json,Attach Governance Mechanism,Link Governance Mechanism
+commands_governance.json,Attach Governance Policies,Link Governance Policies
+commands_governance.json,Attach Governance Response,Link Governance Response
+commands_governance.json,Attach Governed By,Link Governed By
+commands_governance.json,Attach License,Link License
+commands_governance.json,Attach Regulation Certification Type,Link Regulation Certification Type
+commands_governance.json,Attach Security Group -> Security Access Control,Link Security Group -> Security Access Control
+commands_governance.json,Attach Terms & Conditions,Link Terms & Conditions
+commands_governance.json,Attach Zone->Zone,Link Zone->Zone
+commands_governance.json,Detach Certification,Link Certification
+commands_governance.json,Detach Governance Controls,Link Governance Controls
+commands_governance.json,Detach Governance Drivers,Link Governance Drivers
+commands_governance.json,Detach Governance Mechanism,Link Governance Mechanism
+commands_governance.json,Detach Governance Policies,Link Governance Policies
+commands_governance.json,Detach Governance Response,Link Governance Response
+commands_governance.json,Detach Governed By,Link Governed By
+commands_governance.json,Detach License,Link License
+commands_governance.json,Detach Regulation Certification Type,Link Regulation Certification Type
+commands_governance.json,Detach Security Group -> Security Access Control,Link Security Group -> Security Access Control
+commands_governance.json,Detach Terms & Conditions,Link Terms & Conditions
+commands_governance.json,Detach Zone->Zone,Link Zone->Zone
+commands_governance.json,Remove Certification,Link Certification
+commands_governance.json,Remove Governance Controls,Link Governance Controls
+commands_governance.json,Remove Governance Drivers,Link Governance Drivers
+commands_governance.json,Remove Governance Mechanism,Link Governance Mechanism
+commands_governance.json,Remove Governance Policies,Link Governance Policies
+commands_governance.json,Remove Governance Response,Link Governance Response
+commands_governance.json,Remove Governed By,Link Governed By
+commands_governance.json,Remove License,Link License
+commands_governance.json,Remove Regulation Certification Type,Link Regulation Certification Type
+commands_governance.json,Remove Security Group -> Security Access Control,Link Security Group -> Security Access Control
+commands_governance.json,Remove Terms & Conditions,Link Terms & Conditions
+commands_governance.json,Remove Zone->Zone,Link Zone->Zone
+commands_governance.json,Unlink Certification,Link Certification
+commands_governance.json,Unlink Governance Controls,Link Governance Controls
+commands_governance.json,Unlink Governance Drivers,Link Governance Drivers
+commands_governance.json,Unlink Governance Mechanism,Link Governance Mechanism
+commands_governance.json,Unlink Governance Policies,Link Governance Policies
+commands_governance.json,Unlink Governance Response,Link Governance Response
+commands_governance.json,Unlink Governed By,Link Governed By
+commands_governance.json,Unlink License,Link License
+commands_governance.json,Unlink Regulation Certification Type,Link Regulation Certification Type
+commands_governance.json,Unlink Security Group -> Security Access Control,Link Security Group -> Security Access Control
+commands_governance.json,Unlink Terms & Conditions,Link Terms & Conditions
+commands_governance.json,Unlink Zone->Zone,Link Zone->Zone
+commands_product_manager.json,Add Agreement->Item,Link Agreement->Item
+commands_product_manager.json,Add Agreement->T&C,Link Agreement->T&C
+commands_product_manager.json,Add Collection->Resource,Link Collection->Resource
+commands_product_manager.json,Add Contracts,Link Contracts
+commands_product_manager.json,Add Product-Product,Link Product-Product
+commands_product_manager.json,Add Subscriber->Subscription,Link Subscriber->Subscription
+commands_product_manager.json,Attach Agreement->Item,Link Agreement->Item
+commands_product_manager.json,Attach Agreement->T&C,Link Agreement->T&C
+commands_product_manager.json,Attach Collection->Resource,Link Collection->Resource
+commands_product_manager.json,Attach Contracts,Link Contracts
+commands_product_manager.json,Attach Product-Product,Link Product-Product
+commands_product_manager.json,Attach Subscriber->Subscription,Link Subscriber->Subscription
+commands_product_manager.json,Detach Agreement->Item,Link Agreement->Item
+commands_product_manager.json,Detach Agreement->T&C,Link Agreement->T&C
+commands_product_manager.json,Detach Collection->Resource,Link Collection->Resource
+commands_product_manager.json,Detach Contracts,Link Contracts
+commands_product_manager.json,Detach Product-Product,Link Product-Product
+commands_product_manager.json,Detach Subscriber->Subscription,Link Subscriber->Subscription
+commands_product_manager.json,Remove Agreement->Item,Link Agreement->Item
+commands_product_manager.json,Remove Agreement->T&C,Link Agreement->T&C
+commands_product_manager.json,Remove Collection->Resource,Link Collection->Resource
+commands_product_manager.json,Remove Contracts,Link Contracts
+commands_product_manager.json,Remove Product-Product,Link Product-Product
+commands_product_manager.json,Remove Subscriber->Subscription,Link Subscriber->Subscription
+commands_product_manager.json,Unlink Agreement->Item,Link Agreement->Item
+commands_product_manager.json,Unlink Agreement->T&C,Link Agreement->T&C
+commands_product_manager.json,Unlink Collection->Resource,Link Collection->Resource
+commands_product_manager.json,Unlink Contracts,Link Contracts
+commands_product_manager.json,Unlink Product-Product,Link Product-Product
+commands_product_manager.json,Unlink Subscriber->Subscription,Link Subscriber->Subscription
+commands_project.json,Add Project Dependency,Link Project Dependency
+commands_project.json,Add Project Hierarchy,Link Project Hierarchy
+commands_project.json,Attach Project Dependency,Link Project Dependency
+commands_project.json,Attach Project Hierarchy,Link Project Hierarchy
+commands_project.json,Detach Project Dependency,Link Project Dependency
+commands_project.json,Detach Project Hierarchy,Link Project Hierarchy
+commands_project.json,Remove Project Dependency,Link Project Dependency
+commands_project.json,Remove Project Hierarchy,Link Project Hierarchy
+commands_project.json,Unlink Project Dependency,Link Project Dependency
+commands_project.json,Unlink Project Hierarchy,Link Project Hierarchy
+commands_solution_architect.json,Add Information Supply Chain Peers,Link Information Supply Chain Peers
+commands_solution_architect.json,Add Solution Component Peers,Link Solution Component Peers
+commands_solution_architect.json,Attach Information Supply Chain Peers,Link Information Supply Chain Peers
+commands_solution_architect.json,Attach Solution Component Peers,Link Solution Component Peers
+commands_solution_architect.json,Detach Information Supply Chain Peers,Link Information Supply Chain Peers
+commands_solution_architect.json,Detach Solution Component Peers,Link Solution Component Peers
+commands_solution_architect.json,Remove Information Supply Chain Peers,Link Information Supply Chain Peers
+commands_solution_architect.json,Remove Solution Component Peers,Link Solution Component Peers
+commands_solution_architect.json,Unlink Information Supply Chain Peers,Link Information Supply Chain Peers
+commands_solution_architect.json,Unlink Solution Component Peers,Link Solution Component Peers

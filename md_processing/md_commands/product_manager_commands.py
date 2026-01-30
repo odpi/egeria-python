@@ -773,7 +773,7 @@ def process_link_agreement_item_command(egeria_client: EgeriaTech, txt: str,
     elif directive == "process":
 
         try:
-            if object_action == "Detach":
+            if object_action in ["Detach", "Unlink", "Remove"]:
                 if not exists:
                     msg = (f" Link `{label}` does not exist! Updating result document with Link "
                            f"object_action\n")
@@ -794,7 +794,7 @@ def process_link_agreement_item_command(egeria_client: EgeriaTech, txt: str,
 
                     return (out)
 
-            elif object_action == "Link":
+            elif object_action in ["Link", "Attach", "Add"]:
                 if valid is False and exists:
                     msg = (f"-->  Link called `{label}` already exists and result document updated changing "
                            f"`Link` to `Detach` in processed output\n")
@@ -891,7 +891,7 @@ def process_add_to_collection_command(egeria_client: EgeriaTech, txt: str,
             "class": "CollectionMembershipProperties",
             "membershipRationale": membership_rationale,
             "expression": expression,
-            "membershipStatus": membership_status,
+            "membershipStatus": membership_status.upper(),
             "userDefinedStatus": user_defined_status,
             "confidence": confidence,
             "steward": steward,
@@ -928,10 +928,7 @@ def process_add_to_collection_command(egeria_client: EgeriaTech, txt: str,
                     msg = (f"-->  Link called `{label}` already exists and result document updated changing "
                            f"`Link` to `Detach` in processed output\n")
                     logger.error(msg)
-                if valid is False and exists:
-                    msg = (f"-->  Link called `{label}` already exists and result document updated changing "
-                           f"`Link` to `Detach` in processed output\n")
-                    logger.error(msg)
+
 
                 elif valid is False:
                     msg = f"==>{object_type} Link with label `{label}` is not valid and can't be created"
@@ -950,7 +947,10 @@ def process_add_to_collection_command(egeria_client: EgeriaTech, txt: str,
                     out = parsed_output['display'].replace('Link', 'Detach', 1)
                     return out
 
-
+        except PyegeriaException as e:
+            logger.error(f"Error performing {command}: {e}")
+            print_basic_exception(e)
+            return None
         except Exception as e:
             logger.error(f"Error performing {command}: {e}")
             return None
@@ -1008,7 +1008,7 @@ def process_product_dependency_command(egeria_client: EgeriaTech, txt: str,
         }
 
         try:
-            if object_action == "Detach":
+            if object_action in ["Detach", "Unlink", "Remove"]:
                 if not exists:
                     msg = (f" Link `{label}` does not exist! Updating result document with Link "
                            f"object_action\n")
@@ -1030,7 +1030,7 @@ def process_product_dependency_command(egeria_client: EgeriaTech, txt: str,
 
                     return (out)
 
-            elif object_action == "Link":
+            elif object_action in ["Link", "Attach", "Add"]:
                 if valid is False and exists:
                     msg = (f"-->  Link called `{label}` already exists and result document updated changing "
                            f"`Link` to `Detach` in processed output\n")
@@ -1112,7 +1112,7 @@ def process_attach_collection_command(egeria_client: EgeriaTech, txt: str,
         }
 
         try:
-            if object_action == "Detach":
+            if object_action in ["Detach", "Unlink", "Remove"]:
                 if not exists:
                     msg = (f" Link `Attach Resource to Collection` does not exist! Updating result document with Link "
                            f"object_action\n")
@@ -1134,7 +1134,7 @@ def process_attach_collection_command(egeria_client: EgeriaTech, txt: str,
 
                     return (out)
 
-            elif object_action == "Link":
+            elif object_action in ["Link", "Attach", "Add"]:
                 if valid is False and exists:
                     msg = (
                         f"-->  Link called `Attach Resource to Collection` already exists and result document updated changing "
@@ -1212,7 +1212,7 @@ def process_attach_subscriber_command(egeria_client: EgeriaTech, txt: str,
         }
 
         try:
-            if object_action == "Detach":
+            if object_action in ["Detach", "Unlink", "Remove"]:
                 if not exists:
                     msg = (
                         f" Link `Attach Subscriber to Subscription` does not exist! Updating result document with Link "
@@ -1235,7 +1235,7 @@ def process_attach_subscriber_command(egeria_client: EgeriaTech, txt: str,
 
                     return (out)
 
-            elif object_action == "Link":
+            elif object_action in ["Link", "Attach", "Add"]:
                 if valid is False and exists:
                     msg = (
                         f"-->  Link called `Attach Subscriber to Subscription` already exists and result document updated changing "

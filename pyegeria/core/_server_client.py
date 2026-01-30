@@ -334,7 +334,7 @@ class ServerClient(BaseServerClient):
             additional_info = {"reason": "Display name is missing - please provide.", }
             raise PyegeriaInvalidParameterException(additional_info=additional_info)
         display_name = re.sub(r'\s', '-', display_name.strip())  # This changes spaces between words to -; removing
-        q_name = f"{type}::{display_name}"
+        q_name = f"{type_name}::{display_name}"
         if EGERIA_LOCAL_QUALIFIER:
             q_name = f"{EGERIA_LOCAL_QUALIFIER}::{q_name}"
         if version_identifier:

@@ -249,7 +249,7 @@ def process_link_to_external_reference_command(egeria_client: EgeriaTech, txt: s
     elif directive == "process":
 
         try:
-            if object_action == "Detach":
+            if object_action in ["Detach", "Unlink", "Remove"]:
                 if not exists:
                     msg = " Link  does not exist! Updating result document with Link object_action\n"
                     logger.error(msg)
@@ -270,7 +270,7 @@ def process_link_to_external_reference_command(egeria_client: EgeriaTech, txt: s
                     return (out)
 
 
-            elif object_action == "Link":
+            elif object_action in ["Link", "Attach", "Add"]:
                 if valid is False and exists:
                     msg = "-->  Link already exists and result document updated changing `Link` to `Detach` in processed output\n"
                     logger.error(msg)
@@ -361,7 +361,7 @@ def process_link_to_media_reference_command(egeria_client: EgeriaTech, txt: str,
     elif directive == "process":
 
         try:
-            if object_action == "Detach":
+            if object_action in ["Detach", "Unlink", "Remove"]:
                 if not exists:
                     msg = " Link  does not exist! Updating result document with Link object_action\n"
                     logger.error(msg)
@@ -382,7 +382,7 @@ def process_link_to_media_reference_command(egeria_client: EgeriaTech, txt: str,
                     return (out)
 
 
-            elif object_action == "Link":
+            elif object_action in ["Link", "Attach", "Add"]:
                 if valid is False and exists:
                     msg = "-->  Link already exists and result document updated changing `Link` to `Detach` in processed output\n"
                     logger.error(msg)
@@ -471,7 +471,7 @@ def process_link_to_cited_document_command(egeria_client: EgeriaTech, txt: str, 
 
 
         try:
-            if object_action == "Detach":
+            if object_action in ["Detach", "Unlink", "Remove"]:
                 if not exists:
                     msg = f" Link  does not exist! Updating result document with Link object_action\n"
                     logger.error(msg)
@@ -492,7 +492,7 @@ def process_link_to_cited_document_command(egeria_client: EgeriaTech, txt: str, 
                     return (out)
 
 
-            elif object_action == "Link":
+            elif object_action in ["Link", "Attach", "Add"]:
                 if valid is False and exists:
                     msg = "-->  Link already exists and result document updated changing `Link` to `Detach` in processed output\n"
                     logger.error(msg)
