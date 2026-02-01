@@ -59,18 +59,43 @@ def _extract_referenceable_properties(element: dict[str, Any]) -> dict[str, Any]
     effective_to = element['elementHeader'].get("effectiveTo", None)
     status = element['elementHeader'].get("status", None)
     # Get attributes from properties
-    properties = element['properties']
-    url = properties.get('url', None)
-    display_name = properties.get("displayName","")
-    description = properties.get("description", "") or ""
-    qualified_name = properties.get("qualifiedName", "") or ""
-    category = properties.get("category", "") or ""
-    version_identifier = properties.get("versionIdentifier", "") or ""
-    additional_properties = properties.get("additionalProperties", {}) or {}
-    extended_properties = properties.get("extendedProperties", {}) or {}
-    contentStatus = properties.get("contentStatus", "")
-    activityStatus = properties.get("activityStatus", "")
-    deploymentStatus = properties.get("deploymentStatus", "")
+    properties = element.get('properties',None)
+    if properties:
+        url = properties.get('url', None)
+        display_name = properties.get("displayName","")
+        description = properties.get("description", "") or ""
+        qualified_name = properties.get("qualifiedName", "") or ""
+        category = properties.get("category", "") or ""
+        version_identifier = properties.get("versionIdentifier", "") or ""
+        additional_properties = properties.get("additionalProperties", {}) or {}
+        extended_properties = properties.get("extendedProperties", {}) or {}
+        contentStatus = properties.get("contentStatus", "")
+        activityStatus = properties.get("activityStatus", "")
+        deploymentStatus = properties.get("deploymentStatus", "")
+    else:
+        display_name = element.get('displayName', "")
+        description = element.get('description', "")
+        qualified_name = element.get('qualifiedName', "")
+        request_type = element.get('requestType', "")
+        requester_user_id = element.get('requesterUserId', "")
+        governance_engine_name = element.get('governanceEngineName', "")
+        domain_identifier = element.get('domainIdentifier', 0)
+        action_status = element.get('actionStatus', "")
+        requested_time = element.get('requestedTime', None)
+        start_time = element.get('startTime', None)
+        url = None
+        category = None
+        version_identifier = None
+        additional_properties = None
+        extended_properties = None
+        contentStatus = None
+        activityStatus = None
+        deploymentStatus = None
+
+
+        description = None
+        qualified_name = None
+
 
     return {
         "GUID": guid,

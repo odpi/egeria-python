@@ -15,7 +15,11 @@ from rich import print
 from rich.console import Console
 from rich.markdown import Markdown
 
-from md_processing.md_processing_utils.common_md_proc_utils import (parse_upsert_command)
+from md_processing.md_processing_utils.common_md_proc_utils import (
+    parse_upsert_command,
+    render_command_table,
+    render_exception_table,
+)
 from md_processing.md_processing_utils.common_md_utils import (
     update_element_dictionary,
     set_create_body,
@@ -287,7 +291,7 @@ def sync_data_field_rel_elements(egeria_client: EgeriaTech, structure_list: list
         if len(terms_to_add) > 0:
             for dc in classes_to_add:
                 body = {
-                    "class": "RelationshipRequestBody", "forLineage": False, "forDuplicateProcessing": False
+                    "class": "NewRelationshipRequestBody", "forLineage": False, "forDuplicateProcessing": False
                     }
                 egeria_client.link_data_class_definition(guid, dc, body)
                 msg = f"Added `{dc}` to`{display_name}`"
@@ -395,7 +399,7 @@ def sync_data_class_rel_elements(egeria_client: EgeriaTech, containing_data_clas
         if len(specialized_classes_to_add) > 0:
             for dc in specialized_classes_to_add:
                 body = {
-                    "class": "RelationshipRequestBody", "forLineage": False, "forDuplicateProcessing": False
+                    "class": "NewRelationshipRequestBody", "forLineage": False, "forDuplicateProcessing": False
                     }
                 egeria_client.link_specialist_data_class(guid, dc, body)
                 msg = f"Added `{dc}` to`{display_name}`"
@@ -449,21 +453,21 @@ def process_data_spec_upsert_command(egeria_client: EgeriaTech, txt: str, direct
     attributes = parsed_output['attributes']
     display_name = attributes.get('Display Name', {}).get('value', "None Found")
     status = attributes.get('Status', {}).get('value', None)
-    print(Markdown(parsed_output['display']))
+    render_command_table(parsed_output, directive)
 
     in_data_spec_list = attributes.get('In Data Specification', {}).get('value', None)
     in_data_spec_valid = attributes.get('In Data Specification', {}).get('valid', None)
     in_data_spec_exists = attributes.get('In Data Specification', {}).get('exists', None)
     output_set = make_format_set_name_from_type(object_type)
     object_type = "DataSpec"
-    print(Markdown(parsed_output['display']))
+    render_command_table(parsed_output, directive)
 
     if directive == "display":
 
         return None
     elif directive == "validate":
         if valid:
-            print(Markdown(f"==> Validation of {command} completed successfully!\n"))
+            pass
         else:
             msg = f"Validation failed for object_action `{command}`\n"
         return valid
@@ -561,7 +565,7 @@ def process_data_dict_upsert_command(egeria_client: EgeriaTech, txt: str, direct
     qualified_name = parsed_output.get('qualified_name', None)
     guid = parsed_output.get('guid', None)
 
-    print(Markdown(parsed_output['display']))
+    render_command_table(parsed_output, directive)
 
     logger.debug(json.dumps(parsed_output, indent=4))
 
@@ -575,7 +579,7 @@ def process_data_dict_upsert_command(egeria_client: EgeriaTech, txt: str, direct
         return None
     elif directive == "validate":
         if valid:
-            print(Markdown(f"==> Validation of {command} completed successfully!\n"))
+            pass
         else:
             msg = f"Validation failed for object_action `{command}`\n"
         return valid
@@ -674,14 +678,14 @@ def process_data_structure_upsert_command(egeria_client: EgeriaTech, txt: str,
     guid = parsed_output.get('guid', None)
     output_set = make_format_set_name_from_type(object_type)
 
-    print(Markdown(parsed_output['display']))
+    render_command_table(parsed_output, directive)
 
     if directive == "display":
         return None
 
     elif directive == "validate":
         if valid:
-            print(Markdown(f"==> Validation of {command} completed successfully!\n"))
+            pass
         else:
             msg = f"Validation failed for object_action `{command}`\n"
         return valid
@@ -821,14 +825,14 @@ def process_data_field_upsert_command(egeria_client: EgeriaTech, txt: str, direc
     exists = parsed_output['exists']
     output_set = make_format_set_name_from_type(object_type)
 
-    print(Markdown(parsed_output['display']))
+    render_command_table(parsed_output, directive)
 
     if directive == "display":
 
         return None
     elif directive == "validate":
         if valid:
-            print(Markdown(f"==> Validation of {command} completed successfully!\n"))
+            pass
         else:
             msg = f"Validation failed for object_action `{command}`\n"
             logger.error(msg)
@@ -883,9 +887,6 @@ def process_data_field_upsert_command(egeria_client: EgeriaTech, txt: str, direc
                 msg = f"Invalid specification - please review\n\n___"
                 logger.error(msg)
                 return None
-        else:
-            print(Markdown(f"==> Validation of {command} completed successfully! Proceeding to apply the changes.\n"))
-
         props_body = set_data_field_body(object_type, qualified_name, attributes)
 
         try:
@@ -1045,14 +1046,14 @@ def process_data_class_upsert_command(egeria_client: EgeriaTech, txt: str, direc
     exists = parsed_output['exists']
     output_set = make_format_set_name_from_type(object_type)
 
-    print(Markdown(parsed_output['display']))
+    render_command_table(parsed_output, directive)
 
     if directive == "display":
 
         return None
     elif directive == "validate":
         if valid:
-            print(Markdown(f"==> Validation of {command} completed successfully!\n"))
+            pass
         else:
             msg = f"Validation failed for object_action `{command}`\n"
             logger.error(msg)
@@ -1151,9 +1152,6 @@ def process_data_class_upsert_command(egeria_client: EgeriaTech, txt: str, direc
             else:
                 msg = f"Invalid specification - please review\n\n___"
                 return None
-        else:
-            print(Markdown(f"==> Validation of {command} completed successfully! Proceeding to apply the changes.\n"))
-
         try:
             if object_action == "Update":
                 if not exists:
@@ -1243,7 +1241,7 @@ def process_data_class_upsert_command(egeria_client: EgeriaTech, txt: str, direc
                         if glossary_term:
                             if glossary_term_guid:
                                 glossary_body = {
-                                    "class": "RelationshipRequestBody", "externalSourceGUID": external_source_guid,
+                                    "class": "NewRelationshipRequestBody", "externalSourceGUID": external_source_guid,
                                     "externalSourceName": external_source_name, "effectiveTime": effective_time,
                                     "forLineage": for_lineage, "forDuplicateProcessing": for_duplicate_processing
                                     }
@@ -1273,4 +1271,3 @@ def process_data_class_upsert_command(egeria_client: EgeriaTech, txt: str, direc
             return None
     else:
         return None
-

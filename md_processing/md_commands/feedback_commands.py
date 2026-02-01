@@ -10,7 +10,12 @@ from pydantic import ValidationError
 from rich import print
 from rich.markdown import Markdown
 
-from md_processing.md_processing_utils.common_md_proc_utils import (parse_upsert_command, parse_view_command)
+from md_processing.md_processing_utils.common_md_proc_utils import (
+    parse_upsert_command,
+    parse_view_command,
+    render_command_table,
+    render_exception_table,
+)
 from md_processing.md_processing_utils.common_md_utils import set_update_body, \
     set_element_prop_body, set_delete_request_body, set_create_body, set_rel_request_body_for_type
 
@@ -56,7 +61,7 @@ def process_add_comment_command(egeria_client: EgeriaTech, txt: str, directive: 
     qualified_name = parsed_output.get('qualified_name', None)
     guid = parsed_output.get('guid', None)
 
-    print(Markdown(parsed_output['display']))
+    render_command_table(parsed_output, directive)
 
     logger.debug(json.dumps(parsed_output, indent=4))
 
@@ -84,7 +89,7 @@ def process_add_comment_command(egeria_client: EgeriaTech, txt: str, directive: 
         return None
     elif directive == "validate":
         if valid:
-            print(Markdown(f"==> Validation of {command} completed successfully!\n"))
+            pass
         else:
             msg = f"Validation failed for object_action `{command}`\n"
         return valid
@@ -117,7 +122,6 @@ def process_add_comment_command(egeria_client: EgeriaTech, txt: str, directive: 
                 elif not valid:
                     msg = ("  The input data is invalid and cannot be processed. \nPlease review")
                     logger.error(msg)
-                    print(Markdown(f"==> Validation of {command} failed!!\n"))
                     print(Markdown(msg))
                     return None
                 else:
@@ -147,7 +151,6 @@ def process_add_comment_command(egeria_client: EgeriaTech, txt: str, directive: 
                 elif not valid:
                     msg = ("The input data is invalid and cannot be processed. \nPlease review")
                     logger.error(msg)
-                    print(Markdown(f"==> Validation of {command} failed!!\n"))
                     print(Markdown(msg))
                     return None
 
@@ -177,7 +180,7 @@ def process_add_comment_command(egeria_client: EgeriaTech, txt: str, directive: 
 
         except PyegeriaException as e:
             logger.error(f"Pyegeria error performing {command}: {e}")
-            print_basic_exception(e)
+            render_exception_table(command, "process", e)
             return None
         except Exception as e:
             logger.error(f"Error performing {command}: {e}")
@@ -210,7 +213,7 @@ def process_journal_entry_command(egeria_client: EgeriaTech, txt: str,
     qualified_name = parsed_output.get('qualified_name', None)
     guid = parsed_output.get('guid', None)
 
-    print(Markdown(parsed_output['display']))
+    render_command_table(parsed_output, directive)
 
     logger.debug(json.dumps(parsed_output, indent=4))
 
@@ -240,7 +243,7 @@ def process_journal_entry_command(egeria_client: EgeriaTech, txt: str,
         return None
     elif directive == "validate":
         if valid:
-            print(Markdown(f"==> Validation of {command} completed successfully!\n"))
+            pass
         else:
             msg = f"Validation failed for object_action `{command}`\n"
         return valid
@@ -253,7 +256,6 @@ def process_journal_entry_command(egeria_client: EgeriaTech, txt: str,
                     msg = "Journal name or Journal entry are missing."
                     logger.error(msg)
                     print(msg)
-                    print(Markdown(f"==> Validation of {command} failed!!\n"))
                     return None
 
                 else:
@@ -275,7 +277,7 @@ def process_journal_entry_command(egeria_client: EgeriaTech, txt: str,
 
         except PyegeriaException as e:
             logger.error(f"Pyegeria error performing {command}: {e}")
-            print_basic_exception(e)
+            render_exception_table(command, "process", e)
             return None
         except Exception as e:
             logger.error(f"Error performing {command}: {e}")
@@ -307,7 +309,7 @@ def process_upsert_note_command(egeria_client: EgeriaTech, txt: str, directive: 
     qualified_name = parsed_output.get('qualified_name', None)
     guid = parsed_output.get('guid', None)
 
-    print(Markdown(parsed_output['display']))
+    render_command_table(parsed_output, directive)
 
     logger.debug(json.dumps(parsed_output, indent=4))
 
@@ -322,7 +324,7 @@ def process_upsert_note_command(egeria_client: EgeriaTech, txt: str, directive: 
         return None
     elif directive == "validate":
         if valid:
-            print(Markdown(f"==> Validation of {command} completed successfully!\n"))
+            pass
         else:
             msg = f"Validation failed for object_action `{command}`\n"
         return valid
@@ -344,7 +346,6 @@ def process_upsert_note_command(egeria_client: EgeriaTech, txt: str, directive: 
                 elif not valid:
                     msg = ("  The input data is invalid and cannot be processed. \nPlease review")
                     logger.error(msg)
-                    print(Markdown(f"==> Validation of {command} failed!!\n"))
                     print(Markdown(msg))
                     return None
                 else:
@@ -374,7 +375,6 @@ def process_upsert_note_command(egeria_client: EgeriaTech, txt: str, directive: 
                 elif not valid:
                     msg = ("The input data is invalid and cannot be processed. \nPlease review")
                     logger.error(msg)
-                    print(Markdown(f"==> Validation of {command} failed!!\n"))
                     print(Markdown(msg))
                     return None
 
@@ -398,7 +398,7 @@ def process_upsert_note_command(egeria_client: EgeriaTech, txt: str, directive: 
 
         except PyegeriaException as e:
             logger.error(f"Pyegeria error performing {command}: {e}")
-            print_basic_exception(e)
+            render_exception_table(command, "process", e)
             return None
         except Exception as e:
             logger.error(f"Error performing {command}: {e}")
@@ -420,7 +420,7 @@ def process_attach_note_log_command(egeria_client: EgeriaTech, txt: str, directi
         print(Markdown("## Parsing failed"))
         return None
 
-    print(Markdown(parsed_output['display']))
+    render_command_table(parsed_output, directive)
 
     logger.debug(json.dumps(parsed_output, indent=4))
 
@@ -438,11 +438,10 @@ def process_attach_note_log_command(egeria_client: EgeriaTech, txt: str, directi
         return None
     elif directive == "validate":
         if valid:
-            print(Markdown(f"==> Validation of {command} completed successfully!\n"))
+            pass
         else:
             msg = f"Validation failed for object_action `{command}`\n"
             logger.error(msg)
-            print(Markdown(f"==> Validation of {command} failed!!\n"))
         return valid
 
     elif directive == "process":
@@ -494,11 +493,11 @@ def process_attach_note_log_command(egeria_client: EgeriaTech, txt: str, directi
                     return out
 
         except ValidationError as e:
-            print_validation_error(e)
+            render_exception_table(command, "process", e)
             logger.error(f"Validation Error performing {command}: {e}")
             return None
         except PyegeriaException as e:
-            print_basic_exception(e)
+            render_exception_table(command, "process", e)
             logger.error(f"PyegeriaException occurred: {e}")
             return None
 
@@ -534,7 +533,7 @@ def process_upsert_informal_tag_command(egeria_client: EgeriaTech, txt: str, dir
 
     guid = parsed_output.get('guid', None)
 
-    print(Markdown(parsed_output['display']))
+    render_command_table(parsed_output, directive)
 
     logger.debug(json.dumps(parsed_output, indent=4))
 
@@ -548,7 +547,7 @@ def process_upsert_informal_tag_command(egeria_client: EgeriaTech, txt: str, dir
         return None
     elif directive == "validate":
         if valid:
-            print(Markdown(f"==> Validation of {command} completed successfully!\n"))
+            pass
         else:
             msg = f"Validation failed for object_action `{command}`\n"
         return valid
@@ -570,7 +569,6 @@ def process_upsert_informal_tag_command(egeria_client: EgeriaTech, txt: str, dir
                 elif not valid:
                     msg = ("  The input data is invalid and cannot be processed. \nPlease review")
                     logger.error(msg)
-                    print(Markdown(f"==> Validation of {command} failed!!\n"))
                     print(Markdown(msg))
                     return None
                 else:
@@ -596,7 +594,6 @@ def process_upsert_informal_tag_command(egeria_client: EgeriaTech, txt: str, dir
                 elif not valid:
                     msg = ("The input data is invalid and cannot be processed. \nPlease review")
                     logger.error(msg)
-                    print(Markdown(f"==> Validation of {command} failed!!\n"))
                     print(Markdown(msg))
                     return None
 
@@ -618,7 +615,7 @@ def process_upsert_informal_tag_command(egeria_client: EgeriaTech, txt: str, dir
 
         except PyegeriaException as e:
             logger.error(f"Pyegeria error performing {command}: {e}")
-            print_basic_exception(e)
+            render_exception_table(command, "process", e)
             return None
         except Exception as e:
             logger.error(f"Error performing {command}: {e}")
@@ -645,7 +642,7 @@ def process_tag_element_command(egeria_client: EgeriaTech, txt: str, directive: 
         print(Markdown("## Parsing failed"))
         return None
 
-    print(Markdown(parsed_output['display']))
+    render_command_table(parsed_output, directive)
 
     logger.debug(json.dumps(parsed_output, indent=4))
 
@@ -657,11 +654,10 @@ def process_tag_element_command(egeria_client: EgeriaTech, txt: str, directive: 
         return None
     elif directive == "validate":
         if valid:
-            print(Markdown(f"==> Validation of {command} completed successfully!\n"))
+            pass
         else:
             msg = f"Validation failed for object_action `{command}`\n"
             logger.error(msg)
-            print(Markdown(f"==> Validation of {command} failed!!\n"))
         return valid
 
     elif directive == "process":
@@ -709,11 +705,11 @@ def process_tag_element_command(egeria_client: EgeriaTech, txt: str, directive: 
                     return out
 
         except ValidationError as e:
-            print_validation_error(e)
+            render_exception_table(command, "process", e)
             logger.error(f"Validation Error performing {command}: {e}")
             return None
         except PyegeriaException as e:
-            print_basic_exception(e)
+            render_exception_table(command, "process", e)
             logger.error(f"PyegeriaException occurred: {e}")
             return None
 
@@ -722,4 +718,3 @@ def process_tag_element_command(egeria_client: EgeriaTech, txt: str, directive: 
             return None
     else:
         return None
-

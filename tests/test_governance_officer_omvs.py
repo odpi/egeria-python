@@ -165,6 +165,57 @@ class TestGovernanceOfficer:
         finally:
             s_client.close_session()
 
+    def test_create_notification_type(self):
+        try:
+            s_client = GovernanceOfficer(
+                self.view_server, self.platform_url, self.user, self.password
+            )
+            s_client.create_egeria_bearer_token()
+            display_name = "sample-notification-type2"
+            q_name = s_client.__create_qualified_name__("NotificationType", display_name)
+
+            body = {
+                "class": "NewElementRequestBody",
+                "properties": {
+                    "class": "NotificationTypeProperties",
+                    "domainIdentifier": 0,
+                    "qualifiedName": q_name,
+                    "displayName": display_name,
+                    "summary": "sample data lens",
+                    "description": "sample data lens description",
+                    "scope": "Global",
+                    "importance": "Moderate",
+                    "multipleNotificationsPermitted": True,
+                    "minimumNotificationInterval": 60,
+                    "notificationInterval": 100,
+                    "plannedStartDate": "2026-01-31",
+                    "plannedCompletionDate": "2027-01-31"
+                },
+            }
+
+            start_time = time.perf_counter()
+            response = s_client.create_governance_definition(body)
+            duration = time.perf_counter() - start_time
+            print(
+                f"\n\tDuration was {duration:.2f} seconds, Type: {type(response)}, Element count is {len(response)}"
+            )
+            if isinstance(response, (list, dict)):
+                print_json(data=response)
+            elif type(response) is str:
+                print("\n\n\t Response is: " + response)
+
+            assert True
+        except (
+                PyegeriaInvalidParameterException,
+                PyegeriaAPIException,
+                PyegeriaUnauthorizedException,
+        ) as e:
+            print_basic_exception(e)
+            assert False, "Invalid request"
+
+        finally:
+            s_client.close_session()
+
     def test_create_governance_strategy_definition(self):
         try:
             s_client = GovernanceOfficer(

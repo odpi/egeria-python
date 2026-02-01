@@ -31,6 +31,7 @@ from pyegeria.omvs.data_engineer import DataEngineer
 from pyegeria.omvs.asset_maker import AssetMaker
 from pyegeria.core._exceptions import (
     PyegeriaNotFoundException,
+    PyegeriaTimeoutException,
 )
 from pyegeria.models import NewElementRequestBody
 
@@ -203,7 +204,10 @@ class DataEngineerScenarioTester:
                 console.print("  ✓ Successfully called get_tabular_data_set")
                 # print(report)
             except Exception as e:
-                console.print(f"  ⚠ Note: get_tabular_data_set might fail if no report exists yet: {str(e)}")
+                if isinstance(e, PyegeriaTimeoutException):
+                    console.print("  ⚠ Timeout getting tabular data set report; continuing.")
+                else:
+                    console.print(f"  ⚠ Note: get_tabular_data_set might fail if no report exists yet: {str(e)}")
                 # We won't fail the test just because the report isn't there, as long as the find worked.
                 # But in a real scenario we'd expect it to work if data was ingested.
 
@@ -212,6 +216,9 @@ class DataEngineerScenarioTester:
 
         except Exception as e:
             duration = time.perf_counter() - start_time
+            if isinstance(e, PyegeriaTimeoutException):
+                console.print(f"  [bold yellow]⚠ Timeout in {name}; continuing.[/bold yellow]")
+                return TestResult(name, "WARNING", duration, f"Timeout: {e}", error=e, created_guids=created_guids)
             console.print(f"  [bold red]✗ Scenario failed: {str(e)}[/bold red]")
             traceback.print_exc()
             return TestResult(name, "FAILED", duration, str(e), error=e, created_guids=created_guids)

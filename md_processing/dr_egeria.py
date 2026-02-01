@@ -12,6 +12,8 @@ from rich import print
 from rich.console import Console
 
 from md_processing import (extract_command, process_provenance_command, get_current_datetime_string, command_list)
+from md_processing.md_processing_utils.common_md_proc_utils import set_parse_summary_mode
+from md_processing.md_processing_utils.common_md_utils import set_attribute_log_level
 
 from md_processing.command_mapping import setup_dispatcher
 
@@ -43,11 +45,15 @@ logger.add("debug_log.log", rotation="1 day", retention="1 week", compression="z
            colorize=True)
 
 @logger.catch
-def process_md_file(input_file: str, output_folder:str, directive: str, server: str, url: str, userid: str,
-                          user_pass: str ) -> None:
+def process_md_file(input_file: str, output_folder: str, directive: str, server: str, url: str, userid: str,
+                          user_pass: str, parse_summary: str = "none",
+                          attribute_logs: str = "debug") -> None:
     """
     Process a markdown file by parsing and executing Dr. Egeria md_commands. Write output to a new file.
     """
+
+    set_parse_summary_mode(parse_summary)
+    set_attribute_log_level(attribute_logs)
 
     cmd_list = command_list
     console = Console(width=int(EGERIA_WIDTH))

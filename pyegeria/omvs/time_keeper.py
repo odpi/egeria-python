@@ -832,7 +832,7 @@ class TimeKeeper(ServerClient):
         ```
         """
         url = f"{self.platform_url}/servers/{self.view_server}/api/open-metadata/time-keeper/context-events/{context_event_guid}/evidence/{evidence_guid}/attach"
-        await self._async_new_relationship_request(url, body)
+        await self._async_new_relationship_request(url, ["ContextEventEvidenceProperties"], body)
 
     def link_context_event_evidence(
         self, context_event_guid: str, evidence_guid: str, body: dict | NewRelationshipRequestBody

@@ -53,6 +53,7 @@ ALL_GOVERNANCE_DEFINITIONS = GENERAL_GOVERNANCE_DEFINITIONS + GOVERNANCE_CONTROL
                                                 "Naming Standard Rule", "TermsAndConditions", "Certification Type", "License Type"]
 console = Console(width=EGERIA_WIDTH)
 debug_level = DEBUG_LEVEL
+ATTRIBUTE_LOG_LEVEL = os.environ.get("EGERIA_ATTRIBUTE_LOG_LEVEL", "debug").lower()
 global COMMAND_DEFINITIONS
 
 def split_tb_string(input: str)-> [Any]:
@@ -85,6 +86,15 @@ def set_debug_level(directive: str) -> None:
         debug_level = "display-only"
 
 
+def set_attribute_log_level(level: str) -> None:
+    """Sets the verbosity for per-attribute messages."""
+    global ATTRIBUTE_LOG_LEVEL
+    normalized = (level or "").strip().lower()
+    if normalized not in {"debug", "info", "none"}:
+        raise ValueError(f"Invalid attribute log level: {level}")
+    ATTRIBUTE_LOG_LEVEL = normalized
+
+
 def get_current_datetime_string():
     """Returns the current date and time as a human-readable string."""
     now = datetime.now().strftime('%Y-%m-%d %H:%M')
@@ -108,25 +118,28 @@ def print_msg(msg_level: str, msg: str, verbosity: str):
     """
     if msg_level == "ALWAYS":
         print(f"{message_types.get(msg_level, '')}{msg}")
-    # else:
-    #     logger.info(f"{message_types.get(msg_level, '')}{msg}")
-    # elif verbosity == "verbose" and msg_level in ["INFO", "WARNING", "ERROR"]:
-    #     print(f"{message_types.get(msg_level, '')}{msg}")
-    # elif verbosity == "quiet" and msg_level in ["WARNING", "ERROR"]:
-    #     print(f"{message_types.get(msg_level, '')}{msg}")
-    # elif verbosity == "debug" and msg_level in ["INFO", "WARNING", "ERROR", "DEBUG-INFO", "DEBUG-WARNING",
-    #                                             "DEBUG-ERROR"]:
-    #     print(f"{message_types.get(msg_level, '')}{msg}")
-    # elif verbosity == "display-only" and msg_level in ["ALWAYS", "ERROR"]:
-    #     print(f"{message_types.get(msg_level, '')}{msg}")
-    elif msg_level == "ERROR":
-        logger.error(f"{message_types.get(msg_level, '')}{msg}")
+        return
+
+    if ATTRIBUTE_LOG_LEVEL == "none":
+        return
+
+    formatted = f"{message_types.get(msg_level, '')}{msg}"
+    if msg_level.startswith("DEBUG"):
+        logger.debug(formatted)
+        return
+
+    if ATTRIBUTE_LOG_LEVEL == "debug":
+        logger.debug(formatted)
+        return
+
+    if msg_level == "ERROR":
+        logger.error(formatted)
     elif msg_level == "WARNING":
-        logger.warning(f"{message_types.get(msg_level, '')}{msg}")
+        logger.warning(formatted)
     elif msg_level == "DEBUG":
-        logger.debug(f"{message_types.get(msg_level, '')}{msg}")
+        logger.debug(formatted)
     else:
-        logger.info(f"{message_types.get(msg_level, '')}{msg}")
+        logger.info(formatted)
 
 def process_provenance_command(file_path: str, txt: [str]) -> str:
     """

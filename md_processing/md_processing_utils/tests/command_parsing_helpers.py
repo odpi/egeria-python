@@ -14,9 +14,19 @@ from md_processing.md_processing_utils.md_processing_constants import COMMAND_DE
 
 
 class FakeEgeriaClient:
+    def __init__(self, exists: bool | None = None) -> None:
+        self._exists = exists
+
     def get_elements_by_property_value(self, element_name, property_names, open_metadata_type_name=None):
         if not element_name:
             return "No elements found"
+        if self._exists is False:
+            return "No elements found"
+        if self._exists is True:
+            return [{
+                "elementHeader": {"guid": f"guid::{element_name}"},
+                "properties": {"qualifiedName": f"qn::{element_name}", "displayName": element_name},
+            }]
         if str(element_name).startswith("NEW "):
             return "No elements found"
         return [{

@@ -21,7 +21,6 @@ from pyegeria.core.utils import dynamic_catch, body_slimmer
 
 EGERIA_LOCAL_QUALIFIER = app_settings.User_Profile.egeria_local_qualifier
 
-
 class NotificationManager(ServerClient):
     """
     Manage notification types and their relationships to monitored resources and subscribers.

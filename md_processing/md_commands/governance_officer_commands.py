@@ -12,7 +12,12 @@ from rich import print
 from rich.console import Console
 from rich.markdown import Markdown
 
-from md_processing.md_processing_utils.common_md_proc_utils import (parse_upsert_command, parse_view_command)
+from md_processing.md_processing_utils.common_md_proc_utils import (
+    parse_upsert_command,
+    parse_view_command,
+    render_command_table,
+    render_exception_table,
+)
 from md_processing.md_processing_utils.common_md_utils import (set_gov_prop_body,
                                                                set_update_body, set_create_body,
                                                                set_peer_gov_def_request_body, set_rel_prop_body,
@@ -125,7 +130,7 @@ def process_gov_definition_upsert_command(egeria_client: EgeriaTech, txt: str,
 
         elif directive == "validate":
             if valid:
-                print(Markdown(f"==> Validation of {command} completed successfully!\n"))
+                pass
             else:
                 logger.error(f"Validation failed for `{command}`.")
             return valid
@@ -186,7 +191,7 @@ def process_gov_definition_upsert_command(egeria_client: EgeriaTech, txt: str,
 
     except PyegeriaException as e:
         logger.error(f"PyegeriaException occurred: {e}")
-        print_basic_exception(e)
+        render_exception_table(command, "process", e)
         return None
 
     except Exception as e:
@@ -211,7 +216,7 @@ def process_gov_def_link_detach_command(egeria_client: EgeriaTech, txt: str,
 
     parsed_output = parse_view_command(egeria_client, object_type, object_action, txt, directive)
 
-    print(Markdown(parsed_output['display']))
+    render_command_table(parsed_output, directive)
 
     logger.debug(json.dumps(parsed_output, indent=4))
 
@@ -230,7 +235,7 @@ def process_gov_def_link_detach_command(egeria_client: EgeriaTech, txt: str,
         return None
     elif directive == "validate":
         if valid:
-            print(Markdown(f"==> Validation of {command} completed successfully!\n"))
+            pass
         else:
             msg = f"Validation failed for object_action `{command}`\n"
         return valid
@@ -299,11 +304,11 @@ def process_gov_def_link_detach_command(egeria_client: EgeriaTech, txt: str,
                 return out
 
     except ValidationError as e:
-        print_validation_error(e)
+        render_exception_table(command, "process", e)
         logger.error(f"Validation Error performing {command}: {e}")
         return None
     except PyegeriaException as e:
-        print_basic_exception(e)
+        render_exception_table(command, "process", e)
         logger.error(f"PyegeriaException occurred: {e}")
         return None
 
@@ -330,7 +335,7 @@ def process_supporting_gov_def_link_detach_command(egeria_client: EgeriaTech, tx
 
     parsed_output = parse_view_command(egeria_client, object_type, object_action, txt, directive)
 
-    print(Markdown(parsed_output['display']))
+    render_command_table(parsed_output, directive)
 
     logger.debug(json.dumps(parsed_output, indent=4))
 
@@ -349,7 +354,7 @@ def process_supporting_gov_def_link_detach_command(egeria_client: EgeriaTech, tx
         return None
     elif directive == "validate":
         if valid:
-            print(Markdown(f"==> Validation of {command} completed successfully!\n"))
+            pass
         else:
             msg = f"Validation failed for object_action `{command}`\n"
         return valid
@@ -412,11 +417,11 @@ def process_supporting_gov_def_link_detach_command(egeria_client: EgeriaTech, tx
                 return out
 
     except ValidationError as e:
-        print_validation_error(e)
+        render_exception_table(command, "process", e)
         logger.error(f"Validation Error performing {command}: {e}")
         return None
     except PyegeriaException as e:
-        print_basic_exception(e)
+        render_exception_table(command, "process", e)
         logger.error(f"PyegeriaException occurred: {e}")
         return None
 
@@ -444,7 +449,7 @@ def process_governed_by_link_detach_command(egeria_client: EgeriaTech, txt: str,
 
     parsed_output = parse_view_command(egeria_client, object_type, object_action, txt, directive)
 
-    print(Markdown(parsed_output['display']))
+    render_command_table(parsed_output, directive)
 
     logger.debug(json.dumps(parsed_output, indent=4))
 
@@ -463,7 +468,7 @@ def process_governed_by_link_detach_command(egeria_client: EgeriaTech, txt: str,
         return None
     elif directive == "validate":
         if valid:
-            print(Markdown(f"==> Validation of {command} completed successfully!\n"))
+            pass
         else:
             msg = f"Validation failed for object_action `{command}`\n"
         return valid
@@ -518,11 +523,11 @@ def process_governed_by_link_detach_command(egeria_client: EgeriaTech, txt: str,
                     return out
 
         except ValidationError as e:
-            print_validation_error(e)
+            render_exception_table(command, "process", e)
             logger.error(f"Validation Error performing {command}: {e}")
             return None
         except PyegeriaException as e:
-            print_basic_exception(e)
+            render_exception_table(command, "process", e)
             logger.error(f"PyegeriaException occurred: {e}")
             return None
 
@@ -556,7 +561,7 @@ def process_gov_def_context_command(egeria_client: EgeriaTech, txt: str,
     display_name = parsed_output.get('display_name', None)
     guid = parsed_output.get('guid', None)
 
-    print(Markdown(parsed_output['display']))
+    render_command_table(parsed_output, directive)
 
     attr = parsed_output.get('attributes', {})
 
@@ -567,7 +572,7 @@ def process_gov_def_context_command(egeria_client: EgeriaTech, txt: str,
         return None
     elif directive == "validate":
         if valid:
-            print(Markdown(f"==> Validation of {command} completed successfully!\n"))
+            pass
         else:
             msg = f"Validation failed for object_action `{command}`\n"
             logger.error(msg)

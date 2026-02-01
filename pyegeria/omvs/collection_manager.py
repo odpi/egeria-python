@@ -610,7 +610,7 @@ class CollectionManager(ServerClient):
             }
             validated_body = DeploymentStatusSearchString.model_validate(body_dict)
 
-        json_body = validated_body.model_dump_json(indent=2, exclude_none=True)
+        json_body = validated_body.model_dump_json(indent=2, exclude_none=True, by_alias=True)
         response = await self._async_make_request("POST", url, json_body)
         elements = response.json().get("elements", NO_ELEMENTS_FOUND)
 
@@ -723,7 +723,7 @@ class CollectionManager(ServerClient):
             }
             validated_body = DeploymentStatusFilterRequestBody.model_validate(body_dict)
 
-        json_body = validated_body.model_dump_json(indent=2, exclude_none=True)
+        json_body = validated_body.model_dump_json(indent=2, exclude_none=True, by_alias=True)
         response = await self._async_make_request("POST", url, json_body)
         elements = response.json().get("elements", NO_ELEMENTS_FOUND)
 
@@ -1470,51 +1470,41 @@ class CollectionManager(ServerClient):
 
         """
         if body:
-            validated_body = self.validate_new_element_request(body,"CollectionProperties")
+            validated_body = self.validate_new_element_request(body, "CollectionProperties")
         elif (body is None) and (display_name is not None):
-            if initial_classifications:
-                pre = initial_classifications[0]
-            else:
-                pre = prop[0]
+            # if initial_classifications:
+            #     pre = initial_classifications[0]
+            # else:
+            #     pre = prop[0]
 
             qualified_name = self.__create_qualified_name__(pre, display_name, EGERIA_LOCAL_QUALIFIER)
             if initial_classifications:
                 initial_classifications_dict = {}
                 for c in initial_classifications:
-                    initial_classifications_dict = initial_classifications_dict | {c : {"class": f"{c}Properties"}}
+                    initial_classifications_dict = initial_classifications_dict | {c: {"class": f"{c}Properties"}}
 
             else:
                 initial_classifications_dict = None
 
-            collection_properties = CollectionProperties( class_ = "CollectionProperties",
-                                                             qualified_name = qualified_name,
-                                                             display_name = display_name,
-                                                             description = description,
-                                                             category = category,
-                                                             typeName = prop[0]
-                                                             )
+            collection_properties = CollectionProperties(class_="CollectionProperties",
+                                                         qualified_name=qualified_name,
+                                                         display_name=display_name,
+                                                         description=description,
+                                                         category=category,
+                                                         typeName=prop[0]
+                                                         )
             body = {
-                "class" :"NewElementRequestBody",
+                "class": "NewElementRequestBody",
                 "isOwnAnchor": True,
                 "initialClassifications": initial_classifications_dict,
                 "properties": collection_properties.model_dump()
-                }
+            }
             validated_body = NewElementRequestBody.model_validate(body)
         else:
             raise PyegeriaInvalidParameterException(additional_info={"reason": "Invalid input parameters"})
 
         url = f"{self.collection_command_root}"
-
-        prop = validated_body.properties['class']
-        prop = prop.replace('Properties','')
-
-        # json_body = validated_body.model_dump_json(indent=2, exclude_none=True)
-        #
-        # logger.info(json_body)
-        # resp = await self._async_make_request("POST", url, json_body, is_json=True)
-        # logger.info(f"Create collection with GUID: {resp.json().get('guid')}")
-        # return resp.json().get("guid", NO_GUID_RETURNED)
-        response = await self._async_create_element_body_request(url, [prop], validated_body)
+        response = await self._async_create_element_body_request(url, prop, validated_body)
         return response
 
 
@@ -1946,7 +1936,7 @@ class CollectionManager(ServerClient):
 
 
         url = f"{self.collection_command_root}"
-        json_body = validated_body.model_dump_json(indent=2, exclude_none=True)
+        json_body = validated_body.model_dump_json(indent=2, exclude_none=True, by_alias=True)
         logger.info(json_body)
         resp = await self._async_make_request("POST", url, json_body, is_json=True)
         logger.info(f"Create collection with GUID: {resp.json().get('guid')}")
@@ -2201,7 +2191,7 @@ class CollectionManager(ServerClient):
 
 
         url = f"{self.collection_command_root}"
-        json_body = validated_body.model_dump_json(indent=2, exclude_none=True)
+        json_body = validated_body.model_dump_json(indent=2, exclude_none=True, by_alias=True)
         logger.info(json_body)
         resp = await self._async_make_request("POST", url, json_body, is_json=True)
         logger.info(f"Create collection with GUID: {resp.json().get('guid')}")
@@ -2394,7 +2384,7 @@ class CollectionManager(ServerClient):
 
 
         url = f"{self.collection_command_root}/from-template"
-        json_body = validated_body.model_dump_json(indent=2, exclude_none=True)
+        json_body = validated_body.model_dump_json(indent=2, exclude_none=True, by_alias=True)
         logger.info(json_body)
         resp = await self._async_make_request("POST", url, json_body, is_json=True)
         logger.info(f"Create collection from template with GUID: {resp.json().get('guid')}")

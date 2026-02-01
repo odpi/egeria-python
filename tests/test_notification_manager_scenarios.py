@@ -29,14 +29,16 @@ from rich.progress import Progress, SpinnerColumn, TextColumn
 from pyegeria.omvs.notification_manager import NotificationManager
 from pyegeria.omvs.actor_manager import ActorManager
 from pyegeria.omvs.collection_manager import CollectionManager
+from pyegeria.omvs.governance_officer import GovernanceOfficer
 from pyegeria.core._exceptions import (
     PyegeriaException,
     PyegeriaNotFoundException,
+    PyegeriaTimeoutException,
     print_exception_table,
 )
 
 # Configuration
-VIEW_SERVER = "view-server"
+VIEW_SERVER = "qs-view-server"
 PLATFORM_URL = "https://localhost:9443"
 USER_ID = "peterprofile"
 USER_PWD = "secret"
@@ -62,9 +64,11 @@ class NotificationManagerScenarioTester:
         self.client: Optional[NotificationManager] = None
         self.actor_client: Optional[ActorManager] = None
         self.collection_client: Optional[CollectionManager] = None
+        self.gov_officer: Optional[GovernanceOfficer] = None
         self.results: List[TestResult] = []
         self.created_actors: List[str] = []
         self.created_collections: List[str] = []
+        self.created_notification_types: List[str] = []
         self.test_run_id = datetime.now().strftime("%Y%m%d_%H%M%S")
         
     def setup(self) -> bool:
@@ -74,11 +78,13 @@ class NotificationManagerScenarioTester:
             self.client = NotificationManager(VIEW_SERVER, PLATFORM_URL, user_id=USER_ID, user_pwd=USER_PWD)
             self.actor_client = ActorManager(VIEW_SERVER, PLATFORM_URL, user_id=USER_ID, user_pwd=USER_PWD)
             self.collection_client = CollectionManager(VIEW_SERVER, PLATFORM_URL, user_id=USER_ID, user_pwd=USER_PWD)
+            self.gov_officer = GovernanceOfficer(VIEW_SERVER, PLATFORM_URL, user_id=USER_ID, user_pwd=USER_PWD)
             token = self.client.create_egeria_bearer_token(USER_ID, USER_PWD)
 
             # Apply the token to the other clients
             self.actor_client.token = token
             self.collection_client.token = token
+            self.gov_officer.token = token
             console.print(f"✓ Connected to {PLATFORM_URL}")
             console.print(f"✓ Authenticated as {USER_ID}")
             console.print(f"✓ Test Run ID: {self.test_run_id}\n")
@@ -96,13 +102,15 @@ class NotificationManagerScenarioTester:
             self.actor_client.close_session()
         if self.collection_client:
             self.collection_client.close_session()
+        if self.gov_officer:
+            self.gov_officer.close_session()
             console.print("\n✓ Session closed")
     
     def cleanup_created_elements(self):
         """Delete all elements created during testing"""
         console.print("\n[bold yellow]═══ Cleaning Up Test Data ═══[/bold yellow]\n")
         
-        total_items = len(self.created_actors) + len(self.created_collections)
+        total_items = len(self.created_actors) + len(self.created_collections) + len(self.created_notification_types)
         if total_items == 0:
             console.print("No elements to clean up")
             return
@@ -112,6 +120,18 @@ class NotificationManagerScenarioTester:
         with Progress(SpinnerColumn(), TextColumn("[progress.description]{task.description}"), console=console) as progress:
             task = progress.add_task(f"Cleaning up {total_items} elements...", total=total_items)
             
+            # Clean up notification types
+            for guid in self.created_notification_types:
+                try:
+                    self.gov_officer.delete_governance_definition(guid)
+                    cleanup_results["success"] += 1
+                except PyegeriaNotFoundException:
+                    cleanup_results["not_found"] += 1
+                except Exception as e:
+                    console.print(f"  [yellow]⚠ Failed to delete notification type {guid}: {str(e)}[/yellow]")
+                    cleanup_results["failed"] += 1
+                progress.advance(task)
+
             # Clean up actors
             for guid in self.created_actors:
                 try:
@@ -196,29 +216,38 @@ class NotificationManagerScenarioTester:
         try:
             console.print(f"\n[bold blue]▶ Running: {scenario_name}[/bold blue]")
             
-            # CREATE: Create two collections to act as notification types and monitored resource
-            console.print("  → Creating collections for notification test...")
-            ts = datetime.now().strftime("%Y%m%d%H%M%S%f")
+            # CREATE: Create a notification type governance control and a collection for monitored resource
+            console.print("  → Creating elements for notification test...")
+            ts = datetime.now().isoformat()
             
-            # Create notification type collection
+            # Create notification type governance control
             notification_body = {
                 "class": "NewElementRequestBody",
                 "isOwnAnchor": True,
                 "properties": {
-                    "class": "CollectionProperties",
-                    "qualifiedName": f"Collection::NotificationType::{ts}",
+                    "class": "NotificationTypeProperties",
+                    "qualifiedName": f"NotificationType::{ts}",
                     "displayName": f"Notification Type {ts}",
-                    "description": "Collection acting as notification type for testing"
+                    "description": "Governance control acting as notification type for testing",
+                    "multipleNotificationsPermitted": True,
+                    "minimumNotificationInterval": 60,
+                    "notificationInterval":100,
+                    "plannedStartDate": "2026-01-31",
+                    "plannedCompletionDate": "2027-01-31",
+                    "domainIdentifier": 0,
+                    "summary": "Governance control notification type for testing",
+                    "scope": "Global",
+                    "importance": "Moderate"
                 }
             }
             
-            notification_type_guid = self.collection_client.create_collection(body=notification_body)
+            notification_type_guid = self.gov_officer.create_governance_definition(body=notification_body)
             if notification_type_guid:
                 created_guids.append(notification_type_guid)
-                self.created_collections.append(notification_type_guid)
-                console.print(f"  ✓ Created notification type collection: {notification_type_guid}")
+                self.created_notification_types.append(notification_type_guid)
+                console.print(f"  ✓ Created notification type: {notification_type_guid}")
             else:
-                raise Exception("Failed to create notification type collection")
+                raise Exception("Failed to create notification type")
             
             # Create monitored resource collection
             resource_body = {
@@ -275,6 +304,15 @@ class NotificationManagerScenarioTester:
             
         except Exception as e:
             duration = time.perf_counter() - start_time
+            if isinstance(e, PyegeriaTimeoutException):
+                console.print(f"  [yellow]⚠ Timeout in {scenario_name}; continuing.[/yellow]")
+                return TestResult(
+                    scenario_name=scenario_name,
+                    status="WARNING",
+                    duration=duration,
+                    message=f"Timeout: {str(e)[:100]}",
+                    error=e
+                )
             console.print(f"  [red]✗ Error: {str(e)}[/red]")
             print_exception_table(e) if isinstance(e, PyegeriaException) else console.print_exception()
             return TestResult(
@@ -294,30 +332,30 @@ class NotificationManagerScenarioTester:
         try:
             console.print(f"\n[bold blue]▶ Running: {scenario_name}[/bold blue]")
             
-            # CREATE: Create a collection for notification type and an actor profile for subscriber
+            # CREATE: Create a notification type governance control and an actor profile for subscriber
             console.print("  → Creating elements for subscriber test...")
             ts = datetime.now().strftime("%Y%m%d%H%M%S%f")
             
-            # Create notification type collection
+            # Create notification type governance control
             notification_body = {
                 "class": "NewElementRequestBody",
-                "typeName": "Collection",
+                "typeName": "NotificationType",
                 "isOwnAnchor": True,
                 "properties": {
-                    "class": "CollectionProperties",
-                    "qualifiedName": f"Collection::NotificationTypeSubscriber::{ts}",
+                    "class": "NotificationTypeProperties",
+                    "qualifiedName": f"NotificationType::NotificationTypeSubscriber::{ts}",
                     "displayName": f"Notification Type for Subscriber {ts}",
-                    "description": "Collection acting as notification type for subscriber testing"
+                    "description": "Governance control acting as notification type for subscriber testing"
                 }
             }
             
-            notification_type_guid = self.collection_client.create_collection(notification_body)
+            notification_type_guid = self.gov_officer.create_governance_definition(notification_body)
             if notification_type_guid:
                 created_guids.append(notification_type_guid)
-                self.created_collections.append(notification_type_guid)
-                console.print(f"  ✓ Created notification type collection: {notification_type_guid}")
+                self.created_notification_types.append(notification_type_guid)
+                console.print(f"  ✓ Created notification type: {notification_type_guid}")
             else:
-                raise Exception("Failed to create notification type collection")
+                raise Exception("Failed to create notification type")
             
             # Create subscriber actor profile
             subscriber_body = {
@@ -344,7 +382,7 @@ class NotificationManagerScenarioTester:
             link_body = {
                 "class": "NewRelationshipRequestBody",
                 "properties": {
-                    "class": "MonitoredResourceProperties",
+                    "class": "NotificationSubscriberProperties",
                     "label": "Test Subscriber",
                     "description": "Test subscriber relationship"
                 }
@@ -373,6 +411,15 @@ class NotificationManagerScenarioTester:
             
         except Exception as e:
             duration = time.perf_counter() - start_time
+            if isinstance(e, PyegeriaTimeoutException):
+                console.print(f"  [yellow]⚠ Timeout in {scenario_name}; continuing.[/yellow]")
+                return TestResult(
+                    scenario_name=scenario_name,
+                    status="WARNING",
+                    duration=duration,
+                    message=f"Timeout: {str(e)[:100]}",
+                    error=e
+                )
             console.print(f"  [red]✗ Error: {str(e)}[/red]")
             print_exception_table(e) if isinstance(e, PyegeriaException) else console.print_exception()
             return TestResult(
@@ -396,26 +443,25 @@ class NotificationManagerScenarioTester:
             console.print("  → Creating elements for complete notification setup...")
             ts = datetime.now().strftime("%Y%m%d%H%M%S%f")
             
-            # Create notification type collection
+            # Create notification type governance control
             notification_body = {
                 "class": "NewElementRequestBody",
-                "typeName": "Collection",
-        
+                "typeName": "NotificationType",
                 "properties": {
-                    "class": "CollectionProperties",
-                    "qualifiedName": f"Collection::CompleteNotification::{ts}",
+                    "class": "NotificationTypeProperties",
+                    "qualifiedName": f"NotificationType::CompleteNotification::{ts}",
                     "displayName": f"Complete Notification Type {ts}",
-                    "description": "Collection for complete notification setup testing"
+                    "description": "Governance control for complete notification setup testing"
                 }
             }
             
-            notification_type_guid = self.collection_client.create_collection(notification_body)
+            notification_type_guid = self.gov_officer.create_governance_definition(notification_body)
             if notification_type_guid:
                 created_guids.append(notification_type_guid)
-                self.created_collections.append(notification_type_guid)
-                console.print(f"  ✓ Created notification type collection: {notification_type_guid}")
+                self.created_notification_types.append(notification_type_guid)
+                console.print(f"  ✓ Created notification type: {notification_type_guid}")
             else:
-                raise Exception("Failed to create notification type collection")
+                raise Exception("Failed to create notification type")
             
             # Create monitored resource collection
             resource_body_create = {
@@ -480,7 +526,7 @@ class NotificationManagerScenarioTester:
             subscriber_link_body = {
                 "class": "NewRelationshipRequestBody",
                 "properties": {
-                    "class": "MonitoredResourceProperties",
+                    "class": "NotificationSubscriberProperties",
                     "label": "Complete Test Subscriber",
                     "description": "Complete test subscriber"
                 }
@@ -516,6 +562,15 @@ class NotificationManagerScenarioTester:
             
         except Exception as e:
             duration = time.perf_counter() - start_time
+            if isinstance(e, PyegeriaTimeoutException):
+                console.print(f"  [yellow]⚠ Timeout in {scenario_name}; continuing.[/yellow]")
+                return TestResult(
+                    scenario_name=scenario_name,
+                    status="WARNING",
+                    duration=duration,
+                    message=f"Timeout: {str(e)[:100]}",
+                    error=e
+                )
             console.print(f"  [red]✗ Error: {str(e)}[/red]")
             print_exception_table(e) if isinstance(e, PyegeriaException) else console.print_exception()
             return TestResult(

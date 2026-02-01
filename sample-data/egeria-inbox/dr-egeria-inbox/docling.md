@@ -7,7 +7,7 @@ Can be used standalone or in the context of the [[Data Prep Kit]]].
 
 
 ____
-# Create Solution Component
+# Update Solution Component
 >	A reusable solution component.
 
 ## Display Name
@@ -179,7 +179,7 @@ SolutionBlueprint::Local-Data-Prep-Blueprint-for-ML-OPs::0.1, SolutionBlueprint:
 
 ____
 
-# Create Cited Document
+# Update Cited Document
 >	A cited document
 
 ## Display Name

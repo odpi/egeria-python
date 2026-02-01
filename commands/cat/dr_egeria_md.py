@@ -49,14 +49,19 @@ console = Console(width=EGERIA_WIDTH)
 @click.option("--url", default=EGERIA_VIEW_SERVER_URL, help="URL of Egeria platform to connect to")
 @click.option("--userid", default=EGERIA_USER, help="Egeria user")
 @click.option("--user_pass", default=EGERIA_USER_PASSWORD, help="Egeria user password")
+@click.option("--parse-summary", default="none", help="When to show parse summaries",
+              type=click.Choice(["all", "errors", "none"], case_sensitive=False))
+@click.option("--attribute-logs", default="debug", help="Per-attribute log verbosity",
+              type=click.Choice(["debug", "info", "none"], case_sensitive=False))
 @logger.catch
 def process_markdown_file(input_file: str, output_folder:str, directive: str, server: str, url: str, userid: str,
-                          user_pass: str ) -> None:
+                          user_pass: str, parse_summary: str, attribute_logs: str) -> None:
     """
     Process a markdown file by parsing and executing Dr. Egeria md_commands. Write output to a new file.
     """
     try:
-        process_md_file(input_file, output_folder, directive, server, url, userid, user_pass)
+        process_md_file(input_file, output_folder, directive, server, url, userid, user_pass,
+                        parse_summary=parse_summary, attribute_logs=attribute_logs)
         logger.info(f"Called process_markdown_file with input file {input_file}")
     except PyegeriaException as e:
         logger.error(f"Error processing markdown file {input_file}: {e}")
@@ -71,6 +76,6 @@ if __name__ == "__main__":
     if _running_in_pycharm_debugger():
         input_file = Prompt.ask("Markdown File name to process:", default="dr_egeria_intro_part1.md")
         process_md_file(input_file, "", "process", EGERIA_VIEW_SERVER, EGERIA_VIEW_SERVER_URL, EGERIA_USER,
-                        EGERIA_USER_PASSWORD)
+                        EGERIA_USER_PASSWORD, parse_summary="all", attribute_logs="debug")
     else:
         process_markdown_file()

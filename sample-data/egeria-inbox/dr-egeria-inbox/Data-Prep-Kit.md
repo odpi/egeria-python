@@ -4,7 +4,7 @@
 2. Define an initial component for DPK - the issue seems to be that it can run stand-alone, on spark or on ray.
 
 
-# Don't Update Cited Document
+# Update Cited Document
 >	A cited document
 
 ## Display Name

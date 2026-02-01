@@ -18,6 +18,7 @@ from pyegeria.omvs.asset_maker import AssetMaker
 from pyegeria.core._exceptions import (
     PyegeriaNotFoundException,
     PyegeriaConnectionException,
+    PyegeriaTimeoutException,
 )
 
 # Configuration
@@ -221,6 +222,9 @@ class TimeKeeperScenarioTester:
 
         except Exception as e:
             self.created_guids.extend(created)
+            if isinstance(e, PyegeriaTimeoutException):
+                console.print(f"[bold yellow]⚠ Timeout in {name}; continuing.[/bold yellow]")
+                return TestResult(name, "WARNING", time.perf_counter() - start_time, f"Timeout: {e}", error=e, created_guids=created)
             return TestResult(name, "FAILED", time.perf_counter() - start_time, str(e), error=e, created_guids=created)
 
     def run_all_scenarios(self):

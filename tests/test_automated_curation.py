@@ -464,7 +464,7 @@ class TestAutomatedCuration:
             token = a_client.create_egeria_bearer_token("peterprofile","secret")
 
             start_time = time.perf_counter()
-            response = a_client.get_active_engine_actions()
+            response = a_client.get_active_engine_actions(output_format="DICT",report_spec="Referenceable")
             duration = time.perf_counter() - start_time
             print(f"\n\tDuration was {duration} seconds")
             if type(response) is list:

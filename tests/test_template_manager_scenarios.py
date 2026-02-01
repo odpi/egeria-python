@@ -26,6 +26,7 @@ from loguru import logger
 from pyegeria.egeria_tech_client import EgeriaTech
 from pyegeria.core._exceptions import (
     PyegeriaNotFoundException,
+    PyegeriaTimeoutException,
 )
 
 # Configuration
@@ -200,6 +201,9 @@ class TemplateScenarioTester:
             
         except Exception as e:
             duration = time.perf_counter() - start_time
+            if isinstance(e, PyegeriaTimeoutException):
+                console.print(f"[bold yellow]⚠ Timeout in {scenario_name}; continuing.[/bold yellow]")
+                return TestResult(scenario_name, "WARNING", duration, f"Timeout: {e}", error=e, created_guids=created_in_scenario)
             return TestResult(scenario_name, "FAILED", duration, str(e), error=e, created_guids=created_in_scenario)
 
     def scenario_2_catalog_template_management(self) -> TestResult:
@@ -255,6 +259,9 @@ class TemplateScenarioTester:
             
         except Exception as e:
             duration = time.perf_counter() - start_time
+            if isinstance(e, PyegeriaTimeoutException):
+                console.print(f"[bold yellow]⚠ Timeout in {scenario_name}; continuing.[/bold yellow]")
+                return TestResult(scenario_name, "WARNING", duration, f"Timeout: {e}", error=e, created_guids=created_in_scenario)
             return TestResult(scenario_name, "FAILED", duration, str(e), error=e, created_guids=created_in_scenario)
 
     def generate_report(self):

@@ -772,7 +772,7 @@ class GlossaryManager(CollectionManager):
                 }
             validated_body = self._template_request_adapter.validate_python(body)
             validated_body._templateGUID = glossary_term_guid
-        v_body = body_slimmer(validated_body.model_dump(exclude_none=True))
+        v_body = body_slimmer(validated_body.model_dump(exclude_none=True, by_alias=True))
         logger.info(v_body)
 
         url = (

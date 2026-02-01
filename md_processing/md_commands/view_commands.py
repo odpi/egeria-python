@@ -11,7 +11,11 @@ from rich import print
 from rich.console import Console
 from rich.markdown import Markdown
 
-from md_processing.md_processing_utils.common_md_proc_utils import (parse_view_command)
+from md_processing.md_processing_utils.common_md_proc_utils import (
+    parse_view_command,
+    render_command_table,
+    render_exception_table,
+)
 from md_processing.md_processing_utils.extraction_utils import (extract_command_plus)
 from md_processing.md_processing_utils.md_processing_constants import (load_commands)
 from pyegeria import DEBUG_LEVEL, body_slimmer, print_basic_exception, print_validation_error
@@ -213,9 +217,9 @@ def process_format_set_action(
 
 
     except PyegeriaException as e:
-        print_basic_exception(e)
+        render_exception_table(command, "process", e)
     except ValidationError as e:
-        print_validation_error(e)
+        render_exception_table(command, "process", e)
 
 
 def process_output_command(egeria_client: EgeriaTech, txt: str, directive: str = "display") -> Optional[str]:
@@ -239,13 +243,13 @@ def process_output_command(egeria_client: EgeriaTech, txt: str, directive: str =
 
     valid = parsed_output['valid']
     print(Markdown(f"Performing {command}"))
-    print(Markdown(parsed_output['display']))
+    render_command_table(parsed_output, directive)
 
     if directive == "display":
         return None
     elif directive == "validate":
         if valid:
-            print(Markdown(f"==> Validation of {command} completed successfully!\n"))
+            pass
         else:
             msg = f"Validation failed for object_action `{command}`\n"
             logger.error(msg)

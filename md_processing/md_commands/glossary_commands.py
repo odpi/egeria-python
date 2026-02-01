@@ -8,8 +8,13 @@ from loguru import logger
 from rich import print
 from rich.markdown import Markdown
 
-from md_processing.md_processing_utils.common_md_proc_utils import (parse_upsert_command, parse_view_command,
-                                                                    sync_collection_memberships)
+from md_processing.md_processing_utils.common_md_proc_utils import (
+    parse_upsert_command,
+    parse_view_command,
+    sync_collection_memberships,
+    render_command_table,
+    render_exception_table,
+)
 from md_processing.md_processing_utils.common_md_utils import set_update_body, \
     set_element_prop_body, set_rel_request_body, set_create_body, set_object_classifications, set_rel_prop_body
 
@@ -115,7 +120,7 @@ def process_glossary_upsert_command(egeria_client: EgeriaTech, txt: str, directi
     qualified_name = parsed_output.get('qualified_name', None)
     guid = parsed_output.get('guid', None)
 
-    print(Markdown(parsed_output['display']))
+    render_command_table(parsed_output, directive)
 
     logger.debug(json.dumps(parsed_output, indent=4))
 
@@ -129,7 +134,7 @@ def process_glossary_upsert_command(egeria_client: EgeriaTech, txt: str, directi
         return None
     elif directive == "validate":
         if valid:
-            print(Markdown(f"==> Validation of {command} completed successfully!\n"))
+            pass
         else:
             msg = f"Validation failed for object_action `{command}`\n"
         return valid
@@ -205,7 +210,7 @@ def process_glossary_upsert_command(egeria_client: EgeriaTech, txt: str, directi
 
         except PyegeriaException as e:
             logger.error(f"Pyegeria error performing {command}: {e}")
-            print_basic_exception(e)
+            render_exception_table(command, "process", e)
             return None
         except Exception as e:
             logger.error(f"Error performing {command}: {e}")
@@ -485,7 +490,7 @@ def process_term_upsert_command(egeria_client: EgeriaTech, txt: str, directive: 
     qualified_name = parsed_output.get('qualified_name', None)
     guid = parsed_output.get('guid', None)
 
-    print(Markdown(parsed_output['display']))
+    render_command_table(parsed_output, directive)
 
     logger.debug(json.dumps(parsed_output, indent=4))
 
@@ -500,7 +505,7 @@ def process_term_upsert_command(egeria_client: EgeriaTech, txt: str, directive: 
         return None
     elif directive == "validate":
         if valid:
-            print(Markdown(f"==> Validation of {command} completed successfully!\n"))
+            pass
         else:
             msg = f"Validation failed for object_action `{command}`\n"
         return valid
@@ -593,7 +598,7 @@ def process_term_upsert_command(egeria_client: EgeriaTech, txt: str, directive: 
 
         except PyegeriaException as e:
             logger.error(f"Pyegeria error performing {command}: {e}")
-            print_basic_exception(e)
+            render_exception_table(command, "process", e)
             return None
         except Exception as e:
             logger.error(f"Error performing {command}: {e}")
@@ -608,7 +613,7 @@ def process_link_term_term_relationship_command(egeria_client: EgeriaTech, txt: 
 
     parsed_output = parse_view_command(egeria_client, object_type, object_action, txt, directive)
 
-    print(Markdown(parsed_output['display']))
+    render_command_table(parsed_output, directive)
 
     logger.debug(json.dumps(parsed_output, indent=4))
 
@@ -636,7 +641,7 @@ def process_link_term_term_relationship_command(egeria_client: EgeriaTech, txt: 
         return None
     elif directive == "validate":
         if valid:
-            print(Markdown(f"==> Validation of {command} completed successfully!\n"))
+            pass
         else:
             msg = f"Validation failed for object_action `{command}`\n"
         return valid
@@ -675,9 +680,8 @@ def process_link_term_term_relationship_command(egeria_client: EgeriaTech, txt: 
 
         except Exception as e:
             print(f"Error performing {command}: {e}")
-            print_basic_exception(e)
+            render_exception_table(command, "process", e)
             return None
             return None
     else:
         return None
-

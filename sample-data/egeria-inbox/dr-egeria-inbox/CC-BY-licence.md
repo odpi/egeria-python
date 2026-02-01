@@ -1,4 +1,4 @@
-# Update License Type
+# Create License Type
 >	A type of license.
 
 ## Display Name
@@ -107,5 +107,5 @@ Simple and free use of licensed IP.
 
 >	Default Value: ACTIVE
 
-ACtiVE
+ACTIVE
 

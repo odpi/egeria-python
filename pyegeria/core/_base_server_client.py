@@ -19,7 +19,7 @@ from loguru import logger
 
 from pyegeria.core._exceptions import (
     PyegeriaAPIException, PyegeriaConnectionException, PyegeriaInvalidParameterException,
-    PyegeriaUnknownException, PyegeriaClientException
+    PyegeriaUnknownException, PyegeriaClientException, PyegeriaTimeoutException
 )
 from pyegeria.core._globals import enable_ssl_check, max_paging_size
 from pyegeria.core._validators import (
@@ -531,7 +531,15 @@ class BaseServerClient:
 
             status_code = response.status_code
 
-        except (httpx.TimeoutException, httpcore.ConnectError, httpx.ConnectError) as e:
+        except httpx.TimeoutException as e:
+            additional_info = {
+                "endpoint": endpoint,
+                "error_kind": "timeout",
+                "timeout_seconds": time_out,
+            }
+            raise PyegeriaTimeoutException(context, additional_info, e)
+
+        except (httpcore.ConnectError, httpx.ConnectError) as e:
             additional_info = {"endpoint": endpoint, "error_kind": "connection"}
             raise PyegeriaConnectionException(context, additional_info, e)
 

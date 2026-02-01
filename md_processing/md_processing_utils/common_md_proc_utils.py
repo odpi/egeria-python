@@ -12,9 +12,16 @@ from pydantic import ValidationError
 from rich import print
 from rich.markdown import Markdown
 from rich.console import Console
+from rich.table import Table
 from pyegeria.core.utils import parse_to_dict
 from pyegeria.core.config import settings
-from md_processing.md_processing_utils.common_md_utils import (get_current_datetime_string, split_tb_string, str_to_bool, )
+from md_processing.md_processing_utils.common_md_utils import (
+    get_current_datetime_string,
+    split_tb_string,
+    str_to_bool,
+    print_msg,
+    debug_level as common_debug_level,
+)
 from md_processing.md_processing_utils.extraction_utils import (process_simple_attribute, extract_attribute,
                                                                 get_element_by_name)
 from md_processing.md_processing_utils.common_md_utils import (update_element_dictionary, set_find_body)
@@ -36,7 +43,150 @@ user_config = settings.User_Profile
 EGERIA_WIDTH = int(os.environ.get("EGERIA_WIDTH", "200"))
 EGERIA_USAGE_LEVEL = os.environ.get("EGERIA_USAGE_LEVEL", user_config.egeria_usage_level)
 LOCAL_QUALIFIER = os.environ.get("EGERIA_LOCAL_QUALIFIER", None)
-console = Console(width=EGERIA_WIDTH)
+_force_rich = os.environ.get("EGERIA_RICH_FORCE", "false").strip().lower() in {"1", "true", "yes"}
+console = Console(width=EGERIA_WIDTH, force_terminal=_force_rich, color_system="truecolor" if _force_rich else None)
+PARSE_SUMMARY_MODE = os.environ.get("EGERIA_PARSE_SUMMARY_MODE", "none").lower()
+
+
+def set_parse_summary_mode(mode: str) -> None:
+    """Sets when to print parse summaries: all, errors, or none."""
+    global PARSE_SUMMARY_MODE
+    normalized = (mode or "").strip().lower()
+    if normalized not in {"all", "errors", "none"}:
+        raise ValueError(f"Invalid parse summary mode: {mode}")
+    PARSE_SUMMARY_MODE = normalized
+
+
+def _attribute_msg(level: str, msg: str) -> None:
+    print_msg(level, msg, common_debug_level)
+
+
+def _render_parse_summary(summary: dict) -> None:
+    if PARSE_SUMMARY_MODE == "none":
+        return
+    if PARSE_SUMMARY_MODE == "errors" and not (summary["errors"] or summary["warnings"]):
+        return
+
+    table = Table(title="Parse Summary", show_header=True, header_style="bold")
+    table.add_column("Command", overflow="fold")
+    table.add_column("Status", justify="center")
+    table.add_column("Errors", overflow="fold")
+    table.add_column("Warnings", overflow="fold")
+    table.add_column("Req Parsed", justify="right")
+    table.add_column("Req Missing", justify="right")
+    table.add_column("Opt Parsed", justify="right")
+    table.add_column("Opt Skipped", justify="right")
+
+    status = summary["status"]
+    status_style = "green" if status == "OK" else ("yellow" if status == "WARN" else "red")
+    errors_text = "\n".join(f"[red]{err}[/red]" for err in summary["errors"]) if summary["errors"] else ""
+    warnings_text = "\n".join(f"[yellow]{warn}[/yellow]" for warn in summary["warnings"]) if summary["warnings"] else ""
+
+    table.add_row(
+        summary["command"],
+        f"[{status_style}]{status}[/{status_style}]",
+        errors_text,
+        warnings_text,
+        str(summary["required_parsed"]),
+        str(summary["required_missing"]),
+        str(summary["optional_parsed"]),
+        str(summary["optional_skipped"]),
+    )
+    console.print(table)
+
+
+def _init_summary(command: str) -> dict:
+    return {
+        "command": command,
+        "required_parsed": 0,
+        "required_missing": 0,
+        "optional_parsed": 0,
+        "optional_skipped": 0,
+        "errors": [],
+        "warnings": [],
+        "status": "OK",
+    }
+
+
+def _format_value(value) -> str:
+    if value is None:
+        return ""
+    if isinstance(value, dict):
+        if value and all(isinstance(v, dict) for v in value.values()):
+            qnames = [v.get("known_q_name") for v in value.values()]
+            if any(qnames):
+                return ", ".join(q for q in qnames if q)
+        return json.dumps(value, indent=2)
+    if isinstance(value, list):
+        return json.dumps(value, indent=2)
+    return str(value)
+
+
+def _summary_status(summary: dict) -> str:
+    if summary.get("errors"):
+        return "ERROR"
+    if summary.get("warnings"):
+        return "WARN"
+    return "OK"
+
+
+def _summary_message(parsed_output: dict, directive: str) -> str:
+    summary = parsed_output.get("summary", {})
+    action = parsed_output.get("action", "")
+    if directive == "display":
+        return (f"DISPLAY OK: req {summary.get('required_parsed', 0)}/"
+                f"{summary.get('required_parsed', 0) + summary.get('required_missing', 0)} "
+                f"opt {summary.get('optional_parsed', 0)}/"
+                f"{summary.get('optional_parsed', 0) + summary.get('optional_skipped', 0)} "
+                f"skipped {summary.get('optional_skipped', 0)}")
+    if not parsed_output.get("valid", True):
+        reason = parsed_output.get("reason", "").strip()
+        if not reason:
+            reason = "; ".join(summary.get("errors", []))
+        reason = reason or "see errors"
+        return f"{directive.upper()} ERROR: {reason}"
+    if directive == "validate":
+        return f"VALIDATE OK: ready to {action.lower()}"
+    if directive == "process":
+        return f"PROCESS OK: ready to apply changes"
+    return f"{directive.upper()} OK"
+
+
+def render_command_table(parsed_output: dict, directive: str, summary_message: str | None = None) -> None:
+    summary = parsed_output.get("summary", {})
+    status = _summary_status(summary)
+    status_style = "green" if status == "OK" else ("yellow" if status == "WARN" else "red")
+
+    table = Table(title=parsed_output.get("command", "Command"), show_header=True, header_style="bold")
+    table.add_column("Attribute", overflow="fold")
+    table.add_column("Value", overflow="fold")
+    table.add_column("Status", justify="center")
+
+    for key, meta in parsed_output.get("attributes", {}).items():
+        value = _format_value(meta.get("value"))
+        attr_status = "OK"
+        if meta.get("status") == WARNING:
+            attr_status = "WARN"
+        if meta.get("valid") is False or meta.get("status") == ERROR:
+            attr_status = "ERROR"
+        attr_style = "green" if attr_status == "OK" else ("yellow" if attr_status == "WARN" else "red")
+        table.add_row(key, value, f"[{attr_style}]{attr_status}[/{attr_style}]")
+
+    summary_text = summary_message or _summary_message(parsed_output, directive)
+    table.add_section()
+    table.add_row("Summary", summary_text, f"[{status_style}]{status}[/{status_style}]")
+    console.print(table)
+
+
+def render_exception_table(command: str, phase: str, exc: Exception) -> None:
+    table = Table(title="Exception", show_header=True, header_style="bold")
+    table.add_column("Field", overflow="fold")
+    table.add_column("Value", overflow="fold")
+    table.add_row("Command", command or "")
+    table.add_row("Phase", phase)
+    table.add_row("Type", type(exc).__name__)
+    table.add_row("Message", str(exc))
+    console.print(table)
 
 
 
@@ -64,12 +214,16 @@ def process_provenance_command(file_path: str, txt: [str]) -> str:
 def parse_upsert_command(egeria_client: EgeriaTech, object_type: str, object_action: str, txt: str,
                        directive: str = "display", body_type: str = None) -> dict:
     parsed_attributes, parsed_output = {}, {}
+    summary = _init_summary(f"{object_action} {object_type}")
 
     parsed_output['valid'] = True
     parsed_output['exists'] = False
     parsed_output['display'] = ""
     display_name = ""
     labels = {}
+    parsed_output["action"] = object_action
+    parsed_output["object_type"] = object_type
+    parsed_output["command"] = f"{object_action} {object_type}"
 
     command_spec = get_command_spec(f"Create {object_type}", body_type = body_type)
     if command_spec is None:
@@ -105,19 +259,16 @@ def parse_upsert_command(egeria_client: EgeriaTech, object_type: str, object_act
                        f"{for_update}`\n")
                 logger.trace(msg)
                 if for_update is False and object_action == "Update":
-                    logger.trace(f"Attribute `{key}`is not allowed for `Update`", highlight=True)
+                    summary["optional_skipped"] += 1
                     continue
                 if EGERIA_USAGE_LEVEL == "Basic" and level != "Basic":
-                    logger.trace(f"Attribute `{key}` is not supported for `{EGERIA_USAGE_LEVEL}` usage level. Skipping.",
-                                highlight=True)
+                    summary["optional_skipped"] += 1
                     continue
                 if EGERIA_USAGE_LEVEL == "Advanced" and level in ["Expert", "Invisible"]:
-                    logger.trace(f"Attribute `{key}` is not supported for `{EGERIA_USAGE_LEVEL}` usage level. Skipping.",
-                                highlight=True)
+                    summary["optional_skipped"] += 1
                     continue
                 if EGERIA_USAGE_LEVEL == "Expert" and level == "Invisible":
-                    logger.trace(f"Attribute `{key}` is not supported for `{EGERIA_USAGE_LEVEL}` usage level. Skipping.",
-                                highlight=True)
+                    summary["optional_skipped"] += 1
                     continue
 
                 if attr[key].get('input_required', False) is True:
@@ -138,6 +289,7 @@ def parse_upsert_command(egeria_client: EgeriaTech, object_type: str, object_act
 
                 attribute = extract_attribute(txt, labels)
                 if attribute is None and (default_value is None or default_value == "") and if_missing != ERROR:
+                    summary["optional_skipped"] += 1
                     continue
 
                 style = attr[key]['style']
@@ -197,7 +349,7 @@ def parse_upsert_command(egeria_client: EgeriaTech, object_type: str, object_act
                     if ((if_missing == ERROR) and parsed_attributes[key].get("value", None) and parsed_attributes[key][
                         'exists'] is False):
                         msg = f"Reference Name `{parsed_attributes[key]['value']}` is specified but does not exist"
-                        logger.error(msg)
+                        _attribute_msg("ERROR", msg)
                         parsed_output['valid'] = False
                         parsed_output['reason'] += msg
                     elif parsed_attributes[key]['valid'] is False:
@@ -252,12 +404,12 @@ def parse_upsert_command(egeria_client: EgeriaTech, object_type: str, object_act
                             parsed_attributes[key]['exists'] is False or parsed_attributes[key]['valid'] is False)):
                         msg = (f"A Reference Name in `{parsed_attributes[key].get('name_list', None)}` is specified but "
                                f"does not exist")
-                        logger.error(msg)
+                        _attribute_msg("ERROR", msg)
                         parsed_output['valid'] = False
                         parsed_output['reason'] += msg
                 else:
                     msg = f"Unknown attribute style: {style} for key `{key}`"
-                    logger.error(msg)
+                    _attribute_msg("ERROR", msg)
                     sys.exit(1)
                     parsed_attributes[key]['valid'] = False
                     parsed_attributes[key]['value'] = None
@@ -269,6 +421,23 @@ def parse_upsert_command(egeria_client: EgeriaTech, object_type: str, object_act
                     parsed_output['reason'] += f"Invalid attribute value for `{key}`: {parsed_attributes[key]['reason']}\n"
 
                 value = parsed_attributes[key].get('value', None)
+                required = attr[key].get('input_required', False) is True
+                if value is not None:
+                    if required:
+                        summary["required_parsed"] += 1
+                    else:
+                        summary["optional_parsed"] += 1
+                else:
+                    if required:
+                        summary["required_missing"] += 1
+                        summary["errors"].append(f"Missing `{key}`")
+                    else:
+                        summary["optional_skipped"] += 1
+                status = parsed_attributes[key].get("status")
+                if status == WARNING:
+                    summary["warnings"].append(f"`{key}`: {parsed_attributes[key].get('reason', '')}".strip())
+                elif status == ERROR or parsed_attributes[key].get('valid') is False:
+                    summary["errors"].append(f"Invalid `{key}`: {parsed_attributes[key].get('reason', '')}".strip())
 
                 if value is not None:
                     if isinstance(value, list):
@@ -298,7 +467,7 @@ def parse_upsert_command(egeria_client: EgeriaTech, object_type: str, object_act
 
     if display_name is None:
         msg = f"No display name or name identifier found"
-        logger.error(msg)
+        _attribute_msg("ERROR", msg)
         parsed_output['valid'] = False
         parsed_output['reason'] = msg
         return parsed_output
@@ -308,40 +477,48 @@ def parse_upsert_command(egeria_client: EgeriaTech, object_type: str, object_act
         if (parsed_attributes.get('Parent Relationship Type Name',{}).get('value', None) is None) or (
                 parsed_attributes.get('Parent at End1',{}).get('value',None) is None):
             msg = "Parent ID was found but either Parent `Relationship Type Name` or `Parent at End1` are missing"
-            logger.error(msg)
+            _attribute_msg("ERROR", msg)
             parsed_output['valid'] = False
             parsed_output['reason'] = msg
         if parsed_attributes['Parent Relationship Type Name'].get('exists', False) is False:
             msg = "Parent ID was found but does not exist"
-            logger.error(msg)
+            _attribute_msg("ERROR", msg)
             parsed_output['valid'] = False
             parsed_output['reason'] = msg
 
     if directive in ["validate", "process"] and object_action == "Update" and not parsed_output[
         'exists']:  # check to see if provided information exists and is consistent with existing info
         msg = f"Update request invalid, element `{display_name}` does not exist\n"
-        logger.error(msg)
+        _attribute_msg("ERROR", msg)
         parsed_output['valid'] = False
     if directive in ["validate", "process"] and not parsed_output['valid'] and object_action == "Update":
         msg = f"Request is invalid, `{object_action} {object_type}` is not valid - see previous messages\n"
-        logger.error(msg)
+        _attribute_msg("ERROR", msg)
 
     elif directive in ["validate",
                        "process"] and object_action == 'Create':  # if the object_action is create, check that it
         # doesn't already exist
         if parsed_output['exists']:
             msg = f"Element `{display_name}` cannot be created since it already exists\n"
-            logger.error(msg)
+            _attribute_msg("ERROR", msg)
             parsed_output['valid'] = False
+            summary["errors"].append(msg.strip())
         else:
             msg = f"Element `{display_name}` does not exist so it can be created\n"
-            logger.info(msg)
+            _attribute_msg("INFO", msg)
 
 
     if parsed_output.get('qualified_name',None) and "* Qualified Name" not in parsed_output['display']:
         parsed_output['display'] += f"\n\t* Qualified Name: `{parsed_output['qualified_name']}`\n\t"
     if parsed_output.get('guid',None):
         parsed_output['display'] += f"\n\t* GUID: `{parsed_output['guid']}`\n\t"
+
+    if summary["errors"]:
+        summary["status"] = "ERROR"
+    elif summary["warnings"]:
+        summary["status"] = "WARN"
+    parsed_output["summary"] = summary
+    _render_parse_summary(summary)
 
     return parsed_output
 
@@ -350,12 +527,16 @@ def parse_upsert_command(egeria_client: EgeriaTech, object_type: str, object_act
 def parse_view_command(egeria_client: EgeriaTech, object_type: str, object_action: str, txt: str,
                          directive: str = "display") -> dict:
     parsed_attributes, parsed_output = {}, {}
+    summary = _init_summary(f"{object_action} {object_type}")
 
     parsed_output['valid'] = True
     parsed_output['exists'] = False
+    parsed_output["action"] = object_action
+    parsed_output["object_type"] = object_type
+    parsed_output["command"] = f"{object_action} {object_type}"
 
     labels = {}
-    if object_action in ["Link", "Attach", "Unlink", "Detach"]:
+    if object_action in ["Link", "Attach", "Add", "Unlink", "Detach", "Remove"]:
         command_spec = get_command_spec(f"Link {object_type}")
         if command_spec is None:
             logger.error(f"Command specification not found for 'Link {object_type}'")
@@ -403,16 +584,13 @@ def parse_view_command(egeria_client: EgeriaTech, object_type: str, object_actio
             logger.trace(msg)
 
             if EGERIA_USAGE_LEVEL == "Basic" and level != "Basic":
-                logger.trace(f"Attribute `{key}` is not supported for `{EGERIA_USAGE_LEVEL}` usage level. Skipping.",
-                             highlight=True)
+                summary["optional_skipped"] += 1
                 continue
             if EGERIA_USAGE_LEVEL == "Advanced" and level in ["Expert", "Invisible"]:
-                logger.trace(f"Attribute `{key}` is not supported for `{EGERIA_USAGE_LEVEL}` usage level. Skipping.",
-                             highlight=True)
+                summary["optional_skipped"] += 1
                 continue
             if EGERIA_USAGE_LEVEL == "Expert" and level == "Invisible":
-                logger.trace(f"Attribute `{key}` is not supported for `{EGERIA_USAGE_LEVEL}` usage level. Skipping.",
-                             highlight=True)
+                summary["optional_skipped"] += 1
                 continue
 
             if attr[key].get('input_required', False) is True:
@@ -441,6 +619,7 @@ def parse_view_command(egeria_client: EgeriaTech, object_type: str, object_actio
 
             attribute = extract_attribute(txt, labels)
             if attribute is None and (default_value is None or default_value == "") and if_missing != ERROR:
+                summary["optional_skipped"] += 1
                 continue
 
             style = attr[key]['style']
@@ -485,12 +664,12 @@ def parse_view_command(egeria_client: EgeriaTech, object_type: str, object_actio
                     )
                 if ((if_missing == ERROR) and parsed_attributes[key].get("value", None) is None):
                     msg = f"Required parameter `{parsed_attributes.get(key,{}).get('value',None)}` is missing"
-                    logger.error(msg)
+                    _attribute_msg("ERROR", msg)
                     parsed_output['valid'] = False
                     parsed_output['reason'] += msg
                 elif parsed_attributes.get(key,{}).get('value',None) and parsed_attributes.get(key,{}).get('exists',None) is False:
                     msg = f"Reference Name `{parsed_attributes.get(key,{}).get('value',None)}` is specified but does not exist"
-                    logger.error(msg)
+                    _attribute_msg("ERROR", msg)
                     parsed_output['valid'] = False
                     parsed_output['reason'] += msg
 
@@ -537,17 +716,34 @@ def parse_view_command(egeria_client: EgeriaTech, object_type: str, object_actio
                         parsed_attributes[key]['exists'] is False or parsed_attributes[key]['valid'] is False)):
                     msg = (f"A Reference Name in `{parsed_attributes[key].get('name_list', None)}` is specified but "
                            f"does not exist")
-                    logger.error(msg)
+                    _attribute_msg("ERROR", msg)
                     parsed_output['valid'] = False
                     parsed_output['reason'] += msg
             else:
                 msg = f"Unknown attribute style: {style}"
-                logger.error(msg)
+                _attribute_msg("ERROR", msg)
                 sys.exit(1)
                 parsed_attributes[key]['valid'] = False
                 parsed_attributes[key]['value'] = None
 
             value = parsed_attributes[key].get('value', None)
+            required = attr[key].get('input_required', False) is True
+            if value is not None:
+                if required:
+                    summary["required_parsed"] += 1
+                else:
+                    summary["optional_parsed"] += 1
+            else:
+                if required:
+                    summary["required_missing"] += 1
+                    summary["errors"].append(f"Missing `{key}`")
+                else:
+                    summary["optional_skipped"] += 1
+            status = parsed_attributes[key].get("status")
+            if status == WARNING:
+                summary["warnings"].append(f"`{key}`: {parsed_attributes[key].get('reason', '')}".strip())
+            elif status == ERROR or parsed_attributes[key].get('valid') is False:
+                summary["errors"].append(f"Invalid `{key}`: {parsed_attributes[key].get('reason', '')}".strip())
 
             if value is not None:
                 # if the value is a dict or list, get the stringifiedt
@@ -581,6 +777,13 @@ def parse_view_command(egeria_client: EgeriaTech, object_type: str, object_actio
         msg = f"Request is invalid, `{object_action} {object_type}` is not valid - see previous messages\n"
         logger.error(msg)
 
+    if summary["errors"]:
+        summary["status"] = "ERROR"
+    elif summary["warnings"]:
+        summary["status"] = "WARN"
+    parsed_output["summary"] = summary
+    _render_parse_summary(summary)
+
 
     return parsed_output
 
@@ -610,7 +813,7 @@ def proc_simple_attribute(txt: str, action: str, labels: set, if_missing: str = 
 
     if if_missing not in ["WARNING", "ERROR", "INFO"]:
         msg = "Invalid severity for missing attribute"
-        logger.error(msg)
+        _attribute_msg("ERROR", msg)
         return {"status": ERROR, "reason": msg, "value": None, "valid": False}
 
     if default_value == "":
@@ -632,11 +835,11 @@ def proc_simple_attribute(txt: str, action: str, labels: set, if_missing: str = 
         if if_missing == INFO or if_missing == WARNING:
             msg = f"Optional attribute with labels: `{labels}` missing"
             valid = True
-            logger.info(msg)
+            _attribute_msg("INFO", msg)
         else:
             msg = f"Missing attribute with labels `{labels}` "
             valid = False
-            logger.error(msg)
+            _attribute_msg("ERROR", msg)
         return {"status": if_missing, "reason": msg, "value": None, "valid": valid, "exists": False}
 
     if attribute and simp_type == "int" :
@@ -645,7 +848,7 @@ def proc_simple_attribute(txt: str, action: str, labels: set, if_missing: str = 
         except ValueError:
             msg = f"Invalid integer value for attribute with labels `{labels}`: {attribute}"
             valid = False
-            logger.error(msg)
+            _attribute_msg("ERROR", msg)
             return {"status": ERROR, "reason": msg, "value": None, "valid": valid, "exists": True}
 
     # elif attribute and simp_type == "list":
@@ -678,7 +881,7 @@ def proc_dictionary_attribute(txt: str, action: str, labels: set, if_missing: st
 
     if if_missing not in ["WARNING", "ERROR", "INFO"]:
         msg = "Invalid severity for missing attribute"
-        logger.error(msg)
+        _attribute_msg("ERROR", msg)
         return {"status": ERROR, "reason": msg, "value": None, "valid": False}
 
     if default_value == "":
@@ -700,11 +903,11 @@ def proc_dictionary_attribute(txt: str, action: str, labels: set, if_missing: st
         if if_missing == INFO or if_missing == WARNING:
             msg = f"Optional attribute with labels: `{labels}` missing"
             valid = True
-            logger.info(msg)
+            _attribute_msg("INFO", msg)
         else:
             msg = f"Missing attribute with labels `{labels}` "
             valid = False
-            logger.error(msg)
+            _attribute_msg("ERROR", msg)
         return {"status": if_missing, "reason": msg, "value": None, "valid": valid, "exists": False}
 
     return {"status": INFO, "OK": None, "value": attribute, "valid": valid, "exists": True}
@@ -732,11 +935,11 @@ def proc_valid_value(txt: str, action: str, labels: set, valid_values: [], if_mi
 
     if if_missing not in ["WARNING", "ERROR", "INFO"]:
         msg = "Invalid severity for missing attribute"
-        logger.error(msg)
+        _attribute_msg("ERROR", msg)
         return {"status": ERROR, "reason": msg, "value": None, "valid": False}
     if valid_values is None:
         msg = "Missing valid values list"
-        logger.error(msg)
+        _attribute_msg("ERROR", msg)
         return {"status": WARNING, "reason": msg, "value": None, "valid": False}
     if isinstance(valid_values, str):
         # v_values = [item.strip() for item in re.split(r'[;,\n]+', valid_values)]
@@ -745,11 +948,11 @@ def proc_valid_value(txt: str, action: str, labels: set, valid_values: [], if_mi
         v_values = valid_values
     if not isinstance(v_values, list):
         msg = "Valid values list is not a list"
-        logger.error(msg)
+        _attribute_msg("ERROR", msg)
         return {"status": WARNING, "reason": msg, "value": None, "valid": False}
     if len(v_values) == 0:
         msg = "Valid values list is empty"
-        logger.error(msg)
+        _attribute_msg("ERROR", msg)
         return {"status": WARNING, "reason": msg, "value": None, "valid": False}
 
     if extracted_attribute is _EXTRACT_UNSET:
@@ -763,12 +966,12 @@ def proc_valid_value(txt: str, action: str, labels: set, valid_values: [], if_mi
     if attribute is None:
         if if_missing == INFO or if_missing == WARNING:
             msg = f"Optional attribute with labels: `{labels}` missing"
-            logger.info(msg)
+            _attribute_msg("INFO", msg)
             valid = True
         else:
             msg = f"Missing attribute with labels `{labels}` "
             valid = False
-            logger.error(msg)
+            _attribute_msg("ERROR", msg)
         return {"status": if_missing, "reason": msg, "value": None, "valid": valid, "exists": False}
     else:
         # Todo: look at moving validation into pydantic or another style...
@@ -776,7 +979,7 @@ def proc_valid_value(txt: str, action: str, labels: set, valid_values: [], if_mi
             attribute = attribute.upper()
         if attribute not in v_values:
             msg = f"Invalid value for attribute `{labels}` attribute is `{attribute}`"
-            logger.warning(msg)
+            _attribute_msg("WARNING", msg)
             return {"status": WARNING, "reason": msg, "value": attribute, "valid": False, "exists": True}
 
     return {"status": INFO, "OK": "OK", "value": attribute, "valid": valid, "exists": True}
@@ -804,7 +1007,7 @@ def proc_bool_attribute(txt: str, action: str, labels: set, if_missing: str = IN
 
     if if_missing not in ["WARNING", "ERROR", "INFO"]:
         msg = "Invalid severity for missing attribute"
-        logger.error(msg)
+        _attribute_msg("ERROR", msg)
         return {"status": ERROR, "reason": msg, "value": None, "valid": False}
 
     if extracted_attribute is _EXTRACT_UNSET:
@@ -820,12 +1023,12 @@ def proc_bool_attribute(txt: str, action: str, labels: set, if_missing: str = IN
     if attribute is None:
         if if_missing == INFO or if_missing == WARNING:
             msg = f"Optional attribute with labels: `{labels}` missing"
-            logger.info(msg)
+            _attribute_msg("INFO", msg)
             valid = True
         else:
             msg = f"Missing attribute with labels `{labels}` "
             valid = False
-            logger.error(msg)
+            _attribute_msg("ERROR", msg)
         return {"status": if_missing, "reason": msg, "value": None, "valid": valid, "exists": False}
 
     if isinstance(attribute, str):
@@ -836,7 +1039,7 @@ def proc_bool_attribute(txt: str, action: str, labels: set, if_missing: str = IN
             attribute = False
         else:
             msg = f"Invalid value for boolean attribute `{labels}`"
-            logger.error(msg)
+            _attribute_msg("ERROR", msg)
             return {"status": ERROR, "reason": msg, "value": attribute, "valid": False, "exists": True}
 
     return {"status": INFO, "OK": None, "value": attribute, "valid": valid, "exists": True}
@@ -885,7 +1088,7 @@ def proc_el_id(egeria_client: EgeriaTech, element_type: str, qn_prefix: str, ele
 
     if element_name is None:
         msg = f"Optional attribute with label`{element_type}` missing"
-        logger.info(msg)
+        _attribute_msg("INFO", msg)
         identifier_output = {"status": INFO, "reason": msg, "value": None, "valid": False, "exists": False, }
         return identifier_output
 
@@ -899,18 +1102,18 @@ def proc_el_id(egeria_client: EgeriaTech, element_type: str, qn_prefix: str, ele
 
     if unique is False:
         msg = f"Multiple elements named  {element_name} found"
-        logger.error(msg)
+        _attribute_msg("ERROR", msg)
         identifier_output = {"status": ERROR, "reason": msg, "value": element_name, "valid": False, "exists": True, }
         valid = False
 
     if action == "Update" and not exists:
         msg = f"Element {element_name} does not exist"
-        logger.error(msg)
+        _attribute_msg("ERROR", msg)
         identifier_output = {"status": ERROR, "reason": msg, "value": element_name, "valid": False, "exists": False, }
 
-    elif action in ["Update", "View", "Link", "Detach"] and exists:
+    elif action in ["Update", "View", "Link", "Attach", "Add", "Detach", "Unlink", "Remove"] and exists:
         msg = f"Element {element_name} exists"
-        logger.info(msg)
+        _attribute_msg("INFO", msg)
         identifier_output = {
             "status": INFO, "reason": msg, "value": element_name, "valid": True, "exists": True,
             'qualified_name': q_name, 'guid': guid
@@ -918,7 +1121,7 @@ def proc_el_id(egeria_client: EgeriaTech, element_type: str, qn_prefix: str, ele
 
     elif action == "Create" and exists:
         msg = f"Element {element_name} already exists"
-        logger.error(msg)
+        _attribute_msg("ERROR", msg)
         identifier_output = {
             "status": ERROR, "reason": msg, "value": element_name, "valid": False, "exists": True,
             'qualified_name': qualified_name, 'guid': guid,
@@ -926,7 +1129,7 @@ def proc_el_id(egeria_client: EgeriaTech, element_type: str, qn_prefix: str, ele
 
     elif action == "Create" and not exists and valid:
         msg = f"{element_type} `{element_name}` does not exist"
-        logger.info(msg)
+        _attribute_msg("INFO", msg)
 
         if q_name is None and qualified_name is None:
             q_name = egeria_client.__create_qualified_name__(qn_prefix, element_name, LOCAL_QUALIFIER, version)
@@ -994,7 +1197,7 @@ def proc_ids(egeria_client: EgeriaTech, element_type: str, element_labels: set, 
 
         if '\n' in element_name or ',' in element_name:
             msg = f"Element name `{element_name}` appears to be a list rather than a single element"
-            logger.error(msg)
+            _attribute_msg("ERROR", msg)
             return {"status": ERROR, "reason": msg, "value": None, "valid": False, "exists": False, }
         q_name, guid, unique, exists = get_element_by_name(egeria_client, element_type, element_name)
         value = element_name
@@ -1006,30 +1209,30 @@ def proc_ids(egeria_client: EgeriaTech, element_type: str, element_labels: set, 
     if exists is True and unique is False:
         # Multiple elements found - so need to respecify with qualified name
         msg = f"Multiple elements named  {element_name} found"
-        logger.error(msg)
+        _attribute_msg("ERROR", msg)
         identifier_output = {"status": ERROR, "reason": msg, "value": element_name, "valid": False, "exists": True, }
 
 
     elif action == EXISTS_REQUIRED or if_missing == ERROR and not exists:
         # a required identifier doesn't exist
         msg = f"Required {element_type} `{element_name}` does not exist"
-        logger.error(msg)
+        _attribute_msg("ERROR", msg)
         identifier_output = {"status": ERROR, "reason": msg, "value": element_name, "valid": False, "exists": False, }
     elif value is None and if_missing == INFO:
         # an optional identifier is empty
         msg = f"Optional attribute with label`{element_type}` missing"
-        logger.info(msg)
+        _attribute_msg("INFO", msg)
         identifier_output = {"status": INFO, "reason": msg, "value": None, "valid": True, "exists": False, }
     elif value and exists is False:
         # optional identifier specified but doesn't exist
         msg = f"Optional attribute with label`{element_type}` specified but doesn't exist"
-        logger.error(msg)
+        _attribute_msg("ERROR", msg)
         identifier_output = {"status": ERROR, "reason": msg, "value": value, "valid": False, "exists": False, }
 
     else:
         # all good.
         msg = f"Element {element_type} `{element_name}` exists"
-        logger.info(msg)
+        _attribute_msg("INFO", msg)
         identifier_output = {
             "status": INFO, "reason": msg, "value": element_name, "valid": True, "exists": True,
             "qualified_name": q_name, 'guid': guid

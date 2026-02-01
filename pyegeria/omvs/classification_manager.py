@@ -11670,7 +11670,7 @@ body: Optional[dict | FilterRequestBody] = None,
             }
             validated_body = FindRequestBody.model_validate(body_dict)
 
-        json_body = validated_body.model_dump_json(indent=2, exclude_none=True)
+        json_body = validated_body.model_dump_json(indent=2, exclude_none=True, by_alias=True)
 
         response = await self._async_make_request("POST", url, json_body, time_out=time_out)
         elements = response.json().get("elements", NO_ELEMENTS_FOUND)

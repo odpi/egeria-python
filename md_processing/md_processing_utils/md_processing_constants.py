@@ -124,99 +124,95 @@ COLLECTION_CREATE = ["Create Collection", "Update Collection", "Create Digital P
 FEEDBACK_COMMANDS = ["Create Comment", "Update Comment", "Create Journal Entry",
                      "Create Informal Tag", "Update Informal Tag", "Link Tag->Element", "Link Tag", "Detach Tag"]
 
-command_list = ["Provenance", "Create Glossary", "Update Glossary", "Create Term", "Update Term", "List Terms",
-                "List Term Details", "List Glossary Terms", "List Term History", "List Term Revision History",
-                "List Term Update History", "List Glossary Structure", "List Glossaries", "List Categories",
-                "List Glossary Categories", "Link Project Dependency", "Attach Project Dependency",
-                "Detach Project Dependency", "Link Parent Project", "Attach Parent Project", "Detach Parent Project",
-                "Detach Parent Project",
-                "Create Solution Blueprint", "Update Solution Blueprint", "View Solution Blueprint",
-                "View Solution Blueprints", "View Blueprints",
-                "View Information Supply Chain", "View Information Supply Chains", "View Supply Chains",
-                "View Supply Chain",
-                "View Solution Components", "View Solution Component", "View Solution Roles", "View Solution Role",
-                "Create Information Supply Chain", "Update Information Supply Chain",
-                "Link Information Supply Chain Peers", "Link Supply Chains", "Link Information Supply Chains",
-                "Unlink Information Supply Chain Peers", "Unlink Information Supply Chains", "Unlink Supply Chains",
-                "Create Solution Component", "Update Solution Component", "Link Solution Components",
-                "Wire Solution Components",
-                "Detach Solution Components", "Unlink Solution Components", "Link Term-Term Relationship", "Link Terms",
-                "Detach Terms",
-                "Detach Term-Term Relationship", "Create Data Spec", "Create Data Specification", "Update Data Spec",
-                "Update Data Specification", "Create Data Field", "Update Data Field", "Create Data Structure",
-                "Update Data Structure", "Create Data Dictionary", "Update Data Dictionary", "Create Data Dict",
-                "Update Data Dict",
-                "View Data Structures", "View Data Structure", "View Data Fields", "View Data Field",
-                "View Data Classes", "View Data Class", "Create Data Class", "Update Data Class",
+LINK_VERBS = ("Link", "Attach", "Add", "Detach", "Unlink", "Remove")
+CREATE_VERBS = ("Create", "Update")
+VIEW_VERBS = ("View", "List", "Run")
+ALL_VERBS = set(LINK_VERBS + CREATE_VERBS + VIEW_VERBS)
 
-                "Create Data Specifications", "Update Data Specifications", "Create Data Specs", "Update Data Specs",
-                "Create Data Dictionaries", "Update Data Dictionaries", "Create Data Dicts", "Update Data Dicts",
-                "View Data Specifications", "View Data Specification", "View Data Specs", "View Data Specification",
-                "View Data Dictionaries", "View Data Dictionary", "View Data Dicts", "View Data Dictionary",
-                "Link Collection->Root Collection", "Link Collection->Folder",
-                "Link Collection->Context Event Collection", "Link Collection->Name Space Collection",
-                "Link Collection->Event Set Collection", "Link Collection->Naming Standard Ruleset",
-                "Create Digital Product", "Create Data Product", "Update Digital Product", "Update Data Product",
-                "Create Agreement", "Update Agreement",
-                "Link Digital Products", "Link Product-Product", "Detach Digital Products", "Detach Product-Product",
-                "Create Data Sharing Agreement", "Update Data Sharing Agreement",
-                "Create Digital Subscription", "Create Product Subscription", "Update Digital Subscription",
-                "Update Product Subscription",
-                "Link Agreement->Item", "Detach Agreement->Item",
-                "Attach Contract", "Detach Contract",
-                "Link Subscriber->Subscription", "Detach Subscriber->Subscription",
-                "Link Collection->Resource", "Attach Collection->Resource",
-                "Unlink Collection->Resource", "Detach Collection->Resource",
-                "Add Member to Collection", "Add Member", "Add Member->Collection", 'Add Member', 'Add to Folder',
-                "Remove Member from Collection", "Remove Member->Collection", ' Remove Member', 'Remove from Folder',
-                "View Governance Definitions", "View Gov Definitions",
-                "List Governance Definitions", "List Gov Definitions",
-                "View Governance Definition Context", "List Governance Definition Context",
-                "View Governance Def Context", "List Governance Def Context",
-                "View Report",
-                "Create Business Imperative", "Update Business Imperative",
-                "Create Regulation Article Definition", "Update Regulation Article Definition",
-                "Create Threat Definition", "Update Threat Definition",
-                "Create Governance Principle", "Update Governance Principle",
-                "Create Governance Obligation", "Update Governance Obligation",
-                "Create Governance Approach", "Update Governance Approach",
-                "Create Governance Strategy", "Update Governance Strategy",
-                "Create Regulation", "Create Regulation Definition", "Update Regulation",
-                "Update Regulation Definition",
-                "Create Governance Control:", "Update Governance Control",
-                "Create Governance Rule:", "Update Governance Rule",
-                "Create Service Level Objective", "Update Service Level Objective",
-                "Create Governance Process", "Update Governance Process",
-                "Create Governance Responsibility", "Update Governance Responsibility",
-                "Create Governance Procedure", "Update Governance Procedure",
-                "Create Security Access Control", "Update Security Access Control",
-                "Create Security Group", "Update Security Group",
-                "Create Naming Standard Rule", "Update Naming Standard Rule",
-                "Create Certification Type", "Update Certification Type",
-                "Create License Type", "Update License Type",
-                "Link Governance Drivers", "Detach Governance Drivers",
-                "Link Governance Policies", "Detach Governance Policies",
-                "Link Governance Controls", "Detach Governance Controls",
-                "Link Governed By", "Attach Governed By", "Detach Governed By",
-                "Create CSV File"
-
-                ]
-command_list.extend(LIST_COMMANDS)
-command_list.extend(GOV_COM_LIST)
-command_list.extend(GOV_LINK_LIST)
-command_list.extend(COLLECTIONS_LIST)
-command_list.extend(COLLECTION_CREATE)
-command_list.extend(SIMPLE_COLLECTIONS)
-command_list.extend(PROJECT_COMMANDS)
-command_list.extend(EXT_REF_COMMANDS)
-command_list.extend(["Link Governance Response", "Detach Governance Response",
-                     "Link Governance Mechanism", "Detach Governance Mechanism"])
-command_list.extend(FEEDBACK_COMMANDS)
-command_list = [c for c in command_list if not (c.startswith(("List ", "View ")) and c != "Run Report")]
+command_list = ["Provenance"]
 pre_command = "\n---\n==> Processing object_action:"
 command_seperator = Markdown("\n---\n")
 EXISTS_REQUIRED = "Exists Required"
 COMMAND_DEFINITIONS = {}
+
+def _normalize_command(text: str) -> str:
+    return " ".join(text.split())
+
+
+def _split_command(command: str) -> tuple[str, str]:
+    normalized = _normalize_command(command)
+    parts = normalized.split(maxsplit=1)
+    if len(parts) == 1:
+        return parts[0], ""
+    return parts[0], parts[1]
+
+
+def _parse_alternate_names(spec: dict) -> list[str]:
+    alt = spec.get("alternate_names", "")
+    if not alt:
+        return []
+    return [_normalize_command(item) for item in alt.split(";") if item.strip()]
+
+
+def _expand_command_phrase(verb: str, noun: str, allow_update: bool) -> set[str]:
+    if verb in LINK_VERBS:
+        return {f"{v} {noun}".strip() for v in LINK_VERBS}
+    if verb in VIEW_VERBS:
+        if noun == "Report":
+            return {"View Report", "Run Report"}
+        return set()
+    if verb in CREATE_VERBS:
+        if allow_update:
+            return {f"{v} {noun}".strip() for v in CREATE_VERBS}
+        return {f"{verb} {noun}".strip()}
+    return {f"{verb} {noun}".strip()}
+
+
+def build_command_variants(spec_name: str, spec: dict) -> set[str]:
+    variants = set()
+    if not spec_name:
+        return variants
+
+    base_verb, base_noun = _split_command(spec_name)
+    allow_update = bool(spec.get("upsert"))
+
+    def add_phrase(phrase: str) -> None:
+        verb, noun = _split_command(phrase)
+        if not noun:
+            return
+        variants.update(_expand_command_phrase(verb, noun, allow_update))
+
+    add_phrase(spec_name)
+
+    for alt in _parse_alternate_names(spec):
+        alt_verb, _ = _split_command(alt)
+        if alt_verb in ALL_VERBS:
+            add_phrase(alt)
+        else:
+            add_phrase(f"{base_verb} {alt}")
+
+    return {cmd for cmd in variants if cmd}
+
+
+def build_command_list_from_specs(specs: dict, include_provenance: bool = True) -> list[str]:
+    commands = set()
+    for name, spec in specs.items():
+        if not isinstance(spec, dict):
+            continue
+        commands.update(build_command_variants(name, spec))
+    if include_provenance:
+        commands.add("Provenance")
+    return sorted(commands)
+
+
+def get_command_variants_for_specs(spec_names: set[str]) -> set[str]:
+    specs = COMMAND_DEFINITIONS.get("Command Specifications", {})
+    commands = set()
+    for name in spec_names:
+        spec = specs.get(name)
+        if isinstance(spec, dict):
+            commands.update(build_command_variants(name, spec))
+    return commands
 
 generic_bodies = {
 
@@ -240,7 +236,7 @@ debug_level = DEBUG_LEVEL
 #         print(ERROR, msg, debug_level)
 
 def load_commands(filename: str) -> None:
-    global COMMAND_DEFINITIONS
+    global COMMAND_DEFINITIONS, command_list
 
     try:
         config_path = importlib.resources.files("md_processing") / "data" / filename
@@ -249,6 +245,9 @@ def load_commands(filename: str) -> None:
         # Validate JSON before attempting to load
         try:
             COMMAND_DEFINITIONS = json.loads(config_str)
+            command_list = build_command_list_from_specs(
+                COMMAND_DEFINITIONS.get("Command Specifications", {})
+            )
             msg = f"Successfully loaded {filename}"
             logger.debug(msg)
         except json.JSONDecodeError as json_err:
@@ -289,6 +288,7 @@ def load_commands(filename: str) -> None:
             # Initialize with empty dict to allow application to continue
             # (though functionality will be limited)
             COMMAND_DEFINITIONS = {}
+            command_list = ["Provenance"]
 
             # Re-raise with more context
             raise json.JSONDecodeError(
@@ -301,11 +301,13 @@ def load_commands(filename: str) -> None:
         msg = f"ERROR: File {filename} not found."
         print(msg)
         COMMAND_DEFINITIONS = {}
+        command_list = ["Provenance"]
         raise FileNotFoundError(msg)
     except Exception as e:
         msg = f"ERROR: Unexpected error loading {filename}: {str(e)}"
         print(msg)
         COMMAND_DEFINITIONS = {}
+        command_list = ["Provenance"]
         raise
 
 
@@ -384,27 +386,31 @@ def get_command_spec(command: str, body_type: str = None) -> dict | None:
 
 
 def does_command_match(command: str, alt_names: list[str]) -> bool:
-    # Define verb synonyms
-    verbs_synonyms = {
-        "Link": ["Link", "Attach", "Detach", "Unlink"],
-        "Create": ["Create", "Update"],
-        "View": ["List", "View"],
-    }
-
-    # Extract the verb from the command
     command_parts = command.split(maxsplit=1)
     if len(command_parts) < 2:
-        return False  # Invalid command structure
-    verb, terms = command_parts
+        return False
+    verb, _ = command_parts
 
-    # Generate all possible combinations and check for a match
-    for primary_verb, synonyms in verbs_synonyms.items():
+    if verb in LINK_VERBS:
+        synonyms = LINK_VERBS
+    elif verb in VIEW_VERBS:
+        synonyms = VIEW_VERBS
+    elif verb in CREATE_VERBS:
+        synonyms = CREATE_VERBS
+    else:
+        synonyms = (verb,)
+
+    for alt_name in alt_names:
+        alt_name = alt_name.strip()
+        if not alt_name:
+            continue
+        alt_verb, alt_terms = _split_command(alt_name)
+        if alt_verb in ALL_VERBS and alt_terms:
+            alt_name = alt_terms
         for synonym in synonyms:
-            for alt_name in alt_names:
-                alt_name = alt_name.strip()
-                tst = f"{synonym} {alt_name}"
-                if tst == command:
-                    return True
+            tst = f"{synonym} {alt_name}".strip()
+            if tst == command:
+                return True
     return False
 
 
