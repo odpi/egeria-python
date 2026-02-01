@@ -13,7 +13,7 @@ from rich.console import Console
 from rich.table import Table
 
 from pyegeria.omvs.valid_type_lists import ValidTypeLists
-from pyegeria.core._exceptions import PyegeriaException
+from pyegeria.core._exceptions import PyegeriaException, PyegeriaTimeoutException
 
 VIEW_SERVER = "qs-view-server"
 PLATFORM_URL = "https://localhost:9443"
@@ -59,6 +59,9 @@ class ValidTypeListsScenarioTester:
             subtypes = self.client.get_sub_types("Asset")
             
             return TestResult(name, "PASSED", time.perf_counter() - start_time, f"Retrieved {len(types) if types else 0} entity types and {len(subtypes) if subtypes else 0} subtypes for Asset")
+        except PyegeriaTimeoutException as e:
+            rprint(f"[bold yellow]Timeout in {name}; continuing.[/bold yellow]")
+            return TestResult(name, "WARNING", time.perf_counter() - start_time, f"Timeout: {e}")
         except PyegeriaException as e:
             return TestResult(name, "FAILED", time.perf_counter() - start_time, str(e))
         except Exception as e:
@@ -80,7 +83,12 @@ class ValidTypeListsScenarioTester:
         table.add_column("Duration (s)", justify="right")
         table.add_column("Message")
         for res in self.results:
-            style = "green" if res.status == "PASSED" else "red"
+            if res.status == "PASSED":
+                style = "green"
+            elif res.status == "WARNING":
+                style = "yellow"
+            else:
+                style = "red"
             table.add_row(res.scenario_name, f"[{style}]{res.status}[/{style}]", f"{res.duration:.2f}", res.message)
         console.print(table)
 

@@ -83,6 +83,14 @@ class PyegeriaErrorCode(Enum):
         "system_action": "Server-side issue requires attention.",
         "user_action": "Contact server support."
         }
+    TIMEOUT_ERROR = {
+        "http_code": 408,
+        "egeria_code": "Connection timeout",
+        "message_id": "TIMEOUT_ERROR_408",
+        "message_template": "Request timed out for endpoint `{0}`.",
+        "system_action": "The client did not receive a response within the timeout window.",
+        "user_action": "Check connectivity, server load, and consider increasing timeout settings.",
+        }
 
     def __str__(self):
         return (
@@ -162,17 +170,23 @@ class PyegeriaException(Exception):
         self.response_egeria_msg = ""
         if response:
             self.response = response
-            self.response_url = getattr(response, "url", "unknown URL") if response else additional_info.get("endpoint",                                                                                             "")
-            self.response_code = getattr(response, "status_code", "unknown status code") if response else ""
+            self.response_url = getattr(response, "url", "unknown URL")
+            self.response_code = getattr(response, "status_code", "unknown status code")
             self.response_reason_phrase = getattr(response, "reason_phrase", "unknown reason")
             self.http_status_code = getattr(response, "status_code", "unknown status code")
             if self.http_status_code == 200:
-                self.response_egeria_msg_id = response.json().get("exceptionErrorMessageId", "")
-                self.response_egeria_msg = response.json().get("exceptionErrorMessage", "")
+                try:
+                    self.response_egeria_msg_id = response.json().get("exceptionErrorMessageId", "")
+                    self.response_egeria_msg = response.json().get("exceptionErrorMessage", "")
+                except Exception:
+                    self.response_egeria_msg_id = ""
+                    self.response_egeria_msg = ""
         else:
             self.response = None
-            self.response_url = ""
+            self.response_url = additional_info.get("endpoint", "") if additional_info else ""
             self.response_code = ""
+            self.response_reason_phrase = ""
+            self.http_status_code = None
             self.response_egeria_msg_id = ""
             self.response_egeria_msg = ""
         self.error_code = error_code
@@ -197,6 +211,13 @@ class PyegeriaException(Exception):
         msg += f"\n=>\t{self.message}"
         msg += f"\n\t* Context: \n\t{ctx_str}\n"
 
+        error_kind = self.additional_info.get("error_kind", "") if self.additional_info else ""
+        if error_kind:
+            msg += f"\t* Error Kind: {error_kind}\n"
+        timeout_seconds = self.additional_info.get("timeout_seconds", "") if self.additional_info else ""
+        if timeout_seconds:
+            msg += f"\t* Timeout Seconds: {timeout_seconds}\n"
+
         related_http_code = self.additional_info.get('relatedHTTPCode', None)
         if related_http_code:
             if related_http_code != 200:
@@ -216,6 +237,14 @@ class PyegeriaConnectionException(PyegeriaException):
     """Raised when there's an issue connecting to an Egeria Platform."""
     def __init__(self, context: dict = None, additional_info:dict = None, e: Exception = None) -> None:
         super().__init__(None, PyegeriaErrorCode.CONNECTION_ERROR,
+                 context, additional_info, e)
+        self.message = self.error_details["message_template"].format(self.response_url)
+        logger.info(self.__str__())
+
+class PyegeriaTimeoutException(PyegeriaException):
+    """Raised when an HTTP request times out."""
+    def __init__(self, context: dict = None, additional_info:dict = None, e: Exception = None) -> None:
+        super().__init__(None, PyegeriaErrorCode.TIMEOUT_ERROR,
                  context, additional_info, e)
         self.message = self.error_details["message_template"].format(self.response_url)
         logger.info(self.__str__())
@@ -334,17 +363,20 @@ def print_exception_response(e: PyegeriaException):
     if isinstance(e, PyegeriaException):
         console.print(Markdown(f"\n---\n# Exception: {e.__class__.__name__}"))
         msg: Text = Text(e.__str__(), overflow="fold")
-        if e.response_code:
-            related_response = e.response.json()
-            exception_msg_id = related_response.get("exceptionErrorMessageId", None)
-            if exception_msg_id:
-                msg.append( f"\n\t{e.error_details['message_template'].format(exception_msg_id)}\n")
+        if e.response and e.response_code:
+            try:
+                related_response = e.response.json()
+            except Exception:
+                related_response = None
 
-            # for key, value in related_response.items():
-            #     msg += f"\t\t* {key} = {print(value)}\n"
-            for key, value in related_response.items():
-                msg.append( Text(f"\t* {key} =", style = "bold yellow"))
-                msg.append(Text( f"\n\t\t{format_dict_to_string(value)}\n", overflow="fold", style = "green"))
+            if related_response:
+                exception_msg_id = related_response.get("exceptionErrorMessageId", None)
+                if exception_msg_id:
+                    msg.append( f"\n\t{e.error_details['message_template'].format(exception_msg_id)}\n")
+
+                for key, value in related_response.items():
+                    msg.append( Text(f"\t* {key} =", style = "bold yellow"))
+                    msg.append(Text( f"\n\t\t{format_dict_to_string(value)}\n", overflow="fold", style = "green"))
         console.print(msg)
     else:
         print(f"\n\n\t  Not an Pyegeria exception {e}")
@@ -352,7 +384,12 @@ def print_exception_response(e: PyegeriaException):
 def print_exception_table(e: PyegeriaException):
     """Prints the exception response"""
     related_code = e.related_http_code if hasattr(e, "related_http_code") else ""
-    related_response = e.response.json()
+    related_response = None
+    if e.response:
+        try:
+            related_response = e.response.json()
+        except Exception:
+            pass
 
     table = Table(title=f"Exception: {e.__class__.__name__}", show_lines=True, header_style="bold", box=box.HEAVY_HEAD)
     table.caption = e.pyegeria_code
@@ -362,24 +399,23 @@ def print_exception_table(e: PyegeriaException):
     if isinstance(e, PyegeriaException):
         table.add_row("HTTP Code", str(e.response_code))
         table.add_row("Egeria Code", str(related_code))
-        table.add_row("Caller Method", e.context.get("caller method", "---"))
+        error_kind = e.additional_info.get("error_kind", "") if e.additional_info else ""
+        if error_kind:
+            table.add_row("Error Kind", error_kind)
+        table.add_row("Caller Method", e.context.get("caller method", "---") if e.context else "---")
         table.add_row("Request URL", str(e.response_url))
-        if e.response_code:
+        if e.response_code and related_response:
             item_table = Table(show_lines = True, header_style="bold")
             item_table.add_column("Item", justify="center")
             item_table.add_column("Detail", justify="left")
-            if related_response:
-                for key, value in related_response.items():
-                    item_table.add_row(key, format_dict_to_string(value))
+            for key, value in related_response.items():
+                item_table.add_row(key, format_dict_to_string(value))
             table.add_row("Egeria Details", item_table)
 
-
-
-
-        exception_msg_id = related_response.get("exceptionErrorMessageId", None)
-        table.add_row("Pyegeria Exception", exception_msg_id)
-        table.add_row("Pyegeria Message",
-                      f"\n\t{e.error_details['message_template'].format(exception_msg_id)}\n")
+            exception_msg_id = related_response.get("exceptionErrorMessageId", None)
+            table.add_row("Pyegeria Exception", exception_msg_id)
+            table.add_row("Pyegeria Message",
+                          f"\n\t{e.error_details['message_template'].format(exception_msg_id)}\n")
 
 
         console.print(table)
@@ -397,20 +433,19 @@ def print_basic_exception(e: PyegeriaException):
 
     related_code = e.related_http_code if hasattr(e, "related_http_code") else ""
     http_reason = e.response.text if e.response else ""
+    related_response = None
+    exception_msg_id = ""
 
-    table = Table(title=f"Exception: {e.__class__.__name__}", show_lines=True, header_style="bold", box=box.HEAVY_HEAD)
-    table.caption = e.pyegeria_code
-    table.add_column("Facet", justify="center")
-    table.add_column("Item", justify="left", width=80)
     if e.response:
-        if isinstance(e.response, dict|Response):
-            related_response = e.response.json()
-            exception_msg_id = related_response.get("exceptionErrorMessageId", None)
-        else:
-            related_response = e.response or '---'
-
-    else:
-        exception_msg_id = ""
+        if isinstance(e.response, Response):
+            try:
+                related_response = e.response.json()
+                exception_msg_id = related_response.get("exceptionErrorMessageId", "")
+            except Exception:
+                related_response = e.response.text
+        elif isinstance(e.response, dict):
+            related_response = e.response
+            exception_msg_id = related_response.get("exceptionErrorMessageId", "")
 
     table = Table(title=f"Exception: {e.__class__.__name__}", show_lines=True, header_style="bold", box=box.HEAVY_HEAD)
     table.caption = e.pyegeria_code
@@ -420,28 +455,28 @@ def print_basic_exception(e: PyegeriaException):
     if isinstance(e, PyegeriaException):
         if e.context:
             table.add_row("Context", e.context.get('reason',""), style = "bold yellow")
+        error_kind = e.additional_info.get("error_kind", "") if e.additional_info else ""
+        if error_kind:
+            table.add_row("Error Kind", error_kind)
         if e.response:
             table.add_row("HTTP Code", str(e.response_code))
             table.add_row("HTTP Reason", str(http_reason))
             table.add_row("Egeria Code", str(related_code))
-            table.add_row("Caller Method", e.context.get("caller method", "---")) if e.context else ""
+            table.add_row("Caller Method", e.context.get("caller method", "---") if e.context else "---")
             table.add_row("Request URL", str(e.response_url))
             if related_response:
                 if isinstance(related_response, dict):
                     table.add_row("Egeria Message",
                           format_dict_to_string(related_response.get('exceptionErrorMessage',"")))
+                    user_action = format_dict_to_string(related_response.get("exceptionUserAction", ""))
+                    table.add_row("Egeria User Action", format_dict_to_string(user_action))
+                    exception_msg_id = related_response.get("exceptionErrorMessageId", "")
                 elif isinstance(related_response, str):
-                    table.add_row(related_response,)
-            table.add_row("Egeria Message", )
-            if isinstance(related_response, dict):
-                user_action = format_dict_to_string(related_response.get("exceptionUserAction", ""))
+                    table.add_row("Egeria Message", related_response)
+                    table.add_row("Egeria User Action", "---")
+                    exception_msg_id = related_response
 
-                table.add_row("Egeria User Action",
-                          format_dict_to_string(user_action))
-            else:
-                table.add_row("Egeria User Action",related_response)
-            exception_msg_id = related_response.get("exceptionErrorMessageId", None) if isinstance(related_response,dict) else related_response
-        table.add_row("Egeria Exception Message Id", exception_msg_id)
+        table.add_row("Egeria Exception Message Id", str(exception_msg_id))
         table.add_row("Pyegeria Message", e.message)
         console.print(table)
 

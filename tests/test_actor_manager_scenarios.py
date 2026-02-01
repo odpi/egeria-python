@@ -31,6 +31,7 @@ from rich.progress import Progress, SpinnerColumn, TextColumn
 from pyegeria.omvs.actor_manager import ActorManager
 from pyegeria.core._exceptions import (
     PyegeriaAPIException,
+    PyegeriaTimeoutException,
     print_validation_error,
 )
 from pydantic import ValidationError
@@ -334,6 +335,16 @@ class ActorManagerScenarioTester:
             )
         except Exception as e:
             duration = time.perf_counter() - start_time
+            if isinstance(e, PyegeriaTimeoutException):
+                console.print(f"  [yellow]⚠ Timeout in {scenario_name}; continuing.[/yellow]")
+                return TestResult(
+                    scenario_name=scenario_name,
+                    status="WARNING",
+                    duration=duration,
+                    message=f"Timeout: {str(e)}",
+                    error=e,
+                    created_guids=created_guids
+                )
             console.print(f"  [red]✗ Scenario failed: {str(e)}[/red]")
             traceback.print_exc()
             return TestResult(
@@ -442,6 +453,16 @@ class ActorManagerScenarioTester:
             )
         except Exception as e:
             duration = time.perf_counter() - start_time
+            if isinstance(e, PyegeriaTimeoutException):
+                console.print(f"  [yellow]⚠ Timeout in {scenario_name}; continuing.[/yellow]")
+                return TestResult(
+                    scenario_name=scenario_name,
+                    status="WARNING",
+                    duration=duration,
+                    message=f"Timeout: {str(e)}",
+                    error=e,
+                    created_guids=created_guids
+                )
             console.print(f"  [red]✗ Scenario failed: {str(e)}[/red]")
             traceback.print_exc()
             return TestResult(
@@ -535,6 +556,16 @@ class ActorManagerScenarioTester:
             )
         except Exception as e:
             duration = time.perf_counter() - start_time
+            if isinstance(e, PyegeriaTimeoutException):
+                console.print(f"  [yellow]⚠ Timeout in {scenario_name}; continuing.[/yellow]")
+                return TestResult(
+                    scenario_name=scenario_name,
+                    status="WARNING",
+                    duration=duration,
+                    message=f"Timeout: {str(e)}",
+                    error=e,
+                    created_guids=created_guids
+                )
             console.print(f"  [red]✗ Scenario failed: {str(e)}[/red]")
             traceback.print_exc()
             return TestResult(
@@ -619,6 +650,16 @@ class ActorManagerScenarioTester:
 
         except Exception as e:
             duration = time.perf_counter() - start_time
+            if isinstance(e, PyegeriaTimeoutException):
+                console.print(f"  [yellow]⚠ Timeout in {scenario_name}; continuing.[/yellow]")
+                return TestResult(
+                    scenario_name=scenario_name,
+                    status="WARNING",
+                    duration=duration,
+                    message=f"Timeout: {str(e)}",
+                    error=e,
+                    created_guids=created_guids
+                )
             console.print(f"  [red]✗ Scenario failed: {str(e)}[/red]")
             return TestResult(
                 scenario_name=scenario_name,

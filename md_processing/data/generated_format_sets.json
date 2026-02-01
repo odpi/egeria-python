@@ -1,1118 +1,11 @@
 {
-  "Comment-DrE": {
-    "target_type": "Comment",
-    "heading": "Comment-DrE Attributes",
-    "description": "Auto-generated format for Comment (Create).",
-    "aliases": [],
-    "annotations": {},
-    "formats": [
-      {
-        "types": [
-          "ALL"
-        ],
-        "attributes": [
-          {
-            "name": "Display Name",
-            "key": "display_name",
-            "format": false
-          },
-          {
-            "name": "Associated Element",
-            "key": "associated_element",
-            "format": false
-          },
-          {
-            "name": "Comment Text",
-            "key": "comment_text",
-            "format": false
-          },
-          {
-            "name": "Comment Type",
-            "key": "comment_type",
-            "format": false
-          }
-        ],
-        "columns": [
-          {
-            "name": "Display Name",
-            "key": "display_name",
-            "format": false
-          },
-          {
-            "name": "Associated Element",
-            "key": "associated_element",
-            "format": false
-          },
-          {
-            "name": "Comment Text",
-            "key": "comment_text",
-            "format": false
-          },
-          {
-            "name": "Comment Type",
-            "key": "comment_type",
-            "format": false
-          }
-        ]
-      }
-    ],
-    "action": {
-      "function": "GovernanceOfficer.find_governance_definitions",
-      "required_params": [
-        "search_string"
-      ],
-      "optional_params": [
-        "page_size",
-        "start_from",
-        "starts_with",
-        "ends_with",
-        "ignore_case"
-      ],
-      "spec_params": {}
-    },
-    "get_additional_props": null
-  },
-  "NoteLog-DrE": {
-    "target_type": "NoteLog",
-    "heading": "NoteLog-DrE Attributes",
-    "description": "Auto-generated format for NoteLog (Create).",
-    "aliases": [],
-    "annotations": {},
-    "formats": [
-      {
-        "types": [
-          "ALL"
-        ],
-        "attributes": [
-          {
-            "name": "Journal Name",
-            "key": "display_name",
-            "format": false
-          },
-          {
-            "name": "Associated Element",
-            "key": "associated_element",
-            "format": false
-          },
-          {
-            "name": "Journal Description",
-            "key": "journal_description",
-            "format": false
-          },
-          {
-            "name": "Note Entry",
-            "key": "note_entry",
-            "format": false
-          }
-        ],
-        "columns": [
-          {
-            "name": "Journal Name",
-            "key": "display_name",
-            "format": false
-          },
-          {
-            "name": "Associated Element",
-            "key": "associated_element",
-            "format": false
-          },
-          {
-            "name": "Journal Description",
-            "key": "journal_description",
-            "format": false
-          },
-          {
-            "name": "Note Entry",
-            "key": "note_entry",
-            "format": false
-          }
-        ]
-      }
-    ],
-    "action": null,
-    "get_additional_props": null
-  },
-  "Informal-Tag-DrE": {
-    "target_type": "Informal Tag",
-    "heading": "Informal-Tag-DrE Attributes",
-    "description": "Auto-generated format for Informal Tag (Create).",
-    "aliases": [],
-    "annotations": {},
-    "formats": [
-      {
-        "types": [
-          "ALL"
-        ],
-        "attributes": [
-          {
-            "name": "Display Name",
-            "key": "display_name",
-            "format": false
-          },
-          {
-            "name": "Description",
-            "key": "description",
-            "format": false
-          }
-        ],
-        "columns": [
-          {
-            "name": "Display Name",
-            "key": "display_name",
-            "format": false
-          },
-          {
-            "name": "Description",
-            "key": "description",
-            "format": false
-          }
-        ]
-      }
-    ],
-    "action": null,
-    "get_additional_props": null
-  },
-  "External-Reference-DrE": {
-    "target_type": "External Reference",
-    "heading": "External-Reference-DrE Attributes",
-    "description": "Auto-generated format for External Reference (Create).",
-    "aliases": [],
-    "annotations": {},
-    "formats": [
-      {
-        "types": [
-          "ALL"
-        ],
-        "attributes": [
-          {
-            "name": "Display Name",
-            "key": "display_name",
-            "format": false
-          },
-          {
-            "name": "Description",
-            "key": "description",
-            "format": false
-          },
-          {
-            "name": "Reference Title",
-            "key": "reference_title",
-            "format": false
-          },
-          {
-            "name": "Reference Abstract",
-            "key": "reference_abstract",
-            "format": false
-          },
-          {
-            "name": "Authors",
-            "key": "authors",
-            "format": false
-          },
-          {
-            "name": "Organization",
-            "key": "organization",
-            "format": false
-          },
-          {
-            "name": "Sources",
-            "key": "reference_sources",
-            "format": false
-          },
-          {
-            "name": "License",
-            "key": "license",
-            "format": false
-          },
-          {
-            "name": "Copyright",
-            "key": "copyright",
-            "format": false
-          },
-          {
-            "name": "Attribution",
-            "key": "category",
-            "format": false
-          },
-          {
-            "name": "Number of Pages",
-            "key": "number_of_pages",
-            "format": false
-          },
-          {
-            "name": "Page Range",
-            "key": "page_range",
-            "format": false
-          },
-          {
-            "name": "Publication Series",
-            "key": "publication_series",
-            "format": false
-          },
-          {
-            "name": "Publication Series Volume",
-            "key": "pub_series_volume",
-            "format": false
-          },
-          {
-            "name": "Publisher",
-            "key": "publisher",
-            "format": false
-          },
-          {
-            "name": "First Publication Date",
-            "key": "first_pub_date",
-            "format": false
-          },
-          {
-            "name": "Publication Date",
-            "key": "pub_date",
-            "format": false
-          },
-          {
-            "name": "Publication City",
-            "key": "pub_city",
-            "format": false
-          },
-          {
-            "name": "Publication Year",
-            "key": "pub_year",
-            "format": false
-          },
-          {
-            "name": "Publication Numbers",
-            "key": "pub_numbers",
-            "format": false
-          }
-        ],
-        "columns": [
-          {
-            "name": "Display Name",
-            "key": "display_name",
-            "format": false
-          },
-          {
-            "name": "Description",
-            "key": "description",
-            "format": false
-          },
-          {
-            "name": "Reference Title",
-            "key": "reference_title",
-            "format": false
-          },
-          {
-            "name": "Reference Abstract",
-            "key": "reference_abstract",
-            "format": false
-          },
-          {
-            "name": "Authors",
-            "key": "authors",
-            "format": false
-          },
-          {
-            "name": "Organization",
-            "key": "organization",
-            "format": false
-          },
-          {
-            "name": "Sources",
-            "key": "reference_sources",
-            "format": false
-          },
-          {
-            "name": "License",
-            "key": "license",
-            "format": false
-          },
-          {
-            "name": "Copyright",
-            "key": "copyright",
-            "format": false
-          },
-          {
-            "name": "Attribution",
-            "key": "category",
-            "format": false
-          },
-          {
-            "name": "Number of Pages",
-            "key": "number_of_pages",
-            "format": false
-          },
-          {
-            "name": "Page Range",
-            "key": "page_range",
-            "format": false
-          },
-          {
-            "name": "Publication Series",
-            "key": "publication_series",
-            "format": false
-          },
-          {
-            "name": "Publication Series Volume",
-            "key": "pub_series_volume",
-            "format": false
-          },
-          {
-            "name": "Publisher",
-            "key": "publisher",
-            "format": false
-          },
-          {
-            "name": "First Publication Date",
-            "key": "first_pub_date",
-            "format": false
-          },
-          {
-            "name": "Publication Date",
-            "key": "pub_date",
-            "format": false
-          },
-          {
-            "name": "Publication City",
-            "key": "pub_city",
-            "format": false
-          },
-          {
-            "name": "Publication Year",
-            "key": "pub_year",
-            "format": false
-          },
-          {
-            "name": "Publication Numbers",
-            "key": "pub_numbers",
-            "format": false
-          }
-        ]
-      }
-    ],
-    "action": {
-      "function": "ExternalReference.find_external_references",
-      "required_params": [
-        "search_string"
-      ],
-      "optional_params": [
-        "page_size",
-        "start_from",
-        "starts_with",
-        "ends_with",
-        "ignore_case"
-      ],
-      "spec_params": {
-        "metadata_element_subtypes": [
-          "CitedDocument"
-        ]
-      }
-    },
-    "get_additional_props": null
-  },
-  "External-Data-Source-DrE": {
-    "target_type": "External Data Source",
-    "heading": "External-Data-Source-DrE Attributes",
-    "description": "Auto-generated format for External Data Source (Create).",
-    "aliases": [],
-    "annotations": {},
-    "formats": [
-      {
-        "types": [
-          "ALL"
-        ],
-        "attributes": [
-          {
-            "name": "Display Name",
-            "key": "display_name",
-            "format": false
-          },
-          {
-            "name": "Description",
-            "key": "description",
-            "format": false
-          },
-          {
-            "name": "Reference Title",
-            "key": "reference_title",
-            "format": false
-          },
-          {
-            "name": "Reference Abstract",
-            "key": "reference_abstract",
-            "format": false
-          },
-          {
-            "name": "Authors",
-            "key": "authors",
-            "format": false
-          },
-          {
-            "name": "Organization",
-            "key": "organization",
-            "format": false
-          },
-          {
-            "name": "Sources",
-            "key": "reference_sources",
-            "format": false
-          },
-          {
-            "name": "License",
-            "key": "license",
-            "format": false
-          },
-          {
-            "name": "Copyright",
-            "key": "copyright",
-            "format": false
-          },
-          {
-            "name": "Attribution",
-            "key": "category",
-            "format": false
-          }
-        ],
-        "columns": [
-          {
-            "name": "Display Name",
-            "key": "display_name",
-            "format": false
-          },
-          {
-            "name": "Description",
-            "key": "description",
-            "format": false
-          },
-          {
-            "name": "Reference Title",
-            "key": "reference_title",
-            "format": false
-          },
-          {
-            "name": "Reference Abstract",
-            "key": "reference_abstract",
-            "format": false
-          },
-          {
-            "name": "Authors",
-            "key": "authors",
-            "format": false
-          },
-          {
-            "name": "Organization",
-            "key": "organization",
-            "format": false
-          },
-          {
-            "name": "Sources",
-            "key": "reference_sources",
-            "format": false
-          },
-          {
-            "name": "License",
-            "key": "license",
-            "format": false
-          },
-          {
-            "name": "Copyright",
-            "key": "copyright",
-            "format": false
-          },
-          {
-            "name": "Attribution",
-            "key": "category",
-            "format": false
-          }
-        ]
-      }
-    ],
-    "action": {
-      "function": "ExternalReference.find_external_references",
-      "required_params": [
-        "search_string"
-      ],
-      "optional_params": [
-        "page_size",
-        "start_from",
-        "starts_with",
-        "ends_with",
-        "ignore_case"
-      ],
-      "spec_params": {
-        "metadata_element_subtypes": [
-          "ExternalDataSource"
-        ]
-      }
-    },
-    "get_additional_props": null
-  },
-  "Collection-DrE": {
-    "target_type": "Collection",
-    "heading": "Collection-DrE Attributes",
-    "description": "Auto-generated format for Collection (Create).",
-    "aliases": [],
-    "annotations": {},
-    "formats": [
-      {
-        "types": [
-          "ALL"
-        ],
-        "attributes": [
-          {
-            "name": "Display Name",
-            "key": "display_name",
-            "format": false
-          },
-          {
-            "name": "Description",
-            "key": "description",
-            "format": false
-          }
-        ],
-        "columns": [
-          {
-            "name": "Display Name",
-            "key": "display_name",
-            "format": false
-          },
-          {
-            "name": "Description",
-            "key": "description",
-            "format": false
-          }
-        ]
-      }
-    ],
-    "action": {
-      "function": "CollectionManager.find_collections",
-      "required_params": [
-        "search_string"
-      ],
-      "optional_params": [
-        "page_size",
-        "start_from",
-        "starts_with",
-        "ends_with",
-        "ignore_case"
-      ],
-      "spec_params": {}
-    },
-    "get_additional_props": null
-  },
-  "Digital-Product-Catalog-DrE": {
-    "target_type": "Digital Product Catalog",
-    "heading": "Digital-Product-Catalog-DrE Attributes",
-    "description": "Auto-generated format for Digital Product Catalog (Create).",
-    "aliases": [],
-    "annotations": {},
-    "formats": [
-      {
-        "types": [
-          "ALL"
-        ],
-        "attributes": [
-          {
-            "name": "Display Name",
-            "key": "display_name",
-            "format": false
-          },
-          {
-            "name": "Description",
-            "key": "description",
-            "format": false
-          }
-        ],
-        "columns": [
-          {
-            "name": "Display Name",
-            "key": "display_name",
-            "format": false
-          },
-          {
-            "name": "Description",
-            "key": "description",
-            "format": false
-          }
-        ]
-      }
-    ],
-    "action": null,
-    "get_additional_props": null
-  },
-  "Digital-Product-DrE": {
-    "target_type": "Digital Product",
-    "heading": "Digital-Product-DrE Attributes",
-    "description": "Auto-generated format for Digital Product (Create).",
-    "aliases": [],
-    "annotations": {},
-    "formats": [
-      {
-        "types": [
-          "ALL"
-        ],
-        "attributes": [
-          {
-            "name": "Display Name",
-            "key": "display_name",
-            "format": false
-          },
-          {
-            "name": "Description",
-            "key": "description",
-            "format": false
-          },
-          {
-            "name": "Product Name",
-            "key": "product_name",
-            "format": false
-          },
-          {
-            "name": "Identifier",
-            "key": "identifier",
-            "format": false
-          },
-          {
-            "name": "Maturity",
-            "key": "maturity",
-            "format": false
-          },
-          {
-            "name": "Service Life",
-            "key": "service_life",
-            "format": false
-          },
-          {
-            "name": "Introduction Date",
-            "key": "introduction_date",
-            "format": false
-          },
-          {
-            "name": "Next Version Date",
-            "key": "next_version_date",
-            "format": false
-          },
-          {
-            "name": "Withdrawal Date",
-            "key": "withdrawal_date",
-            "format": false
-          },
-          {
-            "name": "Product Manager",
-            "key": "product_manager",
-            "format": false
-          },
-          {
-            "name": "Agreements",
-            "key": "agreements",
-            "format": false
-          }
-        ],
-        "columns": [
-          {
-            "name": "Display Name",
-            "key": "display_name",
-            "format": false
-          },
-          {
-            "name": "Description",
-            "key": "description",
-            "format": false
-          },
-          {
-            "name": "Product Name",
-            "key": "product_name",
-            "format": false
-          },
-          {
-            "name": "Identifier",
-            "key": "identifier",
-            "format": false
-          },
-          {
-            "name": "Maturity",
-            "key": "maturity",
-            "format": false
-          },
-          {
-            "name": "Service Life",
-            "key": "service_life",
-            "format": false
-          },
-          {
-            "name": "Introduction Date",
-            "key": "introduction_date",
-            "format": false
-          },
-          {
-            "name": "Next Version Date",
-            "key": "next_version_date",
-            "format": false
-          },
-          {
-            "name": "Withdrawal Date",
-            "key": "withdrawal_date",
-            "format": false
-          },
-          {
-            "name": "Product Manager",
-            "key": "product_manager",
-            "format": false
-          },
-          {
-            "name": "Agreements",
-            "key": "agreements",
-            "format": false
-          }
-        ]
-      }
-    ],
-    "action": {
-      "function": "CollectionManager.find_collections",
-      "required_params": [
-        "search_string"
-      ],
-      "optional_params": [
-        "page_size",
-        "start_from",
-        "starts_with",
-        "ends_with",
-        "ignore_case"
-      ],
-      "spec_params": {
-        "metadata_element_subtypes": [
-          "DigitalProduct"
-        ]
-      }
-    },
-    "get_additional_props": null
-  },
-  "Agreement-DrE": {
-    "target_type": "Agreement",
-    "heading": "Agreement-DrE Attributes",
-    "description": "Auto-generated format for Agreement (Create).",
-    "aliases": [],
-    "annotations": {},
-    "formats": [
-      {
-        "types": [
-          "ALL"
-        ],
-        "attributes": [
-          {
-            "name": "Display Name",
-            "key": "display_name",
-            "format": false
-          },
-          {
-            "name": "Description",
-            "key": "description",
-            "format": false
-          },
-          {
-            "name": "Identifier",
-            "key": "agreement_identifier",
-            "format": false
-          },
-          {
-            "name": "Agreement Actors",
-            "key": "agreement_actors",
-            "format": false
-          }
-        ],
-        "columns": [
-          {
-            "name": "Display Name",
-            "key": "display_name",
-            "format": false
-          },
-          {
-            "name": "Description",
-            "key": "description",
-            "format": false
-          },
-          {
-            "name": "Identifier",
-            "key": "agreement_identifier",
-            "format": false
-          },
-          {
-            "name": "Agreement Actors",
-            "key": "agreement_actors",
-            "format": false
-          }
-        ]
-      }
-    ],
-    "action": {
-      "function": "CollectionManager.find_collections",
-      "required_params": [
-        "search_string"
-      ],
-      "optional_params": [
-        "page_size",
-        "start_from",
-        "starts_with",
-        "ends_with",
-        "ignore_case"
-      ],
-      "spec_params": {
-        "metadata_element_subtypes": [
-          "Agreement"
-        ]
-      }
-    },
-    "get_additional_props": null
-  },
-  "Data-Sharing-Agreement-DrE": {
-    "target_type": "Data Sharing Agreement",
-    "heading": "Data-Sharing-Agreement-DrE Attributes",
-    "description": "Auto-generated format for Data Sharing Agreement (Create).",
-    "aliases": [],
-    "annotations": {},
-    "formats": [
-      {
-        "types": [
-          "ALL"
-        ],
-        "attributes": [
-          {
-            "name": "Display Name",
-            "key": "display_name",
-            "format": false
-          },
-          {
-            "name": "Description",
-            "key": "description",
-            "format": false
-          },
-          {
-            "name": "Identifier",
-            "key": "identifier",
-            "format": false
-          },
-          {
-            "name": "Product Manager",
-            "key": "product_manager",
-            "format": false
-          }
-        ],
-        "columns": [
-          {
-            "name": "Display Name",
-            "key": "display_name",
-            "format": false
-          },
-          {
-            "name": "Description",
-            "key": "description",
-            "format": false
-          },
-          {
-            "name": "Identifier",
-            "key": "identifier",
-            "format": false
-          },
-          {
-            "name": "Product Manager",
-            "key": "product_manager",
-            "format": false
-          }
-        ]
-      }
-    ],
-    "action": {
-      "function": "CollectionManager.find_collections",
-      "required_params": [
-        "search_string"
-      ],
-      "optional_params": [
-        "page_size",
-        "start_from",
-        "starts_with",
-        "ends_with",
-        "ignore_case"
-      ],
-      "spec_params": {
-        "classification_names": [
-          "DataSharingAgreement"
-        ]
-      }
-    },
-    "get_additional_props": null
-  },
-  "Digital-Subscription-DrE": {
-    "target_type": "Digital Subscription",
-    "heading": "Digital-Subscription-DrE Attributes",
-    "description": "Auto-generated format for Digital Subscription (Create).",
-    "aliases": [],
-    "annotations": {},
-    "formats": [
-      {
-        "types": [
-          "ALL"
-        ],
-        "attributes": [
-          {
-            "name": "Display Name",
-            "key": "display_name",
-            "format": false
-          },
-          {
-            "name": "Description",
-            "key": "description",
-            "format": false
-          },
-          {
-            "name": "Identifier",
-            "key": "identifier",
-            "format": false
-          },
-          {
-            "name": "Support Level",
-            "key": "support_level",
-            "format": false
-          },
-          {
-            "name": "Service Levels",
-            "key": "service_levels",
-            "format": false
-          }
-        ],
-        "columns": [
-          {
-            "name": "Display Name",
-            "key": "display_name",
-            "format": false
-          },
-          {
-            "name": "Description",
-            "key": "description",
-            "format": false
-          },
-          {
-            "name": "Identifier",
-            "key": "identifier",
-            "format": false
-          },
-          {
-            "name": "Support Level",
-            "key": "support_level",
-            "format": false
-          },
-          {
-            "name": "Service Levels",
-            "key": "service_levels",
-            "format": false
-          }
-        ]
-      }
-    ],
-    "action": {
-      "function": "CollectionManager.find_collections",
-      "required_params": [
-        "search_string"
-      ],
-      "optional_params": [
-        "page_size",
-        "start_from",
-        "starts_with",
-        "ends_with",
-        "ignore_case"
-      ],
-      "spec_params": {
-        "metadata_element_subtypes": [
-          "DigitalSubscription"
-        ]
-      }
-    },
-    "get_additional_props": null
-  },
-  "CSV-File-DrE": {
-    "target_type": "CSV File",
-    "heading": "CSV-File-DrE Attributes",
-    "description": "Auto-generated format for CSV File (Create).",
-    "aliases": [],
-    "annotations": {},
-    "formats": [
-      {
-        "types": [
-          "ALL"
-        ],
-        "attributes": [
-          {
-            "name": "Display Name",
-            "key": "display_name",
-            "format": false
-          },
-          {
-            "name": "Description",
-            "key": "description",
-            "format": false
-          },
-          {
-            "name": "File Path",
-            "key": "file_path",
-            "format": false
-          },
-          {
-            "name": "File Encoding",
-            "key": "file_encoding",
-            "format": false
-          },
-          {
-            "name": "File Extension",
-            "key": "file_extension",
-            "format": false
-          },
-          {
-            "name": "File System Name",
-            "key": "file_system_name",
-            "format": false
-          }
-        ],
-        "columns": [
-          {
-            "name": "Display Name",
-            "key": "display_name",
-            "format": false
-          },
-          {
-            "name": "Description",
-            "key": "description",
-            "format": false
-          },
-          {
-            "name": "File Path",
-            "key": "file_path",
-            "format": false
-          },
-          {
-            "name": "File Encoding",
-            "key": "file_encoding",
-            "format": false
-          },
-          {
-            "name": "File Extension",
-            "key": "file_extension",
-            "format": false
-          },
-          {
-            "name": "File System Name",
-            "key": "file_system_name",
-            "format": false
-          }
-        ]
-      }
-    ],
-    "action": null,
-    "get_additional_props": null
-  },
   "Data-Dictionary-DrE": {
     "target_type": "Data Dictionary",
     "heading": "Data-Dictionary-DrE Attributes",
     "description": "Auto-generated format for Data Dictionary (Create).",
     "aliases": [],
     "annotations": {},
+    "family": "Data Designer",
     "formats": [
       {
         "types": [
@@ -1150,6 +43,8 @@
         "search_string"
       ],
       "optional_params": [
+        "sequencing_order",
+        "sequencing_property",
         "page_size",
         "start_from",
         "starts_with",
@@ -1162,7 +57,8 @@
         ]
       }
     },
-    "get_additional_props": null
+    "get_additional_props": null,
+    "question_spec": null
   },
   "Data-Specification-DrE": {
     "target_type": "Data Specification",
@@ -1170,6 +66,7 @@
     "description": "Auto-generated format for Data Specification (Create).",
     "aliases": [],
     "annotations": {},
+    "family": "Data Designer",
     "formats": [
       {
         "types": [
@@ -1207,6 +104,8 @@
         "search_string"
       ],
       "optional_params": [
+        "sequencing_order",
+        "sequencing_property",
         "page_size",
         "start_from",
         "starts_with",
@@ -1219,7 +118,8 @@
         ]
       }
     },
-    "get_additional_props": null
+    "get_additional_props": null,
+    "question_spec": null
   },
   "Data-Structure-DrE": {
     "target_type": "Data Structure",
@@ -1227,6 +127,7 @@
     "description": "Auto-generated format for Data Structure (Create).",
     "aliases": [],
     "annotations": {},
+    "family": "Data Designer",
     "formats": [
       {
         "types": [
@@ -1241,6 +142,11 @@
           {
             "name": "Description",
             "key": "description",
+            "format": false
+          },
+          {
+            "name": "Namespace",
+            "key": "namespace",
             "format": false
           },
           {
@@ -1263,6 +169,11 @@
           {
             "name": "Description",
             "key": "description",
+            "format": false
+          },
+          {
+            "name": "Namespace",
+            "key": "namespace",
             "format": false
           },
           {
@@ -1284,6 +195,8 @@
         "search_string"
       ],
       "optional_params": [
+        "sequencing_order",
+        "sequencing_property",
         "page_size",
         "start_from",
         "starts_with",
@@ -1292,7 +205,8 @@
       ],
       "spec_params": {}
     },
-    "get_additional_props": null
+    "get_additional_props": null,
+    "question_spec": null
   },
   "Data-Field-DrE": {
     "target_type": "Data Field",
@@ -1300,6 +214,7 @@
     "description": "Auto-generated format for Data Field (Create).",
     "aliases": [],
     "annotations": {},
+    "family": "Data Designer",
     "formats": [
       {
         "types": [
@@ -1352,6 +267,21 @@
             "format": false
           },
           {
+            "name": "Aliases",
+            "key": "aliases",
+            "format": false
+          },
+          {
+            "name": "Name Patterns",
+            "key": "name_patterns",
+            "format": false
+          },
+          {
+            "name": "Namespace",
+            "key": "namespace",
+            "format": false
+          },
+          {
             "name": "isNullable",
             "key": "is_nullable",
             "format": false
@@ -1379,6 +309,11 @@
           {
             "name": "Units",
             "key": "units",
+            "format": false
+          },
+          {
+            "name": "Sort Order",
+            "key": "sort_order",
             "format": false
           },
           {
@@ -1434,6 +369,21 @@
             "format": false
           },
           {
+            "name": "Aliases",
+            "key": "aliases",
+            "format": false
+          },
+          {
+            "name": "Name Patterns",
+            "key": "name_patterns",
+            "format": false
+          },
+          {
+            "name": "Namespace",
+            "key": "namespace",
+            "format": false
+          },
+          {
             "name": "isNullable",
             "key": "is_nullable",
             "format": false
@@ -1464,6 +414,11 @@
             "format": false
           },
           {
+            "name": "Sort Order",
+            "key": "sort_order",
+            "format": false
+          },
+          {
             "name": "Default Value",
             "key": "default_value",
             "format": false
@@ -1477,6 +432,8 @@
         "search_string"
       ],
       "optional_params": [
+        "sequencing_order",
+        "sequencing_property",
         "page_size",
         "start_from",
         "starts_with",
@@ -1485,7 +442,8 @@
       ],
       "spec_params": {}
     },
-    "get_additional_props": null
+    "get_additional_props": null,
+    "question_spec": null
   },
   "Data-Class-DrE": {
     "target_type": "Data Class",
@@ -1493,6 +451,7 @@
     "description": "Auto-generated format for Data Class (Create).",
     "aliases": [],
     "annotations": {},
+    "family": "Data Designer",
     "formats": [
       {
         "types": [
@@ -1527,6 +486,16 @@
           {
             "name": "IsCaseSensitive",
             "key": "is_case_sensitive",
+            "format": false
+          },
+          {
+            "name": "Specification",
+            "key": "specification",
+            "format": false
+          },
+          {
+            "name": "Specification Details",
+            "key": "spec_details",
             "format": false
           },
           {
@@ -1624,6 +593,16 @@
           {
             "name": "IsCaseSensitive",
             "key": "is_case_sensitive",
+            "format": false
+          },
+          {
+            "name": "Specification",
+            "key": "specification",
+            "format": false
+          },
+          {
+            "name": "Specification Details",
+            "key": "spec_details",
             "format": false
           },
           {
@@ -1700,6 +679,8 @@
         "search_string"
       ],
       "optional_params": [
+        "sequencing_order",
+        "sequencing_property",
         "page_size",
         "start_from",
         "starts_with",
@@ -1708,14 +689,16 @@
       ],
       "spec_params": {}
     },
-    "get_additional_props": null
+    "get_additional_props": null,
+    "question_spec": null
   },
-  "Information-Supply-Chain-DrE": {
-    "target_type": "Information Supply Chain",
-    "heading": "Information-Supply-Chain-DrE Attributes",
-    "description": "Auto-generated format for Information Supply Chain (Create).",
+  "External-Reference-DrE": {
+    "target_type": "External Reference",
+    "heading": "External-Reference-DrE Attributes",
+    "description": "Auto-generated format for External Reference (Create).",
     "aliases": [],
     "annotations": {},
+    "family": "External Reference",
     "formats": [
       {
         "types": [
@@ -1733,23 +716,43 @@
             "format": false
           },
           {
-            "name": "Scope",
-            "key": "scope",
+            "name": "Reference Title",
+            "key": "reference_title",
             "format": false
           },
           {
-            "name": "Purposes",
-            "key": "purposes",
+            "name": "Reference Abstract",
+            "key": "reference_abstract",
             "format": false
           },
           {
-            "name": "Nested Information Supply Chains",
-            "key": "nested_info_supply_chains",
+            "name": "Authors",
+            "key": "authors",
             "format": false
           },
           {
-            "name": "In Information Supply Chain",
-            "key": "in_supply_chain",
+            "name": "Organization",
+            "key": "organization",
+            "format": false
+          },
+          {
+            "name": "Sources",
+            "key": "reference_sources",
+            "format": false
+          },
+          {
+            "name": "License",
+            "key": "license",
+            "format": false
+          },
+          {
+            "name": "Copyright",
+            "key": "copyright",
+            "format": false
+          },
+          {
+            "name": "Attribution",
+            "key": "category",
             "format": false
           }
         ],
@@ -1765,34 +768,56 @@
             "format": false
           },
           {
-            "name": "Scope",
-            "key": "scope",
+            "name": "Reference Title",
+            "key": "reference_title",
             "format": false
           },
           {
-            "name": "Purposes",
-            "key": "purposes",
+            "name": "Reference Abstract",
+            "key": "reference_abstract",
             "format": false
           },
           {
-            "name": "Nested Information Supply Chains",
-            "key": "nested_info_supply_chains",
+            "name": "Authors",
+            "key": "authors",
             "format": false
           },
           {
-            "name": "In Information Supply Chain",
-            "key": "in_supply_chain",
+            "name": "Organization",
+            "key": "organization",
+            "format": false
+          },
+          {
+            "name": "Sources",
+            "key": "reference_sources",
+            "format": false
+          },
+          {
+            "name": "License",
+            "key": "license",
+            "format": false
+          },
+          {
+            "name": "Copyright",
+            "key": "copyright",
+            "format": false
+          },
+          {
+            "name": "Attribution",
+            "key": "category",
             "format": false
           }
         ]
       }
     ],
     "action": {
-      "function": "SolutionArchitect.find_information_supply_chains",
+      "function": "ExternalReference.find_external_references",
       "required_params": [
         "search_string"
       ],
       "optional_params": [
+        "sequencing_order",
+        "sequencing_property",
         "page_size",
         "start_from",
         "starts_with",
@@ -1801,14 +826,16 @@
       ],
       "spec_params": {}
     },
-    "get_additional_props": null
+    "get_additional_props": null,
+    "question_spec": null
   },
-  "Solution-Blueprint-DrE": {
-    "target_type": "Solution Blueprint",
-    "heading": "Solution-Blueprint-DrE Attributes",
-    "description": "Auto-generated format for Solution Blueprint (Create).",
+  "External-Data-Source-DrE": {
+    "target_type": "External Data Source",
+    "heading": "External-Data-Source-DrE Attributes",
+    "description": "Auto-generated format for External Data Source (Create).",
     "aliases": [],
     "annotations": {},
+    "family": "External Reference",
     "formats": [
       {
         "types": [
@@ -1826,8 +853,43 @@
             "format": false
           },
           {
-            "name": "Solution Components",
-            "key": "solution_components",
+            "name": "Reference Title",
+            "key": "reference_title",
+            "format": false
+          },
+          {
+            "name": "Reference Abstract",
+            "key": "reference_abstract",
+            "format": false
+          },
+          {
+            "name": "Authors",
+            "key": "authors",
+            "format": false
+          },
+          {
+            "name": "Organization",
+            "key": "organization",
+            "format": false
+          },
+          {
+            "name": "Sources",
+            "key": "reference_sources",
+            "format": false
+          },
+          {
+            "name": "License",
+            "key": "license",
+            "format": false
+          },
+          {
+            "name": "Copyright",
+            "key": "copyright",
+            "format": false
+          },
+          {
+            "name": "Attribution",
+            "key": "category",
             "format": false
           }
         ],
@@ -1843,35 +905,78 @@
             "format": false
           },
           {
-            "name": "Solution Components",
-            "key": "solution_components",
+            "name": "Reference Title",
+            "key": "reference_title",
+            "format": false
+          },
+          {
+            "name": "Reference Abstract",
+            "key": "reference_abstract",
+            "format": false
+          },
+          {
+            "name": "Authors",
+            "key": "authors",
+            "format": false
+          },
+          {
+            "name": "Organization",
+            "key": "organization",
+            "format": false
+          },
+          {
+            "name": "Sources",
+            "key": "reference_sources",
+            "format": false
+          },
+          {
+            "name": "License",
+            "key": "license",
+            "format": false
+          },
+          {
+            "name": "Copyright",
+            "key": "copyright",
+            "format": false
+          },
+          {
+            "name": "Attribution",
+            "key": "category",
             "format": false
           }
         ]
       }
     ],
     "action": {
-      "function": "SolutionArchitect.find_solution_blueprints",
+      "function": "ExternalReference.find_external_references",
       "required_params": [
         "search_string"
       ],
       "optional_params": [
+        "sequencing_order",
+        "sequencing_property",
         "page_size",
         "start_from",
         "starts_with",
         "ends_with",
         "ignore_case"
       ],
-      "spec_params": {}
+      "spec_params": {
+        "metadata_element_subtypes": [
+          "ExternalDataSource"
+        ]
+      }
     },
-    "get_additional_props": null
+    "get_additional_props": null,
+    "question_spec": null
   },
-  "Solution-Component-DrE": {
-    "target_type": "Solution Component",
-    "heading": "Solution-Component-DrE Attributes",
-    "description": "Auto-generated format for Solution Component (Create).",
+  "External-Model-Source-DrE": {
+    "target_type": "External Model Source",
+    "heading": "External-Model-Source-DrE Attributes",
+    "description": "Auto-generated format for External Model Source (Create).",
     "aliases": [],
     "annotations": {},
+    "family": "External Reference",
     "formats": [
       {
         "types": [
@@ -1889,33 +994,43 @@
             "format": false
           },
           {
-            "name": "Solution Component Type",
-            "key": "soln_comp_type",
+            "name": "Reference Title",
+            "key": "reference_title",
             "format": false
           },
           {
-            "name": "Planned Deployed Implementation Type",
-            "key": "planned_deployed_impl_type",
+            "name": "Reference Abstract",
+            "key": "reference_abstract",
             "format": false
           },
           {
-            "name": "In Solution Components",
-            "key": "in_components",
+            "name": "Authors",
+            "key": "authors",
             "format": false
           },
           {
-            "name": "In Solution Blueprints",
-            "key": "solution_blueprints",
+            "name": "Organization",
+            "key": "organization",
             "format": false
           },
           {
-            "name": "In Information Supply Chains",
-            "key": "in_supply_chains",
+            "name": "Sources",
+            "key": "reference_sources",
             "format": false
           },
           {
-            "name": "Actors",
-            "key": "actors",
+            "name": "License",
+            "key": "license",
+            "format": false
+          },
+          {
+            "name": "Copyright",
+            "key": "copyright",
+            "format": false
+          },
+          {
+            "name": "Attribution",
+            "key": "category",
             "format": false
           }
         ],
@@ -1931,60 +1046,78 @@
             "format": false
           },
           {
-            "name": "Solution Component Type",
-            "key": "soln_comp_type",
+            "name": "Reference Title",
+            "key": "reference_title",
             "format": false
           },
           {
-            "name": "Planned Deployed Implementation Type",
-            "key": "planned_deployed_impl_type",
+            "name": "Reference Abstract",
+            "key": "reference_abstract",
             "format": false
           },
           {
-            "name": "In Solution Components",
-            "key": "in_components",
+            "name": "Authors",
+            "key": "authors",
             "format": false
           },
           {
-            "name": "In Solution Blueprints",
-            "key": "solution_blueprints",
+            "name": "Organization",
+            "key": "organization",
             "format": false
           },
           {
-            "name": "In Information Supply Chains",
-            "key": "in_supply_chains",
+            "name": "Sources",
+            "key": "reference_sources",
             "format": false
           },
           {
-            "name": "Actors",
-            "key": "actors",
+            "name": "License",
+            "key": "license",
+            "format": false
+          },
+          {
+            "name": "Copyright",
+            "key": "copyright",
+            "format": false
+          },
+          {
+            "name": "Attribution",
+            "key": "category",
             "format": false
           }
         ]
       }
     ],
     "action": {
-      "function": "SolutionArchitect.find_solution_components",
+      "function": "ExternalReference.find_external_references",
       "required_params": [
         "search_string"
       ],
       "optional_params": [
+        "sequencing_order",
+        "sequencing_property",
         "page_size",
         "start_from",
         "starts_with",
         "ends_with",
         "ignore_case"
       ],
-      "spec_params": {}
+      "spec_params": {
+        "metadata_element_subtypes": [
+          "ExternalModelSource"
+        ]
+      }
     },
-    "get_additional_props": null
+    "get_additional_props": null,
+    "question_spec": null
   },
-  "Solution-Role-DrE": {
-    "target_type": "Solution Role",
-    "heading": "Solution-Role-DrE Attributes",
-    "description": "Auto-generated format for Solution Role (Create).",
+  "Related-Media-DrE": {
+    "target_type": "Related Media",
+    "heading": "Related-Media-DrE Attributes",
+    "description": "Auto-generated format for Related Media (Create).",
     "aliases": [],
     "annotations": {},
+    "family": "External Reference",
     "formats": [
       {
         "types": [
@@ -1992,8 +1125,8 @@
         ],
         "attributes": [
           {
-            "name": "Name",
-            "key": "name",
+            "name": "Display Name",
+            "key": "display_name",
             "format": false
           },
           {
@@ -2002,30 +1135,70 @@
             "format": false
           },
           {
-            "name": "Title",
-            "key": "title",
+            "name": "Reference Title",
+            "key": "reference_title",
             "format": false
           },
           {
-            "name": "Scope",
-            "key": "scope",
+            "name": "Reference Abstract",
+            "key": "reference_abstract",
             "format": false
           },
           {
-            "name": "identifier",
-            "key": "identifier",
+            "name": "Authors",
+            "key": "authors",
             "format": false
           },
           {
-            "name": "Domain Identifier",
-            "key": "domain_identifier",
+            "name": "Organization",
+            "key": "organization",
+            "format": false
+          },
+          {
+            "name": "Sources",
+            "key": "reference_sources",
+            "format": false
+          },
+          {
+            "name": "License",
+            "key": "license",
+            "format": false
+          },
+          {
+            "name": "Copyright",
+            "key": "copyright",
+            "format": false
+          },
+          {
+            "name": "Attribution",
+            "key": "category",
+            "format": false
+          },
+          {
+            "name": "Media Type",
+            "key": "media_type",
+            "format": false
+          },
+          {
+            "name": "Media Type Other Id",
+            "key": "media_type_other_id",
+            "format": false
+          },
+          {
+            "name": "Default Media Usage",
+            "key": "default_media_usage",
+            "format": false
+          },
+          {
+            "name": "default Media Usage Other Id",
+            "key": "default_media_usage_other_id",
             "format": false
           }
         ],
         "columns": [
           {
-            "name": "Name",
-            "key": "name",
+            "name": "Display Name",
+            "key": "display_name",
             "format": false
           },
           {
@@ -2034,34 +1207,398 @@
             "format": false
           },
           {
-            "name": "Title",
-            "key": "title",
+            "name": "Reference Title",
+            "key": "reference_title",
             "format": false
           },
           {
-            "name": "Scope",
-            "key": "scope",
+            "name": "Reference Abstract",
+            "key": "reference_abstract",
             "format": false
           },
           {
-            "name": "identifier",
-            "key": "identifier",
+            "name": "Authors",
+            "key": "authors",
             "format": false
           },
           {
-            "name": "Domain Identifier",
-            "key": "domain_identifier",
+            "name": "Organization",
+            "key": "organization",
+            "format": false
+          },
+          {
+            "name": "Sources",
+            "key": "reference_sources",
+            "format": false
+          },
+          {
+            "name": "License",
+            "key": "license",
+            "format": false
+          },
+          {
+            "name": "Copyright",
+            "key": "copyright",
+            "format": false
+          },
+          {
+            "name": "Attribution",
+            "key": "category",
+            "format": false
+          },
+          {
+            "name": "Media Type",
+            "key": "media_type",
+            "format": false
+          },
+          {
+            "name": "Media Type Other Id",
+            "key": "media_type_other_id",
+            "format": false
+          },
+          {
+            "name": "Default Media Usage",
+            "key": "default_media_usage",
+            "format": false
+          },
+          {
+            "name": "default Media Usage Other Id",
+            "key": "default_media_usage_other_id",
             "format": false
           }
         ]
       }
     ],
     "action": {
-      "function": "SolutionArchitect.find_solution_roles",
+      "function": "ExternalReference.find_external_references",
       "required_params": [
         "search_string"
       ],
       "optional_params": [
+        "sequencing_order",
+        "sequencing_property",
+        "page_size",
+        "start_from",
+        "starts_with",
+        "ends_with",
+        "ignore_case"
+      ],
+      "spec_params": {
+        "metadata_element_subtypes": [
+          "RelatedMedia"
+        ]
+      }
+    },
+    "get_additional_props": null,
+    "question_spec": null
+  },
+  "Cited-Document-DrE": {
+    "target_type": "Cited Document",
+    "heading": "Cited-Document-DrE Attributes",
+    "description": "Auto-generated format for Cited Document (Create).",
+    "aliases": [],
+    "annotations": {},
+    "family": "External Reference",
+    "formats": [
+      {
+        "types": [
+          "ALL"
+        ],
+        "attributes": [
+          {
+            "name": "Display Name",
+            "key": "display_name",
+            "format": false
+          },
+          {
+            "name": "Description",
+            "key": "description",
+            "format": false
+          },
+          {
+            "name": "Reference Title",
+            "key": "reference_title",
+            "format": false
+          },
+          {
+            "name": "Reference Abstract",
+            "key": "reference_abstract",
+            "format": false
+          },
+          {
+            "name": "Authors",
+            "key": "authors",
+            "format": false
+          },
+          {
+            "name": "Organization",
+            "key": "organization",
+            "format": false
+          },
+          {
+            "name": "Sources",
+            "key": "reference_sources",
+            "format": false
+          },
+          {
+            "name": "License",
+            "key": "license",
+            "format": false
+          },
+          {
+            "name": "Copyright",
+            "key": "copyright",
+            "format": false
+          },
+          {
+            "name": "Attribution",
+            "key": "category",
+            "format": false
+          },
+          {
+            "name": "Number of Pages",
+            "key": "number_of_pages",
+            "format": false
+          },
+          {
+            "name": "Page Range",
+            "key": "page_range",
+            "format": false
+          },
+          {
+            "name": "Publication Series",
+            "key": "publication_series",
+            "format": false
+          },
+          {
+            "name": "Publication Series Volume",
+            "key": "pub_series_volume",
+            "format": false
+          },
+          {
+            "name": "Publisher",
+            "key": "publisher",
+            "format": false
+          },
+          {
+            "name": "First Publication Date",
+            "key": "first_pub_date",
+            "format": false
+          },
+          {
+            "name": "Publication Date",
+            "key": "pub_date",
+            "format": false
+          },
+          {
+            "name": "Publication City",
+            "key": "pub_city",
+            "format": false
+          },
+          {
+            "name": "Publication Year",
+            "key": "pub_year",
+            "format": false
+          },
+          {
+            "name": "Publication Numbers",
+            "key": "pub_numbers",
+            "format": false
+          }
+        ],
+        "columns": [
+          {
+            "name": "Display Name",
+            "key": "display_name",
+            "format": false
+          },
+          {
+            "name": "Description",
+            "key": "description",
+            "format": false
+          },
+          {
+            "name": "Reference Title",
+            "key": "reference_title",
+            "format": false
+          },
+          {
+            "name": "Reference Abstract",
+            "key": "reference_abstract",
+            "format": false
+          },
+          {
+            "name": "Authors",
+            "key": "authors",
+            "format": false
+          },
+          {
+            "name": "Organization",
+            "key": "organization",
+            "format": false
+          },
+          {
+            "name": "Sources",
+            "key": "reference_sources",
+            "format": false
+          },
+          {
+            "name": "License",
+            "key": "license",
+            "format": false
+          },
+          {
+            "name": "Copyright",
+            "key": "copyright",
+            "format": false
+          },
+          {
+            "name": "Attribution",
+            "key": "category",
+            "format": false
+          },
+          {
+            "name": "Number of Pages",
+            "key": "number_of_pages",
+            "format": false
+          },
+          {
+            "name": "Page Range",
+            "key": "page_range",
+            "format": false
+          },
+          {
+            "name": "Publication Series",
+            "key": "publication_series",
+            "format": false
+          },
+          {
+            "name": "Publication Series Volume",
+            "key": "pub_series_volume",
+            "format": false
+          },
+          {
+            "name": "Publisher",
+            "key": "publisher",
+            "format": false
+          },
+          {
+            "name": "First Publication Date",
+            "key": "first_pub_date",
+            "format": false
+          },
+          {
+            "name": "Publication Date",
+            "key": "pub_date",
+            "format": false
+          },
+          {
+            "name": "Publication City",
+            "key": "pub_city",
+            "format": false
+          },
+          {
+            "name": "Publication Year",
+            "key": "pub_year",
+            "format": false
+          },
+          {
+            "name": "Publication Numbers",
+            "key": "pub_numbers",
+            "format": false
+          }
+        ]
+      }
+    ],
+    "action": {
+      "function": "ExternalReference.find_external_references",
+      "required_params": [
+        "search_string"
+      ],
+      "optional_params": [
+        "sequencing_order",
+        "sequencing_property",
+        "page_size",
+        "start_from",
+        "starts_with",
+        "ends_with",
+        "ignore_case"
+      ],
+      "spec_params": {
+        "metadata_element_subtypes": [
+          "CitedDocument"
+        ]
+      }
+    },
+    "get_additional_props": null,
+    "question_spec": null
+  },
+  "Comment-DrE": {
+    "target_type": "Comment",
+    "heading": "Comment-DrE Attributes",
+    "description": "Auto-generated format for Comment (Create).",
+    "aliases": [],
+    "annotations": {},
+    "family": "Feedback Manager",
+    "formats": [
+      {
+        "types": [
+          "ALL"
+        ],
+        "attributes": [
+          {
+            "name": "Display Name",
+            "key": "display_name",
+            "format": false
+          },
+          {
+            "name": "Associated Element",
+            "key": "associated_element",
+            "format": false
+          },
+          {
+            "name": "Comment Text",
+            "key": "comment_text",
+            "format": false
+          },
+          {
+            "name": "Comment Type",
+            "key": "comment_type",
+            "format": false
+          }
+        ],
+        "columns": [
+          {
+            "name": "Display Name",
+            "key": "display_name",
+            "format": false
+          },
+          {
+            "name": "Associated Element",
+            "key": "associated_element",
+            "format": false
+          },
+          {
+            "name": "Comment Text",
+            "key": "comment_text",
+            "format": false
+          },
+          {
+            "name": "Comment Type",
+            "key": "comment_type",
+            "format": false
+          }
+        ]
+      }
+    ],
+    "action": {
+      "function": "GovernanceOfficer.find_governance_definitions",
+      "required_params": [
+        "search_string"
+      ],
+      "optional_params": [
+        "sequencing_order",
+        "sequencing_property",
         "page_size",
         "start_from",
         "starts_with",
@@ -2070,7 +1607,142 @@
       ],
       "spec_params": {}
     },
-    "get_additional_props": null
+    "get_additional_props": null,
+    "question_spec": null
+  },
+  "Journal-Entry-DrE": {
+    "target_type": "Journal Entry",
+    "heading": "Journal-Entry-DrE Attributes",
+    "description": "Auto-generated format for Journal Entry (Create).",
+    "aliases": [],
+    "annotations": {},
+    "family": "Feedback Manager",
+    "formats": [
+      {
+        "types": [
+          "ALL"
+        ],
+        "attributes": [
+          {
+            "name": "Journal Name",
+            "key": "display_name",
+            "format": false
+          },
+          {
+            "name": "Associated Element",
+            "key": "associated_element",
+            "format": false
+          },
+          {
+            "name": "Journal Description",
+            "key": "journal_description",
+            "format": false
+          },
+          {
+            "name": "Note Entry",
+            "key": "note_entry",
+            "format": false
+          }
+        ],
+        "columns": [
+          {
+            "name": "Journal Name",
+            "key": "display_name",
+            "format": false
+          },
+          {
+            "name": "Associated Element",
+            "key": "associated_element",
+            "format": false
+          },
+          {
+            "name": "Journal Description",
+            "key": "journal_description",
+            "format": false
+          },
+          {
+            "name": "Note Entry",
+            "key": "note_entry",
+            "format": false
+          }
+        ]
+      }
+    ],
+    "action": {
+      "function": "Client2.find_notes",
+      "required_params": [
+        "search_string"
+      ],
+      "optional_params": [
+        "sequencing_order",
+        "sequencing_property",
+        "page_size",
+        "start_from",
+        "starts_with",
+        "ends_with",
+        "ignore_case"
+      ],
+      "spec_params": {}
+    },
+    "get_additional_props": null,
+    "question_spec": null
+  },
+  "Informal-Tag-DrE": {
+    "target_type": "Informal Tag",
+    "heading": "Informal-Tag-DrE Attributes",
+    "description": "Auto-generated format for Informal Tag (Create).",
+    "aliases": [],
+    "annotations": {},
+    "family": "Feedback Manager",
+    "formats": [
+      {
+        "types": [
+          "ALL"
+        ],
+        "attributes": [
+          {
+            "name": "Display Name",
+            "key": "display_name",
+            "format": false
+          },
+          {
+            "name": "Description",
+            "key": "description",
+            "format": false
+          }
+        ],
+        "columns": [
+          {
+            "name": "Display Name",
+            "key": "display_name",
+            "format": false
+          },
+          {
+            "name": "Description",
+            "key": "description",
+            "format": false
+          }
+        ]
+      }
+    ],
+    "action": {
+      "function": "Client2.find_tags",
+      "required_params": [
+        "search_string"
+      ],
+      "optional_params": [
+        "sequencing_order",
+        "sequencing_property",
+        "page_size",
+        "start_from",
+        "starts_with",
+        "ends_with",
+        "ignore_case"
+      ],
+      "spec_params": {}
+    },
+    "get_additional_props": null,
+    "question_spec": null
   },
   "Glossary-DrE": {
     "target_type": "Glossary",
@@ -2078,6 +1750,7 @@
     "description": "Auto-generated format for Glossary (Create).",
     "aliases": [],
     "annotations": {},
+    "family": "Glossary",
     "formats": [
       {
         "types": [
@@ -2125,6 +1798,8 @@
         "search_string"
       ],
       "optional_params": [
+        "sequencing_order",
+        "sequencing_property",
         "page_size",
         "start_from",
         "starts_with",
@@ -2137,7 +1812,8 @@
         ]
       }
     },
-    "get_additional_props": null
+    "get_additional_props": null,
+    "question_spec": null
   },
   "Glossary-Term-DrE": {
     "target_type": "Glossary Term",
@@ -2145,6 +1821,7 @@
     "description": "Auto-generated format for Glossary Term (Create).",
     "aliases": [],
     "annotations": {},
+    "family": "Glossary",
     "formats": [
       {
         "types": [
@@ -2242,6 +1919,8 @@
         "search_string"
       ],
       "optional_params": [
+        "sequencing_order",
+        "sequencing_property",
         "page_size",
         "start_from",
         "starts_with",
@@ -2250,788 +1929,8 @@
       ],
       "spec_params": {}
     },
-    "get_additional_props": null
-  },
-  "Project-DrE": {
-    "target_type": "Project",
-    "heading": "Project-DrE Attributes",
-    "description": "Auto-generated format for Project (Create).",
-    "aliases": [],
-    "annotations": {},
-    "formats": [
-      {
-        "types": [
-          "ALL"
-        ],
-        "attributes": [
-          {
-            "name": "Display Name",
-            "key": "display_name",
-            "format": false
-          },
-          {
-            "name": "Description",
-            "key": "description",
-            "format": false
-          },
-          {
-            "name": "Project Type",
-            "key": "project_type",
-            "format": false
-          },
-          {
-            "name": "Identifier",
-            "key": "project_identifier",
-            "format": false
-          },
-          {
-            "name": "Mission",
-            "key": "mission",
-            "format": false
-          },
-          {
-            "name": "Purposes",
-            "key": "purposes",
-            "format": false
-          },
-          {
-            "name": "Start Date",
-            "key": "start_date",
-            "format": false
-          },
-          {
-            "name": "Planned End Date",
-            "key": "end_date",
-            "format": false
-          },
-          {
-            "name": "Priority",
-            "key": "priority",
-            "format": false
-          },
-          {
-            "name": "Project Phase",
-            "key": "project_phase",
-            "format": false
-          },
-          {
-            "name": "Project Status",
-            "key": "project_status",
-            "format": false
-          },
-          {
-            "name": "Project Health",
-            "key": "project_health",
-            "format": false
-          }
-        ],
-        "columns": [
-          {
-            "name": "Display Name",
-            "key": "display_name",
-            "format": false
-          },
-          {
-            "name": "Description",
-            "key": "description",
-            "format": false
-          },
-          {
-            "name": "Project Type",
-            "key": "project_type",
-            "format": false
-          },
-          {
-            "name": "Identifier",
-            "key": "project_identifier",
-            "format": false
-          },
-          {
-            "name": "Mission",
-            "key": "mission",
-            "format": false
-          },
-          {
-            "name": "Purposes",
-            "key": "purposes",
-            "format": false
-          },
-          {
-            "name": "Start Date",
-            "key": "start_date",
-            "format": false
-          },
-          {
-            "name": "Planned End Date",
-            "key": "end_date",
-            "format": false
-          },
-          {
-            "name": "Priority",
-            "key": "priority",
-            "format": false
-          },
-          {
-            "name": "Project Phase",
-            "key": "project_phase",
-            "format": false
-          },
-          {
-            "name": "Project Status",
-            "key": "project_status",
-            "format": false
-          },
-          {
-            "name": "Project Health",
-            "key": "project_health",
-            "format": false
-          }
-        ]
-      }
-    ],
-    "action": {
-      "function": "ProjectManager.find_projects",
-      "required_params": [
-        "search_string"
-      ],
-      "optional_params": [
-        "page_size",
-        "start_from",
-        "starts_with",
-        "ends_with",
-        "ignore_case"
-      ],
-      "spec_params": {}
-    },
-    "get_additional_props": null
-  },
-  "Campaign-DrE": {
-    "target_type": "Campaign",
-    "heading": "Campaign-DrE Attributes",
-    "description": "Auto-generated format for Campaign (Create).",
-    "aliases": [],
-    "annotations": {},
-    "formats": [
-      {
-        "types": [
-          "ALL"
-        ],
-        "attributes": [
-          {
-            "name": "Display Name",
-            "key": "display_name",
-            "format": false
-          },
-          {
-            "name": "Description",
-            "key": "description",
-            "format": false
-          },
-          {
-            "name": "Project Type",
-            "key": "project_type",
-            "format": false
-          },
-          {
-            "name": "Identifier",
-            "key": "project_identifier",
-            "format": false
-          },
-          {
-            "name": "Mission",
-            "key": "mission",
-            "format": false
-          },
-          {
-            "name": "Purposes",
-            "key": "purposes",
-            "format": false
-          },
-          {
-            "name": "Start Date",
-            "key": "start_date",
-            "format": false
-          },
-          {
-            "name": "Planned End Date",
-            "key": "end_date",
-            "format": false
-          },
-          {
-            "name": "Priority",
-            "key": "priority",
-            "format": false
-          },
-          {
-            "name": "Project Phase",
-            "key": "project_phase",
-            "format": false
-          },
-          {
-            "name": "Project Status",
-            "key": "project_status",
-            "format": false
-          },
-          {
-            "name": "Project Health",
-            "key": "project_health",
-            "format": false
-          }
-        ],
-        "columns": [
-          {
-            "name": "Display Name",
-            "key": "display_name",
-            "format": false
-          },
-          {
-            "name": "Description",
-            "key": "description",
-            "format": false
-          },
-          {
-            "name": "Project Type",
-            "key": "project_type",
-            "format": false
-          },
-          {
-            "name": "Identifier",
-            "key": "project_identifier",
-            "format": false
-          },
-          {
-            "name": "Mission",
-            "key": "mission",
-            "format": false
-          },
-          {
-            "name": "Purposes",
-            "key": "purposes",
-            "format": false
-          },
-          {
-            "name": "Start Date",
-            "key": "start_date",
-            "format": false
-          },
-          {
-            "name": "Planned End Date",
-            "key": "end_date",
-            "format": false
-          },
-          {
-            "name": "Priority",
-            "key": "priority",
-            "format": false
-          },
-          {
-            "name": "Project Phase",
-            "key": "project_phase",
-            "format": false
-          },
-          {
-            "name": "Project Status",
-            "key": "project_status",
-            "format": false
-          },
-          {
-            "name": "Project Health",
-            "key": "project_health",
-            "format": false
-          }
-        ]
-      }
-    ],
-    "action": {
-      "function": "ProjectManager.find_projects",
-      "required_params": [
-        "search_string"
-      ],
-      "optional_params": [
-        "page_size",
-        "start_from",
-        "starts_with",
-        "ends_with",
-        "ignore_case"
-      ],
-      "spec_params": {
-        "classification_names": [
-          "Campaign"
-        ]
-      }
-    },
-    "get_additional_props": null
-  },
-  "Task-DrE": {
-    "target_type": "Task",
-    "heading": "Task-DrE Attributes",
-    "description": "Auto-generated format for Task (Create).",
-    "aliases": [],
-    "annotations": {},
-    "formats": [
-      {
-        "types": [
-          "ALL"
-        ],
-        "attributes": [
-          {
-            "name": "Display Name",
-            "key": "display_name",
-            "format": false
-          },
-          {
-            "name": "Description",
-            "key": "description",
-            "format": false
-          },
-          {
-            "name": "Project Type",
-            "key": "project_type",
-            "format": false
-          },
-          {
-            "name": "Identifier",
-            "key": "project_identifier",
-            "format": false
-          },
-          {
-            "name": "Mission",
-            "key": "mission",
-            "format": false
-          },
-          {
-            "name": "Purposes",
-            "key": "purposes",
-            "format": false
-          },
-          {
-            "name": "Start Date",
-            "key": "start_date",
-            "format": false
-          },
-          {
-            "name": "Planned End Date",
-            "key": "end_date",
-            "format": false
-          },
-          {
-            "name": "Priority",
-            "key": "priority",
-            "format": false
-          },
-          {
-            "name": "Project Phase",
-            "key": "project_phase",
-            "format": false
-          },
-          {
-            "name": "Project Status",
-            "key": "project_status",
-            "format": false
-          },
-          {
-            "name": "Project Health",
-            "key": "project_health",
-            "format": false
-          }
-        ],
-        "columns": [
-          {
-            "name": "Display Name",
-            "key": "display_name",
-            "format": false
-          },
-          {
-            "name": "Description",
-            "key": "description",
-            "format": false
-          },
-          {
-            "name": "Project Type",
-            "key": "project_type",
-            "format": false
-          },
-          {
-            "name": "Identifier",
-            "key": "project_identifier",
-            "format": false
-          },
-          {
-            "name": "Mission",
-            "key": "mission",
-            "format": false
-          },
-          {
-            "name": "Purposes",
-            "key": "purposes",
-            "format": false
-          },
-          {
-            "name": "Start Date",
-            "key": "start_date",
-            "format": false
-          },
-          {
-            "name": "Planned End Date",
-            "key": "end_date",
-            "format": false
-          },
-          {
-            "name": "Priority",
-            "key": "priority",
-            "format": false
-          },
-          {
-            "name": "Project Phase",
-            "key": "project_phase",
-            "format": false
-          },
-          {
-            "name": "Project Status",
-            "key": "project_status",
-            "format": false
-          },
-          {
-            "name": "Project Health",
-            "key": "project_health",
-            "format": false
-          }
-        ]
-      }
-    ],
-    "action": {
-      "function": "ProjectManager.find_projects",
-      "required_params": [
-        "search_string"
-      ],
-      "optional_params": [
-        "page_size",
-        "start_from",
-        "starts_with",
-        "ends_with",
-        "ignore_case"
-      ],
-      "spec_params": {
-        "classification_names": [
-          "Task"
-        ]
-      }
-    },
-    "get_additional_props": null
-  },
-  "Personal-Project-DrE": {
-    "target_type": "Personal Project",
-    "heading": "Personal-Project-DrE Attributes",
-    "description": "Auto-generated format for Personal Project (Create).",
-    "aliases": [],
-    "annotations": {},
-    "formats": [
-      {
-        "types": [
-          "ALL"
-        ],
-        "attributes": [
-          {
-            "name": "Display Name",
-            "key": "display_name",
-            "format": false
-          },
-          {
-            "name": "Description",
-            "key": "description",
-            "format": false
-          },
-          {
-            "name": "Project Type",
-            "key": "project_type",
-            "format": false
-          },
-          {
-            "name": "Identifier",
-            "key": "project_identifier",
-            "format": false
-          },
-          {
-            "name": "Mission",
-            "key": "mission",
-            "format": false
-          },
-          {
-            "name": "Purposes",
-            "key": "purposes",
-            "format": false
-          },
-          {
-            "name": "Start Date",
-            "key": "start_date",
-            "format": false
-          },
-          {
-            "name": "Planned End Date",
-            "key": "end_date",
-            "format": false
-          },
-          {
-            "name": "Priority",
-            "key": "priority",
-            "format": false
-          },
-          {
-            "name": "Project Phase",
-            "key": "project_phase",
-            "format": false
-          },
-          {
-            "name": "Project Status",
-            "key": "project_status",
-            "format": false
-          },
-          {
-            "name": "Project Health",
-            "key": "project_health",
-            "format": false
-          }
-        ],
-        "columns": [
-          {
-            "name": "Display Name",
-            "key": "display_name",
-            "format": false
-          },
-          {
-            "name": "Description",
-            "key": "description",
-            "format": false
-          },
-          {
-            "name": "Project Type",
-            "key": "project_type",
-            "format": false
-          },
-          {
-            "name": "Identifier",
-            "key": "project_identifier",
-            "format": false
-          },
-          {
-            "name": "Mission",
-            "key": "mission",
-            "format": false
-          },
-          {
-            "name": "Purposes",
-            "key": "purposes",
-            "format": false
-          },
-          {
-            "name": "Start Date",
-            "key": "start_date",
-            "format": false
-          },
-          {
-            "name": "Planned End Date",
-            "key": "end_date",
-            "format": false
-          },
-          {
-            "name": "Priority",
-            "key": "priority",
-            "format": false
-          },
-          {
-            "name": "Project Phase",
-            "key": "project_phase",
-            "format": false
-          },
-          {
-            "name": "Project Status",
-            "key": "project_status",
-            "format": false
-          },
-          {
-            "name": "Project Health",
-            "key": "project_health",
-            "format": false
-          }
-        ]
-      }
-    ],
-    "action": {
-      "function": "ProjectManager.find_projects",
-      "required_params": [
-        "search_string"
-      ],
-      "optional_params": [
-        "page_size",
-        "start_from",
-        "starts_with",
-        "ends_with",
-        "ignore_case"
-      ],
-      "spec_params": {
-        "classification_names": [
-          "PersonalProject"
-        ]
-      }
-    },
-    "get_additional_props": null
-  },
-  "Study-Project-DrE": {
-    "target_type": "Study Project",
-    "heading": "Study-Project-DrE Attributes",
-    "description": "Auto-generated format for Study Project (Create).",
-    "aliases": [],
-    "annotations": {},
-    "formats": [
-      {
-        "types": [
-          "ALL"
-        ],
-        "attributes": [
-          {
-            "name": "Display Name",
-            "key": "display_name",
-            "format": false
-          },
-          {
-            "name": "Description",
-            "key": "description",
-            "format": false
-          },
-          {
-            "name": "Project Type",
-            "key": "project_type",
-            "format": false
-          },
-          {
-            "name": "Identifier",
-            "key": "project_identifier",
-            "format": false
-          },
-          {
-            "name": "Mission",
-            "key": "mission",
-            "format": false
-          },
-          {
-            "name": "Purposes",
-            "key": "purposes",
-            "format": false
-          },
-          {
-            "name": "Start Date",
-            "key": "start_date",
-            "format": false
-          },
-          {
-            "name": "Planned End Date",
-            "key": "end_date",
-            "format": false
-          },
-          {
-            "name": "Priority",
-            "key": "priority",
-            "format": false
-          },
-          {
-            "name": "Project Phase",
-            "key": "project_phase",
-            "format": false
-          },
-          {
-            "name": "Project Status",
-            "key": "project_status",
-            "format": false
-          },
-          {
-            "name": "Project Health",
-            "key": "project_health",
-            "format": false
-          }
-        ],
-        "columns": [
-          {
-            "name": "Display Name",
-            "key": "display_name",
-            "format": false
-          },
-          {
-            "name": "Description",
-            "key": "description",
-            "format": false
-          },
-          {
-            "name": "Project Type",
-            "key": "project_type",
-            "format": false
-          },
-          {
-            "name": "Identifier",
-            "key": "project_identifier",
-            "format": false
-          },
-          {
-            "name": "Mission",
-            "key": "mission",
-            "format": false
-          },
-          {
-            "name": "Purposes",
-            "key": "purposes",
-            "format": false
-          },
-          {
-            "name": "Start Date",
-            "key": "start_date",
-            "format": false
-          },
-          {
-            "name": "Planned End Date",
-            "key": "end_date",
-            "format": false
-          },
-          {
-            "name": "Priority",
-            "key": "priority",
-            "format": false
-          },
-          {
-            "name": "Project Phase",
-            "key": "project_phase",
-            "format": false
-          },
-          {
-            "name": "Project Status",
-            "key": "project_status",
-            "format": false
-          },
-          {
-            "name": "Project Health",
-            "key": "project_health",
-            "format": false
-          }
-        ]
-      }
-    ],
-    "action": {
-      "function": "ProjectManager.find_projects",
-      "required_params": [
-        "search_string"
-      ],
-      "optional_params": [
-        "page_size",
-        "start_from",
-        "starts_with",
-        "ends_with",
-        "ignore_case"
-      ],
-      "spec_params": {
-        "classification_names": [
-          "StudyProject"
-        ]
-      }
-    },
-    "get_additional_props": null
+    "get_additional_props": null,
+    "question_spec": null
   },
   "Governance-Driver-DrE": {
     "target_type": "Governance Driver",
@@ -3039,6 +1938,7 @@
     "description": "Auto-generated format for Governance Driver (Create).",
     "aliases": [],
     "annotations": {},
+    "family": "Governance Officer",
     "formats": [
       {
         "types": [
@@ -3136,6 +2036,8 @@
         "search_string"
       ],
       "optional_params": [
+        "sequencing_order",
+        "sequencing_property",
         "page_size",
         "start_from",
         "starts_with",
@@ -3148,7 +2050,8 @@
         ]
       }
     },
-    "get_additional_props": null
+    "get_additional_props": null,
+    "question_spec": null
   },
   "Governance-Strategy-DrE": {
     "target_type": "Governance Strategy",
@@ -3156,6 +2059,7 @@
     "description": "Auto-generated format for Governance Strategy (Create).",
     "aliases": [],
     "annotations": {},
+    "family": "Governance Officer",
     "formats": [
       {
         "types": [
@@ -3283,6 +2187,8 @@
         "search_string"
       ],
       "optional_params": [
+        "sequencing_order",
+        "sequencing_property",
         "page_size",
         "start_from",
         "starts_with",
@@ -3295,7 +2201,8 @@
         ]
       }
     },
-    "get_additional_props": null
+    "get_additional_props": null,
+    "question_spec": null
   },
   "Business-Imperative-DrE": {
     "target_type": "Business Imperative",
@@ -3303,6 +2210,7 @@
     "description": "Auto-generated format for Business Imperative (Create).",
     "aliases": [],
     "annotations": {},
+    "family": "Governance Officer",
     "formats": [
       {
         "types": [
@@ -3430,6 +2338,8 @@
         "search_string"
       ],
       "optional_params": [
+        "sequencing_order",
+        "sequencing_property",
         "page_size",
         "start_from",
         "starts_with",
@@ -3442,7 +2352,8 @@
         ]
       }
     },
-    "get_additional_props": null
+    "get_additional_props": null,
+    "question_spec": null
   },
   "Regulation-DrE": {
     "target_type": "Regulation",
@@ -3450,6 +2361,7 @@
     "description": "Auto-generated format for Regulation (Create).",
     "aliases": [],
     "annotations": {},
+    "family": "Governance Officer",
     "formats": [
       {
         "types": [
@@ -3597,6 +2509,8 @@
         "search_string"
       ],
       "optional_params": [
+        "sequencing_order",
+        "sequencing_property",
         "page_size",
         "start_from",
         "starts_with",
@@ -3609,7 +2523,8 @@
         ]
       }
     },
-    "get_additional_props": null
+    "get_additional_props": null,
+    "question_spec": null
   },
   "Regulation-Article-DrE": {
     "target_type": "Regulation Article",
@@ -3617,6 +2532,7 @@
     "description": "Auto-generated format for Regulation Article (Create).",
     "aliases": [],
     "annotations": {},
+    "family": "Governance Officer",
     "formats": [
       {
         "types": [
@@ -3744,6 +2660,8 @@
         "search_string"
       ],
       "optional_params": [
+        "sequencing_order",
+        "sequencing_property",
         "page_size",
         "start_from",
         "starts_with",
@@ -3756,7 +2674,8 @@
         ]
       }
     },
-    "get_additional_props": null
+    "get_additional_props": null,
+    "question_spec": null
   },
   "Threat-Definition-DrE": {
     "target_type": "Threat Definition",
@@ -3764,6 +2683,7 @@
     "description": "Auto-generated format for Threat Definition (Create).",
     "aliases": [],
     "annotations": {},
+    "family": "Governance Officer",
     "formats": [
       {
         "types": [
@@ -3891,6 +2811,8 @@
         "search_string"
       ],
       "optional_params": [
+        "sequencing_order",
+        "sequencing_property",
         "page_size",
         "start_from",
         "starts_with",
@@ -3903,7 +2825,8 @@
         ]
       }
     },
-    "get_additional_props": null
+    "get_additional_props": null,
+    "question_spec": null
   },
   "Governance-Policy-DrE": {
     "target_type": "Governance Policy",
@@ -3911,6 +2834,7 @@
     "description": "Auto-generated format for Governance Policy (Create).",
     "aliases": [],
     "annotations": {},
+    "family": "Governance Officer",
     "formats": [
       {
         "types": [
@@ -4038,6 +2962,8 @@
         "search_string"
       ],
       "optional_params": [
+        "sequencing_order",
+        "sequencing_property",
         "page_size",
         "start_from",
         "starts_with",
@@ -4050,7 +2976,8 @@
         ]
       }
     },
-    "get_additional_props": null
+    "get_additional_props": null,
+    "question_spec": null
   },
   "Governance-Principle-DrE": {
     "target_type": "Governance Principle",
@@ -4058,6 +2985,7 @@
     "description": "Auto-generated format for Governance Principle (Create).",
     "aliases": [],
     "annotations": {},
+    "family": "Governance Officer",
     "formats": [
       {
         "types": [
@@ -4185,6 +3113,8 @@
         "search_string"
       ],
       "optional_params": [
+        "sequencing_order",
+        "sequencing_property",
         "page_size",
         "start_from",
         "starts_with",
@@ -4197,7 +3127,8 @@
         ]
       }
     },
-    "get_additional_props": null
+    "get_additional_props": null,
+    "question_spec": null
   },
   "Governance-Obligation-DrE": {
     "target_type": "Governance Obligation",
@@ -4205,6 +3136,7 @@
     "description": "Auto-generated format for Governance Obligation (Create).",
     "aliases": [],
     "annotations": {},
+    "family": "Governance Officer",
     "formats": [
       {
         "types": [
@@ -4332,6 +3264,8 @@
         "search_string"
       ],
       "optional_params": [
+        "sequencing_order",
+        "sequencing_property",
         "page_size",
         "start_from",
         "starts_with",
@@ -4344,7 +3278,8 @@
         ]
       }
     },
-    "get_additional_props": null
+    "get_additional_props": null,
+    "question_spec": null
   },
   "Governance-Approach-DrE": {
     "target_type": "Governance Approach",
@@ -4352,6 +3287,7 @@
     "description": "Auto-generated format for Governance Approach (Create).",
     "aliases": [],
     "annotations": {},
+    "family": "Governance Officer",
     "formats": [
       {
         "types": [
@@ -4479,6 +3415,8 @@
         "search_string"
       ],
       "optional_params": [
+        "sequencing_order",
+        "sequencing_property",
         "page_size",
         "start_from",
         "starts_with",
@@ -4491,7 +3429,8 @@
         ]
       }
     },
-    "get_additional_props": null
+    "get_additional_props": null,
+    "question_spec": null
   },
   "Governance-Control-DrE": {
     "target_type": "Governance Control",
@@ -4499,6 +3438,158 @@
     "description": "Auto-generated format for Governance Control (Create).",
     "aliases": [],
     "annotations": {},
+    "family": "Governance Officer",
+    "formats": [
+      {
+        "types": [
+          "ALL"
+        ],
+        "attributes": [
+          {
+            "name": "Display Name",
+            "key": "display_name",
+            "format": false
+          },
+          {
+            "name": "Summary",
+            "key": "summary",
+            "format": false
+          },
+          {
+            "name": "Description",
+            "key": "description",
+            "format": false
+          },
+          {
+            "name": "Domain Identifier",
+            "key": "domain_identifier",
+            "format": false
+          },
+          {
+            "name": "Identifier",
+            "key": "identifier",
+            "format": false
+          },
+          {
+            "name": "Usage",
+            "key": "usage",
+            "format": false
+          },
+          {
+            "name": "Scope",
+            "key": "scope",
+            "format": false
+          },
+          {
+            "name": "Importance",
+            "key": "importance",
+            "format": false
+          },
+          {
+            "name": "Implications",
+            "key": "implications",
+            "format": false
+          },
+          {
+            "name": "Outcomes",
+            "key": "outcomes",
+            "format": false
+          },
+          {
+            "name": "Results",
+            "key": "results",
+            "format": false
+          }
+        ],
+        "columns": [
+          {
+            "name": "Display Name",
+            "key": "display_name",
+            "format": false
+          },
+          {
+            "name": "Summary",
+            "key": "summary",
+            "format": false
+          },
+          {
+            "name": "Description",
+            "key": "description",
+            "format": false
+          },
+          {
+            "name": "Domain Identifier",
+            "key": "domain_identifier",
+            "format": false
+          },
+          {
+            "name": "Identifier",
+            "key": "identifier",
+            "format": false
+          },
+          {
+            "name": "Usage",
+            "key": "usage",
+            "format": false
+          },
+          {
+            "name": "Scope",
+            "key": "scope",
+            "format": false
+          },
+          {
+            "name": "Importance",
+            "key": "importance",
+            "format": false
+          },
+          {
+            "name": "Implications",
+            "key": "implications",
+            "format": false
+          },
+          {
+            "name": "Outcomes",
+            "key": "outcomes",
+            "format": false
+          },
+          {
+            "name": "Results",
+            "key": "results",
+            "format": false
+          }
+        ]
+      }
+    ],
+    "action": {
+      "function": "GovernanceOfficer.find_governance_definitions",
+      "required_params": [
+        "search_string"
+      ],
+      "optional_params": [
+        "sequencing_order",
+        "sequencing_property",
+        "page_size",
+        "start_from",
+        "starts_with",
+        "ends_with",
+        "ignore_case"
+      ],
+      "spec_params": {
+        "metadata_element_subtypes": [
+          "GovernanceControl"
+        ]
+      }
+    },
+    "get_additional_props": null,
+    "question_spec": null
+  },
+  "Governance-Metric-DrE": {
+    "target_type": "Governance Metric",
+    "heading": "Governance-Metric-DrE Attributes",
+    "description": "Auto-generated format for Governance Metric (Create).",
+    "aliases": [],
+    "annotations": {},
+    "family": "Governance Officer",
     "formats": [
       {
         "types": [
@@ -4646,6 +3737,8 @@
         "search_string"
       ],
       "optional_params": [
+        "sequencing_order",
+        "sequencing_property",
         "page_size",
         "start_from",
         "starts_with",
@@ -4658,7 +3751,8 @@
         ]
       }
     },
-    "get_additional_props": null
+    "get_additional_props": null,
+    "question_spec": null
   },
   "Governance-Action-DrE": {
     "target_type": "Governance Action",
@@ -4666,6 +3760,7 @@
     "description": "Auto-generated format for Governance Action (Create).",
     "aliases": [],
     "annotations": {},
+    "family": "Governance Officer",
     "formats": [
       {
         "types": [
@@ -4793,6 +3888,8 @@
         "search_string"
       ],
       "optional_params": [
+        "sequencing_order",
+        "sequencing_property",
         "page_size",
         "start_from",
         "starts_with",
@@ -4805,7 +3902,8 @@
         ]
       }
     },
-    "get_additional_props": null
+    "get_additional_props": null,
+    "question_spec": null
   },
   "Data-Processing-Purpose-DrE": {
     "target_type": "Data Processing Purpose",
@@ -4813,6 +3911,7 @@
     "description": "Auto-generated format for Data Processing Purpose (Create).",
     "aliases": [],
     "annotations": {},
+    "family": "Governance Officer",
     "formats": [
       {
         "types": [
@@ -4940,6 +4039,8 @@
         "search_string"
       ],
       "optional_params": [
+        "sequencing_order",
+        "sequencing_property",
         "page_size",
         "start_from",
         "starts_with",
@@ -4952,7 +4053,8 @@
         ]
       }
     },
-    "get_additional_props": null
+    "get_additional_props": null,
+    "question_spec": null
   },
   "Governance-Rule-DrE": {
     "target_type": "Governance Rule",
@@ -4960,6 +4062,7 @@
     "description": "Auto-generated format for Governance Rule (Create).",
     "aliases": [],
     "annotations": {},
+    "family": "Governance Officer",
     "formats": [
       {
         "types": [
@@ -5097,6 +4200,8 @@
         "search_string"
       ],
       "optional_params": [
+        "sequencing_order",
+        "sequencing_property",
         "page_size",
         "start_from",
         "starts_with",
@@ -5109,7 +4214,8 @@
         ]
       }
     },
-    "get_additional_props": null
+    "get_additional_props": null,
+    "question_spec": null
   },
   "Service-Level-Objectives-DrE": {
     "target_type": "Service Level Objectives",
@@ -5117,6 +4223,7 @@
     "description": "Auto-generated format for Service Level Objectives (Create).",
     "aliases": [],
     "annotations": {},
+    "family": "Governance Officer",
     "formats": [
       {
         "types": [
@@ -5182,6 +4289,16 @@
             "name": "Results",
             "key": "results",
             "format": false
+          },
+          {
+            "name": "Is Own Anchor",
+            "key": "is_own_anchor",
+            "format": false
+          },
+          {
+            "name": "Parent Relationship Type Name",
+            "key": "parent_rel_type_name",
+            "format": false
           }
         ],
         "columns": [
@@ -5244,6 +4361,16 @@
             "name": "Results",
             "key": "results",
             "format": false
+          },
+          {
+            "name": "Is Own Anchor",
+            "key": "is_own_anchor",
+            "format": false
+          },
+          {
+            "name": "Parent Relationship Type Name",
+            "key": "parent_rel_type_name",
+            "format": false
           }
         ]
       }
@@ -5254,6 +4381,8 @@
         "search_string"
       ],
       "optional_params": [
+        "sequencing_order",
+        "sequencing_property",
         "page_size",
         "start_from",
         "starts_with",
@@ -5266,7 +4395,8 @@
         ]
       }
     },
-    "get_additional_props": null
+    "get_additional_props": null,
+    "question_spec": null
   },
   "Governance-Responsibility-DrE": {
     "target_type": "Governance Responsibility",
@@ -5274,6 +4404,7 @@
     "description": "Auto-generated format for Governance Responsibility (Create).",
     "aliases": [],
     "annotations": {},
+    "family": "Governance Officer",
     "formats": [
       {
         "types": [
@@ -5339,6 +4470,16 @@
             "name": "Results",
             "key": "results",
             "format": false
+          },
+          {
+            "name": "Is Own Anchor",
+            "key": "is_own_anchor",
+            "format": false
+          },
+          {
+            "name": "Parent Relationship Type Name",
+            "key": "parent_rel_type_name",
+            "format": false
           }
         ],
         "columns": [
@@ -5401,6 +4542,16 @@
             "name": "Results",
             "key": "results",
             "format": false
+          },
+          {
+            "name": "Is Own Anchor",
+            "key": "is_own_anchor",
+            "format": false
+          },
+          {
+            "name": "Parent Relationship Type Name",
+            "key": "parent_rel_type_name",
+            "format": false
           }
         ]
       }
@@ -5411,6 +4562,8 @@
         "search_string"
       ],
       "optional_params": [
+        "sequencing_order",
+        "sequencing_property",
         "page_size",
         "start_from",
         "starts_with",
@@ -5423,7 +4576,8 @@
         ]
       }
     },
-    "get_additional_props": null
+    "get_additional_props": null,
+    "question_spec": null
   },
   "Governance-Procedure-DrE": {
     "target_type": "Governance Procedure",
@@ -5431,6 +4585,7 @@
     "description": "Auto-generated format for Governance Procedure (Create).",
     "aliases": [],
     "annotations": {},
+    "family": "Governance Officer",
     "formats": [
       {
         "types": [
@@ -5496,6 +4651,16 @@
             "name": "Results",
             "key": "results",
             "format": false
+          },
+          {
+            "name": "Is Own Anchor",
+            "key": "is_own_anchor",
+            "format": false
+          },
+          {
+            "name": "Parent Relationship Type Name",
+            "key": "parent_rel_type_name",
+            "format": false
           }
         ],
         "columns": [
@@ -5558,6 +4723,16 @@
             "name": "Results",
             "key": "results",
             "format": false
+          },
+          {
+            "name": "Is Own Anchor",
+            "key": "is_own_anchor",
+            "format": false
+          },
+          {
+            "name": "Parent Relationship Type Name",
+            "key": "parent_rel_type_name",
+            "format": false
           }
         ]
       }
@@ -5568,6 +4743,8 @@
         "search_string"
       ],
       "optional_params": [
+        "sequencing_order",
+        "sequencing_property",
         "page_size",
         "start_from",
         "starts_with",
@@ -5580,7 +4757,8 @@
         ]
       }
     },
-    "get_additional_props": null
+    "get_additional_props": null,
+    "question_spec": null
   },
   "Security-Access-Control-DrE": {
     "target_type": "Security Access Control",
@@ -5588,6 +4766,7 @@
     "description": "Auto-generated format for Security Access Control (Create).",
     "aliases": [],
     "annotations": {},
+    "family": "Governance Officer",
     "formats": [
       {
         "types": [
@@ -5648,6 +4827,16 @@
             "name": "Results",
             "key": "results",
             "format": false
+          },
+          {
+            "name": "Is Own Anchor",
+            "key": "is_own_anchor",
+            "format": false
+          },
+          {
+            "name": "Parent Relationship Type Name",
+            "key": "parent_rel_type_name",
+            "format": false
           }
         ],
         "columns": [
@@ -5705,6 +4894,16 @@
             "name": "Results",
             "key": "results",
             "format": false
+          },
+          {
+            "name": "Is Own Anchor",
+            "key": "is_own_anchor",
+            "format": false
+          },
+          {
+            "name": "Parent Relationship Type Name",
+            "key": "parent_rel_type_name",
+            "format": false
           }
         ]
       }
@@ -5715,6 +4914,8 @@
         "search_string"
       ],
       "optional_params": [
+        "sequencing_order",
+        "sequencing_property",
         "page_size",
         "start_from",
         "starts_with",
@@ -5727,14 +4928,16 @@
         ]
       }
     },
-    "get_additional_props": null
+    "get_additional_props": null,
+    "question_spec": null
   },
-  "security_access_control-DrE": {
-    "target_type": "security_access_control",
-    "heading": "security_access_control-DrE Attributes",
-    "description": "Auto-generated format for security_access_control (Create).",
+  "Governance-Zone-DrE": {
+    "target_type": "Governance Zone",
+    "heading": "Governance-Zone-DrE Attributes",
+    "description": "Auto-generated format for Governance Zone (Create).",
     "aliases": [],
     "annotations": {},
+    "family": "Governance Officer",
     "formats": [
       {
         "types": [
@@ -5800,6 +5003,16 @@
             "name": "Results",
             "key": "results",
             "format": false
+          },
+          {
+            "name": "Is Own Anchor",
+            "key": "is_own_anchor",
+            "format": false
+          },
+          {
+            "name": "Parent Relationship Type Name",
+            "key": "parent_rel_type_name",
+            "format": false
           }
         ],
         "columns": [
@@ -5862,6 +5075,16 @@
             "name": "Results",
             "key": "results",
             "format": false
+          },
+          {
+            "name": "Is Own Anchor",
+            "key": "is_own_anchor",
+            "format": false
+          },
+          {
+            "name": "Parent Relationship Type Name",
+            "key": "parent_rel_type_name",
+            "format": false
           }
         ]
       }
@@ -5872,6 +5095,8 @@
         "search_string"
       ],
       "optional_params": [
+        "sequencing_order",
+        "sequencing_property",
         "page_size",
         "start_from",
         "starts_with",
@@ -5884,7 +5109,8 @@
         ]
       }
     },
-    "get_additional_props": null
+    "get_additional_props": null,
+    "question_spec": null
   },
   "Security-Group-DrE": {
     "target_type": "Security Group",
@@ -5892,6 +5118,7 @@
     "description": "Auto-generated format for Security Group (Create).",
     "aliases": [],
     "annotations": {},
+    "family": "Governance Officer",
     "formats": [
       {
         "types": [
@@ -5952,6 +5179,16 @@
             "name": "Results",
             "key": "results",
             "format": false
+          },
+          {
+            "name": "Is Own Anchor",
+            "key": "is_own_anchor",
+            "format": false
+          },
+          {
+            "name": "Parent Relationship Type Name",
+            "key": "parent_rel_type_name",
+            "format": false
           }
         ],
         "columns": [
@@ -6009,6 +5246,16 @@
             "name": "Results",
             "key": "results",
             "format": false
+          },
+          {
+            "name": "Is Own Anchor",
+            "key": "is_own_anchor",
+            "format": false
+          },
+          {
+            "name": "Parent Relationship Type Name",
+            "key": "parent_rel_type_name",
+            "format": false
           }
         ]
       }
@@ -6019,6 +5266,8 @@
         "search_string"
       ],
       "optional_params": [
+        "sequencing_order",
+        "sequencing_property",
         "page_size",
         "start_from",
         "starts_with",
@@ -6031,7 +5280,8 @@
         ]
       }
     },
-    "get_additional_props": null
+    "get_additional_props": null,
+    "question_spec": null
   },
   "Naming-Standard-Rule-DrE": {
     "target_type": "Naming Standard Rule",
@@ -6039,6 +5289,7 @@
     "description": "Auto-generated format for Naming Standard Rule (Create).",
     "aliases": [],
     "annotations": {},
+    "family": "Governance Officer",
     "formats": [
       {
         "types": [
@@ -6104,6 +5355,16 @@
             "name": "Results",
             "key": "results",
             "format": false
+          },
+          {
+            "name": "Is Own Anchor",
+            "key": "is_own_anchor",
+            "format": false
+          },
+          {
+            "name": "Parent Relationship Type Name",
+            "key": "parent_rel_type_name",
+            "format": false
           }
         ],
         "columns": [
@@ -6166,6 +5427,16 @@
             "name": "Results",
             "key": "results",
             "format": false
+          },
+          {
+            "name": "Is Own Anchor",
+            "key": "is_own_anchor",
+            "format": false
+          },
+          {
+            "name": "Parent Relationship Type Name",
+            "key": "parent_rel_type_name",
+            "format": false
           }
         ]
       }
@@ -6176,6 +5447,8 @@
         "search_string"
       ],
       "optional_params": [
+        "sequencing_order",
+        "sequencing_property",
         "page_size",
         "start_from",
         "starts_with",
@@ -6188,7 +5461,8 @@
         ]
       }
     },
-    "get_additional_props": null
+    "get_additional_props": null,
+    "question_spec": null
   },
   "Certification-Type-DrE": {
     "target_type": "Certification Type",
@@ -6196,6 +5470,7 @@
     "description": "Auto-generated format for Certification Type (Create).",
     "aliases": [],
     "annotations": {},
+    "family": "Governance Officer",
     "formats": [
       {
         "types": [
@@ -6276,6 +5551,16 @@
             "name": "Entitlements",
             "key": "Entitlements",
             "format": false
+          },
+          {
+            "name": "Is Own Anchor",
+            "key": "is_own_anchor",
+            "format": false
+          },
+          {
+            "name": "Parent Relationship Type Name",
+            "key": "parent_rel_type_name",
+            "format": false
           }
         ],
         "columns": [
@@ -6353,12 +5638,42 @@
             "name": "Entitlements",
             "key": "Entitlements",
             "format": false
+          },
+          {
+            "name": "Is Own Anchor",
+            "key": "is_own_anchor",
+            "format": false
+          },
+          {
+            "name": "Parent Relationship Type Name",
+            "key": "parent_rel_type_name",
+            "format": false
           }
         ]
       }
     ],
-    "action": null,
-    "get_additional_props": null
+    "action": {
+      "function": "GovernanceOfficer.find_governance_definitions",
+      "required_params": [
+        "search_string"
+      ],
+      "optional_params": [
+        "sequencing_order",
+        "sequencing_property",
+        "page_size",
+        "start_from",
+        "starts_with",
+        "ends_with",
+        "ignore_case"
+      ],
+      "spec_params": {
+        "metadata_element_subtypes": [
+          "CertificationType"
+        ]
+      }
+    },
+    "get_additional_props": null,
+    "question_spec": null
   },
   "License-Type-DrE": {
     "target_type": "License Type",
@@ -6366,6 +5681,7 @@
     "description": "Auto-generated format for License Type (Create).",
     "aliases": [],
     "annotations": {},
+    "family": "Governance Officer",
     "formats": [
       {
         "types": [
@@ -6446,6 +5762,16 @@
             "name": "Entitlements",
             "key": "Entitlements",
             "format": false
+          },
+          {
+            "name": "Is Own Anchor",
+            "key": "is_own_anchor",
+            "format": false
+          },
+          {
+            "name": "Parent Relationship Type Name",
+            "key": "parent_rel_type_name",
+            "format": false
           }
         ],
         "columns": [
@@ -6523,11 +5849,1830 @@
             "name": "Entitlements",
             "key": "Entitlements",
             "format": false
+          },
+          {
+            "name": "Is Own Anchor",
+            "key": "is_own_anchor",
+            "format": false
+          },
+          {
+            "name": "Parent Relationship Type Name",
+            "key": "parent_rel_type_name",
+            "format": false
+          }
+        ]
+      }
+    ],
+    "action": {
+      "function": "GovernanceOfficer.find_governance_definitions",
+      "required_params": [
+        "search_string"
+      ],
+      "optional_params": [
+        "sequencing_order",
+        "sequencing_property",
+        "page_size",
+        "start_from",
+        "starts_with",
+        "ends_with",
+        "ignore_case"
+      ],
+      "spec_params": {}
+    },
+    "get_additional_props": null,
+    "question_spec": null
+  },
+  "Collection-DrE": {
+    "target_type": "Collection",
+    "heading": "Collection-DrE Attributes",
+    "description": "Auto-generated format for Collection (Create).",
+    "aliases": [],
+    "annotations": {},
+    "family": "Digital Product Manager",
+    "formats": [
+      {
+        "types": [
+          "ALL"
+        ],
+        "attributes": [
+          {
+            "name": "Display Name",
+            "key": "display_name",
+            "format": false
+          },
+          {
+            "name": "Description",
+            "key": "description",
+            "format": false
+          }
+        ],
+        "columns": [
+          {
+            "name": "Display Name",
+            "key": "display_name",
+            "format": false
+          },
+          {
+            "name": "Description",
+            "key": "description",
+            "format": false
+          }
+        ]
+      }
+    ],
+    "action": {
+      "function": "CollectionManager.find_collections",
+      "required_params": [
+        "search_string"
+      ],
+      "optional_params": [
+        "sequencing_order",
+        "sequencing_property",
+        "page_size",
+        "start_from",
+        "starts_with",
+        "ends_with",
+        "ignore_case"
+      ],
+      "spec_params": {}
+    },
+    "get_additional_props": null,
+    "question_spec": null
+  },
+  "Digital-Product-Catalog-DrE": {
+    "target_type": "Digital Product Catalog",
+    "heading": "Digital-Product-Catalog-DrE Attributes",
+    "description": "Auto-generated format for Digital Product Catalog (Create).",
+    "aliases": [],
+    "annotations": {},
+    "family": "Digital Product Manager",
+    "formats": [
+      {
+        "types": [
+          "ALL"
+        ],
+        "attributes": [
+          {
+            "name": "Display Name",
+            "key": "display_name",
+            "format": false
+          },
+          {
+            "name": "Description",
+            "key": "description",
+            "format": false
+          }
+        ],
+        "columns": [
+          {
+            "name": "Display Name",
+            "key": "display_name",
+            "format": false
+          },
+          {
+            "name": "Description",
+            "key": "description",
+            "format": false
+          }
+        ]
+      }
+    ],
+    "action": {
+      "function": "CollectionManager.find_collections",
+      "required_params": [
+        "search_string"
+      ],
+      "optional_params": [
+        "sequencing_order",
+        "sequencing_property",
+        "page_size",
+        "start_from",
+        "starts_with",
+        "ends_with",
+        "ignore_case"
+      ],
+      "spec_params": {
+        "metadata_element_subtypes": [
+          "DigitalProductCatalog"
+        ]
+      }
+    },
+    "get_additional_props": null,
+    "question_spec": null
+  },
+  "Digital-Product-DrE": {
+    "target_type": "Digital Product",
+    "heading": "Digital-Product-DrE Attributes",
+    "description": "Auto-generated format for Digital Product (Create).",
+    "aliases": [],
+    "annotations": {},
+    "family": "Digital Product Manager",
+    "formats": [
+      {
+        "types": [
+          "ALL"
+        ],
+        "attributes": [
+          {
+            "name": "Display Name",
+            "key": "display_name",
+            "format": false
+          },
+          {
+            "name": "Description",
+            "key": "description",
+            "format": false
+          },
+          {
+            "name": "Product Name",
+            "key": "product_name",
+            "format": false
+          },
+          {
+            "name": "Identifier",
+            "key": "identifier",
+            "format": false
+          },
+          {
+            "name": "Maturity",
+            "key": "maturity",
+            "format": false
+          },
+          {
+            "name": "Service Life",
+            "key": "service_life",
+            "format": false
+          },
+          {
+            "name": "Introduction Date",
+            "key": "introduction_date",
+            "format": false
+          },
+          {
+            "name": "Next Version Date",
+            "key": "next_version_date",
+            "format": false
+          },
+          {
+            "name": "Withdrawal Date",
+            "key": "withdrawal_date",
+            "format": false
+          },
+          {
+            "name": "Product Manager",
+            "key": "product_manager",
+            "format": false
+          },
+          {
+            "name": "Agreements",
+            "key": "agreements",
+            "format": false
+          }
+        ],
+        "columns": [
+          {
+            "name": "Display Name",
+            "key": "display_name",
+            "format": false
+          },
+          {
+            "name": "Description",
+            "key": "description",
+            "format": false
+          },
+          {
+            "name": "Product Name",
+            "key": "product_name",
+            "format": false
+          },
+          {
+            "name": "Identifier",
+            "key": "identifier",
+            "format": false
+          },
+          {
+            "name": "Maturity",
+            "key": "maturity",
+            "format": false
+          },
+          {
+            "name": "Service Life",
+            "key": "service_life",
+            "format": false
+          },
+          {
+            "name": "Introduction Date",
+            "key": "introduction_date",
+            "format": false
+          },
+          {
+            "name": "Next Version Date",
+            "key": "next_version_date",
+            "format": false
+          },
+          {
+            "name": "Withdrawal Date",
+            "key": "withdrawal_date",
+            "format": false
+          },
+          {
+            "name": "Product Manager",
+            "key": "product_manager",
+            "format": false
+          },
+          {
+            "name": "Agreements",
+            "key": "agreements",
+            "format": false
+          }
+        ]
+      }
+    ],
+    "action": {
+      "function": "CollectionManager.find_collections",
+      "required_params": [
+        "search_string"
+      ],
+      "optional_params": [
+        "sequencing_order",
+        "sequencing_property",
+        "page_size",
+        "start_from",
+        "starts_with",
+        "ends_with",
+        "ignore_case"
+      ],
+      "spec_params": {
+        "metadata_element_subtypes": [
+          "DigitalProduct"
+        ]
+      }
+    },
+    "get_additional_props": null,
+    "question_spec": null
+  },
+  "Agreement-DrE": {
+    "target_type": "Agreement",
+    "heading": "Agreement-DrE Attributes",
+    "description": "Auto-generated format for Agreement (Create).",
+    "aliases": [],
+    "annotations": {},
+    "family": "Digital Product Manager",
+    "formats": [
+      {
+        "types": [
+          "ALL"
+        ],
+        "attributes": [
+          {
+            "name": "Display Name",
+            "key": "display_name",
+            "format": false
+          },
+          {
+            "name": "Description",
+            "key": "description",
+            "format": false
+          },
+          {
+            "name": "Identifier",
+            "key": "agreement_identifier",
+            "format": false
+          },
+          {
+            "name": "Agreement Actors",
+            "key": "agreement_actors",
+            "format": false
+          }
+        ],
+        "columns": [
+          {
+            "name": "Display Name",
+            "key": "display_name",
+            "format": false
+          },
+          {
+            "name": "Description",
+            "key": "description",
+            "format": false
+          },
+          {
+            "name": "Identifier",
+            "key": "agreement_identifier",
+            "format": false
+          },
+          {
+            "name": "Agreement Actors",
+            "key": "agreement_actors",
+            "format": false
+          }
+        ]
+      }
+    ],
+    "action": {
+      "function": "CollectionManager.find_collections",
+      "required_params": [
+        "search_string"
+      ],
+      "optional_params": [
+        "sequencing_order",
+        "sequencing_property",
+        "page_size",
+        "start_from",
+        "starts_with",
+        "ends_with",
+        "ignore_case"
+      ],
+      "spec_params": {
+        "metadata_element_subtypes": [
+          "Agreement"
+        ]
+      }
+    },
+    "get_additional_props": null,
+    "question_spec": null
+  },
+  "Data-Sharing-Agreement-DrE": {
+    "target_type": "Data Sharing Agreement",
+    "heading": "Data-Sharing-Agreement-DrE Attributes",
+    "description": "Auto-generated format for Data Sharing Agreement (Create).",
+    "aliases": [],
+    "annotations": {},
+    "family": "Digital Product Manager",
+    "formats": [
+      {
+        "types": [
+          "ALL"
+        ],
+        "attributes": [
+          {
+            "name": "Display Name",
+            "key": "display_name",
+            "format": false
+          },
+          {
+            "name": "Description",
+            "key": "description",
+            "format": false
+          },
+          {
+            "name": "Identifier",
+            "key": "identifier",
+            "format": false
+          },
+          {
+            "name": "Product Manager",
+            "key": "product_manager",
+            "format": false
+          }
+        ],
+        "columns": [
+          {
+            "name": "Display Name",
+            "key": "display_name",
+            "format": false
+          },
+          {
+            "name": "Description",
+            "key": "description",
+            "format": false
+          },
+          {
+            "name": "Identifier",
+            "key": "identifier",
+            "format": false
+          },
+          {
+            "name": "Product Manager",
+            "key": "product_manager",
+            "format": false
+          }
+        ]
+      }
+    ],
+    "action": {
+      "function": "CollectionManager.find_collections",
+      "required_params": [
+        "search_string"
+      ],
+      "optional_params": [
+        "sequencing_order",
+        "sequencing_property",
+        "page_size",
+        "start_from",
+        "starts_with",
+        "ends_with",
+        "ignore_case"
+      ],
+      "spec_params": {
+        "classification_names": [
+          "DataSharingAgreement"
+        ]
+      }
+    },
+    "get_additional_props": null,
+    "question_spec": null
+  },
+  "Digital-Subscription-DrE": {
+    "target_type": "Digital Subscription",
+    "heading": "Digital-Subscription-DrE Attributes",
+    "description": "Auto-generated format for Digital Subscription (Create).",
+    "aliases": [],
+    "annotations": {},
+    "family": "Digital Product Manager",
+    "formats": [
+      {
+        "types": [
+          "ALL"
+        ],
+        "attributes": [
+          {
+            "name": "Display Name",
+            "key": "display_name",
+            "format": false
+          },
+          {
+            "name": "Description",
+            "key": "description",
+            "format": false
+          },
+          {
+            "name": "Identifier",
+            "key": "identifier",
+            "format": false
+          },
+          {
+            "name": "Support Level",
+            "key": "support_level",
+            "format": false
+          },
+          {
+            "name": "Service Levels",
+            "key": "service_levels",
+            "format": false
+          }
+        ],
+        "columns": [
+          {
+            "name": "Display Name",
+            "key": "display_name",
+            "format": false
+          },
+          {
+            "name": "Description",
+            "key": "description",
+            "format": false
+          },
+          {
+            "name": "Identifier",
+            "key": "identifier",
+            "format": false
+          },
+          {
+            "name": "Support Level",
+            "key": "support_level",
+            "format": false
+          },
+          {
+            "name": "Service Levels",
+            "key": "service_levels",
+            "format": false
+          }
+        ]
+      }
+    ],
+    "action": {
+      "function": "CollectionManager.find_collections",
+      "required_params": [
+        "search_string"
+      ],
+      "optional_params": [
+        "sequencing_order",
+        "sequencing_property",
+        "page_size",
+        "start_from",
+        "starts_with",
+        "ends_with",
+        "ignore_case"
+      ],
+      "spec_params": {
+        "metadata_element_subtypes": [
+          "DigitalSubscription"
+        ]
+      }
+    },
+    "get_additional_props": null,
+    "question_spec": null
+  },
+  "CSV-File-DrE": {
+    "target_type": "CSV File",
+    "heading": "CSV-File-DrE Attributes",
+    "description": "Auto-generated format for CSV File (Create).",
+    "aliases": [],
+    "annotations": {},
+    "family": "Digital Product Manager",
+    "formats": [
+      {
+        "types": [
+          "ALL"
+        ],
+        "attributes": [
+          {
+            "name": "Display Name",
+            "key": "display_name",
+            "format": false
+          },
+          {
+            "name": "Description",
+            "key": "description",
+            "format": false
+          },
+          {
+            "name": "File Path",
+            "key": "file_path",
+            "format": false
+          },
+          {
+            "name": "File Encoding",
+            "key": "file_encoding",
+            "format": false
+          },
+          {
+            "name": "File Extension",
+            "key": "file_extension",
+            "format": false
+          },
+          {
+            "name": "File System Name",
+            "key": "file_system_name",
+            "format": false
+          }
+        ],
+        "columns": [
+          {
+            "name": "Display Name",
+            "key": "display_name",
+            "format": false
+          },
+          {
+            "name": "Description",
+            "key": "description",
+            "format": false
+          },
+          {
+            "name": "File Path",
+            "key": "file_path",
+            "format": false
+          },
+          {
+            "name": "File Encoding",
+            "key": "file_encoding",
+            "format": false
+          },
+          {
+            "name": "File Extension",
+            "key": "file_extension",
+            "format": false
+          },
+          {
+            "name": "File System Name",
+            "key": "file_system_name",
+            "format": false
           }
         ]
       }
     ],
     "action": null,
-    "get_additional_props": null
+    "get_additional_props": null,
+    "question_spec": null
+  },
+  "Project-DrE": {
+    "target_type": "Project",
+    "heading": "Project-DrE Attributes",
+    "description": "Auto-generated format for Project (Create).",
+    "aliases": [],
+    "annotations": {},
+    "family": "Project",
+    "formats": [
+      {
+        "types": [
+          "ALL"
+        ],
+        "attributes": [
+          {
+            "name": "Display Name",
+            "key": "display_name",
+            "format": false
+          },
+          {
+            "name": "Description",
+            "key": "description",
+            "format": false
+          },
+          {
+            "name": "Project Type",
+            "key": "project_type",
+            "format": false
+          },
+          {
+            "name": "Identifier",
+            "key": "project_identifier",
+            "format": false
+          },
+          {
+            "name": "Mission",
+            "key": "mission",
+            "format": false
+          },
+          {
+            "name": "Purposes",
+            "key": "purposes",
+            "format": false
+          },
+          {
+            "name": "Start Date",
+            "key": "start_date",
+            "format": false
+          },
+          {
+            "name": "Planned End Date",
+            "key": "end_date",
+            "format": false
+          },
+          {
+            "name": "Priority",
+            "key": "priority",
+            "format": false
+          },
+          {
+            "name": "Project Phase",
+            "key": "project_phase",
+            "format": false
+          },
+          {
+            "name": "Project Status",
+            "key": "project_status",
+            "format": false
+          },
+          {
+            "name": "Project Health",
+            "key": "project_health",
+            "format": false
+          }
+        ],
+        "columns": [
+          {
+            "name": "Display Name",
+            "key": "display_name",
+            "format": false
+          },
+          {
+            "name": "Description",
+            "key": "description",
+            "format": false
+          },
+          {
+            "name": "Project Type",
+            "key": "project_type",
+            "format": false
+          },
+          {
+            "name": "Identifier",
+            "key": "project_identifier",
+            "format": false
+          },
+          {
+            "name": "Mission",
+            "key": "mission",
+            "format": false
+          },
+          {
+            "name": "Purposes",
+            "key": "purposes",
+            "format": false
+          },
+          {
+            "name": "Start Date",
+            "key": "start_date",
+            "format": false
+          },
+          {
+            "name": "Planned End Date",
+            "key": "end_date",
+            "format": false
+          },
+          {
+            "name": "Priority",
+            "key": "priority",
+            "format": false
+          },
+          {
+            "name": "Project Phase",
+            "key": "project_phase",
+            "format": false
+          },
+          {
+            "name": "Project Status",
+            "key": "project_status",
+            "format": false
+          },
+          {
+            "name": "Project Health",
+            "key": "project_health",
+            "format": false
+          }
+        ]
+      }
+    ],
+    "action": {
+      "function": "ProjectManager.find_projects",
+      "required_params": [
+        "search_string"
+      ],
+      "optional_params": [
+        "sequencing_order",
+        "sequencing_property",
+        "page_size",
+        "start_from",
+        "starts_with",
+        "ends_with",
+        "ignore_case"
+      ],
+      "spec_params": {}
+    },
+    "get_additional_props": null,
+    "question_spec": null
+  },
+  "Campaign-DrE": {
+    "target_type": "Campaign",
+    "heading": "Campaign-DrE Attributes",
+    "description": "Auto-generated format for Campaign (Create).",
+    "aliases": [],
+    "annotations": {},
+    "family": "Project",
+    "formats": [
+      {
+        "types": [
+          "ALL"
+        ],
+        "attributes": [
+          {
+            "name": "Display Name",
+            "key": "display_name",
+            "format": false
+          },
+          {
+            "name": "Description",
+            "key": "description",
+            "format": false
+          },
+          {
+            "name": "Project Type",
+            "key": "project_type",
+            "format": false
+          },
+          {
+            "name": "Identifier",
+            "key": "project_identifier",
+            "format": false
+          },
+          {
+            "name": "Mission",
+            "key": "mission",
+            "format": false
+          },
+          {
+            "name": "Purposes",
+            "key": "purposes",
+            "format": false
+          },
+          {
+            "name": "Start Date",
+            "key": "start_date",
+            "format": false
+          },
+          {
+            "name": "Planned End Date",
+            "key": "end_date",
+            "format": false
+          },
+          {
+            "name": "Priority",
+            "key": "priority",
+            "format": false
+          },
+          {
+            "name": "Project Phase",
+            "key": "project_phase",
+            "format": false
+          },
+          {
+            "name": "Project Status",
+            "key": "project_status",
+            "format": false
+          },
+          {
+            "name": "Project Health",
+            "key": "project_health",
+            "format": false
+          }
+        ],
+        "columns": [
+          {
+            "name": "Display Name",
+            "key": "display_name",
+            "format": false
+          },
+          {
+            "name": "Description",
+            "key": "description",
+            "format": false
+          },
+          {
+            "name": "Project Type",
+            "key": "project_type",
+            "format": false
+          },
+          {
+            "name": "Identifier",
+            "key": "project_identifier",
+            "format": false
+          },
+          {
+            "name": "Mission",
+            "key": "mission",
+            "format": false
+          },
+          {
+            "name": "Purposes",
+            "key": "purposes",
+            "format": false
+          },
+          {
+            "name": "Start Date",
+            "key": "start_date",
+            "format": false
+          },
+          {
+            "name": "Planned End Date",
+            "key": "end_date",
+            "format": false
+          },
+          {
+            "name": "Priority",
+            "key": "priority",
+            "format": false
+          },
+          {
+            "name": "Project Phase",
+            "key": "project_phase",
+            "format": false
+          },
+          {
+            "name": "Project Status",
+            "key": "project_status",
+            "format": false
+          },
+          {
+            "name": "Project Health",
+            "key": "project_health",
+            "format": false
+          }
+        ]
+      }
+    ],
+    "action": {
+      "function": "ProjectManager.find_projects",
+      "required_params": [
+        "search_string"
+      ],
+      "optional_params": [
+        "sequencing_order",
+        "sequencing_property",
+        "page_size",
+        "start_from",
+        "starts_with",
+        "ends_with",
+        "ignore_case"
+      ],
+      "spec_params": {
+        "classification_names": [
+          "Campaign"
+        ]
+      }
+    },
+    "get_additional_props": null,
+    "question_spec": null
+  },
+  "Task-DrE": {
+    "target_type": "Task",
+    "heading": "Task-DrE Attributes",
+    "description": "Auto-generated format for Task (Create).",
+    "aliases": [],
+    "annotations": {},
+    "family": "Project",
+    "formats": [
+      {
+        "types": [
+          "ALL"
+        ],
+        "attributes": [
+          {
+            "name": "Display Name",
+            "key": "display_name",
+            "format": false
+          },
+          {
+            "name": "Description",
+            "key": "description",
+            "format": false
+          },
+          {
+            "name": "Project Type",
+            "key": "project_type",
+            "format": false
+          },
+          {
+            "name": "Identifier",
+            "key": "project_identifier",
+            "format": false
+          },
+          {
+            "name": "Mission",
+            "key": "mission",
+            "format": false
+          },
+          {
+            "name": "Purposes",
+            "key": "purposes",
+            "format": false
+          },
+          {
+            "name": "Start Date",
+            "key": "start_date",
+            "format": false
+          },
+          {
+            "name": "Planned End Date",
+            "key": "end_date",
+            "format": false
+          },
+          {
+            "name": "Priority",
+            "key": "priority",
+            "format": false
+          },
+          {
+            "name": "Project Phase",
+            "key": "project_phase",
+            "format": false
+          },
+          {
+            "name": "Project Status",
+            "key": "project_status",
+            "format": false
+          },
+          {
+            "name": "Project Health",
+            "key": "project_health",
+            "format": false
+          }
+        ],
+        "columns": [
+          {
+            "name": "Display Name",
+            "key": "display_name",
+            "format": false
+          },
+          {
+            "name": "Description",
+            "key": "description",
+            "format": false
+          },
+          {
+            "name": "Project Type",
+            "key": "project_type",
+            "format": false
+          },
+          {
+            "name": "Identifier",
+            "key": "project_identifier",
+            "format": false
+          },
+          {
+            "name": "Mission",
+            "key": "mission",
+            "format": false
+          },
+          {
+            "name": "Purposes",
+            "key": "purposes",
+            "format": false
+          },
+          {
+            "name": "Start Date",
+            "key": "start_date",
+            "format": false
+          },
+          {
+            "name": "Planned End Date",
+            "key": "end_date",
+            "format": false
+          },
+          {
+            "name": "Priority",
+            "key": "priority",
+            "format": false
+          },
+          {
+            "name": "Project Phase",
+            "key": "project_phase",
+            "format": false
+          },
+          {
+            "name": "Project Status",
+            "key": "project_status",
+            "format": false
+          },
+          {
+            "name": "Project Health",
+            "key": "project_health",
+            "format": false
+          }
+        ]
+      }
+    ],
+    "action": {
+      "function": "ProjectManager.find_projects",
+      "required_params": [
+        "search_string"
+      ],
+      "optional_params": [
+        "sequencing_order",
+        "sequencing_property",
+        "page_size",
+        "start_from",
+        "starts_with",
+        "ends_with",
+        "ignore_case"
+      ],
+      "spec_params": {
+        "classification_names": [
+          "Task"
+        ]
+      }
+    },
+    "get_additional_props": null,
+    "question_spec": null
+  },
+  "Personal-Project-DrE": {
+    "target_type": "Personal Project",
+    "heading": "Personal-Project-DrE Attributes",
+    "description": "Auto-generated format for Personal Project (Create).",
+    "aliases": [],
+    "annotations": {},
+    "family": "Project",
+    "formats": [
+      {
+        "types": [
+          "ALL"
+        ],
+        "attributes": [
+          {
+            "name": "Display Name",
+            "key": "display_name",
+            "format": false
+          },
+          {
+            "name": "Description",
+            "key": "description",
+            "format": false
+          },
+          {
+            "name": "Project Type",
+            "key": "project_type",
+            "format": false
+          },
+          {
+            "name": "Identifier",
+            "key": "project_identifier",
+            "format": false
+          },
+          {
+            "name": "Mission",
+            "key": "mission",
+            "format": false
+          },
+          {
+            "name": "Purposes",
+            "key": "purposes",
+            "format": false
+          },
+          {
+            "name": "Start Date",
+            "key": "start_date",
+            "format": false
+          },
+          {
+            "name": "Planned End Date",
+            "key": "end_date",
+            "format": false
+          },
+          {
+            "name": "Priority",
+            "key": "priority",
+            "format": false
+          },
+          {
+            "name": "Project Phase",
+            "key": "project_phase",
+            "format": false
+          },
+          {
+            "name": "Project Status",
+            "key": "project_status",
+            "format": false
+          },
+          {
+            "name": "Project Health",
+            "key": "project_health",
+            "format": false
+          }
+        ],
+        "columns": [
+          {
+            "name": "Display Name",
+            "key": "display_name",
+            "format": false
+          },
+          {
+            "name": "Description",
+            "key": "description",
+            "format": false
+          },
+          {
+            "name": "Project Type",
+            "key": "project_type",
+            "format": false
+          },
+          {
+            "name": "Identifier",
+            "key": "project_identifier",
+            "format": false
+          },
+          {
+            "name": "Mission",
+            "key": "mission",
+            "format": false
+          },
+          {
+            "name": "Purposes",
+            "key": "purposes",
+            "format": false
+          },
+          {
+            "name": "Start Date",
+            "key": "start_date",
+            "format": false
+          },
+          {
+            "name": "Planned End Date",
+            "key": "end_date",
+            "format": false
+          },
+          {
+            "name": "Priority",
+            "key": "priority",
+            "format": false
+          },
+          {
+            "name": "Project Phase",
+            "key": "project_phase",
+            "format": false
+          },
+          {
+            "name": "Project Status",
+            "key": "project_status",
+            "format": false
+          },
+          {
+            "name": "Project Health",
+            "key": "project_health",
+            "format": false
+          }
+        ]
+      }
+    ],
+    "action": {
+      "function": "ProjectManager.find_projects",
+      "required_params": [
+        "search_string"
+      ],
+      "optional_params": [
+        "sequencing_order",
+        "sequencing_property",
+        "page_size",
+        "start_from",
+        "starts_with",
+        "ends_with",
+        "ignore_case"
+      ],
+      "spec_params": {
+        "classification_names": [
+          "PersonalProject"
+        ]
+      }
+    },
+    "get_additional_props": null,
+    "question_spec": null
+  },
+  "Study-Project-DrE": {
+    "target_type": "Study Project",
+    "heading": "Study-Project-DrE Attributes",
+    "description": "Auto-generated format for Study Project (Create).",
+    "aliases": [],
+    "annotations": {},
+    "family": "Project",
+    "formats": [
+      {
+        "types": [
+          "ALL"
+        ],
+        "attributes": [
+          {
+            "name": "Display Name",
+            "key": "display_name",
+            "format": false
+          },
+          {
+            "name": "Description",
+            "key": "description",
+            "format": false
+          },
+          {
+            "name": "Project Type",
+            "key": "project_type",
+            "format": false
+          },
+          {
+            "name": "Identifier",
+            "key": "project_identifier",
+            "format": false
+          },
+          {
+            "name": "Mission",
+            "key": "mission",
+            "format": false
+          },
+          {
+            "name": "Purposes",
+            "key": "purposes",
+            "format": false
+          },
+          {
+            "name": "Start Date",
+            "key": "start_date",
+            "format": false
+          },
+          {
+            "name": "Planned End Date",
+            "key": "end_date",
+            "format": false
+          },
+          {
+            "name": "Priority",
+            "key": "priority",
+            "format": false
+          },
+          {
+            "name": "Project Phase",
+            "key": "project_phase",
+            "format": false
+          },
+          {
+            "name": "Project Status",
+            "key": "project_status",
+            "format": false
+          },
+          {
+            "name": "Project Health",
+            "key": "project_health",
+            "format": false
+          }
+        ],
+        "columns": [
+          {
+            "name": "Display Name",
+            "key": "display_name",
+            "format": false
+          },
+          {
+            "name": "Description",
+            "key": "description",
+            "format": false
+          },
+          {
+            "name": "Project Type",
+            "key": "project_type",
+            "format": false
+          },
+          {
+            "name": "Identifier",
+            "key": "project_identifier",
+            "format": false
+          },
+          {
+            "name": "Mission",
+            "key": "mission",
+            "format": false
+          },
+          {
+            "name": "Purposes",
+            "key": "purposes",
+            "format": false
+          },
+          {
+            "name": "Start Date",
+            "key": "start_date",
+            "format": false
+          },
+          {
+            "name": "Planned End Date",
+            "key": "end_date",
+            "format": false
+          },
+          {
+            "name": "Priority",
+            "key": "priority",
+            "format": false
+          },
+          {
+            "name": "Project Phase",
+            "key": "project_phase",
+            "format": false
+          },
+          {
+            "name": "Project Status",
+            "key": "project_status",
+            "format": false
+          },
+          {
+            "name": "Project Health",
+            "key": "project_health",
+            "format": false
+          }
+        ]
+      }
+    ],
+    "action": {
+      "function": "ProjectManager.find_projects",
+      "required_params": [
+        "search_string"
+      ],
+      "optional_params": [
+        "sequencing_order",
+        "sequencing_property",
+        "page_size",
+        "start_from",
+        "starts_with",
+        "ends_with",
+        "ignore_case"
+      ],
+      "spec_params": {
+        "classification_names": [
+          "StudyProject"
+        ]
+      }
+    },
+    "get_additional_props": null,
+    "question_spec": null
+  },
+  "Information-Supply-Chain-DrE": {
+    "target_type": "Information Supply Chain",
+    "heading": "Information-Supply-Chain-DrE Attributes",
+    "description": "Auto-generated format for Information Supply Chain (Create).",
+    "aliases": [],
+    "annotations": {},
+    "family": "Solution Architect",
+    "formats": [
+      {
+        "types": [
+          "ALL"
+        ],
+        "attributes": [
+          {
+            "name": "Display Name",
+            "key": "display_name",
+            "format": false
+          },
+          {
+            "name": "Description",
+            "key": "description",
+            "format": false
+          },
+          {
+            "name": "Scope",
+            "key": "scope",
+            "format": false
+          },
+          {
+            "name": "Purposes",
+            "key": "purposes",
+            "format": false
+          },
+          {
+            "name": "Nested Information Supply Chains",
+            "key": "nested_info_supply_chains",
+            "format": false
+          },
+          {
+            "name": "In Information Supply Chain",
+            "key": "in_supply_chain",
+            "format": false
+          }
+        ],
+        "columns": [
+          {
+            "name": "Display Name",
+            "key": "display_name",
+            "format": false
+          },
+          {
+            "name": "Description",
+            "key": "description",
+            "format": false
+          },
+          {
+            "name": "Scope",
+            "key": "scope",
+            "format": false
+          },
+          {
+            "name": "Purposes",
+            "key": "purposes",
+            "format": false
+          },
+          {
+            "name": "Nested Information Supply Chains",
+            "key": "nested_info_supply_chains",
+            "format": false
+          },
+          {
+            "name": "In Information Supply Chain",
+            "key": "in_supply_chain",
+            "format": false
+          }
+        ]
+      }
+    ],
+    "action": {
+      "function": "SolutionArchitect.find_information_supply_chains",
+      "required_params": [
+        "search_string"
+      ],
+      "optional_params": [
+        "sequencing_order",
+        "sequencing_property",
+        "page_size",
+        "start_from",
+        "starts_with",
+        "ends_with",
+        "ignore_case"
+      ],
+      "spec_params": {}
+    },
+    "get_additional_props": null,
+    "question_spec": null
+  },
+  "Solution-Blueprint-DrE": {
+    "target_type": "Solution Blueprint",
+    "heading": "Solution-Blueprint-DrE Attributes",
+    "description": "Auto-generated format for Solution Blueprint (Create).",
+    "aliases": [],
+    "annotations": {},
+    "family": "Solution Architect",
+    "formats": [
+      {
+        "types": [
+          "ALL"
+        ],
+        "attributes": [
+          {
+            "name": "Display Name",
+            "key": "display_name",
+            "format": false
+          },
+          {
+            "name": "Description",
+            "key": "description",
+            "format": false
+          },
+          {
+            "name": "Solution Components",
+            "key": "solution_components",
+            "format": false
+          }
+        ],
+        "columns": [
+          {
+            "name": "Display Name",
+            "key": "display_name",
+            "format": false
+          },
+          {
+            "name": "Description",
+            "key": "description",
+            "format": false
+          },
+          {
+            "name": "Solution Components",
+            "key": "solution_components",
+            "format": false
+          }
+        ]
+      }
+    ],
+    "action": {
+      "function": "SolutionArchitect.find_solution_blueprints",
+      "required_params": [
+        "search_string"
+      ],
+      "optional_params": [
+        "sequencing_order",
+        "sequencing_property",
+        "page_size",
+        "start_from",
+        "starts_with",
+        "ends_with",
+        "ignore_case"
+      ],
+      "spec_params": {}
+    },
+    "get_additional_props": null,
+    "question_spec": null
+  },
+  "Solution-Component-DrE": {
+    "target_type": "Solution Component",
+    "heading": "Solution-Component-DrE Attributes",
+    "description": "Auto-generated format for Solution Component (Create).",
+    "aliases": [],
+    "annotations": {},
+    "family": "Solution Architect",
+    "formats": [
+      {
+        "types": [
+          "ALL"
+        ],
+        "attributes": [
+          {
+            "name": "Display Name",
+            "key": "display_name",
+            "format": false
+          },
+          {
+            "name": "Description",
+            "key": "description",
+            "format": false
+          },
+          {
+            "name": "Solution Component Type",
+            "key": "soln_comp_type",
+            "format": false
+          },
+          {
+            "name": "Planned Deployed Implementation Type",
+            "key": "planned_deployed_impl_type",
+            "format": false
+          },
+          {
+            "name": "Solution SubComponents",
+            "key": "solution_sub_components",
+            "format": false
+          },
+          {
+            "name": "In Solution Components",
+            "key": "in_components",
+            "format": false
+          },
+          {
+            "name": "In Solution Blueprints",
+            "key": "solution_blueprints",
+            "format": false
+          },
+          {
+            "name": "In Information Supply Chains",
+            "key": "in_supply_chains",
+            "format": false
+          },
+          {
+            "name": "Actors",
+            "key": "actors",
+            "format": false
+          }
+        ],
+        "columns": [
+          {
+            "name": "Display Name",
+            "key": "display_name",
+            "format": false
+          },
+          {
+            "name": "Description",
+            "key": "description",
+            "format": false
+          },
+          {
+            "name": "Solution Component Type",
+            "key": "soln_comp_type",
+            "format": false
+          },
+          {
+            "name": "Planned Deployed Implementation Type",
+            "key": "planned_deployed_impl_type",
+            "format": false
+          },
+          {
+            "name": "Solution SubComponents",
+            "key": "solution_sub_components",
+            "format": false
+          },
+          {
+            "name": "In Solution Components",
+            "key": "in_components",
+            "format": false
+          },
+          {
+            "name": "In Solution Blueprints",
+            "key": "solution_blueprints",
+            "format": false
+          },
+          {
+            "name": "In Information Supply Chains",
+            "key": "in_supply_chains",
+            "format": false
+          },
+          {
+            "name": "Actors",
+            "key": "actors",
+            "format": false
+          }
+        ]
+      }
+    ],
+    "action": {
+      "function": "SolutionArchitect.find_solution_components",
+      "required_params": [
+        "search_string"
+      ],
+      "optional_params": [
+        "sequencing_order",
+        "sequencing_property",
+        "page_size",
+        "start_from",
+        "starts_with",
+        "ends_with",
+        "ignore_case"
+      ],
+      "spec_params": {}
+    },
+    "get_additional_props": null,
+    "question_spec": null
+  },
+  "Solution-Role-DrE": {
+    "target_type": "Solution Role",
+    "heading": "Solution-Role-DrE Attributes",
+    "description": "Auto-generated format for Solution Role (Create).",
+    "aliases": [],
+    "annotations": {},
+    "family": "Solution Architect",
+    "formats": [
+      {
+        "types": [
+          "ALL"
+        ],
+        "attributes": [
+          {
+            "name": "Name",
+            "key": "name",
+            "format": false
+          },
+          {
+            "name": "Description",
+            "key": "description",
+            "format": false
+          },
+          {
+            "name": "Title",
+            "key": "title",
+            "format": false
+          },
+          {
+            "name": "Scope",
+            "key": "scope",
+            "format": false
+          },
+          {
+            "name": "identifier",
+            "key": "identifier",
+            "format": false
+          },
+          {
+            "name": "Domain Identifier",
+            "key": "domain_identifier",
+            "format": false
+          }
+        ],
+        "columns": [
+          {
+            "name": "Name",
+            "key": "name",
+            "format": false
+          },
+          {
+            "name": "Description",
+            "key": "description",
+            "format": false
+          },
+          {
+            "name": "Title",
+            "key": "title",
+            "format": false
+          },
+          {
+            "name": "Scope",
+            "key": "scope",
+            "format": false
+          },
+          {
+            "name": "identifier",
+            "key": "identifier",
+            "format": false
+          },
+          {
+            "name": "Domain Identifier",
+            "key": "domain_identifier",
+            "format": false
+          }
+        ]
+      }
+    ],
+    "action": {
+      "function": "SolutionArchitect.find_solution_roles",
+      "required_params": [
+        "search_string"
+      ],
+      "optional_params": [
+        "sequencing_order",
+        "sequencing_property",
+        "page_size",
+        "start_from",
+        "starts_with",
+        "ends_with",
+        "ignore_case"
+      ],
+      "spec_params": {}
+    },
+    "get_additional_props": null,
+    "question_spec": null
   }
 }

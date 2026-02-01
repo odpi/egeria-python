@@ -349,7 +349,7 @@ class ExternalReferences(ServerClient):
             validated_body = self._template_request_adapter.validate_python(body)
 
         url = f"{self.command_root}/external-references/from-template"
-        json_body = validated_body.model_dump_json(indent=2, exclude_none=True)
+        json_body = validated_body.model_dump_json(indent=2, exclude_none=True, by_alias=True)
         logger.info(json_body)
         resp = await self._async_make_request("POST", url, json_body, is_json=True)
         logger.info(f"Create external_reference from template with GUID: {resp.json().get('guid')}")

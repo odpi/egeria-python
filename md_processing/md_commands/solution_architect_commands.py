@@ -13,7 +13,12 @@ from rich import print
 from rich.console import Console
 from rich.markdown import Markdown
 
-from md_processing.md_processing_utils.common_md_proc_utils import (parse_upsert_command, parse_view_command)
+from md_processing.md_processing_utils.common_md_proc_utils import (
+    parse_upsert_command,
+    parse_view_command,
+    render_command_table,
+    render_exception_table,
+)
 from md_processing.md_processing_utils.common_md_utils import update_element_dictionary, set_element_prop_body, \
     set_update_body, set_create_body, add_search_keywords, add_note_in_dr_e
 from md_processing.md_processing_utils.extraction_utils import (extract_command_plus, update_a_command)
@@ -295,14 +300,14 @@ def process_blueprint_upsert_command(egeria_client: EgeriaTech, txt: str, direct
     qualified_name = parsed_output.get('qualified_name', None)
     guid = parsed_output.get('guid', None)
     journal_entry = parsed_output.get('Journey Entry', {}.get('value', None))
-    print(Markdown(parsed_output['display']))
+    render_command_table(parsed_output, directive)
 
     logger.debug(json.dumps(parsed_output, indent=4))
 
     attributes = parsed_output['attributes']
     description = attributes.get('Description', {}).get('value', None)
     display_name = attributes['Display Name'].get('value', None)
-    search_keywords = attributes['Search Keywords'].get('value', None)
+    search_keywords = attributes.get('Search Keywords',{}).get('value', None)
 
 
 
@@ -319,7 +324,7 @@ def process_blueprint_upsert_command(egeria_client: EgeriaTech, txt: str, direct
         return None
     elif directive == "validate":
         if valid:
-            print(Markdown(f"==> Validation of {command} completed successfully!\n"))
+            pass
         else:
             msg = f"Validation failed for object_action `{command}`\n"
         return valid
@@ -400,7 +405,7 @@ def process_blueprint_upsert_command(egeria_client: EgeriaTech, txt: str, direct
                     return None
 
         except PyegeriaException as e:
-            print_basic_exception(e)
+            render_exception_table(command, "process", e)
             logger.error(f"Error performing {command}: {e}")
             return None
     else:
@@ -428,7 +433,7 @@ def process_solution_roles_upsert_command(egeria_client: EgeriaTech, txt: str, d
     qualified_name = parsed_output.get('qualified_name', None)
     guid = parsed_output.get('guid', None)
     journal_entry = parsed_output.get('Journey Entry', {}.get('value', None))
-    print(Markdown(parsed_output['display']))
+    render_command_table(parsed_output, directive)
 
     logger.debug(json.dumps(parsed_output, indent=4))
 
@@ -452,7 +457,7 @@ def process_solution_roles_upsert_command(egeria_client: EgeriaTech, txt: str, d
         return None
     elif directive == "validate":
         if valid:
-            print(Markdown(f"==> Validation of {command} completed successfully!\n"))
+            pass
         else:
             msg = f"Validation failed for object_action `{command}`\n"
         return valid
@@ -533,7 +538,7 @@ def process_solution_roles_upsert_command(egeria_client: EgeriaTech, txt: str, d
                     return None
 
         except PyegeriaException as e:
-            print_basic_exception(e)
+            render_exception_table(command, "process", e)
             logger.error(f"Error performing {command}: {e}")
             return None
     else:
@@ -565,7 +570,7 @@ def process_solution_component_upsert_command(egeria_client: EgeriaTech, txt: st
     qualified_name = parsed_output.get('qualified_name', None)
     guid = parsed_output.get('guid', None)
 
-    print(Markdown(parsed_output['display']))
+    render_command_table(parsed_output, directive)
 
     logger.debug(json.dumps(parsed_output, indent=4))
 
@@ -628,7 +633,7 @@ def process_solution_component_upsert_command(egeria_client: EgeriaTech, txt: st
         return None
     elif directive == "validate":
         if valid:
-            print(Markdown(f"==> Validation of {command} completed successfully!\n"))
+            pass
         else:
             msg = f"Validation failed for object_action `{command}`\n"
         return valid
@@ -801,7 +806,7 @@ def process_component_link_unlink_command(egeria_client: EgeriaTech, txt: str,
 
     parsed_output = parse_view_command(egeria_client, object_type, object_action, txt, directive)
 
-    print(Markdown(parsed_output['display']))
+    render_command_table(parsed_output, directive)
 
     logger.debug(json.dumps(parsed_output, indent=4))
 
@@ -833,14 +838,14 @@ def process_component_link_unlink_command(egeria_client: EgeriaTech, txt: str,
         return None
     elif directive == "validate":
         if valid:
-            print(Markdown(f"==> Validation of {command} completed successfully!\n"))
+            pass
         else:
             msg = f"Validation failed for object_action `{command}`\n"
         return valid
 
     elif directive == "process":
         try:
-            if object_action == "Unlink":
+            if object_action in ["Detach", "Unlink", "Remove"]:
                 if not exists:
                     msg = (f" Link `{label}` does not exist! Updating result document with Link "
                            f"object_action\n")
@@ -870,7 +875,7 @@ def process_component_link_unlink_command(egeria_client: EgeriaTech, txt: str,
                 return (out)
 
 
-            elif object_action == "Link":
+            elif object_action in ["Link", "Attach", "Add"]:
                 if valid is False and exists:
                     msg = (f"-->  Link called `{label}` already exists and result document updated changing "
                            f"`Link` to `Detach` in processed output\n")
@@ -934,7 +939,7 @@ def process_information_supply_chain_upsert_command(egeria_client: EgeriaTech, t
     qualified_name = parsed_output.get('qualified_name', None)
     guid = parsed_output.get('guid', None)
 
-    print(Markdown(parsed_output['display']))
+    render_command_table(parsed_output, directive)
 
     logger.debug(json.dumps(parsed_output, indent=4))
 
@@ -964,7 +969,7 @@ def process_information_supply_chain_upsert_command(egeria_client: EgeriaTech, t
         return None
     elif directive == "validate":
         if valid:
-            print(Markdown(f"==> Validation of {command} completed successfully!\n"))
+            pass
         else:
             msg = f"Validation failed for object_action `{command}`\n"
         return valid
@@ -1075,7 +1080,7 @@ def process_information_supply_chain_link_unlink_command(egeria_client: EgeriaTe
 
     parsed_output = parse_view_command(egeria_client, object_type, object_action, txt, directive)
 
-    print(Markdown(parsed_output['display']))
+    render_command_table(parsed_output, directive)
 
     logger.debug(json.dumps(parsed_output, indent=4))
 
@@ -1107,14 +1112,14 @@ def process_information_supply_chain_link_unlink_command(egeria_client: EgeriaTe
         return None
     elif directive == "validate":
         if valid:
-            print(Markdown(f"==> Validation of {command} completed successfully!\n"))
+            pass
         else:
             msg = f"Validation failed for object_action `{command}`\n"
         return valid
 
     elif directive == "process":
         try:
-            if object_action == "Unlink":
+            if object_action in ["Detach", "Unlink", "Remove"]:
                 if not exists:
                     msg = (f" Link `{label}` does not exist! Updating result document with Link "
                            f"object_action\n")
@@ -1144,7 +1149,7 @@ def process_information_supply_chain_link_unlink_command(egeria_client: EgeriaTe
                 return (out)
 
 
-            elif object_action == "Link":
+            elif object_action in ["Link", "Attach", "Add"]:
                 if valid is False and exists:
                     msg = (f"-->  Link called `{label}` already exists and result document updated changing "
                            f"`Link` to `Detach` in processed output\n")
@@ -1181,4 +1186,3 @@ def process_information_supply_chain_link_unlink_command(egeria_client: EgeriaTe
             return None
     else:
         return None
-

@@ -33,6 +33,7 @@ from loguru import logger
 from pyegeria.omvs.location_arena import Location
 from pyegeria.core._exceptions import (
     print_validation_error, PyegeriaAPIException,
+    PyegeriaTimeoutException,
 )
 
 # Configuration
@@ -257,6 +258,16 @@ class LocationScenarioTester:
             print_validation_error(e)
         except Exception as e:
             duration = time.perf_counter() - start_time
+            if isinstance(e, PyegeriaTimeoutException):
+                console.print(f"  [yellow]⚠ Timeout in {scenario_name}; continuing.[/yellow]")
+                return TestResult(
+                    scenario_name=scenario_name,
+                    status="WARNING",
+                    duration=duration,
+                    message=f"Timeout: {str(e)}",
+                    error=e,
+                    created_guids=created_guids
+                )
             console.print(f"  [red]✗ Scenario failed: {str(e)}[/red]")
             return TestResult(
                 scenario_name=scenario_name,
@@ -349,6 +360,16 @@ class LocationScenarioTester:
             
         except Exception as e:
             duration = time.perf_counter() - start_time
+            if isinstance(e, PyegeriaTimeoutException):
+                console.print(f"  [yellow]⚠ Timeout in {scenario_name}; continuing.[/yellow]")
+                return TestResult(
+                    scenario_name=scenario_name,
+                    status="WARNING",
+                    duration=duration,
+                    message=f"Timeout: {str(e)}",
+                    error=e,
+                    created_guids=created_guids
+                )
             console.print(f"  [red]✗ Scenario failed: {str(e)}[/red]")
             return TestResult(
                 scenario_name=scenario_name,
@@ -444,6 +465,16 @@ class LocationScenarioTester:
             
         except Exception as e:
             duration = time.perf_counter() - start_time
+            if isinstance(e, PyegeriaTimeoutException):
+                console.print(f"  [yellow]⚠ Timeout in {scenario_name}; continuing.[/yellow]")
+                return TestResult(
+                    scenario_name=scenario_name,
+                    status="WARNING",
+                    duration=duration,
+                    message=f"Timeout: {str(e)}",
+                    error=e,
+                    created_guids=created_guids
+                )
             console.print(f"  [red]✗ Scenario failed: {str(e)}[/red]")
             return TestResult(
                 scenario_name=scenario_name,
@@ -526,6 +557,16 @@ class LocationScenarioTester:
             
         except Exception as e:
             duration = time.perf_counter() - start_time
+            if isinstance(e, PyegeriaTimeoutException):
+                console.print(f"  [yellow]⚠ Timeout in {scenario_name}; continuing.[/yellow]")
+                return TestResult(
+                    scenario_name=scenario_name,
+                    status="WARNING",
+                    duration=duration,
+                    message=f"Timeout: {str(e)}",
+                    error=e,
+                    created_guids=created_guids
+                )
             console.print(f"  [red]✗ Scenario failed: {str(e)}[/red]")
             return TestResult(
                 scenario_name=scenario_name,

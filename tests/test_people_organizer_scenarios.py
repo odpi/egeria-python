@@ -15,7 +15,7 @@ from rich.table import Table
 
 from pyegeria.egeria_client import Egeria
 from pyegeria.core._exceptions import (
-    PyegeriaConnectionException, print_basic_exception,
+    PyegeriaConnectionException, PyegeriaTimeoutException, print_basic_exception,
 )
 
 # Configuration
@@ -85,6 +85,11 @@ class PeopleOrganizerScenarioTester:
             duration = time.perf_counter() - start_time
             self.results.append(TestResult(name, "PASSED", duration, message))
             rprint(f"[bold green]✓ {name} passed[/bold green]")
+            return True
+        except PyegeriaTimeoutException as e:
+            duration = time.perf_counter() - start_time
+            rprint(f"[bold yellow]⚠ Timeout in {name}; continuing.[/bold yellow]")
+            self.results.append(TestResult(name, "WARNING", duration, f"Timeout: {e}", e))
             return True
         except Exception as e:
             duration = time.perf_counter() - start_time

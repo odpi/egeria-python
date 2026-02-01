@@ -1,0 +1,13 @@
+command,test_file,test_name
+Detach Components,/Users/dwolfson/localGit/egeria-python/md_processing/md_processing_utils/tests/test_solution_architect_command_parsing.py,test_solution_architect_command_parsing[Detach Components]
+Detach Referenceable->Cited Document,/Users/dwolfson/localGit/egeria-python/md_processing/md_processing_utils/tests/test_ext_ref_command_parsing.py,test_ext_ref_command_parsing[Detach Referenceable->Cited Document]
+Detach Solution Components,/Users/dwolfson/localGit/egeria-python/md_processing/md_processing_utils/tests/test_solution_architect_command_parsing.py,test_solution_architect_command_parsing[Detach Solution Components]
+Detach Tag,/Users/dwolfson/localGit/egeria-python/md_processing/md_processing_utils/tests/test_feedback_command_parsing.py,test_feedback_command_parsing[Detach Tag]
+Remove Components,/Users/dwolfson/localGit/egeria-python/md_processing/md_processing_utils/tests/test_solution_architect_command_parsing.py,test_solution_architect_command_parsing[Remove Components]
+Remove Referenceable->Cited Document,/Users/dwolfson/localGit/egeria-python/md_processing/md_processing_utils/tests/test_ext_ref_command_parsing.py,test_ext_ref_command_parsing[Remove Referenceable->Cited Document]
+Remove Solution Components,/Users/dwolfson/localGit/egeria-python/md_processing/md_processing_utils/tests/test_solution_architect_command_parsing.py,test_solution_architect_command_parsing[Remove Solution Components]
+Remove Tag,/Users/dwolfson/localGit/egeria-python/md_processing/md_processing_utils/tests/test_feedback_command_parsing.py,test_feedback_command_parsing[Remove Tag]
+Unlink Components,/Users/dwolfson/localGit/egeria-python/md_processing/md_processing_utils/tests/test_solution_architect_command_parsing.py,test_solution_architect_command_parsing[Unlink Components]
+Unlink Referenceable->Cited Document,/Users/dwolfson/localGit/egeria-python/md_processing/md_processing_utils/tests/test_ext_ref_command_parsing.py,test_ext_ref_command_parsing[Unlink Referenceable->Cited Document]
+Unlink Solution Components,/Users/dwolfson/localGit/egeria-python/md_processing/md_processing_utils/tests/test_solution_architect_command_parsing.py,test_solution_architect_command_parsing[Unlink Solution Components]
+Unlink Tag,/Users/dwolfson/localGit/egeria-python/md_processing/md_processing_utils/tests/test_feedback_command_parsing.py,test_feedback_command_parsing[Unlink Tag]

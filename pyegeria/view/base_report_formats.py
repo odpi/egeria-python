@@ -96,7 +96,7 @@ from pyegeria.view._output_format_models import (
 
 # Import generated format sets from within pyegeria package
 try:
-    from pyegeria.view.dr_egeria_reports import generated_format_sets
+    from pyegeria.view.old_dr_egeria_reports import generated_format_sets
 
     logger.debug(f"Loaded {len(generated_format_sets)} generated format sets from pyegeria.dr_egeria_reports")
 except (ImportError) as e:

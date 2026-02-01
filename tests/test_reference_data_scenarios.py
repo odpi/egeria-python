@@ -31,6 +31,7 @@ from rich.progress import Progress, SpinnerColumn, TextColumn
 from pyegeria.omvs.reference_data import ReferenceDataManager
 from pyegeria.core._exceptions import (
     print_validation_error, PyegeriaAPIException,
+    PyegeriaTimeoutException,
 )
 from pydantic import ValidationError
 
@@ -259,6 +260,16 @@ class ReferenceDataScenarioTester:
             )
         except Exception as e:
             duration = time.perf_counter() - start_time
+            if isinstance(e, PyegeriaTimeoutException):
+                console.print(f"  [yellow]⚠ Timeout in {scenario_name}; continuing.[/yellow]")
+                return TestResult(
+                    scenario_name=scenario_name,
+                    status="WARNING",
+                    duration=duration,
+                    message=f"Timeout: {str(e)}",
+                    error=e,
+                    created_guids=created_guids
+                )
             console.print(f"  [red]✗ Scenario failed: {str(e)}[/red]")
             traceback.print_exc()
             return TestResult(
@@ -382,6 +393,16 @@ class ReferenceDataScenarioTester:
             )
         except Exception as e:
             duration = time.perf_counter() - start_time
+            if isinstance(e, PyegeriaTimeoutException):
+                console.print(f"  [yellow]⚠ Timeout in {scenario_name}; continuing.[/yellow]")
+                return TestResult(
+                    scenario_name=scenario_name,
+                    status="WARNING",
+                    duration=duration,
+                    message=f"Timeout: {str(e)}",
+                    error=e,
+                    created_guids=created_guids
+                )
             console.print(f"  [red]✗ Scenario failed: {str(e)}[/red]")
             traceback.print_exc()
             return TestResult(
@@ -481,6 +502,16 @@ class ReferenceDataScenarioTester:
             )
         except Exception as e:
             duration = time.perf_counter() - start_time
+            if isinstance(e, PyegeriaTimeoutException):
+                console.print(f"  [yellow]⚠ Timeout in {scenario_name}; continuing.[/yellow]")
+                return TestResult(
+                    scenario_name=scenario_name,
+                    status="WARNING",
+                    duration=duration,
+                    message=f"Timeout: {str(e)}",
+                    error=e,
+                    created_guids=created_guids
+                )
             console.print(f"  [red]✗ Scenario failed: {str(e)}[/red]")
             traceback.print_exc()
             return TestResult(

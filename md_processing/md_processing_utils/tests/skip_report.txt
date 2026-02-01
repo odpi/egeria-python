@@ -1,0 +1,7 @@
+Skipped commands:
+- Create Digital Products (verb_mismatch)
+- List Digital Products (verb_mismatch)
+- List Terms (verb_mismatch)
+- Update Digital Products (verb_mismatch)
+- View Digital Products (verb_mismatch)
+- View Terms (verb_mismatch)

@@ -38,7 +38,7 @@ GOV_DEF_PROPERTIES_LIST = ["GovernanceDefinitionProperties", "GovernanceStrategy
                            "CertificationTypeProperties", "LicenseTypeProperties", "GovernanceApproachProperties",
                            "GovernanceStrategyProperties", "GovernanceProcessingPurposeProperties",
                            "BusinessImperativeProperties", "RegulationArticleProperties", "ThreatProperties",
-                           "DataLensProperties",]
+                           "DataLensProperties","NotificationTypeProperties"]
 
 GOV_BASIC_TYPES = ["BusinessImperative", "RegulationArticle", "Threat", "GovernancePrinciple", "GovernanceObligation",
                    "GovernanceApproach", "GovernanceProcessingPurpose"]
@@ -796,7 +796,7 @@ class GovernanceOfficer(ServerClient):
             raise PyegeriaInvalidParameterException(
                 additional_info={"reason": "body must be a dict or TemplateRequestBody"})
 
-        json_body = validated_body.model_dump_json(indent=2, exclude_none=True)
+        json_body = validated_body.model_dump_json(indent=2, exclude_none=True, by_alias=True)
         logger.info(json_body)
         resp = await self._async_make_request("POST", url, json_body, is_json=True)
         logger.info(f"Created governance definition from template with GUID: {resp.json().get('guid')}")

@@ -1,10 +1,13 @@
 """
 This is an ongoing experiment in parsing and playing with Freddie docs
 """
+import argparse
 import os
 import sys
 
 from loguru import logger
+from rich.console import Console
+from rich.prompt import Prompt
 
 log_format = "{time} | {level} | {function} | {line} | {message} | {extra}"
 logger.remove()
@@ -34,6 +37,7 @@ EGERIA_GLOSSARY_PATH = os.environ.get("EGERIA_GLOSSARY_PATH", None)
 EGERIA_ROOT_PATH = os.environ.get("EGERIA_ROOT_PATH", "../..")
 EGERIA_INBOX_PATH = os.environ.get("EGERIA_INBOX_PATH", "md_processing/dr_egeria_inbox")
 EGERIA_OUTBOX_PATH = os.environ.get("EGERIA_OUTBOX_PATH", "md_processing/dr_egeria_outbox")
+console = Console(width=EGERIA_WIDTH)
 
 @click.command("process_markdown_file", help="Process a markdown file and return the output as a string.")
 @click.option("--input-file", help="Markdown file to process.", default="dr_egeria_intro_part1.md", required=True,
@@ -45,14 +49,19 @@ EGERIA_OUTBOX_PATH = os.environ.get("EGERIA_OUTBOX_PATH", "md_processing/dr_eger
 @click.option("--url", default=EGERIA_VIEW_SERVER_URL, help="URL of Egeria platform to connect to")
 @click.option("--userid", default=EGERIA_USER, help="Egeria user")
 @click.option("--user_pass", default=EGERIA_USER_PASSWORD, help="Egeria user password")
+@click.option("--parse-summary", default="none", help="When to show parse summaries",
+              type=click.Choice(["all", "errors", "none"], case_sensitive=False))
+@click.option("--attribute-logs", default="debug", help="Per-attribute log verbosity",
+              type=click.Choice(["debug", "info", "none"], case_sensitive=False))
 @logger.catch
 def process_markdown_file(input_file: str, output_folder:str, directive: str, server: str, url: str, userid: str,
-                          user_pass: str ) -> None:
+                          user_pass: str, parse_summary: str, attribute_logs: str) -> None:
     """
     Process a markdown file by parsing and executing Dr. Egeria md_commands. Write output to a new file.
     """
     try:
-        process_md_file(input_file, output_folder, directive, server, url, userid, user_pass)
+        process_md_file(input_file, output_folder, directive, server, url, userid, user_pass,
+                        parse_summary=parse_summary, attribute_logs=attribute_logs)
         logger.info(f"Called process_markdown_file with input file {input_file}")
     except PyegeriaException as e:
         logger.error(f"Error processing markdown file {input_file}: {e}")
@@ -60,33 +69,13 @@ def process_markdown_file(input_file: str, output_folder:str, directive: str, se
         logger.error(f"Unexpected error processing markdown file {input_file}: {e}")
 
 
-# def main():
-#     parser = argparse.ArgumentParser()
-#     parser.add_argument("--server", help="Name of the server to display status for")
-#     parser.add_argument("--url", help="URL Platform to connect to")
-#     parser.add_argument("--userid", help="User Id")
-#     parser.add_argument("--password", help="User Password")
-#     parser.add_argument("--time_out", help="Time Out")
-#
-#     args = parser.parse_args()
-#
-#     server = args.server if args.server is not None else EGERIA_VIEW_SERVER
-#     url = args.url if args.url is not None else EGERIA_PLATFORM_URL
-#     userid = args.userid if args.userid is not None else EGERIA_USER
-#     user_pass = args.password if args.password is not None else EGERIA_USER_PASSWORD
-#     time_out = args.time_out if args.time_out is not None else 60
-#     try:
-#         input_file = Prompt.ask("Markdown File name to process:", default="")
-#         directive = Prompt.ask("Processing Directive:", choices=[ "display", "validate", "process"],
-#         default="validate")
-#
-#         process_markdown_file(input_file, directive, server, url, userid, user_pass)
-#     except KeyboardInterrupt:
-#         pass
-#
-#
-# if __name__ == "__main__":
-#     main()
+def _running_in_pycharm_debugger() -> bool:
+    return sys.gettrace() is not None or os.environ.get("PYCHARM_HOSTED") is not None
 
 if __name__ == "__main__":
-    process_markdown_file()
+    if _running_in_pycharm_debugger():
+        input_file = Prompt.ask("Markdown File name to process:", default="dr_egeria_intro_part1.md")
+        process_md_file(input_file, "", "process", EGERIA_VIEW_SERVER, EGERIA_VIEW_SERVER_URL, EGERIA_USER,
+                        EGERIA_USER_PASSWORD, parse_summary="all", attribute_logs="debug")
+    else:
+        process_markdown_file()

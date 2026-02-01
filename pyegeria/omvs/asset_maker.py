@@ -2657,7 +2657,7 @@ class AssetMaker(ServerClient):
         else:
             validated_body = self._action_request_adapter.validate_python(body)
 
-        json_body = validated_body.model_dump_json(indent=2, exclude_none=True)
+        json_body = validated_body.model_dump_json(indent=2, exclude_none=True, by_alias=True)
         response = await self._async_make_request("POST", url, json_body)
         return response.json().get("guid", NO_GUID_RETURNED)
 
@@ -2778,7 +2778,7 @@ class AssetMaker(ServerClient):
         else:
             validated_body = NewRelationshipRequestBody(class_="NewRelationshipRequestBody")
 
-        json_body = validated_body.model_dump_json(indent=2, exclude_none=True)
+        json_body = validated_body.model_dump_json(indent=2, exclude_none=True, by_alias=True)
         response = await self._async_make_request("POST", url, json_body)
         return response.json().get("guid", NO_GUID_RETURNED)
 
@@ -2856,7 +2856,7 @@ class AssetMaker(ServerClient):
         else:
             validated_body = self._update_relationship_request_adapter.validate_python(body)
 
-        json_body = validated_body.model_dump_json(indent=2, exclude_none=True)
+        json_body = validated_body.model_dump_json(indent=2, exclude_none=True, by_alias=True)
         await self._async_make_request("POST", url, json_body)
 
     @dynamic_catch

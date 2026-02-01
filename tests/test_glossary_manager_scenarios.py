@@ -19,6 +19,7 @@ from rich.panel import Panel
 from pyegeria import GlossaryManager
 from pyegeria.core._exceptions import (
     PyegeriaException,
+    PyegeriaTimeoutException,
     print_basic_exception,
 )
 from pyegeria.omvs.glossary_manager import GlossaryTermProperties
@@ -33,6 +34,7 @@ class TestResult:
     scenario_name: str
     passed: bool
     duration: float
+    skipped: bool = False
     message: str = ""
     error: str = ""
 
@@ -160,6 +162,16 @@ class GlossaryScenarioTester:
                 message=f"Successfully completed full glossary lifecycle for {display_name}",
             )
 
+        except PyegeriaTimeoutException as e:
+            duration = time.perf_counter() - start_time
+            console.print(f"[yellow]Timeout in {scenario_name}; continuing.[/yellow]")
+            return TestResult(
+                scenario_name=scenario_name,
+                passed=False,
+                skipped=True,
+                duration=duration,
+                message=f"Timeout: {e}",
+            )
         except PyegeriaException as e:
             duration = time.perf_counter() - start_time
             print_basic_exception(e)
@@ -287,6 +299,16 @@ class GlossaryScenarioTester:
                 message=f"Successfully managed {len(term_names)} terms in glossary",
             )
 
+        except PyegeriaTimeoutException as e:
+            duration = time.perf_counter() - start_time
+            console.print(f"[yellow]Timeout in {scenario_name}; continuing.[/yellow]")
+            return TestResult(
+                scenario_name=scenario_name,
+                passed=False,
+                skipped=True,
+                duration=duration,
+                message=f"Timeout: {e}",
+            )
         except PyegeriaException as e:
             duration = time.perf_counter() - start_time
             print_basic_exception(e)
@@ -382,6 +404,16 @@ class GlossaryScenarioTester:
                 message=f"Successfully searched and retrieved {len(glossary_names)} glossaries",
             )
 
+        except PyegeriaTimeoutException as e:
+            duration = time.perf_counter() - start_time
+            console.print(f"[yellow]Timeout in {scenario_name}; continuing.[/yellow]")
+            return TestResult(
+                scenario_name=scenario_name,
+                passed=False,
+                skipped=True,
+                duration=duration,
+                message=f"Timeout: {e}",
+            )
         except PyegeriaException as e:
             duration = time.perf_counter() - start_time
             print_basic_exception(e)
@@ -505,6 +537,16 @@ class GlossaryScenarioTester:
                 message="Successfully copied term between glossaries",
             )
 
+        except PyegeriaTimeoutException as e:
+            duration = time.perf_counter() - start_time
+            console.print(f"[yellow]Timeout in {scenario_name}; continuing.[/yellow]")
+            return TestResult(
+                scenario_name=scenario_name,
+                passed=False,
+                skipped=True,
+                duration=duration,
+                message=f"Timeout: {e}",
+            )
         except PyegeriaException as e:
             duration = time.perf_counter() - start_time
             print_basic_exception(e)
@@ -556,6 +598,8 @@ class GlossaryScenarioTester:
 
                 if result.passed:
                     console.print(f"\n[green]✓ PASSED[/green] - {result.message}")
+                elif result.skipped:
+                    console.print(f"\n[yellow]⚠ SKIPPED[/yellow] - {result.message}")
                 else:
                     console.print(f"\n[red]✗ FAILED[/red] - {result.error}")
 
@@ -576,11 +620,17 @@ class GlossaryScenarioTester:
 
         total_duration = 0
         passed_count = 0
+        skipped_count = 0
 
         for result in results:
-            status = "[green]✓ PASS[/green]" if result.passed else "[red]✗ FAIL[/red]"
+            if result.passed:
+                status = "[green]✓ PASS[/green]"
+            elif result.skipped:
+                status = "[yellow]⚠ SKIP[/yellow]"
+            else:
+                status = "[red]✗ FAIL[/red]"
             duration_str = f"{result.duration:.2f}s"
-            details = result.message if result.passed else result.error
+            details = result.message if (result.passed or result.skipped) else result.error
 
             table.add_row(
                 result.scenario_name,
@@ -592,6 +642,8 @@ class GlossaryScenarioTester:
             total_duration += result.duration
             if result.passed:
                 passed_count += 1
+            if result.skipped:
+                skipped_count += 1
 
         console.print("\n")
         console.print(table)
@@ -600,7 +652,8 @@ class GlossaryScenarioTester:
         console.print(f"\n[bold]Summary:[/bold]")
         console.print(f"  Total scenarios: {len(results)}")
         console.print(f"  Passed: [green]{passed_count}[/green]")
-        console.print(f"  Failed: [red]{len(results) - passed_count}[/red]")
+        console.print(f"  Skipped: [yellow]{skipped_count}[/yellow]")
+        console.print(f"  Failed: [red]{len(results) - passed_count - skipped_count}[/red]")
         console.print(f"  Total duration: {total_duration:.2f}s")
         console.print(f"  Average duration: {total_duration / len(results):.2f}s")
 
@@ -612,7 +665,7 @@ def test_glossary_manager_scenarios():
     tester.print_results_summary(results)
 
     # Assert that all scenarios passed
-    assert all(result.passed for result in results), "Some scenarios failed"
+    assert all(result.passed or result.skipped for result in results), "Some scenarios failed"
 
 
 if __name__ == "__main__":

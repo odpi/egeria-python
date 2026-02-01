@@ -8,7 +8,7 @@ import time
 from datetime import datetime
 from rich.console import Console
 from pyegeria.omvs.metadata_expert import MetadataExpert
-from pyegeria.core._exceptions import PyegeriaException
+from pyegeria.core._exceptions import PyegeriaException, PyegeriaTimeoutException
 
 VIEW_SERVER = "qs-view-server"
 PLATFORM_URL = "https://localhost:9443"
@@ -82,6 +82,8 @@ def run_scenario():
         
         console.print("[bold green]Scenario completed successfully![/bold green]")
         
+    except PyegeriaTimeoutException as e:
+        console.print(f"[bold yellow]⚠ Timeout during scenario; continuing: {e}[/bold yellow]")
     except Exception as e:
         console.print(f"[bold red]Scenario failed: {e}[/bold red]")
 

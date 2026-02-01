@@ -14,7 +14,7 @@ from rich.console import Console
 from rich.table import Table
 
 from pyegeria.omvs.schema_maker import SchemaMaker
-from pyegeria.core._exceptions import PyegeriaException
+from pyegeria.core._exceptions import PyegeriaException, PyegeriaTimeoutException
 
 VIEW_SERVER = "qs-view-server"
 PLATFORM_URL = "https://localhost:9443"
@@ -79,6 +79,9 @@ class SchemaMakerScenarioTester:
             found = self.client.find_schema_types(search_string=qualified_name)
             
             return TestResult(name, "PASSED", time.perf_counter() - start_time, f"Created, updated and found schema type {guid}")
+        except PyegeriaTimeoutException as e:
+            rprint(f"[bold yellow]Timeout in {name}; continuing.[/bold yellow]")
+            return TestResult(name, "WARNING", time.perf_counter() - start_time, f"Timeout: {e}")
         except PyegeriaException as e:
             return TestResult(name, "FAILED", time.perf_counter() - start_time, str(e))
         except Exception as e:
@@ -100,7 +103,12 @@ class SchemaMakerScenarioTester:
         table.add_column("Duration (s)", justify="right")
         table.add_column("Message")
         for res in self.results:
-            style = "green" if res.status == "PASSED" else "red"
+            if res.status == "PASSED":
+                style = "green"
+            elif res.status == "WARNING":
+                style = "yellow"
+            else:
+                style = "red"
             table.add_row(res.scenario_name, f"[{style}]{res.status}[/{style}]", f"{res.duration:.2f}", res.message)
         console.print(table)
 

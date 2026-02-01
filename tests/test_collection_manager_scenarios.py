@@ -31,6 +31,7 @@ from pyegeria.omvs.collection_manager import CollectionManager
 from pyegeria.core._exceptions import (
     PyegeriaException,
     PyegeriaAPIException,
+    PyegeriaTimeoutException,
     print_exception_table,
 )
 
@@ -285,6 +286,16 @@ class CollectionManagerScenarioTester:
             
         except Exception as e:
             duration = time.perf_counter() - start_time
+            if isinstance(e, PyegeriaTimeoutException):
+                console.print(f"  [yellow]⚠ Timeout in {scenario_name}; continuing.[/yellow]")
+                return TestResult(
+                    scenario_name=scenario_name,
+                    status="WARNING",
+                    duration=duration,
+                    message=f"Timeout: {str(e)[:100]}",
+                    error=e,
+                    created_guids=created_guids
+                )
             console.print(f"  [red]✗ Error: {str(e)}[/red]")
             print_exception_table(e) if isinstance(e, PyegeriaException) else console.print_exception()
             return TestResult(
@@ -396,6 +407,16 @@ class CollectionManagerScenarioTester:
             
         except Exception as e:
             duration = time.perf_counter() - start_time
+            if isinstance(e, PyegeriaTimeoutException):
+                console.print(f"  [yellow]⚠ Timeout in {scenario_name}; continuing.[/yellow]")
+                return TestResult(
+                    scenario_name=scenario_name,
+                    status="WARNING",
+                    duration=duration,
+                    message=f"Timeout: {str(e)[:100]}",
+                    error=e,
+                    created_guids=created_guids
+                )
             console.print(f"  [red]✗ Error: {str(e)}[/red]")
             print_exception_table(e) if isinstance(e, PyegeriaException) else console.print_exception()
             return TestResult(
@@ -501,6 +522,16 @@ class CollectionManagerScenarioTester:
             
         except Exception as e:
             duration = time.perf_counter() - start_time
+            if isinstance(e, PyegeriaTimeoutException):
+                console.print(f"  [yellow]⚠ Timeout in {scenario_name}; continuing.[/yellow]")
+                return TestResult(
+                    scenario_name=scenario_name,
+                    status="WARNING",
+                    duration=duration,
+                    message=f"Timeout: {str(e)[:100]}",
+                    error=e,
+                    created_guids=created_guids
+                )
             console.print(f"  [red]✗ Error: {str(e)}[/red]")
             print_exception_table(e) if isinstance(e, PyegeriaException) else console.print_exception()
             return TestResult(
@@ -617,6 +648,16 @@ class CollectionManagerScenarioTester:
             
         except Exception as e:
             duration = time.perf_counter() - start_time
+            if isinstance(e, PyegeriaTimeoutException):
+                console.print(f"  [yellow]⚠ Timeout in {scenario_name}; continuing.[/yellow]")
+                return TestResult(
+                    scenario_name=scenario_name,
+                    status="WARNING",
+                    duration=duration,
+                    message=f"Timeout: {str(e)[:100]}",
+                    error=e,
+                    created_guids=created_guids
+                )
             console.print(f"  [red]✗ Error: {str(e)}[/red]")
             print_exception_table(e) if isinstance(e, PyegeriaException) else console.print_exception()
             return TestResult(

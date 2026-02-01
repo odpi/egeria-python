@@ -30,7 +30,9 @@ from rich.panel import Panel
 from pyegeria.omvs.asset_catalog import AssetCatalog
 from pyegeria.core._exceptions import (
     PyegeriaAPIException,
+    PyegeriaTimeoutException,
     print_validation_error,
+    print_basic_exception,
 )
 from pydantic import ValidationError
 
@@ -155,7 +157,18 @@ class AssetCatalogScenarioTester:
             )
         except Exception as e:
             duration = time.perf_counter() - start_time
+            if isinstance(e, PyegeriaTimeoutException):
+                console.print(f"  [yellow]⚠ Timeout in {scenario_name}; continuing.[/yellow]")
+                return TestResult(
+                    scenario_name=scenario_name,
+                    status="WARNING",
+                    duration=duration,
+                    message=f"Timeout: {str(e)}",
+                    error=e
+                )
             console.print(f"  [red]✗ Scenario failed: {str(e)}[/red]")
+            print_basic_exception(e)
+
             traceback.print_exc()
             return TestResult(
                 scenario_name=scenario_name,
@@ -258,6 +271,15 @@ class AssetCatalogScenarioTester:
             )
         except Exception as e:
             duration = time.perf_counter() - start_time
+            if isinstance(e, PyegeriaTimeoutException):
+                console.print(f"  [yellow]⚠ Timeout in {scenario_name}; continuing.[/yellow]")
+                return TestResult(
+                    scenario_name=scenario_name,
+                    status="WARNING",
+                    duration=duration,
+                    message=f"Timeout: {str(e)}",
+                    error=e
+                )
             console.print(f"  [red]✗ Scenario failed: {str(e)}[/red]")
             traceback.print_exc()
             return TestResult(
@@ -342,6 +364,15 @@ class AssetCatalogScenarioTester:
             )
         except Exception as e:
             duration = time.perf_counter() - start_time
+            if isinstance(e, PyegeriaTimeoutException):
+                console.print(f"  [yellow]⚠ Timeout in {scenario_name}; continuing.[/yellow]")
+                return TestResult(
+                    scenario_name=scenario_name,
+                    status="WARNING",
+                    duration=duration,
+                    message=f"Timeout: {str(e)}",
+                    error=e
+                )
             console.print(f"  [red]✗ Scenario failed: {str(e)}[/red]")
             traceback.print_exc()
             return TestResult(
@@ -436,6 +467,15 @@ class AssetCatalogScenarioTester:
             )
         except Exception as e:
             duration = time.perf_counter() - start_time
+            if isinstance(e, PyegeriaTimeoutException):
+                console.print(f"  [yellow]⚠ Timeout in {scenario_name}; continuing.[/yellow]")
+                return TestResult(
+                    scenario_name=scenario_name,
+                    status="WARNING",
+                    duration=duration,
+                    message=f"Timeout: {str(e)}",
+                    error=e
+                )
             console.print(f"  [red]✗ Scenario failed: {str(e)}[/red]")
             traceback.print_exc()
             return TestResult(

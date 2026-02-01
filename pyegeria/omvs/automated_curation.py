@@ -22,7 +22,7 @@ from pyegeria.core._validators import validate_guid, validate_name, validate_sea
 # )
 from pyegeria.models import GetRequestBody, FilterRequestBody, SearchStringRequestBody, TemplateRequestBody
 from typing import Any, Optional
-from pyegeria.core.utils import body_slimmer, dynamic_catch
+from pyegeria.core.utils import body_slimmer, dynamic_catch, to_camel_case
 from pyegeria.core.config import settings
 from pyegeria.view.base_report_formats import select_report_format, get_report_spec_match
 from pyegeria.view.output_formatter import (
@@ -419,6 +419,7 @@ class AutomatedCuration(ServerClient):
         )
 
     def _extract_engine_action_properties(self, element: dict, columns_struct: dict) -> dict:
+
         col_data = populate_columns_from_properties(element, columns_struct)
         columns_list = col_data.get("formats", {}).get("attributes", [])
         header_props = _extract_referenceable_properties(element)
@@ -2073,16 +2074,20 @@ class AutomatedCuration(ServerClient):
         """
 
         url = (
-            f"{self.curation_command_root}/engine-actions/active"
+            f"{self.curation_command_root}/engine-actions/active?startFrom={start_from}&pageSize={page_size}"
         )
 
-        response = await self._async_get_name_request(url, _type=self.ENGINE_ACTION_LABEL,
-                                                      _gen_output=self._generate_engine_action_output,
-                                                      filter_string=None,
-                                                      start_from=start_from, page_size=page_size,
-                                                      output_format=output_format, report_spec=report_spec)
+        response = await self._async_make_request('GET', url)
+        elements = response.json().get("elements", NO_ELEMENTS_FOUND)
+        if type(elements) is str:
+            logger.info(NO_ELEMENTS_FOUND)
+            return NO_ELEMENTS_FOUND
 
-        return response
+        if output_format.upper() != "JSON":
+            return self._generate_engine_action_output(elements, "All", "EngineAction",
+                                                    output_format, report_spec)
+        return elements
+
 
     def get_active_engine_actions(
             self, start_from: int = 0, page_size: int = 0,

@@ -229,6 +229,38 @@ class ReferenceableProperties(OpenMetadataRootProperties):
     additional_properties: dict | None = None
 
 
+class GovernanceControlProperties(ReferenceableProperties):
+    class_: Annotated[Literal["GovernanceControlProperties"], Field(alias="class")]
+    domain_identifier: int | None = 0
+    document_identifier: str | None = None
+    title: str | None = None
+    summary: str | None = None
+    scope: str | None = None
+    importance: str | None = None
+    outcomes: list[str] | None = None
+    results: list[str] | None = None
+    implications: list[str] | None = None
+    implementation_description: str | None = None
+
+
+class MonitoredResourceProperties(PyegeriaModel):
+    class_: Annotated[Literal["MonitoredResourceProperties"], Field(alias="class")]
+    label: str | None = None
+    description: str | None = None
+    effective_from: datetime | None = None
+    effective_to: datetime | None = None
+
+
+class NotificationSubscriberProperties(PyegeriaModel):
+    class_: Annotated[Literal["NotificationSubscriberProperties"], Field(alias="class")]
+    label: str | None = None
+    description: str | None = None
+    activity_status: str | None = None
+    zone_membership: list[str] | None = None
+    effective_from: datetime | None = None
+    effective_to: datetime | None = None
+
+
 class RequestBody(PyegeriaModel):
     external_source_guid: str | None = None
     external_source_name: str | None = None

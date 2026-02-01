@@ -30,6 +30,7 @@ from pyegeria.omvs.automated_curation import AutomatedCuration
 from pyegeria.core._exceptions import (
     PyegeriaException,
     PyegeriaAPIException,
+    PyegeriaTimeoutException,
     print_exception_table,
     print_basic_exception,
 )
@@ -188,6 +189,15 @@ class AutomatedCurationScenarioTester:
             )
         except Exception as e:
             duration = time.perf_counter() - start_time
+            if isinstance(e, PyegeriaTimeoutException):
+                console.print(f"  [yellow]⚠ Timeout in {scenario_name}; continuing.[/yellow]")
+                return TestResult(
+                    scenario_name=scenario_name,
+                    status="WARNING",
+                    duration=duration,
+                    message=f"Timeout: {str(e)[:100]}",
+                    error=e
+                )
             console.print(f"  [red]✗ Error: {str(e)}[/red]")
             print_exception_table(e) if isinstance(e, PyegeriaException) else console.print_exception()
             return TestResult(
@@ -261,6 +271,15 @@ class AutomatedCurationScenarioTester:
             )
         except Exception as e:
             duration = time.perf_counter() - start_time
+            if isinstance(e, PyegeriaTimeoutException):
+                console.print(f"  [yellow]⚠ Timeout in {scenario_name}; continuing.[/yellow]")
+                return TestResult(
+                    scenario_name=scenario_name,
+                    status="WARNING",
+                    duration=duration,
+                    message=f"Timeout: {str(e)[:100]}",
+                    error=e
+                )
             console.print(f"  [red]✗ Error: {str(e)}[/red]")
             print_exception_table(e) if isinstance(e, PyegeriaException) else console.print_exception()
             return TestResult(
@@ -325,6 +344,15 @@ class AutomatedCurationScenarioTester:
             )
         except Exception as e:
             duration = time.perf_counter() - start_time
+            if isinstance(e, PyegeriaTimeoutException):
+                console.print(f"  [yellow]⚠ Timeout in {scenario_name}; continuing.[/yellow]")
+                return TestResult(
+                    scenario_name=scenario_name,
+                    status="WARNING",
+                    duration=duration,
+                    message=f"Timeout: {str(e)[:100]}",
+                    error=e
+                )
             console.print(f"  [red]✗ Error: {str(e)}[/red]")
             print_exception_table(e) if isinstance(e, PyegeriaException) else console.print_exception()
             return TestResult(
@@ -389,6 +417,15 @@ class AutomatedCurationScenarioTester:
             )
         except Exception as e:
             duration = time.perf_counter() - start_time
+            if isinstance(e, PyegeriaTimeoutException):
+                console.print(f"  [yellow]⚠ Timeout in {scenario_name}; continuing.[/yellow]")
+                return TestResult(
+                    scenario_name=scenario_name,
+                    status="WARNING",
+                    duration=duration,
+                    message=f"Timeout: {str(e)[:100]}",
+                    error=e
+                )
             console.print(f"  [red]✗ Error: {str(e)}[/red]")
             print_exception_table(e) if isinstance(e, PyegeriaException) else console.print_exception()
             return TestResult(

@@ -10,7 +10,12 @@ from rich import print
 from rich.console import Console
 from rich.markdown import Markdown
 
-from md_processing.md_processing_utils.common_md_proc_utils import (parse_upsert_command, parse_view_command)
+from md_processing.md_processing_utils.common_md_proc_utils import (
+    parse_upsert_command,
+    parse_view_command,
+    render_command_table,
+    render_exception_table,
+)
 from md_processing.md_processing_utils.common_md_utils import update_element_dictionary, set_update_body, \
     set_element_prop_body, set_delete_request_body, set_rel_request_body, set_create_body, set_object_classifications, \
     set_product_body
@@ -192,14 +197,14 @@ def process_collection_upsert_command(egeria_client: EgeriaTech, txt: str, direc
 
     else:
         obj = object_type
-    print(Markdown(parsed_output['display']))
+    render_command_table(parsed_output, directive)
 
     if directive == "display":
 
         return None
     elif directive == "validate":
         if valid:
-            print(Markdown(f"==> Validation of {command} completed successfully!\n"))
+            pass
         else:
             msg = f"Validation failed for object_action `{command}`\n"
         return valid
@@ -273,7 +278,7 @@ def process_collection_upsert_command(egeria_client: EgeriaTech, txt: str, direc
 
         except PyegeriaException as e:
             logger.error(f"Pyegeria error performing {command}: {e}")
-            print_basic_exception(e)
+            render_exception_table(command, "process", e)
             return None
         except Exception as e:
             logger.error(f"Error performing {command}: {e}")
@@ -305,7 +310,7 @@ def process_digital_product_upsert_command(egeria_client: EgeriaTech, txt: str,
     qualified_name = parsed_output.get('qualified_name', None)
     guid = parsed_output.get('guid', None)
 
-    print(Markdown(parsed_output['display']))
+    render_command_table(parsed_output, directive)
 
     logger.debug(json.dumps(parsed_output, indent=4))
 
@@ -321,7 +326,7 @@ def process_digital_product_upsert_command(egeria_client: EgeriaTech, txt: str,
         return None
     elif directive == "validate":
         if valid:
-            print(Markdown(f"==> Validation of {command} completed successfully!\n"))
+            pass
         else:
             msg = f"Validation failed for object_action `{command}`\n"
         return valid
@@ -418,7 +423,7 @@ def process_digital_product_upsert_command(egeria_client: EgeriaTech, txt: str,
     #     qualified_name = parsed_output.get('qualified_name', None)
     #     guid = parsed_output.get('guid', None)
     #
-    #     print(Markdown(parsed_output['display']))
+    #     render_command_table(parsed_output, directive)
     #
     #     logger.debug(json.dumps(parsed_output, indent=4))
     #
@@ -433,7 +438,6 @@ def process_digital_product_upsert_command(egeria_client: EgeriaTech, txt: str,
     #         return None
     #     elif directive == "validate":
     #         if valid:
-    #             print(Markdown(f"==> Validation of {command} completed successfully!\n"))
     #         else:
     #             msg = f"Validation failed for object_action `{command}`\n"
     #         return valid
@@ -533,7 +537,7 @@ def process_agreement_upsert_command(egeria_client: EgeriaTech, txt: str, direct
     qualified_name = parsed_output.get('qualified_name', None)
     guid = parsed_output.get('guid', None)
 
-    print(Markdown(parsed_output['display']))
+    render_command_table(parsed_output, directive)
 
     logger.debug(json.dumps(parsed_output, indent=4))
 
@@ -548,7 +552,7 @@ def process_agreement_upsert_command(egeria_client: EgeriaTech, txt: str, direct
         return None
     elif directive == "validate":
         if valid:
-            print(Markdown(f"==> Validation of {command} completed successfully!\n"))
+            pass
         else:
             msg = f"Validation failed for object_action `{command}`\n"
         return valid
@@ -653,7 +657,7 @@ def process_csv_element_upsert_command(egeria_client: EgeriaTech, txt: str, dire
     qualified_name = parsed_output.get('qualified_name', None)
     guid = parsed_output.get('guid', None)
 
-    print(Markdown(parsed_output['display']))
+    render_command_table(parsed_output, directive)
 
     logger.debug(json.dumps(parsed_output, indent=4))
 
@@ -677,7 +681,7 @@ def process_csv_element_upsert_command(egeria_client: EgeriaTech, txt: str, dire
         return None
     elif directive == "validate":
         if valid:
-            print(Markdown(f"==> Validation of {command} completed successfully!\n"))
+            pass
         else:
             msg = f"Validation failed for object_action `{command}`\n"
         return valid
@@ -745,7 +749,7 @@ def process_link_agreement_item_command(egeria_client: EgeriaTech, txt: str,
 
     parsed_output = parse_view_command(egeria_client, object_type, object_action, txt, directive)
 
-    print(Markdown(parsed_output['display']))
+    render_command_table(parsed_output, directive)
 
     logger.debug(json.dumps(parsed_output, indent=4))
 
@@ -765,7 +769,7 @@ def process_link_agreement_item_command(egeria_client: EgeriaTech, txt: str,
         return None
     elif directive == "validate":
         if valid:
-            print(Markdown(f"==> Validation of {command} completed successfully!\n"))
+            pass
         else:
             msg = f"Validation failed for object_action `{command}`\n"
         return valid
@@ -773,7 +777,7 @@ def process_link_agreement_item_command(egeria_client: EgeriaTech, txt: str,
     elif directive == "process":
 
         try:
-            if object_action == "Detach":
+            if object_action in ["Detach", "Unlink", "Remove"]:
                 if not exists:
                     msg = (f" Link `{label}` does not exist! Updating result document with Link "
                            f"object_action\n")
@@ -794,7 +798,7 @@ def process_link_agreement_item_command(egeria_client: EgeriaTech, txt: str,
 
                     return (out)
 
-            elif object_action == "Link":
+            elif object_action in ["Link", "Attach", "Add"]:
                 if valid is False and exists:
                     msg = (f"-->  Link called `{label}` already exists and result document updated changing "
                            f"`Link` to `Detach` in processed output\n")
@@ -852,7 +856,7 @@ def process_add_to_collection_command(egeria_client: EgeriaTech, txt: str,
 
     parsed_output = parse_view_command(egeria_client, object_type, object_action, txt, directive)
 
-    print(Markdown(parsed_output['display']))
+    render_command_table(parsed_output, directive)
 
     logger.debug(json.dumps(parsed_output, indent=4))
 
@@ -881,7 +885,7 @@ def process_add_to_collection_command(egeria_client: EgeriaTech, txt: str,
         return None
     elif directive == "validate":
         if valid:
-            print(Markdown(f"==> Validation of {command} completed successfully!\n"))
+            pass
         else:
             msg = f"Validation failed for object_action `{command}`\n"
         return valid
@@ -891,7 +895,7 @@ def process_add_to_collection_command(egeria_client: EgeriaTech, txt: str,
             "class": "CollectionMembershipProperties",
             "membershipRationale": membership_rationale,
             "expression": expression,
-            "membershipStatus": membership_status,
+            "membershipStatus": membership_status.upper(),
             "userDefinedStatus": user_defined_status,
             "confidence": confidence,
             "steward": steward,
@@ -928,10 +932,7 @@ def process_add_to_collection_command(egeria_client: EgeriaTech, txt: str,
                     msg = (f"-->  Link called `{label}` already exists and result document updated changing "
                            f"`Link` to `Detach` in processed output\n")
                     logger.error(msg)
-                if valid is False and exists:
-                    msg = (f"-->  Link called `{label}` already exists and result document updated changing "
-                           f"`Link` to `Detach` in processed output\n")
-                    logger.error(msg)
+
 
                 elif valid is False:
                     msg = f"==>{object_type} Link with label `{label}` is not valid and can't be created"
@@ -950,7 +951,10 @@ def process_add_to_collection_command(egeria_client: EgeriaTech, txt: str,
                     out = parsed_output['display'].replace('Link', 'Detach', 1)
                     return out
 
-
+        except PyegeriaException as e:
+            logger.error(f"Error performing {command}: {e}")
+            render_exception_table(command, "process", e)
+            return None
         except Exception as e:
             logger.error(f"Error performing {command}: {e}")
             return None
@@ -973,7 +977,7 @@ def process_product_dependency_command(egeria_client: EgeriaTech, txt: str,
 
     parsed_output = parse_view_command(egeria_client, object_type, object_action, txt, directive)
 
-    print(Markdown(parsed_output['display']))
+    render_command_table(parsed_output, directive)
 
     logger.debug(json.dumps(parsed_output, indent=4))
 
@@ -993,7 +997,7 @@ def process_product_dependency_command(egeria_client: EgeriaTech, txt: str,
         return None
     elif directive == "validate":
         if valid:
-            print(Markdown(f"==> Validation of {command} completed successfully!\n"))
+            pass
         else:
             msg = f"Validation failed for object_action `{command}`\n"
         return valid
@@ -1008,7 +1012,7 @@ def process_product_dependency_command(egeria_client: EgeriaTech, txt: str,
         }
 
         try:
-            if object_action == "Detach":
+            if object_action in ["Detach", "Unlink", "Remove"]:
                 if not exists:
                     msg = (f" Link `{label}` does not exist! Updating result document with Link "
                            f"object_action\n")
@@ -1030,7 +1034,7 @@ def process_product_dependency_command(egeria_client: EgeriaTech, txt: str,
 
                     return (out)
 
-            elif object_action == "Link":
+            elif object_action in ["Link", "Attach", "Add"]:
                 if valid is False and exists:
                     msg = (f"-->  Link called `{label}` already exists and result document updated changing "
                            f"`Link` to `Detach` in processed output\n")
@@ -1075,7 +1079,7 @@ def process_attach_collection_command(egeria_client: EgeriaTech, txt: str,
 
     parsed_output = parse_view_command(egeria_client, object_type, object_action, txt, directive)
 
-    print(Markdown(parsed_output['display']))
+    render_command_table(parsed_output, directive)
 
     logger.debug(json.dumps(parsed_output, indent=4))
 
@@ -1096,7 +1100,7 @@ def process_attach_collection_command(egeria_client: EgeriaTech, txt: str,
         return None
     elif directive == "validate":
         if valid:
-            print(Markdown(f"==> Validation of {command} completed successfully!\n"))
+            pass
         else:
             msg = f"Validation failed for object_action `{command}`\n"
         return valid
@@ -1112,7 +1116,7 @@ def process_attach_collection_command(egeria_client: EgeriaTech, txt: str,
         }
 
         try:
-            if object_action == "Detach":
+            if object_action in ["Detach", "Unlink", "Remove"]:
                 if not exists:
                     msg = (f" Link `Attach Resource to Collection` does not exist! Updating result document with Link "
                            f"object_action\n")
@@ -1134,7 +1138,7 @@ def process_attach_collection_command(egeria_client: EgeriaTech, txt: str,
 
                     return (out)
 
-            elif object_action == "Link":
+            elif object_action in ["Link", "Attach", "Add"]:
                 if valid is False and exists:
                     msg = (
                         f"-->  Link called `Attach Resource to Collection` already exists and result document updated changing "
@@ -1183,7 +1187,7 @@ def process_attach_subscriber_command(egeria_client: EgeriaTech, txt: str,
         logger.error(f"Input error in command `{txt}`")
         return None
 
-    print(Markdown(parsed_output['display']))
+    render_command_table(parsed_output, directive)
 
     logger.debug(json.dumps(parsed_output, indent=4))
 
@@ -1198,7 +1202,7 @@ def process_attach_subscriber_command(egeria_client: EgeriaTech, txt: str,
         return None
     elif directive == "validate":
         if valid:
-            print(Markdown(f"==> Validation of {command} completed successfully!\n"))
+            pass
         else:
             msg = f"Validation failed for object_action `{command}`\n"
         return valid
@@ -1212,7 +1216,7 @@ def process_attach_subscriber_command(egeria_client: EgeriaTech, txt: str,
         }
 
         try:
-            if object_action == "Detach":
+            if object_action in ["Detach", "Unlink", "Remove"]:
                 if not exists:
                     msg = (
                         f" Link `Attach Subscriber to Subscription` does not exist! Updating result document with Link "
@@ -1235,7 +1239,7 @@ def process_attach_subscriber_command(egeria_client: EgeriaTech, txt: str,
 
                     return (out)
 
-            elif object_action == "Link":
+            elif object_action in ["Link", "Attach", "Add"]:
                 if valid is False and exists:
                     msg = (
                         f"-->  Link called `Attach Subscriber to Subscription` already exists and result document updated changing "

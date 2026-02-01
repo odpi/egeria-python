@@ -944,7 +944,7 @@ class SolutionArchitect(ServerClient):
         elif isinstance(body, dict):
             validated_body = self._template_request_adapter.validate_python(body)
 
-        json_body = validated_body.model_dump_json(indent=2, exclude_none=True)
+        json_body = validated_body.model_dump_json(indent=2, exclude_none=True, by_alias=True)
         logger.info(json_body)
         resp = await self._async_make_request("POST", url, json_body, is_json=True)
         logger.info(f"Create Supply Chain from template with GUID: {resp.json().get('guid')}")
@@ -2595,7 +2595,7 @@ class SolutionArchitect(ServerClient):
         elif isinstance(body, dict):
             validated_body = self._template_request_adapter.validate_python(body)
 
-        json_body = validated_body.model_dump_json(indent=2, exclude_none=True)
+        json_body = validated_body.model_dump_json(indent=2, exclude_none=True, by_alias=True)
         logger.info(json_body)
         resp = await self._async_make_request("POST", url, json_body, is_json=True)
         logger.info(f"Create Blueprint from template with GUID: {resp.json().get('guid')}")
@@ -2929,7 +2929,7 @@ class SolutionArchitect(ServerClient):
         url = (f"{self.platform_url}/servers/{self.view_server}/api/open-metadata/solution-architect/"
                f"solution-blueprints/{blueprint_guid}/solution-components/{component_guid}/attach")
 
-        await self._async_new_relationship_request(url, ["SolutionComponentCompositionProperties"], body)
+        await self._async_new_relationship_request(url, ["SolutionBlueprintCompositionProperties"], body)
         logger.info(f"Linked component to blueprint {component_guid} -> {blueprint_guid}")
 
     @dynamic_catch
@@ -3917,7 +3917,7 @@ class SolutionArchitect(ServerClient):
         elif isinstance(body, dict):
             validated_body = self._template_request_adapter.validate_python(body)
 
-        json_body = validated_body.model_dump_json(indent=2, exclude_none=True)
+        json_body = validated_body.model_dump_json(indent=2, exclude_none=True, by_alias=True)
         logger.info(json_body)
         resp = await self._async_make_request("POST", url, json_body, is_json=True)
         logger.info(f"Create Solution Component from template with GUID: {resp.json().get('guid')}")
@@ -5488,7 +5488,7 @@ class SolutionArchitect(ServerClient):
         elif isinstance(body, dict):
             validated_body = self._template_request_adapter.validate_python(body)
 
-        json_body = validated_body.model_dump_json(indent=2, exclude_none=True)
+        json_body = validated_body.model_dump_json(indent=2, exclude_none=True, by_alias=True)
         logger.info(json_body)
         resp = await self._async_make_request("POST", url, json_body, is_json=True)
         logger.info(f"Create Solution Role from template with GUID: {resp.json().get('guid')}")
