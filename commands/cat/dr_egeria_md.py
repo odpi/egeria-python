@@ -1,42 +1,37 @@
 """
 This is an ongoing experiment in parsing and playing with Freddie docs
 """
-import argparse
 import os
 import sys
 
+import click
 from loguru import logger
 from rich.console import Console
 from rich.prompt import Prompt
 
+from pyegeria.core._exceptions import PyegeriaException
+from pyegeria.core.config import settings
+from md_processing.dr_egeria import process_md_file
+
+# Configure logging
 log_format = "{time} | {level} | {function} | {line} | {message} | {extra}"
 logger.remove()
 logger.add(sys.stderr, level="INFO", format=log_format, colorize=True)
 logger.add("debug_log.log", rotation="1 day", retention="1 week", compression="zip", level="TRACE", format=log_format,
            colorize=True)
-import click
 
-from pyegeria.core._exceptions import PyegeriaException
-from md_processing.dr_egeria import process_md_file
+# Load configuration from config/config.json with environment variable overrides
+app_config = settings.Environment
 
-EGERIA_METADATA_STORE = os.environ.get("EGERIA_METADATA_STORE", "active-metadata-store")
-EGERIA_KAFKA_ENDPOINT = os.environ.get("KAFKA_ENDPOINT", "localhost:9092")
-EGERIA_PLATFORM_URL = os.environ.get("EGERIA_PLATFORM_URL", "https://localhost:9443")
-EGERIA_VIEW_SERVER = os.environ.get("EGERIA_VIEW_SERVER", "view-server")
-EGERIA_VIEW_SERVER_URL = os.environ.get("EGERIA_VIEW_SERVER_URL", "https://localhost:9443")
-EGERIA_INTEGRATION_DAEMON = os.environ.get("EGERIA_INTEGRATION_DAEMON", "integration-daemon")
-EGERIA_INTEGRATION_DAEMON_URL = os.environ.get("EGERIA_INTEGRATION_DAEMON_URL", "https://localhost:9443")
-EGERIA_ADMIN_USER = os.environ.get("ADMIN_USER", "garygeeke")
-EGERIA_ADMIN_PASSWORD = os.environ.get("ADMIN_PASSWORD", "secret")
+# Get configuration values with environment variable fallbacks
+EGERIA_VIEW_SERVER = os.environ.get("EGERIA_VIEW_SERVER", app_config.egeria_view_server)
+EGERIA_VIEW_SERVER_URL = os.environ.get("EGERIA_VIEW_SERVER_URL", app_config.egeria_view_server_url)
+# User credentials are only from environment variables or command line (not stored in config for security)
 EGERIA_USER = os.environ.get("EGERIA_USER", "erinoverview")
 EGERIA_USER_PASSWORD = os.environ.get("EGERIA_USER_PASSWORD", "secret")
-EGERIA_WIDTH = os.environ.get("EGERIA_WIDTH", 220)
-EGERIA_JUPYTER = os.environ.get("EGERIA_JUPYTER", False)
-EGERIA_HOME_GLOSSARY_GUID = os.environ.get("EGERIA_HOME_GLOSSARY_GUID", None)
-EGERIA_GLOSSARY_PATH = os.environ.get("EGERIA_GLOSSARY_PATH", None)
-EGERIA_ROOT_PATH = os.environ.get("EGERIA_ROOT_PATH", "../..")
-EGERIA_INBOX_PATH = os.environ.get("EGERIA_INBOX_PATH", "md_processing/dr_egeria_inbox")
-EGERIA_OUTBOX_PATH = os.environ.get("EGERIA_OUTBOX_PATH", "md_processing/dr_egeria_outbox")
+EGERIA_WIDTH = int(os.environ.get("EGERIA_WIDTH", app_config.console_width or 220))
+EGERIA_JUPYTER = os.environ.get("EGERIA_JUPYTER", str(app_config.egeria_jupyter)).lower() in ("true", "1", "yes")
+
 console = Console(width=EGERIA_WIDTH)
 
 @click.command("process_markdown_file", help="Process a markdown file and return the output as a string.")

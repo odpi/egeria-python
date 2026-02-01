@@ -7,42 +7,50 @@ from datetime import datetime
 
 from loguru import logger
 from pydantic import ValidationError
-
 from rich import print
 from rich.console import Console
 
 from md_processing import (extract_command, process_provenance_command, get_current_datetime_string, command_list)
 from md_processing.md_processing_utils.common_md_proc_utils import set_parse_summary_mode
 from md_processing.md_processing_utils.common_md_utils import set_attribute_log_level
-
 from md_processing.command_mapping import setup_dispatcher
 
 from pyegeria import EgeriaTech, PyegeriaException, print_basic_exception, print_validation_error
+from pyegeria.core.config import settings
 
-EGERIA_METADATA_STORE = os.environ.get("EGERIA_METADATA_STORE", "active-metadata-store")
-EGERIA_KAFKA_ENDPOINT = os.environ.get("KAFKA_ENDPOINT", "localhost:9092")
-EGERIA_PLATFORM_URL = os.environ.get("EGERIA_PLATFORM_URL", "https://localhost:9443")
-EGERIA_VIEW_SERVER = os.environ.get("EGERIA_VIEW_SERVER", "view-server")
-EGERIA_VIEW_SERVER_URL = os.environ.get("EGERIA_VIEW_SERVER_URL", "https://localhost:9443")
-EGERIA_INTEGRATION_DAEMON = os.environ.get("EGERIA_INTEGRATION_DAEMON", "integration-daemon")
-EGERIA_INTEGRATION_DAEMON_URL = os.environ.get("EGERIA_INTEGRATION_DAEMON_URL", "https://localhost:9443")
-EGERIA_ADMIN_USER = os.environ.get("ADMIN_USER", "garygeeke")
-EGERIA_ADMIN_PASSWORD = os.environ.get("ADMIN_PASSWORD", "secret")
-EGERIA_USER = os.environ.get("EGERIA_USER", "erinoverview")
-EGERIA_USER_PASSWORD = os.environ.get("EGERIA_USER_PASSWORD", "secret")
-EGERIA_WIDTH = os.environ.get("EGERIA_WIDTH", 220)
-EGERIA_JUPYTER = os.environ.get("EGERIA_JUPYTER", False)
-EGERIA_HOME_GLOSSARY_GUID = os.environ.get("EGERIA_HOME_GLOSSARY_GUID", None)
-EGERIA_GLOSSARY_PATH = os.environ.get("EGERIA_GLOSSARY_PATH", None)
-EGERIA_ROOT_PATH = os.environ.get("EGERIA_ROOT_PATH", "../../")
-EGERIA_INBOX_PATH = os.environ.get("EGERIA_INBOX_PATH", "md_processing/dr_egeria_inbox")
-EGERIA_OUTBOX_PATH = os.environ.get("EGERIA_OUTBOX_PATH", "md_processing/dr_egeria_outbox")
-
+# Configure logging
 log_format = "{time} | {level} | {function} | {line} | {message} | {extra}"
 logger.remove()
 logger.add(sys.stderr, level="ERROR", format=log_format, colorize=True)
 logger.add("debug_log.log", rotation="1 day", retention="1 week", compression="zip", level="INFO", format=log_format,
            colorize=True)
+
+# Load configuration from config/config.json with environment variable overrides
+app_config = settings.Environment
+
+# Get configuration values with environment variable fallbacks
+EGERIA_METADATA_STORE = os.environ.get("EGERIA_METADATA_STORE", app_config.egeria_metadata_store)
+EGERIA_KAFKA_ENDPOINT = os.environ.get("KAFKA_ENDPOINT", app_config.egeria_kafka_endpoint)
+EGERIA_PLATFORM_URL = os.environ.get("EGERIA_PLATFORM_URL", app_config.egeria_platform_url)
+EGERIA_VIEW_SERVER = os.environ.get("EGERIA_VIEW_SERVER", app_config.egeria_view_server)
+EGERIA_VIEW_SERVER_URL = os.environ.get("EGERIA_VIEW_SERVER_URL", app_config.egeria_view_server_url)
+EGERIA_INTEGRATION_DAEMON = os.environ.get("EGERIA_INTEGRATION_DAEMON", app_config.egeria_integration_daemon)
+EGERIA_INTEGRATION_DAEMON_URL = os.environ.get("EGERIA_INTEGRATION_DAEMON_URL", app_config.egeria_integration_daemon_url)
+EGERIA_WIDTH = int(os.environ.get("EGERIA_WIDTH", app_config.console_width or 220))
+EGERIA_JUPYTER = os.environ.get("EGERIA_JUPYTER", str(app_config.egeria_jupyter)).lower() in ("true", "1", "yes")
+EGERIA_GLOSSARY_PATH = os.environ.get("EGERIA_GLOSSARY_PATH", app_config.egeria_glossary_path)
+EGERIA_ROOT_PATH = os.environ.get("EGERIA_ROOT_PATH", app_config.pyegeria_root or "../../")
+EGERIA_INBOX_PATH = os.environ.get("EGERIA_INBOX_PATH", app_config.dr_egeria_inbox)
+EGERIA_OUTBOX_PATH = os.environ.get("EGERIA_OUTBOX_PATH", app_config.dr_egeria_outbox)
+
+# User credentials and admin credentials are only from environment variables (not stored in config for security)
+EGERIA_ADMIN_USER = os.environ.get("ADMIN_USER", "garygeeke")
+EGERIA_ADMIN_PASSWORD = os.environ.get("ADMIN_PASSWORD", "secret")
+EGERIA_USER = os.environ.get("EGERIA_USER", "erinoverview")
+EGERIA_USER_PASSWORD = os.environ.get("EGERIA_USER_PASSWORD", "secret")
+
+# Legacy environment variables (deprecated, kept for backward compatibility)
+EGERIA_HOME_GLOSSARY_GUID = os.environ.get("EGERIA_HOME_GLOSSARY_GUID", None)
 
 @logger.catch
 def process_md_file(input_file: str, output_folder: str, directive: str, server: str, url: str, userid: str,
