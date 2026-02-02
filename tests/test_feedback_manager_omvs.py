@@ -51,6 +51,7 @@ class TestFeedbackManager:
     good_view_server_2 = "qs-view-server"
     bad_server_1 = "coco"
     bad_server_2 = ""
+    test_element_guid = "49bc1002-1b0a-4194-9305-3607c713726d"
 
     def test_add_like_to_element(self):
         """Test adding a like to an element"""
@@ -68,11 +69,11 @@ class TestFeedbackManager:
             
             # Use a known element GUID from your test environment
             # This should be replaced with an actual test element
-            test_element_guid = "test-element-guid-123"
+            # test_element_guid = "test-element-guid-123"
             
             start_time = time.perf_counter()
             response = f_client.add_like_to_element(
-                test_element_guid,
+                self.test_element_guid,
                 is_public=True,
                 body={}
             )
@@ -115,7 +116,7 @@ class TestFeedbackManager:
                 self.good_user_2, self.good_user_2_pwd
             )
             
-            test_element_guid = "test-element-guid-123"
+            # test_element_guid = "test-element-guid-123"
             
             # Rating body with star rating and review
             rating_body = {
@@ -125,7 +126,7 @@ class TestFeedbackManager:
             
             start_time = time.perf_counter()
             response = f_client.add_rating_to_element(
-                test_element_guid,
+                self.test_element_guid,
                 is_public=True,
                 body=rating_body
             )

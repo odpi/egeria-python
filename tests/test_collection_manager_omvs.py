@@ -582,10 +582,9 @@ class TestCollectionManager:
             start_time = time.perf_counter()
             display_name = "Kenwood Radios"
             description = "Radios made by Kenwood"
-            classification_name = "Folder"
+            classification_name = ["Folder"]
 
-            response = c_client.create_collection_w_body(display_name, description, category="Radios",
-                                                         classification_name =classification_name)
+            response = c_client.create_collection(display_name, description, category="Radios",prop=['CollectionFolder'])
             duration = time.perf_counter() - start_time
             # resp_str = json.loads(response)
             print(f"\n\tDuration was {duration} seconds\n")
