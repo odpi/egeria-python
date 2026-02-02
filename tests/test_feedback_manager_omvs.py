@@ -24,7 +24,7 @@ from pyegeria.core._exceptions import (
     PyegeriaAPIException,
     PyegeriaUnauthorizedException,
 )
-from pyegeria.omvs.feedback_manager import FeedbackManager
+from pyegeria.deprecated.feedback_manager import FeedbackManager
 
 disable_ssl_warnings = True
 

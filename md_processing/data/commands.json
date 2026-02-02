@@ -17146,7 +17146,7 @@
           "Search String": {
             "variable_name": "",
             "inUpdate": true,
-            "attr_labels": "Filter",
+            "attr_labels": "Filter_String",
             "examples": "",
             "default_value": "*",
             "valid_values": "",
@@ -17268,27 +17268,7 @@
             "Journal Entry": ""
           }
         },
-        {
-          "Limit Result by Status": {
-            "variable_name": "",
-            "inUpdate": true,
-            "attr_labels": "",
-            "examples": "",
-            "default_value": "['ACTIVE']",
-            "valid_values": "'UNKNOWN'; 'DRAFT'; 'PREPARED'; 'PROPOSED'; 'APPROVED'; 'REJECTED';   'APPROVED_CONCEPT'; 'UNDER_DEVELOPMENT'; 'DEVELOPMENT_COMPLETE';                              'APPROVED_FOR_DEPLOYMENT'; 'STANDBY'; 'ACTIVE'; 'FAILED'; 'DISABLED'; 'COMPLETE';    'DEPRECATED'; 'OTHER' ; 'DELETED",
-            "existing_element": "",
-            "description": "One of the status values from a list of valid values.",
-            "generated": false,
-            "style": "Valid Value",
-            "user_specified": true,
-            "unique": false,
-            "input_required": false,
-            "min_cardinality": 1,
-            "max_cardinality": 1,
-            "level": "Advanced",
-            "Journal Entry": ""
-          }
-        },
+        
         {
           "Metadata Element Subtype Names": {
             "variable_name": "metadata_element_subtype_names",
