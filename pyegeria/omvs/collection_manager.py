@@ -1475,7 +1475,7 @@ class CollectionManager(ServerClient):
             # if initial_classifications:
             #     pre = initial_classifications[0]
             # else:
-            #     pre = prop[0]
+            pre = prop[0]
 
             qualified_name = self.__create_qualified_name__(pre, display_name, EGERIA_LOCAL_QUALIFIER)
             if initial_classifications:

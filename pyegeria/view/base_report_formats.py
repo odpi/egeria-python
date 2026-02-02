@@ -143,7 +143,7 @@ MD_SEPARATOR = "\n---\n\n"
 
 # Standard optional parameters for search functions
 OPTIONAL_SEQUENCING_PARAMS = ["sequencing_order", "sequencing_property"]
-OPTIONAL_SEARCH_PARAMS = OPTIONAL_SEQUENCING_PARAMS + ["page_size", "start_from", "starts_with", "ends_with", "ignore_case"]
+OPTIONAL_SEARCH_PARAMS = OPTIONAL_SEQUENCING_PARAMS + ["page_size", "start_from", "starts_with", "ends_with", "ignore_case","classification_names","metadata_element_subtypes",]
 OPTIONAL_FILTER_PARAMS = OPTIONAL_SEQUENCING_PARAMS + ["page_size", "start_from"]
 # Define shared elements
 

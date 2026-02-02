@@ -172,9 +172,9 @@ def test_find_note_logs():
         client = ServerClient(view_server, view_url, user, user_pass)
         client.create_egeria_bearer_token()
         search_string = "*"
-        output_format = "JSON"
+        output_format = "DICT"
         report_spec = "Referenceables"
-        response = client.find_note_logs(search_string, output_format = output_format, report_spec=report_spec)
+        response = client.find_note_logs(search_string, page_size=10, output_format = output_format, report_spec=report_spec)
         if isinstance(response, dict | list):
             print(json.dumps(response, indent = 2))
         else:
