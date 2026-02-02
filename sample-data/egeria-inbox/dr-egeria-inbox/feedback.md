@@ -6,11 +6,11 @@ My first comment
 
 ## Associated Element
 
-DigitalProduct::Sentinel-2a 
+Sales Regions
 
 ## Comment Text
 
-This is my first comment and its on Docling!
+This is my first comment and its on Sales Regions
 
 ## Comment Type
 
@@ -64,13 +64,16 @@ This tag is used to mark interesting things.
 
 ____
 
-# Don't Link Tag->Element
+# Link Tag->Element
 ## Tag ID
 InformalTag::Interesting
 ## Element ID
-Digital Product Catalogs Root
+Sales Regions
 
-# View Report
+
+____
+
+# Don't View Report
 >	This can be used to produce a report using any output format set.
 
 ## Search String
@@ -94,7 +97,7 @@ File System
 
 >	**Default Value**: LIST
 
-DICT
+LIST
 
 ## Output Format Set
 >	**Input Required**: True

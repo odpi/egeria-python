@@ -217,9 +217,9 @@ def process_format_set_action(
 
 
     except PyegeriaException as e:
-        render_exception_table(command, "process", e)
+        print_basic_exception(e)
     except ValidationError as e:
-        render_exception_table(command, "process", e)
+        print_validation_error(e)
 
 
 def process_output_command(egeria_client: EgeriaTech, txt: str, directive: str = "display") -> Optional[str]:
@@ -259,11 +259,11 @@ def process_output_command(egeria_client: EgeriaTech, txt: str, directive: str =
         search_string = attributes.get('Search String', {}).get('value', '*')
         output_format = attributes.get('Output Format', {}).get('value', 'LIST')
         report_spec = attributes.get('Report Spec', {}).get('value', object_type)
-        filter_string = attributes.get('Filter', {}).get('value', None)
+        filter_string = attributes.get('Filter_String', {}).get('value', None)
         kwargs = parsed_output.get("kwargs", {})
 
 
-        kwargs['filter'] = search_string
+        kwargs['filter_string'] = filter_string if filter_string else search_string
 
 
 
