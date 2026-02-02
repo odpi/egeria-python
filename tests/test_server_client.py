@@ -1,375 +1,348 @@
-import json
-from json import JSONDecodeError
+"""
+SPDX-License-Identifier: Apache-2.0
+Copyright Contributors to the ODPi Egeria project.
 
-import os
+This module is for testing the ServerClient class feedback methods (likes and ratings).
+The routines assume that pytest is being used as the test tool and framework.
+
+A running Egeria environment is needed to run these tests.
+"""
+
+import json
+import time
 
 from pydantic import ValidationError
 
+from pyegeria import (
+    PyegeriaException,
+    print_exception_table,
+    print_validation_error,
+    print_basic_exception,
+)
+from pyegeria.core._exceptions import (
+    PyegeriaInvalidParameterException,
+    PyegeriaAPIException,
+    PyegeriaUnauthorizedException,
+)
 from pyegeria.core._server_client import ServerClient
-from pyegeria.core.config import settings
-from pyegeria.core.logging_configuration import config_logging
 
-from pyegeria.core._exceptions import PyegeriaException, print_basic_exception, \
-    print_validation_error, PyegeriaAPIException
-
-EGERIA_USER = os.environ.get("EGERIA_USER", "peterprofile")
-EGERIA_USER_PASSWORD = os.environ.get("EGERIA_USER_PASSWORD", "secret")
+disable_ssl_warnings = True
 
 
-app_config = settings.Environment
-config_logging()
-view_server: str = app_config.egeria_view_server
-view_url: str = app_config.egeria_view_server_url
-user: str = EGERIA_USER
-user_pass: str = EGERIA_USER_PASSWORD
+class TestServerClientFeedback:
+    """Test class for ServerClient feedback methods (likes and ratings)"""
+    
+    good_platform1_url = "https://laz.local:9443"
+    good_platform2_url = "https://oak.local:9443"
+    bad_platform1_url = "https://localhost:9443"
 
-def test_get_platform_origin():
-    try:
-        client = ServerClient(view_server, view_url, user, user_pass)
-        client.create_egeria_bearer_token()
+    good_user_1 = "garygeeke"
+    good_user_2 = "erinoverview"
+    good_user_3 = "peterprofile"
+    bad_user_1 = "eviledna"
+    bad_user_2 = ""
+    good_user_2_pwd = "secret"
+    good_server_1 = "simple-metadata-store"
+    good_server_2 = "qs-view-server"
+    good_server_3 = "active-metadata-store"
+    good_server_4 = "integration-daemon"
+    good_server_5 = "fluffy_kv"
+    good_server_6 = "cocoVIew1"
+    good_engine_host_1 = "governDL01"
+    good_view_server_1 = "view-server"
+    good_view_server_2 = "qs-view-server"
+    bad_server_1 = "coco"
+    bad_server_2 = ""
+    test_element_guid = "49bc1002-1b0a-4194-9305-3607c713726d"
 
-        # response = client.get_platform_origin()
-        response = client.check_connection()
-        print(f"\n{response}\n")
-        assert True
-    except (PyegeriaException,PyegeriaAPIException) as e:
-        print_basic_exception(e)
-        assert False
+    def test_add_like_to_element(self):
+        """Test adding a like to an element"""
+        try:
+            s_client = ServerClient(
+                self.good_view_server_2,
+                self.good_platform1_url,
+                user_id=self.good_user_2,
+                user_pwd=self.good_user_2_pwd,
+            )
 
+            token = s_client.create_egeria_bearer_token(
+                self.good_user_2, self.good_user_2_pwd
+            )
+            
+            # Use a known element GUID from your test environment
+            # This should be replaced with an actual test element
+            # test_element_guid = "test-element-guid-123"
+            
+            start_time = time.perf_counter()
+            response = s_client.add_like_to_element(
+                self.test_element_guid,
+                is_public=True,
+                body={}
+            )
+            duration = time.perf_counter() - start_time
+            
+            print(f"\n\tDuration was {duration} seconds")
+            print(f"\n\tResponse was: {json.dumps(response, indent=2)}")
+            
+            assert True, "Like added successfully"
 
-def test_add_archive_file():
-    server_display_name = "qs-metadata-store"
+        except PyegeriaInvalidParameterException as e:
+            print_exception_table(e)
+            assert False, "Invalid parameter exception"
+        except PyegeriaAPIException as e:
+            print_exception_table(e)
+            assert False, "API exception"
+        except PyegeriaUnauthorizedException as e:
+            print_exception_table(e)
+            assert False, "Unauthorized exception"
+        except ValidationError as e:
+            print_validation_error(e)
+            assert False, "Validation error"
+        except Exception as e:
+            print_basic_exception(e)
+            assert False, "Unexpected exception"
+        finally:
+            s_client.close_session()
 
-    try:
-        client = ServerClient(view_server, view_url, user, user_pass)
-        client.create_egeria_bearer_token()
-        # archive_file = "content-packs/CocoComboArchive.omarchive"
-        archive_file = "content-packs/PostgresContentPack.omarchive"
-        response = client.add_archive_file(archive_file, display_name = "qs-metadata-store")
-        print(response)
-        assert True
-    except (PyegeriaException,PyegeriaAPIException) as e:
-        print_basic_exception(e)
-        assert False
+    def test_add_rating_to_element(self):
+        """Test adding a rating to an element"""
+        try:
+            s_client = ServerClient(
+                self.good_view_server_2,
+                self.good_platform1_url,
+                user_id=self.good_user_2,
+                user_pwd=self.good_user_2_pwd,
+            )
 
-def test_get_guid_for_name():
-    name = "PostgreSQL Server"
-
-    try:
-        client = ServerClient(view_server, view_url, user, user_pass)
-        client.create_egeria_bearer_token()
-
-        response = client.get_guid_for_name(name)
-        print(f"\n\nGUID is {response}\n\n")
-        assert True
-    except (PyegeriaException, PyegeriaAPIException) as e:
-        print_basic_exception(e)
-        assert False
-
-
-def test_add_search_keyword():
-    keyword = "Sentinel"
-    element_guid = "a3442fd4-7e23-4778-b139-9739172fdcd7"
-
-    try:
-        client = ServerClient(view_server, view_url, user, user_pass)
-        client.create_egeria_bearer_token()
-
-        response = client.add_search_keyword_to_element(element_guid, keyword)
-        print(response)
-        assert True
-    except PyegeriaException as e:
-        print_basic_exception(e)
-        assert False
-
-def test_find_search_keyword() :
-    keyword = "*"
-    try:
-        client = ServerClient(view_server, view_url, user, user_pass)
-        client.create_egeria_bearer_token()
-        response = client.find_search_keywords(keyword, output_format="DICT", report_spec = "Search-Keywords")
-        if isinstance(response, dict | list):
-            print(json.dumps(response, indent = 2))
-        else:
-            print(response)
-        assert True
-    except PyegeriaException as e:
-        print_basic_exception(e)
-        assert False
-
-
-def test_remove_search_keyword() :
-    keyword_guid = "49cedf27-3aa3-4522-b4b9-7764bac99a3d"
-    try:
-        client = ServerClient(view_server, view_url, user, user_pass)
-        client.create_egeria_bearer_token()
-        client.remove_search_keyword(keyword_guid)
-
-        assert True
-    except (PyegeriaException, JSONDecodeError) as e:
-        print_basic_exception(e)
-        assert False
-
-def test_get_user_guid() :
-    user_id = "peterprofile"
-    try:
-        client = ServerClient(view_server, view_url, user, user_pass)
-        client.create_egeria_bearer_token()
-        response = client.get_elements_by_property_value(
-            user_id,
-            ["userId", "displayName", "fullName"],
-            metadata_element_type_name=None,
-        )
-        if isinstance(response, dict | list):
-            print(json.dumps(response, indent = 2))
-        else:
-            print(response)
-        assert True
-    except (PyegeriaException, JSONDecodeError) as e:
-        print_basic_exception(e)
-        assert False
-
-def test_create_note_log():
-    element_guid = "1a16188a-9cba-4c86-835b-e223e97d22bb" # Milvus
-    element_qn = "SolutionComponent::Milvus::V1.0"
-    note_log_display_name = "Milvus-NoteLog"
-    journal_entry_display_name = "test-journal-entry"
-    journal_entry_description = "First Journal Entry"
-
-    try:
-        client = ServerClient(view_server, view_url, user, user_pass)
-        client.create_egeria_bearer_token()
-        response = client.create_note_log(element_qn = element_qn,
-                                            note_log_display_name=note_log_display_name,
-                                            journal_entry_description=journal_entry_description,)
-        print("\n\n" + response)
-        assert True
-    except (PyegeriaException, JSONDecodeError) as e:
-        print_basic_exception(e)
-        assert False
-
-def test_add_journal_entry():
-    element_guid = "1a16188a-9cba-4c86-835b-e223e97d22bb" # Milvus
-    element_qn = "SolutionComponent::Milvus"
-    note_log_display_name = "Milvus-NoteLog"
-    journal_entry_display_name = "test-journal-entry"
-    journal_entry_description = "First Journal Entry"
-
-    try:
-        client = ServerClient(view_server, view_url, user, user_pass)
-        client.create_egeria_bearer_token()
-        response = client.add_journal_entry(element_qn=element_qn, note_log_display_name=note_log_display_name,
-                                            journal_entry_display_name=journal_entry_display_name,
-                                            note_entry=journal_entry_description)
-        print("\n\n" + response)
-        assert True
-    except (PyegeriaException, JSONDecodeError) as e:
-        print_basic_exception(e)
-        assert False
-
-def test_find_note_logs():
-    try:
-        client = ServerClient(view_server, view_url, user, user_pass)
-        client.create_egeria_bearer_token()
-        search_string = "*"
-        output_format = "DICT"
-        report_spec = "Referenceables"
-        response = client.find_note_logs(search_string, page_size=10, output_format = output_format, report_spec=report_spec)
-        if isinstance(response, dict | list):
-            print(json.dumps(response, indent = 2))
-        else:
-            print(response)
-    except (PyegeriaException, JSONDecodeError) as e:
-        print_basic_exception(e)
-        assert False
-
-def test_remove_note_log() :
-    note_log_guid = "5bcc6c62-b9aa-4f56-9d86-4c2bd63eb7f8"
-    try:
-        client = ServerClient(view_server, view_url, user, user_pass)
-        client.create_egeria_bearer_token()
-        client.remove_note_log(note_log_guid)
-
-        assert True
-    except (PyegeriaException, JSONDecodeError) as e:
-        print_basic_exception(e)
-        assert False
-
-def test_remove_note() :
-    note_guid = "14067611-c5d6-4dd9-aa0a-52b8d0516610"
-    try:
-        client = ServerClient(view_server, view_url, user, user_pass)
-        client.create_egeria_bearer_token()
-        client.remove_note(note_guid)
-
-        assert True
-    except (PyegeriaException, JSONDecodeError) as e:
-        print_basic_exception(e)
-        assert False
-
-def test_find_notes():
-    try:
-        client = ServerClient(view_server, view_url, user, user_pass)
-        client.create_egeria_bearer_token()
-        search_string = "Note::71a2d327-115b-4700-aac8"
-        output_format = "JSON"
-        report_spec = "Journal-Entry-DrE"
-        response = client.find_notes(search_string, output_format = output_format, report_spec=report_spec)
-        if isinstance(response, dict | list):
-            print(json.dumps(response, indent = 2))
-        else:
-            print(response)
-    except (PyegeriaException, JSONDecodeError) as e:
-        print_basic_exception(e)
-        assert False
-    except ValidationError as e:
-        print_validation_error(e)
-        assert False
-
-def test_get_notes_for_note_log():
-    try:
-        client = ServerClient(view_server, view_url, user, user_pass)
-        client.create_egeria_bearer_token()
-        note_log_guid = "5c01cab6-3e57-4f74-b2b2-2438cf36415b"
-        output_format = "JSON"
-        report_spec = "Referenceables"
-        response = client.get_notes_for_note_log(note_log_guid, output_format = output_format, report_spec = report_spec)
-        if isinstance(response, dict | list):
-            print(json.dumps(response, indent = 2))
-        else:
-            print(response)
-    except (PyegeriaException, JSONDecodeError) as e:
-        print_basic_exception(e)
-        assert False
-
-def test_add_comment():
-    try:
-        client = ServerClient(view_server, view_url, user, user_pass)
-        client.create_egeria_bearer_token()
-        associated_guid = "ec80a761-2472-4c2a-a088-872c68b4961d"
-        comment = "a new comment"
-        comment_type = "STANDARD_COMMENT"
-        body = {
-            "class": "NewAttachmentRequestBody",
-            "properties": {
-                "class": "CommentProperties",
-                "qualifiedName": client.make_feedback_qn("Comment", associated_guid),
-                "description": comment,
-                "commentType": comment_type
+            token = s_client.create_egeria_bearer_token(
+                self.good_user_2, self.good_user_2_pwd
+            )
+            
+            # test_element_guid = "test-element-guid-123"
+            
+            # Rating body with star rating and review
+            rating_body = {
+                "starRating": 5,
+                "review": "Excellent element!"
             }
-        }
-        response = client.add_comment_to_element(associated_guid, body=body)
-        if isinstance(response, dict | list):
-            print(json.dumps(response, indent = 2))
-        else:
-            print(response)
-    except (PyegeriaException, JSONDecodeError) as e:
-        print_basic_exception(e)
-        assert False
+            
+            start_time = time.perf_counter()
+            response = s_client.add_rating_to_element(
+                self.test_element_guid,
+                is_public=True,
+                body=rating_body
+            )
+            duration = time.perf_counter() - start_time
+            
+            print(f"\n\tDuration was {duration} seconds")
+            print(f"\n\tResponse was: {json.dumps(response, indent=2)}")
+            
+            assert True, "Rating added successfully"
 
-def test_remove_comment_from_element():
-    try:
-        client = ServerClient(view_server, view_url, user, user_pass)
-        client.create_egeria_bearer_token()
-        guid = "5c0a9924-b72a-4f0d-aac2-44e5cc7a05f6"
+        except PyegeriaInvalidParameterException as e:
+            print_exception_table(e)
+            assert False, "Invalid parameter exception"
+        except PyegeriaAPIException as e:
+            print_exception_table(e)
+            assert False, "API exception"
+        except PyegeriaUnauthorizedException as e:
+            print_exception_table(e)
+            assert False, "Unauthorized exception"
+        except ValidationError as e:
+            print_validation_error(e)
+            assert False, "Validation error"
+        except Exception as e:
+            print_basic_exception(e)
+            assert False, "Unexpected exception"
+        finally:
+            s_client.close_session()
 
-        response = client.remove_comment_from_element(comment_guid = guid, cascade_delete=True)
-        if isinstance(response, dict | list):
-            print(json.dumps(response, indent = 2))
-        else:
-            print(response)
-    except (PyegeriaException, JSONDecodeError) as e:
-        print_basic_exception(e)
-        assert False
+    def test_get_attached_likes(self):
+        """Test retrieving likes attached to an element"""
+        try:
+            s_client = ServerClient(
+                self.good_view_server_2,
+                self.good_platform1_url,
+                user_id=self.good_user_2,
+                user_pwd=self.good_user_2_pwd,
+            )
 
-def test_get_comment_by_guid():
-    try:
-        client = ServerClient(view_server, view_url, user, user_pass)
-        client.create_egeria_bearer_token()
-        guid = '11c2d9aa-8128-43c3-a06d-7231f148ecc6'
+            token = s_client.create_egeria_bearer_token(
+                self.good_user_2, self.good_user_2_pwd
+            )
+            
+            test_element_guid = "test-element-guid-123"
+            
+            start_time = time.perf_counter()
+            response = s_client.get_attached_likes(
+                test_element_guid,
+                start_from=0,
+                page_size=50
+            )
+            duration = time.perf_counter() - start_time
+            
+            print(f"\n\tDuration was {duration} seconds")
+            print(f"\n\tResponse was: {json.dumps(response, indent=2)}")
+            
+            assert True, "Likes retrieved successfully"
 
-        response = client.get_comment_by_guid(guid)
-        if isinstance(response, dict | list):
-            print(json.dumps(response, indent = 2))
-        else:
-            print(response)
-    except (PyegeriaException, JSONDecodeError) as e:
-        print_basic_exception(e)
-        assert False
+        except PyegeriaInvalidParameterException as e:
+            print_exception_table(e)
+            assert False, "Invalid parameter exception"
+        except PyegeriaAPIException as e:
+            print_exception_table(e)
+            assert False, "API exception"
+        except PyegeriaUnauthorizedException as e:
+            print_exception_table(e)
+            assert False, "Unauthorized exception"
+        except ValidationError as e:
+            print_validation_error(e)
+            assert False, "Validation error"
+        except Exception as e:
+            print_basic_exception(e)
+            assert False, "Unexpected exception"
+        finally:
+            s_client.close_session()
 
-def test_find_comments():
-    try:
-        client = ServerClient(view_server, view_url, user, user_pass)
-        client.create_egeria_bearer_token()
-        search_string = "*"
+    def test_get_attached_ratings(self):
+        """Test retrieving ratings attached to an element"""
+        try:
+            s_client = ServerClient(
+                self.good_view_server_2,
+                self.good_platform1_url,
+                user_id=self.good_user_2,
+                user_pwd=self.good_user_2_pwd,
+            )
 
-        response = client.find_comments(search_string, output_format = "DICT", report_spec = "Journal-Entry-DrE")
-        if isinstance(response, dict | list):
-            print(json.dumps(response, indent = 2))
-        if isinstance(response, dict | list):
-            print(json.dumps(response, indent = 2))
-        else:
-            print(response)
-    except (PyegeriaException, JSONDecodeError) as e:
-        print_basic_exception(e)
-        assert False
+            token = s_client.create_egeria_bearer_token(
+                self.good_user_2, self.good_user_2_pwd
+            )
+            
+            test_element_guid = "test-element-guid-123"
+            
+            start_time = time.perf_counter()
+            response = s_client.get_attached_ratings(
+                test_element_guid,
+                start_from=0,
+                page_size=50
+            )
+            duration = time.perf_counter() - start_time
+            
+            print(f"\n\tDuration was {duration} seconds")
+            print(f"\n\tResponse was: {json.dumps(response, indent=2)}")
+            
+            assert True, "Ratings retrieved successfully"
+
+        except PyegeriaInvalidParameterException as e:
+            print_exception_table(e)
+            assert False, "Invalid parameter exception"
+        except PyegeriaAPIException as e:
+            print_exception_table(e)
+            assert False, "API exception"
+        except PyegeriaUnauthorizedException as e:
+            print_exception_table(e)
+            assert False, "Unauthorized exception"
+        except ValidationError as e:
+            print_validation_error(e)
+            assert False, "Validation error"
+        except Exception as e:
+            print_basic_exception(e)
+            assert False, "Unexpected exception"
+        finally:
+            s_client.close_session()
+
+    def test_remove_like_from_element(self):
+        """Test removing a like from an element"""
+        try:
+            s_client = ServerClient(
+                self.good_view_server_2,
+                self.good_platform1_url,
+                user_id=self.good_user_2,
+                user_pwd=self.good_user_2_pwd,
+            )
+
+            token = s_client.create_egeria_bearer_token(
+                self.good_user_2, self.good_user_2_pwd
+            )
+            
+            test_element_guid = "test-element-guid-123"
+            
+            start_time = time.perf_counter()
+            response = s_client.remove_like_from_element(
+                test_element_guid,
+                body={}
+            )
+            duration = time.perf_counter() - start_time
+            
+            print(f"\n\tDuration was {duration} seconds")
+            print(f"\n\tResponse was: {json.dumps(response, indent=2)}")
+            
+            assert True, "Like removed successfully"
+
+        except PyegeriaInvalidParameterException as e:
+            print_exception_table(e)
+            assert False, "Invalid parameter exception"
+        except PyegeriaAPIException as e:
+            print_exception_table(e)
+            assert False, "API exception"
+        except PyegeriaUnauthorizedException as e:
+            print_exception_table(e)
+            assert False, "Unauthorized exception"
+        except ValidationError as e:
+            print_validation_error(e)
+            assert False, "Validation error"
+        except Exception as e:
+            print_basic_exception(e)
+            assert False, "Unexpected exception"
+        finally:
+            s_client.close_session()
+
+    def test_remove_rating_from_element(self):
+        """Test removing a rating from an element"""
+        try:
+            s_client = ServerClient(
+                self.good_view_server_2,
+                self.good_platform1_url,
+                user_id=self.good_user_2,
+                user_pwd=self.good_user_2_pwd,
+            )
+
+            token = s_client.create_egeria_bearer_token(
+                self.good_user_2, self.good_user_2_pwd
+            )
+            
+            test_element_guid = "test-element-guid-123"
+            
+            start_time = time.perf_counter()
+            response = s_client.remove_rating_from_element(
+                test_element_guid,
+                body={}
+            )
+            duration = time.perf_counter() - start_time
+            
+            print(f"\n\tDuration was {duration} seconds")
+            print(f"\n\tResponse was: {json.dumps(response, indent=2)}")
+            
+            assert True, "Rating removed successfully"
+
+        except PyegeriaInvalidParameterException as e:
+            print_exception_table(e)
+            assert False, "Invalid parameter exception"
+        except PyegeriaAPIException as e:
+            print_exception_table(e)
+            assert False, "API exception"
+        except PyegeriaUnauthorizedException as e:
+            print_exception_table(e)
+            assert False, "Unauthorized exception"
+        except ValidationError as e:
+            print_validation_error(e)
+            assert False, "Validation error"
+        except Exception as e:
+            print_basic_exception(e)
+            assert False, "Unexpected exception"
+        finally:
+            s_client.close_session()
 
 
-def test_create_informal_tag():
-    tag = "GeoSpatial"
-    description = "Tag for GeoSpatial"
-
-    try:
-        client = ServerClient(view_server, view_url, user, user_pass)
-        client.create_egeria_bearer_token()
-
-        response = client.create_informal_tag(tag, description)
-        if isinstance(response, dict | list):
-            print(response)
-        else:
-            print(response)
-        assert True
-    except PyegeriaException as e:
-        print_basic_exception(e)
-        assert False
-
-def test_find_informal_tags() :
-    search_string = "*"
-    try:
-        client = ServerClient(view_server, view_url, user, user_pass)
-        client.create_egeria_bearer_token()
-        response = client.find_tags(search_string, output_format="DICT", report_spec = "Informal-Tags-DrE")
-        if isinstance(response, dict | list):
-            print(json.dumps(response, indent = 2))
-        else:
-            print(response)
-        assert True
-    except PyegeriaException as e:
-        print_basic_exception(e)
-        assert False
-
-
-def test_delete_tag() :
-    keyword_guid = "cd87a519-4dab-4bc4-b4e0-e939082820e8"
-    try:
-        client = ServerClient(view_server, view_url, user, user_pass)
-        client.create_egeria_bearer_token()
-        client.delete_tag(keyword_guid)
-
-        assert True
-    except (PyegeriaException, JSONDecodeError) as e:
-        print_basic_exception(e)
-        assert False
-
-def test_get_tag_by_guid() :
-    guid = "d465235f-0dfa-435f-82b7-e50becde2b25"
-    try:
-        client = ServerClient(view_server, view_url, user, user_pass)
-        client.create_egeria_bearer_token()
-        response = client.get_tag_by_guid(guid, output_format = "DICT", report_spec = "Informal-Tags-DrE")
-        if isinstance(response, dict | list):
-            print(json.dumps(response, indent = 2))
-        assert True
-    except (PyegeriaException, JSONDecodeError) as e:
-        print_basic_exception(e)
-        assert False
+if __name__ == "__main__":
+    print("Running ServerClient feedback unit tests...")

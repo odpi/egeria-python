@@ -1590,7 +1590,8 @@ class ServerClient(BaseServerClient):
             page_size: int = max_paging_size,
             output_format: str = "JSON",
             report_spec: Optional[str | dict] = None,
-            body: Optional[dict | SearchStringRequestBody] = None
+            body: Optional[dict | SearchStringRequestBody] = None,
+            **kwargs
     ) -> dict | str:
 
         """
@@ -1598,45 +1599,103 @@ class ServerClient(BaseServerClient):
 
         Parameters
         ----------
-        search_string
-            - search string and effective time.
-
-        starts_with
-            - does the value start with the supplied string?
-        ends_with
-            - does the value end with the supplied string?
-        ignore_case
-            - should the search ignore case?
-        start_from
-            - index of the list to start from (0 for start).
-        page_size
-            - maximum number of elements to return.
-        output_format
-            - output format for the response
-        report_spec
-            - output format set for the response
-        body
-            - body of the request. Details of the body overrides other parameters if present.
+        search_string : str, optional
+            Search string to find in comments.
+        classification_names : list[str], optional
+            List of classification names to filter by.
+        metadata_element_subtypes : list[str], default ["Comment"]
+            List of metadata element subtypes to search.
+        starts_with : bool, optional
+            Does the value start with the supplied string?
+        ends_with : bool, optional
+            Does the value end with the supplied string?
+        ignore_case : bool, optional
+            Should the search ignore case?
+        start_from : int, default 0
+            Index of the list to start from (0 for start).
+        page_size : int, default max_paging_size
+            Maximum number of elements to return.
+        output_format : str, default "JSON"
+            Output format for the response.
+        report_spec : str | dict, optional
+            Output format set for the response.
+        body : dict | SearchStringRequestBody, optional
+            Body of the request. Details of the body override other parameters if present.
+        **kwargs : dict, optional
+            Additional parameters supported by the underlying find request:
+            
+            - anchor_domain : str - Domain to anchor the search
+            - metadata_element_type : str - Specific metadata element type
+            - skip_relationships : list[str] - Relationship types to skip
+            - include_only_relationships : list[str] - Only include these relationship types
+            - skip_classified_elements : list[str] - Skip elements with these classifications
+            - include_only_classified_elements : list[str] - Only include elements with these classifications
+            - graph_query_depth : int - Depth of graph traversal (default 3)
+            - governance_zone_filter : list[str] - Filter by governance zones
+            - as_of_time : str - Historical query time
+            - effective_time : str - Effective time for the query
+            - relationship_page_size : int - Page size for relationships
+            - limit_results_by_status : list[str] - Filter by element status
+            - sequencing_order : str - Order of results
+            - sequencing_property : str - Property to sequence by
+            - property_names : list[str] - Specific properties to search
 
         Returns
         -------
-        list of comment objects
+        dict | str
+            List of comment objects in the requested format.
 
         Raises
         ------
         PyegeriaException
+            If there are issues in communications, message format, or Egeria errors.
 
-        Args:
-            classification_names ():
-            metadata_element_subtypes ():
+        Notes
+        -----
+        The **kwargs parameter allows advanced users to access all parameters supported by the
+        underlying _async_find_request helper method. Common parameters are explicitly listed
+        in the signature for discoverability, while advanced parameters can be passed via kwargs.
 
-
+        Examples
+        --------
+        Basic usage:
+            >>> comments = await client._async_find_comments("test", starts_with=True)
+        
+        Advanced usage with kwargs:
+            >>> comments = await client._async_find_comments(
+            ...     "test",
+            ...     starts_with=True,
+            ...     graph_query_depth=5,
+            ...     governance_zone_filter=["zone1"]
+            ... )
         """
 
         url = f"{self.command_root}feedback-manager/comments/by-search-string"
-        response = await self._async_find_request(url, _type="Comment", _gen_output=self._generate_comment_output,
-                                                  search_string=search_string, output_format="JSON", page_size=0,
-                                                  body=body)
+        
+        # Build params dict with explicit parameters
+        params = {
+            'search_string': search_string,
+            'classification_names': classification_names,
+            'metadata_element_subtypes': metadata_element_subtypes,
+            'starts_with': starts_with,
+            'ends_with': ends_with,
+            'ignore_case': ignore_case,
+            'start_from': start_from,
+            'page_size': page_size,
+            'output_format': output_format,
+            'report_spec': report_spec,
+            'body': body
+        }
+        # Merge with any additional kwargs, removing None values
+        params.update(kwargs)
+        params = {k: v for k, v in params.items() if v is not None}
+        
+        response = await self._async_find_request(
+            url,
+            _type="Comment",
+            _gen_output=self._generate_comment_output,
+            **params
+        )
 
         return response
 
@@ -2169,7 +2228,8 @@ class ServerClient(BaseServerClient):
             page_size: int = max_paging_size,
             output_format: str = "JSON",
             report_spec: Optional[str | dict] = None,
-            body: Optional[dict | SearchStringRequestBody] = None
+            body: Optional[dict | SearchStringRequestBody] = None,
+            **kwargs
     ) -> dict | str:
 
         """
@@ -2177,38 +2237,64 @@ class ServerClient(BaseServerClient):
 
         Parameters
         ----------
-        search_string
-            - search string and effective time.
-
-        starts_with
-            - does the value start with the supplied string?
-        ends_with
-            - does the value end with the supplied string?
-        ignore_case
-            - should the search ignore case?
-        start_from
-            - index of the list to start from (0 for start).
-        page_size
-            - maximum number of elements to return.
-        output_format
-            - output format for the response
-        report_spec
-            - output format set for the response
-        body
-            - body of the request. Details of the body overrides other parameters if present.
+        search_string : str
+            Search string to find in note logs.
+        classification_names : list[str], optional
+            List of classification names to filter by.
+        metadata_element_subtypes : list[str], default ["NoteLog"]
+            List of metadata element subtypes to search.
+        starts_with : bool, optional
+            Does the value start with the supplied string?
+        ends_with : bool, optional
+            Does the value end with the supplied string?
+        ignore_case : bool, optional
+            Should the search ignore case?
+        start_from : int, default 0
+            Index of the list to start from (0 for start).
+        page_size : int, default max_paging_size
+            Maximum number of elements to return.
+        output_format : str, default "JSON"
+            Output format for the response.
+        report_spec : str | dict, optional
+            Output format set for the response.
+        body : dict | SearchStringRequestBody, optional
+            Body of the request. Details of the body override other parameters if present.
+        **kwargs : dict, optional
+            Additional parameters supported by the underlying find request:
+            
+            - anchor_domain : str - Domain to anchor the search
+            - metadata_element_type : str - Specific metadata element type
+            - skip_relationships : list[str] - Relationship types to skip
+            - include_only_relationships : list[str] - Only include these relationship types
+            - skip_classified_elements : list[str] - Skip elements with these classifications
+            - include_only_classified_elements : list[str] - Only include elements with these classifications
+            - graph_query_depth : int - Depth of graph traversal (default 3)
+            - governance_zone_filter : list[str] - Filter by governance zones
+            - as_of_time : str - Historical query time
+            - effective_time : str - Effective time for the query
+            - relationship_page_size : int - Page size for relationships
+            - limit_results_by_status : list[str] - Filter by element status
+            - sequencing_order : str - Order of results
+            - sequencing_property : str - Property to sequence by
+            - property_names : list[str] - Specific properties to search
 
         Returns
         -------
-        list of note log objects
+        dict | str
+            List of note log objects in the requested format.
 
         Raises
         ------
         PyegeriaException
+            If there are issues in communications, message format, or Egeria errors.
 
-        Notes:
+        Notes
+        -----
+        The **kwargs parameter allows advanced users to access all parameters supported by the
+        underlying _async_find_request helper method. Common parameters are explicitly listed
+        in the signature for discoverability, while advanced parameters can be passed via kwargs.
 
-        Sample body:
-
+        Sample body structure:
         {
           "class" : "SearchStringRequestBody",
           "searchString" : "Add value here",
@@ -2225,17 +2311,47 @@ class ServerClient(BaseServerClient):
           "sequencingOrder" : "PROPERTY_ASCENDING",
           "sequencingProperty" : "qualifiedName"
         }
+
+        Examples
+        --------
+        Basic usage:
+            >>> note_logs = await client._async_find_note_logs("project", starts_with=True)
+        
+        Advanced usage with kwargs:
+            >>> note_logs = await client._async_find_note_logs(
+            ...     "project",
+            ...     starts_with=True,
+            ...     graph_query_depth=5,
+            ...     limit_results_by_status=["ACTIVE"]
+            ... )
         """
 
         url = f"{self.command_root}feedback-manager/note-logs/by-search-string"
-        response = await self._async_find_request(url, _type="NoteLog", _gen_output=self._generate_feedback_output,
-                                                  metadata_element_subtypes=metadata_element_subtypes,
-                                                  include_only_classified_elements=classification_names,
-                                                  search_string=search_string, starts_with=starts_with,
-                                                  ends_with=ends_with,
-                                                  ignore_case=ignore_case, start_from=start_from, page_size=page_size,
-                                                  output_format=output_format, report_spec=report_spec,
-                                                  body=body)
+        
+        # Build params dict with explicit parameters
+        params = {
+            'search_string': search_string,
+            'metadata_element_subtypes': metadata_element_subtypes,
+            'include_only_classified_elements': classification_names,
+            'starts_with': starts_with,
+            'ends_with': ends_with,
+            'ignore_case': ignore_case,
+            'start_from': start_from,
+            'page_size': page_size,
+            'output_format': output_format,
+            'report_spec': report_spec,
+            'body': body
+        }
+        # Merge with any additional kwargs, removing None values
+        params.update(kwargs)
+        params = {k: v for k, v in params.items() if v is not None}
+        
+        response = await self._async_find_request(
+            url,
+            _type="NoteLog",
+            _gen_output=self._generate_feedback_output,
+            **params
+        )
 
         return response
 
@@ -3065,83 +3181,138 @@ class ServerClient(BaseServerClient):
             start_from: int = 0, page_size: int = 100,
             property_names: Optional[list[str]] = None,
             body: Optional[dict | SearchStringRequestBody] = None,
+            **kwargs
     ) -> dict | str:
         """
-        Retrieve the list of note metadata elements that contain the search string.
+        Retrieve the list of note metadata elements that contain the search string. Async version.
 
         Parameters
         ----------
-        search_string: str, optional = None
-            - optional search string to search for. If none, all elements are returned.
-        body
-            - search string and effective time.
-
-        starts_with
-            - Does the value start with the supplied string?
-        ends_with
-            - Does the value end with the supplied string?
-        ignore_case
-            - Should the search ignore case?
-        start_from
-            - Index of the list to start from (0 for start).
-        page_size
-            -Maximum number of elements to return.
-        output_format: str, optional = "JSON"
-            - Format of the returned output - includes JSON, MD, MERMAID, REPORT, LIST...
-        report_spec: str, optional = None
-            - Report specification for the returned output
+        search_string : str, default "*"
+            Search string to find in notes. If "*", all elements are returned.
+        starts_with : bool, default True
+            Does the value start with the supplied string?
+        ends_with : bool, default False
+            Does the value end with the supplied string?
+        ignore_case : bool, default False
+            Should the search ignore case?
+        anchor_domain : str, optional
+            Domain to anchor the search.
+        metadata_element_type : str, optional
+            Specific metadata element type to search.
+        metadata_element_subtypes : list[str], optional
+            List of metadata element subtypes to search.
+        skip_relationships : list[str], optional
+            Relationship types to skip in the query.
+        include_only_relationships : list[str], optional
+            Only include these relationship types.
+        skip_classified_elements : list[str], optional
+            Skip elements with these classifications.
+        include_only_classified_elements : list[str], optional
+            Only include elements with these classifications.
+        graph_query_depth : int, default 3
+            Depth of graph traversal for related elements.
+        governance_zone_filter : list[str], optional
+            Filter results by governance zones.
+        as_of_time : str, optional
+            Historical query time (ISO 8601 format).
+        effective_time : str, optional
+            Effective time for the query (ISO 8601 format).
+        relationship_page_size : int, default 0
+            Page size for relationship queries.
+        limit_results_by_status : list[str], optional
+            Filter by element status (e.g., ["ACTIVE"]).
+        sequencing_order : str, optional
+            Order of results (e.g., "PROPERTY_ASCENDING").
+        sequencing_property : str, optional
+            Property to sequence results by.
+        output_format : str, default "JSON"
+            Format of the returned output (JSON, MD, MERMAID, REPORT, LIST, etc.).
+        report_spec : str | dict, optional
+            Report specification for the returned output.
+        start_from : int, default 0
+            Index of the list to start from (0 for start).
+        page_size : int, default 100
+            Maximum number of elements to return.
+        property_names : list[str], optional
+            Specific properties to search within.
+        body : dict | SearchStringRequestBody, optional
+            Request body that overrides other parameters if present.
+        **kwargs : dict, optional
+            Additional parameters supported by the underlying find request.
+            Since this method already exposes most parameters, kwargs is provided
+            for future extensibility.
 
         Returns
         -------
-        list of matching metadata elements
+        dict | str
+            List of matching note metadata elements in the requested format.
 
         Raises
         ------
         PyegeriaException
+            If there are issues in communications, message format, or Egeria errors.
 
-        Args:
-            anchor_domain ():
-            metadata_element_type ():
-            metadata_element_subtypes ():
-            skip_relationships ():
-            include_only_relationships ():
-            skip_classified_elements ():
-            include_only_classified_elements ():
-            graph_query_depth ():
-            governance_zone_filter ():
-            as_of_time ():
-            effective_time ():
-            relationship_page_size ():
-            limit_results_by_status ():
-            sequencing_order ():
-            sequencing_property ():
-            property_names ():
-            _type ():
+        Notes
+        -----
+        This method exposes most of the advanced parameters directly in its signature,
+        making them easily discoverable. The **kwargs parameter is included for future
+        extensibility and to maintain consistency with other find methods.
 
+        Examples
+        --------
+        Basic usage:
+            >>> notes = await client._async_find_notes("meeting", starts_with=True)
+        
+        Advanced usage with graph traversal:
+            >>> notes = await client._async_find_notes(
+            ...     "project",
+            ...     graph_query_depth=5,
+            ...     governance_zone_filter=["internal"],
+            ...     limit_results_by_status=["ACTIVE"]
+            ... )
         """
 
         url = f"{self.command_root}feedback-manager/assets/by-search-string"
-        response = await self._async_find_request(url, "NoteLog", self._generate_feedback_output, search_string,
-                                                  starts_with=starts_with,
-                                                  ends_with=ends_with, ignore_case=ignore_case,
-                                                  anchor_domain=anchor_domain,
-                                                  metadata_element_type=metadata_element_type,
-                                                  metadata_element_subtypes=metadata_element_subtypes,
-                                                  skip_relationships=skip_relationships,
-                                                  include_only_relationships=include_only_relationships,
-                                                  skip_classified_elements=skip_classified_elements,
-                                                  include_only_classified_elements=include_only_classified_elements,
-                                                  graph_query_depth=graph_query_depth,
-                                                  governance_zone_filter=governance_zone_filter,
-                                                  as_of_time=as_of_time, effective_time=effective_time,
-                                                  relationship_page_size=relationship_page_size,
-                                                  limit_results_by_status=limit_results_by_status,
-                                                  sequencing_order=sequencing_order,
-                                                  sequencing_property=sequencing_property,
-                                                  output_format=output_format, report_spec=report_spec,
-                                                  start_from=start_from, page_size=page_size,
-                                                  property_names=property_names, body=body
-                                                  )
+        
+        # Build params dict with explicit parameters
+        params = {
+            'search_string': search_string,
+            'starts_with': starts_with,
+            'ends_with': ends_with,
+            'ignore_case': ignore_case,
+            'anchor_domain': anchor_domain,
+            'metadata_element_type': metadata_element_type,
+            'metadata_element_subtypes': metadata_element_subtypes,
+            'skip_relationships': skip_relationships,
+            'include_only_relationships': include_only_relationships,
+            'skip_classified_elements': skip_classified_elements,
+            'include_only_classified_elements': include_only_classified_elements,
+            'graph_query_depth': graph_query_depth,
+            'governance_zone_filter': governance_zone_filter,
+            'as_of_time': as_of_time,
+            'effective_time': effective_time,
+            'relationship_page_size': relationship_page_size,
+            'limit_results_by_status': limit_results_by_status,
+            'sequencing_order': sequencing_order,
+            'sequencing_property': sequencing_property,
+            'output_format': output_format,
+            'report_spec': report_spec,
+            'start_from': start_from,
+            'page_size': page_size,
+            'property_names': property_names,
+            'body': body
+        }
+        # Merge with any additional kwargs, removing None values
+        params.update(kwargs)
+        params = {k: v for k, v in params.items() if v is not None}
+        
+        response = await self._async_find_request(
+            url,
+            _type="NoteLog",
+            _gen_output=self._generate_feedback_output,
+            **params
+        )
         return response
 
     @dynamic_catch
@@ -3724,45 +3895,114 @@ class ServerClient(BaseServerClient):
             ends_with: bool = False,
             ignore_case: bool = False,
             start_from: int = 0,
-            page_size: int = max_paging_size, output_format: str = "json", report_spec: Optional[str] = None,
-
+            page_size: int = max_paging_size,
+            output_format: str = "json",
+            report_spec: Optional[str] = None,
+            **kwargs
     ) -> dict | str:
         """
-        Return the list of informal tags containing the supplied string in their name or description. The search string
-        is located in the request body and is interpreted as a plain string.  The request parameters,
-        startsWith, endsWith and ignoreCase can be used to allow a fuzzy search.  The request body also supports the
-        specification of an effective time to restrict the search to element that are/were effective at a particular time.
+        Return the list of informal tags containing the supplied string in their name or description. Async version.
+
+        The search string is located in the request body and is interpreted as a plain string. The request parameters
+        startsWith, endsWith and ignoreCase can be used to allow a fuzzy search. The request body also supports the
+        specification of an effective time to restrict the search to elements that are/were effective at a particular time.
 
         Parameters
         ----------
-        search_string: str
-            - string to search for.
-        body: dict | SearchStringRequestBody
-            - details of the request.
-        starts_with
-            - does the value start with the supplied string?
-        ends_with
-            - does the value end with the supplied string?
-        ignore_case
-            - should the search ignore case?
-        start_from
-            - index of the list to start from (0 for start).
-        page_size
-            - maximum number of elements to return.
+        search_string : str, optional
+            String to search for in tag names or descriptions.
+        body : dict | SearchStringRequestBody, optional
+            Details of the request. If provided, overrides other parameters.
+        starts_with : bool, default True
+            Does the value start with the supplied string?
+        ends_with : bool, default False
+            Does the value end with the supplied string?
+        ignore_case : bool, default False
+            Should the search ignore case?
+        start_from : int, default 0
+            Index of the list to start from (0 for start).
+        page_size : int, default max_paging_size
+            Maximum number of elements to return.
+        output_format : str, default "json"
+            Format of the returned output.
+        report_spec : str, optional
+            Report specification for the returned output.
+        **kwargs : dict, optional
+            Additional parameters supported by the underlying find request:
+            
+            - anchor_domain : str - Domain to anchor the search
+            - metadata_element_type : str - Specific metadata element type
+            - metadata_element_subtypes : list[str] - List of metadata element subtypes
+            - skip_relationships : list[str] - Relationship types to skip
+            - include_only_relationships : list[str] - Only include these relationship types
+            - skip_classified_elements : list[str] - Skip elements with these classifications
+            - include_only_classified_elements : list[str] - Only include elements with these classifications
+            - graph_query_depth : int - Depth of graph traversal (default 3)
+            - governance_zone_filter : list[str] - Filter by governance zones
+            - as_of_time : str - Historical query time
+            - effective_time : str - Effective time for the query
+            - relationship_page_size : int - Page size for relationships
+            - limit_results_by_status : list[str] - Filter by element status
+            - sequencing_order : str - Order of results
+            - sequencing_property : str - Property to sequence by
+            - property_names : list[str] - Specific properties to search
 
         Returns
         -------
-        list of tag objects
+        dict | str
+            List of tag objects in the requested format.
 
         Raises
         ------
         PyegeriaException
+            If there are issues in communications, message format, or Egeria errors.
 
+        Notes
+        -----
+        The **kwargs parameter allows advanced users to access all parameters supported by the
+        underlying _async_find_request helper method. Common parameters are explicitly listed
+        in the signature for discoverability, while advanced parameters can be passed via kwargs.
+
+        Examples
+        --------
+        Basic usage:
+            >>> tags = await client._async_find_tags("project", starts_with=True)
+        
+        Advanced usage with kwargs:
+            >>> tags = await client._async_find_tags(
+            ...     "project",
+            ...     starts_with=True,
+            ...     governance_zone_filter=["internal"],
+            ...     limit_results_by_status=["ACTIVE"]
+            ... )
         """
 
         url = f"{self.command_root}feedback-manager/tags/by-search-string"
-        response = await self._async_find_request(url, "InformalTag", self._generate_feedback_output, search_string,
-                                                  anchor_domain=None, output_format="JSON", page_size=0, body=body)
+        
+        # Build params dict with explicit parameters
+        params = {
+            'search_string': search_string,
+            'starts_with': starts_with,
+            'ends_with': ends_with,
+            'ignore_case': ignore_case,
+            'start_from': start_from,
+            'page_size': page_size,
+            'output_format': output_format,
+            'report_spec': report_spec,
+            'body': body
+        }
+        # Merge with any additional kwargs, removing None values
+        params.update(kwargs)
+        params = {k: v for k, v in params.items() if v is not None}
+        
+        response = await self._async_find_request(
+            url,
+            _type="InformalTag",
+            _gen_output=self._generate_feedback_output,
+            anchor_domain=None,
+            output_format="JSON",
+            **kwargs
+        )
         return response
 
     @dynamic_catch
@@ -4249,6 +4489,516 @@ class ServerClient(BaseServerClient):
             )
         )
         return response
+    #
+    # Likes
+    #
+    @dynamic_catch
+    async def _async_add_like_to_element(
+            self,
+            element_guid: str,
+            is_public: bool = True,
+            body: Optional[dict] = None
+    ) -> dict | str:
+        """
+        Creates a "like" object and attaches it to an element. Async version.
+
+        Parameters
+        ----------
+        element_guid : str
+            Unique identifier for the element.
+        is_public : bool, default True
+            Is this visible to other people?
+        body : dict, optional
+            Optional effective time.
+
+        Returns
+        -------
+        dict | str
+            Response from the server.
+
+        Raises
+        ------
+        PyegeriaInvalidParameterException
+            One of the parameters is null or invalid.
+        PyegeriaAPIException
+            There is a problem adding the element properties to the metadata repository.
+        PyegeriaUnauthorizedException
+            The requesting user is not authorized to issue this request.
+        """
+        if body is None:
+            body = {}
+        
+        url = (f"{self.command_root}feedback-manager/elements/{element_guid}/likes"
+               f"?isPublic={is_public}")
+        
+        response = await self._async_make_request("POST", url, body)
+        return response.json()
+
+    def add_like_to_element(
+            self,
+            element_guid: str,
+            is_public: bool = True,
+            body: Optional[dict] = None
+    ) -> dict | str:
+        """
+        Creates a "like" object and attaches it to an element.
+
+        Parameters
+        ----------
+        element_guid : str
+            Unique identifier for the element.
+        is_public : bool, default True
+            Is this visible to other people?
+        body : dict, optional
+            Optional effective time.
+
+        Returns
+        -------
+        dict | str
+            Response from the server.
+
+        Raises
+        ------
+        PyegeriaInvalidParameterException
+            One of the parameters is null or invalid.
+        PyegeriaAPIException
+            There is a problem adding the element properties to the metadata repository.
+        PyegeriaUnauthorizedException
+            The requesting user is not authorized to issue this request.
+        """
+        loop = asyncio.get_event_loop()
+        response = loop.run_until_complete(
+            self._async_add_like_to_element(element_guid, is_public, body)
+        )
+        return response
+
+    @dynamic_catch
+    async def _async_get_attached_likes(
+            self,
+            element_guid: str,
+            body: Optional[dict] = None,
+            start_from: int = 0,
+            page_size: int = max_paging_size,
+            output_format: str = "json",
+            report_spec: Optional[str] = None
+    ) -> dict | str:
+        """
+        Return the likes attached to an element. Async version.
+
+        Parameters
+        ----------
+        element_guid : str
+            Unique identifier for the element that the likes are connected to.
+        body : dict, optional
+            Optional effective time.
+        start_from : int, default 0
+            Index of the list to start from (0 for start).
+        page_size : int, default max_paging_size
+            Maximum number of elements to return.
+        output_format : str, default "json"
+            Format of the returned output.
+        report_spec : str, optional
+            Report specification for the returned output.
+
+        Returns
+        -------
+        dict | str
+            List of likes in the requested format.
+
+        Raises
+        ------
+        PyegeriaInvalidParameterException
+            One of the parameters is null or invalid.
+        PyegeriaAPIException
+            There is a problem retrieving information from the metadata repository.
+        PyegeriaUnauthorizedException
+            The requesting user is not authorized to issue this request.
+        """
+        if body is None:
+            body = {}
+        
+        url = (f"{self.command_root}feedback-manager/elements/{element_guid}/likes/retrieve"
+               f"?startFrom={start_from}&pageSize={page_size}")
+        
+        response = await self._async_make_request("POST", url, body)
+        return response.json()
+
+    def get_attached_likes(
+            self,
+            element_guid: str,
+            body: Optional[dict] = None,
+            start_from: int = 0,
+            page_size: int = max_paging_size,
+            output_format: str = "json",
+            report_spec: Optional[str] = None
+    ) -> dict | str:
+        """
+        Return the likes attached to an element.
+
+        Parameters
+        ----------
+        element_guid : str
+            Unique identifier for the element that the likes are connected to.
+        body : dict, optional
+            Optional effective time.
+        start_from : int, default 0
+            Index of the list to start from (0 for start).
+        page_size : int, default max_paging_size
+            Maximum number of elements to return.
+        output_format : str, default "json"
+            Format of the returned output.
+        report_spec : str, optional
+            Report specification for the returned output.
+
+        Returns
+        -------
+        dict | str
+            List of likes in the requested format.
+
+        Raises
+        ------
+        PyegeriaInvalidParameterException
+            One of the parameters is null or invalid.
+        PyegeriaAPIException
+            There is a problem retrieving information from the metadata repository.
+        PyegeriaUnauthorizedException
+            The requesting user is not authorized to issue this request.
+        """
+        loop = asyncio.get_event_loop()
+        response = loop.run_until_complete(
+            self._async_get_attached_likes(element_guid, body, start_from, page_size,
+                                          output_format, report_spec)
+        )
+        return response
+
+    @dynamic_catch
+    async def _async_remove_like_from_element(
+            self,
+            element_guid: str,
+            body: Optional[dict] = None
+    ) -> dict | str:
+        """
+        Removes a "Like" added to the element by this user. Async version.
+
+        Parameters
+        ----------
+        element_guid : str
+            Unique identifier for the element where the like is attached.
+        body : dict, optional
+            Optional effective time.
+
+        Returns
+        -------
+        dict | str
+            Response from the server.
+
+        Raises
+        ------
+        PyegeriaInvalidParameterException
+            One of the parameters is null or invalid.
+        PyegeriaAPIException
+            There is a problem removing the like from the metadata repository.
+        PyegeriaUnauthorizedException
+            The requesting user is not authorized to issue this request.
+        """
+        if body is None:
+            body = {}
+        
+        url = f"{self.command_root}feedback-manager/elements/{element_guid}/likes/remove"
+        
+        response = await self._async_make_request("POST", url, body)
+        return response.json()
+
+    def remove_like_from_element(
+            self,
+            element_guid: str,
+            body: Optional[dict] = None
+    ) -> dict | str:
+        """
+        Removes a "Like" added to the element by this user.
+
+        Parameters
+        ----------
+        element_guid : str
+            Unique identifier for the element where the like is attached.
+        body : dict, optional
+            Optional effective time.
+
+        Returns
+        -------
+        dict | str
+            Response from the server.
+
+        Raises
+        ------
+        PyegeriaInvalidParameterException
+            One of the parameters is null or invalid.
+        PyegeriaAPIException
+            There is a problem removing the like from the metadata repository.
+        PyegeriaUnauthorizedException
+            The requesting user is not authorized to issue this request.
+        """
+        loop = asyncio.get_event_loop()
+        response = loop.run_until_complete(
+            self._async_remove_like_from_element(element_guid, body)
+        )
+        return response
+
+    #
+    # Ratings
+    #
+    @dynamic_catch
+    async def _async_add_rating_to_element(
+            self,
+            element_guid: str,
+            is_public: bool = True,
+            body: Optional[dict] = None
+    ) -> dict | str:
+        """
+        Adds a star rating and optional review text to the element. Async version.
+
+        Parameters
+        ----------
+        element_guid : str
+            Unique identifier for the element.
+        is_public : bool, default True
+            Is this visible to other people?
+        body : dict, optional
+            Contains the StarRating and user review of element.
+
+        Returns
+        -------
+        dict | str
+            Element GUID of the rating.
+
+        Raises
+        ------
+        PyegeriaInvalidParameterException
+            One of the parameters is null or invalid.
+        PyegeriaAPIException
+            There is a problem adding the element properties to the metadata repository.
+        PyegeriaUnauthorizedException
+            The requesting user is not authorized to issue this request.
+        """
+        if body is None:
+            body = {}
+        
+        url = (f"{self.command_root}feedback-manager/elements/{element_guid}/ratings"
+               f"?isPublic={is_public}")
+        
+        response = await self._async_make_request("POST", url, body)
+        return response.json()
+
+    def add_rating_to_element(
+            self,
+            element_guid: str,
+            is_public: bool = True,
+            body: Optional[dict] = None
+    ) -> dict | str:
+        """
+        Adds a star rating and optional review text to the element.
+
+        Parameters
+        ----------
+        element_guid : str
+            Unique identifier for the element.
+        is_public : bool, default True
+            Is this visible to other people?
+        body : dict, optional
+            Contains the StarRating and user review of element.
+
+        Returns
+        -------
+        dict | str
+            Element GUID of the rating.
+
+        Raises
+        ------
+        PyegeriaInvalidParameterException
+            One of the parameters is null or invalid.
+        PyegeriaAPIException
+            There is a problem adding the element properties to the metadata repository.
+        PyegeriaUnauthorizedException
+            The requesting user is not authorized to issue this request.
+        """
+        loop = asyncio.get_event_loop()
+        response = loop.run_until_complete(
+            self._async_add_rating_to_element(element_guid, is_public, body)
+        )
+        return response
+
+    @dynamic_catch
+    async def _async_get_attached_ratings(
+            self,
+            element_guid: str,
+            body: Optional[dict] = None,
+            start_from: int = 0,
+            page_size: int = max_paging_size,
+            output_format: str = "json",
+            report_spec: Optional[str] = None
+    ) -> dict | str:
+        """
+        Return the ratings attached to an element. Async version.
+
+        Parameters
+        ----------
+        element_guid : str
+            Unique identifier for the element that the ratings are connected to.
+        body : dict, optional
+            Optional effective time.
+        start_from : int, default 0
+            Index of the list to start from (0 for start).
+        page_size : int, default max_paging_size
+            Maximum number of elements to return.
+        output_format : str, default "json"
+            Format of the returned output.
+        report_spec : str, optional
+            Report specification for the returned output.
+
+        Returns
+        -------
+        dict | str
+            List of ratings in the requested format.
+
+        Raises
+        ------
+        PyegeriaInvalidParameterException
+            One of the parameters is null or invalid.
+        PyegeriaAPIException
+            There is a problem retrieving information from the metadata repository.
+        PyegeriaUnauthorizedException
+            The requesting user is not authorized to issue this request.
+        """
+        if body is None:
+            body = {}
+        
+        url = (f"{self.command_root}feedback-manager/elements/{element_guid}/ratings/retrieve"
+               f"?startFrom={start_from}&pageSize={page_size}")
+        
+        response = await self._async_make_request("POST", url, body)
+        return response.json()
+
+    def get_attached_ratings(
+            self,
+            element_guid: str,
+            body: Optional[dict] = None,
+            start_from: int = 0,
+            page_size: int = max_paging_size,
+            output_format: str = "json",
+            report_spec: Optional[str] = None
+    ) -> dict | str:
+        """
+        Return the ratings attached to an element.
+
+        Parameters
+        ----------
+        element_guid : str
+            Unique identifier for the element that the ratings are connected to.
+        body : dict, optional
+            Optional effective time.
+        start_from : int, default 0
+            Index of the list to start from (0 for start).
+        page_size : int, default max_paging_size
+            Maximum number of elements to return.
+        output_format : str, default "json"
+            Format of the returned output.
+        report_spec : str, optional
+            Report specification for the returned output.
+
+        Returns
+        -------
+        dict | str
+            List of ratings in the requested format.
+
+        Raises
+        ------
+        PyegeriaInvalidParameterException
+            One of the parameters is null or invalid.
+        PyegeriaAPIException
+            There is a problem retrieving information from the metadata repository.
+        PyegeriaUnauthorizedException
+            The requesting user is not authorized to issue this request.
+        """
+        loop = asyncio.get_event_loop()
+        response = loop.run_until_complete(
+            self._async_get_attached_ratings(element_guid, body, start_from, page_size,
+                                            output_format, report_spec)
+        )
+        return response
+
+    @dynamic_catch
+    async def _async_remove_rating_from_element(
+            self,
+            element_guid: str,
+            body: Optional[dict] = None
+    ) -> dict | str:
+        """
+        Removes a star rating/review that was added to the element by this user. Async version.
+
+        Parameters
+        ----------
+        element_guid : str
+            Unique identifier for the element where the rating is attached.
+        body : dict, optional
+            Optional effective time.
+
+        Returns
+        -------
+        dict | str
+            Response from the server.
+
+        Raises
+        ------
+        PyegeriaInvalidParameterException
+            One of the parameters is null or invalid.
+        PyegeriaAPIException
+            There is a problem removing the rating from the metadata repository.
+        PyegeriaUnauthorizedException
+            The requesting user is not authorized to issue this request.
+        """
+        if body is None:
+            body = {}
+        
+        url = f"{self.command_root}feedback-manager/elements/{element_guid}/ratings/remove"
+        
+        response = await self._async_make_request("POST", url, body)
+        return response.json()
+
+    def remove_rating_from_element(
+            self,
+            element_guid: str,
+            body: Optional[dict] = None
+    ) -> dict | str:
+        """
+        Removes a star rating/review that was added to the element by this user.
+
+        Parameters
+        ----------
+        element_guid : str
+            Unique identifier for the element where the rating is attached.
+        body : dict, optional
+            Optional effective time.
+
+        Returns
+        -------
+        dict | str
+            Response from the server.
+
+        Raises
+        ------
+        PyegeriaInvalidParameterException
+            One of the parameters is null or invalid.
+        PyegeriaAPIException
+            There is a problem removing the rating from the metadata repository.
+        PyegeriaUnauthorizedException
+            The requesting user is not authorized to issue this request.
+        """
+        loop = asyncio.get_event_loop()
+        response = loop.run_until_complete(
+            self._async_remove_rating_from_element(element_guid, body)
+        )
+        return response
+
 
     #
     # Search Tags
@@ -4657,48 +5407,99 @@ class ServerClient(BaseServerClient):
         """
         loop = asyncio.get_event_loop()
         response = loop.run_until_complete(
-            self._async_find_search_keywords(keyword, start_from, page_size, output_format, report_spec, body)
+            self._async_find_search_keywords(keyword, body, start_from=start_from, page_size=page_size,
+                                            output_format=output_format, report_spec=report_spec)
         )
         return response
 
     async def _async_find_search_keywords(
             self,
             search_string: str,
+            body: Optional[dict | SearchStringRequestBody] = None,
+            starts_with: bool = False,
+            ends_with: bool = False,
+            ignore_case: bool = True,
             start_from: int = 0,
             page_size: int = 0,
             output_format: str | None = "JSON",
             report_spec: dict | str = None,
-            body: Optional[dict | SearchStringRequestBody] = None
+            **kwargs
     ) -> dict | str:
         """
-        Return the list of search keywords containing the supplied string. The search string is located in the request
-         body and is interpreted as a plain string.  The request parameters, startsWith, endsWith and ignoreCase can
-         be used to allow a fuzzy search.  The request body also supports the specification of an effective time to
-         restrict the search to element that are/were effective at a particular time. Async Version.
+        Return the list of search keywords containing the supplied string. Async version.
+
+        The search string is located in the request body and is interpreted as a plain string. The request parameters
+        startsWith, endsWith and ignoreCase can be used to allow a fuzzy search. The request body also supports the
+        specification of an effective time to restrict the search to elements that are/were effective at a particular time.
 
         Parameters
         ----------
         search_string : str
-            - keyword to search for.
-        start_from: int, default 0
-            - start index of the search keyword
-        page size
-            - output_format: str, default "JSON
-        output_format: str, default "JSON"
-            - output format for the response
-        report_spec: str | dict, default None
-            - report specification
-        body: dict | SearchStringRequestBody, optional
-            - structure containing detailed request information.
+            String to search for in search keyword names or descriptions.
+        body : dict | SearchStringRequestBody, optional
+            Details of the request. If provided, overrides other parameters.
+        starts_with : bool, default False
+            Does the value start with the supplied string?
+        ends_with : bool, default False
+            Does the value end with the supplied string?
+        ignore_case : bool, default True
+            Should the search ignore case?
+        start_from : int, default 0
+            Index of the list to start from (0 for start).
+        page_size : int, default 0
+            Maximum number of elements to return (0 for server default).
+        output_format : str, default "JSON"
+            Format of the returned output.
+        report_spec : str | dict, optional
+            Report specification for the returned output.
+        **kwargs : dict, optional
+            Additional parameters supported by the underlying find request:
+            
+            - anchor_domain : str - Domain to anchor the search
+            - metadata_element_type : str - Specific metadata element type
+            - metadata_element_subtypes : list[str] - List of metadata element subtypes
+            - skip_relationships : list[str] - Relationship types to skip
+            - include_only_relationships : list[str] - Only include these relationship types
+            - skip_classified_elements : list[str] - Skip elements with these classifications
+            - include_only_classified_elements : list[str] - Only include elements with these classifications
+            - graph_query_depth : int - Depth of graph traversal (default 3)
+            - governance_zone_filter : list[str] - Filter by governance zones
+            - as_of_time : str - Historical query time
+            - effective_time : str - Effective time for the query
+            - relationship_page_size : int - Page size for relationships
+            - limit_results_by_status : list[str] - Filter by element status
+            - sequencing_order : str - Order of results
+            - sequencing_property : str - Property to sequence by
+            - property_names : list[str] - Specific properties to search
 
         Returns
         -------
-        Details of the search keyword in the requested format.
+        dict | str
+            List of search keyword objects in the requested format.
 
         Raises
         ------
         PyegeriaException
+            If there are issues in communications, message format, or Egeria errors.
 
+        Notes
+        -----
+        The **kwargs parameter allows advanced users to access all parameters supported by the
+        underlying _async_find_request helper method. Common parameters are explicitly listed
+        in the signature for discoverability, while advanced parameters can be passed via kwargs.
+
+        Examples
+        --------
+        Basic usage:
+            >>> keywords = await client._async_find_search_keywords("data", starts_with=True)
+        
+        Advanced usage with kwargs:
+            >>> keywords = await client._async_find_search_keywords(
+            ...     "data",
+            ...     starts_with=True,
+            ...     governance_zone_filter=["internal"],
+            ...     limit_results_by_status=["ACTIVE"]
+            ... )
         """
         if body is None and search_string:
             body = {
@@ -4708,8 +5509,29 @@ class ServerClient(BaseServerClient):
                 "pageSize": page_size
             }
         url = f"{self.command_root}classification-manager/search-keywords/by-search-string"
-        response = await self._async_find_request(url, "SearchKeyword", self._generate_feedback_output, search_string,
-                                                  anchor_domain=None, output_format="JSON", page_size=0, body=body)
+        
+        # Build params dict with explicit parameters
+        params = {
+            'search_string': search_string,
+            'starts_with': starts_with,
+            'ends_with': ends_with,
+            'ignore_case': ignore_case,
+            'start_from': start_from,
+            'page_size': page_size,
+            'output_format': output_format,
+            'report_spec': report_spec,
+            'body': body
+        }
+        # Merge with any additional kwargs, removing None values
+        params.update(kwargs)
+        params = {k: v for k, v in params.items() if v is not None}
+        
+        response = await self._async_find_request(
+            url,
+            _type="SearchKeyword",
+            _gen_output=self._generate_feedback_output,
+            **params
+        )
         return response
 
     @dynamic_catch
@@ -4754,7 +5576,8 @@ class ServerClient(BaseServerClient):
         """
         loop = asyncio.get_event_loop()
         response = loop.run_until_complete(
-            self._async_find_search_keywords(search_string, start_from, page_size, output_format, report_spec, body)
+            self._async_find_search_keywords(search_string, body, start_from=start_from, page_size=page_size,
+                                            output_format=output_format, report_spec=report_spec)
         )
         return response
 
@@ -6341,40 +7164,65 @@ class ServerClient(BaseServerClient):
         loop.run_until_complete(self._async_delete_asset(asset_guid, body))
 
     @dynamic_catch
-    async def _async_find_assets(self, search_string: str = "*", starts_with: bool = False, ends_with: bool = False,
-                                 ignore_case: bool = True, anchor_domain: Optional[str] = None, metadata_element_type: Optional[str] = None,
-                                 metadata_element_subtypes: Optional[list[str]] = None, skip_relationships: Optional[list[str]] = None,
-                                 include_only_relationships: Optional[list[str]] = None,
-                                 skip_classified_elements: Optional[list[str]] = None,
-                                 include_only_classified_elements: Optional[list[str]] = None, graph_query_depth: int = 3,
-                                 governance_zone_filter: Optional[list[str]] = None, as_of_time: Optional[str] = None,
-                                 effective_time: Optional[str] = None, relationship_page_size: int = 0,
-                                 limit_results_by_status: Optional[list[str]] = None, sequencing_order: Optional[str] = None,
-                                 sequencing_property: Optional[str] = None, output_format: str = "DICT",
-                                 report_spec: dict | str | None = None, start_from: int = 0, page_size: int = 0,
-                                 body: dict | SearchStringRequestBody | None = None) -> list | dict | str:
-        """Retrieve the list of asset metadata elements that contain the search string. Async version.
+    async def _async_find_assets(
+            self,
+            search_string: str = "*",
+            body: dict | SearchStringRequestBody | None = None,
+            starts_with: bool = False,
+            ends_with: bool = False,
+            ignore_case: bool = True,
+            start_from: int = 0,
+            page_size: int = 0,
+            output_format: str = "DICT",
+            report_spec: dict | str | None = None,
+            **kwargs
+    ) -> list | dict | str:
+        """
+        Retrieve the list of asset metadata elements that contain the search string. Async version.
+
+        The search string is located in the request body and is interpreted as a plain string. The request parameters
+        startsWith, endsWith and ignoreCase can be used to allow a fuzzy search. The request body also supports the
+        specification of an effective time to restrict the search to elements that are/were effective at a particular time.
 
         Parameters
         ----------
-        search_string: str, optional
-            String to search for in asset properties. Default is "*".
-        starts_with: bool, optional
-            Whether to match only at the start. Default is False.
-        ends_with: bool, optional
-            Whether to match only at the end. Default is False.
-        ignore_case: bool, optional
-            Whether to ignore case in matching. Default is True.
-        start_from: int, optional
-            Index of the first result to return. Default is 0.
-        page_size: int, optional
-            Maximum number of results to return. Default is None (server default).
-        output_format: str, optional
-            Format of the output. Default is "DICT".
-        report_spec: dict | str, optional
+        search_string : str, default "*"
+            String to search for in asset properties.
+        body : dict | SearchStringRequestBody, optional
+            Details of the request. If provided, overrides other parameters.
+        starts_with : bool, default False
+            Whether to match only at the start of the string.
+        ends_with : bool, default False
+            Whether to match only at the end of the string.
+        ignore_case : bool, default True
+            Whether to ignore case in matching.
+        start_from : int, default 0
+            Index of the first result to return.
+        page_size : int, default 0
+            Maximum number of results to return (0 for server default).
+        output_format : str, default "DICT"
+            Format of the output.
+        report_spec : dict | str, optional
             Specification for report formatting.
-        body: dict | SearchStringRequestBody, optional
-            Additional search parameters.
+        **kwargs : dict, optional
+            Additional parameters supported by the underlying find request:
+            
+            - anchor_domain : str - Domain to anchor the search
+            - metadata_element_type : str - Specific metadata element type (e.g., "Asset")
+            - metadata_element_subtypes : list[str] - List of metadata element subtypes
+            - skip_relationships : list[str] - Relationship types to skip in graph traversal
+            - include_only_relationships : list[str] - Only include these relationship types
+            - skip_classified_elements : list[str] - Skip elements with these classifications
+            - include_only_classified_elements : list[str] - Only include elements with these classifications
+            - graph_query_depth : int - Depth of graph traversal (default 3)
+            - governance_zone_filter : list[str] - Filter by governance zones
+            - as_of_time : str - Historical query time (ISO 8601 format)
+            - effective_time : str - Effective time for the query (ISO 8601 format)
+            - relationship_page_size : int - Page size for relationships
+            - limit_results_by_status : list[str] - Filter by element status (e.g., ["ACTIVE"])
+            - sequencing_order : str - Order of results (e.g., "PROPERTY_ASCENDING")
+            - sequencing_property : str - Property to sequence by
+            - property_names : list[str] - Specific properties to search
 
         Returns
         -------
@@ -6384,41 +7232,63 @@ class ServerClient(BaseServerClient):
         Raises
         ------
         PyegeriaException
-            One of the pyegeria exceptions will be raised if there are issues in communications, message format, or
-            Egeria errors.
+            If there are issues in communications, message format, or Egeria errors.
 
+        Notes
+        -----
+        The **kwargs parameter allows advanced users to access all parameters supported by the
+        underlying _async_find_request helper method. Common parameters are explicitly listed
+        in the signature for discoverability, while advanced parameters can be passed via kwargs.
+        
+        This method is particularly useful for finding assets across the metadata repository.
+        The graph_query_depth parameter controls how deep the relationship traversal goes,
+        which can significantly impact performance and the amount of data returned.
+
+        Examples
+        --------
+        Basic usage:
+            >>> assets = await client._async_find_assets("customer", starts_with=True)
+        
+        Advanced usage with filtering:
+            >>> assets = await client._async_find_assets(
+            ...     "customer",
+            ...     starts_with=True,
+            ...     metadata_element_type="DataSet",
+            ...     governance_zone_filter=["production"],
+            ...     limit_results_by_status=["ACTIVE"],
+            ...     graph_query_depth=2
+            ... )
+        
+        Using effective time:
+            >>> assets = await client._async_find_assets(
+            ...     "customer",
+            ...     effective_time="2024-01-01T00:00:00Z",
+            ...     governance_zone_filter=["production"]
+            ... )
         """
         url = f"{self.command_root}asset-maker/assets/by-search-string"
 
+        # Build params dict with explicit parameters
+        params = {
+            'search_string': search_string,
+            'starts_with': starts_with,
+            'ends_with': ends_with,
+            'ignore_case': ignore_case,
+            'start_from': start_from,
+            'page_size': page_size,
+            'output_format': output_format,
+            'report_spec': report_spec,
+            'body': body
+        }
+        # Merge with any additional kwargs, removing None values
+        params.update(kwargs)
+        params = {k: v for k, v in params.items() if v is not None}
+        
         return await self._async_find_request(
             url,
             _type="Asset",
             _gen_output=self._generate_referenceable_output,
-            search_string=search_string,
-            starts_with=starts_with,
-            ends_with=ends_with,
-            ignore_case=ignore_case,
-            anchor_domain=anchor_domain,
-            metadata_element_type=metadata_element_type,
-            metadata_element_subtypes=metadata_element_subtypes,
-            skip_relationships=skip_relationships,
-            include_only_relationships=include_only_relationships,
-            skip_classified_elements=skip_classified_elements,
-            include_only_classified_elements=include_only_classified_elements,
-            graph_query_depth=graph_query_depth,
-            governance_zone_filter=governance_zone_filter,
-            as_of_time=as_of_time,
-            effective_time=effective_time,
-            relationship_page_size=relationship_page_size,
-            limit_results_by_status=limit_results_by_status,
-            sequencing_order=sequencing_order,
-            sequencing_property=sequencing_property,
-            output_format=output_format,
-            report_spec=report_spec,
-            start_from=start_from,
-            page_size=page_size,
-            property_names=None,
-            body=body,
+            **params
         )
 
     @dynamic_catch
