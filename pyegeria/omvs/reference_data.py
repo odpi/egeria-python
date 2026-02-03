@@ -144,14 +144,16 @@ class ReferenceDataManager(ServerClient):
     @dynamic_catch
     async def _async_find_valid_value_definitions(
             self,
-            search_string: str, classification_names: Optional[list[str]] = None, metadata_element_subtypes: Optional[list[str]] = None,
+            search_string: str,
+            body: Optional[dict | SearchStringRequestBody] = None,
             starts_with: bool = False,
             ends_with: bool = False,
             ignore_case: bool = False,
             start_from: int = 0,
             page_size: int = 0,
-            output_format: str = "json", report_spec: str | dict = None,
-            body: Optional[dict | SearchStringRequestBody] = None
+            output_format: str = "json",
+            report_spec: str | dict = None,
+            **kwargs
     ) -> list | str:
         """ Returns the list of valid value definitions matching the search string.
             The search string is located in the request body and is interpreted as a plain string.
@@ -196,23 +198,45 @@ class ReferenceDataManager(ServerClient):
 
         url = f"{self.ref_data_command_base}/valid-value-definitions/by-search-string"
 
-        response = await self._async_find_request(url, _type="ValidValuesDefinition",
-                                                  _gen_output=self._generate_vv_def_output, search_string=search_string,
-                                                  output_format="JSON", page_size=0, body=body)
+        # Merge explicit parameters with kwargs
+        params = {
+            'search_string': search_string,
+            'body': body,
+            'starts_with': starts_with,
+            'ends_with': ends_with,
+            'ignore_case': ignore_case,
+            'start_from': start_from,
+            'page_size': page_size,
+            'output_format': output_format,
+            'report_spec': report_spec
+        }
+        params.update(kwargs)
+        
+        # Filter out None values, but keep search_string even if None (it's required)
+        params = {k: v for k, v in params.items() if v is not None or k == 'search_string'}
+
+        response = await self._async_find_request(
+            url,
+            _type="ValidValuesDefinition",
+            _gen_output=self._generate_vv_def_output,
+            **params
+        )
 
         return response
 
     @dynamic_catch
     def find_valid_value_definitions(
             self,
-            search_string: str, classification_names: Optional[list[str]] = None, metadata_element_subtypes: Optional[list[str]] = None,
+            search_string: str,
+            body: Optional[dict | SearchStringRequestBody] = None,
             starts_with: bool = False,
             ends_with: bool = False,
             ignore_case: bool = False,
             start_from: int = 0,
             page_size: int = 0,
-            output_format: str = "json", report_spec: str | dict = None,
-            body: Optional[dict | SearchStringRequestBody] = None
+            output_format: str = "json",
+            report_spec: str | dict = None,
+            **kwargs
     ) -> list | str:
 
         """ Returns the list of valid value definitions matching the search string.
@@ -253,17 +277,16 @@ class ReferenceDataManager(ServerClient):
         loop = asyncio.get_event_loop()
         resp = loop.run_until_complete(
             self._async_find_valid_value_definitions(
-                search_string,
-                classification_names,
-                metadata_element_subtypes,
-                starts_with,
-                ends_with,
-                ignore_case,
-                start_from,
-                page_size,
-                output_format,
-                report_spec,
-                body,
+                search_string=search_string,
+                body=body,
+                starts_with=starts_with,
+                ends_with=ends_with,
+                ignore_case=ignore_case,
+                start_from=start_from,
+                page_size=page_size,
+                output_format=output_format,
+                report_spec=report_spec,
+                **kwargs
             )
         )
 

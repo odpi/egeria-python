@@ -961,26 +961,19 @@ class Location(ServerClient):
         loop.run_until_complete(self._async_delete_location(location_guid, body, cascade))
 
     @dynamic_catch
-    async def _async_find_locations(self, search_string: str = "*",
-                                    starts_with: bool = True, ends_with: bool = False,
-                                    ignore_case: bool = False,
-                                    anchor_domain: Optional[str] = None,
-                                    metadata_element_type: Optional[str] = None,
-                                    metadata_element_subtypes: Optional[list[str]] = None,
-                                    skip_relationships: Optional[list[str]] = None,
-                                    include_only_relationships: Optional[list[str]] = None,
-                                    skip_classified_elements: Optional[list[str]] = None,
-                                    include_only_classified_elements: Optional[list[str]] = None,
-                                    graph_query_depth: int = 3,
-                                    governance_zone_filter: Optional[list[str]] = None, as_of_time: Optional[str] = None,
-                                    effective_time: Optional[str] = None, relationship_page_size: int = 0,
-                                    limit_results_by_status: Optional[list[str]] = None, sequencing_order: Optional[str] = None,
-                                    sequencing_property: Optional[str] = None,
-                                    output_format: str = "JSON",
-                                    report_spec: str | dict = "Referenceable",
-                                    start_from: int = 0, page_size: int = 100,
-                                    property_names: Optional[list[str]] = None,
-                                    body: Optional[dict | SearchStringRequestBody] = None) -> list | str:
+    async def _async_find_locations(
+        self,
+        search_string: str = "*",
+        body: Optional[dict | SearchStringRequestBody] = None,
+        starts_with: bool = True,
+        ends_with: bool = False,
+        ignore_case: bool = False,
+        start_from: int = 0,
+        page_size: int = 100,
+        output_format: str = "JSON",
+        report_spec: str | dict = "Referenceable",
+        **kwargs
+    ) -> list | str:
         """ Retrieve the list of location metadata elements that contain the search string. Async Version.
 
         Parameters
@@ -1054,50 +1047,47 @@ class Location(ServerClient):
 
         """
         url = f"{self.ref_location_command_base}/locations/by-search-string"
-        response = await self._async_find_request(url, _type="Location", _gen_output=self._generate_location_output,
-                                                  search_string=search_string, starts_with=starts_with,
-                                                  ends_with=ends_with, ignore_case=ignore_case,
-                                                  anchor_domain=anchor_domain,
-                                                  metadata_element_type=metadata_element_type,
-                                                  metadata_element_subtypes=metadata_element_subtypes,
-                                                  skip_relationships=skip_relationships,
-                                                  include_only_relationships=include_only_relationships,
-                                                  skip_classified_elements=skip_classified_elements,
-                                                  include_only_classified_elements=include_only_classified_elements,
-                                                  graph_query_depth=graph_query_depth,
-                                                  governance_zone_filter=governance_zone_filter,
-                                                  as_of_time=as_of_time, effective_time=effective_time,
-                                                  relationship_page_size=relationship_page_size,
-                                                  limit_results_by_status=limit_results_by_status,
-                                                  sequencing_order=sequencing_order,
-                                                  sequencing_property=sequencing_property,
-                                                  output_format=output_format, report_spec=report_spec,
-                                                  start_from=start_from, page_size=page_size,
-                                                  property_names=property_names, body=body)
+        
+        # Merge explicit parameters with kwargs
+        params = {
+            'search_string': search_string,
+            'body': body,
+            'starts_with': starts_with,
+            'ends_with': ends_with,
+            'ignore_case': ignore_case,
+            'start_from': start_from,
+            'page_size': page_size,
+            'output_format': output_format,
+            'report_spec': report_spec
+        }
+        params.update(kwargs)
+        
+        # Filter out None values, but keep search_string even if None (it's required)
+        params = {k: v for k, v in params.items() if v is not None or k == 'search_string'}
+        
+        response = await self._async_find_request(
+            url,
+            _type="Location",
+            _gen_output=self._generate_location_output,
+            **params
+        )
 
         return response
 
     @dynamic_catch
-    def find_locations(self, search_string: str = "*",
-                       starts_with: bool = True, ends_with: bool = False,
-                       ignore_case: bool = False,
-                       anchor_domain: Optional[str] = None,
-                       metadata_element_type: Optional[str] = None,
-                       metadata_element_subtypes: Optional[list[str]] = None,
-                       skip_relationships: Optional[list[str]] = None,
-                       include_only_relationships: Optional[list[str]] = None,
-                       skip_classified_elements: Optional[list[str]] = None,
-                       include_only_classified_elements: Optional[list[str]] = None,
-                       graph_query_depth: int = 3,
-                       governance_zone_filter: Optional[list[str]] = None, as_of_time: Optional[str] = None,
-                       effective_time: Optional[str] = None, relationship_page_size: int = 0,
-                       limit_results_by_status: Optional[list[str]] = None, sequencing_order: Optional[str] = None,
-                       sequencing_property: Optional[str] = None,
-                       output_format: str = "JSON",
-                       report_spec: str | dict = "Referenceable",
-                       start_from: int = 0, page_size: int = 100,
-                       property_names: Optional[list[str]] = None,
-                       body: Optional[dict | SearchStringRequestBody] = None) -> list | str:
+    def find_locations(
+        self,
+        search_string: str = "*",
+        body: Optional[dict | SearchStringRequestBody] = None,
+        starts_with: bool = True,
+        ends_with: bool = False,
+        ignore_case: bool = False,
+        start_from: int = 0,
+        page_size: int = 100,
+        output_format: str = "JSON",
+        report_spec: str | dict = "Referenceable",
+        **kwargs
+    ) -> list | str:
         """ Retrieve the list of location metadata elements that contain the search string.
 
         Parameters
@@ -1171,31 +1161,20 @@ class Location(ServerClient):
 
         """
         loop = asyncio.get_event_loop()
-        return loop.run_until_complete(self._async_find_locations(search_string=search_string,
-                                                                 starts_with=starts_with,
-                                                                 ends_with=ends_with,
-                                                                 ignore_case=ignore_case,
-                                                                 anchor_domain=anchor_domain,
-                                                                 metadata_element_type=metadata_element_type,
-                                                                 metadata_element_subtypes=metadata_element_subtypes,
-                                                                 skip_relationships=skip_relationships,
-                                                                 include_only_relationships=include_only_relationships,
-                                                                 skip_classified_elements=skip_classified_elements,
-                                                                 include_only_classified_elements=include_only_classified_elements,
-                                                                 graph_query_depth=graph_query_depth,
-                                                                 governance_zone_filter=governance_zone_filter,
-                                                                 as_of_time=as_of_time,
-                                                                 effective_time=effective_time,
-                                                                 relationship_page_size=relationship_page_size,
-                                                                 limit_results_by_status=limit_results_by_status,
-                                                                 sequencing_order=sequencing_order,
-                                                                 sequencing_property=sequencing_property,
-                                                                 output_format=output_format,
-                                                                 report_spec=report_spec,
-                                                                 start_from=start_from,
-                                                                 page_size=page_size,
-                                                                 property_names=property_names,
-                                                                 body=body))
+        return loop.run_until_complete(
+            self._async_find_locations(
+                search_string=search_string,
+                body=body,
+                starts_with=starts_with,
+                ends_with=ends_with,
+                ignore_case=ignore_case,
+                start_from=start_from,
+                page_size=page_size,
+                output_format=output_format,
+                report_spec=report_spec,
+                **kwargs
+            )
+        )
 
     @dynamic_catch
     async def _async_get_locations_by_name(self, filter_string: Optional[str] = None,

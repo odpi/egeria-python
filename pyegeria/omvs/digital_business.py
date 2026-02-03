@@ -506,30 +506,15 @@ class DigitalBusiness(CollectionManager):
     async def _async_find_business_capabilities(
         self,
         search_string: str = "*",
+        body: Optional[dict] = None,
         starts_with: bool = False,
         ends_with: bool = False,
         ignore_case: bool = True,
-        anchor_domain: Optional[str] = None,
-        metadata_element_type: Optional[str] = "BusinessCapability",
-        metadata_element_subtype: Optional[list[str]] = None,
-        skip_relationships: Optional[list[str]] = None,
-        include_only_relationships: Optional[list[str]] = None,
-        skip_classified_elements: Optional[list[str]] = None,
-        include_only_classified_elements: Optional[list[str]] = None,
-        graph_query_depth: int = 0,
-        governance_zone_filter: Optional[list[str]] = None,
-        as_of_time: Optional[str] = None,
-        effective_time: Optional[str] = None,
-        relationship_page_size: int = 0,
-        limit_results_by_status: Optional[list[str]] = None,
-        sequencing_order: Optional[str] = None,
-        sequencing_property: Optional[str] = None,
         start_from: int = 0,
         page_size: int = 0,
         output_format: str = "JSON",
         report_spec: Optional[str | dict] = None,
-        property_names: Optional[list[str]] = None,
-        body: Optional[dict] = None,
+        **kwargs
     ) -> list | str:
         """Returns the list of business capabilities matching the search string. Async version.
 
@@ -597,65 +582,44 @@ class DigitalBusiness(CollectionManager):
             If there are issues in communications, message format, or Egeria errors.
         """
         url = f"{self.digital_business_command_root}/collections/by-search-string"
+        
+        # Merge explicit parameters with kwargs
+        params = {
+            'search_string': search_string,
+            'body': body,
+            'starts_with': starts_with,
+            'ends_with': ends_with,
+            'ignore_case': ignore_case,
+            'start_from': start_from,
+            'page_size': page_size,
+            'output_format': output_format,
+            'report_spec': report_spec
+        }
+        params.update(kwargs)
+        
+        # Filter out None values, but keep search_string even if None (it's required)
+        params = {k: v for k, v in params.items() if v is not None or k == 'search_string'}
+        
         response = await self._async_find_request(
             url,
             _type="BusinessCapability",
             _gen_output=self._generate_collection_output,
-            search_string=search_string,
-            starts_with=starts_with,
-            ends_with=ends_with,
-            ignore_case=ignore_case,
-            anchor_domain=anchor_domain,
-            metadata_element_type=metadata_element_type,
-            metadata_element_subtypes=metadata_element_subtype,
-            skip_relationships=skip_relationships,
-            include_only_relationships=include_only_relationships,
-            skip_classified_elements=skip_classified_elements,
-            include_only_classified_elements=include_only_classified_elements,
-            graph_query_depth=graph_query_depth,
-            governance_zone_filter=governance_zone_filter,
-            as_of_time=as_of_time,
-            effective_time=effective_time,
-            relationship_page_size=relationship_page_size,
-            limit_results_by_status=limit_results_by_status,
-            sequencing_order=sequencing_order,
-            sequencing_property=sequencing_property,
-            start_from=start_from,
-            page_size=page_size,
-            output_format=output_format,
-            report_spec=report_spec,
-            property_names=property_names,
-            body=body,
+            **params
         )
         return response
 
     def find_business_capabilities(
         self,
         search_string: str = "*",
+        body: Optional[dict] = None,
         starts_with: bool = False,
         ends_with: bool = False,
         ignore_case: bool = True,
-        anchor_domain: Optional[str] = None,
-        metadata_element_type: Optional[str] = "BusinessCapability",
-        metadata_element_subtype: Optional[list[str]] = None,
-        skip_relationships: Optional[list[str]] = None,
-        include_only_relationships: Optional[list[str]] = None,
-        skip_classified_elements: Optional[list[str]] = None,
-        include_only_classified_elements: Optional[list[str]] = None,
-        graph_query_depth: int = 0,
-        governance_zone_filter: Optional[list[str]] = None,
-        as_of_time: Optional[str] = None,
-        effective_time: Optional[str] = None,
-        relationship_page_size: int = 0,
-        limit_results_by_status: Optional[list[str]] = None,
-        sequencing_order: Optional[str] = None,
-        sequencing_property: Optional[str] = None,
         start_from: int = 0,
         page_size: int = 0,
         output_format: str = "JSON",
         report_spec: Optional[str | dict] = None,
-        property_names: Optional[list[str]] = None,
-        body: Optional[dict] = None,
+        **kwargs
     ) -> list | str:
         """Returns the list of business capabilities matching the search string. Sync version.
 
@@ -725,13 +689,16 @@ class DigitalBusiness(CollectionManager):
         loop = asyncio.get_event_loop()
         return loop.run_until_complete(
             self._async_find_business_capabilities(
-                search_string, starts_with, ends_with, ignore_case, anchor_domain,
-                metadata_element_type, metadata_element_subtype, skip_relationships,
-                include_only_relationships, skip_classified_elements, include_only_classified_elements,
-                graph_query_depth, governance_zone_filter, as_of_time, effective_time,
-                relationship_page_size, limit_results_by_status, sequencing_order,
-                sequencing_property, start_from, page_size, output_format, report_spec,
-                property_names, body
+                search_string=search_string,
+                body=body,
+                starts_with=starts_with,
+                ends_with=ends_with,
+                ignore_case=ignore_case,
+                start_from=start_from,
+                page_size=page_size,
+                output_format=output_format,
+                report_spec=report_spec,
+                **kwargs
             )
         )
 

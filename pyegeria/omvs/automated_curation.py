@@ -2228,234 +2228,181 @@ class AutomatedCuration(ServerClient):
         return response
 
     @dynamic_catch
-    async def _async_find_engine_actions(self, search_string: str = "*",
-                                         starts_with: bool = True, ends_with: bool = False,
-                                         ignore_case: bool = False,
-                                         anchor_domain: Optional[str] = None,
-                                         metadata_element_subtypes: Optional[list[str]] = None,
-                                         skip_relationships: Optional[list[str]] = None,
-                                         include_only_relationships: Optional[list[str]] = None,
-                                         skip_classified_elements: Optional[list[str]] = None,
-                                         include_only_classified_elements: Optional[list[str]] = None,
-                                         graph_query_depth: int = 3,
-                                         governance_zone_filter: Optional[list[str]] = None, as_of_time: Optional[str] = None,
-                                         effective_time: Optional[str] = None, relationship_page_size: int = 0,
-                                         limit_results_by_status: Optional[list[str]] = None, sequencing_order: Optional[str] = None,
-                                         sequencing_property: Optional[str] = None,
-                                         output_format: str = "JSON",
-                                         report_spec: str | dict = "EngineAction",
-                                         start_from: int = 0, page_size: int = 100,
-                                         property_names: Optional[list[str]] = None,
-                                         body: Optional[dict | SearchStringRequestBody] = None) -> list | str:
+    async def _async_find_engine_actions(
+            self,
+            search_string: str = "*",
+            body: Optional[dict | SearchStringRequestBody] = None,
+            starts_with: bool = True,
+            ends_with: bool = False,
+            ignore_case: bool = False,
+            start_from: int = 0,
+            page_size: int = 100,
+            output_format: str = "JSON",
+            report_spec: str | dict = "EngineAction",
+            **kwargs
+    ) -> list | str:
         """ Retrieve the list of engine action metadata elements that contain the search string. Async Version.
 
         Parameters
         ----------
-        search_string: str
+        search_string : str, default "*"
             Search string to match against - None or '*' indicate match against all engine actions.
-        starts_with : bool, [default=True], optional
+        body : dict | SearchStringRequestBody, optional
+            Request body. If provided, overrides other parameters.
+        starts_with : bool, default True
             Starts with the supplied string.
-        ends_with : bool, [default=False], optional
-            Ends with the supplied string
-        ignore_case : bool, [default=False], optional
-            Ignore case when searching
-        anchor_domain: str, optional
-            The anchor domain to search in.
-        metadata_element_subtypes: list[str], optional
-            The subtypes of metadata element to search for.
-        skip_relationships: list[str], optional
-            The types of relationships to skip.
-        include_only_relationships: list[str], optional
-            The types of relationships to include.
-        skip_classified_elements: list[str], optional
-            The types of classified elements to skip.
-        include_only_classified_elements: list[str], optional
-            The types of classified elements to include.
-        graph_query_depth: int, [default=3], optional
-            The depth of the graph query.
-        governance_zone_filter: list[str], optional
-            The governance zones to search in.
-        as_of_time: str, optional
-            The time to search as of.
-        effective_time: str, optional
-            The effective time to search at.
-        relationship_page_size: int, [default=0], optional
-            The page size for relationships.
-        limit_results_by_status: list[str], optional
-            The statuses to limit results by.
-        sequencing_order: str, optional
-            The order to sequence results by.
-        sequencing_property: str, optional
-            The property to sequence results by.
-        output_format: str, default = "JSON"
-            - one of "MD", "LIST", "FORM", "REPORT", "DICT", "MERMAID" or "JSON"
-        report_spec: str | dict , optional, default = "EngineAction"
-            - The desired output columns/fields to include.
-        start_from: int, [default=0], optional
-            When multiple pages of results are available, the page number to start from.
-        page_size: int, [default=100]
-            The number of items to return in a single page.
-        property_names: list[str], optional
-            The names of properties to search for.
-        body: dict | SearchStringRequestBody, optional, default = None
-            - if provided, the search parameters in the body will supercede other attributes, such as "search_string"
+        ends_with : bool, default False
+            Ends with the supplied string.
+        ignore_case : bool, default False
+            Ignore case when searching.
+        start_from : int, default 0
+            Starting index for pagination.
+        page_size : int, default 100
+            Number of items to return in a single page.
+        output_format : str, default "JSON"
+            Output format: "MD", "LIST", "FORM", "REPORT", "DICT", "MERMAID" or "JSON".
+        report_spec : str | dict, default "EngineAction"
+            Report specification for output formatting.
+        **kwargs : dict, optional
+            Additional parameters supported by the underlying find request:
+            
+            - anchor_domain : str - Domain to anchor the search
+            - metadata_element_subtypes : list[str] - List of metadata element subtypes
+            - skip_relationships : list[str] - Relationship types to skip
+            - include_only_relationships : list[str] - Only include these relationship types
+            - skip_classified_elements : list[str] - Skip elements with these classifications
+            - include_only_classified_elements : list[str] - Only include elements with these classifications
+            - graph_query_depth : int - Depth of graph traversal (default 3)
+            - governance_zone_filter : list[str] - Filter by governance zones
+            - as_of_time : str - Historical query time (ISO 8601 format)
+            - effective_time : str - Effective time for the query (ISO 8601 format)
+            - relationship_page_size : int - Page size for relationships
+            - limit_results_by_status : list[str] - Filter by element status
+            - sequencing_order : str - Order of results
+            - sequencing_property : str - Property to sequence by
+            - property_names : list[str] - Specific properties to search
 
         Returns
--------
-        List | str
-
-        Output depends on the output format specified.
+        -------
+        list | str
+            List of engine actions in the requested format.
 
         Raises
--------
-
+        ------
         ValidationError
-          If the client passes incorrect parameters on the request that don't conform to the data model.
+            If the client passes incorrect parameters on the request that don't conform to the data model.
         PyegeriaException
-          Issues raised in communicating or server side processing.
+            Issues raised in communicating or server side processing.
         NotAuthorizedException
-          The principle specified by the user_id does not have authorization for the requested action
-
+            The principle specified by the user_id does not have authorization for the requested action.
         """
         url = str(HttpUrl(f"{self.curation_command_root}/assets/by-search-string"))
-        response = await self._async_find_request(url, _type=self.ENGINE_ACTION_LABEL, _gen_output=self._generate_engine_action_output,
-                                                  search_string=search_string, starts_with=starts_with,
-                                                  ends_with=ends_with, ignore_case=ignore_case,
-                                                  anchor_domain=anchor_domain,
-                                                  metadata_element_type='EngineAction',
-                                                  metadata_element_subtypes=metadata_element_subtypes,
-                                                  skip_relationships=skip_relationships,
-                                                  include_only_relationships=include_only_relationships,
-                                                  skip_classified_elements=skip_classified_elements,
-                                                  include_only_classified_elements=include_only_classified_elements,
-                                                  graph_query_depth=graph_query_depth,
-                                                  governance_zone_filter=governance_zone_filter,
-                                                  as_of_time=as_of_time, effective_time=effective_time,
-                                                  relationship_page_size=relationship_page_size,
-                                                  limit_results_by_status=limit_results_by_status,
-                                                  sequencing_order=sequencing_order,
-                                                  sequencing_property=sequencing_property,
-                                                  output_format=output_format, report_spec=report_spec,
-                                                  start_from=start_from, page_size=page_size,
-                                                  property_names=property_names, body=body)
-
+        
+        # Set metadata_element_type to 'EngineAction' if not provided
+        if 'metadata_element_type' not in kwargs:
+            kwargs['metadata_element_type'] = 'EngineAction'
+        
+        # Merge explicit parameters with kwargs
+        params = {
+            'search_string': search_string,
+            'body': body,
+            'starts_with': starts_with,
+            'ends_with': ends_with,
+            'ignore_case': ignore_case,
+            'start_from': start_from,
+            'page_size': page_size,
+            'output_format': output_format,
+            'report_spec': report_spec
+        }
+        params.update(kwargs)
+        
+        # Filter out None values, but keep search_string even if None (it's required)
+        params = {k: v for k, v in params.items() if v is not None or k == 'search_string'}
+        
+        response = await self._async_find_request(
+            url,
+            _type=self.ENGINE_ACTION_LABEL,
+            _gen_output=self._generate_engine_action_output,
+            **params
+        )
         return response
 
     @dynamic_catch
-    def find_engine_actions(self, search_string: str = "*",
-                            starts_with: bool = True, ends_with: bool = False,
-                            ignore_case: bool = False,
-                            anchor_domain: Optional[str] = None,
-                            metadata_element_subtypes: Optional[list[str]] = None,
-                            skip_relationships: Optional[list[str]] = None,
-                            include_only_relationships: Optional[list[str]] = None,
-                            skip_classified_elements: Optional[list[str]] = None,
-                            include_only_classified_elements: Optional[list[str]] = None,
-                            graph_query_depth: int = 3,
-                            governance_zone_filter: Optional[list[str]] = None, as_of_time: Optional[str] = None,
-                            effective_time: Optional[str] = None, relationship_page_size: int = 0,
-                            limit_results_by_status: Optional[list[str]] = None, sequencing_order: Optional[str] = None,
-                            sequencing_property: Optional[str] = None,
-                            output_format: str = "JSON",
-                            report_spec: str | dict = "EngineAction",
-                            start_from: int = 0, page_size: int = 100,
-                            property_names: Optional[list[str]] = None,
-                            body: Optional[dict | SearchStringRequestBody] = None) -> list | str:
+    def find_engine_actions(
+            self,
+            search_string: str = "*",
+            body: Optional[dict | SearchStringRequestBody] = None,
+            starts_with: bool = True,
+            ends_with: bool = False,
+            ignore_case: bool = False,
+            start_from: int = 0,
+            page_size: int = 100,
+            output_format: str = "JSON",
+            report_spec: str | dict = "EngineAction",
+            **kwargs
+    ) -> list | str:
         """ Retrieve the list of engine action metadata elements that contain the search string.
 
         Parameters
         ----------
-        search_string: str
+        search_string : str, default "*"
             Search string to match against - None or '*' indicate match against all engine actions.
-        starts_with : bool, [default=True], optional
+        body : dict | SearchStringRequestBody, optional
+            Request body. If provided, overrides other parameters.
+        starts_with : bool, default True
             Starts with the supplied string.
-        ends_with : bool, [default=False], optional
-            Ends with the supplied string
-        ignore_case : bool, [default=False], optional
-            Ignore case when searching
-        anchor_domain: str, optional
-            The anchor domain to search in.
-        metadata_element_subtypes: list[str], optional
-            The subtypes of metadata element to search for.
-        skip_relationships: list[str], optional
-            The types of relationships to skip.
-        include_only_relationships: list[str], optional
-            The types of relationships to include.
-        skip_classified_elements: list[str], optional
-            The types of classified elements to skip.
-        include_only_classified_elements: list[str], optional
-            The types of classified elements to include.
-        graph_query_depth: int, [default=3], optional
-            The depth of the graph query.
-        governance_zone_filter: list[str], optional
-            The governance zones to search in.
-        as_of_time: str, optional
-            The time to search as of.
-        effective_time: str, optional
-            The effective time to search at.
-        relationship_page_size: int, [default=0], optional
-            The page size for relationships.
-        limit_results_by_status: list[str], optional
-            The statuses to limit results by.
-        sequencing_order: str, optional
-            The order to sequence results by.
-        sequencing_property: str, optional
-            The property to sequence results by.
-        output_format: str, default = "JSON"
-            - one of "MD", "LIST", "FORM", "REPORT", "DICT", "MERMAID" or "JSON"
-        report_spec: str | dict , optional, default = "EngineAction"
-            - The desired output columns/fields to include.
-        start_from: int, [default=0], optional
-            When multiple pages of results are available, the page number to start from.
-        page_size: int, [default=100]
-            The number of items to return in a single page.
-        property_names: list[str], optional
-            The names of properties to search for.
-        body: dict | SearchStringRequestBody, optional, default = None
-            - if provided, the search parameters in the body will supercede other attributes, such as "search_string"
+        ends_with : bool, default False
+            Ends with the supplied string.
+        ignore_case : bool, default False
+            Ignore case when searching.
+        start_from : int, default 0
+            Starting index for pagination.
+        page_size : int, default 100
+            Number of items to return in a single page.
+        output_format : str, default "JSON"
+            Output format: "MD", "LIST", "FORM", "REPORT", "DICT", "MERMAID" or "JSON".
+        report_spec : str | dict, default "EngineAction"
+            Report specification for output formatting.
+        **kwargs : dict, optional
+            Additional parameters supported by the underlying find request:
+            
+            - anchor_domain : str - Domain to anchor the search
+            - metadata_element_subtypes : list[str] - List of metadata element subtypes
+            - skip_relationships : list[str] - Relationship types to skip
+            - include_only_relationships : list[str] - Only include these relationship types
+            - skip_classified_elements : list[str] - Skip elements with these classifications
+            - include_only_classified_elements : list[str] - Only include elements with these classifications
+            - graph_query_depth : int - Depth of graph traversal (default 3)
+            - governance_zone_filter : list[str] - Filter by governance zones
+            - as_of_time : str - Historical query time (ISO 8601 format)
+            - effective_time : str - Effective time for the query (ISO 8601 format)
+            - relationship_page_size : int - Page size for relationships
+            - limit_results_by_status : list[str] - Filter by element status
+            - sequencing_order : str - Order of results
+            - sequencing_property : str - Property to sequence by
+            - property_names : list[str] - Specific properties to search
 
         Returns
--------
-        List | str
-
-        Output depends on the output format specified.
+        -------
+        list | str
+            List of engine actions in the requested format.
 
         Raises
--------
-
+        ------
         ValidationError
-          If the client passes incorrect parameters on the request that don't conform to the data model.
+            If the client passes incorrect parameters on the request that don't conform to the data model.
         PyegeriaException
-          Issues raised in communicating or server side processing.
+            Issues raised in communicating or server side processing.
         NotAuthorizedException
-          The principle specified by the user_id does not have authorization for the requested action
-
+            The principle specified by the user_id does not have authorization for the requested action.
         """
         loop = asyncio.get_event_loop()
-        return loop.run_until_complete(self._async_find_engine_actions(search_string=search_string,
-                                                                      starts_with=starts_with,
-                                                                      ends_with=ends_with,
-                                                                      ignore_case=ignore_case,
-                                                                      anchor_domain=anchor_domain,
-                                                                      metadata_element_subtypes=metadata_element_subtypes,
-                                                                      skip_relationships=skip_relationships,
-                                                                      include_only_relationships=include_only_relationships,
-                                                                      skip_classified_elements=skip_classified_elements,
-                                                                      include_only_classified_elements=include_only_classified_elements,
-                                                                      graph_query_depth=graph_query_depth,
-                                                                      governance_zone_filter=governance_zone_filter,
-                                                                      as_of_time=as_of_time,
-                                                                      effective_time=effective_time,
-                                                                      relationship_page_size=relationship_page_size,
-                                                                      limit_results_by_status=limit_results_by_status,
-                                                                      sequencing_order=sequencing_order,
-                                                                      sequencing_property=sequencing_property,
-                                                                      output_format=output_format,
-                                                                      report_spec=report_spec,
-                                                                      start_from=start_from,
-                                                                      page_size=page_size,
-                                                                      property_names=property_names,
-                                                                      body=body))
+        return loop.run_until_complete(
+            self._async_find_engine_actions(
+                search_string, body, starts_with, ends_with, ignore_case,
+                start_from, page_size, output_format, report_spec, **kwargs
+            )
+        )
 
     #
     # Governance action processes
@@ -3974,30 +3921,15 @@ class AutomatedCuration(ServerClient):
     async def async_find_technology_types(
         self,
         search_string: str = "*",
+        body: Optional[dict | SearchStringRequestBody] = None,
         starts_with: bool = False,
         ends_with: bool = False,
         ignore_case: bool = True,
-        anchor_domain: Optional[str] = None,
-        metadata_element_type: Optional[str] = None,
-        metadata_element_subtypes: Optional[list[str]] = None,
-        skip_relationships: Optional[list[str]] = None,
-        include_only_relationships: Optional[list[str]] = None,
-        skip_classified_elements: Optional[list[str]] = None,
-        include_only_classified_elements: Optional[list[str]] = None,
-        graph_query_depth: int = 3,
-        governance_zone_filter: Optional[list[str]] = None,
-        as_of_time: Optional[str] = None,
-        effective_time: Optional[str] = None,
-        relationship_page_size: int = 0,
-        limit_results_by_status: list[str] = ["ACTIVE"],
-        sequencing_order: str = "PROPERTY_ASCENDING",
-        sequencing_property: str = "qualifiedName",
-        output_format: str = "JSON",
-        report_spec: str | dict = "TechType",
         start_from: int = 0,
         page_size: int = 0,
-        property_names: Optional[list[str]] = None,
-        body: Optional[dict | SearchStringRequestBody] = None,
+        output_format: str = "JSON",
+        report_spec: str | dict = "TechType",
+        **kwargs
     ) -> list | str:
         """Retrieve the list of technology types that contain the search string. Async version.
 
@@ -4042,136 +3974,119 @@ class AutomatedCuration(ServerClient):
             search_string = None
 
         url = f"{self.curation_command_root}/technology-types/by-search-string"
-
+        
+        # Set defaults for technology types if not provided in kwargs
+        if 'limit_results_by_status' not in kwargs:
+            kwargs['limit_results_by_status'] = ["ACTIVE"]
+        if 'sequencing_order' not in kwargs:
+            kwargs['sequencing_order'] = "PROPERTY_ASCENDING"
+        if 'sequencing_property' not in kwargs:
+            kwargs['sequencing_property'] = "qualifiedName"
+        
+        # Merge explicit parameters with kwargs
+        params = {
+            'search_string': search_string,  # Always include, even if None
+            'body': body,
+            'starts_with': starts_with,
+            'ends_with': ends_with,
+            'ignore_case': ignore_case,
+            'start_from': start_from,
+            'page_size': page_size,
+            'output_format': output_format,
+            'report_spec': report_spec
+        }
+        params.update(kwargs)
+        
+        # Filter out None values, but keep search_string even if None (it's required)
+        params = {k: v for k, v in params.items() if v is not None or k == 'search_string'}
+        
         return await self._async_find_request(
             url,
             _type="TechType",
             _gen_output=self._generate_tech_type_output,
-            search_string=search_string,
-            starts_with=starts_with,
-            ends_with=ends_with,
-            ignore_case=ignore_case,
-            anchor_domain=anchor_domain,
-            metadata_element_type=metadata_element_type,
-            metadata_element_subtypes=metadata_element_subtypes,
-            skip_relationships=skip_relationships,
-            include_only_relationships=include_only_relationships,
-            skip_classified_elements=skip_classified_elements,
-            include_only_classified_elements=include_only_classified_elements,
-            graph_query_depth=graph_query_depth,
-            governance_zone_filter=governance_zone_filter,
-            as_of_time=as_of_time,
-            effective_time=effective_time,
-            relationship_page_size=relationship_page_size,
-            limit_results_by_status=limit_results_by_status,
-            sequencing_order=sequencing_order,
-            sequencing_property=sequencing_property,
-            output_format=output_format,
-            report_spec=report_spec,
-            start_from=start_from,
-            page_size=page_size,
-            property_names=property_names,
-            body=body,
+            **params
         )
 
     def find_technology_types(
-        self,
-        search_string: str = "*",
-        starts_with: bool = False,
-        ends_with: bool = False,
-        ignore_case: bool = True,
-        anchor_domain: Optional[str] = None,
-        metadata_element_type: Optional[str] = None,
-        metadata_element_subtypes: Optional[list[str]] = None,
-        skip_relationships: Optional[list[str]] = None,
-        include_only_relationships: Optional[list[str]] = None,
-        skip_classified_elements: Optional[list[str]] = None,
-        include_only_classified_elements: Optional[list[str]] = None,
-        graph_query_depth: int = 3,
-        governance_zone_filter: Optional[list[str]] = None,
-        as_of_time: Optional[str] = None,
-        effective_time: Optional[str] = None,
-        relationship_page_size: int = 0,
-        limit_results_by_status: list[str] = ["ACTIVE"],
-        sequencing_order: str = "PROPERTY_ASCENDING",
-        sequencing_property: str = "qualifiedName",
-        output_format: str = "JSON",
-        report_spec: str | dict = "TechType",
-        start_from: int = 0,
-        page_size: int = 0,
-        property_names: Optional[list[str]] = None,
-        body: Optional[dict | SearchStringRequestBody] = None,
+            self,
+            search_string: str = "*",
+            body: Optional[dict | SearchStringRequestBody] = None,
+            starts_with: bool = False,
+            ends_with: bool = False,
+            ignore_case: bool = True,
+            start_from: int = 0,
+            page_size: int = 0,
+            output_format: str = "JSON",
+            report_spec: str | dict = "TechType",
+            **kwargs
     ) -> list | str:
         """Retrieve the list of technology types that contain the search string.
 
-        Parameters:
+        Parameters
         ----------
-        search_string: str
+        search_string : str, default "*"
             The search string we are looking for.
-        starts_with : bool, optional
-           Whether to search engine actions that start with the given search string. Default is False.
-        ends_with : bool, optional
-           Whether to search engine actions that end with the given search string. Default is False.
-        ignore_case : bool, optional
-           Whether to ignore case while searching engine actions. Default is True.
-        start_from : int, optional
-           The index from which to start fetching the engine actions. Default is 0.
-        page_size : int, optional
-           The maximum number of engine actions to fetch in a single request. Default is `0`.
-        output_format: str, optional
-            The format of the output. Default is "JSON".
-        report_spec: str | dict, optional
-            The report specification. Default is "TechType".
-        body: dict | SearchStringRequestBody, optional
-            The request body. Default is None.
+        body : dict | SearchStringRequestBody, optional
+            Request body. If provided, overrides other parameters.
+        starts_with : bool, default False
+            Whether to search that start with the given search string.
+        ends_with : bool, default False
+            Whether to search that end with the given search string.
+        ignore_case : bool, default True
+            Whether to ignore case while searching.
+        start_from : int, default 0
+            The index from which to start fetching results.
+        page_size : int, default 0
+            The maximum number of results to fetch in a single request.
+        output_format : str, default "JSON"
+            Output format: "MD", "LIST", "FORM", "REPORT", "DICT", "MERMAID" or "JSON".
+        report_spec : str | dict, default "TechType"
+            Report specification for output formatting.
+        **kwargs : dict, optional
+            Additional parameters supported by the underlying find request:
+            
+            - anchor_domain : str - Domain to anchor the search
+            - metadata_element_type : str - Specific metadata element type
+            - metadata_element_subtypes : list[str] - List of metadata element subtypes
+            - skip_relationships : list[str] - Relationship types to skip
+            - include_only_relationships : list[str] - Only include these relationship types
+            - skip_classified_elements : list[str] - Skip elements with these classifications
+            - include_only_classified_elements : list[str] - Only include elements with these classifications
+            - graph_query_depth : int - Depth of graph traversal (default 3)
+            - governance_zone_filter : list[str] - Filter by governance zones
+            - as_of_time : str - Historical query time (ISO 8601 format)
+            - effective_time : str - Effective time for the query (ISO 8601 format)
+            - relationship_page_size : int - Page size for relationships
+            - limit_results_by_status : list[str] - Filter by element status (default ["ACTIVE"])
+            - sequencing_order : str - Order of results (default "PROPERTY_ASCENDING")
+            - sequencing_property : str - Property to sequence by (default "qualifiedName")
+            - property_names : list[str] - Specific properties to search
 
-        Returns:
+        Returns
         -------
-            [dict] | str: List of elements describing the technology - or "no tech found" if not found.
+        list | str
+            List of technology types in the requested format.
 
-        Raises:
+        Raises
         ------
-        PyegeriaInvalidParameterException: If the API response indicates an error (non-200 status code),
-                                   this exception is raised with details from the response content.
-        PyegeriaAPIException: If the API response indicates a server side error.
-        PyegeriaUnauthorizedException:
+        PyegeriaInvalidParameterException
+            If the API response indicates an error (non-200 status code).
+        PyegeriaAPIException
+            If the API response indicates a server side error.
+        PyegeriaUnauthorizedException
+            If the user is not authorized.
 
         Notes
         -----
         For more information see: https://egeria-project.org/concepts/deployed-implementation-type
         """
-
         loop = asyncio.get_event_loop()
-        response = loop.run_until_complete(
+        return loop.run_until_complete(
             self.async_find_technology_types(
-                search_string=search_string,
-                starts_with=starts_with,
-                ends_with=ends_with,
-                ignore_case=ignore_case,
-                anchor_domain=anchor_domain,
-                metadata_element_type=metadata_element_type,
-                metadata_element_subtypes=metadata_element_subtypes,
-                skip_relationships=skip_relationships,
-                include_only_relationships=include_only_relationships,
-                skip_classified_elements=skip_classified_elements,
-                include_only_classified_elements=include_only_classified_elements,
-                graph_query_depth=graph_query_depth,
-                governance_zone_filter=governance_zone_filter,
-                as_of_time=as_of_time,
-                effective_time=effective_time,
-                relationship_page_size=relationship_page_size,
-                limit_results_by_status=limit_results_by_status,
-                sequencing_order=sequencing_order,
-                sequencing_property=sequencing_property,
-                output_format=output_format,
-                report_spec=report_spec,
-                start_from=start_from,
-                page_size=page_size,
-                property_names=property_names,
-                body=body,
+                search_string, body, starts_with, ends_with, ignore_case,
+                start_from, page_size, output_format, report_spec, **kwargs
             )
         )
-        return response
 
     async def async_find_technology_types_body(
         self,

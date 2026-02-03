@@ -1761,25 +1761,20 @@ class SolutionArchitect(ServerClient):
                                                    start_from, page_size,
                                                    property_names, body)
 
-    async def _async_find_information_supply_chains(self, search_string: str = "*", add_implementation: bool = True,
-                                                   starts_with: bool = True, ends_with: bool = False,
-                                                   ignore_case: bool = False,
-                                                   anchor_domain: Optional[str] = None,
-                                                   metadata_element_type: Optional[str] = None,
-                                                   metadata_element_subtypes: Optional[list[str]] = None,
-                                                   skip_relationships: Optional[list[str]] = None,
-                                                   include_only_relationships: Optional[list[str]] = None,
-                                                   skip_classified_elements: Optional[list[str]] = None,
-                                                   include_only_classified_elements: Optional[list[str]] = None,
-                                                   graph_query_depth: int = 3,
-                                                   governance_zone_filter: Optional[list[str]] = None, as_of_time: Optional[str] = None,
-                                                   effective_time: Optional[str] = None, relationship_page_size: int = 0,
-                                                   limit_results_by_status: Optional[list[str]] = None, sequencing_order: Optional[str] = None,
-                                                   sequencing_property: Optional[str] = None,
-                                                   output_format: str = "JSON", report_spec: str | dict = None,
-                                                   start_from: int = 0, page_size: int = 100,
-                                                   property_names: Optional[list[str]] = None,
-                                                   body: Optional[dict | SearchStringRequestBody] = None) -> list[dict] | str:
+    async def _async_find_information_supply_chains(
+        self,
+        search_string: str = "*",
+        add_implementation: bool = True,
+        body: Optional[dict | SearchStringRequestBody] = None,
+        starts_with: bool = True,
+        ends_with: bool = False,
+        ignore_case: bool = False,
+        start_from: int = 0,
+        page_size: int = 100,
+        output_format: str = "JSON",
+        report_spec: str | dict = None,
+        **kwargs
+    ) -> list[dict] | str:
         """Retrieve the information supply chain metadata elements that contain the search string.
            https://egeria-project.org/concepts/information-supply-chain
            Async version.
@@ -1875,49 +1870,47 @@ class SolutionArchitect(ServerClient):
         """
 
         url = f"{self.solution_architect_command_root}/information-supply-chains/by-search-string?addImplementation={add_implementation}"
-        return await self._async_find_request(url, _type="InformationSupplyChain",
-                                              _gen_output=self.generate_info_supply_chain_output,
-                                              search_string=search_string, starts_with=starts_with,
-                                              ends_with=ends_with, ignore_case=ignore_case,
-                                              anchor_domain=anchor_domain,
-                                              metadata_element_type=metadata_element_type,
-                                              metadata_element_subtypes=metadata_element_subtypes,
-                                              skip_relationships=skip_relationships,
-                                              include_only_relationships=include_only_relationships,
-                                              skip_classified_elements=skip_classified_elements,
-                                              include_only_classified_elements=include_only_classified_elements,
-                                              graph_query_depth=graph_query_depth,
-                                              governance_zone_filter=governance_zone_filter,
-                                              as_of_time=as_of_time, effective_time=effective_time,
-                                              relationship_page_size=relationship_page_size,
-                                              limit_results_by_status=limit_results_by_status,
-                                              sequencing_order=sequencing_order,
-                                              sequencing_property=sequencing_property,
-                                              output_format=output_format, report_spec=report_spec,
-                                              start_from=start_from, page_size=page_size,
-                                              property_names=property_names, body=body)
+        
+        # Merge explicit parameters with kwargs
+        params = {
+            'search_string': search_string,
+            'body': body,
+            'starts_with': starts_with,
+            'ends_with': ends_with,
+            'ignore_case': ignore_case,
+            'start_from': start_from,
+            'page_size': page_size,
+            'output_format': output_format,
+            'report_spec': report_spec
+        }
+        params.update(kwargs)
+        
+        # Filter out None values, but keep search_string even if None (it's required)
+        params = {k: v for k, v in params.items() if v is not None or k == 'search_string'}
+        
+        return await self._async_find_request(
+            url,
+            _type="InformationSupplyChain",
+            _gen_output=self.generate_info_supply_chain_output,
+            **params
+        )
 
 
 
-    def find_information_supply_chains(self, search_string: str = "*", add_implementation: bool = True,
-                                       starts_with: bool = True, ends_with: bool = False,
-                                       ignore_case: bool = False,
-                                       anchor_domain: Optional[str] = None,
-                                       metadata_element_type: Optional[str] = None,
-                                       metadata_element_subtypes: Optional[list[str]] = None,
-                                       skip_relationships: Optional[list[str]] = None,
-                                       include_only_relationships: Optional[list[str]] = None,
-                                       skip_classified_elements: Optional[list[str]] = None,
-                                       include_only_classified_elements: Optional[list[str]] = None,
-                                       graph_query_depth: int = 3,
-                                       governance_zone_filter: Optional[list[str]] = None, as_of_time: Optional[str] = None,
-                                       effective_time: Optional[str] = None, relationship_page_size: int = 0,
-                                       limit_results_by_status: Optional[list[str]] = None, sequencing_order: Optional[str] = None,
-                                       sequencing_property: Optional[str] = None,
-                                       output_format: str = "JSON", report_spec: str | dict = None,
-                                       start_from: int = 0, page_size: int = 100,
-                                       property_names: Optional[list[str]] = None,
-                                       body: Optional[dict | SearchStringRequestBody] = None) -> list[dict] | str:
+    def find_information_supply_chains(
+        self,
+        search_string: str = "*",
+        add_implementation: bool = True,
+        body: Optional[dict | SearchStringRequestBody] = None,
+        starts_with: bool = True,
+        ends_with: bool = False,
+        ignore_case: bool = False,
+        start_from: int = 0,
+        page_size: int = 100,
+        output_format: str = "JSON",
+        report_spec: str | dict = None,
+        **kwargs
+    ) -> list[dict] | str:
         """Retrieve the information supply chain metadata elements that contain the search string.
           https://egeria-project.org/concepts/information-supply-chain
 
@@ -2013,25 +2006,20 @@ class SolutionArchitect(ServerClient):
 
         loop = asyncio.get_event_loop()
         response = loop.run_until_complete(
-            self._async_find_information_supply_chains(search_string, add_implementation,
-                                                       starts_with, ends_with, ignore_case,
-                                                       anchor_domain,
-                                                       metadata_element_type,
-                                                       metadata_element_subtypes,
-                                                       skip_relationships,
-                                                       include_only_relationships,
-                                                       skip_classified_elements,
-                                                       include_only_classified_elements,
-                                                       graph_query_depth,
-                                                       governance_zone_filter,
-                                                       as_of_time, effective_time,
-                                                       relationship_page_size,
-                                                       limit_results_by_status,
-                                                       sequencing_order,
-                                                       sequencing_property,
-                                                       output_format, report_spec,
-                                                       start_from, page_size,
-                                                       property_names, body))
+            self._async_find_information_supply_chains(
+                search_string=search_string,
+                add_implementation=add_implementation,
+                body=body,
+                starts_with=starts_with,
+                ends_with=ends_with,
+                ignore_case=ignore_case,
+                start_from=start_from,
+                page_size=page_size,
+                output_format=output_format,
+                report_spec=report_spec,
+                **kwargs
+            )
+        )
         return response
 
     async def _async_get_info_supply_chain_by_name(self, search_filter: str, body: dict = None,
@@ -3170,25 +3158,19 @@ class SolutionArchitect(ServerClient):
 
 
 
-    async def _async_find_solution_blueprints(self, search_string: str = "*",
-                                             starts_with: bool = True, ends_with: bool = False,
-                                             ignore_case: bool = False,
-                                             anchor_domain: Optional[str] = None,
-                                             metadata_element_type: Optional[str] = None,
-                                             metadata_element_subtypes: Optional[list[str]] = None,
-                                             skip_relationships: Optional[list[str]] = None,
-                                             include_only_relationships: Optional[list[str]] = None,
-                                             skip_classified_elements: Optional[list[str]] = None,
-                                             include_only_classified_elements: Optional[list[str]] = None,
-                                             graph_query_depth: int = 3,
-                                             governance_zone_filter: Optional[list[str]] = None, as_of_time: Optional[str] = None,
-                                             effective_time: Optional[str] = None, relationship_page_size: int = 0,
-                                             limit_results_by_status: Optional[list[str]] = None, sequencing_order: Optional[str] = None,
-                                             sequencing_property: Optional[str] = None,
-                                             output_format: str = "JSON", report_spec: str | dict = "Solution-Blueprint",
-                                             start_from: int = 0, page_size: int = 100,
-                                             property_names: Optional[list[str]] = None,
-                                             body: Optional[dict | SearchStringRequestBody] = None) -> list[dict] | str:
+    async def _async_find_solution_blueprints(
+        self,
+        search_string: str = "*",
+        body: Optional[dict | SearchStringRequestBody] = None,
+        starts_with: bool = True,
+        ends_with: bool = False,
+        ignore_case: bool = False,
+        start_from: int = 0,
+        page_size: int = 100,
+        output_format: str = "JSON",
+        report_spec: str | dict = "Solution-Blueprint",
+        **kwargs
+    ) -> list[dict] | str:
         """Retrieve the solution blueprint elements that contain the search string.
            https://egeria-project.org/concepts/solution-blueprint
            Async version.
@@ -3281,48 +3263,45 @@ class SolutionArchitect(ServerClient):
         """
 
         url = f"{self.solution_architect_command_root}/solution-blueprints/by-search-string"
-        return await self._async_find_request(url, _type="GovernanceDefinition",
-                                              _gen_output=self.generate_info_supply_chain_output,
-                                              search_string=search_string, starts_with=starts_with,
-                                              ends_with=ends_with, ignore_case=ignore_case,
-                                              anchor_domain=anchor_domain,
-                                              metadata_element_type=metadata_element_type,
-                                              metadata_element_subtypes=metadata_element_subtypes,
-                                              skip_relationships=skip_relationships,
-                                              include_only_relationships=include_only_relationships,
-                                              skip_classified_elements=skip_classified_elements,
-                                              include_only_classified_elements=include_only_classified_elements,
-                                              graph_query_depth=graph_query_depth,
-                                              governance_zone_filter=governance_zone_filter,
-                                              as_of_time=as_of_time, effective_time=effective_time,
-                                              relationship_page_size=relationship_page_size,
-                                              limit_results_by_status=limit_results_by_status,
-                                              sequencing_order=sequencing_order,
-                                              sequencing_property=sequencing_property,
-                                              output_format=output_format, report_spec=report_spec,
-                                              start_from=start_from, page_size=page_size,
-                                              property_names=property_names, body=body)
+        
+        # Merge explicit parameters with kwargs
+        params = {
+            'search_string': search_string,
+            'body': body,
+            'starts_with': starts_with,
+            'ends_with': ends_with,
+            'ignore_case': ignore_case,
+            'start_from': start_from,
+            'page_size': page_size,
+            'output_format': output_format,
+            'report_spec': report_spec
+        }
+        params.update(kwargs)
+        
+        # Filter out None values, but keep search_string even if None (it's required)
+        params = {k: v for k, v in params.items() if v is not None or k == 'search_string'}
+        
+        return await self._async_find_request(
+            url,
+            _type="GovernanceDefinition",
+            _gen_output=self.generate_info_supply_chain_output,
+            **params
+        )
 
 
-    def find_solution_blueprints(self, search_string: str = "*",
-                                 starts_with: bool = True, ends_with: bool = False,
-                                 ignore_case: bool = False,
-                                 anchor_domain: Optional[str] = None,
-                                 metadata_element_type: Optional[str] = None,
-                                 metadata_element_subtypes: Optional[list[str]] = None,
-                                 skip_relationships: Optional[list[str]] = None,
-                                 include_only_relationships: Optional[list[str]] = None,
-                                 skip_classified_elements: Optional[list[str]] = None,
-                                 include_only_classified_elements: Optional[list[str]] = None,
-                                 graph_query_depth: int = 3,
-                                 governance_zone_filter: Optional[list[str]] = None, as_of_time: Optional[str] = None,
-                                 effective_time: Optional[str] = None, relationship_page_size: int = 0,
-                                 limit_results_by_status: Optional[list[str]] = None, sequencing_order: Optional[str] = None,
-                                 sequencing_property: Optional[str] = None,
-                                 output_format: str = "JSON", report_spec: str | dict = "Solution-Blueprint",
-                                 start_from: int = 0, page_size: int = 100,
-                                 property_names: Optional[list[str]] = None,
-                                 body: Optional[dict | SearchStringRequestBody] = None) -> list[dict] | str:
+    def find_solution_blueprints(
+        self,
+        search_string: str = "*",
+        body: Optional[dict | SearchStringRequestBody] = None,
+        starts_with: bool = True,
+        ends_with: bool = False,
+        ignore_case: bool = False,
+        start_from: int = 0,
+        page_size: int = 100,
+        output_format: str = "JSON",
+        report_spec: str | dict = "Solution-Blueprint",
+        **kwargs
+    ) -> list[dict] | str:
         """Retrieve the list of solution blueprint elements that contain the search string.
            https://egeria-project.org/concepts/solution-blueprint
 
@@ -3382,25 +3361,19 @@ class SolutionArchitect(ServerClient):
 
         loop = asyncio.get_event_loop()
         response = loop.run_until_complete(
-            self._async_find_solution_blueprints(search_string,
-                                                 starts_with, ends_with, ignore_case,
-                                                 anchor_domain,
-                                                 metadata_element_type,
-                                                 metadata_element_subtypes,
-                                                 skip_relationships,
-                                                 include_only_relationships,
-                                                 skip_classified_elements,
-                                                 include_only_classified_elements,
-                                                 graph_query_depth,
-                                                 governance_zone_filter,
-                                                 as_of_time, effective_time,
-                                                 relationship_page_size,
-                                                 limit_results_by_status,
-                                                 sequencing_order,
-                                                 sequencing_property,
-                                                 output_format, report_spec,
-                                                 start_from, page_size,
-                                                 property_names, body))
+            self._async_find_solution_blueprints(
+                search_string=search_string,
+                body=body,
+                starts_with=starts_with,
+                ends_with=ends_with,
+                ignore_case=ignore_case,
+                start_from=start_from,
+                page_size=page_size,
+                output_format=output_format,
+                report_spec=report_spec,
+                **kwargs
+            )
+        )
         return response
 
     def find_all_solution_blueprints(self, classification_names: Optional[list[str]] = None,
@@ -4579,25 +4552,19 @@ class SolutionArchitect(ServerClient):
         loop = asyncio.get_event_loop()
         loop.run_until_complete(self._async_delete_solution_component(solution_component_guid, cascade_delete, body))
 
-    async def _async_find_solution_components(self, search_string: str = "*",
-                                             starts_with: bool = True, ends_with: bool = False,
-                                             ignore_case: bool = False,
-                                             anchor_domain: Optional[str] = None,
-                                             metadata_element_type: Optional[str] = None,
-                                             metadata_element_subtypes: Optional[list[str]] = None,
-                                             skip_relationships: Optional[list[str]] = None,
-                                             include_only_relationships: Optional[list[str]] = None,
-                                             skip_classified_elements: Optional[list[str]] = None,
-                                             include_only_classified_elements: Optional[list[str]] = None,
-                                             graph_query_depth: int = 3,
-                                             governance_zone_filter: Optional[list[str]] = None, as_of_time: Optional[str] = None,
-                                             effective_time: Optional[str] = None, relationship_page_size: int = 0,
-                                             limit_results_by_status: Optional[list[str]] = None, sequencing_order: Optional[str] = None,
-                                             sequencing_property: Optional[str] = None,
-                                             output_format: str = "JSON", report_spec: str | dict = None,
-                                             start_from: int = 0, page_size: int = 100,
-                                             property_names: Optional[list[str]] = None,
-                                             body: Optional[dict | SearchStringRequestBody] = None) -> list[dict] | str:
+    async def _async_find_solution_components(
+        self,
+        search_string: str = "*",
+        body: Optional[dict | SearchStringRequestBody] = None,
+        starts_with: bool = True,
+        ends_with: bool = False,
+        ignore_case: bool = False,
+        start_from: int = 0,
+        page_size: int = 100,
+        output_format: str = "JSON",
+        report_spec: str | dict = None,
+        **kwargs
+    ) -> list[dict] | str:
         """ Retrieve the solution component elements that contain the search string. The solutions components returned
             include information about consumers, actors, and other solution components that are associated with them.
             https://egeria-project.org/concepts/solution-components
@@ -4692,48 +4659,44 @@ class SolutionArchitect(ServerClient):
         """
 
         url = f"{self.solution_architect_command_root}/solution-components/by-search-string"
+        
+        # Merge explicit parameters with kwargs
+        params = {
+            'search_string': search_string,
+            'body': body,
+            'starts_with': starts_with,
+            'ends_with': ends_with,
+            'ignore_case': ignore_case,
+            'start_from': start_from,
+            'page_size': page_size,
+            'output_format': output_format,
+            'report_spec': report_spec
+        }
+        params.update(kwargs)
+        
+        # Filter out None values, but keep search_string even if None (it's required)
+        params = {k: v for k, v in params.items() if v is not None or k == 'search_string'}
+        
+        return await self._async_find_request(
+            url,
+            _type="SolutionComponent",
+            _gen_output=self.generate_solution_components_output,
+            **params
+        )
 
-        return await self._async_find_request(url, _type="SolutionComponent",
-                                              _gen_output=self.generate_solution_components_output,
-                                              search_string=search_string, starts_with=starts_with,
-                                              ends_with=ends_with, ignore_case=ignore_case,
-                                              anchor_domain=anchor_domain,
-                                              metadata_element_type=metadata_element_type,
-                                              metadata_element_subtypes=metadata_element_subtypes,
-                                              skip_relationships=skip_relationships,
-                                              include_only_relationships=include_only_relationships,
-                                              skip_classified_elements=skip_classified_elements,
-                                              include_only_classified_elements=include_only_classified_elements,
-                                              graph_query_depth=graph_query_depth,
-                                              governance_zone_filter=governance_zone_filter,
-                                              as_of_time=as_of_time, effective_time=effective_time,
-                                              relationship_page_size=relationship_page_size,
-                                              limit_results_by_status=limit_results_by_status,
-                                              sequencing_order=sequencing_order,
-                                              sequencing_property=sequencing_property,
-                                              output_format=output_format, report_spec=report_spec,
-                                              start_from=start_from, page_size=page_size,
-                                              property_names=property_names, body=body)
-
-    def find_solution_components(self, search_string: str = "*",
-                                 starts_with: bool = True, ends_with: bool = False,
-                                 ignore_case: bool = False,
-                                 anchor_domain: Optional[str] = None,
-                                 metadata_element_type: Optional[str] = None,
-                                 metadata_element_subtypes: Optional[list[str]] = None,
-                                 skip_relationships: Optional[list[str]] = None,
-                                 include_only_relationships: Optional[list[str]] = None,
-                                 skip_classified_elements: Optional[list[str]] = None,
-                                 include_only_classified_elements: Optional[list[str]] = None,
-                                 graph_query_depth: int = 3,
-                                 governance_zone_filter: Optional[list[str]] = None, as_of_time: Optional[str] = None,
-                                 effective_time: Optional[str] = None, relationship_page_size: int = 0,
-                                 limit_results_by_status: Optional[list[str]] = None, sequencing_order: Optional[str] = None,
-                                 sequencing_property: Optional[str] = None,
-                                 output_format: str = "JSON", report_spec: str | dict = None,
-                                 start_from: int = 0, page_size: int = 100,
-                                 property_names: Optional[list[str]] = None,
-                                 body: Optional[dict | SearchStringRequestBody] = None) -> list[dict] | str:
+    def find_solution_components(
+        self,
+        search_string: str = "*",
+        body: Optional[dict | SearchStringRequestBody] = None,
+        starts_with: bool = True,
+        ends_with: bool = False,
+        ignore_case: bool = False,
+        start_from: int = 0,
+        page_size: int = 100,
+        output_format: str = "JSON",
+        report_spec: str | dict = None,
+        **kwargs
+    ) -> list[dict] | str:
         """ Retrieve the solution component elements that contain the search string. The solutions components returned
             include information about consumers, actors, and other solution components that are associated with them.
             https://egeria-project.org/concepts/solution-components
@@ -4791,25 +4754,19 @@ class SolutionArchitect(ServerClient):
 
         loop = asyncio.get_event_loop()
         response = loop.run_until_complete(
-            self._async_find_solution_components(search_string,
-                                                 starts_with, ends_with, ignore_case,
-                                                 anchor_domain,
-                                                 metadata_element_type,
-                                                 metadata_element_subtypes,
-                                                 skip_relationships,
-                                                 include_only_relationships,
-                                                 skip_classified_elements,
-                                                 include_only_classified_elements,
-                                                 graph_query_depth,
-                                                 governance_zone_filter,
-                                                 as_of_time, effective_time,
-                                                 relationship_page_size,
-                                                 limit_results_by_status,
-                                                 sequencing_order,
-                                                 sequencing_property,
-                                                 output_format, report_spec,
-                                                 start_from, page_size,
-                                                 property_names, body))
+            self._async_find_solution_components(
+                search_string=search_string,
+                body=body,
+                starts_with=starts_with,
+                ends_with=ends_with,
+                ignore_case=ignore_case,
+                start_from=start_from,
+                page_size=page_size,
+                output_format=output_format,
+                report_spec=report_spec,
+                **kwargs
+            )
+        )
         return response
 
     def find_all_solution_components(self, classification_names: Optional[list[str]] = None,
@@ -5971,25 +5928,19 @@ class SolutionArchitect(ServerClient):
         loop = asyncio.get_event_loop()
         loop.run_until_complete(self._async_delete_solution_role(guid, cascade_delete, body))
 
-    async def _async_find_solution_roles(self, search_string: str = "*",
-                                         starts_with: bool = True, ends_with: bool = False,
-                                         ignore_case: bool = False,
-                                         anchor_domain: Optional[str] = None,
-                                         metadata_element_type: Optional[str] = None,
-                                         metadata_element_subtypes: Optional[list[str]] = None,
-                                         skip_relationships: Optional[list[str]] = None,
-                                         include_only_relationships: Optional[list[str]] = None,
-                                         skip_classified_elements: Optional[list[str]] = None,
-                                         include_only_classified_elements: Optional[list[str]] = None,
-                                         graph_query_depth: int = 3,
-                                         governance_zone_filter: Optional[list[str]] = None, as_of_time: Optional[str] = None,
-                                         effective_time: Optional[str] = None, relationship_page_size: int = 0,
-                                         limit_results_by_status: Optional[list[str]] = None, sequencing_order: Optional[str] = None,
-                                         sequencing_property: Optional[str] = None,
-                                         output_format: str = "JSON", report_spec: str | dict = None,
-                                         start_from: int = 0, page_size: int = 100,
-                                         property_names: Optional[list[str]] = None,
-                                         body: Optional[dict | SearchStringRequestBody] = None) -> list[dict] | str:
+    async def _async_find_solution_roles(
+        self,
+        search_string: str = "*",
+        body: Optional[dict | SearchStringRequestBody] = None,
+        starts_with: bool = True,
+        ends_with: bool = False,
+        ignore_case: bool = False,
+        start_from: int = 0,
+        page_size: int = 100,
+        output_format: str = "JSON",
+        report_spec: str | dict = None,
+        **kwargs
+    ) -> list[dict] | str:
         """Retrieve the solution role elements that contain the search string.
            https://egeria-project.org/concepts/actor
            Async version.
@@ -6084,48 +6035,44 @@ class SolutionArchitect(ServerClient):
         """
 
         url = f"{self.solution_architect_command_root}/solution-roles/by-search-string"
+        
+        # Merge explicit parameters with kwargs
+        params = {
+            'search_string': search_string,
+            'body': body,
+            'starts_with': starts_with,
+            'ends_with': ends_with,
+            'ignore_case': ignore_case,
+            'start_from': start_from,
+            'page_size': page_size,
+            'output_format': output_format,
+            'report_spec': report_spec
+        }
+        params.update(kwargs)
+        
+        # Filter out None values, but keep search_string even if None (it's required)
+        params = {k: v for k, v in params.items() if v is not None or k == 'search_string'}
+        
+        return await self._async_find_request(
+            url,
+            _type="GovernanceDefinition",
+            _gen_output=self.generate_info_supply_chain_output,
+            **params
+        )
 
-        return await self._async_find_request(url, _type="GovernanceDefinition",
-                                              _gen_output=self.generate_info_supply_chain_output,
-                                              search_string=search_string, starts_with=starts_with,
-                                              ends_with=ends_with, ignore_case=ignore_case,
-                                              anchor_domain=anchor_domain,
-                                              metadata_element_type=metadata_element_type,
-                                              metadata_element_subtypes=metadata_element_subtypes,
-                                              skip_relationships=skip_relationships,
-                                              include_only_relationships=include_only_relationships,
-                                              skip_classified_elements=skip_classified_elements,
-                                              include_only_classified_elements=include_only_classified_elements,
-                                              graph_query_depth=graph_query_depth,
-                                              governance_zone_filter=governance_zone_filter,
-                                              as_of_time=as_of_time, effective_time=effective_time,
-                                              relationship_page_size=relationship_page_size,
-                                              limit_results_by_status=limit_results_by_status,
-                                              sequencing_order=sequencing_order,
-                                              sequencing_property=sequencing_property,
-                                              output_format=output_format, report_spec=report_spec,
-                                              start_from=start_from, page_size=page_size,
-                                              property_names=property_names, body=body)
-
-    def find_solution_roles(self, search_string: str = "*",
-                            starts_with: bool = True, ends_with: bool = False,
-                            ignore_case: bool = False,
-                            anchor_domain: Optional[str] = None,
-                            metadata_element_type: Optional[str] = None,
-                            metadata_element_subtypes: Optional[list[str]] = None,
-                            skip_relationships: Optional[list[str]] = None,
-                            include_only_relationships: Optional[list[str]] = None,
-                            skip_classified_elements: Optional[list[str]] = None,
-                            include_only_classified_elements: Optional[list[str]] = None,
-                            graph_query_depth: int = 3,
-                            governance_zone_filter: Optional[list[str]] = None, as_of_time: Optional[str] = None,
-                            effective_time: Optional[str] = None, relationship_page_size: int = 0,
-                            limit_results_by_status: Optional[list[str]] = None, sequencing_order: Optional[str] = None,
-                            sequencing_property: Optional[str] = None,
-                            output_format: str = "JSON", report_spec: str | dict = None,
-                            start_from: int = 0, page_size: int = 100,
-                            property_names: Optional[list[str]] = None,
-                            body: Optional[dict | SearchStringRequestBody] = None) -> list[dict] | str:
+    def find_solution_roles(
+        self,
+        search_string: str = "*",
+        body: Optional[dict | SearchStringRequestBody] = None,
+        starts_with: bool = True,
+        ends_with: bool = False,
+        ignore_case: bool = False,
+        start_from: int = 0,
+        page_size: int = 100,
+        output_format: str = "JSON",
+        report_spec: str | dict = None,
+        **kwargs
+    ) -> list[dict] | str:
         """Retrieve the solution role elements that contain the search string.
            https://egeria-project.org/concepts/actor
 
@@ -6218,39 +6165,50 @@ class SolutionArchitect(ServerClient):
         """
 
         loop = asyncio.get_event_loop()
-        response = loop.run_until_complete(
-            self._async_find_solution_roles(search_string,
-                                            starts_with, ends_with, ignore_case,
-                                            anchor_domain,
-                                            metadata_element_type,
-                                            metadata_element_subtypes,
-                                            skip_relationships,
-                                            include_only_relationships,
-                                            skip_classified_elements,
-                                            include_only_classified_elements,
-                                            graph_query_depth,
-                                            governance_zone_filter,
-                                            as_of_time, effective_time,
-                                            relationship_page_size,
-                                            limit_results_by_status,
-                                            sequencing_order,
-                                            sequencing_property,
-                                            output_format, report_spec,
-                                            start_from, page_size,
-                                            property_names, body))
-        return response
+        return loop.run_until_complete(
+            self._async_find_solution_roles(
+                search_string=search_string,
+                body=body,
+                starts_with=starts_with,
+                ends_with=ends_with,
+                ignore_case=ignore_case,
+                start_from=start_from,
+                page_size=page_size,
+                output_format=output_format,
+                report_spec=report_spec,
+                **kwargs
+            )
+        )
 
-    def find_all_solution_roles(self,  classification_names: Optional[list[str]] = None,
-                                    metadata_element_subtypes: Optional[list[str]] = None,
-                                    starts_with: bool = True, ends_with: bool = False,
-                                    ignore_case: bool = False, start_from: int = 0,
-                                    page_size: int = 0, output_format: str = 'JSON',
-                                    report_spec: Optional[str] = None,
-                                    body: dict| SearchStringRequestBody = None) -> list[dict] | str:
+    def find_all_solution_roles(
+        self,
+        classification_names: Optional[list[str]] = None,
+        metadata_element_subtypes: Optional[list[str]] = None,
+        starts_with: bool = True,
+        ends_with: bool = False,
+        ignore_case: bool = False,
+        start_from: int = 0,
+        page_size: int = 0,
+        output_format: str = 'JSON',
+        report_spec: Optional[str] = None,
+        body: Optional[dict | SearchStringRequestBody] = None
+    ) -> list[dict] | str:
         """Retrieve a list of all solution blueprint elements
         https://egeria-project.org/concepts/actor
         """
-        return self.find_solution_roles("*", classification_names, metadata_element_subtypes, starts_with, ends_with, ignore_case, start_from, page_size, output_format, report_spec, body)
+        return self.find_solution_roles(
+            search_string="*",
+            body=body,
+            starts_with=starts_with,
+            ends_with=ends_with,
+            ignore_case=ignore_case,
+            start_from=start_from,
+            page_size=page_size,
+            output_format=output_format,
+            report_spec=report_spec,
+            skip_classified_elements=classification_names,
+            metadata_element_subtypes=metadata_element_subtypes
+        )
 
 
     async def _async_get_solution_roles_by_name(self, search_filter: str, body: dict = None, start_from: int = 0,
