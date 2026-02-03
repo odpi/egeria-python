@@ -53,7 +53,7 @@ class TestServerClientFeedback:
     good_view_server_2 = "qs-view-server"
     bad_server_1 = "coco"
     bad_server_2 = ""
-    test_element_guid = "49bc1002-1b0a-4194-9305-3607c713726d"
+    test_element_guid = "71e67a50-ced4-40ed-b25e-98142a009604"
 
     def test_add_like_to_element(self):
         """Test adding a like to an element"""
@@ -171,11 +171,11 @@ class TestServerClientFeedback:
                 self.good_user_2, self.good_user_2_pwd
             )
             
-            test_element_guid = "test-element-guid-123"
+            # test_element_guid = "test-element-guid-123"
             
             start_time = time.perf_counter()
             response = s_client.get_attached_likes(
-                test_element_guid,
+                self.test_element_guid,
                 start_from=0,
                 page_size=50
             )
@@ -265,11 +265,11 @@ class TestServerClientFeedback:
                 self.good_user_2, self.good_user_2_pwd
             )
             
-            test_element_guid = "test-element-guid-123"
+            # test_element_guid = "test-element-guid-123"
             
             start_time = time.perf_counter()
             response = s_client.remove_like_from_element(
-                test_element_guid,
+                self.test_element_guid,
                 body={}
             )
             duration = time.perf_counter() - start_time
@@ -340,6 +340,87 @@ class TestServerClientFeedback:
         except Exception as e:
             print_basic_exception(e)
             assert False, "Unexpected exception"
+        finally:
+            s_client.close_session()
+
+    def test_remove_rating_from_element(self):
+        """Test removing a rating from an element"""
+        try:
+            s_client = ServerClient(
+                self.good_view_server_2,
+                self.good_platform1_url,
+                user_id=self.good_user_2,
+                user_pwd=self.good_user_2_pwd,
+            )
+
+            token = s_client.create_egeria_bearer_token(
+                self.good_user_2, self.good_user_2_pwd
+            )
+
+            test_element_guid = "test-element-guid-123"
+
+            start_time = time.perf_counter()
+            response = s_client.remove_rating_from_element(
+                test_element_guid,
+                body={}
+            )
+            duration = time.perf_counter() - start_time
+
+            print(f"\n\tDuration was {duration} seconds")
+            print(f"\n\tResponse was: {json.dumps(response, indent=2)}")
+
+            assert True, "Rating removed successfully"
+
+        except PyegeriaInvalidParameterException as e:
+            print_exception_table(e)
+            assert False, "Invalid parameter exception"
+        except PyegeriaAPIException as e:
+            print_exception_table(e)
+            assert False, "API exception"
+        except PyegeriaUnauthorizedException as e:
+            print_exception_table(e)
+            assert False, "Unauthorized exception"
+        except ValidationError as e:
+            print_validation_error(e)
+            assert False, "Validation error"
+        except Exception as e:
+            print_basic_exception(e)
+            assert False, "Unexpected exception"
+        finally:
+            s_client.close_session()
+
+    def test_find_assets(self):
+        try:
+            s_client = ServerClient(
+                self.good_view_server_2,
+                self.good_platform1_url,
+                user_id=self.good_user_2,
+                user_pwd=self.good_user_2_pwd,
+            )
+            token = s_client.create_egeria_bearer_token(self.good_user_2, "secret")
+            start_time = time.perf_counter()
+            search_string = "Sustainability"
+
+            response = s_client.find_assets(
+                search_string, output_format="JSON", report_spec="Referenceable", page_size=10
+            )
+            duration = time.perf_counter() - start_time
+
+            print(f"\n\tDuration was {duration} seconds")
+            if type(response) is list:
+                print(f"Found {len(response)} projects {type(response)}\n\n")
+                print("\n\n" + json.dumps(response, indent=4))
+            elif type(response) is str:
+                print("\n\nGUID is: " + response)
+            assert True
+
+        except (
+            PyegeriaException
+        ) as e:
+            print_basic_exception()
+            assert False, "Invalid request"
+        except ValidationError as e:
+            print_validation_error(e)
         finally:
             s_client.close_session()
 
