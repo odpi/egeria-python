@@ -809,277 +809,190 @@ class DataDesigner(ServerClient):
                                          report_spec=report_spec)
 
     @dynamic_catch
-    async def _async_find_data_structures(self, search_string: str,
-                                          starts_with: bool = True, ends_with: bool = False,
-                                          ignore_case: bool = False,
-                                          anchor_domain: Optional[str] = None,
-                                          metadata_element_type: Optional[str] = None,
-                                          metadata_element_subtypes: Optional[list[str]] = None,
-                                          skip_relationships: Optional[list[str]] = None,
-                                          include_only_relationships: Optional[list[str]] = None,
-                                          skip_classified_elements: Optional[list[str]] = None,
-                                          include_only_classified_elements: Optional[list[str]] = None,
-                                          graph_query_depth: int = 3,
-                                          governance_zone_filter: Optional[list[str]] = None, as_of_time: Optional[str] = None,
-                                          effective_time: Optional[str] = None, relationship_page_size: int = 0,
-                                          limit_results_by_status: Optional[list[str]] = None, sequencing_order: Optional[str] = None,
-                                          sequencing_property: Optional[str] = None,
-                                          output_format: str = "JSON", report_spec: str | dict = None,
-                                          start_from: int = 0, page_size: int = 100,
-                                          property_names: Optional[list[str]] = None,
-                                          body: Optional[dict | SearchStringRequestBody] = None) -> list | str:
-        """ Find the list of data structure metadata elements that contain the search string.
-            Async version.
+    async def _async_find_data_structures(
+        self,
+        search_string: str,
+        body: Optional[dict | SearchStringRequestBody] = None,
+        starts_with: bool = True,
+        ends_with: bool = False,
+        ignore_case: bool = False,
+        start_from: int = 0,
+        page_size: int = 100,
+        output_format: str = "JSON",
+        report_spec: str | dict = None,
+        **kwargs
+    ) -> list | str:
+        """Find the list of data structure metadata elements that contain the search string. Async version.
 
         Parameters
         ----------
-        search_string: str
-            - search string to filter on.
-        starts_with : bool, [default=True], optional
-            Starts with the supplied string.
-        ends_with : bool, [default=False], optional
-            Ends with the supplied string
-        ignore_case : bool, [default=False], optional
-            Ignore case when searching
-        anchor_domain: str, optional
-            The anchor domain to search in.
-        metadata_element_type: str, optional
-            The type of metadata element to search for.
-        metadata_element_subtypes: list[str], optional
-            The subtypes of metadata element to search for.
-        skip_relationships: list[str], optional
-            The types of relationships to skip.
-        include_only_relationships: list[str], optional
-            The types of relationships to include.
-        skip_classified_elements: list[str], optional
-            The types of classified elements to skip.
-        include_only_classified_elements: list[str], optional
-            The types of classified elements to include.
-        graph_query_depth: int, [default=3], optional
-            The depth of the graph query.
-        governance_zone_filter: list[str], optional
-            The governance zones to search in.
-        as_of_time: str, optional
-            The time to search as of.
-        effective_time: str, optional
-            The effective time to search at.
-        relationship_page_size: int, [default=0], optional
-            The page size for relationships.
-        limit_results_by_status: list[str], optional
-            The statuses to limit results by.
-        sequencing_order: str, optional
-            The order to sequence results by.
-        sequencing_property: str, optional
-            The property to sequence results by.
-        output_format: str, default = 'JSON'
-            Type of output to produce:
-                JSON - output standard json
-                MD - output standard markdown with no preamble
-                FORM - output markdown with a preamble for a form
-                REPORT - output markdown with a preamble for a report
-        report_spec: str | dict, optional
-            The report specification to use.
-        start_from: int, [default=0], optional
-            The page number to start from.
-        page_size: int, [default=100], optional
-            The number of items to return in a single page.
-        property_names: list[str], optional
-            The names of properties to search for.
-        body: dict, optional, default = None
-            - additional optional specifications for the search.
+        search_string : str
+            Search string to filter on.
+        body : dict | SearchStringRequestBody, optional
+            Request body containing search parameters. If provided, overrides other search parameters.
+        starts_with : bool, default=True
+            Whether to match data structures starting with the search string.
+        ends_with : bool, default=False
+            Whether to match data structures ending with the search string.
+        ignore_case : bool, default=False
+            Whether to ignore case when searching.
+        start_from : int, default=0
+            Page number to start from when paginating results.
+        page_size : int, default=100
+            Number of items to return per page.
+        output_format : str, default="JSON"
+            Format of the output. Options: "JSON", "MD", "LIST", "FORM", "REPORT", "DICT", "MERMAID".
+        report_spec : str | dict, optional
+            Specification for custom report output columns/fields.
+        **kwargs : dict, optional
+            Additional parameters supported by the find request:
+            
+            - anchor_domain (str): The anchor domain to search in
+            - metadata_element_type (str): The type of metadata element to search for
+            - metadata_element_subtypes (list[str]): The subtypes of metadata element to search for
+            - skip_relationships (list[str]): Relationship types to skip
+            - include_only_relationships (list[str]): Relationship types to include exclusively
+            - skip_classified_elements (list[str]): Classified element types to skip
+            - include_only_classified_elements (list[str]): Classified element types to include exclusively
+            - graph_query_depth (int): Depth of the graph query (default=3)
+            - governance_zone_filter (list[str]): Governance zones to filter by
+            - as_of_time (str): Historical time for the query
+            - effective_time (str): Effective time for the query
+            - relationship_page_size (int): Page size for relationships (default=0)
+            - limit_results_by_status (list[str]): Element statuses to filter by
+            - sequencing_order (str): Order for sequencing results
+            - sequencing_property (str): Property to use for sequencing
+            - property_names (list[str]): Property names to search for
 
         Returns
         -------
-        [dict] | str
-            Returns a string if no elements are found and a list of dict  with the results.
+        list | str
+            List of data structure metadata elements or formatted string, depending on output_format.
 
         Raises
         ------
         PyegeriaInvalidParameterException
-            one of the parameters is null or invalid or
+            If one of the parameters is null or invalid.
         PyegeriaAPIException
-            There is a problem adding the element properties to the metadata repository or
+            If there is a problem adding the element properties to the metadata repository.
         PyegeriaUnauthorizedException
-            the requesting user is not authorized to issue this request.
-
-        Notes:
-        _____
-        Sample Body:
-        {
-          "class" : "SearchStringRequestBody",
-          "startsWith" : false,
-          "endsWith" : false,
-          "ignoreCase" : true,
-          "startFrom" : 0,
-          "pageSize": 0,
-          "asOfTime" : "{{$isoTimestamp}}",
-          "effectiveTime" : "{{$isoTimestamp}}",
-          "forLineage" : false,
-          "forDuplicateProcessing" : false,
-          "limitResultsByStatus" : ["ACTIVE"],
-          "sequencingOrder" : "PROPERTY_ASCENDING",
-          "sequencingProperty" : "qualifiedName"
-        }
+            If the requesting user is not authorized to issue this request.
 
         """
 
         url = f"{base_path(self, self.view_server)}/data-structures/by-search-string"
-
-        return await self._async_find_request(url, "DataStructure", self._generate_data_structure_output, search_string,
-                                              starts_with=starts_with, ends_with=ends_with, ignore_case=ignore_case,
-                                              anchor_domain=anchor_domain,
-                                              metadata_element_type=metadata_element_type,
-                                              metadata_element_subtypes=metadata_element_subtypes,
-                                              skip_relationships=skip_relationships,
-                                              include_only_relationships=include_only_relationships,
-                                              skip_classified_elements=skip_classified_elements,
-                                              include_only_classified_elements=include_only_classified_elements,
-                                              graph_query_depth=graph_query_depth,
-                                              governance_zone_filter=governance_zone_filter,
-                                              as_of_time=as_of_time, effective_time=effective_time,
-                                              relationship_page_size=relationship_page_size,
-                                              limit_results_by_status=limit_results_by_status,
-                                              sequencing_order=sequencing_order,
-                                              sequencing_property=sequencing_property,
-                                              output_format=output_format, report_spec=report_spec,
-                                              start_from=start_from, page_size=page_size,
-                                              property_names=property_names, body=body)
+        
+        # Merge explicit parameters with kwargs
+        params = {
+            'search_string': search_string,
+            'body': body,
+            'starts_with': starts_with,
+            'ends_with': ends_with,
+            'ignore_case': ignore_case,
+            'start_from': start_from,
+            'page_size': page_size,
+            'output_format': output_format,
+            'report_spec': report_spec
+        }
+        params.update(kwargs)
+        
+        # Filter out None values, but keep search_string even if None (it's required)
+        params = {k: v for k, v in params.items() if v is not None or k == 'search_string'}
+        
+        return await self._async_find_request(
+            url,
+            "DataStructure",
+            self._generate_data_structure_output,
+            **params
+        )
 
     @dynamic_catch
-    def find_data_structures(self, search_string: str,
-                             starts_with: bool = True, ends_with: bool = False,
-                             ignore_case: bool = False,
-                             anchor_domain: Optional[str] = None,
-                             metadata_element_type: Optional[str] = None,
-                             metadata_element_subtypes: Optional[list[str]] = None,
-                             skip_relationships: Optional[list[str]] = None,
-                             include_only_relationships: Optional[list[str]] = None,
-                             skip_classified_elements: Optional[list[str]] = None,
-                             include_only_classified_elements: Optional[list[str]] = None,
-                             graph_query_depth: int = 3,
-                             governance_zone_filter: Optional[list[str]] = None, as_of_time: Optional[str] = None,
-                             effective_time: Optional[str] = None, relationship_page_size: int = 0,
-                             limit_results_by_status: Optional[list[str]] = None, sequencing_order: Optional[str] = None,
-                             sequencing_property: Optional[str] = None,
-                             output_format: str = "JSON", report_spec: str | dict = None,
-                             start_from: int = 0, page_size: int = 100,
-                             property_names: Optional[list[str]] = None,
-                             body: Optional[dict | SearchStringRequestBody] = None) -> list | str:
-        """ Find the list of data structure metadata elements that contain the search string.
+    def find_data_structures(
+        self,
+        search_string: str,
+        body: Optional[dict | SearchStringRequestBody] = None,
+        starts_with: bool = True,
+        ends_with: bool = False,
+        ignore_case: bool = False,
+        start_from: int = 0,
+        page_size: int = 100,
+        output_format: str = "JSON",
+        report_spec: str | dict = None,
+        **kwargs
+    ) -> list | str:
+        """Find the list of data structure metadata elements that contain the search string.
 
         Parameters
         ----------
-        search_string: str
-            - search string to filter on.
-        starts_with : bool, [default=True], optional
-            Starts with the supplied string.
-        ends_with : bool, [default=False], optional
-            Ends with the supplied string
-        ignore_case : bool, [default=False], optional
-            Ignore case when searching
-        anchor_domain: str, optional
-            The anchor domain to search in.
-        metadata_element_type: str, optional
-            The type of metadata element to search for.
-        metadata_element_subtypes: list[str], optional
-            The subtypes of metadata element to search for.
-        skip_relationships: list[str], optional
-            The types of relationships to skip.
-        include_only_relationships: list[str], optional
-            The types of relationships to include.
-        skip_classified_elements: list[str], optional
-            The types of classified elements to skip.
-        include_only_classified_elements: list[str], optional
-            The types of classified elements to include.
-        graph_query_depth: int, [default=3], optional
-            The depth of the graph query.
-        governance_zone_filter: list[str], optional
-            The governance zones to search in.
-        as_of_time: str, optional
-            The time to search as of.
-        effective_time: str, optional
-            The effective time to search at.
-        relationship_page_size: int, [default=0], optional
-            The page size for relationships.
-        limit_results_by_status: list[str], optional
-            The statuses to limit results by.
-        sequencing_order: str, optional
-            The order to sequence results by.
-        sequencing_property: str, optional
-            The property to sequence results by.
-        output_format: str, default = 'JSON'
-            Type of output to produce:
-                JSON - output standard json
-                MD - output standard markdown with no preamble
-                FORM - output markdown with a preamble for a form
-                REPORT - output markdown with a preamble for a report
-        report_spec: str | dict, optional
-            The report specification to use.
-        start_from: int, [default=0], optional
-            The page number to start from.
-        page_size: int, [default=100], optional
-            The number of items to return in a single page.
-        property_names: list[str], optional
-            The names of properties to search for.
-        body: dict, optional, default = None
-            - additional optional specifications for the search.
+        search_string : str
+            Search string to filter on.
+        body : dict | SearchStringRequestBody, optional
+            Request body containing search parameters. If provided, overrides other search parameters.
+        starts_with : bool, default=True
+            Whether to match data structures starting with the search string.
+        ends_with : bool, default=False
+            Whether to match data structures ending with the search string.
+        ignore_case : bool, default=False
+            Whether to ignore case when searching.
+        start_from : int, default=0
+            Page number to start from when paginating results.
+        page_size : int, default=100
+            Number of items to return per page.
+        output_format : str, default="JSON"
+            Format of the output. Options: "JSON", "MD", "LIST", "FORM", "REPORT", "DICT", "MERMAID".
+        report_spec : str | dict, optional
+            Specification for custom report output columns/fields.
+        **kwargs : dict, optional
+            Additional parameters supported by the find request:
+            
+            - anchor_domain (str): The anchor domain to search in
+            - metadata_element_type (str): The type of metadata element to search for
+            - metadata_element_subtypes (list[str]): The subtypes of metadata element to search for
+            - skip_relationships (list[str]): Relationship types to skip
+            - include_only_relationships (list[str]): Relationship types to include exclusively
+            - skip_classified_elements (list[str]): Classified element types to skip
+            - include_only_classified_elements (list[str]): Classified element types to include exclusively
+            - graph_query_depth (int): Depth of the graph query (default=3)
+            - governance_zone_filter (list[str]): Governance zones to filter by
+            - as_of_time (str): Historical time for the query
+            - effective_time (str): Effective time for the query
+            - relationship_page_size (int): Page size for relationships (default=0)
+            - limit_results_by_status (list[str]): Element statuses to filter by
+            - sequencing_order (str): Order for sequencing results
+            - sequencing_property (str): Property to use for sequencing
+            - property_names (list[str]): Property names to search for
 
         Returns
         -------
-        [dict] | str
-            Returns a string if no elements are found and a list of dict  with the results.
+        list | str
+            List of data structure metadata elements or formatted string, depending on output_format.
 
         Raises
         ------
         PyegeriaInvalidParameterException
-            one of the parameters is null or invalid or
+            If one of the parameters is null or invalid.
         PyegeriaAPIException
-            There is a problem adding the element properties to the metadata repository or
+            If there is a problem adding the element properties to the metadata repository.
         PyegeriaUnauthorizedException
-            the requesting user is not authorized to issue this request.
-
-        Notes:
-        _____
-        Sample Body:
-        {
-          "class" : "SearchStringRequestBody",
-          "startsWith" : false,
-          "endsWith" : false,
-          "ignoreCase" : true,
-          "startFrom" : 0,
-          "pageSize": 0,
-          "asOfTime" : "{{$isoTimestamp}}",
-          "effectiveTime" : "{{$isoTimestamp}}",
-          "forLineage" : false,
-          "forDuplicateProcessing" : false,
-          "limitResultsByStatus" : ["ACTIVE"],
-          "sequencingOrder" : "PROPERTY_ASCENDING",
-          "sequencingProperty" : "qualifiedName"
-        }
+            If the requesting user is not authorized to issue this request.
 
         """
 
         loop = asyncio.get_event_loop()
         response = loop.run_until_complete(
-            self._async_find_data_structures(search_string,
-                                             starts_with=starts_with, ends_with=ends_with, ignore_case=ignore_case,
-                                             anchor_domain=anchor_domain,
-                                             metadata_element_type=metadata_element_type,
-                                             metadata_element_subtypes=metadata_element_subtypes,
-                                             skip_relationships=skip_relationships,
-                                             include_only_relationships=include_only_relationships,
-                                             skip_classified_elements=skip_classified_elements,
-                                             include_only_classified_elements=include_only_classified_elements,
-                                             graph_query_depth=graph_query_depth,
-                                             governance_zone_filter=governance_zone_filter,
-                                             as_of_time=as_of_time, effective_time=effective_time,
-                                             relationship_page_size=relationship_page_size,
-                                             limit_results_by_status=limit_results_by_status,
-                                             sequencing_order=sequencing_order,
-                                             sequencing_property=sequencing_property,
-                                             output_format=output_format, report_spec=report_spec,
-                                             start_from=start_from, page_size=page_size,
-                                             property_names=property_names, body=body))
+            self._async_find_data_structures(
+                search_string,
+                body=body,
+                starts_with=starts_with,
+                ends_with=ends_with,
+                ignore_case=ignore_case,
+                start_from=start_from,
+                page_size=page_size,
+                output_format=output_format,
+                report_spec=report_spec,
+                **kwargs
+            )
+        )
         return response
 
     @dynamic_catch
@@ -2431,27 +2344,20 @@ class DataDesigner(ServerClient):
         return response
 
     @dynamic_catch
-    async def _async_find_data_fields(self, search_string: str,
-                                      starts_with: bool = True, ends_with: bool = False,
-                                      ignore_case: bool = False,
-                                      anchor_domain: Optional[str] = None,
-                                      metadata_element_type: Optional[str] = None,
-                                      metadata_element_subtypes: Optional[list[str]] = None,
-                                      skip_relationships: Optional[list[str]] = None,
-                                      include_only_relationships: Optional[list[str]] = None,
-                                      skip_classified_elements: Optional[list[str]] = None,
-                                      include_only_classified_elements: Optional[list[str]] = None,
-                                      graph_query_depth: int = 3,
-                                      governance_zone_filter: Optional[list[str]] = None, as_of_time: Optional[str] = None,
-                                      effective_time: Optional[str] = None, relationship_page_size: int = 0,
-                                      limit_results_by_status: Optional[list[str]] = None, sequencing_order: Optional[str] = None,
-                                      sequencing_property: Optional[str] = None,
-                                      output_format: str = "JSON", report_spec: str | dict = None,
-                                      start_from: int = 0, page_size: int = 100,
-                                      property_names: Optional[list[str]] = None,
-                                      body: Optional[dict | SearchStringRequestBody] = None) -> list | str:
-        """ Find the list of data class elements that contain the search string.
-            Async version.
+    async def _async_find_data_fields(
+        self,
+        search_string: str,
+        body: Optional[dict | SearchStringRequestBody] = None,
+        starts_with: bool = True,
+        ends_with: bool = False,
+        ignore_case: bool = False,
+        start_from: int = 0,
+        page_size: int = 100,
+        output_format: str = "JSON",
+        report_spec: str | dict = None,
+        **kwargs
+    ) -> list | str:
+        """Retrieve the list of data fields elements that contain the search string filter. Async version.
 
         Parameters
         ----------
@@ -2527,26 +2433,30 @@ class DataDesigner(ServerClient):
         """
 
         url = f"{base_path(self, self.view_server)}/data-fields/by-search-string"
-
-        return await self._async_find_request(url, "DataField", self._generate_data_field_output, search_string,
-                                              starts_with=starts_with, ends_with=ends_with, ignore_case=ignore_case,
-                                              anchor_domain=anchor_domain,
-                                              metadata_element_type=metadata_element_type,
-                                              metadata_element_subtypes=metadata_element_subtypes,
-                                              skip_relationships=skip_relationships,
-                                              include_only_relationships=include_only_relationships,
-                                              skip_classified_elements=skip_classified_elements,
-                                              include_only_classified_elements=include_only_classified_elements,
-                                              graph_query_depth=graph_query_depth,
-                                              governance_zone_filter=governance_zone_filter,
-                                              as_of_time=as_of_time, effective_time=effective_time,
-                                              relationship_page_size=relationship_page_size,
-                                              limit_results_by_status=limit_results_by_status,
-                                              sequencing_order=sequencing_order,
-                                              sequencing_property=sequencing_property,
-                                              output_format=output_format, report_spec=report_spec,
-                                              start_from=start_from, page_size=page_size,
-                                              property_names=property_names, body=body)
+        
+        # Merge explicit parameters with kwargs
+        params = {
+            'search_string': search_string,
+            'body': body,
+            'starts_with': starts_with,
+            'ends_with': ends_with,
+            'ignore_case': ignore_case,
+            'start_from': start_from,
+            'page_size': page_size,
+            'output_format': output_format,
+            'report_spec': report_spec
+        }
+        params.update(kwargs)
+        
+        # Filter out None values, but keep search_string even if None (it's required)
+        params = {k: v for k, v in params.items() if v is not None or k == 'search_string'}
+        
+        return await self._async_find_request(
+            url,
+            "DataField",
+            self._generate_data_field_output,
+            **params
+        )
 
     @dynamic_catch
     def find_data_fields(self, search_string: str,
