@@ -4,7 +4,7 @@
 2. Define an initial component for DPK - the issue seems to be that it can run stand-alone, on spark or on ray.
 
 
-# Update Cited Document
+# Don't Create Cited Document
 >	A cited document
 
 ## Display Name
@@ -249,7 +249,7 @@ ExtRef::Data-Prep-Kit
 
 ____
 
-# Create Solution Component
+# Update Solution Component
 >	A reusable solution component.
 
 ## Display Name

@@ -45,10 +45,10 @@ class TestDataEngineer:
             de_client.create_egeria_bearer_token(self.good_user_1, "secret")
 
             start_time = time.perf_counter()
-            response = de_client.find_tabular_data_sets(search_string="*")
+            response = de_client.find_tabular_data_sets(search_string="Attributes", output_format="DICT",report_spec="Referenceable")
             duration = time.perf_counter() - start_time
             
-            print(f"response type is {type(response)}")
+            print(f"response type is {type(response)}, count = {len(response)}")
             print(f"\n\tDuration was {duration} seconds")
             console.print_json(data=response)
             assert response is not None
@@ -70,7 +70,7 @@ class TestDataEngineer:
             de_client.create_egeria_bearer_token(self.good_user_1, "secret")
 
             # We need a GUID. Let's try to find one first.
-            find_response = de_client.find_tabular_data_sets(search_string="*")
+            find_response = de_client.find_tabular_data_sets(search_string="Attributes")
             
             if isinstance(find_response, list) and len(find_response) > 0:
                 guid = find_response[0].get('elementHeader', {}).get('guid')

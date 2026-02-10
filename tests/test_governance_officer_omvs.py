@@ -580,8 +580,8 @@ class TestGovernanceOfficer:
             s_client.close_session()
 
     def test_get_gov_process_graph(self):
-        name = "PostgreSQLServer:CreateAndSurveyGovernanceActionProcess"
-
+        # name = "PostgreSQLServer:CreateAndSurveyGovernanceActionProcess"
+        name = "Egeria:DailyGovernanceActionProcess"
         try:
             s_client = EgeriaTech(
                 self.view_server, self.platform_url, self.user, self.password
