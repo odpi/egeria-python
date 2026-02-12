@@ -58,6 +58,53 @@ class MyProfile(ServerClient):
         )
         self.my_profile_command_root: str = f"{self.platform_url}/servers/{self.view_server}/api/open-metadata/my-profile"
 
+    def _extract_summary(self, summary: dict) -> dict:
+        """Extract properties from a RelatedMetadataElementSummary or HierarchySummary.
+        
+        This helper recursively extracts relationship properties, related element properties,
+        and any nested elements into a dictionary.
+        """
+        if not isinstance(summary, dict):
+            return {}
+
+        res = {}
+
+        # 1. Relationship properties
+        rel_props = summary.get("relationshipProperties", {})
+        if isinstance(rel_props, dict):
+            for k, v in rel_props.items():
+                if k not in ("class", "typeName", "extendedProperties"):
+                    res[k] = v
+
+        # 2. Related element header & properties
+        rel_el = summary.get("relatedElement", {})
+        if isinstance(rel_el, dict):
+            header = rel_el.get("elementHeader", {})
+            props = rel_el.get("properties", {})
+
+            if header:
+                res["type"] = header.get("type", {}).get("typeName")
+                res["guid"] = header.get("guid")
+
+            if isinstance(props, dict):
+                # Add a friendly 'name' if possible
+                if "displayName" in props:
+                    res["name"] = props["displayName"]
+                elif "qualifiedName" in props:
+                    res["name"] = props["qualifiedName"]
+
+                for k, v in props.items():
+                    if k not in ("class", "typeName", "extendedProperties"):
+                        if k not in res:
+                            res[k] = v
+        
+        # 3. Nested elements (Recursion)
+        nested = summary.get("nestedElements", [])
+        if isinstance(nested, list) and len(nested) > 0:
+            res["nested_elements"] = [self._extract_summary(n) for n in nested]
+
+        return res
+
     def _extract_my_profile_properties(self, element: dict, columns_struct: dict) -> dict:
         """Extractor for My Profile (Person) elements."""
         col_data = populate_common_columns(element, columns_struct)
@@ -86,34 +133,12 @@ class MyProfile(ServerClient):
                 elif key == "contact_methods":
                     contacts = element.get("contactDetails", [])
                     if isinstance(contacts, list):
-                        contact_list = []
-                        for c in contacts:
-                            props = c.get("relatedElement", {}).get("properties", {})
-                            if props:
-                                contact_list.append({
-                                    "name": props.get("displayName"),
-                                    "type": props.get("contactType"),
-                                    "method": props.get("contactMethodType"),
-                                    "service": props.get("contactMethodService"),
-                                    "value": props.get("contactMethodValue")
-                                })
-                        column["value"] = contact_list
+                        column["value"] = [self._extract_summary(c) for c in contacts]
 
                 elif key == "roles":
                     roles = element.get("performsRoles", [])
                     if isinstance(roles, list):
-                        role_list = []
-                        for r in roles:
-                            rel_el = r.get("relatedElement", {})
-                            if rel_el:
-                                props = rel_el.get("properties", {})
-                                header = rel_el.get("elementHeader", {})
-                                role_list.append({
-                                    "role_name": props.get("displayName") or props.get("qualifiedName"),
-                                    "type": header.get("type", {}).get("typeName"),
-                                    "guid": header.get("guid")
-                                })
-                        column["value"] = role_list
+                        column["value"] = [self._extract_summary(r) for r in roles]
 
                 elif key == "teams":
                     roles = element.get("performsRoles", [])
@@ -127,13 +152,7 @@ class MyProfile(ServerClient):
                                     if rel_el:
                                         header = rel_el.get("elementHeader", {})
                                         if header.get("type", {}).get("typeName") == "Team":
-                                            props = rel_el.get("properties", {})
-                                            team_list.append({
-                                                "team_name": props.get("displayName"),
-                                                "description": props.get("description"),
-                                                "qualified_name": props.get("qualifiedName"),
-                                                "guid": header.get("guid")
-                                            })
+                                            team_list.append(self._extract_summary(n))
                         column["value"] = team_list
 
                 elif key == "communities":
@@ -148,13 +167,7 @@ class MyProfile(ServerClient):
                                     if rel_el:
                                         header = rel_el.get("elementHeader", {})
                                         if header.get("type", {}).get("typeName") == "Community":
-                                            props = rel_el.get("properties", {})
-                                            community_list.append({
-                                                "community_name": props.get("displayName"),
-                                                "description": props.get("description"),
-                                                "qualified_name": props.get("qualifiedName"),
-                                                "guid": header.get("guid")
-                                            })
+                                            community_list.append(self._extract_summary(n))
                         column["value"] = community_list
         except Exception as e:
             logger.debug(f"Error in _extract_my_profile_properties: {e}")

@@ -478,7 +478,7 @@ base_report_specs = FormatSetDict({
         family="MyProfile",
         formats=[
             Format(
-                types=["DICT","REPORT","LIST"],
+                types=["DICT","LIST"],
                 attributes= [
                     Column(name="Full Name", key='full_name'),
                     Column(name="Job Title", key='job_title'),
