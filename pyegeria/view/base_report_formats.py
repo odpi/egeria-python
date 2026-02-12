@@ -614,6 +614,48 @@ base_report_specs = FormatSetDict({
         ],
 
     ),
+    "Common-Mermaid-Prop-Value": FormatSet(
+        target_type="Referenceable",
+        heading="Mermaid Graphs by Property Value",
+        description="Mermaid Graphs using get by property value.",
+        annotations={},  # No specific annotations
+        family="General",
+        formats=[
+            Format(
+                types=["DICT", "REPORT"],
+                attributes=[
+                    Column(name='Display Name', key='display_name'),
+                    Column(name="Qualified Name", key='qualified_name'),
+                    Column(name="Description", key='description'),
+                    Column(name="GUID", key='guid'),
+                    Column(name="Mermaid Graph", key='mermaidGraph'),
+                    Column(name="Anchor Mermaid Graph", key='anchorMermaidGraph'),
+                    Column(name="Information Supply Chain Mermaid Graph", key='informationSupplyChainMermaidGraph'),
+                    Column(name="Field Level Lineage Graph", key='fieldLevelLineageGraph'),
+                    Column(name="Action Mermaid Graph", key='actionMermaidGraph'),
+                    Column(name="Local Lineage Graph", key="localLineageGraph"),
+                    Column(name="Edge Mermaid", key="edgeMermaidGraph"),
+                    Column(name="ISC Implementation Graph", key='iscImplementationGraph'),
+                    Column(name="Specification Mermaid Graph", key='specificationMermaidGraph'),
+                    Column(name="Solution Blueprint Mermaid Graph", key='solutionBlueprintMermaidGraph'),
+                    Column(name="Solution Subcomponent Mermaid Graph", key='solutionSubcomponentMermaidGraph'),
+                    Column(name="Governance Action Process Mermaid Graph", key='governanceActionProcessMermaidGraph'),
+
+                ],
+            ),
+            Format(
+                types=["MERMAID"],
+                attributes=[
+                    Column(name="Mermaid Graph", key='mermaidGraph')
+                ])
+        ],
+        action=ActionParameter(
+            function="EgeriaTech.get_elements_by_property_value",
+            optional_params=OPTIONAL_FILTER_PARAMS + TIME_PARAMETERS + ["get_templates"],
+            required_params=["property_value","property_names"],
+            spec_params={},
+        )
+    ),
     "Tech-Type-Elements": FormatSet(
         target_type="TechTypeElements",
         heading="Technology Type Elements",

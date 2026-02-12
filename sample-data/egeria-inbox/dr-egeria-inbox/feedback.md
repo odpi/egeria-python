@@ -53,7 +53,7 @@ This is a standalone Note Log
 
 Some text for Today's Note
 
-# Don't Create Informal Tag
+# Create Informal Tag
 ## Tag Name
 
 Interesting
@@ -66,9 +66,9 @@ ____
 
 # Link Tag->Element
 ## Tag ID
-InformalTag::Interesting
+myLocal::InformalTag::Interesting
 ## Element ID
-Sales Regions
+DigitalProductFamily::OpenMetadataDigitalProduct::IT-OBSERVABILITY-FAMILY::IT Operations Observability
 
 
 ____

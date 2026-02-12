@@ -5054,12 +5054,13 @@ class SolutionArchitect(ServerClient):
                     supply_chain_guids.append(guid)
 
         keywords = response.get('searchKeywords', None)
-        for mem in keywords:
-            guid = mem['relatedElement']['elementHeader'].get('guid', None)
-            keyword = mem['relatedElement']['properties'].get('displayName',None)
-            if keyword is  None:
-                keyword = mem['relatedElement']['properties'].get('keyword',None)
-            keywords_list[keyword] = guid
+        if keywords is not None:
+            for mem in keywords:
+                guid = mem['relatedElement']['elementHeader'].get('guid', None)
+                keyword = mem['relatedElement']['properties'].get('displayName',None)
+                if keyword is  None:
+                    keyword = mem['relatedElement']['properties'].get('keyword',None)
+                keywords_list[keyword] = guid
 
         sub_components = response.get('nestedSolutionComponents', None)
         if sub_components is not None:

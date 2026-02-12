@@ -6,7 +6,7 @@ Unit tests for AssetMaker class.
 
 A running Egeria environment is needed to run these tests.
 """
-
+import json
 import time
 
 import pytest
@@ -109,11 +109,14 @@ class TestAssetMaker:
             )
             start_time = time.perf_counter()
             
-            response = a_client.find_assets(search_string="Postgres", output_format="JSON")
+            response = a_client.find_assets(metadata_element_type="DataAsset",search_string="Postgres", output_format="DICT", report_spec="Referenceable")
             duration = time.perf_counter() - start_time
             
             print(f"\n\tDuration was {duration} seconds")
-            print(f"\n\nFound {len(response) if isinstance(response, list) else 0} assets")
+            if isinstance(response, dict| list):
+                print(f"\n\nFound {len(response)} assets")
+                print(json.dumps(response, indent=4))
+
             
             assert True
             
@@ -121,7 +124,7 @@ class TestAssetMaker:
             print_exception_table(e)
             assert False, "Invalid request"
         except Exception as e:
-            console.print_exception(e)
+            console.print_exception()
             assert False, "Unexpected error"
         finally:
             a_client.close_session()

@@ -30,6 +30,18 @@ load_commands('commands.json')
 console = Console(width=int(200))
 
 
+def _solution_blueprint_link_body(description: Optional[str] = None, role: Optional[str] = None) -> dict:
+    properties: dict = {"class": "SolutionBlueprintCompositionProperties"}
+    if role:
+        properties["role"] = role
+    if description:
+        properties["description"] = description
+    return {
+        "class": "NewRelationshipRequestBody",
+        "properties": properties,
+    }
+
+
 @logger.catch
 def sync_chain_related_elements(egeria_client: EgeriaTech, guid:str, in_supply_chain_guids:list, display_name:str,
                                 merge_update:bool):
@@ -80,8 +92,15 @@ def sync_component_related_elements(egeria_client: EgeriaTech, object_type: str,
     """Sync a components related elements.
 
     """
-    if not merge_update:
+    rel_el_list = None
+    if merge_update:
         rel_el_list = egeria_client.get_component_related_elements(guid)
+        if rel_el_list is None:
+            logger.warning("Unexpected -> the list was None - assigning empty list")
+            rel_el_list = {}
+
+    if not merge_update:
+        rel_el_list = rel_el_list or egeria_client.get_component_related_elements(guid)
         # should I throw an exception if empty?
 
         as_is_actors = set(rel_el_list.get("actor_guids", []))
@@ -149,8 +168,9 @@ def sync_component_related_elements(egeria_client: EgeriaTech, object_type: str,
         blueprints_to_add = to_be_blueprints - as_is_blueprints
         logger.trace(f"blueprints_to_add: {list(blueprints_to_add)}")
         if len(blueprints_to_add) > 0:
+            body = _solution_blueprint_link_body(description="linked by dr-egeria")
             for bp in blueprints_to_add:
-                egeria_client.link_solution_component_to_blueprint(bp, guid, None)
+                egeria_client.link_solution_component_to_blueprint(bp, guid, body)
                 msg = f"Added `{display_name}` to component `{bp}`"
                 logger.trace(msg)
 
@@ -197,27 +217,39 @@ def sync_component_related_elements(egeria_client: EgeriaTech, object_type: str,
 
     else:  # merge - add field to related elements
         if parent_component_guids:
-            for comp in parent_component_guids:
-                egeria_client.link_subcomponent(guid, comp, None)
-                msg = f"Added `{parent_component_guids}` to `{display_name}`"
+            as_is_parent_components = set(rel_el_list.get("parent_component_guids", []))
+            parent_components_to_add = set(parent_component_guids) - as_is_parent_components
+            for comp in parent_components_to_add:
+                egeria_client.link_subcomponent(comp, guid, None)
+                msg = f"Added `{comp}` to `{display_name}`"
                 logger.trace(msg)
 
         if actor_guids:
-            for actor in actor_guids:
+            as_is_actors = set(rel_el_list.get("actor_guids", []))
+            actors_to_add = set(actor_guids) - as_is_actors
+            for actor in actors_to_add:
                 egeria_client.link_component_to_actor(actor, guid, None)
-                msg = f"Added `{actor_guids}` to `{display_name}`"
+                msg = f"Added `{actor}` to `{display_name}`"
                 logger.trace(msg)
 
         if in_blueprint_guids:
-            for bp in in_blueprint_guids:
-                egeria_client.link_solution_component_to_blueprint(bp, guid, None)
-                msg = f"Added `{in_blueprint_guids}` to `{display_name}`"
+            as_is_blueprints = set(rel_el_list.get("blueprint_guids", []))
+            blueprints_to_add = set(in_blueprint_guids) - as_is_blueprints
+            body = _solution_blueprint_link_body(description="linked by dr-egeria")
+            for bp in blueprints_to_add:
+                egeria_client.link_solution_component_to_blueprint(bp, guid, body)
+                msg = f"Added `{bp}` to `{display_name}`"
                 logger.trace(msg)
 
         if keywords:
-            add_search_keywords(egeria_client, guid, keywords)
+            as_is_keywords = set(rel_el_list.get("keywords_list", {}).keys())
+            keywords_to_add = set(keywords) - as_is_keywords
+            if keywords_to_add:
+                add_search_keywords(egeria_client, guid, list(keywords_to_add))
 
         if supply_chain_guids:
+            as_is_supply_chains = set(rel_el_list.get("supply_chain_guids", []))
+            supply_chains_to_add = set(supply_chain_guids) - as_is_supply_chains
             body = {
                 "class": "NewRelationshipRequestBody",
                 "properties": {
@@ -225,7 +257,7 @@ def sync_component_related_elements(egeria_client: EgeriaTech, object_type: str,
                     "description": "a blank description to satisfy the Egeria gods"
                 }
             }
-            for isc in supply_chain_guids:
+            for isc in supply_chains_to_add:
                 egeria_client.link_design_to_implementation(isc, guid, body)
                 msg = f"Added `{display_name}` to `{isc}`"
                 logger.trace(msg)
@@ -263,7 +295,8 @@ def sync_blueprint_related_elements(egeria_client: EgeriaTech, object_type: str,
         logger.trace(f"sub_components_to_add: {list(components_to_add)}")
         if len(components_to_add) > 0:
             for ds in components_to_add:
-                egeria_client.link_solution_component_to_blueprint(guid, ds, None)
+                body = _solution_blueprint_link_body(description="linked by dr-egeria")
+                egeria_client.link_solution_component_to_blueprint(guid, ds, body)
                 msg = f"Added `{ds}` to component `{display_name}`"
                 logger.trace(msg)
 
@@ -271,8 +304,9 @@ def sync_blueprint_related_elements(egeria_client: EgeriaTech, object_type: str,
 
     else:  # merge - add field to related elements
         if component_guids:
+            body = _solution_blueprint_link_body(description="linked by dr-egeria")
             for comp in component_guids:
-                egeria_client.link_solution_component_to_blueprint(guid, comp, None)
+                egeria_client.link_solution_component_to_blueprint(guid, comp, body)
             msg = f"Added `{component_guids}` to `{display_name}`"
             logger.trace(msg)
 
@@ -764,8 +798,9 @@ def process_solution_component_upsert_command(egeria_client: EgeriaTech, txt: st
                             logger.trace(msg)
 
                         if in_blueprint_guids:
+                            body = _solution_blueprint_link_body(description="linked by dr-egeria")
                             for bp in in_blueprint_guids:
-                                egeria_client.link_solution_component_to_blueprint(bp, guid, None)
+                                egeria_client.link_solution_component_to_blueprint(bp, guid, body)
                             msg = f"Added  `{display_name}`to blueprints `{in_blueprint_names}`"
                             logger.trace(msg)
 

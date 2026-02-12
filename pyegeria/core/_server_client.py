@@ -41,8 +41,8 @@ from pyegeria.models import (SearchStringRequestBody, FilterRequestBody, GetRequ
                              ActivityStatusSearchString, ActivityStatusFilterRequestBody,
                              ActivityStatusRequestBody, ActionRequestBody)
 from pyegeria.core.utils import body_slimmer, dynamic_catch
-from pyegeria.view.output_formatter import populate_common_columns, resolve_output_formats, generate_output, overlay_additional_values
-
+from pyegeria.view.output_formatter import populate_common_columns, resolve_output_formats, generate_output, \
+    overlay_additional_values, _generate_default_output
 
 # Main Client Imports
 from pyegeria.models.models import (
@@ -6075,8 +6075,8 @@ class ServerClient(BaseServerClient):
 
         if output_format.upper() != 'JSON':  # return a simplified markdown representation
             # logger.info(f"Found elements, output format: {output_format} and report_spec: {report_spec}")
-            return _gen_output(elements, search_string, _type,
-                               output_format, report_spec)
+            return _gen_output(elements=elements, search_string=search_string, element_type_name=_type,
+                               output_format=output_format, report_spec=report_spec)
         return elements
 
     @dynamic_catch
@@ -7290,7 +7290,7 @@ class ServerClient(BaseServerClient):
         return await self._async_find_request(
             url,
             _type="Asset",
-            _gen_output=self._generate_referenceable_output,
+            _gen_output=_generate_default_output, # changed from _generate_referenceable_output
             **params
         )
 
