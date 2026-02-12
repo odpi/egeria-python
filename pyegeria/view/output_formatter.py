@@ -1171,7 +1171,7 @@ def extract_basic_dict(elements: Union[Dict, List[Dict]]) -> Union[Dict, List[Di
         result.append(body)
     return result
 
-def _extract_default_properties(self, element: dict, columns_struct: dict) -> dict:
+def _extract_default_properties(element: dict, columns_struct: dict) -> dict:
     props = element.get('properties', {}) or {}
     normalized = {
         'properties': props,
@@ -1184,7 +1184,7 @@ def _extract_default_properties(self, element: dict, columns_struct: dict) -> di
     return col_data
 
 
-def _generate_default_output(self, elements: dict | list[dict], search_string: str,
+def _generate_default_output(elements: dict | list[dict], search_string: str,
                              element_type_name: str | None,
                              output_format: str = 'DICT',
                              report_format: dict | str | None = None,

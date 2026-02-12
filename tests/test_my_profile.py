@@ -8,7 +8,7 @@ from pyegeria.core._exceptions import PyegeriaException, print_basic_exception
 
 VIEW_SERVER = "qs-view-server"
 PLATFORM_URL = "https://localhost:9443"
-USER_ID = "erinoverview"
+USER_ID = "calliequartile"
 USER_PWD = "secret"
 
 class TestMyProfile:
@@ -29,7 +29,7 @@ class TestMyProfile:
             profile = profile_client.get_my_profile()
             assert isinstance(profile, (dict, list, str))
 
-            profile_dict = profile_client.get_my_profile(output_format="JSON", report_spec="Referenceable")
+            profile_dict = profile_client.get_my_profile(output_format="MERMAID", report_spec="Common-Mermaid")
             assert isinstance(profile_dict, (dict, list, str))
             print(f"\nRetrieved profile (DICT): {json.dumps(profile_dict, indent=2)}")
         except PyegeriaException as e:

@@ -245,6 +245,32 @@ def load_commands(filename: str) -> None:
         # Validate JSON before attempting to load
         try:
             COMMAND_DEFINITIONS = json.loads(config_str)
+            base_specs = COMMAND_DEFINITIONS.get("Command Specifications", {})
+
+            # Optionally merge compact specs from a separate directory
+            try:
+                from md_processing.md_processing_utils.compact_loader import load_compact_specs_from_dir
+
+                compact_dir = os.environ.get(
+                    "DR_EGERIA_COMPACT_DIR",
+                    str(importlib.resources.files("md_processing") / "data" / "compact_commands"),
+                )
+                allowlist = os.environ.get("DR_EGERIA_COMPACT_FAMILIES", "").split(",")
+                allowlist = [a.strip() for a in allowlist if a.strip()]
+
+                if os.path.isdir(compact_dir) and allowlist:
+                    overlay_specs = load_compact_specs_from_dir(compact_dir, allowlist)
+                    if overlay_specs:
+                        # Merge/overlay into base specs
+                        merged = dict(base_specs)
+                        merged.update(overlay_specs)
+                        COMMAND_DEFINITIONS["Command Specifications"] = merged
+                        logger.debug(
+                            f"Loaded {len(overlay_specs)} compact commands from {compact_dir} for families: {allowlist}"
+                        )
+            except Exception as merge_err:
+                logger.warning(f"Compact commands merge skipped due to error: {merge_err}")
+
             command_list = build_command_list_from_specs(
                 COMMAND_DEFINITIONS.get("Command Specifications", {})
             )

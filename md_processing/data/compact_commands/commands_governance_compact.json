@@ -1,0 +1,43 @@
+{
+"exported": "Feb 10, 2026 at 8:09:09 PM",
+"attribute_definitions": {
+"Access Control":{
+"variable_name": "access_control",
+"inUpdate": false,
+"attr_labels": "",
+"examples": "",
+"default_value": "",
+"valid_values":
+[],
+"existing_element": "SecurityAccessControl",
+"description": "The security access control endpoint in an AssociatedSecurityGroup relationship.",
+"generated": false,
+"style": "Reference Name",
+"user_specified": true,
+"unique": false,
+"input_required": false,
+"min_cardinality": 1,
+"max_cardinality": 1,
+"level": "Basic",
+	"Journal Entry": ""},
+"Activity Status":{
+"variable_name": "activity_status",
+"inUpdate": true,
+"attr_labels": "",
+"examples": "",
+"default_value": "APPROVED",
+"valid_values":
+["REQUESTED", "APPROVED", "WAITING", "ACTIVATING", "IN_PROGRESS", "PAUSED", "FOR_INFO", "COMPLETED", "INVALID", "IGNORED", "FAILED", "CANCELLED", "ABANDONED", "OTHER"],
+"existing_element": "",
+"description": "The current status of the subscription activity. Uses ActivityStatus enum.",
+"generated": false,
+"style": "Valid Value",
+"user_specified": true,
+"unique": false,
+"input_required": false,
+"min_cardinality": 0,
+"max_cardinality": 1,
+"level": "Basic",
+	"Journal Entry": ""}
+}
+}

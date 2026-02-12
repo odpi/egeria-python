@@ -37,7 +37,7 @@
     ],
     "console_logging_level": "ERROR",
     "enable_logging": true,
-    "file_logging_level": "INFO",
+    "file_logging_level": "WARN",
     "log_directory": "/Users/dwolfson/localGit/egeria-v5-3/egeria-python/logs",
     "logging_console_format": "<green>{time:YYYY-MM-DD HH:mm:ss.SSS}</green> | <level>{level: <8}</level> | <cyan>{name}</cyan>:<cyan>{line}</cyan> - <level>{message}</level>",
     "logging_file_format": "{time:YYYY-MM-DD HH:mm:ss} | {level} | {module}-{function}:{line}-{message}-{extra}"
