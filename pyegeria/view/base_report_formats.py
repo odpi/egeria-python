@@ -470,6 +470,36 @@ base_report_specs = FormatSetDict({
             spec_params={},
         )
     ),
+"My-User": FormatSet(
+        target_type="My-User",
+        heading="My Information",
+        description="User Information",
+        annotations={},  # No specific annotations
+        family="MyProfile",
+        formats=[
+            Format(
+                types=["DICT","REPORT","LIST"],
+                attributes= [
+                    Column(name="Full Name", key='full_name'),
+                    Column(name="Job Title", key='job_title'),
+                    Column(name="Employee Number", key='employee_number'),
+                    Column(name="Employee Type", key='employee_type'),
+                    Column(name="User ID", key='user_id'),
+                    Column(name="Job Status", key='job_status'),
+                    Column(name="Contact Methods", key='contact_methods'),
+                    Column(name="Roles", key='roles'),
+                    Column(name="Teams", key='teams'),
+                    Column(name="Communities", key='communities'),
+                ],
+            )
+        ],
+        action=ActionParameter(
+            function="MyProfile.get_my_profile",
+            optional_params=OPTIONAL_FILTER_PARAMS + TIME_PARAMETERS,
+            required_params=[],
+            spec_params={},
+        )
+    ),
 
     "TypeDef": FormatSet(
         target_type="TypeDef",
