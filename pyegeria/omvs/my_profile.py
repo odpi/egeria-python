@@ -18,7 +18,7 @@ from pyegeria.models import (
     SearchStringRequestBody,
     UpdateElementRequestBody,
 )
-from pyegeria.view.output_formatter import (populate_common_columns, generate_output, resolve_output_formats)
+from pyegeria.view.output_formatter import (populate_common_columns, generate_output, resolve_output_formats, materialize_egeria_summary, select_report_format)
 import asyncio
 
 
@@ -58,53 +58,6 @@ class MyProfile(ServerClient):
         )
         self.my_profile_command_root: str = f"{self.platform_url}/servers/{self.view_server}/api/open-metadata/my-profile"
 
-    def _extract_summary(self, summary: dict) -> dict:
-        """Extract properties from a RelatedMetadataElementSummary or HierarchySummary.
-        
-        This helper recursively extracts relationship properties, related element properties,
-        and any nested elements into a dictionary.
-        """
-        if not isinstance(summary, dict):
-            return {}
-
-        res = {}
-
-        # 1. Relationship properties
-        rel_props = summary.get("relationshipProperties", {})
-        if isinstance(rel_props, dict):
-            for k, v in rel_props.items():
-                if k not in ("class", "typeName", "extendedProperties"):
-                    res[k] = v
-
-        # 2. Related element header & properties
-        rel_el = summary.get("relatedElement", {})
-        if isinstance(rel_el, dict):
-            header = rel_el.get("elementHeader", {})
-            props = rel_el.get("properties", {})
-
-            if header:
-                res["type"] = header.get("type", {}).get("typeName")
-                res["guid"] = header.get("guid")
-
-            if isinstance(props, dict):
-                # Add a friendly 'name' if possible
-                if "displayName" in props:
-                    res["name"] = props["displayName"]
-                elif "qualifiedName" in props:
-                    res["name"] = props["qualifiedName"]
-
-                for k, v in props.items():
-                    if k not in ("class", "typeName", "extendedProperties"):
-                        if k not in res:
-                            res[k] = v
-        
-        # 3. Nested elements (Recursion)
-        nested = summary.get("nestedElements", [])
-        if isinstance(nested, list) and len(nested) > 0:
-            res["nested_elements"] = [self._extract_summary(n) for n in nested]
-
-        return res
-
     def _extract_my_profile_properties(self, element: dict, columns_struct: dict) -> dict:
         """Extractor for My Profile (Person) elements."""
         col_data = populate_common_columns(element, columns_struct)
@@ -133,12 +86,27 @@ class MyProfile(ServerClient):
                 elif key == "contact_methods":
                     contacts = element.get("contactDetails", [])
                     if isinstance(contacts, list):
-                        column["value"] = [self._extract_summary(c) for c in contacts]
+                        # Resolve the spec for this column to enable generic promotion (DICT -> LIST -> REPORT -> ALL)
+                        ds_name = column.get("detail_spec")
+                        spec = None
+                        if ds_name:
+                            spec = (select_report_format(ds_name, "DICT")
+                                    or select_report_format(ds_name, "LIST")
+                                    or select_report_format(ds_name, "REPORT")
+                                    or select_report_format(ds_name, "ALL"))
+                        column["value"] = [materialize_egeria_summary(c, spec) for c in contacts]
 
                 elif key == "roles":
                     roles = element.get("performsRoles", [])
                     if isinstance(roles, list):
-                        column["value"] = [self._extract_summary(r) for r in roles]
+                        ds_name = column.get("detail_spec")
+                        spec = None
+                        if ds_name:
+                            spec = (select_report_format(ds_name, "DICT")
+                                    or select_report_format(ds_name, "LIST")
+                                    or select_report_format(ds_name, "REPORT")
+                                    or select_report_format(ds_name, "ALL"))
+                        column["value"] = [materialize_egeria_summary(r, spec) for r in roles]
 
                 elif key == "teams":
                     roles = element.get("performsRoles", [])
@@ -152,7 +120,7 @@ class MyProfile(ServerClient):
                                     if rel_el:
                                         header = rel_el.get("elementHeader", {})
                                         if header.get("type", {}).get("typeName") == "Team":
-                                            team_list.append(self._extract_summary(n))
+                                            team_list.append(materialize_egeria_summary(n))
                         column["value"] = team_list
 
                 elif key == "communities":
@@ -167,7 +135,7 @@ class MyProfile(ServerClient):
                                     if rel_el:
                                         header = rel_el.get("elementHeader", {})
                                         if header.get("type", {}).get("typeName") == "Community":
-                                            community_list.append(self._extract_summary(n))
+                                            community_list.append(materialize_egeria_summary(n))
                         column["value"] = community_list
         except Exception as e:
             logger.debug(f"Error in _extract_my_profile_properties: {e}")

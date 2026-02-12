@@ -5,10 +5,14 @@ import asyncio
 from pyegeria.omvs.my_profile import MyProfile
 from pyegeria.models import NewElementRequestBody
 from pyegeria.core._exceptions import PyegeriaException, print_basic_exception
+from rich.markdown import Markdown
+
+from rich.console import Console
+console = Console(width = 150)
 
 VIEW_SERVER = "qs-view-server"
 PLATFORM_URL = "https://localhost:9443"
-USER_ID = "calliequartile"
+USER_ID = "garygeeke"
 USER_PWD = "secret"
 
 class TestMyProfile:
@@ -29,9 +33,13 @@ class TestMyProfile:
             profile = profile_client.get_my_profile()
             assert isinstance(profile, (dict, list, str))
 
-            profile_dict = profile_client.get_my_profile(output_format="DICT", report_spec="My-User")
-            assert isinstance(profile_dict, (dict, list, str))
-            print(f"\nRetrieved profile (DICT): {json.dumps(profile_dict, indent=2)}")
+            profile = profile_client.get_my_profile(output_format="DICT", report_spec="My-User-MD")
+            assert isinstance(profile, (dict, list, str))
+            if isinstance(profile, dict|list):
+                print(json.dumps(profile, indent=2))
+            else:
+                console.print(Markdown(profile))
+
         except PyegeriaException as e:
             # We might get a 404 or 401 depending on the environment, but the call should at least attempt
             print(f"get_my_profile failed as expected or due to env: {e}")

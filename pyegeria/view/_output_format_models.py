@@ -141,6 +141,7 @@ class Column(BaseModel):
     name: str
     key: str
     format: bool = False
+    detail_spec: Optional[str] = None
 
 # New preferred alias for Column
 Attribute = Column

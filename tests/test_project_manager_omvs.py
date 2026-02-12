@@ -148,7 +148,7 @@ class TestProjectManager:
             )
             token = p_client.create_egeria_bearer_token(self.good_user_2, "secret")
             start_time = time.perf_counter()
-            search_string = "*"
+            search_string = "RAG"
 
             response = p_client.find_projects(
                 search_string, output_format="DICT", report_spec="Project"
@@ -325,7 +325,7 @@ class TestProjectManager:
             p_client = ProjectManager(
                 self.good_view_server_2,
                 self.good_platform1_url,
-                user_id=self.good_user_2,
+                user_id=self.good_user_1,
             )
 
             token = p_client.create_egeria_bearer_token(self.good_user_2, "secret")
@@ -514,8 +514,8 @@ class TestProjectManager:
 
             token = p_client.create_egeria_bearer_token(self.good_user_2, "secret")
             start_time = time.perf_counter()
-            project_guid = "91589680-75a7-481a-a2d1-53a63def65aa"
-            actor_guid = "dcfd7e32-8074-4cdf-bdc5-9a6f28818a9d"
+            project_guid = "e5c89ced-ef10-476a-909e-c9b44f602a94"
+            actor_guid = "dedfebcd-2bcf-4a63-9d56-9dd677424fe9"
 
             p_client.add_to_project_team(project_guid, actor_guid)
             duration = time.perf_counter() - start_time

@@ -227,7 +227,137 @@ def make_preamble(obj_type: str, search_string: str, output_format: str = 'MD') 
     else:
         return "\n", elements_action
 
-def make_md_attribute(attribute_name: str, attribute_value: str, output_type: str) -> Optional[str]:
+def materialize_egeria_summary(summary: dict, columns_struct: Optional[dict] = None) -> dict:
+    """Recursively materialize an Egeria summary object into a clean dictionary.
+    
+    If columns_struct (a FormatSet dict) is provided, it uses the detail_spec definitions
+    to promote nested elements of specific types into their own keys, matching the 
+    report specification's expectation.
+    """
+    if not isinstance(summary, dict):
+        return {}
+
+    res = {}
+
+    # 1. Relationship properties
+    rel_props = summary.get("relationshipProperties", {})
+    if isinstance(rel_props, dict):
+        for k, v in rel_props.items():
+            if k not in ("class", "typeName", "extendedProperties"):
+                res[k] = v
+
+    # 2. Related element header & properties
+    rel_el = summary.get("relatedElement", {})
+    if isinstance(rel_el, dict):
+        header = rel_el.get("elementHeader", {})
+        props = rel_el.get("properties", {})
+
+        if header:
+            res["type"] = header.get("type", {}).get("typeName")
+            res["guid"] = header.get("guid")
+
+        if isinstance(props, dict):
+            # Add a friendly 'name' if possible
+            if "displayName" in props:
+                res["name"] = props["displayName"]
+            elif "qualifiedName" in props:
+                res["name"] = props["qualifiedName"]
+
+            for k, v in props.items():
+                if k not in ("class", "typeName", "extendedProperties"):
+                    if k not in res:
+                        res[k] = v
+
+    # 3. Build type-to-key map from the current spec if provided
+    type_map = {}
+    if columns_struct:
+        formats = columns_struct.get('formats') or {}
+        attributes = formats.get('attributes', [])
+        for col in attributes:
+            # col can be a dict or a Column object
+            key = col.get('key') if isinstance(col, dict) else getattr(col, 'key', None)
+            ds_name = col.get('detail_spec') if isinstance(col, dict) else getattr(col, 'detail_spec', None)
+            
+            if ds_name:
+                # Resolve the spec to get its target_type with fallbacks (DICT -> LIST -> REPORT -> ALL)
+                linked_spec = (
+                    select_report_format(ds_name, "DICT")
+                    or select_report_format(ds_name, "LIST")
+                    or select_report_format(ds_name, "REPORT")
+                    or select_report_format(ds_name, "ALL")
+                )
+                if linked_spec and linked_spec.get('target_type'):
+                    type_map[linked_spec['target_type']] = key
+
+    # 4. Process nested elements
+    nested = summary.get("nestedElements", [])
+    if isinstance(nested, list) and len(nested) > 0:
+        res["nested_elements"] = []
+        for n in nested:
+            # Descend into next level. 
+            # Note: We don't pass the same columns_struct because it belongs to the parent.
+            # However, if we found a match in type_map, we might want to use that spec's struct
+            # for the NEXT level. But for now, generic materialization is enough.
+            extracted = materialize_egeria_summary(n)
+            res["nested_elements"].append(extracted)
+
+            # Generic promotion: If the type of this nested element matches a column in our spec,
+            # add it to that specific key so populate_columns_from_properties finds it.
+            element_type = extracted.get("type")
+            if element_type in type_map:
+                target_key = type_map[element_type]
+                if target_key not in res:
+                    res[target_key] = []
+                res[target_key].append(extracted)
+
+    return res
+
+def render_rich_value(value: Any, output_format: str) -> str:
+    """Visually format rich nested values for text-based reports.
+    - LIST: summarized string (handled elsewhere)
+    - FORM: keep compact summary to preserve editability
+    - REPORT/MD: nested bullet lists
+    """
+    def summarize(v: Any) -> str:
+        if isinstance(v, dict):
+            return v.get('name') or v.get('displayName') or v.get('qualifiedName') or v.get('type') or str(v)
+        if isinstance(v, list):
+            names = [summarize(i) for i in v]
+            return ", ".join([x for x in names if x])
+        return str(v)
+
+    if output_format == 'FORM':
+        return summarize(value)
+
+    # REPORT/MD nested bullets
+    def bullets(v: Any, indent: int = 0) -> str:
+        if not isinstance(v, (list, dict)):
+            return str(v)
+        prefix = "  " * indent
+        out = []
+        if isinstance(v, list):
+            for item in v:
+                if isinstance(item, dict):
+                    name = item.get('name') or item.get('type', 'Item')
+                    out.append(f"{prefix}* **{name}**")
+                    for k, val in item.items():
+                        if k in ('name', 'nested_elements'): continue
+                        out.append(f"{prefix}  * {camel_to_title_case(k)}: {val}")
+                    if item.get('nested_elements'):
+                        out.append(bullets(item['nested_elements'], indent + 2))
+                else:
+                    out.append(f"{prefix}* {item}")
+        else:  # dict
+            for k, val in v.items():
+                if k == 'nested_elements':
+                    out.append(bullets(val, indent + 1))
+                else:
+                    out.append(f"{prefix}* **{camel_to_title_case(k)}**: {val}")
+        return "\n".join(out)
+
+    return bullets(value, 0)
+
+def make_md_attribute(attribute_name: str, attribute_value: str|list|dict, output_type: str) -> Optional[str]:
     """
     Create a markdown attribute line for a given attribute name and value.
 
@@ -242,16 +372,18 @@ def make_md_attribute(attribute_name: str, attribute_value: str, output_type: st
     output = ""
     if isinstance(attribute_value,str):
         attribute_value = attribute_value.strip() if attribute_value else ""
-    elif isinstance(attribute_value,list) and len(attribute_value) > 0:
-        attribute_value = ",\n".join(attribute_value)
+    
     if attribute_name:
-        if attribute_name.upper() == "GUID":
-            attribute_title = attribute_name.upper()
-        else:
-            # attribute_title = attribute_name.title()
-            attribute_title = camel_to_title_case(attribute_name)
+        attribute_title = camel_to_title_case(attribute_name)
     else:
         attribute_title = ""
+
+    if isinstance(attribute_value, (dict, list)):
+        rendered = render_rich_value(attribute_value, output_type)
+        if rendered:
+            return f"## {attribute_title}\n{rendered}\n\n"
+        else:
+            return "\n"
 
     if output_type in ["FORM", "MD"]:
         if attribute_name.lower() in [ "mermaid", "solutionBlueprintMermaidGraph", "links", "implemented by", "sub_components"]:
@@ -297,15 +429,15 @@ def populate_columns_from_properties(element: dict, columns_struct: dict) -> dic
 
     In both cases, the effective properties are expected to use camelCase keys.
     The columns_struct is expected to follow the format returned by select_report_spec, where
-    columns are located at columns_struct['formats']['columns'] and each column is a dict containing
-    at least a 'key' field expressed in snake_case. For each column whose snake_case key corresponds
-    to a key in the element properties (after converting to camelCase), this function adds a 'value'
-    entry to the column with the matching property's value.
+    columns are located at columns_struct['formats']['columns'] and each column is a dict or Column object
+    containing at least a 'key' field. For each column whose key corresponds
+    to a key in the element properties (either directly or after converting to camelCase),
+    this function adds a 'value' entry to the column with the matching property's value.
 
     Args:
         element: Either a dict with a nested 'properties' dict using camelCase keys, or
                  a dict that itself is the set of properties.
-        columns_struct: The columns structure whose columns have snake_case 'key' fields.
+        columns_struct: The columns structure whose columns have 'key' fields.
 
     Returns:
         The updated columns_struct (the input structure is modified in place and also returned).
@@ -330,24 +462,46 @@ def populate_columns_from_properties(element: dict, columns_struct: dict) -> dic
     if not isinstance(columns, list):
         return columns_struct
 
-    # Pre-compute snake_case to camelCase mapping for all columns (cache for performance)
+    # Pre-compute snake_case to camelCase mapping for all columns
     key_mapping = {}
     for col in columns:
-        if isinstance(col, dict):
-            key_snake = col.get('key')
-            if key_snake:
-                key_mapping[key_snake] = to_camel_case(key_snake)
+        key_snake = col.get('key') if isinstance(col, dict) else getattr(col, 'key', None)
+        if key_snake:
+            key_mapping[key_snake] = to_camel_case(key_snake)
 
     # Single pass to populate values
     for col in columns:
         try:
-            key_snake = col.get('key') if isinstance(col, dict) else None
+            key_snake = col.get('key') if isinstance(col, dict) else getattr(col, 'key', None)
             if not key_snake:
                 continue
-            # Use pre-computed camelCase key
+            
+            # 1) Try original key (handles already camelCased keys like assignmentType)
+            if key_snake in props:
+                if isinstance(col, dict):
+                    col['value'] = props.get(key_snake)
+                else:
+                    setattr(col, 'value', props.get(key_snake))
+                continue
+
+            # 2) Try pre-computed camelCase key
             key_camel = key_mapping.get(key_snake)
             if key_camel and key_camel in props:
-                col['value'] = props.get(key_camel)
+                if isinstance(col, dict):
+                    col['value'] = props.get(key_camel)
+                else:
+                    setattr(col, 'value', props.get(key_camel))
+                continue
+            
+            # 3) Try uppercase (handles GUID if it was extracted as GUID)
+            key_upper = key_snake.upper()
+            if key_upper in props:
+                if isinstance(col, dict):
+                    col['value'] = props.get(key_upper)
+                else:
+                    setattr(col, 'value', props.get(key_upper))
+                continue
+
         except Exception as e:
             # Be resilient; log and continue
             logger.debug(f"populate_columns_from_properties: skipping column due to error: {e}")
@@ -542,12 +696,12 @@ def generate_entity_md(elements: List[Dict],
             cols = returned_struct.get('formats', {}).get('attributes', [])
             # Find value from 'display_name' or 'title'
             for col in cols:
-                if col.get('key') in ('display_name', 'title', 'keyword'):
+                if col.get('key') in ('display_name', 'title', 'keyword', 'full_name'):
                     display_name = col.get('value')
                     if display_name:
                         break
         else:
-            display_name = props.get('display_name') or props.get('title') or props.get('keyword')
+            display_name = props.get('display_name') or props.get('title') or props.get('keyword') or props.get('full_name') or props.get('fullName')
 
         if display_name is None and (keyword:= element.get('properties',{}).get('keyword',None)) is not None:
             display_name = keyword
@@ -661,6 +815,8 @@ def generate_entity_md_table(elements: List[Dict],
     elements_md += header_row + "\n"
     elements_md += separator_row + "\n"
 
+    details_md = ""
+
     for element in elements:
         guid = element.get('elementHeader', {}).get('guid', None)
 
@@ -688,8 +844,18 @@ def generate_entity_md_table(elements: List[Dict],
         if get_additional_props_func:
             additional_props = get_additional_props_func(element, guid, output_format)
 
+        # Heuristic to get display name for section headings
+        display_name_for_row = None
+        if returned_struct is not None:
+            for col in returned_struct.get('formats', {}).get('attributes', []):
+                if col.get('key') in ('display_name', 'title', 'keyword', 'full_name') and col.get('value'):
+                    display_name_for_row = col['value']
+                    break
+
         # Build row
         row = "| "
+        pending_details = []  # (anchor_id, col_display_name, detail_spec, values)
+
         if returned_struct is not None:
             for column in returned_struct.get('formats', {}).get('attributes', []):
                 key = column.get('key')
@@ -697,15 +863,42 @@ def generate_entity_md_table(elements: List[Dict],
                 if (value in (None, "")) and key in additional_props:
                     value = additional_props[key]
 
-                if value in (None, ""):
-                    value = " --- "
+                # Summarize for LIST
+                cell_value = value
+                if isinstance(value, list):
+                    names = []
+                    for item in value:
+                        if isinstance(item, dict):
+                            nm = item.get('name') or item.get('displayName') or item.get('qualifiedName') or item.get('type')
+                            if nm: names.append(nm)
+                        elif item is not None:
+                            names.append(str(item))
+                    cell_value = ", ".join(names)
+                elif isinstance(value, dict):
+                    cell_value = value.get('name') or value.get('displayName') or value.get('qualifiedName') or str(value)
+
+                # If detail_spec present and we have values to show later, add a link
+                detail_spec = column.get('detail_spec')
+                if detail_spec and value not in (None, "", [], {}):
+                    anchor_id = f"{guid or 'noguid'}_{key}"
+                    # show compact + link
+                    summary_label = f"{len(value)} items" if isinstance(value, list) else (cell_value or "detail")
+                    link = f" [details](#{anchor_id})"
+                    cell_value = (cell_value + link) if cell_value else (summary_label + link)
+
+                    # queue rendering of the detail section (values are already materialized dicts)
+                    values_list = value if isinstance(value, list) else [value]
+                    pending_details.append((anchor_id, column.get('name', key), detail_spec, values_list))
+
+                if value in (None, "", [], {}):
+                    cell_value = " --- "
 
                 if column.get('format'):
-                    value = format_for_markdown_table(value, guid)
-                elif isinstance(value, str):
-                    value = value.replace("\n", " ").replace("|", "\\|")
+                    cell_value = format_for_markdown_table(cell_value, guid)
+                elif isinstance(cell_value, str):
+                    cell_value = cell_value.replace("\n", " ").replace("|", "\\|")
 
-                row += f"{value} | "
+                row += f"{cell_value} | "
         else:
             # Legacy fallback: read from props dict
             props = extract_properties_func(element)
@@ -728,8 +921,29 @@ def generate_entity_md_table(elements: List[Dict],
                 row += f"{value} | "
 
         elements_md += row + "\n"
-        # if wk := columns_struct.get("annotations",{}).get("wikilinks", None):
-        #     elements_md += ", ".join(wk)
+
+        # After the row, append queued detail sections
+        for anchor_id, col_disp, spec_name, values_list in pending_details:
+            # Resolve the linked spec in an appropriate format (prefer LIST for compactness)
+            detail_struct = resolve_output_formats(entity_type, 'LIST', spec_name, default_label=spec_name)
+            if detail_struct is None:
+                # fallback to REPORT if LIST not available
+                detail_struct = resolve_output_formats(entity_type, 'REPORT', spec_name, default_label=spec_name)
+
+            # Render by reusing the generic pipeline; treat each dict as a properties payload
+            # so populate_columns_from_properties can do key-mapping
+            if detail_struct is not None:
+                details_md += f"\n\n<a id=\"{anchor_id}\"></a>\n### {col_disp} for {display_name_for_row or (guid or '')}\n\n"
+                details_md += generate_output(
+                    elements=values_list,               # list of dicts already materialized
+                    search_string="",
+                    entity_type=detail_struct.get('target_type') or col_disp,
+                    output_format='LIST' if 'LIST' in detail_struct.get('formats', {}).get('types', ['LIST']) else 'REPORT',
+                    extract_properties_func=populate_columns_from_properties,
+                    columns_struct=detail_struct,
+                )
+
+    elements_md += details_md
     return elements_md
 
 
