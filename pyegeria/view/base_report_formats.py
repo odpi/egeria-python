@@ -470,6 +470,166 @@ base_report_specs = FormatSetDict({
             spec_params={},
         )
     ),
+"My-User": FormatSet(
+        target_type="My-User",
+        heading="My Information",
+        description="User Information",
+        annotations={},  # No specific annotations
+        family="MyProfile",
+        formats=[
+            Format(
+                types=["DICT","LIST"],
+                attributes= [
+                    Column(name="Full Name", key='full_name'),
+                    Column(name="Job Title", key='job_title'),
+                    Column(name="Employee Number", key='employee_number'),
+                    Column(name="Employee Type", key='employee_type'),
+                    Column(name="User ID", key='user_id'),
+                    Column(name="Job Status", key='job_status'),
+                    Column(name="Contact Methods", key='contact_methods'),
+                    Column(name="Roles", key='roles'),
+                    Column(name="Teams", key='teams'),
+                    Column(name="Communities", key='communities'),
+                ],
+            )
+        ],
+        action=ActionParameter(
+            function="MyProfile.get_my_profile",
+            optional_params=OPTIONAL_FILTER_PARAMS + TIME_PARAMETERS,
+            required_params=[],
+            spec_params={},
+        )
+    ),
+"My-User-MD": FormatSet(
+        target_type="My-User",
+        heading="My Information Master-Detail",
+        description="User Information with links to details",
+        annotations={},  # No specific annotations
+        family="MyProfile",
+        formats=[
+            Format(
+                types=["DICT","LIST", "REPORT"],
+                attributes= [
+                    Column(name="Full Name", key='full_name'),
+                    Column(name="Job Title", key='job_title'),
+                    Column(name="Employee Number", key='employee_number'),
+                    Column(name="Employee Type", key='employee_type'),
+                    Column(name="User ID", key='user_id'),
+                    Column(name="Job Status", key='job_status'),
+                    Column(name="Contact Methods", key="contact_methods", detail_spec="My-User-Contact-Detail"),
+                    Column(name="Roles", key="roles", detail_spec="My-User-Roles-Detail"),
+                    Column(name="Teams", key="teams", detail_spec="My-User-Teams-Detail"),
+                    Column(name="Communities", key="communities", detail_spec="My-User-Communities-Detail"),
+                ],
+            )
+        ],
+        action=ActionParameter(
+            function="MyProfile.get_my_profile",
+            optional_params=OPTIONAL_FILTER_PARAMS + TIME_PARAMETERS,
+            required_params=[],
+            spec_params={},
+        )
+    ),
+
+"My-User-Contact-Detail": FormatSet(
+    target_type="ContactDetails",
+    heading="Contact Methods",
+    description="Detailed Contact Methods",
+    family="MyProfile",
+    formats=[
+        Format(
+            types=["LIST", "REPORT"],
+            attributes=[
+                Column(name="Name", key="name"),
+                Column(name="Method Type", key="contactMethodType"),
+                Column(name="Contact Type", key="contactType"),
+                Column(name="Service", key="contactMethodService"),
+                Column(name="Value", key="contactMethodValue"),
+                Column(name="GUID", key="guid", format=True),
+            ],
+        )
+    ],
+),
+
+"My-User-Roles-Detail": FormatSet(
+    target_type="PersonRole",
+    heading="Roles",
+    description="Detailed Roles",
+    family="MyProfile",
+    formats=[
+        Format(
+            types=["LIST", "REPORT"],
+            attributes=[
+                Column(name="Name", key="name"),
+                Column(name="Type", key="type"),
+                Column(name="Assignment Type", key="assignmentType"),
+                Column(name="Identifier", key="identifier"),
+                Column(name="Scope", key="scope"),
+                Column(name="Description", key="description"),
+                Column(name="GUID", key="guid", format=True),
+                Column(name="Projects", key="projects",detail_spec="My-User-Projects-Detail" ),
+            ],
+        )
+    ],
+),
+
+"My-User-Teams-Detail": FormatSet(
+    target_type="Team",
+    heading="Teams",
+    description="Detailed Teams",
+    family="MyProfile",
+    formats=[
+        Format(
+            types=["LIST", "REPORT"],
+            attributes=[
+                Column(name="Name", key="name"),
+                Column(name="Assignment Type", key="assignmentType"),
+                Column(name="Identifier", key="identifier"),
+                Column(name="Team Type", key="teamType"),
+                Column(name="Description", key="description"),
+                Column(name="GUID", key="guid", format=True),
+            ],
+        )
+    ],
+),
+"My-User-Projects-Detail": FormatSet(
+    target_type="Project",
+    heading="Projects",
+    description="Details on projects I'm involved in",
+    family="MyProfile",
+    formats=[
+        Format(
+            types=["LIST", "REPORT"],
+            attributes=[
+                Column(name="Name", key="display_name"),
+                Column(name="Qualified Name", key="qualified_name"),
+                Column(name="Project Status", key="project_status"),
+                Column(name="Project Type", key="projectType"),
+                Column(name="Description", key="description"),
+                Column(name="Priority", key="priority"),
+                Column(name="GUID", key="guid", format=True),
+            ],
+        )
+    ],
+),
+
+"My-User-Communities-Detail": FormatSet(
+    target_type="Community",
+    heading="Communities",
+    description="Detailed Communities",
+    family="MyProfile",
+    formats=[
+        Format(
+            types=["LIST", "REPORT"],
+            attributes=[
+                Column(name="Name", key="name"),
+                Column(name="Assignment Type", key="assignmentType"),
+                Column(name="Description", key="description"),
+                Column(name="GUID", key="guid", format=True),
+            ],
+        )
+    ],
+),
 
     "TypeDef": FormatSet(
         target_type="TypeDef",

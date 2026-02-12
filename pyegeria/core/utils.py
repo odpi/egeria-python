@@ -12,6 +12,7 @@ from rich.console import Console
 from rich.markdown import Markdown
 
 from pyegeria.core.config import settings as app_settings
+from pyegeria.core._globals import REPORT_ACRONYMS
 from typing import Callable, TypeVar
 
 T = TypeVar('T', bound=Callable)
@@ -89,9 +90,23 @@ def body_slimmer(body: dict) -> dict:
 
 
 def camel_to_title_case(input_string):
-    # Add a space before uppercase letters and capitalize each word
-    result = re.sub(r'([a-z])([A-Z])', r'\1 \2', input_string).title()
-    return result
+    """Convert camelCase or snake_case to Title Case, respecting common acronyms."""
+    # Handle snake_case by converting to spaces first
+    input_string = input_string.replace('_', ' ')
+    # Add a space before uppercase letters
+    res = re.sub(r'([a-z])([A-Z])', r'\1 \2', input_string)
+    # Capitalize each word (initial title case)
+    title_res = res.title()
+
+    # Refine with acronyms
+    words = title_res.split()
+    new_words = []
+    for word in words:
+        if word.upper() in REPORT_ACRONYMS:
+            new_words.append(word.upper())
+        else:
+            new_words.append(word)
+    return " ".join(new_words)
 
 
 def to_camel_case(input_string):
