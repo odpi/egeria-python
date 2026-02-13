@@ -3,14 +3,14 @@
 
 [project]
 name = "pyegeria"
-version = "5.5.3.10"
+version = "5.5.3.11"
 license = 'Apache-2.0'
 license-files = ["LICENSE"]
 authors = [{name = "Dan Wolfson", email = "dan.wolfson@pdr-associates.com"},]
 readme = "README.md"
 description = "A python client for Egeria"
 keywords = ["egeria", "metadata", "governance"]
-requires-python =">3.12"
+requires-python = ">=3.12"
 classifiers = [
     "Programming Language :: Python",
     "Programming Language :: Python :: 3",
@@ -47,8 +47,8 @@ dependencies = [
 [project.scripts]
     pyegeria-mcp = "pyegeria.mcp_server:main"
     run_report = "commands.cat.run_report:main"
-    run_report_orig = "Commands.cat.run_report_orig:main"
-    my_reports = "Commands.cat.my_reports:start_exp2"
+    run_report_orig = "commands.cat.run_report_orig:main"
+    my_reports = "commands.cat.my_reports:start_exp2"
 
     list_assets = "commands.cat.list_assets:main"
     list_tech_types = "commands.cat.list_tech_types:main"
@@ -178,7 +178,7 @@ requires = ["setuptools>=42", "wheel"]
 build-backend = "setuptools.build_meta"
 
 [tool.setuptools.packages.find]
-include = ["pyegeria", "pyegeria.*", "commands", "commands.*", "commands.cat.*", "md_processing", "md_processing.*" , "examples"]
+include = ["pyegeria", "pyegeria.*", "commands", "commands.*", "md_processing", "md_processing.*"]
 exclude = ["tests", "config"]
 
 [tool.setuptools.package-data]

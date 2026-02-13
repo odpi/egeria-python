@@ -1,10 +1,9 @@
 version = 1
 revision = 3
-requires-python = ">3.12"
+requires-python = ">=3.12"
 resolution-markers = [
     "python_full_version >= '3.14'",
-    "python_full_version == '3.13.*'",
-    "python_full_version < '3.13'",
+    "python_full_version < '3.14'",
 ]
 
 [[package]]
@@ -1521,7 +1520,7 @@ sdist = { url = "https://files.pythonhosted.org/packages/3d/74/f19e5eaabada3ae7d
 
 [[package]]
 name = "pyegeria"
-version = "5.5.3.10"
+version = "5.5.3.11"
 source = { editable = "." }
 dependencies = [
     { name = "altair" },

@@ -135,7 +135,7 @@ def save_format_sets_example(custom_format_sets):
     print("\n=== Saving Report Specs ===")
     
     # Create a directory for the example files
-    example_dir = os.path.join(os.path.dirname(os.path.abspath(__file__)), "format_sets")
+    example_dir = os.path.join(os.path.dirname(os.path.abspath(__file__)), "report_specs")
     os.makedirs(example_dir, exist_ok=True)
     
     # Save all format sets to a file

@@ -1,0 +1,260 @@
+<!-- SPDX-License-Identifier: CC-BY-4.0 -->
+
+# Output Formats and Report Specs in pyegeria
+
+This document explains how pyegeria turns Egeria responses into useful output using report specs (a.k.a. format sets). It covers available output formats, the report spec model, how nested/master–detail views work, and how to create and load your own specs.
+
+If you are new to pyegeria, start with the README for installation and configuration, then return here when you need to tailor the output of find/get operations.
+
+---
+
+## Quick Start
+
+- Show a user profile with master–detail output (table + linked detail sections):
+
+```python
+from pyegeria.omvs.my_profile import MyProfile
+
+client = MyProfile("qs-view-server", "https://localhost:9443", user_id="user", user_pwd="secret")
+client.create_egeria_bearer_token("user", "secret")
+
+md = client.get_my_profile(output_format="LIST", report_spec="My-User-MD")
+print(md)  # Markdown table with [details] links for Contact Methods, Roles, Teams, Communities
+```
+
+- Get the same data as a nested dictionary (ideal for programmatic processing/UIs):
+
+```python
+profile = client.get_my_profile(output_format="DICT", report_spec="My-User-MD")
+# dict with scalar attributes + lists of dicts for contact_methods, roles, teams, communities
+```
+
+---
+
+## Output Formats
+
+pyegeria supports multiple output types. Each report spec declares which types it supports.
+
+- DICT: Python list/dict structures — best for programmatic use and tests.
+- LIST: Markdown table (horizontal). Good for compact overviews. Nested values are summarized and link to detail sections if configured.
+- REPORT (MD): Rich Markdown (vertical). Renders nested dict/list values as bullet lists.
+- FORM: Markdown suitable for Dr.Egeria editable forms. Complex values are summarized (not deeply expanded).
+- MD: Plain Markdown (legacy simple rendering).
+- MERMAID: Mermaid graph text for supported responses.
+- HTML: HTML wrapper around Markdown (when enabled in generators).
+
+Tip: Use DICT for APIs and automation; use LIST for dashboards/browsing; use REPORT for deep, readable details; use FORM when producing updateable forms.
+
+---
+
+## The Report Spec Model
+
+Report specs are defined using Pydantic models in `pyegeria/view/_output_format_models.py` and registered in `pyegeria/view/base_report_formats.py`.
+
+- FormatSet
+  - `target_type`: logical type (e.g., "Glossary", "Project", "My-User")
+  - `heading`, `description`, optional `family`, optional `aliases`
+  - `formats`: a list of `Format` entries
+  - optional `action`: how to call a client method (used by higher-level tooling)
+- Format
+  - `types`: list of output types this format supports (e.g., `["DICT", "LIST"]`)
+  - `attributes`: list of `Column` (alias: `Attribute`)
+- Column (Attribute)
+  - `name`: display name in the output
+  - `key`: property key to extract from the data (snake_case or camelCase supported)
+  - `format`: optional flag to apply formatting suitable for tables/links
+  - `detail_spec`: optional name of another report spec to render a nested detail section (master–detail)
+
+Example (Python) — simplified snippet:
+
+```python
+from pyegeria.view._output_format_models import Column, Format, FormatSet
+
+My_User_MD = FormatSet(
+    target_type="My-User",
+    heading="My Information Master-Detail",
+    description="User Information with links to details",
+    family="MyProfile",
+    formats=[
+        Format(
+            types=["DICT", "LIST", "REPORT"],
+            attributes=[
+                Column(name="Full Name", key="full_name"),
+                Column(name="User ID", key="user_id"),
+                Column(name="Roles", key="roles", detail_spec="My-User-Roles-Detail"),
+            ],
+        )
+    ],
+)
+```
+
+---
+
+## Selecting Specs and Generating Output
+
+Most client methods already call the output pipeline for you. Under the hood, the following helpers are used (in `pyegeria/view/output_formatter.py` and `pyegeria/view/base_report_formats.py`):
+
+- `select_report_format(label: str, output_type: str) -> dict`: pick a spec by name/label and match the requested type (with fallback to `ALL`).
+- `resolve_output_formats(entity_type: str, output_format: str, report_spec: str|dict|None)`: flexible resolver used by clients (by name, by dict, or by entity type default).
+- `generate_output(...)`: orchestrates DICT/LIST/REPORT/FORM rendering given elements and a spec.
+
+Basic example using a registered spec:
+
+```python
+from pyegeria.view.base_report_formats import select_report_format
+from pyegeria.view.output_formatter import generate_output
+
+spec = select_report_format("My-User-MD", "LIST")
+md = generate_output(elements=[element], search_string="", entity_type="My-User", output_format="LIST",
+                     extract_properties_func=my_extractor, columns_struct=spec)
+```
+
+In practice you will call a client method (e.g., `MyProfile.get_my_profile`) and pass `output_format` + `report_spec`.
+
+---
+
+## Nested Data and the Master–Detail Pattern
+
+Egeria OMVS responses often include related elements and nested hierarchies. pyegeria preserves this richness and makes it navigable.
+
+- Rich materialization: `materialize_egeria_summary(summary, columns_struct=None)` turns a `RelatedMetadata*Summary` into a clean dict that includes:
+  - relationship properties (e.g., `assignmentType`)
+  - related element properties (e.g., `name`, `qualifiedName`, `guid`, `type`, `description`)
+  - recursively processed `nested_elements`
+- Schema‑driven promotion: if the current spec includes attributes with `detail_spec`, pyegeria builds a type→key map from those linked specs and promotes matching nested elements into those keys. Example: a role that has nested `Project` items becomes `{"projects": [ ... ]}` when the column points to a `Project` detail spec.
+
+### How LIST, REPORT, FORM, and DICT handle nested values
+
+- DICT: returns full nested dict/lists for downstream processing.
+- LIST: shows a compact summary (names/identifiers) in the master row and adds a `[details]` link if a `detail_spec` is configured. A detail section is appended below using the linked spec.
+- REPORT: renders nested dicts/lists as hierarchical markdown bullet lists (read‑only view).
+- FORM: shows summarized values only to keep the form updateable and concise.
+
+### Example: Roles → Projects
+
+In `base_report_formats.py`:
+
+```python
+# Master: roles column links to a detail spec
+Column(name="Roles", key="roles", detail_spec="My-User-Roles-Detail")
+
+# Roles detail spec includes a nested projects column that links again
+"My-User-Roles-Detail": FormatSet(
+  target_type="PersonRole",
+  formats=[
+    Format(types=["LIST", "REPORT"], attributes=[
+      Column(name="Name", key="name"),
+      Column(name="GUID", key="guid", format=True),
+      Column(name="Projects", key="projects", detail_spec="My-User-Projects-Detail"),
+    ])
+  ]
+)
+
+"My-User-Projects-Detail": FormatSet(
+  target_type="Project",
+  formats=[
+    Format(types=["LIST", "REPORT"], attributes=[
+      Column(name="Name", key="display_name"),
+      Column(name="Qualified Name", key="qualified_name"),
+      Column(name="Project Status", key="project_status"),
+      Column(name="GUID", key="guid", format=True),
+    ])
+  ]
+)
+```
+
+Result:
+- LIST master shows role names with a `[details]` link.
+- A "Roles" section appears below the table; each row’s projects appear as a nested table or report using `My-User-Projects-Detail`.
+
+---
+
+## Writing Your Own Report Specs
+
+You can add/override report specs without changing pyegeria’s source by providing JSON files and loading them at runtime.
+
+### Where pyegeria looks for user specs
+
+`pyegeria/view/base_report_formats.py` supports loading JSON files from a user directory via:
+
+- Environment variable `PYEGERIA_USER_REPORT_SPECS_DIR` (preferred)
+- Fallback env var `PYEGERIA_USER_FORMAT_SETS_DIR`
+
+All `*.json` files in that directory are loaded and merged. Later files overwrite earlier keys on collision.
+
+Load them early in your program:
+
+```python
+from pyegeria.view.base_report_formats import load_user_report_specs
+load_user_report_specs()
+```
+
+Tip: You can also export the built‑in specs, edit them, and re‑load from your directory:
+
+```python
+from pyegeria.view.base_report_formats import save_report_specs
+save_report_specs("/tmp/builtin_specs.json")                       # dump all built‑ins
+save_report_specs("/tmp/my_subset.json", ["My-User-MD"])         # dump a subset
+```
+
+### JSON structure for user specs
+
+User JSON files contain a dictionary of FormatSets keyed by label. The shape mirrors the Pydantic models (attributes may appear as `attributes` or legacy `columns`). Example:
+
+```json
+{
+  "My-Custom-Assets": {
+    "target_type": "Asset",
+    "heading": "My Asset Overview",
+    "description": "Compact asset table for my team",
+    "family": "AssetCatalog",
+    "formats": [
+      {
+        "types": ["LIST"],
+        "attributes": [
+          {"name": "Display Name", "key": "display_name"},
+          {"name": "Type", "key": "type_name"},
+          {"name": "GUID", "key": "guid", "format": true}
+        ]
+      }
+    ]
+  }
+}
+```
+
+Place this JSON file into your user specs directory and call `load_user_report_specs()`.
+
+### Notes on keys and labels
+
+- Column `key` can be snake_case or camelCase. The formatter tries exact, then `to_camel_case`, then uppercase (useful for `GUID`).
+- Display labels are prettified (camel/snake → Title Case) and respect common acronyms (GUID, URL, ID, API, UI).
+- Use `detail_spec` to implement master–detail links. The linked spec’s `target_type` drives automatic promotion of nested elements when possible.
+
+---
+
+## Discoverability & Introspection
+
+- List all spec names (optionally grouped): `report_spec_list(show_family=True, sort_by_family=True)`
+- Get a spec by name and match a type: `select_report_format("Collections", "TABLE")`
+- Render a documentation page of all specs (names, types, columns): `report_spec_markdown()`
+- Search by perspective or question (if a spec defines `question_spec`):
+  - `find_report_specs_by_perspective("Solution Architect")`
+  - `find_report_specs_by_question("list my teams")`
+
+---
+
+## Troubleshooting
+
+- Cell shows `---` in LIST: the value is empty or the key didn’t match. Check your column `key` (snake vs camel), and confirm your extractor/materializer emits that key.
+- Detail link not shown: the master column has `detail_spec` but the value is empty. Ensure nested elements are materialized and (for generic promotion) that the linked spec’s `target_type` matches the nested element’s `type`.
+- GUID not visible: include a `Column(name="GUID", key="guid", format=True)` in the detail spec. The formatter maps `guid` and formats it safely for tables/links.
+- FORM output shows summaries only: this is by design to keep forms concise and editable.
+
+---
+
+## References
+
+- Specs registry and helpers: `pyegeria/view/base_report_formats.py`
+- Output engine and materializer: `pyegeria/view/output_formatter.py`
+- Pydantic models for specs: `pyegeria/view/_output_format_models.py`
+- Example built‑ins (including My-User‑MD): `pyegeria/view/base_report_formats.py`
