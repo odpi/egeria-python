@@ -110,26 +110,17 @@ class MyProfile(ServerClient):
                                         or select_report_format(ds_name, "ALL"))
                             column["value"] = [materialize_egeria_summary(r, spec) for r in performs_roles]
 
-                    elif key == "teams":
-                        if isinstance(performs_roles, list):
-                            team_list = []
-                            for r in performs_roles:
-                                if not isinstance(r, dict):
-                                    continue
-                                nested = r.get("nestedElements") or []
-                                if isinstance(nested, list):
-                                    for n in nested:
-                                        if not isinstance(n, dict):
-                                            continue
-                                        rel_el = n.get("relatedElement") or {}
-                                        header = rel_el.get("elementHeader") or {}
-                                        if (header.get("type") or {}).get("typeName") == "Team":
-                                            team_list.append(materialize_egeria_summary(n))
-                            column["value"] = team_list
+                    # Generic handler for elements nested within roles (e.g., teams, communities, projects)
+                    elif column.get("detail_spec") and column.get("value") in (None, "", []):
+                        ds_name = column.get("detail_spec")
+                        spec = (select_report_format(ds_name, "DICT")
+                                or select_report_format(ds_name, "LIST")
+                                or select_report_format(ds_name, "REPORT")
+                                or select_report_format(ds_name, "ALL"))
 
-                    elif key == "communities":
-                        if isinstance(performs_roles, list):
-                            community_list = []
+                        if spec and spec.get("target_type"):
+                            target_type = spec.get("target_type")
+                            found_elements = []
                             for r in performs_roles:
                                 if not isinstance(r, dict):
                                     continue
@@ -140,9 +131,11 @@ class MyProfile(ServerClient):
                                             continue
                                         rel_el = n.get("relatedElement") or {}
                                         header = rel_el.get("elementHeader") or {}
-                                        if (header.get("type") or {}).get("typeName") == "Community":
-                                            community_list.append(materialize_egeria_summary(n))
-                            column["value"] = community_list
+                                        if (header.get("type") or {}).get("typeName") == target_type:
+                                            # Found a match! Materialize it using its detail spec
+                                            found_elements.append(materialize_egeria_summary(n, spec))
+                            if found_elements:
+                                column["value"] = found_elements
                 except Exception as e:
                     logger.error(f"Error processing profile column '{key}': {e}")
 

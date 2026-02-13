@@ -520,6 +520,7 @@ base_report_specs = FormatSetDict({
                     Column(name="Roles", key="roles", detail_spec="My-User-Roles-Detail"),
                     Column(name="Teams", key="teams", detail_spec="My-User-Teams-Detail"),
                     Column(name="Communities", key="communities", detail_spec="My-User-Communities-Detail"),
+                    Column(name="Projects", key="projects", detail_spec="My-User-Projects-Detail"),
                 ],
             )
         ],
@@ -538,7 +539,7 @@ base_report_specs = FormatSetDict({
     family="MyProfile",
     formats=[
         Format(
-            types=["LIST", "REPORT"],
+            types=["LIST", "REPORT","DICT"],
             attributes=[
                 Column(name="Name", key="name"),
                 Column(name="Method Type", key="contactMethodType"),
@@ -558,7 +559,7 @@ base_report_specs = FormatSetDict({
     family="MyProfile",
     formats=[
         Format(
-            types=["LIST", "REPORT"],
+            types=["LIST", "REPORT", "DICT"],
             attributes=[
                 Column(name="Name", key="name"),
                 Column(name="Type", key="type"),
@@ -567,7 +568,7 @@ base_report_specs = FormatSetDict({
                 Column(name="Scope", key="scope"),
                 Column(name="Description", key="description"),
                 Column(name="GUID", key="guid", format=True),
-                Column(name="Projects", key="projects",detail_spec="My-User-Projects-Detail" ),
+
             ],
         )
     ],
@@ -580,7 +581,7 @@ base_report_specs = FormatSetDict({
     family="MyProfile",
     formats=[
         Format(
-            types=["LIST", "REPORT"],
+            types=["LIST", "REPORT","DICT"],
             attributes=[
                 Column(name="Name", key="name"),
                 Column(name="Assignment Type", key="assignmentType"),
@@ -599,7 +600,7 @@ base_report_specs = FormatSetDict({
     family="MyProfile",
     formats=[
         Format(
-            types=["LIST", "REPORT"],
+            types=["LIST", "DICT", "REPORT"],
             attributes=[
                 Column(name="Name", key="display_name"),
                 Column(name="Qualified Name", key="qualified_name"),
