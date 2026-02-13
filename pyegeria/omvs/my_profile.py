@@ -62,7 +62,11 @@ class MyProfile(ServerClient):
         """Extractor for My Profile (Person) elements."""
         col_data = populate_common_columns(element, columns_struct)
 
-        # Handle richness for My-User report spec
+        # Pre-fetch collections once to avoid redundant work
+        performs_roles = element.get("performsRoles") or []
+        contact_details = element.get("contactDetails") or []
+        user_identities = element.get("userIdentities") or []
+
         try:
             formats = col_data.get("formats")
             if isinstance(formats, dict):
@@ -77,68 +81,73 @@ class MyProfile(ServerClient):
                 if not key:
                     continue
 
-                if key == "user_id":
-                    identities = element.get("userIdentities", [])
-                    if identities and isinstance(identities, list):
-                        props = identities[0].get("relatedElement", {}).get("properties", {})
-                        column["value"] = props.get("userId")
+                try:
+                    if key == "user_id":
+                        if user_identities and isinstance(user_identities, list):
+                            props = (user_identities[0].get("relatedElement") or {}).get("properties") or {}
+                            column["value"] = props.get("userId")
 
-                elif key == "contact_methods":
-                    contacts = element.get("contactDetails", [])
-                    if isinstance(contacts, list):
-                        # Resolve the spec for this column to enable generic promotion (DICT -> LIST -> REPORT -> ALL)
-                        ds_name = column.get("detail_spec")
-                        spec = None
-                        if ds_name:
-                            spec = (select_report_format(ds_name, "DICT")
-                                    or select_report_format(ds_name, "LIST")
-                                    or select_report_format(ds_name, "REPORT")
-                                    or select_report_format(ds_name, "ALL"))
-                        column["value"] = [materialize_egeria_summary(c, spec) for c in contacts]
+                    elif key == "contact_methods":
+                        if isinstance(contact_details, list):
+                            # Resolve the spec for this column to enable generic promotion (DICT -> LIST -> REPORT -> ALL)
+                            ds_name = column.get("detail_spec")
+                            spec = None
+                            if ds_name:
+                                spec = (select_report_format(ds_name, "DICT")
+                                        or select_report_format(ds_name, "LIST")
+                                        or select_report_format(ds_name, "REPORT")
+                                        or select_report_format(ds_name, "ALL"))
+                            column["value"] = [materialize_egeria_summary(c, spec) for c in contact_details]
 
-                elif key == "roles":
-                    roles = element.get("performsRoles", [])
-                    if isinstance(roles, list):
-                        ds_name = column.get("detail_spec")
-                        spec = None
-                        if ds_name:
-                            spec = (select_report_format(ds_name, "DICT")
-                                    or select_report_format(ds_name, "LIST")
-                                    or select_report_format(ds_name, "REPORT")
-                                    or select_report_format(ds_name, "ALL"))
-                        column["value"] = [materialize_egeria_summary(r, spec) for r in roles]
+                    elif key == "roles":
+                        if isinstance(performs_roles, list):
+                            ds_name = column.get("detail_spec")
+                            spec = None
+                            if ds_name:
+                                spec = (select_report_format(ds_name, "DICT")
+                                        or select_report_format(ds_name, "LIST")
+                                        or select_report_format(ds_name, "REPORT")
+                                        or select_report_format(ds_name, "ALL"))
+                            column["value"] = [materialize_egeria_summary(r, spec) for r in performs_roles]
 
-                elif key == "teams":
-                    roles = element.get("performsRoles", [])
-                    if isinstance(roles, list):
-                        team_list = []
-                        for r in roles:
-                            nested = r.get("nestedElements", [])
-                            if isinstance(nested, list):
-                                for n in nested:
-                                    rel_el = n.get("relatedElement", {})
-                                    if rel_el:
-                                        header = rel_el.get("elementHeader", {})
-                                        if header.get("type", {}).get("typeName") == "Team":
+                    elif key == "teams":
+                        if isinstance(performs_roles, list):
+                            team_list = []
+                            for r in performs_roles:
+                                if not isinstance(r, dict):
+                                    continue
+                                nested = r.get("nestedElements") or []
+                                if isinstance(nested, list):
+                                    for n in nested:
+                                        if not isinstance(n, dict):
+                                            continue
+                                        rel_el = n.get("relatedElement") or {}
+                                        header = rel_el.get("elementHeader") or {}
+                                        if (header.get("type") or {}).get("typeName") == "Team":
                                             team_list.append(materialize_egeria_summary(n))
-                        column["value"] = team_list
+                            column["value"] = team_list
 
-                elif key == "communities":
-                    roles = element.get("performsRoles", [])
-                    if isinstance(roles, list):
-                        community_list = []
-                        for r in roles:
-                            nested = r.get("nestedElements", [])
-                            if isinstance(nested, list):
-                                for n in nested:
-                                    rel_el = n.get("relatedElement", {})
-                                    if rel_el:
-                                        header = rel_el.get("elementHeader", {})
-                                        if header.get("type", {}).get("typeName") == "Community":
+                    elif key == "communities":
+                        if isinstance(performs_roles, list):
+                            community_list = []
+                            for r in performs_roles:
+                                if not isinstance(r, dict):
+                                    continue
+                                nested = r.get("nestedElements") or []
+                                if isinstance(nested, list):
+                                    for n in nested:
+                                        if not isinstance(n, dict):
+                                            continue
+                                        rel_el = n.get("relatedElement") or {}
+                                        header = rel_el.get("elementHeader") or {}
+                                        if (header.get("type") or {}).get("typeName") == "Community":
                                             community_list.append(materialize_egeria_summary(n))
-                        column["value"] = community_list
+                            column["value"] = community_list
+                except Exception as e:
+                    logger.error(f"Error processing profile column '{key}': {e}")
+
         except Exception as e:
-            logger.debug(f"Error in _extract_my_profile_properties: {e}")
+            logger.error(f"Critical error in _extract_my_profile_properties: {e}")
 
         return col_data
 
