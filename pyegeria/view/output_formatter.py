@@ -240,20 +240,21 @@ def materialize_egeria_summary(summary: dict, columns_struct: Optional[dict] = N
     res = {}
 
     # 1. Relationship properties
-    rel_props = summary.get("relationshipProperties", {})
+    rel_props = summary.get("relationshipProperties") or {}
     if isinstance(rel_props, dict):
         for k, v in rel_props.items():
             if k not in ("class", "typeName", "extendedProperties"):
                 res[k] = v
 
     # 2. Related element header & properties
-    rel_el = summary.get("relatedElement", {})
+    rel_el = summary.get("relatedElement") or {}
     if isinstance(rel_el, dict):
-        header = rel_el.get("elementHeader", {})
-        props = rel_el.get("properties", {})
+        header = rel_el.get("elementHeader") or {}
+        props = rel_el.get("properties") or {}
 
         if header:
-            res["type"] = header.get("type", {}).get("typeName")
+            header_type = header.get("type") or {}
+            res["type"] = header_type.get("typeName")
             res["guid"] = header.get("guid")
 
         if isinstance(props, dict):
@@ -290,14 +291,13 @@ def materialize_egeria_summary(summary: dict, columns_struct: Optional[dict] = N
                     type_map[linked_spec['target_type']] = key
 
     # 4. Process nested elements
-    nested = summary.get("nestedElements", [])
+    nested = summary.get("nestedElements") or []
     if isinstance(nested, list) and len(nested) > 0:
         res["nested_elements"] = []
         for n in nested:
+            if not isinstance(n, dict):
+                continue
             # Descend into next level. 
-            # Note: We don't pass the same columns_struct because it belongs to the parent.
-            # However, if we found a match in type_map, we might want to use that spec's struct
-            # for the NEXT level. But for now, generic materialization is enough.
             extracted = materialize_egeria_summary(n)
             res["nested_elements"].append(extracted)
 
