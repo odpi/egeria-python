@@ -25,8 +25,8 @@ to visualize and use Egeria. The commands also serve as useful examples.
 
 An examples folder holds some useful examples showing different facets of using pyegeria.
 
-For detailed guidance on report formats (selection and migration from columns→attributes), see:
-- examples/doc_samples/report_formats.md
+For detailed guidance on output formats and report specs (including nested/master–detail), see:
+- docs/output-formats-and-report-specs.md
 
 ### Report specs: families and filtering
 
