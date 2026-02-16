@@ -104,7 +104,7 @@ def test_get_user_guid() :
         response = client.get_elements_by_property_value(
             user_id,
             ["userId", "displayName", "fullName"],
-            metadata_element_type_name=None,
+            metadata_element_type=None,
         )
         if isinstance(response, dict | list):
             print(json.dumps(response, indent = 2))

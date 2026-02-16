@@ -20,7 +20,7 @@ from rich.prompt import Prompt
 from rich.table import Table
 
 from pyegeria import (
-    ClassificationManager,
+    ClassificationExplorer,
     PyegeriaException,
     print_basic_exception,
     settings,
@@ -50,7 +50,7 @@ def list_relationships(
         raise ValueError(
             "Invalid Search String - must be greater than four characters long"
         )
-    g_client = ClassificationManager(
+    g_client = ClassificationExplorer(
         server, url, user_id=username, user_pwd=user_password
     )
     token = g_client.create_egeria_bearer_token(username, user_password)

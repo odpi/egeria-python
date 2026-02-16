@@ -17,6 +17,11 @@ inflect_engine = inflect.engine()
 EGERIA_ROOT_PATH = os.environ.get("EGERIA_ROOT_PATH", "/home/jovyan")
 EGERIA_INBOX_PATH = os.environ.get("EGERIA_INBOX_PATH", "loading-bay/dr_egeria_inbox")
 
+# Constants for compact resource loading
+USE_COMPACT_RESOURCES = True
+COMPACT_RESOURCE_DIR = str(importlib.resources.files("md_processing") / "data" / "compact_commands")
+COMPACT_FAMILIES = []  # Empty list means all families are loaded
+
 # Constants for element labels
 GLOSSARY_NAME_LABELS = ["Glossary Name", "Glossary", "Glossaries", "Owning Glossary", "In Glossary"]
 
@@ -248,28 +253,25 @@ def load_commands(filename: str) -> None:
             base_specs = COMMAND_DEFINITIONS.get("Command Specifications", {})
 
             # Optionally merge compact specs from a separate directory
-            try:
-                from md_processing.md_processing_utils.compact_loader import load_compact_specs_from_dir
+            if USE_COMPACT_RESOURCES:
+                try:
+                    from md_processing.md_processing_utils.compact_loader import load_compact_specs_from_dir
 
-                compact_dir = os.environ.get(
-                    "DR_EGERIA_COMPACT_DIR",
-                    str(importlib.resources.files("md_processing") / "data" / "compact_commands"),
-                )
-                allowlist = os.environ.get("DR_EGERIA_COMPACT_FAMILIES", "").split(",")
-                allowlist = [a.strip() for a in allowlist if a.strip()]
-
-                if os.path.isdir(compact_dir) and allowlist:
-                    overlay_specs = load_compact_specs_from_dir(compact_dir, allowlist)
-                    if overlay_specs:
-                        # Merge/overlay into base specs
-                        merged = dict(base_specs)
-                        merged.update(overlay_specs)
-                        COMMAND_DEFINITIONS["Command Specifications"] = merged
-                        logger.debug(
-                            f"Loaded {len(overlay_specs)} compact commands from {compact_dir} for families: {allowlist}"
+                    if os.path.isdir(COMPACT_RESOURCE_DIR):
+                        overlay_specs = load_compact_specs_from_dir(
+                            COMPACT_RESOURCE_DIR, COMPACT_FAMILIES if COMPACT_FAMILIES else None
                         )
-            except Exception as merge_err:
-                logger.warning(f"Compact commands merge skipped due to error: {merge_err}")
+                        if overlay_specs:
+                            # Merge/overlay into base specs
+                            merged = dict(base_specs)
+                            merged.update(overlay_specs)
+                            COMMAND_DEFINITIONS["Command Specifications"] = merged
+                            logger.debug(
+                                f"Loaded {len(overlay_specs)} compact commands from {COMPACT_RESOURCE_DIR}"
+                                + (f" for families: {COMPACT_FAMILIES}" if COMPACT_FAMILIES else "")
+                            )
+                except Exception as merge_err:
+                    logger.warning(f"Compact commands merge skipped due to error: {merge_err}")
 
             command_list = build_command_list_from_specs(
                 COMMAND_DEFINITIONS.get("Command Specifications", {})

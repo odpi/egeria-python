@@ -188,7 +188,7 @@ class TestRuntimeManager:
 
     def test_get_platforms_by_name(self):
         try:
-            r_client = RuntimeManager(
+            r_client = EgeriaTech(
                 self.good_view_server_2,
                 self.good_platform1_url,
                 user_id=self.good_user_2,

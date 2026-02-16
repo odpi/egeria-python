@@ -21,7 +21,7 @@ from rich.text import Text
 from rich.tree import Tree
 
 from pyegeria import (
-    ClassificationManager,
+    ClassificationExplorer,
     PyegeriaException,
     print_basic_exception,
     settings,
@@ -45,7 +45,7 @@ def display_elements(
     jupyter: bool = app_config.egeria_jupyter,
     width: int = app_config.console_width,
 ):
-    c = ClassificationManager(server, url, user_id=username, user_pwd=user_password)
+    c = ClassificationExplorer(server, url, user_id=username, user_pwd=user_password)
 
     bearer_token = c.create_egeria_bearer_token(username, user_password)
 

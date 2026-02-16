@@ -19,7 +19,7 @@ from pyegeria.omvs.actor_manager import ActorManager
 from pyegeria.omvs.asset_catalog import AssetCatalog
 from pyegeria.omvs.asset_maker import AssetMaker
 from pyegeria.omvs.automated_curation import AutomatedCuration
-from pyegeria.omvs.classification_manager import ClassificationManager
+from pyegeria.omvs.classification_explorer import ClassificationExplorer
 from pyegeria.omvs.collection_manager import CollectionManager
 from pyegeria.omvs.community_matters_omvs import CommunityMatters
 from pyegeria.omvs.data_designer import DataDesigner
@@ -33,8 +33,7 @@ from pyegeria.omvs.glossary_manager import GlossaryManager
 from pyegeria.omvs.governance_officer import GovernanceOfficer
 from pyegeria.omvs.lineage_linker import LineageLinker
 from pyegeria.omvs.location_arena import Location
-from pyegeria.omvs.metadata_expert import MetadataExpert
-from pyegeria.omvs.metadata_explorer_omvs import MetadataExplorer
+from pyegeria.omvs.metadata_expert import MetadataExpert, MetadataExplorer
 from pyegeria.omvs.my_profile import MyProfile
 from pyegeria.omvs.notification_manager import NotificationManager
 from pyegeria.omvs.people_organizer import PeopleOrganizer
@@ -80,8 +79,11 @@ class Egeria:
             "asset_catalog": AssetCatalog,
             "asset_maker": AssetMaker,
             "auto_curate": AutomatedCuration,
-            "class_mgr": ClassificationManager,
+            "automated_curation": AutomatedCuration,
+            "class_mgr": ClassificationExplorer,
+            "classification_manager": ClassificationExplorer,
             "collections": CollectionManager,
+            "collection_manager": CollectionManager,
             "community": CommunityMatters,
             "community_matters": CommunityMatters,
             "config": EgeriaConfig,
@@ -91,13 +93,18 @@ class Egeria:
             "data_designer": DataDesigner,
             "digital_business": DigitalBusiness,
             "expert": MetadataExpert,
+            "metadata_expert": MetadataExpert,
             "explorer": MetadataExplorer,
+            "metadata_explorer": MetadataExplorer,
             "external_refs": ExternalReferences,
+            "external_references": ExternalReferences,
             "feedback": FeedbackManager,
             "feedback_manager": FeedbackManager,
             "full_server_config": FullServerConfig,
             "glossary": GlossaryManager,
+            "glossary_manager": GlossaryManager,
             "gov_officer": GovernanceOfficer,
+            "governance_officer": GovernanceOfficer,
             "lineage_linker": LineageLinker,
             "location": Location,
             "my_profile": MyProfile,
@@ -109,12 +116,16 @@ class Egeria:
             "project_manager": ProjectManager,
             "reference_data": ReferenceDataManager,
             "reg_info": RegisteredInfo,
+            "registered_info": RegisteredInfo,
             "runtime": RuntimeManager,
+            "runtime_manager": RuntimeManager,
             "schema_maker": SchemaMaker,
             "server_ops": ServerOps,
             "sol_arch": SolutionArchitect,
+            "solution_architect": SolutionArchitect,
             "specification_properties": SpecificationProperties,
             "subject_area": SubjectArea,
+            "subject_area_manager": SubjectArea,
             "templates": TemplateManager,
             "template_manager": TemplateManager,
             "time_keeper": TimeKeeper,

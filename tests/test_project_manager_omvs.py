@@ -31,7 +31,7 @@ from pyegeria.core._exceptions import (
 # from pyegeria.admin_services import FullServerConfig
 
 disable_ssl_warnings = True
-console = Console(width = 300)
+console = Console(width = 200)
 
 class TestProjectManager:
     good_platform1_url = "https://127.0.0.1:9443"
@@ -148,17 +148,17 @@ class TestProjectManager:
             )
             token = p_client.create_egeria_bearer_token(self.good_user_2, "secret")
             start_time = time.perf_counter()
-            search_string = "RAG"
+            search_string = "*"
 
             response = p_client.find_projects(
-                search_string, output_format="DICT", report_spec="Project"
+                search_string, output_format="DICT", report_spec="Projects"
             )
             duration = time.perf_counter() - start_time
 
             print(f"\n\tDuration was {duration} seconds")
             if type(response) is list:
                 print(f"Found {len(response)} projects {type(response)}\n\n")
-                print("\n\n" + json.dumps(response, indent=4))
+                console.print("\n\n" + json.dumps(response, indent=4))
             elif type(response) is str:
                 print("\n\nGUID is: " + response)
             assert True
@@ -208,9 +208,102 @@ class TestProjectManager:
         finally:
             p_client.close_session()
 
+    def test_add_project_classification(self):
+        try:
+            p_client = ProjectManager(
+                self.good_view_server_2,
+                self.good_platform1_url,
+                user_id=self.good_user_2,
+            )
+            token = p_client.create_egeria_bearer_token(self.good_user_2, "secret")
+            start_time = time.perf_counter()
+            # project_name = "Teddy Bear Drop Foot Clinical Trial IT Setup"
+            project_guid = "36636125-338e-402a-b8fa-dfe69e008a56"
+            body = {
+                "class": "NewClassificationRequestBody",
+                "properties": {
+                    "class": "ProjectClassificationProperties",
+                    "approach": "Exploratory",
+                    "managementStyle": "Cross Organization",
+                    "resultsUsage": "Business Critical"
+                }
+            }
+            p_client.add_project_classification(project_guid, body )
+            duration = time.perf_counter() - start_time
 
+            print(f"\n\tDuration was {duration} seconds")
+            assert True
 
-    def test_get_project_team(self):
+        except (
+            PyegeriaInvalidParameterException,
+            PyegeriaAPIException,
+            PyegeriaUnauthorizedException,
+        ) as e:
+            print_basic_exception(e)
+            assert False, "Invalid request"
+
+        finally:
+            p_client.close_session()
+
+    def test_clear_project_classification(self):
+        try:
+            p_client = ProjectManager(
+                self.good_view_server_2,
+                self.good_platform1_url,
+                user_id=self.good_user_2,
+            )
+            token = p_client.create_egeria_bearer_token(self.good_user_2, "secret")
+            start_time = time.perf_counter()
+            # project_name = "Teddy Bear Drop Foot Clinical Trial IT Setup"
+            project_guid = "36636125-338e-402a-b8fa-dfe69e008a56"
+
+            p_client.clear_project_classification(project_guid)
+            duration = time.perf_counter() - start_time
+
+            print(f"\n\tDuration was {duration} seconds")
+            assert True
+
+        except (
+            PyegeriaInvalidParameterException,
+            PyegeriaAPIException,
+            PyegeriaUnauthorizedException,
+        ) as e:
+            print_basic_exception(e)
+            assert False, "Invalid request"
+
+        finally:
+            p_client.close_session()
+
+    def test_clear_project_classification(self):
+        try:
+            p_client = ProjectManager(
+                self.good_view_server_2,
+                self.good_platform1_url,
+                user_id=self.good_user_2,
+            )
+            token = p_client.create_egeria_bearer_token(self.good_user_2, "secret")
+            start_time = time.perf_counter()
+            # project_name = "Teddy Bear Drop Foot Clinical Trial IT Setup"
+            project_guid = "36636125-338e-402a-b8fa-dfe69e008a56"
+
+            p_client.clear_project_classification(project_guid)
+            duration = time.perf_counter() - start_time
+
+            print(f"\n\tDuration was {duration} seconds")
+            assert True
+
+        except (
+            PyegeriaInvalidParameterException,
+            PyegeriaAPIException,
+            PyegeriaUnauthorizedException,
+        ) as e:
+            print_basic_exception(e)
+            assert False, "Invalid request"
+
+        finally:
+            p_client.close_session()
+
+    def test_get_projects_by_classification_properties(self):
         try:
             p_client = ProjectManager(
                 self.good_view_server_2,
@@ -221,8 +314,13 @@ class TestProjectManager:
             start_time = time.perf_counter()
             # team_role = "ProjectManagement"
             team_role = None
-            project_guid = "36636125-338e-402a-b8fa-dfe69e008a56"
-            response = p_client.get_project_team(project_guid, team_role, output_format="DICT", report_spec = "Projects")
+            approach = "Exploratory"
+            management_style = "Cross Organization"
+            results_usage = "Business Critical"
+            response = p_client.get_projects_by_classification_properties(approach,
+                                                                          management_style,
+                                                                          results_usage,output_format="JSON",
+                                                                          report_spec = "Projects")
 
             duration = time.perf_counter() - start_time
 
@@ -241,6 +339,43 @@ class TestProjectManager:
             PyegeriaException
         ) as e:
             print_basic_exception( e)
+            assert False, "Invalid request"
+        except ValidationError as e:
+            print_validation_error(e)
+        finally:
+            p_client.close_session()
+
+    def test_get_project_team(self):
+        try:
+            p_client = ProjectManager(
+                self.good_view_server_2,
+                self.good_platform1_url,
+                user_id=self.good_user_2,
+            )
+            token = p_client.create_egeria_bearer_token(self.good_user_2, "secret")
+            start_time = time.perf_counter()
+            # team_role = "ProjectManagement"
+            team_role = None
+            project_guid = "36636125-338e-402a-b8fa-dfe69e008a56"
+            response = p_client.get_project_team(project_guid, team_role, output_format="DICT", report_spec="Projects")
+
+            duration = time.perf_counter() - start_time
+
+            print(f"\n\tDuration was {duration} seconds")
+            if type(response) is list:
+                print(f"Type was list - found {len(response)} elements\n")
+                print(json.dumps(response, indent=4))
+            elif type(response) is tuple:
+                print(f"Type is {type(response)}")
+                print("\n\n" + json.dumps(response, indent=4))
+            elif type(response) is str:
+                print("\n\nGUID is: " + response)
+            assert True
+
+        except (
+                PyegeriaException
+        ) as e:
+            print_basic_exception(e)
             assert False, "Invalid request"
         except ValidationError as e:
             print_validation_error(e)

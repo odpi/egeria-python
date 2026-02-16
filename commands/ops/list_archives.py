@@ -21,7 +21,7 @@ from rich.prompt import Prompt
 from rich.table import Table
 
 from pyegeria import (
-    ClassificationManager,
+    ClassificationExplorer,
     PyegeriaException,
     print_basic_exception,
     settings,
@@ -44,7 +44,7 @@ def display_archive_list(
     jupyter: bool = app_config.egeria_jupyter,
     width: int = app_config.console_width
 ) -> object:
-    c_client = ClassificationManager(server, url, user_id=username)
+    c_client = ClassificationExplorer(server, url, user_id=username)
     token = c_client.create_egeria_bearer_token(username, user_pass)
 
     def generate_table() -> Table:

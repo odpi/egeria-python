@@ -20,7 +20,7 @@ from typing import Any, Dict, Optional
 
 from loguru import logger
 
-from pyegeria.omvs.classification_manager import ClassificationManager
+from pyegeria.omvs.classification_explorer import ClassificationExplorer
 from pyegeria.omvs.actor_manager import ActorManager
 from pyegeria.egeria_tech_client import EgeriaTech
 from pyegeria.omvs.collection_manager import CollectionManager
@@ -42,7 +42,7 @@ _CLIENT_CLASS_MAP = {
     "GovernanceOfficer": GovernanceOfficer,
     "GlossaryManager": GlossaryManager,
     "ExternalReference": ExternalReferences,
-    "ClassificationManager": ClassificationManager,
+    "ClassificationExplorer": ClassificationExplorer,
     "ActorManager": ActorManager,
 }
 

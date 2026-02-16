@@ -2,6 +2,7 @@
 SPDX-License-Identifier: Apache-2.0
 Copyright Contributors to the ODPi Egeria project.
 """
+from pyegeria.core._exceptions import PyegeriaInvalidParameterException
 
 """
 # Purpose
@@ -213,6 +214,7 @@ PROJECT_COLUMNS = COMMON_COLUMNS + [
     Column(name='Resources', key='resource_list'),
     Column(name="Project Roles", key='project_roles'),
     Column(name="Managed Projects", key='managed_projects'),
+
 ]
 
 GLOSSARY_COLUMNS = COMMON_COLUMNS + [
@@ -336,8 +338,8 @@ base_report_specs = FormatSetDict({
             )
         ],
         action=ActionParameter(
-            function="ClassificationManager.get_elements_by_property_value",
-            optional_params=OPTIONAL_FILTER_PARAMS + ["metadata_element_type_name"] + TIME_PARAMETERS,
+            function="ClassificationExplorer.get_elements_by_property_value",
+            optional_params=OPTIONAL_FILTER_PARAMS + ["metadata_element_type"] + TIME_PARAMETERS,
             required_params=["property_value"],
             spec_params={"property_names": ["displayName", "qualifiedName"]},
         )
@@ -367,8 +369,8 @@ base_report_specs = FormatSetDict({
             )
         ],
         action=ActionParameter(
-            function="ClassificationManager.get_elements_by_property_value",
-            optional_params=OPTIONAL_FILTER_PARAMS + ["metadata_element_type_name"] + TIME_PARAMETERS,
+            function="ClassificationExplorer.get_elements_by_property_value",
+            optional_params=OPTIONAL_FILTER_PARAMS + ["metadata_element_type"] + TIME_PARAMETERS,
             required_params=["property_value"],
             spec_params={"property_names": ["displayName", "qualifiedName"]},
         )
@@ -398,7 +400,7 @@ base_report_specs = FormatSetDict({
             )
         ],
         action=ActionParameter(
-            function="ClassificationManager.get_owners_elements",
+            function="ClassificationExplorer.get_owners_elements",
             optional_params=['body'],
             required_params=["owner_name"],
             spec_params={},
@@ -2845,6 +2847,10 @@ def list_report_specs() -> list[str]:
 
 def _select_from_registry(registry: FormatSetDict, kind: str, output_type: str) -> dict | None:
     # Normalize
+    if output_type is None:
+        reason = "Invalid Parameter - output_type is None"
+        logger.error(reason)
+        raise PyegeriaInvalidParameterException(context={"reason": reason})
 
     output_type = output_type.upper()
     element: Optional[FormatSet] = registry.get(kind)

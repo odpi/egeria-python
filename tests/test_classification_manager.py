@@ -21,7 +21,7 @@ from rich.console import Console
 from pyegeria import EgeriaTech
 from pyegeria.core._exceptions import PyegeriaException, print_basic_exception, print_validation_error, \
     PyegeriaConnectionException, PyegeriaAPIException, print_exception_table
-from pyegeria.omvs.classification_manager import ClassificationManager
+from pyegeria.omvs.classification_explorer import ClassificationExplorer
 
 # from pyegeria.output_formatter import make_preamble, make_md_attribute
 
@@ -30,7 +30,7 @@ disable_ssl_warnings = True
 platform_url = "https://localhost:9443"
 view_server = "qs-view-server"
 
-# c_client = ClassificationManager(view_server, platform_url)
+# c_client = ClassificationExplorer(view_server, platform_url)
 
 user = "erinoverview"
 password = "secret"
@@ -64,12 +64,12 @@ def valid_guid(guid):
 ##
 #
 def test_get_classified_elements_by():
-    # metadata_element_type_name = 'CertificationType'
+    # metadata_element_type = 'CertificationType'
     #
-    # metadata_element_type_name = "DeployedDatabaseSchema"
+    # metadata_element_type = "DeployedDatabaseSchema"
     classification_name = "Confidentiality"
     try:
-        c_client = ClassificationManager(view_server, platform_url)
+        c_client = ClassificationExplorer(view_server, platform_url)
 
         bearer_token = c_client.create_egeria_bearer_token(user, password)
         body = {
@@ -97,12 +97,12 @@ def test_get_classified_elements_by():
 
 
 def test_get_security_tagged_elements():
-    # metadata_element_type_name = 'CertificationType'
+    # metadata_element_type = 'CertificationType'
     #
-    # metadata_element_type_name = "DeployedDatabaseSchema"
+    # metadata_element_type = "DeployedDatabaseSchema"
     classification_name = "confidentiality"
     try:
-        c_client = ClassificationManager(view_server, platform_url)
+        c_client = ClassificationExplorer(view_server, platform_url)
 
         bearer_token = c_client.create_egeria_bearer_token(user, password)
         body = {
@@ -142,7 +142,7 @@ def test_get_security_tagged_elements():
 
 def test_get_owners_elements():
     try:
-        c_client = ClassificationManager(view_server, platform_url)
+        c_client = ClassificationExplorer(view_server, platform_url)
         bearer_token = c_client.create_egeria_bearer_token(user, password)
         owner_name = "Erin Overview"
         body = {
@@ -171,7 +171,7 @@ def test_get_owners_elements():
 
 def test_get_elements_by_origin():
     try:
-        c_client = ClassificationManager(view_server, platform_url)
+        c_client = ClassificationExplorer(view_server, platform_url)
         bearer_token = c_client.create_egeria_bearer_token(user, password)
         home_metadata_collection = "PostgresContentPack"
         body = {
@@ -200,12 +200,12 @@ def test_get_elements_by_origin():
 
 
 def test_get_elements():
-    # metadata_element_type_name = 'CertificationType'
+    # metadata_element_type = 'CertificationType'
     #
-    # metadata_element_type_name = "DeployedDatabaseSchema"
+    # metadata_element_type = "DeployedDatabaseSchema"
     open_metadata_type_name = "UserIdentity"
     try:
-        c_client = ClassificationManager(view_server, platform_url)
+        c_client = ClassificationExplorer(view_server, platform_url)
 
         bearer_token = c_client.create_egeria_bearer_token(user, password)
         body = {
@@ -237,13 +237,13 @@ def test_get_elements():
 
 
 def test_get_elements_by_property_value():
-    # metadata_element_type_name = 'Project'
+    # metadata_element_type = 'Project'
     # property_value = "Campaign:Clinical Trials Management"
-    # metadata_element_type_name = "ValidValueDefinition"
+    # metadata_element_type = "ValidValueDefinition"
     metadata_element_type_name = None
     # property_value = "Unity Catalog Catalog"
     # property_names = ["name", "qualifiedName"]
-    # metadata_element_type_name = "Asset"
+    # metadata_element_type = "Asset"
     # property_value = "ClinicalTrials@CocoPharmaceuticals:set-up-clinical-trial"
     # property_value = "default"
     # property_names = ["name", "qualifiedName"]
@@ -251,14 +251,14 @@ def test_get_elements_by_property_value():
     property_value = "BusinessArea::RES"
     # property_names = ["anchorGUID"]
     try:
-        c_client = ClassificationManager(view_server, platform_url)
+        c_client = ClassificationExplorer(view_server, platform_url)
 
         bearer_token = c_client.create_egeria_bearer_token(user, password)
         start_time = time.perf_counter()
         result = c_client.get_elements_by_property_value(
             property_value,
             property_names,
-            metadata_element_type_name=metadata_element_type_name,
+            metadata_element_type=metadata_element_type_name,
             as_of_time="2025-12-01",
         )
         duration = time.perf_counter() - start_time
@@ -281,13 +281,13 @@ def test_get_elements_by_property_value():
 
 
 def test_find_elements_by_property_value():
-    # metadata_element_type_name = 'Project'
+    # metadata_element_type = 'Project'
     # property_value = "Campaign:Clinical Trials Management"
-    # metadata_element_type_name = "ValidValueDefinition"
-    # metadata_element_type_name = None
-    # metadata_element_type_name = "ArchiveFile"
+    # metadata_element_type = "ValidValueDefinition"
+    # metadata_element_type = None
+    # metadata_element_type = "ArchiveFile"
     open_metadata_type_name = "DigitalProduct"
-    # metadata_element_type_name = None
+    # metadata_element_type = None
     # property_names = ["name"]
     # property_value = "Set up new clinical trial"
     property_names = ["displayName"]
@@ -324,7 +324,7 @@ def test_find_elements_by_property_value():
 def test_get_element_by_guid():
     element_guid = '6ec2c097-9d6e-4e9d-ab51-186d2c437443'
     try:
-        c_client = ClassificationManager(view_server, platform_url)
+        c_client = ClassificationExplorer(view_server, platform_url)
 
         bearer_token = c_client.create_egeria_bearer_token(user, password)
         start_time = time.perf_counter()
@@ -351,7 +351,7 @@ def test_get_element_by_guid():
 def test_get_actor_for_guid():
     element_guid = "dcfd7e32-8074-4cdf-bdc5-9a6f28818a9d"
     try:
-        c_client = ClassificationManager(view_server, platform_url)
+        c_client = ClassificationExplorer(view_server, platform_url)
 
         bearer_token = c_client.create_egeria_bearer_token(user, password)
         start_time = time.perf_counter()
@@ -383,7 +383,7 @@ def test_get_guid_for_name():
     # property_value = "Sustainability Glossary"
     # property_value = "qs-view-server"
     # property_value = "Campaign:Sustainability"
-    c_client = ClassificationManager(view_server, platform_url)
+    c_client = ClassificationExplorer(view_server, platform_url)
 
     bearer_token = c_client.create_egeria_bearer_token(user, password)
     start_time = time.perf_counter()
@@ -406,7 +406,7 @@ def test_get_element_guid_by_unique_name():
     # property_value = "FileDirectory:CreateAndSurveyGovernanceActionProcess"
     property_value = "Open Metadata Digital Product Data Dictionary"
 
-    c_client = ClassificationManager(view_server, platform_url)
+    c_client = ClassificationExplorer(view_server, platform_url)
     try:
         bearer_token = c_client.create_egeria_bearer_token(user, password)
         start_time = time.perf_counter()
@@ -429,7 +429,7 @@ def test_get_element_by_unique_name():
     # property_value = "Person:UK:324713"
     property_value = "FileDirectory:CreateAndSurveyGovernanceActionProcess"
 
-    c_client = ClassificationManager(view_server, platform_url)
+    c_client = ClassificationExplorer(view_server, platform_url)
     try:
         bearer_token = c_client.create_egeria_bearer_token(user, password)
 
@@ -451,12 +451,12 @@ def test_get_element_by_unique_name():
 
 
 def test_get_elements_by_classification():
-    # metadata_element_type_name = "Project"
-    # metadata_element_type_name = "DeployedDatabaseSchema"
+    # metadata_element_type = "Project"
+    # metadata_element_type = "DeployedDatabaseSchema"
     open_metadata_type_name = None
     # classification = "GovernanceProject"
     classification = "Ownership"
-    c_client = ClassificationManager(view_server, platform_url)
+    c_client = ClassificationExplorer(view_server, platform_url)
 
     bearer_token = c_client.create_egeria_bearer_token(user, password)
     body = {
@@ -478,7 +478,7 @@ def test_get_elements_by_classification():
 
 
 def test_get_elements_by_classification_with_property_value():
-    # metadata_element_type_name = "Project"
+    # metadata_element_type = "Project"
     open_metadata_type_name = None
     classification = "DataSpec"
     # property_value = "Collection"
@@ -486,7 +486,7 @@ def test_get_elements_by_classification_with_property_value():
     property_value = ""
     property_names = [""]
     try:
-        c_client = ClassificationManager(view_server, platform_url)
+        c_client = ClassificationExplorer(view_server, platform_url)
 
         bearer_token = c_client.create_egeria_bearer_token(user, password)
         result = c_client.get_elements_by_classification_with_property_value(
@@ -513,17 +513,17 @@ def test_get_elements_by_classification_with_property_value():
 
 def test_find_elements_by_classification_with_property_value():
     # classification = "GovernanceProject"
-    # metadata_element_type_name = "Project"
+    # metadata_element_type = "Project"
     # property_value = "Clinical Trials"
     # property_names = ["name", "qualifiedName"]
     #
     classification = "Anchor"
-    # metadata_element_type_name = "Project"
+    # metadata_element_type = "Project"
     open_metadata_type_name = "DigitalProduct"
     property_value = "Open Metadata Digital Product Data Dictionary"
     property_names = ["displayName"]
     try:
-        c_client = ClassificationManager(view_server, platform_url)
+        c_client = ClassificationExplorer(view_server, platform_url)
 
         bearer_token = c_client.create_egeria_bearer_token(user, password)
 
@@ -552,7 +552,7 @@ def test_find_anchored_elements_with_property_value():
     property_value = "PostgreSQL Server"
     # property_names = ["ServerCapability", "anchorTypeName"]
     property_names = ["name"]
-    c_client = ClassificationManager(view_server, platform_url)
+    c_client = ClassificationExplorer(view_server, platform_url)
 
     bearer_token = c_client.create_egeria_bearer_token(user, password)
     response = c_client.find_elements_by_classification_with_property_value(
@@ -569,9 +569,9 @@ def test_find_anchored_elements_with_property_value():
 
 
 def test_get_all_related_elements():
-    # metadata_element_type_name = 'Project'
+    # metadata_element_type = 'Project'
     open_metadata_type_name = None
-    c_client = ClassificationManager(view_server, platform_url)
+    c_client = ClassificationExplorer(view_server, platform_url)
     # element_guid = "d156faa6-90cf-4be8-b3c1-c002f3e9a0e5" # branch database
     # element_guid = "da0442bf-818f-406b-99dc-83b72605cc98"
     # element_guid = "8b9cce34-ff42-4f9d-b4b3-6317c8a767c3"  # Retail schema
@@ -589,18 +589,18 @@ def test_get_all_related_elements():
 
 
 def test_get_related_elements():
-    # metadata_element_type_name = 'CertificationType'
+    # metadata_element_type = 'CertificationType'
     # element_guid = '2ce8d10d-08a2-4fca-b0c2-1d5a335d00fc'
     element_guid = "10662294-52d0-43c5-9aa3-19922e478e69"
-    # metadata_element_type_name = "Organization"
-    # metadata_element_type_name = "CSVFile"
-    # metadata_element_type_name = "InformationSupplyChain"
+    # metadata_element_type = "Organization"
+    # metadata_element_type = "CSVFile"
+    # metadata_element_type = "InformationSupplyChain"
     open_metadata_type_name = "Referenceable"
     # element_guid = "8dca6e76-d454-4344-9c93-faa837a1a898"
     # relationship_type = "DataContentForDataSet"
     relationship_type = "CollectionMembership"
     # relationship_type = "InformationSupplyChainComposition"
-    c_client = ClassificationManager(view_server, platform_url)
+    c_client = ClassificationExplorer(view_server, platform_url)
     try:
         bearer_token = c_client.create_egeria_bearer_token(user, password)
         body = {
@@ -623,7 +623,7 @@ def test_get_related_elements():
 
 
 def test_get_related_elements_with_property_value():
-    # metadata_element_type_name = 'Project'
+    # metadata_element_type = 'Project'
     open_metadata_type_name = None
     relationship_type = "ResourceList"
     property_value = "Catalog Resource"
@@ -632,7 +632,7 @@ def test_get_related_elements_with_property_value():
     ]
     element_guid = '2ce8d10d-08a2-4fca-b0c2-1d5a335d00fc'
     try:
-        c_client = ClassificationManager(view_server, platform_url)
+        c_client = ClassificationExplorer(view_server, platform_url)
 
         bearer_token = c_client.create_egeria_bearer_token(user, password)
         result = c_client.get_related_elements_with_property_value(
@@ -662,14 +662,14 @@ def test_get_related_elements_with_property_value():
 
 
 def test_find_related_elements_with_property_value():
-    # metadata_element_type_name = 'Project'
+    # metadata_element_type = 'Project'
     open_metadata_type_name = None
     property_value = "Clinical Trials Management"
     property_names = ["name", "qualifiedName"]
     # property_value = "Partner"
     # property_names = ["teamType"]
 
-    c_client = ClassificationManager(view_server, platform_url)
+    c_client = ClassificationExplorer(view_server, platform_url)
 
     bearer_token = c_client.create_egeria_bearer_token(user, password)
     response = c_client.find_related_elements_with_property_value(
@@ -689,7 +689,7 @@ def test_find_related_elements_with_property_value():
 
 
 def test_get_relationships():
-    c_client = ClassificationManager(view_server, platform_url)
+    c_client = ClassificationExplorer(view_server, platform_url)
 
     bearer_token = c_client.create_egeria_bearer_token(user, password)
     relationship_type = "Certification"
@@ -708,7 +708,7 @@ def test_get_relationships_with_property_value():
     property_value = "Organization:Hampton Hospital"
     property_names = ["name", "qualifiedName"]
     try:
-        c_client = ClassificationManager(view_server, platform_url)
+        c_client = ClassificationExplorer(view_server, platform_url)
 
         bearer_token = c_client.create_egeria_bearer_token(user, password)
         result = c_client.get_relationships_with_property_value(
@@ -739,7 +739,7 @@ def test_get_relationships_with_property_value():
 def test_find_relationships_with_property_value():
     property_value = "Clinical Trials"
     property_names = ["name", "qualifiedName"]
-    c_client = ClassificationManager(view_server, platform_url)
+    c_client = ClassificationExplorer(view_server, platform_url)
 
     bearer_token = c_client.create_egeria_bearer_token(user, password)
     response = c_client.find_relationships_with_property_value(
@@ -757,7 +757,7 @@ def test_find_relationships_with_property_value():
 
 
 def test_retrieve_instance_for_guid():
-    c_client = ClassificationManager(view_server, platform_url)
+    c_client = ClassificationExplorer(view_server, platform_url)
 
     bearer_token = c_client.create_egeria_bearer_token(user, password)
     element_guid = "59f0232c-f834-4365-8e06-83695d238d2d"
@@ -772,7 +772,7 @@ def test_retrieve_instance_for_guid():
 
 
 def test_set_criticality_classification():
-    # metadata_element_type_name = 'Project'
+    # metadata_element_type = 'Project'
     element_guid = "9f6f668d-d9b8-44e3-915b-9edeb4c1f8a5"
     body = {
         "class": "NewClassificationRequestBody",
@@ -784,7 +784,7 @@ def test_set_criticality_classification():
     }
 
     try:
-        c_client = ClassificationManager(view_server, platform_url)
+        c_client = ClassificationExplorer(view_server, platform_url)
 
         bearer_token = c_client.create_egeria_bearer_token(user, password)
         result = c_client.set_criticality_classification(
@@ -813,7 +813,7 @@ def test_set_criticality_classification():
 def test_get_subject_area_members():
     subject_area = "Clinical Trials"
     try:
-        c_client = ClassificationManager(view_server, platform_url)
+        c_client = ClassificationExplorer(view_server, platform_url)
         bearer_token = c_client.create_egeria_bearer_token(user, password)
         body = {
             "class": "FilterRequestBody",
@@ -831,7 +831,7 @@ def test_get_subject_area_members():
 
 def test_get_meanings():
     try:
-        c_client = ClassificationManager(view_server, platform_url)
+        c_client = ClassificationExplorer(view_server, platform_url)
         bearer_token = c_client.create_egeria_bearer_token(user, password)
         body = {
             "class": "FilterRequestBody",
@@ -847,7 +847,7 @@ def test_get_meanings():
 
 def test_get_semantic_asignees():
     try:
-        c_client = ClassificationManager(view_server, platform_url)
+        c_client = ClassificationExplorer(view_server, platform_url)
         bearer_token = c_client.create_egeria_bearer_token(user, password)
         body = {
             "class": "FilterRequestBody",
@@ -863,7 +863,7 @@ def test_get_semantic_asignees():
 
 def test_get_governed_elements():
     try:
-        c_client = ClassificationManager(view_server, platform_url)
+        c_client = ClassificationExplorer(view_server, platform_url)
         bearer_token = c_client.create_egeria_bearer_token(user, password)
         response = c_client.get_governed_elements(element_guid)
         assert True
@@ -875,7 +875,7 @@ def test_get_governed_elements():
 
 def test_get_governed_by_definitions():
     try:
-        c_client = ClassificationManager(view_server, platform_url)
+        c_client = ClassificationExplorer(view_server, platform_url)
         bearer_token = c_client.create_egeria_bearer_token(user, password)
         response = c_client.get_governed_by_definitions(element_guid)
         assert True
@@ -887,7 +887,7 @@ def test_get_governed_by_definitions():
 
 def test_get_source_elements():
     try:
-        c_client = ClassificationManager(view_server, platform_url)
+        c_client = ClassificationExplorer(view_server, platform_url)
         bearer_token = c_client.create_egeria_bearer_token(user, password)
         response = c_client.get_source_elements(element_guid)
         assert True
@@ -899,7 +899,7 @@ def test_get_source_elements():
 
 def test_get_elements_sourced_from():
     try:
-        c_client = ClassificationManager(view_server, platform_url)
+        c_client = ClassificationExplorer(view_server, platform_url)
         bearer_token = c_client.create_egeria_bearer_token(user, password)
         response = c_client.get_elements_sourced_from(element_guid)
         assert True
@@ -911,7 +911,7 @@ def test_get_elements_sourced_from():
 
 def test_get_scopes():
     try:
-        c_client = ClassificationManager(view_server, platform_url)
+        c_client = ClassificationExplorer(view_server, platform_url)
         bearer_token = c_client.create_egeria_bearer_token(user, password)
         response = c_client.get_scopes(element_guid)
         if isinstance(response, list|dict):
@@ -928,7 +928,7 @@ def test_get_scopes():
 
 def test_get_scoped_elements():
     try:
-        c_client = ClassificationManager(view_server, platform_url)
+        c_client = ClassificationExplorer(view_server, platform_url)
         bearer_token = c_client.create_egeria_bearer_token(user, password)
         response = c_client.get_scoped_elements(element_guid)
         assert True
@@ -940,7 +940,7 @@ def test_get_scoped_elements():
 
 def test_get_licensed_elements():
     try:
-        c_client = ClassificationManager(view_server, platform_url)
+        c_client = ClassificationExplorer(view_server, platform_url)
         bearer_token = c_client.create_egeria_bearer_token(user, password)
         response = c_client.get_licensed_elements(element_guid)
         assert True
@@ -952,7 +952,7 @@ def test_get_licensed_elements():
 
 def test_get_licenses():
     try:
-        c_client = ClassificationManager(view_server, platform_url)
+        c_client = ClassificationExplorer(view_server, platform_url)
         bearer_token = c_client.create_egeria_bearer_token(user, password)
         response = c_client.get_licenses(element_guid)
         assert True
@@ -964,7 +964,7 @@ def test_get_licenses():
 
 def test_get_certified_elements():
     try:
-        c_client = ClassificationManager(view_server, platform_url)
+        c_client = ClassificationExplorer(view_server, platform_url)
         bearer_token = c_client.create_egeria_bearer_token(user, password)
         response = c_client.get_certified_elements(element_guid)
         assert True
@@ -976,7 +976,7 @@ def test_get_certified_elements():
 
 def test_get_certifications():
     try:
-        c_client = ClassificationManager(view_server, platform_url)
+        c_client = ClassificationExplorer(view_server, platform_url)
         bearer_token = c_client.create_egeria_bearer_token(user, password)
         response = c_client.get_certifications(element_guid)
         assert True
@@ -995,7 +995,7 @@ def test_confidence_classification():
         }
     }
     try:
-        c_client = ClassificationManager(view_server, platform_url)
+        c_client = ClassificationExplorer(view_server, platform_url)
         bearer_token = c_client.create_egeria_bearer_token(user, password)
         c_client.set_confidence_classification(element_guid, body)
         c_client.clear_confidence_classification(element_guid)
@@ -1015,7 +1015,7 @@ def test_confidentiality_classification():
         }
     }
     try:
-        c_client = ClassificationManager(view_server, platform_url)
+        c_client = ClassificationExplorer(view_server, platform_url)
         bearer_token = c_client.create_egeria_bearer_token(user, password)
         c_client.set_confidentiality_classification(element_guid, body)
         c_client.clear_confidentiality_classification(element_guid)
@@ -1035,7 +1035,7 @@ def test_impact_classification():
         }
     }
     try:
-        c_client = ClassificationManager(view_server, platform_url)
+        c_client = ClassificationExplorer(view_server, platform_url)
         bearer_token = c_client.create_egeria_bearer_token(user, password)
         c_client.set_impact_classification(element_guid, body)
         c_client.clear_impact_classification(element_guid)
@@ -1048,7 +1048,7 @@ def test_impact_classification():
 
 def test_criticality_classification_clear():
     try:
-        c_client = ClassificationManager(view_server, platform_url)
+        c_client = ClassificationExplorer(view_server, platform_url)
         bearer_token = c_client.create_egeria_bearer_token(user, password)
         c_client.clear_criticality_classification(element_guid)
         assert True
@@ -1060,7 +1060,7 @@ def test_criticality_classification_clear():
 
 def test_gov_definition_to_element():
     try:
-        c_client = ClassificationManager(view_server, platform_url)
+        c_client = ClassificationExplorer(view_server, platform_url)
         bearer_token = c_client.create_egeria_bearer_token(user, password)
         # using dummy GUIDs for now, expecting potential 404 but testing call pattern
         def_guid = "dummy-def-guid"
@@ -1075,7 +1075,7 @@ def test_gov_definition_to_element():
 
 def test_scope_to_element():
     try:
-        c_client = ClassificationManager(view_server, platform_url)
+        c_client = ClassificationExplorer(view_server, platform_url)
         bearer_token = c_client.create_egeria_bearer_token(user, password)
         scope_guid = "17f9bcd9-ede6-431e-9cec-1b8474f31e4b"
 
@@ -1090,7 +1090,7 @@ def test_scope_to_element():
 
 def test_assign_actor_to_element():
     try:
-        c_client = ClassificationManager(view_server, platform_url)
+        c_client = ClassificationExplorer(view_server, platform_url)
         bearer_token = c_client.create_egeria_bearer_token(user, password)
         actor_guid = "dummy-actor-guid"
 
@@ -1105,7 +1105,7 @@ def test_assign_actor_to_element():
 
 def test_certification_to_element():
     try:
-        c_client = ClassificationManager(view_server, platform_url)
+        c_client = ClassificationExplorer(view_server, platform_url)
         bearer_token = c_client.create_egeria_bearer_token(user, password)
         cert_type_guid = "dummy-cert-type-guid"
         # add returns guid of relationship
@@ -1121,7 +1121,7 @@ def test_certification_to_element():
 
 def test_license_to_element():
     try:
-        c_client = ClassificationManager(view_server, platform_url)
+        c_client = ClassificationExplorer(view_server, platform_url)
         bearer_token = c_client.create_egeria_bearer_token(user, password)
         license_type_guid = "dummy-license-type-guid"
         # c_client.add_license_to_element(license_type_guid, element_guid)
@@ -1144,7 +1144,7 @@ def test_add_ownership_to_element():
         }
     }
     try:
-        c_client = ClassificationManager(view_server, platform_url)
+        c_client = ClassificationExplorer(view_server, platform_url)
         bearer_token = c_client.create_egeria_bearer_token(user, password)
         c_client.add_ownership_to_element(element_guid, body)
         c_client.clear_ownership_from_element(element_guid)
@@ -1165,7 +1165,7 @@ def test_digital_resource_origin():
         }
     }
     try:
-        c_client = ClassificationManager(view_server, platform_url)
+        c_client = ClassificationExplorer(view_server, platform_url)
         bearer_token = c_client.create_egeria_bearer_token(user, password)
         c_client.add_digital_resource_origin(element_guid, body)
         # c_client.clear_digital_resource_origin_from_element(element_guid, {"class": "DeleteClassificationRequestBody"})
@@ -1185,7 +1185,7 @@ def test_zone_membership():
         }
     }
     try:
-        c_client = ClassificationManager(view_server, platform_url)
+        c_client = ClassificationExplorer(view_server, platform_url)
         bearer_token = c_client.create_egeria_bearer_token(user, password)
         c_client.add_zone_membership(element_guid, body)
         # c_client.clear_zone_membership(element_guid, {"class": "DeleteClassificationRequestBody"})
@@ -1204,7 +1204,7 @@ def test_retention_classification():
         }
     }
     try:
-        c_client = ClassificationManager(view_server, platform_url)
+        c_client = ClassificationExplorer(view_server, platform_url)
         bearer_token = c_client.create_egeria_bearer_token(user, password)
         c_client.set_retention_classification(element_guid, body)
         c_client.clear_retention_classification(element_guid)
@@ -1223,7 +1223,7 @@ def test_governance_expectation():
         }
     }
     try:
-        c_client = ClassificationManager(view_server, platform_url)
+        c_client = ClassificationExplorer(view_server, platform_url)
         bearer_token = c_client.create_egeria_bearer_token(user, password)
         c_client.set_governance_expectation(element_guid, body)
         c_client.update_governance_expectation(element_guid, body)
@@ -1243,7 +1243,7 @@ def test_security_tags_classification():
         }
     }
     try:
-        c_client = ClassificationManager(view_server, platform_url)
+        c_client = ClassificationExplorer(view_server, platform_url)
         bearer_token = c_client.create_egeria_bearer_token(user, password)
         c_client.set_security_tags_classification(element_guid, body)
         c_client.clear_security_tags_classification(element_guid)
@@ -1256,7 +1256,7 @@ def test_security_tags_classification():
 
 def test_semantic_assignment():
     try:
-        c_client = ClassificationManager(view_server, platform_url)
+        c_client = ClassificationExplorer(view_server, platform_url)
         bearer_token = c_client.create_egeria_bearer_token(user, password)
         term_guid = "dummy-term-guid"
         # c_client.setup_semantic_assignment(term_guid, element_guid, {})
@@ -1270,7 +1270,7 @@ def test_semantic_assignment():
 
 def test_subject_area_membership():
     try:
-        c_client = ClassificationManager(view_server, platform_url)
+        c_client = ClassificationExplorer(view_server, platform_url)
         bearer_token = c_client.create_egeria_bearer_token(user, password)
         c_client.add_element_to_subject_area(element_guid, {})
         c_client.remove_element_from_subject_area(element_guid)
@@ -1296,7 +1296,7 @@ def test_governance_measurements():
         }
     }
     try:
-        c_client = ClassificationManager(view_server, platform_url)
+        c_client = ClassificationExplorer(view_server, platform_url)
         bearer_token = c_client.create_egeria_bearer_token(user, password)
         c_client.add_governance_measurements(element_guid, body)
         c_client.update_governance_measurements(element_guid, update_body)
@@ -1323,7 +1323,7 @@ def test_data_scope_classification():
         }
     }
     try:
-        c_client = ClassificationManager(view_server, platform_url)
+        c_client = ClassificationExplorer(view_server, platform_url)
         bearer_token = c_client.create_egeria_bearer_token(user, password)
         c_client.add_data_scope(element_guid, body)
         c_client.update_data_scope(element_guid, update_body)
@@ -1352,7 +1352,7 @@ def test_search_keywords():
         }
     }
     try:
-        c_client = ClassificationManager(view_server, platform_url)
+        c_client = ClassificationExplorer(view_server, platform_url)
         bearer_token = c_client.create_egeria_bearer_token(user, password)
         keyword_guid = c_client.add_search_keyword_to_element(element_guid, body)
         if keyword_guid != "NO_GUID_RETURNED":
@@ -1373,7 +1373,7 @@ def test_known_duplicate_classification():
         }
     }
     try:
-        c_client = ClassificationManager(view_server, platform_url)
+        c_client = ClassificationExplorer(view_server, platform_url)
         bearer_token = c_client.create_egeria_bearer_token(user, password)
         c_client.set_known_duplicate_classification(element_guid, body)
         c_client.clear_known_duplicate_classification(element_guid)
@@ -1393,7 +1393,7 @@ def test_peer_duplicate_link():
         }
     }
     try:
-        c_client = ClassificationManager(view_server, platform_url)
+        c_client = ClassificationExplorer(view_server, platform_url)
         bearer_token = c_client.create_egeria_bearer_token(user, password)
         c_client.link_elements_as_peer_duplicates(element_guid, peer_guid, body)
         c_client.unlink_elements_as_peer_duplicates(element_guid, peer_guid, body)
@@ -1419,7 +1419,7 @@ def test_consolidated_duplicate_management():
         }
     }
     try:
-        c_client = ClassificationManager(view_server, platform_url)
+        c_client = ClassificationExplorer(view_server, platform_url)
         bearer_token = c_client.create_egeria_bearer_token(user, password)
         c_client.set_consolidated_duplicate_classification(element_guid, body)
         c_client.link_consolidated_duplicate_to_source(element_guid, source_guid, link_body)
@@ -1443,7 +1443,7 @@ def test_action_actor_linking():
         }
     }
     try:
-        c_client = ClassificationManager(view_server, platform_url)
+        c_client = ClassificationExplorer(view_server, platform_url)
         bearer_token = c_client.create_egeria_bearer_token(user, password)
         c_client.assign_action(action_guid, actor_guid, body)
         c_client.reassign_action(action_guid, actor_guid, body)

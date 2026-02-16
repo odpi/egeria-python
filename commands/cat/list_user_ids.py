@@ -12,7 +12,7 @@ from rich.prompt import Prompt
 from rich.table import Table
 
 from pyegeria import (
-    ClassificationManager,
+    ClassificationExplorer,
     PyegeriaAPIException, PyegeriaClientException, print_basic_exception, print_exception_table, ActorManager,
     EgeriaTech
 )

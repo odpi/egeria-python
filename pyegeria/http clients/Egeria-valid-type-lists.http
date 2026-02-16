@@ -69,6 +69,48 @@ GET {{baseURL}}/servers/{{viewServer}}/api/open-metadata/valid-metadata/open-met
 Authorization: Bearer {{token}}
 Content-Type: application/json
 
+
+####
+# @name getAttributeTypes
+# Returns all the AttributeTypeDefs used in the open metadata types.
+#
+GET {{baseURL}}/servers/{{viewServer}}/api/open-metadata/valid-metadata/open-metadata-types/attribute-defs
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+
+####
+# @name getAttributeTypes (PRIMITIVE)
+# Returns all the AttributeTypeDefs used in the open metadata types that are primitives.
+#
+GET {{baseURL}}/servers/{{viewServer}}/api/open-metadata/valid-metadata/open-metadata-types/attribute-defs?category=PRIMITIVE
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+####
+# @name getAttributeTypes (COLLECTION)
+# Returns all the AttributeTypeDefs used in the open metadata types that are collections (structures, maps and arrays).
+#
+GET {{baseURL}}/servers/{{viewServer}}/api/open-metadata/valid-metadata/open-metadata-types/attribute-defs?category=COLLECTION
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+####
+# @name getAttributeTypes (ENUM)
+# Returns all the AttributeTypeDefs used in the open metadata types that are enumerations of valid values.
+#
+GET {{baseURL}}/servers/{{viewServer}}/api/open-metadata/valid-metadata/open-metadata-types/attribute-defs?category=ENUM
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+###
+# @name getValidMetadataValues (propertyName)
+# Retrieve a list of all of the properties in the open metadata type system.
+#
+GET {{baseURL}}/servers/{{viewServer}}/api/open-metadata/valid-metadata/get-valid-metadata-values/propertyName?startFrom=0&pageSize=0
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
 ####
 # @name getValidRelationshipTypes
 # Returns all the TypeDefs for relationships that can be attached to the requested entity type.
@@ -85,6 +127,7 @@ GET {{baseURL}}/servers/{{viewServer}}/api/open-metadata/valid-metadata/open-met
 Authorization: Bearer {{token}}
 Content-Type: application/json
 
+
 ###
 # @name getTypeDefByName
 # Return the TypeDef identified by the unique name.
@@ -94,7 +137,7 @@ Content-Type: application/json
 
 
 ###
-# @name getTypeDefByName
+# @name getTypeDefByName (Anchors)
 # Return the TypeDef identified by the unique name.
 GET {{baseURL}}/servers/{{viewServer}}/api/open-metadata/valid-metadata/open-metadata-types/name/Anchors
 Authorization: Bearer {{token}}

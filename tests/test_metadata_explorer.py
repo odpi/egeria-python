@@ -17,7 +17,7 @@ import time
 from rich import print, print_json
 from rich.console import Console
 
-from pyegeria import MetadataExplorer
+from pyegeria import MetadataExpert
 from pyegeria.core._exceptions import (
     PyegeriaInvalidParameterException,
     PyegeriaAPIException,
@@ -46,11 +46,11 @@ def valid_guid(guid):
         return True
 
 
-class TestMetadataExplorer:
+class TestMetadataExpert:
     good_view_server_1 = "view-server"
     platform_url = "https://localhost:9443"
     view_server = "qs-view-server"
-    user = "erinoverview"
+    user_id = "erinoverview"
     password = "secret"
 
     #
@@ -60,9 +60,9 @@ class TestMetadataExplorer:
         name = "Open Metadata Digital Product Glossary"
         property_name = "displayName"
         try:
-            m_client = MetadataExplorer(self.view_server, self.platform_url)
+            m_client = MetadataExpert(self.view_server, self.platform_url, self.user_id)
 
-            m_client.create_egeria_bearer_token(self.user, self.password)
+            m_client.create_egeria_bearer_token(self.user_id, self.password)
             start_time = time.perf_counter()
             response = m_client.get_metadata_guid_by_unique_name(name, property_name)
             duration = time.perf_counter() - start_time
@@ -92,9 +92,9 @@ class TestMetadataExplorer:
         # guid = "4e12a28c-56e7-48ab-838b-8fc157e3b710"  # a glossary
         guid = '5dc94eb4-5cf9-41f5-b24c-cfb8fc7e1772'  # a term
         try:
-            m_client = MetadataExplorer(self.view_server, self.platform_url)
+            m_client = MetadataExpert(self.view_server, self.platform_url, self.user_id)
 
-            m_client.create_egeria_bearer_token(self.user, self.password)
+            m_client.create_egeria_bearer_token(self.user_id, self.password)
             start_time = time.perf_counter()
             response = m_client.get_metadata_element_by_guid(guid)
             duration = time.perf_counter() - start_time
@@ -123,9 +123,9 @@ class TestMetadataExplorer:
         guid = "5dc94eb4-5cf9-41f5-b24c-cfb8fc7e1772"
 
         try:
-            m_client = MetadataExplorer(self.view_server, self.platform_url)
+            m_client = MetadataExpert(self.view_server, self.platform_url, self.user_id)
 
-            m_client.create_egeria_bearer_token(self.user, self.password)
+            m_client.create_egeria_bearer_token(self.user_id, self.password)
             start_time = time.perf_counter()
             response = m_client.get_anchored_element_graph(guid, mermaid_only=False)
             duration = time.perf_counter() - start_time
@@ -154,9 +154,9 @@ class TestMetadataExplorer:
     def test_get_element_mermaid_graph(self):
         guid = "5dc94eb4-5cf9-41f5-b24c-cfb8fc7e1772"  # a glossary term
         try:
-            m_client = MetadataExplorer(self.view_server, self.platform_url)
+            m_client = MetadataExpert(self.view_server, self.platform_url, self.user_id)
 
-            m_client.create_egeria_bearer_token(self.user, self.password)
+            m_client.create_egeria_bearer_token(self.user_id, self.password)
             start_time = time.perf_counter()
             # response = m_client.get_metadata_element_mermaid_graph(guid)
             response = m_client.get_anchored_element_graph(guid, mermaid_only=True)
@@ -185,9 +185,9 @@ class TestMetadataExplorer:
     def test_get_element_by_unique_name(self):
         name = "GlossaryTerm::CO2 Emission Scope"
         try:
-            m_client = MetadataExplorer(self.view_server, self.platform_url)
+            m_client = MetadataExpert(self.view_server, self.platform_url, self.user_id)
 
-            m_client.create_egeria_bearer_token(self.user, self.password)
+            m_client.create_egeria_bearer_token(self.user_id, self.password)
             start_time = time.perf_counter()
             response = m_client.get_metadata_element_by_unique_name(name, "qualifiedName")
             duration = time.perf_counter() - start_time
@@ -215,9 +215,9 @@ class TestMetadataExplorer:
     def test_get_metadata_element_history(self):
         guid = "5dc94eb4-5cf9-41f5-b24c-cfb8fc7e1772"  # CO2 Emission Scope
         try:
-            m_client = MetadataExplorer(self.view_server, self.platform_url)
+            m_client = MetadataExpert(self.view_server, self.platform_url, self.user_id)
 
-            m_client.create_egeria_bearer_token(self.user, self.password)
+            m_client.create_egeria_bearer_token(self.user_id, self.password)
             start_time = time.perf_counter()
             response = m_client.get_element_history(guid)
             duration = time.perf_counter() - start_time
@@ -257,9 +257,9 @@ class TestMetadataExplorer:
         }
 
         try:
-            m_client = MetadataExplorer(self.view_server, self.platform_url)
+            m_client = MetadataExpert(self.view_server, self.platform_url, self.user_id)
 
-            m_client.create_egeria_bearer_token(self.user, self.password)
+            m_client.create_egeria_bearer_token(self.user_id, self.password)
             start_time = time.perf_counter()
             response = m_client.find_metadata_elements_with_string("Emission", body=body, page_size=1000)
             duration = time.perf_counter() - start_time
@@ -302,9 +302,9 @@ class TestMetadataExplorer:
         }
 
         try:
-            m_client = MetadataExplorer(self.view_server, self.platform_url)
+            m_client = MetadataExpert(self.view_server, self.platform_url, self.user_id)
 
-            m_client.create_egeria_bearer_token(self.user, self.password)
+            m_client.create_egeria_bearer_token(self.user_id, self.password)
             start_time = time.perf_counter()
             response = m_client.get_all_related_elements(
                 guid, body=body, starting_at_end=1
@@ -342,9 +342,9 @@ class TestMetadataExplorer:
         }
 
         try:
-            m_client = MetadataExplorer(self.view_server, self.platform_url)
+            m_client = MetadataExpert(self.view_server, self.platform_url, self.user_id)
 
-            m_client.create_egeria_bearer_token(self.user, self.password)
+            m_client.create_egeria_bearer_token(self.user_id, self.password)
             start_time = time.perf_counter()
             response = m_client.get_all_related_elements(
                 guid, 1,body=body
@@ -385,9 +385,9 @@ class TestMetadataExplorer:
         }
 
         try:
-            m_client = MetadataExplorer(self.view_server, self.platform_url)
+            m_client = MetadataExpert(self.view_server, self.platform_url, self.user_id)
 
-            m_client.create_egeria_bearer_token(self.user, self.password)
+            m_client.create_egeria_bearer_token(self.user_id, self.password)
             start_time = time.perf_counter()
             response = m_client.get_related_metadata_elements(
                 guid, relationship_type, body, mermaid_only=False
@@ -428,9 +428,9 @@ class TestMetadataExplorer:
         }
 
         try:
-            m_client = MetadataExplorer(self.view_server, self.platform_url)
+            m_client = MetadataExpert(self.view_server, self.platform_url, self.user_id)
 
-            m_client.create_egeria_bearer_token(self.user, self.password)
+            m_client.create_egeria_bearer_token(self.user_id, self.password)
             start_time = time.perf_counter()
             response = m_client.get_all_metadata_element_relationships(
                 end1_guid, end2_guid, body
@@ -472,9 +472,9 @@ class TestMetadataExplorer:
         }
 
         try:
-            m_client = MetadataExplorer(self.view_server, self.platform_url)
+            m_client = MetadataExpert(self.view_server, self.platform_url, self.user_id)
 
-            m_client.create_egeria_bearer_token(self.user, self.password)
+            m_client.create_egeria_bearer_token(self.user_id, self.password)
             start_time = time.perf_counter()
             response = m_client.get_metadata_element_relationships(
                 end1_guid, end2_guid, relationship_type, body
@@ -534,9 +534,9 @@ class TestMetadataExplorer:
         }
 
         try:
-            m_client = MetadataExplorer(self.view_server, self.platform_url)
+            m_client = MetadataExpert(self.view_server, self.platform_url, self.user_id)
 
-            m_client.create_egeria_bearer_token(self.user, self.password)
+            m_client.create_egeria_bearer_token(self.user_id, self.password)
             start_time = time.perf_counter()
             response = m_client.find_metadata_elements(body)
             duration = time.perf_counter() - start_time
@@ -627,9 +627,9 @@ class TestMetadataExplorer:
         }
 
         try:
-            m_client = MetadataExplorer(self.view_server, self.platform_url)
+            m_client = MetadataExpert(self.view_server, self.platform_url, self.user_id)
 
-            m_client.create_egeria_bearer_token(self.user, self.password)
+            m_client.create_egeria_bearer_token(self.user_id, self.password)
             start_time = time.perf_counter()
             response = m_client.find_metadata_elements(body, page_size=page_size)
             duration = time.perf_counter() - start_time
@@ -687,9 +687,9 @@ class TestMetadataExplorer:
         }
 
         try:
-            m_client = MetadataExplorer(self.view_server, self.platform_url)
+            m_client = MetadataExpert(self.view_server, self.platform_url, self.user_id)
 
-            m_client.create_egeria_bearer_token(self.user, self.password)
+            m_client.create_egeria_bearer_token(self.user_id, self.password)
             start_time = time.perf_counter()
             response = m_client.find_metadata_elements(body)
             duration = time.perf_counter() - start_time
@@ -749,9 +749,9 @@ class TestMetadataExplorer:
         }
 
         try:
-            m_client = MetadataExplorer(self.view_server, self.platform_url)
+            m_client = MetadataExpert(self.view_server, self.platform_url, self.user_id)
 
-            m_client.create_egeria_bearer_token(self.user, self.password)
+            m_client.create_egeria_bearer_token(self.user_id, self.password)
             start_time = time.perf_counter()
             response = m_client.find_metadata_elements(body, page_size=page_size)
             duration = time.perf_counter() - start_time
@@ -802,9 +802,9 @@ class TestMetadataExplorer:
         }
 
         try:
-            m_client = MetadataExplorer(self.view_server, self.platform_url)
+            m_client = MetadataExpert(self.view_server, self.platform_url, self.user_id)
 
-            m_client.create_egeria_bearer_token(self.user, self.password)
+            m_client.create_egeria_bearer_token(self.user_id, self.password)
             start_time = time.perf_counter()
             response = m_client.find_relationships_between_elements(
                 body, mermaid_only=False
@@ -835,9 +835,9 @@ class TestMetadataExplorer:
     def test_get_relationship_by_guid(self):
         guid = "dbda2d45-47be-43bd-a5a3-2bde11349cff"
         try:
-            m_client = MetadataExplorer(self.view_server, self.platform_url)
+            m_client = MetadataExpert(self.view_server, self.platform_url, self.user_id)
 
-            m_client.create_egeria_bearer_token(self.user, self.password)
+            m_client.create_egeria_bearer_token(self.user_id, self.password)
             start_time = time.perf_counter()
             response = m_client.get_relationship_by_guid(guid)
             duration = time.perf_counter() - start_time
@@ -865,9 +865,9 @@ class TestMetadataExplorer:
     def test_get_relationship_history(self):
         guid = "dbda2d45-47be-43bd-a5a3-2bde11349cff"
         try:
-            m_client = MetadataExplorer(self.view_server, self.platform_url)
+            m_client = MetadataExpert(self.view_server, self.platform_url, self.user_id)
 
-            m_client.create_egeria_bearer_token(self.user, self.password)
+            m_client.create_egeria_bearer_token(self.user_id, self.password)
             start_time = time.perf_counter()
             response = m_client.get_relationship_history(guid)
             duration = time.perf_counter() - start_time

@@ -606,7 +606,7 @@ def get_element_by_name(egeria_client, element_type: str, element_name: str) -> 
     details = egeria_client.get_elements_by_property_value(
         element_name,
         property_names,
-        metadata_element_type_name=open_metadata_type_name,
+        metadata_element_type=open_metadata_type_name,
     )
     if isinstance(details, str):
         msg = f"{element_type} `{element_name}` not found in Egeria"

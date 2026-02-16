@@ -15,7 +15,7 @@ from rich.console import Console
 from rich.table import Table
 from rich.panel import Panel
 
-from pyegeria import MetadataExplorer
+from pyegeria import MetadataExpert
 from pyegeria.core._exceptions import PyegeriaTimeoutException
 
 console = Console()
@@ -45,7 +45,7 @@ class MetadataExplorerScenarioTester:
     def setup(self):
         """Initialize the client"""
         try:
-            self.client = MetadataExplorer(
+            self.client = MetadataExpert(
                 self.view_server,
                 self.platform_url,
                 user_id=self.user,

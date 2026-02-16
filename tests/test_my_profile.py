@@ -6,7 +6,7 @@ from pyegeria.omvs.my_profile import MyProfile
 from pyegeria.models import NewElementRequestBody
 from pyegeria.core._exceptions import PyegeriaException, print_basic_exception
 from rich.markdown import Markdown
-
+from pyegeria import EgeriaTech
 from rich.console import Console
 console = Console(width = 150)
 
@@ -30,8 +30,6 @@ class TestMyProfile:
         try:
             profile_client = MyProfile(VIEW_SERVER, PLATFORM_URL, USER_ID, USER_PWD)
             token = profile_client.create_egeria_bearer_token(USER_ID, USER_PWD)
-            profile = profile_client.get_my_profile()
-            assert isinstance(profile, (dict, list, str))
 
             profile = profile_client.get_my_profile(output_format="DICT", report_spec="My-User-MD")
             assert isinstance(profile, (dict, list, str))
@@ -58,7 +56,7 @@ class TestMyProfile:
 
     def test_get_my_user_identities(self, profile_client):
         try:
-            response = profile_client.get_my_user_identities()
+            response = profile_client.get_my_user_identities(output_format="DICT", report_spec="Referenceable")
             assert isinstance(response, (list, dict, str))
             print(f"\nRetrieved user identities: {json.dumps(response, indent=2)}" if isinstance(response, (list, dict)) else f"\nRetrieved user identities: {response}")
         except PyegeriaException as e:

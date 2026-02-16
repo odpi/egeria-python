@@ -20,7 +20,7 @@ from rich.prompt import Prompt
 from rich.table import Table
 
 from pyegeria import (
-    ClassificationManager,
+    ClassificationExplorer,
     ProjectManager,
     PyegeriaAPIException, PyegeriaClientException,
     print_basic_exception, print_validation_error, PyegeriaException,
@@ -57,7 +57,7 @@ def display_project_list(
 ):
     p_client = ProjectManager(server, url, user_id=username)
     token = p_client.create_egeria_bearer_token(username, user_pass)
-    c_client = ClassificationManager(server, url, token=token)
+    c_client = ClassificationExplorer(server, url, token=token)
 
     def generate_table(project_name: str) -> Table:
         """Make a new table."""

@@ -280,7 +280,7 @@ class ServerClient(BaseServerClient):
                     "effectiveTime": None,
                 }
                 url = (
-                    f"{self.platform_url}/servers/{view_server}/api/open-metadata/classification-manager/"
+                    f"{self.platform_url}/servers/{view_server}/api/open-metadata/classification-explorer/"
                     f"elements/guid-by-unique-name"
                 )
 
@@ -419,7 +419,7 @@ class ServerClient(BaseServerClient):
         }
 
         url = (
-            f"{self.platform_url}/servers/{self.server_name}/api/open-metadata/classification-manager/relationships/"
+            f"{self.platform_url}/servers/{self.server_name}/api/open-metadata/classification-explorer/relationships/"
             f"with-exact-property-value"
         )
 
@@ -506,7 +506,7 @@ class ServerClient(BaseServerClient):
             self,
             property_value: str,
             property_names: list[str],
-            metadata_element_type_name: Optional[str] = None,
+            metadata_element_name: Optional[str] = None,
             effective_time: Optional[str] = None,
             for_lineage: Optional[bool] = None,
             for_duplicate_processing: Optional[bool] = None,
@@ -526,7 +526,7 @@ class ServerClient(BaseServerClient):
             - property value to be searched.
         property_names: [str]
             - property names to search in.
-        metadata_element_type_name : str, default = None
+        metadata_element_name : str, default = None
             - open metadata type to be used to restrict the search
         effective_time: str, default = None
             - Time format is "YYYY-MM-DDTHH:MM:SS" (ISO 8601)
@@ -555,7 +555,7 @@ class ServerClient(BaseServerClient):
 
         body = {
             "class": "FindPropertyNamesProperties",
-            "metadataElementTypeName": metadata_element_type_name,
+            "metadataElementTypeName": metadata_element_name,
             "propertyValue": property_value,
             "propertyNames": property_names,
             "effectiveTime": effective_time,
@@ -581,7 +581,7 @@ class ServerClient(BaseServerClient):
             self,
             property_value: str,
             property_names: list[str],
-            metadata_element_type_name: Optional[str] = None,
+            metadata_element_type: Optional[str] = None,
             effective_time: Optional[str] = None,
             for_lineage: Optional[bool] = None,
             for_duplicate_processing: Optional[bool] = None,
@@ -601,7 +601,7 @@ class ServerClient(BaseServerClient):
             - property value to be searched.
         property_names: [str]
             - property names to search in.
-        metadata_element_type_name : str, default = None
+        metadata_element_type : str, default = None
             - open metadata type to be used to restrict the search
         effective_time: str, default = None
             - Time format is "YYYY-MM-DDTHH:MM:SS" (ISO 8601)
@@ -628,7 +628,7 @@ class ServerClient(BaseServerClient):
 
         loop = asyncio.get_event_loop()
         response = loop.run_until_complete(
-            self._async_get_elements_by_property_value(property_value, property_names, metadata_element_type_name,
+            self._async_get_elements_by_property_value(property_value, property_names, metadata_element_type,
                                                        effective_time, for_lineage, for_duplicate_processing,
                                                        start_from, page_size, time_out)
         )
@@ -736,7 +736,7 @@ class ServerClient(BaseServerClient):
             "effectiveTime": None,
         }
 
-        url = (f"{self.platform_url}/servers/{self.server_name}/api/open-metadata/classification-manager/elements/"
+        url = (f"{self.platform_url}/servers/{self.server_name}/api/open-metadata/classification-explorer/elements/"
                f"{element_guid}?forLineage=false&forDuplicateProcessing=false")
 
         response: Response = await self._async_make_request("POST", url, body_slimmer(body))
@@ -948,7 +948,7 @@ class ServerClient(BaseServerClient):
         server_guid = self.__get_guid__(
             server_guid,
             display_name,
-            "displayName",
+            "resourceName",
             qualified_name,
             "Metadata Access Server",
         )
@@ -5057,7 +5057,7 @@ class ServerClient(BaseServerClient):
         elif body is None:
             raise PyegeriaInvalidParameterException(context={"reason": "keyword or body is required"})
 
-        url = f"{self.command_root}classification-manager/elements/{element_guid}/search-keywords"
+        url = f"{self.command_root}classification-explorer/elements/{element_guid}/search-keywords"
 
         response = await self._async_make_request("POST", url, body_slimmer(body))
         return response.json().get('guid', 'Search keyword was not created')
@@ -5150,7 +5150,7 @@ class ServerClient(BaseServerClient):
 
         """
 
-        url = f"{self.command_root}classification-manager/search-keywords/{keyword_guid}/update"
+        url = f"{self.command_root}classification-explorer/search-keywords/{keyword_guid}/update"
         await self._async_update_relationship_request(url, None, body_slimmer(body))
 
     @dynamic_catch
@@ -5220,7 +5220,7 @@ class ServerClient(BaseServerClient):
 
         """
 
-        url = f"{self.command_root}classification-manager/search-keywords/{keyword_guid}/remove"
+        url = f"{self.command_root}classification-explorer/search-keywords/{keyword_guid}/remove"
         await self._async_delete_relationship_request(url = url, body = None, cascade_delete = False)
 
     @dynamic_catch
@@ -5280,7 +5280,7 @@ class ServerClient(BaseServerClient):
 
         """
 
-        url = f"{self.command_root}classification-manager/search-keywords/{keyword_guid}"
+        url = f"{self.command_root}classification-explorer/search-keywords/{keyword_guid}"
         response = await self._async_get_guid_request(url, "SearchKeyword", self._generate_feedback_output,
                                                       output_format, report_spec)
         return response
@@ -5364,7 +5364,7 @@ class ServerClient(BaseServerClient):
                 "startFrom": start_from,
                 "pageSize": page_size
             }
-        url = f"{self.command_root}classification-manager/search-keywords/by-keyword"
+        url = f"{self.command_root}classification-explorer/search-keywords/by-keyword"
         response = await self._async_get_name_request(url, "SearchKeyword", self._generate_feedback_output,
                                                       keyword, None, None, start_from,
                                                       page_size, output_format, report_spec, body)
@@ -5510,7 +5510,7 @@ class ServerClient(BaseServerClient):
                 "startFrom": start_from,
                 "pageSize": page_size
             }
-        url = f"{self.command_root}classification-manager/search-keywords/by-search-string"
+        url = f"{self.command_root}classification-explorer/search-keywords/by-search-string"
         
         # Build params dict with explicit parameters
         params = {

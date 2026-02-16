@@ -47,11 +47,11 @@ def query_string(params):
 
 
 def base_path(client, view_server: str):
-    return f"{client.platform_url}/servers/{view_server}/api/open-metadata/classification-manager"
+    return f"{client.platform_url}/servers/{view_server}/api/open-metadata/classification-explorer"
 
 
-class ClassificationManager(ServerClient):
-    """ClassificationManager is a class that extends the Client class. It
+class ClassificationExplorer(ServerClient):
+    """ClassificationExplorer is a class that extends the Client class. It
     provides methods to CRUD annotations and to query elements and relationships. Async version.
 
     Attributes:
@@ -83,7 +83,7 @@ class ClassificationManager(ServerClient):
         self.user_id = user_id
         self.user_pwd = user_pwd
         self.classification_command_root: str = (
-            f"{self.platform_url}/servers/{self.view_server}/api/open-metadata/classification-manager"
+            f"{self.platform_url}/servers/{self.view_server}/api/open-metadata/classification-explorer"
         )
         ServerClient.__init__(
             self,
@@ -2480,7 +2480,7 @@ body: Optional[dict | FilterRequestBody] = None,
             self,
             property_value: str,
             property_names: Optional[list[str]] = None,
-            metadata_element_type_name: Optional[str] = None,
+            metadata_element_name: Optional[str] = None,
             starts_with: bool = True,
             ends_with: bool = False,
             ignore_case: bool = False,
@@ -2516,7 +2516,7 @@ body: Optional[dict | FilterRequestBody] = None,
             - property value to be searched.
         property_names: list[str]
             - property names to search in.
-        metadata_element_type_name : str, default = None
+        metadata_element_name : str, default = None
             - open metadata type to be used to restrict the search
         starts_with : bool, default = True
             - Whether to match only at the start.
@@ -2593,7 +2593,7 @@ body: Optional[dict | FilterRequestBody] = None,
             ends_with=ends_with,
             ignore_case=ignore_case,
             anchor_domain=anchor_domain,
-            metadata_element_type=metadata_element_type_name,
+            metadata_element_type=metadata_element_name,
             metadata_element_subtypes=metadata_element_subtypes,
             skip_relationships=skip_relationships,
             include_only_relationships=include_only_relationships,
@@ -2619,7 +2619,7 @@ body: Optional[dict | FilterRequestBody] = None,
             self,
             property_value: str,
             property_names: Optional[list[str]] = None,
-            metadata_element_type_name: Optional[str] = None,
+            metadata_element_type: Optional[str] = None,
             starts_with: bool = True,
             ends_with: bool = False,
             ignore_case: bool = False,
@@ -2655,7 +2655,7 @@ body: Optional[dict | FilterRequestBody] = None,
             - property value to be searched.
         property_names: list[str]
             - property names to search in.
-        metadata_element_type_name : str, default = None
+        metadata_element_type : str, default = None
             - open metadata type to be used to restrict the search
         starts_with : bool, default = True
             - Whether to match only at the start.
@@ -2717,7 +2717,7 @@ body: Optional[dict | FilterRequestBody] = None,
             self._async_get_elements_by_property_value(
                 property_value,
                 property_names,
-                metadata_element_type_name,
+                metadata_element_type,
                 starts_with,
                 ends_with,
                 ignore_case,
@@ -2850,7 +2850,7 @@ body: Optional[dict | FilterRequestBody] = None,
         Sample body:
         {
             "class": "FindPropertyNamesRequestBody",
-            "metadataElementTypeName": metadata_element_type_name,
+            "metadataElementTypeName": metadata_element_type,
             "propertyValue": property_value,
             "propertyNames": property_names,
             "effectiveTime": effective_time,
@@ -2978,7 +2978,7 @@ body: Optional[dict | FilterRequestBody] = None,
         Sample body:
         {
             "class": "FindPropertyNamesRequestBody",
-            "metadataElementTypeName": metadata_element_type_name,
+            "metadataElementTypeName": metadata_element_type,
             "propertyValue": property_value,
             "propertyNames": property_names,
             "effectiveTime": effective_time,

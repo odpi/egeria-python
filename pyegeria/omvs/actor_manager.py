@@ -2806,7 +2806,7 @@ class ActorManager(ServerClient):
         logger.trace(f"Executing generate_actor_role_output for {entity_type}: {output_formats}")
         return generate_output(
             elements,
-            filter,
+            filter_string,
             entity_type,
             output_format,
             self._extract_actor_role_properties,

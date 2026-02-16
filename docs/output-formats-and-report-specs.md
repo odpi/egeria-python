@@ -169,6 +169,28 @@ Result:
 
 ---
 
+## Deep Nesting and Recursive Aggregation
+
+When generating output for complex entities like User Profiles, pyegeria can recursively search through the relationship hierarchy to find and aggregate nested elements.
+
+For example, a User Profile report spec might include a `projects` attribute. Since Egeria usually returns projects nested within roles or teams, pyegeria's profile extractor automatically scans the `performsRoles` hierarchy to find all elements of type `Project` and pulls them up to the top level of your report.
+
+### Key Features:
+- **Recursive Search**: Scans multiple levels deep (configurable, default is 3).
+- **Automatic Deduplication**: Elements are automatically deduplicated by their GUID, ensuring that a project linked via multiple roles only appears once in the aggregated list.
+- **Type-Aware**: Uses the `target_type` defined in the attribute's `detail_spec` to decide what to aggregate. Matches both primary type names and supertype names.
+
+### Configurable Depth
+The recursion depth can be controlled in the client code. For the `MyProfile` client, you can set the `aggregation_depth` parameter:
+
+```python
+client = MyProfile(..., aggregation_depth=5)
+# Or update it on an existing client
+client.aggregation_depth = 1  # Only look at immediate children of roles
+```
+
+---
+
 ## Writing Your Own Report Specs
 
 You can add/override report specs without changing pyegeria’s source by providing JSON files and loading them at runtime.

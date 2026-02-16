@@ -1,4 +1,4 @@
-# Egeria-my-profile-view-service
+# Egeria-my-profile-api
 # Work with a user's personal profile - this API is designed for retrieving the logged on user's personal profile.
 # Updates to the actors associate with a user are made using the Actor Manager API.
 # https://egeria-project.org/concepts/personal-profile
@@ -32,9 +32,17 @@ Content-Type: application/json
 # InvalidParameterException the userId is null or invalid or
 # PropertyServerException a problem retrieving information from the property server(s) or
 # UserNotAuthorizedException the requesting user is not authorized to issue this request.
-GET {{baseURL}}/servers/{{viewServer}}/api/open-metadata/my-profile
+POST {{baseURL}}/servers/{{viewServer}}/api/open-metadata/my-profile
 Authorization: Bearer {{token}}
+Content-Type: application/json
 
+{
+  "class" : "GetRequestBody",
+  "asOfTime" : "{{$isoTimestamp}}",
+  "effectiveTime" : "{{$isoTimestamp}}",
+  "forLineage" : false,
+  "forDuplicateProcessing" : false
+}
 
 ###
 # @name getMyActors
@@ -133,7 +141,7 @@ Content-Type: application/json
 
 ###
 # @name Add My Profile
-POST {{baseURL}}/servers/{{viewServer}}/api/open-metadata/my-profile
+POST {{baseURL}}/servers/{{viewServer}}/api/open-metadata/my-profile/new
 Authorization: Bearer {{token}}
 Content-Type: application/json
 
