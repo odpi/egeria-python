@@ -40,7 +40,7 @@ def base_path(client, view_server: str):
 
 
 class ClassificationManager(ServerClient):
-    """ClassificationManager is a class that extends the Client class. It
+    """ClassificationExplorer is a class that extends the Client class. It
     provides methods to CRUD annotations and to query elements and relationships. Async version.
 
     Attributes:
@@ -336,7 +336,7 @@ class ClassificationManager(ServerClient):
         return response
 
     async def _async_get_elements_by_property_value(self, property_value: str, property_names: [str],
-                                                    metadata_element_type_name: str = None, effective_time: str = None,
+                                                    metadata_element_name: str = None, effective_time: str = None,
                                                     for_lineage: bool = None, for_duplicate_processing: bool = None,
                                                     start_from: int = 0, page_size: int = 0,
                                                     time_out: int = default_time_out) -> list | str:
@@ -352,7 +352,7 @@ class ClassificationManager(ServerClient):
             - property value to be searched.
         property_names: [str]
             - property names to search in.
-        metadata_element_type_name : str, default = None
+        metadata_element_name : str, default = None
             - open metadata type to be used to restrict the search
         effective_time: str, default = None
             - Time format is "YYYY-MM-DDTHH:MM:SS" (ISO 8601)
@@ -383,7 +383,7 @@ class ClassificationManager(ServerClient):
 
         body = {
             "class": "FindPropertyNamesProperties",
-            "metadataElementTypeName": metadata_element_type_name,
+            "metadataElementTypeName": metadata_element_name,
             "propertyValue": property_value,
             "propertyNames": property_names,
             "effectiveTime": effective_time,
@@ -406,7 +406,7 @@ class ClassificationManager(ServerClient):
         return elements
 
     def get_elements_by_property_value(self, property_value: str, property_names: [str],
-                                       metadata_element_type_name: str = None, effective_time: str = None,
+                                       metadata_element_type: str = None, effective_time: str = None,
                                        for_lineage: bool = None, for_duplicate_processing: bool = None,
                                        start_from: int = 0, page_size: int = 0,
                                        time_out: int = default_time_out) -> list | str:
@@ -422,7 +422,7 @@ class ClassificationManager(ServerClient):
             - property value to be searched.
         property_names: [str]
             - property names to search in.
-        metadata_element_type_name : str, default = None
+        metadata_element_type : str, default = None
             - open metadata type to be used to restrict the search
         effective_time: str, default = None
             - Time format is "YYYY-MM-DDTHH:MM:SS" (ISO 8601)
@@ -451,14 +451,14 @@ class ClassificationManager(ServerClient):
 
         loop = asyncio.get_event_loop()
         response = loop.run_until_complete(
-            self._async_get_elements_by_property_value(property_value, property_names, metadata_element_type_name,
+            self._async_get_elements_by_property_value(property_value, property_names, metadata_element_type,
                                                        effective_time, for_lineage, for_duplicate_processing,
                                                        start_from, page_size, time_out)
         )
         return self._generate_referenceable_output(
             elements=response,
             search_string=property_value,
-            element_type_name=metadata_element_type_name,
+            element_type_name=metadata_element_type,
             output_format=output_format,
             report_spec=report_spec,
         )

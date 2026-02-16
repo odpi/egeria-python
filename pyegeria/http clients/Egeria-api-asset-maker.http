@@ -1,8 +1,8 @@
-# Egeria-asset-maker-view-service
+# Egeria-asset-maker-api
 # The Asset Maker OMVS provides APIs for supporting the creation and editing of assets.
 
 @baseURL=https://localhost:9443
-@viewServer=qs-view-server
+@viewServer=view-server
 
 ###
 # =====================================================================================================================
@@ -342,9 +342,18 @@ Content-Type: application/json
 
 {
   "class" : "ActivityStatusSearchString",
-  "searchString" : "make",
-  "activityStatusList" : [],
-  "metadataElementSubtypeNames": ["ToDo"],
+  "metadataElementSubtypeNames": ["ToDo", "Notification", "GovernanceActionService"],
+  "searchString" : "Digital",
+  "startsWith" : false,
+  "endsWith" : false,
+  "ignoreCase" : true,
+  "startFrom" : 0,
+  "pageSize": 0,
+  "asOfTime" : "{{$isoTimestamp}}",
+  "effectiveTime" : "{{$isoTimestamp}}",
+  "forLineage" : false,
+  "forDuplicateProcessing" : false,
+  "limitResultsByStatus" : ["ACTIVE"],
   "sequencingOrder" : "PROPERTY_ASCENDING",
   "sequencingProperty" : "qualifiedName"
 }
@@ -403,20 +412,54 @@ Content-Type: application/json
 
 {
   "class" : "ActionRequestBody",
-      "properties" : {
-        "class" : "ActionProperties",
-        "qualifiedName": "make-cocoa",
-        "identifier": "cocoa",
-        "displayName": "Make Cocoa",
-        "description": "Cocoa is warm",
-        "requestedTime": "{{$isoTimestamp}}",
-        "requestedStartTime": "{{$isoTimestamp}}",
-        "priority": 0,
-        "activityStatus": "REQUESTED"
-      },
-  "originatorGUID" : "dfe5c382-9ec4-4972-8481-35fd61cb4feb",
-  "actionSponsorGUID" : "7b5cf4fa-23a8-4cf5-aaa6-02bcf58214f8",
-  "assignToActorGUID" : "dcfd7e32-8074-4cdf-bdc5-9a6f28818a9d"
+  "initialClassifications" : {
+    "ZoneMembership" : {
+      "class" : "ZoneMembershipProperties",
+      "zoneMembership" : ["governance"]
+    }
+  },
+  "newActionTargets" : [
+    {
+      "actionTargetGUID" : "add guid here",
+      "actionTargetName": "add name here"
+    }
+  ],
+  "properties" : {
+    "class" : "ActionProperties",
+    "qualifiedName": "",
+    "identifier": "",
+    "displayName": "",
+    "description": "",
+    "versionIdentifier": "",
+    "category": "",
+    "url": "",
+    "resourceName": "",
+    "namespace": "",
+    "deployedImplementationType": "",
+    "source": "",
+    "expectedBehaviour": "",
+    "requestedTime": "{{$isoTimestamp}}",
+    "requestedStartTime": "{{$isoTimestamp}}",
+    "startTime": "{{$isoTimestamp}}",
+    "dueTime": "{{$isoTimestamp}}",
+    "lastReviewTime": "{{$isoTimestamp}}",
+    "lastPauseTime": "{{$isoTimestamp}}",
+    "lastResumeTime": "{{$isoTimestamp}}",
+    "completionTime": "{{$isoTimestamp}}",
+    "priority": 0,
+    "formula": "",
+    "formulaType": "",
+    "activityStatus": "REQUESTED",
+    "userDefinedActivityStatus": "",
+    "situation": "",
+    "additionalProperties" : {
+      "property1" : "propertyValue1",
+      "property2" : "propertyValue2"
+    }
+  },
+  "originatorGUID" : "add guid of requester (ActionRequester relationship)",
+  "actionSponsorGUID" : "add guid of sponsor (Actions relationship)",
+  "assignToActorGUID" : "add guid of actor that will be assigned this action (AssignmentScope relationship)"
 }
 
 
@@ -993,7 +1036,7 @@ Content-Type: application/json
 
 
 ###
-# @name getActionsForSponsor
+# @name getActionsForRequester
 # Retrieve the "Actions" that are chained off the requester's element. (ActionRequester relationship)
 #
 # @param serverName name of the server instances for this request

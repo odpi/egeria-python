@@ -19,8 +19,8 @@ from rich.prompt import Prompt
 from rich.table import Table
 
 from pyegeria import (
-    ClassificationManager,
-PyegeriaAPIException, PyegeriaClientException, print_basic_exception, print_exception_table
+    ClassificationExplorer,
+    PyegeriaAPIException, PyegeriaClientException, print_basic_exception, print_exception_table
 )
 
 console = Console()
@@ -51,7 +51,7 @@ def display_related_elements(
     jupyter: bool = EGERIA_JUPYTER,
     width: int = EGERIA_WIDTH,
 ):
-    c_client = ClassificationManager(server, url, user_id=username, user_pwd=password)
+    c_client = ClassificationExplorer(server, url, user_id=username, user_pwd=password)
     token = c_client.create_egeria_bearer_token()
     rel_el = c_client.get_related_elements(element_guid, relationship, om_type)
 

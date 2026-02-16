@@ -1,4 +1,4 @@
-# Egeria-people-organizer-view-service
+# Egeria-people-organizer-api
 
 @baseURL=https://localhost:9443
 @viewServer=view-server

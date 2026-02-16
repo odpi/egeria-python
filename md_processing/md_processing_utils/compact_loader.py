@@ -61,6 +61,8 @@ def _command_to_legacy_spec(name: str, cdef: Dict[str, Any], expanded: Dict[str,
     return legacy
 
 
+
+
 def load_compact_specs_from_dir(dir_path: str, families_allowlist: Iterable[str] | None = None) -> Dict[str, Dict[str, Any]]:
     """
     Load all compact command files from a directory and return a mapping suitable
@@ -83,23 +85,37 @@ def load_compact_specs_from_dir(dir_path: str, families_allowlist: Iterable[str]
     if not os.path.isdir(dir_path):
         return specs
 
+    all_attr_defs = {}
+    all_bundles = {}
+    all_commands = {}
+
     for fname in os.listdir(dir_path):
         if not fname.endswith(".json"):
             continue
         fpath = os.path.join(dir_path, fname)
-        data = load_compact_json(fpath)
+        try:
+            data = load_compact_json(fpath)
+        except Exception as e:
+            from loguru import logger
+            logger.warning(f"Failed to load compact JSON {fname}: {e}")
+            continue
 
-        attr_defs = data.get("attribute_definitions", {})
-        bundles = data.get("bundles", {})
-        commands = data.get("commands", {})
+        all_attr_defs.update(data.get("attribute_definitions", {}))
+        all_bundles.update(data.get("bundles", {}))
+        all_commands.update(data.get("commands", {}))
 
-        for cname, cdef in commands.items():
-            # Family gating
-            fam = cdef.get("family")
-            if families and fam not in families:
-                continue
-
-            expanded = expand_command(cdef, bundles, attr_defs)
+    for cname, cdef in all_commands.items():
+        # Family gating
+        fam = cdef.get("family")
+        if families and fam not in families:
+            continue
+        
+        try:
+            expanded = expand_command(cdef, all_bundles, all_attr_defs)
             specs[cname] = _command_to_legacy_spec(cname, cdef, expanded)
+        except (KeyError, ValueError) as e:
+            from loguru import logger
+            logger.warning(f"Skipping command '{cname}': {e}")
+            continue
 
     return specs

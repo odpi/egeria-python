@@ -16,9 +16,10 @@ from pyegeria.core._server_client import ServerClient
 from pyegeria.view.base_report_formats import get_report_spec_match
 from pyegeria.core.config import settings as app_settings
 from pyegeria.models import (SearchStringRequestBody, FilterRequestBody, GetRequestBody, NewElementRequestBody,
-                             TemplateRequestBody, DeleteElementRequestBody, DeleteRelationshipRequestBody, UpdateElementRequestBody,
-                             NewRelationshipRequestBody)
-from pyegeria.view.output_formatter import generate_output, populate_common_columns, overlay_additional_values
+                             TemplateRequestBody, DeleteElementRequestBody, DeleteRelationshipRequestBody,
+                             UpdateElementRequestBody,
+                             NewRelationshipRequestBody, NewClassificationRequestBody, DeleteClassificationRequestBody)
+from pyegeria.view.output_formatter import generate_output, populate_common_columns, overlay_additional_values, materialize_egeria_summary
 from pyegeria.core.utils import body_slimmer, dynamic_catch
 
 EGERIA_LOCAL_QUALIFIER = app_settings.User_Profile.egeria_local_qualifier
@@ -64,46 +65,22 @@ class ProjectManager(ServerClient):
         self.url_marker = 'project-manager'
         ServerClient.__init__(self, view_server, platform_url, user_id, user_pwd, token)
 
-    def _extract_additional_project_properties(self, element: dict, columns_struct: dict)-> dict:
-
-
-        roles_required = any(column.get('key') == 'project_roles'
-                             for column in columns_struct.get('formats', {}).get('attributes', []))
-        project_props = {}
-
-        if roles_required:
-            project_roles = element['elementHeader'].get('projectRoles', [])
-            project_roles_list = []
-            for project_role in project_roles:
-                project_roles_list.append(project_role.get('classificationName', ""))
-            project_roles_md = (", \n".join(project_roles_list)).rstrip(',') if project_roles_list else ''
-            project_props = {
-                'project_roles': project_roles_md,
-            }
-        return project_props
-
-
-
 
     def _extract_project_properties(self, element: dict, columns_struct: dict) -> dict:
-        props = element.get('properties', {}) or {}
-        normalized = {
-            'properties': props,
-            'elementHeader': element.get('elementHeader', {}),
-        }
+        """Extract properties from a project element, materializing header fields generically."""
+        # Materialize the element to flatten header properties (like projectRoles)
+        flat_element = materialize_egeria_summary(element, columns_struct)
+
         # Common population pipeline
-        col_data = populate_common_columns(element, columns_struct)
-        columns_list = col_data.get('formats', {}).get('attributes', [])
-        # Overlay extras (project perspectives) only where empty
-        extra = self._extract_additional_project_properties(element, columns_struct)
-        col_data = overlay_additional_values(col_data, extra)
+        col_data = populate_common_columns(flat_element, columns_struct)
         return col_data
 
 
     def _generate_project_output(self, elements: dict | list[dict], search_string: str,
                                  element_type_name: str | None,
                                  output_format: str = 'DICT',
-                                 report_spec: dict | str = None) -> str | list[dict]:
+                                 report_spec: dict | str = None,
+                                 **kwargs) -> str | list[dict]:
         entity_type = 'Project'
         if report_spec:
             if isinstance(report_spec, str):
@@ -124,6 +101,7 @@ class ProjectManager(ServerClient):
             extract_properties_func=self._extract_project_properties,
             get_additional_props_func=None,
             columns_struct=output_formats,
+            **kwargs
         )
 
     #
@@ -179,7 +157,7 @@ class ProjectManager(ServerClient):
             f"metadata-elements/{parent_guid}/projects"
         )
 
-        response = await self._async_get_guid_request(url, "Project", self._extract_project_properties,
+        response = await self._async_get_guid_request(url, "Project", self._generate_project_output,
                                                       body=body,
                                                       output_format=output_format,
                                                       report_spec=report_spec)
@@ -349,6 +327,337 @@ class ProjectManager(ServerClient):
         )
         return resp
 
+    @dynamic_catch
+    async def _async_add_project_classification(
+            self, project_guid: str, body: dict | NewClassificationRequestBody
+    )-> None:
+
+        """Classify the project to indicate the approach and style of the project based on its intended outcome. Async version.
+
+        Parameters
+        ----------
+        project_guid: str
+            The project to classify.
+        body: dict | NewClassificationRequestBody
+            Details of the new classification to add.
+
+        Returns
+        -------
+        None
+
+        Raises
+        ------
+        PyegeriaInvalidParameterException
+          If the client passes incorrect parameters on the request - such as bad URLs or invalid values
+        PyegeriaAPIException
+          Raised by the server when an issue arises in processing a valid request
+        NotAuthorizedException
+          The principle specified by the user_id does not have authorization for the requested action
+
+        Note
+        ____
+        Sample body:
+        {
+          "class": "NewClassificationRequestBody",
+          "properties": {
+            "class": "ProjectClassificationProperties",
+            "approach": "Regulated Clinical Trial",
+            "managementStyle": "Regulated Project",
+            "ResultsUsage": "Business Critical"
+          }
+        }
+
+        """
+
+        url = (
+            f"{self.platform_url}/servers/{self.view_server}/api/open-metadata/project-manager/"
+            f"projects/{project_guid}/classification-properties/classify"
+        )
+        response = await self._async_new_classification_request(url, ["ProjectClassificationProperties"],
+                                                                body=body)
+        return response
+
+    @dynamic_catch
+    def add_project_classification(
+            self,
+            project_guid: str,
+            body: dict | NewClassificationRequestBody,
+
+    ) -> None:
+        """Classify the project to indicate the approach and style of the project based on its intended outcome.
+
+         Parameters
+         ----------
+         project_guid: str
+             The project to classify.
+         body: dict | NewClassificationRequestBody
+             Details of the new classification to add.
+
+         Returns
+         -------
+         None
+
+         Raises
+         ------
+         PyegeriaInvalidParameterException
+           If the client passes incorrect parameters on the request - such as bad URLs or invalid values
+         PyegeriaAPIException
+           Raised by the server when an issue arises in processing a valid request
+         NotAuthorizedException
+           The principle specified by the user_id does not have authorization for the requested action
+
+         Note
+         ____
+         Sample body:
+         {
+           "class": "NewClassificationRequestBody",
+           "properties": {
+             "class": "ProjectClassificationProperties",
+             "approach": "Regulated Clinical Trial",
+             "managementStyle": "Regulated Project",
+             "ResultsUsage": "Business Critical"
+           }
+         }
+         """
+        loop = asyncio.get_event_loop()
+        loop.run_until_complete(
+            self._async_add_project_classification(project_guid = project_guid,
+                                                body=body
+                                                )
+        )
+
+    @dynamic_catch
+    async def _async_clear_project_classification(
+            self, project_guid: str, body: dict | DeleteClassificationRequestBody | None = None
+    )-> None:
+
+        """Clear the classification the ProjectClassification classification from the project. Async version.
+
+        Parameters
+        ----------
+        project_guid: str
+            The project to declassify.
+        body: dict | DeleteClassificationRequestBody | None
+            Request details of the classification to remove.
+
+        Returns
+        -------
+        None
+
+        Raises
+        ------
+        PyegeriaInvalidParameterException
+          If the client passes incorrect parameters on the request - such as bad URLs or invalid values
+        PyegeriaAPIException
+          Raised by the server when an issue arises in processing a valid request
+        NotAuthorizedException
+          The principle specified by the user_id does not have authorization for the requested action
+
+        Note
+        ____
+        Sample body:
+        {
+          "class": "DeleteClassificationRequestBody",
+          "externalSourceGUID": "add guid here",
+          "externalSourceName": "add qualified name here",
+          "effectiveTime": "{{$isoTimestamp}}",
+          "forLineage": false,
+          "forDuplicateProcessing": false
+        }
+        """
+
+        url = (
+            f"{self.platform_url}/servers/{self.view_server}/api/open-metadata/project-manager/"
+            f"projects/{project_guid}/classification-properties/declassify"
+        )
+        response = await self._async_new_classification_request(url, ["ProjectClassificationProperties"],
+                                                                body=body)
+        return response
+
+    @dynamic_catch
+    def clear_project_classification(
+            self,
+            project_guid: str,
+            body: dict | DeleteClassificationRequestBody | None = None,
+
+    ) -> None:
+        """Clear the classification the ProjectClassification classification from the project.
+
+         Parameters
+         ----------
+         project_guid: str
+             The project to declassify.
+         body: dict | DeleteClassificationRequestBody | None
+             Request details of the classification to remove.
+
+         Returns
+         -------
+         None
+
+         Raises
+         ------
+         PyegeriaInvalidParameterException
+           If the client passes incorrect parameters on the request - such as bad URLs or invalid values
+         PyegeriaAPIException
+           Raised by the server when an issue arises in processing a valid request
+         NotAuthorizedException
+           The principle specified by the user_id does not have authorization for the requested action
+
+         Note
+         ____
+         Sample body:
+         {
+          "class": "DeleteClassificationRequestBody",
+          "externalSourceGUID": "add guid here",
+          "externalSourceName": "add qualified name here",
+          "effectiveTime": "{{$isoTimestamp}}",
+          "forLineage": false,
+          "forDuplicateProcessing": false
+         }
+         """
+        loop = asyncio.get_event_loop()
+        loop.run_until_complete(
+            self._async_clear_project_classification(project_guid = project_guid,
+                                                body=body
+                                                )
+        )
+
+
+
+    @dynamic_catch
+    async def _async_get_projects_by_classification_properties(
+            self, approach: str = None, management_style: str = None, results_usage: str = None,
+            start_from: int = 0,
+            page_size: int = 0,
+            output_format: str = 'JSON',
+            report_spec: str | dict = None,
+            body: Optional[dict | None] = None,) -> str | dict:
+
+        """ Returns the list of project with a ProjectClassification classification and with matching properties.
+         Async version.
+
+        Parameters
+        ----------
+        approach: str, [default=None]
+            The approach to filter by.  If None, will be treated as any.
+        management_style: str, [default=None]
+            The management style to filter by.  If None, will be treated as any.
+        results_usage: str, [default=None]
+            The results usage to filter by.  If None, will be treated as any.
+        start_from: int, [default=0], optional
+                    When multiple pages of results are available, the page number to start from.
+        page_size: int, [default=None]
+            The number of items to return in a single page. If not specified, the default will be taken from
+            the class instance.
+        output_format: str, [default='JSON'], optional
+            The format of the response.
+        report_spec: str, [default=None]
+            The report specification to use.  If None, the default will be used.
+        Returns
+        -------
+        List | str
+
+        A list of projects filtered by project classification, and effective time.
+
+        Raises
+        ------
+        PyegeriaException
+
+        Notes
+        _____
+        sample body:
+        {
+          "class" : "FindProjectClassificationProperties",
+          "approach" : "",
+          "managementStyle" : "",
+          "resultsUsage" : ""
+        }
+        """
+        url = (
+            f"{self.platform_url}/servers/{self.view_server}/api/open-metadata/project-manager/"
+            f"projects/by-classification-properties"
+        )
+        if body is None:
+            body = {
+                "class" : "FindProjectClassificationProperties",
+                "approach" : approach,
+                "managementStyle" : management_style,
+                "resultsUsage" : results_usage,
+                "startFrom" : start_from,
+                "pageSize" : page_size,
+            }
+        response = await self._async_make_request("POST", url, body)
+
+        elements = response.json().get("elements", NO_ELEMENTS_FOUND)
+        if type(elements) is str or len(elements) == 0:
+            logger.info(NO_ELEMENTS_FOUND)
+            return NO_ELEMENTS_FOUND
+
+        if output_format != 'JSON':  # return a simplified markdown representation
+            logger.info(f"Found elements, output format: {output_format} and report_spec: {report_spec}")
+            return self._generate_project_output(elements, "ProjectClassification",
+                                                 "Project",
+                                                 output_format, report_spec)
+        return elements
+
+    @dynamic_catch
+    def get_projects_by_classification_properties(
+            self, approach: str = None, management_style: str = None, results_usage: str = None,
+            start_from: int = 0,
+            page_size: int = 0,
+            output_format: str = 'JSON',
+            report_spec: str | dict = None,
+            body: Optional[dict | None] = None,) -> str | dict:
+
+        """ Returns the list of project with a ProjectClassification classification and with matching properties.
+
+        Parameters
+        ----------
+        approach: str, [default=None]
+            The approach to filter by.  If None, will be treated as any.
+        management_style: str, [default=None]
+            The management style to filter by.  If None, will be treated as any.
+        results_usage: str, [default=None]
+            The results usage to filter by.  If None, will be treated as any.
+        start_from: int, [default=0], optional
+                    When multiple pages of results are available, the page number to start from.
+        page_size: int, [default=None]
+            The number of items to return in a single page. If not specified, the default will be taken from
+            the class instance.
+        output_format: str, [default='JSON'], optional
+            The format of the response.
+        report_spec: str, [default=None]
+            The report specification to use.  If None, the default will be used.
+        Returns
+        -------
+        List | str
+
+        A list of projects filtered by project classification, and effective time.
+
+        Raises
+        ------
+        PyegeriaException
+
+        Notes
+        _____
+        sample body:
+        {
+          "class": "FindProjectClassificationProperties",
+          "approach": "",
+          "managementStyle": "",
+          "resultsUsage": ""
+        }
+        """
+
+        loop = asyncio.get_event_loop()
+        resp = loop.run_until_complete(
+            self._async_get_projects_by_classification_properties( approach, management_style, results_usage,
+                                         start_from, page_size,
+                                         output_format, report_spec, body)
+        )
+        return resp
+
+
     async def _async_get_project_team(
             self,
             project_guid: str,
@@ -451,8 +760,6 @@ class ProjectManager(ServerClient):
                                          output_format,report_spec, body  )
         )
         return resp
-
-
 
     @dynamic_catch
     async def _async_find_projects(
@@ -916,12 +1223,54 @@ class ProjectManager(ServerClient):
     @dynamic_catch
     async def _async_create_project(
             self,
-            body: dict | NewElementRequestBody,
+            anchor_guid: Optional[str] = None,
+            parent_guid: Optional[str] = None,
+            parent_relationship_type_name: Optional[str] = None,
+            parent_at_end1: bool = False,
+            display_name: Optional[str] = None,
+            description: Optional[str] = None,
+            classification_name: str = "Project",
+            identifier: Optional[str] = None,
+            is_own_anchor: bool = True,
+            status: Optional[str] = None,
+            phase: Optional[str] = None,
+            health: Optional[str] = None,
+            start_date: Optional[str] = None,
+            planned_end_date: Optional[str] = None,
+            body: Optional[dict | NewElementRequestBody] = None,
     ) -> str:
         """Create project: https://egeria-project.org/concepts/project Async version.
 
         Parameters
         ----------.
+        anchor_guid: str, optional
+            The identity of the anchor element for the project.
+        parent_guid: str, optional
+            The identity of the parent element for the project.
+        parent_relationship_type_name: str, optional
+            The type of relationship to the parent element.
+        parent_at_end1: bool, optional
+            True if the parent is at end 1 of the relationship.
+        display_name: str, optional
+            The display name of the project.
+        description: str, optional
+            A description of the project.
+        classification_name: str, optional
+            The type of project - Campaign, StudyProject, Task, PersonalProject or Project.
+        identifier: str, optional
+            A business identifier for the project.
+        is_own_anchor: bool, optional
+            True if the project is its own anchor.
+        status: str, optional
+            The project status.
+        phase: str, optional
+            The project phase.
+        health: str, optional
+            The project health.
+        start_date: str, optional
+            The start date of the project.
+        planned_end_date: str, optional
+            The planned completion date of the project.
         body: dict
             A dict representing the details of the project to create. To create different kinds of projects,
             set the initial_classifications in the body to be, for instance, "PersonalProject" or "Campaign".
@@ -955,7 +1304,7 @@ class ProjectManager(ServerClient):
                   "class": "FolderProperties"
                 }
               },
-          "projectProperties": {
+          "properties": {
             "class" : "ProjectProperties",
             "qualifiedName": "Must provide a unique name here",
             "identifier" : "Add business identifier",
@@ -970,6 +1319,33 @@ class ProjectManager(ServerClient):
         }
 
         """
+        if body is None:
+            import time
+            body = {
+                "class": "NewElementRequestBody",
+                "anchorGUID": anchor_guid,
+                "isOwnAnchor": is_own_anchor,
+                "parentGUID": parent_guid,
+                "parentRelationshipTypeName": parent_relationship_type_name,
+                "parentAtEnd1": parent_at_end1,
+                "initialClassifications": {
+                    classification_name: {
+                        "class": f"{classification_name}Properties"
+                    }
+                } if classification_name and classification_name != "Project" else None,
+                "properties": {
+                    "class": "ProjectProperties",
+                    "qualifiedName": f"{classification_name}-{display_name}-{time.asctime()}",
+                    "identifier": identifier,
+                    "name": display_name,
+                    "description": description,
+                    "projectStatus": status,
+                    "projectPhase": phase,
+                    "projectHealth": health,
+                    "startDate": start_date,
+                    "plannedEndDate": planned_end_date,
+                }
+            }
 
         url = f"{self.platform_url}/servers/{self.view_server}/api/open-metadata/project-manager/projects"
 
@@ -978,12 +1354,54 @@ class ProjectManager(ServerClient):
     @dynamic_catch
     def create_project(
             self,
-            body: dict | NewElementRequestBody,
+            anchor_guid: Optional[str] = None,
+            parent_guid: Optional[str] = None,
+            parent_relationship_type_name: Optional[str] = None,
+            parent_at_end1: bool = False,
+            display_name: Optional[str] = None,
+            description: Optional[str] = None,
+            classification_name: str = "Project",
+            identifier: Optional[str] = None,
+            is_own_anchor: bool = True,
+            status: Optional[str] = None,
+            phase: Optional[str] = None,
+            health: Optional[str] = None,
+            start_date: Optional[str] = None,
+            planned_end_date: Optional[str] = None,
+            body: Optional[dict | NewElementRequestBody] = None,
     ) -> str:
         """Create project: https://egeria-project.org/concepts/project
 
         Parameters
         ----------.
+        anchor_guid: str, optional
+            The identity of the anchor element for the project.
+        parent_guid: str, optional
+            The identity of the parent element for the project.
+        parent_relationship_type_name: str, optional
+            The type of relationship to the parent element.
+        parent_at_end1: bool, optional
+            True if the parent is at end 1 of the relationship.
+        display_name: str, optional
+            The display name of the project.
+        description: str, optional
+            A description of the project.
+        classification_name: str, optional
+            The type of project - Campaign, StudyProject, Task, PersonalProject or Project.
+        identifier: str, optional
+            A business identifier for the project.
+        is_own_anchor: bool, optional
+            True if the project is its own anchor.
+        status: str, optional
+            The project status.
+        phase: str, optional
+            The project phase.
+        health: str, optional
+            The project health.
+        start_date: str, optional
+            The start date of the project.
+        planned_end_date: str, optional
+            The planned completion date of the project.
         body: dict
             A dict representing the details of the project to create.
 
@@ -1026,7 +1444,9 @@ class ProjectManager(ServerClient):
         """
         loop = asyncio.get_event_loop()
         resp = loop.run_until_complete(
-            self._async_create_project(body)
+            self._async_create_project(anchor_guid, parent_guid, parent_relationship_type_name, parent_at_end1,
+                                       display_name, description, classification_name, identifier,
+                                       is_own_anchor, status, phase, health, start_date, planned_end_date, body)
         )
         return resp
 
@@ -1161,7 +1581,17 @@ class ProjectManager(ServerClient):
     async def _async_update_project(
             self,
             project_guid: str,
-            body: dict | UpdateElementRequestBody
+            qualified_name: Optional[str] = None,
+            identifier: Optional[str] = None,
+            display_name: Optional[str] = None,
+            description: Optional[str] = None,
+            project_status: Optional[str] = None,
+            project_phase: Optional[str] = None,
+            project_health: Optional[str] = None,
+            start_date: Optional[str] = None,
+            planned_end_date: Optional[str] = None,
+            merge_update: bool = True,
+            body: Optional[dict | UpdateElementRequestBody] = None,
     ) -> None:
         """Update the properties of a project. Async Version.
 
@@ -1189,6 +1619,8 @@ class ProjectManager(ServerClient):
             Planned completion date in ISO 8601 string format.
         merge_update: bool, optional, defaults to False
             If True, then all the properties of the project will be replaced with the specified properties.
+        body: dict, optional
+            Full request body. If provided, other parameters are ignored.
 
         Returns
         -------
@@ -1203,6 +1635,23 @@ class ProjectManager(ServerClient):
         NotAuthorizedException
           The principle specified by the user_id does not have authorization for the requested action
         """
+        if body is None:
+            body = {
+                "class": "UpdateElementRequestBody",
+                "mergeUpdate": merge_update,
+                "properties": {
+                    "class": "ProjectProperties",
+                    "qualifiedName": qualified_name,
+                    "identifier": identifier,
+                    "name": display_name,
+                    "description": description,
+                    "projectStatus": project_status,
+                    "projectPhase": project_phase,
+                    "projectHealth": project_health,
+                    "startDate": start_date,
+                    "plannedEndDate": planned_end_date,
+                }
+            }
 
         url = (
             f"{self.platform_url}/servers/{self.view_server}/api/open-metadata/project-manager/projects/{project_guid}/"
@@ -1216,7 +1665,17 @@ class ProjectManager(ServerClient):
     def update_project(
             self,
             project_guid: str,
-            body: dict | UpdateElementRequestBody,
+            qualified_name: Optional[str] = None,
+            identifier: Optional[str] = None,
+            display_name: Optional[str] = None,
+            description: Optional[str] = None,
+            project_status: Optional[str] = None,
+            project_phase: Optional[str] = None,
+            project_health: Optional[str] = None,
+            start_date: Optional[str] = None,
+            planned_end_date: Optional[str] = None,
+            merge_update: bool = True,
+            body: Optional[dict | UpdateElementRequestBody] = None,
     ) -> None:
         """Update the properties of a project.
 
@@ -1244,6 +1703,8 @@ class ProjectManager(ServerClient):
             Planned completion date in ISO 8601 string format.
         merge_update: bool, optional, defaults to False
             If True, then all the properties of the project will be replaced with the specified properties.
+        body: dict, optional
+            Full request body. If provided, other parameters are ignored.
 
         Returns
         -------
@@ -1260,7 +1721,9 @@ class ProjectManager(ServerClient):
         """
         loop = asyncio.get_event_loop()
         loop.run_until_complete(
-            self._async_update_project(project_guid, body))
+            self._async_update_project(project_guid, qualified_name, identifier, display_name, description,
+                                       project_status, project_phase, project_health, start_date, planned_end_date,
+                                       merge_update, body))
 
     @dynamic_catch
     async def _async_delete_project(
@@ -1856,12 +2319,37 @@ class ProjectManager(ServerClient):
         )
 
     @dynamic_catch
-    async def _async_create_task_for_project(
+    async def _async_create_project_task(
             self,
             project_guid: str,
-            body: dict | NewElementRequestBody
+            display_name: Optional[str] = None,
+            identifier: Optional[str] = None,
+            description: Optional[str] = None,
+            status: Optional[str] = None,
+            phase: Optional[str] = None,
+            health: Optional[str] = None,
+            start_date: Optional[str] = None,
+            planned_end_date: Optional[str] = None,
+            body: Optional[dict | NewElementRequestBody] = None
     ) -> str:
         """Create a new task for a project.  Async version."""
+        if body is None:
+            import time
+            body = {
+                "class": "NewElementRequestBody",
+                "properties": {
+                    "class": "ProjectProperties",
+                    "qualifiedName": f"Task-{display_name}-{time.asctime()}",
+                    "identifier": identifier,
+                    "name": display_name,
+                    "description": description,
+                    "projectStatus": status,
+                    "projectPhase": phase,
+                    "projectHealth": health,
+                    "startDate": start_date,
+                    "plannedEndDate": planned_end_date,
+                }
+            }
 
         url = f"{self.project_command_base}/{project_guid}/task"
         response = await self._async_new_element_request(url, body)
@@ -1869,15 +2357,24 @@ class ProjectManager(ServerClient):
         return response
 
     @dynamic_catch
-    def create_task_for_project(
+    def create_project_task(
             self,
             project_guid: str,
-            body: dict | NewElementRequestBody
+            display_name: Optional[str] = None,
+            identifier: Optional[str] = None,
+            description: Optional[str] = None,
+            status: Optional[str] = None,
+            phase: Optional[str] = None,
+            health: Optional[str] = None,
+            start_date: Optional[str] = None,
+            planned_end_date: Optional[str] = None,
+            body: Optional[dict | NewElementRequestBody] = None
     ) -> str:
         """Create a new task for a project.  """
         loop = asyncio.get_event_loop()
         resp = loop.run_until_complete(
-            self._async_create_task_for_project(project_guid, body)
+            self._async_create_project_task(project_guid, display_name, identifier, description, status, phase, health,
+                                            start_date, planned_end_date, body)
         )
         return resp
 

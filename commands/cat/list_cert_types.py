@@ -18,7 +18,7 @@ from rich.console import Console
 from rich.table import Table
 
 from pyegeria import (
-    ClassificationManager,
+    ClassificationExplorer,
     PyegeriaException, settings
 )
 app_config = settings.Environment
@@ -40,7 +40,7 @@ def display_certifications(
 ):
     console = Console(width=width, force_terminal=not jupyter, soft_wrap=True)
 
-    g_client = ClassificationManager(
+    g_client = ClassificationExplorer(
         server, url, user_id=username, user_pwd=user_password
     )
     token = g_client.create_egeria_bearer_token(username, user_password)

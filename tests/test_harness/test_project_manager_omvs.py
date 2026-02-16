@@ -110,7 +110,7 @@ class TestProjectManager:
             # parent_guid = "0fa16a37-5c61-44c1-85a0-e415c3cecb82"
             # classification = "RootCollection"
             classification = "GovernanceProject"
-            response = p_client.get_classified_projects(classification)
+            response = p_client.add_project_classification(project_guid, None)
             duration = time.perf_counter() - start_time
 
             print(f"\n\tDuration was {duration} seconds")
@@ -219,7 +219,7 @@ class TestProjectManager:
             start_time = time.perf_counter()
             project_classification = "Campaign"
 
-            response = p_client.get_classified_projects(project_classification)
+            response = p_client.add_project_classification(project_guid, None)
             duration = time.perf_counter() - start_time
 
             print(f"\n\tDuration was {duration} seconds")

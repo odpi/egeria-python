@@ -1,4 +1,4 @@
-# Egeria-metadata-expert-view-service
+# Egeria-metadata-expert-api
 # The Metadata Expert OMVS provides APIs for supporting the search, query and retrieval of open metadata.  It is an advanced API for users that understand the [Open Metadata Types](https://egeria-project.org/types/).
 
 @baseURL=https://localhost:9443

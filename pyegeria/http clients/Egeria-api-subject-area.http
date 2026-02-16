@@ -1,5 +1,7 @@
-# Egeria-subject-area-view-service
-# Manage the definition of a subject area
+# Egeria-subject-area-api
+# Manage the definition of a subject area.  Subject Areas are collections.  Therefore
+# this API is used in conjunction with Collection Manager.  The operations from Collection
+# are highlighted
 # Subject Areas: https://egeria-project.org/concepts/subject-area/
 
 @baseURL=https://localhost:9443

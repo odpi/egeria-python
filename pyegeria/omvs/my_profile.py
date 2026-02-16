@@ -18,6 +18,7 @@ from pyegeria.models import (
     SearchStringRequestBody,
     UpdateElementRequestBody,
 )
+from pyegeria.view.base_report_formats import select_report_spec, get_report_spec_match
 from pyegeria.view.output_formatter import (populate_common_columns, generate_output, resolve_output_formats, materialize_egeria_summary, select_report_format)
 import asyncio
 
@@ -42,12 +43,20 @@ class MyProfile(ServerClient):
         The user password. Default is None.
     """
 
-    def __init__(self, view_server: str, platform_url: str, user_id: str | None = None, user_pwd: str|None = None,
-                 token: str|None = None):
+    def __init__(
+        self,
+        view_server: str,
+        platform_url: str,
+        user_id: str | None = None,
+        user_pwd: str | None = None,
+        token: str | None = None,
+        aggregation_depth: int = 3,
+    ):
         self.view_server = view_server
         self.platform_url = platform_url
         self.user_id = user_id
         self.user_pwd = user_pwd
+        self.aggregation_depth = aggregation_depth
         ServerClient.__init__(
             self,
             view_server,
@@ -56,7 +65,64 @@ class MyProfile(ServerClient):
             user_pwd=user_pwd,
             token=token,
         )
-        self.my_profile_command_root: str = f"{self.platform_url}/servers/{self.view_server}/api/open-metadata/my-profile"
+        self.my_profile_command_root: str = (
+            f"{self.platform_url}/servers/{self.view_server}/api/open-metadata/my-profile"
+        )
+
+    def _find_nested_elements(
+        self,
+        summary_list: list,
+        target_type: str,
+        spec: dict,
+        max_depth: int = 3,
+        current_depth: int = 0,
+        seen_guids: Optional[set] = None,
+    ) -> list:
+        """
+        Recursively find nested elements of a specific type within a list of summaries.
+        Deduplicates by GUID. Checks both type name and supertype names.
+        """
+        if seen_guids is None:
+            seen_guids = set()
+
+        found = []
+        if current_depth >= max_depth:
+            return found
+
+        for s in summary_list:
+            if not isinstance(s, dict):
+                continue
+
+            rel_el = s.get("relatedElement") or {}
+            header = rel_el.get("elementHeader") or {}
+            guid = header.get("guid")
+
+            header_type = header.get("type") or {}
+            type_name = header_type.get("typeName")
+            super_types = header_type.get("superTypeNames") or []
+
+            # 1. Check this element
+            if type_name == target_type or target_type in super_types:
+                if not guid or guid not in seen_guids:
+                    found.append(materialize_egeria_summary(s, spec))
+                    if guid:
+                        seen_guids.add(guid)
+
+            # 2. Recurse into nested elements
+            nested = s.get("nestedElements") or []
+            if isinstance(nested, list) and nested:
+                found.extend(
+                    self._find_nested_elements(
+                        nested,
+                        target_type,
+                        spec,
+                        max_depth,
+                        current_depth + 1,
+                        seen_guids,
+                    )
+                )
+
+        return found
 
     def _extract_my_profile_properties(self, element: dict, columns_struct: dict) -> dict:
         """Extractor for My Profile (Person) elements."""
@@ -93,47 +159,61 @@ class MyProfile(ServerClient):
                             ds_name = column.get("detail_spec")
                             spec = None
                             if ds_name:
-                                spec = (select_report_format(ds_name, "DICT")
-                                        or select_report_format(ds_name, "LIST")
-                                        or select_report_format(ds_name, "REPORT")
-                                        or select_report_format(ds_name, "ALL"))
-                            column["value"] = [materialize_egeria_summary(c, spec) for c in contact_details]
+                                spec = (
+                                    select_report_format(ds_name, "DICT")
+                                    or select_report_format(ds_name, "LIST")
+                                    or select_report_format(ds_name, "REPORT")
+                                    or select_report_format(ds_name, "ALL")
+                                )
+                            # Use recursive finder with max_depth=1 for top-level collections to benefit from deduplication
+                            if spec and spec.get("target_type"):
+                                column["value"] = self._find_nested_elements(
+                                    contact_details, spec.get("target_type"), spec, max_depth=1
+                                )
+                            else:
+                                column["value"] = [
+                                    materialize_egeria_summary(c, spec) for c in contact_details
+                                ]
 
                     elif key == "roles":
                         if isinstance(performs_roles, list):
                             ds_name = column.get("detail_spec")
                             spec = None
                             if ds_name:
-                                spec = (select_report_format(ds_name, "DICT")
-                                        or select_report_format(ds_name, "LIST")
-                                        or select_report_format(ds_name, "REPORT")
-                                        or select_report_format(ds_name, "ALL"))
-                            column["value"] = [materialize_egeria_summary(r, spec) for r in performs_roles]
+                                spec = (
+                                    select_report_format(ds_name, "DICT")
+                                    or select_report_format(ds_name, "LIST")
+                                    or select_report_format(ds_name, "REPORT")
+                                    or select_report_format(ds_name, "ALL")
+                                )
+                            # Deduplicate roles using recursion depth 1
+                            if spec and spec.get("target_type"):
+                                column["value"] = self._find_nested_elements(
+                                    performs_roles, spec.get("target_type"), spec, max_depth=1
+                                )
+                            else:
+                                column["value"] = [
+                                    materialize_egeria_summary(r, spec) for r in performs_roles
+                                ]
 
                     # Generic handler for elements nested within roles (e.g., teams, communities, projects)
                     elif column.get("detail_spec") and column.get("value") in (None, "", []):
                         ds_name = column.get("detail_spec")
-                        spec = (select_report_format(ds_name, "DICT")
-                                or select_report_format(ds_name, "LIST")
-                                or select_report_format(ds_name, "REPORT")
-                                or select_report_format(ds_name, "ALL"))
+                        spec = (
+                            select_report_format(ds_name, "DICT")
+                            or select_report_format(ds_name, "LIST")
+                            or select_report_format(ds_name, "REPORT")
+                            or select_report_format(ds_name, "ALL")
+                        )
 
                         if spec and spec.get("target_type"):
                             target_type = spec.get("target_type")
-                            found_elements = []
-                            for r in performs_roles:
-                                if not isinstance(r, dict):
-                                    continue
-                                nested = r.get("nestedElements") or []
-                                if isinstance(nested, list):
-                                    for n in nested:
-                                        if not isinstance(n, dict):
-                                            continue
-                                        rel_el = n.get("relatedElement") or {}
-                                        header = rel_el.get("elementHeader") or {}
-                                        if (header.get("type") or {}).get("typeName") == target_type:
-                                            # Found a match! Materialize it using its detail spec
-                                            found_elements.append(materialize_egeria_summary(n, spec))
+                            found_elements = self._find_nested_elements(
+                                performs_roles,
+                                target_type,
+                                spec,
+                                max_depth=self.aggregation_depth,
+                            )
                             if found_elements:
                                 column["value"] = found_elements
                 except Exception as e:
@@ -144,16 +224,67 @@ class MyProfile(ServerClient):
 
         return col_data
 
+
+
+    def _generate_my_profile_output(self, elements: dict | list[dict], filter_string: str = "My",
+                                    element_type_name: str = "Actor", output_format: str = "JSON",
+                                    report_spec: dict | str = "My-User-MD") -> str | list[dict]:
+        """ Generate output for my_profile in the specified format.
+
+            Args:
+                elements (Union[Dict, List[Dict]]): Dictionary or list of dictionaries containing data field elements
+                output_format (str): The desired output format (MD, FORM, REPORT, LIST, DICT, MERMAID, HTML)
+                report_spec (Optional[dict], optional): List of dictionaries containing column data. Defaults
+                to None.
+
+            Returns:
+                Union[str, List[Dict]]: Formatted output as a string or list of dictionaries
+        """
+
+        entity_type = element_type_name if element_type_name else "Actor"
+
+        # First see if the user has specified an report_spec - either a label or a dict
+        get_additional_props_func = None
+
+        if isinstance(report_spec, str):
+            output_formats = select_report_spec(report_spec, output_format)
+        elif isinstance(report_spec, dict):
+            output_formats = get_report_spec_match(report_spec, output_format)
+        else:
+            output_formats = select_report_spec("Default", output_format)
+
+        if output_formats:
+            get_additional_props_name = output_formats.get("get_additional_props", {}).get("function", None)
+            if isinstance(get_additional_props_name, str):
+                class_name, method_name = get_additional_props_name.split(".")
+                if hasattr(self, method_name):
+                    get_additional_props_func = getattr(self, method_name)
+
+        logger.trace(f"Executing generate_actor_role_output for {entity_type}: {output_formats}")
+        return generate_output(
+            elements,
+            filter_string,
+            entity_type,
+            output_format,
+            self._extract_my_profile_properties,
+            get_additional_props_func,
+            output_formats,
+        )
+
+
     @dynamic_catch
     async def _async_get_my_profile(
-        self, output_format: str = "JSON", report_spec: str | dict = None
+            self, body: dict | GetRequestBody | None = None, output_format: str = "JSON",
+            report_spec: str | dict = "My-User-MD"
     ) -> dict | str:
         """Retrieve the profile details of the user associated with the token. Async version.
 
         Parameters
         ----------
+        body: dict | GetRequestBody | None
+            - details of the request body, including filters and options for the profile retrieval.
         output_format: str, default = "JSON"
-            - one of "DICT", "JSON"
+            - specifying the format of the response (JSON, DICT, REPORT, LIST, FORM, MERMAID).
         report_spec: str | dict, optional, default = None
             - The desired output columns/field options.
 
@@ -169,29 +300,15 @@ class MyProfile(ServerClient):
             Egeria errors.
         """
         url = self.my_profile_command_root
-        response = await self._async_make_request("GET",url)
-        if type(response) == str:
-            return "No Profile Found"
+        response = await self._async_get_request_body_request(url=url, _type="Actor", body=body,
+                                                              _gen_output=self._generate_my_profile_output,
+                                                              output_format=output_format, report_spec=report_spec)
 
-        elements = response.json().get("element", "No Profile Found")
-        if output_format != 'JSON':  # return a simplified markdown representation
-            logger.info(f"Found elements, output format: {output_format} and report_spec: {report_spec}")
-            entity_type = "Person"
-            output_formats = resolve_output_formats(entity_type, output_format, report_spec, default_label=entity_type)
-            return generate_output(
-                elements=elements,
-                search_string=self.user_id,
-                entity_type=entity_type,
-                output_format=output_format,
-                extract_properties_func=self._extract_my_profile_properties,
-                get_additional_props_func=None,
-                columns_struct=output_formats,
-            )
-        return elements
+        return response
 
     @dynamic_catch
     def get_my_profile(
-        self, output_format: str = "JSON", report_spec: str | dict = None
+        self, body: dict | GetRequestBody | None = None, output_format: str = "JSON", report_spec: str | dict = "My-User-MD"
     ) -> dict | str:
         """Retrieve the profile details of the user associated with the token.
 
@@ -214,7 +331,7 @@ class MyProfile(ServerClient):
             Egeria errors.
         """
         return asyncio.get_event_loop().run_until_complete(
-            self._async_get_my_profile(output_format, report_spec)
+            self._async_get_my_profile(body, output_format, report_spec)
         )
 
     @dynamic_catch
@@ -373,7 +490,7 @@ class MyProfile(ServerClient):
         return await self._async_get_request_body_request(
             url,
             _type="ActorProfile",
-            _gen_output=self._generate_referenceable_output,
+            _gen_output=self._generate_my_profile_output,
             output_format=output_format,
             report_spec=report_spec,
             body=body,
@@ -449,7 +566,7 @@ class MyProfile(ServerClient):
         return await self._async_get_request_body_request(
             url,
             _type="UserIdentity",
-            _gen_output=self._generate_referenceable_output,
+            _gen_output=self._generate_my_profile_output,
             output_format=output_format,
             report_spec=report_spec,
             body=body,
@@ -525,7 +642,7 @@ class MyProfile(ServerClient):
         return await self._async_get_request_body_request(
             url,
             _type="GovernanceRole",
-            _gen_output=self._generate_referenceable_output,
+            _gen_output=self._generate_my_profile_output,
             output_format=output_format,
             report_spec=report_spec,
             body=body,
@@ -601,7 +718,7 @@ class MyProfile(ServerClient):
         return await self._async_get_request_body_request(
             url,
             _type="Resource",
-            _gen_output=self._generate_referenceable_output,
+            _gen_output=self._generate_my_profile_output,
             output_format=output_format,
             report_spec=report_spec,
             body=body,

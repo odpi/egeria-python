@@ -10,7 +10,7 @@ from pyegeria.omvs.actor_manager import ActorManager
 from pyegeria.omvs.asset_catalog import AssetCatalog
 from pyegeria.omvs.asset_maker import AssetMaker
 from pyegeria.omvs.automated_curation import AutomatedCuration
-from pyegeria.omvs.classification_manager import ClassificationManager
+from pyegeria.omvs.classification_explorer import ClassificationExplorer
 from pyegeria.omvs.collection_manager import CollectionManager
 from pyegeria.omvs.community_matters_omvs import CommunityMatters
 from pyegeria.omvs.data_designer import DataDesigner
@@ -23,8 +23,7 @@ from pyegeria.omvs.glossary_manager import GlossaryManager
 from pyegeria.omvs.governance_officer import GovernanceOfficer
 from pyegeria.omvs.lineage_linker import LineageLinker
 from pyegeria.omvs.location_arena import Location
-from pyegeria.omvs.metadata_expert import MetadataExpert
-from pyegeria.omvs.metadata_explorer_omvs import MetadataExplorer
+from pyegeria.omvs.metadata_expert import MetadataExpert, MetadataExplorer
 from pyegeria.omvs.my_profile import MyProfile
 from pyegeria.omvs.notification_manager import NotificationManager
 from pyegeria.omvs.people_organizer import PeopleOrganizer
@@ -81,25 +80,38 @@ class EgeriaTech:
         # Mapping of attribute names to their classes for lazy loading
         self._subclient_map = {
             "auto_curate": AutomatedCuration,
-            "class_mgr": ClassificationManager,
+            "automated_curation": AutomatedCuration,
+            "class_mgr": ClassificationExplorer,
+            "classification_manager": ClassificationExplorer,
             "reg_info": RegisteredInfo,
+            "registered_info": RegisteredInfo,
             "runtime": RuntimeManager,
+            "runtime_manager": RuntimeManager,
             "valid": ValidMetadataManager,
+            "valid_metadata": ValidMetadataManager,
             "explorer": MetadataExplorer,
+            "metadata_explorer": MetadataExplorer,
             "expert": MetadataExpert,
+            "metadata_expert": MetadataExpert,
             "sol_arch": SolutionArchitect,
+            "solution_architect": SolutionArchitect,
             "designer": DataDesigner,
             "data_designer": DataDesigner,
             "glossary": GlossaryManager,
+            "glossary_manager": GlossaryManager,
             "templates": TemplateManager,
             "template_manager": TemplateManager,
             "gov_officer": GovernanceOfficer,
+            "governance_officer": GovernanceOfficer,
             "collections": CollectionManager,
+            "collection_manager": CollectionManager,
             "external_references": ExternalReferences,
+            "external_refs": ExternalReferences,
             "actor_manager": ActorManager,
             "time_keeper": TimeKeeper,
             "product_manager": ProductManager,
             "location_arena": Location,
+            "location": Location,
             "data_discovery": DataDiscovery,
             "data_engineer": DataEngineer,
             "digital_business": DigitalBusiness,
@@ -124,8 +136,7 @@ class EgeriaTech:
             "reference_data": ReferenceDataManager,
             "specification_properties": SpecificationProperties,
             "subject_area": SubjectArea,
-            "valid": ValidMetadataManager,
-            "valid_metadata": ValidMetadataManager,
+            "subject_area_manager": SubjectArea,
         }
         self._instantiated_clients = {}
         self.NO_ELEMENTS_FOUND = NO_ELEMENTS_FOUND

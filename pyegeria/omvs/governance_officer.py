@@ -53,7 +53,7 @@ DEFAULT_BODY_SKELETON = {
 
 
 def base_path(client, view_server: str):
-    return f"{client.platform_url}/servers/governance-officer/api/open-metadata/metadata-explorer"
+    return f"{client.platform_url}/servers/governance-officer/api/open-metadata/metadata-expert"
 
 
 class GovernanceDefinitionProperties(ReferenceableProperties):

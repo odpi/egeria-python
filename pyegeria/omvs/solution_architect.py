@@ -54,7 +54,7 @@ def query_string(params):
 
 
 def base_path(client, view_server: str):
-    return f"{client.platform_url}/servers/{view_server}/api/open-metadata/metadata-explorer"
+    return f"{client.platform_url}/servers/{view_server}/api/open-metadata/metadata-expert"
 
 
 class SolutionArchitect(ServerClient):

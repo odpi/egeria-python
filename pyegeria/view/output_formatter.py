@@ -239,35 +239,80 @@ def materialize_egeria_summary(summary: dict, columns_struct: Optional[dict] = N
 
     res = {}
 
-    # 1. Relationship properties
+    # 1. Header & properties materialization
+    # Check if we are dealing with a summary that has a top-level elementHeader or properties
+    # This handles both raw elements and summary objects
+    header = summary.get("elementHeader") or (summary.get("relatedElement") or {}).get("elementHeader")
+    props = summary.get("properties") or (summary.get("relatedElement") or {}).get("properties") or {}
     rel_props = summary.get("relationshipProperties") or {}
+
+    # 1a. Generic materialization of the header
+    if isinstance(header, dict):
+        res["type"] = (header.get("type") or {}).get("typeName")
+        res["guid"] = header.get("guid")
+        
+        # Pull everything else from the header generically
+        for h_key, h_val in header.items():
+            if h_key in ("guid", "type", "classifications", "origin", "versions", "status"):
+                continue
+            
+            # Materialize this header property
+            if isinstance(h_val, list):
+                materialized_list = []
+                for item in h_val:
+                    if isinstance(item, dict):
+                        # Recursive materialization
+                        m_item = materialize_egeria_summary(item, columns_struct)
+                        # Fallback for classifications/roles found in headers
+                        if not m_item.get('name') and item.get('classificationName'):
+                            m_item['name'] = item['classificationName']
+                        materialized_list.append(m_item)
+                    else:
+                        materialized_list.append(item)
+                res[h_key] = materialized_list
+            elif isinstance(h_val, dict):
+                res[h_key] = materialize_egeria_summary(h_val, columns_struct)
+            else:
+                res[h_key] = h_val
+
+    # 1b. Materialize relationship properties
     if isinstance(rel_props, dict):
         for k, v in rel_props.items():
-            if k not in ("class", "typeName", "extendedProperties"):
+            if k not in ("class", "typeName", "extendedProperties") and k not in res:
                 res[k] = v
 
-    # 2. Related element header & properties
-    rel_el = summary.get("relatedElement") or {}
-    if isinstance(rel_el, dict):
-        header = rel_el.get("elementHeader") or {}
-        props = rel_el.get("properties") or {}
+    # 1c. Materialize element properties
+    if isinstance(props, dict):
+        # Add a friendly 'name' if possible
+        if "displayName" in props:
+            res["name"] = props["displayName"]
+        elif "qualifiedName" in props:
+            res["name"] = props["qualifiedName"]
 
-        if header:
-            header_type = header.get("type") or {}
-            res["type"] = header_type.get("typeName")
-            res["guid"] = header.get("guid")
+        for k, v in props.items():
+            if k not in ("class", "typeName", "extendedProperties"):
+                if k not in res:
+                    res[k] = v
 
-        if isinstance(props, dict):
-            # Add a friendly 'name' if possible
-            if "displayName" in props:
-                res["name"] = props["displayName"]
-            elif "qualifiedName" in props:
-                res["name"] = props["qualifiedName"]
+    # 1d. Generic materialization of any other top-level fields
+    for k, v in summary.items():
+        if k in ("elementHeader", "properties", "relationshipProperties", "relatedElement", "nestedElements", "class"):
+            continue
+        if k in res:
+            continue
 
-            for k, v in props.items():
-                if k not in ("class", "typeName", "extendedProperties"):
-                    if k not in res:
-                        res[k] = v
+        if isinstance(v, list):
+            materialized_list = []
+            for item in v:
+                if isinstance(item, dict):
+                    materialized_list.append(materialize_egeria_summary(item, columns_struct))
+                else:
+                    materialized_list.append(item)
+            res[k] = materialized_list
+        elif isinstance(v, dict):
+            res[k] = materialize_egeria_summary(v, columns_struct)
+        else:
+            res[k] = v
 
     # 3. Build type-to-key map from the current spec if provided
     type_map = {}
@@ -293,12 +338,14 @@ def materialize_egeria_summary(summary: dict, columns_struct: Optional[dict] = N
     # 4. Process nested elements
     nested = summary.get("nestedElements") or []
     if isinstance(nested, list) and len(nested) > 0:
-        res["nested_elements"] = []
+        if "nested_elements" not in res:
+            res["nested_elements"] = []
+            
         for n in nested:
             if not isinstance(n, dict):
                 continue
             # Descend into next level. 
-            extracted = materialize_egeria_summary(n)
+            extracted = materialize_egeria_summary(n, columns_struct)
             res["nested_elements"].append(extracted)
 
             # Generic promotion: If the type of this nested element matches a column in our spec,
@@ -1230,6 +1277,7 @@ def populate_common_columns(
     # Single pass through columns - consolidate all operations
     col_data = columns_struct
     columns_list = col_data.get('formats', {}).get('attributes', [])
+    header = element.get('elementHeader', {}) if isinstance(element, dict) else {}
     
     for column in columns_list:
         if not isinstance(column, dict):
@@ -1249,7 +1297,32 @@ def populate_common_columns(
             column['value'] = props.get(key_camel)
             continue
         
-        # 2) Try header properties
+        # 1a) Try elementHeader (generic fallback)
+        if key_camel in header:
+            h_val = header.get(key_camel)
+            if isinstance(h_val, list):
+                # Summarize list of objects (like projectRoles)
+                names = []
+                for item in h_val:
+                    if isinstance(item, dict):
+                        # Try to find a name generically
+                        nm = item.get('classificationName') or item.get('name') or item.get('displayName') or item.get('qualifiedName')
+                        if nm:
+                            names.append(nm)
+                        else:
+                            # If no name found, maybe it's a simple dict we can stringify or just skip
+                            names.append(str(item))
+                    else:
+                        names.append(str(item))
+                column['value'] = ", ".join(names)
+            elif isinstance(h_val, dict):
+                # Generic fallback for dicts in header
+                column['value'] = h_val.get('name') or h_val.get('displayName') or h_val.get('qualifiedName') or str(h_val)
+            else:
+                column['value'] = h_val
+            continue
+
+        # 2) Try header properties (from pre-extracted referenceable properties)
         if include_header:
             if key in header_props:
                 column['value'] = header_props.get(key)

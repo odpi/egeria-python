@@ -1,4 +1,4 @@
-# Egeria-actor-manager-view-service
+# Egeria-actor-manager-api
 # The Actor Manager OMVS provides APIs for supporting the creation and editing of actor profiles, 
 #actor roles and user identities.
 
@@ -1421,7 +1421,7 @@ Authorization: Bearer {{token}}
 Content-Type: application/json
 
 {
-  "class" : "MetadataSourceRequestBody",
+  "class" : "DeleteClassificationRequestBody",
   "externalSourceGUID": "add guid here",
   "externalSourceName": "add qualified name here",
   "effectiveTime" : "{{$isoTimestamp}}",

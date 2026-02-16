@@ -1,4 +1,4 @@
-# Egeria-data-engineer-view-service
+# Egeria-data-engineer-api
 
 @baseURL=https://localhost:9443
 @viewServer=view-server

@@ -59,7 +59,7 @@ from pyegeria.omvs.actor_manager import ActorManager
 from pyegeria.omvs.asset_catalog import AssetCatalog
 from pyegeria.omvs.asset_maker import AssetMaker
 from pyegeria.omvs.automated_curation import AutomatedCuration
-from pyegeria.omvs.classification_manager import ClassificationManager
+from pyegeria.omvs.classification_explorer import ClassificationExplorer
 from pyegeria.omvs.collection_manager import CollectionManager
 from pyegeria.omvs.community_matters_omvs import CommunityMatters
 from pyegeria.omvs.data_designer import DataDesigner
@@ -163,7 +163,7 @@ __all__ = [
     "AssetCatalog",
     "AssetMaker",
     "AutomatedCuration",
-    "ClassificationManager",
+    "ClassificationExplorer",
     "CollectionManager",
     "CommunityMatters",
     "DataDesigner",

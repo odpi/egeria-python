@@ -34,7 +34,7 @@ Open Licenses
 >	Description: Integer representing the governance domain. All domains is 0.
 
 >	Default Value: 0
-
+ALL
 
 ## Document Identifier
 >	Input Required: False

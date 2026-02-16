@@ -1,4 +1,4 @@
-# Egeria-data-officer-view-service
+# Egeria-data-officer-api
 
 @baseURL=https://localhost:9443
 @viewServer=view-server
