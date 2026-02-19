@@ -82,9 +82,9 @@ class NotificationManagerScenarioTester:
             token = self.client.create_egeria_bearer_token(USER_ID, USER_PWD)
 
             # Apply the token to the other clients
-            self.actor_client.token = token
-            self.collection_client.token = token
-            self.gov_officer.token = token
+            self.actor_client.set_bearer_token(token)
+            self.collection_client.set_bearer_token(token)
+            self.gov_officer.set_bearer_token(token)
             console.print(f"✓ Connected to {PLATFORM_URL}")
             console.print(f"✓ Authenticated as {USER_ID}")
             console.print(f"✓ Test Run ID: {self.test_run_id}\n")
@@ -223,7 +223,7 @@ class NotificationManagerScenarioTester:
             # Create notification type governance control
             notification_body = {
                 "class": "NewElementRequestBody",
-                "isOwnAnchor": True,
+                # "isOwnAnchor": True,
                 "properties": {
                     "class": "NotificationTypeProperties",
                     "qualifiedName": f"NotificationType::{ts}",
@@ -253,7 +253,6 @@ class NotificationManagerScenarioTester:
             resource_body = {
                 "class": "NewElementRequestBody",
                 "typeName": "Collection",
-        
                 "properties": {
                     "class": "CollectionProperties",
                     "qualifiedName": f"Collection::MonitoredResource::{ts}",
@@ -302,7 +301,7 @@ class NotificationManagerScenarioTester:
                 created_guids=created_guids
             )
             
-        except Exception as e:
+        except PyegeriaException as e:
             duration = time.perf_counter() - start_time
             if isinstance(e, PyegeriaTimeoutException):
                 console.print(f"  [yellow]⚠ Timeout in {scenario_name}; continuing.[/yellow]")
@@ -467,7 +466,6 @@ class NotificationManagerScenarioTester:
             resource_body_create = {
                 "class": "NewElementRequestBody",
                 "typeName": "Collection",
-        
                 "properties": {
                     "class": "CollectionProperties",
                     "qualifiedName": f"Collection::CompleteResource::{ts}",
@@ -476,7 +474,7 @@ class NotificationManagerScenarioTester:
                 }
             }
             
-            monitored_resource_guid = self.collection_client.create_collection(resource_body_create)
+            monitored_resource_guid = self.collection_client.create_collection(body=resource_body_create)
             if monitored_resource_guid:
                 created_guids.append(monitored_resource_guid)
                 self.created_collections.append(monitored_resource_guid)

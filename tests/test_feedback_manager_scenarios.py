@@ -372,7 +372,7 @@ class FeedbackScenarioTester:
         console.print(table)
         console.print(f"\n[bold]Summary:[/bold] {passed} passed, {failed} failed, {skipped} skipped")
 
-    def run_all_scenarios(self):
+    def run_all_scenarios(self) -> list[TestResult]:
         """Run all test scenarios"""
         console.print(Panel.fit(
             "[bold cyan]Feedback Manager Scenario Tests[/bold cyan]\n"
@@ -382,7 +382,7 @@ class FeedbackScenarioTester:
 
         if not self.setup():
             console.print("[red]Setup failed. Aborting tests.[/red]")
-            return
+            return []
 
         results = []
 
@@ -403,6 +403,14 @@ class FeedbackScenarioTester:
 
         self.teardown()
         self.print_summary(results)
+        return results
+
+
+def test_feedback_manager_scenarios():
+    """Pytest entry point"""
+    tester = FeedbackScenarioTester()
+    results = tester.run_all_scenarios()
+    assert all(result.passed or result.skipped for result in results), "Some scenarios failed"
 
 
 def main():
