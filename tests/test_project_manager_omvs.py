@@ -469,6 +469,10 @@ class TestProjectManager:
             body = {
                 "class": "NewElementRequestBody",
                 "isOwnAnchor": True,
+                "initialClassifications": {
+                    "PersonalProject": {
+                        "class": "PersonalProjectProperties"
+                    },
                 "parentRelationshipTypeName": "ProjectHierarchy",
                 "properties":{
                     "class": "ProjectProperties",
@@ -478,14 +482,11 @@ class TestProjectManager:
                     "projectStatus": "DEFINED",
                     "startDate": "2025-12-01",
                     "plannedEndDate": "2028-01-01",
-                    "initialClassifications" : {
-                        "PersonalProject" : {
-                          "class": "PersonalProjectProperties"
-                        }
+
                     },
                 },
             }
-            response = p_client.create_project(body)
+            response = p_client.create_project(body=body)
             duration = time.perf_counter() - start_time
             # resp_str = json.loads(response)
             print(f"\n\tDuration was {duration} seconds\n")

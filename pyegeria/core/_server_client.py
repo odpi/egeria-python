@@ -1446,12 +1446,6 @@ class ServerClient(BaseServerClient):
         ----------
         comment_guid
             - unique identifier for the comment object.
-        server_name
-            - name of the server instances for this request
-        view_service_url_marker
-            - optional view service URL marker (overrides access_service_url_marker)
-        access_service_url_marker
-            - optional access service URL marker used to identify which back end service to call
         body
             - optional effective time
 
@@ -1466,7 +1460,7 @@ class ServerClient(BaseServerClient):
         PyegeriaAPIException
             There is a problem adding the element properties to the metadata repository or
         PyegeriaUnauthorizedException
-            the requesting user is not authorized to issue this request.
+            The requesting user is not authorized to issue this request.
 
         Args:
             element_type ():
@@ -1540,18 +1534,12 @@ class ServerClient(BaseServerClient):
         ----------
         element_guid
             - unique identifier for the element that the comments are connected to (maybe a comment too).
-        server_name
-            - name of the server instances for this request
         body
             - optional effective time
         start_from
             - index of the list to start from (0 for start)
         page_size
             - maximum number of elements to return.
-        view_service_url_marker
-            - optional view service URL marker (overrides access_service_url_marker)
-        access_service_url_marker
-            - optional access service URL marker used to identify which back end service to call
 
         Returns
         -------
@@ -4462,11 +4450,7 @@ class ServerClient(BaseServerClient):
         tag_guid
             - unique id of the tag.
 
-        view_service_url_marker
-            - optional view service URL marker (overrides access_service_url_marker)
-        access_service_url_marker
-            - optional access service URL marker used to identify which back end service to call
-        body
+       body
             - null request body needed for correct protocol exchange.
 
         Returns
@@ -4498,7 +4482,7 @@ class ServerClient(BaseServerClient):
     async def _async_add_like_to_element(
             self,
             element_guid: str,
-            is_public: bool = True,
+            emoji: str = None,
             body: Optional[dict] = None
     ) -> dict | str:
         """
@@ -4508,8 +4492,8 @@ class ServerClient(BaseServerClient):
         ----------
         element_guid : str
             Unique identifier for the element.
-        is_public : bool, default True
-            Is this visible to other people?
+        emoji :str, default None
+            an optional emoji string
         body : dict, optional
             Optional effective time.
 
@@ -4526,20 +4510,48 @@ class ServerClient(BaseServerClient):
             There is a problem adding the element properties to the metadata repository.
         PyegeriaUnauthorizedException
             The requesting user is not authorized to issue this request.
+
+        Notes:
+        {
+          "class" : "NewAttachmentRequestBody",
+          "initialClassifications" : {
+            "ZoneMembership" : {
+              "class" : "ZoneMembershipProperties",
+              "zoneMembership" : "erinoverview"
+            }
+          "properties" : {
+            "class" : "LikeProperties",
+            "emoji" : "Add characters here as text"
+          }
+        }
+
         """
-        if body is None:
-            body = {}
-        
-        url = (f"{self.command_root}feedback-manager/elements/{element_guid}/likes"
-               f"?isPublic={is_public}")
-        
-        response = await self._async_make_request("POST", url, body)
+
+        if body is None and emoji:
+            body = {
+              "class" : "NewAttachmentRequestBody",
+              "initialClassifications" : {
+                "ZoneMembership" : {
+                  "class" : "ZoneMembershipProperties",
+                  "zoneMembership" : "erinoverview"
+                }
+              },
+              "properties" : {
+                "class" : "LikeProperties",
+                "emoji" : "Add characters here as text"
+                }
+            }
+        url = f"{self.command_root}feedback-manager/elements/{element_guid}/likes"
+        if body:
+            response = await self._async_make_request("POST", url, body)
+        else:
+            response = await self._async_make_request("POST", url)
         return response.json()
 
     def add_like_to_element(
             self,
             element_guid: str,
-            is_public: bool = True,
+            emoji: str = None,
             body: Optional[dict] = None
     ) -> dict | str:
         """
@@ -4549,8 +4561,8 @@ class ServerClient(BaseServerClient):
         ----------
         element_guid : str
             Unique identifier for the element.
-        is_public : bool, default True
-            Is this visible to other people?
+        emoji :str, default None
+            an optional emoji string
         body : dict, optional
             Optional effective time.
 
@@ -4567,10 +4579,26 @@ class ServerClient(BaseServerClient):
             There is a problem adding the element properties to the metadata repository.
         PyegeriaUnauthorizedException
             The requesting user is not authorized to issue this request.
+
+        Notes
+        _____
+        {
+          "class" : "NewAttachmentRequestBody",
+          "initialClassifications" : {
+            "ZoneMembership" : {
+              "class" : "ZoneMembershipProperties",
+              "zoneMembership" : "erinoverview"
+            }
+          },
+          "properties" : {
+            "class" : "LikeProperties",
+            "emoji" : "Add characters here as text"
+          }
+        }
         """
         loop = asyncio.get_event_loop()
         response = loop.run_until_complete(
-            self._async_add_like_to_element(element_guid, is_public, body)
+            self._async_add_like_to_element(element_guid, emoji, body)
         )
         return response
 
@@ -4781,6 +4809,17 @@ class ServerClient(BaseServerClient):
             There is a problem adding the element properties to the metadata repository.
         PyegeriaUnauthorizedException
             The requesting user is not authorized to issue this request.
+
+        Notes
+        _____
+        rating_body = {
+            "class": "NewAttachmentRequestBody",
+            "properties": {
+                "class": "RatingProperties",
+                "starRating": 5,
+                "review": "Excellent test element!"
+            }
+        }
         """
         if body is None:
             body = {}
@@ -4822,6 +4861,17 @@ class ServerClient(BaseServerClient):
             There is a problem adding the element properties to the metadata repository.
         PyegeriaUnauthorizedException
             The requesting user is not authorized to issue this request.
+
+        Notes
+        _____
+        rating_body = {
+            "class": "NewAttachmentRequestBody",
+            "properties": {
+                "class": "RatingProperties",
+                "starRating": 5,
+                "review": "Excellent test element!"
+            }
+        }
         """
         loop = asyncio.get_event_loop()
         response = loop.run_until_complete(

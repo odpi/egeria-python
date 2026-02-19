@@ -1,6 +1,6 @@
 {
   "family": "Governance Officer",
-  "exported": "Feb 15, 2026 at 8:09:20 PM",
+  "exported": "Feb 18, 2026 at 11:35:24 AM",
   "attribute_definitions": {
     "Access Control": {
       "variable_name": "access_control",
@@ -2505,7 +2505,17 @@
       "extra_find": "",
       "extra_constraints": "",
       "bundle": "Governance Control Base",
-      "custom_attributes": [],
+      "custom_attributes": [
+        "Max Height",
+        "Data Collection End Time",
+        "Data Collection Start Time",
+        "Max Latitude",
+        "Max Longitude",
+        "Min Height",
+        "Min Latitude",
+        "Min Longitude",
+        "Scope Elements"
+      ],
       "Journal Entry": ""
     },
     "Create Data Processing Purpose": {
@@ -2757,7 +2767,9 @@
       "extra_find": "",
       "extra_constraints": "",
       "bundle": "Governance Driver",
-      "custom_attributes": [],
+      "custom_attributes": [
+        "Business Imperatives"
+      ],
       "Journal Entry": ""
     },
     "Create Governance Zone": {
@@ -2775,7 +2787,9 @@
       "extra_find": "",
       "extra_constraints": "",
       "bundle": "Governance Control Base",
-      "custom_attributes": [],
+      "custom_attributes": [
+        "Criteria"
+      ],
       "Journal Entry": ""
     },
     "Create License Type": {
@@ -2847,7 +2861,15 @@
       "extra_find": "",
       "extra_constraints": "",
       "bundle": "Governance Control Base",
-      "custom_attributes": [],
+      "custom_attributes": [
+        "Planned Completion Date",
+        "Multiple Notifications Permitted",
+        "Next Scheduled Notification",
+        "Notification Count",
+        "Notification Interval",
+        "Minimum Notification Interval",
+        "Planned Start Date"
+      ],
       "Journal Entry": ""
     },
     "Create Regulation": {
@@ -2865,7 +2887,10 @@
       "extra_find": "",
       "extra_constraints": "",
       "bundle": "Governance Driver",
-      "custom_attributes": [],
+      "custom_attributes": [
+        "Regulation Source",
+        "Regulators"
+      ],
       "Journal Entry": ""
     },
     "Create Regulation Article": {
@@ -2957,7 +2982,11 @@
       "extra_find": "",
       "extra_constraints": "",
       "bundle": "Governance Control Base",
-      "custom_attributes": [],
+      "custom_attributes": [
+        "Obligations",
+        "Entitlements",
+        "Restrictions"
+      ],
       "Journal Entry": ""
     },
     "Create Threat Definition": {
@@ -3011,7 +3040,11 @@
       "extra_find": "",
       "extra_constraints": "",
       "bundle": "Link Command Base",
-      "custom_attributes": [],
+      "custom_attributes": [
+        "Access Control",
+        "Operation Name",
+        "Security Group"
+      ],
       "Journal Entry": ""
     },
     "Link Certification": {
@@ -3029,7 +3062,24 @@
       "extra_find": "",
       "extra_constraints": "",
       "bundle": "Link Command Base",
-      "custom_attributes": [],
+      "custom_attributes": [
+        "Certificate GUID",
+        "Certification Type",
+        "Certified By",
+        "Certified By Property Name",
+        "Certified By Type Name",
+        "Conditions",
+        "Custodian",
+        "Custodian Property Name",
+        "Custodian Type Name",
+        "End Date",
+        "Notes",
+        "Recipient",
+        "Recipient Property Name",
+        "Recipient Type Name",
+        "Referenceable",
+        "Start Date"
+      ],
       "Journal Entry": ""
     },
     "Link Governance Controls": {
@@ -3047,7 +3097,10 @@
       "extra_find": "",
       "extra_constraints": "",
       "bundle": "Link Command Base",
-      "custom_attributes": [],
+      "custom_attributes": [
+        "Governance Control 1",
+        "Governance Control 2"
+      ],
       "Journal Entry": ""
     },
     "Link Governance Drivers": {
@@ -3065,7 +3118,10 @@
       "extra_find": "",
       "extra_constraints": "",
       "bundle": "Link Command Base",
-      "custom_attributes": [],
+      "custom_attributes": [
+        "Governance Driver 1",
+        "Governance Driver 2"
+      ],
       "Journal Entry": ""
     },
     "Link Governance Mechanism": {
@@ -3083,7 +3139,11 @@
       "extra_find": "",
       "extra_constraints": "",
       "bundle": "Link Command Base",
-      "custom_attributes": [],
+      "custom_attributes": [
+        "Rationale",
+        "Mechanism",
+        "Policy"
+      ],
       "Journal Entry": ""
     },
     "Link Governance Policies": {
@@ -3101,7 +3161,10 @@
       "extra_find": "",
       "extra_constraints": "",
       "bundle": "Link Command Base",
-      "custom_attributes": [],
+      "custom_attributes": [
+        "Governance Policy 1",
+        "Governance Policy 2"
+      ],
       "Journal Entry": ""
     },
     "Link Governance Response": {
@@ -3119,7 +3182,11 @@
       "extra_find": "",
       "extra_constraints": "",
       "bundle": "Link Command Base",
-      "custom_attributes": [],
+      "custom_attributes": [
+        "Rationale",
+        "Driver",
+        "Policy"
+      ],
       "Journal Entry": ""
     },
     "Link Governed By": {
@@ -3137,7 +3204,10 @@
       "extra_find": "",
       "extra_constraints": "",
       "bundle": "Link Command Base",
-      "custom_attributes": [],
+      "custom_attributes": [
+        "Governance Definition",
+        "Referenceable"
+      ],
       "Journal Entry": ""
     },
     "Link License": {
@@ -3155,7 +3225,27 @@
       "extra_find": "",
       "extra_constraints": "",
       "bundle": "Link Command Base",
-      "custom_attributes": [],
+      "custom_attributes": [
+        "Conditions",
+        "Custodian",
+        "Custodian Property Name",
+        "Custodian Type Name",
+        "End Date",
+        "Entitlements",
+        "License GUID",
+        "License Type",
+        "Licensed By",
+        "Licensed By Property Name",
+        "Licensed By Type Name",
+        "Licensee",
+        "Licensee Property Name",
+        "Licensee Type Name",
+        "Notes",
+        "Obligations",
+        "Referenceable",
+        "Restrictions",
+        "Start Date"
+      ],
       "Journal Entry": ""
     },
     "Link Monitored Resource": {
@@ -3173,7 +3263,10 @@
       "extra_find": "",
       "extra_constraints": "",
       "bundle": "Link Command Base",
-      "custom_attributes": [],
+      "custom_attributes": [
+        "Monitored Resource",
+        "Monitoring Control"
+      ],
       "Journal Entry": ""
     },
     "Link Notification Subscriber": {
@@ -3191,7 +3284,13 @@
       "extra_find": "",
       "extra_constraints": "",
       "bundle": "Link Command Base",
-      "custom_attributes": [],
+      "custom_attributes": [
+        "Zone Membership",
+        "Notification Type",
+        "Activity Status",
+        "Subscriber",
+        "Last Notification"
+      ],
       "Journal Entry": ""
     },
     "Link Regulation Certification Type": {
@@ -3209,7 +3308,10 @@
       "extra_find": "",
       "extra_constraints": "",
       "bundle": "Link Command Base",
-      "custom_attributes": [],
+      "custom_attributes": [
+        "Certification Type",
+        "Regulation"
+      ],
       "Journal Entry": ""
     },
     "Link Zone Hierarchy": {
@@ -3227,7 +3329,10 @@
       "extra_find": "",
       "extra_constraints": "",
       "bundle": "Link Command Base",
-      "custom_attributes": [],
+      "custom_attributes": [
+        "Parent Zone",
+        "Child Zone"
+      ],
       "Journal Entry": ""
     }
   }
