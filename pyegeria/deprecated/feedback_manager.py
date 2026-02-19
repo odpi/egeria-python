@@ -156,14 +156,7 @@ class FeedbackManager(ServerClient):
 
 
 
-    async def _async_add_like_to_element(
-        self,
-        element_guid: str,
-        is_public: bool = True,
-        body: dict = {},
-        view_service_url_marker: Optional[str] = None,
-        access_service_url_marker: Optional[str] = None,
-    ) -> dict | str:
+    async def _async_add_like_to_element(self, element_guid: str, emoji: bool = None, body: dict = None) -> dict | str:
         """
         Creates a "like" object and attaches it to an element.
 
@@ -172,7 +165,7 @@ class FeedbackManager(ServerClient):
 
         element_guid
             - String - unique id for the element.
-        is_public
+        emoji
             - is this visible to other people
         view_service_url_marker
             - optional view service URL marker (overrides access_service_url_marker)
@@ -197,7 +190,7 @@ class FeedbackManager(ServerClient):
 
         possible_query_params = query_string(
             [
-                ("isPublic", is_public),
+                ("isPublic", emoji),
                 ("viewServiceUrlMarker", view_service_url_marker),
                 ("accessServiceUrlMarker", access_service_url_marker),
             ]
@@ -248,13 +241,7 @@ class FeedbackManager(ServerClient):
         """
         loop = asyncio.get_event_loop()
         response = loop.run_until_complete(
-            self._async_add_like_to_element(
-                element_guid,
-                is_public,
-                body,
-                view_service_url_marker,
-                access_service_url_marker,
-            )
+            self._async_add_like_to_element(element_guid, is_public, body)
         )
         return response
 

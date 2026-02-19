@@ -24,13 +24,13 @@ from pyegeria.core._exceptions import (
     PyegeriaAPIException,
     PyegeriaUnauthorizedException,
 )
-from pyegeria.deprecated.feedback_manager import FeedbackManager
+from pyegeria.omvs.feedback_manager import FeedbackManager
 
 disable_ssl_warnings = True
 
 
 class TestFeedbackManager:
-    good_platform1_url = "https://laz.local:9443"
+    good_platform1_url = "https://localhost:9443"
     good_platform2_url = "https://oak.local:9443"
     bad_platform1_url = "https://localhost:9443"
 
@@ -74,8 +74,7 @@ class TestFeedbackManager:
             start_time = time.perf_counter()
             response = f_client.add_like_to_element(
                 self.test_element_guid,
-                is_public=True,
-                body={}
+
             )
             duration = time.perf_counter() - start_time
             

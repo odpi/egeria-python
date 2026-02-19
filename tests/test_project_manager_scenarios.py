@@ -38,7 +38,7 @@ class ProjectManagerScenarioTester:
 
     def __init__(self):
         self.view_server = "qs-view-server"
-        self.platform_url = "https://127.0.0.1:9443"
+        self.platform_url = "https://localhost:9443"
         self.user = "erinoverview"
         self.password = "secret"
         self.client = None
@@ -100,6 +100,7 @@ class ProjectManagerScenarioTester:
             console.print(f"\n[cyan]Creating project: {display_name}[/cyan]")
             body = {
                 "class": "NewElementRequestBody",
+                "isOwnAnchor": True,
                 "properties": {
                     "class": "ProjectProperties",
                     "qualifiedName": f"Project:{display_name}",
@@ -111,7 +112,7 @@ class ProjectManagerScenarioTester:
                 },
             }
 
-            project_guid = self.client.create_project(body)
+            project_guid = self.client.create_project(body=body)
             self.created_projects.append(project_guid)
             console.print(f"[green]✓[/green] Created project with GUID: {project_guid}")
 
@@ -125,11 +126,13 @@ class ProjectManagerScenarioTester:
                     "identifier": identifier,
                     "name": display_name,
                     "description": "Updated description for testing",
-                    "projectStatus": "ACTIVE",
                     "projectPhase": "EXECUTION",
+                    "projectStatus": "DEFINED",
+                    "startDate": "2025-12-01",
+                    "plannedEndDate": "2028-01-01",
                 },
             }
-            self.client.update_project(project_guid, update_body)
+            self.client.update_project(project_guid, body=update_body)
             console.print(f"[green]✓[/green] Updated project")
 
             # Step 3: Retrieve project
@@ -210,7 +213,7 @@ class ProjectManagerScenarioTester:
                     },
                 }
 
-                guid = self.client.create_project(body)
+                guid = self.client.create_project(body=body)
                 created_guids.append(guid)
                 self.created_projects.append(guid)
                 console.print(f"[green]✓[/green] Created: {guid}")
@@ -304,7 +307,7 @@ class ProjectManagerScenarioTester:
                 },
             }
 
-            template_guid = self.client.create_project(template_body)
+            template_guid = self.client.create_project(body=template_body)
             self.created_projects.append(template_guid)
             console.print(f"[green]✓[/green] Created template: {template_guid}")
 
@@ -324,7 +327,7 @@ class ProjectManagerScenarioTester:
                 },
             }
 
-            new_guid = self.client.create_project_from_template(from_template_body)
+            new_guid = self.client.create_project_from_template(body=from_template_body)
             self.created_projects.append(new_guid)
             console.print(f"[green]✓[/green] Created from template: {new_guid}")
 
@@ -401,7 +404,7 @@ class ProjectManagerScenarioTester:
                 },
             }
 
-            parent_guid = self.client.create_project(parent_body)
+            parent_guid = self.client.create_project(body=parent_body)
             self.created_projects.append(parent_guid)
             console.print(f"[green]✓[/green] Created parent project: {parent_guid}")
 
@@ -423,7 +426,7 @@ class ProjectManagerScenarioTester:
                     },
                 }
 
-                child_guid = self.client.create_project(child_body)
+                child_guid = self.client.create_project(body=child_body)
                 child_guids.append(child_guid)
                 self.created_projects.append(child_guid)
                 console.print(f"[green]✓[/green] Created child project: {child_guid}")

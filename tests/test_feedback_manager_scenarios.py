@@ -16,11 +16,11 @@ from rich.console import Console
 from rich.table import Table
 from rich.panel import Panel
 
-from pyegeria import FeedbackManager, GlossaryManager
+from pyegeria.omvs import FeedbackManager, GlossaryManager
 from pyegeria.core._exceptions import (
     PyegeriaException,
     PyegeriaTimeoutException,
-    print_basic_exception,
+    print_basic_exception, print_exception_table,
 )
 
 console = Console()
@@ -42,16 +42,16 @@ class FeedbackScenarioTester:
 
     def __init__(self):
         self.view_server = "qs-view-server"
-        self.platform_url = "https://laz.local:9443"
-        self.user = "erinoverview"
+        self.platform_url = "https://localhost:9443"
+        self.user = "peterprofile"
         self.password = "secret"
         self.feedback_client = None
         self.glossary_client = None
         self.test_element_guid = None
-        self.created_likes = []
-        self.created_ratings = []
-        self.created_comments = []
-        self.created_tags = []
+        self.created_likes = set()
+        self.created_ratings = set()
+        self.created_comments = set()
+        self.created_tags = set()
 
     def setup(self):
         """Initialize the clients and create a test element"""
@@ -103,32 +103,34 @@ class FeedbackScenarioTester:
     def cleanup_created_entities(self):
         """Delete all created test entities"""
         console.print("\n[bold cyan]Cleaning up created entities...[/bold cyan]")
-        
+
         # Remove likes
-        for like_guid in self.created_likes:
+        for element_guid in self.created_likes:
             try:
-                if self.test_element_guid:
-                    self.feedback_client.remove_like_from_element(self.test_element_guid)
-                    console.print(f"[green]✓[/green] Removed like from element")
-            except Exception as e:
-                console.print(f"[yellow]⚠[/yellow] Could not remove like: {str(e)}")
-        
+                self.feedback_client.remove_like_from_element(element_guid)
+                console.print(f"[green]✓[/green] Removed like from element {element_guid}")
+            except PyegeriaException:
+                # Ignore if already removed by a test scenario or previous call
+                pass
+        self.created_likes.clear()
+
         # Remove ratings
-        for rating_guid in self.created_ratings:
+        for element_guid in self.created_ratings:
             try:
-                if self.test_element_guid:
-                    self.feedback_client.remove_rating_from_element(self.test_element_guid)
-                    console.print(f"[green]✓[/green] Removed rating from element")
-            except Exception as e:
-                console.print(f"[yellow]⚠[/yellow] Could not remove rating: {str(e)}")
-        
+                self.feedback_client.remove_rating_from_element(element_guid)
+                console.print(f"[green]✓[/green] Removed rating from element {element_guid}")
+            except PyegeriaException:
+                # Ignore if already removed
+                pass
+        self.created_ratings.clear()
         # Delete test glossary
         if self.test_element_guid and self.glossary_client:
             try:
                 self.glossary_client.delete_glossary(self.test_element_guid)
                 console.print(f"[green]✓[/green] Deleted test glossary")
-            except Exception as e:
+            except PyegeriaException as e:
                 console.print(f"[yellow]⚠[/yellow] Could not delete test glossary: {str(e)}")
+                print_basic_exception(e)
 
     def run_scenario(self, scenario_func, scenario_name: str) -> TestResult:
         """Run a single scenario and return the result"""
@@ -159,9 +161,8 @@ class FeedbackScenarioTester:
         # Add like
         response = self.feedback_client.add_like_to_element(
             self.test_element_guid,
-            is_public=True
         )
-        self.created_likes.append(self.test_element_guid)
+        self.created_likes.add(self.test_element_guid)
         
         # Retrieve likes
         likes = self.feedback_client.get_attached_likes(
@@ -181,25 +182,32 @@ class FeedbackScenarioTester:
         
         # Add rating
         rating_body = {
-            "starRating": 5,
-            "review": "Excellent test element!"
+            "class": "NewAttachmentRequestBody",
+            "properties": {
+                "class": "RatingProperties",
+                "starRating": 5,
+                "review": "Excellent test element!"
+            }
         }
-        response = self.feedback_client.add_rating_to_element(
+        try:
+            response = self.feedback_client.add_rating_to_element(
             self.test_element_guid,
-            is_public=True,
             body=rating_body
-        )
-        self.created_ratings.append(self.test_element_guid)
-        
-        # Retrieve ratings
-        ratings = self.feedback_client.get_attached_ratings(
-            self.test_element_guid,
-            start_from=0,
-            page_size=50
-        )
-        
-        assert ratings is not None, "Failed to retrieve ratings"
-        console.print(f"  Retrieved {len(ratings) if isinstance(ratings, list) else 1} rating(s)")
+            )
+            self.created_ratings.add(self.test_element_guid)
+
+            # Retrieve ratings
+            ratings = self.feedback_client.get_attached_ratings(
+                self.test_element_guid,
+                start_from=0,
+                page_size=50
+            )
+            assert ratings is not None, "Failed to retrieve ratings"
+            console.print(f"  Retrieved {len(ratings) if isinstance(ratings, list) else 1} rating(s)")
+        except PyegeriaException as e:
+            console.print(f"  Error adding rating: {e}")
+            print_basic_exception(e)
+            raise Exception(e)
 
     # Scenario 3: Add multiple ratings with different star values
     def scenario_multiple_ratings(self):
@@ -208,18 +216,38 @@ class FeedbackScenarioTester:
             raise Exception("No test element available")
         
         ratings_to_add = [
-            {"starRating": 5, "review": "Excellent!"},
-            {"starRating": 4, "review": "Very good"},
-            {"starRating": 3, "review": "Good"},
+            {
+                "class": "NewAttachmentRequestBody",
+                "properties": {
+                    "class": "RatingProperties",
+                    "starRating": 5,
+                    "review": "Excellent test element!"
+                }
+            },
+            {
+                "class": "NewAttachmentRequestBody",
+                "properties": {
+                    "class": "RatingProperties",
+                    "starRating": 4,
+                    "review": "Very good test element!"
+                }
+            },
+            {
+                "class": "NewAttachmentRequestBody",
+                "properties": {
+                    "class": "RatingProperties",
+                    "starRating": 3,
+                    "review": "Fair test element!"
+                }
+            }
         ]
         
         for rating_data in ratings_to_add:
             self.feedback_client.add_rating_to_element(
                 self.test_element_guid,
-                is_public=True,
                 body=rating_data
             )
-            self.created_ratings.append(self.test_element_guid)
+            self.created_ratings.add(self.test_element_guid)
             time.sleep(0.5)  # Small delay between ratings
         
         # Retrieve all ratings
@@ -236,43 +264,49 @@ class FeedbackScenarioTester:
         """Add a like and then remove it"""
         if not self.test_element_guid:
             raise Exception("No test element available")
+        try:
+            # Add like
+            self.feedback_client.add_like_to_element(self.test_element_guid )
         
-        # Add like
-        self.feedback_client.add_like_to_element(
-            self.test_element_guid,
-            is_public=True
-        )
-        
-        # Remove like
-        response = self.feedback_client.remove_like_from_element(
-            self.test_element_guid
-        )
-        
-        console.print("  Successfully added and removed like")
+            # Remove like
+            self.feedback_client.remove_like_from_element(
+                self.test_element_guid
+            )
+
+            console.print("  Successfully added and removed like")
+        except PyegeriaException as e:
+            console.print(f"  Error adding like: {e}")
+            print_basic_exception(e)
 
     # Scenario 5: Remove a rating
     def scenario_remove_rating(self):
         """Add a rating and then remove it"""
         if not self.test_element_guid:
             raise Exception("No test element available")
-        
-        # Add rating
-        rating_body = {
-            "starRating": 4,
-            "review": "Test rating to be removed"
-        }
-        self.feedback_client.add_rating_to_element(
-            self.test_element_guid,
-            is_public=True,
-            body=rating_body
-        )
-        
-        # Remove rating
-        response = self.feedback_client.remove_rating_from_element(
-            self.test_element_guid
-        )
-        
-        console.print("  Successfully added and removed rating")
+        try:
+            # Add rating
+            rating_body = {
+                'class': 'NewAttachmentRequestBody',
+                'properties': {
+                    'class': 'RatingProperties',
+                    "starRating": 4,
+                    "review": "Test rating to be removed"
+                }
+            }
+            self.feedback_client.add_rating_to_element(
+                self.test_element_guid,
+                body=rating_body
+            )
+
+            # Remove rating
+            self.feedback_client.remove_rating_from_element(
+                self.test_element_guid
+            )
+
+            console.print("  Successfully added and removed rating")
+        except PyegeriaException as e:
+            console.print(f"  Error adding rating: {e}")
+            print_basic_exception(e)
 
     # Scenario 6: Public vs private feedback
     def scenario_public_private_feedback(self):
@@ -282,16 +316,26 @@ class FeedbackScenarioTester:
         
         # Add public like
         self.feedback_client.add_like_to_element(
-            self.test_element_guid,
-            is_public=True
+            self.test_element_guid
         )
-        self.created_likes.append(self.test_element_guid)
+        self.created_likes.add(self.test_element_guid)
         
         # Add private like (if supported)
         try:
+            body = {
+              "class" : "NewAttachmentRequestBody",
+              "initialClassifications" : {
+                "ZoneMembership" : {
+                  "class" : "ZoneMembershipProperties",
+                  "zoneMembership" : self.user
+                }
+              },
+              "properties" : {
+                "class" : "LikeProperties"
+              }
+            }
             self.feedback_client.add_like_to_element(
                 self.test_element_guid,
-                is_public=False
             )
             console.print("  Added both public and private likes")
         except Exception as e:
