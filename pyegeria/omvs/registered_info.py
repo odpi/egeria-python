@@ -16,7 +16,6 @@ from typing import Optional
 from pyegeria.core._server_client import ServerClient
 from pyegeria.view.base_report_formats import select_report_spec, get_report_spec_match
 from pyegeria.view.output_formatter import (
-    generate_output,
     populate_columns_from_properties,
 )
 
@@ -283,50 +282,28 @@ class RegisteredInfo(ServerClient):
         self,
         *,
         elements: list[dict] | dict,
-        filter: Optional[str],
-        entity_type_name: Optional[str],
+        filter_string: Optional[str] = None,
+        entity_type_name: Optional[str] = None,
         output_format: str = "DICT",
         report_spec: dict | str | None = None,
         extract_func=None,
+        **kwargs,
     ) -> str | list[dict]:
-        """Generate output for RegisteredInfo endpoints using the common formatter.
-
-        Args:
-            elements: list or dict of items returned from the endpoint
-            filter: optional filter string used in the request (for headings)
-            entity_type_name: logical report spec target name
-            output_format: desired output format (MD, FORM, REPORT, LIST, DICT, MERMAID, HTML)
-            report_spec: a FormatSet dict or name resolved beforehand
-            extract_func: callable used to map element -> columns_struct values
-        """
-        if entity_type_name is None:
-            entity_type = "Referenceable"
-        else:
-            entity_type = entity_type_name
-
-        columns_struct = None
-        if isinstance(report_spec, dict):
-            columns_struct = report_spec
-        elif isinstance(report_spec, str):
-            columns_struct = select_report_spec(report_spec, output_format)
-        else:
-            columns_struct = select_report_spec(entity_type, output_format)
-
-        if columns_struct is None:
-            columns_struct = select_report_spec("Default", output_format)
+        """Generate output for RegisteredInfo endpoints using the centralized formatter."""
+        entity_type = entity_type_name or "Referenceable"
 
         # Default extract function just maps columns by key
         if extract_func is None:
             extract_func = populate_columns_from_properties
 
-        return generate_output(
+        return self._generate_formatted_output(
             elements=elements,
-            search_string=filter or "All",
-            entity_type=entity_type,
+            query_string=filter_string,
+            element_type_name=entity_type,
             output_format=output_format,
-            extract_properties_func=lambda e, cs=columns_struct: extract_func(e, cs),
-            get_additional_props_func=None,
-            columns_struct=columns_struct,
+            report_spec=report_spec,
+            extract_properties_func=lambda e, cs=None: extract_func(e, cs or {}),
+            **kwargs,
         )
 
 

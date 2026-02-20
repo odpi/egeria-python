@@ -35,6 +35,7 @@ from pyegeria.view.base_report_formats import (
     get_report_spec_heading,
     get_report_spec_description,
 )
+from pyegeria.view.output_formatter import generate_output
 
 
 _CLIENT_CLASS_MAP = {
@@ -105,7 +106,9 @@ async def _async_run_report(
     user_pwd = egeria_client.user_pwd
 
     # Resolve the format set and action
-    effective_format = "REPORT" if output_format == "HTML" else output_format
+    effective_format = "REPORT" if output_format in ["HTML", "MARKDOWN"] else output_format
+    if effective_format == "JSON":
+        effective_format = "DICT"
     fmt = select_report_spec(report_name, effective_format)
     if not fmt:
         raise ValueError(
@@ -183,74 +186,37 @@ async def _async_run_report(
         if not result or result == NO_ELEMENTS_FOUND:
             return {"kind": "empty"}
 
-        # Prepare optional preamble for narrative outputs
-        heading = get_report_spec_heading(report_name)
-        desc = get_report_spec_description(report_name)
-        preamble = f"# {heading}\n{desc}\n\n" if heading and desc else ""
-
         if output_format in {"DICT", "JSON", "ALL"}:
             # Return raw data (list/dict/any) — do not stringify here
             return {"kind": "json", "data": result}
-        elif output_format in {"REPORT", "MD", "FORM"}:
-            # These are markdown narratives, pass-through as markdown text
-            content = preamble + (str(result) if not isinstance(result, (list, dict)) else ("```json\n" + json.dumps(result, indent=2) + "\n```"))
-            return {"kind": "text", "mime": "text/markdown", "content": content}
-        elif output_format == "LIST":
-            # Produce a Markdown table from structured data
-            def to_rows(res):
-                if isinstance(res, list):
-                    return res
-                elif isinstance(res, dict):
-                    return [res]
-                else:
-                    return [res]
-            rows = to_rows(result)
-            # Normalize rows into list of dicts
-            norm_rows = []
-            has_dict = False
-            for r in rows:
-                if isinstance(r, dict):
-                    norm_rows.append(r)
-                    has_dict = True
-                else:
-                    norm_rows.append({"Value": r})
-            # Determine columns
-            cols = []
-            if has_dict:
-                for r in norm_rows:
-                    if isinstance(r, dict):
-                        for k in r.keys():
-                            if k not in cols:
-                                cols.append(str(k))
-            else:
-                cols = ["Value"]
-            # Build markdown table
-            header = "| " + " | ".join(cols) + " |"
-            separator = "| " + " | ".join(["---"] * len(cols)) + " |"
-            lines = []
-            if preamble:
-                lines.append(preamble.strip())
-            lines.append(header)
-            lines.append(separator)
-            for r in norm_rows:
-                row_vals = [str(r.get(c, "")) for c in cols]
-                lines.append("| " + " | ".join(row_vals) + " |")
-            content = "\n".join(lines)
-            return {"kind": "text", "mime": "text/markdown", "content": content}
-        elif output_format == "MERMAID":
-            text = str(result)
-            fenced = text if "```mermaid" in text else f"{preamble}```mermaid\n{text}\n```"
-            return {"kind": "text", "mime": "text/markdown", "content": fenced}
-        elif output_format == "HTML":
-            # HTML should be REPORT transformed to HTML
-            from pyegeria.view.output_formatter import markdown_to_html
-            # If backend returned non-string, render JSON for safety
-            md_source = preamble + (str(result) if not isinstance(result, (list, dict)) else ("```json\n" + json.dumps(result, indent=2) + "\n```"))
-            content = markdown_to_html(md_source)
-            return {"kind": "text", "mime": "text/html", "content": content}
-        else:
-            # Unknown or table-like formats which aren't appropriate for MCP by default
-            return {"kind": "unknown", "raw": result}
+
+        # For narrative formats, try to use generate_output if the result is structured
+        if output_format in {"REPORT", "MD", "FORM", "LIST", "HTML", "MERMAID"}:
+            if isinstance(result, (list, dict)):
+                result = generate_output(
+                    elements=result,
+                    search_string=call_params.get("search_string")
+                    or call_params.get("filter_string")
+                    or "All",
+                    entity_type=fmt.get("target_type", "Referenceable"),
+                    output_format=output_format,
+                    columns_struct=fmt,
+                )
+
+            # If it's already a string, it might have its own preamble. 
+            # We only add our preamble if it doesn't look like it has one.
+            heading = get_report_spec_heading(report_name)
+            desc = get_report_spec_description(report_name)
+            preamble = f"# {heading}\n{desc}\n\n" if heading and desc else ""
+            
+            content = str(result)
+            if preamble and not content.strip().startswith("#"):
+                content = preamble + content
+
+            mime = "text/html" if output_format == "HTML" else "text/markdown"
+            return {"kind": "text", "mime": mime, "content": content}
+
+        return {"kind": "unknown", "raw": result}
 
     except PyegeriaException as e:
         # Re-raise with a simpler message for upstream mapping
@@ -335,53 +301,37 @@ def exec_report_spec(
         if not result or result == NO_ELEMENTS_FOUND:
             return {"kind": "empty"}
 
-        # Prepare optional preamble for narrative outputs
-        heading = get_report_spec_heading(format_set_name)
-        desc = get_report_spec_description(format_set_name)
-        preamble = f"# {heading}\n{desc}\n\n" if heading and desc else ""
-
         if output_format in {"DICT", "JSON", "ALL", "TABLE"}:
             # Return raw data (list/dict/any) — do not stringify here
             return {"kind": "json", "data": result}
-        elif output_format in {"REPORT", "MD", "FORM"}:
-            # These are markdown narratives, pass-through as markdown text
-            content = preamble + (str(result) if not isinstance(result, (list, dict)) else ("```json\n" + json.dumps(result, indent=2) + "\n```"))
-            return {"kind": "text", "mime": "text/markdown", "content": content}
-        elif output_format == "LIST":
-            # Produce a simple markdown list from structured data when possible
+
+        # For narrative formats, try to use generate_output if the result is structured
+        if output_format in {"REPORT", "MD", "FORM", "LIST", "HTML", "MERMAID"}:
             if isinstance(result, (list, dict)):
-                rows = result if isinstance(result, list) else [result]
-                def flatten(item):
-                    if isinstance(item, dict):
-                        return item
-                    return {"value": item}
-                flat_rows = [flatten(r) for r in rows]
-                keys = []
-                for r in flat_rows:
-                    for k in r.keys():
-                        if k not in keys:
-                            keys.append(k)
-                label_key = keys[0] if keys else "value"
-                lines = []
-                if preamble:
-                    lines.append(preamble.strip())
-                lines += [f"- {str(r.get(label_key, ''))}" for r in flat_rows]
-                content = "\n".join(lines)
-            else:
-                content = preamble + str(result)
-            return {"kind": "text", "mime": "text/markdown", "content": content}
-        elif output_format == "MERMAID":
-            text = str(result)
-            fenced = text if "```mermaid" in text else f"{preamble}```mermaid\n{text}\n```"
-            return {"kind": "text", "mime": "text/markdown", "content": fenced}
-        elif output_format == "HTML":
-            from pyegeria.view.output_formatter import markdown_to_html
-            md_source = preamble + (str(result) if not isinstance(result, (list, dict)) else ("```json\n" + json.dumps(result, indent=2) + "\n```"))
-            content = markdown_to_html(md_source)
-            return {"kind": "text", "mime": "text/html", "content": content}
-        else:
-            # Unknown or table-like formats which aren't appropriate for MCP by default
-            return {"kind": "unknown", "raw": result}
+                result = generate_output(
+                    elements=result,
+                    search_string=call_params.get("search_string")
+                    or call_params.get("filter_string")
+                    or "All",
+                    entity_type=fmt.get("target_type", "Referenceable"),
+                    output_format=output_format,
+                    columns_struct=fmt,
+                )
+
+            # If it's already a string, it might have its own preamble. 
+            # We only add our preamble if it doesn't look like it has one.
+            heading = get_report_spec_heading(format_set_name)
+            desc = get_report_spec_description(format_set_name)
+            preamble = f"# {heading}\n{desc}\n\n" if heading and desc else ""
+            
+            content = str(result)
+            if preamble and not content.strip().startswith("#"):
+                content = preamble + content
+
+            mime = "text/html" if output_format == "HTML" else "text/markdown"
+            return {"kind": "text", "mime": mime, "content": content}
+
+        return {"kind": "unknown", "raw": result}
 
     except PyegeriaException as e:
         # Re-raise with a simpler message for upstream mapping

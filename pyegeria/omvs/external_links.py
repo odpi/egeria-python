@@ -1668,59 +1668,31 @@ class ExternalReferences(ServerClient):
 
         return col_data
 
-    def _generate_external_reference_output(self, elements: dict | list[dict], filter_string: Optional[str],
-                                            element_type_name: Optional[str], output_format: str = "DICT",
-                                            report_spec: dict | str = None) -> str | list[dict]:
+    def _generate_external_reference_output(self, elements: dict | list[dict], filter_string: Optional[str] = None,
+                                            element_type_name: Optional[str] = None, output_format: str = "DICT",
+                                            report_spec: dict | str = None, **kwargs) -> str | list[dict]:
         """ Generate output for external_references in the specified format.
 
             Args:
                 elements (Union[Dict, List[Dict]]): Dictionary or list of dictionaries containing data field elements
-                filter (Optional[str]): The search string used to find the elements
+                filter_string (Optional[str]): The search string used to find the elements
                 element_type_name (Optional[str]): The type of external_reference
                 output_format (str): The desired output format (MD, FORM, REPORT, LIST, DICT, MERMAID, HTML)
                 report_spec (Optional[dict], optional): List of dictionaries containing column data. Defaults
                 to None.
+                **kwargs: Additional arguments.
 
             Returns:
                 Union[str, List[Dict]]: Formatted output as a string or list of dictionaries
         """
-        if element_type_name is None:
-            entity_type = "ExternalReference"
-        else:
-            entity_type = element_type_name
-        # First see if the user has specified an report_spec - either a label or a dict
-        get_additional_props_func = None
-        if report_spec:
-            if isinstance(report_spec, str):
-                output_formats = select_report_spec(report_spec, output_format)
-            elif isinstance(report_spec, dict):
-                output_formats = get_report_spec_match(report_spec, output_format)
-
-        # If no output_format was set, then use the element_type_name to lookup the output format
-        elif element_type_name:
-            output_formats = select_report_spec(element_type_name, output_format)
-        else:
-            # fallback to external_references or entity type
-            output_formats = select_report_spec(entity_type, output_format)
-        if output_formats is None:
-            output_formats = select_report_spec("Default", output_format)
-
-        if output_formats:
-            get_additional_props_name = output_formats.get("get_additional_props", {}).get("function", None)
-            if isinstance(get_additional_props_name, str):
-                class_name, method_name = get_additional_props_name.split(".")
-                if hasattr(self, method_name):
-                    get_additional_props_func = getattr(self, method_name)
-
-        logger.trace(f"Executing generate_external_reference_output for {entity_type}: {output_formats}")
-        return generate_output(
-            elements,
-            filter,
-            entity_type,
-            output_format,
-            self._extract_external_reference_properties,
-            get_additional_props_func,
-            output_formats,
+        return self._generate_formatted_output(
+            elements=elements,
+            query_string=filter_string,
+            entity_type=element_type_name or "ExternalReference",
+            output_format=output_format,
+            extract_properties_func=self._extract_external_reference_properties,
+            report_spec=report_spec,
+            **kwargs
         )
 
 

@@ -24,8 +24,7 @@ from pyegeria.models import (NewElementRequestBody, DeleteElementRequestBody, De
                              NewRelationshipRequestBody, UpdateRelationshipRequestBody, NewClassificationRequestBody,
                              FilterRequestBody, GetRequestBody, SearchStringRequestBody,
                              DeleteClassificationRequestBody)
-from pyegeria.view.output_formatter import (generate_output,
-                                            _extract_referenceable_properties, populate_common_columns,
+from pyegeria.view.output_formatter import (_extract_referenceable_properties, populate_common_columns,
                                             overlay_additional_values, resolve_output_formats)
 from pyegeria.core.utils import body_slimmer, dynamic_catch
 
@@ -2600,36 +2599,34 @@ class GlossaryManager(CollectionManager):
             pass
         return additional
 
-    def _generate_glossary_output(self, elements: dict | list[dict], search_string: str,
-                                  element_type_name: str | None,
+    def _generate_glossary_output(self, elements: dict | list[dict], search_string: Optional[str] = None,
+                                  element_type_name: Optional[str] = None,
                                   output_format: str = 'DICT',
-                                  report_spec: dict | str = None) -> str | list[dict]:
-        entity_type = 'Glossary'
-        output_formats = resolve_output_formats(entity_type, output_format, report_spec)
-        return generate_output(
+                                  report_spec: dict | str = None,
+                                  **kwargs) -> str | list[dict]:
+        return self._generate_formatted_output(
             elements=elements,
-            search_string=search_string,
-            entity_type=entity_type,
+            query_string=search_string,
+            entity_type='Glossary',
             output_format=output_format,
             extract_properties_func=self._extract_glossary_properties,
-            get_additional_props_func=None,
-            columns_struct=output_formats,
+            report_spec=report_spec,
+            **kwargs
         )
 
-    def _generate_term_output(self, elements: dict | list[dict], search_string: str,
-                               element_type_name: str | None,
+    def _generate_term_output(self, elements: dict | list[dict], search_string: Optional[str] = None,
+                               element_type_name: Optional[str] = None,
                                output_format: str = 'DICT',
-                               report_spec: dict | str = None) -> str | list[dict]:
-        entity_type = 'GlossaryTerm'
-        output_formats = resolve_output_formats(entity_type, output_format, report_spec)
-        return generate_output(
+                               report_spec: dict | str = None,
+                               **kwargs) -> str | list[dict]:
+        return self._generate_formatted_output(
             elements=elements,
-            search_string=search_string,
-            entity_type=entity_type,
+            query_string=search_string,
+            entity_type='GlossaryTerm',
             output_format=output_format,
             extract_properties_func=self._extract_term_properties,
-            get_additional_props_func=self._get_term_additional_properties,
-            columns_struct=output_formats,
+            report_spec=report_spec,
+            **kwargs
         )
 
     async def _async_get_glossary_term_statuses(self) -> [str]:

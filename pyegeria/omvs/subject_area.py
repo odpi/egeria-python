@@ -25,7 +25,6 @@ from pyegeria.models import (
     RelationshipBeanProperties,
 )
 from pyegeria.view.output_formatter import (
-    generate_output,
     populate_common_columns,
     overlay_additional_values,
 )
@@ -85,19 +84,20 @@ class SubjectArea(ServerClient):
     def _generate_subject_area_output(
         self,
         elements: dict | list[dict],
-        filter: Optional[str],
-        element_type_name: Optional[str],
+        query_string: Optional[str] = None,
+        element_type_name: Optional[str] = None,
         output_format: str = "DICT",
         report_spec: dict | str = None,
+        **kwargs
     ) -> str | list[dict]:
-        return generate_output(
-            elements,
-            filter,
-            element_type_name,
-            output_format,
-            self._extract_subject_area_properties,
-            None,
-            report_spec,
+        return self._generate_formatted_output(
+            elements=elements,
+            query_string=query_string,
+            entity_type=element_type_name or "SubjectArea",
+            output_format=output_format,
+            extract_properties_func=self._extract_subject_area_properties,
+            report_spec=report_spec,
+            **kwargs
         )
 
     @dynamic_catch

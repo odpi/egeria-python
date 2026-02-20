@@ -20,7 +20,6 @@ from pyegeria.models import LevelIdentifierQueryBody, FilterRequestBody, GetRequ
     NewAttachmentRequestBody, UpdateElementRequestBody, FindPropertyNamesRequestBody, ResultsRequestBody, \
     FindRequestBody, ContentStatusSearchString, ContentStatusFilterRequestBody
 from pyegeria.view.output_formatter import (
-    generate_output,
     _extract_referenceable_properties,
     populate_columns_from_properties,
     get_required_relationships,
@@ -127,54 +126,24 @@ class ClassificationExplorer(ServerClient):
         return col_data
 
     @dynamic_catch
-    def _generate_referenceable_output(self,
-                                       elements: dict | list[dict],
-        filter_string : str | None,
-                                       element_type_name: str | None,
-                                       output_format: str = "DICT",
-                                       report_spec: dict | str | None = None) -> str | list[dict]:
+    def _generate_referenceable_output(
+        self,
+        elements: dict | list[dict],
+        filter_string: Optional[str] = None,
+        element_type_name: Optional[str] = None,
+        output_format: str = "DICT",
+        report_spec: dict | str | None = None,
+        **kwargs,
+    ) -> str | list[dict]:
         """Resolve format set and generate output for Referenceable-derived elements."""
-        if isinstance(elements,list):
-            el_type = elements[0]['elementHeader']['type']['typeName']
-        elif isinstance(elements,dict):
-            el_type = elements['elementHeader']['type']['typeName']
-        else:
-            el_type = "Referenceable"
-
-        entity_type = element_type_name or self.REFERENCEABLE_LABEL
-
-        # Resolve output format set
-        get_additional_props_func = None
-        if report_spec:
-            if isinstance(report_spec, str):
-                output_formats = select_report_spec(report_spec, output_format)
-            else:
-                output_formats = get_report_spec_match(report_spec, output_format)
-        elif element_type_name not in ['Referenceable','OpenMetadataRoot']:
-            output_formats = select_report_spec(element_type_name, output_format)
-        else:
-            output_formats = select_report_spec(el_type, output_format)
-
-        if output_formats is None:
-            output_formats = select_report_spec("Default", output_format)
-
-        # Optional hook: allow format set to specify an enrichment method on this class
-        get_additional_props_name = (
-            output_formats.get("get_additional_props", {}).get("function") if output_formats else None
-        )
-        if isinstance(get_additional_props_name, str):
-            method_name = get_additional_props_name.split(".")[-1]
-            if hasattr(self, method_name):
-                get_additional_props_func = getattr(self, method_name)
-
-        return generate_output(
-            elements,
-            filter,
-            entity_type,
-            output_format,
-            self._extract_referenceable_output_properties,
-            get_additional_props_func,
-            output_formats,
+        return self._generate_formatted_output(
+            elements=elements,
+            query_string=filter_string,
+            element_type_name=element_type_name or self.REFERENCEABLE_LABEL,
+            output_format=output_format,
+            report_spec=report_spec,
+            extract_properties_func=self._extract_referenceable_output_properties,
+            **kwargs,
         )
 
     #

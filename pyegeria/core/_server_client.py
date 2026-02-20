@@ -1748,30 +1748,80 @@ class ServerClient(BaseServerClient):
 
         return resp
 
-    def _generate_comment_output(self, elements: dict | list[dict], search_string: str,
-                                 element_type_name: str | None,
-                                 output_format: str = 'DICT',
-                                 report_spec: dict | str = None) -> str | list[dict]:
-        entity_type = 'Comment'
-        if report_spec:
-            if isinstance(report_spec, str):
-                output_formats = select_report_spec(report_spec, output_format)
-            elif isinstance(report_spec, dict):
-                output_formats = get_report_spec_match(report_spec, output_format)
-            else:
-                output_formats = None
-        else:
-            output_formats = select_report_spec(entity_type, output_format)
-        if output_formats is None:
-            output_formats = select_report_spec('Default', output_format)
+    def _generate_formatted_output(
+            self,
+            elements: dict | list[dict],
+            query_string: Optional[str] = None,
+            entity_type: str = "Referenceable",
+            output_format: str = "DICT",
+            extract_properties_func: Optional[Callable] = None,
+            report_spec: Optional[dict | str] = None,
+            **kwargs
+    ) -> str | list[dict]:
+        """Centralized output generation logic for OMVS managers.
+
+        Args:
+            elements: Raw elements to format.
+            query_string: Search or filter string. If None, derived from kwargs.
+            entity_type: Type of the entity for reporting.
+            output_format: Desired format (DICT, MD, etc.).
+            extract_properties_func: Callback to extract properties from a single element.
+            report_spec: Optional specification (by label or dict).
+            **kwargs: Passed through to resolve_output_formats and generate_output.
+        """
+        # Resolve output formats structure
+        output_formats = resolve_output_formats(
+            entity_type,
+            output_format,
+            report_spec,
+            default_label=entity_type,
+            **kwargs
+        )
+
+        # Dynamic discovery of additional properties function
+        get_additional_props_func = None
+        if output_formats:
+            get_additional_props_name = output_formats.get("get_additional_props", {}).get("function", None)
+            if isinstance(get_additional_props_name, str):
+                # Expecting something like "ClassName.method_name" or just "method_name"
+                method_name = get_additional_props_name.split(".")[-1]
+                if hasattr(self, method_name):
+                    get_additional_props_func = getattr(self, method_name)
+
+        # Priority: explicit query_string -> search_string -> filter_string
+        if query_string is None:
+            query_string = kwargs.get('search_string') or kwargs.get('filter_string')
+
+        # Clean up kwargs to avoid multiple values for arguments we pass explicitly to generate_output
+        for key in ['elements', 'search_string', 'filter_string', 'entity_type', 
+                    'output_format', 'extract_properties_func', 
+                    'get_additional_props_func', 'columns_struct']:
+            kwargs.pop(key, None)
+
         return generate_output(
             elements=elements,
-            search_string=search_string,
+            search_string=query_string,
             entity_type=entity_type,
             output_format=output_format,
-            extract_properties_func=self._extract_comment_properties,
-            get_additional_props_func=None,
+            extract_properties_func=extract_properties_func,
+            get_additional_props_func=get_additional_props_func,
             columns_struct=output_formats,
+            **kwargs
+        )
+
+    def _generate_comment_output(self, elements: dict | list[dict], search_string: Optional[str] = None,
+                                 element_type_name: Optional[str] = None,
+                                 output_format: str = 'DICT',
+                                 report_spec: dict | str = None,
+                                 **kwargs) -> str | list[dict]:
+        return self._generate_formatted_output(
+            elements=elements,
+            query_string=search_string,
+            entity_type=element_type_name or 'Comment',
+            output_format=output_format,
+            extract_properties_func=self._extract_comment_properties,
+            report_spec=report_spec,
+            **kwargs
         )
 
     #
@@ -5696,30 +5746,19 @@ class ServerClient(BaseServerClient):
         return col_data
 
     @dynamic_catch
-    def _generate_feedback_output(self, elements: dict | list[dict], search_string: str,
-                                  element_type_name: str | None,
+    def _generate_feedback_output(self, elements: dict | list[dict], search_string: Optional[str] = None,
+                                  element_type_name: Optional[str] = None,
                                   output_format: str = 'DICT',
-                                  report_spec: dict | str = None) -> str | list[dict]:
-        entity_type = element_type_name
-        if report_spec:
-            if isinstance(report_spec, str):
-                output_formats = select_report_spec(report_spec, output_format)
-            elif isinstance(report_spec, dict):
-                output_formats = get_report_spec_match(report_spec, output_format)
-            else:
-                output_formats = None
-        else:
-            output_formats = select_report_spec(entity_type, output_format)
-        if output_formats is None:
-            output_formats = select_report_spec('Default', output_format)
-        return generate_output(
+                                  report_spec: dict | str = None,
+                                  **kwargs) -> str | list[dict]:
+        return self._generate_formatted_output(
             elements=elements,
-            search_string=search_string,
-            entity_type=entity_type,
+            query_string=search_string,
+            entity_type=element_type_name,
             output_format=output_format,
             extract_properties_func=self._extract_feedback_properties,
-            get_additional_props_func=None,
-            columns_struct=output_formats,
+            report_spec=report_spec,
+            **kwargs
         )
 
 
@@ -6051,7 +6090,8 @@ class ServerClient(BaseServerClient):
                                   output_format: Optional[str] = None, report_spec: Optional[str | dict] = None,
                                   start_from: int = 0, page_size: int | None = 100,
                                   property_names: Optional[list[str]] = None,
-                                  body: dict | SearchStringRequestBody | FindPropertyNamesRequestBody = None) -> Any:
+                                  body: dict | SearchStringRequestBody | FindPropertyNamesRequestBody = None,
+                                  **kwargs) -> Any:
 
         if isinstance(body, (SearchStringRequestBody, FindPropertyNamesRequestBody)):
             validated_body = body
@@ -6126,7 +6166,7 @@ class ServerClient(BaseServerClient):
         if output_format.upper() != 'JSON':  # return a simplified markdown representation
             # logger.info(f"Found elements, output format: {output_format} and report_spec: {report_spec}")
             return _gen_output(elements=elements, search_string=search_string, element_type_name=_type,
-                               output_format=output_format, report_spec=report_spec)
+                               output_format=output_format, report_spec=report_spec, **kwargs)
         return elements
 
     @dynamic_catch
@@ -6134,7 +6174,8 @@ class ServerClient(BaseServerClient):
                                       filter_string: str, classification_names: Optional[list[str]] = None,
                                       start_from: int = 0, page_size: int = 0, output_format: str = 'JSON',
                                       report_spec: Optional[str | dict] = None,
-                                      body: Optional[dict | FilterRequestBody] = None) -> Any:
+                                      body: Optional[dict | FilterRequestBody] = None,
+                                      **kwargs) -> Any:
 
         if isinstance(body, FilterRequestBody):
             validated_body = body
@@ -6165,14 +6206,15 @@ class ServerClient(BaseServerClient):
 
         if output_format != 'JSON':  # return a simplified markdown representation
             logger.info(f"Found elements, output format: {output_format} and report_spec: {report_spec}")
-            return _gen_output(elements, filter_string, _type,
-                               output_format, report_spec)
+            return _gen_output(elements=elements, filter_string=filter_string, element_type_name=_type,
+                               output_format=output_format, report_spec=report_spec, **kwargs)
         return elements
 
     @dynamic_catch
     async def _async_get_guid_request(self, url: str, _type: str, _gen_output: Callable[..., Any],
                                       output_format: str = 'JSON', report_spec: Optional[str | dict] = None,
-                                      body: Optional[dict | GetRequestBody] = None) -> Any:
+                                      body: Optional[dict | GetRequestBody] = None,
+                                      **kwargs) -> Any:
 
         if isinstance(body, GetRequestBody):
             validated_body = body
@@ -6198,14 +6240,16 @@ class ServerClient(BaseServerClient):
 
         if output_format != 'JSON':  # return a simplified markdown representation
             logger.info(f"Found elements, output format: {output_format} and report_spec: {report_spec}")
-            return _gen_output(elements, "GUID", _type, output_format, report_spec)
+            return _gen_output(elements=elements, filter_string="GUID", element_type_name=_type, 
+                               output_format=output_format, report_spec=report_spec, **kwargs)
         return elements
 
     @dynamic_catch
     async def _async_get_request_body_request(self, url: str, _type: str, _gen_output: Callable[..., Any],
                                               output_format: str = 'JSON',
                                               report_spec: Optional[str | dict] = None,
-                                              body: Optional[dict | GetRequestBody] = None) -> Any:
+                                              body: Optional[dict | GetRequestBody] = None,
+                                              **kwargs) -> Any:
         """Handles request; returns elements or formatted output"""
         if isinstance(body, GetRequestBody):
             validated_body = body
@@ -6262,6 +6306,7 @@ class ServerClient(BaseServerClient):
         start_from: int = 0,
         page_size: int | None = 100,
         body: dict | ActivityStatusSearchString | None = None,
+        **kwargs
     ) -> Any:
         if isinstance(body, ActivityStatusSearchString):
             validated_body = body
@@ -6322,6 +6367,7 @@ class ServerClient(BaseServerClient):
         output_format: str = "JSON",
         report_spec: Optional[str | dict] = None,
         body: Optional[dict | ActivityStatusFilterRequestBody] = None,
+        **kwargs
     ) -> Any:
         if isinstance(body, ActivityStatusFilterRequestBody):
             validated_body = body
@@ -6364,6 +6410,7 @@ class ServerClient(BaseServerClient):
         output_format: str = "JSON",
         report_spec: Optional[str | dict] = None,
         body: Optional[dict | ActivityStatusRequestBody] = None,
+        **kwargs
     ) -> Any:
         if isinstance(body, ActivityStatusRequestBody):
             validated_body = body
@@ -6423,6 +6470,7 @@ class ServerClient(BaseServerClient):
         start_from: int = 0,
         page_size: int | None = 100,
         body: dict | ContentStatusSearchString | None = None,
+        **kwargs
     ) -> Any:
         if isinstance(body, ContentStatusSearchString):
             validated_body = body
@@ -6483,6 +6531,7 @@ class ServerClient(BaseServerClient):
         output_format: str = "JSON",
         report_spec: Optional[str | dict] = None,
         body: Optional[dict | ContentStatusFilterRequestBody] = None,
+        **kwargs
     ) -> Any:
         if isinstance(body, ContentStatusFilterRequestBody):
             validated_body = body
@@ -6632,7 +6681,8 @@ class ServerClient(BaseServerClient):
     async def _async_get_results_body_request(self, url: str, _type: str, _gen_output: Callable[..., Any],
                                               start_from: int = 0, page_size: int = 0, output_format: str = 'JSON',
                                               report_spec: Optional[str | dict] = None,
-                                              body: Optional[dict | ResultsRequestBody] = None) -> Any:
+                                              body: Optional[dict | ResultsRequestBody] = None,
+                                              **kwargs) -> Any:
         """Handles request; returns elements or formatted output"""
         if isinstance(body, ResultsRequestBody):
             validated_body = body
@@ -6660,15 +6710,16 @@ class ServerClient(BaseServerClient):
 
         if output_format.upper() != 'JSON':  # return a simplified markdown representation
             logger.info(f"Found elements, output format: {output_format} and report_spec: {report_spec}")
-            return _gen_output(elements, "Members", _type,
-                               output_format, report_spec)
+            return _gen_output(elements=elements, filter_string="Members", element_type_name=_type,
+                               output_format=output_format, report_spec=report_spec, **kwargs)
         return elements
 
     @dynamic_catch
     async def _async_get_level_identifier_query_body_request(self, url: str, _gen_output: Callable[..., Any],
                                                              output_format: str = 'JSON',
                                                              report_spec: Optional[str | dict] = None,
-                                                             body: Optional[dict | ResultsRequestBody] = None) -> Any:
+                                                             body: Optional[dict | ResultsRequestBody] = None,
+                                                             **kwargs) -> Any:
         if isinstance(body, LevelIdentifierQueryBody):
             validated_body = body
         elif isinstance(body, dict):
@@ -6689,8 +6740,8 @@ class ServerClient(BaseServerClient):
 
         if output_format != 'JSON':  # return a simplified markdown representation
             logger.info(f"Found elements, output format: {output_format} and report_spec: {report_spec}")
-            return _gen_output(elements, "", "Referenceable",
-                               output_format, report_spec)
+            return _gen_output(elements=elements, query_string="", entity_type="Referenceable",
+                               output_format=output_format, report_spec=report_spec, **kwargs)
         return elements
 
     @dynamic_catch
@@ -7414,10 +7465,11 @@ class ServerClient(BaseServerClient):
         return populate_common_columns(element, columns_struct)
 
     @dynamic_catch
-    def _generate_referenceable_output(self, elements: dict | list[dict], search_string: str | None,
-                                       element_type_name: str | None,
+    def _generate_referenceable_output(self, elements: dict | list[dict], search_string: Optional[str] = None,
+                                       element_type_name: Optional[str] = None,
                                        output_format: str = "JSON",
-                                       report_spec: dict | str = None) -> str | list[dict]:
+                                       report_spec: dict | str = None,
+                                       **kwargs) -> str | list[dict]:
         """Generate formatted output for generic Referenceable elements.
 
         If output_format is 'JSON', returns elements unchanged. Otherwise, resolves an
@@ -7425,16 +7477,15 @@ class ServerClient(BaseServerClient):
         """
         if output_format == "JSON":
             return elements
-        entity_type = element_type_name or "Referenceable"
-        output_formats = resolve_output_formats(entity_type, output_format, report_spec, default_label=entity_type)
-        return generate_output(
+
+        return self._generate_formatted_output(
             elements=elements,
-            search_string=search_string,
-            entity_type=entity_type,
+            query_string=search_string,
+            entity_type=element_type_name or "Referenceable",
             output_format=output_format,
             extract_properties_func=self._extract_referenceable_properties,
-            get_additional_props_func=None,
-            columns_struct=output_formats,
+            report_spec=report_spec,
+            **kwargs
         )
 
     def _extract_element_properties_for_keyword(self, element: dict, columns_struct: dict) -> dict:

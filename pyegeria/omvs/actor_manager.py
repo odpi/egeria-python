@@ -19,8 +19,7 @@ from pyegeria.models import (SearchStringRequestBody, FilterRequestBody, GetRequ
                              UpdateElementRequestBody, NewRelationshipRequestBody,
                              DeleteElementRequestBody, DeleteRelationshipRequestBody, NewClassificationRequestBody,
                              DeleteClassificationRequestBody)
-from pyegeria.view.output_formatter import (generate_output,
-                                            _extract_referenceable_properties, populate_columns_from_properties,
+from pyegeria.view.output_formatter import (_extract_referenceable_properties, populate_columns_from_properties,
                                             get_required_relationships)
 from pyegeria.core.utils import dynamic_catch
 
@@ -1202,59 +1201,31 @@ class ActorManager(ServerClient):
 
         return col_data
 
-    def _generate_actor_profile_output(self, elements: dict | list[dict], filter_string: Optional[str],
-                                       element_type_name: Optional[str], output_format: str = "DICT",
-                                       report_spec: dict | str = "Actor-Profiles") -> str | list[dict]:
+    def _generate_actor_profile_output(self, elements: dict | list[dict], filter_string: Optional[str] = None,
+                                       element_type_name: Optional[str] = None, output_format: str = "DICT",
+                                       report_spec: dict | str = "Actor-Profiles", **kwargs) -> str | list[dict]:
         """ Generate output for actor_profiles in the specified format.
 
             Args:
                 elements (Union[Dict, List[Dict]]): Dictionary or list of dictionaries containing data field elements
-                filter (Optional[str]): The search string used to find the elements
+                filter_string (Optional[str]): The search string used to find the elements
                 element_type_name (Optional[str]): The type of actor_profile
                 output_format (str): The desired output format (MD, FORM, REPORT, LIST, DICT, MERMAID, HTML)
                 report_spec (Optional[dict], optional): List of dictionaries containing column data. Defaults
                 to None.
+                **kwargs: Additional arguments.
 
             Returns:
                 Union[str, List[Dict]]: Formatted output as a string or list of dictionaries
         """
-        if element_type_name is None:
-            entity_type = "ActorProfile"
-        else:
-            entity_type = element_type_name
-        # First see if the user has specified an report_spec - either a label or a dict
-        get_additional_props_func = None
-        if report_spec:
-            if isinstance(report_spec, str):
-                output_formats = select_report_spec(report_spec, output_format)
-            elif isinstance(report_spec, dict):
-                output_formats = get_report_spec_match(report_spec, output_format)
-
-        # If no output_format was set, then use the element_type_name to lookup the output format
-        elif element_type_name:
-            output_formats = select_report_spec(element_type_name, output_format)
-        else:
-            # fallback to actor_profiles or entity type
-            output_formats = select_report_spec(entity_type, output_format)
-        if output_formats is None:
-            output_formats = select_report_spec("Default", output_format)
-
-        if output_formats:
-            get_additional_props_name = output_formats.get("get_additional_props", {}).get("function", None)
-            if isinstance(get_additional_props_name, str):
-                class_name, method_name = get_additional_props_name.split(".")
-                if hasattr(self, method_name):
-                    get_additional_props_func = getattr(self, method_name)
-
-        logger.trace(f"Executing generate_actor_profile_output for {entity_type}: {output_formats}")
-        return generate_output(
-            elements,
-            filter,
-            entity_type,
-            output_format,
-            self._extract_actor_profile_properties,
-            get_additional_props_func,
-            output_formats,
+        return self._generate_formatted_output(
+            elements=elements,
+            query_string=filter_string,
+            entity_type=element_type_name or "ActorProfile",
+            output_format=output_format,
+            extract_properties_func=self._extract_actor_profile_properties,
+            report_spec=report_spec,
+            **kwargs
         )
 
     #
@@ -2759,59 +2730,31 @@ class ActorManager(ServerClient):
 
         return col_data
 
-    def _generate_actor_role_output(self, elements: dict | list[dict], filter_string: Optional[str],
-                                    element_type_name: Optional[str], output_format: str = "DICT",
-                                    report_spec: dict | str = "Actor-Roles") -> str | list[dict]:
+    def _generate_actor_role_output(self, elements: dict | list[dict], filter_string: Optional[str] = None,
+                                    element_type_name: Optional[str] = None, output_format: str = "DICT",
+                                    report_spec: dict | str = "Actor-Roles", **kwargs) -> str | list[dict]:
         """ Generate output for actor_roles in the specified format.
 
             Args:
                 elements (Union[Dict, List[Dict]]): Dictionary or list of dictionaries containing data field elements
-                filter (Optional[str]): The search string used to find the elements
+                filter_string (Optional[str]): The search string used to find the elements
                 element_type_name (Optional[str]): The type of actor_role
                 output_format (str): The desired output format (MD, FORM, REPORT, LIST, DICT, MERMAID, HTML)
                 report_spec (Optional[dict], optional): List of dictionaries containing column data. Defaults
                 to None.
+                **kwargs: Additional arguments.
 
             Returns:
                 Union[str, List[Dict]]: Formatted output as a string or list of dictionaries
         """
-        if element_type_name is None:
-            entity_type = "ActorRole"
-        else:
-            entity_type = element_type_name
-        # First see if the user has specified an report_spec - either a label or a dict
-        get_additional_props_func = None
-        if report_spec:
-            if isinstance(report_spec, str):
-                output_formats = select_report_spec(report_spec, output_format)
-            elif isinstance(report_spec, dict):
-                output_formats = get_report_spec_match(report_spec, output_format)
-
-        # If no output_format was set, then use the element_type_name to lookup the output format
-        elif element_type_name:
-            output_formats = select_report_spec(element_type_name, output_format)
-        else:
-            # fallback to actor_roles or entity type
-            output_formats = select_report_spec(entity_type, output_format)
-        if output_formats is None:
-            output_formats = select_report_spec("Default", output_format)
-
-        if output_formats:
-            get_additional_props_name = output_formats.get("get_additional_props", {}).get("function", None)
-            if isinstance(get_additional_props_name, str):
-                class_name, method_name = get_additional_props_name.split(".")
-                if hasattr(self, method_name):
-                    get_additional_props_func = getattr(self, method_name)
-
-        logger.trace(f"Executing generate_actor_role_output for {entity_type}: {output_formats}")
-        return generate_output(
-            elements,
-            filter_string,
-            entity_type,
-            output_format,
-            self._extract_actor_role_properties,
-            get_additional_props_func,
-            output_formats,
+        return self._generate_formatted_output(
+            elements=elements,
+            query_string=filter_string,
+            entity_type=element_type_name or "ActorRole",
+            output_format=output_format,
+            extract_properties_func=self._extract_actor_role_properties,
+            report_spec=report_spec,
+            **kwargs
         )
 
     #
@@ -4455,59 +4398,31 @@ class ActorManager(ServerClient):
 
         return col_data
 
-    def _generate_user_identity_output(self, elements: dict | list[dict], filter_string: Optional[str],
-                                       element_type_name: Optional[str], output_format: str = "DICT",
-                                       report_spec: dict | str = "User-Identities") -> str | list[dict]:
+    def _generate_user_identity_output(self, elements: dict | list[dict], filter_string: Optional[str] = None,
+                                       element_type_name: Optional[str] = None, output_format: str = "DICT",
+                                       report_spec: dict | str = "User-Identities", **kwargs) -> str | list[dict]:
         """ Generate output for user_identitys in the specified format.
 
             Args:
                 elements (Union[Dict, List[Dict]]): Dictionary or list of dictionaries containing data field elements
-                filter (Optional[str]): The search string used to find the elements
+                filter_string (Optional[str]): The search string used to find the elements
                 element_type_name (Optional[str]): The type of user_identity
                 output_format (str): The desired output format (MD, FORM, REPORT, LIST, DICT, MERMAID, HTML)
                 report_spec (Optional[dict], optional): List of dictionaries containing column data. Defaults
                 to None.
+                **kwargs: Additional arguments.
 
             Returns:
                 Union[str, List[Dict]]: Formatted output as a string or list of dictionaries
         """
-        if element_type_name is None:
-            entity_type = "UserIdentity"
-        else:
-            entity_type = element_type_name
-        # First see if the user has specified an report_spec - either a label or a dict
-        get_additional_props_func = None
-        if report_spec:
-            if isinstance(report_spec, str):
-                output_formats = select_report_spec(report_spec, output_format)
-            elif isinstance(report_spec, dict):
-                output_formats = get_report_spec_match(report_spec, output_format)
-
-        # If no output_format was set, then use the element_type_name to lookup the output format
-        elif element_type_name:
-            output_formats = select_report_spec(element_type_name, output_format)
-        else:
-            # fallback to user_identitys or entity type
-            output_formats = select_report_spec(entity_type, output_format)
-        if output_formats is None:
-            output_formats = select_report_spec("Default", output_format)
-
-        if output_formats:
-            get_additional_props_name = output_formats.get("get_additional_props", {}).get("function", None)
-            if isinstance(get_additional_props_name, str):
-                class_name, method_name = get_additional_props_name.split(".")
-                if hasattr(self, method_name):
-                    get_additional_props_func = getattr(self, method_name)
-
-        logger.trace(f"Executing generate_user_identity_output for {entity_type}: {output_formats}")
-        return generate_output(
-            elements,
-            filter,
-            entity_type,
-            output_format,
-            self._extract_user_identity_properties,
-            get_additional_props_func,
-            output_formats,
+        return self._generate_formatted_output(
+            elements=elements,
+            query_string=filter_string,
+            entity_type=element_type_name or "UserIdentity",
+            output_format=output_format,
+            extract_properties_func=self._extract_user_identity_properties,
+            report_spec=report_spec,
+            **kwargs
         )
 
 

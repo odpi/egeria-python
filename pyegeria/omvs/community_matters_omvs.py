@@ -132,14 +132,24 @@ class CommunityMatters(ServerClient):
     def _generate_community_output(
         self,
         elements: dict | list[dict],
-        filter_or_search: str | None,
-        element_type_name: str | None,
+        search_string: Optional[str] = None,
+        element_type_name: Optional[str] = None,
         output_format: str = "JSON",
         report_spec: dict | str | None = None,
+        **kwargs
     ) -> Any:
-        # Minimal implementation: return JSON elements unchanged for now.
-        # Extend later to provide markdown/DICT formatting with output_formatter if needed.
-        return elements
+        if output_format == "JSON":
+            return elements
+
+        return self._generate_formatted_output(
+            elements=elements,
+            query_string=search_string,
+            entity_type=element_type_name or "Community",
+            output_format=output_format,
+            extract_properties_func=self._extract_referenceable_properties,
+            report_spec=report_spec,
+            **kwargs
+        )
 
     @dynamic_catch
     async def _async_get_communities_by_name(

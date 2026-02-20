@@ -18,7 +18,6 @@ from pyegeria.models import (SearchStringRequestBody, FilterRequestBody, GetRequ
                              UpdateElementRequestBody, NewRelationshipRequestBody,
                              DeleteElementRequestBody, DeleteRelationshipRequestBody)
 from pyegeria.view.output_formatter import (extract_mermaid_only, extract_basic_dict, populate_common_columns)
-from pyegeria.view.output_formatter import (generate_output)
 from pyegeria.core.utils import dynamic_catch
 from typing import Any, Optional
 
@@ -5154,153 +5153,109 @@ class DataDesigner(ServerClient):
         
         return col_data
 
-    def _generate_basic_structured_output(self, elements: dict, filter_string: str, type_name: str = None ,output_format: str = 'DICT',
-                                          columns_struct: dict = None) -> str | list:
+    def _generate_basic_structured_output(self, elements: dict, filter_string: Optional[str] = None, type_name: str = None ,output_format: str = 'DICT',
+                                          columns_struct: dict = None, **kwargs) -> str | list:
         """
         Generate output in the specified format for the given elements.
 
         Args:
             elements: Dictionary or list of dictionaries containing element data
-            filter: The search string used to find the elements
+            filter_string: The search string used to find the elements
             output_format: The desired output format (MD, FORM, REPORT, LIST, DICT, MERMAID, HTML)
             columns_struct: dict, optional, default = None
                 - The columns/attributes options to use
+            **kwargs: Additional arguments.
         Returns:
             Formatted output as string or list of dictionaries
         """
-        # Handle MERMAID and DICT formats using existing methods
-        if output_format == "MERMAID":
-            return extract_mermaid_only(elements)
-        elif output_format == "DICT":
-            return extract_basic_dict(elements)
-        elif output_format == "HTML":
-            return generate_output(
-                elements=elements,
-                search_string=filter,
-                entity_type="Data Element",
-                columns_struct=columns_struct,
-                output_format="HTML",
-                extract_properties_func=self._extract_data_structure_properties
-                )
+        if output_format == "JSON":
+            return elements
 
-        # For other formats (MD, FORM, REPORT, LIST), use generate_output
-        elif output_format in ["MD", "FORM", "REPORT", "LIST"]:
-            # Define columns for LIST format
-
-            return generate_output(elements,
-                                   filter,
-                                   "Data Element",
-                                   output_format,
-                                   self._extract_data_structure_properties,
-                                   None,
-                                   columns_struct,
-                                   )
+        return self._generate_formatted_output(
+            elements=elements,
+            query_string=filter_string,
+            entity_type=type_name or "Data Element",
+            output_format=output_format,
+            extract_properties_func=self._extract_data_structure_properties,
+            report_spec=columns_struct,
+            **kwargs
+        )
 
     def _generate_data_structure_output(self, elements: dict | list[dict], filter_string: Optional[str] = None, type: Optional[str] = None,
                                         output_format: str = "DICT",
-                                        report_spec: str | dict = None) -> str | list:
+                                        report_spec: str | dict = None, **kwargs) -> str | list:
         """
         Generate output for data structures in the specified format.
 
         Args:
             elements: Dictionary or list of dictionaries containing data structure elements
-            filter: The search string used to find the elements
+            filter_string: The search string used to find the elements
             output_format: The desired output format (MD, FORM, REPORT, LIST, DICT, MERMAID, HTML)
+            **kwargs: Additional arguments.
 
         Returns:
             Formatted output as string or list of dictionaries
         """
-        entity_type = "Data Structure"
-        if report_spec is None:
-            report_spec = select_report_spec(entity_type, output_format)
-
-        if report_spec:
-            if isinstance(report_spec, str):
-                output_formats = select_report_spec(report_spec, output_format)
-            elif isinstance(report_spec, dict):
-                output_formats = get_report_spec_match(report_spec, output_format)
-        else:
-            output_formats = None
-        logger.trace(f"Executing _generate_data_structure_output for {entity_type}: {output_formats}")
-        return generate_output(elements,
-                               filter,
-                               entity_type,
-                               output_format,
-                               self._extract_data_structure_properties,
-                               None,
-                               output_formats,
-                               )
+        return self._generate_formatted_output(
+            elements=elements,
+            query_string=filter_string,
+            entity_type="Data Structure",
+            output_format=output_format,
+            extract_properties_func=self._extract_data_structure_properties,
+            report_spec=report_spec,
+            **kwargs
+        )
 
     def _generate_data_class_output(self, elements: dict | list[dict], filter_string: Optional[str] = None, type: Optional[str] = None, output_format: str = "DICT",
-                                    report_spec: str | dict = None) -> str | list:
+                                    report_spec: str | dict = None, **kwargs) -> str | list:
         """
         Generate output for data classes in the specified format.
 
         Args:
             elements: Dictionary or list of dictionaries containing data class elements
-            filter: The search string used to find the elements
+            filter_string: The search string used to find the elements
             output_format: The desired output format (MD, FORM, REPORT, LIST, DICT, MERMAID, HTML)
             report_spec: Optional output format set
                 - Option column/attribute selection and definition.
+            **kwargs: Additional arguments.
         Returns:
             Formatted output as either a string or list of dictionaries
         """
-        entity_type = "Data Class"
-        if report_spec is None:
-            report_spec = select_report_spec(entity_type, output_format)
-
-        if report_spec:
-            if isinstance(report_spec, str):
-                output_formats = select_report_spec(report_spec, output_format)
-            if isinstance(report_spec, dict):
-                output_formats = get_report_spec_match(report_spec, output_format)
-        else:
-            output_formats = None
-        logger.trace(f"Executing _generate_data_class_output for {entity_type}: {output_formats}")
-        return generate_output(elements,
-                               filter,
-                               entity_type,
-                               output_format,
-                               self._extract_data_class_properties,
-                               None,
-                               output_formats,
-                               )
+        return self._generate_formatted_output(
+            elements=elements,
+            query_string=filter_string,
+            entity_type="Data Class",
+            output_format=output_format,
+            extract_properties_func=self._extract_data_class_properties,
+            report_spec=report_spec,
+            **kwargs
+        )
 
     def _generate_data_field_output(self, elements: dict | list[dict], filter_string: Optional[str] = None, type: Optional[str] = None, output_format: str = "DICT",
-                                    report_spec: str | dict = None) -> str | list:
+                                    report_spec: str | dict = None, **kwargs) -> str | list:
         """
         Generate output for data fields in the specified format.
 
         Args:
             elements: Dictionary or list of dictionaries containing data field elements
-            filter: The search string used to find the elements
+            filter_string: The search string used to find the elements
             output_format: The desired output format (MD, FORM, REPORT, LIST, DICT, MERMAID, HTML)
             report_spec: str|dict, Optional, default = None
             - Option column/attribute selection and definition.
+            **kwargs: Additional arguments.
 
         Returns:
             Formatted output as a string or list of dictionaries
         """
-        entity_type = "Data-Fields"
-        if report_spec is None:
-            report_spec = select_report_spec(entity_type, output_format)
-
-        if report_spec:
-            if isinstance(report_spec, str):
-                output_formats = select_report_spec(report_spec, output_format)
-            if isinstance(report_spec, dict):
-                output_formats = get_report_spec_match(report_spec, output_format)
-        else:
-            output_formats = None
-        logger.trace(f"Executing _generate_data_field_output for {entity_type}: {output_formats}")
-        return generate_output(elements,
-                               filter,
-                               entity_type,
-                               output_format,
-                               self._extract_data_field_properties,
-                               None,
-                               output_formats,
-                               )
+        return self._generate_formatted_output(
+            elements=elements,
+            query_string=filter_string,
+            entity_type="Data-Fields",
+            output_format=output_format,
+            extract_properties_func=self._extract_data_field_properties,
+            report_spec=report_spec,
+            **kwargs
+        )
 
     def _extract_additional_data_struct_properties(self, element, columns_struct):
         return None

@@ -7,7 +7,7 @@ import re
 import sys
 import nest_asyncio
 
-from typing import Any, Dict, Optional
+from typing import Any, Dict, Optional, Literal
 
 from mcp.server.fastmcp.exceptions import ValidationError
 
@@ -76,25 +76,27 @@ def main() -> None:
 
     # list_reports tool (formerly list_format_sets)
     @srv.tool(name="list_reports")
-    def list_reports_tool() -> Dict[str, Any]:
+    def list_reports_tool(output_type: Literal["DICT", "JSON", "MARKDOWN"] = "DICT") -> Dict[str, Any]:
         """Lists all available reports (FormatSets)."""
         print("DEBUG: Listing reports...", file=sys.stderr)
         return _ok(list_reports())
 
     @srv.tool(name="find_report_specs")
-    def find_report_specs_tool(perspective: str=None, question: str=None, report_spec: str=None) -> Dict[str, Any]:
+    def find_report_specs_tool(perspective: str=None, question: str=None, report_spec: str=None, output_type: Literal["DICT", "JSON", "MARKDOWN"] = "DICT") -> Dict[str, Any]:
         """Finds report specs that match the given perspective, question, and report spec."""
         print("DEBUG: Finding report specs...", file=sys.stderr)
         return _ok(run_find_report_specs(perspective=perspective, question=question, report_spec=report_spec))
 
 
     @srv.tool(name="describe_report")
-    def describe_report_tool(name: str, output_type: str = "DICT") -> Dict[str, Any]:
+    def describe_report_tool(name: str, output_type: Literal["DICT", "JSON", "MARKDOWN"] = "DICT") -> Dict[str, Any]:
         """Returns the schema and details for a specified report."""
         # FastMCP handles validation of 'name' and 'output_type' types automatically.
-        print(f"DEBUG: Describing report: {name} with output type: {output_type}", file=sys.stderr)
+        effective_output_type = "REPORT" if output_type == "MARKDOWN" else ("DICT" if output_type == "JSON" else output_type)
+
+        print(f"DEBUG: Describing report: {name} with output type: {effective_output_type}", file=sys.stderr)
         try:
-            return _ok(describe_report(name, output_type))
+            return _ok(describe_report(name, effective_output_type))
         except Exception as e:
             print(f"DEBUG: Exception during describe_report: {str(e)}", file=sys.stderr)
             raise
@@ -108,7 +110,7 @@ def main() -> None:
             starts_with: Optional[bool] = None,
             ends_with: Optional[bool] = None,
             ignore_case: Optional[bool] = None,
-            output_format: str = "DICT"
+            output_type: Literal["DICT", "JSON", "MARKDOWN"] = "DICT"
     ) -> Dict[str, Any]:
         import asyncio
         import nest_asyncio
@@ -119,10 +121,12 @@ def main() -> None:
         # 1. Automatic Validation: FastMCP/Pydantic ensures types are correct.
 
         # 2. Manual Validation (for specific values like output_format)
-        if output_format not in ["DICT", "JSON", "REPORT", "MERMAID", "HTML"]:
-            print(f"DEBUG: Invalid output_format: {output_format}", file=sys.stderr)
+        effective_output_format = "REPORT" if output_type == "MARKDOWN" else ("DICT" if output_type == "JSON" else output_type)
+
+        if effective_output_format not in ["DICT", "JSON", "REPORT", "MERMAID", "HTML"]:
+            print(f"DEBUG: Invalid output_format: {effective_output_format}", file=sys.stderr)
             raise ValueError(
-                f"Invalid output_format: {output_format}. Must be one of ['DICT', 'JSON', 'REPORT', 'MERMAID', 'HTML'].")
+                f"Invalid output_format: {effective_output_format}. Must be one of ['DICT', 'JSON', 'REPORT', 'MERMAID', 'HTML'].")
 
         # 3. Build params dictionary with only non-None values for clean passing
         params = {
@@ -146,7 +150,8 @@ def main() -> None:
                 _async_run_report_tool(
                     report=report_name,
                     egeria_client=egeria_client,
-                    params=params),
+                    params=params,
+                    output_format=effective_output_format),
                 timeout=30  # Adjust timeout as needed
             )
 

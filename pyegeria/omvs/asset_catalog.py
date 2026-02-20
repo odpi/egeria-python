@@ -17,7 +17,7 @@ from pyegeria.core._server_client import ServerClient
 from pyegeria.view.base_report_formats import select_report_format, get_report_spec_match
 from pyegeria.models import SearchStringRequestBody, ResultsRequestBody
 from pyegeria.view.output_formatter import populate_columns_from_properties, _extract_referenceable_properties, \
-    get_required_relationships, generate_output
+    get_required_relationships
 from pyegeria.core.utils import body_slimmer, dynamic_catch
 from pyegeria.core._globals import max_paging_size
 from pyegeria.core._globals import NO_ELEMENTS_FOUND, NO_ASSETS_FOUND
@@ -89,30 +89,17 @@ class AssetCatalog(ServerClient):
                 break
         return col_data
 
-    def _generate_asset_output(self, elements: dict | list[dict], filter_string: str | None,
-                                            element_type_name: str | None, output_format: str = "DICT",
-                                            report_spec: dict | str | None = None) -> str | list[dict]:
-        entity_type = element_type_name
-        get_additional_props_func = None
-        if report_spec:
-            if isinstance(report_spec, str):
-                output_formats = select_report_format(report_spec, output_format)
-            else:
-                output_formats = get_report_spec_match(report_spec, output_format)
-        elif element_type_name:
-            output_formats = select_report_format(element_type_name, output_format)
-        else:
-            output_formats = select_report_format(entity_type, output_format)
-        if output_formats is None:
-            output_formats = select_report_format("Default", output_format)
-        return generate_output(
-            elements,
-            filter,
-            entity_type,
-            output_format,
-            self._extract_asset_properties,
-            None,
-            output_formats,
+    def _generate_asset_output(self, elements: dict | list[dict], filter_string: Optional[str] = None,
+                                            element_type_name: Optional[str] = None, output_format: str = "DICT",
+                                            report_spec: dict | str | None = None, **kwargs) -> str | list[dict]:
+        return self._generate_formatted_output(
+            elements=elements,
+            query_string=filter_string,
+            entity_type=element_type_name or "Asset",
+            output_format=output_format,
+            extract_properties_func=self._extract_asset_properties,
+            report_spec=report_spec,
+            **kwargs
         )
 
     @dynamic_catch

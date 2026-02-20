@@ -112,7 +112,7 @@ class TestCollectionManager:
             search_string = "*"
             classification_name = None
             element_type = ["DigitalProduct"]
-            output_format = "DICT"
+            output_format = "REPORT"
             report_spec = "BasicCollections"
 
             response = c_client.find_collections(search_string = search_string, classification_names = classification_name

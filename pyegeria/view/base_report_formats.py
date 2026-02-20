@@ -480,7 +480,7 @@ base_report_specs = FormatSetDict({
         family="MyProfile",
         formats=[
             Format(
-                types=["DICT","LIST"],
+                types=["DICT","LIST", "TABLE"],
                 attributes= [
                     Column(name="Full Name", key='full_name'),
                     Column(name="Job Title", key='job_title'),
@@ -510,7 +510,7 @@ base_report_specs = FormatSetDict({
         family="MyProfile",
         formats=[
             Format(
-                types=["DICT","LIST", "REPORT"],
+                types=["DICT","LIST", "REPORT", "TABLE"],
                 attributes= [
                     Column(name="Full Name", key='full_name'),
                     Column(name="Job Title", key='job_title'),
@@ -534,14 +534,14 @@ base_report_specs = FormatSetDict({
         )
     ),
 
-"My-User-Contact-Detail": FormatSet(
+    "My-User-Contact-Detail": FormatSet(
     target_type="ContactDetails",
     heading="Contact Methods",
     description="Detailed Contact Methods",
     family="MyProfile",
     formats=[
         Format(
-            types=["LIST", "REPORT","DICT"],
+            types=["LIST", "REPORT", "DICT", "TABLE"],
             attributes=[
                 Column(name="Name", key="name"),
                 Column(name="Method Type", key="contactMethodType"),
@@ -561,7 +561,7 @@ base_report_specs = FormatSetDict({
     family="MyProfile",
     formats=[
         Format(
-            types=["LIST", "REPORT", "DICT"],
+            types=["LIST", "REPORT", "DICT", "TABLE"],
             attributes=[
                 Column(name="Name", key="name"),
                 Column(name="Type", key="type"),
@@ -583,7 +583,7 @@ base_report_specs = FormatSetDict({
     family="MyProfile",
     formats=[
         Format(
-            types=["LIST", "REPORT","DICT"],
+            types=["LIST", "REPORT", "DICT", "TABLE"],
             attributes=[
                 Column(name="Name", key="name"),
                 Column(name="Assignment Type", key="assignmentType"),
@@ -602,7 +602,7 @@ base_report_specs = FormatSetDict({
     family="MyProfile",
     formats=[
         Format(
-            types=["LIST", "DICT", "REPORT"],
+            types=["LIST", "DICT", "REPORT", "TABLE"],
             attributes=[
                 Column(name="Name", key="display_name"),
                 Column(name="Qualified Name", key="qualified_name"),
@@ -623,7 +623,7 @@ base_report_specs = FormatSetDict({
     family="MyProfile",
     formats=[
         Format(
-            types=["LIST", "REPORT"],
+            types=["LIST", "REPORT", "DICT", "TABLE"],
             attributes=[
                 Column(name="Name", key="name"),
                 Column(name="Assignment Type", key="assignmentType"),
@@ -2861,7 +2861,7 @@ def _select_from_registry(registry: FormatSetDict, kind: str, output_type: str) 
                 element = value
                 break
     if element is None:
-        logger.error(f"No matching report format found for kind='{kind}' and output type_name = '{output_type}'.")
+        logger.debug(f"No matching report format found for kind='{kind}' and output type_name = '{output_type}'.")
         return None
 
     output_struct: dict = {
@@ -2884,11 +2884,19 @@ def _select_from_registry(registry: FormatSetDict, kind: str, output_type: str) 
         if output_type in fmt.types:
             output_struct["formats"] = fmt.dict()
             return output_struct
+
+    # Fallback for TABLE -> DICT
+    if output_type == "TABLE":
+        for fmt in element.formats:
+            if "DICT" in fmt.types:
+                output_struct["formats"] = fmt.dict()
+                return output_struct
+
     for fmt in element.formats:
         if "ALL" in fmt.types:
             output_struct["formats"] = fmt.dict()
             return output_struct
-    logger.error(f"No matching format found for kind='{kind}' with output type_name = '{output_type}'.")
+    logger.debug(f"No matching format found for kind='{kind}' with output type_name = '{output_type}'.")
     return None
 
 

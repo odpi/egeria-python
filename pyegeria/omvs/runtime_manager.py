@@ -22,7 +22,7 @@ from pyegeria.models import (
     DeleteElementRequestBody, DeleteRelationshipRequestBody,
     ArchiveRequestBody, NewOpenMetadataElementRequestBody, FindRequestBody
 )
-from pyegeria.view.output_formatter import generate_output, populate_columns_from_properties, \
+from pyegeria.view.output_formatter import populate_columns_from_properties, \
     _extract_referenceable_properties, get_required_relationships
 
 class RuntimeManager(ServerClient):
@@ -152,13 +152,13 @@ class RuntimeManager(ServerClient):
                 c['value'] = elem.get(c['key'])
             return c_data
 
-        return generate_output(
+        return self._generate_formatted_output(
             elements=elements,
-            search_string=connector_name,
+            query_string=connector_name,
             entity_type="Properties",
             output_format=output_format,
             extract_properties_func=extract_kv,
-            columns_struct=columns_struct
+            report_spec=columns_struct
         )
 
     def get_integration_connector_config_properties(
@@ -2586,72 +2586,32 @@ class RuntimeManager(ServerClient):
         return col_data
 
     @dynamic_catch
-    def _generate_platform_output(self, elements: dict | list[dict], filter_string: Optional[str],
-                                  element_type_name: Optional[str], output_format: str = "DICT",
-                                  report_spec: dict | str = None) -> str | list[dict]:
+    def _generate_platform_output(self, elements: dict | list[dict], filter_string: Optional[str] = None,
+                                  element_type_name: Optional[str] = None, output_format: str = "DICT",
+                                  report_spec: dict | str = None, **kwargs) -> str | list[dict]:
         """ Generate output for Platform elements. """
-        if element_type_name is None:
-            entity_type = "Platforms"
-        else:
-            entity_type = element_type_name
-            
-        get_additional_props_func = None
-        output_formats = None
-        
-        if report_spec:
-             if isinstance(report_spec, str):
-                output_formats = select_report_spec(report_spec, output_format)
-             elif isinstance(report_spec, dict):
-                output_formats = get_report_spec_match(report_spec, output_format)
-        
-        if not output_formats:
-             output_formats = select_report_spec(entity_type, output_format)
-        
-        if output_formats is None:
-            output_formats = select_report_spec("Default", output_format)
-
-        return generate_output(
-            elements,
-            filter_string,
-            entity_type,
-            output_format,
-            self._extract_platform_properties,
-            get_additional_props_func,
-            output_formats
+        return self._generate_formatted_output(
+            elements=elements,
+            query_string=filter_string,
+            entity_type=element_type_name or "Platforms",
+            output_format=output_format,
+            extract_properties_func=self._extract_platform_properties,
+            report_spec=report_spec,
+            **kwargs
         )
 
-    def _generate_platform_report_output(self, elements: dict | list[dict], filter_string: Optional[str],
-                                  element_type_name: Optional[str], output_format: str = "DICT",
-                                  report_spec: dict | str = None) -> str | list[dict]:
+    def _generate_platform_report_output(self, elements: dict | list[dict], filter_string: Optional[str] = None,
+                                  element_type_name: Optional[str] = None, output_format: str = "DICT",
+                                  report_spec: dict | str = None, **kwargs) -> str | list[dict]:
         """ Generate output for Platform Report elements. """
-        if element_type_name is None:
-            entity_type = "SoftwareServerPlatform"
-        else:
-            entity_type = element_type_name
-
-        get_additional_props_func = None
-        output_formats = None
-
-        if report_spec:
-            if isinstance(report_spec, str):
-                output_formats = select_report_spec(report_spec, output_format)
-            elif isinstance(report_spec, dict):
-                output_formats = get_report_spec_match(report_spec, output_format)
-
-        if not output_formats:
-            output_formats = select_report_spec(entity_type, output_format)
-
-        if output_formats is None:
-            output_formats = select_report_spec("Default", output_format)
-
-        return generate_output(
-            elements,
-            filter_string,
-            entity_type,
-            output_format,
-            self._extract_platform_properties,
-            get_additional_props_func,
-            output_formats
+        return self._generate_formatted_output(
+            elements=elements,
+            query_string=filter_string,
+            entity_type=element_type_name or "SoftwareServerPlatform",
+            output_format=output_format,
+            extract_properties_func=self._extract_platform_properties,
+            report_spec=report_spec,
+            **kwargs
         )
 
     def _extract_omag_server_properties(self, element: dict, columns_struct: dict) -> dict:
@@ -2686,72 +2646,32 @@ class RuntimeManager(ServerClient):
         return col_data
 
     @dynamic_catch
-    def _generate_omag_server_output(self, elements: dict | list[dict], filter_string: Optional[str],
-                                  element_type_name: Optional[str], output_format: str = "DICT",
-                                  report_spec: dict | str = None) -> str | list[dict]:
+    def _generate_omag_server_output(self, elements: dict | list[dict], filter_string: Optional[str] = None,
+                                  element_type_name: Optional[str] = None, output_format: str = "DICT",
+                                  report_spec: dict | str = None, **kwargs) -> str | list[dict]:
         """ Generate output for OMAGServer elements. """
-        if element_type_name is None:
-            entity_type = "OMAGServers"
-        else:
-            entity_type = element_type_name
-            
-        get_additional_props_func = None
-        output_formats = None
-
-        if report_spec:
-             if isinstance(report_spec, str):
-                output_formats = select_report_spec(report_spec, output_format)
-             elif isinstance(report_spec, dict):
-                output_formats = get_report_spec_match(report_spec, output_format)
-        
-        if not output_formats:
-             output_formats = select_report_spec(entity_type, output_format)
-        
-        if output_formats is None:
-            output_formats = select_report_spec("Default", output_format)
-
-        return generate_output(
-            elements,
-            filter_string,
-            entity_type,
-            output_format,
-            self._extract_omag_server_properties,
-            get_additional_props_func,
-            output_formats
+        return self._generate_formatted_output(
+            elements=elements,
+            query_string=filter_string,
+            entity_type=element_type_name or "OMAGServers",
+            output_format=output_format,
+            extract_properties_func=self._extract_omag_server_properties,
+            report_spec=report_spec,
+            **kwargs
         )
 
-    def _generate_server_report_output(self, elements: dict | list[dict], filter_string: Optional[str],
-                                     element_type_name: Optional[str], output_format: str = "DICT",
-                                     report_spec: dict | str = None) -> str | list[dict]:
+    def _generate_server_report_output(self, elements: dict | list[dict], filter_string: Optional[str] = None,
+                                     element_type_name: Optional[str] = None, output_format: str = "DICT",
+                                     report_spec: dict | str = None, **kwargs) -> str | list[dict]:
         """ Generate output for OMAGServer elements. """
-        if element_type_name is None:
-            entity_type = "OMAGServers"
-        else:
-            entity_type = element_type_name
-
-        get_additional_props_func = None
-        output_formats = None
-
-        if report_spec:
-            if isinstance(report_spec, str):
-                output_formats = select_report_spec(report_spec, output_format)
-            elif isinstance(report_spec, dict):
-                output_formats = get_report_spec_match(report_spec, output_format)
-
-        if not output_formats:
-            output_formats = select_report_spec(entity_type, output_format)
-
-        if output_formats is None:
-            output_formats = select_report_spec("Default", output_format)
-
-        return generate_output(
-            elements,
-            filter_string,
-            entity_type,
-            output_format,
-            self._extract_omag_server_properties,
-            get_additional_props_func,
-            output_formats
+        return self._generate_formatted_output(
+            elements=elements,
+            query_string=filter_string,
+            entity_type=element_type_name or "OMAGServerReport",
+            output_format=output_format,
+            extract_properties_func=self._extract_omag_server_properties,
+            report_spec=report_spec,
+            **kwargs
         )
 
     def _extract_integration_connector_properties(self, element: dict, columns_struct: dict) -> dict:
@@ -2778,38 +2698,18 @@ class RuntimeManager(ServerClient):
         return col_data
 
     @dynamic_catch
-    def _generate_integration_connector_output(self, elements: dict | list[dict], filter_string: Optional[str],
-                                  element_type_name: Optional[str], output_format: str = "DICT",
-                                  report_spec: dict | str = None) -> str | list[dict]:
+    def _generate_integration_connector_output(self, elements: dict | list[dict], filter_string: Optional[str] = None,
+                                  element_type_name: Optional[str] = None, output_format: str = "DICT",
+                                  report_spec: dict | str = None, **kwargs) -> str | list[dict]:
         """ Generate output for IntegrationConnector elements. """
-        if element_type_name is None:
-            entity_type = "IntegrationConnectors"
-        else:
-            entity_type = element_type_name
-            
-        get_additional_props_func = None
-        output_formats = None
-        
-        if report_spec:
-             if isinstance(report_spec, str):
-                output_formats = select_report_spec(report_spec, output_format)
-             elif isinstance(report_spec, dict):
-                output_formats = get_report_spec_match(report_spec, output_format)
-        
-        if not output_formats:
-             output_formats = select_report_spec(entity_type, output_format)
-        
-        if output_formats is None:
-            output_formats = select_report_spec("Default", output_format)
-
-        return generate_output(
-            elements,
-            filter_string,
-            entity_type,
-            output_format,
-            self._extract_integration_connector_properties,
-            get_additional_props_func,
-            output_formats
+        return self._generate_formatted_output(
+            elements=elements,
+            query_string=filter_string,
+            entity_type=element_type_name or "IntegrationConnectors",
+            output_format=output_format,
+            extract_properties_func=self._extract_integration_connector_properties,
+            report_spec=report_spec,
+            **kwargs
         )
 
 
