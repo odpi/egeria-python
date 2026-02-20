@@ -11,15 +11,13 @@ import asyncio
 from typing import Any, Optional
 
 from pyegeria.core._globals import NO_ELEMENTS_FOUND
-from pyegeria.view.base_report_formats import select_report_spec
 from pyegeria.core._server_client import ServerClient
-from pyegeria.view.base_report_formats import get_report_spec_match
 from pyegeria.core.config import settings as app_settings
 from pyegeria.models import (SearchStringRequestBody, FilterRequestBody, GetRequestBody, NewElementRequestBody,
                              TemplateRequestBody, DeleteElementRequestBody, DeleteRelationshipRequestBody,
                              UpdateElementRequestBody,
                              NewRelationshipRequestBody, NewClassificationRequestBody, DeleteClassificationRequestBody)
-from pyegeria.view.output_formatter import generate_output, populate_common_columns, overlay_additional_values, materialize_egeria_summary
+from pyegeria.view.output_formatter import populate_common_columns, overlay_additional_values, materialize_egeria_summary
 from pyegeria.core.utils import body_slimmer, dynamic_catch
 
 EGERIA_LOCAL_QUALIFIER = app_settings.User_Profile.egeria_local_qualifier
@@ -76,31 +74,18 @@ class ProjectManager(ServerClient):
         return col_data
 
 
-    def _generate_project_output(self, elements: dict | list[dict], search_string: str,
-                                 element_type_name: str | None,
+    def _generate_project_output(self, elements: dict | list[dict], search_string: Optional[str] = None,
+                                 element_type_name: Optional[str] = None,
                                  output_format: str = 'DICT',
                                  report_spec: dict | str = None,
                                  **kwargs) -> str | list[dict]:
-        entity_type = 'Project'
-        if report_spec:
-            if isinstance(report_spec, str):
-                output_formats = select_report_spec(report_spec, output_format)
-            elif isinstance(report_spec, dict):
-                output_formats = get_report_spec_match(report_spec, output_format)
-            else:
-                output_formats = None
-        else:
-            output_formats = select_report_spec(entity_type, output_format)
-        if output_formats is None:
-            output_formats = select_report_spec('Default', output_format)
-        return generate_output(
+        return self._generate_formatted_output(
             elements=elements,
-            search_string=search_string,
-            entity_type=entity_type,
+            query_string=search_string,
+            entity_type='Project',
             output_format=output_format,
             extract_properties_func=self._extract_project_properties,
-            get_additional_props_func=None,
-            columns_struct=output_formats,
+            report_spec=report_spec,
             **kwargs
         )
 

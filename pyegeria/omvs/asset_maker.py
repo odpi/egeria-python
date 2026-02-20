@@ -3664,30 +3664,19 @@ class AssetMaker(ServerClient):
     def _generate_referenceable_output(
         self,
         elements: list | dict,
-        search_string : str | None,
-        # filter_string : str | None,
-        element_type_name: str | None,
+        search_string: Optional[str] = None,
+        element_type_name: Optional[str] = None,
         output_format: str = "DICT",
         report_spec: dict | str | None = None,
+        **kwargs
     ):
         """Helper to generate output for referenceable elements."""
-        from pyegeria.view.output_formatter import generate_output
-        entity_type = element_type_name if element_type_name else "Asset"
-        if report_spec:
-            if isinstance(report_spec, str):
-                output_formats = select_report_spec(report_spec, output_format)
-            elif isinstance(report_spec, dict):
-                output_formats = get_report_spec_match(report_spec, output_format)
-            else:
-                output_formats = None
-        else:
-            output_formats = select_report_spec(entity_type, output_format)
-        if output_formats is None:
-            output_formats = select_report_spec('Default', output_format)
-        return generate_output(
-            elements,
-            search_string=search_string,
-            entity_type=element_type_name,
+        return self._generate_formatted_output(
+            elements=elements,
+            query_string=search_string,
+            entity_type=element_type_name or "Asset",
             output_format=output_format,
-            columns_struct = output_formats,
+            extract_properties_func=self._extract_referenceable_properties,
+            report_spec=report_spec,
+            **kwargs
         )

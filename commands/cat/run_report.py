@@ -217,16 +217,42 @@ def list_generic(
     }
 
 
-def _flatten(item: Any, parent_key: str = "", sep: str = ".") -> Dict[str, Any]: 
-    """Flatten nested dict-like objects into a single level using dot-notation keys."""
+def _flatten(item: Any, parent_key: str = "", sep: str = ".") -> Dict[str, Any]:
+    """Flatten nested dict-like objects into a single level using dot-notation keys.
+    For nested collections of entities (master-detail), try to summarize by name.
+    """
     flat: Dict[str, Any] = {}
     if isinstance(item, Mapping):
         for k, v in item.items():
             new_key = f"{parent_key}{sep}{k}" if parent_key else str(k)
             flat.update(_flatten(v, new_key, sep))
     elif isinstance(item, (list, tuple)):
-        # Represent short sequences inline; longer ones as counts
-        if len(item) <= 3:
+        if not item:
+            flat[parent_key or "list"] = ""
+        elif all(isinstance(x, Mapping) for x in item):
+            # Master-detail or nested entities: try to summarize by name
+            names = []
+            for x in item:
+                # Prefer friendlier names often added by materializers
+                name = (
+                    x.get("name")
+                    or x.get("displayName")
+                    or x.get("qualifiedName")
+                    or x.get("guid")
+                )
+                if name:
+                    names.append(str(name))
+                else:
+                    # Fallback: find first string value in the dict
+                    str_vals = [v for v in x.values() if isinstance(v, str)]
+                    names.append(str_vals[0] if str_vals else str(x))
+
+            summary = ", ".join(names)
+            # If still very long, truncate for table display
+            if len(summary) > 120:
+                summary = summary[:117] + "..."
+            flat[parent_key or "list"] = summary
+        elif len(item) <= 3:
             flat[parent_key or "list"] = ", ".join([str(x) for x in item])
         else:
             flat[parent_key or "list"] = f"{len(item)} items"

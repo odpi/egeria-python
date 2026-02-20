@@ -171,7 +171,7 @@ class TestGovernanceOfficer:
                 self.view_server, self.platform_url, self.user, self.password
             )
             s_client.create_egeria_bearer_token()
-            display_name = "sample-notification-type2"
+            display_name = "sample-notification-type3"
             q_name = s_client.__create_qualified_name__("NotificationType", display_name)
 
             body = {
@@ -190,7 +190,7 @@ class TestGovernanceOfficer:
                     "notificationInterval": 100,
                     "plannedStartDate": "2026-01-31",
                     "plannedCompletionDate": "2027-01-31"
-                },
+                }
             }
 
             start_time = time.perf_counter()

@@ -21,7 +21,7 @@ from pyegeria.view.base_report_formats import select_report_spec, get_report_spe
 from pyegeria.models import NewElementRequestBody, TemplateRequestBody, UpdateElementRequestBody, \
     NewRelationshipRequestBody, SearchStringRequestBody, DeleteElementRequestBody, \
     DeleteRelationshipRequestBody
-from pyegeria.view.output_formatter import generate_output, extract_mermaid_only, \
+from pyegeria.view.output_formatter import extract_mermaid_only, \
     populate_common_columns
 from pyegeria.core.utils import body_slimmer, dynamic_catch
 
@@ -564,156 +564,64 @@ class SolutionArchitect(ServerClient):
     #
     # Markdown output support
     #
-    def generate_info_supply_chain_output(self, elements: list | dict, search_string: str, element_type_name: str | None,
-                                          output_format: str = 'MD', report_spec: dict | str = None) -> str | list:
-        """Render Information Supply Chains using the shared output pipeline.
-        """
+    def generate_info_supply_chain_output(self, elements: list | dict, search_string: Optional[str] = None, element_type_name: Optional[str] = None,
+                                          output_format: str = 'MD', report_spec: dict | str | None = None, **kwargs) -> str | list:
+        """Render Information Supply Chains using the centralized formatter."""
         if output_format == "MERMAID":
             return extract_mermaid_only(elements)
-
-        entity_type = "Information Supply Chain"
-        if report_spec:
-            if isinstance(report_spec, str):
-                output_formats = select_report_spec(report_spec, output_format)
-            elif isinstance(report_spec, dict):
-                output_formats = get_report_spec_match(report_spec, output_format)
-            else:
-                output_formats = None
-        else:
-            output_formats = select_report_spec("Information Supply Chains", output_format)
-        if output_formats is None:
-            output_formats = select_report_spec("Default", output_format)
-
-        return generate_output(
+        return self._generate_formatted_output(
             elements=elements,
-            search_string=search_string,
-            entity_type=entity_type,
+            query_string=search_string,
+            element_type_name=element_type_name or "Information Supply Chain",
             output_format=output_format,
+            report_spec=report_spec,
             extract_properties_func=self._extract_info_supply_chain_properties,
-            get_additional_props_func=None,
-            columns_struct=output_formats,
+            **kwargs,
         )
 
-    def generate_solution_blueprint_output(self, elements: list | dict, search_string: str, element_type_name: str | None,
-                                           output_format: str = 'MD', report_spec: dict | str = None) -> str | list:
-        """
-        Generate output for solution blueprints in the specified format.
-
-        Args:
-            elements: Dictionary or list of dictionaries containing solution blueprint elements
-            search_string: The search string used to find the elements
-            output_format: The desired output format (MD, FORM, REPORT, LIST, DICT, MERMAID, HTML)
-
-        Returns:
-            Formatted output as string or list of dictionaries
-        """
+    def generate_solution_blueprint_output(self, elements: list | dict, search_string: Optional[str] = None, element_type_name: Optional[str] = None,
+                                           output_format: str = 'MD', report_spec: dict | str | None = None, **kwargs) -> str | list:
+        """Generate output for solution blueprints using the centralized formatter."""
         if output_format == "MERMAID":
             return extract_mermaid_only(elements)
-
-        entity_type = "Solution Blueprint"
-        if report_spec:
-            if isinstance(report_spec, str):
-                output_formats = select_report_spec(report_spec, output_format)
-            elif isinstance(report_spec, dict):
-                output_formats = get_report_spec_match(report_spec, output_format)
-            else:
-                output_formats = None
-        else:
-            output_formats = select_report_spec("Solution Blueprints", output_format)
-        if output_formats is None:
-            output_formats = select_report_spec("Default", output_format)
-
-        return generate_output(
+        return self._generate_formatted_output(
             elements=elements,
-            search_string=search_string,
-            entity_type=entity_type,
+            query_string=search_string,
+            element_type_name=element_type_name or "Solution Blueprint",
             output_format=output_format,
+            report_spec=report_spec,
             extract_properties_func=self._extract_solution_blueprint_properties,
-            get_additional_props_func=None,
-            columns_struct=output_formats,
+            **kwargs,
         )
 
-    def generate_solution_roles_output(self, elements: list | dict, search_string: str, element_type_name: str | None,
-                                       output_format: str = 'MD', report_spec: dict | str = None) -> str | list:
-        """
-        Generate output for solution roles in the specified format.
-
-        Args:
-            elements: Dictionary or list of dictionaries containing solution role elements
-            search_string: The search string used to find the elements
-            output_format: The desired output format (MD, FORM, REPORT, LIST, DICT, MERMAID, HTML)
-
-        Returns:
-            Formatted output as string or list of dictionaries
-        """
+    def generate_solution_roles_output(self, elements: list | dict, search_string: Optional[str] = None, element_type_name: Optional[str] = None,
+                                       output_format: str = 'MD', report_spec: dict | str | None = None, **kwargs) -> str | list:
+        """Generate output for solution roles using the centralized formatter."""
         if output_format == "MERMAID":
             return extract_mermaid_only(elements)
-
-        entity_type = "Solution Role"
-        if report_spec:
-            if isinstance(report_spec, str):
-                output_formats = select_report_spec(report_spec, output_format)
-            elif isinstance(report_spec, dict):
-                output_formats = get_report_spec_match(report_spec, output_format)
-            else:
-                output_formats = None
-        else:
-            output_formats = select_report_spec("Solution Roles", output_format)
-        if output_formats is None:
-            output_formats = select_report_spec("Default", output_format)
-
-        return generate_output(
+        return self._generate_formatted_output(
             elements=elements,
-            search_string=search_string,
-            entity_type=entity_type,
+            query_string=search_string,
+            element_type_name=element_type_name or "Solution Role",
             output_format=output_format,
+            report_spec=report_spec,
             extract_properties_func=self._extract_solution_roles_properties,
-            get_additional_props_func=None,
-            columns_struct=output_formats,
+            **kwargs,
         )
 
-    def generate_solution_components_output(self, elements: list | dict, search_string: str, element_type_name: str | None,
-                                            output_format: str = 'MD', report_spec: dict | str = None) -> str | list:
-        """
-        Generate output for solution components in the specified format.
-
-        Given a set of elements representing solution components (either as a list or a dictionary),
-        this function generates output in the specified format. The output includes various
-        attributes of the solution components, such as their names, descriptions, types, and
-        related information like blueprints, parents, and extended properties.
-
-        Args:
-            elements: Dictionary or list of dictionaries containing solution component elements
-            search_string: The search string used to find the elements
-            output_format: The desired output format (MD, FORM, REPORT, LIST, DICT, MERMAID, HTML)
-
-        Returns:
-            Formatted output as string or list of dictionaries
-        """
+    def generate_solution_components_output(self, elements: list | dict, search_string: Optional[str] = None, element_type_name: Optional[str] = None,
+                                            output_format: str = 'MD', report_spec: dict | str | None = None, **kwargs) -> str | list:
+        """Generate output for solution components using the centralized formatter."""
         if output_format == "MERMAID":
             return extract_mermaid_only(elements)
-
-        entity_type = "Solution Component"
-        if report_spec:
-            if isinstance(report_spec, str):
-                output_formats = select_report_spec(report_spec, output_format)
-            elif isinstance(report_spec, dict):
-                output_formats = get_report_spec_match(report_spec, output_format)
-            else:
-                output_formats = None
-        else:
-            output_formats = select_report_spec("Solution Components", output_format)
-        if output_formats is None:
-            output_formats = select_report_spec("Default", output_format)
-
-        return generate_output(
+        return self._generate_formatted_output(
             elements=elements,
-            search_string=search_string,
-            entity_type=entity_type,
+            query_string=search_string,
+            element_type_name=element_type_name or "Solution Component",
             output_format=output_format,
+            report_spec=report_spec,
             extract_properties_func=self._extract_solution_components_properties,
-            get_additional_props_func=None,
-            columns_struct=output_formats,
+            **kwargs,
         )
 
     @dynamic_catch

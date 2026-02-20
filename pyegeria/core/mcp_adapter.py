@@ -132,6 +132,7 @@ async def _async_run_report_tool(
     report: str,
     egeria_client: EgeriaTech,
     params: Optional[Dict[str, Any]] = None,
+    output_format: str = "DICT"
 ) -> Dict[str, Any]:
     """
     Execute a format set action as an MCP-style tool. Enforces DICT/ALL by default.
@@ -140,5 +141,5 @@ async def _async_run_report_tool(
     # Lazy import of settings to avoid circulars when optional args are None
 
     print(f"Report: {report}\n params: {json.dumps(params)}\n", file=sys.stderr)
-    result = await _async_run_report(report, egeria_client, output_format="DICT", params=params)
+    result = await _async_run_report(report, egeria_client, output_format=output_format, params=params)
     return result

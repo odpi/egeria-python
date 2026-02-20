@@ -26,7 +26,6 @@ from pyegeria.core.utils import body_slimmer, dynamic_catch, to_camel_case
 from pyegeria.core.config import settings
 from pyegeria.view.base_report_formats import select_report_format, get_report_spec_match
 from pyegeria.view.output_formatter import (
-    generate_output,
     _extract_referenceable_properties,
     populate_columns_from_properties,
     get_required_relationships,
@@ -222,99 +221,41 @@ class AutomatedCuration(ServerClient):
     def _generate_tech_type_output(
         self,
         elements: dict | list[dict],
-        filter_string: str | None,
-        element_type_name: str | None,
+        filter_string: Optional[str] = None,
+        element_type_name: Optional[str] = None,
         output_format: str = "DICT",
         report_spec: dict | str | None = None,
         **kwargs,
     ) -> str | list[dict]:
         """Generate output for technology types in the specified format."""
-        entity_type = element_type_name or self.TECH_TYPE_ENTITY_LABEL
-
-        # Resolve report format (with backward-compatible legacy kwarg)
-        get_additional_props_func = None
-        if report_spec is None and isinstance(kwargs, dict) and 'report_spec' in kwargs:
-            report_spec = kwargs.get('report_spec')
-        if report_spec:
-            if isinstance(report_spec, str):
-                output_formats = select_report_format(report_spec, output_format)
-            else:
-                output_formats = get_report_spec_match(report_spec, output_format)
-        elif element_type_name:
-            output_formats = select_report_format(element_type_name, output_format)
-        else:
-            output_formats = select_report_format(entity_type, output_format)
-
-        if output_formats is None:
-            output_formats = select_report_format("Default", output_format)
-
-        # Optional hook for extra server calls to enrich rows
-        get_additional_props_name = (
-            output_formats.get("get_additional_props", {}).get("function") if output_formats else None
-        )
-        if isinstance(get_additional_props_name, str):
-            parts = get_additional_props_name.split(".")
-            method_name = parts[-1] if parts else None
-            if method_name and hasattr(self, method_name):
-                get_additional_props_func = getattr(self, method_name)
-
-        return generate_output(
-            elements,
-            filter_string,
-            entity_type,
-            output_format,
-            self._extract_tech_type_properties,
-            get_additional_props_func,
-            output_formats,
+        return self._generate_formatted_output(
+            elements=elements,
+            query_string=filter_string,
+            element_type_name=element_type_name or self.TECH_TYPE_ENTITY_LABEL,
+            output_format=output_format,
+            report_spec=report_spec,
+            extract_properties_func=self._extract_tech_type_properties,
+            **kwargs,
         )
 
     def _generate_tech_type_element_output(
         self,
         elements: dict | list[dict],
-        filter_string: str | None,
-        element_type_name: str | None,
+        filter_string: Optional[str] = None,
+        element_type_name: Optional[str] = None,
         output_format: str = "DICT",
         report_spec: dict | str | None = None,
         **kwargs,
     ) -> str | list[dict]:
         """Generate output for technology type elements in the specified format."""
-        entity_type = element_type_name or self.TECH_TYPE_ENTITY_LABEL
-
-        # Resolve report format (with backward-compatible legacy kwarg)
-        get_additional_props_func = None
-        if report_spec is None and isinstance(kwargs, dict) and 'report_spec' in kwargs:
-            report_spec = kwargs.get('report_spec')
-        if report_spec:
-            if isinstance(report_spec, str):
-                output_formats = select_report_format(report_spec, output_format)
-            else:
-                output_formats = get_report_spec_match(report_spec, output_format)
-        elif element_type_name:
-            output_formats = select_report_format(element_type_name, output_format)
-        else:
-            output_formats = select_report_format(entity_type, output_format)
-
-        if output_formats is None:
-            output_formats = select_report_format("Default", output_format)
-
-        # Optional hook for extra server calls to enrich rows
-        get_additional_props_name = (
-            output_formats.get("get_additional_props", {}).get("function") if output_formats else None
-        )
-        if isinstance(get_additional_props_name, str):
-            parts = get_additional_props_name.split(".")
-            method_name = parts[-1] if parts else None
-            if method_name and hasattr(self, method_name):
-                get_additional_props_func = getattr(self, method_name)
-
-        return generate_output(
-            elements,
-            filter_string,
-            entity_type,
-            output_format,
-            self._extract_tech_type_element_properties,
-            get_additional_props_func,
-            output_formats,
+        return self._generate_formatted_output(
+            elements=elements,
+            query_string=filter_string,
+            element_type_name=element_type_name or self.TECH_TYPE_ENTITY_LABEL,
+            output_format=output_format,
+            report_spec=report_spec,
+            extract_properties_func=self._extract_tech_type_element_properties,
+            **kwargs,
         )
 
     def _extract_gov_action_type_properties(self, element: dict, columns_struct: dict) -> dict:
@@ -335,40 +276,23 @@ class AutomatedCuration(ServerClient):
                 break
         return col_data
 
-    def _generate_gov_action_type_output(self, elements: dict | list[dict], filter_string: str | None,
-                                         element_type_name: str | None, output_format: str = "DICT",
-                                         report_format: dict | str | None = None,
-                                         **kwargs) -> str | list[dict]:
-        entity_type = element_type_name or self.GOV_ACTION_TYPE_LABEL
-        get_additional_props_func = None
-        if report_format is None and isinstance(kwargs, dict) and 'report_spec' in kwargs:
-            report_format = kwargs.get('report_spec')
-        if report_format:
-            if isinstance(report_format, str):
-                output_formats = select_report_format(report_format, output_format)
-            else:
-                output_formats = get_report_spec_match(report_format, output_format)
-        elif element_type_name:
-            output_formats = select_report_format(element_type_name, output_format)
-        else:
-            output_formats = select_report_format(entity_type, output_format)
-        if output_formats is None:
-            output_formats = select_report_format("Default", output_format)
-        get_additional_props_name = (
-            output_formats.get("get_additional_props", {}).get("function") if output_formats else None
-        )
-        if isinstance(get_additional_props_name, str):
-            method_name = get_additional_props_name.split(".")[-1]
-            if hasattr(self, method_name):
-                get_additional_props_func = getattr(self, method_name)
-        return generate_output(
-            elements,
-            filter_string,
-            entity_type,
-            output_format,
-            self._extract_gov_action_type_properties,
-            get_additional_props_func,
-            output_formats,
+    def _generate_gov_action_type_output(
+        self,
+        elements: dict | list[dict],
+        filter_string: Optional[str] = None,
+        element_type_name: Optional[str] = None,
+        output_format: str = "DICT",
+        report_spec: dict | str | None = None,
+        **kwargs,
+    ) -> str | list[dict]:
+        return self._generate_formatted_output(
+            elements=elements,
+            query_string=filter_string,
+            element_type_name=element_type_name or self.GOV_ACTION_TYPE_LABEL,
+            output_format=output_format,
+            report_spec=report_spec,
+            extract_properties_func=self._extract_gov_action_type_properties,
+            **kwargs,
         )
 
     def _extract_catalog_target_properties(self, element: dict, columns_struct: dict) -> dict:
@@ -389,33 +313,23 @@ class AutomatedCuration(ServerClient):
                 break
         return col_data
 
-    def _generate_catalog_target_output(self, elements: dict | list[dict], filter_string: str | None,
-                                        element_type_name: str | None, output_format: str = "DICT",
-                                        report_format: dict | str | None = None,
-                                        **kwargs) -> str | list[dict]:
-        entity_type = element_type_name or self.CATALOG_TARGET_LABEL
-        get_additional_props_func = None
-        if report_format is None and isinstance(kwargs, dict) and 'report_spec' in kwargs:
-            report_format = kwargs.get('report_spec')
-        if report_format:
-            if isinstance(report_format, str):
-                output_formats = select_report_format(report_format, output_format)
-            else:
-                output_formats = get_report_spec_match(report_format, output_format)
-        elif element_type_name:
-            output_formats = select_report_format(element_type_name, output_format)
-        else:
-            output_formats = select_report_format(entity_type, output_format)
-        if output_formats is None:
-            output_formats = select_report_format("Default", output_format)
-        return generate_output(
-            elements,
-            filter_string,
-            entity_type,
-            output_format,
-            self._extract_catalog_target_properties,
-            None,
-            output_formats,
+    def _generate_catalog_target_output(
+        self,
+        elements: dict | list[dict],
+        filter_string: Optional[str] = None,
+        element_type_name: Optional[str] = None,
+        output_format: str = "DICT",
+        report_spec: dict | str | None = None,
+        **kwargs,
+    ) -> str | list[dict]:
+        return self._generate_formatted_output(
+            elements=elements,
+            query_string=filter_string,
+            element_type_name=element_type_name or self.CATALOG_TARGET_LABEL,
+            output_format=output_format,
+            report_spec=report_spec,
+            extract_properties_func=self._extract_catalog_target_properties,
+            **kwargs,
         )
 
     def _extract_engine_action_properties(self, element: dict, columns_struct: dict) -> dict:
@@ -468,37 +382,23 @@ class AutomatedCuration(ServerClient):
                 break
         return col_data
 
-    def _generate_engine_action_output(self, elements: dict | list[dict], filter_string: str | None,
-                                       element_type_name: str | None, output_format: str = "DICT",
-                                       report_spec: dict | str | None = None) -> str | list[dict]:
-        entity_type = element_type_name or self.ENGINE_ACTION_LABEL
-        get_additional_props_func = None
-        if report_spec:
-            if isinstance(report_spec, str):
-                output_formats = select_report_format(report_spec, output_format)
-            else:
-                output_formats = get_report_spec_match(report_spec, output_format)
-        elif element_type_name:
-            output_formats = select_report_format(element_type_name, output_format)
-        else:
-            output_formats = select_report_format(entity_type, output_format)
-        if output_formats is None:
-            output_formats = select_report_format("Default", output_format)
-        get_additional_props_name = (
-            output_formats.get("get_additional_props", {}).get("function") if output_formats else None
-        )
-        if isinstance(get_additional_props_name, str):
-            method_name = get_additional_props_name.split(".")[-1]
-            if hasattr(self, method_name):
-                get_additional_props_func = getattr(self, method_name)
-        return generate_output(
-            elements,
-            filter_string,
-            entity_type,
-            output_format,
-            self._extract_engine_action_properties,
-            get_additional_props_func,
-            output_formats,
+    def _generate_engine_action_output(
+        self,
+        elements: dict | list[dict],
+        filter_string: Optional[str] = None,
+        element_type_name: Optional[str] = None,
+        output_format: str = "DICT",
+        report_spec: dict | str | None = None,
+        **kwargs,
+    ) -> str | list[dict]:
+        return self._generate_formatted_output(
+            elements=elements,
+            query_string=filter_string,
+            element_type_name=element_type_name or self.ENGINE_ACTION_LABEL,
+            output_format=output_format,
+            report_spec=report_spec,
+            extract_properties_func=self._extract_engine_action_properties,
+            **kwargs,
         )
 
     def _extract_gov_action_process_properties(self, element: dict, columns_struct: dict) -> dict:
@@ -536,30 +436,23 @@ class AutomatedCuration(ServerClient):
                 break
         return col_data
 
-    def _generate_gov_action_process_output(self, elements: dict | list[dict], filter_string: str | None,
-                                            element_type_name: str | None, output_format: str = "DICT",
-                                            report_spec: dict | str | None = None) -> str | list[dict]:
-        entity_type = element_type_name or self.GOV_ACTION_PROCESS_LABEL
-        get_additional_props_func = None
-        if report_spec:
-            if isinstance(report_spec, str):
-                output_formats = select_report_format(report_spec, output_format)
-            else:
-                output_formats = get_report_spec_match(report_spec, output_format)
-        elif element_type_name:
-            output_formats = select_report_format(element_type_name, output_format)
-        else:
-            output_formats = select_report_format(entity_type, output_format)
-        if output_formats is None:
-            output_formats = select_report_format("Default", output_format)
-        return generate_output(
-            elements,
-            filter_string,
-            entity_type,
-            output_format,
-            self._extract_gov_action_process_properties,
-            None,
-            output_formats,
+    def _generate_gov_action_process_output(
+        self,
+        elements: dict | list[dict],
+        filter_string: Optional[str] = None,
+        element_type_name: Optional[str] = None,
+        output_format: str = "DICT",
+        report_spec: dict | str | None = None,
+        **kwargs,
+    ) -> str | list[dict]:
+        return self._generate_formatted_output(
+            elements=elements,
+            query_string=filter_string,
+            element_type_name=element_type_name or self.GOV_ACTION_PROCESS_LABEL,
+            output_format=output_format,
+            report_spec=report_spec,
+            extract_properties_func=self._extract_gov_action_process_properties,
+            **kwargs,
         )
 
     async def _async_create_elem_from_template(self, body: Optional[dict | TemplateRequestBody] = None) -> str:

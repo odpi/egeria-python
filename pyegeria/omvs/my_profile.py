@@ -19,7 +19,7 @@ from pyegeria.models import (
     UpdateElementRequestBody,
 )
 from pyegeria.view.base_report_formats import select_report_spec, get_report_spec_match
-from pyegeria.view.output_formatter import (populate_common_columns, generate_output, resolve_output_formats, materialize_egeria_summary, select_report_format)
+from pyegeria.view.output_formatter import (populate_common_columns, resolve_output_formats, materialize_egeria_summary, select_report_format)
 import asyncio
 
 
@@ -226,9 +226,15 @@ class MyProfile(ServerClient):
 
 
 
-    def _generate_my_profile_output(self, elements: dict | list[dict], filter_string: str = "My",
-                                    element_type_name: str = "Actor", output_format: str = "JSON",
-                                    report_spec: dict | str = "My-User-MD") -> str | list[dict]:
+    def _generate_my_profile_output(
+            self,
+            elements: dict | list[dict],
+            filter_string: Optional[str] = "My",
+            element_type_name: Optional[str] = "Actor",
+            output_format: str = "JSON",
+            report_spec: dict | str | None = "My-User-MD",
+            **kwargs,
+    ) -> str | list[dict]:
         """ Generate output for my_profile in the specified format.
 
             Args:
@@ -242,33 +248,15 @@ class MyProfile(ServerClient):
         """
 
         entity_type = element_type_name if element_type_name else "Actor"
-
-        # First see if the user has specified an report_spec - either a label or a dict
-        get_additional_props_func = None
-
-        if isinstance(report_spec, str):
-            output_formats = select_report_spec(report_spec, output_format)
-        elif isinstance(report_spec, dict):
-            output_formats = get_report_spec_match(report_spec, output_format)
-        else:
-            output_formats = select_report_spec("Default", output_format)
-
-        if output_formats:
-            get_additional_props_name = output_formats.get("get_additional_props", {}).get("function", None)
-            if isinstance(get_additional_props_name, str):
-                class_name, method_name = get_additional_props_name.split(".")
-                if hasattr(self, method_name):
-                    get_additional_props_func = getattr(self, method_name)
-
-        logger.trace(f"Executing generate_actor_role_output for {entity_type}: {output_formats}")
-        return generate_output(
-            elements,
-            filter_string,
-            entity_type,
-            output_format,
-            self._extract_my_profile_properties,
-            get_additional_props_func,
-            output_formats,
+        logger.trace(f"Executing generate_actor_role_output for {entity_type}")
+        return self._generate_formatted_output(
+            elements=elements,
+            query_string=filter_string,
+            element_type_name=entity_type,
+            output_format=output_format,
+            report_spec=report_spec,
+            extract_properties_func=self._extract_my_profile_properties,
+            **kwargs,
         )
 
 

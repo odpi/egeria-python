@@ -771,11 +771,33 @@ def generate_entity_md(elements: List[Dict],
                 name = column.get('name')
                 key = column.get('key')
                 value = column.get('value')
+                detail_spec = column.get('detail_spec')
+
                 if value in (None, "") and key in additional_props:
                     value = additional_props[key]
                 if column.get('format'):
                     value = format_for_markdown_table(value, guid)
+                
                 elements_md += make_md_attribute(name, value, output_format)
+
+                # Master-Detail support for REPORT format
+                if detail_spec and value and output_format == 'REPORT':
+                    values_list = value if isinstance(value, list) else [value]
+                    if values_list and all(isinstance(v, dict) for v in values_list):
+                        # Resolve the linked spec
+                        detail_struct = select_report_format(detail_spec, 'REPORT')
+                        if detail_struct:
+                            elements_md += f"\n### {name} Details\n\n"
+                            elements_md += generate_output(
+                                elements=values_list,
+                                search_string="",
+                                entity_type=detail_struct.get('target_type') or name,
+                                output_format='REPORT',
+                                extract_properties_func=populate_columns_from_properties,
+                                columns_struct=detail_struct,
+                                include_preamble=False,
+                            )
+                            elements_md += "\n"
             if wk := returned_struct.get("annotations", {}).get("wikilinks", None):
                 elements_md += ", ".join(wk)
         elif base_columns:
@@ -988,6 +1010,7 @@ def generate_entity_md_table(elements: List[Dict],
                     output_format='LIST' if 'LIST' in detail_struct.get('formats', {}).get('types', ['LIST']) else 'REPORT',
                     extract_properties_func=populate_columns_from_properties,
                     columns_struct=detail_struct,
+                    include_preamble=False,
                 )
 
     elements_md += details_md
@@ -1061,10 +1084,31 @@ def generate_entity_dict(elements: List[Dict],
                 key = column.get('key')
                 name = column.get('name')
                 value = column.get('value')
+                detail_spec = column.get('detail_spec')
+
                 if (value in (None, "")) and key in additional_props:
                     value = additional_props[key]
                 if column.get('format'):
                     value = format_for_markdown_table(value, guid)
+
+                # Master-Detail support for DICT format
+                if detail_spec and value and output_format in ['DICT', 'TABLE']:
+                    values_list = value if isinstance(value, list) else [value]
+                    if values_list and all(isinstance(v, dict) for v in values_list):
+                        # Use DICT for nested details if top-level is TABLE
+                        recursive_ofmt = 'DICT' if output_format == 'TABLE' else output_format
+                        detail_struct = select_report_format(detail_spec, recursive_ofmt)
+                        if detail_struct:
+                            value = generate_output(
+                                elements=values_list,
+                                search_string="",
+                                entity_type=detail_struct.get('target_type') or name,
+                                output_format=recursive_ofmt,
+                                extract_properties_func=populate_columns_from_properties,
+                                columns_struct=detail_struct,
+                                include_preamble=False,
+                            )
+
                 # Avoid overwriting when multiple columns share the same display name in a spec
                 dict_key = name
                 if dict_key in entity_dict:
@@ -1503,12 +1547,14 @@ def _generate_default_output(elements: dict | list[dict], search_string: str,
 
 
 def generate_output(elements: Union[Dict, List[Dict]],
-               search_string: str,
-               entity_type: str,
-               output_format: str,
-               extract_properties_func: Callable,
+               search_string: Optional[str] = None,
+               entity_type: str = "Referenceable",
+               output_format: str = "DICT",
+               extract_properties_func: Optional[Callable] = None,
                get_additional_props_func: Optional[Callable] = None,
-               columns_struct: dict = None) -> Union[str, list[dict]]:
+               columns_struct: dict = None,
+               include_preamble: bool = True,
+               **kwargs) -> Union[str, list[dict]]:
     """
     Generate output in the specified format for the given elements.
 
@@ -1519,11 +1565,16 @@ def generate_output(elements: Union[Dict, List[Dict]],
         output_format: The desired output format (MD, FORM, REPORT, LIST, DICT, MERMAID, HTML)
         extract_properties_func: Function to extract properties from an element
         get_additional_props_func: Optional function to get additional properties
-        columns: Optional list of column definitions for table output
+        columns_struct: Optional report specification structure
+        include_preamble: Whether to include the report header/preamble
+        **kwargs: Additional arguments, including potential 'filter_string'
 
     Returns:
         Formatted output as string or list of dictionaries
     """
+    if search_string is None:
+        search_string = kwargs.get('filter_string')
+
     columns = columns_struct['formats'].get('attributes',None) if columns_struct else None
     if not columns:
         columns_struct = select_report_format("Default",output_format)
@@ -1590,11 +1641,14 @@ def generate_output(elements: Union[Dict, List[Dict]],
         )
 
     else:  #  MD, FORM, REPORT
-        elements_md, elements_action = make_preamble(
-            obj_type=target_type,
-            search_string=search_string,
-            output_format=output_format
-        )
+        elements_md = ""
+        elements_action = "Details"
+        if include_preamble:
+            elements_md, elements_action = make_preamble(
+                obj_type=target_type,
+                search_string=search_string,
+                output_format=output_format
+            )
 
         elements_md += generate_entity_md(
             elements=elements,

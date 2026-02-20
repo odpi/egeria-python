@@ -15,7 +15,6 @@ from pyegeria.core.utils import dict_to_markdown_list, dynamic_catch, body_slimm
 from pyegeria.core._globals import max_paging_size, NO_ELEMENTS_FOUND
 from pyegeria.view.base_report_formats import select_report_spec, get_report_spec_match
 from pyegeria.view.output_formatter import (
-    generate_output,
     _extract_referenceable_properties,
     populate_columns_from_properties,
     get_required_relationships,
@@ -94,39 +93,21 @@ class ValidMetadataManager(ServerClient):
     def _generate_referenceable_output(
         self,
         elements: dict | list[dict],
-        filter_string : str | None,
-        element_type_name: str | None,
+        filter_string: Optional[str] = None,
+        element_type_name: Optional[str] = None,
         output_format: str = "DICT",
         report_spec: dict | str | None = None,
+        **kwargs,
     ) -> str | list[dict]:
-        """Resolve format set and generate output for Referenceable-derived elements.
-
-        This aligns with the formatting workflow used by classification_manager and automated_curation.
-        """
-        entity_type = element_type_name or self.REFERENCEABLE_LABEL
-
-        # Resolve output format set
-        if report_spec:
-            if isinstance(report_spec, str):
-                output_formats = select_report_spec(report_spec, output_format)
-            else:
-                output_formats = get_report_spec_match(report_spec, output_format)
-        elif element_type_name:
-            output_formats = select_report_spec(element_type_name, output_format)
-        else:
-            output_formats = select_report_spec(entity_type, output_format)
-
-        if output_formats is None:
-            output_formats = select_report_spec("Default", output_format)
-
-        return generate_output(
-            elements,
-            filter,
-            entity_type,
-            output_format,
-            self._extract_referenceable_output_properties,
-            None,
-            output_formats,
+        """Resolve format set and generate output for Referenceable-derived elements via the centralized wrapper."""
+        return self._generate_formatted_output(
+            elements=elements,
+            query_string=filter_string,
+            element_type_name=element_type_name or self.REFERENCEABLE_LABEL,
+            output_format=output_format,
+            report_spec=report_spec,
+            extract_properties_func=self._extract_referenceable_output_properties,
+            **kwargs,
         )
 
     def _extract_valid_value_output_properties(self, element: dict, columns_struct: dict) -> dict:
@@ -178,40 +159,21 @@ class ValidMetadataManager(ServerClient):
     def _generate_valid_value_output(
         self,
         elements: dict | list[dict],
-        filter_string : str | None,
-        element_type_name: str | None,
+        filter_string: Optional[str] = None,
+        element_type_name: Optional[str] = None,
         output_format: str = "DICT",
         report_spec: dict | str | None = None,
+        **kwargs,
     ) -> dict | str | list[dict]:
-        """Resolve format set and generate output for Referenceable-derived elements.
-
-        This aligns with the formatting workflow used by classification_manager and automated_curation.
-        """
-        entity_type = element_type_name or self.REFERENCEABLE_LABEL
-
-        # Resolve output format set
-        if report_spec:
-            if isinstance(report_spec, str):
-                output_formats = select_report_spec(report_spec, output_format)
-            else:
-                output_formats = get_report_spec_match(report_spec, output_format)
-        elif element_type_name:
-            output_formats = select_report_spec(element_type_name, output_format)
-        else:
-            output_formats = select_report_spec(entity_type, output_format)
-
-        if output_formats is None:
-            output_formats = select_report_spec("Default", output_format)
-
-        return generate_output(
-            elements,
-            filter,
-            entity_type,
-            output_format,
-            # self._extract_valid_value_output_properties,
-            populate_columns_from_properties,
-            None,
-            output_formats,
+        """Generate output for valid value payloads using the centralized wrapper."""
+        return self._generate_formatted_output(
+            elements=elements,
+            query_string=filter_string,
+            element_type_name=element_type_name or self.REFERENCEABLE_LABEL,
+            output_format=output_format,
+            report_spec=report_spec,
+            extract_properties_func=populate_columns_from_properties,
+            **kwargs,
         )
 
     def _extract_entity_output_properties(self, element: dict, columns_struct: dict) -> dict:
@@ -245,42 +207,24 @@ class ValidMetadataManager(ServerClient):
     def _generate_entity_output(
         self,
         elements: dict | list[dict],
-        filter_string : str | None,
-        element_type_name: str | None,
+        filter_string: Optional[str] = None,
+        element_type_name: Optional[str] = None,
         output_format: str = "DICT",
         report_spec: dict | str | None = None,
+        **kwargs,
     ) -> dict | str | list[dict]:
-        """Resolve format set and generate output for Referenceable-derived elements.
-
-        This aligns with the formatting workflow used by classification_manager and automated_curation.
-        """
-        entity_type = element_type_name if element_type_name is not None else self.REFERENCEABLE_LABEL
+        """Generate generic entity output using the centralized wrapper."""
         # Remove a layer of nesting in the JSON if the output_format is not MERMAID
-        if output_format != "MERMAID":
-            elements = elements["typeDefs"] if output_format != "MERMAID" else elements
-
-        # Resolve output format set
-        if report_spec:
-            if isinstance(report_spec, str):
-                output_formats = select_report_spec(report_spec, output_format)
-            else:
-                output_formats = get_report_spec_match(report_spec, output_format)
-        elif element_type_name:
-            output_formats = select_report_spec(element_type_name, output_format)
-        else:
-            output_formats = select_report_spec(entity_type, output_format)
-
-        if output_formats is None:
-            output_formats = select_report_spec("Default", output_format)
-
-        return generate_output(
-            elements,
-            filter,
-            entity_type,
-            output_format,
-            self._extract_entity_output_properties,
-            None,
-            output_formats,
+        if output_format != "MERMAID" and isinstance(elements, dict) and "typeDefs" in elements:
+            elements = elements["typeDefs"]
+        return self._generate_formatted_output(
+            elements=elements,
+            query_string=filter_string,
+            element_type_name=element_type_name or self.REFERENCEABLE_LABEL,
+            output_format=output_format,
+            report_spec=report_spec,
+            extract_properties_func=self._extract_entity_output_properties,
+            **kwargs,
         )
 
     async def _async_setup_valid_metadata_value(

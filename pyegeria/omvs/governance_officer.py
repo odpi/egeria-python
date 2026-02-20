@@ -19,7 +19,6 @@ from pyegeria.core._server_client import ServerClient
 from pyegeria.view.base_report_formats import select_report_spec, get_report_spec_match
 from pyegeria.view.output_formatter import (
     extract_mermaid_only,
-    generate_output,
     populate_common_columns,
 )
 
@@ -102,9 +101,9 @@ class GovernanceOfficer(ServerClient):
     #
     # Extract properties functions
     #
-    def _generate_governance_definition_output(self, elements: list | dict, search_string: str, element_type_name: Optional[str] = None,
-                                               output_format: str = 'DICT', report_spec: dict | str = None
-                                               ) -> str | list:
+    def _generate_governance_definition_output(self, elements: list | dict, search_string: Optional[str] = None, element_type_name: Optional[str] = None,
+                                               output_format: str = 'DICT', report_spec: dict | str = None,
+                                               **kwargs) -> str | list:
         """
         Render governance definitions using the shared output pipeline.
 
@@ -121,40 +120,24 @@ class GovernanceOfficer(ServerClient):
         report_spec : dict | str, optional
             Either a label for a format set or a concrete format-set dict. When omitted, a sensible
             default for Governance Definitions is chosen, falling back to "Default".
+        **kwargs: Additional arguments.
 
         Returns
         -------
         str | list
             Rendered output in the requested format.
         """
-        # Ensure elements handled consistently for MERMAID
-        if output_format == "MERMAID":
-            return extract_mermaid_only(elements)
+        if output_format == "JSON":
+            return elements
 
-        entity_type = element_type_name if element_type_name else "Governance Definition"
-        # Resolve columns_struct via output format sets
-        if report_spec:
-            if isinstance(report_spec, str):
-                output_formats = select_report_spec(report_spec, output_format)
-            elif isinstance(report_spec, dict):
-                output_formats = get_report_spec_match(report_spec, output_format)
-            else:
-                output_formats = None
-        else:
-            # Default to the Governance Definitions format set
-            output_formats = select_report_spec("Governance Definitions", output_format)
-        if output_formats is None:
-            output_formats = select_report_spec("Default", output_format)
-
-        logger.trace(f"Executing generate_governance_definition_output: {output_formats}")
-        return generate_output(
+        return self._generate_formatted_output(
             elements=elements,
-            search_string=search_string,
-            entity_type=entity_type,
+            query_string=search_string,
+            entity_type=element_type_name or "Governance Definition",
             output_format=output_format,
             extract_properties_func=self._extract_gov_def_properties,
-            get_additional_props_func=None,
-            columns_struct=output_formats,
+            report_spec=report_spec,
+            **kwargs
         )
 
     #

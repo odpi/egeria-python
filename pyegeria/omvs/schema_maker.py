@@ -20,7 +20,6 @@ from pyegeria.models import (
     ReferenceableProperties,
 )
 from pyegeria.view.output_formatter import (
-    generate_output,
     populate_common_columns,
     overlay_additional_values,
 )
@@ -89,19 +88,20 @@ class SchemaMaker(ServerClient):
     def _generate_schema_output(
         self,
         elements: dict | list[dict],
-        filter: Optional[str],
-        element_type_name: Optional[str],
+        filter_string: Optional[str] = None,
+        element_type_name: Optional[str] = None,
         output_format: str = "DICT",
-        report_spec: dict | str = None,
+        report_spec: dict | str | None = None,
+        **kwargs,
     ) -> str | list[dict]:
-        return generate_output(
-            elements,
-            filter,
-            element_type_name,
-            output_format,
-            self._extract_schema_properties,
-            None,
-            report_spec,
+        return self._generate_formatted_output(
+            elements=elements,
+            query_string=filter_string,
+            element_type_name=element_type_name or "SchemaType",
+            output_format=output_format,
+            report_spec=report_spec,
+            extract_properties_func=self._extract_schema_properties,
+            **kwargs,
         )
 
     # Schema Types

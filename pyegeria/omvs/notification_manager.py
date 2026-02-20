@@ -74,7 +74,7 @@ class NotificationManager(ServerClient):
     def _prepare_body(self, body: Optional[dict | NewRelationshipRequestBody | DeleteRelationshipRequestBody]) -> dict:
         """Convert Pydantic models to dict and slim the body."""
         if body is None:
-            return {}
+            return None
         if isinstance(body, dict):
             return body_slimmer(body)
         # It's a Pydantic model
@@ -185,7 +185,12 @@ class NotificationManager(ServerClient):
             f"{self.notification_manager_command_root}/notification-types/"
             f"{notification_type_guid}/monitored-resources/{monitored_resource_guid}/detach"
         )
-        await self._async_make_request("POST", url, self._prepare_body(body))
+        body = self._prepare_body(body)
+        if body:
+            await self._async_make_request("POST", url, body)
+        else:
+            await self._async_make_request("POST", url)
+
 
     def detach_monitored_resource(
         self,

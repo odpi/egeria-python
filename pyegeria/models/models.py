@@ -338,7 +338,7 @@ class NewElementRequestBody(RequestBody):
     properties: dict | None = None
     parent_guid: str | None = None
     parent_relationship_type_name: str | None = None
-    parent_at_end_1: bool | None = True
+    parent_at_end_1: bool | None = None
     properties: dict | None =None
 
 
