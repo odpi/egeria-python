@@ -12,6 +12,7 @@ The `json_inspector.py` module provides a way to:
 ## Files
 
 - [json_inspector.py](file:///Users/dwolfson/antigravity-pyegeria/egeria-python/examples/surveys/json_inspector.py): The core implementation of the file identification and parsing logic.
+- [survey_crawler.py](file:///Users/dwolfson/antigravity-pyegeria/egeria-python/examples/surveys/survey_crawler.py): A CLI script to recursively scan directories and report JSON file types.
 - [test_json_inspector.py](file:///Users/dwolfson/antigravity-pyegeria/egeria-python/examples/surveys/test_json_inspector.py): Unit tests for the inspector.
 
 ## Supported File Types
@@ -56,6 +57,22 @@ if summary:
 else:
     print("File type not recognized.")
 ```
+
+## Survey Crawler Usage
+
+The `survey_crawler.py` script can be used to scan an entire project or data directory recursively:
+
+```bash
+python examples/surveys/survey_crawler.py [path_to_scan]
+```
+
+Example:
+
+```bash
+python examples/surveys/survey_crawler.py examples
+```
+
+It will produce a formatted table showing the files identified and their detected artifact types.
 
 ## Running Tests
 
