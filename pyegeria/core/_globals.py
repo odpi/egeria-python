@@ -33,14 +33,14 @@ star_ratings = (
     "TWO_STARS",
 )
 class GovernanceDomains(Enum):
-    ALL= 0,
-    DATA= 1,
-    PRIVACY= 2,
-    SECURITY= 3,
-    IT_INFRASTRUCTURE= 4,
-    SOFTWARE_DEVELOPMENT= 5,
-    CORPORATE= 6,
-    ASSET_MANAGEMENT= 7,
+    ALL= 0
+    DATA= 1
+    PRIVACY= 2
+    SECURITY= 3
+    IT_INFRASTRUCTURE= 4
+    SOFTWARE_DEVELOPMENT= 5
+    CORPORATE= 6
+    ASSET_MANAGEMENT= 7
     OTHER= 99
 
 class ContentStatus(Enum):

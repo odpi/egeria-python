@@ -36,9 +36,9 @@ profile = client.get_my_profile(output_format="DICT", report_spec="My-User-MD")
 pyegeria supports multiple output types. Each report spec declares which types it supports.
 
 - DICT: Python list/dict structures — best for programmatic use and tests.
-- LIST: Markdown table (horizontal). Good for compact overviews. Nested values are summarized and link to detail sections if configured.
-- REPORT (MD): Rich Markdown (vertical). Renders nested dict/list values as bullet lists.
-- FORM: Markdown suitable for Dr.Egeria editable forms. Complex values are summarized (not deeply expanded).
+- LIST: Markdown table (horizontal). Good for compact overviews. Nested values are automatically summarized (names/display names). If a `detail_spec` is configured, master rows include `[details]` links to rich detail sections appended below the table.
+- REPORT: Rich Markdown (vertical). Ideal for deep dives. Renders nested dict/list values as hierarchical bullet lists and includes vertical detail sections for master-detail columns.
+- FORM: Markdown suitable for Dr.Egeria editable forms. Complex values are summarized to keep the form concise and manageable.
 - MD: Plain Markdown (legacy simple rendering).
 - MERMAID: Mermaid graph text for supported responses.
 - HTML: HTML wrapper around Markdown (when enabled in generators).
@@ -46,6 +46,27 @@ pyegeria supports multiple output types. Each report spec declares which types i
 Tip: Use DICT for APIs and automation; use LIST for dashboards/browsing; use REPORT for deep, readable details; use FORM when producing updateable forms.
 
 ---
+
+## Method Parameter Consistency
+
+All `find_*` and `get_*` methods in `pyegeria` that support formatted output follow a consistent parameter pattern:
+
+- `output_format`: The desired output type (e.g., "DICT", "LIST", "REPORT"). Defaults to "DICT" or "JSON" depending on the method.
+- `report_spec`: Optional name or dictionary defining the columns and layout.
+- `search_string` / `filter_string`: 
+    - `find_*` methods use `search_string` for substring matching.
+    - `get_*` methods use `filter_string` for exact value matching.
+    - **Normalization**: The output layer automatically handles both. Whichever string was used to fetch the data will be displayed in the output preamble (e.g., in Markdown reports).
+- `**kwargs`: Methods accept additional keyword arguments which are passed safely through to the output formatter. This allows for future rendering flags without breaking method signatures.
+
+---
+
+### Parameter naming: snake_case vs camelCase
+
+- For method/CLI parameters and action specs, prefer snake_case names (e.g., `metadata_element_subtypes`, `page_size`, `start_from`, `effective_time`, `sequencing_order`).
+- The report executor (`exec_report_spec`/`run_report`) and CLI adaptors expect snake_case; underlying clients convert to on‑wire camelCase when calling Egeria.
+- Column `key` names in report specs can be snake_case or camelCase. The formatter tries exact key, then `to_camel_case`, then uppercase for well‑known IDs. Prefer snake_case for consistency.
+- CLI flags like `--param page_size=50` or `--params-json '{"metadata_element_subtypes":["Asset"],"page_size":100}'` must use snake_case.
 
 ## The Report Spec Model
 
@@ -96,7 +117,31 @@ Most client methods already call the output pipeline for you. Under the hood, th
 
 - `select_report_format(label: str, output_type: str) -> dict`: pick a spec by name/label and match the requested type (with fallback to `ALL`).
 - `resolve_output_formats(entity_type: str, output_format: str, report_spec: str|dict|None)`: flexible resolver used by clients (by name, by dict, or by entity type default).
-- `generate_output(...)`: orchestrates DICT/LIST/REPORT/FORM rendering given elements and a spec.
+- `generate_output(...)`: orchestrates DICT/LIST/REPORT/FORM rendering given elements and a spec. It supports an `include_preamble` parameter (default `True`) to control whether the report header/preamble is included; this is automatically disabled during recursive master-detail calls to prevent redundant headings.
+
+### Type matching and the 'ALL' shorthand
+
+When you request an `output_format`, pyegeria selects the best matching `Format` inside the `formats` list for the chosen spec:
+- Exact match: a `Format` whose `types` contains the requested type (e.g., `"LIST"`).
+- Fallback to `ALL`: if no exact match is found, a `Format` whose `types` includes `"ALL"` will be used.
+- Final fallback: if neither is present, the first `Format` entry is used.
+- Precedence: if both a type‑specific `Format` and an `ALL` `Format` are present, the type‑specific one wins.
+
+Example JSON using `ALL`:
+```json
+{
+  "My-User-Compact": {
+    "target_type": "My-User",
+    "formats": [
+      {"types": ["ALL"], "attributes": [
+        {"name":"Name","key":"display_name"},
+        {"name":"GUID","key":"guid","format":true}
+      ]}
+    ]
+  }
+}
+```
+This single spec works for `DICT`, `LIST`, and `REPORT` with the same attribute set. You can add another `Format` with `types: ["REPORT"]` later if you want a richer vertical report while keeping `ALL` for other types.
 
 Basic example using a registered spec:
 
@@ -115,15 +160,16 @@ In practice you will call a client method (e.g., `MyProfile.get_my_profile`) and
 
 ## Nested Data and the Master–Detail Pattern
 
-Egeria OMVS responses often include related elements and nested hierarchies. pyegeria preserves this richness and makes it navigable.
+Egeria OMVS responses often include related elements and nested hierarchies. pyegeria preserves this richness and makes it navigable across all primary output formats (`LIST`, `REPORT`, `DICT`, and CLI `TABLE`).
 
 - Rich materialization: `materialize_egeria_summary(summary, columns_struct=None)` turns a `RelatedMetadata*Summary` into a clean dict that includes:
   - relationship properties (e.g., `assignmentType`)
   - related element properties (e.g., `name`, `qualifiedName`, `guid`, `type`, `description`)
   - recursively processed `nested_elements`
 - Schema‑driven promotion: if the current spec includes attributes with `detail_spec`, pyegeria builds a type→key map from those linked specs and promotes matching nested elements into those keys. Example: a role that has nested `Project` items becomes `{"projects": [ ... ]}` when the column points to a `Project` detail spec.
+- Smart Summarization: when rendering collections in tables (`LIST` or CLI `TABLE`), pyegeria now attempts to summarize them by joining the names or display names of child elements, rather than just showing a count.
 
-### How LIST, REPORT, FORM, and DICT handle nested values
+### How formats handle nested values
 
 - DICT: returns full nested dict/lists for downstream processing.
 - LIST: shows a compact summary (names/identifiers) in the master row and adds a `[details]` link if a `detail_spec` is configured. A detail section is appended below using the linked spec.
@@ -262,6 +308,94 @@ Place this JSON file into your user specs directory and call `load_user_report_s
 - Search by perspective or question (if a spec defines `question_spec`):
   - `find_report_specs_by_perspective("Solution Architect")`
   - `find_report_specs_by_question("list my teams")`
+
+---
+
+## Report Commands (CLI)
+
+pyegeria provides ready-to-use CLI commands to discover and run report specs.
+
+- `list_reports`: Lists all registered report specs with their Family, Description, and Available Formats. Use `--search/-s` to filter by name, family, description, or aliases.
+- `run_report`: Executes a report spec and renders output:
+  - `TABLE`: paged, interactive Rich table in the terminal
+  - `MD`/`REPORT`/`FORM`/`LIST`/`HTML`: writes a timestamped file to your outbox
+  - `DICT`/`JSON`: returns machine-readable data
+
+Examples
+
+```bash
+# List all reports (paged table)
+poetry run list_reports
+
+# Filter by keyword (matches name, family, description, aliases)
+poetry run list_reports --search glossary
+
+# Run a report as a table (Rich table in terminal)
+poetry run run_report --report "Digital-Products" --output-format TABLE --param search_string="*"
+
+# Run a report and save Markdown to the outbox
+poetry run run_report --report "My-User-MD" --output-format REPORT --param search_string="*"
+
+# Pass multiple parameters in snake_case
+poetry run run_report \
+  --report "Collections" \
+  --output-format TABLE \
+  --param search_string="*" \
+  --param page_size=100 \
+  --param start_from=0
+
+# Or pass parameters as JSON (snake_case keys)
+poetry run run_report --report "Collections" --output-format TABLE \
+  --params-json '{"search_string":"*","page_size":100,"start_from":0}'
+```
+
+From the main CLI (`hey_egeria`):
+
+```bash
+# Inside the Hey Egeria CLI
+hey_egeria cat show info list-reports --search user
+hey_egeria cat show info "Run Report" --report "Digital-Products" --output-format TABLE --search-string "*"
+```
+
+Notes
+- Unknown report vs unsupported format: error messages clearly distinguish a mistyped/unknown report from a known report that does not support the requested `output_format`. Hints include the list of available formats and suggest running `list_reports`.
+- CLI parameters must use snake_case (see “Parameter naming: snake_case vs camelCase”).
+
+---
+
+## MCP tools for reports
+
+If you use an MCP-compatible client, pyegeria exposes report-related tools via a lightweight server at `pyegeria/core/mcp_server.py`.
+
+Start the server
+
+```bash
+# Using Poetry
+poetry run pyegeria-mcp
+
+# If installed via pip, the same entry point is available as a script
+pyegeria-mcp
+```
+
+Exposed tools and parameters
+
+- `list_reports(output_type="DICT"|"JSON"|"MARKDOWN")`
+  - Lists eligible report specs (those that support `DICT` or `ALL`), including description, target type, and required/optional params.
+- `describe_report(name, output_type="DICT"|"JSON"|"MARKDOWN")`
+  - Returns the schema and details for a single report spec. `MARKDOWN` maps to a narrative description; `JSON` maps to DICT.
+- `find_report_specs(perspective=None, question=None, report_spec=None, output_type="DICT"|"JSON"|"MARKDOWN")`
+  - Searches report specs by perspective and/or example question (when provided in the spec’s `question_spec`). Use `"*"` to skip a filter.
+- `run_report(report_name, search_string="*", page_size=0, start_from=0, starts_with=None, ends_with=None, ignore_case=None, output_type="DICT"|"JSON"|"MARKDOWN")`
+  - Executes a report spec. Prefer `output_type="DICT"` for tool consumption; `MARKDOWN` returns a human-readable narrative.
+
+Conventions
+- Parameters are snake_case, matching the rest of pyegeria. The server adapts these to on‑wire camelCase when calling Egeria.
+- Return payloads follow the normalized shapes used across pyegeria’s report executor:
+  - `{"kind":"empty"}` when no rows are found
+  - `{"kind":"json","data": ...}` for DICT/JSON results
+  - `{"kind":"text","mime":"text/markdown"|"text/html","content": ...}` for narrative outputs
+
+Tip: You can combine `find_report_specs` to discover candidates and then `run_report` with the same report name.
 
 ---
 

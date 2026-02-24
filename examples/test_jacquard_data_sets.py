@@ -4,6 +4,7 @@ Copyright Contributors to the ODPi Egeria project.
 
 This module tests the JacquardDataSets class and methods from jacquard_data_sets.py
 """
+import json
 
 from rich import print
 from rich.console import Console
@@ -44,6 +45,8 @@ class TestJacquardDataSets:
             
             try:
                 response = jds_client.find_tabular_data_sets(search_string="*")
+                print(f"\nFound {len(response)} tabular data sets")
+                # print(json.dumps(response, indent=2))
                 assert response is not None
             except (PyegeriaInvalidParameterException, PyegeriaNotFoundException, PyegeriaAPIException):
                 pass

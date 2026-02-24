@@ -12,7 +12,7 @@ from rich.markdown import Markdown
 
 from pyegeria import ServerClient, PyegeriaException
 from pyegeria.core.utils import (camel_to_title_case)
-from pyegeria.core._globals import DEBUG_LEVEL
+from pyegeria.core._globals import DEBUG_LEVEL, GovernanceDomains
 from md_processing.md_processing_utils.message_constants import message_types
 
 # Constants
@@ -389,7 +389,8 @@ def set_update_status_body(object_type: str, attributes: dict)->dict:
 def set_gov_prop_body(object_type: str, qualified_name: str, attributes: dict)->dict:
     prop_name = object_type.replace(" ", "")
     prop_bod = set_element_prop_body(object_type, qualified_name, attributes)
-    prop_bod["domainIdentifier"] = attributes.get('Domain Identifier', {}).get('value', None)
+    domain_id = attributes.get('Domain Identifier', {}).get('value', None)
+    prop_bod["domainIdentifier"] = GovernanceDomains[domain_id].value
     prop_bod["displayName"]= attributes.get('Display Name', {}).get('value', None)
     prop_bod['qualifiedName'] = qualified_name
     prop_bod["versionIdentifier"] = attributes.get('Version Identifier', {}).get('value', None)

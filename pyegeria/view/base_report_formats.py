@@ -144,7 +144,7 @@ MD_SEPARATOR = "\n---\n\n"
 
 # Standard optional parameters for search functions
 OPTIONAL_SEQUENCING_PARAMS = ["sequencing_order", "sequencing_property"]
-OPTIONAL_SEARCH_PARAMS = OPTIONAL_SEQUENCING_PARAMS + ["page_size", "start_from", "starts_with", "ends_with", "ignore_case","classification_names","metadata_element_subtypes",]
+OPTIONAL_SEARCH_PARAMS = OPTIONAL_SEQUENCING_PARAMS + ["page_size", "start_from", "starts_with", "ends_with", "ignore_case","classification_names","metadata_element_subtypes","metadata_element_type" ]
 OPTIONAL_FILTER_PARAMS = OPTIONAL_SEQUENCING_PARAMS + ["page_size", "start_from"]
 # Define shared elements
 
@@ -1725,7 +1725,7 @@ base_report_specs = FormatSetDict({
         action=ActionParameter(
             function="CollectionManager.find_collections",
             required_params=["search_string"],
-            spec_params={"metadata_element_subtypes": ["DdataSpec"]},
+            spec_params={"metadata_element_subtypes": ["DataSpec"]},
         )
     ),
 
@@ -1908,6 +1908,7 @@ base_report_specs = FormatSetDict({
         action=ActionParameter(
             function="GovernanceOfficer.find_governance_definitions",
             required_params=["search_string"],
+            optional_params=OPTIONAL_SEARCH_PARAMS,
             spec_params={},
         )
     ),
@@ -2080,7 +2081,7 @@ base_report_specs = FormatSetDict({
             function="GovernanceOfficer.find_governance_definitions",
             required_params=["search_string"],
             optional_params=OPTIONAL_SEARCH_PARAMS,
-            spec_params={"metadata_element_subtypes": ["GovernancePolicy"]},
+            spec_params={"metadata_element_type": "GovernancePolicy"},
         )
     )
 
