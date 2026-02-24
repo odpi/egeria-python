@@ -1,0 +1,1939 @@
+{
+  "class": "OpenMetadataRootElement",
+  "elementHeader": {
+    "class": "ElementHeader",
+    "headerVersion": 0,
+    "status": "ACTIVE",
+    "type": {
+      "typeId": "e3c4293d-8846-4500-b0c0-197d73aba8b0",
+      "typeName": "Regulation",
+      "superTypeNames": [
+        "GovernanceDriver",
+        "GovernanceDefinition",
+        "AuthoredReferenceable",
+        "Referenceable",
+        "OpenMetadataRoot"
+      ],
+      "typeVersion": 1,
+      "typeDescription": "Identifies a regulation related to data that must be supported.",
+      "typeCategory": "ENTITY_DEF"
+    },
+    "origin": {
+      "sourceServer": "qs-metadata-store",
+      "originCategory": "CONTENT_PACK",
+      "homeMetadataCollectionId": "655b1965-4c29-4a0e-8a5d-3f55a37b3799",
+      "homeMetadataCollectionName": "Coco Pharmaceuticals Combination",
+      "license": "Apache 2.0"
+    },
+    "versions": {
+      "createdBy": "Egeria Project",
+      "updatedBy": "Egeria Project",
+      "createTime": "2021-12-20T07:20:40.038+00:00",
+      "updateTime": "2026-02-19T10:41:07.323+00:00",
+      "version": 1771497664240
+    },
+    "guid": "2ba17e3c-825a-409b-928f-d0e46e741c11",
+    "anchor": {
+      "class": "ElementClassification",
+      "headerVersion": 0,
+      "status": "ACTIVE",
+      "type": {
+        "typeId": "aa44f302-2e43-4669-a1e7-edaae414fc6e",
+        "typeName": "Anchors",
+        "typeVersion": 1,
+        "typeDescription": "Identifies the anchor entity for an element that is part of a large composite object such as an asset.",
+        "typeCategory": "CLASSIFICATION_DEF"
+      },
+      "origin": {
+        "sourceServer": "qs-metadata-store",
+        "originCategory": "CONTENT_PACK",
+        "homeMetadataCollectionId": "655b1965-4c29-4a0e-8a5d-3f55a37b3799",
+        "homeMetadataCollectionName": "Coco Pharmaceuticals Combination"
+      },
+      "versions": {
+        "createdBy": "Egeria Project",
+        "updatedBy": "Egeria Project",
+        "createTime": "2021-12-20T07:20:40.038+00:00",
+        "updateTime": "2026-02-19T10:41:07.323+00:00",
+        "version": 1771497664240
+      },
+      "classificationOrigin": "ASSIGNED",
+      "classificationName": "Anchors",
+      "classificationProperties": {
+        "class": "AnchorsProperties",
+        "typeName": "Anchors",
+        "extendedProperties": {},
+        "anchorTypeName": "Regulation",
+        "anchorDomainName": "AuthoredReferenceable"
+      }
+    }
+  },
+  "peerGovernanceDefinitions": [
+    {
+      "class": "RelatedMetadataHierarchySummary",
+      "relationshipHeader": {
+        "class": "ElementHeader",
+        "headerVersion": 0,
+        "status": "ACTIVE",
+        "type": {
+          "typeId": "c5e6fada-2c12-46ee-afa9-b71dd1bd8179",
+          "typeName": "GovernanceDriverLink",
+          "typeVersion": 1,
+          "typeDescription": "Link between a two governance drivers.",
+          "typeCategory": "RELATIONSHIP_DEF"
+        },
+        "origin": {
+          "sourceServer": "qs-metadata-store",
+          "originCategory": "CONTENT_PACK",
+          "homeMetadataCollectionId": "655b1965-4c29-4a0e-8a5d-3f55a37b3799",
+          "homeMetadataCollectionName": "Coco Pharmaceuticals Combination",
+          "license": "Apache 2.0"
+        },
+        "versions": {
+          "createdBy": "Egeria Project",
+          "updatedBy": "Egeria Project",
+          "createTime": "2021-12-20T07:20:40.038+00:00",
+          "updateTime": "2026-02-19T10:41:07.323+00:00",
+          "version": 1771497664240
+        },
+        "guid": "0d11756b-96dc-43f8-a7c2-f634851b4108"
+      },
+      "relatedElement": {
+        "elementHeader": {
+          "class": "ElementHeader",
+          "headerVersion": 0,
+          "status": "ACTIVE",
+          "type": {
+            "typeId": "3c34f121-07a6-4e95-a07d-9b0ef17b7bbf",
+            "typeName": "GovernanceStrategy",
+            "superTypeNames": [
+              "GovernanceDriver",
+              "GovernanceDefinition",
+              "AuthoredReferenceable",
+              "Referenceable",
+              "OpenMetadataRoot"
+            ],
+            "typeVersion": 1,
+            "typeDescription": "Defines how the governance program and the supporting capabilities are supporting the business strategy.",
+            "typeCategory": "ENTITY_DEF"
+          },
+          "origin": {
+            "sourceServer": "qs-metadata-store",
+            "originCategory": "CONTENT_PACK",
+            "homeMetadataCollectionId": "655b1965-4c29-4a0e-8a5d-3f55a37b3799",
+            "homeMetadataCollectionName": "Coco Pharmaceuticals Combination",
+            "license": "Apache 2.0"
+          },
+          "versions": {
+            "createdBy": "Egeria Project",
+            "updatedBy": "Egeria Project",
+            "createTime": "2021-12-20T07:20:40.038+00:00",
+            "updateTime": "2026-02-19T10:41:07.323+00:00",
+            "version": 1771497664240
+          },
+          "guid": "667c6480-a90a-4fd4-9022-8da646e203d2",
+          "anchor": {
+            "class": "ElementClassification",
+            "headerVersion": 0,
+            "status": "ACTIVE",
+            "type": {
+              "typeId": "aa44f302-2e43-4669-a1e7-edaae414fc6e",
+              "typeName": "Anchors",
+              "typeVersion": 1,
+              "typeDescription": "Identifies the anchor entity for an element that is part of a large composite object such as an asset.",
+              "typeCategory": "CLASSIFICATION_DEF"
+            },
+            "origin": {
+              "sourceServer": "qs-metadata-store",
+              "originCategory": "CONTENT_PACK",
+              "homeMetadataCollectionId": "655b1965-4c29-4a0e-8a5d-3f55a37b3799",
+              "homeMetadataCollectionName": "Coco Pharmaceuticals Combination"
+            },
+            "versions": {
+              "createdBy": "Egeria Project",
+              "updatedBy": "Egeria Project",
+              "createTime": "2021-12-20T07:20:40.038+00:00",
+              "updateTime": "2026-02-19T10:41:07.323+00:00",
+              "version": 1771497664240
+            },
+            "classificationOrigin": "ASSIGNED",
+            "classificationName": "Anchors",
+            "classificationProperties": {
+              "class": "AnchorsProperties",
+              "typeName": "Anchors",
+              "extendedProperties": {},
+              "anchorTypeName": "GovernanceStrategy",
+              "anchorDomainName": "AuthoredReferenceable"
+            }
+          }
+        },
+        "properties": {
+          "class": "GovernanceStrategyProperties",
+          "typeName": "GovernanceStrategy",
+          "extendedProperties": {
+            "domainIdentifier": 9,
+            "scope": "Within organization"
+          },
+          "qualifiedName": "GovernanceStrategy::Operate Coco Pharmaceuticals in an increasingly sustainable way",
+          "identifier": "SUSTAINABILITY_03",
+          "displayName": "Operate Coco Pharmaceuticals in an increasingly sustainable way",
+          "description": "Use sustainability regulations to develop a program of education and initiatives that are designed to improve Coco''s sustainability measurements with rewards for effective actions.",
+          "summary": "Create a company wide sustainability initiative with rewards.",
+          "domainIdentifier": 0,
+          "importance": "High",
+          "implications": [
+            "A budget needs to be allocated.",
+            "People need to be given time to participate.",
+            "New communication paths need to be established.",
+            "New responsibilities need to be established with key leaders.",
+            "New employee rewards need to be designed and implemented"
+          ]
+        }
+      },
+      "relatedElementAtEnd1": false,
+      "nestedElements": [
+        {
+          "class": "RelatedMetadataHierarchySummary",
+          "relationshipHeader": {
+            "class": "ElementHeader",
+            "headerVersion": 0,
+            "status": "ACTIVE",
+            "type": {
+              "typeId": "c5e6fada-2c12-46ee-afa9-b71dd1bd8179",
+              "typeName": "GovernanceDriverLink",
+              "typeVersion": 1,
+              "typeDescription": "Link between a two governance drivers.",
+              "typeCategory": "RELATIONSHIP_DEF"
+            },
+            "origin": {
+              "sourceServer": "qs-metadata-store",
+              "originCategory": "CONTENT_PACK",
+              "homeMetadataCollectionId": "655b1965-4c29-4a0e-8a5d-3f55a37b3799",
+              "homeMetadataCollectionName": "Coco Pharmaceuticals Combination",
+              "license": "Apache 2.0"
+            },
+            "versions": {
+              "createdBy": "Egeria Project",
+              "updatedBy": "Egeria Project",
+              "createTime": "2021-12-20T07:20:40.038+00:00",
+              "updateTime": "2026-02-19T10:41:07.323+00:00",
+              "version": 1771497664240
+            },
+            "guid": "b514e9a1-76e7-4187-ab93-010db7efd7fd"
+          },
+          "relatedElement": {
+            "elementHeader": {
+              "class": "ElementHeader",
+              "headerVersion": 0,
+              "status": "ACTIVE",
+              "type": {
+                "typeId": "4ca51fdf-9b70-46b1-bdf6-8860429e78d8",
+                "typeName": "Threat",
+                "superTypeNames": [
+                  "GovernanceDriver",
+                  "GovernanceDefinition",
+                  "AuthoredReferenceable",
+                  "Referenceable",
+                  "OpenMetadataRoot"
+                ],
+                "typeVersion": 1,
+                "typeDescription": "A description of a specific threat.",
+                "typeCategory": "ENTITY_DEF"
+              },
+              "origin": {
+                "sourceServer": "qs-metadata-store",
+                "originCategory": "CONTENT_PACK",
+                "homeMetadataCollectionId": "655b1965-4c29-4a0e-8a5d-3f55a37b3799",
+                "homeMetadataCollectionName": "Coco Pharmaceuticals Combination",
+                "license": "Apache 2.0"
+              },
+              "versions": {
+                "createdBy": "Egeria Project",
+                "updatedBy": "Egeria Project",
+                "createTime": "2021-12-20T07:20:40.038+00:00",
+                "updateTime": "2026-02-19T10:41:07.323+00:00",
+                "version": 1771497664240
+              },
+              "guid": "4552f777-65d6-4706-b4bf-e9177660de88",
+              "anchor": {
+                "class": "ElementClassification",
+                "headerVersion": 0,
+                "status": "ACTIVE",
+                "type": {
+                  "typeId": "aa44f302-2e43-4669-a1e7-edaae414fc6e",
+                  "typeName": "Anchors",
+                  "typeVersion": 1,
+                  "typeDescription": "Identifies the anchor entity for an element that is part of a large composite object such as an asset.",
+                  "typeCategory": "CLASSIFICATION_DEF"
+                },
+                "origin": {
+                  "sourceServer": "qs-metadata-store",
+                  "originCategory": "CONTENT_PACK",
+                  "homeMetadataCollectionId": "655b1965-4c29-4a0e-8a5d-3f55a37b3799",
+                  "homeMetadataCollectionName": "Coco Pharmaceuticals Combination"
+                },
+                "versions": {
+                  "createdBy": "Egeria Project",
+                  "updatedBy": "Egeria Project",
+                  "createTime": "2021-12-20T07:20:40.038+00:00",
+                  "updateTime": "2026-02-19T10:41:07.323+00:00",
+                  "version": 1771497664240
+                },
+                "classificationOrigin": "ASSIGNED",
+                "classificationName": "Anchors",
+                "classificationProperties": {
+                  "class": "AnchorsProperties",
+                  "typeName": "Anchors",
+                  "extendedProperties": {},
+                  "anchorTypeName": "Threat",
+                  "anchorDomainName": "AuthoredReferenceable"
+                }
+              }
+            },
+            "properties": {
+              "class": "ThreatProperties",
+              "typeName": "Threat",
+              "extendedProperties": {
+                "domainIdentifier": 9,
+                "scope": "Within organization"
+              },
+              "qualifiedName": "Threat::The price of ignoring sustainability",
+              "identifier": "SUSTAINABILITY_01",
+              "displayName": "The price of ignoring sustainability",
+              "description": "Increasingly, financial institutions are viewing organizations with a lack of focus in sustainability as a poor risk for the future.",
+              "summary": "A poor record of sustainable operations will affect Coco Pharmaceuticals credit rating",
+              "domainIdentifier": 0,
+              "importance": "High",
+              "implications": [
+                "Higher cost of doing business"
+              ]
+            }
+          },
+          "relatedElementAtEnd1": true,
+          "nestedElements": [
+            {
+              "class": "RelatedMetadataHierarchySummary",
+              "relationshipHeader": {
+                "class": "ElementHeader",
+                "headerVersion": 0,
+                "status": "ACTIVE",
+                "type": {
+                  "typeId": "c5e6fada-2c12-46ee-afa9-b71dd1bd8179",
+                  "typeName": "GovernanceDriverLink",
+                  "typeVersion": 1,
+                  "typeDescription": "Link between a two governance drivers.",
+                  "typeCategory": "RELATIONSHIP_DEF"
+                },
+                "origin": {
+                  "sourceServer": "qs-metadata-store",
+                  "originCategory": "CONTENT_PACK",
+                  "homeMetadataCollectionId": "655b1965-4c29-4a0e-8a5d-3f55a37b3799",
+                  "homeMetadataCollectionName": "Coco Pharmaceuticals Combination",
+                  "license": "Apache 2.0"
+                },
+                "versions": {
+                  "createdBy": "Egeria Project",
+                  "updatedBy": "Egeria Project",
+                  "createTime": "2021-12-20T07:20:40.038+00:00",
+                  "updateTime": "2026-02-19T10:41:07.323+00:00",
+                  "version": 1771497664240
+                },
+                "guid": "b514e9a1-76e7-4187-ab93-010db7efd7fd"
+              },
+              "relatedElement": {
+                "elementHeader": {
+                  "class": "ElementHeader",
+                  "headerVersion": 0,
+                  "status": "ACTIVE",
+                  "type": {
+                    "typeId": "3c34f121-07a6-4e95-a07d-9b0ef17b7bbf",
+                    "typeName": "GovernanceStrategy",
+                    "superTypeNames": [
+                      "GovernanceDriver",
+                      "GovernanceDefinition",
+                      "AuthoredReferenceable",
+                      "Referenceable",
+                      "OpenMetadataRoot"
+                    ],
+                    "typeVersion": 1,
+                    "typeDescription": "Defines how the governance program and the supporting capabilities are supporting the business strategy.",
+                    "typeCategory": "ENTITY_DEF"
+                  },
+                  "origin": {
+                    "sourceServer": "qs-metadata-store",
+                    "originCategory": "CONTENT_PACK",
+                    "homeMetadataCollectionId": "655b1965-4c29-4a0e-8a5d-3f55a37b3799",
+                    "homeMetadataCollectionName": "Coco Pharmaceuticals Combination",
+                    "license": "Apache 2.0"
+                  },
+                  "versions": {
+                    "createdBy": "Egeria Project",
+                    "updatedBy": "Egeria Project",
+                    "createTime": "2021-12-20T07:20:40.038+00:00",
+                    "updateTime": "2026-02-19T10:41:07.323+00:00",
+                    "version": 1771497664240
+                  },
+                  "guid": "667c6480-a90a-4fd4-9022-8da646e203d2",
+                  "anchor": {
+                    "class": "ElementClassification",
+                    "headerVersion": 0,
+                    "status": "ACTIVE",
+                    "type": {
+                      "typeId": "aa44f302-2e43-4669-a1e7-edaae414fc6e",
+                      "typeName": "Anchors",
+                      "typeVersion": 1,
+                      "typeDescription": "Identifies the anchor entity for an element that is part of a large composite object such as an asset.",
+                      "typeCategory": "CLASSIFICATION_DEF"
+                    },
+                    "origin": {
+                      "sourceServer": "qs-metadata-store",
+                      "originCategory": "CONTENT_PACK",
+                      "homeMetadataCollectionId": "655b1965-4c29-4a0e-8a5d-3f55a37b3799",
+                      "homeMetadataCollectionName": "Coco Pharmaceuticals Combination"
+                    },
+                    "versions": {
+                      "createdBy": "Egeria Project",
+                      "updatedBy": "Egeria Project",
+                      "createTime": "2021-12-20T07:20:40.038+00:00",
+                      "updateTime": "2026-02-19T10:41:07.323+00:00",
+                      "version": 1771497664240
+                    },
+                    "classificationOrigin": "ASSIGNED",
+                    "classificationName": "Anchors",
+                    "classificationProperties": {
+                      "class": "AnchorsProperties",
+                      "typeName": "Anchors",
+                      "extendedProperties": {},
+                      "anchorTypeName": "GovernanceStrategy",
+                      "anchorDomainName": "AuthoredReferenceable"
+                    }
+                  }
+                },
+                "properties": {
+                  "class": "GovernanceStrategyProperties",
+                  "typeName": "GovernanceStrategy",
+                  "extendedProperties": {
+                    "domainIdentifier": 9,
+                    "scope": "Within organization"
+                  },
+                  "qualifiedName": "GovernanceStrategy::Operate Coco Pharmaceuticals in an increasingly sustainable way",
+                  "identifier": "SUSTAINABILITY_03",
+                  "displayName": "Operate Coco Pharmaceuticals in an increasingly sustainable way",
+                  "description": "Use sustainability regulations to develop a program of education and initiatives that are designed to improve Coco''s sustainability measurements with rewards for effective actions.",
+                  "summary": "Create a company wide sustainability initiative with rewards.",
+                  "domainIdentifier": 0,
+                  "importance": "High",
+                  "implications": [
+                    "A budget needs to be allocated.",
+                    "People need to be given time to participate.",
+                    "New communication paths need to be established.",
+                    "New responsibilities need to be established with key leaders.",
+                    "New employee rewards need to be designed and implemented"
+                  ]
+                }
+              },
+              "relatedElementAtEnd1": false,
+              "nestedElements": [
+                {
+                  "class": "RelatedMetadataHierarchySummary",
+                  "relationshipHeader": {
+                    "class": "ElementHeader",
+                    "headerVersion": 0,
+                    "status": "ACTIVE",
+                    "type": {
+                      "typeId": "c5e6fada-2c12-46ee-afa9-b71dd1bd8179",
+                      "typeName": "GovernanceDriverLink",
+                      "typeVersion": 1,
+                      "typeDescription": "Link between a two governance drivers.",
+                      "typeCategory": "RELATIONSHIP_DEF"
+                    },
+                    "origin": {
+                      "sourceServer": "qs-metadata-store",
+                      "originCategory": "CONTENT_PACK",
+                      "homeMetadataCollectionId": "655b1965-4c29-4a0e-8a5d-3f55a37b3799",
+                      "homeMetadataCollectionName": "Coco Pharmaceuticals Combination",
+                      "license": "Apache 2.0"
+                    },
+                    "versions": {
+                      "createdBy": "Egeria Project",
+                      "updatedBy": "Egeria Project",
+                      "createTime": "2021-12-20T07:20:40.038+00:00",
+                      "updateTime": "2026-02-19T10:41:07.323+00:00",
+                      "version": 1771497664240
+                    },
+                    "guid": "b514e9a1-76e7-4187-ab93-010db7efd7fd"
+                  },
+                  "relatedElement": {
+                    "elementHeader": {
+                      "class": "ElementHeader",
+                      "headerVersion": 0,
+                      "status": "ACTIVE",
+                      "type": {
+                        "typeId": "4ca51fdf-9b70-46b1-bdf6-8860429e78d8",
+                        "typeName": "Threat",
+                        "superTypeNames": [
+                          "GovernanceDriver",
+                          "GovernanceDefinition",
+                          "AuthoredReferenceable",
+                          "Referenceable",
+                          "OpenMetadataRoot"
+                        ],
+                        "typeVersion": 1,
+                        "typeDescription": "A description of a specific threat.",
+                        "typeCategory": "ENTITY_DEF"
+                      },
+                      "origin": {
+                        "sourceServer": "qs-metadata-store",
+                        "originCategory": "CONTENT_PACK",
+                        "homeMetadataCollectionId": "655b1965-4c29-4a0e-8a5d-3f55a37b3799",
+                        "homeMetadataCollectionName": "Coco Pharmaceuticals Combination",
+                        "license": "Apache 2.0"
+                      },
+                      "versions": {
+                        "createdBy": "Egeria Project",
+                        "updatedBy": "Egeria Project",
+                        "createTime": "2021-12-20T07:20:40.038+00:00",
+                        "updateTime": "2026-02-19T10:41:07.323+00:00",
+                        "version": 1771497664240
+                      },
+                      "guid": "4552f777-65d6-4706-b4bf-e9177660de88",
+                      "anchor": {
+                        "class": "ElementClassification",
+                        "headerVersion": 0,
+                        "status": "ACTIVE",
+                        "type": {
+                          "typeId": "aa44f302-2e43-4669-a1e7-edaae414fc6e",
+                          "typeName": "Anchors",
+                          "typeVersion": 1,
+                          "typeDescription": "Identifies the anchor entity for an element that is part of a large composite object such as an asset.",
+                          "typeCategory": "CLASSIFICATION_DEF"
+                        },
+                        "origin": {
+                          "sourceServer": "qs-metadata-store",
+                          "originCategory": "CONTENT_PACK",
+                          "homeMetadataCollectionId": "655b1965-4c29-4a0e-8a5d-3f55a37b3799",
+                          "homeMetadataCollectionName": "Coco Pharmaceuticals Combination"
+                        },
+                        "versions": {
+                          "createdBy": "Egeria Project",
+                          "updatedBy": "Egeria Project",
+                          "createTime": "2021-12-20T07:20:40.038+00:00",
+                          "updateTime": "2026-02-19T10:41:07.323+00:00",
+                          "version": 1771497664240
+                        },
+                        "classificationOrigin": "ASSIGNED",
+                        "classificationName": "Anchors",
+                        "classificationProperties": {
+                          "class": "AnchorsProperties",
+                          "typeName": "Anchors",
+                          "extendedProperties": {},
+                          "anchorTypeName": "Threat",
+                          "anchorDomainName": "AuthoredReferenceable"
+                        }
+                      }
+                    },
+                    "properties": {
+                      "class": "ThreatProperties",
+                      "typeName": "Threat",
+                      "extendedProperties": {
+                        "domainIdentifier": 9,
+                        "scope": "Within organization"
+                      },
+                      "qualifiedName": "Threat::The price of ignoring sustainability",
+                      "identifier": "SUSTAINABILITY_01",
+                      "displayName": "The price of ignoring sustainability",
+                      "description": "Increasingly, financial institutions are viewing organizations with a lack of focus in sustainability as a poor risk for the future.",
+                      "summary": "A poor record of sustainable operations will affect Coco Pharmaceuticals credit rating",
+                      "domainIdentifier": 0,
+                      "importance": "High",
+                      "implications": [
+                        "Higher cost of doing business"
+                      ]
+                    }
+                  },
+                  "relatedElementAtEnd1": true,
+                  "nestedElements": [
+                    {
+                      "class": "RelatedMetadataElementSummary",
+                      "relationshipHeader": {
+                        "class": "ElementHeader",
+                        "headerVersion": 0,
+                        "status": "ACTIVE",
+                        "type": {
+                          "typeId": "c5e6fada-2c12-46ee-afa9-b71dd1bd8179",
+                          "typeName": "GovernanceDriverLink",
+                          "typeVersion": 1,
+                          "typeDescription": "Link between a two governance drivers.",
+                          "typeCategory": "RELATIONSHIP_DEF"
+                        },
+                        "origin": {
+                          "sourceServer": "qs-metadata-store",
+                          "originCategory": "CONTENT_PACK",
+                          "homeMetadataCollectionId": "655b1965-4c29-4a0e-8a5d-3f55a37b3799",
+                          "homeMetadataCollectionName": "Coco Pharmaceuticals Combination",
+                          "license": "Apache 2.0"
+                        },
+                        "versions": {
+                          "createdBy": "Egeria Project",
+                          "updatedBy": "Egeria Project",
+                          "createTime": "2021-12-20T07:20:40.038+00:00",
+                          "updateTime": "2026-02-19T10:41:07.323+00:00",
+                          "version": 1771497664240
+                        },
+                        "guid": "b514e9a1-76e7-4187-ab93-010db7efd7fd"
+                      },
+                      "relatedElement": {
+                        "elementHeader": {
+                          "class": "ElementHeader",
+                          "headerVersion": 0,
+                          "status": "ACTIVE",
+                          "type": {
+                            "typeId": "3c34f121-07a6-4e95-a07d-9b0ef17b7bbf",
+                            "typeName": "GovernanceStrategy",
+                            "superTypeNames": [
+                              "GovernanceDriver",
+                              "GovernanceDefinition",
+                              "AuthoredReferenceable",
+                              "Referenceable",
+                              "OpenMetadataRoot"
+                            ],
+                            "typeVersion": 1,
+                            "typeDescription": "Defines how the governance program and the supporting capabilities are supporting the business strategy.",
+                            "typeCategory": "ENTITY_DEF"
+                          },
+                          "origin": {
+                            "sourceServer": "qs-metadata-store",
+                            "originCategory": "CONTENT_PACK",
+                            "homeMetadataCollectionId": "655b1965-4c29-4a0e-8a5d-3f55a37b3799",
+                            "homeMetadataCollectionName": "Coco Pharmaceuticals Combination",
+                            "license": "Apache 2.0"
+                          },
+                          "versions": {
+                            "createdBy": "Egeria Project",
+                            "updatedBy": "Egeria Project",
+                            "createTime": "2021-12-20T07:20:40.038+00:00",
+                            "updateTime": "2026-02-19T10:41:07.323+00:00",
+                            "version": 1771497664240
+                          },
+                          "guid": "667c6480-a90a-4fd4-9022-8da646e203d2",
+                          "anchor": {
+                            "class": "ElementClassification",
+                            "headerVersion": 0,
+                            "status": "ACTIVE",
+                            "type": {
+                              "typeId": "aa44f302-2e43-4669-a1e7-edaae414fc6e",
+                              "typeName": "Anchors",
+                              "typeVersion": 1,
+                              "typeDescription": "Identifies the anchor entity for an element that is part of a large composite object such as an asset.",
+                              "typeCategory": "CLASSIFICATION_DEF"
+                            },
+                            "origin": {
+                              "sourceServer": "qs-metadata-store",
+                              "originCategory": "CONTENT_PACK",
+                              "homeMetadataCollectionId": "655b1965-4c29-4a0e-8a5d-3f55a37b3799",
+                              "homeMetadataCollectionName": "Coco Pharmaceuticals Combination"
+                            },
+                            "versions": {
+                              "createdBy": "Egeria Project",
+                              "updatedBy": "Egeria Project",
+                              "createTime": "2021-12-20T07:20:40.038+00:00",
+                              "updateTime": "2026-02-19T10:41:07.323+00:00",
+                              "version": 1771497664240
+                            },
+                            "classificationOrigin": "ASSIGNED",
+                            "classificationName": "Anchors",
+                            "classificationProperties": {
+                              "class": "AnchorsProperties",
+                              "typeName": "Anchors",
+                              "extendedProperties": {},
+                              "anchorTypeName": "GovernanceStrategy",
+                              "anchorDomainName": "AuthoredReferenceable"
+                            }
+                          }
+                        },
+                        "properties": {
+                          "class": "GovernanceStrategyProperties",
+                          "typeName": "GovernanceStrategy",
+                          "extendedProperties": {
+                            "domainIdentifier": 9,
+                            "scope": "Within organization"
+                          },
+                          "qualifiedName": "GovernanceStrategy::Operate Coco Pharmaceuticals in an increasingly sustainable way",
+                          "identifier": "SUSTAINABILITY_03",
+                          "displayName": "Operate Coco Pharmaceuticals in an increasingly sustainable way",
+                          "description": "Use sustainability regulations to develop a program of education and initiatives that are designed to improve Coco''s sustainability measurements with rewards for effective actions.",
+                          "summary": "Create a company wide sustainability initiative with rewards.",
+                          "domainIdentifier": 0,
+                          "importance": "High",
+                          "implications": [
+                            "A budget needs to be allocated.",
+                            "People need to be given time to participate.",
+                            "New communication paths need to be established.",
+                            "New responsibilities need to be established with key leaders.",
+                            "New employee rewards need to be designed and implemented"
+                          ]
+                        }
+                      },
+                      "relatedElementAtEnd1": false
+                    }
+                  ]
+                },
+                {
+                  "class": "RelatedMetadataHierarchySummary",
+                  "relationshipHeader": {
+                    "class": "ElementHeader",
+                    "headerVersion": 0,
+                    "status": "ACTIVE",
+                    "type": {
+                      "typeId": "c5e6fada-2c12-46ee-afa9-b71dd1bd8179",
+                      "typeName": "GovernanceDriverLink",
+                      "typeVersion": 1,
+                      "typeDescription": "Link between a two governance drivers.",
+                      "typeCategory": "RELATIONSHIP_DEF"
+                    },
+                    "origin": {
+                      "sourceServer": "qs-metadata-store",
+                      "originCategory": "CONTENT_PACK",
+                      "homeMetadataCollectionId": "655b1965-4c29-4a0e-8a5d-3f55a37b3799",
+                      "homeMetadataCollectionName": "Coco Pharmaceuticals Combination",
+                      "license": "Apache 2.0"
+                    },
+                    "versions": {
+                      "createdBy": "Egeria Project",
+                      "updatedBy": "Egeria Project",
+                      "createTime": "2021-12-20T07:20:40.038+00:00",
+                      "updateTime": "2026-02-19T10:41:07.323+00:00",
+                      "version": 1771497664240
+                    },
+                    "guid": "0d11756b-96dc-43f8-a7c2-f634851b4108"
+                  },
+                  "relatedElement": {
+                    "elementHeader": {
+                      "class": "ElementHeader",
+                      "headerVersion": 0,
+                      "status": "ACTIVE",
+                      "type": {
+                        "typeId": "e3c4293d-8846-4500-b0c0-197d73aba8b0",
+                        "typeName": "Regulation",
+                        "superTypeNames": [
+                          "GovernanceDriver",
+                          "GovernanceDefinition",
+                          "AuthoredReferenceable",
+                          "Referenceable",
+                          "OpenMetadataRoot"
+                        ],
+                        "typeVersion": 1,
+                        "typeDescription": "Identifies a regulation related to data that must be supported.",
+                        "typeCategory": "ENTITY_DEF"
+                      },
+                      "origin": {
+                        "sourceServer": "qs-metadata-store",
+                        "originCategory": "CONTENT_PACK",
+                        "homeMetadataCollectionId": "655b1965-4c29-4a0e-8a5d-3f55a37b3799",
+                        "homeMetadataCollectionName": "Coco Pharmaceuticals Combination",
+                        "license": "Apache 2.0"
+                      },
+                      "versions": {
+                        "createdBy": "Egeria Project",
+                        "updatedBy": "Egeria Project",
+                        "createTime": "2021-12-20T07:20:40.038+00:00",
+                        "updateTime": "2026-02-19T10:41:07.323+00:00",
+                        "version": 1771497664240
+                      },
+                      "guid": "2ba17e3c-825a-409b-928f-d0e46e741c11",
+                      "anchor": {
+                        "class": "ElementClassification",
+                        "headerVersion": 0,
+                        "status": "ACTIVE",
+                        "type": {
+                          "typeId": "aa44f302-2e43-4669-a1e7-edaae414fc6e",
+                          "typeName": "Anchors",
+                          "typeVersion": 1,
+                          "typeDescription": "Identifies the anchor entity for an element that is part of a large composite object such as an asset.",
+                          "typeCategory": "CLASSIFICATION_DEF"
+                        },
+                        "origin": {
+                          "sourceServer": "qs-metadata-store",
+                          "originCategory": "CONTENT_PACK",
+                          "homeMetadataCollectionId": "655b1965-4c29-4a0e-8a5d-3f55a37b3799",
+                          "homeMetadataCollectionName": "Coco Pharmaceuticals Combination"
+                        },
+                        "versions": {
+                          "createdBy": "Egeria Project",
+                          "updatedBy": "Egeria Project",
+                          "createTime": "2021-12-20T07:20:40.038+00:00",
+                          "updateTime": "2026-02-19T10:41:07.323+00:00",
+                          "version": 1771497664240
+                        },
+                        "classificationOrigin": "ASSIGNED",
+                        "classificationName": "Anchors",
+                        "classificationProperties": {
+                          "class": "AnchorsProperties",
+                          "typeName": "Anchors",
+                          "extendedProperties": {},
+                          "anchorTypeName": "Regulation",
+                          "anchorDomainName": "AuthoredReferenceable"
+                        }
+                      }
+                    },
+                    "properties": {
+                      "class": "RegulationProperties",
+                      "typeName": "Regulation",
+                      "extendedProperties": {
+                        "domainIdentifier": 9,
+                        "scope": "Within organization"
+                      },
+                      "qualifiedName": "Regulation::Corporate Sustainability Reporting Directive (CSRD)",
+                      "identifier": "SUSTAINABILITY_02",
+                      "displayName": "Corporate Sustainability Reporting Directive (CSRD)",
+                      "summary": "Details of the types of reporting that organizations must produce.",
+                      "domainIdentifier": 0,
+                      "importance": "High",
+                      "implications": [
+                        "New data pipelines and dashboards need to be implemented"
+                      ],
+                      "outcomes": [
+                        "A greater awareness of sustainability will improve resource use"
+                      ]
+                    }
+                  },
+                  "relatedElementAtEnd1": true,
+                  "nestedElements": [
+                    {
+                      "class": "RelatedMetadataElementSummary",
+                      "relationshipHeader": {
+                        "class": "ElementHeader",
+                        "headerVersion": 0,
+                        "status": "ACTIVE",
+                        "type": {
+                          "typeId": "c5e6fada-2c12-46ee-afa9-b71dd1bd8179",
+                          "typeName": "GovernanceDriverLink",
+                          "typeVersion": 1,
+                          "typeDescription": "Link between a two governance drivers.",
+                          "typeCategory": "RELATIONSHIP_DEF"
+                        },
+                        "origin": {
+                          "sourceServer": "qs-metadata-store",
+                          "originCategory": "CONTENT_PACK",
+                          "homeMetadataCollectionId": "655b1965-4c29-4a0e-8a5d-3f55a37b3799",
+                          "homeMetadataCollectionName": "Coco Pharmaceuticals Combination",
+                          "license": "Apache 2.0"
+                        },
+                        "versions": {
+                          "createdBy": "Egeria Project",
+                          "updatedBy": "Egeria Project",
+                          "createTime": "2021-12-20T07:20:40.038+00:00",
+                          "updateTime": "2026-02-19T10:41:07.323+00:00",
+                          "version": 1771497664240
+                        },
+                        "guid": "0d11756b-96dc-43f8-a7c2-f634851b4108"
+                      },
+                      "relatedElement": {
+                        "elementHeader": {
+                          "class": "ElementHeader",
+                          "headerVersion": 0,
+                          "status": "ACTIVE",
+                          "type": {
+                            "typeId": "3c34f121-07a6-4e95-a07d-9b0ef17b7bbf",
+                            "typeName": "GovernanceStrategy",
+                            "superTypeNames": [
+                              "GovernanceDriver",
+                              "GovernanceDefinition",
+                              "AuthoredReferenceable",
+                              "Referenceable",
+                              "OpenMetadataRoot"
+                            ],
+                            "typeVersion": 1,
+                            "typeDescription": "Defines how the governance program and the supporting capabilities are supporting the business strategy.",
+                            "typeCategory": "ENTITY_DEF"
+                          },
+                          "origin": {
+                            "sourceServer": "qs-metadata-store",
+                            "originCategory": "CONTENT_PACK",
+                            "homeMetadataCollectionId": "655b1965-4c29-4a0e-8a5d-3f55a37b3799",
+                            "homeMetadataCollectionName": "Coco Pharmaceuticals Combination",
+                            "license": "Apache 2.0"
+                          },
+                          "versions": {
+                            "createdBy": "Egeria Project",
+                            "updatedBy": "Egeria Project",
+                            "createTime": "2021-12-20T07:20:40.038+00:00",
+                            "updateTime": "2026-02-19T10:41:07.323+00:00",
+                            "version": 1771497664240
+                          },
+                          "guid": "667c6480-a90a-4fd4-9022-8da646e203d2",
+                          "anchor": {
+                            "class": "ElementClassification",
+                            "headerVersion": 0,
+                            "status": "ACTIVE",
+                            "type": {
+                              "typeId": "aa44f302-2e43-4669-a1e7-edaae414fc6e",
+                              "typeName": "Anchors",
+                              "typeVersion": 1,
+                              "typeDescription": "Identifies the anchor entity for an element that is part of a large composite object such as an asset.",
+                              "typeCategory": "CLASSIFICATION_DEF"
+                            },
+                            "origin": {
+                              "sourceServer": "qs-metadata-store",
+                              "originCategory": "CONTENT_PACK",
+                              "homeMetadataCollectionId": "655b1965-4c29-4a0e-8a5d-3f55a37b3799",
+                              "homeMetadataCollectionName": "Coco Pharmaceuticals Combination"
+                            },
+                            "versions": {
+                              "createdBy": "Egeria Project",
+                              "updatedBy": "Egeria Project",
+                              "createTime": "2021-12-20T07:20:40.038+00:00",
+                              "updateTime": "2026-02-19T10:41:07.323+00:00",
+                              "version": 1771497664240
+                            },
+                            "classificationOrigin": "ASSIGNED",
+                            "classificationName": "Anchors",
+                            "classificationProperties": {
+                              "class": "AnchorsProperties",
+                              "typeName": "Anchors",
+                              "extendedProperties": {},
+                              "anchorTypeName": "GovernanceStrategy",
+                              "anchorDomainName": "AuthoredReferenceable"
+                            }
+                          }
+                        },
+                        "properties": {
+                          "class": "GovernanceStrategyProperties",
+                          "typeName": "GovernanceStrategy",
+                          "extendedProperties": {
+                            "domainIdentifier": 9,
+                            "scope": "Within organization"
+                          },
+                          "qualifiedName": "GovernanceStrategy::Operate Coco Pharmaceuticals in an increasingly sustainable way",
+                          "identifier": "SUSTAINABILITY_03",
+                          "displayName": "Operate Coco Pharmaceuticals in an increasingly sustainable way",
+                          "description": "Use sustainability regulations to develop a program of education and initiatives that are designed to improve Coco''s sustainability measurements with rewards for effective actions.",
+                          "summary": "Create a company wide sustainability initiative with rewards.",
+                          "domainIdentifier": 0,
+                          "importance": "High",
+                          "implications": [
+                            "A budget needs to be allocated.",
+                            "People need to be given time to participate.",
+                            "New communication paths need to be established.",
+                            "New responsibilities need to be established with key leaders.",
+                            "New employee rewards need to be designed and implemented"
+                          ]
+                        }
+                      },
+                      "relatedElementAtEnd1": false
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "class": "RelatedMetadataHierarchySummary",
+          "relationshipHeader": {
+            "class": "ElementHeader",
+            "headerVersion": 0,
+            "status": "ACTIVE",
+            "type": {
+              "typeId": "c5e6fada-2c12-46ee-afa9-b71dd1bd8179",
+              "typeName": "GovernanceDriverLink",
+              "typeVersion": 1,
+              "typeDescription": "Link between a two governance drivers.",
+              "typeCategory": "RELATIONSHIP_DEF"
+            },
+            "origin": {
+              "sourceServer": "qs-metadata-store",
+              "originCategory": "CONTENT_PACK",
+              "homeMetadataCollectionId": "655b1965-4c29-4a0e-8a5d-3f55a37b3799",
+              "homeMetadataCollectionName": "Coco Pharmaceuticals Combination",
+              "license": "Apache 2.0"
+            },
+            "versions": {
+              "createdBy": "Egeria Project",
+              "updatedBy": "Egeria Project",
+              "createTime": "2021-12-20T07:20:40.038+00:00",
+              "updateTime": "2026-02-19T10:41:07.323+00:00",
+              "version": 1771497664240
+            },
+            "guid": "0d11756b-96dc-43f8-a7c2-f634851b4108"
+          },
+          "relatedElement": {
+            "elementHeader": {
+              "class": "ElementHeader",
+              "headerVersion": 0,
+              "status": "ACTIVE",
+              "type": {
+                "typeId": "e3c4293d-8846-4500-b0c0-197d73aba8b0",
+                "typeName": "Regulation",
+                "superTypeNames": [
+                  "GovernanceDriver",
+                  "GovernanceDefinition",
+                  "AuthoredReferenceable",
+                  "Referenceable",
+                  "OpenMetadataRoot"
+                ],
+                "typeVersion": 1,
+                "typeDescription": "Identifies a regulation related to data that must be supported.",
+                "typeCategory": "ENTITY_DEF"
+              },
+              "origin": {
+                "sourceServer": "qs-metadata-store",
+                "originCategory": "CONTENT_PACK",
+                "homeMetadataCollectionId": "655b1965-4c29-4a0e-8a5d-3f55a37b3799",
+                "homeMetadataCollectionName": "Coco Pharmaceuticals Combination",
+                "license": "Apache 2.0"
+              },
+              "versions": {
+                "createdBy": "Egeria Project",
+                "updatedBy": "Egeria Project",
+                "createTime": "2021-12-20T07:20:40.038+00:00",
+                "updateTime": "2026-02-19T10:41:07.323+00:00",
+                "version": 1771497664240
+              },
+              "guid": "2ba17e3c-825a-409b-928f-d0e46e741c11",
+              "anchor": {
+                "class": "ElementClassification",
+                "headerVersion": 0,
+                "status": "ACTIVE",
+                "type": {
+                  "typeId": "aa44f302-2e43-4669-a1e7-edaae414fc6e",
+                  "typeName": "Anchors",
+                  "typeVersion": 1,
+                  "typeDescription": "Identifies the anchor entity for an element that is part of a large composite object such as an asset.",
+                  "typeCategory": "CLASSIFICATION_DEF"
+                },
+                "origin": {
+                  "sourceServer": "qs-metadata-store",
+                  "originCategory": "CONTENT_PACK",
+                  "homeMetadataCollectionId": "655b1965-4c29-4a0e-8a5d-3f55a37b3799",
+                  "homeMetadataCollectionName": "Coco Pharmaceuticals Combination"
+                },
+                "versions": {
+                  "createdBy": "Egeria Project",
+                  "updatedBy": "Egeria Project",
+                  "createTime": "2021-12-20T07:20:40.038+00:00",
+                  "updateTime": "2026-02-19T10:41:07.323+00:00",
+                  "version": 1771497664240
+                },
+                "classificationOrigin": "ASSIGNED",
+                "classificationName": "Anchors",
+                "classificationProperties": {
+                  "class": "AnchorsProperties",
+                  "typeName": "Anchors",
+                  "extendedProperties": {},
+                  "anchorTypeName": "Regulation",
+                  "anchorDomainName": "AuthoredReferenceable"
+                }
+              }
+            },
+            "properties": {
+              "class": "RegulationProperties",
+              "typeName": "Regulation",
+              "extendedProperties": {
+                "domainIdentifier": 9,
+                "scope": "Within organization"
+              },
+              "qualifiedName": "Regulation::Corporate Sustainability Reporting Directive (CSRD)",
+              "identifier": "SUSTAINABILITY_02",
+              "displayName": "Corporate Sustainability Reporting Directive (CSRD)",
+              "summary": "Details of the types of reporting that organizations must produce.",
+              "domainIdentifier": 0,
+              "importance": "High",
+              "implications": [
+                "New data pipelines and dashboards need to be implemented"
+              ],
+              "outcomes": [
+                "A greater awareness of sustainability will improve resource use"
+              ]
+            }
+          },
+          "relatedElementAtEnd1": true,
+          "nestedElements": [
+            {
+              "class": "RelatedMetadataHierarchySummary",
+              "relationshipHeader": {
+                "class": "ElementHeader",
+                "headerVersion": 0,
+                "status": "ACTIVE",
+                "type": {
+                  "typeId": "c5e6fada-2c12-46ee-afa9-b71dd1bd8179",
+                  "typeName": "GovernanceDriverLink",
+                  "typeVersion": 1,
+                  "typeDescription": "Link between a two governance drivers.",
+                  "typeCategory": "RELATIONSHIP_DEF"
+                },
+                "origin": {
+                  "sourceServer": "qs-metadata-store",
+                  "originCategory": "CONTENT_PACK",
+                  "homeMetadataCollectionId": "655b1965-4c29-4a0e-8a5d-3f55a37b3799",
+                  "homeMetadataCollectionName": "Coco Pharmaceuticals Combination",
+                  "license": "Apache 2.0"
+                },
+                "versions": {
+                  "createdBy": "Egeria Project",
+                  "updatedBy": "Egeria Project",
+                  "createTime": "2021-12-20T07:20:40.038+00:00",
+                  "updateTime": "2026-02-19T10:41:07.323+00:00",
+                  "version": 1771497664240
+                },
+                "guid": "0d11756b-96dc-43f8-a7c2-f634851b4108"
+              },
+              "relatedElement": {
+                "elementHeader": {
+                  "class": "ElementHeader",
+                  "headerVersion": 0,
+                  "status": "ACTIVE",
+                  "type": {
+                    "typeId": "3c34f121-07a6-4e95-a07d-9b0ef17b7bbf",
+                    "typeName": "GovernanceStrategy",
+                    "superTypeNames": [
+                      "GovernanceDriver",
+                      "GovernanceDefinition",
+                      "AuthoredReferenceable",
+                      "Referenceable",
+                      "OpenMetadataRoot"
+                    ],
+                    "typeVersion": 1,
+                    "typeDescription": "Defines how the governance program and the supporting capabilities are supporting the business strategy.",
+                    "typeCategory": "ENTITY_DEF"
+                  },
+                  "origin": {
+                    "sourceServer": "qs-metadata-store",
+                    "originCategory": "CONTENT_PACK",
+                    "homeMetadataCollectionId": "655b1965-4c29-4a0e-8a5d-3f55a37b3799",
+                    "homeMetadataCollectionName": "Coco Pharmaceuticals Combination",
+                    "license": "Apache 2.0"
+                  },
+                  "versions": {
+                    "createdBy": "Egeria Project",
+                    "updatedBy": "Egeria Project",
+                    "createTime": "2021-12-20T07:20:40.038+00:00",
+                    "updateTime": "2026-02-19T10:41:07.323+00:00",
+                    "version": 1771497664240
+                  },
+                  "guid": "667c6480-a90a-4fd4-9022-8da646e203d2",
+                  "anchor": {
+                    "class": "ElementClassification",
+                    "headerVersion": 0,
+                    "status": "ACTIVE",
+                    "type": {
+                      "typeId": "aa44f302-2e43-4669-a1e7-edaae414fc6e",
+                      "typeName": "Anchors",
+                      "typeVersion": 1,
+                      "typeDescription": "Identifies the anchor entity for an element that is part of a large composite object such as an asset.",
+                      "typeCategory": "CLASSIFICATION_DEF"
+                    },
+                    "origin": {
+                      "sourceServer": "qs-metadata-store",
+                      "originCategory": "CONTENT_PACK",
+                      "homeMetadataCollectionId": "655b1965-4c29-4a0e-8a5d-3f55a37b3799",
+                      "homeMetadataCollectionName": "Coco Pharmaceuticals Combination"
+                    },
+                    "versions": {
+                      "createdBy": "Egeria Project",
+                      "updatedBy": "Egeria Project",
+                      "createTime": "2021-12-20T07:20:40.038+00:00",
+                      "updateTime": "2026-02-19T10:41:07.323+00:00",
+                      "version": 1771497664240
+                    },
+                    "classificationOrigin": "ASSIGNED",
+                    "classificationName": "Anchors",
+                    "classificationProperties": {
+                      "class": "AnchorsProperties",
+                      "typeName": "Anchors",
+                      "extendedProperties": {},
+                      "anchorTypeName": "GovernanceStrategy",
+                      "anchorDomainName": "AuthoredReferenceable"
+                    }
+                  }
+                },
+                "properties": {
+                  "class": "GovernanceStrategyProperties",
+                  "typeName": "GovernanceStrategy",
+                  "extendedProperties": {
+                    "domainIdentifier": 9,
+                    "scope": "Within organization"
+                  },
+                  "qualifiedName": "GovernanceStrategy::Operate Coco Pharmaceuticals in an increasingly sustainable way",
+                  "identifier": "SUSTAINABILITY_03",
+                  "displayName": "Operate Coco Pharmaceuticals in an increasingly sustainable way",
+                  "description": "Use sustainability regulations to develop a program of education and initiatives that are designed to improve Coco''s sustainability measurements with rewards for effective actions.",
+                  "summary": "Create a company wide sustainability initiative with rewards.",
+                  "domainIdentifier": 0,
+                  "importance": "High",
+                  "implications": [
+                    "A budget needs to be allocated.",
+                    "People need to be given time to participate.",
+                    "New communication paths need to be established.",
+                    "New responsibilities need to be established with key leaders.",
+                    "New employee rewards need to be designed and implemented"
+                  ]
+                }
+              },
+              "relatedElementAtEnd1": false,
+              "nestedElements": [
+                {
+                  "class": "RelatedMetadataHierarchySummary",
+                  "relationshipHeader": {
+                    "class": "ElementHeader",
+                    "headerVersion": 0,
+                    "status": "ACTIVE",
+                    "type": {
+                      "typeId": "c5e6fada-2c12-46ee-afa9-b71dd1bd8179",
+                      "typeName": "GovernanceDriverLink",
+                      "typeVersion": 1,
+                      "typeDescription": "Link between a two governance drivers.",
+                      "typeCategory": "RELATIONSHIP_DEF"
+                    },
+                    "origin": {
+                      "sourceServer": "qs-metadata-store",
+                      "originCategory": "CONTENT_PACK",
+                      "homeMetadataCollectionId": "655b1965-4c29-4a0e-8a5d-3f55a37b3799",
+                      "homeMetadataCollectionName": "Coco Pharmaceuticals Combination",
+                      "license": "Apache 2.0"
+                    },
+                    "versions": {
+                      "createdBy": "Egeria Project",
+                      "updatedBy": "Egeria Project",
+                      "createTime": "2021-12-20T07:20:40.038+00:00",
+                      "updateTime": "2026-02-19T10:41:07.323+00:00",
+                      "version": 1771497664240
+                    },
+                    "guid": "b514e9a1-76e7-4187-ab93-010db7efd7fd"
+                  },
+                  "relatedElement": {
+                    "elementHeader": {
+                      "class": "ElementHeader",
+                      "headerVersion": 0,
+                      "status": "ACTIVE",
+                      "type": {
+                        "typeId": "4ca51fdf-9b70-46b1-bdf6-8860429e78d8",
+                        "typeName": "Threat",
+                        "superTypeNames": [
+                          "GovernanceDriver",
+                          "GovernanceDefinition",
+                          "AuthoredReferenceable",
+                          "Referenceable",
+                          "OpenMetadataRoot"
+                        ],
+                        "typeVersion": 1,
+                        "typeDescription": "A description of a specific threat.",
+                        "typeCategory": "ENTITY_DEF"
+                      },
+                      "origin": {
+                        "sourceServer": "qs-metadata-store",
+                        "originCategory": "CONTENT_PACK",
+                        "homeMetadataCollectionId": "655b1965-4c29-4a0e-8a5d-3f55a37b3799",
+                        "homeMetadataCollectionName": "Coco Pharmaceuticals Combination",
+                        "license": "Apache 2.0"
+                      },
+                      "versions": {
+                        "createdBy": "Egeria Project",
+                        "updatedBy": "Egeria Project",
+                        "createTime": "2021-12-20T07:20:40.038+00:00",
+                        "updateTime": "2026-02-19T10:41:07.323+00:00",
+                        "version": 1771497664240
+                      },
+                      "guid": "4552f777-65d6-4706-b4bf-e9177660de88",
+                      "anchor": {
+                        "class": "ElementClassification",
+                        "headerVersion": 0,
+                        "status": "ACTIVE",
+                        "type": {
+                          "typeId": "aa44f302-2e43-4669-a1e7-edaae414fc6e",
+                          "typeName": "Anchors",
+                          "typeVersion": 1,
+                          "typeDescription": "Identifies the anchor entity for an element that is part of a large composite object such as an asset.",
+                          "typeCategory": "CLASSIFICATION_DEF"
+                        },
+                        "origin": {
+                          "sourceServer": "qs-metadata-store",
+                          "originCategory": "CONTENT_PACK",
+                          "homeMetadataCollectionId": "655b1965-4c29-4a0e-8a5d-3f55a37b3799",
+                          "homeMetadataCollectionName": "Coco Pharmaceuticals Combination"
+                        },
+                        "versions": {
+                          "createdBy": "Egeria Project",
+                          "updatedBy": "Egeria Project",
+                          "createTime": "2021-12-20T07:20:40.038+00:00",
+                          "updateTime": "2026-02-19T10:41:07.323+00:00",
+                          "version": 1771497664240
+                        },
+                        "classificationOrigin": "ASSIGNED",
+                        "classificationName": "Anchors",
+                        "classificationProperties": {
+                          "class": "AnchorsProperties",
+                          "typeName": "Anchors",
+                          "extendedProperties": {},
+                          "anchorTypeName": "Threat",
+                          "anchorDomainName": "AuthoredReferenceable"
+                        }
+                      }
+                    },
+                    "properties": {
+                      "class": "ThreatProperties",
+                      "typeName": "Threat",
+                      "extendedProperties": {
+                        "domainIdentifier": 9,
+                        "scope": "Within organization"
+                      },
+                      "qualifiedName": "Threat::The price of ignoring sustainability",
+                      "identifier": "SUSTAINABILITY_01",
+                      "displayName": "The price of ignoring sustainability",
+                      "description": "Increasingly, financial institutions are viewing organizations with a lack of focus in sustainability as a poor risk for the future.",
+                      "summary": "A poor record of sustainable operations will affect Coco Pharmaceuticals credit rating",
+                      "domainIdentifier": 0,
+                      "importance": "High",
+                      "implications": [
+                        "Higher cost of doing business"
+                      ]
+                    }
+                  },
+                  "relatedElementAtEnd1": true,
+                  "nestedElements": [
+                    {
+                      "class": "RelatedMetadataElementSummary",
+                      "relationshipHeader": {
+                        "class": "ElementHeader",
+                        "headerVersion": 0,
+                        "status": "ACTIVE",
+                        "type": {
+                          "typeId": "c5e6fada-2c12-46ee-afa9-b71dd1bd8179",
+                          "typeName": "GovernanceDriverLink",
+                          "typeVersion": 1,
+                          "typeDescription": "Link between a two governance drivers.",
+                          "typeCategory": "RELATIONSHIP_DEF"
+                        },
+                        "origin": {
+                          "sourceServer": "qs-metadata-store",
+                          "originCategory": "CONTENT_PACK",
+                          "homeMetadataCollectionId": "655b1965-4c29-4a0e-8a5d-3f55a37b3799",
+                          "homeMetadataCollectionName": "Coco Pharmaceuticals Combination",
+                          "license": "Apache 2.0"
+                        },
+                        "versions": {
+                          "createdBy": "Egeria Project",
+                          "updatedBy": "Egeria Project",
+                          "createTime": "2021-12-20T07:20:40.038+00:00",
+                          "updateTime": "2026-02-19T10:41:07.323+00:00",
+                          "version": 1771497664240
+                        },
+                        "guid": "b514e9a1-76e7-4187-ab93-010db7efd7fd"
+                      },
+                      "relatedElement": {
+                        "elementHeader": {
+                          "class": "ElementHeader",
+                          "headerVersion": 0,
+                          "status": "ACTIVE",
+                          "type": {
+                            "typeId": "3c34f121-07a6-4e95-a07d-9b0ef17b7bbf",
+                            "typeName": "GovernanceStrategy",
+                            "superTypeNames": [
+                              "GovernanceDriver",
+                              "GovernanceDefinition",
+                              "AuthoredReferenceable",
+                              "Referenceable",
+                              "OpenMetadataRoot"
+                            ],
+                            "typeVersion": 1,
+                            "typeDescription": "Defines how the governance program and the supporting capabilities are supporting the business strategy.",
+                            "typeCategory": "ENTITY_DEF"
+                          },
+                          "origin": {
+                            "sourceServer": "qs-metadata-store",
+                            "originCategory": "CONTENT_PACK",
+                            "homeMetadataCollectionId": "655b1965-4c29-4a0e-8a5d-3f55a37b3799",
+                            "homeMetadataCollectionName": "Coco Pharmaceuticals Combination",
+                            "license": "Apache 2.0"
+                          },
+                          "versions": {
+                            "createdBy": "Egeria Project",
+                            "updatedBy": "Egeria Project",
+                            "createTime": "2021-12-20T07:20:40.038+00:00",
+                            "updateTime": "2026-02-19T10:41:07.323+00:00",
+                            "version": 1771497664240
+                          },
+                          "guid": "667c6480-a90a-4fd4-9022-8da646e203d2",
+                          "anchor": {
+                            "class": "ElementClassification",
+                            "headerVersion": 0,
+                            "status": "ACTIVE",
+                            "type": {
+                              "typeId": "aa44f302-2e43-4669-a1e7-edaae414fc6e",
+                              "typeName": "Anchors",
+                              "typeVersion": 1,
+                              "typeDescription": "Identifies the anchor entity for an element that is part of a large composite object such as an asset.",
+                              "typeCategory": "CLASSIFICATION_DEF"
+                            },
+                            "origin": {
+                              "sourceServer": "qs-metadata-store",
+                              "originCategory": "CONTENT_PACK",
+                              "homeMetadataCollectionId": "655b1965-4c29-4a0e-8a5d-3f55a37b3799",
+                              "homeMetadataCollectionName": "Coco Pharmaceuticals Combination"
+                            },
+                            "versions": {
+                              "createdBy": "Egeria Project",
+                              "updatedBy": "Egeria Project",
+                              "createTime": "2021-12-20T07:20:40.038+00:00",
+                              "updateTime": "2026-02-19T10:41:07.323+00:00",
+                              "version": 1771497664240
+                            },
+                            "classificationOrigin": "ASSIGNED",
+                            "classificationName": "Anchors",
+                            "classificationProperties": {
+                              "class": "AnchorsProperties",
+                              "typeName": "Anchors",
+                              "extendedProperties": {},
+                              "anchorTypeName": "GovernanceStrategy",
+                              "anchorDomainName": "AuthoredReferenceable"
+                            }
+                          }
+                        },
+                        "properties": {
+                          "class": "GovernanceStrategyProperties",
+                          "typeName": "GovernanceStrategy",
+                          "extendedProperties": {
+                            "domainIdentifier": 9,
+                            "scope": "Within organization"
+                          },
+                          "qualifiedName": "GovernanceStrategy::Operate Coco Pharmaceuticals in an increasingly sustainable way",
+                          "identifier": "SUSTAINABILITY_03",
+                          "displayName": "Operate Coco Pharmaceuticals in an increasingly sustainable way",
+                          "description": "Use sustainability regulations to develop a program of education and initiatives that are designed to improve Coco''s sustainability measurements with rewards for effective actions.",
+                          "summary": "Create a company wide sustainability initiative with rewards.",
+                          "domainIdentifier": 0,
+                          "importance": "High",
+                          "implications": [
+                            "A budget needs to be allocated.",
+                            "People need to be given time to participate.",
+                            "New communication paths need to be established.",
+                            "New responsibilities need to be established with key leaders.",
+                            "New employee rewards need to be designed and implemented"
+                          ]
+                        }
+                      },
+                      "relatedElementAtEnd1": false
+                    }
+                  ]
+                },
+                {
+                  "class": "RelatedMetadataHierarchySummary",
+                  "relationshipHeader": {
+                    "class": "ElementHeader",
+                    "headerVersion": 0,
+                    "status": "ACTIVE",
+                    "type": {
+                      "typeId": "c5e6fada-2c12-46ee-afa9-b71dd1bd8179",
+                      "typeName": "GovernanceDriverLink",
+                      "typeVersion": 1,
+                      "typeDescription": "Link between a two governance drivers.",
+                      "typeCategory": "RELATIONSHIP_DEF"
+                    },
+                    "origin": {
+                      "sourceServer": "qs-metadata-store",
+                      "originCategory": "CONTENT_PACK",
+                      "homeMetadataCollectionId": "655b1965-4c29-4a0e-8a5d-3f55a37b3799",
+                      "homeMetadataCollectionName": "Coco Pharmaceuticals Combination",
+                      "license": "Apache 2.0"
+                    },
+                    "versions": {
+                      "createdBy": "Egeria Project",
+                      "updatedBy": "Egeria Project",
+                      "createTime": "2021-12-20T07:20:40.038+00:00",
+                      "updateTime": "2026-02-19T10:41:07.323+00:00",
+                      "version": 1771497664240
+                    },
+                    "guid": "0d11756b-96dc-43f8-a7c2-f634851b4108"
+                  },
+                  "relatedElement": {
+                    "elementHeader": {
+                      "class": "ElementHeader",
+                      "headerVersion": 0,
+                      "status": "ACTIVE",
+                      "type": {
+                        "typeId": "e3c4293d-8846-4500-b0c0-197d73aba8b0",
+                        "typeName": "Regulation",
+                        "superTypeNames": [
+                          "GovernanceDriver",
+                          "GovernanceDefinition",
+                          "AuthoredReferenceable",
+                          "Referenceable",
+                          "OpenMetadataRoot"
+                        ],
+                        "typeVersion": 1,
+                        "typeDescription": "Identifies a regulation related to data that must be supported.",
+                        "typeCategory": "ENTITY_DEF"
+                      },
+                      "origin": {
+                        "sourceServer": "qs-metadata-store",
+                        "originCategory": "CONTENT_PACK",
+                        "homeMetadataCollectionId": "655b1965-4c29-4a0e-8a5d-3f55a37b3799",
+                        "homeMetadataCollectionName": "Coco Pharmaceuticals Combination",
+                        "license": "Apache 2.0"
+                      },
+                      "versions": {
+                        "createdBy": "Egeria Project",
+                        "updatedBy": "Egeria Project",
+                        "createTime": "2021-12-20T07:20:40.038+00:00",
+                        "updateTime": "2026-02-19T10:41:07.323+00:00",
+                        "version": 1771497664240
+                      },
+                      "guid": "2ba17e3c-825a-409b-928f-d0e46e741c11",
+                      "anchor": {
+                        "class": "ElementClassification",
+                        "headerVersion": 0,
+                        "status": "ACTIVE",
+                        "type": {
+                          "typeId": "aa44f302-2e43-4669-a1e7-edaae414fc6e",
+                          "typeName": "Anchors",
+                          "typeVersion": 1,
+                          "typeDescription": "Identifies the anchor entity for an element that is part of a large composite object such as an asset.",
+                          "typeCategory": "CLASSIFICATION_DEF"
+                        },
+                        "origin": {
+                          "sourceServer": "qs-metadata-store",
+                          "originCategory": "CONTENT_PACK",
+                          "homeMetadataCollectionId": "655b1965-4c29-4a0e-8a5d-3f55a37b3799",
+                          "homeMetadataCollectionName": "Coco Pharmaceuticals Combination"
+                        },
+                        "versions": {
+                          "createdBy": "Egeria Project",
+                          "updatedBy": "Egeria Project",
+                          "createTime": "2021-12-20T07:20:40.038+00:00",
+                          "updateTime": "2026-02-19T10:41:07.323+00:00",
+                          "version": 1771497664240
+                        },
+                        "classificationOrigin": "ASSIGNED",
+                        "classificationName": "Anchors",
+                        "classificationProperties": {
+                          "class": "AnchorsProperties",
+                          "typeName": "Anchors",
+                          "extendedProperties": {},
+                          "anchorTypeName": "Regulation",
+                          "anchorDomainName": "AuthoredReferenceable"
+                        }
+                      }
+                    },
+                    "properties": {
+                      "class": "RegulationProperties",
+                      "typeName": "Regulation",
+                      "extendedProperties": {
+                        "domainIdentifier": 9,
+                        "scope": "Within organization"
+                      },
+                      "qualifiedName": "Regulation::Corporate Sustainability Reporting Directive (CSRD)",
+                      "identifier": "SUSTAINABILITY_02",
+                      "displayName": "Corporate Sustainability Reporting Directive (CSRD)",
+                      "summary": "Details of the types of reporting that organizations must produce.",
+                      "domainIdentifier": 0,
+                      "importance": "High",
+                      "implications": [
+                        "New data pipelines and dashboards need to be implemented"
+                      ],
+                      "outcomes": [
+                        "A greater awareness of sustainability will improve resource use"
+                      ]
+                    }
+                  },
+                  "relatedElementAtEnd1": true,
+                  "nestedElements": [
+                    {
+                      "class": "RelatedMetadataElementSummary",
+                      "relationshipHeader": {
+                        "class": "ElementHeader",
+                        "headerVersion": 0,
+                        "status": "ACTIVE",
+                        "type": {
+                          "typeId": "c5e6fada-2c12-46ee-afa9-b71dd1bd8179",
+                          "typeName": "GovernanceDriverLink",
+                          "typeVersion": 1,
+                          "typeDescription": "Link between a two governance drivers.",
+                          "typeCategory": "RELATIONSHIP_DEF"
+                        },
+                        "origin": {
+                          "sourceServer": "qs-metadata-store",
+                          "originCategory": "CONTENT_PACK",
+                          "homeMetadataCollectionId": "655b1965-4c29-4a0e-8a5d-3f55a37b3799",
+                          "homeMetadataCollectionName": "Coco Pharmaceuticals Combination",
+                          "license": "Apache 2.0"
+                        },
+                        "versions": {
+                          "createdBy": "Egeria Project",
+                          "updatedBy": "Egeria Project",
+                          "createTime": "2021-12-20T07:20:40.038+00:00",
+                          "updateTime": "2026-02-19T10:41:07.323+00:00",
+                          "version": 1771497664240
+                        },
+                        "guid": "0d11756b-96dc-43f8-a7c2-f634851b4108"
+                      },
+                      "relatedElement": {
+                        "elementHeader": {
+                          "class": "ElementHeader",
+                          "headerVersion": 0,
+                          "status": "ACTIVE",
+                          "type": {
+                            "typeId": "3c34f121-07a6-4e95-a07d-9b0ef17b7bbf",
+                            "typeName": "GovernanceStrategy",
+                            "superTypeNames": [
+                              "GovernanceDriver",
+                              "GovernanceDefinition",
+                              "AuthoredReferenceable",
+                              "Referenceable",
+                              "OpenMetadataRoot"
+                            ],
+                            "typeVersion": 1,
+                            "typeDescription": "Defines how the governance program and the supporting capabilities are supporting the business strategy.",
+                            "typeCategory": "ENTITY_DEF"
+                          },
+                          "origin": {
+                            "sourceServer": "qs-metadata-store",
+                            "originCategory": "CONTENT_PACK",
+                            "homeMetadataCollectionId": "655b1965-4c29-4a0e-8a5d-3f55a37b3799",
+                            "homeMetadataCollectionName": "Coco Pharmaceuticals Combination",
+                            "license": "Apache 2.0"
+                          },
+                          "versions": {
+                            "createdBy": "Egeria Project",
+                            "updatedBy": "Egeria Project",
+                            "createTime": "2021-12-20T07:20:40.038+00:00",
+                            "updateTime": "2026-02-19T10:41:07.323+00:00",
+                            "version": 1771497664240
+                          },
+                          "guid": "667c6480-a90a-4fd4-9022-8da646e203d2",
+                          "anchor": {
+                            "class": "ElementClassification",
+                            "headerVersion": 0,
+                            "status": "ACTIVE",
+                            "type": {
+                              "typeId": "aa44f302-2e43-4669-a1e7-edaae414fc6e",
+                              "typeName": "Anchors",
+                              "typeVersion": 1,
+                              "typeDescription": "Identifies the anchor entity for an element that is part of a large composite object such as an asset.",
+                              "typeCategory": "CLASSIFICATION_DEF"
+                            },
+                            "origin": {
+                              "sourceServer": "qs-metadata-store",
+                              "originCategory": "CONTENT_PACK",
+                              "homeMetadataCollectionId": "655b1965-4c29-4a0e-8a5d-3f55a37b3799",
+                              "homeMetadataCollectionName": "Coco Pharmaceuticals Combination"
+                            },
+                            "versions": {
+                              "createdBy": "Egeria Project",
+                              "updatedBy": "Egeria Project",
+                              "createTime": "2021-12-20T07:20:40.038+00:00",
+                              "updateTime": "2026-02-19T10:41:07.323+00:00",
+                              "version": 1771497664240
+                            },
+                            "classificationOrigin": "ASSIGNED",
+                            "classificationName": "Anchors",
+                            "classificationProperties": {
+                              "class": "AnchorsProperties",
+                              "typeName": "Anchors",
+                              "extendedProperties": {},
+                              "anchorTypeName": "GovernanceStrategy",
+                              "anchorDomainName": "AuthoredReferenceable"
+                            }
+                          }
+                        },
+                        "properties": {
+                          "class": "GovernanceStrategyProperties",
+                          "typeName": "GovernanceStrategy",
+                          "extendedProperties": {
+                            "domainIdentifier": 9,
+                            "scope": "Within organization"
+                          },
+                          "qualifiedName": "GovernanceStrategy::Operate Coco Pharmaceuticals in an increasingly sustainable way",
+                          "identifier": "SUSTAINABILITY_03",
+                          "displayName": "Operate Coco Pharmaceuticals in an increasingly sustainable way",
+                          "description": "Use sustainability regulations to develop a program of education and initiatives that are designed to improve Coco''s sustainability measurements with rewards for effective actions.",
+                          "summary": "Create a company wide sustainability initiative with rewards.",
+                          "domainIdentifier": 0,
+                          "importance": "High",
+                          "implications": [
+                            "A budget needs to be allocated.",
+                            "People need to be given time to participate.",
+                            "New communication paths need to be established.",
+                            "New responsibilities need to be established with key leaders.",
+                            "New employee rewards need to be designed and implemented"
+                          ]
+                        }
+                      },
+                      "relatedElementAtEnd1": false
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "class": "RelatedMetadataElementSummary",
+      "relationshipHeader": {
+        "class": "ElementHeader",
+        "headerVersion": 0,
+        "status": "ACTIVE",
+        "type": {
+          "typeId": "c5e6fada-2c12-46ee-afa9-b71dd1bd8179",
+          "typeName": "GovernanceDriverLink",
+          "typeVersion": 1,
+          "typeDescription": "Link between a two governance drivers.",
+          "typeCategory": "RELATIONSHIP_DEF"
+        },
+        "origin": {
+          "sourceServer": "qs-metadata-store",
+          "originCategory": "CONTENT_PACK",
+          "homeMetadataCollectionId": "655b1965-4c29-4a0e-8a5d-3f55a37b3799",
+          "homeMetadataCollectionName": "Coco Pharmaceuticals Combination",
+          "license": "Apache 2.0"
+        },
+        "versions": {
+          "createdBy": "Egeria Project",
+          "updatedBy": "Egeria Project",
+          "createTime": "2021-12-20T07:20:40.038+00:00",
+          "updateTime": "2026-02-19T10:41:07.323+00:00",
+          "version": 1771497664240
+        },
+        "guid": "0d11756b-96dc-43f8-a7c2-f634851b4108"
+      },
+      "relatedElement": {
+        "elementHeader": {
+          "class": "ElementHeader",
+          "headerVersion": 0,
+          "status": "ACTIVE",
+          "type": {
+            "typeId": "3c34f121-07a6-4e95-a07d-9b0ef17b7bbf",
+            "typeName": "GovernanceStrategy",
+            "superTypeNames": [
+              "GovernanceDriver",
+              "GovernanceDefinition",
+              "AuthoredReferenceable",
+              "Referenceable",
+              "OpenMetadataRoot"
+            ],
+            "typeVersion": 1,
+            "typeDescription": "Defines how the governance program and the supporting capabilities are supporting the business strategy.",
+            "typeCategory": "ENTITY_DEF"
+          },
+          "origin": {
+            "sourceServer": "qs-metadata-store",
+            "originCategory": "CONTENT_PACK",
+            "homeMetadataCollectionId": "655b1965-4c29-4a0e-8a5d-3f55a37b3799",
+            "homeMetadataCollectionName": "Coco Pharmaceuticals Combination",
+            "license": "Apache 2.0"
+          },
+          "versions": {
+            "createdBy": "Egeria Project",
+            "updatedBy": "Egeria Project",
+            "createTime": "2021-12-20T07:20:40.038+00:00",
+            "updateTime": "2026-02-19T10:41:07.323+00:00",
+            "version": 1771497664240
+          },
+          "guid": "667c6480-a90a-4fd4-9022-8da646e203d2",
+          "anchor": {
+            "class": "ElementClassification",
+            "headerVersion": 0,
+            "status": "ACTIVE",
+            "type": {
+              "typeId": "aa44f302-2e43-4669-a1e7-edaae414fc6e",
+              "typeName": "Anchors",
+              "typeVersion": 1,
+              "typeDescription": "Identifies the anchor entity for an element that is part of a large composite object such as an asset.",
+              "typeCategory": "CLASSIFICATION_DEF"
+            },
+            "origin": {
+              "sourceServer": "qs-metadata-store",
+              "originCategory": "CONTENT_PACK",
+              "homeMetadataCollectionId": "655b1965-4c29-4a0e-8a5d-3f55a37b3799",
+              "homeMetadataCollectionName": "Coco Pharmaceuticals Combination"
+            },
+            "versions": {
+              "createdBy": "Egeria Project",
+              "updatedBy": "Egeria Project",
+              "createTime": "2021-12-20T07:20:40.038+00:00",
+              "updateTime": "2026-02-19T10:41:07.323+00:00",
+              "version": 1771497664240
+            },
+            "classificationOrigin": "ASSIGNED",
+            "classificationName": "Anchors",
+            "classificationProperties": {
+              "class": "AnchorsProperties",
+              "typeName": "Anchors",
+              "extendedProperties": {},
+              "anchorTypeName": "GovernanceStrategy",
+              "anchorDomainName": "AuthoredReferenceable"
+            }
+          }
+        },
+        "properties": {
+          "class": "GovernanceStrategyProperties",
+          "typeName": "GovernanceStrategy",
+          "extendedProperties": {
+            "domainIdentifier": 9,
+            "scope": "Within organization"
+          },
+          "qualifiedName": "GovernanceStrategy::Operate Coco Pharmaceuticals in an increasingly sustainable way",
+          "identifier": "SUSTAINABILITY_03",
+          "displayName": "Operate Coco Pharmaceuticals in an increasingly sustainable way",
+          "description": "Use sustainability regulations to develop a program of education and initiatives that are designed to improve Coco''s sustainability measurements with rewards for effective actions.",
+          "summary": "Create a company wide sustainability initiative with rewards.",
+          "domainIdentifier": 0,
+          "importance": "High",
+          "implications": [
+            "A budget needs to be allocated.",
+            "People need to be given time to participate.",
+            "New communication paths need to be established.",
+            "New responsibilities need to be established with key leaders.",
+            "New employee rewards need to be designed and implemented"
+          ]
+        }
+      },
+      "relatedElementAtEnd1": false
+    },
+    {
+      "class": "RelatedMetadataElementSummary",
+      "relationshipHeader": {
+        "class": "ElementHeader",
+        "headerVersion": 0,
+        "status": "ACTIVE",
+        "type": {
+          "typeId": "c5e6fada-2c12-46ee-afa9-b71dd1bd8179",
+          "typeName": "GovernanceDriverLink",
+          "typeVersion": 1,
+          "typeDescription": "Link between a two governance drivers.",
+          "typeCategory": "RELATIONSHIP_DEF"
+        },
+        "origin": {
+          "sourceServer": "qs-metadata-store",
+          "originCategory": "CONTENT_PACK",
+          "homeMetadataCollectionId": "655b1965-4c29-4a0e-8a5d-3f55a37b3799",
+          "homeMetadataCollectionName": "Coco Pharmaceuticals Combination",
+          "license": "Apache 2.0"
+        },
+        "versions": {
+          "createdBy": "Egeria Project",
+          "updatedBy": "Egeria Project",
+          "createTime": "2021-12-20T07:20:40.038+00:00",
+          "updateTime": "2026-02-19T10:41:07.323+00:00",
+          "version": 1771497664240
+        },
+        "guid": "0d11756b-96dc-43f8-a7c2-f634851b4108"
+      },
+      "relatedElement": {
+        "elementHeader": {
+          "class": "ElementHeader",
+          "headerVersion": 0,
+          "status": "ACTIVE",
+          "type": {
+            "typeId": "3c34f121-07a6-4e95-a07d-9b0ef17b7bbf",
+            "typeName": "GovernanceStrategy",
+            "superTypeNames": [
+              "GovernanceDriver",
+              "GovernanceDefinition",
+              "AuthoredReferenceable",
+              "Referenceable",
+              "OpenMetadataRoot"
+            ],
+            "typeVersion": 1,
+            "typeDescription": "Defines how the governance program and the supporting capabilities are supporting the business strategy.",
+            "typeCategory": "ENTITY_DEF"
+          },
+          "origin": {
+            "sourceServer": "qs-metadata-store",
+            "originCategory": "CONTENT_PACK",
+            "homeMetadataCollectionId": "655b1965-4c29-4a0e-8a5d-3f55a37b3799",
+            "homeMetadataCollectionName": "Coco Pharmaceuticals Combination",
+            "license": "Apache 2.0"
+          },
+          "versions": {
+            "createdBy": "Egeria Project",
+            "updatedBy": "Egeria Project",
+            "createTime": "2021-12-20T07:20:40.038+00:00",
+            "updateTime": "2026-02-19T10:41:07.323+00:00",
+            "version": 1771497664240
+          },
+          "guid": "667c6480-a90a-4fd4-9022-8da646e203d2",
+          "anchor": {
+            "class": "ElementClassification",
+            "headerVersion": 0,
+            "status": "ACTIVE",
+            "type": {
+              "typeId": "aa44f302-2e43-4669-a1e7-edaae414fc6e",
+              "typeName": "Anchors",
+              "typeVersion": 1,
+              "typeDescription": "Identifies the anchor entity for an element that is part of a large composite object such as an asset.",
+              "typeCategory": "CLASSIFICATION_DEF"
+            },
+            "origin": {
+              "sourceServer": "qs-metadata-store",
+              "originCategory": "CONTENT_PACK",
+              "homeMetadataCollectionId": "655b1965-4c29-4a0e-8a5d-3f55a37b3799",
+              "homeMetadataCollectionName": "Coco Pharmaceuticals Combination"
+            },
+            "versions": {
+              "createdBy": "Egeria Project",
+              "updatedBy": "Egeria Project",
+              "createTime": "2021-12-20T07:20:40.038+00:00",
+              "updateTime": "2026-02-19T10:41:07.323+00:00",
+              "version": 1771497664240
+            },
+            "classificationOrigin": "ASSIGNED",
+            "classificationName": "Anchors",
+            "classificationProperties": {
+              "class": "AnchorsProperties",
+              "typeName": "Anchors",
+              "extendedProperties": {},
+              "anchorTypeName": "GovernanceStrategy",
+              "anchorDomainName": "AuthoredReferenceable"
+            }
+          }
+        },
+        "properties": {
+          "class": "GovernanceStrategyProperties",
+          "typeName": "GovernanceStrategy",
+          "extendedProperties": {
+            "domainIdentifier": 9,
+            "scope": "Within organization"
+          },
+          "qualifiedName": "GovernanceStrategy::Operate Coco Pharmaceuticals in an increasingly sustainable way",
+          "identifier": "SUSTAINABILITY_03",
+          "displayName": "Operate Coco Pharmaceuticals in an increasingly sustainable way",
+          "description": "Use sustainability regulations to develop a program of education and initiatives that are designed to improve Coco''s sustainability measurements with rewards for effective actions.",
+          "summary": "Create a company wide sustainability initiative with rewards.",
+          "domainIdentifier": 0,
+          "importance": "High",
+          "implications": [
+            "A budget needs to be allocated.",
+            "People need to be given time to participate.",
+            "New communication paths need to be established.",
+            "New responsibilities need to be established with key leaders.",
+            "New employee rewards need to be designed and implemented"
+          ]
+        }
+      },
+      "relatedElementAtEnd1": false
+    }
+  ],
+  "properties": {
+    "class": "RegulationProperties",
+    "typeName": "Regulation",
+    "extendedProperties": {
+      "domainIdentifier": 9,
+      "scope": "Within organization"
+    },
+    "qualifiedName": "Regulation::Corporate Sustainability Reporting Directive (CSRD)",
+    "identifier": "SUSTAINABILITY_02",
+    "displayName": "Corporate Sustainability Reporting Directive (CSRD)",
+    "summary": "Details of the types of reporting that organizations must produce.",
+    "domainIdentifier": 0,
+    "importance": "High",
+    "implications": [
+      "New data pipelines and dashboards need to be implemented"
+    ],
+    "outcomes": [
+      "A greater awareness of sustainability will improve resource use"
+    ]
+  },
+  "mermaidGraph": "---\ntitle: Regulation - Corporate Sustainability Reporting Directive (CSRD) [2ba17e3c-825a-409b-928f-d0e46e741c11]\n---\nflowchart TD\n%%{init: {\"flowchart\": {\"htmlLabels\": false}} }%%\n\n1@{ shape: rounded, label: \"*Regulation*\n**Corporate Sustainability Reporting Directive (CSRD)**\"}\n2@{ shape: doc, label: \"*Governance Strategy*\n**Operate Coco Pharmaceuticals in an increasingly sustainable way**\"}\n1==>|\"Governance Driver Link\"|2\n3@{ shape: doc, label: \"*Threat*\n**The price of ignoring sustainability**\"}\n3==>|\"Governance Driver Link\"|2\nstyle 1 color:#000000, fill:#e0ab18, stroke:#004563\nstyle 2 color:#FFFFFF, fill:#006400, stroke:#000000\nstyle 3 color:#FFFFFF, fill:#006400, stroke:#000000\n"
+}

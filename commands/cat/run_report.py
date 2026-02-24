@@ -31,7 +31,7 @@ from rich.prompt import Prompt
 
 from pyegeria.core.config import settings
 from pyegeria.core._exceptions import PyegeriaException, print_exception_response
-from pyegeria.view.base_report_formats import get_report_spec_heading, select_report_spec
+from pyegeria.view.base_report_formats import get_report_spec_heading, select_report_spec, get_report_registry
 from pyegeria.view.format_set_executor import exec_report_spec
 EGERIA_USER = os.environ.get("EGERIA_USER", "erinoverview")
 EGERIA_USER_PASSWORD = os.environ.get("EGERIA_USER_PASSWORD", "secret")
@@ -40,6 +40,8 @@ EGERIA_USER_PASSWORD = os.environ.get("EGERIA_USER_PASSWORD", "secret")
 app_config = settings.Environment
 # config_logging()
 
+# Note: CLI --param/--params-json must use snake_case names (e.g., metadata_element_subtypes). The
+# underlying clients serialize to camelCase for on-wire Egeria JSON automatically.
 TEXT_FILE_FORMATS = {"MD", "REPORT", "FORM", "HTML", "MERMAID", "LIST", "DICT", "JSON"}
 
 
@@ -89,9 +91,42 @@ def list_generic(
     ofmt = (output_format or "TABLE").upper()
 
     # Load format spec to introspect required/optional params
-    fmt = select_report_spec(report_spec, ofmt if ofmt not in {"TABLE", "MD", "FORM", "LIST"} else "DICT")
+    # First, validate existence of the report regardless of type
+    fmt_any = select_report_spec(report_spec, "ANY")
+    if not fmt_any:
+        raise ValueError(
+            f"Unknown report spec '{report_spec}'. Run 'list_reports' to see available reports."
+        )
+
+    # Then resolve the specific output format (TABLE maps to DICT rendering under the hood)
+    requested_type = ofmt
+    lookup_type = ofmt if ofmt not in {"TABLE", "MD", "FORM", "LIST"} else "DICT"
+    fmt = select_report_spec(report_spec, lookup_type)
     if not fmt:
-        raise ValueError(f"Report spec '{report_spec}' not found for format '{ofmt}'.")
+        # Provide actionable message with available types
+        available: list[str] = []
+        try:
+            registry = get_report_registry()
+            fs = registry.get(report_spec)
+            if fs is None:
+                for key, v in registry.items():
+                    aliases = getattr(v, "aliases", []) or []
+                    if report_spec in aliases:
+                        fs = v
+                        break
+            if fs is not None:
+                seen = set()
+                for f in getattr(fs, "formats", []) or []:
+                    for t in getattr(f, "types", []) or []:
+                        seen.add(str(t).upper())
+                available = sorted(seen)
+        except Exception:
+            pass
+        hint = f" Available formats: {', '.join(available)}." if available else ""
+        raise ValueError(
+            f"Report spec '{report_spec}' does not support requested output_format '{requested_type}'.{hint} "
+            f"Run 'list_reports' to see available reports."
+        )
     action = fmt.get("action", {}) or {}
     required_params = action.get("required_params", action.get("user_params", [])) or []
     optional_params = action.get("optional_params", []) or []
@@ -110,10 +145,9 @@ def list_generic(
             raise ValueError(f"Missing required parameter(s): {', '.join(missing)}")
 
     # Map only TABLE to DICT for data retrieval; pass through other formats
-    # mapped_format = "DICT" if ofmt == "TABLE" else ofmt
-    mapped_format = ofmt
+    mapped_format = "DICT" if ofmt == "TABLE" else ofmt
     try:
-    # Execute
+        # Execute
         result = exec_report_spec(
             report_spec,
             output_format=mapped_format,
@@ -150,7 +184,7 @@ def list_generic(
         }
 
     # For TABLE, optionally render Rich table and return json data for caller
-    if ofmt == "TABLE":
+    if ofmt in {"TABLE", "DICT"}:
         if result.get("kind") == "json":
             heading = get_report_spec_heading(report_spec) or f"Report: {report_spec}"
             data = result.get("data")
@@ -401,7 +435,7 @@ def main():
             console.print("No results found.")
             return
 
-        if output_format == "TABLE":
+        if output_format in {"TABLE", "DICT"}:
             heading = result.get("heading") or (get_report_spec_heading(report_spec) or f"Report: {report_spec}")
             caption = f"View Server '{args.server}' @ Platform - {args.url}"
             _render_table(console, heading, caption, result.get("data"))
@@ -414,6 +448,9 @@ def main():
         else:
             print(result.get("content", ""))
 
+    except ValueError as e:
+        console.print(f"[bold red]{e}[/]")
+        console.print("Tip: Run 'list_reports' to see available reports.")
     except PyegeriaException as e:
         print_exception_response(e)
     except KeyboardInterrupt:

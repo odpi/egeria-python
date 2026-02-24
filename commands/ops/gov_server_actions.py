@@ -134,7 +134,7 @@ def start_server(ctx, server):
     token = p_client.create_egeria_bearer_token()
     try:
         server_guid = p_client.get_element_guid_by_unique_name(server, "name")
-        p_client.activate_server_with_stored_config(None, server)
+        p_client.activate_server_with_stored_config(None, server_guid)
 
         click.echo(f"Started server {server}")
 
