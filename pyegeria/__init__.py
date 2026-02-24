@@ -34,7 +34,7 @@ if disable_ssl_warnings:
     from urllib3.exceptions import InsecureRequestWarning
 
     disable_warnings(InsecureRequestWarning)
-
+from pyegeria.core._globals import (GovernanceDomains)
 from pyegeria.core._server_client import ServerClient
 from pyegeria.core._exceptions import (
     PyegeriaException,

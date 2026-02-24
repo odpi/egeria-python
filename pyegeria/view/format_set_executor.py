@@ -34,6 +34,7 @@ from pyegeria.view.base_report_formats import (
     select_report_spec,
     get_report_spec_heading,
     get_report_spec_description,
+    get_report_registry,
 )
 from pyegeria.view.output_formatter import generate_output
 
@@ -86,6 +87,9 @@ async def safe_call_tool(func, **call_params):
 
 
 
+# Parameter naming note:
+# - exec_report_spec and run_report expect parameter names in snake_case (e.g., metadata_element_subtypes).
+# - The underlying clients map these to on-wire camelCase when serializing request bodies for Egeria.
 async def _async_run_report(
     report_name: str,
     egeria_client: EgeriaTech,
@@ -109,11 +113,42 @@ async def _async_run_report(
     effective_format = "REPORT" if output_format in ["HTML", "MARKDOWN"] else output_format
     if effective_format == "JSON":
         effective_format = "DICT"
+
+    # First, check if the report spec exists at all (independent of type)
+    fmt_any = select_report_spec(report_name, "ANY")
+    if not fmt_any:
+        raise ValueError(
+            f"Unknown report spec '{report_name}'. Run 'list_reports' to see available reports."
+        )
+
+    # Then, check if the requested output format is supported
     fmt = select_report_spec(report_name, effective_format)
     if not fmt:
+        # Try to collect available types for a clearer message
+        available: list[str] = []
+        try:
+            registry = get_report_registry()
+            fs = registry.get(report_name)
+            if fs is None:
+                for key, v in registry.items():
+                    aliases = getattr(v, "aliases", []) or []
+                    if report_name in aliases:
+                        fs = v
+                        break
+            if fs is not None:
+                seen = set()
+                for f in getattr(fs, "formats", []) or []:
+                    for t in getattr(f, "types", []) or []:
+                        seen.add(str(t).upper())
+                available = sorted(seen)
+        except Exception:
+            pass
+        hint = f" Available formats: {', '.join(available)}." if available else ""
         raise ValueError(
-            f"Output format set '{report_name}' does not have a compatible '{output_format}' format."
+            f"Report spec '{report_name}' does not support requested output_format '{output_format}'.{hint} "
+            f"Run 'list_reports' to see available reports."
         )
+
     if "action" not in fmt:
         raise ValueError(f"Output format set '{report_name}' does not have an action property.")
 
@@ -186,8 +221,8 @@ async def _async_run_report(
         if not result or result == NO_ELEMENTS_FOUND:
             return {"kind": "empty"}
 
-        if output_format in {"DICT", "JSON", "ALL"}:
-            # Return raw data (list/dict/any) — do not stringify here
+        if output_format in {"DICT", "JSON", "ALL", "TABLE"}:
+            # Return raw data (list/dict/any) — do not stringify here; include TABLE to enable Rich rendering upstream
             return {"kind": "json", "data": result}
 
         # For narrative formats, try to use generate_output if the result is structured
@@ -250,11 +285,40 @@ def exec_report_spec(
     if isinstance(format_set_name, dict):
         fmt = format_set_name
     else:
+        # First, validate existence regardless of type
+        fmt_any = select_report_spec(format_set_name, "ANY")
+        if not fmt_any:
+            raise ValueError(
+                f"Unknown report spec '{format_set_name}'. Run 'list_reports' to see available reports."
+            )
         fmt = select_report_spec(format_set_name, output_format)
+
     if not fmt:
+        # Provide a clearer unsupported-format message with available types
+        available: list[str] = []
+        try:
+            registry = get_report_registry()
+            fs = registry.get(format_set_name)
+            if fs is None:
+                for key, v in registry.items():
+                    aliases = getattr(v, "aliases", []) or []
+                    if format_set_name in aliases:
+                        fs = v
+                        break
+            if fs is not None:
+                seen = set()
+                for f in getattr(fs, "formats", []) or []:
+                    for t in getattr(f, "types", []) or []:
+                        seen.add(str(t).upper())
+                available = sorted(seen)
+        except Exception:
+            pass
+        hint = f" Available formats: {', '.join(available)}." if available else ""
         raise ValueError(
-            f"Output report spec '{format_set_name}' does not have a compatible '{output_format}' format."
+            f"Report spec '{format_set_name}' does not support requested output_format '{output_format}'.{hint} "
+            f"Run 'list_reports' to see available reports."
         )
+
     if "action" not in fmt:
         raise ValueError(f"Output report spec '{format_set_name}' does not have an action property.")
 

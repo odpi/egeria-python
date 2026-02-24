@@ -444,20 +444,14 @@ class TestGovernanceOfficer:
                 # "metadataElementTypeName": ["BusinessImperative", "Regulation", "LicenseType", "GovernanceResponsibility",
                 #                             "GovernanceApproach", "Certification Type", "Governance Principle"],
                 # "metadataElementSubtypeNames": ["GovernancePrinciple","GovernanceStrategy","Regulation", "BusinessImperative"],
-                # "metadataElementTypeName": "GovernanceActionProcess",
-                "metadataElementSubtypeNames": ["GovernanceActionProcess"],
+                "metadataElementSubtypeNames": ["GovernanceStrategy"],
                 "sequencingOrder": None,
                 "sequencingProperty": None,
-                "searchString": filter
+                "searchString": "sustainable"
                 }
-            body2 = SearchStringRequestBody(
-                class_="SearchStringRequestBody",
-                metadata_element_subtype_names=["GovernancePolicy", "GovernanceDriver", "BusinessImperative"],
-                search_string="*",
 
-                )
             start_time = time.perf_counter()
-            response = s_client.find_governance_definitions(search_string=filter, body=body, output_format="MERMAID", report_spec="Common-Mermaid")
+            response = s_client.find_governance_definitions(search_string="*", body=body, output_format="JSON", report_spec="Governance Policies")
             duration = time.perf_counter() - start_time
             print(
                 f"\n\tDuration was {duration:.2f} seconds, Type: {type(response)}, Element count is {len(response)}"
@@ -513,7 +507,7 @@ class TestGovernanceOfficer:
             s_client.close_session()
 
     def test_get_gov_def_by_guid(self):
-        guid = "fdec46ab-cf36-4029-85ee-755b9c2eb165"
+        guid = "2ba17e3c-825a-409b-928f-d0e46e741c11"
         try:
             s_client = GovernanceOfficer(
                 self.view_server, self.platform_url, self.user, self.password

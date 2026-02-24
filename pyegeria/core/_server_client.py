@@ -6101,7 +6101,8 @@ class ServerClient(BaseServerClient):
             else:
                 validated_body = self._search_string_request_adapter.validate_python(body)
         else:
-            search_string = None if search_string == "*" else search_string
+            # Treat a lone '*' as a wildcard for any content: map to '.*' regex understood by Egeria
+            search_string = ".*" if search_string == "*" else search_string
             if page_size is None:
                 page_size = 0
 

@@ -1,6 +1,6 @@
 {
   "family": "Collections",
-  "exported": "Feb 18, 2026 at 11:37:59 AM",
+  "exported": "Feb 21, 2026 at 7:46:01 AM",
   "attribute_definitions": {
     "Access Control": {
       "variable_name": "access_control",
@@ -2343,7 +2343,7 @@
       "max_cardinality": 1,
       "level": "Advanced",
       "Journal Entry": ""
-    }
+    },
     "Collection Id": {
       "variable_name": "collection_id",
       "inUpdate": true,
@@ -2612,12 +2612,91 @@
     }
   },
   "bundles": {
-    "Collection Base": {
+    "Authored Referenceable": {
+      "inherits": "Referenceable",
+      "own_attributes": [
+        "Authors",
+        "Content Status",
+        "User Defined Content Status"
+      ]
+    },
+    "Referenceable": {
+      "inherits": "New-Element",
+      "own_attributes": [
+        "Additional Properties",
+        "Category",
+        "Class Word Classification",
+        "Confidence Classification",
+        "Confidentiality Classification",
+        "Criticality Classification",
+        "Description",
+        "Display Name",
+        "GUID",
+        "Identifier",
+        "Impact Classification",
+        "Modifier Classification",
+        "Policy Management Point",
+        "Prime Word Classification",
+        "Qualified Name",
+        "Retention Classification",
+        "Security Tags",
+        "URL",
+        "Version Identifier"
+      ]
+    },
+    "New-Element": {
       "inherits": null,
+      "own_attributes": [
+        "Anchor ID",
+        "Effective From",
+        "Effective Time",
+        "Effective To",
+        "Extended Properties",
+        "External Source GUID",
+        "External Source Name",
+        "Glossary Term",
+        "Is Own Anchor",
+        "Journal Entry",
+        "Merge Update",
+        "Parent at End1",
+        "Parent ID",
+        "Parent Relationship Attributes",
+        "Parent Relationship Type Name",
+        "Search Keywords",
+        "Status",
+        "Zone Membership"
+      ]
+    },
+    "Terms and Conditions": {
+      "inherits": null,
+      "own_attributes": [
+        "Entitlements",
+        "Obligations",
+        "Restrictions"
+      ]
+    },
+    "Link Command Base": {
+      "inherits": null,
+      "own_attributes": [
+        "Description",
+        "Link Label"
+      ]
+    },
+    "Asset": {
+      "inherits": "Referenceable",
+      "own_attributes": [
+        "Deployed Implementation Type",
+        "Namespace",
+        "Resource Name",
+        "Source"
+      ]
+    },
+    "Collection Base": {
+      "inherits": "Authored Referenceable",
       "own_attributes": []
     },
     "Collection Membership": {
-      "inherits": null,
+      "inherits": "Link Command Base",
       "own_attributes": [
         "\"Collection Id\"",
         "\"Confidence\"",
@@ -2633,7 +2712,7 @@
       ]
     },
     "Resource List": {
-      "inherits": null,
+      "inherits": "Link Command Base",
       "own_attributes": [
         "\"Collection Id\"",
         "\"Resource Description\"",

@@ -3,7 +3,7 @@
 
 [project]
 name = "pyegeria"
-version = "5.5.3.17"
+version = "5.5.3.18"
 license = 'Apache-2.0'
 license-files = ["LICENSE"]
 authors = [{name = "Dan Wolfson", email = "dan.wolfson@pdr-associates.com"},]
@@ -49,6 +49,7 @@ dependencies = [
     run_report = "commands.cat.run_report:main"
     run_report_orig = "commands.cat.run_report_orig:main"
     my_reports = "commands.cat.my_reports:start_exp2"
+    list_reports = "commands.cat.list_reports:main"
 
     list_assets = "commands.cat.list_assets:main"
     list_tech_types = "commands.cat.list_tech_types:main"

@@ -70,16 +70,16 @@ class TestDataEngineer:
             de_client.create_egeria_bearer_token(self.good_user_1, "secret")
 
             # We need a GUID. Let's try to find one first.
-            find_response = de_client.find_tabular_data_sets(search_string="Attributes")
+            find_response = de_client.find_tabular_data_sets(search_string="Types")
             
             if isinstance(find_response, list) and len(find_response) > 0:
                 guid = find_response[0].get('elementHeader', {}).get('guid')
-                
+
                 if guid:
                     start_time = time.perf_counter()
                     response = de_client.get_tabular_data_set(guid)
                     duration = time.perf_counter() - start_time
-                    if isinstance(response, dict):
+                    if isinstance(response, dict|list):
                         console.print(f"==>Found {response.get('recordCount',"")} records")
                     print(f"get response type is {type(response)}")
                     print(f"\n\tget Duration was {duration} seconds")

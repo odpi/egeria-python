@@ -1,6 +1,6 @@
 {
   "family": "Solution Architect",
-  "exported": "Feb 18, 2026 at 11:57:16 AM",
+  "exported": "Feb 21, 2026 at 7:49:57 AM",
   "attribute_definitions": {
     "Access Control": {
       "variable_name": "access_control",
@@ -2343,7 +2343,7 @@
       "max_cardinality": 1,
       "level": "Advanced",
       "Journal Entry": ""
-    }
+    },
     "Actors": {
       "variable_name": "actors",
       "inUpdate": true,
@@ -2745,110 +2745,142 @@
     }
   },
   "bundles": {
-    "New-Element": {
-      "inherits": null,
+    "Authored Referenceable": {
+      "inherits": "Referenceable",
       "own_attributes": [
-        "\"Anchor ID\"",
-        "\"Effective From\"",
-        "\"Effective Time\"",
-        "\"Effective To\"",
-        "\"Extended Properties\"",
-        "\"External Source GUID\"",
-        "\"External Source Name\"",
-        "\"Glossary Term\"",
-        "\"Is Own Anchor\"",
-        "\"Journal Entry\"",
-        "\"Merge Update\"",
-        "\"Parent at End1\"",
-        "\"Parent ID\"",
-        "\"Parent Relationship Attributes\"",
-        "\"Parent Relationship Type Name\"",
-        "\"Search Keywords\"",
-        "\"Status\"",
-        "\"Zone Membership\""
+        "Authors",
+        "Content Status",
+        "User Defined Content Status"
       ]
     },
     "Referenceable": {
       "inherits": "New-Element",
       "own_attributes": [
-        "\"Additional Properties\"",
-        "\"Category\"",
-        "\"Class Word Classification\"",
-        "\"Confidence Classification\"",
-        "\"Confidentiality Classification\"",
-        "\"Criticality Classification\"",
-        "\"Description\"",
-        "\"Display Name\"",
-        "\"GUID\"",
-        "\"Identifier\"",
-        "\"Impact Classification\"",
-        "\"Modifier Classification\"",
-        "\"Policy Management Point\"",
-        "\"Prime Word Classification\"",
-        "\"Qualified Name\"",
-        "\"Retention Classification\"",
-        "\"Security Tags\"",
-        "\"URL\"",
-        "\"Version Identifier\""
+        "Additional Properties",
+        "Category",
+        "Class Word Classification",
+        "Confidence Classification",
+        "Confidentiality Classification",
+        "Criticality Classification",
+        "Description",
+        "Display Name",
+        "GUID",
+        "Identifier",
+        "Impact Classification",
+        "Modifier Classification",
+        "Policy Management Point",
+        "Prime Word Classification",
+        "Qualified Name",
+        "Retention Classification",
+        "Security Tags",
+        "URL",
+        "Version Identifier"
       ]
     },
-    "Asset": {
-      "inherits": "Referenceable",
+    "New-Element": {
+      "inherits": null,
       "own_attributes": [
-        "\"Deployed Implementation Type\"",
-        "\"Namespace\"",
-        "\"Resource Name\"",
-        "\"Source\""
+        "Anchor ID",
+        "Effective From",
+        "Effective Time",
+        "Effective To",
+        "Extended Properties",
+        "External Source GUID",
+        "External Source Name",
+        "Glossary Term",
+        "Is Own Anchor",
+        "Journal Entry",
+        "Merge Update",
+        "Parent at End1",
+        "Parent ID",
+        "Parent Relationship Attributes",
+        "Parent Relationship Type Name",
+        "Search Keywords",
+        "Status",
+        "Zone Membership"
       ]
-    },
-    "Authored Referenceable": {
-      "inherits": "Referenceable",
-      "own_attributes": [
-        "\"Authors\"",
-        "\"Content Status\"",
-        "\"User Defined Content Status\""
-      ]
-    },
-    "Governance Definition Core": {
-      "inherits": "Authored Referenceable",
-      "own_attributes": [
-        "\"Domain Identifier\"",
-        "\"Implications\"",
-        "\"Importance\"",
-        "\"Outcomes\"",
-        "\"Results\"",
-        "\"Scope\"",
-        "\"Summary\"",
-        "\"Usage\""
-      ]
-    },
-    "Governance Driver": {
-      "inherits": "Governance Definition Core",
-      "own_attributes": []
-    },
-    "Governance Control Base": {
-      "inherits": "Governance Definition Core",
-      "own_attributes": [
-        "\"Implementation Description\""
-      ]
-    },
-    "Governance Policy": {
-      "inherits": "Governance Definition Core",
-      "own_attributes": []
     },
     "Terms and Conditions": {
       "inherits": null,
       "own_attributes": [
-        "\"Entitlements\"",
-        "\"Obligations\"",
-        "\"Restrictions\""
+        "Entitlements",
+        "Obligations",
+        "Restrictions"
       ]
     },
     "Link Command Base": {
       "inherits": null,
       "own_attributes": [
-        "\"Description\"",
-        "\"Link Label\""
+        "Description",
+        "Link Label"
+      ]
+    },
+    "Asset": {
+      "inherits": "Referenceable",
+      "own_attributes": [
+        "Deployed Implementation Type",
+        "Namespace",
+        "Resource Name",
+        "Source"
+      ]
+    },
+    "ISC Base": {
+      "inherits": null,
+      "own_attributes": [
+        "Scope",
+        "Purposes",
+        "Nested Information Supply Chains",
+        "In Information Supply Chain"
+      ]
+    },
+    "Solution Blueprint Base": {
+      "inherits": null,
+      "own_attributes": [
+        "Solution Components"
+      ]
+    },
+    "Solution Component Base": {
+      "inherits": null,
+      "own_attributes": [
+        "Solution Component Type",
+        "Planned Deployed Implementation Type",
+        "Solution SubComponents",
+        "In Solution Components",
+        "In Solution Blueprints",
+        "In Information Supply Chains",
+        "Actors"
+      ]
+    },
+    "Solution Role Base": {
+      "inherits": null,
+      "own_attributes": [
+        "Title",
+        "Scope",
+        "Role Identifier",
+        "Role Domain Identifier",
+        "Role Type"
+      ]
+    },
+    "Solution Component Link Base": {
+      "inherits": null,
+      "own_attributes": [
+        "Component1",
+        "Component2",
+        "Wire Label"
+      ]
+    },
+    "ISC Link Base": {
+      "inherits": null,
+      "own_attributes": [
+        "Segment1",
+        "Segment2"
+      ]
+    },
+    "ISC Segment Link Base": {
+      "inherits": null,
+      "own_attributes": [
+        "ISC Segment",
+        "ISC Endpoint"
       ]
     }
   },
