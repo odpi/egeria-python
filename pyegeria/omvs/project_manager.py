@@ -251,10 +251,9 @@ class ProjectManager(ServerClient):
             f"projects/by-classifications"
         )
         response = await self._async_get_name_request(url, "Project", self._extract_project_properties,
-                                                      filter_string = project_classification, start_from=start_from,
-                                                      page_size=page_size, body=body,
-                                                      output_format=output_format,
-                                                      report_spec=report_spec)
+                                                      filter_string=project_classification, start_from=start_from,
+                                                      page_size=page_size, output_format=output_format,
+                                                      report_spec=report_spec, body=body)
         return response
 
     @dynamic_catch
@@ -851,12 +850,8 @@ class ProjectManager(ServerClient):
         # Filter out None values, but keep search_string even if None (it's required)
         params = {k: v for k, v in params.items() if v is not None or k == 'search_string'}
         
-        response = await self._async_find_request(
-            url,
-            _type="Project",
-            _gen_output=self._generate_project_output,
-            **params
-        )
+        response = await self._async_find_request(url, _type="Project", _gen_output=self._generate_project_output,
+                                                  **params)
 
         return response
 
@@ -971,13 +966,11 @@ class ProjectManager(ServerClient):
             report_spec: str | dict = None) -> list | str:
         url = f"{self.project_command_base}/by-name"
 
-        response = await self._async_get_name_request(url, _type="Projects",
-                                                      _gen_output=self._generate_project_output,
+        response = await self._async_get_name_request(url, _type="Projects", _gen_output=self._generate_project_output,
                                                       filter_string=filter_string,
-                                                      classification_names=classification_names,
-                                                      start_from=start_from, page_size=page_size,
-                                                      output_format=output_format, report_spec=report_spec,
-                                                      body=body)
+                                                      classification_names=classification_names, start_from=start_from,
+                                                      page_size=page_size, output_format=output_format,
+                                                      report_spec=report_spec, body=body)
 
         return response
 

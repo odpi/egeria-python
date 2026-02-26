@@ -363,7 +363,7 @@ def set_product_body(object_type: str, qualified_name: str, attributes: dict)->d
 
 def set_data_field_body(object_type: str, qualified_name: str, attributes: dict)->dict:
     prop_bod = set_element_prop_body(object_type, qualified_name, attributes)
-    prop_bod["namespace"] = attributes.get('Namespace', {}).get('value', None)
+    prop_bod["namespacePath"] = attributes.get('Namespace', {}).get('value', None)
     prop_bod["aliases"] = attributes.get('Aliases', {}).get('value', [])
     prop_bod["namePatterns"] = attributes.get('Name Patterns', {}).get('value', [])
     prop_bod["defaultValue"] = attributes.get('Default Value', {}).get('value', None)

@@ -1165,7 +1165,7 @@ def process_data_class_upsert_command(egeria_client: EgeriaTech, txt: str, direc
                     "externalSourceName": external_source_name, "effectiveTime": effective_time,
                     "forLineage": for_lineage, "forDuplicateProcessing": for_duplicate_processing, "properties": {
                         "class": "DataClassProperties", "qualifiedName": qualified_name, "displayName": display_name,
-                        "description": description, "namespace": namespace, "matchPropertyNames": match_property_names,
+                        "description": description, "namespacePath": namespace, "matchPropertyNames": match_property_names,
                         "matchThreshold": match_threshold, "specification": specification,
                         "specificationDetails": specification_details, "dataType": data_type,
                         "allowsDuplicateValues": allow_duplicates, "isNullable": is_nullable,
@@ -1213,7 +1213,7 @@ def process_data_class_upsert_command(egeria_client: EgeriaTech, txt: str, direc
                     body = {
                         "class": "NewElementRequestBody", "properties": {
                             "class": "DataClassProperties", "qualifiedName": qualified_name,
-                            "displayName": display_name, "description": description, "namespace": namespace,
+                            "displayName": display_name, "description": description, "namespacePath": namespace,
                             "matchPropertyNames": match_property_names, "matchThreshold": match_threshold,
                             "specification": specification, "specificationDetails": specification_details,
                             "dataType": data_type, "allowsDuplicateValues": allow_duplicates, "isNullable": is_nullable,

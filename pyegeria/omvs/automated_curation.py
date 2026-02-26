@@ -1885,10 +1885,8 @@ class AutomatedCuration(ServerClient):
         )
         response = await self._async_get_name_request(url, _type=self.ENGINE_ACTION_LABEL,
                                                       _gen_output=self._generate_engine_action_output,
-                                                      filter_string=None,
-                                                      start_from=start_from, page_size=page_size,
-                                                      output_format=output_format, report_spec=report_spec,
-                                                      body=body)
+                                                      filter_string=None, start_from=start_from, page_size=page_size,
+                                                      output_format=output_format, report_spec=report_spec, body=body)
         return response
 
     def get_engine_actions(
@@ -2066,10 +2064,8 @@ class AutomatedCuration(ServerClient):
         )
         response = await self._async_get_name_request(url, _type=self.ENGINE_ACTION_LABEL,
                                                       _gen_output=self._generate_engine_action_output,
-                                                      filter_string=name,
-                                                      start_from=start_from, page_size=page_size,
-                                                      output_format=output_format, report_spec=report_spec,
-                                                      body=body)
+                                                      filter_string=name, start_from=start_from, page_size=page_size,
+                                                      output_format=output_format, report_spec=report_spec, body=body)
         return response
 
     def get_engine_actions_by_name(
@@ -2212,12 +2208,8 @@ class AutomatedCuration(ServerClient):
         # Filter out None values, but keep search_string even if None (it's required)
         params = {k: v for k, v in params.items() if v is not None or k == 'search_string'}
         
-        response = await self._async_find_request(
-            url,
-            _type=self.ENGINE_ACTION_LABEL,
-            _gen_output=self._generate_engine_action_output,
-            **params
-        )
+        response = await self._async_find_request(url, _type=self.ENGINE_ACTION_LABEL,
+                                                  _gen_output=self._generate_engine_action_output, **params)
         return response
 
     @dynamic_catch
@@ -3035,10 +3027,8 @@ class AutomatedCuration(ServerClient):
 
         response = await self._async_get_name_request(url, _type=self.CATALOG_TARGET_LABEL,
                                                       _gen_output=self._generate_catalog_target_output,
-                                                      filter_string=None,
-                                                      start_from=start_from, page_size=page_size,
-                                                      output_format=output_format, report_spec=report_spec,
-                                                      body=body)
+                                                      filter_string=None, start_from=start_from, page_size=page_size,
+                                                      output_format=output_format, report_spec=report_spec, body=body)
 
         return response
 
@@ -3509,10 +3499,9 @@ class AutomatedCuration(ServerClient):
         )
         response = await self._async_get_name_request(url, _type=self.TECH_TYPE_ENTITY_LABEL,
                                                       _gen_output=self._generate_tech_type_output,
-                                                      filter_string=tech_name,
-                                                      start_from=start_from, page_size=page_size,
-                                                      output_format=output_format, report_spec=report_spec,
-                                                      body=body)
+                                                      filter_string=tech_name, start_from=start_from,
+                                                      page_size=page_size, output_format=output_format,
+                                                      report_spec=report_spec, body=body)
 
         return response
 
@@ -3893,12 +3882,8 @@ class AutomatedCuration(ServerClient):
         # Filter out None values, but keep search_string even if None (it's required)
         params = {k: v for k, v in params.items() if v is not None or k == 'search_string'}
         
-        return await self._async_find_request(
-            url,
-            _type="TechType",
-            _gen_output=self._generate_tech_type_output,
-            **params
-        )
+        return await self._async_find_request(url, _type="TechType", _gen_output=self._generate_tech_type_output,
+                                              **params)
 
     def find_technology_types(
             self,
@@ -4315,7 +4300,9 @@ class AutomatedCuration(ServerClient):
                     "pageSize": page_size
                     }
 
-        response = await self._async_get_name_request(url, "TechTypeElement",  self._generate_tech_type_element_output, filter_string, None, start_from, page_size, output_format, report_spec, body)
+        response = await self._async_get_name_request(url, "TechTypeElement", self._generate_tech_type_element_output,
+                                                      filter_string, None, start_from, page_size, output_format,
+                                                      report_spec, body)
         return response
 
 

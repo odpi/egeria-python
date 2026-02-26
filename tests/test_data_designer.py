@@ -10,7 +10,7 @@ The routines assume that pytest is being used as the test tool and framework.
 A running Egeria environment is needed to run these tests.
 
 """
-
+from datetime import datetime
 import json
 import time, os
 
@@ -70,16 +70,16 @@ class TestDataDesigner:
 
     def test_create_data_structure(self):
         display_name = "solar_power2"
-        namespace = "solar"
+        namespacePath = "solar"
         # body = {
         #     "class": "NewElementRequestBody",
         #     "isOwnAnchor": True,
         #     "properties": {
         #         "class" : "DataStructureProperties",
         #         "displayName": display_name,
-        #         "qualifiedName": f"{namespace}::data-structure::{display_name}",
+        #         "qualifiedName": f"{"namespacePath"}::data-structure::{display_name}",
         #         "description": "a solar power data structure",
-        #         "namespace": namespace,
+        #         "namespacePath"Path": namespacePath,
         #         "versionIdentifier": "0.1"
         #       }
         #     }
@@ -408,9 +408,9 @@ class TestDataDesigner:
             "isOwnAnchor": True,
             "properties": {
                 "class": "DataFieldProperties",
-                "qualifiedName": "dataField::radio_name",
+                "qualifiedName": f"dataField::radio_name-{datetime.now().isoformat()}",
                 "displayName": "radio_name",
-                "namespace": "",
+                "namespacePath": "home",
                 "description": "What is the name of the radio",
                 "versionIdentifier": ".1",
                 "aliases": [
@@ -662,7 +662,7 @@ class TestDataDesigner:
             search_string = "*"
 
             body = {
-                "class": "FilterRequestBody",
+                "class": "SearchStringRequestBody",
                 # "asOfTime": "2025-06-27T16:10:00-05:00",
                 "effectiveTime": None,
                 "forLineage": False,
@@ -672,7 +672,7 @@ class TestDataDesigner:
                 "sequencingProperty": None,
                 "filter": search_string,
                 }
-            response = m_client.find_data_fields_w_body(body,output_format="DICT")
+            response = m_client.find_data_fields(search_string=search_string, body=body, output_format="DICT")
             duration = time.perf_counter() - start_time
             print(
                 f"\n\tDuration was {duration:.2f} seconds, Type: {type(response)}"
@@ -726,10 +726,10 @@ class TestDataDesigner:
           "parentAtEnd1": True,
           "properties": {
             "class" : "DataClassProperties",
-            "qualifiedName": "dataClass::moo",
+            "qualifiedName": f"dataClass::moo-{datetime.now().isoformat()}",
             "displayName": "Moo",
             "description": "add description here",
-            # "namespace": "add scope of this data class's applicability.",
+            # ""namespacePath"": "add scope of this data class's applicability.",
             # "matchPropertyNames": ["name1", "name2"],
             "matchThreshold": 0,
             # "specification": "",
@@ -763,7 +763,7 @@ class TestDataDesigner:
             #     "qualifiedName": "DataClass::Purchase Date",
             #     "displayName": name,
             #     "description": description,
-            #     "namespace": None,
+            #     ""namespacePath"": None,
             #     "matchPropertyNames": [],
             #     "matchThreshold": 0,
             #     "specification": None,
@@ -951,7 +951,7 @@ class TestDataDesigner:
         finally:
             m_client.close_session()
 
-    def test_link_specialist_data_class(self):
+    def test_link_specialized_data_class(self):
         containing_guid = "6af8cfc5-3218-4abc-a174-4c852856765e"
         member_guid = "198ca7cf-76d5-4504-8a94-c1158c23cc7a"
 
@@ -960,7 +960,7 @@ class TestDataDesigner:
 
             m_client.create_egeria_bearer_token(self.user, self.password)
             start_time = time.perf_counter()
-            m_client.link_specialist_data_class(containing_guid, member_guid)
+            m_client.link_specialized_data_class(containing_guid, member_guid)
             duration = time.perf_counter() - start_time
             print(
                 f"\n\tDuration was {duration:.2f} seconds"
@@ -973,5 +973,59 @@ class TestDataDesigner:
             print_basic_exception(e)
             assert False, "Invalid request"
 
+        finally:
+            m_client.close_session()
+
+    def test_create_data_value_specification(self):
+        body = {
+            "class": "NewElementRequestBody",
+            "isOwnAnchor": True,
+            "properties": {
+                "class": "DataValueSpecificationProperties",
+                "qualifiedName": f"DataValueSpec::Test-{datetime.now().isoformat()}",
+                "displayName": "Test Data Value Spec",
+                "description": "A test data value specification"
+            }
+        }
+        try:
+            m_client = DataDesigner(self.view_server, self.platform_url)
+            m_client.create_egeria_bearer_token(self.user, self.password)
+            response = m_client.create_data_value_specification(body)
+            assert valid_guid(response)
+        except Exception as e:
+            print_basic_exception(e)
+        finally:
+            m_client.close_session()
+
+    def test_create_data_grain(self):
+        body = {
+            "class": "NewElementRequestBody",
+            "isOwnAnchor": True,
+            "properties": {
+                "class": "DataValueSpecificationProperties",
+                "qualifiedName": f"DataGrain::Test-{datetime.now().isoformat()}",
+                "displayName": "Test Data Grain",
+                "description": "A test data grain"
+            }
+        }
+        try:
+            m_client = DataDesigner(self.view_server, self.platform_url)
+            m_client.create_egeria_bearer_token(self.user, self.password)
+            response = m_client.create_data_grain(body)
+            assert valid_guid(response)
+        except Exception as e:
+            print_basic_exception(e)
+        finally:
+            m_client.close_session()
+
+    def test_find_data_value_specifications(self):
+        try:
+            m_client = DataDesigner(self.view_server, self.platform_url)
+            m_client.create_egeria_bearer_token(self.user, self.password)
+            response = m_client.find_data_value_specifications(search_string="*", output_format="DICT", report_spc="Data-Value-Spec")
+            print(json.dumps(response, indent=4))
+            assert isinstance(response, (list, str))
+        except Exception as e:
+            print_basic_exception(e)
         finally:
             m_client.close_session()

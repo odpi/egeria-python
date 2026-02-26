@@ -80,7 +80,7 @@ GOV_COM_LIST = ["Create Business Imperative", "Update Business Imperative",
                 ]
 
 SIMPLE_BASE_COLLECTIONS: set = {"Collection", "Home Collection", "Digital Product", "Result Set", "Recent Access",
-                                "Reference List", "Work Item List", "Data Sharing Agreement", "Namespace", "Agreement",
+                                "Reference List", "Work Item List", "Data Sharing Agreement", "namespacePath", "Agreement",
                                 "Digital Subscription", "Data Product", "Subscription",
                                 "Root Collection", "Folder", "Context Event Collection", "Name Space Collection",
                                 # "Data Specifications", "Data Specifications", "Data Specs", "Data Specs",
@@ -298,7 +298,7 @@ def load_commands(filename: str) -> None:
                 f"\n{'=' * 80}\n"
                 f"ERROR: Invalid JSON in {filename}\n"
                 f"{'=' * 80}\n"
-                f"Location: Line {error_line}, Column {error_col} (char position {error_pos})\n"
+                f"LocationArena: Line {error_line}, Column {error_col} (char position {error_pos})\n"
                 f"Error: {json_err.msg}\n"
                 f"\nContext around error:\n{context}\n"
                 f"{'=' * 80}\n"

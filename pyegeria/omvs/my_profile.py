@@ -288,9 +288,10 @@ class MyProfile(ServerClient):
             Egeria errors.
         """
         url = self.my_profile_command_root
-        response = await self._async_get_request_body_request(url=url, _type="Actor", body=body,
+        response = await self._async_get_request_body_request(url=url, _type="Actor",
                                                               _gen_output=self._generate_my_profile_output,
-                                                              output_format=output_format, report_spec=report_spec)
+                                                              output_format=output_format, report_spec=report_spec,
+                                                              body=body)
 
         return response
 
@@ -475,14 +476,10 @@ class MyProfile(ServerClient):
         ```
         """
         url = f"{self.my_profile_command_root}/actors"
-        return await self._async_get_request_body_request(
-            url,
-            _type="ActorProfile",
-            _gen_output=self._generate_my_profile_output,
-            output_format=output_format,
-            report_spec=report_spec,
-            body=body,
-        )
+        return await self._async_get_request_body_request(url, _type="ActorProfile",
+                                                          _gen_output=self._generate_my_profile_output,
+                                                          output_format=output_format, report_spec=report_spec,
+                                                          body=body)
 
     @dynamic_catch
     def get_my_actors(
@@ -551,14 +548,10 @@ class MyProfile(ServerClient):
         ```
         """
         url = f"{self.my_profile_command_root}/actors/user-identities"
-        return await self._async_get_request_body_request(
-            url,
-            _type="UserIdentity",
-            _gen_output=self._generate_my_profile_output,
-            output_format=output_format,
-            report_spec=report_spec,
-            body=body,
-        )
+        return await self._async_get_request_body_request(url, _type="UserIdentity",
+                                                          _gen_output=self._generate_my_profile_output,
+                                                          output_format=output_format, report_spec=report_spec,
+                                                          body=body)
 
     @dynamic_catch
     def get_my_user_identities(
@@ -627,14 +620,10 @@ class MyProfile(ServerClient):
         ```
         """
         url = f"{self.my_profile_command_root}/actors/assigned-roles"
-        return await self._async_get_request_body_request(
-            url,
-            _type="GovernanceRole",
-            _gen_output=self._generate_my_profile_output,
-            output_format=output_format,
-            report_spec=report_spec,
-            body=body,
-        )
+        return await self._async_get_request_body_request(url, _type="GovernanceRole",
+                                                          _gen_output=self._generate_my_profile_output,
+                                                          output_format=output_format, report_spec=report_spec,
+                                                          body=body)
 
     @dynamic_catch
     def get_my_roles(
@@ -703,14 +692,10 @@ class MyProfile(ServerClient):
         ```
         """
         url = f"{self.my_profile_command_root}/assigned-resources"
-        return await self._async_get_request_body_request(
-            url,
-            _type="Resource",
-            _gen_output=self._generate_my_profile_output,
-            output_format=output_format,
-            report_spec=report_spec,
-            body=body,
-        )
+        return await self._async_get_request_body_request(url, _type="Resource",
+                                                          _gen_output=self._generate_my_profile_output,
+                                                          output_format=output_format, report_spec=report_spec,
+                                                          body=body)
 
     @dynamic_catch
     def get_my_resources(

@@ -515,7 +515,7 @@ class TestGovernanceOfficer:
 
             s_client.create_egeria_bearer_token()
             start_time = time.perf_counter()
-            response = s_client.get_governance_definition_by_guid(guid, output_format='JSON')
+            response = s_client.get_governance_definition_by_guid(guid, output_format='JSON', report_spec="Governance Definition")
             duration = time.perf_counter() - start_time
             duration = time.perf_counter() - start_time
             print(

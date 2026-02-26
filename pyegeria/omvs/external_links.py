@@ -1290,12 +1290,8 @@ class ExternalReferences(ServerClient):
         # Filter out None values, but keep search_string even if None (it's required)
         params = {k: v for k, v in params.items() if v is not None or k == 'search_string'}
 
-        response = await self._async_find_request(
-            url,
-            _type="ExternalReference",
-            _gen_output=self._generate_external_reference_output,
-            **params
-        )
+        response = await self._async_find_request(url, _type="ExternalReference",
+                                                  _gen_output=self._generate_external_reference_output, **params)
 
         return response
 
@@ -1448,10 +1444,9 @@ class ExternalReferences(ServerClient):
         response = await self._async_get_name_request(url, _type="ExternalReference",
                                                       _gen_output=self._generate_external_reference_output,
                                                       filter_string=filter_string,
-                                                      classification_names=classification_names,
-                                                      start_from=start_from, page_size=page_size,
-                                                      output_format=output_format, report_spec=report_spec,
-                                                      body=body)
+                                                      classification_names=classification_names, start_from=start_from,
+                                                      page_size=page_size, output_format=output_format,
+                                                      report_spec=report_spec, body=body)
 
         return response
 

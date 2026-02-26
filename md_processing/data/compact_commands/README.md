@@ -25,7 +25,7 @@ The "Compact" format moves away from the flat, redundant structure of the legacy
 
 The `md_processing` library automatically detects and loads these files during initialization:
 
--   **Location**: All `.json` files in `md_processing/data/compact_commands/` are scanned.
+-   **LocationArena**: All `.json` files in `md_processing/data/compact_commands/` are scanned.
 -   **Global Resolution**: Attribute and bundle definitions are gathered from **all** files in the directory before commands are expanded. This allows a command in one file to use a bundle defined in another (e.g., a Glossary command referencing the `Referenceable` bundle defined in a base file).
 -   **Preferential Use**: Commands defined in these compact files take precedence over any commands with the same name in the legacy `commands.json`. This allows for a gradual, file-by-file migration.
 

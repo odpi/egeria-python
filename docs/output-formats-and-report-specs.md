@@ -35,9 +35,11 @@ profile = client.get_my_profile(output_format="DICT", report_spec="My-User-MD")
 
 pyegeria supports multiple output types. Each report spec declares which types it supports.
 
-- DICT: Python list/dict structures — best for programmatic use and tests.
+- DICT: Python list/dict structures — best for programmatic use and tests. This format provides a "materialized" view where properties are cleaned up and nested elements are promoted to logical keys.
+- JSON: Raw Egeria response dictionary — ideal for advanced users who need to process the exact response from the Egeria platform without any pyegeria-specific transformations.
 - LIST: Markdown table (horizontal). Good for compact overviews. Nested values are automatically summarized (names/display names). If a `detail_spec` is configured, master rows include `[details]` links to rich detail sections appended below the table.
 - REPORT: Rich Markdown (vertical). Ideal for deep dives. Renders nested dict/list values as hierarchical bullet lists and includes vertical detail sections for master-detail columns.
+- REPORT-GRAPH: Recursive, linked Markdown report. Builds anchor-linked sections per element (by GUID), and adds link lists for peer and child/nested elements; recurses while avoiding cycles.
 - FORM: Markdown suitable for Dr.Egeria editable forms. Complex values are summarized to keep the form concise and manageable.
 - MD: Plain Markdown (legacy simple rendering).
 - MERMAID: Mermaid graph text for supported responses.
@@ -171,7 +173,8 @@ Egeria OMVS responses often include related elements and nested hierarchies. pye
 
 ### How formats handle nested values
 
-- DICT: returns full nested dict/lists for downstream processing.
+- DICT: returns full nested dict/lists for downstream processing (materialized).
+- JSON: returns the raw Egeria response structure.
 - LIST: shows a compact summary (names/identifiers) in the master row and adds a `[details]` link if a `detail_spec` is configured. A detail section is appended below using the linked spec.
 - REPORT: renders nested dicts/lists as hierarchical markdown bullet lists (read‑only view).
 - FORM: shows summarized values only to keep the form updateable and concise.
@@ -212,6 +215,58 @@ Column(name="Roles", key="roles", detail_spec="My-User-Roles-Detail")
 Result:
 - LIST master shows role names with a `[details]` link.
 - A "Roles" section appears below the table; each row’s projects appear as a nested table or report using `My-User-Projects-Detail`.
+
+---
+
+## Linked Graph REPORTs (REPORT-GRAPH)
+
+The `REPORT-GRAPH` output type produces a recursive, wiki-style Markdown document with working intra-document links. It is ideal for exploring networks of related metadata (peers and nested/child elements) from a `find_*` response.
+
+Key traits
+- One section per element, with an anchor (`<a id="{guid}">`) and heading `# <Type> Name: <Display Name>`
+- Shows key identifiers (Qualified Name, GUID) and scalar properties
+- Lists Peers and Children as bullet lists with Markdown links that jump to their sections
+- Recurses to render each referenced element exactly once (subsequent references render only as links), avoiding cycles
+- Works with most specs out-of-the-box due to `ALL` fallback; you typically do not need to edit the spec to try it
+
+Examples
+```bash
+# Generate a linked Markdown graph for governance definitions
+poetry run run_report --report "Governance Policies" --output-format REPORT-GRAPH --param search_string="*"
+
+# Any spec with types:["ALL"] can also be rendered as a graph
+poetry run run_report --report "Collections" --output-format REPORT-GRAPH --param search_string="*"
+```
+
+Notes
+- The outbox file is saved as Markdown (`.md`).
+- The top preamble (title/description) is automatically included by the executor.
+- Use optional parameters (if supported by the calling client/spec), for example `page_size`, `start_from`.
+
+---
+
+## Mermaid Graphs and Normalization
+
+Many Egeria elements include Mermaid graph definitions to visualize relationships. pyegeria automatically detects and renders these in Markdown reports (`REPORT`, `REPORT-GRAPH`, `MERMAID`).
+
+### Syntax Compatibility
+Egeria often produces Mermaid output using newer syntax features (like `@ { shape: ... }`) or YAML frontmatter that some Markdown renderers (e.g., Obsidian, PyCharm) do not yet support.
+
+By default, pyegeria applies a **normalization** process to these graphs to ensure they render correctly across a wide range of tools.
+
+#### Normalization Rules:
+1. **Line Endings**: Standardizes all line endings to `\n`.
+2. **Frontmatter Removal**: Strips YAML frontmatter blocks (delimited by `---`) from the Mermaid code, as these often cause parsing errors in older renderers.
+3. **Label Escaping**: Automatically escapes literal newlines inside double-quoted labels (changing them to `\n`) to prevent parser crashes.
+4. **Shape Syntax Conversion**: Converts newer node-with-shape syntax to standard, broadly compatible Mermaid syntax:
+   - `rounded` or `stadium` → `(text)`
+   - `diamond` or `decision` → `{text}`
+   - `circle` → `((text))`
+   - `hexagon` → `{{text}}`
+   - Unknown or document shapes → `[text]` (standard square box)
+
+### Disabling Normalization
+If you are using a modern Mermaid renderer that supports the native Egeria output, you can disable this transformation by changing the `NORMALIZE_MERMAID` flag in `pyegeria/view/output_formatter.py` to `False`.
 
 ---
 
@@ -319,7 +374,8 @@ pyegeria provides ready-to-use CLI commands to discover and run report specs.
 - `run_report`: Executes a report spec and renders output:
   - `TABLE`: paged, interactive Rich table in the terminal
   - `MD`/`REPORT`/`FORM`/`LIST`/`HTML`: writes a timestamped file to your outbox
-  - `DICT`/`JSON`: returns machine-readable data
+  - `DICT`: returns machine-readable data (materialized)
+  - `JSON`: returns raw machine-readable data from Egeria
 
 Examples
 

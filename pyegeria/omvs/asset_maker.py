@@ -621,18 +621,11 @@ class AssetMaker(ServerClient):
         }
         """
         url = f"{self.asset_command_root}/assets/by-name"
-        return await self._async_get_name_request(
-            url,
-            _type="Asset",
-            _gen_output=self._generate_referenceable_output,
-            filter_string=filter_string,
-            classification_names=classification_names,
-            start_from=start_from,
-            page_size=page_size,
-            output_format=output_format,
-            report_spec=report_spec,
-            body=body,
-        )
+        return await self._async_get_name_request(url, _type="Asset", _gen_output=self._generate_referenceable_output,
+                                                  filter_string=filter_string,
+                                                  classification_names=classification_names, start_from=start_from,
+                                                  page_size=page_size, output_format=output_format,
+                                                  report_spec=report_spec, body=body)
 
     @dynamic_catch
     def get_assets_by_name(
@@ -1619,36 +1612,27 @@ class AssetMaker(ServerClient):
         }
         """
         url = f"{self.asset_command_root}/data-assets/by-search-string"
-        return await self._async_content_status_search_request(
-            url,
-            _type="DataAsset",
-            _gen_output=self._generate_referenceable_output,
-            search_string=search_string,
-            content_status_list=content_status_list,
-            starts_with=starts_with,
-            ends_with=ends_with,
-            ignore_case=ignore_case,
-            anchor_domain=anchor_domain,
-            metadata_element_type=metadata_element_type,
-            metadata_element_subtypes=metadata_element_subtypes,
-            skip_relationships=skip_relationships,
-            include_only_relationships=include_only_relationships,
-            skip_classified_elements=skip_classified_elements,
-            include_only_classified_elements=include_only_classified_elements,
-            graph_query_depth=graph_query_depth,
-            governance_zone_filter=governance_zone_filter,
-            as_of_time=as_of_time,
-            effective_time=effective_time,
-            relationship_page_size=relationship_page_size,
-            limit_results_by_status=limit_results_by_status,
-            sequencing_order=sequencing_order,
-            sequencing_property=sequencing_property,
-            output_format=output_format,
-            report_spec=report_spec,
-            start_from=start_from,
-            page_size=page_size,
-            body=body,
-        )
+        return await self._async_content_status_search_request(url, _type="DataAsset",
+                                                               _gen_output=self._generate_referenceable_output,
+                                                               search_string=search_string,
+                                                               content_status_list=content_status_list,
+                                                               starts_with=starts_with, ends_with=ends_with,
+                                                               ignore_case=ignore_case, anchor_domain=anchor_domain,
+                                                               metadata_element_type=metadata_element_type,
+                                                               metadata_element_subtypes=metadata_element_subtypes,
+                                                               skip_relationships=skip_relationships,
+                                                               include_only_relationships=include_only_relationships,
+                                                               skip_classified_elements=skip_classified_elements,
+                                                               include_only_classified_elements=include_only_classified_elements,
+                                                               graph_query_depth=graph_query_depth,
+                                                               governance_zone_filter=governance_zone_filter,
+                                                               as_of_time=as_of_time, effective_time=effective_time,
+                                                               relationship_page_size=relationship_page_size,
+                                                               limit_results_by_status=limit_results_by_status,
+                                                               sequencing_order=sequencing_order,
+                                                               sequencing_property=sequencing_property,
+                                                               output_format=output_format, report_spec=report_spec,
+                                                               start_from=start_from, page_size=page_size, body=body)
 
     @dynamic_catch
     def find_data_assets(
@@ -2009,36 +1993,27 @@ class AssetMaker(ServerClient):
         }
         """
         url = f"{self.asset_command_root}/infrastructure-assets/by-search-string"
-        return await self._async_deployment_status_search_request(
-            url,
-            _type="Infrastructure",
-            _gen_output=self._generate_referenceable_output,
-            search_string=search_string,
-            deployment_status_list=deployment_status_list,
-            starts_with=starts_with,
-            ends_with=ends_with,
-            ignore_case=ignore_case,
-            anchor_domain=anchor_domain,
-            metadata_element_type=metadata_element_type,
-            metadata_element_subtypes=metadata_element_subtypes,
-            skip_relationships=skip_relationships,
-            include_only_relationships=include_only_relationships,
-            skip_classified_elements=skip_classified_elements,
-            include_only_classified_elements=include_only_classified_elements,
-            graph_query_depth=graph_query_depth,
-            governance_zone_filter=governance_zone_filter,
-            as_of_time=as_of_time,
-            effective_time=effective_time,
-            relationship_page_size=relationship_page_size,
-            limit_results_by_status=limit_results_by_status,
-            sequencing_order=sequencing_order,
-            sequencing_property=sequencing_property,
-            output_format=output_format,
-            report_spec=report_spec,
-            start_from=start_from,
-            page_size=page_size,
-            body=body,
-        )
+        return await self._async_deployment_status_search_request(url, _type="Infrastructure",
+                                                                  _gen_output=self._generate_referenceable_output,
+                                                                  search_string=search_string,
+                                                                  deployment_status_list=deployment_status_list,
+                                                                  starts_with=starts_with, ends_with=ends_with,
+                                                                  ignore_case=ignore_case, anchor_domain=anchor_domain,
+                                                                  metadata_element_type=metadata_element_type,
+                                                                  metadata_element_subtypes=metadata_element_subtypes,
+                                                                  skip_relationships=skip_relationships,
+                                                                  include_only_relationships=include_only_relationships,
+                                                                  skip_classified_elements=skip_classified_elements,
+                                                                  include_only_classified_elements=include_only_classified_elements,
+                                                                  graph_query_depth=graph_query_depth,
+                                                                  governance_zone_filter=governance_zone_filter,
+                                                                  as_of_time=as_of_time, effective_time=effective_time,
+                                                                  relationship_page_size=relationship_page_size,
+                                                                  limit_results_by_status=limit_results_by_status,
+                                                                  sequencing_order=sequencing_order,
+                                                                  sequencing_property=sequencing_property,
+                                                                  output_format=output_format, report_spec=report_spec,
+                                                                  start_from=start_from, page_size=page_size, body=body)
 
     @dynamic_catch
     def find_infrastructure(
@@ -2623,7 +2598,7 @@ class AssetMaker(ServerClient):
             "category": "",
             "url": "",
             "resourceName": "",
-            "namespace": "",
+            "namespacePath": "",
             "deployedImplementationType": "",
             "source": "",
             "expectedBehaviour": "",
@@ -2704,7 +2679,7 @@ class AssetMaker(ServerClient):
             "category": "",
             "url": "",
             "resourceName": "",
-            "namespace": "",
+            "namespacePath": "",
             "deployedImplementationType": "",
             "source": "",
             "expectedBehaviour": "",

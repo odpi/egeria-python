@@ -22,7 +22,7 @@ from pyegeria.omvs.feedback_manager import FeedbackManager
 from pyegeria.omvs.glossary_manager import GlossaryManager
 from pyegeria.omvs.governance_officer import GovernanceOfficer
 from pyegeria.omvs.lineage_linker import LineageLinker
-from pyegeria.omvs.location_arena import Location
+from pyegeria.omvs.location_arena import LocationArena
 from pyegeria.omvs.metadata_expert import MetadataExpert
 from pyegeria.omvs.metadata_explorer_omvs import MetadataExplorer
 from pyegeria.omvs.my_profile import MyProfile
@@ -111,8 +111,7 @@ class EgeriaTech:
             "actor_manager": ActorManager,
             "time_keeper": TimeKeeper,
             "product_manager": ProductManager,
-            "location_arena": Location,
-            "location": Location,
+            "location_arena": LocationArena,
             "data_discovery": DataDiscovery,
             "data_engineer": DataEngineer,
             "digital_business": DigitalBusiness,
@@ -197,7 +196,7 @@ class EgeriaTech:
         for sub in self._instantiated_clients.values():
             if hasattr(sub, "get_token"):
                 return sub.get_token()
-        return None
+        return self.token
 
     def close_session(self) -> None:
         """Close sessions for all sub-clients that were instantiated."""

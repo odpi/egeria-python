@@ -30,6 +30,25 @@ from pyegeria.view.mermaid_utilities import construct_mermaid_web
 from pyegeria.view.base_report_formats import select_report_format, MD_SEPARATOR, get_report_spec_match
 from pyegeria.models import to_camel_case
 
+# Flag to control whether Mermaid graphs are normalized for broad compatibility (e.g. Obsidian, PyCharm).
+# Egeria often produces Mermaid output using newer syntax features (like @{ shape: ... })
+# or with YAML frontmatter that some Markdown renderers do not yet support.
+#
+# Rules applied when NORMALIZE_MERMAID = True:
+# 1. Line Endings: Standardize on \n.
+# 2. Frontmatter: Remove leading --- blocks (YAML frontmatter) which can break older parsers.
+# 3. Label Escaping: Literal newlines within double-quoted labels are escaped to \n to prevent
+#    parsing errors in environments like Obsidian.
+# 4. Shape Syntax: Converts @{ shape: type, label: "text" } syntax to standard Mermaid shapes:
+#    - 'rounded' or 'stadium' -> (text)
+#    - 'diamond' or 'decision' -> {text}
+#    - 'circle' -> ((text))
+#    - 'hexagon' -> {{text}}
+#    - Others (e.g. 'doc') -> [text] (standard square box)
+#
+# Set to False to preserve the native Egeria output for modern Mermaid renderers.
+NORMALIZE_MERMAID = False
+
 """
 Note on select_report_spec function:
 
@@ -438,8 +457,9 @@ def make_md_attribute(attribute_name: str, attribute_value: str|list|dict, outpu
 
         output = f"## {attribute_title}\n{attribute_value}\n\n"
     elif output_type in ["REPORT", "MERMAID"]:
-        if attribute_title in MERMAID_GRAPH_TITLES + ['Mermaid Graph', 'Mermaid']:
-            output = f"## {attribute_title}\n\n```mermaid\n{attribute_value}\n```\n"
+        if attribute_title in MERMAID_GRAPH_TITLES + ["Mermaid Graph", "Mermaid"]:
+            norm_mermaid = _normalize_mermaid_graph(attribute_value)
+            output = f"## {attribute_title}\n\n```mermaid\n{norm_mermaid}\n```\n"
         elif attribute_value:
             output = f"## {attribute_title}\n{attribute_value}\n\n"
     return output
@@ -1440,17 +1460,21 @@ def extract_mermaid_only(elements: Union[Dict, List[Dict]]) -> Union[str, List[s
         String or list of strings containing mermaid graph data
     """
     if isinstance(elements, dict):
-        mer = elements.get('mermaidGraph', None)
+        mer = elements.get("mermaidGraph", None)
         if mer:
-            return f"\n```mermaid\n{mer}\n```"
+            norm_mermaid = _normalize_mermaid_graph(mer)
+            return f"\n```mermaid\n{norm_mermaid}\n```"
         else:
             return "---"
 
-
     result = []
     for element in elements:
-        mer = element.get('mermaidGraph', "---")
-        mer_out = f"\n\n```mermaid\n{mer}\n```" if mer else "---"
+        mer = element.get("mermaidGraph", "---")
+        if mer and mer != "---":
+            norm_mermaid = _normalize_mermaid_graph(mer)
+            mer_out = f"\n\n```mermaid\n{norm_mermaid}\n```"
+        else:
+            mer_out = "---"
         result.append(mer_out)
     return result
 
@@ -1546,6 +1570,204 @@ def _generate_default_output(elements: dict | list[dict], search_string: str,
     )
 
 
+def _normalize_mermaid_graph(mermaid_code: str) -> str:
+    """Normalize and transform Mermaid graph for broad compatibility.
+    - Ensures standard line endings (\n)
+    - Escapes literal newlines in double-quoted labels
+    - Converts newer @{ shape: ..., label: ... } syntax to standard nodes
+    - Removes frontmatter (---) which is often unsupported in older versions
+    """
+    if not mermaid_code or not isinstance(mermaid_code, str):
+        return mermaid_code
+
+    if not NORMALIZE_MERMAID:
+        return mermaid_code
+
+    # 1. Basic normalization
+    mermaid_code = mermaid_code.strip().replace("\r\n", "\n").replace("\r", "\n")
+
+    # 2. Handle frontmatter (move title out of Mermaid block if present)
+    if mermaid_code.startswith("---"):
+        parts = mermaid_code.split("---", 2)
+        if len(parts) >= 3:
+            mermaid_code = parts[2].strip()
+
+    # 3. Escape literal newlines in labels
+    if '"' in mermaid_code:
+        mermaid_code = re.sub(
+            r'"(?:[^"\\]|\\.)*"',
+            lambda m: m.group(0).replace("\n", "\\n"),
+            mermaid_code,
+        )
+
+    # 4. Syntax Compatibility Transformation
+    def transform_shape(match):
+        node_id = match.group(1)
+        shape_type = match.group(2).lower()
+        label = match.group(3)
+
+        if shape_type in ("rounded", "stadium"):
+            return f"{node_id}({label})"
+        elif shape_type in ("diamond", "decision"):
+            return f"{node_id}{{{label}}}"
+        elif shape_type in ("circle",):
+            return f"{node_id}(({label}))"
+        elif shape_type in ("hexagon",):
+            return f"{node_id}{{{{{label}}}}}"
+        else:
+            # Default to square box for unknown/doc/etc.
+            return f"{node_id}[{label}]"
+
+    # Regex to match: node_id@{ shape: some_shape, label: "some label" }
+    mermaid_code = re.sub(
+        r"(\w+)\s*@\{\s*shape:\s*(\w+),\s*label:\s*(\"(?:[^\"\\]|\\.)*\")\s*\}",
+        transform_shape,
+        mermaid_code,
+    )
+
+    return mermaid_code
+
+
+def _lg_node_title(d: Dict[str, Any]) -> str:
+    return (
+        d.get("displayName")
+        or d.get("name")
+        or d.get("qualifiedName")
+        or d.get("guid")
+        or "(unnamed)"
+    )
+
+
+def _lg_rel_label(d: Dict[str, Any]) -> str:
+    try:
+        return (
+            (d.get("relationshipHeader") or {}).get("type", {}).get("typeName")
+            or "related"
+        )
+    except Exception:
+        return "related"
+
+
+def _lg_extract_peers(norm: Dict[str, Any]) -> list[Dict[str, Any]]:
+    peers: list[Dict[str, Any]] = []
+    for k, v in norm.items():
+        if k == "nested_elements":
+            continue
+        if isinstance(v, list) and v and all(isinstance(i, dict) for i in v):
+            # Treat lists that carry a relationshipHeader as peer links
+            if any(isinstance(i.get("relationshipHeader"), dict) for i in v):
+                peers.extend(v)
+        # Some materializations may have already flattened peer items without explicit key markers
+    return peers
+
+
+def _lg_extract_children(norm: Dict[str, Any]) -> list[Dict[str, Any]]:
+    items = norm.get("nested_elements")
+    if isinstance(items, list) and all(isinstance(i, dict) for i in items):
+        return items
+    return []
+
+
+def generate_linked_graph_report(
+    elements: Union[Dict[str, Any], List[Dict[str, Any]]],
+    *,
+    entity_type: str = "Referenceable",
+    max_depth: int = 5,
+    include_peers: bool = True,
+    include_children: bool = True,
+) -> str:
+    """
+    Produce a recursive, linked Markdown report that walks peers and children.
+    - Adds anchors by GUID and intra-doc links for peer/child elements
+    - Renders each GUID exactly once; later references are links only
+    """
+    items: List[Dict[str, Any]] = elements if isinstance(elements, list) else [elements]
+    visited: set[str] = set()
+    lines: list[str] = []
+
+    def render_node(raw: Dict[str, Any], depth: int = 0) -> None:
+        norm = materialize_egeria_summary(raw)
+        guid = norm.get("guid") or f"no-guid-{id(norm)}"
+        title = _lg_node_title(norm)
+
+        if guid in visited:
+            return
+
+        visited.add(guid)
+        # Section header and identifiers
+        if lines:
+            lines.append("\n---\n")
+        lines.append(
+            f'# {norm.get("type", entity_type)} Name: {title} <a id="{guid}" name="{guid}"></a>\n'
+        )
+        qn = norm.get("qualifiedName")
+        if qn:
+            lines.append(f"- Qualified Name: `{qn}`")
+        lines.append(f"- GUID: `{guid}`\n")
+
+        # Scalar properties (skip big nested/header keys)
+        keys_to_skip = {"guid", "type", "name", "displayName", "qualifiedName", "nested_elements"}
+        props = []
+        mermaid_blocks = []
+        for k, v in norm.items():
+            if k in keys_to_skip:
+                continue
+
+            # Special handling for Mermaid graphs
+            if isinstance(v, str) and ("flowchart" in v.lower() or "mermaid" in k.lower()):
+                mermaid_blocks.append((k, v))
+                continue
+
+            if isinstance(v, (dict, list)):
+                continue
+            props.append((k, v))
+
+        if props:
+            lines.append("### Properties")
+            for k, v in sorted(props, key=lambda kv: kv[0].lower()):
+                lines.append(f"- {k}: {v}")
+            lines.append("")
+
+        for k, v in mermaid_blocks:
+            lines.append(f"### {camel_to_title_case(k)}")
+            lines.append("```mermaid")
+            # Normalize and transform Mermaid graph for compatibility
+            mermaid_code = _normalize_mermaid_graph(v)
+            lines.append(mermaid_code)
+            lines.append("```\n")
+
+        if depth >= max_depth:
+            return
+
+        peers = _lg_extract_peers(norm) if include_peers else []
+        children = _lg_extract_children(norm) if include_children else []
+
+        if peers:
+            lines.append("### Peers")
+            for p in peers:
+                pn = materialize_egeria_summary(p)
+                plabel = _lg_rel_label(p)
+                lines.append(f"- [{_lg_node_title(pn)}](#{pn.get('guid')}) — {plabel}")
+            lines.append("")
+
+        if children:
+            lines.append("### Children")
+            for c in children:
+                cn = materialize_egeria_summary(c)
+                lines.append(f"- [{_lg_node_title(cn)}](#{cn.get('guid')})")
+            lines.append("")
+
+        # Recurse
+        for nxt in list(peers) + list(children):
+            render_node(nxt, depth + 1)
+
+    for el in items:
+        if isinstance(el, dict):
+            render_node(el, 0)
+
+    return "\n".join(lines)
+
+
 def generate_output(elements: Union[Dict, List[Dict]],
                search_string: Optional[str] = None,
                entity_type: str = "Referenceable",
@@ -1598,6 +1820,9 @@ def generate_output(elements: Union[Dict, List[Dict]],
     #     output_format = "DICT"
 
     # Generate output based on format
+    if output_format.upper() == 'JSON':
+        return elements
+
     if output_format == 'MERMAID':
         return extract_mermaid_only(elements)
 
@@ -1616,7 +1841,7 @@ def generate_output(elements: Union[Dict, List[Dict]],
         # Convert the markdown to HTML
         return markdown_to_html(report_output)
 
-    elif output_format in ['DICT','TABLE']:
+    elif output_format in ['DICT', 'TABLE']:
         return generate_entity_dict(
             elements=elements,
             extract_properties_func=extract_properties_func,
@@ -1638,6 +1863,15 @@ def generate_output(elements: Union[Dict, List[Dict]],
             columns_struct=columns_struct,
             get_additional_props_func=get_additional_props_func,
             output_format=output_format
+        )
+
+    elif output_format == 'REPORT-GRAPH':
+        return generate_linked_graph_report(
+            elements=elements,
+            entity_type=target_type,
+            max_depth=kwargs.get('max_depth', 5),
+            include_peers=kwargs.get('include_peers', True),
+            include_children=kwargs.get('include_children', True),
         )
 
     else:  #  MD, FORM, REPORT
