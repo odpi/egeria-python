@@ -1815,6 +1815,38 @@ base_report_specs = FormatSetDict({
             spec_params={},
         )
     ),
+"Data-Value-Spec": FormatSet(
+        target_type="Data Value Specification",
+        heading="Data Value Specification Information",
+        description="Attributes about Data Value Specifications",
+        aliases=["Data Value Spec"],
+        annotations={"wikilinks": ["[[Data Value Specification]]"]},
+        family="Data Designer",
+        formats=[Format(types=["MD", "FORM", "DICT", "LIST","TABLE"], attributes=COMMON_COLUMNS + [
+            Column(name="Data Type", key='data_type'),
+            Column(name="Specification", key='specification'),
+            Column(name="In Data Dictionaries", key='in_data_dictionary'),
+            Column(name="Units", key='units'),
+            Column(name="Namespace Path", key='namespace_path'),
+        ]),
+             Format(types=["REPORT"], attributes=COMMON_COLUMNS +
+                 [
+                     Column(name="Data Type", key='data_type'),
+                     Column(name="Specification", key='specification'),
+                     Column(name="In Data Dictionaries", key='in_data_dictionary'),
+                     Column(name="Containing Data Class",  key='containing_data_class'),
+                     Column(name="Specializes", key='specializes_data_class'),
+                     Column(name="Mermaid", key='mermaidGraph')
+                 ]
+            )],
+
+        action=ActionParameter(
+            function="DataDesigner.find_data_value_specifications",
+            required_params=["search_string"],
+            optional_params=OPTIONAL_SEARCH_PARAMS,
+            spec_params={},
+        )
+    ),
     'External-References': FormatSet(target_type='External-Reference',
                                      heading='External-Reference Attributes',
                                      description='External References',

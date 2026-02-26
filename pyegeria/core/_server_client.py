@@ -200,6 +200,7 @@ class ServerClient(BaseServerClient):
         self._activity_status_filter_request_adapter = TypeAdapter(ActivityStatusFilterRequestBody)
         self._activity_status_request_adapter = TypeAdapter(ActivityStatusRequestBody)
         self._action_request_adapter = TypeAdapter(ActionRequestBody)
+        self._request_id: str = None
 
         try:
             result = self.check_connection()
@@ -1514,7 +1515,7 @@ class ServerClient(BaseServerClient):
         element = response.json().get("elements", NO_ELEMENTS_FOUND)
         if element == NO_ELEMENTS_FOUND:
             return NO_ELEMENTS_FOUND
-        if output_format != 'JSON':  # return a simplified markdown representation
+        if output_format.upper() != 'JSON':  # return a simplified markdown representation
             return self._generate_comment_output(element, None, output_format, report_spec)
         return response.json().get("elements", NO_ELEMENTS_FOUND)
 
@@ -1769,6 +1770,9 @@ class ServerClient(BaseServerClient):
             report_spec: Optional specification (by label or dict).
             **kwargs: Passed through to resolve_output_formats and generate_output.
         """
+        if output_format.upper() == "JSON":
+            return elements
+
         # Resolve output formats structure
         output_formats = resolve_output_formats(
             entity_type,
@@ -2574,7 +2578,7 @@ class ServerClient(BaseServerClient):
         element = response.json().get("elements", NO_ELEMENTS_FOUND)
         if element == NO_ELEMENTS_FOUND:
             return NO_ELEMENTS_FOUND
-        if output_format != 'JSON':  # return a simplified markdown representation
+        if output_format.upper() != 'JSON':  # return a simplified markdown representation
             return self._generate_feedback_output(element, None, output_format, report_spec)
         return response.json().get("elements", NO_ELEMENTS_FOUND)
 
@@ -6087,7 +6091,7 @@ class ServerClient(BaseServerClient):
                                   limit_results_by_status: Optional[list[str]] = None,
                                   sequencing_order: Optional[str] = None,
                                   sequencing_property: Optional[str] = None,
-                                  output_format: Optional[str] = None, report_spec: Optional[str | dict] = None,
+                                  output_format: str = "JSON", report_spec: Optional[str | dict] = None,
                                   start_from: int = 0, page_size: int | None = 100,
                                   property_names: Optional[list[str]] = None,
                                   body: dict | SearchStringRequestBody | FindPropertyNamesRequestBody = None,
@@ -6164,7 +6168,7 @@ class ServerClient(BaseServerClient):
             logger.info(NO_ELEMENTS_FOUND)
             return NO_ELEMENTS_FOUND
 
-        if output_format.upper() != 'JSON':  # return a simplified markdown representation
+        if output_format and output_format.upper() != 'JSON':  # return a simplified markdown representation
             # logger.info(f"Found elements, output format: {output_format} and report_spec: {report_spec}")
             return _gen_output(elements=elements, search_string=search_string, element_type_name=_type,
                                output_format=output_format, report_spec=report_spec, **kwargs)
@@ -6205,7 +6209,7 @@ class ServerClient(BaseServerClient):
             logger.info(NO_ELEMENTS_FOUND)
             return NO_ELEMENTS_FOUND
 
-        if output_format != 'JSON':  # return a simplified markdown representation
+        if output_format and output_format.upper() != 'JSON':  # return a simplified markdown representation
             logger.info(f"Found elements, output format: {output_format} and report_spec: {report_spec}")
             return _gen_output(elements=elements, filter_string=filter_string, element_type_name=_type,
                                output_format=output_format, report_spec=report_spec, **kwargs)
@@ -6239,7 +6243,7 @@ class ServerClient(BaseServerClient):
                 logger.info(NO_ELEMENTS_FOUND)
                 return NO_ELEMENTS_FOUND
 
-        if output_format != 'JSON':  # return a simplified markdown representation
+        if output_format and output_format.upper() != 'JSON':  # return a simplified markdown representation
             logger.info(f"Found elements, output format: {output_format} and report_spec: {report_spec}")
             return _gen_output(elements=elements, filter_string="GUID", element_type_name=_type, 
                                output_format=output_format, report_spec=report_spec, **kwargs)
@@ -6271,7 +6275,7 @@ class ServerClient(BaseServerClient):
             logger.info(NO_ELEMENTS_FOUND)
             return NO_ELEMENTS_FOUND
 
-        if output_format != 'JSON':  # return a simplified markdown representation
+        if output_format.upper() != 'JSON':  # return a simplified markdown representation
             logger.info(f"Found elements, output format: {output_format} and report_spec: {report_spec}")
             return _gen_output(elements, "Members", _type, output_format, report_spec)
         return elements
@@ -6739,7 +6743,7 @@ class ServerClient(BaseServerClient):
             logger.info(NO_ELEMENTS_FOUND)
             return NO_ELEMENTS_FOUND
 
-        if output_format != 'JSON':  # return a simplified markdown representation
+        if output_format.upper() != 'JSON':  # return a simplified markdown representation
             logger.info(f"Found elements, output format: {output_format} and report_spec: {report_spec}")
             return _gen_output(elements=elements, query_string="", entity_type="Referenceable",
                                output_format=output_format, report_spec=report_spec, **kwargs)
@@ -7476,9 +7480,6 @@ class ServerClient(BaseServerClient):
         If output_format is 'JSON', returns elements unchanged. Otherwise, resolves an
         output format set and delegates to generate_output with a standard extractor.
         """
-        if output_format == "JSON":
-            return elements
-
         return self._generate_formatted_output(
             elements=elements,
             query_string=search_string,

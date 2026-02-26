@@ -129,7 +129,7 @@ class RuntimeManager(ServerClient):
         response = await self._async_make_request("GET", url)
         props = response.json().get("properties", {})
         
-        if output_format == "DICT":
+        if output_format.upper() in ["DICT", "JSON"]:
             return props
             
         # Convert to Key/Value list for other formats

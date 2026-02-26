@@ -24,12 +24,12 @@ EGERIA_LOCAL_QUALIFIER = app_settings.User_Profile.egeria_local_qualifier
 from loguru import logger
 
 
-class Location(ServerClient):
+class LocationArena(ServerClient):
     """
     Manage Locations in Egeria..
 
     This client provides asynchronous and synchronous helpers to create, update, search,
-    and relate Location elements and their subtypes (Campaign, StudyProject, Task, PersonalProject).
+    and relate LocationArena elements and their subtypes (Campaign, StudyProject, Task, PersonalProject).
 
     References
 
@@ -99,7 +99,7 @@ class Location(ServerClient):
           "class" : "NewElementRequestBody",
           "properties": {
             "class" : "LocationProperties",
-            "qualifiedName": "Location::Add name here",
+            "qualifiedName": "LocationArena::Add name here",
             "displayName": "Add short name here",
             "description": "Add description here"
           }
@@ -136,7 +136,7 @@ class Location(ServerClient):
           "class" : "NewElementRequestBody",
           "properties": {
             "class" : "LocationProperties",
-            "qualifiedName": "Location::Add name here",
+            "qualifiedName": "LocationArena::Add name here",
             "displayName": "Add short name here",
             "description": "Add description here"
           }
@@ -149,18 +149,18 @@ class Location(ServerClient):
 
     @dynamic_catch
     async def _async_create_location_from_template(self, body: Optional[dict | TemplateRequestBody] = None) -> str:
-        """ Create a new metadata element to represent a Location using an existing metadata element as a template.
+        """ Create a new metadata element to represent a LocationArena using an existing metadata element as a template.
             The template defines additional classifications and relationships that should be added to the new element.
             Async version.
     
         Parameters
         ----------
         body: dict
-            A dict representing the details of the Location to create.
+            A dict representing the details of the LocationArena to create.
     
         Returns
         -------
-        str - the guid of the created Location
+        str - the guid of the created LocationArena
     
         Raises
         ------
@@ -207,17 +207,17 @@ class Location(ServerClient):
 
     @dynamic_catch
     def create_location_from_template(self, body: Optional[dict | TemplateRequestBody] = None) -> str:
-        """ Create a new metadata element to represent a Location using an existing metadata element as a template.
+        """ Create a new metadata element to represent a LocationArena using an existing metadata element as a template.
             The template defines additional classifications and relationships that should be added to the new element.
 
         Parameters
         ----------
         body: dict
-            A dict representing the details of the Location to create.
+            A dict representing the details of the LocationArena to create.
 
         Returns
         -------
-        str - the guid of the created Location
+        str - the guid of the created LocationArena
 
         Raises
         ------
@@ -265,12 +265,12 @@ class Location(ServerClient):
     @dynamic_catch
     async def _async_update_location(self, location_guid: str,
                                      body: dict | UpdateElementRequestBody) -> None:
-        """Update an Location. Async version.
+        """Update an LocationArena. Async version.
 
         Parameters
         ----------
         location_guid: str
-            The guid of the Location to update.
+            The guid of the LocationArena to update.
         body: dict | UpdateElementRequestBody, optional
             A dict or UpdateElementRequestBody representing the updates to apply.
 
@@ -301,12 +301,12 @@ class Location(ServerClient):
 
     @dynamic_catch
     def update_location(self, location_guid: str, body: dict | UpdateElementRequestBody) -> None:
-        """Update an Location.
+        """Update an LocationArena.
 
         Parameters
         ----------
         location_guid: str
-            The guid of the Location to update.
+            The guid of the LocationArena to update.
         body: dict | UpdateElementRequestBody, optional
             A dict or UpdateElementRequestBody representing the updates to apply.
 
@@ -1067,7 +1067,7 @@ class Location(ServerClient):
         
         response = await self._async_find_request(
             url,
-            _type="Location",
+            _type="LocationArena",
             _gen_output=self._generate_location_output,
             **params
         )
@@ -1322,7 +1322,7 @@ class Location(ServerClient):
         """
 
         url = f"{self.ref_location_command_base}/locations/{location_guid}/retrieve"
-        type = element_type if element_type else "Location"
+        type = element_type if element_type else "LocationArena"
 
         response = await self._async_get_guid_request(url, _type=type,
                                                       _gen_output=self._generate_location_output,

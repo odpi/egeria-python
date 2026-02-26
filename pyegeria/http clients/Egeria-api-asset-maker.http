@@ -434,7 +434,7 @@ Content-Type: application/json
     "category": "",
     "url": "",
     "resourceName": "",
-    "namespace": "",
+    "namespacePath": "",
     "deployedImplementationType": "",
     "source": "",
     "expectedBehaviour": "",
@@ -503,7 +503,7 @@ Content-Type: application/json
     "category": "",
     "url": "",
     "resourceName": "",
-    "namespace": "",
+    "namespacePath": "",
     "deployedImplementationType": "",
     "source": "",
     "expectedBehaviour": "",
@@ -575,7 +575,7 @@ Content-Type: application/json
     "category": "",
     "url": "",
     "resourceName": "",
-    "namespace": "",
+    "namespacePath": "",
     "deployedImplementationType": "",
     "source": "",
     "expectedBehaviour": "",
@@ -643,7 +643,7 @@ Content-Type: application/json
     "category": "",
     "url": "",
     "resourceName": "",
-    "namespace": "",
+    "namespacePath": "",
     "deployedImplementationType": "",
     "source": "",
     "expectedBehaviour": "",
@@ -712,7 +712,7 @@ Content-Type: application/json
     "category": "",
     "url": "",
     "resourceName": "",
-    "namespace": "",
+    "namespacePath": "",
     "deployedImplementationType": "",
     "source": "",
     "expectedBehaviour": "",
@@ -755,7 +755,7 @@ Content-Type: application/json
 #
 # @return guid or
 # InvalidParameterException one of the parameters is null or invalid or
-# UserNotAuthorizedException user not authorized to issue this request or
+# UserNotAuthorizedException the user is not authorized to issue this request or
 # PropertyServerException problem storing the catalog target definition.
 POST {{baseURL}}/servers/{{viewServer}}/api/open-metadata/asset-maker/actions/{{actionGUID}}/action-targets/{{metadataElementGUID}}/attach
 Authorization: Bearer {{token}}
@@ -824,7 +824,7 @@ Content-Type: application/json
 #
 # @return details of the governance service and the asset types it is registered for or
 # InvalidParameterException one of the parameters is null or invalid or
-# UserNotAuthorizedException user not authorized to issue this request or
+# UserNotAuthorizedException the user is not authorized to issue this request or
 # PropertyServerException problem storing the integration connector definition.
 POST {{baseURL}}/servers/{{viewServer}}/api/open-metadata/asset-maker/actions/action-targets/{{actionTargetGUID}}/retrieve
 Authorization: Bearer {{token}}
@@ -849,7 +849,7 @@ Content-Type: application/json
 #
 # @return list of unique identifiers or
 # InvalidParameterException one of the parameters is null or invalid or
-# UserNotAuthorizedException user not authorized to issue this request or
+# UserNotAuthorizedException the user is not authorized to issue this request or
 # PropertyServerException problem storing the integration connector definition.
 POST {{baseURL}}/servers/{{viewServer}}/api/open-metadata/asset-maker/actions/{{actionGUID}}/action-targets
 Authorization: Bearer {{token}}

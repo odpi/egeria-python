@@ -1,0 +1,856 @@
+{
+  "class": "OpenMetadataRootElementResponse",
+  "relatedHTTPCode": 200,
+  "element": {
+    "class": "OpenMetadataRootElement",
+    "elementHeader": {
+      "class": "ElementHeader",
+      "headerVersion": 0,
+      "status": "ACTIVE",
+      "type": {
+        "typeId": "ac406bf8-e53e-49f1-9088-2af28bbbd285",
+        "typeName": "Person",
+        "superTypeNames": [
+          "ActorProfile",
+          "Actor",
+          "Referenceable",
+          "OpenMetadataRoot"
+        ],
+        "typeVersion": 1,
+        "typeDescription": "An individual.",
+        "typeCategory": "ENTITY_DEF"
+      },
+      "origin": {
+        "sourceServer": "active-metadata-store",
+        "originCategory": "CONTENT_PACK",
+        "homeMetadataCollectionId": "655b1965-4c29-4a0e-8a5d-3f55a37b3799",
+        "homeMetadataCollectionName": "Coco Pharmaceuticals Combination",
+        "license": "Apache 2.0"
+      },
+      "versions": {
+        "createdBy": "Egeria Project",
+        "updatedBy": "Egeria Project",
+        "createTime": "2021-12-20T07:20:40.038+00:00",
+        "updateTime": "2026-02-11T20:23:28.870+00:00",
+        "version": 1770841408792
+      },
+      "guid": "55f71ffc-d114-4dd0-8e34-db2d0f8df4fc",
+      "anchor": {
+        "class": "ElementClassification",
+        "headerVersion": 0,
+        "status": "ACTIVE",
+        "type": {
+          "typeId": "aa44f302-2e43-4669-a1e7-edaae414fc6e",
+          "typeName": "Anchors",
+          "typeVersion": 1,
+          "typeDescription": "Identifies the anchor entity for an element that is part of a large composite object such as an asset.",
+          "typeCategory": "CLASSIFICATION_DEF"
+        },
+        "origin": {
+          "sourceServer": "active-metadata-store",
+          "originCategory": "CONTENT_PACK",
+          "homeMetadataCollectionId": "655b1965-4c29-4a0e-8a5d-3f55a37b3799",
+          "homeMetadataCollectionName": "Coco Pharmaceuticals Combination"
+        },
+        "versions": {
+          "createdBy": "Egeria Project",
+          "updatedBy": "Egeria Project",
+          "createTime": "2021-12-20T07:20:40.038+00:00",
+          "updateTime": "2026-02-11T20:23:28.870+00:00",
+          "version": 1770841408792
+        },
+        "classificationOrigin": "ASSIGNED",
+        "classificationName": "Anchors",
+        "classificationProperties": {
+          "class": "AnchorsProperties",
+          "typeName": "Anchors",
+          "extendedProperties": {},
+          "anchorTypeName": "Person",
+          "anchorDomainName": "Actor"
+        }
+      }
+    },
+    "userIdentities": [
+      {
+        "class": "RelatedMetadataElementSummary",
+        "relationshipHeader": {
+          "class": "ElementHeader",
+          "headerVersion": 0,
+          "status": "ACTIVE",
+          "type": {
+            "typeId": "01664609-e777-4079-b543-6baffe910ff1",
+            "typeName": "ProfileIdentity",
+            "typeVersion": 1,
+            "typeDescription": "Correlates a user identity with an actor profile.",
+            "typeCategory": "RELATIONSHIP_DEF"
+          },
+          "origin": {
+            "sourceServer": "active-metadata-store",
+            "originCategory": "CONTENT_PACK",
+            "homeMetadataCollectionId": "655b1965-4c29-4a0e-8a5d-3f55a37b3799",
+            "homeMetadataCollectionName": "Coco Pharmaceuticals Combination",
+            "license": "Apache 2.0"
+          },
+          "versions": {
+            "createdBy": "Egeria Project",
+            "updatedBy": "Egeria Project",
+            "createTime": "2021-12-20T07:20:40.038+00:00",
+            "updateTime": "2026-02-11T20:23:28.870+00:00",
+            "version": 1770841408792
+          },
+          "guid": "3f10a529-04d4-47a4-b200-427ec54a8d3c"
+        },
+        "relatedElement": {
+          "elementHeader": {
+            "class": "ElementHeader",
+            "headerVersion": 0,
+            "status": "ACTIVE",
+            "type": {
+              "typeId": "fbe95779-1f3c-4ac6-aa9d-24963ff16282",
+              "typeName": "UserIdentity",
+              "superTypeNames": [
+                "Actor",
+                "Referenceable",
+                "OpenMetadataRoot"
+              ],
+              "typeVersion": 1,
+              "typeDescription": "Name of the security account for a person or automated process.",
+              "typeCategory": "ENTITY_DEF"
+            },
+            "origin": {
+              "sourceServer": "active-metadata-store",
+              "originCategory": "CONTENT_PACK",
+              "homeMetadataCollectionId": "655b1965-4c29-4a0e-8a5d-3f55a37b3799",
+              "homeMetadataCollectionName": "Coco Pharmaceuticals Combination",
+              "license": "Apache 2.0"
+            },
+            "versions": {
+              "createdBy": "Egeria Project",
+              "updatedBy": "Egeria Project",
+              "createTime": "2021-12-20T07:20:40.038+00:00",
+              "updateTime": "2026-02-11T20:23:28.870+00:00",
+              "version": 1770841408792
+            },
+            "guid": "6f06e66a-2e19-4bcb-8c06-abf34b0d9ad8",
+            "anchor": {
+              "class": "ElementClassification",
+              "headerVersion": 0,
+              "status": "ACTIVE",
+              "type": {
+                "typeId": "aa44f302-2e43-4669-a1e7-edaae414fc6e",
+                "typeName": "Anchors",
+                "typeVersion": 1,
+                "typeDescription": "Identifies the anchor entity for an element that is part of a large composite object such as an asset.",
+                "typeCategory": "CLASSIFICATION_DEF"
+              },
+              "origin": {
+                "sourceServer": "active-metadata-store",
+                "originCategory": "LOCAL_COHORT",
+                "homeMetadataCollectionId": "5d5459f5-b26c-4ca0-8ee1-2374c10ed10c",
+                "homeMetadataCollectionName": "active-metadata-store"
+              },
+              "versions": {
+                "createdBy": "activenpa",
+                "createTime": "2026-02-11T20:25:24.730+00:00",
+                "version": 1
+              },
+              "classificationOrigin": "ASSIGNED",
+              "classificationName": "Anchors",
+              "classificationProperties": {
+                "class": "AnchorsProperties",
+                "typeName": "Anchors",
+                "extendedProperties": {},
+                "anchorGUID": "6f06e66a-2e19-4bcb-8c06-abf34b0d9ad8",
+                "anchorTypeName": "UserIdentity",
+                "anchorDomainName": "Actor"
+              }
+            }
+          },
+          "properties": {
+            "class": "UserIdentityProperties",
+            "typeName": "UserIdentity",
+            "extendedProperties": {},
+            "qualifiedName": "UserIdentity:cn=calliequartile,ou=people,ou=users,o=cocoPharma",
+            "userId": "calliequartile",
+            "distinguishedName": "cn=calliequartile,ou=people,ou=users,o=cocoPharma"
+          }
+        },
+        "relatedElementAtEnd1": false
+      }
+    ],
+    "contactDetails": [
+      {
+        "class": "RelatedMetadataElementSummary",
+        "relationshipHeader": {
+          "class": "ElementHeader",
+          "headerVersion": 0,
+          "status": "ACTIVE",
+          "type": {
+            "typeId": "6cb9af43-184e-4dfa-854a-1572bcf0fe75",
+            "typeName": "ContactThrough",
+            "typeVersion": 1,
+            "typeDescription": "he contact details associated with an actor profile.",
+            "typeCategory": "RELATIONSHIP_DEF"
+          },
+          "origin": {
+            "sourceServer": "active-metadata-store",
+            "originCategory": "CONTENT_PACK",
+            "homeMetadataCollectionId": "655b1965-4c29-4a0e-8a5d-3f55a37b3799",
+            "homeMetadataCollectionName": "Coco Pharmaceuticals Combination",
+            "license": "Apache 2.0"
+          },
+          "versions": {
+            "createdBy": "Egeria Project",
+            "updatedBy": "Egeria Project",
+            "createTime": "2021-12-20T07:20:40.038+00:00",
+            "updateTime": "2026-02-11T20:23:28.871+00:00",
+            "version": 1770841408792
+          },
+          "guid": "bc250657-ed83-49bc-ac23-9446f0abc6a3"
+        },
+        "relatedElement": {
+          "elementHeader": {
+            "class": "ElementHeader",
+            "headerVersion": 0,
+            "status": "ACTIVE",
+            "type": {
+              "typeId": "79296df8-645a-4ef7-a011-912d1cdcf75a",
+              "typeName": "ContactDetails",
+              "superTypeNames": [
+                "Referenceable",
+                "OpenMetadataRoot"
+              ],
+              "typeVersion": 1,
+              "typeDescription": "Information on how to send a message to an individual or automated process.",
+              "typeCategory": "ENTITY_DEF"
+            },
+            "origin": {
+              "sourceServer": "active-metadata-store",
+              "originCategory": "CONTENT_PACK",
+              "homeMetadataCollectionId": "655b1965-4c29-4a0e-8a5d-3f55a37b3799",
+              "homeMetadataCollectionName": "Coco Pharmaceuticals Combination",
+              "license": "Apache 2.0"
+            },
+            "versions": {
+              "createdBy": "Egeria Project",
+              "updatedBy": "Egeria Project",
+              "createTime": "2021-12-20T07:20:40.038+00:00",
+              "updateTime": "2026-02-11T20:23:28.871+00:00",
+              "version": 1770841408792
+            },
+            "guid": "69bef184-ff73-4edc-81f1-b3ba53c1569b",
+            "anchor": {
+              "class": "ElementClassification",
+              "headerVersion": 0,
+              "status": "ACTIVE",
+              "type": {
+                "typeId": "aa44f302-2e43-4669-a1e7-edaae414fc6e",
+                "typeName": "Anchors",
+                "typeVersion": 1,
+                "typeDescription": "Identifies the anchor entity for an element that is part of a large composite object such as an asset.",
+                "typeCategory": "CLASSIFICATION_DEF"
+              },
+              "origin": {
+                "sourceServer": "active-metadata-store",
+                "originCategory": "CONTENT_PACK",
+                "homeMetadataCollectionId": "655b1965-4c29-4a0e-8a5d-3f55a37b3799",
+                "homeMetadataCollectionName": "Coco Pharmaceuticals Combination"
+              },
+              "versions": {
+                "createdBy": "Egeria Project",
+                "updatedBy": "Egeria Project",
+                "createTime": "2021-12-20T07:20:40.038+00:00",
+                "updateTime": "2026-02-11T20:23:28.871+00:00",
+                "version": 1770841408792
+              },
+              "classificationOrigin": "ASSIGNED",
+              "classificationName": "Anchors",
+              "classificationProperties": {
+                "class": "AnchorsProperties",
+                "typeName": "Anchors",
+                "extendedProperties": {},
+                "anchorGUID": "55f71ffc-d114-4dd0-8e34-db2d0f8df4fc",
+                "anchorTypeName": "Person",
+                "anchorDomainName": "Actor"
+              }
+            }
+          },
+          "properties": {
+            "class": "ContactDetailsProperties",
+            "typeName": "ContactDetails",
+            "extendedProperties": {},
+            "displayName": "Work Email Address",
+            "contactType": "Work Email",
+            "contactMethodType": "EMAIL",
+            "contactMethodService": "Email address assigned by Coco Pharmaceuticals.",
+            "contactMethodValue": "CallieQuartile@Coco-Pharmaceuticals.org"
+          }
+        },
+        "relatedElementAtEnd1": false
+      }
+    ],
+    "performsRoles": [
+      {
+        "class": "RelatedMetadataHierarchySummary",
+        "relationshipHeader": {
+          "class": "ElementHeader",
+          "headerVersion": 0,
+          "status": "ACTIVE",
+          "type": {
+            "typeId": "4a316abe-bcce-4d11-ad5a-4bfb4079b80b",
+            "typeName": "PersonRoleAppointment",
+            "typeVersion": 1,
+            "typeDescription": "Relationship identifying a person's roles.",
+            "typeCategory": "RELATIONSHIP_DEF"
+          },
+          "origin": {
+            "sourceServer": "active-metadata-store",
+            "originCategory": "CONTENT_PACK",
+            "homeMetadataCollectionId": "655b1965-4c29-4a0e-8a5d-3f55a37b3799",
+            "homeMetadataCollectionName": "Coco Pharmaceuticals Combination",
+            "license": "Apache 2.0"
+          },
+          "versions": {
+            "createdBy": "Egeria Project",
+            "updatedBy": "Egeria Project",
+            "createTime": "2021-12-20T07:20:40.038+00:00",
+            "updateTime": "2026-02-11T20:23:28.878+00:00",
+            "version": 1770841408792
+          },
+          "guid": "9ec8e936-e2d6-4264-920e-407761520911"
+        },
+        "relatedElement": {
+          "elementHeader": {
+            "class": "ElementHeader",
+            "headerVersion": 0,
+            "status": "ACTIVE",
+            "type": {
+              "typeId": "46db26d5-abb2-538b-bc15-d62d373c5db6",
+              "typeName": "TeamMember",
+              "superTypeNames": [
+                "PersonRole",
+                "ActorRole",
+                "Actor",
+                "Referenceable",
+                "OpenMetadataRoot"
+              ],
+              "typeVersion": 1,
+              "typeDescription": "Person assigned to a team.",
+              "typeCategory": "ENTITY_DEF"
+            },
+            "origin": {
+              "sourceServer": "active-metadata-store",
+              "originCategory": "CONTENT_PACK",
+              "homeMetadataCollectionId": "655b1965-4c29-4a0e-8a5d-3f55a37b3799",
+              "homeMetadataCollectionName": "Coco Pharmaceuticals Combination",
+              "license": "Apache 2.0"
+            },
+            "versions": {
+              "createdBy": "Egeria Project",
+              "updatedBy": "Egeria Project",
+              "createTime": "2021-12-20T07:20:40.038+00:00",
+              "updateTime": "2026-02-11T20:23:28.878+00:00",
+              "version": 1770841408792
+            },
+            "guid": "ef5000f6-5a05-4e20-9109-a85db78f858d",
+            "anchor": {
+              "class": "ElementClassification",
+              "headerVersion": 0,
+              "status": "ACTIVE",
+              "type": {
+                "typeId": "aa44f302-2e43-4669-a1e7-edaae414fc6e",
+                "typeName": "Anchors",
+                "typeVersion": 1,
+                "typeDescription": "Identifies the anchor entity for an element that is part of a large composite object such as an asset.",
+                "typeCategory": "CLASSIFICATION_DEF"
+              },
+              "origin": {
+                "sourceServer": "active-metadata-store",
+                "originCategory": "CONTENT_PACK",
+                "homeMetadataCollectionId": "655b1965-4c29-4a0e-8a5d-3f55a37b3799",
+                "homeMetadataCollectionName": "Coco Pharmaceuticals Combination"
+              },
+              "versions": {
+                "createdBy": "Egeria Project",
+                "updatedBy": "Egeria Project",
+                "createTime": "2021-12-20T07:20:40.038+00:00",
+                "updateTime": "2026-02-11T20:23:28.878+00:00",
+                "version": 1770841408792
+              },
+              "classificationOrigin": "ASSIGNED",
+              "classificationName": "Anchors",
+              "classificationProperties": {
+                "class": "AnchorsProperties",
+                "typeName": "Anchors",
+                "extendedProperties": {},
+                "anchorTypeName": "TeamMember",
+                "anchorDomainName": "Actor"
+              }
+            }
+          },
+          "properties": {
+            "class": "TeamMemberProperties",
+            "typeName": "TeamMember",
+            "extendedProperties": {},
+            "qualifiedName": "TeamMembers::Department::4051",
+            "identifier": "TeamMembers::Department::4051",
+            "headCountLimitSet": false,
+            "headCount": 0
+          }
+        },
+        "relatedElementAtEnd1": true,
+        "nestedElements": [
+          {
+            "class": "RelatedMetadataHierarchySummary",
+            "relationshipHeader": {
+              "class": "ElementHeader",
+              "headerVersion": 0,
+              "status": "ACTIVE",
+              "type": {
+                "typeId": "e3fdafe3-692a-46c6-a595-c538cc189dd9",
+                "typeName": "AssignmentScope",
+                "typeVersion": 1,
+                "typeDescription": "Links a profile, role or project to the elements that they are responsible for managing.",
+                "typeCategory": "RELATIONSHIP_DEF"
+              },
+              "origin": {
+                "sourceServer": "active-metadata-store",
+                "originCategory": "CONTENT_PACK",
+                "homeMetadataCollectionId": "655b1965-4c29-4a0e-8a5d-3f55a37b3799",
+                "homeMetadataCollectionName": "Coco Pharmaceuticals Combination",
+                "license": "Apache 2.0"
+              },
+              "versions": {
+                "createdBy": "Egeria Project",
+                "updatedBy": "Egeria Project",
+                "createTime": "2021-12-20T07:20:40.038+00:00",
+                "updateTime": "2026-02-11T20:23:28.878+00:00",
+                "version": 1770841408792
+              },
+              "guid": "fa7bf6a4-beda-4efd-8a76-df03d19e4b64"
+            },
+            "relationshipProperties": {
+              "class": "AssignmentScopeProperties",
+              "typeName": "AssignmentScope",
+              "extendedProperties": {},
+              "assignmentType": "Contributor"
+            },
+            "relatedElement": {
+              "elementHeader": {
+                "class": "ElementHeader",
+                "headerVersion": 0,
+                "status": "ACTIVE",
+                "type": {
+                  "typeId": "36db26d5-aba2-439b-bc15-d62d373c5db6",
+                  "typeName": "Team",
+                  "superTypeNames": [
+                    "ActorProfile",
+                    "Actor",
+                    "Referenceable",
+                    "OpenMetadataRoot"
+                  ],
+                  "typeVersion": 1,
+                  "typeDescription": "Group of people working together.",
+                  "typeCategory": "ENTITY_DEF"
+                },
+                "origin": {
+                  "sourceServer": "active-metadata-store",
+                  "originCategory": "CONTENT_PACK",
+                  "homeMetadataCollectionId": "655b1965-4c29-4a0e-8a5d-3f55a37b3799",
+                  "homeMetadataCollectionName": "Coco Pharmaceuticals Combination",
+                  "license": "Apache 2.0"
+                },
+                "versions": {
+                  "createdBy": "Egeria Project",
+                  "updatedBy": "Egeria Project",
+                  "createTime": "2021-12-20T07:20:40.038+00:00",
+                  "updateTime": "2026-02-11T20:23:28.878+00:00",
+                  "version": 1770841408792
+                },
+                "guid": "bad9b672-aede-47b5-8f10-e477b72e23ef",
+                "anchor": {
+                  "class": "ElementClassification",
+                  "headerVersion": 0,
+                  "status": "ACTIVE",
+                  "type": {
+                    "typeId": "aa44f302-2e43-4669-a1e7-edaae414fc6e",
+                    "typeName": "Anchors",
+                    "typeVersion": 1,
+                    "typeDescription": "Identifies the anchor entity for an element that is part of a large composite object such as an asset.",
+                    "typeCategory": "CLASSIFICATION_DEF"
+                  },
+                  "origin": {
+                    "sourceServer": "active-metadata-store",
+                    "originCategory": "CONTENT_PACK",
+                    "homeMetadataCollectionId": "655b1965-4c29-4a0e-8a5d-3f55a37b3799",
+                    "homeMetadataCollectionName": "Coco Pharmaceuticals Combination"
+                  },
+                  "versions": {
+                    "createdBy": "Egeria Project",
+                    "updatedBy": "Egeria Project",
+                    "createTime": "2021-12-20T07:20:40.038+00:00",
+                    "updateTime": "2026-02-11T20:23:28.878+00:00",
+                    "version": 1770841408792
+                  },
+                  "classificationOrigin": "ASSIGNED",
+                  "classificationName": "Anchors",
+                  "classificationProperties": {
+                    "class": "AnchorsProperties",
+                    "typeName": "Anchors",
+                    "extendedProperties": {},
+                    "anchorTypeName": "Team",
+                    "anchorDomainName": "Actor"
+                  }
+                }
+              },
+              "properties": {
+                "class": "TeamProperties",
+                "typeName": "Team",
+                "extendedProperties": {},
+                "qualifiedName": "Department::4051",
+                "identifier": "4051",
+                "displayName": "Clinical Trials Team (NA)",
+                "description": "Team coordinating the clinical trials with a variety of hospitals in USA/Canada.",
+                "teamType": "Dept"
+              }
+            },
+            "relatedElementAtEnd1": false,
+            "nestedElements": [
+              {
+                "class": "RelatedMetadataElementSummary",
+                "relationshipHeader": {
+                  "class": "ElementHeader",
+                  "headerVersion": 0,
+                  "status": "ACTIVE",
+                  "type": {
+                    "typeId": "e3fdafe3-692a-46c6-a595-c538cc189dd9",
+                    "typeName": "AssignmentScope",
+                    "typeVersion": 1,
+                    "typeDescription": "Links a profile, role or project to the elements that they are responsible for managing.",
+                    "typeCategory": "RELATIONSHIP_DEF"
+                  },
+                  "origin": {
+                    "sourceServer": "active-metadata-store",
+                    "originCategory": "CONTENT_PACK",
+                    "homeMetadataCollectionId": "655b1965-4c29-4a0e-8a5d-3f55a37b3799",
+                    "homeMetadataCollectionName": "Coco Pharmaceuticals Combination",
+                    "license": "Apache 2.0"
+                  },
+                  "versions": {
+                    "createdBy": "Egeria Project",
+                    "updatedBy": "Egeria Project",
+                    "createTime": "2021-12-20T07:20:40.038+00:00",
+                    "updateTime": "2026-02-11T20:23:28.878+00:00",
+                    "version": 1770841408792
+                  },
+                  "guid": "73891d0d-ca48-4a75-b840-2f4e4b4b1d19"
+                },
+                "relationshipProperties": {
+                  "class": "AssignmentScopeProperties",
+                  "typeName": "AssignmentScope",
+                  "extendedProperties": {},
+                  "assignmentType": "Owner",
+                  "description": "Within Region"
+                },
+                "relatedElement": {
+                  "elementHeader": {
+                    "class": "ElementHeader",
+                    "headerVersion": 0,
+                    "status": "ACTIVE",
+                    "type": {
+                      "typeId": "7cc6bcb2-b573-4719-9412-cf6c3f4bbb15",
+                      "typeName": "BusinessCapability",
+                      "superTypeNames": [
+                        "Collection",
+                        "AuthoredReferenceable",
+                        "Referenceable",
+                        "OpenMetadataRoot"
+                      ],
+                      "typeVersion": 1,
+                      "typeDescription": "Describes a function, capability or skill set.",
+                      "typeCategory": "ENTITY_DEF"
+                    },
+                    "origin": {
+                      "sourceServer": "active-metadata-store",
+                      "originCategory": "CONTENT_PACK",
+                      "homeMetadataCollectionId": "655b1965-4c29-4a0e-8a5d-3f55a37b3799",
+                      "homeMetadataCollectionName": "Coco Pharmaceuticals Combination",
+                      "license": "Apache 2.0"
+                    },
+                    "versions": {
+                      "createdBy": "Egeria Project",
+                      "updatedBy": "Egeria Project",
+                      "createTime": "2021-12-20T07:20:40.038+00:00",
+                      "updateTime": "2026-02-11T20:23:28.866+00:00",
+                      "version": 1770841408792
+                    },
+                    "guid": "357ee39b-082d-426d-a429-1edd75f0de54",
+                    "anchor": {
+                      "class": "ElementClassification",
+                      "headerVersion": 0,
+                      "status": "ACTIVE",
+                      "type": {
+                        "typeId": "aa44f302-2e43-4669-a1e7-edaae414fc6e",
+                        "typeName": "Anchors",
+                        "typeVersion": 1,
+                        "typeDescription": "Identifies the anchor entity for an element that is part of a large composite object such as an asset.",
+                        "typeCategory": "CLASSIFICATION_DEF"
+                      },
+                      "origin": {
+                        "sourceServer": "active-metadata-store",
+                        "originCategory": "CONTENT_PACK",
+                        "homeMetadataCollectionId": "655b1965-4c29-4a0e-8a5d-3f55a37b3799",
+                        "homeMetadataCollectionName": "Coco Pharmaceuticals Combination"
+                      },
+                      "versions": {
+                        "createdBy": "Egeria Project",
+                        "updatedBy": "Egeria Project",
+                        "createTime": "2021-12-20T07:20:40.038+00:00",
+                        "updateTime": "2026-02-11T20:23:28.866+00:00",
+                        "version": 1770841408792
+                      },
+                      "classificationOrigin": "ASSIGNED",
+                      "classificationName": "Anchors",
+                      "classificationProperties": {
+                        "class": "AnchorsProperties",
+                        "typeName": "Anchors",
+                        "extendedProperties": {},
+                        "anchorTypeName": "BusinessCapability",
+                        "anchorDomainName": "Collection"
+                      }
+                    }
+                  },
+                  "properties": {
+                    "class": "BusinessCapabilityProperties",
+                    "typeName": "BusinessCapability",
+                    "extendedProperties": {},
+                    "qualifiedName": "BusinessArea::C-TRI",
+                    "identifier": "C-TRI",
+                    "displayName": "Clinical Trials",
+                    "description": "Formal validation of new treatments for cancer with patients.",
+                    "businessCapabilityType": "BUSINESS_AREA"
+                  }
+                },
+                "relatedElementAtEnd1": false
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "class": "RelatedMetadataHierarchySummary",
+        "relationshipHeader": {
+          "class": "ElementHeader",
+          "headerVersion": 0,
+          "status": "ACTIVE",
+          "type": {
+            "typeId": "4a316abe-bcce-4d11-ad5a-4bfb4079b80b",
+            "typeName": "PersonRoleAppointment",
+            "typeVersion": 1,
+            "typeDescription": "Relationship identifying a person's roles.",
+            "typeCategory": "RELATIONSHIP_DEF"
+          },
+          "origin": {
+            "sourceServer": "active-metadata-store",
+            "originCategory": "CONTENT_PACK",
+            "homeMetadataCollectionId": "655b1965-4c29-4a0e-8a5d-3f55a37b3799",
+            "homeMetadataCollectionName": "Coco Pharmaceuticals Combination",
+            "license": "Apache 2.0"
+          },
+          "versions": {
+            "createdBy": "Egeria Project",
+            "updatedBy": "Egeria Project",
+            "createTime": "2021-12-20T07:20:40.038+00:00",
+            "updateTime": "2026-02-11T20:23:29.119+00:00",
+            "version": 1770841408792
+          },
+          "guid": "d3ce0544-0aff-48f2-9695-aaf317cd4c22"
+        },
+        "relatedElement": {
+          "elementHeader": {
+            "class": "ElementHeader",
+            "headerVersion": 0,
+            "status": "ACTIVE",
+            "type": {
+              "typeId": "fbd42379-f6c3-4f09-b6f7-378565cda993",
+              "typeName": "CommunityMember",
+              "superTypeNames": [
+                "PersonRole",
+                "ActorRole",
+                "Actor",
+                "Referenceable",
+                "OpenMetadataRoot"
+              ],
+              "typeVersion": 1,
+              "typeDescription": "A person who has joined a community.",
+              "typeCategory": "ENTITY_DEF"
+            },
+            "origin": {
+              "sourceServer": "active-metadata-store",
+              "originCategory": "CONTENT_PACK",
+              "homeMetadataCollectionId": "655b1965-4c29-4a0e-8a5d-3f55a37b3799",
+              "homeMetadataCollectionName": "Coco Pharmaceuticals Combination",
+              "license": "Apache 2.0"
+            },
+            "versions": {
+              "createdBy": "Egeria Project",
+              "updatedBy": "Egeria Project",
+              "createTime": "2021-12-20T07:20:40.038+00:00",
+              "updateTime": "2026-02-11T20:23:29.119+00:00",
+              "version": 1770841408792
+            },
+            "guid": "f57b20b8-a113-4072-ba1e-5b0f422bb3e4",
+            "anchor": {
+              "class": "ElementClassification",
+              "headerVersion": 0,
+              "status": "ACTIVE",
+              "type": {
+                "typeId": "aa44f302-2e43-4669-a1e7-edaae414fc6e",
+                "typeName": "Anchors",
+                "typeVersion": 1,
+                "typeDescription": "Identifies the anchor entity for an element that is part of a large composite object such as an asset.",
+                "typeCategory": "CLASSIFICATION_DEF"
+              },
+              "origin": {
+                "sourceServer": "active-metadata-store",
+                "originCategory": "CONTENT_PACK",
+                "homeMetadataCollectionId": "655b1965-4c29-4a0e-8a5d-3f55a37b3799",
+                "homeMetadataCollectionName": "Coco Pharmaceuticals Combination"
+              },
+              "versions": {
+                "createdBy": "Egeria Project",
+                "updatedBy": "Egeria Project",
+                "createTime": "2021-12-20T07:20:40.038+00:00",
+                "updateTime": "2026-02-11T20:23:29.119+00:00",
+                "version": 1770841408792
+              },
+              "classificationOrigin": "ASSIGNED",
+              "classificationName": "Anchors",
+              "classificationProperties": {
+                "class": "AnchorsProperties",
+                "typeName": "Anchors",
+                "extendedProperties": {},
+                "anchorTypeName": "CommunityMember",
+                "anchorDomainName": "Actor"
+              }
+            }
+          },
+          "properties": {
+            "class": "CommunityMemberProperties",
+            "typeName": "CommunityMember",
+            "extendedProperties": {},
+            "qualifiedName": "Leader: Community:: SIG:DataSci",
+            "identifier": "Community Leader of Data Science special interest group",
+            "scope": "Community",
+            "headCountLimitSet": false,
+            "headCount": 0
+          }
+        },
+        "relatedElementAtEnd1": true,
+        "nestedElements": [
+          {
+            "class": "RelatedMetadataElementSummary",
+            "relationshipHeader": {
+              "class": "ElementHeader",
+              "headerVersion": 0,
+              "status": "ACTIVE",
+              "type": {
+                "typeId": "e3fdafe3-692a-46c6-a595-c538cc189dd9",
+                "typeName": "AssignmentScope",
+                "typeVersion": 1,
+                "typeDescription": "Links a profile, role or project to the elements that they are responsible for managing.",
+                "typeCategory": "RELATIONSHIP_DEF"
+              },
+              "origin": {
+                "sourceServer": "active-metadata-store",
+                "originCategory": "CONTENT_PACK",
+                "homeMetadataCollectionId": "655b1965-4c29-4a0e-8a5d-3f55a37b3799",
+                "homeMetadataCollectionName": "Coco Pharmaceuticals Combination",
+                "license": "Apache 2.0"
+              },
+              "versions": {
+                "createdBy": "Egeria Project",
+                "updatedBy": "Egeria Project",
+                "createTime": "2021-12-20T07:20:40.038+00:00",
+                "updateTime": "2026-02-11T20:23:29.119+00:00",
+                "version": 1770841408792
+              },
+              "guid": "c1de72ce-6086-4f44-aa71-93ccfdd5364d"
+            },
+            "relationshipProperties": {
+              "class": "AssignmentScopeProperties",
+              "typeName": "AssignmentScope",
+              "extendedProperties": {},
+              "assignmentType": "Leader"
+            },
+            "relatedElement": {
+              "elementHeader": {
+                "class": "ElementHeader",
+                "headerVersion": 0,
+                "status": "ACTIVE",
+                "type": {
+                  "typeId": "fbd42379-f6c3-4f08-b6f7-378565cda993",
+                  "typeName": "Community",
+                  "superTypeNames": [
+                    "Referenceable",
+                    "OpenMetadataRoot"
+                  ],
+                  "typeVersion": 1,
+                  "typeDescription": "A group of people with a common interest or skill.",
+                  "typeCategory": "ENTITY_DEF"
+                },
+                "origin": {
+                  "sourceServer": "active-metadata-store",
+                  "originCategory": "CONTENT_PACK",
+                  "homeMetadataCollectionId": "655b1965-4c29-4a0e-8a5d-3f55a37b3799",
+                  "homeMetadataCollectionName": "Coco Pharmaceuticals Combination",
+                  "license": "Apache 2.0"
+                },
+                "versions": {
+                  "createdBy": "Egeria Project",
+                  "updatedBy": "Egeria Project",
+                  "createTime": "2021-12-20T07:20:40.038+00:00",
+                  "updateTime": "2026-02-11T20:23:29.119+00:00",
+                  "version": 1770841408792
+                },
+                "guid": "9f834342-e990-443d-b8be-44a8a4e7bbc9"
+              },
+              "properties": {
+                "class": "CommunityProperties",
+                "typeName": "Community",
+                "extendedProperties": {},
+                "qualifiedName": "Community:: SIG:DataSci",
+                "displayName": "Data Science special interest group",
+                "description": "Community of data scientists within Coco Pharmaceuticals."
+              }
+            },
+            "relatedElementAtEnd1": false
+          }
+        ]
+      }
+    ],
+    "properties": {
+      "class": "PersonProperties",
+      "typeName": "Person",
+      "extendedProperties": {},
+      "qualifiedName": "Person::USA::328080",
+      "displayName": "Callie Quartile",
+      "additionalProperties": {
+        "workLocation": "3",
+        "countryCode": "USA",
+        "organization": "Coco Pharmaceuticals Ltd",
+        "jobLevel": "5"
+      },
+      "courtesyTitle": "Dr",
+      "initials": "C R",
+      "givenNames": "Callie",
+      "surname": "quartile",
+      "fullName": "Dr Callie R Quartile",
+      "pronouns": "She/her/hers",
+      "jobTitle": "Data Scientist",
+      "employeeNumber": "328080",
+      "employeeType": "FTP"
+    },
+    "mermaidGraph": "---\ntitle: Person - Callie Quartile [55f71ffc-d114-4dd0-8e34-db2d0f8df4fc]\n---\nflowchart TD\n%%{init: {\"flowchart\": {\"htmlLabels\": false}} }%%\n\n1@{ shape: rounded, label: \"*Person*\n**Callie Quartile**\"}\n2@{ shape: bow-rect, label: \"*User Identity*\n**calliequartile**\"}\n1==>|\"Profile Identity\"|2\n3@{ shape: rounded, label: \"*Contact Details*\n**Work Email Address**\"}\n1==>|\"Contact Through\"|3\n4@{ shape: trap-t, label: \"*Team Member*\n**TeamMembers::Department::4051**\"}\n4==>|\"Person Role Appointment\"|1\n5@{ shape: tri, label: \"*Team*\n**Clinical Trials Team (NA)**\"}\n4==>|\"Contributor [Assignment Scope]\"|5\n6@{ shape: rect, label: \"*Business Capability*\n**Clinical Trials**\"}\n5==>|\"Owner [Assignment Scope]\"|6\n7@{ shape: trap-t, label: \"*Community Member*\n**Community Leader of Data Science special interest group**\"}\n7==>|\"Person Role Appointment\"|1\n8@{ shape: trap-t, label: \"*Community*\n**Data Science special interest group**\"}\n7==>|\"Leader [Assignment Scope]\"|8\nstyle 1 color:#000000, fill:#e0ab18, stroke:#004563\nstyle 2 color:#000000, fill:#FF8c00, stroke:#000000\nstyle 3 color:#000000, fill:#39add1, stroke:#004563\nstyle 4 color:#000000, fill:#FFE599, stroke:#000000\nstyle 5 color:#000000, fill:#FFE599, stroke:#000000\nstyle 6 color:#000000, fill:#f5fffa, stroke:#000000\nstyle 7 color:#000000, fill:#FFE599, stroke:#000000\nstyle 8 color:#000000, fill:#FFE599, stroke:#000000\n"
+  }
+}

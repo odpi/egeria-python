@@ -138,9 +138,6 @@ class CommunityMatters(ServerClient):
         report_spec: dict | str | None = None,
         **kwargs
     ) -> Any:
-        if output_format == "JSON":
-            return elements
-
         return self._generate_formatted_output(
             elements=elements,
             query_string=search_string,

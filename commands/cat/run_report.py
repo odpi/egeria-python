@@ -42,7 +42,7 @@ app_config = settings.Environment
 
 # Note: CLI --param/--params-json must use snake_case names (e.g., metadata_element_subtypes). The
 # underlying clients serialize to camelCase for on-wire Egeria JSON automatically.
-TEXT_FILE_FORMATS = {"MD", "REPORT", "FORM", "HTML", "MERMAID", "LIST", "DICT", "JSON"}
+TEXT_FILE_FORMATS = {"MD", "REPORT", "REPORT-GRAPH", "FORM", "HTML", "MERMAID", "LIST", "DICT", "JSON"}
 
 
 def list_generic(
@@ -368,7 +368,7 @@ def write_output_file(content: str, report_spec: str, suffix: str) -> str:
     ts = time.strftime("%Y-%m-%d-%H-%M-%S")
     safe_spec = "".join(c for c in report_spec if c.isalnum() or c in ("-", "_", "+", ".", " ")).strip().replace(" ", "_")
     # Determine extension by content type rules
-    if suffix in {"MD", "REPORT", "FORM", "MERMAID", "LIST"}:
+    if suffix in {"MD", "REPORT", "REPORT-GRAPH", "FORM", "MERMAID", "LIST"}:
         ext = ".md"
     elif suffix in {"HTML"}:
         ext = ".html"
@@ -388,7 +388,7 @@ def main():
     parser = argparse.ArgumentParser(description="Generic list command using exec_report_spec")
     parser.add_argument("--report", dest="report_spec", help="Report spec name to execute (see report specs)")
     parser.add_argument("--output-format", dest="output_format", default="TABLE",
-                        choices=["TABLE", "MD", "REPORT", "FORM", "HTML", "MERMAID", "LIST", "JSON", "DICT"],
+                        choices=["TABLE", "MD", "REPORT", "REPORT-GRAPH", "FORM", "HTML", "MERMAID", "LIST", "JSON", "DICT"],
                         help="Output rendering format")
     parser.add_argument("--server", dest="server", help="Egeria view server name", default=app_config.egeria_view_server)
     parser.add_argument("--url", dest="url", help="Egeria platform URL", default=app_config.egeria_view_server_url)

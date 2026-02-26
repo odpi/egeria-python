@@ -127,9 +127,6 @@ class GovernanceOfficer(ServerClient):
         str | list
             Rendered output in the requested format.
         """
-        if output_format == "JSON":
-            return elements
-
         return self._generate_formatted_output(
             elements=elements,
             query_string=search_string,

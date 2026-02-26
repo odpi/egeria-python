@@ -338,13 +338,6 @@ class DataEngineer(ServerClient):
         response = await self._async_make_request("GET", url)
         el_list = response.json().get('tabularDataSetReport',"No Dataset Found")
         if isinstance(el_list, dict):
-            if output_format == "JSON":
-                return el_list
-            elif output_format == "CSV":
-                return transform_json_to_tabular(response, output_format="CSV")
-            elif output_format == "RICH-TABLE":
-                return transform_json_to_tabular(response, output_format="RICH-TABLE")
-            else:
-                raise PyegeriaException(f"Unsupported output format: {output_format}")
+            return el_list
         else:
             raise PyegeriaException(f"Unsupported output format: {output_format}")

@@ -298,7 +298,7 @@ def load_commands(filename: str) -> None:
                 f"\n{'=' * 80}\n"
                 f"ERROR: Invalid JSON in {filename}\n"
                 f"{'=' * 80}\n"
-                f"Location: Line {error_line}, Column {error_col} (char position {error_pos})\n"
+                f"LocationArena: Line {error_line}, Column {error_col} (char position {error_pos})\n"
                 f"Error: {json_err.msg}\n"
                 f"\nContext around error:\n{context}\n"
                 f"{'=' * 80}\n"

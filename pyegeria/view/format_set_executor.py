@@ -226,7 +226,7 @@ async def _async_run_report(
             return {"kind": "json", "data": result}
 
         # For narrative formats, try to use generate_output if the result is structured
-        if output_format in {"REPORT", "MD", "FORM", "LIST", "HTML", "MERMAID"}:
+        if output_format in {"REPORT", "REPORT-GRAPH", "MD", "FORM", "LIST", "HTML", "MERMAID"}:
             if isinstance(result, (list, dict)):
                 result = generate_output(
                     elements=result,
@@ -370,7 +370,7 @@ def exec_report_spec(
             return {"kind": "json", "data": result}
 
         # For narrative formats, try to use generate_output if the result is structured
-        if output_format in {"REPORT", "MD", "FORM", "LIST", "HTML", "MERMAID"}:
+        if output_format in {"REPORT", "REPORT-GRAPH", "MD", "FORM", "LIST", "HTML", "MERMAID"}:
             if isinstance(result, (list, dict)):
                 result = generate_output(
                     elements=result,

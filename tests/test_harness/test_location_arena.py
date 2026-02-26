@@ -4,7 +4,7 @@ Copyright Contributors to the ODPi Egeria project.
 
 
 
-This module tests the Location class and methods from location_arena.py
+This module tests the LocationArena class and methods from location_arena.py
 
 A running Egeria environment is needed to run these tests.
 
@@ -25,7 +25,7 @@ from pyegeria.core._exceptions import (
     print_basic_exception,
     print_exception_table,
 )
-from pyegeria.omvs.location_arena import Location
+from pyegeria.omvs.location_arena import LocationArena
 from pyegeria.core.logging_configuration import config_logging, init_logging
 from pyegeria.models import (NewElementRequestBody)
 
@@ -51,24 +51,24 @@ class TestLocationArena:
     good_server_2 = VIEW_SERVER
     good_view_server_1 = VIEW_SERVER
 
-    def _unique_qname(self, prefix: str = "Location") -> str:
+    def _unique_qname(self, prefix: str = "LocationArena") -> str:
         ts = datetime.now().strftime("%Y%m%d%H%M%S%f")
         return f"{prefix}::{ts}"
 
     def test_create_location(self):
         """Test creating a basic location with dict body"""
         try:
-            l_client = Location(self.good_view_server_1, self.good_platform1_url, user_id=self.good_user_2)
+            l_client = LocationArena(self.good_view_server_1, self.good_platform1_url, user_id=self.good_user_2)
             token = l_client.create_egeria_bearer_token(self.good_user_2, "secret")
             start_time = time.perf_counter()
 
-            display_name = f"Test Location {datetime.now().strftime('%Y%m%d%H%M%S')}"
+            display_name = f"Test LocationArena {datetime.now().strftime('%Y%m%d%H%M%S')}"
             description = "Test location for automated testing"
             qualified_name = self._unique_qname("TestLocation")
 
             body = {
                 "class": "NewElementRequestBody",
-                "typeName": "Location",
+                "typeName": "LocationArena",
                 "initialStatus": "ACTIVE",
                 "properties": {
                     "class": "LocationProperties",
@@ -102,19 +102,19 @@ class TestLocationArena:
     def test_create_location_w_pyd(self):
         """Test creating a location with Pydantic model"""
         try:
-            l_client = Location(self.good_view_server_1, self.good_platform1_url, user_id=self.good_user_2)
+            l_client = LocationArena(self.good_view_server_1, self.good_platform1_url, user_id=self.good_user_2)
             token = l_client.create_egeria_bearer_token(self.good_user_2, "secret")
             start_time = time.perf_counter()
 
             q_name = self._unique_qname("TestLocationPyd")
             body = NewElementRequestBody(
-                typeName="Location",
+                typeName="LocationArena",
                 initialStatus="ACTIVE",
                 properties={
                     "class": "LocationProperties",
                     "qualifiedName": q_name,
-                    "displayName": f"Pydantic Location {datetime.now().strftime('%H%M%S')}",
-                    "description": "Location created with Pydantic model",
+                    "displayName": f"Pydantic LocationArena {datetime.now().strftime('%H%M%S')}",
+                    "description": "LocationArena created with Pydantic model",
                 }
             )
 
@@ -143,7 +143,7 @@ class TestLocationArena:
     def test_create_location_from_template(self):
         """Test creating a location from a template"""
         try:
-            l_client = Location(self.good_view_server_1, self.good_platform1_url, user_id=self.good_user_2)
+            l_client = LocationArena(self.good_view_server_1, self.good_platform1_url, user_id=self.good_user_2)
             token = l_client.create_egeria_bearer_token(self.good_user_2, "secret")
             start_time = time.perf_counter()
 
@@ -151,12 +151,12 @@ class TestLocationArena:
             template_qname = self._unique_qname("TemplateLocation")
             template_body = {
                 "class": "NewElementRequestBody",
-                "typeName": "Location",
+                "typeName": "LocationArena",
                 "initialStatus": "ACTIVE",
                 "properties": {
                     "class": "LocationProperties",
                     "qualifiedName": template_qname,
-                    "displayName": "Template Location",
+                    "displayName": "Template LocationArena",
                     "description": "This is a template location",
                 }
             }
@@ -181,7 +181,7 @@ class TestLocationArena:
                             "class": "PrimitiveTypePropertyValue",
                             "typeName": "string",
                             "primitiveTypeCategory": "OM_PRIMITIVE_TYPE_STRING",
-                            "primitiveValue": "Location Created from Template"
+                            "primitiveValue": "LocationArena Created from Template"
                         }
                     }
                 }
@@ -211,7 +211,7 @@ class TestLocationArena:
     def test_find_locations(self):
         """Test finding locations with search string"""
         try:
-            l_client = Location(self.good_view_server_1, self.good_platform1_url, user_id=self.good_user_2)
+            l_client = LocationArena(self.good_view_server_1, self.good_platform1_url, user_id=self.good_user_2)
             token = l_client.create_egeria_bearer_token(self.good_user_2, "secret")
             start_time = time.perf_counter()
 
@@ -255,7 +255,7 @@ class TestLocationArena:
     def test_find_locations_w_body(self):
         """Test finding locations with body parameters"""
         try:
-            l_client = Location(self.good_view_server_1, self.good_platform1_url, user_id=self.good_user_2)
+            l_client = LocationArena(self.good_view_server_1, self.good_platform1_url, user_id=self.good_user_2)
             token = l_client.create_egeria_bearer_token(self.good_user_2, "secret")
             start_time = time.perf_counter()
 
@@ -264,7 +264,7 @@ class TestLocationArena:
                 "class": "SearchStringRequestBody",
                 "searchString": search_string,
                 "effectiveTime": None,
-                "typeName": "Location"
+                "typeName": "LocationArena"
             }
 
             response = l_client.find_locations(
@@ -300,7 +300,7 @@ class TestLocationArena:
     def test_get_locations_by_name(self):
         """Test getting locations by name filter"""
         try:
-            l_client = Location(self.good_view_server_1, self.good_platform1_url, user_id=self.good_user_2)
+            l_client = LocationArena(self.good_view_server_1, self.good_platform1_url, user_id=self.good_user_2)
             token = l_client.create_egeria_bearer_token(self.good_user_2, "secret")
             start_time = time.perf_counter()
 
@@ -334,7 +334,7 @@ class TestLocationArena:
     def test_get_location_by_guid(self):
         """Test getting a specific location by GUID"""
         try:
-            l_client = Location(self.good_view_server_1, self.good_platform1_url, user_id=self.good_user_2)
+            l_client = LocationArena(self.good_view_server_1, self.good_platform1_url, user_id=self.good_user_2)
             token = l_client.create_egeria_bearer_token(self.good_user_2, "secret")
             start_time = time.perf_counter()
 
@@ -342,12 +342,12 @@ class TestLocationArena:
             q_name = self._unique_qname("TestLocationForRetrieval")
             body = {
                 "class": "NewElementRequestBody",
-                "typeName": "Location",
+                "typeName": "LocationArena",
                 "initialStatus": "ACTIVE",
                 "properties": {
                     "class": "LocationProperties",
                     "qualifiedName": q_name,
-                    "displayName": "Location for GUID test",
+                    "displayName": "LocationArena for GUID test",
                     "description": "Test location to retrieve by GUID",
                 }
             }
@@ -381,7 +381,7 @@ class TestLocationArena:
     def test_update_location(self):
         """Test updating a location's properties"""
         try:
-            l_client = Location(self.good_view_server_1, self.good_platform1_url, user_id=self.good_user_2)
+            l_client = LocationArena(self.good_view_server_1, self.good_platform1_url, user_id=self.good_user_2)
             token = l_client.create_egeria_bearer_token(self.good_user_2, "secret")
             start_time = time.perf_counter()
 
@@ -389,12 +389,12 @@ class TestLocationArena:
             q_name = self._unique_qname("TestLocationForUpdate")
             create_body = {
                 "class": "NewElementRequestBody",
-                "typeName": "Location",
+                "typeName": "LocationArena",
                 "initialStatus": "ACTIVE",
                 "properties": {
                     "class": "LocationProperties",
                     "qualifiedName": q_name,
-                    "displayName": "Original Location Name",
+                    "displayName": "Original LocationArena Name",
                     "description": "Original description",
                 }
             }
@@ -409,7 +409,7 @@ class TestLocationArena:
                 "properties": {
                     "class": "LocationProperties",
                     "qualifiedName": q_name,
-                    "displayName": "Updated Location Name",
+                    "displayName": "Updated LocationArena Name",
                     "description": new_desc,
                 }
             }
@@ -438,7 +438,7 @@ class TestLocationArena:
     def test_link_peer_locations(self):
         """Test linking two locations as peers"""
         try:
-            l_client = Location(self.good_view_server_1, self.good_platform1_url, user_id=self.good_user_2)
+            l_client = LocationArena(self.good_view_server_1, self.good_platform1_url, user_id=self.good_user_2)
             token = l_client.create_egeria_bearer_token(self.good_user_2, "secret")
             start_time = time.perf_counter()
 
@@ -446,12 +446,12 @@ class TestLocationArena:
             q_name1 = self._unique_qname("PeerLocation1")
             body1 = {
                 "class": "NewElementRequestBody",
-                "typeName": "Location",
+                "typeName": "LocationArena",
                 "initialStatus": "ACTIVE",
                 "properties": {
                     "class": "LocationProperties",
                     "qualifiedName": q_name1,
-                    "displayName": "Peer Location 1",
+                    "displayName": "Peer LocationArena 1",
                     "description": "First peer location",
                 }
             }
@@ -460,12 +460,12 @@ class TestLocationArena:
             q_name2 = self._unique_qname("PeerLocation2")
             body2 = {
                 "class": "NewElementRequestBody",
-                "typeName": "Location",
+                "typeName": "LocationArena",
                 "initialStatus": "ACTIVE",
                 "properties": {
                     "class": "LocationProperties",
                     "qualifiedName": q_name2,
-                    "displayName": "Peer Location 2",
+                    "displayName": "Peer LocationArena 2",
                     "description": "Second peer location",
                 }
             }
@@ -505,7 +505,7 @@ class TestLocationArena:
     def test_detach_peer_locations(self):
         """Test detaching peer locations"""
         try:
-            l_client = Location(self.good_view_server_1, self.good_platform1_url, user_id=self.good_user_2)
+            l_client = LocationArena(self.good_view_server_1, self.good_platform1_url, user_id=self.good_user_2)
             token = l_client.create_egeria_bearer_token(self.good_user_2, "secret")
             start_time = time.perf_counter()
 
@@ -513,12 +513,12 @@ class TestLocationArena:
             q_name1 = self._unique_qname("PeerLocationDetach1")
             body1 = {
                 "class": "NewElementRequestBody",
-                "typeName": "Location",
+                "typeName": "LocationArena",
                 "initialStatus": "ACTIVE",
                 "properties": {
                     "class": "LocationProperties",
                     "qualifiedName": q_name1,
-                    "displayName": "Peer Location Detach 1",
+                    "displayName": "Peer LocationArena Detach 1",
                     "description": "First peer location for detach test",
                 }
             }
@@ -527,12 +527,12 @@ class TestLocationArena:
             q_name2 = self._unique_qname("PeerLocationDetach2")
             body2 = {
                 "class": "NewElementRequestBody",
-                "typeName": "Location",
+                "typeName": "LocationArena",
                 "initialStatus": "ACTIVE",
                 "properties": {
                     "class": "LocationProperties",
                     "qualifiedName": q_name2,
-                    "displayName": "Peer Location Detach 2",
+                    "displayName": "Peer LocationArena Detach 2",
                     "description": "Second peer location for detach test",
                 }
             }
@@ -577,7 +577,7 @@ class TestLocationArena:
     def test_link_nested_location(self):
         """Test linking a location as nested within another"""
         try:
-            l_client = Location(self.good_view_server_1, self.good_platform1_url, user_id=self.good_user_2)
+            l_client = LocationArena(self.good_view_server_1, self.good_platform1_url, user_id=self.good_user_2)
             token = l_client.create_egeria_bearer_token(self.good_user_2, "secret")
             start_time = time.perf_counter()
 
@@ -585,12 +585,12 @@ class TestLocationArena:
             q_name_parent = self._unique_qname("ParentLocation")
             parent_body = {
                 "class": "NewElementRequestBody",
-                "typeName": "Location",
+                "typeName": "LocationArena",
                 "initialStatus": "ACTIVE",
                 "properties": {
                     "class": "LocationProperties",
                     "qualifiedName": q_name_parent,
-                    "displayName": "Parent Location",
+                    "displayName": "Parent LocationArena",
                     "description": "Parent location for nesting test",
                 }
             }
@@ -600,12 +600,12 @@ class TestLocationArena:
             q_name_nested = self._unique_qname("NestedLocation")
             nested_body = {
                 "class": "NewElementRequestBody",
-                "typeName": "Location",
+                "typeName": "LocationArena",
                 "initialStatus": "ACTIVE",
                 "properties": {
                     "class": "LocationProperties",
                     "qualifiedName": q_name_nested,
-                    "displayName": "Nested Location",
+                    "displayName": "Nested LocationArena",
                     "description": "Nested location for testing",
                 }
             }
@@ -645,7 +645,7 @@ class TestLocationArena:
     def test_detach_nested_location(self):
         """Test detaching a nested location"""
         try:
-            l_client = Location(self.good_view_server_1, self.good_platform1_url, user_id=self.good_user_2)
+            l_client = LocationArena(self.good_view_server_1, self.good_platform1_url, user_id=self.good_user_2)
             token = l_client.create_egeria_bearer_token(self.good_user_2, "secret")
             start_time = time.perf_counter()
 
@@ -653,12 +653,12 @@ class TestLocationArena:
             q_name_parent = self._unique_qname("ParentLocationDetach")
             parent_body = {
                 "class": "NewElementRequestBody",
-                "typeName": "Location",
+                "typeName": "LocationArena",
                 "initialStatus": "ACTIVE",
                 "properties": {
                     "class": "LocationProperties",
                     "qualifiedName": q_name_parent,
-                    "displayName": "Parent Location Detach",
+                    "displayName": "Parent LocationArena Detach",
                     "description": "Parent location for detach test",
                 }
             }
@@ -667,12 +667,12 @@ class TestLocationArena:
             q_name_nested = self._unique_qname("NestedLocationDetach")
             nested_body = {
                 "class": "NewElementRequestBody",
-                "typeName": "Location",
+                "typeName": "LocationArena",
                 "initialStatus": "ACTIVE",
                 "properties": {
                     "class": "LocationProperties",
                     "qualifiedName": q_name_nested,
-                    "displayName": "Nested Location Detach",
+                    "displayName": "Nested LocationArena Detach",
                     "description": "Nested location for detach test",
                 }
             }
@@ -717,7 +717,7 @@ class TestLocationArena:
     def test_link_known_location(self):
         """Test linking a location to another element"""
         try:
-            l_client = Location(self.good_view_server_1, self.good_platform1_url, user_id=self.good_user_2)
+            l_client = LocationArena(self.good_view_server_1, self.good_platform1_url, user_id=self.good_user_2)
             token = l_client.create_egeria_bearer_token(self.good_user_2, "secret")
             start_time = time.perf_counter()
 
@@ -725,13 +725,13 @@ class TestLocationArena:
             q_name = self._unique_qname("KnownLocation")
             location_body = {
                 "class": "NewElementRequestBody",
-                "typeName": "Location",
+                "typeName": "LocationArena",
                 "initialStatus": "ACTIVE",
                 "properties": {
                     "class": "LocationProperties",
                     "qualifiedName": q_name,
-                    "displayName": "Known Location",
-                    "description": "Location for known location test",
+                    "displayName": "Known LocationArena",
+                    "description": "LocationArena for known location test",
                 }
             }
             location_guid = l_client.create_location(location_body)
@@ -740,12 +740,12 @@ class TestLocationArena:
             q_name_element = self._unique_qname("ElementForKnownLocation")
             element_body = {
                 "class": "NewElementRequestBody",
-                "typeName": "Location",
+                "typeName": "LocationArena",
                 "initialStatus": "ACTIVE",
                 "properties": {
                     "class": "LocationProperties",
                     "qualifiedName": q_name_element,
-                    "displayName": "Element for Known Location",
+                    "displayName": "Element for Known LocationArena",
                     "description": "Element to link to known location",
                 }
             }
@@ -785,7 +785,7 @@ class TestLocationArena:
     def test_detach_known_location(self):
         """Test detaching a known location"""
         try:
-            l_client = Location(self.good_view_server_1, self.good_platform1_url, user_id=self.good_user_2)
+            l_client = LocationArena(self.good_view_server_1, self.good_platform1_url, user_id=self.good_user_2)
             token = l_client.create_egeria_bearer_token(self.good_user_2, "secret")
             start_time = time.perf_counter()
 
@@ -793,13 +793,13 @@ class TestLocationArena:
             q_name = self._unique_qname("KnownLocationDetach")
             location_body = {
                 "class": "NewElementRequestBody",
-                "typeName": "Location",
+                "typeName": "LocationArena",
                 "initialStatus": "ACTIVE",
                 "properties": {
                     "class": "LocationProperties",
                     "qualifiedName": q_name,
-                    "displayName": "Known Location Detach",
-                    "description": "Location for detach test",
+                    "displayName": "Known LocationArena Detach",
+                    "description": "LocationArena for detach test",
                 }
             }
             location_guid = l_client.create_location(location_body)
@@ -807,12 +807,12 @@ class TestLocationArena:
             q_name_element = self._unique_qname("ElementForKnownLocationDetach")
             element_body = {
                 "class": "NewElementRequestBody",
-                "typeName": "Location",
+                "typeName": "LocationArena",
                 "initialStatus": "ACTIVE",
                 "properties": {
                     "class": "LocationProperties",
                     "qualifiedName": q_name_element,
-                    "displayName": "Element for Known Location Detach",
+                    "displayName": "Element for Known LocationArena Detach",
                     "description": "Element to detach from known location",
                 }
             }
@@ -857,7 +857,7 @@ class TestLocationArena:
     def test_delete_location(self):
         """Test deleting a location"""
         try:
-            l_client = Location(self.good_view_server_1, self.good_platform1_url, user_id=self.good_user_2)
+            l_client = LocationArena(self.good_view_server_1, self.good_platform1_url, user_id=self.good_user_2)
             token = l_client.create_egeria_bearer_token(self.good_user_2, "secret")
             start_time = time.perf_counter()
 
@@ -865,12 +865,12 @@ class TestLocationArena:
             q_name = self._unique_qname("LocationToDelete")
             create_body = {
                 "class": "NewElementRequestBody",
-                "typeName": "Location",
+                "typeName": "LocationArena",
                 "initialStatus": "ACTIVE",
                 "properties": {
                     "class": "LocationProperties",
                     "qualifiedName": q_name,
-                    "displayName": "Location to Delete",
+                    "displayName": "LocationArena to Delete",
                     "description": "This location will be deleted",
                 }
             }
@@ -906,9 +906,9 @@ class TestLocationArena:
     def test_crud_location_e2e(self):
         """End-to-end test: Create, Read, Update, Delete a location"""
         try:
-            l_client = Location(self.good_view_server_1, self.good_platform1_url, user_id=self.good_user_2)
+            l_client = LocationArena(self.good_view_server_1, self.good_platform1_url, user_id=self.good_user_2)
             created_guid = None
-            display_name = f"E2E Test Location {datetime.now().strftime('%Y%m%d%H%M%S')}"
+            display_name = f"E2E Test LocationArena {datetime.now().strftime('%Y%m%d%H%M%S')}"
 
             token = l_client.create_egeria_bearer_token(self.good_user_2, "secret")
 
@@ -917,7 +917,7 @@ class TestLocationArena:
             q_name = self._unique_qname("E2ELocation")
             body = {
                 "class": "NewElementRequestBody",
-                "typeName": "Location",
+                "typeName": "LocationArena",
                 "initialStatus": "ACTIVE",
                 "properties": {
                     "class": "LocationProperties",
@@ -971,9 +971,9 @@ class TestLocationArena:
             try:
                 after = l_client.get_location_by_guid(created_guid, output_format="JSON")
                 # If we get here, deletion might not have worked
-                print("Warning: Location still exists after deletion")
+                print("Warning: LocationArena still exists after deletion")
             except PyegeriaAPIException:
-                print("Confirmed: Location no longer exists")
+                print("Confirmed: LocationArena no longer exists")
 
             assert True
 

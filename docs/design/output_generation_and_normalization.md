@@ -18,7 +18,7 @@ The solution introduces a centralized "glue" method in the `ServerClient` base c
 
 ### 1. The Centralized Wrapper: `_generate_formatted_output`
 
-Location: `pyegeria/core/_server_client.py`
+LocationArena: `pyegeria/core/_server_client.py`
 
 This method acts as the single entry point for all formatting needs. It performs the following tasks:
 - **Format Resolution**: Uses `resolve_output_formats` to pick the correct report spec based on `entity_type`, `output_format`, and `report_spec`.
@@ -54,7 +54,7 @@ def _generate_something_output(
 
 ### 3. Output Formatter Enhancements
 
-Location: `pyegeria/view/output_formatter.py`
+LocationArena: `pyegeria/view/output_formatter.py`
 
 - `generate_output` now accepts `**kwargs`.
 - It handles parameter normalization internally: if `search_string` is `None`, it attempts to retrieve it from `kwargs.get('filter_string')`. This ensures that even direct calls remain robust.
