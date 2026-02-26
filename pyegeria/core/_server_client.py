@@ -2484,9 +2484,9 @@ class ServerClient(BaseServerClient):
 
         url = f"{self.command_root}feedback-manager/note-logs/by-name"
         response = await self._async_get_name_request(url, _type=element_type,
-                                                      _gen_output=self._generate_feedback_output, filter_string=filter,
-                                                      start_from=start_from, page_size=page_size,
-                                                      output_format=output_format, report_spec=report_spec, body=body)
+                                                      _gen_output=self._generate_feedback_output, start_from=0,
+                                                      page_size=0, output_format="JSON", report_spec=report_spec,
+                                                      body=body, filter_string=filter_string)
 
         return response
 
@@ -3869,8 +3869,9 @@ class ServerClient(BaseServerClient):
 
         url = f"{self.command_root}feedback-manager/tags/by-name"
 
-        response = await self._async_get_name_request(url, self._generate_feedback_output, tag_name, None, start_from,
-                                                      page_size, output_format, report_spec)
+        response = await self._async_get_name_request(url, self._generate_feedback_output, tag_name, start_from=0,
+                                                      page_size=0, output_format="JSON", report_spec=None,
+                                                      body=start_from, max_mermaid_node_count=page_size)
         return response
 
     @dynamic_catch
@@ -5451,8 +5452,9 @@ class ServerClient(BaseServerClient):
                 "pageSize": page_size
             }
         url = f"{self.command_root}classification-explorer/search-keywords/by-keyword"
-        response = await self._async_get_name_request(url, "SearchKeyword", self._generate_feedback_output, keyword,
-                                                      None, None, start_from, page_size, output_format, report_spec)
+        response = await self._async_get_name_request(url, "SearchKeyword", self._generate_feedback_output,
+                                                      start_from=0, page_size=0, output_format="JSON",
+                                                      report_spec=keyword, body=None, max_mermaid_node_count=None)
         return response
 
     @dynamic_catch
@@ -6055,20 +6057,19 @@ class ServerClient(BaseServerClient):
     @dynamic_catch
     async def _async_find_request(self, url: str, _type: str, _gen_output: Callable[..., Any], search_string: str,
                                   starts_with: bool = True, ends_with: bool = False, ignore_case: bool = False,
-                                  anchor_domain: Optional[str] = None,
-                                  metadata_element_type: Optional[str] = None,
+                                  anchor_domain: Optional[str] = None, anchor_type_name: Optional[str]=None,
+                                  anchor_guid: Optional[str]=None,
+                                  anchor_scope_guid=None, metadata_element_type: Optional[str] = None,
                                   metadata_element_subtypes: Optional[list[str]] = None,
                                   skip_relationships: Optional[list[str]] = None,
                                   include_only_relationships: Optional[list[str]] = None,
                                   skip_classified_elements: Optional[list[str]] = None,
                                   include_only_classified_elements: Optional[list[str]] = None,
-                                  graph_query_depth: int = 3,
-                                  max_mermaid_node_count: int = 5,
+                                  graph_query_depth: int = 5, max_mermaid_node_count: int = 5,
                                   governance_zone_filter: Optional[list[str]] = None, as_of_time: Optional[str] = None,
                                   effective_time: Optional[str] = None, relationship_page_size: int = 0,
                                   limit_results_by_status: Optional[list[str]] = None,
-                                  sequencing_order: Optional[str] = None,
-                                  sequencing_property: Optional[str] = None,
+                                  sequencing_order: Optional[str] = None, sequencing_property: Optional[str] = None,
                                   output_format: str = "JSON", report_spec: Optional[str | dict] = None,
                                   start_from: int = 0, page_size: int | None = 100,
                                   property_names: Optional[list[str]] = None,
@@ -6084,7 +6085,7 @@ class ServerClient(BaseServerClient):
                 validated_body = self._search_string_request_adapter.validate_python(body)
         else:
             # Treat a lone '*' as a wildcard for any content: map to '.*' regex understood by Egeria
-            search_string = ".*" if search_string == "*" else search_string
+            search_string = None if search_string == "*" else search_string
             if page_size is None:
                 page_size = 0
 
@@ -6108,7 +6109,11 @@ class ServerClient(BaseServerClient):
                     "skipClassifiedElements": skip_classified_elements,
                     "includeOnlyClassifiedElements": include_only_classified_elements,
                     "graphQueryDepth": graph_query_depth,
-                    "maxMermaidNodeCount": max_mermaid_node_count
+                    "maxMermaidNodeCount": max_mermaid_node_count,
+                    "anchorGUID": anchor_guid,
+                    "anchorTypeName": anchor_type_name,
+                    "anchorDomainName": anchor_domain,
+                    "anchorScopeGuid": anchor_scope_guid,
                 }
                 validated_body = FindPropertyNamesRequestBody.model_validate(body)
             else:
@@ -6118,7 +6123,10 @@ class ServerClient(BaseServerClient):
                     "startWith": starts_with,
                     "endWith": ends_with,
                     "ignoreCase": ignore_case,
-                    "anchorDomain": anchor_domain,
+                    "anchorGUID": anchor_guid,
+                    "anchorTypeName": anchor_type_name,
+                    "anchorDomainName": anchor_domain,
+                    "anchorScopeGuid": anchor_scope_guid,
                     "zoneFilter": governance_zone_filter,
                     "metadataElementTypeName": metadata_element_type,
                     "metadataElementSubtypeNames": metadata_element_subtypes,
@@ -6156,11 +6164,11 @@ class ServerClient(BaseServerClient):
 
     @dynamic_catch
     async def _async_get_name_request(self, url: str, _type: str, _gen_output: Callable[..., Any],
-                                      filter_string: str, classification_names: Optional[list[str]] = None,
-                                      start_from: int = 0, page_size: int = 0, output_format: str = 'JSON',
+                                      filter_string: str = None, classification_names: list[str] = None,
+                                      start_from: int = None, page_size: int = None, output_format: str = "JSON",
                                       report_spec: Optional[str | dict] = None,
                                       body: Optional[dict | FilterRequestBody] = None,
- max_mermaid_node_count=5, **kwargs) -> Any:
+                                    max_mermaid_node_count=5, **kwargs) -> Any:
 
         if isinstance(body, FilterRequestBody):
             validated_body = body
