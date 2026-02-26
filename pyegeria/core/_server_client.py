@@ -6063,7 +6063,7 @@ class ServerClient(BaseServerClient):
                                   skip_classified_elements: Optional[list[str]] = None,
                                   include_only_classified_elements: Optional[list[str]] = None,
                                   graph_query_depth: int = 3,
-                                  max_mermaid_note_count: int = 5,
+                                  max_mermaid_node_count: int = 5,
                                   governance_zone_filter: Optional[list[str]] = None, as_of_time: Optional[str] = None,
                                   effective_time: Optional[str] = None, relationship_page_size: int = 0,
                                   limit_results_by_status: Optional[list[str]] = None,
@@ -6108,7 +6108,7 @@ class ServerClient(BaseServerClient):
                     "skipClassifiedElements": skip_classified_elements,
                     "includeOnlyClassifiedElements": include_only_classified_elements,
                     "graphQueryDepth": graph_query_depth,
-                    "maxMermaidNoteCount": max_mermaid_note_count
+                    "maxMermaidNodeCount": max_mermaid_node_count
                 }
                 validated_body = FindPropertyNamesRequestBody.model_validate(body)
             else:
@@ -6128,7 +6128,7 @@ class ServerClient(BaseServerClient):
                     "skipClassifiedElements": skip_classified_elements,
                     "includeOnlyClassifiedElements": include_only_classified_elements,
                     "graphQueryDepth": graph_query_depth,
-                    "maxMermaidNoteCount": max_mermaid_note_count,
+                    "maxMermaidNodeCount": max_mermaid_node_count,
                     "asOfTime": as_of_time,
                     "effectiveTime": effective_time,
                     "limitResultsByStatus": limit_results_by_status,
@@ -6160,7 +6160,7 @@ class ServerClient(BaseServerClient):
                                       start_from: int = 0, page_size: int = 0, output_format: str = 'JSON',
                                       report_spec: Optional[str | dict] = None,
                                       body: Optional[dict | FilterRequestBody] = None,
- max_mermaid_note_count=5, **kwargs) -> Any:
+ max_mermaid_node_count=5, **kwargs) -> Any:
 
         if isinstance(body, FilterRequestBody):
             validated_body = body
@@ -6175,7 +6175,7 @@ class ServerClient(BaseServerClient):
                 "start_from": start_from,
                 "page_size": page_size,
                 "include_only_classified_elements": classification_names,
-                "maxMermaidNoteCount": max_mermaid_note_count
+                "maxMermaidNodeCount": max_mermaid_node_count
             }
             validated_body = FilterRequestBody.model_validate(body)
 
@@ -6199,7 +6199,7 @@ class ServerClient(BaseServerClient):
     @dynamic_catch
     async def _async_get_guid_request(self, url: str, _type: str, _gen_output: Callable[..., Any],
                                       output_format: str = 'JSON', report_spec: Optional[str | dict] = None,
-                                      body: Optional[dict | GetRequestBody] = None, max_mermaid_note_count=5,
+                                      body: Optional[dict | GetRequestBody] = None, max_mermaid_node_count=5,
                                       **kwargs) -> Any:
 
         if isinstance(body, GetRequestBody):
@@ -6211,7 +6211,7 @@ class ServerClient(BaseServerClient):
             body = {
                 "class": "GetRequestBody",
                 "metadataElementTypeName": _type,
-                "maxMermaidNoteCount": max_mermaid_note_count
+                "maxMermaidNodeCount": max_mermaid_node_count
             }
             validated_body = GetRequestBody.model_validate(body)
 
@@ -6236,12 +6236,12 @@ class ServerClient(BaseServerClient):
                                               output_format: str = 'JSON',
                                               report_spec: Optional[str | dict] = None,
                                               body: Optional[dict | GetRequestBody] = None,
-                                              max_mermaid_note_count=5,
+                                              max_mermaid_node_count=5,
                                               **kwargs) -> Any:
         """Handles request; returns elements or formatted output
 
         Args:
-            max_mermaid_note_count ():
+            max_mermaid_node_count ():
         """
         if isinstance(body, GetRequestBody):
             validated_body = body
@@ -6286,7 +6286,7 @@ class ServerClient(BaseServerClient):
         skip_classified_elements: Optional[list[str]] = None,
         include_only_classified_elements: Optional[list[str]] = None,
         graph_query_depth: int = 3,
-        max_mermaid_note_count: int = 5,
+        max_mermaid_node_count: int = 5,
         governance_zone_filter: Optional[list[str]] = None,
         as_of_time: Optional[str] = None,
         effective_time: Optional[str] = None,
@@ -6326,7 +6326,7 @@ class ServerClient(BaseServerClient):
                 "skipClassifiedElements": skip_classified_elements,
                 "includeOnlyClassifiedElements": include_only_classified_elements,
                 "graphQueryDepth": graph_query_depth,
-                "maxMermaidNoteCount": max_mermaid_note_count,
+                "maxMermaidNodeCount": max_mermaid_node_count,
                 "asOfTime": as_of_time,
                 "effectiveTime": effective_time,
                 "limitResultsByStatus": limit_results_by_status,
@@ -6452,7 +6452,7 @@ class ServerClient(BaseServerClient):
         skip_classified_elements: Optional[list[str]] = None,
         include_only_classified_elements: Optional[list[str]] = None,
         graph_query_depth: int = 3,
-        max_mermaid_note_count: int = 5,
+        max_mermaid_node_count: int = 5,
         governance_zone_filter: Optional[list[str]] = None,
         as_of_time: Optional[str] = None,
         effective_time: Optional[str] = None,
@@ -6492,7 +6492,7 @@ class ServerClient(BaseServerClient):
                 "skipClassifiedElements": skip_classified_elements,
                 "includeOnlyClassifiedElements": include_only_classified_elements,
                 "graphQueryDepth": graph_query_depth,
-                "maxMermaidNoteCount": max_mermaid_note_count,
+                "maxMermaidNodeCount": max_mermaid_node_count,
                 "asOfTime": as_of_time,
                 "effectiveTime": effective_time,
                 "limitResultsByStatus": limit_results_by_status,
@@ -6574,7 +6574,7 @@ class ServerClient(BaseServerClient):
         skip_classified_elements: Optional[list[str]] = None,
         include_only_classified_elements: Optional[list[str]] = None,
         graph_query_depth: int = 3,
-        max_mermaid_note_count: int = 5,
+        max_mermaid_node_count: int = 5,
         governance_zone_filter: Optional[list[str]] = None,
         as_of_time: Optional[str] = None,
         effective_time: Optional[str] = None,
@@ -6613,7 +6613,7 @@ class ServerClient(BaseServerClient):
                 "skipClassifiedElements": skip_classified_elements,
                 "includeOnlyClassifiedElements": include_only_classified_elements,
                 "graphQueryDepth": graph_query_depth,
-                "maxMermaidNoteCount": max_mermaid_note_count,
+                "maxMermaidNodeCount": max_mermaid_node_count,
                 "asOfTime": as_of_time,
                 "effectiveTime": effective_time,
                 "limitResultsByStatus": limit_results_by_status,
