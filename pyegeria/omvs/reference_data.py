@@ -208,12 +208,8 @@ class ReferenceDataManager(ServerClient):
         # Filter out None values, but keep search_string even if None (it's required)
         params = {k: v for k, v in params.items() if v is not None or k == 'search_string'}
 
-        response = await self._async_find_request(
-            url,
-            _type="ValidValuesDefinition",
-            _gen_output=self._generate_vv_def_output,
-            **params
-        )
+        response = await self._async_find_request(url, _type="ValidValuesDefinition",
+                                                  _gen_output=self._generate_vv_def_output, **params)
 
         return response
 
@@ -297,10 +293,9 @@ class ReferenceDataManager(ServerClient):
         response = await self._async_get_name_request(url, _type="ValidValuesDefinition",
                                                       _gen_output=self._generate_vv_def_output,
                                                       filter_string=filter_string,
-                                                      classification_names=classification_names,
-                                                      start_from=start_from, page_size=page_size,
-                                                      output_format=output_format, report_spec=report_spec,
-                                                      body=body)
+                                                      classification_names=classification_names, start_from=start_from,
+                                                      page_size=page_size, output_format=output_format,
+                                                      report_spec=report_spec, body=body)
 
         return response
 
@@ -485,7 +480,7 @@ class ReferenceDataManager(ServerClient):
             "displayName": "add short name here",
             "description": "add description here",
             "category": "add description here",
-            "namespace" : "add namespace here",
+            "namespacePath" : "add namespace here",
             "userDefinedStatus" : "add status here",
             "usage": "add usage here",
             "dataType" : "add data type here",
@@ -564,7 +559,7 @@ class ReferenceDataManager(ServerClient):
             "displayName": "add short name here",
             "description": "add description here",
             "category": "add description here",
-            "namespace" : "add namespace here",
+            "namespacePath" : "add namespace here",
             "userDefinedStatus" : "add status here",
             "usage": "add usage here",
             "dataType" : "add data type here",
@@ -781,7 +776,7 @@ class ReferenceDataManager(ServerClient):
             "displayName": "add short name here",
             "description": "add description here",
             "category": "add description here",
-            "namespace" : "add namespace here",
+            "namespacePath" : "add namespace here",
             "userDefinedStatus" : "add status here",
             "usage": "add usage here",
             "dataType" : "add data type here",
@@ -849,7 +844,7 @@ class ReferenceDataManager(ServerClient):
             "displayName": "add short name here",
             "description": "add description here",
             "category": "add description here",
-            "namespace" : "add namespace here",
+            "namespacePath" : "add namespace here",
             "userDefinedStatus" : "add status here",
             "usage": "add usage here",
             "dataType" : "add data type here",

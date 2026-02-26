@@ -79,7 +79,7 @@ class TestDataDesigner:
         #         "displayName": display_name,
         #         "qualifiedName": f"{namespace}::data-structure::{display_name}",
         #         "description": "a solar power data structure",
-        #         "namespace": namespace,
+        #         "namespacePath": namespace,
         #         "versionIdentifier": "0.1"
         #       }
         #     }
@@ -410,7 +410,7 @@ class TestDataDesigner:
                 "class": "DataFieldProperties",
                 "qualifiedName": "dataField::radio_name",
                 "displayName": "radio_name",
-                "namespace": "",
+                "namespacePath": "",
                 "description": "What is the name of the radio",
                 "versionIdentifier": ".1",
                 "aliases": [
@@ -729,7 +729,7 @@ class TestDataDesigner:
             "qualifiedName": "dataClass::moo",
             "displayName": "Moo",
             "description": "add description here",
-            # "namespace": "add scope of this data class's applicability.",
+            # "namespacePath": "add scope of this data class's applicability.",
             # "matchPropertyNames": ["name1", "name2"],
             "matchThreshold": 0,
             # "specification": "",
@@ -763,7 +763,7 @@ class TestDataDesigner:
             #     "qualifiedName": "DataClass::Purchase Date",
             #     "displayName": name,
             #     "description": description,
-            #     "namespace": None,
+            #     "namespacePath": None,
             #     "matchPropertyNames": [],
             #     "matchThreshold": 0,
             #     "specification": None,

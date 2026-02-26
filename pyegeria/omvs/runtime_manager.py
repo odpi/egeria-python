@@ -1677,17 +1677,10 @@ class RuntimeManager(ServerClient):
             f"{self.runtime_command_root}/platforms/by-name"
         )
 
-        return await self._async_get_name_request(
-            url,
-            _type="Platforms",
-            _gen_output=self._generate_platform_output,
-            filter_string=filter_string,
-            start_from=start_from,
-            page_size=page_size,
-            output_format=output_format,
-            report_spec=report_spec,
-            body=body
-        )
+        return await self._async_get_name_request(url, _type="Platforms", _gen_output=self._generate_platform_output,
+                                                  filter_string=filter_string, start_from=start_from,
+                                                  page_size=page_size, output_format=output_format,
+                                                  report_spec=report_spec, body=body)
 
     @dynamic_catch
     async def _async_get_platforms_by_type(
@@ -1740,17 +1733,10 @@ class RuntimeManager(ServerClient):
             f"{self.runtime_command_root}/platforms/by-deployed-implementation-type"
         )
 
-        return await self._async_get_name_request(
-            url,
-            _type="Platforms",
-            _gen_output=self._generate_platform_output,
-            filter_string=filter_string,
-            start_from=start_from,
-            page_size=page_size,
-            output_format=output_format,
-            report_spec=report_spec,
-            body=body
-        )
+        return await self._async_get_name_request(url, _type="Platforms", _gen_output=self._generate_platform_output,
+                                                  filter_string=filter_string, start_from=start_from,
+                                                  page_size=page_size, output_format=output_format,
+                                                  report_spec=report_spec, body=body)
 
     def get_platforms_by_type(
         self,
@@ -1850,18 +1836,10 @@ class RuntimeManager(ServerClient):
         )
 
 
-        return await self._async_get_name_request(
-            url,
-            _type="Platforms",
-            _gen_output=self._generate_platform_output,
-            filter_string=filter_string,
-            classification_names=["Template"],
-            start_from=start_from,
-            page_size=page_size,
-            output_format=output_format,
-            report_spec=report_spec,
-            body=body
-        )
+        return await self._async_get_name_request(url, _type="Platforms", _gen_output=self._generate_platform_output,
+                                                  filter_string=filter_string, classification_names=["Template"],
+                                                  start_from=start_from, page_size=page_size,
+                                                  output_format=output_format, report_spec=report_spec, body=body)
 
     def get_platform_templates_by_type(
         self,
@@ -2198,17 +2176,11 @@ class RuntimeManager(ServerClient):
         url = f"{self.runtime_command_root}/software-servers/by-name"
 
         
-        return await self._async_get_name_request(
-             url,
-             _type="SoftwareServer",
-             _gen_output=self._generate_omag_server_output,
-             filter_string=filter_string,
-             start_from=start_from,
-             page_size=page_size,
-             output_format=output_format,
-             report_spec=report_spec,
-             body=body
-        )
+        return await self._async_get_name_request(url, _type="SoftwareServer",
+                                                  _gen_output=self._generate_omag_server_output,
+                                                  filter_string=filter_string, start_from=start_from,
+                                                  page_size=page_size, output_format=output_format,
+                                                  report_spec=report_spec, body=body)
 
     @dynamic_catch
     def get_servers_by_name(
@@ -2296,17 +2268,11 @@ class RuntimeManager(ServerClient):
 
         url = f"{self.runtime_command_root}/software-servers/by-deployed-implementation-type"
 
-        return await self._async_get_name_request(
-            url,
-            _type="OMAGServers",
-            _gen_output=self._generate_omag_server_output,
-            filter_string=filter_string,
-            start_from=start_from,
-            page_size=page_size,
-            output_format=output_format,
-            report_spec=report_spec,
-            body=body
-        )
+        return await self._async_get_name_request(url, _type="OMAGServers",
+                                                  _gen_output=self._generate_omag_server_output,
+                                                  filter_string=filter_string, start_from=start_from,
+                                                  page_size=page_size, output_format=output_format,
+                                                  report_spec=report_spec, body=body)
 
 
     @dynamic_catch
@@ -2401,18 +2367,11 @@ class RuntimeManager(ServerClient):
             f"by-deployed-implementation-type?startFrom={start_from}&pageSize={page_size}&getTemplates=true"
         )
 
-        return await self._async_get_name_request(
-            url,
-            _type="OMAGServers",
-            _gen_output=self._generate_omag_server_output,
-            classification_names = ["Template"],
-            filter_string=filter_string,
-            start_from=start_from,
-            page_size=page_size,
-            output_format=output_format,
-            report_spec=report_spec,
-            body=body
-        )
+        return await self._async_get_name_request(url, _type="OMAGServers",
+                                                  _gen_output=self._generate_omag_server_output,
+                                                  filter_string=filter_string, classification_names=["Template"],
+                                                  start_from=start_from, page_size=page_size,
+                                                  output_format=output_format, report_spec=report_spec, body=body)
 
 
     def get_server_templates_by_dep_impl_type(

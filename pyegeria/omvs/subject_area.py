@@ -624,18 +624,12 @@ class SubjectArea(ServerClient):
         ```
         """
         url = f"{self.platform_url}/servers/{self.view_server}/api/open-metadata/subject-area/governance-definitions/by-name"
-        return await self._async_get_name_request(
-            url,
-            _type="SubjectArea",
-            _gen_output=self._generate_subject_area_output,
-            filter_string=filter_string,
-            classification_names=classification_names,
-            start_from=start_from,
-            page_size=page_size,
-            output_format=output_format,
-            report_spec=report_spec,
-            body=body,
-        )
+        return await self._async_get_name_request(url, _type="SubjectArea",
+                                                  _gen_output=self._generate_subject_area_output,
+                                                  filter_string=filter_string,
+                                                  classification_names=classification_names, start_from=start_from,
+                                                  page_size=page_size, output_format=output_format,
+                                                  report_spec=report_spec, body=body)
 
     def get_subject_areas_by_name(
         self,
@@ -805,12 +799,8 @@ class SubjectArea(ServerClient):
         # Filter out None values, but keep search_string even if None (it's required)
         params = {k: v for k, v in params.items() if v is not None or k == 'search_string'}
         
-        response = await self._async_find_request(
-            url,
-            _type="SubjectArea",
-            _gen_output=self._generate_subject_area_output,
-            **params
-        )
+        response = await self._async_find_request(url, _type="SubjectArea",
+                                                  _gen_output=self._generate_subject_area_output, **params)
 
         return response
 

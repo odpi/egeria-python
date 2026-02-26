@@ -111,8 +111,7 @@ class EgeriaTech:
             "actor_manager": ActorManager,
             "time_keeper": TimeKeeper,
             "product_manager": ProductManager,
-            "location_arena": Location,
-            "location": Location,
+            "location_arena": LocationArena,
             "data_discovery": DataDiscovery,
             "data_engineer": DataEngineer,
             "digital_business": DigitalBusiness,
@@ -197,7 +196,7 @@ class EgeriaTech:
         for sub in self._instantiated_clients.values():
             if hasattr(sub, "get_token"):
                 return sub.get_token()
-        return None
+        return self.token
 
     def close_session(self) -> None:
         """Close sessions for all sub-clients that were instantiated."""

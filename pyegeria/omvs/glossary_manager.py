@@ -2935,13 +2935,11 @@ class GlossaryManager(CollectionManager):
                                              report_spec: str | dict = None) -> list:
         url = (f"{self.platform_url}/servers/{self.view_server}/api/open-metadata/glossary-manager/glossaries/"
                f"terms/by-name")
-        response = await self._async_get_name_request(url, _type="GlossaryTerm",
-                                                      _gen_output=self._generate_term_output,
+        response = await self._async_get_name_request(url, _type="GlossaryTerm", _gen_output=self._generate_term_output,
                                                       filter_string=filter_string,
-                                                      classification_names=classification_names,
-                                                      start_from=start_from, page_size=page_size,
-                                                      output_format=output_format, report_spec=report_spec,
-                                                      body=body)
+                                                      classification_names=classification_names, start_from=start_from,
+                                                      page_size=page_size, output_format=output_format,
+                                                      report_spec=report_spec, body=body)
         return response
 
     def get_terms_by_name(self, filter_string: Optional[str] = None, classification_names: Optional[list[str]] = None,
@@ -3080,12 +3078,8 @@ class GlossaryManager(CollectionManager):
         # Get metadata_element_type from kwargs or use default
         metadata_element_type = kwargs.get('metadata_element_type', 'GlossaryTerm')
         
-        response = await self._async_find_request(
-            url,
-            _type=metadata_element_type,
-            _gen_output=self._generate_term_output,
-            **params
-        )
+        response = await self._async_find_request(url, _type=metadata_element_type,
+                                                  _gen_output=self._generate_term_output, **params)
 
         return response
 

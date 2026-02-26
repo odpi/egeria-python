@@ -1680,12 +1680,8 @@ class ServerClient(BaseServerClient):
         # Filter out None values, but keep search_string even if None (it's required)
         params = {k: v for k, v in params.items() if v is not None or k == 'search_string'}
         
-        response = await self._async_find_request(
-            url,
-            _type="Comment",
-            _gen_output=self._generate_comment_output,
-            **params
-        )
+        response = await self._async_find_request(url, _type="Comment", _gen_output=self._generate_comment_output,
+                                                  **params)
 
         return response
 
@@ -2390,12 +2386,8 @@ class ServerClient(BaseServerClient):
         # Filter out None values, but keep search_string even if None (it's required)
         params = {k: v for k, v in params.items() if v is not None or k == 'search_string'}
         
-        response = await self._async_find_request(
-            url,
-            _type="NoteLog",
-            _gen_output=self._generate_feedback_output,
-            **params
-        )
+        response = await self._async_find_request(url, _type="NoteLog", _gen_output=self._generate_feedback_output,
+                                                  **params)
 
         return response
 
@@ -2491,11 +2483,10 @@ class ServerClient(BaseServerClient):
         """
 
         url = f"{self.command_root}feedback-manager/note-logs/by-name"
-        response = await self._async_get_name_request(url, _type=element_type, filter_string=filter,
-                                                      _gen_output=self._generate_feedback_output, start_from=start_from,
-                                                      page_size=page_size, output_format=output_format,
-                                                      report_spec=report_spec,
-                                                      body=body)
+        response = await self._async_get_name_request(url, _type=element_type,
+                                                      _gen_output=self._generate_feedback_output, filter_string=filter,
+                                                      start_from=start_from, page_size=page_size,
+                                                      output_format=output_format, report_spec=report_spec, body=body)
 
         return response
 
@@ -3352,12 +3343,8 @@ class ServerClient(BaseServerClient):
         # Filter out None values, but keep search_string even if None (it's required)
         params = {k: v for k, v in params.items() if v is not None or k == 'search_string'}
         
-        response = await self._async_find_request(
-            url,
-            _type="NoteLog",
-            _gen_output=self._generate_feedback_output,
-            **params
-        )
+        response = await self._async_find_request(url, _type="NoteLog", _gen_output=self._generate_feedback_output,
+                                                  **params)
         return response
 
     @dynamic_catch
@@ -3882,9 +3869,8 @@ class ServerClient(BaseServerClient):
 
         url = f"{self.command_root}feedback-manager/tags/by-name"
 
-        response = await self._async_get_name_request(url, self._generate_feedback_output, tag_name,
-                                                      None,start_from, page_size, output_format, report_spec
-                                                     )
+        response = await self._async_get_name_request(url, self._generate_feedback_output, tag_name, None, start_from,
+                                                      page_size, output_format, report_spec)
         return response
 
     @dynamic_catch
@@ -4041,12 +4027,8 @@ class ServerClient(BaseServerClient):
         # Filter out None values, but keep search_string even if None (it's required)
         params = {k: v for k, v in params.items() if v is not None or k == 'search_string'}
         
-        response = await self._async_find_request(
-            url,
-            _type="InformalTag",
-            _gen_output=self._generate_feedback_output,
-            **params
-        )
+        response = await self._async_find_request(url, _type="InformalTag", _gen_output=self._generate_feedback_output,
+                                                  **params)
         return response
 
     @dynamic_catch
@@ -5469,9 +5451,8 @@ class ServerClient(BaseServerClient):
                 "pageSize": page_size
             }
         url = f"{self.command_root}classification-explorer/search-keywords/by-keyword"
-        response = await self._async_get_name_request(url, "SearchKeyword", self._generate_feedback_output,
-                                                      keyword, None, None, start_from,
-                                                      page_size, output_format, report_spec, body)
+        response = await self._async_get_name_request(url, "SearchKeyword", self._generate_feedback_output, keyword,
+                                                      None, None, start_from, page_size, output_format, report_spec)
         return response
 
     @dynamic_catch
@@ -5633,12 +5614,8 @@ class ServerClient(BaseServerClient):
         # Filter out None values, but keep search_string even if None (it's required)
         params = {k: v for k, v in params.items() if v is not None or k == 'search_string'}
         
-        response = await self._async_find_request(
-            url,
-            _type="SearchKeyword",
-            _gen_output=self._generate_feedback_output,
-            **params
-        )
+        response = await self._async_find_request(url, _type="SearchKeyword",
+                                                  _gen_output=self._generate_feedback_output, **params)
         return response
 
     @dynamic_catch
@@ -6086,6 +6063,7 @@ class ServerClient(BaseServerClient):
                                   skip_classified_elements: Optional[list[str]] = None,
                                   include_only_classified_elements: Optional[list[str]] = None,
                                   graph_query_depth: int = 3,
+                                  max_mermaid_note_count: int = 5,
                                   governance_zone_filter: Optional[list[str]] = None, as_of_time: Optional[str] = None,
                                   effective_time: Optional[str] = None, relationship_page_size: int = 0,
                                   limit_results_by_status: Optional[list[str]] = None,
@@ -6130,6 +6108,7 @@ class ServerClient(BaseServerClient):
                     "skipClassifiedElements": skip_classified_elements,
                     "includeOnlyClassifiedElements": include_only_classified_elements,
                     "graphQueryDepth": graph_query_depth,
+                    "maxMermaidNoteCount": max_mermaid_note_count
                 }
                 validated_body = FindPropertyNamesRequestBody.model_validate(body)
             else:
@@ -6149,6 +6128,7 @@ class ServerClient(BaseServerClient):
                     "skipClassifiedElements": skip_classified_elements,
                     "includeOnlyClassifiedElements": include_only_classified_elements,
                     "graphQueryDepth": graph_query_depth,
+                    "maxMermaidNoteCount": max_mermaid_note_count,
                     "asOfTime": as_of_time,
                     "effectiveTime": effective_time,
                     "limitResultsByStatus": limit_results_by_status,
@@ -6180,7 +6160,7 @@ class ServerClient(BaseServerClient):
                                       start_from: int = 0, page_size: int = 0, output_format: str = 'JSON',
                                       report_spec: Optional[str | dict] = None,
                                       body: Optional[dict | FilterRequestBody] = None,
-                                      **kwargs) -> Any:
+ max_mermaid_note_count=5, **kwargs) -> Any:
 
         if isinstance(body, FilterRequestBody):
             validated_body = body
@@ -6195,6 +6175,7 @@ class ServerClient(BaseServerClient):
                 "start_from": start_from,
                 "page_size": page_size,
                 "include_only_classified_elements": classification_names,
+                "maxMermaidNoteCount": max_mermaid_note_count
             }
             validated_body = FilterRequestBody.model_validate(body)
 
@@ -6218,7 +6199,7 @@ class ServerClient(BaseServerClient):
     @dynamic_catch
     async def _async_get_guid_request(self, url: str, _type: str, _gen_output: Callable[..., Any],
                                       output_format: str = 'JSON', report_spec: Optional[str | dict] = None,
-                                      body: Optional[dict | GetRequestBody] = None,
+                                      body: Optional[dict | GetRequestBody] = None, max_mermaid_note_count=5,
                                       **kwargs) -> Any:
 
         if isinstance(body, GetRequestBody):
@@ -6229,7 +6210,8 @@ class ServerClient(BaseServerClient):
             _type = _type.replace(" ", "")
             body = {
                 "class": "GetRequestBody",
-                "metadataElementTypeName": _type
+                "metadataElementTypeName": _type,
+                "maxMermaidNoteCount": max_mermaid_note_count
             }
             validated_body = GetRequestBody.model_validate(body)
 
@@ -6254,8 +6236,13 @@ class ServerClient(BaseServerClient):
                                               output_format: str = 'JSON',
                                               report_spec: Optional[str | dict] = None,
                                               body: Optional[dict | GetRequestBody] = None,
+                                              max_mermaid_note_count=5,
                                               **kwargs) -> Any:
-        """Handles request; returns elements or formatted output"""
+        """Handles request; returns elements or formatted output
+
+        Args:
+            max_mermaid_note_count ():
+        """
         if isinstance(body, GetRequestBody):
             validated_body = body
         elif isinstance(body, dict):
@@ -6299,6 +6286,7 @@ class ServerClient(BaseServerClient):
         skip_classified_elements: Optional[list[str]] = None,
         include_only_classified_elements: Optional[list[str]] = None,
         graph_query_depth: int = 3,
+        max_mermaid_note_count: int = 5,
         governance_zone_filter: Optional[list[str]] = None,
         as_of_time: Optional[str] = None,
         effective_time: Optional[str] = None,
@@ -6338,6 +6326,7 @@ class ServerClient(BaseServerClient):
                 "skipClassifiedElements": skip_classified_elements,
                 "includeOnlyClassifiedElements": include_only_classified_elements,
                 "graphQueryDepth": graph_query_depth,
+                "maxMermaidNoteCount": max_mermaid_note_count,
                 "asOfTime": as_of_time,
                 "effectiveTime": effective_time,
                 "limitResultsByStatus": limit_results_by_status,
@@ -6463,6 +6452,7 @@ class ServerClient(BaseServerClient):
         skip_classified_elements: Optional[list[str]] = None,
         include_only_classified_elements: Optional[list[str]] = None,
         graph_query_depth: int = 3,
+        max_mermaid_note_count: int = 5,
         governance_zone_filter: Optional[list[str]] = None,
         as_of_time: Optional[str] = None,
         effective_time: Optional[str] = None,
@@ -6502,6 +6492,7 @@ class ServerClient(BaseServerClient):
                 "skipClassifiedElements": skip_classified_elements,
                 "includeOnlyClassifiedElements": include_only_classified_elements,
                 "graphQueryDepth": graph_query_depth,
+                "maxMermaidNoteCount": max_mermaid_note_count,
                 "asOfTime": as_of_time,
                 "effectiveTime": effective_time,
                 "limitResultsByStatus": limit_results_by_status,
@@ -6583,6 +6574,7 @@ class ServerClient(BaseServerClient):
         skip_classified_elements: Optional[list[str]] = None,
         include_only_classified_elements: Optional[list[str]] = None,
         graph_query_depth: int = 3,
+        max_mermaid_note_count: int = 5,
         governance_zone_filter: Optional[list[str]] = None,
         as_of_time: Optional[str] = None,
         effective_time: Optional[str] = None,
@@ -6621,6 +6613,7 @@ class ServerClient(BaseServerClient):
                 "skipClassifiedElements": skip_classified_elements,
                 "includeOnlyClassifiedElements": include_only_classified_elements,
                 "graphQueryDepth": graph_query_depth,
+                "maxMermaidNoteCount": max_mermaid_note_count,
                 "asOfTime": as_of_time,
                 "effectiveTime": effective_time,
                 "limitResultsByStatus": limit_results_by_status,
@@ -7393,12 +7386,7 @@ class ServerClient(BaseServerClient):
         params.update(kwargs)
         params = {k: v for k, v in params.items() if v is not None}
         
-        return await self._async_find_request(
-            url,
-            _type="Asset",
-            _gen_output=_generate_default_output, # changed from _generate_referenceable_output
-            **params
-        )
+        return await self._async_find_request(url, _type="Asset", _gen_output=_generate_default_output, **params)
 
     @dynamic_catch
     def find_assets(self, search_string: str = "*", starts_with: bool = False, ends_with: bool = False,

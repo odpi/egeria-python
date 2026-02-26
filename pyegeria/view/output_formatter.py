@@ -47,7 +47,7 @@ from pyegeria.models import to_camel_case
 #    - Others (e.g. 'doc') -> [text] (standard square box)
 #
 # Set to False to preserve the native Egeria output for modern Mermaid renderers.
-NORMALIZE_MERMAID = True
+NORMALIZE_MERMAID = False
 
 """
 Note on select_report_spec function:

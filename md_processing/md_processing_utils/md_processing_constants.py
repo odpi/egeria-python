@@ -80,7 +80,7 @@ GOV_COM_LIST = ["Create Business Imperative", "Update Business Imperative",
                 ]
 
 SIMPLE_BASE_COLLECTIONS: set = {"Collection", "Home Collection", "Digital Product", "Result Set", "Recent Access",
-                                "Reference List", "Work Item List", "Data Sharing Agreement", "Namespace", "Agreement",
+                                "Reference List", "Work Item List", "Data Sharing Agreement", "namespacePath", "Agreement",
                                 "Digital Subscription", "Data Product", "Subscription",
                                 "Root Collection", "Folder", "Context Event Collection", "Name Space Collection",
                                 # "Data Specifications", "Data Specifications", "Data Specs", "Data Specs",

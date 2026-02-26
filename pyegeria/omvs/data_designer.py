@@ -910,12 +910,7 @@ class DataDesigner(ServerClient):
         # Filter out None values, but keep search_string even if None (it's required)
         params = {k: v for k, v in params.items() if v is not None or k == 'search_string'}
         
-        return await self._async_find_request(
-            url,
-            "DataStructure",
-            self._generate_data_structure_output,
-            **params
-        )
+        return await self._async_find_request(url, "DataStructure", self._generate_data_structure_output, **params)
 
     @dynamic_catch
     def find_data_structures(
@@ -1063,10 +1058,9 @@ class DataDesigner(ServerClient):
         response = await self._async_get_name_request(url, _type="DataStructure",
                                                       _gen_output=self._generate_data_structure_output,
                                                       filter_string=filter_string,
-                                                      classification_names=classification_names,
-                                                      start_from=start_from, page_size=page_size,
-                                                      output_format=output_format, report_spec=report_spec,
-                                                      body=body)
+                                                      classification_names=classification_names, start_from=start_from,
+                                                      page_size=page_size, output_format=output_format,
+                                                      report_spec=report_spec, body=body)
 
         return response
 
@@ -2520,12 +2514,7 @@ class DataDesigner(ServerClient):
         # Filter out None values, but keep search_string even if None (it's required)
         params = {k: v for k, v in params.items() if v is not None or k == 'search_string'}
         
-        return await self._async_find_request(
-            url,
-            "DataField",
-            self._generate_data_field_output,
-            **params
-        )
+        return await self._async_find_request(url, "DataField", self._generate_data_field_output, **params)
 
     @dynamic_catch
     def find_data_fields(self, search_string: str,
@@ -2706,10 +2695,9 @@ class DataDesigner(ServerClient):
         response = await self._async_get_name_request(url, _type="DataField",
                                                       _gen_output=self._generate_data_field_output,
                                                       filter_string=filter_string,
-                                                      classification_names=classification_names,
-                                                      start_from=start_from, page_size=page_size,
-                                                      output_format=output_format, report_spec=report_spec,
-                                                      body=body)
+                                                      classification_names=classification_names, start_from=start_from,
+                                                      page_size=page_size, output_format=output_format,
+                                                      report_spec=report_spec, body=body)
 
         return response
 
@@ -4087,22 +4075,20 @@ class DataDesigner(ServerClient):
 
         return await self._async_find_request(url, "DataClass", self._generate_data_class_output, search_string,
                                               starts_with=starts_with, ends_with=ends_with, ignore_case=ignore_case,
-                                              anchor_domain=anchor_domain,
-                                              metadata_element_type=metadata_element_type,
+                                              anchor_domain=anchor_domain, metadata_element_type=metadata_element_type,
                                               metadata_element_subtypes=metadata_element_subtypes,
                                               skip_relationships=skip_relationships,
                                               include_only_relationships=include_only_relationships,
                                               skip_classified_elements=skip_classified_elements,
                                               include_only_classified_elements=include_only_classified_elements,
                                               graph_query_depth=graph_query_depth,
-                                              governance_zone_filter=governance_zone_filter,
-                                              as_of_time=as_of_time, effective_time=effective_time,
+                                              governance_zone_filter=governance_zone_filter, as_of_time=as_of_time,
+                                              effective_time=effective_time,
                                               relationship_page_size=relationship_page_size,
                                               limit_results_by_status=limit_results_by_status,
                                               sequencing_order=sequencing_order,
-                                              sequencing_property=sequencing_property,
-                                              output_format=output_format, report_spec=report_spec,
-                                              start_from=start_from, page_size=page_size,
+                                              sequencing_property=sequencing_property, output_format=output_format,
+                                              report_spec=report_spec, start_from=start_from, page_size=page_size,
                                               property_names=property_names, body=body)
 
     @dynamic_catch
@@ -4282,10 +4268,9 @@ class DataDesigner(ServerClient):
         response = await self._async_get_name_request(url, _type="DataClass",
                                                       _gen_output=self._generate_data_class_output,
                                                       filter_string=filter_string,
-                                                      classification_names=classification_names,
-                                                      start_from=start_from, page_size=page_size,
-                                                      output_format=output_format, report_spec=report_spec,
-                                                      body=body)
+                                                      classification_names=classification_names, start_from=start_from,
+                                                      page_size=page_size, output_format=output_format,
+                                                      report_spec=report_spec, body=body)
 
         return response
 
@@ -4717,8 +4702,8 @@ class DataDesigner(ServerClient):
         """
         url = f"{base_path(self, self.view_server)}/data-value-specifications/by-name"
         return await self._async_get_name_request(url, "DataValueSpecification",
-                                                 self._generate_data_value_specification_output, filter_string,
-                                                 **kwargs)
+                                                  self._generate_data_value_specification_output, filter_string,
+                                                  **kwargs)
 
     @dynamic_catch
     def get_data_value_specifications_by_name(self, filter_string: str, **kwargs) -> list | str:
@@ -4769,8 +4754,8 @@ class DataDesigner(ServerClient):
         Connect two data value specifications. Async version.
         """
         url = f"{base_path(self, self.view_server)}/data-value-specifications/{parent_guid}/specialized-data-value-specifications/{child_guid}/attach"
-        await self._async_new_relationship_request(url, ["DataClassHierarchyProperties"], body)
-# TODO - should be DataValueHierarchyProperties
+        await self._async_new_relationship_request(url, ["DataValueHierarchyProperties"], body)
+
     @dynamic_catch
     def link_specialized_data_value_specification(self, parent_guid: str, child_guid: str,
                                                   body: Optional[dict | NewRelationshipRequestBody] = None) -> None:

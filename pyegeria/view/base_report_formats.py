@@ -1449,7 +1449,7 @@ base_report_specs = FormatSetDict({
         question_spec=[{'perspectives': ["ANY"], 'questions': WHO + WHAT + WHEN}],
         formats=[
             Format(
-                types=["DICT", "TABLE", "LIST", "MD", "FORM"],
+                types=["DICT", "TABLE", "LIST", "MD", "FORM","REPORT-GRAPH"],
                 attributes=COLLECTIONS_MEMBERS_COLUMNS
             ),
             Format(

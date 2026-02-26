@@ -33,7 +33,7 @@ from loguru import logger
 from pyegeria.omvs.location_arena import LocationArena
 from pyegeria.core._exceptions import (
     print_validation_error, PyegeriaAPIException,
-    PyegeriaTimeoutException,
+    PyegeriaTimeoutException, PyegeriaException, print_basic_exception,
 )
 
 # Configuration
@@ -256,6 +256,9 @@ class LocationScenarioTester:
             
         except ValidationError as e:
             print_validation_error(e)
+        except PyegeriaException as e:
+            print_basic_exception(e)
+
         except Exception as e:
             duration = time.perf_counter() - start_time
             if isinstance(e, PyegeriaTimeoutException):
@@ -357,7 +360,8 @@ class LocationScenarioTester:
                 message=f"Created {len(data_centers)} data centers with peer relationships",
                 created_guids=created_guids
             )
-            
+        except PyegeriaException as e:
+            print_basic_exception(e)
         except Exception as e:
             duration = time.perf_counter() - start_time
             if isinstance(e, PyegeriaTimeoutException):
@@ -451,7 +455,9 @@ class LocationScenarioTester:
                 # Remove from cleanup list since we already deleted it
                 if guid in self.created_locations:
                     self.created_locations.remove(guid)
-            
+            except PyegeriaException as e:
+                print_basic_exception(e)
+
             duration = time.perf_counter() - start_time
             console.print(f"  [green]✓ Scenario completed in {duration:.2f}s[/green]")
             
@@ -554,10 +560,11 @@ class LocationScenarioTester:
                 message=f"Tested search operations on {len(test_locations)} locations",
                 created_guids=created_guids
             )
-            
+        except PyegeriaException as e:
+            print_basic_exception(e)
         except Exception as e:
             duration = time.perf_counter() - start_time
-            if isinstance(e, PyegeriaTimeoutException):
+            if isinstance(e, PyegeriaTimeoutException|PyegeriaException):
                 console.print(f"  [yellow]⚠ Timeout in {scenario_name}; continuing.[/yellow]")
                 return TestResult(
                     scenario_name=scenario_name,
@@ -658,7 +665,9 @@ class LocationScenarioTester:
             
             # Generate report
             return self.generate_report()
-            
+
+        except PyegeriaException as e:
+            print_basic_exception(e)
         except KeyboardInterrupt:
             console.print("\n[yellow]Test execution interrupted by user[/yellow]")
             self.cleanup_created_locations()
