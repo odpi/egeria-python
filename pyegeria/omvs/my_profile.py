@@ -131,6 +131,7 @@ class MyProfile(AssetMaker):
 
     def _extract_my_profile_properties(self, element: dict, columns_struct: dict) -> dict:
         """Extractor for My Profile (Person) elements."""
+        contribution_record = element.get("contributionRecord") or []
         col_data = populate_common_columns(element, columns_struct)
 
         # Pre-fetch collections once to avoid redundant work
@@ -200,6 +201,16 @@ class MyProfile(AssetMaker):
                                 column["value"] = [
                                     materialize_egeria_summary(r, spec) for r in performs_roles
                                 ]
+                    elif key == "contribution_record":
+                        if isinstance(contribution_record, list):
+                            ds_name = column.get("detail_spec")
+                            spec = select_report_format(ds_name, "DICT")  # or other formats
+                            if spec and spec.get("target_type"):
+                                column["value"] = self._find_nested_elements(
+                                    contribution_record, spec.get("target_type"), spec, max_depth=1
+                                )
+                            else:
+                                column["value"] = [materialize_egeria_summary(c, spec) for c in contribution_record]
 
                     # Generic handler for elements nested within roles (e.g., teams, communities, projects)
                     elif column.get("detail_spec") and column.get("value") in (None, "", []):

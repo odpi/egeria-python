@@ -523,6 +523,7 @@ base_report_specs = FormatSetDict({
                     Column(name="Teams", key="teams", detail_spec="My-User-Teams-Detail"),
                     Column(name="Communities", key="communities", detail_spec="My-User-Communities-Detail"),
                     Column(name="Projects", key="projects", detail_spec="My-User-Projects-Detail"),
+                    Column(name="Contribution Record", key="contribution_record", detail_spec="My-User-Contribution-Record-Detail"),
                 ],
             )
         ],
@@ -533,7 +534,20 @@ base_report_specs = FormatSetDict({
             spec_params={},
         )
     ),
-
+    "My-User-Contribution-Record-Detail": FormatSet(
+        target_type="ContributionRecord",
+        heading="Contribution Record",
+        description="Detailed Contribution Record",
+        family="MyProfile",
+        formats=[
+            Format(
+                types=["LIST", "REPORT", "DICT", "TABLE"],
+                attributes=[
+                    Column(name="Karma Points", key="karma_points")
+                ],
+            )
+        ],
+    ),
     "My-User-Contact-Detail": FormatSet(
     target_type="ContactDetails",
     heading="Contact Methods",
@@ -548,7 +562,9 @@ base_report_specs = FormatSetDict({
                 Column(name="Contact Type", key="contactType"),
                 Column(name="Service", key="contactMethodService"),
                 Column(name="Value", key="contactMethodValue"),
-                Column(name="GUID", key="guid", format=True),
+                Column(name="GUID", key="guid", format=True)
+
+
             ],
         )
     ],
@@ -924,6 +940,65 @@ base_report_specs = FormatSetDict({
             required_params=["filter_string"],
             spec_params={},
         )
+    ),
+    "Tech-Type-Details-MD": FormatSet(
+        target_type="TechTypeDetail",
+        heading="Technology Type Details",
+        description="Details of a Technology Type Valid Value as a Master-Detail pattern",
+        annotations={},  # No specific annotations
+        family="Automated Curation",
+        formats=[
+            Format(
+                types=["ALL"],
+                attributes=[
+                    Column(name='Display Name', key='display_name'),
+                    Column(name="Qualified Name", key='qualified_name'),
+                    Column(name="GUID", key='guid'),
+                    Column(name="Description", key='description'),
+                    Column(name="Catalog Templates", key='catalog_templates', detail_spec="Catalog-Template-Detail"),
+                ],
+            )
+        ],
+        action=ActionParameter(
+            function="ServerClient.get_tech_type_detail",
+            optional_params=OPTIONAL_FILTER_PARAMS + TIME_PARAMETERS,
+            required_params=["filter_string"],
+            spec_params={},
+        )
+    ),
+    "Catalog-Template-Detail": FormatSet(
+        target_type="CatalogTemplates",
+        heading="Catalog Templates",
+        description="Detailed Catalog Template",
+        family="Automated Curation",
+        formats=[
+            Format(
+                types=["LIST", "REPORT", "DICT", "TABLE"],
+                attributes=[
+                    Column(name="Catalog Template Name", key="displayName"),
+                    Column(name="Description", key="description"),
+                    Column(name="Placeholder Properties", key="placeHolderProperty", detail_spec="Place-Holder-Property-Detail"),
+                ],
+            )
+        ],
+    ),
+    "Place-Holder-Property-Detail": FormatSet(
+        target_type="PlaceHolderProperty",
+        heading="Place Holder Properties",
+        description="Detailed Place Holder Properties",
+        family="Automated Curation",
+        formats=[
+            Format(
+                types=["LIST", "REPORT", "DICT", "TABLE"],
+                attributes=[
+                    Column(name="Property Name", key="name"),
+                    Column(name="Description", key="description"),
+                    Column(name="Data Type", key="dataType"),
+                    Column(name="Example", key="example"),
+                    Column(name="Required", key="required"),
+                ],
+            )
+        ],
     ),
     "Tech-Type-Processes": FormatSet(
         target_type="TechTypeDetail",
