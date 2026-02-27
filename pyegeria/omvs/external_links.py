@@ -14,7 +14,6 @@ from pydantic import HttpUrl
 
 from pyegeria.core._globals import NO_GUID_RETURNED
 from pyegeria.view.base_report_formats import select_report_spec, get_report_spec_match
-from pyegeria.core.config import settings
 from pyegeria.models import (SearchStringRequestBody, FilterRequestBody, GetRequestBody, NewElementRequestBody,
                              TemplateRequestBody,
                              UpdateElementRequestBody, NewRelationshipRequestBody,
@@ -24,8 +23,6 @@ from pyegeria.view.output_formatter import (generate_output,
                                             get_required_relationships)
 from pyegeria.core.utils import dynamic_catch
 
-app_settings = settings
-EGERIA_LOCAL_QUALIFIER = app_settings.User_Profile.egeria_local_qualifier
 EXTERNAL_REFERENCE_PROPS = ["ExternalReferenceProperties", "ExternalDataSourceProperties",
                             "ExternalModelSourceProperties",
                             "RelatedMediaProperties", "CitedDocumentProperties"]
@@ -65,15 +62,13 @@ class ExternalReferences(ServerClient):
 
     """
 
-    def __init__(self, view_server: str, platform_url: str, user_id: str, user_pwd: Optional[str] = None, token: Optional[str] = None, ):
-        self.view_server = view_server
-        self.platform_url = platform_url
-        self.user_id = user_id
-        self.user_pwd = user_pwd
-
+    def __init__(self, view_server: str = None, platform_url: str = None, user_id: str = None, user_pwd: Optional[str] = None, token: Optional[str] = None, ):
         ServerClient.__init__(self, view_server, platform_url, user_id, user_pwd, token)
-        # result = self.get_platform_origin()
-        # logger.info(f"ExternalReferences initialized, platform origin is: {result}")
+        self.view_server = self.server_name
+        self.platform_url = self.platform_url
+        self.user_id = self.user_id
+        self.user_pwd = self.user_pwd
+
         self.command_root: str = (
             f"{self.platform_url}/servers/{self.view_server}/api/open-metadata/external-links")
 

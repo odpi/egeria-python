@@ -17,6 +17,7 @@ import httpx
 from httpx import AsyncClient, Response, HTTPStatusError
 from loguru import logger
 
+from pyegeria.core.config import settings
 from pyegeria.core._exceptions import (
     PyegeriaAPIException, PyegeriaConnectionException, PyegeriaInvalidParameterException,
     PyegeriaUnknownException, PyegeriaClientException, PyegeriaTimeoutException
@@ -63,35 +64,34 @@ class BaseServerClient:
 
     def __init__(
             self,
-            server_name: str,
-            platform_url: str,
+            server_name: str = None,
+            platform_url: str = None,
             user_id: str = None,
             user_pwd: str = None,
             token: str = None,
             token_src: str = None,
             api_key: str = None,
-            page_size: int = max_paging_size,
+            page_size: int = None,
+            local_qualifier: str = None,
     ):
-        self.server_name = validate_server_name(server_name)
-        self.platform_url = validate_url(platform_url)
-        self.user_id = user_id
-        self.user_pwd = user_pwd
-        self.page_size = page_size
+        server_name = server_name or settings.Environment.egeria_view_server
+        platform_url = platform_url or settings.Environment.egeria_platform_url
+
+        validate_server_name(server_name)
+        validate_url(platform_url)
+
+        self.server_name = server_name
+        self.platform_url = platform_url
+        self.user_id = user_id or settings.User_Profile.user_name
+        self.user_pwd = user_pwd or settings.User_Profile.user_pwd
+        self.page_size = page_size or max_paging_size
         self.token_src = token_src
         self.token = token
+        self.local_qualifier = local_qualifier or settings.User_Profile.egeria_local_qualifier
+
         self.exc_type = None
         self.exc_value = None
         self.exc_tb = None
-
-        #
-        #           I'm commenting this out since you should only have to use tokens if you want - just have to
-        #           create or set the token with the appropriate methods as desired.
-        # if token is None:
-        #     token = os.environ.get("Egeria_Bearer_Token", None)
-        #     if token is None: # No token found - so make one
-        #         self.create_egeria_bearer_token(self.user_id, self.user_pwd)
-        #     else:
-        #         self.token = token
 
         if api_key is None:
             api_key = os.environ.get("API_KEY", None)
@@ -107,23 +107,17 @@ class BaseServerClient:
             self.headers["X-Api-Key"] = self.api_key
             self.text_headers["X-Api-Key"] = self.api_key
 
-        if token is not None:
-            self.headers["Authorization"] = f"Bearer {token}"
-            self.text_headers["Authorization"] = f"Bearer {token}"
+        if self.token is not None:
+            self.headers["Authorization"] = f"Bearer {self.token}"
+            self.text_headers["Authorization"] = f"Bearer {self.token}"
 
-        v_url = validate_url(platform_url)
-
-        if v_url:
-            self.platform_url = platform_url
-            if validate_server_name(server_name):
-                self.server_name = server_name
-            self.session = AsyncClient(verify=enable_ssl_check)
+        self.session = AsyncClient(verify=enable_ssl_check)
         self.command_root: str = f"{self.platform_url}/servers/{self.server_name}/api/open-metadata/"
 
         try:
             result = self.check_connection()
             logger.debug(f"client initialized, platform origin is: {result}")
-        except PyegeriaConnectionException as e:
+        except PyegeriaConnectionException:
             raise
 
     async def _async_check_connection(self) -> str:

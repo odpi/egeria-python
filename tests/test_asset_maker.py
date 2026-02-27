@@ -405,7 +405,7 @@ class TestAssetMaker:
                                   user_pwd=self.good_user_2_pwd)
             a_client.create_egeria_bearer_token(self.good_user_2, self.good_user_2_pwd)
             # Using a dummy GUID
-            response = a_client.get_assigned_actions(actor_guid="59f0232c-f834-4365-8e06-83695d238d2d", activity_status_list=[],output_format="JSON")
+            response = a_client.get_assigned_actions(actor_guid=gary_guid, activity_status_list=[],output_format="JSON")
             if isinstance(response, dict | list):
                 console.print_json(data=response)
             else:

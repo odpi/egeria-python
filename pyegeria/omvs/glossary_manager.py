@@ -18,7 +18,6 @@ from pyegeria.core._exceptions import PyegeriaInvalidParameterException
 from pyegeria.core._globals import NO_GUID_RETURNED
 from pyegeria.core._validators import validate_guid
 from pyegeria.omvs.collection_manager import CollectionManager
-from pyegeria.core.config import settings as app_settings
 from pyegeria.models import (NewElementRequestBody, DeleteElementRequestBody, DeleteRelationshipRequestBody,
                              ReferenceableProperties, UpdateElementRequestBody, TemplateRequestBody,
                              NewRelationshipRequestBody, UpdateRelationshipRequestBody, NewClassificationRequestBody,
@@ -27,10 +26,6 @@ from pyegeria.models import (NewElementRequestBody, DeleteElementRequestBody, De
 from pyegeria.view.output_formatter import (_extract_referenceable_properties, populate_common_columns,
                                             overlay_additional_values, resolve_output_formats)
 from pyegeria.core.utils import body_slimmer, dynamic_catch
-
-EGERIA_LOCAL_QUALIFIER = app_settings.User_Profile.egeria_local_qualifier
-
-
 
 class GlossaryProperties(ReferenceableProperties):
     class_: Annotated[Literal["GlossaryProperties"], Field(alias="class")]
@@ -70,22 +65,20 @@ class GlossaryManager(CollectionManager):
 
     def __init__(
             self,
-            view_server: str,
-            platform_url: str,
-            user_id: str,
+            view_server: str = None,
+            platform_url: str = None,
+            user_id: str = None,
             user_pwd: Optional[str] = None,
             token: Optional[str] = None,
             ):
-        self.view_server = view_server
-        self.platform_url = platform_url
-        self.user_id = user_id
-        self.user_pwd = user_pwd
+        CollectionManager.__init__(self, view_server, platform_url, user_id, user_pwd, token)
+        self.view_server = self.server_name
+        self.platform_url = self.platform_url
+        self.user_id = self.user_id
+        self.user_pwd = self.user_pwd
         self.url_marker = "glossary-manager"
 
 
-        CollectionManager.__init__(self, view_server, platform_url, user_id, user_pwd, token)
-        # result = self.get_platform_origin()
-        # logger.info(f"GlossaryManager initialized, platform origin is: {result}")
         self.glossary_command_root = f"{self.platform_url}/servers/{self.view_server}/api/open-metadata/glossary-manager"
     #
     #       Get Valid Values for Enumerations
@@ -133,7 +126,7 @@ class GlossaryManager(CollectionManager):
             If there are issues in communications, message format, or Egeria errors.
         """
         if body is None:
-            qualified_name = self.__create_qualified_name__("Glossary", display_name, EGERIA_LOCAL_QUALIFIER)
+            qualified_name = self.__create_qualified_name__("Glossary", display_name)
             body = {
                 "class": "NewElementRequestBody",
                 "is_own_anchor": True,
@@ -754,7 +747,7 @@ class GlossaryManager(CollectionManager):
         elif isinstance(body, dict):
             validated_body = self._template_request_adapter.validate_python(body)
         else:
-            qualified_name = self.__create_qualified_name__("Term", new_display_name, EGERIA_LOCAL_QUALIFIER)
+            qualified_name = self.__create_qualified_name__("Term", new_display_name)
             body = {
                 "class" : "TemplateRequestBody",
                 "templateGUID": glossary_term_guid,
