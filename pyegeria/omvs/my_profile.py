@@ -9,21 +9,23 @@ import json
 
 from loguru import logger
 from typing import Any, Optional
-from pyegeria.core._server_client import ServerClient
+
+from pyegeria import NO_ELEMENTS_FOUND
+from pyegeria.omvs.asset_maker import AssetMaker
 from pyegeria.core._validators import validate_name
-from pyegeria.core.utils import dynamic_catch
+from pyegeria.core.utils import dynamic_catch, body_slimmer
 from pyegeria.models import (
     GetRequestBody,
     NewElementRequestBody,
     SearchStringRequestBody,
-    UpdateElementRequestBody,
+    UpdateElementRequestBody, ActionRequestBody,
 )
 from pyegeria.view.base_report_formats import select_report_spec, get_report_spec_match
 from pyegeria.view.output_formatter import (populate_common_columns, resolve_output_formats, materialize_egeria_summary, select_report_format)
 import asyncio
 
 
-class MyProfile(ServerClient):
+class MyProfile(AssetMaker):
     """A class representing the profile of a user.
 
     This class provides methods for retrieving and managing the profile details
@@ -45,19 +47,14 @@ class MyProfile(ServerClient):
 
     def __init__(
         self,
-        view_server: str,
-        platform_url: str,
+        view_server: str = None,
+        platform_url: str = None,
         user_id: str | None = None,
         user_pwd: str | None = None,
         token: str | None = None,
         aggregation_depth: int = 3,
     ):
-        self.view_server = view_server
-        self.platform_url = platform_url
-        self.user_id = user_id
-        self.user_pwd = user_pwd
-        self.aggregation_depth = aggregation_depth
-        ServerClient.__init__(
+        AssetMaker.__init__(
             self,
             view_server,
             platform_url,
@@ -65,6 +62,14 @@ class MyProfile(ServerClient):
             user_pwd=user_pwd,
             token=token,
         )
+        self.view_server = self.server_name
+        self.platform_url = self.platform_url
+        self.user_id = self.user_id
+        self.user_pwd = self.user_pwd
+        self.aggregation_depth = aggregation_depth
+        self.my_profile_guid: str | None = None
+
+
         self.my_profile_command_root: str = (
             f"{self.platform_url}/servers/{self.view_server}/api/open-metadata/my-profile"
         )
@@ -126,6 +131,7 @@ class MyProfile(ServerClient):
 
     def _extract_my_profile_properties(self, element: dict, columns_struct: dict) -> dict:
         """Extractor for My Profile (Person) elements."""
+        contribution_record = element.get("contributionRecord") or []
         col_data = populate_common_columns(element, columns_struct)
 
         # Pre-fetch collections once to avoid redundant work
@@ -195,6 +201,16 @@ class MyProfile(ServerClient):
                                 column["value"] = [
                                     materialize_egeria_summary(r, spec) for r in performs_roles
                                 ]
+                    elif key == "contribution_record":
+                        if isinstance(contribution_record, list):
+                            ds_name = column.get("detail_spec")
+                            spec = select_report_format(ds_name, "DICT")  # or other formats
+                            if spec and spec.get("target_type"):
+                                column["value"] = self._find_nested_elements(
+                                    contribution_record, spec.get("target_type"), spec, max_depth=1
+                                )
+                            else:
+                                column["value"] = [materialize_egeria_summary(c, spec) for c in contribution_record]
 
                     # Generic handler for elements nested within roles (e.g., teams, communities, projects)
                     elif column.get("detail_spec") and column.get("value") in (None, "", []):
@@ -263,7 +279,7 @@ class MyProfile(ServerClient):
     @dynamic_catch
     async def _async_get_my_profile(
             self, body: dict | GetRequestBody | None = None, output_format: str = "JSON",
-            report_spec: str | dict = "My-User-MD"
+            report_spec: str | dict = "My-User-MD",**kwargs
     ) -> dict | str:
         """Retrieve the profile details of the user associated with the token. Async version.
 
@@ -288,16 +304,32 @@ class MyProfile(ServerClient):
             Egeria errors.
         """
         url = self.my_profile_command_root
-        response = await self._async_get_request_body_request(url=url, _type="Actor",
-                                                              _gen_output=self._generate_my_profile_output,
-                                                              output_format=output_format, report_spec=report_spec,
-                                                              body=body)
+        # response = await self._async_get_request_body_request(url=url, _type="Actor",
+        #                                                       _gen_output=self._generate_my_profile_output,
+        #                                                       output_format=output_format, report_spec=report_spec,
+        #                                                       body=body,**kwargs)
+        if body is None:
+            response = await self._async_make_request("POST", url)
+        else:
+            response = await self._async_make_request("POST", url, body_slimmer(body))
+        elements = response.json().get("element", None)
+        if elements is None:
+            elements = response.json().get("element", NO_ELEMENTS_FOUND)
+        self.my_profile_guid = elements["elementHeader"].get("guid", None) if elements else None
+        if type(elements) is str:
+            logger.info(NO_ELEMENTS_FOUND)
+            return NO_ELEMENTS_FOUND
 
-        return response
+        if output_format.upper() != 'JSON':  # return a simplified markdown representation
+            logger.info(f"Found elements, output format: {output_format} and report_spec: {report_spec}")
+            return self._generate_my_profile_output(elements, "My", "MyProfile", output_format, report_spec)
+        return elements
+
 
     @dynamic_catch
     def get_my_profile(
-        self, body: dict | GetRequestBody | None = None, output_format: str = "JSON", report_spec: str | dict = "My-User-MD"
+        self, body: dict | GetRequestBody | None = None, output_format: str = "JSON",
+            report_spec: str | dict = "My-User-MD",**kwargs
     ) -> dict | str:
         """Retrieve the profile details of the user associated with the token.
 
@@ -320,7 +352,7 @@ class MyProfile(ServerClient):
             Egeria errors.
         """
         return asyncio.get_event_loop().run_until_complete(
-            self._async_get_my_profile(body, output_format, report_spec)
+            self._async_get_my_profile(body, output_format, report_spec,**kwargs)
         )
 
     @dynamic_catch
@@ -734,107 +766,99 @@ class MyProfile(ServerClient):
 
 
 
-    # async def _async_get_assigned_actions(
-    #     self,
-    #     actor_guid: str,
-    #     status: str = "OPEN",
-    #     start_from: int = 0,
-    #     page_size: int = 100,
-    #     output_format: str = "JSON",
-    #     report_spec: str | dict = None,
-    # ) -> list | str:
-    #     """Get assigned actions for the actor. Async version.
-    #
-    #     Parameters
-    #     ----------
-    #     actor_guid: str
-    #         The GUID of the actor whose assigned actions are to be retrieved.
-    #     status: str
-    #         The status of teh action to filter on. Default value is "OPEN".
-    #
-    #     start_from: int, optional
-    #         The index from which to start retrieving the assigned actions. Default is 0.
-    #     page_size: int, optional
-    #         The number of assigned actions to retrieve per page. Default is 100.
-    #
-    #     Returns
-    #     -------
-    #     list or str
-    #         A list of assigned actions is returned. If there aren't any, a string is returned indicating that.
-    #
-    #     Raises
-    #     ------
-    #     PyegeriaInvalidParameterException
-    #       If the client passes incorrect parameters on the request - such as bad URLs or invalid values
-    #     PyegeriaAPIException
-    #       Raised by the server when an issue arises in processing a valid request
-    #     NotAuthorizedException
-    #       The principle specified by the user_id does not have authorization for the requested action
-    #     """
-    #
-    #     if page_size is None:
-    #         page_size = self.page_size
-    #
-    #     body = {"status": status}
-    #
-    #     url = (
-    #         f"{self.my_profile_command_root}/actors/{actor_guid}"
-    #         f"/assigned/to-dos?startFrom={start_from}&pageSize={page_size}"
-    #     )
-    #
-    #     response = await self._async_make_request("POST", url, body)
-    #
-    #     elements = response.json().get("elements", "No entries found")
-    #     if output_format != "JSON" and not isinstance(elements, str):
-    #         return self._generate_referenceable_output(
-    #             elements, actor_guid, "ToDo", output_format, report_spec
-    #         )
-    #     return elements
-    #
-    # def get_assigned_actions(
-    #     self,
-    #     actor_guid: str,
-    #     status: str = "OPEN",
-    #     start_from: int = 0,
-    #     page_size: int = 100,
-    #     output_format: str = "JSON",
-    #     report_spec: str | dict = None,
-    # ) -> list | str:
-    #     """Get assigned actions for the actor.
-    #     Parameters
-    #     ----------
-    #     actor_guid: str
-    #         The GUID of the actor whose assigned actions are to be retrieved.
-    #     status: str
-    #         The status of teh action to filter on. Default value is "OPEN".
-    #
-    #     start_from: int, optional
-    #         The index from which to start retrieving the assigned actions. Default is 0.
-    #     page_size: int, optional
-    #         The number of assigned actions to retrieve per page. Default is 100.
-    #
-    #     Returns
-    #     -------
-    #     list or str
-    #         A list of assigned actions is returned. If there aren't any, a string is returned indicating that.
-    #
-    #     Raises
-    #     ------
-    #     PyegeriaInvalidParameterException
-    #       If the client passes incorrect parameters on the request - such as bad URLs or invalid values
-    #     PyegeriaAPIException
-    #       Raised by the server when an issue arises in processing a valid request
-    #     NotAuthorizedException
-    #       The principle specified by the user_id does not have authorization for the requested action
-    #     """
-    #     loop = asyncio.get_event_loop()
-    #     response = loop.run_until_complete(
-    #         self._async_get_assigned_actions(
-    #             actor_guid, status, start_from, page_size, output_format, report_spec
-    #         )
-    #     )
-    #
-    #     return response
+    async def _async_get_my_assigned_actions(self,
+                                             activity_status_list: list[str] = ["REQUESTED", "WAITING", "IN_PROGRESS"],
+                                             start_from: int = 0, page_size: int = 100, output_format: str = "JSON",
+                                             report_spec: str | dict = None) -> list | str:
+        """Get assigned actions for the actor. Async version.
+
+        Parameters
+        ----------
+
+        activity_status_list: list[str], default = ["REQUESTED", "WAITING", "IN_PROGRESS"]
+            The status of the action to filter on.
+
+        start_from: int, optional
+            The index from which to start retrieving the assigned actions. Default is 0.
+        page_size: int, optional
+            The number of assigned actions to retrieve per page. Default is 100.
+
+        Returns
+        -------
+        list or str
+            A list of assigned actions is returned. If there aren't any, a string is returned indicating that.
+
+        Raises
+        ------
+        PyegeriaInvalidParameterException
+          If the client passes incorrect parameters on the request - such as bad URLs or invalid values
+        PyegeriaAPIException
+          Raised by the server when an issue arises in processing a valid request
+        NotAuthorizedException
+          The principle specified by the user_id does not have authorization for the requested action
+        """
+
+
+        body = {"ActivityStatusList": activity_status_list}
+
+        url = (
+            f"{self.my_profile_command_root}/actors/"
+            f"assigned/actions"
+        )
+
+        response = await self._async_make_request("POST", url, body)
+
+        elements = response.json().get("elements", "No entries found")
+        if output_format != "JSON" and not isinstance(elements, str):
+            return self._generate_referenceable_output(
+                elements, "My", "ToDo", output_format, report_spec
+            )
+        return elements
+
+    def get_my_assigned_actions(
+        self,
+        actor_guid: str,
+        status: str = "OPEN",
+        start_from: int = 0,
+        page_size: int = 100,
+        output_format: str = "JSON",
+        report_spec: str | dict = None,
+    ) -> list | str:
+        """Get assigned actions for the actor.
+        Parameters
+        ----------
+        actor_guid: str
+            The GUID of the actor whose assigned actions are to be retrieved.
+        status: str
+            The status of teh action to filter on. Default value is "OPEN".
+
+        start_from: int, optional
+            The index from which to start retrieving the assigned actions. Default is 0.
+        page_size: int, optional
+            The number of assigned actions to retrieve per page. Default is 100.
+
+        Returns
+        -------
+        list or str
+            A list of assigned actions is returned. If there aren't any, a string is returned indicating that.
+
+        Raises
+        ------
+        PyegeriaInvalidParameterException
+          If the client passes incorrect parameters on the request - such as bad URLs or invalid values
+        PyegeriaAPIException
+          Raised by the server when an issue arises in processing a valid request
+        NotAuthorizedException
+          The principle specified by the user_id does not have authorization for the requested action
+        """
+        loop = asyncio.get_event_loop()
+        response = loop.run_until_complete(
+            self._async_get_my_assigned_actions(
+                actor_guid, status, start_from, page_size, output_format, report_spec
+            )
+        )
+
+        return response
     #
     # async def _async_get_actions_for_action_target(
     #     self,
@@ -940,169 +964,147 @@ class MyProfile(ServerClient):
     #
     # Lifecycle
     #
-    # async def _async_create_person_action(self, body: dict) -> str:
-    #     """Create a person action (Meeting, ToDo, Notification, Review). Async version.
-    #
-    #     Parameters
-    #     ----------
-    #     body : dict
-    #         The dictionary containing the details of the action.
-    #
-    #     Returns
-    #     -------
-    #     GUID
-    #         GUID of the person action
-    #
-    #     Raises
-    #     ------
-    #     PyegeriaException
-    #
-    #     ValidationError
-    #
-    #     Notes
-    #     _____
-    #
-    #     This method can be used to create a person action. The type of person action depends on the "Class" element
-    #     in the body. Here are brief examples of bodies:
-    #
-    #     {
-    #       "class" : "NewElementRequestBody",
-    #       "isOwnAnchor": true,
-    #       "properties": {
-    #         "class" : "Meeting",
-    #         "qualifiedName": "add unique name here",
-    #         "displayName": "add short name here",
-    #         "description": "add description here",
-    #         "situation": "add situation here",
-    #         "objective": "add objective here",
-    #         "minutes": "add minutes here",
-    #         "decisions": "add decisions here"
-    #         }
-    #     }
-    #
-    #     {
-    #       "class" : "NewElementRequestBody",
-    #       "isOwnAnchor": true,
-    #       "properties": {
-    #         "class" : "ToDo",
-    #         "qualifiedName": "add unique name here",
-    #         "displayName": "add short name here",
-    #         "description": "add description here",
-    #         "situation": "add situation here"
-    #         }
-    #     }
-    #
-    #     {
-    #       "class" : "NewElementRequestBody",
-    #       "isOwnAnchor": true,
-    #       "properties": {
-    #         "class" : "Notification",
-    #         "qualifiedName": "add unique name here",
-    #         "displayName": "add short name here",
-    #         "description": "add description here",
-    #         "situation": "add situation here"
-    #         }
-    #     }
-    #
-    #     {
-    #       "class" : "NewElementRequestBody",
-    #       "isOwnAnchor": true,
-    #       "properties": {
-    #         "class" : "Review",
-    #         "qualifiedName": "add unique name here",
-    #         "displayName": "add short name here",
-    #         "description": "add description here",
-    #         "situation": "add situation here",
-    #         "reviewDate": "add date here",
-    #         "comment": "add comment here"
-    #         }
-    #     }
-    #     """
-    #
-    #     response = await super().create_asset(["Meeting","Todo","Notification","Review"], body)
-    #     return response.json().get("guid", "No guid returned")
-    #
-    # def create_person_action(self, body: dict) -> str:
-    #     """Create a person action (Meeting, ToDo, Notification, Review).
-    #         Parameters
-    #         ----------
-    #         body : dict
-    #             The dictionary containing the details of the to-do item.
-    #
-    #         Returns
-    #         -------
-    #         None
-    #             This method does not return any value.
-    #
-    #         Raises
-    #         ------
-    #         PyegeriaInvalidParameterException
-    #           If the client passes incorrect parameters on the request - such as bad URLs or invalid values
-    #         PyegeriaAPIException
-    #           Raised by the server when an issue arises in processing a valid request
-    #         NotAuthorizedException
-    #           The principle specified by the user_id does not have authorization for the requested action
-    #
-    #         Notes
-    #         -----
-    #
-    #         {
-    #           "class" : "NewElementRequestBody",
-    #           "isOwnAnchor": true,
-    #           "properties": {
-    #             "class" : "Meeting",
-    #             "qualifiedName": "add unique name here",
-    #             "displayName": "add short name here",
-    #             "description": "add description here",
-    #             "situation": "add situation here",
-    #             "objective": "add objective here",
-    #             "minutes": "add minutes here",
-    #             "decisions": "add decisions here"
-    #             }
-    #         }
-    #
-    #         {
-    #           "class" : "NewElementRequestBody",
-    #           "isOwnAnchor": true,
-    #           "properties": {
-    #             "class" : "ToDo",
-    #             "qualifiedName": "add unique name here",
-    #             "displayName": "add short name here",
-    #             "description": "add description here",
-    #             "situation": "add situation here"
-    #             }
-    #         }
-    #
-    #         {
-    #           "class" : "NewElementRequestBody",
-    #           "isOwnAnchor": true,
-    #           "properties": {
-    #             "class" : "Notification",
-    #             "qualifiedName": "add unique name here",
-    #             "displayName": "add short name here",
-    #             "description": "add description here",
-    #             "situation": "add situation here"
-    #             }
-    #         }
-    #
-    #         {
-    #           "class" : "NewElementRequestBody",
-    #           "isOwnAnchor": true,
-    #           "properties": {
-    #             "class" : "Review",
-    #             "qualifiedName": "add unique name here",
-    #             "displayName": "add short name here",
-    #             "description": "add description here",
-    #             "situation": "add situation here",
-    #             "reviewDate": "add date here",
-    #             "comment": "add comment here"
-    #             }
-    #         }
-    #     """
-    #     loop = asyncio.get_event_loop()
-    #     response = loop.run_until_complete(self._async_create_person_action(body))
-    #     return response
-    #
+
+    async def _async_create_my_todo(self, todo_name: str, activity_status: str = "REQUESTED",
+                                    description:Optional[str]=None, situation: Optional[str]=None,priority:Optional[int]=0) -> str:
+        """Create a person action (Meeting, ToDo, Notification, Review). Async version.
+
+        Parameters
+        ----------
+        todo_name : str
+            The name of the action to be created.
+        activity_status : str, optional
+            The status of the action, by default "REQUESTED"
+        description : Optional[str], optional
+            The description of the action, by default None
+        situation : Optional[str], optional
+            The situation of the action, by default None
+        priority : Optional[int], optional
+            The priority of the action, by default 0
+        Returns
+        -------
+        GUID
+            GUID of the person action
+
+        Raises
+        ------
+        PyegeriaException
+        ValidationError
+
+        Notes
+        -----
+        This method can be used to create a person action. The type of person action depends on the "Class" element
+        in the body. Here are brief examples of bodies:
+
+        {
+          "class" : "NewElementRequestBody",
+          "isOwnAnchor": true,
+          "properties": {
+            "class" : "ToDo",
+            "qualifiedName": "add unique name here",
+            "displayName": "add short name here",
+            "description": "add description here",
+            "situation": "add situation here"
+            }
+        }
+        """
+        qualified_name = self.__create_qualified_name__("Todo", todo_name)
+        body = {
+            "class": "NewElementRequestBody",
+            "isOwnAnchor": True,
+            "properties": {
+                "class": "ToDoProperties",
+                "qualifiedName": qualified_name,
+                "displayName": todo_name,
+                "description": description,
+                "situation": situation,
+                "priority": priority,
+            }
+        }
+        response = await super()._async_create_asset(["Meeting", "Todo", "Notification", "Review"], body)
+        return response
+
+    def create_my_todo(self, body: dict) -> str:
+        """Create a person action (Meeting, ToDo, Notification, Review).
+            Parameters
+            ----------
+            body : dict
+                The dictionary containing the details of the to-do item.
+
+            Returns
+            -------
+            None
+                This method does not return any value.
+
+            Raises
+            ------
+            PyegeriaInvalidParameterException
+              If the client passes incorrect parameters on the request - such as bad URLs or invalid values
+            PyegeriaAPIException
+              Raised by the server when an issue arises in processing a valid request
+            NotAuthorizedException
+              The principle specified by the user_id does not have authorization for the requested action
+
+            Notes
+            -----
+
+            {
+              "class" : "NewElementRequestBody",
+              "isOwnAnchor": true,
+              "properties": {
+                "class" : "Meeting",
+                "qualifiedName": "add unique name here",
+                "displayName": "add short name here",
+                "description": "add description here",
+                "situation": "add situation here",
+                "objective": "add objective here",
+                "minutes": "add minutes here",
+                "decisions": "add decisions here"
+                }
+            }
+
+            {
+              "class" : "NewElementRequestBody",
+              "isOwnAnchor": true,
+              "properties": {
+                "class" : "ToDo",
+                "qualifiedName": "add unique name here",
+                "displayName": "add short name here",
+                "description": "add description here",
+                "situation": "add situation here"
+                }
+            }
+
+            {
+              "class" : "NewElementRequestBody",
+              "isOwnAnchor": true,
+              "properties": {
+                "class" : "Notification",
+                "qualifiedName": "add unique name here",
+                "displayName": "add short name here",
+                "description": "add description here",
+                "situation": "add situation here"
+                }
+            }
+
+            {
+              "class" : "NewElementRequestBody",
+              "isOwnAnchor": true,
+              "properties": {
+                "class" : "Review",
+                "qualifiedName": "add unique name here",
+                "displayName": "add short name here",
+                "description": "add description here",
+                "situation": "add situation here",
+                "reviewDate": "add date here",
+                "comment": "add comment here"
+                }
+            }
+        """
+        loop = asyncio.get_event_loop()
+        response = loop.run_until_complete(self._async_create_person_action(body))
+        return response
+
     #
     # async def _async_update_person_action(self, action_guid: str, body: dict | UpdateElementRequestBody) -> None:
     #     """Update a person action.  Note that this is a facade over update_asset. Async version.

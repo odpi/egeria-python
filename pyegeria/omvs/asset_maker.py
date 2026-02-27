@@ -11,7 +11,6 @@ import asyncio
 from typing import Any, Optional
 from pyegeria.core._server_client import ServerClient
 from pyegeria.core._globals import max_paging_size, NO_ELEMENTS_FOUND, NO_GUID_RETURNED
-from pyegeria.core.config import settings as app_settings
 from pyegeria.models import (
     GetRequestBody,
     SearchStringRequestBody,
@@ -35,9 +34,6 @@ from pyegeria.models import (
 )
 from pyegeria.core.utils import dynamic_catch
 from pyegeria.view.base_report_formats import select_report_spec, get_report_spec_match
-
-EGERIA_LOCAL_QUALIFIER = app_settings.User_Profile.egeria_local_qualifier
-
 
 class AssetProperties(ReferenceableProperties):
     """Properties for Asset elements"""
@@ -73,21 +69,17 @@ class AssetMaker(ServerClient):
 
     def __init__(
         self,
-        view_server: str,
-        platform_url: str,
+        view_server: str = None,
+        platform_url: str = None,
         user_id: str | None = None,
         user_pwd: str | None = None,
         token: str | None = None,
     ):
         """Initialize an AssetMaker client."""
-        self.view_server = view_server
-        self.platform_url = platform_url
-        self.user_id = user_id
-        self.user_pwd = user_pwd
-
         ServerClient.__init__(
             self, view_server, platform_url, user_id=user_id, user_pwd=user_pwd, token=token
         )
+        self.view_server = self.server_name
         self.asset_command_root = f"{self.platform_url}/servers/{self.view_server}/api/open-metadata/asset-maker"
         self.curation_command_root = f"{self.platform_url}/servers/{self.view_server}/api/open-metadata/automated-curation"
 

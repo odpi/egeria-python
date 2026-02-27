@@ -12,15 +12,12 @@ from typing import Any, Optional
 
 from pyegeria.core._globals import NO_ELEMENTS_FOUND
 from pyegeria.core._server_client import ServerClient
-from pyegeria.core.config import settings as app_settings
 from pyegeria.models import (SearchStringRequestBody, FilterRequestBody, GetRequestBody, NewElementRequestBody,
                              TemplateRequestBody, DeleteElementRequestBody, DeleteRelationshipRequestBody,
                              UpdateElementRequestBody,
                              NewRelationshipRequestBody, NewClassificationRequestBody, DeleteClassificationRequestBody)
 from pyegeria.view.output_formatter import populate_common_columns, overlay_additional_values, materialize_egeria_summary
 from pyegeria.core.utils import body_slimmer, dynamic_catch
-
-EGERIA_LOCAL_QUALIFIER = app_settings.User_Profile.egeria_local_qualifier
 from loguru import logger
 
 PROJECT_TYPES = ["Project", "Campaign", "StudyProject", "Task", "PersonalProject"]
@@ -47,21 +44,21 @@ class ProjectManager(ServerClient):
 
     def __init__(
             self,
-            view_server: str,
-            platform_url: str,
-            user_id: str,
+            view_server: str = None,
+            platform_url: str = None,
+            user_id: str = None,
             user_pwd: Optional[str] = None,
             token: Optional[str] = None,
     ):
-        self.view_server = view_server
-        self.platform_url = platform_url
-        self.user_id = user_id
-        self.user_pwd = user_pwd
+        ServerClient.__init__(self, view_server, platform_url, user_id, user_pwd, token)
+        self.view_server = self.server_name
+        self.platform_url = self.platform_url
+        self.user_id = self.user_id
+        self.user_pwd = self.user_pwd
         self.project_command_base: str = (
             f"{self.platform_url}/servers/{self.view_server}/api/open-metadata/project-manager/projects"
         )
         self.url_marker = 'project-manager'
-        ServerClient.__init__(self, view_server, platform_url, user_id, user_pwd, token)
 
 
     def _extract_project_properties(self, element: dict, columns_struct: dict) -> dict:

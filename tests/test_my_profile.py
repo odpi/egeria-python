@@ -12,7 +12,8 @@ console = Console(width = 150)
 
 VIEW_SERVER = "qs-view-server"
 PLATFORM_URL = "https://localhost:9443"
-USER_ID = "garygeeke"
+# USER_ID = "jacquardnpa"
+USER_ID = "erinoverview"
 USER_PWD = "secret"
 
 class TestMyProfile:
@@ -31,17 +32,14 @@ class TestMyProfile:
             profile_client = MyProfile(VIEW_SERVER, PLATFORM_URL, USER_ID, USER_PWD)
             token = profile_client.create_egeria_bearer_token(USER_ID, USER_PWD)
 
-            profile = profile_client.get_my_profile(output_format="DICT", report_spec="My-User-MD")
-            assert isinstance(profile, (dict, list, str))
-            if isinstance(profile, dict|list):
+            profile = profile_client.get_my_profile(output_format="DICT", report_spec="My-User-MD", graph_query_depth=10)
+            if isinstance(profile, dict | list):
                 print(json.dumps(profile, indent=2))
-            else:
+            if isinstance(profile, str):
                 console.print(Markdown(profile))
 
-        except PyegeriaException as e:
-            # We might get a 404 or 401 depending on the environment, but the call should at least attempt
-            print(f"get_my_profile failed as expected or due to env: {e}")
         except Exception as e:
+            print_basic_exception(e)
             pytest.fail(f"get_my_profile failed with unexpected exception: {e}")
 
     def test_get_my_actors(self, profile_client):
@@ -86,7 +84,8 @@ class TestMyProfile:
 
     def test_get_actions_for_action_target(self, profile_client):
         try:
-            profile = profile_client.get_my_profile()
+            profile = profile_client.get_my_profile(graph_query_depth=0)
+            assert isinstance(profile, (list, dict, str))
             if isinstance(profile, dict):
                 element_guid = profile.get("elementHeader", {}).get("guid")
             else:
@@ -96,6 +95,26 @@ class TestMyProfile:
                 pytest.skip("No profile GUID available for get_actions_for_action_target")
 
             response = profile_client.get_actions_for_action_target(element_guid)
+            assert isinstance(response, (list, dict, str))
+            print(f"\nRetrieved actions for target: {json.dumps(response, indent=2)}" if isinstance(response, (list, dict)) else f"\nRetrieved actions for target: {response}")
+        except PyegeriaException as e:
+            print(f"get_actions_for_action_target failed as expected or due to env: {e}")
+        except Exception as e:
+            pytest.fail(f"get_actions_for_action_target failed with unexpected exception: {e}")
+
+    def test_get_my_assigned_actions(self, profile_client):
+        try:
+            profile = profile_client.get_my_profile(graph_query_depth=0)
+            assert isinstance(profile, (list, dict, str))
+            if isinstance(profile, dict):
+                element_guid = profile.get("elementHeader", {}).get("guid")
+            else:
+                element_guid = None
+
+            if not element_guid:
+                pytest.skip("No profile GUID available for get_my_assigned_actions")
+
+            response = profile_client.get_my_assigned_actions(element_guid)
             assert isinstance(response, (list, dict, str))
             print(f"\nRetrieved actions for target: {json.dumps(response, indent=2)}" if isinstance(response, (list, dict)) else f"\nRetrieved actions for target: {response}")
         except PyegeriaException as e:

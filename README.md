@@ -25,8 +25,11 @@ to visualize and use Egeria. The commands also serve as useful examples.
 
 An examples folder holds some useful examples showing different facets of using pyegeria.
 
-For detailed guidance on output formats and report specs (including nested/master–detail), see:
-- docs/output-formats-and-report-specs.md
+## Documentation
+
+For detailed information on using pyegeria, see:
+- [docs/user_programming.md](docs/user_programming.md): A comprehensive guide to the programming model, configuration, and client usage.
+- [docs/output-formats-and-report-specs.md](docs/output-formats-and-report-specs.md): Guidance on output formats and report specs (including nested/master–detail).
 
 ### Report specs: families and filtering
 
@@ -65,35 +68,15 @@ This is a learning experience.
 
 ## Configuration
 
-pyegeria uses a simple, predictable precedence for configuration:
+pyegeria uses a centralized configuration system powered by Pydantic. Clients (like `EgeriaTech` or `EgeriaCat`) automatically pick up these settings if parameters are omitted during initialization.
 
-1. Built-in defaults (Pydantic models in pyegeria.config)
-2. Config file (JSON) if found
-3. Environment variables (OS env and optional .env)
-4. Explicit env file passed to get_app_config/load_app_config
+Precedence for configuration:
+1. Explicitly passed parameters to client constructors
+2. Environment variables (OS env and optional .env)
+3. Config file (JSON) if found
+4. Built-in defaults
 
-Environment always overrides config file, which overrides defaults.
-
-### Where to put your configuration
-
-- Config file: A JSON file named config.json. The loader looks in this order:
-  - If PYEGERIA_CONFIG_DIRECTORY is set: $PYEGERIA_CONFIG_DIRECTORY/$PYEGERIA_CONFIG_FILE
-  - Else if PYEGERIA_ROOT_PATH is set: $PYEGERIA_ROOT_PATH/$PYEGERIA_CONFIG_FILE
-  - Else: ./config.json (the current working directory)
-
-- .env file: Optional. If present in the current working directory (.env), variables from it will be loaded. You can also pass a specific env file path to get_app_config(env_file=...) or load_app_config(env_file=...). For sample variables, see config/env in this repo.
-
-### Common environment variables
-
-- PYEGERIA_CONFIG_DIRECTORY: directory containing your config.json
-- PYEGERIA_ROOT_PATH: root folder used to resolve config.json when CONFIG_DIRECTORY is not set
-- PYEGERIA_CONFIG_FILE: filename of the configuration JSON (default: config.json)
-- PYEGERIA_CONSOLE_WIDTH: integer console width (e.g., 200 or 280)
-- EGERIA_PLATFORM_URL, EGERIA_VIEW_SERVER_URL, EGERIA_ENGINE_HOST_URL: URLs for your Egeria servers
-- EGERIA_USER, EGERIA_USER_PASSWORD: credentials used by some clients
-- Logging related: PYEGERIA_ENABLE_LOGGING, PYEGERIA_LOG_DIRECTORY, PYEGERIA_CONSOLE_LOG_LVL, PYEGERIA_FILE_LOG_LVL, etc.
-
-See config/env for more variables and defaults.
+For more details on setting up your configuration and available variables, see [docs/user_programming.md](docs/user_programming.md).
 
 ### Example .env
 
@@ -163,8 +146,6 @@ Default live connection parameters (can be overridden via env):
 Notes:
 - SSL verification is controlled by pyegeria._globals.enable_ssl_check, which defaults to False in this repo to support localhost/self-signed certs.
 - See tests/conftest.py for the live test fixtures and switches.
-
-### Troubleshooting
 
 ### Troubleshooting
 

@@ -18,6 +18,7 @@ from httpx import AsyncClient, Response, HTTPStatusError
 # from venv import logger
 from loguru import logger
 
+from pyegeria.core.config import settings
 from pyegeria.core._exceptions import (
     PyegeriaAPIException, PyegeriaConnectionException, PyegeriaInvalidParameterException,
     PyegeriaUnknownException, PyegeriaClientException, PyegeriaTimeoutException
@@ -64,20 +65,26 @@ class BasePlatformClient:
 
     def __init__(
             self,
-            server_name: str,
-            platform_url: str,
+            server_name: str = None,
+            platform_url: str = None,
             user_id: str = None,
             user_pwd: str = None,
             token: str = None,
             token_src: str = None,
             api_key: str = None,
-            page_size: int = max_paging_size,
+            page_size: int = None,
     ):
-        self.server_name = validate_server_name(server_name)
-        self.platform_url = validate_url(platform_url)
-        self.user_id = user_id
-        self.user_pwd = user_pwd
-        self.page_size = page_size
+        server_name = server_name or settings.Environment.egeria_view_server
+        platform_url = platform_url or settings.Environment.egeria_platform_url
+
+        validate_server_name(server_name)
+        validate_url(platform_url)
+
+        self.server_name = server_name
+        self.platform_url = platform_url
+        self.user_id = user_id or settings.User_Profile.user_name
+        self.user_pwd = user_pwd or settings.User_Profile.user_pwd
+        self.page_size = page_size or max_paging_size
         self.token_src = token_src
         self.token = token
         self.exc_type = None
@@ -109,17 +116,11 @@ class BasePlatformClient:
             self.headers["X-Api-Key"] = self.api_key
             self.text_headers["X-Api-Key"] = self.api_key
 
-        if token is not None:
-            self.headers["Authorization"] = f"Bearer {token}"
-            self.text_headers["Authorization"] = f"Bearer {token}"
+        if self.token is not None:
+            self.headers["Authorization"] = f"Bearer {self.token}"
+            self.text_headers["Authorization"] = f"Bearer {self.token}"
 
-        v_url = validate_url(platform_url)
-
-        if v_url:
-            self.platform_url = platform_url
-            if validate_server_name(server_name):
-                self.server_name = server_name
-            self.session = AsyncClient(verify=enable_ssl_check)
+        self.session = AsyncClient(verify=enable_ssl_check)
         self.command_root: str = f"{self.platform_url}/servers/{self.server_name}/api/open-metadata/"
 
         try:

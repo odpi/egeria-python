@@ -62,9 +62,9 @@ class Egeria:
 
     def __init__(
         self,
-        view_server: str,
-        platform_url: str,
-        user_id: str,
+        view_server: str = None,
+        platform_url: str = None,
+        user_id: str = None,
         user_pwd: str = None,
         token: str = None,
     ):
@@ -107,7 +107,7 @@ class Egeria:
             "gov_officer": GovernanceOfficer,
             "governance_officer": GovernanceOfficer,
             "lineage_linker": LineageLinker,
-            "location": Location,
+            "location": LocationArena,
             "my_profile": MyProfile,
             "notifications": NotificationManager,
             "notification_manager": NotificationManager,

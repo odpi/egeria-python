@@ -475,11 +475,13 @@ def format_for_markdown_table(text: str, guid: str = None) -> str:
     Returns:
         str: Formatted text safe for markdown tables
     """
-    if not text:
+    if text is None:
         return ""
-    # Replace newlines with spaces and escape pipe characters
     if isinstance(text, list):
-        text = "\n".join(text)
+        text = "\n".join([str(i) for i in text])
+    if not isinstance(text, str):
+        text = str(text)
+
     t = text.replace("\n", " ").replace("|", "\\|")
     if '::' in t and guid:
         t = f" [{t}](#{guid}) "
@@ -519,6 +521,12 @@ def populate_columns_from_properties(element: dict, columns_struct: dict) -> dic
     props: dict | None = None
     if isinstance(element, dict):
         maybe_props = element.get('properties')
+        if not isinstance(maybe_props, dict):
+            # NEW: Check for relatedElement properties (common in relationship results)
+            related = element.get('relatedElement') or element.get('related_element')
+            if isinstance(related, dict):
+                maybe_props = related.get('properties')
+
         props = maybe_props if isinstance(maybe_props, dict) else element
     if not isinstance(props, dict):
         return columns_struct
@@ -1324,6 +1332,9 @@ def populate_common_columns(
                     top_val = element.get(key_camel)
                     derived_value = ""
                     if isinstance(top_val, list):
+                        if col.get('detail_spec'):
+                            relationship_values[key_snake] = top_val
+                            continue
                         names = []
                         for item in top_val:
                             nm = _extract_name_from_relationship_item(item)
@@ -1331,6 +1342,9 @@ def populate_common_columns(
                                 names.append(nm)
                         derived_value = ", ".join(names)
                     elif isinstance(top_val, dict):
+                        if col.get('detail_spec'):
+                            relationship_values[key_snake] = top_val  # Preserve raw dict for master-detail
+                            continue
                         nm = _extract_name_from_relationship_item(top_val)
                         derived_value = nm or ""
                     else:

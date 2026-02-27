@@ -66,9 +66,9 @@ class EgeriaTech:
 
     def __init__(
         self,
-        view_server: str,
-        platform_url: str,
-        user_id: str,
+        view_server: str = None,
+        platform_url: str = None,
+        user_id: str = None,
         user_pwd: str = None,
         token: str = None,
     ):

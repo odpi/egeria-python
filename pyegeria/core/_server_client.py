@@ -153,18 +153,19 @@ class ServerClient(BaseServerClient):
 
     def __init__(
             self,
-            server_name: str,
-            platform_url: str,
+            server_name: str = None,
+            platform_url: str = None,
             user_id: Optional[str] = None,
             user_pwd: Optional[str] = None,
             token: Optional[str] = None,
             token_src: Optional[str] = None,
             api_key: Optional[str] = None,
-            page_size: int = max_paging_size,
+            page_size: int = None,
+            local_qualifier: str = None,
     ):
 
         super().__init__(server_name, platform_url, user_id, user_pwd, token,
-                         token_src, api_key, page_size)
+                         token_src, api_key, page_size, local_qualifier)
 
         self.command_root: str = f"{self.platform_url}/servers/{self.server_name}/api/open-metadata/"
         self._search_string_request_adapter = TypeAdapter(SearchStringRequestBody)
@@ -329,15 +330,15 @@ class ServerClient(BaseServerClient):
                                   version_identifier: Optional[str] = None) -> str:
         """Helper function to create a qualified name for a given type and display name.
            If present, the local qualifier will be prepended to the qualified name."""
-        EGERIA_LOCAL_QUALIFIER = os.environ.get("EGERIA_LOCAL_QUALIFIER", local_qualifier)
+        effective_local_qualifier = local_qualifier or self.local_qualifier or os.environ.get("EGERIA_LOCAL_QUALIFIER")
 
         if display_name is None:
             additional_info = {"reason": "Display name is missing - please provide.", }
             raise PyegeriaInvalidParameterException(additional_info=additional_info)
         display_name = re.sub(r'\s', '-', display_name.strip())  # This changes spaces between words to -; removing
         q_name = f"{type_name}::{display_name}"
-        if EGERIA_LOCAL_QUALIFIER:
-            q_name = f"{EGERIA_LOCAL_QUALIFIER}::{q_name}"
+        if effective_local_qualifier:
+            q_name = f"{effective_local_qualifier}::{q_name}"
         if version_identifier:
             q_name = f"{q_name}::{version_identifier}"
         return q_name
@@ -6244,19 +6245,25 @@ class ServerClient(BaseServerClient):
                                               output_format: str = 'JSON',
                                               report_spec: Optional[str | dict] = None,
                                               body: Optional[dict | GetRequestBody] = None,
-                                              max_mermaid_node_count=5,
+                                              max_mermaid_node_count=5, graph_query_depth=5,
                                               **kwargs) -> Any:
         """Handles request; returns elements or formatted output
 
         Args:
             max_mermaid_node_count ():
+            graph_query_depth ():
         """
         if isinstance(body, GetRequestBody):
             validated_body = body
         elif isinstance(body, dict):
             validated_body = self._get_request_adapter.validate_python(body)
         else:
-            body = {"class": "GetRequestBody"}
+            body = {
+                "class": "GetRequestBody",
+                "metadataElementTypeName": _type,
+                "maxMermaidNodeCount": max_mermaid_node_count,
+                "graphQueryDepth": graph_query_depth
+            }
             validated_body = GetRequestBody.model_validate(body)
 
         json_body = validated_body.model_dump_json(indent=2, exclude_none=True)

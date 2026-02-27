@@ -25,7 +25,6 @@ from pyegeria.view.output_formatter import (
 sys.path.insert(0, os.path.abspath(os.path.dirname(__file__)))
 from pyegeria.core._exceptions import PyegeriaInvalidParameterException
 from pyegeria.core._globals import NO_GUID_RETURNED
-from pyegeria.core.config import settings as app_settings
 from pyegeria.models import (GetRequestBody, SearchStringRequestBody, FilterRequestBody, NewElementRequestBody,
                              ReferenceableProperties, TemplateRequestBody,
                              UpdateElementRequestBody, NewRelationshipRequestBody,
@@ -44,7 +43,6 @@ GOV_BASIC_TYPES = ["BusinessImperative", "RegulationArticle", "Threat", "Governa
 
 
 
-EGERIA_LOCAL_QUALIFIER = app_settings.User_Profile.egeria_local_qualifier
 DEFAULT_BODY_SKELETON = {
     "effective_time": None, "limitResultsByStatus": ["ACTIVE"], "asOfTime": None, "sequencingOrder": None,
     "sequencingProperty": None, "filter": None,
@@ -88,14 +86,14 @@ class GovernanceOfficer(ServerClient):
         The password associated with the user_id. Defaults to None.
     """
 
-    def __init__(self, view_server: str, platform_url: str, user_id: Optional[str] = None, user_pwd: Optional[str] = None,
+    def __init__(self, view_server: str = None, platform_url: str = None, user_id: Optional[str] = None, user_pwd: Optional[str] = None,
                  token: Optional[str] = None, ):
-        self.view_server = view_server
-        self.platform_url = platform_url
-        self.user_id = user_id
-        self.user_pwd = user_pwd
-
         ServerClient.__init__(self, view_server, platform_url, user_id=user_id, user_pwd=user_pwd, token=token)
+        self.view_server = self.server_name
+        self.platform_url = self.platform_url
+        self.user_id = self.user_id
+        self.user_pwd = self.user_pwd
+
         self.url_marker = "governance-officer"
 
     #

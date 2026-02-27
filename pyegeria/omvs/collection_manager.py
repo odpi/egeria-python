@@ -16,7 +16,6 @@ from pydantic import Field, HttpUrl
 from pyegeria.core._exceptions import PyegeriaInvalidParameterException
 from pyegeria.core._globals import NO_ELEMENTS_FOUND, NO_GUID_RETURNED
 from pyegeria.view.base_report_formats import select_report_spec, get_report_spec_match
-from pyegeria.core.config import settings
 from pyegeria.models import (SearchStringRequestBody, FilterRequestBody, GetRequestBody, NewElementRequestBody,
                              ReferenceableProperties, InitialClassifications, TemplateRequestBody,
                              UpdateElementRequestBody, NewRelationshipRequestBody,
@@ -27,9 +26,6 @@ from pyegeria.models import (SearchStringRequestBody, FilterRequestBody, GetRequ
 from pyegeria.view.output_formatter import (generate_output,
                                             populate_common_columns)
 from pyegeria.core.utils import body_slimmer, dynamic_catch
-
-app_settings = settings
-EGERIA_LOCAL_QUALIFIER = app_settings.User_Profile.egeria_local_qualifier
 
 COLLECTION_PROPERTIES_LIST = ["CollectionProperties", "DataDictionaryProperties",
                               "DataSpecProperties", "DigitalProductProperties",
@@ -132,16 +128,14 @@ class CollectionManager(ServerClient):
     """
 
 
-    def __init__(self, view_server: str, platform_url: str, user_id: str, user_pwd: Optional[str] = None, token: Optional[str] = None, ):
-        self.view_server = view_server
-        self.platform_url = platform_url
-        self.user_id = user_id
-        self.user_pwd = user_pwd
-
-
+    def __init__(self, view_server: str = None, platform_url: str = None, user_id: str = None, user_pwd: Optional[str] = None, token: Optional[str] = None, ):
         ServerClient.__init__(self, view_server, platform_url, user_id, user_pwd, token)
-        # result = self.get_platform_origin()
-        # logger.info(f"CollectionManager initialized, platform origin is: {result}")
+        self.view_server = self.server_name
+        self.platform_url = self.platform_url
+        self.user_id = self.user_id
+        self.user_pwd = self.user_pwd
+
+
         self.collection_command_root: str = (
             f"{self.platform_url}/servers/{self.view_server}/api/open-metadata/collection-manager/collections")
         #
@@ -1407,7 +1401,7 @@ class CollectionManager(ServerClient):
             # else:
             pre = prop[0]
 
-            qualified_name = self.__create_qualified_name__(pre, display_name, EGERIA_LOCAL_QUALIFIER)
+            qualified_name = self.__create_qualified_name__(pre, display_name)
             if initial_classifications:
                 initial_classifications_dict = {}
                 for c in initial_classifications:
@@ -1836,7 +1830,7 @@ class CollectionManager(ServerClient):
         if body:
             validated_body = self.validate_new_element_request(body,"DataSpecProperties")
         elif display_name is not None:
-            qualified_name = self.__create_qualified_name__("DataSpec", display_name, EGERIA_LOCAL_QUALIFIER)
+            qualified_name = self.__create_qualified_name__("DataSpec", display_name)
             logger.info(f"\n\tDisplayName was {display_name}, classification {classification_name}\n")
             if classification_name:
                 initial_classification_data = {
@@ -2094,7 +2088,7 @@ class CollectionManager(ServerClient):
         validated_body = self.validate_new_element_request(body,"DataDictionaryProperties")
 
         if validated_body is None and display_name is not None:
-            qualified_name = self.__create_qualified_name__("DataDictionary", display_name, EGERIA_LOCAL_QUALIFIER)
+            qualified_name = self.__create_qualified_name__("DataDictionary", display_name)
             initial_classifications_data = {"class" : "ClassificationProperties"}
             if classification_name:
                 initial_classification_dict = {
