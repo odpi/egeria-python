@@ -78,6 +78,8 @@ Precedence for configuration:
 
 For more details on setting up your configuration and available variables, see [docs/user_programming.md](docs/user_programming.md).
 
+**For detailed instructions on setting up authentication credentials on Linux, see [SETUP_LINUX_CREDENTIALS.md](SETUP_LINUX_CREDENTIALS.md)**
+
 ### Example .env
 
 # PYEGERIA_CONFIG_DIRECTORY=/path/to/configs

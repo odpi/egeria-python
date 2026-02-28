@@ -193,3 +193,10 @@ Values provided via environment variables take precedence over JSON and defaults
 - Call `load_app_config()` once at startup
 - Initialize logging with `config_logging()`
 - Use `settings.Environment.*` in your code for URLs, folders, and flags
+
+---
+
+### Setting up authentication credentials
+
+For comprehensive instructions on configuring `EGERIA_USER` and `EGERIA_USER_PASSWORD` on Linux systems, see:
+- **[SETUP_LINUX_CREDENTIALS.md](../SETUP_LINUX_CREDENTIALS.md)** - Complete guide for setting up login secrets on Linux terminal
