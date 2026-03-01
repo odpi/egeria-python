@@ -83,7 +83,7 @@ class AutomatedCuration(ServerClient):
         """
         # Populate direct properties first
         col_data = populate_columns_from_properties(element, columns_struct)
-        columns_list = col_data.get("formats", {}).get("columns", [])
+        columns_list = col_data.get("formats", {}).get("attributes", [])
 
         # Referenceable header extraction (GUID, qualifiedName, displayName, etc.)
         header_props = _extract_referenceable_properties(element)
@@ -106,57 +106,87 @@ class AutomatedCuration(ServerClient):
         Extract properties from a technology type element and populate the provided columns_struct.
         Tolerant to missing fields.
         """
-        # # Populate direct properties first
-        # col_data = populate_columns_from_properties(element, columns_struct)
-        # columns_list = col_data.get("formats", {}).get("columns", [])
-        #
-        # # Referenceable header extraction (GUID, qualifiedName, displayName, etc.)
-        # header_props = _extract_referenceable_properties(element)
-        # for column in columns_list:
-        #     key = column.get("key")
-        #     if key in header_props:
-        #         column["value"] = header_props.get(key)
-        #     elif isinstance(key, str) and key.lower() == "guid":
-        #         column["value"] = header_props.get("GUID")
-        #
-        # # Try common category/type fields
-        # category = (
-        #     element.get("properties", {}).get("category")
-        #     or element.get("elementProperties", {}).get("category")
-        #     or element.get("elementType", {}).get("typeName")
-        #     or ""
-        # )
-        columns_list = columns_struct.get("formats", {}).get("attributes", [])
+        # Populate direct properties first
+        col_data = populate_columns_from_properties(element, columns_struct)
+        columns_list = col_data.get("formats", {}).get("attributes", [])
 
-        guid = element.get('technologyTypeGUID',None)
-        qualified_name = element.get('qualifiedName',None)
-        display_name = element.get('displayName',None)
-        description = element.get('description',None)
         catalog_templates = element.get('catalogTemplates',None)
+        # Normalize catalog templates and their placeholders for consistent reporting
+        normalized_templates = []
+        for template in (catalog_templates or []):
+            if not isinstance(template, dict):
+                normalized_templates.append(template)
+                continue
+            t_copy = template.copy()
+            
+            # Normalize template properties
+            if 'displayName' not in t_copy:
+                t_copy['displayName'] = t_copy.get('templateName')
+            if 'description' not in t_copy:
+                t_copy['description'] = t_copy.get('templateDescription')
+            if 'guid' not in t_copy:
+                t_copy['guid'] = t_copy.get('templateGUID')
+            
+            # Normalize placeholder properties within the specification
+            spec = t_copy.get('specification', {})
+            normalized_placeholders = []
+            if isinstance(spec, dict):
+                spec = spec.copy()
+                t_copy['specification'] = spec
+                raw_placeholders = spec.get('placeholderProperty', []) or []
+                for p in raw_placeholders:
+                    if not isinstance(p, dict):
+                        normalized_placeholders.append(p)
+                        continue
+                    p_norm = p.copy()
+                    # Map Egeria keys to standard short keys if missing
+                    if 'name' not in p_norm and 'placeholderPropertyName' in p_norm:
+                        p_norm['name'] = p_norm['placeholderPropertyName']
+                    if 'description' not in p_norm and 'placeholderPropertyDescription' in p_norm:
+                        p_norm['description'] = p_norm['placeholderPropertyDescription']
+                    if 'dataType' not in p_norm and 'placeholderPropertyDataType' in p_norm:
+                        p_norm['dataType'] = p_norm['placeholderPropertyDataType']
+                    if 'example' not in p_norm and 'placeholderPropertyExample' in p_norm:
+                        p_norm['example'] = p_norm['placeholderPropertyExample']
+                    if 'required' not in p_norm and 'placeholderPropertyRequired' in p_norm:
+                        p_norm['required'] = p_norm['placeholderPropertyRequired']
+                    normalized_placeholders.append(p_norm)
+                
+                # Update t_copy's specification with normalized placeholders
+                spec['placeholderProperty'] = normalized_placeholders
+            
+            # Always provide a flattened copy for easier access by Column specs
+            t_copy['placeHolderProperty'] = normalized_placeholders
+            normalized_templates.append(t_copy)
+        catalog_templates = normalized_templates
         governance_processes = element.get('governanceActionProcesses',None)
         external_references = element.get('externalReferences',None)
         url = element.get('url',None)
 
-
         # Mermaid graph support if present
         mermaid_val = element.get("mermaidGraph", "") or ""
         for column in columns_list:
-            if column.get("key") == "mermaidGraph":
+            key = column.get("key")
+            if key == "mermaidGraph":
                 column["value"] = mermaid_val
-                break
-            elif column.get("key") == "catalog_template_specs":
+            elif key == "catalog_template_placeholders":
+                column["value"] = [t.get('specification',{}).get('placeholderProperty',[]) for t in (catalog_templates or [])]
+            elif key == "catalog_template_specs":
                 specs = ""
-                for template in catalog_templates:
-                    for placeholder in template['specification']['placeholderProperty']:
+                for template in (catalog_templates or []):
+                    spec = template.get('specification', {})
+                    for placeholder in (spec.get('placeholderProperty', []) or []):
                         specs += (f"* Placeholder Property: {placeholder.get('name','')}\n\t"
                                   f"Type: {placeholder.get('dataType',"")}\n\t"
                                   f"Description:  {placeholder.get('description',"")}\n\t"
-                                  f"Required: {placeholder.get("required","")}\n\t"
-                                  f"Example: {placeholder.get("example","")}\n\n")
+                                  f"Required: {placeholder.get('required',"")}\n\t"
+                                  f"Example: {placeholder.get('example',"")}\n\n")
                 column["value"] = specs
-            elif column.get("key") == "catalog_templates":
-                column["value"] =catalog_templates
-            elif column.get("key") == "governance_processes":
+            elif key == "catalog_templates":
+                column["value"] = catalog_templates
+            elif key == "governance_action_processes":
+                column["value"] = governance_processes
+            elif key == "governance_processes":
                 procs = ""
                 specs = ""
                 if governance_processes:
@@ -187,7 +217,7 @@ class AutomatedCuration(ServerClient):
                                   f"* Parameters:\n\t---------\n{specs}\n\t==========\n\n"
                                   )
                 column['value'] = procs
-            elif column.get("key") == "governance_processes_d":
+            elif key == "governance_processes_d":
                 processes = []
 
                 if governance_processes:
@@ -200,21 +230,23 @@ class AutomatedCuration(ServerClient):
                         procs['proc_params'] = proc.get("specification",{}).get("supportedRequestParameter",{})
                         processes.append(procs)
                 column['value'] = processes
-            elif column.get("key") == "guid":
-                column["value"] = guid
-            elif column.get("key") == "qualified_name":
-                column["value"] = qualified_name
-            elif column.get("key") == "display_name":
-                column["value"] = display_name
-            elif column.get("key") == "description":
-                column["value"] = description
-            elif column.get("key") == "external_references":
+
+            elif key == "external_references":
                 column["value"] = external_references
-            elif column.get("key") == "ref_url":
-                if isinstance(external_references, dict):
-                    column["value"] = external_references[0]['relatedElement']['properties'].get('url',"")
-            elif column.get("key") == "url":
+            elif key == "ref_url":
+                if isinstance(external_references, list) and len(external_references) > 0:
+                    column["value"] = external_references[0].get('relatedElement',{}).get('properties',{}).get('url',"")
+            elif key == "url":
                 column["value"] = url
+            elif key == "guid" and column.get("value") is None:
+                column["value"] = element.get("technologyTypeGUID")
+            elif key == "qualified_name" and column.get("value") is None:
+                column["value"] = element.get("qualifiedName")
+            elif key == "display_name" and column.get("value") is None:
+                column["value"] = element.get("displayName")
+            elif key == "description" and column.get("value") is None:
+                column["value"] = element.get("description")
+
         columns_struct["formats"]["attributes"] = columns_list
         return columns_struct
 
