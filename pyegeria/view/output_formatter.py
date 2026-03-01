@@ -551,30 +551,44 @@ def populate_columns_from_properties(element: dict, columns_struct: dict) -> dic
             if not key_snake:
                 continue
             
-            # 1) Try original key (handles already camelCased keys like assignmentType)
-            if key_snake in props:
+            # Helper to set value in col
+            def set_col_value(val):
                 if isinstance(col, dict):
-                    col['value'] = props.get(key_snake)
+                    col['value'] = val
                 else:
-                    setattr(col, 'value', props.get(key_snake))
+                    setattr(col, 'value', val)
+
+            # 1) Try original key (handles already camelCased keys like assignmentType)
+            val = props.get(key_snake)
+            # Fallback to root element if not found in nested properties
+            if val is None and props is not element:
+                val = element.get(key_snake)
+
+            if val is not None:
+                set_col_value(val)
                 continue
 
             # 2) Try pre-computed camelCase key
             key_camel = key_mapping.get(key_snake)
-            if key_camel and key_camel in props:
-                if isinstance(col, dict):
-                    col['value'] = props.get(key_camel)
-                else:
-                    setattr(col, 'value', props.get(key_camel))
-                continue
+            if key_camel:
+                val = props.get(key_camel)
+                # Fallback to root element if not found in nested properties
+                if val is None and props is not element:
+                    val = element.get(key_camel)
+                
+                if val is not None:
+                    set_col_value(val)
+                    continue
             
             # 3) Try uppercase (handles GUID if it was extracted as GUID)
             key_upper = key_snake.upper()
-            if key_upper in props:
-                if isinstance(col, dict):
-                    col['value'] = props.get(key_upper)
-                else:
-                    setattr(col, 'value', props.get(key_upper))
+            val = props.get(key_upper)
+            # Fallback to root element if not found in nested properties
+            if val is None and props is not element:
+                val = element.get(key_upper)
+            
+            if val is not None:
+                set_col_value(val)
                 continue
 
         except Exception as e:
@@ -808,8 +822,8 @@ def generate_entity_md(elements: List[Dict],
                 
                 elements_md += make_md_attribute(name, value, output_format)
 
-                # Master-Detail support for REPORT format
-                if detail_spec and value and output_format == 'REPORT':
+                # Master-Detail support for REPORT, MD, and FORM formats
+                if detail_spec and value and output_format in ['REPORT', 'MD', 'FORM']:
                     values_list = value if isinstance(value, list) else [value]
                     if values_list and all(isinstance(v, dict) for v in values_list):
                         # Resolve the linked spec
@@ -1113,7 +1127,7 @@ def generate_entity_dict(elements: List[Dict],
                 name = column.get('name')
                 value = column.get('value')
                 detail_spec = column.get('detail_spec')
-
+                
                 if (value in (None, "")) and key in additional_props:
                     value = additional_props[key]
                 if column.get('format'):

@@ -956,6 +956,8 @@ base_report_specs = FormatSetDict({
                     Column(name="GUID", key='guid'),
                     Column(name="Description", key='description'),
                     Column(name="Catalog Templates", key='catalog_templates', detail_spec="Catalog-Template-Detail"),
+                    # Column(name="Governance Processes", key='governance_action_processes', detail_spec="Governance-Action-Processes-Detail"),
+                    Column(name="Governance Processes", key='governance_processes_d'),
                 ],
             )
         ],
@@ -973,23 +975,41 @@ base_report_specs = FormatSetDict({
         family="Automated Curation",
         formats=[
             Format(
-                types=["LIST", "REPORT", "DICT", "TABLE"],
+                types=["ALL"],
                 attributes=[
                     Column(name="Catalog Template Name", key="displayName"),
                     Column(name="Description", key="description"),
+                    # Column(name="Catalog Template Specs", key="catalog_template"),
                     Column(name="Placeholder Properties", key="placeHolderProperty", detail_spec="Place-Holder-Property-Detail"),
                 ],
             )
         ],
     ),
+    "Governance-Action-Processes-Detail": FormatSet(
+        target_type="GovernanceActionProcesses",
+        heading="Governance Processes",
+        description="Detailed Governance Processes",
+        family="Automated Curation",
+        formats=[
+            Format(
+                types=["LIST", "REPORT", "DICT", "TABLE"],
+                attributes=[
+                    Column(name="Governance Process Name", key="displayName"),
+                    Column(name="Qualified Name", key="qualifiedName"),
+                    Column(name="Description", key="description"),
+                    Column(name="GUID", key="guid"),
+                ],
+            )
+        ],
+    ),
     "Place-Holder-Property-Detail": FormatSet(
-        target_type="PlaceHolderProperty",
+        target_type="placeHolderProperty",
         heading="Place Holder Properties",
         description="Detailed Place Holder Properties",
         family="Automated Curation",
         formats=[
             Format(
-                types=["LIST", "REPORT", "DICT", "TABLE"],
+                types=["ALL"],
                 attributes=[
                     Column(name="Property Name", key="name"),
                     Column(name="Description", key="description"),
