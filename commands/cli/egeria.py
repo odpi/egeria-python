@@ -20,6 +20,7 @@ from pyegeria import config_logging,  settings, ACTIVITY_STATUS
 
 from commands.cat.my_reports import start_exp2
 from commands.cat.run_report import list_generic
+from commands.cat.list_reports import display_reports
 from commands.cat.get_asset_graph import asset_viewer
 from commands.cat.get_collection_tree import collection_viewer
 from commands.cat.get_project_dependencies import project_dependency_viewer
@@ -1091,6 +1092,15 @@ def show_format_set(ctx, report, output_format, search_string):
         report, output_format = output_format, view_server = c.view_server, view_url = c.view_server_url,
         user = c.userid, user_pass = c.password, params = {"search_string": search_string},render_table = True
     )
+
+
+@show_cat_info.command("list-reports")
+@click.option('--search', default="", help="Optional filter for name/description/aliases")
+@click.pass_context
+def show_list_reports(ctx, search):
+    """List available report specs with available formats"""
+    _ = ctx.obj  # unused but kept for symmetry
+    display_reports(search=search)
 
 
 @show_cat_info.command("tech-types")

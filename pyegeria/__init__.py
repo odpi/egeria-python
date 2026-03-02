@@ -34,7 +34,7 @@ if disable_ssl_warnings:
     from urllib3.exceptions import InsecureRequestWarning
 
     disable_warnings(InsecureRequestWarning)
-
+from pyegeria.core._globals import (GovernanceDomains)
 from pyegeria.core._server_client import ServerClient
 from pyegeria.core._exceptions import (
     PyegeriaException,
@@ -72,7 +72,7 @@ from pyegeria.omvs.full_omag_server_config import FullServerConfig
 from pyegeria.omvs.glossary_manager import GlossaryManager
 from pyegeria.omvs.governance_officer import GovernanceOfficer
 from pyegeria.omvs.lineage_linker import LineageLinker
-from pyegeria.omvs.location_arena import Location
+from pyegeria.omvs.location_arena import LocationArena
 from pyegeria.omvs.metadata_expert import MetadataExpert
 from pyegeria.omvs.metadata_explorer_omvs import MetadataExplorer
 from pyegeria.omvs.my_profile import MyProfile
@@ -176,7 +176,7 @@ __all__ = [
     "GlossaryManager",
     "GovernanceOfficer",
     "LineageLinker",
-    "Location",
+    "LocationArena",
     "MetadataExpert",
     "MetadataExplorer",
     "MyProfile",

@@ -1,6 +1,6 @@
 {
   "family": "Governance Officer",
-  "exported": "Feb 18, 2026 at 11:35:24 AM",
+  "exported": "Feb 21, 2026 at 7:55:01 PM",
   "attribute_definitions": {
     "Access Control": {
       "variable_name": "access_control",
@@ -346,11 +346,19 @@
       "attr_labels": "",
       "examples": "",
       "default_value": "",
-      "valid_values": [],
+      "valid_values": [
+        "UNCLASSIFIED",
+        "AD_HOC",
+        "TRANSACTIONAL",
+        "AUTHORITATIVE",
+        "DERIVED",
+        "OBSOLETE",
+        "OTHER"
+      ],
       "existing_element": "",
       "description": "Classification from 0422. Structure: {status_identifier: int, confidence: int, steward: str, steward_type_name: str, steward_property_name: str, source: str, notes: str, level_identifier: int}. level_identifier uses ConfidenceLevel enum: UNCLASSIFIED=0, AD_HOC=1, TRANSACTIONAL=2, AUTHORITATIVE=3, DERIVED=4, OBSOLETE=5, OTHER=99.",
       "generated": false,
-      "style": "Dictionary",
+      "style": "Valid Value",
       "user_specified": true,
       "unique": false,
       "input_required": false,
@@ -365,11 +373,18 @@
       "attr_labels": "",
       "examples": "",
       "default_value": "",
-      "valid_values": [],
+      "valid_values": [
+        "UNCLASSIFIED",
+        "INTERNAL",
+        "CONFIDENTIAL",
+        "SENSITIVE",
+        "RESTRICTED",
+        "OTHER"
+      ],
       "existing_element": "",
       "description": "Classification from 0422. Structure: {status_identifier: int, confidence: int, steward: str, steward_type_name: str, steward_property_name: str, source: str, notes: str, level_identifier: int}. level_identifier uses ConfidentialityLevel enum: UNCLASSIFIED=0, INTERNAL=1, CONFIDENTIAL=2, SENSITIVE=3, RESTRICTED=4, OTHER=99.",
       "generated": false,
-      "style": "Dictionary",
+      "style": "Valid Value",
       "user_specified": true,
       "unique": false,
       "input_required": false,
@@ -431,11 +446,18 @@
       "attr_labels": "",
       "examples": "",
       "default_value": "",
-      "valid_values": [],
+      "valid_values": [
+        "UNCLASSIFIED",
+        "MARGINAL",
+        "IMPORTANT",
+        "CRITICAL",
+        "CATASTROPHIC",
+        "OTHER"
+      ],
       "existing_element": "",
       "description": "Classification from 0422. Structure: {status_identifier: int, confidence: int, steward: str, steward_type_name: str, steward_property_name: str, source: str, notes: str, level_identifier: int}. level_identifier uses CriticalityLevel enum: UNCLASSIFIED=0, MARGINAL=1, IMPORTANT=2, CRITICAL=3, CATASTROPHIC=4, OTHER=99.",
       "generated": false,
-      "style": "Dictionary",
+      "style": "Valid Value",
       "user_specified": true,
       "unique": false,
       "input_required": false,
@@ -666,7 +688,7 @@
         "SECURITY",
         "IT_INFRASTRUCTURE",
         "SOFTWARE_DEVELOPMENT",
-        "CPRPORATE",
+        "CORPORATE",
         "ASSET_MANAGEMENT",
         "OTHER"
       ],
@@ -680,7 +702,7 @@
       "min_cardinality": 1,
       "max_cardinality": 1,
       "level": "Basic",
-      "Journal Entry": ""
+      "Journal Entry": "**UML type:** int (GovernanceDomain enum)  \n**Stored as:** string — convert to int downstream  \n**Convention:** 0 = applies to all domains  \n**See:** \/Command Specifications\/Governance Officer - Refactored\/Docs\/String-to-Int Conversion Register"
     },
     "Effective From": {
       "variable_name": "effective_from",
@@ -759,7 +781,7 @@
       "Journal Entry": ""
     },
     "Entitlements": {
-      "variable_name": "Entitlements",
+      "variable_name": "entitlements",
       "inUpdate": true,
       "attr_labels": "",
       "examples": "Allowed to use within the organization.",
@@ -916,11 +938,17 @@
       "attr_labels": "",
       "examples": "",
       "default_value": "",
-      "valid_values": [],
+      "valid_values": [
+        "UNCLASSIFIED",
+        "LOW",
+        "MEDIUM",
+        "HIGH",
+        "OTHER"
+      ],
       "existing_element": "",
       "description": "Classification from 0422. Structure: {status_identifier: int, confidence: int, steward: str, steward_type_name: str, steward_property_name: str, source: str, notes: str, severity_identifier: int}. severity_identifier uses ImpactSeverity enum: UNCLASSIFIED=0, LOW=1, MEDIUM=2, HIGH=3, OTHER=99.",
       "generated": false,
-      "style": "Dictionary",
+      "style": "Valid Value",
       "user_specified": true,
       "unique": false,
       "input_required": false,
@@ -1980,11 +2008,20 @@
       "attr_labels": "",
       "examples": "",
       "default_value": "",
-      "valid_values": [],
+      "valid_values": [
+        "UNCLASSIFIED",
+        "TEMPORARY",
+        "PROJECT_LIFETIME",
+        "TEAM_LIFETIME",
+        "CONTRACT_LIFETIME",
+        "REGULATED_LIFETIME",
+        "TIMEBOXED_LIFETIME",
+        "OTHER"
+      ],
       "existing_element": "",
       "description": "Classification from 0422. Structure: {status_identifier: int, confidence: int, steward: str, steward_type_name: str, steward_property_name: str, source: str, notes: str, basis_identifier: int, associated_guid: str, archive_after: date, delete_after: date}. basis_identifier uses RetentionBasis enum: UNCLASSIFIED=0, TEMPORARY=1, PROJECT_LIFETIME=2, TEAM_LIFETIME=3, CONTRACT_LIFETIME=4, REGULATED_LIFETIME=5, TIMEBOXED_LIFETIME=6, OTHER=99.",
       "generated": false,
-      "style": "Dictionary",
+      "style": "Valid Value",
       "user_specified": true,
       "unique": false,
       "input_required": false,
@@ -2346,27 +2383,12 @@
     }
   },
   "bundles": {
-    "New-Element": {
-      "inherits": null,
+    "Authored Referenceable": {
+      "inherits": "Referenceable",
       "own_attributes": [
-        "Anchor ID",
-        "Effective From",
-        "Effective Time",
-        "Effective To",
-        "Extended Properties",
-        "External Source GUID",
-        "External Source Name",
-        "Glossary Term",
-        "Is Own Anchor",
-        "Journal Entry",
-        "Merge Update",
-        "Parent at End1",
-        "Parent ID",
-        "Parent Relationship Attributes",
-        "Parent Relationship Type Name",
-        "Search Keywords",
-        "Status",
-        "Zone Membership"
+        "Authors",
+        "Content Status",
+        "User Defined Content Status"
       ]
     },
     "Referenceable": {
@@ -2393,6 +2415,44 @@
         "Version Identifier"
       ]
     },
+    "New-Element": {
+      "inherits": null,
+      "own_attributes": [
+        "Anchor ID",
+        "Effective From",
+        "Effective Time",
+        "Effective To",
+        "Extended Properties",
+        "External Source GUID",
+        "External Source Name",
+        "Glossary Term",
+        "Is Own Anchor",
+        "Journal Entry",
+        "Merge Update",
+        "Parent at End1",
+        "Parent ID",
+        "Parent Relationship Attributes",
+        "Parent Relationship Type Name",
+        "Search Keywords",
+        "Status",
+        "Zone Membership"
+      ]
+    },
+    "General Terms and Conditions": {
+      "inherits": null,
+      "own_attributes": [
+        "Entitlements",
+        "Obligations",
+        "Restrictions"
+      ]
+    },
+    "Link Command Base": {
+      "inherits": null,
+      "own_attributes": [
+        "Description",
+        "Link Label"
+      ]
+    },
     "Asset": {
       "inherits": "Referenceable",
       "own_attributes": [
@@ -2400,14 +2460,6 @@
         "Namespace",
         "Resource Name",
         "Source"
-      ]
-    },
-    "Authored Referenceable": {
-      "inherits": "Referenceable",
-      "own_attributes": [
-        "Authors",
-        "Content Status",
-        "User Defined Content Status"
       ]
     },
     "Governance Definition Core": {
@@ -2438,19 +2490,16 @@
       "own_attributes": []
     },
     "Terms and Conditions": {
-      "inherits": null,
+      "inherits": "Governance Control Base",
       "own_attributes": [
         "Entitlements",
         "Obligations",
         "Restrictions"
       ]
     },
-    "Link Command Base": {
-      "inherits": null,
-      "own_attributes": [
-        "Description",
-        "Link Label"
-      ]
+    "Security Access Control": {
+      "inherits": "Governance Control Base",
+      "own_attributes": []
     }
   },
   "commands": {
@@ -2486,7 +2535,7 @@
       "find_constraints": "{\"metadata_element_types\": [\"CertificationType\"]}",
       "extra_find": "",
       "extra_constraints": "",
-      "bundle": "Governance Control Base",
+      "bundle": "Terms and Conditions",
       "custom_attributes": [],
       "Journal Entry": ""
     },
@@ -2786,7 +2835,7 @@
       "find_constraints": "{\"metadata_element_types\": [\"GovernanceZone\"]}",
       "extra_find": "",
       "extra_constraints": "",
-      "bundle": "Governance Control Base",
+      "bundle": "Security Access Control",
       "custom_attributes": [
         "Criteria"
       ],
@@ -2806,7 +2855,7 @@
       "find_constraints": "{\"metadata_element_types\": [\"LicenseType\"]}",
       "extra_find": "",
       "extra_constraints": "",
-      "bundle": "Governance Control Base",
+      "bundle": "Terms and Conditions",
       "custom_attributes": [],
       "Journal Entry": ""
     },
@@ -2925,7 +2974,7 @@
       "find_constraints": "{\"metadata_element_types\": [\"SecurityAccessControl\"]}",
       "extra_find": "",
       "extra_constraints": "",
-      "bundle": "Governance Control Base",
+      "bundle": "Security Access Control",
       "custom_attributes": [],
       "Journal Entry": ""
     },
@@ -2943,7 +2992,7 @@
       "find_constraints": "{\"metadata_element_types\": [\"SecurityGroup\"]}",
       "extra_find": "",
       "extra_constraints": "",
-      "bundle": "Governance Control Base",
+      "bundle": "Security Access Control",
       "custom_attributes": [],
       "Journal Entry": ""
     },
@@ -2981,12 +3030,8 @@
       "find_constraints": "{\"metadata_element_types\": [\"TermsAndConditions\"]}",
       "extra_find": "",
       "extra_constraints": "",
-      "bundle": "Governance Control Base",
-      "custom_attributes": [
-        "Obligations",
-        "Entitlements",
-        "Restrictions"
-      ],
+      "bundle": "Terms and Conditions",
+      "custom_attributes": [],
       "Journal Entry": ""
     },
     "Create Threat Definition": {

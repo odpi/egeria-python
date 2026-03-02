@@ -32,9 +32,9 @@ class ServerOps(Platform):
 
     def __init__(
         self,
-        server_name: str,
-        platform_url: str,
-        user_id: str,
+        server_name: str = None,
+        platform_url: str = None,
+        user_id: str = None,
         user_pwd: Optional[str] = None,
         token: Optional[str] = None,
     ):

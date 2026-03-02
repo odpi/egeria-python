@@ -1,6 +1,6 @@
 {
   "family": "Projects",
-  "exported": "Feb 18, 2026 at 11:53:55 AM",
+  "exported": "Feb 21, 2026 at 7:49:08 AM",
   "attribute_definitions": {
     "Access Control": {
       "variable_name": "access_control",
@@ -2343,7 +2343,7 @@
       "max_cardinality": 1,
       "level": "Advanced",
       "Journal Entry": ""
-    }
+    },
     "Actual Completion Date": {
       "variable_name": "actual_completion_date",
       "inUpdate": true,
@@ -2707,7 +2707,234 @@
     }
   },
   "bundles": {
+    "Authored Referenceable": {
+      "inherits": "Referenceable",
+      "own_attributes": [
+        "Authors",
+        "Content Status",
+        "User Defined Content Status"
+      ]
+    },
+    "Referenceable": {
+      "inherits": "New-Element",
+      "own_attributes": [
+        "Additional Properties",
+        "Category",
+        "Class Word Classification",
+        "Confidence Classification",
+        "Confidentiality Classification",
+        "Criticality Classification",
+        "Description",
+        "Display Name",
+        "GUID",
+        "Identifier",
+        "Impact Classification",
+        "Modifier Classification",
+        "Policy Management Point",
+        "Prime Word Classification",
+        "Qualified Name",
+        "Retention Classification",
+        "Security Tags",
+        "URL",
+        "Version Identifier"
+      ]
+    },
+    "New-Element": {
+      "inherits": null,
+      "own_attributes": [
+        "Anchor ID",
+        "Effective From",
+        "Effective Time",
+        "Effective To",
+        "Extended Properties",
+        "External Source GUID",
+        "External Source Name",
+        "Glossary Term",
+        "Is Own Anchor",
+        "Journal Entry",
+        "Merge Update",
+        "Parent at End1",
+        "Parent ID",
+        "Parent Relationship Attributes",
+        "Parent Relationship Type Name",
+        "Search Keywords",
+        "Status",
+        "Zone Membership"
+      ]
+    },
+    "Terms and Conditions": {
+      "inherits": null,
+      "own_attributes": [
+        "Entitlements",
+        "Obligations",
+        "Restrictions"
+      ]
+    },
+    "Link Command Base": {
+      "inherits": null,
+      "own_attributes": [
+        "Description",
+        "Link Label"
+      ]
+    },
+    "Asset": {
+      "inherits": "Referenceable",
+      "own_attributes": [
+        "Deployed Implementation Type",
+        "Namespace",
+        "Resource Name",
+        "Source"
+      ]
+    },
+    "Project Base": {
+      "inherits": null,
+      "own_attributes": [
+        "Mission",
+        "Purposes",
+        "Project Type",
+        "Project Identifier",
+        "Start Date",
+        "Planned End Date",
+        "Priority",
+        "Project Phase",
+        "Project Status",
+        "Project Health"
+      ]
+    },
+    "Project Link Base": {
+      "inherits": null,
+      "own_attributes": [
+        "Parent Project",
+        "Child Project"
+      ]
+    }
   },
   "commands": {
+    "Create Study Project": {
+      "display_name": "Create Study Project",
+      "qn_prefix": "",
+      "alternate_names": [],
+      "family": "Projects",
+      "description": "Creates or updates a study project — a focused analysis of a topic, person, object or situation. Sets the StudyProject classification on the Project entity.",
+      "verb": "Create",
+      "upsert": false,
+      "attach": false,
+      "level": "Basic",
+      "find_method": "name",
+      "find_constraints": "",
+      "extra_find": "",
+      "extra_constraints": "",
+      "bundle": "Project Base",
+      "custom_attributes": [],
+      "Journal Entry": ""
+    },
+    "Link Project Hierarchy": {
+      "display_name": "Link Project Hierarchy",
+      "qn_prefix": "",
+      "alternate_names": [],
+      "family": "Projects",
+      "description": "Links or unlinks a parent project and a child project via the ProjectHierarchy relationship.",
+      "verb": "Link",
+      "upsert": false,
+      "attach": false,
+      "level": "Basic",
+      "find_method": "name",
+      "find_constraints": "",
+      "extra_find": "",
+      "extra_constraints": "",
+      "bundle": "Project Link Base",
+      "custom_attributes": [],
+      "Journal Entry": ""
+    },
+    "Link Project Dependency": {
+      "display_name": "Link Project Dependency",
+      "qn_prefix": "",
+      "alternate_names": [],
+      "family": "Projects",
+      "description": "Links or unlinks a project and a project it depends on via the ProjectDependency relationship.",
+      "verb": "Link",
+      "upsert": false,
+      "attach": false,
+      "level": "Basic",
+      "find_method": "name",
+      "find_constraints": "",
+      "extra_find": "",
+      "extra_constraints": "",
+      "bundle": "Project Link Base",
+      "custom_attributes": [],
+      "Journal Entry": ""
+    },
+    "Create Personal Project": {
+      "display_name": "Create Personal Project",
+      "qn_prefix": "",
+      "alternate_names": [],
+      "family": "Projects",
+      "description": "Creates or updates a personal project — an informal project created by a single person to organize part of their work. Sets the PersonalProject classification on the Project entity.",
+      "verb": "Create",
+      "upsert": false,
+      "attach": false,
+      "level": "Basic",
+      "find_method": "name",
+      "find_constraints": "",
+      "extra_find": "",
+      "extra_constraints": "",
+      "bundle": "Project Base",
+      "custom_attributes": [],
+      "Journal Entry": ""
+    },
+    "Create Task": {
+      "display_name": "Create Task",
+      "qn_prefix": "",
+      "alternate_names": [],
+      "family": "Projects",
+      "description": "Creates or updates a task — a small piece of work typically assigned to a single person. Sets the Task classification on the Project entity.",
+      "verb": "Create",
+      "upsert": false,
+      "attach": false,
+      "level": "Basic",
+      "find_method": "name",
+      "find_constraints": "",
+      "extra_find": "",
+      "extra_constraints": "",
+      "bundle": "Project Base",
+      "custom_attributes": [],
+      "Journal Entry": ""
+    },
+    "Create Campaign": {
+      "display_name": "Create Campaign",
+      "qn_prefix": "",
+      "alternate_names": [],
+      "family": "Projects",
+      "description": "Creates or updates a campaign — a collection of related projects working towards a common goal. Sets the Campaign classification on the Project entity.",
+      "verb": "Create",
+      "upsert": false,
+      "attach": false,
+      "level": "Basic",
+      "find_method": "name",
+      "find_constraints": "",
+      "extra_find": "",
+      "extra_constraints": "",
+      "bundle": "Project Base",
+      "custom_attributes": [],
+      "Journal Entry": ""
+    },
+    "Create Project": {
+      "display_name": "Create Project",
+      "qn_prefix": "",
+      "alternate_names": [],
+      "family": "Projects",
+      "description": "Creates or updates a project. Projects organize a specific activity, controlling resources and costs to achieve defined goals.",
+      "verb": "Create",
+      "upsert": false,
+      "attach": false,
+      "level": "Basic",
+      "find_method": "name",
+      "find_constraints": "",
+      "extra_find": "",
+      "extra_constraints": "",
+      "bundle": "Project Base",
+      "custom_attributes": [],
+      "Journal Entry": ""
+    }
   }
 }

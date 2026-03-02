@@ -225,7 +225,7 @@ class DataDesignerScenarioTester:
                     "qualifiedName": f"{namespace}::data-structure::{display_name}",
                     "displayName": display_name,
                     "description": "Test data structure for lifecycle testing",
-                    "namespace": namespace,
+                    "namespacePath": namespace,
                     "versionIdentifier": "1.0"
                 }
             }
@@ -257,7 +257,7 @@ class DataDesignerScenarioTester:
                     "qualifiedName": f"{namespace}::data-structure::{display_name}",
                     "displayName": f"{display_name}_Updated",
                     "description": "Updated test data structure",
-                    "namespace": namespace,
+                    "namespacePath": namespace,
                     "versionIdentifier": "2.0"
                 }
             }
@@ -352,7 +352,7 @@ class DataDesignerScenarioTester:
                     "qualifiedName": f"{namespace}::data-structure::{struct_name}",
                     "displayName": struct_name,
                     "description": "Parent structure for field testing",
-                    "namespace": namespace,
+                    "namespacePath": namespace,
                     "versionIdentifier": "1.0"
                 }
             }
@@ -435,18 +435,18 @@ class DataDesignerScenarioTester:
         scenario_name = "Data Class Management"
         start_time = time.perf_counter()
         created_guids = []
-        
+
         try:
             console.print(f"\n[bold blue]▶ Running: {scenario_name}[/bold blue]")
-            
+
             # Create data classes
             console.print("  → Creating data classes...")
             ts = datetime.now().strftime("%Y%m%d%H%M%S%f")
             namespace = "test_namespace"
-            
+
             class_names = ["EmailAddress", "PhoneNumber", "PostalCode"]
             class_guids = []
-            
+
             for class_name in class_names:
                 class_body = {
                     "class": "NewElementRequestBody",
@@ -457,20 +457,20 @@ class DataDesignerScenarioTester:
                         "qualifiedName": f"{namespace}::data-class::{class_name}_{ts}",
                         "displayName": class_name,
                         "description": f"Data class for validating {class_name} format",
-                        "namespace": namespace
+                        "namespacePath": namespace
                     }
                 }
-                
+
                 class_guid = self.client.create_data_class(class_body)
-                
+
                 if class_guid:
                     created_guids.append(class_guid)
                     self.created_data_classes.append(class_guid)
                     class_guids.append(class_guid)
                     console.print(f"  ✓ Created data class '{class_name}': {class_guid}")
-            
+
             console.print(f"  ✓ Created {len(class_guids)} data classes")
-            
+
             duration = time.perf_counter() - start_time
             return TestResult(
                 scenario_name=scenario_name,
@@ -479,7 +479,7 @@ class DataDesignerScenarioTester:
                 message=f"Created {len(class_guids)} data classes for validation",
                 created_guids=created_guids
             )
-            
+
         except Exception as e:
             duration = time.perf_counter() - start_time
             if isinstance(e, PyegeriaTimeoutException):
@@ -494,6 +494,82 @@ class DataDesignerScenarioTester:
                 )
             console.print(f"  [red]✗ Error: {str(e)}[/red]")
             print_exception_table(e) if isinstance(e, PyegeriaException) else console.print_exception()
+            return TestResult(
+                scenario_name=scenario_name,
+                status="FAILED",
+                duration=duration,
+                message=str(e)[:100],
+                error=e,
+                created_guids=created_guids
+            )
+
+    def scenario_data_value_specification_lifecycle(self) -> TestResult:
+        """Scenario: Create and manage data value specifications and grains"""
+        scenario_name = "Data Value Specification Lifecycle"
+        start_time = time.perf_counter()
+        created_guids = []
+
+        try:
+            console.print(f"\n[bold blue]▶ Running: {scenario_name}[/bold blue]")
+
+            # Create a Data Value Specification
+            console.print("  → Creating Data Value Specification...")
+            ts = datetime.now().strftime("%Y%m%d%H%M%S%f")
+
+            spec_body = {
+                "class": "NewElementRequestBody",
+                "isOwnAnchor": True,
+                "properties": {
+                    "class": "DataValueSpecificationProperties",
+                    "qualifiedName": f"DataValueSpec::LifecycleTest_{ts}",
+                    "displayName": "Lifecycle Test Spec",
+                    "description": "A test data value specification for lifecycle testing"
+                }
+            }
+
+            spec_guid = self.client.create_data_value_specification(spec_body)
+            if spec_guid:
+                created_guids.append(spec_guid)
+                self.created_data_classes.append(spec_guid)  # Using this list for cleanup
+                console.print(f"  ✓ Created Data Value Specification: {spec_guid}")
+
+            # Create a Data Grain
+            console.print("  → Creating Data Grain...")
+            grain_body = {
+                "class": "NewElementRequestBody",
+                "isOwnAnchor": True,
+                "properties": {
+                    "class": "DataValueSpecificationProperties",
+                    "qualifiedName": f"DataGrain::LifecycleTest_{ts}",
+                    "displayName": "Lifecycle Test Grain",
+                    "description": "A test data grain for lifecycle testing"
+                }
+            }
+            grain_guid = self.client.create_data_grain(grain_body)
+            if grain_guid:
+                created_guids.append(grain_guid)
+                self.created_data_classes.append(grain_guid)
+                console.print(f"  ✓ Created Data Grain: {grain_guid}")
+
+            # Link them
+            if spec_guid and grain_guid:
+                console.print("  → Linking Data Grain to Data Value Specification...")
+                self.client.link_specialized_data_value_specification(spec_guid, grain_guid)
+                console.print("  ✓ Linked successfully")
+
+            duration = time.perf_counter() - start_time
+            return TestResult(
+                scenario_name=scenario_name,
+                status="PASSED",
+                duration=duration,
+                message="Successfully managed Data Value Specifications and Grains",
+                created_guids=created_guids
+            )
+
+        except Exception as e:
+            duration = time.perf_counter() - start_time
+            print_exception_table(e) if isinstance(e, PyegeriaException) else console.print_exception()
+            console.print(f"  [red]✗ Error: {str(e)}[/red]")
             return TestResult(
                 scenario_name=scenario_name,
                 status="FAILED",
@@ -520,6 +596,7 @@ class DataDesignerScenarioTester:
             self.results.append(self.scenario_data_structure_lifecycle())
             self.results.append(self.scenario_data_field_management())
             self.results.append(self.scenario_data_class_management())
+            self.results.append(self.scenario_data_value_specification_lifecycle())
             
             # Print summary
             self.print_results_summary()

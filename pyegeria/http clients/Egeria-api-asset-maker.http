@@ -434,7 +434,7 @@ Content-Type: application/json
     "category": "",
     "url": "",
     "resourceName": "",
-    "namespace": "",
+    "namespacePath": "",
     "deployedImplementationType": "",
     "source": "",
     "expectedBehaviour": "",
@@ -503,7 +503,7 @@ Content-Type: application/json
     "category": "",
     "url": "",
     "resourceName": "",
-    "namespace": "",
+    "namespacePath": "",
     "deployedImplementationType": "",
     "source": "",
     "expectedBehaviour": "",
@@ -575,7 +575,7 @@ Content-Type: application/json
     "category": "",
     "url": "",
     "resourceName": "",
-    "namespace": "",
+    "namespacePath": "",
     "deployedImplementationType": "",
     "source": "",
     "expectedBehaviour": "",
@@ -643,7 +643,7 @@ Content-Type: application/json
     "category": "",
     "url": "",
     "resourceName": "",
-    "namespace": "",
+    "namespacePath": "",
     "deployedImplementationType": "",
     "source": "",
     "expectedBehaviour": "",
@@ -712,7 +712,7 @@ Content-Type: application/json
     "category": "",
     "url": "",
     "resourceName": "",
-    "namespace": "",
+    "namespacePath": "",
     "deployedImplementationType": "",
     "source": "",
     "expectedBehaviour": "",
@@ -755,7 +755,7 @@ Content-Type: application/json
 #
 # @return guid or
 # InvalidParameterException one of the parameters is null or invalid or
-# UserNotAuthorizedException user not authorized to issue this request or
+# UserNotAuthorizedException the user is not authorized to issue this request or
 # PropertyServerException problem storing the catalog target definition.
 POST {{baseURL}}/servers/{{viewServer}}/api/open-metadata/asset-maker/actions/{{actionGUID}}/action-targets/{{metadataElementGUID}}/attach
 Authorization: Bearer {{token}}
@@ -824,7 +824,7 @@ Content-Type: application/json
 #
 # @return details of the governance service and the asset types it is registered for or
 # InvalidParameterException one of the parameters is null or invalid or
-# UserNotAuthorizedException user not authorized to issue this request or
+# UserNotAuthorizedException the user is not authorized to issue this request or
 # PropertyServerException problem storing the integration connector definition.
 POST {{baseURL}}/servers/{{viewServer}}/api/open-metadata/asset-maker/actions/action-targets/{{actionTargetGUID}}/retrieve
 Authorization: Bearer {{token}}
@@ -849,7 +849,7 @@ Content-Type: application/json
 #
 # @return list of unique identifiers or
 # InvalidParameterException one of the parameters is null or invalid or
-# UserNotAuthorizedException user not authorized to issue this request or
+# UserNotAuthorizedException the user is not authorized to issue this request or
 # PropertyServerException problem storing the integration connector definition.
 POST {{baseURL}}/servers/{{viewServer}}/api/open-metadata/asset-maker/actions/{{actionGUID}}/action-targets
 Authorization: Bearer {{token}}
@@ -1408,6 +1408,209 @@ Content-Type: application/json
   "forLineage" : false,
   "forDuplicateProcessing" : false
 }
+
+###
+# Reports
+# https://egeria-project.org/concepts/report
+
+@originatorGUID=add guid here
+@subjectGUID=add guid here
+@reportGUID=add guid here
+@priorReportGUID=add guid here
+
+###
+# @name linkReportOriginator
+# Create a relationship that identifies the originator of a report.
+
+# @param serverName name of the server to route the request to
+# @param originatorGUID       unique identifier of the originator
+# @param reportGUID           unique identifier of the report
+# @param urlMarker  view service URL marker
+# @param requestBody optional effective time
+#
+# @return  void or
+# InvalidParameterException  one of the parameters is invalid
+# UserNotAuthorizedException the user is not authorized to issue this request
+# PropertyServerException    a problem reported in the open metadata server(s)
+#/
+POST {{baseURL}}/servers/{{viewServer}}/api/open-metadata/asset-maker/elements/{{originatorGUID}}/originated-reports/{{reportGUID}}/attach
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "class" : "NewRelationshipRequestBody",
+  "properties": {
+    "class": "ReportOriginatorProperties",
+    "label": "add display label",
+    "description": "add description",
+    "effectiveFrom": "{{$isoTimestamp}}",
+    "effectiveTo": "{{$isoTimestamp}}"
+  },
+  "externalSourceGUID": "add guid here",
+  "externalSourceName": "add qualified name here",
+  "effectiveTime" : "{{$isoTimestamp}}",
+  "forLineage" : false,
+  "forDuplicateProcessing" : false
+}
+
+
+###
+# @name unlinkReportOriginator
+# Remove a ReportOriginator relationship.
+#
+# @param serverName name of the server to route the request to
+# @param originatorGUID       unique identifier of the originator
+# @param reportGUID           unique identifier of the report
+# @param urlMarker  view service URL marker
+# @param requestBody optional effective time
+#
+# @return void or
+# InvalidParameterException  one of the parameters is invalid
+# UserNotAuthorizedException the user is not authorized to issue this request
+# PropertyServerException    a problem reported in the open metadata server(s)
+#
+POST {{baseURL}}/servers/{{viewServer}}/api/open-metadata/asset-maker/elements/{{originatorGUID}}/originated-reports/{{reportGUID}}/detach
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "class" : "DeleteRelationshipRequestBody",
+  "externalSourceGUID": "add guid here",
+  "externalSourceName": "add qualified name here",
+  "effectiveTime" : "{{$isoTimestamp}}",
+  "forLineage" : false,
+  "forDuplicateProcessing" : false
+}
+
+###
+# @name linkReportDependency
+# Create a relationship that identifies the prior publishing of a report.
+#
+# @param serverName name of the server to route the request to
+# @param priorReportGUID       unique identifier of the earlier report
+# @param reportGUID           unique identifier of the new report
+# @param urlMarker  view service URL marker
+# @param requestBody optional effective time
+#
+# @return  void or
+# InvalidParameterException  one of the parameters is invalid
+# UserNotAuthorizedException the user is not authorized to issue this request
+# PropertyServerException    a problem reported in the open metadata server(s)
+#/
+POST {{baseURL}}/servers/{{viewServer}}/api/open-metadata/asset-maker/reports/{{priorReportGUID}}/follow-on-reports/{{reportGUID}}/attach
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "class" : "NewRelationshipRequestBody",
+  "properties": {
+    "class": "ReportDependencyProperties",
+    "label": "add display label",
+    "description": "add description",
+    "effectiveFrom": "{{$isoTimestamp}}",
+    "effectiveTo": "{{$isoTimestamp}}"
+  },
+  "externalSourceGUID": "add guid here",
+  "externalSourceName": "add qualified name here",
+  "effectiveTime" : "{{$isoTimestamp}}",
+  "forLineage" : false,
+  "forDuplicateProcessing" : false
+}
+
+
+###
+# @name unlinkReportDependency
+# Remove a ReportDependency relationship.
+#
+# @param serverName name of the server to route the request to
+# @param priorReportGUID       unique identifier of the prior report
+# @param reportGUID           unique identifier of the new report
+# @param urlMarker  view service URL marker
+# @param requestBody optional effective time
+#
+# @return void or
+# InvalidParameterException  one of the parameters is invalid
+# UserNotAuthorizedException the user is not authorized to issue this request
+# PropertyServerException    a problem reported in the open metadata server(s)
+#
+POST {{baseURL}}/servers/{{viewServer}}/api/open-metadata/asset-maker/reports/{{priorReportGUID}}/follow-on-reports/{{reportGUID}}/detach
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "class" : "DeleteRelationshipRequestBody",
+  "externalSourceGUID": "add guid here",
+  "externalSourceName": "add qualified name here",
+  "effectiveTime" : "{{$isoTimestamp}}",
+  "forLineage" : false,
+  "forDuplicateProcessing" : false
+}
+
+
+###
+# @name linkReportSubject
+# Create a relationship that identifies the subject of a report.
+#
+# @param serverName name of the server to route the request to
+# @param subjectGUID       unique identifier of the subject
+# @param reportGUID           unique identifier of the report
+# @param urlMarker  view service URL marker
+# @param requestBody optional effective time
+#
+# @return  void or
+# InvalidParameterException  one of the parameters is invalid
+# UserNotAuthorizedException the user is not authorized to issue this request
+# PropertyServerException    a problem reported in the open metadata server(s)
+#/
+POST {{baseURL}}/servers/{{viewServer}}/api/open-metadata/asset-maker/elements/{{subjectGUID}}/reports/{{reportGUID}}/attach
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "class" : "NewRelationshipRequestBody",
+  "properties": {
+    "class": "ReportSubjectProperties",
+    "label": "add display label",
+    "description": "add description",
+    "effectiveFrom": "{{$isoTimestamp}}",
+    "effectiveTo": "{{$isoTimestamp}}"
+  },
+  "externalSourceGUID": "add guid here",
+  "externalSourceName": "add qualified name here",
+  "effectiveTime" : "{{$isoTimestamp}}",
+  "forLineage" : false,
+  "forDuplicateProcessing" : false
+}
+
+
+###
+# @name unlinkReportSubject
+# Remove a ReportSubject relationship.
+#
+# @param serverName name of the server to route the request to
+# @param subjectGUID       unique identifier of the subject
+# @param reportGUID           unique identifier of the report
+# @param urlMarker  view service URL marker
+# @param requestBody optional effective time
+#
+# @return void or
+# InvalidParameterException  one of the parameters is invalid
+# UserNotAuthorizedException the user is not authorized to issue this request
+# PropertyServerException    a problem reported in the open metadata server(s)
+#
+POST {{baseURL}}/servers/{{viewServer}}/api/open-metadata/asset-maker/elements/{{subjectGUID}}/reports/{{reportGUID}}/detach
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "class" : "DeleteRelationshipRequestBody",
+  "externalSourceGUID": "add guid here",
+  "externalSourceName": "add qualified name here",
+  "effectiveTime" : "{{$isoTimestamp}}",
+  "forLineage" : false,
+  "forDuplicateProcessing" : false
+}
+
 
 ###
 # =====================================================================================================================

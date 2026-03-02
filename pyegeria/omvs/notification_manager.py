@@ -12,14 +12,12 @@ import asyncio
 from typing import Optional
 
 from pyegeria.core._server_client import ServerClient
-from pyegeria.core.config import settings as app_settings
 from pyegeria.models import (
     NewRelationshipRequestBody,
     DeleteRelationshipRequestBody,
 )
 from pyegeria.core.utils import dynamic_catch, body_slimmer
 
-EGERIA_LOCAL_QUALIFIER = app_settings.User_Profile.egeria_local_qualifier
 
 class NotificationManager(ServerClient):
     """
@@ -56,20 +54,20 @@ class NotificationManager(ServerClient):
 
     def __init__(
         self,
-        view_server: str,
-        platform_url: str,
-        user_id: str,
+        view_server: str = None,
+        platform_url: str = None,
+        user_id: str = None,
         user_pwd: Optional[str] = None,
         token: Optional[str] = None,
     ):
-        self.view_server = view_server
-        self.platform_url = platform_url
-        self.user_id = user_id
-        self.user_pwd = user_pwd
+        ServerClient.__init__(self, view_server, platform_url, user_id, user_pwd, token)
+        self.view_server = self.server_name
+        self.platform_url = self.platform_url
+        self.user_id = self.user_id
+        self.user_pwd = self.user_pwd
         self.notification_manager_command_root: str = (
             f"{self.platform_url}/servers/{self.view_server}/api/open-metadata/notification-manager"
         )
-        ServerClient.__init__(self, view_server, platform_url, user_id, user_pwd, token)
 
     def _prepare_body(self, body: Optional[dict | NewRelationshipRequestBody | DeleteRelationshipRequestBody]) -> dict:
         """Convert Pydantic models to dict and slim the body."""

@@ -12,15 +12,12 @@ from typing import Any, Optional
 
 from pyegeria.core._globals import NO_ELEMENTS_FOUND
 from pyegeria.core._server_client import ServerClient
-from pyegeria.core.config import settings as app_settings
 from pyegeria.models import (SearchStringRequestBody, FilterRequestBody, GetRequestBody, NewElementRequestBody,
                              TemplateRequestBody, DeleteElementRequestBody, DeleteRelationshipRequestBody,
                              UpdateElementRequestBody,
                              NewRelationshipRequestBody, NewClassificationRequestBody, DeleteClassificationRequestBody)
 from pyegeria.view.output_formatter import populate_common_columns, overlay_additional_values, materialize_egeria_summary
 from pyegeria.core.utils import body_slimmer, dynamic_catch
-
-EGERIA_LOCAL_QUALIFIER = app_settings.User_Profile.egeria_local_qualifier
 from loguru import logger
 
 PROJECT_TYPES = ["Project", "Campaign", "StudyProject", "Task", "PersonalProject"]
@@ -47,21 +44,21 @@ class ProjectManager(ServerClient):
 
     def __init__(
             self,
-            view_server: str,
-            platform_url: str,
-            user_id: str,
+            view_server: str = None,
+            platform_url: str = None,
+            user_id: str = None,
             user_pwd: Optional[str] = None,
             token: Optional[str] = None,
     ):
-        self.view_server = view_server
-        self.platform_url = platform_url
-        self.user_id = user_id
-        self.user_pwd = user_pwd
+        ServerClient.__init__(self, view_server, platform_url, user_id, user_pwd, token)
+        self.view_server = self.server_name
+        self.platform_url = self.platform_url
+        self.user_id = self.user_id
+        self.user_pwd = self.user_pwd
         self.project_command_base: str = (
             f"{self.platform_url}/servers/{self.view_server}/api/open-metadata/project-manager/projects"
         )
         self.url_marker = 'project-manager'
-        ServerClient.__init__(self, view_server, platform_url, user_id, user_pwd, token)
 
 
     def _extract_project_properties(self, element: dict, columns_struct: dict) -> dict:
@@ -251,10 +248,9 @@ class ProjectManager(ServerClient):
             f"projects/by-classifications"
         )
         response = await self._async_get_name_request(url, "Project", self._extract_project_properties,
-                                                      filter_string = project_classification, start_from=start_from,
-                                                      page_size=page_size, body=body,
-                                                      output_format=output_format,
-                                                      report_spec=report_spec)
+                                                      filter_string=project_classification, start_from=start_from,
+                                                      page_size=page_size, output_format=output_format,
+                                                      report_spec=report_spec, body=body)
         return response
 
     @dynamic_catch
@@ -851,12 +847,8 @@ class ProjectManager(ServerClient):
         # Filter out None values, but keep search_string even if None (it's required)
         params = {k: v for k, v in params.items() if v is not None or k == 'search_string'}
         
-        response = await self._async_find_request(
-            url,
-            _type="Project",
-            _gen_output=self._generate_project_output,
-            **params
-        )
+        response = await self._async_find_request(url, _type="Project", _gen_output=self._generate_project_output,
+                                                  **params)
 
         return response
 
@@ -971,13 +963,11 @@ class ProjectManager(ServerClient):
             report_spec: str | dict = None) -> list | str:
         url = f"{self.project_command_base}/by-name"
 
-        response = await self._async_get_name_request(url, _type="Projects",
-                                                      _gen_output=self._generate_project_output,
+        response = await self._async_get_name_request(url, _type="Projects", _gen_output=self._generate_project_output,
                                                       filter_string=filter_string,
-                                                      classification_names=classification_names,
-                                                      start_from=start_from, page_size=page_size,
-                                                      output_format=output_format, report_spec=report_spec,
-                                                      body=body)
+                                                      classification_names=classification_names, start_from=start_from,
+                                                      page_size=page_size, output_format=output_format,
+                                                      report_spec=report_spec, body=body)
 
         return response
 

@@ -268,6 +268,7 @@ class RequestBody(PyegeriaModel):
     governance_zone_filter: list[str] | None = None
     for_lineage: bool | None = False
     for_duplicate_processing: bool | None = False
+    request_id: str | None = None
 
 
 class NewRelationshipRequestBody(RequestBody):
@@ -339,7 +340,6 @@ class NewElementRequestBody(RequestBody):
     parent_guid: str | None = None
     parent_relationship_type_name: str | None = None
     parent_at_end_1: bool | None = None
-    properties: dict | None =None
 
 
 class NewClassificationRequestBody(RequestBody):
@@ -451,19 +451,22 @@ class GetRequestBody(PyegeriaModel):
     skip_classified_elements: list[str] | None = None
     include_only_classified_elements: list[str] | None = None
     graph_query_depth: int | None = None
+    max_mermaid_node_count: int | None = None
     governance_zone_filter: list[str]  | None= None
     as_of_time: datetime | None = None
     effective_time: datetime | None = None
     for_lineage: bool | None = False
     for_duplicate_processing: bool | None = False
-    relationship_page_size: int = 0
+    relationships_page_size: int = 0
+
 
 
 class ResultsRequestBody(GetRequestBody):
     class_: Annotated[Literal["ResultsRequestBody"], Field(alias="class")]
-    limit_results_by_status: list[ValidStatusValues] | None= None # header status
-    relationships_page_size: int = 0
     anchor_guid: str | None = None
+    anchor_domain_name: str | None = None
+    anchor_scope_guid: str | None = None
+    limit_results_by_status: list[ValidStatusValues] | None = None  # header status
     sequencing_order: SequencingOrder | None = None
     sequencing_property: str | None = None
     start_from: int = 0
@@ -610,8 +613,9 @@ class AnchorClassificationProperties(PyegeriaModel):
     """Represents 'classificationProperties' for Anchor."""
     anchortype__name: str
     anchor_domain_name: str
-    anchor_scope_guid: list[str] = None # Varies between anchor and anchorScopeGUID
-    anchor_guid: list[str] = None # Used in Glossary anchor
+    anchor_scope_guid: str | None = None # Varies between anchor and anchorScopeGUID
+    anchor_guid: str | None = None
+
 
 class SubjectAreaClassificationProperties(PyegeriaModel):
     """Represents 'classificationProperties' for SubjectArea."""

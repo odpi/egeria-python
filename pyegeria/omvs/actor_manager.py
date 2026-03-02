@@ -13,7 +13,6 @@ from loguru import logger
 from pydantic import HttpUrl
 
 from pyegeria.view.base_report_formats import select_report_spec, get_report_spec_match
-from pyegeria.core.config import settings
 from pyegeria.models import (SearchStringRequestBody, FilterRequestBody, GetRequestBody, NewElementRequestBody,
                              TemplateRequestBody, NewAttachmentRequestBody,
                              UpdateElementRequestBody, NewRelationshipRequestBody,
@@ -23,8 +22,6 @@ from pyegeria.view.output_formatter import (_extract_referenceable_properties, p
                                             get_required_relationships)
 from pyegeria.core.utils import dynamic_catch
 
-app_settings = settings
-EGERIA_LOCAL_QUALIFIER = app_settings.User_Profile.egeria_local_qualifier
 ACTOR_PROFILE = ["ActorProfile", "PersonRole", "TeamRole", "Organization",
                  "UserIdentity","ITProfile"]
 
@@ -71,7 +68,7 @@ class ActorManager(ServerClient):
 
     """
 
-    def __init__(self, view_server: str, platform_url: str, user_id: str, user_pwd: Optional[str] = None, token: Optional[str] = None, ):
+    def __init__(self, view_server: str = None, platform_url: str = None, user_id: str = None, user_pwd: Optional[str] = None, token: Optional[str] = None, ):
         self.view_server = view_server
         self.platform_url = platform_url
         self.user_id = user_id
@@ -805,12 +802,8 @@ class ActorManager(ServerClient):
         # Filter out None values, but keep search_string even if None (it's required)
         params = {k: v for k, v in params.items() if v is not None or k == 'search_string'}
         
-        response = await self._async_find_request(
-            url,
-            _type="ActorProfile",
-            _gen_output=self._generate_actor_profile_output,
-            **params
-        )
+        response = await self._async_find_request(url, _type="ActorProfile",
+                                                  _gen_output=self._generate_actor_profile_output, **params)
         return response
 
     @dynamic_catch
@@ -959,10 +952,9 @@ class ActorManager(ServerClient):
         response = await self._async_get_name_request(url, _type="ACTOR_PROFILES",
                                                       _gen_output=self._generate_actor_profile_output,
                                                       filter_string=filter_string,
-                                                      classification_names=classification_names,
-                                                      start_from=start_from, page_size=page_size,
-                                                      output_format=output_format, report_spec=report_spec,
-                                                      body=body)
+                                                      classification_names=classification_names, start_from=start_from,
+                                                      page_size=page_size, output_format=output_format,
+                                                      report_spec=report_spec, body=body)
 
         return response
 
@@ -2334,12 +2326,8 @@ class ActorManager(ServerClient):
         # Filter out None values, but keep search_string even if None (it's required)
         params = {k: v for k, v in params.items() if v is not None or k == 'search_string'}
         
-        response = await self._async_find_request(
-            url,
-            _type="ActorRole",
-            _gen_output=self._generate_actor_role_output,
-            **params
-        )
+        response = await self._async_find_request(url, _type="ActorRole", _gen_output=self._generate_actor_role_output,
+                                                  **params)
         return response
 
     @dynamic_catch
@@ -2488,10 +2476,9 @@ class ActorManager(ServerClient):
         response = await self._async_get_name_request(url, _type="ActorRole",
                                                       _gen_output=self._generate_actor_role_output,
                                                       filter_string=filter_string,
-                                                      classification_names=classification_names,
-                                                      start_from=start_from, page_size=page_size,
-                                                      output_format=output_format, report_spec=report_spec,
-                                                      body=body)
+                                                      classification_names=classification_names, start_from=start_from,
+                                                      page_size=page_size, output_format=output_format,
+                                                      report_spec=report_spec, body=body)
 
         return response
 
@@ -4000,12 +3987,8 @@ class ActorManager(ServerClient):
         # Filter out None values, but keep search_string even if None (it's required)
         params = {k: v for k, v in params.items() if v is not None or k == 'search_string'}
         
-        response = await self._async_find_request(
-            url,
-            _type="UserIdentity",
-            _gen_output=self._generate_user_identity_output,
-            **params
-        )
+        response = await self._async_find_request(url, _type="UserIdentity",
+                                                  _gen_output=self._generate_user_identity_output, **params)
         return response
 
     @dynamic_catch
@@ -4154,10 +4137,9 @@ class ActorManager(ServerClient):
         response = await self._async_get_name_request(url, _type="UserIdentity",
                                                       _gen_output=self._generate_user_identity_output,
                                                       filter_string=filter_string,
-                                                      classification_names=classification_names,
-                                                      start_from=start_from, page_size=page_size,
-                                                      output_format=output_format, report_spec=report_spec,
-                                                      body=body)
+                                                      classification_names=classification_names, start_from=start_from,
+                                                      page_size=page_size, output_format=output_format,
+                                                      report_spec=report_spec, body=body)
 
         return response
 

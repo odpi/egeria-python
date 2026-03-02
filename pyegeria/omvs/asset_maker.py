@@ -11,7 +11,6 @@ import asyncio
 from typing import Any, Optional
 from pyegeria.core._server_client import ServerClient
 from pyegeria.core._globals import max_paging_size, NO_ELEMENTS_FOUND, NO_GUID_RETURNED
-from pyegeria.core.config import settings as app_settings
 from pyegeria.models import (
     GetRequestBody,
     SearchStringRequestBody,
@@ -35,9 +34,6 @@ from pyegeria.models import (
 )
 from pyegeria.core.utils import dynamic_catch
 from pyegeria.view.base_report_formats import select_report_spec, get_report_spec_match
-
-EGERIA_LOCAL_QUALIFIER = app_settings.User_Profile.egeria_local_qualifier
-
 
 class AssetProperties(ReferenceableProperties):
     """Properties for Asset elements"""
@@ -73,21 +69,17 @@ class AssetMaker(ServerClient):
 
     def __init__(
         self,
-        view_server: str,
-        platform_url: str,
+        view_server: str = None,
+        platform_url: str = None,
         user_id: str | None = None,
         user_pwd: str | None = None,
         token: str | None = None,
     ):
         """Initialize an AssetMaker client."""
-        self.view_server = view_server
-        self.platform_url = platform_url
-        self.user_id = user_id
-        self.user_pwd = user_pwd
-
         ServerClient.__init__(
             self, view_server, platform_url, user_id=user_id, user_pwd=user_pwd, token=token
         )
+        self.view_server = self.server_name
         self.asset_command_root = f"{self.platform_url}/servers/{self.view_server}/api/open-metadata/asset-maker"
         self.curation_command_root = f"{self.platform_url}/servers/{self.view_server}/api/open-metadata/automated-curation"
 
@@ -621,18 +613,11 @@ class AssetMaker(ServerClient):
         }
         """
         url = f"{self.asset_command_root}/assets/by-name"
-        return await self._async_get_name_request(
-            url,
-            _type="Asset",
-            _gen_output=self._generate_referenceable_output,
-            filter_string=filter_string,
-            classification_names=classification_names,
-            start_from=start_from,
-            page_size=page_size,
-            output_format=output_format,
-            report_spec=report_spec,
-            body=body,
-        )
+        return await self._async_get_name_request(url, _type="Asset", _gen_output=self._generate_referenceable_output,
+                                                  filter_string=filter_string,
+                                                  classification_names=classification_names, start_from=start_from,
+                                                  page_size=page_size, output_format=output_format,
+                                                  report_spec=report_spec, body=body)
 
     @dynamic_catch
     def get_assets_by_name(
@@ -1619,36 +1604,27 @@ class AssetMaker(ServerClient):
         }
         """
         url = f"{self.asset_command_root}/data-assets/by-search-string"
-        return await self._async_content_status_search_request(
-            url,
-            _type="DataAsset",
-            _gen_output=self._generate_referenceable_output,
-            search_string=search_string,
-            content_status_list=content_status_list,
-            starts_with=starts_with,
-            ends_with=ends_with,
-            ignore_case=ignore_case,
-            anchor_domain=anchor_domain,
-            metadata_element_type=metadata_element_type,
-            metadata_element_subtypes=metadata_element_subtypes,
-            skip_relationships=skip_relationships,
-            include_only_relationships=include_only_relationships,
-            skip_classified_elements=skip_classified_elements,
-            include_only_classified_elements=include_only_classified_elements,
-            graph_query_depth=graph_query_depth,
-            governance_zone_filter=governance_zone_filter,
-            as_of_time=as_of_time,
-            effective_time=effective_time,
-            relationship_page_size=relationship_page_size,
-            limit_results_by_status=limit_results_by_status,
-            sequencing_order=sequencing_order,
-            sequencing_property=sequencing_property,
-            output_format=output_format,
-            report_spec=report_spec,
-            start_from=start_from,
-            page_size=page_size,
-            body=body,
-        )
+        return await self._async_content_status_search_request(url, _type="DataAsset",
+                                                               _gen_output=self._generate_referenceable_output,
+                                                               search_string=search_string,
+                                                               content_status_list=content_status_list,
+                                                               starts_with=starts_with, ends_with=ends_with,
+                                                               ignore_case=ignore_case, anchor_domain=anchor_domain,
+                                                               metadata_element_type=metadata_element_type,
+                                                               metadata_element_subtypes=metadata_element_subtypes,
+                                                               skip_relationships=skip_relationships,
+                                                               include_only_relationships=include_only_relationships,
+                                                               skip_classified_elements=skip_classified_elements,
+                                                               include_only_classified_elements=include_only_classified_elements,
+                                                               graph_query_depth=graph_query_depth,
+                                                               governance_zone_filter=governance_zone_filter,
+                                                               as_of_time=as_of_time, effective_time=effective_time,
+                                                               relationship_page_size=relationship_page_size,
+                                                               limit_results_by_status=limit_results_by_status,
+                                                               sequencing_order=sequencing_order,
+                                                               sequencing_property=sequencing_property,
+                                                               output_format=output_format, report_spec=report_spec,
+                                                               start_from=start_from, page_size=page_size, body=body)
 
     @dynamic_catch
     def find_data_assets(
@@ -2009,36 +1985,27 @@ class AssetMaker(ServerClient):
         }
         """
         url = f"{self.asset_command_root}/infrastructure-assets/by-search-string"
-        return await self._async_deployment_status_search_request(
-            url,
-            _type="Infrastructure",
-            _gen_output=self._generate_referenceable_output,
-            search_string=search_string,
-            deployment_status_list=deployment_status_list,
-            starts_with=starts_with,
-            ends_with=ends_with,
-            ignore_case=ignore_case,
-            anchor_domain=anchor_domain,
-            metadata_element_type=metadata_element_type,
-            metadata_element_subtypes=metadata_element_subtypes,
-            skip_relationships=skip_relationships,
-            include_only_relationships=include_only_relationships,
-            skip_classified_elements=skip_classified_elements,
-            include_only_classified_elements=include_only_classified_elements,
-            graph_query_depth=graph_query_depth,
-            governance_zone_filter=governance_zone_filter,
-            as_of_time=as_of_time,
-            effective_time=effective_time,
-            relationship_page_size=relationship_page_size,
-            limit_results_by_status=limit_results_by_status,
-            sequencing_order=sequencing_order,
-            sequencing_property=sequencing_property,
-            output_format=output_format,
-            report_spec=report_spec,
-            start_from=start_from,
-            page_size=page_size,
-            body=body,
-        )
+        return await self._async_deployment_status_search_request(url, _type="Infrastructure",
+                                                                  _gen_output=self._generate_referenceable_output,
+                                                                  search_string=search_string,
+                                                                  deployment_status_list=deployment_status_list,
+                                                                  starts_with=starts_with, ends_with=ends_with,
+                                                                  ignore_case=ignore_case, anchor_domain=anchor_domain,
+                                                                  metadata_element_type=metadata_element_type,
+                                                                  metadata_element_subtypes=metadata_element_subtypes,
+                                                                  skip_relationships=skip_relationships,
+                                                                  include_only_relationships=include_only_relationships,
+                                                                  skip_classified_elements=skip_classified_elements,
+                                                                  include_only_classified_elements=include_only_classified_elements,
+                                                                  graph_query_depth=graph_query_depth,
+                                                                  governance_zone_filter=governance_zone_filter,
+                                                                  as_of_time=as_of_time, effective_time=effective_time,
+                                                                  relationship_page_size=relationship_page_size,
+                                                                  limit_results_by_status=limit_results_by_status,
+                                                                  sequencing_order=sequencing_order,
+                                                                  sequencing_property=sequencing_property,
+                                                                  output_format=output_format, report_spec=report_spec,
+                                                                  start_from=start_from, page_size=page_size, body=body)
 
     @dynamic_catch
     def find_infrastructure(
@@ -2623,7 +2590,7 @@ class AssetMaker(ServerClient):
             "category": "",
             "url": "",
             "resourceName": "",
-            "namespace": "",
+            "namespacePath": "",
             "deployedImplementationType": "",
             "source": "",
             "expectedBehaviour": "",
@@ -2704,7 +2671,7 @@ class AssetMaker(ServerClient):
             "category": "",
             "url": "",
             "resourceName": "",
-            "namespace": "",
+            "namespacePath": "",
             "deployedImplementationType": "",
             "source": "",
             "expectedBehaviour": "",

@@ -279,12 +279,8 @@ class SchemaMaker(ServerClient):
         # Filter out None values, but keep search_string even if None (it's required)
         params = {k: v for k, v in params.items() if v is not None or k == 'search_string'}
         
-        response = await self._async_find_request(
-            url,
-            _type="SchemaType",
-            _gen_output=self._generate_schema_output,
-            **params
-        )
+        response = await self._async_find_request(url, _type="SchemaType", _gen_output=self._generate_schema_output,
+                                                  **params)
 
         return response
 

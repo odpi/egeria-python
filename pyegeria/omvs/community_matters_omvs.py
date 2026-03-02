@@ -138,9 +138,6 @@ class CommunityMatters(ServerClient):
         report_spec: dict | str | None = None,
         **kwargs
     ) -> Any:
-        if output_format == "JSON":
-            return elements
-
         return self._generate_formatted_output(
             elements=elements,
             query_string=search_string,
@@ -162,17 +159,11 @@ class CommunityMatters(ServerClient):
         report_spec: str | dict | None = None,
     ) -> list | str:
         url = f"{self.community_command_base}/communities/by-name"
-        response = await self._async_get_name_request(
-            url,
-            _type="Community",
-            _gen_output=self._generate_community_output,
-            filter_string=filter_string,
-            start_from=start_from,
-            page_size=page_size,
-            output_format=output_format,
-            report_spec=report_spec,
-            body=body,
-        )
+        response = await self._async_get_name_request(url, _type="Community",
+                                                      _gen_output=self._generate_community_output,
+                                                      filter_string=filter_string, start_from=start_from,
+                                                      page_size=page_size, output_format=output_format,
+                                                      report_spec=report_spec, body=body)
         return response
 
     @dynamic_catch
@@ -290,12 +281,8 @@ class CommunityMatters(ServerClient):
         # Filter out None values, but keep search_string even if None (it's required)
         params = {k: v for k, v in params.items() if v is not None or k == 'search_string'}
         
-        response = await self._async_find_request(
-            url,
-            _type="Community",
-            _gen_output=self._generate_community_output,
-            **params
-        )
+        response = await self._async_find_request(url, _type="Community", _gen_output=self._generate_community_output,
+                                                  **params)
         
         return response
 

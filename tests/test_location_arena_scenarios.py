@@ -3,7 +3,7 @@
 SPDX-License-Identifier: Apache-2.0
 Copyright Contributors to the ODPi Egeria project.
 
-Scenario-based testing for Location Arena with synthetic data.
+Scenario-based testing for LocationArena Arena with synthetic data.
 
 This executable test script runs realistic scenarios for location management,
 including creating hierarchical location structures, managing relationships,
@@ -30,10 +30,10 @@ from rich.panel import Panel
 from rich.progress import Progress, SpinnerColumn, TextColumn
 from loguru import logger
 
-from pyegeria.omvs.location_arena import Location
+from pyegeria.omvs.location_arena import LocationArena
 from pyegeria.core._exceptions import (
     print_validation_error, PyegeriaAPIException,
-    PyegeriaTimeoutException,
+    PyegeriaTimeoutException, PyegeriaException, print_basic_exception,
 )
 
 # Configuration
@@ -77,8 +77,8 @@ class LocationScenarioTester:
     def setup(self) -> bool:
         """Initialize connection to Egeria"""
         try:
-            console.print("\n[bold cyan]═══ Setting up Location Arena Test Environment ═══[/bold cyan]\n")
-            self.client = Location(VIEW_SERVER, PLATFORM_URL, user_id=USER_ID, user_pwd=USER_PWD)
+            console.print("\n[bold cyan]═══ Setting up LocationArena Arena Test Environment ═══[/bold cyan]\n")
+            self.client = LocationArena(VIEW_SERVER, PLATFORM_URL, user_id=USER_ID, user_pwd=USER_PWD)
             token = self.client.create_egeria_bearer_token(USER_ID, USER_PWD)
             console.print(f"✓ Connected to {PLATFORM_URL}")
             console.print(f"✓ Authenticated as {USER_ID}")
@@ -142,7 +142,7 @@ class LocationScenarioTester:
         """Helper to create a location and track it"""
         body = {
             "class": "NewElementRequestBody",
-            "typeName": "Location",
+            "typeName": "LocationArena",
             "initialStatus": "ACTIVE",
             "properties": {
                 "class": "LocationProperties",
@@ -178,37 +178,37 @@ class LocationScenarioTester:
             # Create locations
             locations = {
                 "hq": LocationData(
-                    f"Location::GlobalHQ::{self.test_run_id}",
+                    f"LocationArena::GlobalHQ::{self.test_run_id}",
                     "Global Headquarters",
                     "Main corporate headquarters"
                 ),
                 "na_region": LocationData(
-                    f"Location::NorthAmerica::{self.test_run_id}",
+                    f"LocationArena::NorthAmerica::{self.test_run_id}",
                     "North America Region",
                     "North American regional office"
                 ),
                 "eu_region": LocationData(
-                    f"Location::Europe::{self.test_run_id}",
+                    f"LocationArena::Europe::{self.test_run_id}",
                     "Europe Region",
                     "European regional office"
                 ),
                 "ny_office": LocationData(
-                    f"Location::NewYork::{self.test_run_id}",
+                    f"LocationArena::NewYork::{self.test_run_id}",
                     "New York Office",
                     "New York City office location"
                 ),
                 "sf_office": LocationData(
-                    f"Location::SanFrancisco::{self.test_run_id}",
+                    f"LocationArena::SanFrancisco::{self.test_run_id}",
                     "San Francisco Office",
                     "San Francisco office location"
                 ),
                 "london_office": LocationData(
-                    f"Location::London::{self.test_run_id}",
+                    f"LocationArena::London::{self.test_run_id}",
                     "London Office",
                     "London office location"
                 ),
                 "berlin_office": LocationData(
-                    f"Location::Berlin::{self.test_run_id}",
+                    f"LocationArena::Berlin::{self.test_run_id}",
                     "Berlin Office",
                     "Berlin office location"
                 ),
@@ -256,6 +256,9 @@ class LocationScenarioTester:
             
         except ValidationError as e:
             print_validation_error(e)
+        except PyegeriaException as e:
+            print_basic_exception(e)
+
         except Exception as e:
             duration = time.perf_counter() - start_time
             if isinstance(e, PyegeriaTimeoutException):
@@ -296,17 +299,17 @@ class LocationScenarioTester:
             # Create data centers
             data_centers = {
                 "us_east": LocationData(
-                    f"Location::DataCenter::USEast::{self.test_run_id}",
+                    f"LocationArena::DataCenter::USEast::{self.test_run_id}",
                     "US-East Data Center",
                     "Primary data center in US East region"
                 ),
                 "us_west": LocationData(
-                    f"Location::DataCenter::USWest::{self.test_run_id}",
+                    f"LocationArena::DataCenter::USWest::{self.test_run_id}",
                     "US-West Data Center",
                     "Secondary data center in US West region"
                 ),
                 "eu": LocationData(
-                    f"Location::DataCenter::EU::{self.test_run_id}",
+                    f"LocationArena::DataCenter::EU::{self.test_run_id}",
                     "EU Data Center",
                     "Backup data center in European region"
                 ),
@@ -357,7 +360,8 @@ class LocationScenarioTester:
                 message=f"Created {len(data_centers)} data centers with peer relationships",
                 created_guids=created_guids
             )
-            
+        except PyegeriaException as e:
+            print_basic_exception(e)
         except Exception as e:
             duration = time.perf_counter() - start_time
             if isinstance(e, PyegeriaTimeoutException):
@@ -388,7 +392,7 @@ class LocationScenarioTester:
         - Search and retrieve
         - Delete location
         """
-        scenario_name = "Location Lifecycle Management"
+        scenario_name = "LocationArena Lifecycle Management"
         start_time = time.perf_counter()
         created_guids = []
         
@@ -397,8 +401,8 @@ class LocationScenarioTester:
             
             # Create
             loc = LocationData(
-                f"Location::Lifecycle::Test::{self.test_run_id}",
-                "Lifecycle Test Location",
+                f"LocationArena::Lifecycle::Test::{self.test_run_id}",
+                "Lifecycle Test LocationArena",
                 "Original description"
             )
             guid = self._create_location(loc)
@@ -416,7 +420,7 @@ class LocationScenarioTester:
                 "properties": {
                     "class": "LocationProperties",
                     "qualifiedName": loc.qualified_name,
-                    "displayName": "Updated Lifecycle Location",
+                    "displayName": "Updated Lifecycle LocationArena",
                     "description": "Updated description with new information",
                 }
             }
@@ -445,13 +449,15 @@ class LocationScenarioTester:
             # Verify deletion
             try:
                 self.client.get_location_by_guid(guid, output_format="JSON")
-                raise Exception("Location still exists after deletion!")
+                raise Exception("LocationArena still exists after deletion!")
             except PyegeriaAPIException:
                 console.print(f"  ✓ Verified deletion")
                 # Remove from cleanup list since we already deleted it
                 if guid in self.created_locations:
                     self.created_locations.remove(guid)
-            
+            except PyegeriaException as e:
+                print_basic_exception(e)
+
             duration = time.perf_counter() - start_time
             console.print(f"  [green]✓ Scenario completed in {duration:.2f}s[/green]")
             
@@ -501,17 +507,17 @@ class LocationScenarioTester:
             # Create test locations with patterns
             test_locations = [
                 LocationData(
-                    f"Location::Search::Office::NYC::{self.test_run_id}",
+                    f"LocationArena::Search::Office::NYC::{self.test_run_id}",
                     "NYC Office",
                     "New York City office for search testing"
                 ),
                 LocationData(
-                    f"Location::Search::Office::LA::{self.test_run_id}",
+                    f"LocationArena::Search::Office::LA::{self.test_run_id}",
                     "LA Office",
                     "Los Angeles office for search testing"
                 ),
                 LocationData(
-                    f"Location::Search::Warehouse::Seattle::{self.test_run_id}",
+                    f"LocationArena::Search::Warehouse::Seattle::{self.test_run_id}",
                     "Seattle Warehouse",
                     "Seattle warehouse for search testing"
                 ),
@@ -554,10 +560,11 @@ class LocationScenarioTester:
                 message=f"Tested search operations on {len(test_locations)} locations",
                 created_guids=created_guids
             )
-            
+        except PyegeriaException as e:
+            print_basic_exception(e)
         except Exception as e:
             duration = time.perf_counter() - start_time
-            if isinstance(e, PyegeriaTimeoutException):
+            if isinstance(e, PyegeriaTimeoutException|PyegeriaException):
                 console.print(f"  [yellow]⚠ Timeout in {scenario_name}; continuing.[/yellow]")
                 return TestResult(
                     scenario_name=scenario_name,
@@ -658,7 +665,9 @@ class LocationScenarioTester:
             
             # Generate report
             return self.generate_report()
-            
+
+        except PyegeriaException as e:
+            print_basic_exception(e)
         except KeyboardInterrupt:
             console.print("\n[yellow]Test execution interrupted by user[/yellow]")
             self.cleanup_created_locations()
@@ -674,7 +683,7 @@ class LocationScenarioTester:
 def test_location_arena_scenarios():
     """Main entry point"""
     console.print(Panel.fit(
-        "[bold cyan]Location Arena Scenario Testing[/bold cyan]\n"
+        "[bold cyan]LocationArena Arena Scenario Testing[/bold cyan]\n"
         "Comprehensive testing with synthetic data and automatic cleanup",
         border_style="cyan"
     ))

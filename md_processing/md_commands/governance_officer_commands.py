@@ -25,7 +25,7 @@ from md_processing.md_processing_utils.common_md_utils import (set_gov_prop_body
                                                                ALL_GOVERNANCE_DEFINITIONS, set_delete_request_body)
 from md_processing.md_processing_utils.extraction_utils import (extract_command_plus, update_a_command)
 from md_processing.md_processing_utils.md_processing_constants import (load_commands)
-from pyegeria import DEBUG_LEVEL, body_slimmer, PyegeriaException, print_basic_exception, print_validation_error
+from pyegeria import DEBUG_LEVEL, body_slimmer, PyegeriaException, GovernanceDomains, print_basic_exception, print_validation_error
 from pyegeria.egeria_tech_client import EgeriaTech
 from pyegeria.core.utils import make_format_set_name_from_type
 

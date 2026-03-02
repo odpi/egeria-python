@@ -25,7 +25,6 @@ from pyegeria.view.output_formatter import (
 sys.path.insert(0, os.path.abspath(os.path.dirname(__file__)))
 from pyegeria.core._exceptions import PyegeriaInvalidParameterException
 from pyegeria.core._globals import NO_GUID_RETURNED
-from pyegeria.core.config import settings as app_settings
 from pyegeria.models import (GetRequestBody, SearchStringRequestBody, FilterRequestBody, NewElementRequestBody,
                              ReferenceableProperties, TemplateRequestBody,
                              UpdateElementRequestBody, NewRelationshipRequestBody,
@@ -44,7 +43,6 @@ GOV_BASIC_TYPES = ["BusinessImperative", "RegulationArticle", "Threat", "Governa
 
 
 
-EGERIA_LOCAL_QUALIFIER = app_settings.User_Profile.egeria_local_qualifier
 DEFAULT_BODY_SKELETON = {
     "effective_time": None, "limitResultsByStatus": ["ACTIVE"], "asOfTime": None, "sequencingOrder": None,
     "sequencingProperty": None, "filter": None,
@@ -88,14 +86,14 @@ class GovernanceOfficer(ServerClient):
         The password associated with the user_id. Defaults to None.
     """
 
-    def __init__(self, view_server: str, platform_url: str, user_id: Optional[str] = None, user_pwd: Optional[str] = None,
+    def __init__(self, view_server: str = None, platform_url: str = None, user_id: Optional[str] = None, user_pwd: Optional[str] = None,
                  token: Optional[str] = None, ):
-        self.view_server = view_server
-        self.platform_url = platform_url
-        self.user_id = user_id
-        self.user_pwd = user_pwd
-
         ServerClient.__init__(self, view_server, platform_url, user_id=user_id, user_pwd=user_pwd, token=token)
+        self.view_server = self.server_name
+        self.platform_url = self.platform_url
+        self.user_id = self.user_id
+        self.user_pwd = self.user_pwd
+
         self.url_marker = "governance-officer"
 
     #
@@ -127,9 +125,6 @@ class GovernanceOfficer(ServerClient):
         str | list
             Rendered output in the requested format.
         """
-        if output_format == "JSON":
-            return elements
-
         return self._generate_formatted_output(
             elements=elements,
             query_string=search_string,
@@ -906,7 +901,7 @@ class GovernanceOfficer(ServerClient):
             "qualifiedName": "add unique name here",
             "displayName": "add short name here",
             "description": "add description here",
-            "namespace": "add namespace for this structure",
+            "namespacePath": "add namespace for this structure",
             "versionIdentifier": "add version for this structure",
             "additionalProperties": {
               "property1" : "propertyValue1",
@@ -971,7 +966,7 @@ class GovernanceOfficer(ServerClient):
             "qualifiedName": "add unique name here",
             "displayName": "add short name here",
             "description": "add description here",
-            "namespace": "add namespace for this structure",
+            "namespacePath": "add namespace for this structure",
             "versionIdentifier": "add version for this structure",
             "additionalProperties": {
               "property1" : "propertyValue1",
@@ -1913,12 +1908,8 @@ class GovernanceOfficer(ServerClient):
         # Filter out None values, but keep search_string even if None (it's required)
         params = {k: v for k, v in params.items() if v is not None or k == 'search_string'}
         
-        response = await self._async_find_request(
-            url,
-            _type="GovernanceDefinition",
-            _gen_output=self._generate_governance_definition_output,
-            **params
-        )
+        response = await self._async_find_request(url, _type="GovernanceDefinition",
+                                                  _gen_output=self._generate_governance_definition_output, **params)
 
         return response
 
@@ -2086,10 +2077,9 @@ class GovernanceOfficer(ServerClient):
         response = await self._async_get_name_request(url, _type="GovernanceDefinition",
                                                       _gen_output=self._generate_governance_definition_output,
                                                       filter_string=filter_string,
-                                                      classification_names=classification_names,
-                                                      start_from=start_from, page_size=page_size,
-                                                      output_format=output_format, report_spec=report_spec,
-                                                      body=body)
+                                                      classification_names=classification_names, start_from=start_from,
+                                                      page_size=page_size, output_format=output_format,
+                                                      report_spec=report_spec, body=body)
 
         return response
 

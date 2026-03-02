@@ -32,7 +32,7 @@ from md_processing.md_processing_utils.message_constants import (ERROR, INFO, WA
 from pyegeria import EgeriaTech, PyegeriaException
 from pyegeria.view.base_report_formats import select_report_spec
 from pyegeria.core._exceptions import print_basic_exception, print_validation_error, print_basic_exception
-from pyegeria.core._globals import DEBUG_LEVEL
+from pyegeria.core._globals import DEBUG_LEVEL, GovernanceDomains
 
 debug_level = DEBUG_LEVEL
 global COMMAND_DEFINITIONS

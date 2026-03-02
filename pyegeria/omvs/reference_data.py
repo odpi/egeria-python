@@ -13,14 +13,11 @@ from typing import Any, Optional
 from pyegeria.view.base_report_formats import select_report_spec
 from pyegeria.core._server_client import ServerClient
 from pyegeria.view.base_report_formats import get_report_spec_match
-from pyegeria.core.config import settings as app_settings
 from pyegeria.models import (SearchStringRequestBody, FilterRequestBody, GetRequestBody, NewElementRequestBody,
                              TemplateRequestBody, UpdateElementRequestBody,
                              NewRelationshipRequestBody, DeleteElementRequestBody, DeleteRelationshipRequestBody)
 from pyegeria.view.output_formatter import populate_common_columns
 from pyegeria.core.utils import dynamic_catch
-
-EGERIA_LOCAL_QUALIFIER = app_settings.User_Profile.egeria_local_qualifier
 from loguru import logger
 
 
@@ -56,21 +53,21 @@ class ReferenceDataManager(ServerClient):
 
     def __init__(
             self,
-            view_server: str,
-            platform_url: str,
-            user_id: str,
+            view_server: str = None,
+            platform_url: str = None,
+            user_id: str = None,
             user_pwd: Optional[str] = None,
             token: Optional[str] = None,
     ):
-        self.view_server = view_server
-        self.platform_url = platform_url
-        self.user_id = user_id
-        self.user_pwd = user_pwd
+        ServerClient.__init__(self, view_server, platform_url, user_id, user_pwd, token)
+        self.view_server = self.server_name
+        self.platform_url = self.platform_url
+        self.user_id = self.user_id
+        self.user_pwd = self.user_pwd
         self.ref_data_command_base: str = (
             f"{self.platform_url}/servers/{self.view_server}/api/open-metadata/reference-data"
         )
         self.url_marker = 'reference-data'
-        ServerClient.__init__(self, view_server, platform_url, user_id, user_pwd, token)
 
     def _extract_additional_valid_value_definition_properties(self, element: dict, columns_struct: dict)-> dict:
 
@@ -208,12 +205,8 @@ class ReferenceDataManager(ServerClient):
         # Filter out None values, but keep search_string even if None (it's required)
         params = {k: v for k, v in params.items() if v is not None or k == 'search_string'}
 
-        response = await self._async_find_request(
-            url,
-            _type="ValidValuesDefinition",
-            _gen_output=self._generate_vv_def_output,
-            **params
-        )
+        response = await self._async_find_request(url, _type="ValidValuesDefinition",
+                                                  _gen_output=self._generate_vv_def_output, **params)
 
         return response
 
@@ -297,10 +290,9 @@ class ReferenceDataManager(ServerClient):
         response = await self._async_get_name_request(url, _type="ValidValuesDefinition",
                                                       _gen_output=self._generate_vv_def_output,
                                                       filter_string=filter_string,
-                                                      classification_names=classification_names,
-                                                      start_from=start_from, page_size=page_size,
-                                                      output_format=output_format, report_spec=report_spec,
-                                                      body=body)
+                                                      classification_names=classification_names, start_from=start_from,
+                                                      page_size=page_size, output_format=output_format,
+                                                      report_spec=report_spec, body=body)
 
         return response
 
@@ -485,7 +477,7 @@ class ReferenceDataManager(ServerClient):
             "displayName": "add short name here",
             "description": "add description here",
             "category": "add description here",
-            "namespace" : "add namespace here",
+            "namespacePath" : "add namespace here",
             "userDefinedStatus" : "add status here",
             "usage": "add usage here",
             "dataType" : "add data type here",
@@ -564,7 +556,7 @@ class ReferenceDataManager(ServerClient):
             "displayName": "add short name here",
             "description": "add description here",
             "category": "add description here",
-            "namespace" : "add namespace here",
+            "namespacePath" : "add namespace here",
             "userDefinedStatus" : "add status here",
             "usage": "add usage here",
             "dataType" : "add data type here",
@@ -781,7 +773,7 @@ class ReferenceDataManager(ServerClient):
             "displayName": "add short name here",
             "description": "add description here",
             "category": "add description here",
-            "namespace" : "add namespace here",
+            "namespacePath" : "add namespace here",
             "userDefinedStatus" : "add status here",
             "usage": "add usage here",
             "dataType" : "add data type here",
@@ -849,7 +841,7 @@ class ReferenceDataManager(ServerClient):
             "displayName": "add short name here",
             "description": "add description here",
             "category": "add description here",
-            "namespace" : "add namespace here",
+            "namespacePath" : "add namespace here",
             "userDefinedStatus" : "add status here",
             "usage": "add usage here",
             "dataType" : "add data type here",

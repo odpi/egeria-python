@@ -4,7 +4,7 @@
 # https://egeria-project.org/concepts/personal-profile
 
 @baseURL=https://localhost:9443
-@viewServer=view-server
+@viewServer=qs-view-server
 
 ###
 # =====================================================================================================================
@@ -15,7 +15,7 @@ POST {{baseURL}}/api/token
 Content-Type: application/json
 
 {
-  "userId" : "peterprofile",
+  "userId" : "erinoverview",
   "password" : "secret"
 }
 
@@ -27,6 +27,7 @@ Content-Type: application/json
 # Return the profile for this user.
 #
 # @param serverName name of the server instances for this request
+# @param requestBody optional properties to restrict search by and control how the results are formatted
 #
 # @return profile response object or
 # InvalidParameterException the userId is null or invalid or
@@ -49,6 +50,7 @@ Content-Type: application/json
 # Return the list of actors linked to the user's profile.
 #
 # @param serverName name of the server instances for this request
+# @param requestBody optional properties to restrict search by and control how the results are formatted
 #
 # @return profile response object or
 # InvalidParameterException the userId is null or invalid or
@@ -60,7 +62,7 @@ Authorization: Bearer {{token}}
 Content-Type: application/json
 
 {
-  "class" : "GetRequestBody",
+  "class" : "ResultsRequestBody",
   "asOfTime" : "{{$isoTimestamp}}",
   "effectiveTime" : "{{$isoTimestamp}}",
   "forLineage" : false,
@@ -73,6 +75,7 @@ Content-Type: application/json
 # Return the list of user identities linked to the user's profile.
 #
 # @param serverName name of the server instances for this request
+# @param requestBody optional properties to restrict search by and control how the results are formatted
 #
 # @return profile response object or
 # InvalidParameterException the userId is null or invalid or
@@ -83,7 +86,7 @@ Authorization: Bearer {{token}}
 Content-Type: application/json
 
 {
-  "class" : "GetRequestBody",
+  "class" : "ResultsRequestBody",
   "asOfTime" : "{{$isoTimestamp}}",
   "effectiveTime" : "{{$isoTimestamp}}",
   "forLineage" : false,
@@ -96,6 +99,7 @@ Content-Type: application/json
 # Return the list of assigned roles linked to the user's profile.
 #
 # @param serverName name of the server instances for this request
+# @param requestBody optional properties to restrict search by and control how the results are formatted
 #
 # @return profile response object or
 # InvalidParameterException the userId is null or invalid or
@@ -106,18 +110,108 @@ Authorization: Bearer {{token}}
 Content-Type: application/json
 
 {
-  "class" : "GetRequestBody",
+  "class" : "ResultsRequestBody",
   "asOfTime" : "{{$isoTimestamp}}",
   "effectiveTime" : "{{$isoTimestamp}}",
   "forLineage" : false,
   "forDuplicateProcessing" : false
 }
 
+
+###
+# @name getMyAssignedActions
+# Return the list of actions that have been assigned to the user's profile, roles, or user identity.
+#
+# @param serverName name of the server instances for this request
+# @param includeUserIds get actions for linked userIds; default=true
+# @param includeRoles   get actions for linked roles; default=true
+# @param requestBody optional properties to restrict search by and control how the results are formatted
+#
+# @return profile response object or
+# InvalidParameterException the userId is null or invalid or
+# PropertyServerException a problem retrieving information from the property server(s) or
+# UserNotAuthorizedException the requesting user is not authorized to issue this request.
+#
+POST {{baseURL}}/servers/{{viewServer}}/api/open-metadata/my-profile/assigned-actions
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "class" : "ActivityStatusRequestBody",
+  "activityStatusList": ["REQUESTED", "WAITING", "IN_PROGRESS"],
+  "asOfTime" : "{{$isoTimestamp}}",
+  "effectiveTime" : "{{$isoTimestamp}}",
+  "forLineage" : false,
+  "forDuplicateProcessing" : false
+}
+
+
+###
+# @name getMySponsoredActions
+# Return the list of actions linked to the user's profile, roles, or user identity that this user has sponsored.
+#
+# @param serverName name of the server instances for this request
+# @param includeUserIds get actions for linked userIds; default=true
+# @param includeRoles   get actions for linked roles; default=true
+# @param requestBody optional properties to restrict search by and control how the results are formatted
+#
+# @return profile response object or
+# InvalidParameterException the userId is null or invalid or
+# PropertyServerException a problem retrieving information from the property server(s) or
+# UserNotAuthorizedException the requesting user is not authorized to issue this request.
+#
+POST {{baseURL}}/servers/{{viewServer}}/api/open-metadata/my-profile/sponsored-actions
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "class" : "ActivityStatusRequestBody",
+  "activityStatusList": ["REQUESTED", "WAITING", "IN_PROGRESS"],
+  "asOfTime" : "{{$isoTimestamp}}",
+  "effectiveTime" : "{{$isoTimestamp}}",
+  "forLineage" : false,
+  "forDuplicateProcessing" : false
+}
+
+
+
+###
+# @name getMyRequestedActions
+# Return the list of actions linked to the user's profile, roles, or user identity that this user has sponsored.
+#
+# @param serverName name of the server instances for this request
+# @param includeUserIds get actions for linked userIds; default=true
+# @param includeRoles   get actions for linked roles; default=true
+# @param requestBody optional properties to restrict search by and control how the results are formatted
+#
+# @return profile response object or
+# InvalidParameterException the userId is null or invalid or
+# PropertyServerException a problem retrieving information from the property server(s) or
+# UserNotAuthorizedException the requesting user is not authorized to issue this request.
+#
+POST {{baseURL}}/servers/{{viewServer}}/api/open-metadata/my-profile/requested-actions
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "class" : "ActivityStatusRequestBody",
+  "activityStatusList": ["REQUESTED", "WAITING", "IN_PROGRESS"],
+  "asOfTime" : "{{$isoTimestamp}}",
+  "effectiveTime" : "{{$isoTimestamp}}",
+  "metadataElementTypeName": "ToDo",
+  "forLineage" : false,
+  "forDuplicateProcessing" : false
+}
+
+
 ###
 # @name getMyResources
 # Return the list of assigned resources linked to the user's profile.
 #
 # @param serverName name of the server instances for this request
+# @param includeUserIds get actions for linked userIds; default=true
+# @param includeRoles   get actions for linked roles; default=true
+# @param requestBody optional properties to restrict search by and control how the results are formatted
 #
 # @return profile response object or
 # InvalidParameterException the userId is null or invalid or
@@ -128,12 +222,99 @@ Authorization: Bearer {{token}}
 Content-Type: application/json
 
 {
-  "class" : "GetRequestBody",
+  "class" : "ResultsRequestBody",
   "asOfTime" : "{{$isoTimestamp}}",
   "effectiveTime" : "{{$isoTimestamp}}",
   "forLineage" : false,
   "forDuplicateProcessing" : false
 }
+
+
+###
+# @name logMyActivity
+# Add the supplied notification to the user's activity log.
+#
+# @param serverName name of the server instances for this request
+# @param requestBody details of the user profile to add
+#
+# @return profile response object or
+# InvalidParameterException the userId is null or invalid or
+# PropertyServerException a problem retrieving information from the property server(s) or
+# UserNotAuthorizedException the requesting user is not authorized to issue this request.
+#/
+POST {{baseURL}}/servers/{{viewServer}}/api/open-metadata/my-profile/log-my-activity
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "class" : "NewAttachmentRequestBody",
+  "properties" : {
+     "class" : "NotificationProperties",
+     "qualifiedName" : "Add name here",
+     "displayName" : "Add name here",
+     "situation" : "Describe notification (title/summary)",
+     "description" : "Add text for notification",
+     "expectedBehaviour" : "Optionally, if action is to be taken, describe it here"
+  }
+}
+
+
+###
+# Add the supplied notification to the user's journal.
+#
+# @param serverName name of the server instances for this request
+# @param requestBody details of the user profile to add
+#
+# @return profile response object or
+# InvalidParameterException the userId is null or invalid or
+# PropertyServerException a problem retrieving information from the property server(s) or
+# UserNotAuthorizedException the requesting user is not authorized to issue this request.
+#/
+POST {{baseURL}}/servers/{{viewServer}}/api/open-metadata/my-profile/journal-my-activity
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "class" : "NewAttachmentRequestBody",
+  "properties" : {
+    "class" : "NotificationProperties",
+    "qualifiedName" : "Add name here",
+    "displayName" : "Add name here",
+    "situation" : "Describe notification (title/summary)",
+    "description" : "Add text for notification",
+    "expectedBehaviour" : "Optionally, if action is to be taken, describe it here"
+  }
+}
+
+
+###
+# @name blogMyActivity
+# Add the supplied notification to the user's blog.
+#
+# @param serverName name of the server instances for this request
+# @param requestBody details of the user profile to add
+#
+# @return profile response object or
+# InvalidParameterException the userId is null or invalid or
+# PropertyServerException a problem retrieving information from the property server(s) or
+# UserNotAuthorizedException the requesting user is not authorized to issue this request.
+#/
+POST {{baseURL}}/servers/{{viewServer}}/api/open-metadata/my-profile/blog-my-activity
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "class" : "NewAttachmentRequestBody",
+  "properties" : {
+    "class" : "NotificationProperties",
+    "qualifiedName" : "Add name here",
+    "displayName" : "Add name here",
+    "situation" : "Describe notification (title/summary)",
+    "description" : "Add text for notification",
+    "expectedBehaviour" : "Optionally, if action is to be taken, describe it here"
+  }
+}
+
 
 ###
 # =====================================================================================================================

@@ -20,7 +20,8 @@ from pyegeria import (
 from pyegeria.omvs.asset_maker import AssetMaker
 
 disable_ssl_warnings = True
-erin_guid = "dcfd7e32-8074-4cdf-bdc5-9a6f28818a9d"  # Erin
+erin_guid = "dcfd7e32-8074-4cdf-bdc5-9a6f28818a9d"  # Erin User ID
+erin_profile_guid = "55a54f3c-5062-4d62-892c-dc414151f88e"
 gary_guid = "dfe5c382-9ec4-4972-8481-35fd61cb4feb"
 lemme_guid = "7b5cf4fa-23a8-4cf5-aaa6-02bcf58214f8"
 
@@ -361,14 +362,14 @@ class TestAssetMaker:
                 "class": "ActionRequestBody",
                 "properties": {
                     "class": "ToDoProperties",
-                    "qualifiedName": f"make-coffee-{int(time.time())}",
-                    "displayName": "make-coffee",
+                    "qualifiedName": f"get-cold-water-{int(time.time())}",
+                    "displayName": "get-cold-water",
                     "activityStatus": "REQUESTED",
-                    "description": "Make coffee for the team",
+                    "description": "Bring water to the team",
                 },
-                "assignToActorGUID": gary_guid,
+                "assignToActorGUID": erin_profile_guid,
                 "originatorGUID": erin_guid,
-                "actionSponsorGUID": lemme_guid,
+                "actionSponsorGUID": erin_guid,
             }
             response = a_client.create_action(body=body)
             print(response)
@@ -405,7 +406,7 @@ class TestAssetMaker:
                                   user_pwd=self.good_user_2_pwd)
             a_client.create_egeria_bearer_token(self.good_user_2, self.good_user_2_pwd)
             # Using a dummy GUID
-            response = a_client.get_assigned_actions(actor_guid="59f0232c-f834-4365-8e06-83695d238d2d", activity_status_list=[],output_format="JSON")
+            response = a_client.get_assigned_actions(actor_guid=erin_guid, activity_status_list=[],output_format="JSON")
             if isinstance(response, dict | list):
                 console.print_json(data=response)
             else:

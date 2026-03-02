@@ -112,11 +112,11 @@ class TestCollectionManager:
             search_string = "*"
             classification_name = None
             element_type = ["DigitalProduct"]
-            output_format = "REPORT"
+            output_format = "DICT"
             report_spec = "BasicCollections"
 
             response = c_client.find_collections(search_string = search_string, classification_names = classification_name
-                                                 ,metadata_element_subtypes=element_type
+                                                 ,metadata_element_subtypes=element_type, max_mermaid_note_count=5
                                                  ,output_format=output_format, report_spec=report_spec)
             duration = time.perf_counter() - start_time
             if response:
@@ -182,11 +182,11 @@ class TestCollectionManager:
                 "limitResultsByStatus": [],
                 "sequencingOrder": "PROPERTY_ASCENDING",
                 "sequencingProperty": "qualifiedName",
-                "metadataElementTypeName" : "DigitalProduct",
+                "metadataElementTypeName" : "Collection",
                 "metadataElementSubtypeNames": []
                 }
 
-            response = c_client.find_collections(body=body, output_format="JSON", report_spec="Digital-Products")
+            response = c_client.find_collections(body=body, output_format="DICT", report_spec="Digital-Products")
             duration = time.perf_counter() - start_time
 
             print(f"\n\tNumber elements {len(response)} & Duration was {duration:.2f} seconds")

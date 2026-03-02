@@ -806,8 +806,8 @@ class TestAutomatedCuration:
 
             start_time = time.perf_counter()
             # response = a_client.get_tech_type_detail("CSV Data File", True)
-            response = a_client.get_tech_type_detail("PostgreSQL Relational Database", output_format="TABLE",
-                                                     report_spec="Tech-Type-Processes")
+            response = a_client.get_tech_type_detail("PostgreSQL Relational Database", output_format="DICT",
+                                                     report_spec="Tech-Type-Details-MD")
             duration = time.perf_counter() - start_time
             print(f"\n\tDuration was {duration} seconds")
             if type(response) is list:
@@ -866,13 +866,6 @@ class TestAutomatedCuration:
 
             duration = time.perf_counter() - start_time
             print(f"\n\tDuration was {duration} seconds")
-            if type(response) is dict:
-                out = "\n\n" + json.dumps(response, indent=4)
-                count = len(response)
-                console.log(f"Found {count} elements")
-                print_json(out)
-            elif type(response) is str:
-                console.log("\n\n" + response)
             assert True
 
         except (

@@ -46,16 +46,12 @@ class Platform(BasePlatformClient):
 
     def __init__(
         self,
-        server_name: str,
-        platform_url: str,
-        user_id: str,
+        server_name: str = None,
+        platform_url: str = None,
+        user_id: str = None,
         user_pwd: Optional[str] = None,
         token: Optional[str] = None,
     ):
-        validate_user_id(
-            user_id
-        )  # add this check since we aren't using bearer tokens in this class
-
         BasePlatformClient.__init__(self, server_name, platform_url, user_id, user_pwd, token=token)
         self.admin_command_root = (
             self.platform_url

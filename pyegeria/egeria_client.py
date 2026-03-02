@@ -32,7 +32,7 @@ from pyegeria.omvs.full_omag_server_config import FullServerConfig
 from pyegeria.omvs.glossary_manager import GlossaryManager
 from pyegeria.omvs.governance_officer import GovernanceOfficer
 from pyegeria.omvs.lineage_linker import LineageLinker
-from pyegeria.omvs.location_arena import Location
+from pyegeria.omvs.location_arena import LocationArena
 from pyegeria.omvs.metadata_expert import MetadataExpert
 from pyegeria.omvs.metadata_explorer_omvs import MetadataExplorer
 from pyegeria.omvs.my_profile import MyProfile
@@ -62,9 +62,9 @@ class Egeria:
 
     def __init__(
         self,
-        view_server: str,
-        platform_url: str,
-        user_id: str,
+        view_server: str = None,
+        platform_url: str = None,
+        user_id: str = None,
         user_pwd: str = None,
         token: str = None,
     ):
@@ -107,7 +107,7 @@ class Egeria:
             "gov_officer": GovernanceOfficer,
             "governance_officer": GovernanceOfficer,
             "lineage_linker": LineageLinker,
-            "location": Location,
+            "location": LocationArena,
             "my_profile": MyProfile,
             "notifications": NotificationManager,
             "notification_manager": NotificationManager,

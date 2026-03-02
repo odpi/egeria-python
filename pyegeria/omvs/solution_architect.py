@@ -1796,12 +1796,8 @@ class SolutionArchitect(ServerClient):
         # Filter out None values, but keep search_string even if None (it's required)
         params = {k: v for k, v in params.items() if v is not None or k == 'search_string'}
         
-        return await self._async_find_request(
-            url,
-            _type="InformationSupplyChain",
-            _gen_output=self.generate_info_supply_chain_output,
-            **params
-        )
+        return await self._async_find_request(url, _type="InformationSupplyChain",
+                                              _gen_output=self.generate_info_supply_chain_output, **params)
 
 
 
@@ -3189,12 +3185,8 @@ class SolutionArchitect(ServerClient):
         # Filter out None values, but keep search_string even if None (it's required)
         params = {k: v for k, v in params.items() if v is not None or k == 'search_string'}
         
-        return await self._async_find_request(
-            url,
-            _type="GovernanceDefinition",
-            _gen_output=self.generate_info_supply_chain_output,
-            **params
-        )
+        return await self._async_find_request(url, _type="GovernanceDefinition",
+                                              _gen_output=self.generate_info_supply_chain_output, **params)
 
 
     def find_solution_blueprints(
@@ -4585,12 +4577,8 @@ class SolutionArchitect(ServerClient):
         # Filter out None values, but keep search_string even if None (it's required)
         params = {k: v for k, v in params.items() if v is not None or k == 'search_string'}
         
-        return await self._async_find_request(
-            url,
-            _type="SolutionComponent",
-            _gen_output=self.generate_solution_components_output,
-            **params
-        )
+        return await self._async_find_request(url, _type="SolutionComponent",
+                                              _gen_output=self.generate_solution_components_output, **params)
 
     def find_solution_components(
         self,
@@ -5962,12 +5950,8 @@ class SolutionArchitect(ServerClient):
         # Filter out None values, but keep search_string even if None (it's required)
         params = {k: v for k, v in params.items() if v is not None or k == 'search_string'}
         
-        return await self._async_find_request(
-            url,
-            _type="GovernanceDefinition",
-            _gen_output=self.generate_info_supply_chain_output,
-            **params
-        )
+        return await self._async_find_request(url, _type="GovernanceDefinition",
+                                              _gen_output=self.generate_info_supply_chain_output, **params)
 
     def find_solution_roles(
         self,

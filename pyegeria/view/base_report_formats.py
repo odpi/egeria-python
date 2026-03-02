@@ -144,7 +144,7 @@ MD_SEPARATOR = "\n---\n\n"
 
 # Standard optional parameters for search functions
 OPTIONAL_SEQUENCING_PARAMS = ["sequencing_order", "sequencing_property"]
-OPTIONAL_SEARCH_PARAMS = OPTIONAL_SEQUENCING_PARAMS + ["page_size", "start_from", "starts_with", "ends_with", "ignore_case","classification_names","metadata_element_subtypes",]
+OPTIONAL_SEARCH_PARAMS = OPTIONAL_SEQUENCING_PARAMS + ["page_size", "start_from", "starts_with", "ends_with", "ignore_case","classification_names","metadata_element_subtypes","metadata_element_type" ]
 OPTIONAL_FILTER_PARAMS = OPTIONAL_SEQUENCING_PARAMS + ["page_size", "start_from"]
 # Define shared elements
 
@@ -523,6 +523,7 @@ base_report_specs = FormatSetDict({
                     Column(name="Teams", key="teams", detail_spec="My-User-Teams-Detail"),
                     Column(name="Communities", key="communities", detail_spec="My-User-Communities-Detail"),
                     Column(name="Projects", key="projects", detail_spec="My-User-Projects-Detail"),
+                    Column(name="Contribution Record", key="contribution_record", detail_spec="My-User-Contribution-Record-Detail"),
                 ],
             )
         ],
@@ -533,7 +534,20 @@ base_report_specs = FormatSetDict({
             spec_params={},
         )
     ),
-
+    "My-User-Contribution-Record-Detail": FormatSet(
+        target_type="ContributionRecord",
+        heading="Contribution Record",
+        description="Detailed Contribution Record",
+        family="MyProfile",
+        formats=[
+            Format(
+                types=["LIST", "REPORT", "DICT", "TABLE"],
+                attributes=[
+                    Column(name="Karma Points", key="karma_points")
+                ],
+            )
+        ],
+    ),
     "My-User-Contact-Detail": FormatSet(
     target_type="ContactDetails",
     heading="Contact Methods",
@@ -548,7 +562,9 @@ base_report_specs = FormatSetDict({
                 Column(name="Contact Type", key="contactType"),
                 Column(name="Service", key="contactMethodService"),
                 Column(name="Value", key="contactMethodValue"),
-                Column(name="GUID", key="guid", format=True),
+                Column(name="GUID", key="guid", format=True)
+
+
             ],
         )
     ],
@@ -629,6 +645,26 @@ base_report_specs = FormatSetDict({
                 Column(name="Assignment Type", key="assignmentType"),
                 Column(name="Description", key="description"),
                 Column(name="GUID", key="guid", format=True),
+            ],
+        )
+    ],
+),
+"My-User-ToDos": FormatSet(
+    target_type="Todo",
+    heading="Todos",
+    description="My Todos",
+    family="MyProfile",
+    formats=[
+        Format(
+            types=["LIST", "REPORT", "DICT", "TABLE"],
+            attributes=[
+                Column(name="Name", key="displayName"),
+                Column(name="Qualified Name", key="qualifiedName"),
+                Column(name="Description", key="description"),
+                Column(name="GUID", key="guid", format=True),
+                Column(name="Type", key="typeName"),
+                Column(name="Activity Status", key="activityStatus"),
+                Column(name="Priority", key="priority"),
             ],
         )
     ],
@@ -924,6 +960,85 @@ base_report_specs = FormatSetDict({
             required_params=["filter_string"],
             spec_params={},
         )
+    ),
+    "Tech-Type-Details-MD": FormatSet(
+        target_type="TechTypeDetail",
+        heading="Technology Type Details",
+        description="Details of a Technology Type Valid Value as a Master-Detail pattern",
+        annotations={},  # No specific annotations
+        family="Automated Curation",
+        formats=[
+            Format(
+                types=["ALL"],
+                attributes=[
+                    Column(name='Display Name', key='display_name'),
+                    Column(name="Qualified Name", key='qualified_name'),
+                    Column(name="GUID", key='guid'),
+                    Column(name="Description", key='description'),
+                    Column(name="Catalog Templates", key='catalog_templates', detail_spec="Catalog-Template-Detail"),
+                    # Column(name="Governance Processes", key='governance_action_processes', detail_spec="Governance-Action-Processes-Detail"),
+                    Column(name="Governance Processes", key='governance_processes_d'),
+                ],
+            )
+        ],
+        action=ActionParameter(
+            function="ServerClient.get_tech_type_detail",
+            optional_params=OPTIONAL_FILTER_PARAMS + TIME_PARAMETERS,
+            required_params=["filter_string"],
+            spec_params={},
+        )
+    ),
+    "Catalog-Template-Detail": FormatSet(
+        target_type="CatalogTemplates",
+        heading="Catalog Templates",
+        description="Detailed Catalog Template",
+        family="Automated Curation",
+        formats=[
+            Format(
+                types=["ALL"],
+                attributes=[
+                    Column(name="Catalog Template Name", key="displayName"),
+                    Column(name="Description", key="description"),
+                    # Column(name="Catalog Template Specs", key="catalog_template"),
+                    Column(name="Placeholder Properties", key="placeHolderProperty", detail_spec="Place-Holder-Property-Detail"),
+                ],
+            )
+        ],
+    ),
+    "Governance-Action-Processes-Detail": FormatSet(
+        target_type="GovernanceActionProcesses",
+        heading="Governance Processes",
+        description="Detailed Governance Processes",
+        family="Automated Curation",
+        formats=[
+            Format(
+                types=["LIST", "REPORT", "DICT", "TABLE"],
+                attributes=[
+                    Column(name="Governance Process Name", key="displayName"),
+                    Column(name="Qualified Name", key="qualifiedName"),
+                    Column(name="Description", key="description"),
+                    Column(name="GUID", key="guid"),
+                ],
+            )
+        ],
+    ),
+    "Place-Holder-Property-Detail": FormatSet(
+        target_type="placeHolderProperty",
+        heading="Place Holder Properties",
+        description="Detailed Place Holder Properties",
+        family="Automated Curation",
+        formats=[
+            Format(
+                types=["ALL"],
+                attributes=[
+                    Column(name="Property Name", key="name"),
+                    Column(name="Description", key="description"),
+                    Column(name="Data Type", key="dataType"),
+                    Column(name="Example", key="example"),
+                    Column(name="Required", key="required"),
+                ],
+            )
+        ],
     ),
     "Tech-Type-Processes": FormatSet(
         target_type="TechTypeDetail",
@@ -1449,7 +1564,7 @@ base_report_specs = FormatSetDict({
         question_spec=[{'perspectives': ["ANY"], 'questions': WHO + WHAT + WHEN}],
         formats=[
             Format(
-                types=["DICT", "TABLE", "LIST", "MD", "FORM"],
+                types=["DICT", "TABLE", "LIST", "MD", "FORM","REPORT-GRAPH"],
                 attributes=COLLECTIONS_MEMBERS_COLUMNS
             ),
             Format(
@@ -1725,7 +1840,7 @@ base_report_specs = FormatSetDict({
         action=ActionParameter(
             function="CollectionManager.find_collections",
             required_params=["search_string"],
-            spec_params={"metadata_element_subtypes": ["DdataSpec"]},
+            spec_params={"metadata_element_subtypes": ["DataSpec"]},
         )
     ),
 
@@ -1812,6 +1927,38 @@ base_report_specs = FormatSetDict({
         action=ActionParameter(
             function="DataDesigner.find_data_classes",
             required_params=["search_string"],
+            spec_params={},
+        )
+    ),
+"Data-Value-Spec": FormatSet(
+        target_type="Data Value Specification",
+        heading="Data Value Specification Information",
+        description="Attributes about Data Value Specifications",
+        aliases=["Data Value Spec"],
+        annotations={"wikilinks": ["[[Data Value Specification]]"]},
+        family="Data Designer",
+        formats=[Format(types=["MD", "FORM", "DICT", "LIST","TABLE"], attributes=COMMON_COLUMNS + [
+            Column(name="Data Type", key='data_type'),
+            Column(name="Specification", key='specification'),
+            Column(name="In Data Dictionaries", key='in_data_dictionary'),
+            Column(name="Units", key='units'),
+            Column(name="Namespace Path", key='namespace_path'),
+        ]),
+             Format(types=["REPORT"], attributes=COMMON_COLUMNS +
+                 [
+                     Column(name="Data Type", key='data_type'),
+                     Column(name="Specification", key='specification'),
+                     Column(name="In Data Dictionaries", key='in_data_dictionary'),
+                     Column(name="Containing Data Class",  key='containing_data_class'),
+                     Column(name="Specializes", key='specializes_data_class'),
+                     Column(name="Mermaid", key='mermaidGraph')
+                 ]
+            )],
+
+        action=ActionParameter(
+            function="DataDesigner.find_data_value_specifications",
+            required_params=["search_string"],
+            optional_params=OPTIONAL_SEARCH_PARAMS,
             spec_params={},
         )
     ),
@@ -1908,6 +2055,7 @@ base_report_specs = FormatSetDict({
         action=ActionParameter(
             function="GovernanceOfficer.find_governance_definitions",
             required_params=["search_string"],
+            optional_params=OPTIONAL_SEARCH_PARAMS,
             spec_params={},
         )
     ),
@@ -2080,7 +2228,7 @@ base_report_specs = FormatSetDict({
             function="GovernanceOfficer.find_governance_definitions",
             required_params=["search_string"],
             optional_params=OPTIONAL_SEARCH_PARAMS,
-            spec_params={"metadata_element_subtypes": ["GovernancePolicy"]},
+            spec_params={"metadata_element_type": "GovernancePolicy"},
         )
     )
 

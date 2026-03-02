@@ -2614,12 +2614,8 @@ class ValidMetadataManager(ServerClient):
         # Filter out None values, but keep search_string even if None (it's required)
         params = {k: v for k, v in params.items() if v is not None or k == 'search_string'}
         
-        response = await self._async_find_request(
-            url,
-            _type="SpecificationPropertyValue",
-            _gen_output=self._generate_valid_value_output,
-            **params
-        )
+        response = await self._async_find_request(url, _type="SpecificationPropertyValue",
+                                                  _gen_output=self._generate_valid_value_output, **params)
 
         return response
 
@@ -2891,12 +2887,10 @@ class ValidMetadataManager(ServerClient):
         url = (f"{self.platform_url}/servers/{self.view_server}/api/open-metadata/valid-metadata/"
                f"specification-properties/by-name")
         response = await self._async_get_name_request(url, _type="SpecificationPropertyValue",
-                                                      _gen_output=self._generate_valid_value_output,
-                                                      filter_string=name,
-                                                      classification_names=classification_names,
-                                                      start_from=start_from, page_size=page_size,
-                                                      output_format=output_format, report_spec=report_spec,
-                                                      body=body)
+                                                      _gen_output=self._generate_valid_value_output, filter_string=name,
+                                                      classification_names=classification_names, start_from=start_from,
+                                                      page_size=page_size, output_format=output_format,
+                                                      report_spec=report_spec, body=body)
 
         return response
 

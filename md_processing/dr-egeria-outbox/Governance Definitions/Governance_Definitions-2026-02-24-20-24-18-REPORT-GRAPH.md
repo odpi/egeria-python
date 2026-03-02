@@ -1,0 +1,196 @@
+# GovernanceApproach Name: New Sustainability Governance Domain <a id="334fc1df-692a-4960-bbff-343bf7c486d2" name="334fc1df-692a-4960-bbff-343bf7c486d2"></a>
+
+- Qualified Name: `GovernanceApproach::New Sustainability Governance Domain`
+- GUID: `334fc1df-692a-4960-bbff-343bf7c486d2`
+
+### Properties
+- class: ElementHeader
+- description: The new governance domain would provide a focal point for education, initiatives and awards that improve the sustainability of Coco Pharmaceuticals. particularly where cross-organizational collaboration is required.  It will include a leader, a community of advocates and location leaders to help drive initiatives across the organization
+- domainIdentifier: 0
+- headerVersion: 0
+- identifier: SUSTAINABILITY_06
+- importance: High
+- summary: Set up a new governance domain for sustainability to educate and drive action.
+
+### Mermaid Graph
+```mermaid
+flowchart TD
+%%{init: {"flowchart": {"htmlLabels": false}} }%%
+
+1("*Governance Approach*\n**New Sustainability Governance Domain**")
+2["*Governance Responsibility*\n**Sustainability leadership**"]
+1==>|"Governance Mechanism"|2
+3["*Governance Responsibility*\n**Sustainability Champion**"]
+1==>|"Governance Mechanism"|3
+4["*Governance Responsibility*\n**Deliver Sustainability Reporting Capability**"]
+1==>|"Governance Mechanism"|4
+5["*Governance Approach*\n**Measure harmful emissions**"]
+5==>|"Governance Mechanism"|4
+style 1 color:#000000, fill:#e0ab18, stroke:#004563
+style 2 color:#FFFFFF, fill:#006400, stroke:#000000
+style 3 color:#FFFFFF, fill:#006400, stroke:#000000
+style 4 color:#FFFFFF, fill:#006400, stroke:#000000
+style 5 color:#FFFFFF, fill:#006400, stroke:#000000
+```
+
+### Peers
+- [Sustainability leadership](#27646717-3f23-496e-b35c-2772de3adfff) — GovernanceMechanism
+- [Sustainability Champion](#b73fb3aa-f964-4118-9797-81e222a858ce) — GovernanceMechanism
+- [Deliver Sustainability Reporting Capability](#13a8b144-5f86-4197-9ea0-5aae95dc793e) — GovernanceMechanism
+- [Sustainability leadership](#27646717-3f23-496e-b35c-2772de3adfff) — GovernanceMechanism
+- [Sustainability Champion](#b73fb3aa-f964-4118-9797-81e222a858ce) — GovernanceMechanism
+- [Deliver Sustainability Reporting Capability](#13a8b144-5f86-4197-9ea0-5aae95dc793e) — GovernanceMechanism
+
+
+---
+
+# GovernanceResponsibility Name: Sustainability leadership <a id="27646717-3f23-496e-b35c-2772de3adfff" name="27646717-3f23-496e-b35c-2772de3adfff"></a>
+
+- Qualified Name: `GovernanceResponsibility::Sustainability leadership`
+- GUID: `27646717-3f23-496e-b35c-2772de3adfff`
+
+### Properties
+- description: Lead the community of people who are identified as having responsibility for an aspect of sustainability.  Identify new initiatives and help to get them funded and underway.  Encourage an open conversation about sustainability at all levels of the company.
+- domainIdentifier: 0
+- headerVersion: 0
+- identifier: SUSTAINABILITY_07
+- importance: High
+- relatedElementAtEnd1: False
+- summary: Lead the sustainability governance domain
+
+
+---
+
+# GovernanceResponsibility Name: Sustainability Champion <a id="b73fb3aa-f964-4118-9797-81e222a858ce" name="b73fb3aa-f964-4118-9797-81e222a858ce"></a>
+
+- Qualified Name: `GovernanceResponsibility::Sustainability Champion`
+- GUID: `b73fb3aa-f964-4118-9797-81e222a858ce`
+
+### Properties
+- description: Provide education and guidance to the people from the assigned business area on improving the sustainability of its operation.
+- domainIdentifier: 0
+- headerVersion: 0
+- identifier: SUSTAINABILITY_08
+- importance: High
+- relatedElementAtEnd1: False
+- summary: Lead the local team(s) on their sustainability events and initiatives.
+
+
+---
+
+# GovernanceResponsibility Name: Deliver Sustainability Reporting Capability <a id="13a8b144-5f86-4197-9ea0-5aae95dc793e" name="13a8b144-5f86-4197-9ea0-5aae95dc793e"></a>
+
+- Qualified Name: `GovernanceResponsibility::Deliver Sustainability Reporting Capability`
+- GUID: `13a8b144-5f86-4197-9ea0-5aae95dc793e`
+
+### Properties
+- domainIdentifier: 0
+- headerVersion: 0
+- identifier: SUSTAINABILITY_09
+- importance: High
+- relatedElementAtEnd1: False
+- summary: Operate an information supply chain to measure and monitor Coco Pharmaceuticals'' operations for sustainability.
+
+
+---
+
+# GovernanceStrategy Name: Operate Coco Pharmaceuticals in an increasingly sustainable way <a id="667c6480-a90a-4fd4-9022-8da646e203d2" name="667c6480-a90a-4fd4-9022-8da646e203d2"></a>
+
+- Qualified Name: `GovernanceStrategy::Operate Coco Pharmaceuticals in an increasingly sustainable way`
+- GUID: `667c6480-a90a-4fd4-9022-8da646e203d2`
+
+### Properties
+- class: ElementHeader
+- description: Use sustainability regulations to develop a program of education and initiatives that are designed to improve Coco''s sustainability measurements with rewards for effective actions.
+- domainIdentifier: 0
+- headerVersion: 0
+- identifier: SUSTAINABILITY_03
+- importance: High
+- summary: Create a company wide sustainability initiative with rewards.
+
+### Mermaid Graph
+```mermaid
+flowchart TD
+%%{init: {"flowchart": {"htmlLabels": false}} }%%
+
+1("*Governance Strategy*\n**Operate Coco Pharmaceuticals in an increasingly sustainable way**")
+2["*Threat*\n**The price of ignoring sustainability**"]
+2==>|"Governance Driver Link"|1
+3["*Regulation*\n**Corporate Sustainability Reporting Directive (CSRD)**"]
+3==>|"Governance Driver Link"|1
+style 1 color:#000000, fill:#e0ab18, stroke:#004563
+style 2 color:#FFFFFF, fill:#006400, stroke:#000000
+style 3 color:#FFFFFF, fill:#006400, stroke:#000000
+```
+
+### Peers
+- [The price of ignoring sustainability](#4552f777-65d6-4706-b4bf-e9177660de88) — GovernanceDriverLink
+- [Corporate Sustainability Reporting Directive (CSRD)](#2ba17e3c-825a-409b-928f-d0e46e741c11) — GovernanceDriverLink
+- [The price of ignoring sustainability](#4552f777-65d6-4706-b4bf-e9177660de88) — GovernanceDriverLink
+- [Corporate Sustainability Reporting Directive (CSRD)](#2ba17e3c-825a-409b-928f-d0e46e741c11) — GovernanceDriverLink
+- [The price of ignoring sustainability](#4552f777-65d6-4706-b4bf-e9177660de88) — GovernanceDriverLink
+- [Corporate Sustainability Reporting Directive (CSRD)](#2ba17e3c-825a-409b-928f-d0e46e741c11) — GovernanceDriverLink
+
+
+---
+
+# Threat Name: The price of ignoring sustainability <a id="4552f777-65d6-4706-b4bf-e9177660de88" name="4552f777-65d6-4706-b4bf-e9177660de88"></a>
+
+- Qualified Name: `Threat::The price of ignoring sustainability`
+- GUID: `4552f777-65d6-4706-b4bf-e9177660de88`
+
+### Properties
+- description: Increasingly, financial institutions are viewing organizations with a lack of focus in sustainability as a poor risk for the future.
+- domainIdentifier: 0
+- headerVersion: 0
+- identifier: SUSTAINABILITY_01
+- importance: High
+- relatedElementAtEnd1: True
+- summary: A poor record of sustainable operations will affect Coco Pharmaceuticals credit rating
+
+### Children
+- [Operate Coco Pharmaceuticals in an increasingly sustainable way](#667c6480-a90a-4fd4-9022-8da646e203d2)
+
+
+---
+
+# Regulation Name: Corporate Sustainability Reporting Directive (CSRD) <a id="2ba17e3c-825a-409b-928f-d0e46e741c11" name="2ba17e3c-825a-409b-928f-d0e46e741c11"></a>
+
+- Qualified Name: `Regulation::Corporate Sustainability Reporting Directive (CSRD)`
+- GUID: `2ba17e3c-825a-409b-928f-d0e46e741c11`
+
+### Properties
+- domainIdentifier: 0
+- headerVersion: 0
+- identifier: SUSTAINABILITY_02
+- importance: High
+- relatedElementAtEnd1: True
+- summary: Details of the types of reporting that organizations must produce.
+
+### Children
+- [Operate Coco Pharmaceuticals in an increasingly sustainable way](#667c6480-a90a-4fd4-9022-8da646e203d2)
+
+
+---
+
+# GovernanceZone Name: Sustainability Reporting <a id="c4012014-1fc3-4896-ab55-646a4cfab141" name="c4012014-1fc3-4896-ab55-646a4cfab141"></a>
+
+- Qualified Name: `GovernanceZone::sustainability`
+- GUID: `c4012014-1fc3-4896-ab55-646a4cfab141`
+
+### Properties
+- class: ElementHeader
+- criteria: Activity data that relates to sustainability
+- description: Assets used to build reports that illustrate the status of Coco Pharmaceutical''s greenhouse gas emissions and sustainability initiatives.
+- domainIdentifier: 0
+- headerVersion: 0
+- identifier: sustainability
+
+### Mermaid Graph
+```mermaid
+flowchart TD
+%%{init: {"flowchart": {"htmlLabels": false}} }%%
+
+1("*Governance Zone*\n**Sustainability Reporting**")
+style 1 color:#000000, fill:#e0ab18, stroke:#004563
+```

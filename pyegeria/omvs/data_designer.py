@@ -92,6 +92,7 @@ class DataDesigner(ServerClient):
         Sample body:
         {
           "class" : "NewElementRequestBody",
+          "requestId": "a request id",
           "anchorGUID" : "add guid here",
           "isOwnAnchor": false,
           "parentGUID": "add guid here",
@@ -112,7 +113,7 @@ class DataDesigner(ServerClient):
             "qualifiedName": "add unique name here",
             "displayName": "add short name here",
             "description": "add description here",
-            "namespace": "add namespace for this structure",
+            "namespacePath": "add namespace for this structure",
             "versionIdentifier": "add version for this structure",
             "additionalProperties": {
               "property1" : "propertyValue1",
@@ -132,7 +133,7 @@ class DataDesigner(ServerClient):
 
         url = f"{base_path(self, self.view_server)}/data-structures"
 
-        return await self._async_create_element_body_request(url, "DataStructure", body)
+        return await self._async_create_element_body_request(url, ["DataStructure"], body)
 
     @dynamic_catch
     def create_data_structure(self, body: dict | NewElementRequestBody) -> str:
@@ -163,6 +164,7 @@ class DataDesigner(ServerClient):
         Sample body:
         {
           "class" : "NewElementRequestBody",
+          "requestId": "a request id",
           "anchorGUID" : "add guid here",
           "isOwnAnchor": false,
           "parentGUID": "add guid here",
@@ -183,7 +185,7 @@ class DataDesigner(ServerClient):
             "qualifiedName": "add unique name here",
             "displayName": "add short name here",
             "description": "add description here",
-            "namespace": "add namespace for this structure",
+            "namespacePath": "add namespace for this structure",
             "versionIdentifier": "add version for this structure",
             "additionalProperties": {
               "property1" : "propertyValue1",
@@ -237,6 +239,7 @@ class DataDesigner(ServerClient):
 
         {
           "class" : "TemplateRequestBody",
+          "requestId": "A request id",
           "externalSourceGUID": "add guid here",
           "externalSourceName": "add qualified name here",
           "effectiveTime" : "{{$isoTimestamp}}",
@@ -310,6 +313,7 @@ class DataDesigner(ServerClient):
 
         {
           "class" : "TemplateRequestBody",
+          "requestId": "A request id",
           "externalSourceGUID": "add guid here",
           "externalSourceName": "add qualified name here",
           "effectiveTime" : "{{$isoTimestamp}}",
@@ -380,13 +384,14 @@ class DataDesigner(ServerClient):
         Full sample body:
         {
           "class" : "UpdateElementRequestBody",
+          "requestId": "A request id",
           "mergeUpdate": true,
           "properties": {
             "class" : "DataStructureProperties",
             "qualifiedName": "add unique name here",
             "displayName": "add short name here",
             "description": "add description here",
-            "namespace": "add namespace for this structure",
+            "namespacePath": "add namespace for this structure",
             "versionIdentifier": "add version for this structure",
             "additionalProperties": {
               "property1" : "propertyValue1",
@@ -435,13 +440,14 @@ class DataDesigner(ServerClient):
         Full sample body:
         {
           "class" : "UpdateElementRequestBody",
+          "requestId": "A request id",
           "mergeUpdate": true,
           "properties": {
             "class" : "DataStructureProperties",
             "qualifiedName": "add unique name here",
             "displayName": "add short name here",
             "description": "add description here",
-            "namespace": "add namespace for this structure",
+            "namespacePath": "add namespace for this structure",
             "versionIdentifier": "add version for this structure",
             "additionalProperties": {
               "property1" : "propertyValue1",
@@ -497,6 +503,7 @@ class DataDesigner(ServerClient):
         Full sample body:
         {
           "class" : "NewRelationshipRequestBody",
+          "requestId": "A request id",
           "properties": {
             "class": "MemberDataFieldProperties",
             "dataFieldPosition": 0,
@@ -553,6 +560,7 @@ class DataDesigner(ServerClient):
          Full sample body:
          {
            "class" : "NewRelationshipRequestBody",
+           "requestId": "A request id",
            "properties": {
              "class": "MemberDataFieldProperties",
              "dataFieldPosition": 0,
@@ -610,6 +618,7 @@ class DataDesigner(ServerClient):
         Full sample body:
         {
           "class": "DeleteRelationshipRequestBody",
+          "requestId": "A request id",
           "cascadedDelete": false,
           "deleteMethod": "LOOK_FOR_LINEAGE",
           "externalSourceGUID": "add guid here",
@@ -662,6 +671,7 @@ class DataDesigner(ServerClient):
         Full sample body:
         {
           "class": "DeleteRelationshipRequestBody",
+          "requestId": "A request id",
           "cascadedDelete": false,
           "deleteMethod": "LOOK_FOR_LINEAGE",
           "externalSourceGUID": "add guid here",
@@ -713,6 +723,7 @@ class DataDesigner(ServerClient):
 
         {
           "class": "DeleteRelationshipRequestBody",
+          "requestId": "A request id",
           "cascadedDelete": false,
           "deleteMethod": "LOOK_FOR_LINEAGE",
           "externalSourceGUID": "add guid here",
@@ -763,6 +774,7 @@ class DataDesigner(ServerClient):
 
         {
           "class": "DeleteRelationshipRequestBody",
+          "requestId": "A request id",
           "cascadedDelete": false,
           "deleteMethod": "LOOK_FOR_LINEAGE",
           "externalSourceGUID": "add guid here",
@@ -898,12 +910,7 @@ class DataDesigner(ServerClient):
         # Filter out None values, but keep search_string even if None (it's required)
         params = {k: v for k, v in params.items() if v is not None or k == 'search_string'}
         
-        return await self._async_find_request(
-            url,
-            "DataStructure",
-            self._generate_data_structure_output,
-            **params
-        )
+        return await self._async_find_request(url, "DataStructure", self._generate_data_structure_output, **params)
 
     @dynamic_catch
     def find_data_structures(
@@ -1051,10 +1058,9 @@ class DataDesigner(ServerClient):
         response = await self._async_get_name_request(url, _type="DataStructure",
                                                       _gen_output=self._generate_data_structure_output,
                                                       filter_string=filter_string,
-                                                      classification_names=classification_names,
-                                                      start_from=start_from, page_size=page_size,
-                                                      output_format=output_format, report_spec=report_spec,
-                                                      body=body)
+                                                      classification_names=classification_names, start_from=start_from,
+                                                      page_size=page_size, output_format=output_format,
+                                                      report_spec=report_spec, body=body)
 
         return response
 
@@ -1274,7 +1280,7 @@ class DataDesigner(ServerClient):
         return collection_list
 
     def get_data_rel_elements_dict(self, el_struct: dict) -> dict | str:
-        """return the lists of objects related to a data field"""
+        """return the lists of objects related to a data field, class, or grain"""
 
         parent_guids = []
         parent_names = []
@@ -1315,6 +1321,14 @@ class DataDesigner(ServerClient):
         specialized_data_classes_guids = []
         specialized_data_classes_names = []
         specialized_data_classes_qnames = []
+
+        assigned_data_value_specs_guids = []
+        assigned_data_value_specs_names = []
+        assigned_data_value_specs_qnames = []
+
+        specialized_data_value_specs_guids = []
+        specialized_data_value_specs_names = []
+        specialized_data_value_specs_qnames = []
 
         # terms
         assigned_meanings = el_struct.get("assignedMeanings", {})
@@ -1369,6 +1383,12 @@ class DataDesigner(ServerClient):
             data_class_names.append(data_class['relatedElement']["properties"]["displayName"])
             data_class_qnames.append(data_class['relatedElement']["properties"]["qualifiedName"])
 
+        assigned_data_value_specs = el_struct.get("assignedDataValueSpecifications", {})
+        for spec in assigned_data_value_specs:
+            assigned_data_value_specs_guids.append(spec['relatedElement']["elementHeader"]["guid"])
+            assigned_data_value_specs_names.append(spec['relatedElement']["properties"]["displayName"])
+            assigned_data_value_specs_qnames.append(spec['relatedElement']["properties"]["qualifiedName"])
+
         nested_data_classes = el_struct.get("nestedDataClasses", {})
         for nested_data_class in nested_data_classes:
             nested_data_classes_guids.append(nested_data_class['relatedElement']["elementHeader"]["guid"])
@@ -1380,6 +1400,12 @@ class DataDesigner(ServerClient):
             specialized_data_classes_guids.append(nested_data_class['relatedElement']["elementHeader"]["guid"])
             specialized_data_classes_names.append(nested_data_class['relatedElement']["properties"]["displayName"])
             specialized_data_classes_qnames.append(nested_data_class['relatedElement']["properties"]["qualifiedName"])
+
+        specialized_data_value_specs = el_struct.get("specializedDataValueSpecifications", {})
+        for spec in specialized_data_value_specs:
+            specialized_data_value_specs_guids.append(spec['relatedElement']["elementHeader"]["guid"])
+            specialized_data_value_specs_names.append(spec['relatedElement']["properties"]["displayName"])
+            specialized_data_value_specs_qnames.append(spec['relatedElement']["properties"]["qualifiedName"])
 
         mermaid = el_struct.get("mermaidGraph", {})
 
@@ -1407,6 +1433,14 @@ class DataDesigner(ServerClient):
             "specialized_data_class_guids": specialized_data_classes_guids,
             "specialized_data_class_names": specialized_data_classes_names,
             "specialized_data_class_qnames": specialized_data_classes_qnames,
+
+            "assigned_data_value_spec_guids": assigned_data_value_specs_guids,
+            "assigned_data_value_spec_names": assigned_data_value_specs_names,
+            "assigned_data_value_spec_qnames": assigned_data_value_specs_qnames,
+
+            "specialized_data_value_spec_guids": specialized_data_value_specs_guids,
+            "specialized_data_value_spec_names": specialized_data_value_specs_names,
+            "specialized_data_value_spec_qnames": specialized_data_value_specs_qnames,
 
             "external_references_guids": external_references_guids,
             "external_references_names": external_references_names,
@@ -1443,6 +1477,22 @@ class DataDesigner(ServerClient):
             return None
         return self.get_data_rel_elements_dict(data_class_entry)
 
+    def get_data_value_specification_rel_elements(self, guid: str) -> dict | str:
+        """return the lists of objects related to a data value specification"""
+
+        spec_entry = self.get_data_value_specification_by_guid(guid, output_format="JSON")
+        if isinstance(spec_entry, str):
+            return None
+        return self.get_data_rel_elements_dict(spec_entry)
+
+    def get_data_grain_rel_elements(self, guid: str) -> dict | str:
+        """return the lists of objects related to a data grain"""
+
+        grain_entry = self.get_data_grain_by_guid(guid, output_format="JSON")
+        if isinstance(grain_entry, str):
+            return None
+        return self.get_data_rel_elements_dict(grain_entry)
+
     #
     # Work with Data Fields
     # https://egeria-project.org/concepts/data-class
@@ -1477,6 +1527,7 @@ class DataDesigner(ServerClient):
 
         {
           "class" : "NewElementRequestBody",
+          "requestId": "add optional request id here",
           "externalSourceGUID": "add guid here",
           "externalSourceName": "add qualified name here",
           "effectiveTime" : "{{$isoTimestamp}}",
@@ -1501,7 +1552,7 @@ class DataDesigner(ServerClient):
             "class" : "DataFieldProperties",
             "qualifiedName": "add unique name here",
             "displayName": "add short name here",
-            "namespace": "",
+            "namespacePath": "",
             "description": "add description here",
             "versionIdentifier": "add version",
             "aliases": ["alias1", "alias2"],
@@ -1528,7 +1579,7 @@ class DataDesigner(ServerClient):
             "class": "DataFieldProperties",
             "qualifiedName": "add unique name here",
             "displayName": "add short name here",
-            "namespace": "",
+            "namespacePath": "",
             "description": "add description here",
             "versionIdentifier": "add version",
             "aliases": [
@@ -1557,7 +1608,7 @@ class DataDesigner(ServerClient):
 
         url = f"{base_path(self, self.view_server)}/data-fields"
 
-        return await self._async_create_element_body_request(url, "DataField", body)
+        return await self._async_create_element_body_request(url, ["DataField"], body)
 
     @dynamic_catch
     def create_data_field(self, body: dict | NewElementRequestBody) -> str:
@@ -1590,6 +1641,7 @@ class DataDesigner(ServerClient):
 
         {
           "class" : "NewDataFieldRequestBody",
+          "requestId": "add optional request id here",
           "externalSourceGUID": "add guid here",
           "externalSourceName": "add qualified name here",
           "effectiveTime" : "{{$isoTimestamp}}",
@@ -1614,7 +1666,7 @@ class DataDesigner(ServerClient):
             "class" : "DataFieldProperties",
             "qualifiedName": "add unique name here",
             "displayName": "add short name here",
-            "namespace": "",
+            "namespacePath": "",
             "description": "add description here",
             "versionIdentifier": "add version",
             "aliases": ["alias1", "alias2"],
@@ -1641,7 +1693,7 @@ class DataDesigner(ServerClient):
             "class": "DataFieldProperties",
             "qualifiedName": "add unique name here",
             "displayName": "add short name here",
-            "namespace": "",
+            "namespacePath": "",
             "description": "add description here",
             "versionIdentifier": "add version",
             "aliases": [
@@ -1702,6 +1754,7 @@ class DataDesigner(ServerClient):
         ----
         {
           "class" : "TemplateRequestBody",
+          "requestId": "add optional request id here",
           "externalSourceGUID": "add guid here",
           "externalSourceName": "add qualified name here",
           "effectiveTime" : "{{$isoTimestamp}}",
@@ -1775,6 +1828,7 @@ class DataDesigner(ServerClient):
         ----
         {
           "class" : "TemplateRequestBody",
+          "requestId": "add optional request id here",
           "externalSourceGUID": "add guid here",
           "externalSourceName": "add qualified name here",
           "effectiveTime" : "{{$isoTimestamp}}",
@@ -1850,6 +1904,7 @@ class DataDesigner(ServerClient):
 
        {
           "class" : "UpdateDataFieldRequestBody",
+          "requestId": "add optional request id here",
           "externalSourceGUID": "add guid here",
           "externalSourceName": "add qualified name here",
           "effectiveTime" : "{{$isoTimestamp}}",
@@ -1859,7 +1914,7 @@ class DataDesigner(ServerClient):
             "class" : "DataFieldProperties",
             "qualifiedName": "add unique name here",
             "displayName": "add short name here",
-            "namespace": "",
+            "namespacePath": "",
             "description": "add description here",
             "versionIdentifier": "add version",
             "aliases": ["alias1", "alias2"],
@@ -1923,6 +1978,7 @@ class DataDesigner(ServerClient):
 
        {
           "class" : "UpdateDataFieldRequestBody",
+          "requestId": "add optional request id here",
           "externalSourceGUID": "add guid here",
           "externalSourceName": "add qualified name here",
           "effectiveTime" : "{{$isoTimestamp}}",
@@ -1932,7 +1988,7 @@ class DataDesigner(ServerClient):
             "class" : "DataFieldProperties",
             "qualifiedName": "add unique name here",
             "displayName": "add short name here",
-            "namespace": "",
+            "namespacePath": "",
             "description": "add description here",
             "versionIdentifier": "add version",
             "aliases": ["alias1", "alias2"],
@@ -1993,14 +2049,15 @@ class DataDesigner(ServerClient):
         Full sample body:
 
         {
-          "class" : "MemberDataFieldRequestBody",
+          "class" : "NewRelationshipRequestBody",
+          "requestId": "add optional request id here",
           "externalSourceGUID": "add guid here",
           "externalSourceName": "add qualified name here",
           "effectiveTime" : "{{$isoTimestamp}}",
           "forLineage" : false,
           "forDuplicateProcessing" : false,
           "properties": {
-            "class": "MemberDataFieldProperties",
+            "class": "NestedDataFieldProperties",
             "dataFieldPosition": 0,
             "minCardinality": 0,
             "maxCardinality": 0,
@@ -2051,14 +2108,15 @@ class DataDesigner(ServerClient):
         Full sample body:
 
         {
-          "class" : "MemberDataFieldRequestBody",
+          "class" : "NewRelationshipRequestBody",
+          "requestId": "add optional request id here",
           "externalSourceGUID": "add guid here",
           "externalSourceName": "add qualified name here",
           "effectiveTime" : "{{$isoTimestamp}}",
           "forLineage" : false,
           "forDuplicateProcessing" : false,
           "properties": {
-            "class": "MemberDataFieldProperties",
+            "class": "NestedDataFieldProperties",
             "dataFieldPosition": 0,
             "minCardinality": 0,
             "maxCardinality": 0,
@@ -2107,7 +2165,9 @@ class DataDesigner(ServerClient):
         Full sample body:
 
        {
-          "class": "MetadataSourceRequestBody",
+          "class": "DeleteRelationshipRequestBody",
+          "requestId": "add optional request id here",
+          "cascadedDelete": false,
           "externalSourceGUID": "add guid here",
           "externalSourceName": "add qualified name here",
           "effectiveTime": "{{$isoTimestamp}}",
@@ -2119,7 +2179,7 @@ class DataDesigner(ServerClient):
         """
 
         url = (f"{base_path(self, self.view_server)}/data-fields/{parent_data_field_guid}"
-               f"/member-data-fields/{nested_data_field_guid}/detach")
+               f"/nested-data-fields/{nested_data_field_guid}/detach")
 
         await self._async_delete_relationship_request(url, body)
         logger.info(f"Data field {parent_data_field_guid} detached from data structure {nested_data_field_guid}.")
@@ -2158,7 +2218,8 @@ class DataDesigner(ServerClient):
         Full sample body:
 
         {
-          "class": "MetadataSourceRequestBody",
+          "class": "DeleteRelationshipRequestBody",
+          "requestId": "add optional request id here",
           "externalSourceGUID": "add guid here",
           "externalSourceName": "add qualified name here",
           "effectiveTime": "{{$isoTimestamp}}",
@@ -2208,6 +2269,8 @@ class DataDesigner(ServerClient):
 
        {
           "class": "DeleteElementRequestBody",
+          "requestId": "add optional request id here",
+          "cascadedDelete": false,
           "externalSourceGUID": "add guid here",
           "externalSourceName": "add qualified name here",
           "effectiveTime": "{{$isoTimestamp}}",
@@ -2258,7 +2321,9 @@ class DataDesigner(ServerClient):
         Full sample body:
 
         {
-          "class": "MetadataSourceRequestBody",
+          "class": "DeleteElementRequestBody",
+          "requestId": "add optional request id here",
+          "cascadedDelete": false,
           "externalSourceGUID": "add guid here",
           "externalSourceName": "add qualified name here",
           "effectiveTime": "{{$isoTimestamp}}",
@@ -2273,19 +2338,19 @@ class DataDesigner(ServerClient):
 
     @dynamic_catch
     async def _async_find_all_data_fields(self, output_format: str = 'JSON',
-                                          report_spec: str | dict = None) -> list | str:
+                                          report_spec: str | dict = None,
+                                          body: dict|SearchStringRequestBody| None= None) -> list | str:
         """Returns a list of all known data fields. Async version.
 
         Parameters
         ----------
-        start_from: int, default = 0
-            - index of the list to start from (0 for start).
-        page_size
-            - maximum number of elements to return.
+
         output_format: str, default = "DICT"
             - output format of the data structure. Possible values: "DICT", "JSON", "MERMAID".
         report_spec: str|dict, optional, default = None
             - The desired output columns/field options.
+        body: dict|SearchStringRequestBody, optional, default = None
+            - The body of the request. If None, no body is sent.
 
         Returns
         -------
@@ -2304,22 +2369,21 @@ class DataDesigner(ServerClient):
         """
 
         return self.find_data_fields(search_string="*", output_format=output_format,
-                                     report_spec=report_spec)
+                                     report_spec=report_spec, body= body)
 
     @dynamic_catch
-    def find_all_data_fields(self, output_format: str = 'JSON', report_spec: str | dict = None) -> list | str:
+    def find_all_data_fields(self, output_format: str = 'JSON', report_spec: str | dict = None,
+                             body: dict | SearchStringRequestBody| None = None) -> list | str:
         """ Returns a list of all known data fields.
 
         Parameters
         ----------
-        start_from: int, default = 0
-            - index of the list to start from (0 for start).
-        page_size
-            - maximum number of elements to return.
         output_format: str, default = "DICT"
             - output format of the data structure. Possible values: "DICT", "JSON", "MERMAID".
         report_spec: str|dict, optional, default = None
             - The desired output columns/field options.
+        body: dict|SearchStringRequestBody, optional, default = None
+        - The body of the request. If None, no body is sent.
 
         Returns
         -------
@@ -2339,7 +2403,7 @@ class DataDesigner(ServerClient):
 
         loop = asyncio.get_event_loop()
         response = loop.run_until_complete(
-            self._async_find_all_data_fields(output_format, report_spec))
+            self._async_find_all_data_fields(output_format, report_spec, body))
         return response
 
     @dynamic_catch
@@ -2450,12 +2514,7 @@ class DataDesigner(ServerClient):
         # Filter out None values, but keep search_string even if None (it's required)
         params = {k: v for k, v in params.items() if v is not None or k == 'search_string'}
         
-        return await self._async_find_request(
-            url,
-            "DataField",
-            self._generate_data_field_output,
-            **params
-        )
+        return await self._async_find_request(url, "DataField", self._generate_data_field_output, **params)
 
     @dynamic_catch
     def find_data_fields(self, search_string: str,
@@ -2618,6 +2677,8 @@ class DataDesigner(ServerClient):
 
         {
           "class": "FilterRequestBody",
+          "startFrom": 0,
+          "pageSize": 100,
           "asOfTime": "{{$isoTimestamp}}",
           "effectiveTime": "{{$isoTimestamp}}",
           "forLineage": false,
@@ -2634,10 +2695,9 @@ class DataDesigner(ServerClient):
         response = await self._async_get_name_request(url, _type="DataField",
                                                       _gen_output=self._generate_data_field_output,
                                                       filter_string=filter_string,
-                                                      classification_names=classification_names,
-                                                      start_from=start_from, page_size=page_size,
-                                                      output_format=output_format, report_spec=report_spec,
-                                                      body=body)
+                                                      classification_names=classification_names, start_from=start_from,
+                                                      page_size=page_size, output_format=output_format,
+                                                      report_spec=report_spec, body=body)
 
         return response
 
@@ -2867,7 +2927,7 @@ class DataDesigner(ServerClient):
             "qualifiedName": "add unique name here",
             "displayName": "add short name here",
             "description": "add description here",
-            "namespace": "add scope of this data class's applicability.",
+            "namespacePath": "add scope of this data class's applicability.",
             "matchPropertyNames": ["name1", "name2"],
             "matchThreshold": 0,
             "specification": "",
@@ -2900,7 +2960,7 @@ class DataDesigner(ServerClient):
             "qualifiedName": "add unique name here",
             "displayName": "add short name here",
             "description": "add description here",
-            "namespace": "add scope of this data class's applicability.",
+            "namespacePath": "add scope of this data class's applicability.",
             "matchPropertyNames": [
               "name1",
               "name2"
@@ -2930,9 +2990,9 @@ class DataDesigner(ServerClient):
 
         """
 
-        url = f"{base_path(self, self.view_server)}/data-classes"
+        url = f"{base_path(self, self.view_server)}/data-value-specifications"
 
-        return await self._async_create_element_body_request(url, "DataClass", body)
+        return await self._async_create_element_body_request(url, ["DataClass"], body)
 
     @dynamic_catch
     def create_data_class(self, body: dict | NewElementRequestBody) -> str:
@@ -2988,7 +3048,7 @@ class DataDesigner(ServerClient):
             "qualifiedName": "add unique name here",
             "displayName": "add short name here",
             "description": "add description here",
-            "namespace": "add scope of this data class's applicability.",
+            "namespacePath": "add scope of this data class's applicability.",
             "matchPropertyNames": ["name1", "name2"],
             "matchThreshold": 0,
             "specification": "",
@@ -3022,7 +3082,7 @@ class DataDesigner(ServerClient):
             "qualifiedName": "add unique name here",
             "displayName": "add short name here",
             "description": "add description here",
-            "namespace": "add scope of this data class's applicability.",
+            "namespacePath": "add scope of this data class's applicability.",
             "matchPropertyNames": [
               "name1",
               "name2"
@@ -3125,7 +3185,7 @@ class DataDesigner(ServerClient):
 
         """
 
-        url = f"{base_path(self, self.view_server)}/data-classes/from-template"
+        url = f"{base_path(self, self.view_server)}/data-value-specifications/from-template"
         return await self._async_create_element_from_template(url, body)
 
     @dynamic_catch
@@ -3241,7 +3301,7 @@ class DataDesigner(ServerClient):
             "qualifiedName": "add unique name here",
             "displayName": "add short name here",
             "description": "add description here",
-            "namespace": "add scope of this data class's applicability.",
+            "namespacePath": "add scope of this data class's applicability.",
             "matchPropertyNames": ["name1", "name2"],
             "matchThreshold": 0,
             "specification": "",
@@ -3267,7 +3327,7 @@ class DataDesigner(ServerClient):
         }
         """
 
-        url = f"{base_path(self, self.view_server)}/data-classes/{data_class_guid}/update"
+        url = f"{base_path(self, self.view_server)}/data-value-specifications/{data_class_guid}/update"
         await self._async_update_element_body_request(url, ["DataClass"], body)
         logger.info(f"Data class {data_class_guid} updated.")
 
@@ -3311,7 +3371,7 @@ class DataDesigner(ServerClient):
             "qualifiedName": "add unique name here",
             "displayName": "add short name here",
             "description": "add description here",
-            "namespace": "add scope of this data class's applicability.",
+            "namespacePath": "add scope of this data class's applicability.",
             "matchPropertyNames": ["name1", "name2"],
             "matchThreshold": 0,
             "specification": "",
@@ -3388,7 +3448,7 @@ class DataDesigner(ServerClient):
         url = (f"{base_path(self, self.view_server)}/data-classes/{parent_data_class_guid}"
                f"/nested-data-classes/{child_data_class_guid}/attach")
 
-        await self._async_new_relationship_request(url, ["MemberDataClassProperties"], body)
+        await self._async_new_relationship_request(url, ["DataClassCompositionProperties"], body)
         logger.info(f"Data field {child_data_class_guid} attached to Data structure {parent_data_class_guid}.")
 
     @dynamic_catch
@@ -3583,10 +3643,10 @@ class DataDesigner(ServerClient):
 
         """
 
-        url = (f"{base_path(self, self.view_server)}/data-classes/{parent_data_class_guid}"
-               f"/specialized-data-classes/{child_data_class_guid}/attach")
+        url = (f"{base_path(self, self.view_server)}/data-value-specifications/{parent_data_class_guid}"
+               f"/specialized-data-value-specifications/{child_data_class_guid}/attach")
 
-        await self._async_new_relationship_request(url, ["DataClassHierarchyProperties"], body)
+        await self._async_new_relationship_request(url, ["DataValueHierarchyProperties"], body)
         logger.info(f"Data field {child_data_class_guid} attached to Data structure {parent_data_class_guid}.")
 
     @dynamic_catch
@@ -3683,8 +3743,8 @@ class DataDesigner(ServerClient):
 
         """
 
-        url = (f"{base_path(self, self.view_server)}/data-classes/{parent_data_class_guid}"
-               f"/specialized-data-classes/{child_data_class_guid}/detach")
+        url = (f"{base_path(self, self.view_server)}/data-value-specifications/{parent_data_class_guid}"
+               f"/specialized-data-value-specifications/{child_data_class_guid}/detach")
 
         await self._async_delete_relationship_request(url, body, cascade_delete)
         logger.info(f"Data field {child_data_class_guid} detached from data structure {parent_data_class_guid}.")
@@ -3784,7 +3844,7 @@ class DataDesigner(ServerClient):
 
         """
 
-        url = f"{base_path(self, self.view_server)}/data-classes/{data_class_guid}/delete"
+        url = f"{base_path(self, self.view_server)}/data-value-specifications/{data_class_guid}/delete"
 
         await self._async_delete_element_request(url, body, cascade_delete)
         logger.info(f"Data structure {data_class_guid} deleted.")
@@ -3873,7 +3933,7 @@ class DataDesigner(ServerClient):
 
         """
 
-        url = f"{base_path(self, self.view_server)}/data-classes/by-search-string"
+        url = f"{base_path(self, self.view_server)}/data-value-specifications/by-search-string"
 
         return self.find_data_classes(search_string="*", output_format=output_format,
                                       report_spec=report_spec)
@@ -4011,26 +4071,24 @@ class DataDesigner(ServerClient):
 
         """
 
-        url = f"{base_path(self, self.view_server)}/data-classes/by-search-string"
+        url = f"{base_path(self, self.view_server)}/data-value-specifications/by-search-string"
 
         return await self._async_find_request(url, "DataClass", self._generate_data_class_output, search_string,
                                               starts_with=starts_with, ends_with=ends_with, ignore_case=ignore_case,
-                                              anchor_domain=anchor_domain,
-                                              metadata_element_type=metadata_element_type,
+                                              anchor_domain=anchor_domain, metadata_element_type=metadata_element_type,
                                               metadata_element_subtypes=metadata_element_subtypes,
                                               skip_relationships=skip_relationships,
                                               include_only_relationships=include_only_relationships,
                                               skip_classified_elements=skip_classified_elements,
                                               include_only_classified_elements=include_only_classified_elements,
                                               graph_query_depth=graph_query_depth,
-                                              governance_zone_filter=governance_zone_filter,
-                                              as_of_time=as_of_time, effective_time=effective_time,
+                                              governance_zone_filter=governance_zone_filter, as_of_time=as_of_time,
+                                              effective_time=effective_time,
                                               relationship_page_size=relationship_page_size,
                                               limit_results_by_status=limit_results_by_status,
                                               sequencing_order=sequencing_order,
-                                              sequencing_property=sequencing_property,
-                                              output_format=output_format, report_spec=report_spec,
-                                              start_from=start_from, page_size=page_size,
+                                              sequencing_property=sequencing_property, output_format=output_format,
+                                              report_spec=report_spec, start_from=start_from, page_size=page_size,
                                               property_names=property_names, body=body)
 
     @dynamic_catch
@@ -4205,15 +4263,14 @@ class DataDesigner(ServerClient):
         }
         """
 
-        url = f"{base_path(self, self.view_server)}/data-classes/by-name"
+        url = f"{base_path(self, self.view_server)}/data-value-specifications/by-name"
 
         response = await self._async_get_name_request(url, _type="DataClass",
                                                       _gen_output=self._generate_data_class_output,
                                                       filter_string=filter_string,
-                                                      classification_names=classification_names,
-                                                      start_from=start_from, page_size=page_size,
-                                                      output_format=output_format, report_spec=report_spec,
-                                                      body=body)
+                                                      classification_names=classification_names, start_from=start_from,
+                                                      page_size=page_size, output_format=output_format,
+                                                      report_spec=report_spec, body=body)
 
         return response
 
@@ -4324,7 +4381,7 @@ class DataDesigner(ServerClient):
 
         """
 
-        url = (f"{base_path(self, self.view_server)}/data-classes/{guid}/retrieve")
+        url = (f"{base_path(self, self.view_server)}/data-value-specifications/{guid}/retrieve")
         type = element_type if element_type else "DataClass"
 
         response = await self._async_get_guid_request(url, _type=type,
@@ -4385,6 +4442,425 @@ class DataDesigner(ServerClient):
 
     ###
     # =====================================================================================================================
+    # Work with Data Value Specifications (Data Classes or Data Grains)
+    # https://egeria-project.org/concepts/data-value-specification
+    #
+    @dynamic_catch
+    async def _async_create_data_value_specification(self, body: dict | NewElementRequestBody) -> str:
+        """
+        Create a new data value specification with parameters defined in the body. Async version.
+
+        Parameters
+        ----------
+        body: dict
+            - a dictionary containing the properties of the data value specification to be created.
+
+        Returns
+        -------
+        str
+            The GUID of the element - or "No element found"
+        Notes
+        _____
+        Optional request body:
+        {
+          "class" : "NewElementRequestBody",
+          "anchorGUID" : "add guid here",
+          "isOwnAnchor": false,
+          "parentGUID": "add guid here",
+          "parentRelationshipTypeName": "add type name here",
+          "parentRelationshipProperties": {
+            "class": "RelationshipElementProperties",
+            "propertyValueMap" : {
+              "description" : {
+                "class": "PrimitiveTypePropertyValue",
+                "typeName": "string",
+                "primitiveValue" : "New description"
+              }
+            }
+          },
+          "parentAtEnd1": false,
+          "properties": {
+            "class" : "DataValueSpecificationProperties",
+            "qualifiedName": "add unique name here",
+            "displayName": "add short name here",
+            "description": "add description here",
+            "namespacePath": "add scope of this data class's applicability.",
+            "matchPropertyNames": ["name1", "name2"],
+            "matchThreshold": 0,
+            "specification": "",
+            "specificationDetails": {
+              "property1" : "propertyValue1",
+              "property2" : "propertyValue2"
+            },
+            "dataType": "",
+            "units" : "",
+            "absoluteUncertainty" : 0,
+            "relativeUncertainty" : 0,
+            "additionalProperties": {
+              "property1" : "propertyValue1",
+              "property2" : "propertyValue2"
+            }
+          },
+          "externalSourceGUID": "add guid here",
+          "externalSourceName": "add qualified name here",
+          "effectiveTime" : "{{$isoTimestamp}}",
+          "forLineage" : false,
+          "forDuplicateProcessing" : false
+        }
+        """
+        url = f"{base_path(self, self.view_server)}/data-value-specifications"
+        return await self._async_create_element_body_request(url, ["DataValueSpecification"], body)
+
+    @dynamic_catch
+    def create_data_value_specification(self, body: dict | NewElementRequestBody) -> str:
+        """
+        Create a new data value specification with parameters defined in the body.
+
+        Parameters
+        ----------
+        body: dict
+            - a dictionary containing the properties of the data value specification to be created.
+
+        Returns
+        -------
+        str
+            The GUID of the element - or "No element found"
+        Notes
+        _____
+        Optional request body:
+        {
+          "class" : "NewElementRequestBody",
+          "anchorGUID" : "add guid here",
+          "isOwnAnchor": false,
+          "parentGUID": "add guid here",
+          "parentRelationshipTypeName": "add type name here",
+          "parentRelationshipProperties": {
+            "class": "RelationshipElementProperties",
+            "propertyValueMap" : {
+              "description" : {
+                "class": "PrimitiveTypePropertyValue",
+                "typeName": "string",
+                "primitiveValue" : "New description"
+              }
+            }
+          },
+          "parentAtEnd1": false,
+          "properties": {
+            "class" : "DataValueSpecificationProperties",
+            "qualifiedName": "add unique name here",
+            "displayName": "add short name here",
+            "description": "add description here",
+            "namespacePath": "add scope of this data class's applicability.",
+            "matchPropertyNames": ["name1", "name2"],
+            "matchThreshold": 0,
+            "specification": "",
+            "specificationDetails": {
+              "property1" : "propertyValue1",
+              "property2" : "propertyValue2"
+            },
+            "dataType": "",
+            "units" : "",
+            "absoluteUncertainty" : 0,
+            "relativeUncertainty" : 0,
+            "additionalProperties": {
+              "property1" : "propertyValue1",
+              "property2" : "propertyValue2"
+            }
+          },
+          "externalSourceGUID": "add guid here",
+          "externalSourceName": "add qualified name here",
+          "effectiveTime" : "{{$isoTimestamp}}",
+          "forLineage" : false,
+          "forDuplicateProcessing" : false
+        }
+        """
+        loop = asyncio.get_event_loop()
+        return loop.run_until_complete(self._async_create_data_value_specification(body))
+
+    @dynamic_catch
+    async def _async_create_data_grain(self, body: dict | NewElementRequestBody) -> str:
+        """
+        Create a new data grain with parameters defined in the body. Async version.
+
+        Parameters
+        ----------
+        body: dict
+            - a dictionary containing the properties of the data grain to be created.
+
+        Returns
+        -------
+        str
+            The GUID of the element - or "No element found"
+        """
+        url = f"{base_path(self, self.view_server)}/data-value-specifications"
+        return await self._async_create_element_body_request(url, ["DataGrain"], body)
+
+    @dynamic_catch
+    def create_data_grain(self, body: dict | NewElementRequestBody) -> str:
+        """
+        Create a new data grain with parameters defined in the body.
+
+        Parameters
+        ----------
+        body: dict
+            - a dictionary containing the properties of the data grain to be created.
+
+        Returns
+        -------
+        str
+            The GUID of the element - or "No element found"
+        """
+        loop = asyncio.get_event_loop()
+        return loop.run_until_complete(self._async_create_data_grain(body))
+
+    @dynamic_catch
+    async def _async_create_data_value_specification_from_template(self, body: dict | TemplateRequestBody) -> str:
+        """
+        Create a new data value specification using a template. Async version.
+        """
+        url = f"{base_path(self, self.view_server)}/data-value-specifications/from-template"
+        return await self._async_create_element_from_template_request(url, "DataValueSpecification", body)
+
+    @dynamic_catch
+    def create_data_value_specification_from_template(self, body: dict | TemplateRequestBody) -> str:
+        """
+        Create a new data value specification using a template.
+        """
+        loop = asyncio.get_event_loop()
+        return loop.run_until_complete(self._async_create_data_value_specification_from_template(body))
+
+    @dynamic_catch
+    async def _async_update_data_value_specification(self, guid: str, body: dict | UpdateElementRequestBody) -> str:
+        """
+        Update the properties of a data value specification. Async version.
+        """
+        url = f"{base_path(self, self.view_server)}/data-value-specifications/{guid}/update"
+        return await self._async_update_element_request(url, ["DataValueSpecification"], body)
+
+    @dynamic_catch
+    def update_data_value_specification(self, guid: str, body: dict | UpdateElementRequestBody) -> str:
+        """
+        Update the properties of a data value specification.
+        """
+        loop = asyncio.get_event_loop()
+        return loop.run_until_complete(self._async_update_data_value_specification(guid, body))
+
+    @dynamic_catch
+    async def _async_delete_data_value_specification(self, guid: str,
+                                                     body: Optional[dict | DeleteElementRequestBody] = None) -> None:
+        """
+        Delete a data value specification. Async version.
+        """
+        url = f"{base_path(self, self.view_server)}/data-value-specifications/{guid}/delete"
+        await self._async_delete_element_request(url, body)
+
+    @dynamic_catch
+    def delete_data_value_specification(self, guid: str, body: Optional[dict | DeleteElementRequestBody] = None) -> None:
+        """
+        Delete a data value specification.
+        """
+        loop = asyncio.get_event_loop()
+        loop.run_until_complete(self._async_delete_data_value_specification(guid, body))
+
+    @dynamic_catch
+    async def _async_find_data_value_specifications(self, search_string: str, **kwargs) -> list | str:
+        """
+        Find data value specifications by search string. Async version.
+        """
+        url = f"{base_path(self, self.view_server)}/data-value-specifications/by-search-string"
+        return await self._async_find_request(url, "DataValueSpecification",
+                                              self._generate_data_value_specification_output, search_string, **kwargs)
+
+    @dynamic_catch
+    def find_data_value_specifications(self, search_string: str, **kwargs) -> list | str:
+        """
+        Find data value specifications by search string.
+        """
+        loop = asyncio.get_event_loop()
+        return loop.run_until_complete(self._async_find_data_value_specifications(search_string, **kwargs))
+
+    @dynamic_catch
+    async def _async_find_all_data_grains(self, **kwargs) -> list | str:
+        """
+        Retrieve all data grains. Async version.
+        """
+        return await self._async_find_data_value_specifications(search_string="*", metadata_element_type="DataGrain",
+                                                               **kwargs)
+
+    @dynamic_catch
+    def find_all_data_grains(self, **kwargs) -> list | str:
+        """
+        Retrieve all data grains.
+        """
+        loop = asyncio.get_event_loop()
+        return loop.run_until_complete(self._async_find_all_data_grains(**kwargs))
+
+    @dynamic_catch
+    async def _async_get_data_value_specifications_by_name(self, filter_string: str, **kwargs) -> list | str:
+        """
+        Get data value specifications by name. Async version.
+        """
+        url = f"{base_path(self, self.view_server)}/data-value-specifications/by-name"
+        return await self._async_get_name_request(url, "DataValueSpecification",
+                                                  self._generate_data_value_specification_output, filter_string,
+                                                  **kwargs)
+
+    @dynamic_catch
+    def get_data_value_specifications_by_name(self, filter_string: str, **kwargs) -> list | str:
+        """
+        Get data value specifications by name.
+        """
+        loop = asyncio.get_event_loop()
+        return loop.run_until_complete(self._async_get_data_value_specifications_by_name(filter_string, **kwargs))
+
+    @dynamic_catch
+    async def _async_get_data_value_specification_by_guid(self, guid: str, **kwargs) -> dict | str:
+        """
+        Get data value specification by unique identifier. Async version.
+        """
+        url = f"{base_path(self, self.view_server)}/data-value-specifications/{guid}/retrieve"
+        return await self._async_get_guid_request(url, "DataValueSpecification",
+                                                 self._generate_data_value_specification_output, **kwargs)
+
+    @dynamic_catch
+    def get_data_value_specification_by_guid(self, guid: str, **kwargs) -> dict | str:
+        """
+        Get data value specification by unique identifier.
+        """
+        loop = asyncio.get_event_loop()
+        return loop.run_until_complete(self._async_get_data_value_specification_by_guid(guid, **kwargs))
+
+    @dynamic_catch
+    async def _async_get_data_grain_by_guid(self, guid: str, **kwargs) -> dict | str:
+        """
+        Get data grain by unique identifier. Async version.
+        """
+        url = f"{base_path(self, self.view_server)}/data-value-specifications/{guid}/retrieve"
+        return await self._async_get_guid_request(url, "DataGrain", self._generate_data_grain_output, **kwargs)
+
+    @dynamic_catch
+    def get_data_grain_by_guid(self, guid: str, **kwargs) -> dict | str:
+        """
+        Get data grain by unique identifier.
+        """
+        loop = asyncio.get_event_loop()
+        return loop.run_until_complete(self._async_get_data_grain_by_guid(guid, **kwargs))
+
+    @dynamic_catch
+    async def _async_link_specialized_data_value_specification(self, parent_guid: str, child_guid: str,
+                                                               body: Optional[
+                                                                   dict | NewRelationshipRequestBody] = None) -> None:
+        """
+        Connect two data value specifications. Async version.
+        """
+        url = f"{base_path(self, self.view_server)}/data-value-specifications/{parent_guid}/specialized-data-value-specifications/{child_guid}/attach"
+        await self._async_new_relationship_request(url, ["DataValueHierarchyProperties"], body)
+
+    @dynamic_catch
+    def link_specialized_data_value_specification(self, parent_guid: str, child_guid: str,
+                                                  body: Optional[dict | NewRelationshipRequestBody] = None) -> None:
+        """
+        Connect two data value specifications.
+        """
+        loop = asyncio.get_event_loop()
+        loop.run_until_complete(self._async_link_specialized_data_value_specification(parent_guid, child_guid, body))
+
+    @dynamic_catch
+    async def _async_detach_specialized_data_value_specification(self, parent_guid: str, child_guid: str,
+                                                                 body: Optional[
+                                                                     dict | DeleteRelationshipRequestBody] = None) -> None:
+        """
+        Detach two data value specifications. Async version.
+        """
+        url = f"{base_path(self, self.view_server)}/data-value-specifications/{parent_guid}/specialized-data-value-specifications/{child_guid}/detach"
+        await self._async_delete_relationship_request(url, body)
+
+    @dynamic_catch
+    def detach_specialized_data_value_specification(self, parent_guid: str, child_guid: str,
+                                                    body: Optional[dict | DeleteRelationshipRequestBody] = None) -> None:
+        """
+        Detach two data value specifications.
+        """
+        loop = asyncio.get_event_loop()
+        loop.run_until_complete(self._async_detach_specialized_data_value_specification(parent_guid, child_guid, body))
+
+    @dynamic_catch
+    async def _async_assign_data_value_specification(self, element_guid: str, spec_guid: str,
+                                                     body: Optional[dict | NewRelationshipRequestBody] = None) -> None:
+        """
+        Assign a data value specification to an element. Async version.
+        """
+        url = f"{base_path(self, self.view_server)}/elements/{element_guid}/data-value-specifications/{spec_guid}/attach"
+        await self._async_new_relationship_request(url, ["DataValueAssignmentProperties"], body)
+
+    @dynamic_catch
+    def assign_data_value_specification(self, element_guid: str, spec_guid: str,
+                                        body: Optional[dict | NewRelationshipRequestBody] = None) -> None:
+        """
+        Assign a data value specification to an element.
+        """
+        loop = asyncio.get_event_loop()
+        loop.run_until_complete(self._async_assign_data_value_specification(element_guid, spec_guid, body))
+
+    @dynamic_catch
+    async def _async_detach_data_value_specification_assignment(self, element_guid: str, spec_guid: str,
+                                                                body: Optional[
+                                                                    dict | DeleteRelationshipRequestBody] = None) -> None:
+        """
+        Detach a data value specification assignment. Async version.
+        """
+        url = f"{base_path(self, self.view_server)}/elements/{element_guid}/data-value-specifications/{spec_guid}/detach"
+        await self._async_delete_relationship_request(url, body)
+
+    @dynamic_catch
+    def detach_data_value_specification_assignment(self, element_guid: str, spec_guid: str,
+                                                    body: Optional[dict | DeleteRelationshipRequestBody] = None) -> None:
+        """
+        Detach a data value specification assignment.
+        """
+        loop = asyncio.get_event_loop()
+        loop.run_until_complete(self._async_detach_data_value_specification_assignment(element_guid, spec_guid, body))
+
+    @dynamic_catch
+    async def _async_link_data_value_specification_definition(self, definition_guid: str, spec_guid: str,
+                                                              body: Optional[
+                                                                  dict | NewRelationshipRequestBody] = None) -> None:
+        """
+        Connect a data definition to a data value specification. Async version.
+        """
+        url = f"{base_path(self, self.view_server)}/data-definitions/{definition_guid}/data-value-specification-definition/{spec_guid}/attach"
+        await self._async_new_relationship_request(url, ["DataValueDefinitionProperties"], body)
+
+    @dynamic_catch
+    def link_data_value_specification_definition(self, definition_guid: str, spec_guid: str,
+                                                 body: Optional[dict | NewRelationshipRequestBody] = None) -> None:
+        """
+        Connect a data definition to a data value specification.
+        """
+        loop = asyncio.get_event_loop()
+        loop.run_until_complete(self._async_link_data_value_specification_definition(definition_guid, spec_guid, body))
+
+    @dynamic_catch
+    async def _async_detach_data_value_specification_definition(self, definition_guid: str, spec_guid: str,
+                                                                body: Optional[
+                                                                    dict | DeleteRelationshipRequestBody] = None) -> None:
+        """
+        Detach a data definition from a data value specification. Async version.
+        """
+        url = f"{base_path(self, self.view_server)}/data-definitions/{definition_guid}/data-value-specification-definition/{spec_guid}/detach"
+        await self._async_delete_relationship_request(url, body)
+
+    @dynamic_catch
+    def detach_data_value_specification_definition(self, definition_guid: str, spec_guid: str,
+                                                   body: Optional[dict | DeleteRelationshipRequestBody] = None) -> None:
+        """
+        Detach a data definition from a data value specification.
+        """
+        loop = asyncio.get_event_loop()
+        loop.run_until_complete(self._async_detach_data_value_specification_definition(definition_guid, spec_guid, body))
+
+    ###
+    # =====================================================================================================================
     # Assembling a data specification
     # https://egeria-project.org/concepts/data-specification
     #
@@ -4434,9 +4910,9 @@ class DataDesigner(ServerClient):
         """
 
         url = (f"{base_path(self, self.view_server)}/data-definitions/{data_definition_guid}"
-               f"/data-class-definition/{data_class_guid}/attach")
+               f"/data-value-specification-definition/{data_class_guid}/attach")
 
-        await self._async_new_relationship_request(url, ["DataClassDefinitionProperties"], body)
+        await self._async_new_relationship_request(url, ["DataValueDefinitionProperties"], body)
         logger.info(f"Data class {data_class_guid} attached to Data definition {data_definition_guid}.")
 
     @dynamic_catch
@@ -4534,7 +5010,7 @@ class DataDesigner(ServerClient):
         """
 
         url = (f"{base_path(self, self.view_server)}/data-definitions/{data_definition_guid}"
-               f"/data-class-definition/{data_class_guid}/detach")
+               f"/data-value-specification-definition/{data_class_guid}/detach")
 
         await self._async_delete_relationship_request(url, body, cascade_delete)
         logger.info(f"Data class {data_class_guid} detached from data definition {data_definition_guid}.")
@@ -5168,9 +5644,6 @@ class DataDesigner(ServerClient):
         Returns:
             Formatted output as string or list of dictionaries
         """
-        if output_format == "JSON":
-            return elements
-
         return self._generate_formatted_output(
             elements=elements,
             query_string=filter_string,
@@ -5262,6 +5735,89 @@ class DataDesigner(ServerClient):
     def _extract_additional_data_field_properties(self, element, columns_struct):
         return None
     def _extract_additional_data_class_properties(self, element, columns_struct):
+        return None
+
+    def _extract_data_value_specification_properties(self, element: dict, columns_struct: dict) -> dict:
+        """Extractor for Data Value Specification elements."""
+        col_data = populate_common_columns(element, columns_struct)
+        try:
+            related_map = self.get_data_rel_elements_dict(element)
+        except Exception:
+            related_map = {}
+        if isinstance(related_map, dict) and related_map:
+            try:
+                formats = col_data.get("formats") if isinstance(col_data, dict) else None
+                if isinstance(formats, list):
+                    targets = formats
+                elif isinstance(formats, dict):
+                    inner = formats.get("formats") if isinstance(formats.get("formats"), (dict, list)) else None
+                    if isinstance(inner, list):
+                        targets = inner
+                    elif isinstance(inner, dict):
+                        targets = [inner]
+                    else:
+                        targets = [formats]
+                else:
+                    targets = []
+
+                if targets:
+                    for fmt in targets:
+                        cols = fmt.get("attributes", []) if isinstance(fmt, dict) else []
+                        for col in cols:
+                            key = col.get("key") if isinstance(col, dict) else None
+                            if key and key in related_map:
+                                col["value"] = related_map.get(key)
+                else:
+                    cols = col_data.get("attributes", []) if isinstance(col_data, dict) else []
+                    for col in cols:
+                        key = col.get("key") if isinstance(col, dict) else None
+                        if key and key in related_map:
+                            col["value"] = related_map.get(key)
+            except Exception:
+                pass
+        return col_data
+
+    def _extract_data_grain_properties(self, element: dict, columns_struct: dict) -> dict:
+        """Extractor for Data Grain elements."""
+        return self._extract_data_value_specification_properties(element, columns_struct)
+
+    def _generate_data_value_specification_output(self, elements: dict | list[dict],
+                                                  filter_string: Optional[str] = None,
+                                                  type: Optional[str] = None, output_format: str = "DICT",
+                                                  report_spec: str | dict = None, **kwargs) -> str | list:
+        """
+        Generate output for data value specifications in the specified format.
+        """
+        return self._generate_formatted_output(
+            elements=elements,
+            query_string=filter_string,
+            entity_type="Data Value Specification",
+            output_format=output_format,
+            extract_properties_func=self._extract_data_value_specification_properties,
+            report_spec=report_spec,
+            **kwargs
+        )
+
+    def _generate_data_grain_output(self, elements: dict | list[dict], filter_string: Optional[str] = None,
+                                    type: Optional[str] = None, output_format: str = "DICT",
+                                    report_spec: str | dict = None, **kwargs) -> str | list:
+        """
+        Generate output for data grains in the specified format.
+        """
+        return self._generate_formatted_output(
+            elements=elements,
+            query_string=filter_string,
+            entity_type="Data Grain",
+            output_format=output_format,
+            extract_properties_func=self._extract_data_grain_properties,
+            report_spec=report_spec,
+            **kwargs
+        )
+
+    def _extract_additional_data_value_specification_properties(self, element, columns_struct):
+        return None
+
+    def _extract_additional_data_grain_properties(self, element, columns_struct):
         return None
 
 if __name__ == "__main__":

@@ -165,12 +165,8 @@ class DataEngineer(ServerClient):
         # Filter out None values, but keep search_string even if None (it's required)
         params = {k: v for k, v in params.items() if v is not None or k == 'search_string'}
         
-        response = await self._async_find_request(
-            url,
-            _type="TabularDataSet",
-            _gen_output=self._generate_referenceable_output,
-            **params
-        )
+        response = await self._async_find_request(url, _type="TabularDataSet",
+                                                  _gen_output=self._generate_referenceable_output, **params)
         return response
 
     @dynamic_catch
@@ -338,13 +334,6 @@ class DataEngineer(ServerClient):
         response = await self._async_make_request("GET", url)
         el_list = response.json().get('tabularDataSetReport',"No Dataset Found")
         if isinstance(el_list, dict):
-            if output_format == "JSON":
-                return el_list
-            elif output_format == "CSV":
-                return transform_json_to_tabular(response, output_format="CSV")
-            elif output_format == "RICH-TABLE":
-                return transform_json_to_tabular(response, output_format="RICH-TABLE")
-            else:
-                raise PyegeriaException(f"Unsupported output format: {output_format}")
+            return el_list
         else:
             raise PyegeriaException(f"Unsupported output format: {output_format}")
