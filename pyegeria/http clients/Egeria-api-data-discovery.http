@@ -188,6 +188,388 @@ Content-Type: application/json
 ###
 
 ###
+# @name attachAnnotationToReport
+# Create a relationship that links a new annotation to its survey report.  This relationship is typically
+# established during the createAnnotation as the parent relationship.  It is included for completeness.
+#
+# @param serverName         name of called server
+# @param surveyReportGUID       unique identifier of the report
+# @param newAnnotationGUID           unique identifier of the  annotation
+# @param requestBody  description of the relationship.
+#
+# @return void or
+#  InvalidParameterException  one of the parameters is null or invalid.
+#  PropertyServerException    a problem retrieving information from the property server(s).
+#  UserNotAuthorizedException the requesting user is not authorized to issue this request.
+#
+POST {{baseURL}}/servers/{{viewServer}}/api/open-metadata/data-discovery/survey-reports/{{surveyReportGUID}}/new-annotations/{{annotationGUID}}/attach
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "class" : "NewRelationshipRequestBody",
+  "properties": {
+    "class": "ReportedAnnotationProperties",
+    "label": "add display label",
+    "description": "add description",
+    "effectiveFrom": "{{$isoTimestamp}}",
+    "effectiveTo": "{{$isoTimestamp}}"
+  },
+  "externalSourceGUID": "add guid here",
+  "externalSourceName": "add qualified name here",
+  "effectiveTime" : "{{$isoTimestamp}}",
+  "forLineage" : false,
+  "forDuplicateProcessing" : false
+}
+
+
+###
+# @name detachAnnotationFromReport
+# Detach an annotation from its report (ReportedAnnotation relationship).
+#
+# @param serverName         name of called server
+# @param surveyReportGUID       unique identifier of the report
+# @param newAnnotationGUID           unique identifier of the  annotation
+# @param requestBody  description of the relationship.
+#
+# @return void or
+#  InvalidParameterException  one of the parameters is null or invalid.
+#  PropertyServerException    a problem retrieving information from the property server(s).
+#  UserNotAuthorizedException the requesting user is not authorized to issue this request.
+#
+POST {{baseURL}}/servers/{{viewServer}}/api/open-metadata/data-discovery/survey-reports/{{surveyReportGUID}}/new-annotations/{{annotationGUID}}/detach
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "class" : "DeleteRelationshipRequestBody",
+  "externalSourceGUID": "add guid here",
+  "externalSourceName": "add qualified name here",
+  "effectiveTime" : "{{$isoTimestamp}}",
+  "forLineage" : false,
+  "forDuplicateProcessing" : false
+}
+
+
+###
+# @name linkAnnotationToDescribedElement
+# Attach an annotation to the element that it is describing (via AssociatedAnnotation relationship).
+#
+# @param serverName         name of called server
+# @param elementGUID          unique identifier of the described element
+# @param annotationGUID          unique identifier of the annotation
+# @param requestBody  description of the relationship.
+#
+# @return void or
+#  InvalidParameterException  one of the parameters is null or invalid.
+#  PropertyServerException    a problem retrieving information from the property server(s).
+#  UserNotAuthorizedException the requesting user is not authorized to issue this request.
+#
+POST {{baseURL}}/servers/{{viewServer}}/api/open-metadata/data-discovery/elements/{{elementGUID}}/associated-annotations/{{annotationGUID}}/attach
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "class" : "NewRelationshipRequestBody",
+  "properties": {
+    "class": "AssociatedAnnotationProperties",
+    "label": "add display label",
+    "description": "add description",
+    "effectiveFrom": "{{$isoTimestamp}}",
+    "effectiveTo": "{{$isoTimestamp}}"
+  },
+  "externalSourceGUID": "add guid here",
+  "externalSourceName": "add qualified name here",
+  "effectiveTime" : "{{$isoTimestamp}}",
+  "forLineage" : false,
+  "forDuplicateProcessing" : false
+}
+
+###
+# @name detachAnnotationFromDescribedElement
+# Detach an annotation from the element that it is describing (via AssociatedAnnotation relationship).
+#
+# @param serverName         name of called server
+# @param elementGUID          unique identifier of the described element
+# @param annotationGUID          unique identifier of the annotation
+# @param requestBody  description of the relationship.
+#
+# @return void or
+#  InvalidParameterException  one of the parameters is null or invalid.
+#  PropertyServerException    a problem retrieving information from the property server(s).
+#  UserNotAuthorizedException the requesting user is not authorized to issue this request.
+#
+POST {{baseURL}}/servers/{{viewServer}}/api/open-metadata/data-discovery/elements/{{elementGUID}}/associated-annotations/{{annotationGUID}}/detach
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "class" : "DeleteRelationshipRequestBody",
+  "externalSourceGUID": "add guid here",
+  "externalSourceName": "add qualified name here",
+  "effectiveTime" : "{{$isoTimestamp}}",
+  "forLineage" : false,
+  "forDuplicateProcessing" : false
+}
+
+###
+
+@previousAnnotationGUID=add guid here
+
+###
+# @name linkAnnotationToItsPredecessor
+# Attach an annotation to the equivalent annotation from the previous run of the survey.
+#
+# @param serverName         name of called server
+# @param previousAnnotationGUID          unique identifier of the annotation from the previous run of the survey
+# @param newAnnotationGUID            unique identifier of the annotation from this run of the survey
+# @param requestBody  description of the relationship.
+#
+# @return void or
+#  InvalidParameterException  one of the parameters is null or invalid.
+#  PropertyServerException    a problem retrieving information from the property server(s).
+#  UserNotAuthorizedException the requesting user is not authorized to issue this request.
+#
+POST {{baseURL}}/servers/{{viewServer}}/api/open-metadata/data-discovery/annotations/{{previousAnnotationGUID}}/later-annotations/{{annotationGUID}}/attach
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "class" : "NewRelationshipRequestBody",
+  "properties": {
+    "class": "AnnotationExtensionProperties",
+    "label": "add display label",
+    "description": "add description",
+    "effectiveFrom": "{{$isoTimestamp}}",
+    "effectiveTo": "{{$isoTimestamp}}"
+  },
+  "externalSourceGUID": "add guid here",
+  "externalSourceName": "add qualified name here",
+  "effectiveTime" : "{{$isoTimestamp}}",
+  "forLineage" : false,
+  "forDuplicateProcessing" : false
+}
+
+
+###
+# @name detachAnnotationFromItsPredecessor
+# Detach an annotation from an annotation from the previous run of the survey.
+#
+# @param serverName         name of called server
+# @param previousAnnotationGUID          unique identifier of the annotation from the previous run of the survey
+# @param newAnnotationGUID            unique identifier of the annotation from this run of the survey
+# @param requestBody  description of the relationship.
+#
+# @return void or
+#  InvalidParameterException  one of the parameters is null or invalid.
+#  PropertyServerException    a problem retrieving information from the property server(s).
+#  UserNotAuthorizedException the requesting user is not authorized to issue this request.
+#
+POST {{baseURL}}/servers/{{viewServer}}/api/open-metadata/data-discovery/annotations/{{previousAnnotationGUID}}/later-annotations/{{annotationGUID}}/detach
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "class" : "DeleteRelationshipRequestBody",
+  "externalSourceGUID": "add guid here",
+  "externalSourceName": "add qualified name here",
+  "effectiveTime" : "{{$isoTimestamp}}",
+  "forLineage" : false,
+  "forDuplicateProcessing" : false
+}
+
+###
+
+@assetGUID=add guid here
+
+###
+# @name linkResourceProfileData
+# Attach a resource profile log annotation to an asset where the profile data is stored.
+#
+# @param serverName         name of called server
+# @param annotationGUID               unique identifier of the annotation
+# @param assetGUID         unique identifier of the associated asset
+# @param requestBody  description of the relationship.
+#
+# @return void or
+#  InvalidParameterException  one of the parameters is null or invalid.
+#  PropertyServerException    a problem retrieving information from the property server(s).
+#  UserNotAuthorizedException the requesting user is not authorized to issue this request.
+#
+POST {{baseURL}}/servers/{{viewServer}}/api/open-metadata/data-discovery/annotations/{{annotationGUID}}/resource-profile-data-assets/{{assetGUID}}/attach
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "class" : "NewRelationshipRequestBody",
+  "properties": {
+    "class": "ResourceProfileProperties",
+    "effectiveFrom": "{{$isoTimestamp}}",
+    "effectiveTo": "{{$isoTimestamp}}"
+  },
+  "externalSourceGUID": "add guid here",
+  "externalSourceName": "add qualified name here",
+  "effectiveTime" : "{{$isoTimestamp}}",
+  "forLineage" : false,
+  "forDuplicateProcessing" : false
+}
+
+###
+# @name detachResourceProfileData
+# Detach a resource profile log annotation from an asset where the profile data is stored.
+#
+# @param serverName         name of called server
+# @param annotationGUID               unique identifier of the annotation
+# @param assetGUID         unique identifier of the associated asset
+# @param requestBody  description of the relationship.
+#
+# @return void or
+#  InvalidParameterException  one of the parameters is null or invalid.
+#  PropertyServerException    a problem retrieving information from the property server(s).
+#  UserNotAuthorizedException the requesting user is not authorized to issue this request.
+#
+POST {{baseURL}}/servers/{{viewServer}}/api/open-metadata/data-discovery/annotations/{{annotationGUID}}/resource-profile-data-assets/{{assetGUID}}/detach
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "class" : "DeleteRelationshipRequestBody",
+  "externalSourceGUID": "add guid here",
+  "externalSourceName": "add qualified name here",
+  "effectiveTime" : "{{$isoTimestamp}}",
+  "forLineage" : false,
+  "forDuplicateProcessing" : false
+}
+
+
+###
+# @name linkAnnotationMatch
+# Attach an annotation to an element that has been matched with the subject of the survey.
+#
+# @param serverName         name of called server
+# @param annotationGUID               unique identifier of the annotation
+# @param elementGUID         unique identifier of the associated data class
+# @param requestBody  description of the relationship.
+#
+# @return void or
+#  InvalidParameterException  one of the parameters is null or invalid.
+#  PropertyServerException    a problem retrieving information from the property server(s).
+#  UserNotAuthorizedException the requesting user is not authorized to issue this request.
+#/
+POST {{baseURL}}/servers/{{viewServer}}/api/open-metadata/data-discovery/annotations/{{annotationGUID}}/matched-elements/{{elementGUID}}/attach
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "class" : "NewRelationshipRequestBody",
+  "properties": {
+    "class": "AnnotationMatchProperties",
+    "label": "add display label",
+    "description": "add description",
+    "method" : "Add method name here",
+    "threshold" : 10,
+    "effectiveFrom": "{{$isoTimestamp}}",
+    "effectiveTo": "{{$isoTimestamp}}"
+  },
+  "externalSourceGUID": "add guid here",
+  "externalSourceName": "add qualified name here",
+  "effectiveTime" : "{{$isoTimestamp}}",
+  "forLineage" : false,
+  "forDuplicateProcessing" : false
+}
+
+
+###
+# @name detachAnnotationMatch
+# Remove an AnnotationMatch relationship.
+#
+# @param serverName         name of called server
+# @param annotationGUID     unique identifier of the annotation
+# @param elementGUID     unique identifier of the associated data class
+# @param requestBody  description of the relationship.
+#
+# @return void or
+#  InvalidParameterException  one of the parameters is null or invalid.
+#  PropertyServerException    a problem retrieving information from the property server(s).
+#  UserNotAuthorizedException the requesting user is not authorized to issue this request.
+#
+POST {{baseURL}}/servers/{{viewServer}}/api/open-metadata/data-discovery/annotations/{{annotationGUID}}/matched-elements/{{elementGUID}}/detach
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "class" : "DeleteRelationshipRequestBody",
+  "externalSourceGUID": "add guid here",
+  "externalSourceName": "add qualified name here",
+  "effectiveTime" : "{{$isoTimestamp}}",
+  "forLineage" : false,
+  "forDuplicateProcessing" : false
+}
+
+
+###
+# @name linkRequestForActionTarget
+# Attach a request for action annotation to the element that needs attention.
+#
+# @param serverName         name of called server
+# @param annotationGUID               unique identifier of the annotation
+# @param elementGUID         unique identifier of the associated element
+# @param requestBody  description of the relationship.
+#
+# @return void or
+#  InvalidParameterException  one of the parameters is null or invalid.
+#  PropertyServerException    a problem retrieving information from the property server(s).
+#  UserNotAuthorizedException the requesting user is not authorized to issue this request.
+#
+POST {{baseURL}}/servers/{{viewServer}}/api/open-metadata/data-discovery/annotations/{{annotationGUID}}/request-for-action-targets/{{elementGUID}}/attach
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "class" : "NewRelationshipRequestBody",
+  "properties": {
+    "class": "RequestForActionProperties",
+    "actionTargetName": "add name here",
+    "effectiveFrom": "{{$isoTimestamp}}",
+    "effectiveTo": "{{$isoTimestamp}}"
+  },
+  "externalSourceGUID": "add guid here",
+  "externalSourceName": "add qualified name here",
+  "effectiveTime" : "{{$isoTimestamp}}",
+  "forLineage" : false,
+  "forDuplicateProcessing" : false
+}
+
+
+###
+# @name detachRequestForActionTarget
+# Detach a request for action annotation from its intended target element.
+#
+# @param serverName         name of called server
+# @param annotationGUID               unique identifier of the annotation
+# @param elementGUID         unique identifier of the associated element
+# @param requestBody  description of the relationship.
+#
+# @return void or
+#  InvalidParameterException  one of the parameters is null or invalid.
+#  PropertyServerException    a problem retrieving information from the property server(s).
+#  UserNotAuthorizedException the requesting user is not authorized to issue this request.
+#
+POST {{baseURL}}/servers/{{viewServer}}/api/open-metadata/data-discovery/annotations/{{annotationGUID}}/request-for-action-targets/{{elementGUID}}/detach
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "class" : "DeleteRelationshipRequestBody",
+  "externalSourceGUID": "add guid here",
+  "externalSourceName": "add qualified name here",
+  "effectiveTime" : "{{$isoTimestamp}}",
+  "forLineage" : false,
+  "forDuplicateProcessing" : false
+}
+
+
+###
 # @name deleteAnnotation
 # Delete an annotation.
 #

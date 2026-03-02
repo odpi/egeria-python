@@ -649,6 +649,26 @@ base_report_specs = FormatSetDict({
         )
     ],
 ),
+"My-User-ToDos": FormatSet(
+    target_type="Todo",
+    heading="Todos",
+    description="My Todos",
+    family="MyProfile",
+    formats=[
+        Format(
+            types=["LIST", "REPORT", "DICT", "TABLE"],
+            attributes=[
+                Column(name="Name", key="displayName"),
+                Column(name="Qualified Name", key="qualifiedName"),
+                Column(name="Description", key="description"),
+                Column(name="GUID", key="guid", format=True),
+                Column(name="Type", key="typeName"),
+                Column(name="Activity Status", key="activityStatus"),
+                Column(name="Priority", key="priority"),
+            ],
+        )
+    ],
+),
 
     "TypeDef": FormatSet(
         target_type="TypeDef",

@@ -1,4 +1,5 @@
 import json
+import time
 
 import pytest
 import asyncio
@@ -82,58 +83,91 @@ class TestMyProfile:
         except Exception as e:
             pytest.fail(f"get_my_resources failed with unexpected exception: {e}")
 
-    def test_get_actions_for_action_target(self, profile_client):
-        try:
-            profile = profile_client.get_my_profile(graph_query_depth=0)
-            assert isinstance(profile, (list, dict, str))
-            if isinstance(profile, dict):
-                element_guid = profile.get("elementHeader", {}).get("guid")
-            else:
-                element_guid = None
-
-            if not element_guid:
-                pytest.skip("No profile GUID available for get_actions_for_action_target")
-
-            response = profile_client.get_actions_for_action_target(element_guid)
-            assert isinstance(response, (list, dict, str))
-            print(f"\nRetrieved actions for target: {json.dumps(response, indent=2)}" if isinstance(response, (list, dict)) else f"\nRetrieved actions for target: {response}")
-        except PyegeriaException as e:
-            print(f"get_actions_for_action_target failed as expected or due to env: {e}")
-        except Exception as e:
-            pytest.fail(f"get_actions_for_action_target failed with unexpected exception: {e}")
-
     def test_get_my_assigned_actions(self, profile_client):
         try:
-            profile = profile_client.get_my_profile(graph_query_depth=0)
-            assert isinstance(profile, (list, dict, str))
-            if isinstance(profile, dict):
-                element_guid = profile.get("elementHeader", {}).get("guid")
-            else:
-                element_guid = None
-
-            if not element_guid:
-                pytest.skip("No profile GUID available for get_my_assigned_actions")
-
-            response = profile_client.get_my_assigned_actions(element_guid)
+            response = profile_client.get_my_assigned_actions()
             assert isinstance(response, (list, dict, str))
-            print(f"\nRetrieved actions for target: {json.dumps(response, indent=2)}" if isinstance(response, (list, dict)) else f"\nRetrieved actions for target: {response}")
+            print(f"\nRetrieved assigned actions: {json.dumps(response, indent=2)}" if isinstance(response, (list, dict)) else f"\nRetrieved assigned actions: {response}")
         except PyegeriaException as e:
-            print(f"get_actions_for_action_target failed as expected or due to env: {e}")
+            print(f"get_my_assigned_actions failed as expected or due to env: {e}")
         except Exception as e:
-            pytest.fail(f"get_actions_for_action_target failed with unexpected exception: {e}")
+            pytest.fail(f"get_my_assigned_actions failed with unexpected exception: {e}")
 
-    def test_find_to_do(self, profile_client):
+    def test_get_my_sponsored_actions(self, profile_client):
         try:
-            response = profile_client.find_to_do(search_string="*")
+            response = profile_client.get_my_sponsored_actions()
             assert isinstance(response, (list, dict, str))
-            print(f"\nRetrieved to-dos: {json.dumps(response, indent=2)}" if isinstance(response, (list, dict)) else f"\nRetrieved to-dos: {response}")
+            print(f"\nRetrieved sponsored actions: {json.dumps(response, indent=2)}" if isinstance(response, (list, dict)) else f"\nRetrieved sponsored actions: {response}")
         except PyegeriaException as e:
-            print(f"find_to_do failed as expected or due to env: {e}")
+            print(f"get_my_sponsored_actions failed as expected or due to env: {e}")
         except Exception as e:
-            pytest.fail(f"find_to_do failed with unexpected exception: {e}")
+            pytest.fail(f"get_my_sponsored_actions failed with unexpected exception: {e}")
 
+    def test_get_my_requested_actions(self, profile_client):
+        try:
+            response = profile_client.get_my_requested_actions()
+            assert isinstance(response, (list, dict, str))
+            print(f"\nRetrieved requested actions: {json.dumps(response, indent=2)}" if isinstance(response, (list, dict)) else f"\nRetrieved requested actions: {response}")
+        except PyegeriaException as e:
+            print(f"get_my_requested_actions failed as expected or due to env: {e}")
+        except Exception as e:
+            pytest.fail(f"get_my_requested_actions failed with unexpected exception: {e}")
 
+    def test_activity_logging(self, profile_client):
+        try:
+            body = {
+                "class": "NewAttachmentRequestBody",
+                "properties": {
+                    "class": "NotificationProperties",
+                    "qualifiedName": "TestActivity",
+                    "displayName": "A new Test Activity",
+                    "situation": "Testing activity logging",
+                    "description": "This is a test notification",
+                }
+            }
+            guid = profile_client.log_my_activity(body)
+            assert isinstance(guid, str)
+            print(f"\nLogged activity GUID: {guid}")
 
+            guid = profile_client.journal_my_activity(body)
+            assert isinstance(guid, str)
+            print(f"\nJournaled activity GUID: {guid}")
+
+            guid = profile_client.blog_my_activity(body)
+            assert isinstance(guid, str)
+            print(f"\nBlogged activity GUID: {guid}")
+
+        except PyegeriaException as e:
+            print(f"activity logging failed as expected or due to env: {e}")
+        except Exception as e:
+            pytest.fail(f"activity logging failed with unexpected exception: {e}")
+
+    def test_get_to_dos(self, profile_client):
+        try:
+            response = profile_client.get_my_to_dos(output_format="DICT",report_spec="My-User-ToDos")
+            assert isinstance(response, (list, dict, str))
+            if isinstance(response, list|dict):
+                print(f"\nRetrieved to-dos: {json.dumps(response, indent=2)}" if isinstance(response, (list, dict)) else f"\nRetrieved to-dos: {response}")
+            else:
+                print(f"\nRetrieved to-dos: {response}")
+        except PyegeriaException as e:
+            print(f"get_my_to_dos failed as expected or due to env: {e}")
+        except Exception as e:
+            pytest.fail(f"get_my_to_dos failed with unexpected exception: {e}")
+
+    def test_create_my_todo(self,profile_client):
+        try:
+
+            response = profile_client.create_my_todo("do-my-backup","REQUESTED","do-backup",
+                                                     "Weekly backup needed",3)
+
+            assert isinstance(response, (list, dict, str))
+            print(f"\nCreated to-do: {json.dumps(response, indent=2)}" if isinstance(response, (list, dict)) else f"\nCreated to-do: {response}")
+        except PyegeriaException as e:
+            print(f"create_my_todo failed as expected or due to env: {e}")
+            print_basic_exception(e)
+        except Exception as e:
+            pytest.fail(f"create_my_todo failed with unexpected exception: {e}")
 
 if __name__ == "__main__":
     pytest.main([__file__])

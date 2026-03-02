@@ -232,7 +232,7 @@ class TestMyProfile:
 
             token = m_client.create_egeria_bearer_token(self.good_user_2, "secret")
 
-            response = m_client.find_to_do("*", status="OPEN")
+            response = m_client.get_my_to_dos()
 
             if type(response) is list:
                 print(f"Found {len(response)} todos that matched the criteria")
