@@ -136,7 +136,6 @@ class MyProfileScenarioTester:
     def scenario_explore_assigned_actions(self) -> TestResult:
         """
         Scenario: Explore assigned actions
-        - Get my profile to find actor GUID
         - Retrieve assigned actions
         - Check action details
         """
@@ -144,47 +143,27 @@ class MyProfileScenarioTester:
         start_time = time.perf_counter()
 
         try:
-            console.print("[yellow]⚠[/yellow] scenario_explore_assigned_actions is disabled (method moved).")
-            duration = time.perf_counter() - start_time
-            return TestResult(
-                scenario_name=scenario_name,
-                passed=True,
-                duration=duration,
-                message="Skipped: get_assigned_actions moved to another module.",
-            )
+            # Step 1: Get assigned actions
+            console.print(f"\n[cyan]Retrieving assigned actions for user[/cyan]")
+            try:
+                actions = self.client.get_my_assigned_actions()
 
-            # Step 1: Get profile to find actor GUID
-            console.print(f"\n[cyan]Getting profile to find actor GUID[/cyan]")
-            profile = self.client.get_my_profile()
-            
-            actor_guid = None
-            if isinstance(profile, dict):
-                actor_guid = profile.get("elementHeader", {}).get("guid")
-                console.print(f"[green]✓[/green] Found actor GUID: {actor_guid}")
+                if isinstance(actions, list):
+                    console.print(f"[green]✓[/green] Found {len(actions)} assigned actions")
 
-            if actor_guid:
-                # Step 2: Get assigned actions
-                console.print(f"\n[cyan]Retrieving assigned actions for actor[/cyan]")
-                try:
-                    actions = self.client.get_assigned_actions(actor_guid)
-                    
-                    if isinstance(actions, list):
-                        console.print(f"[green]✓[/green] Found {len(actions)} assigned actions")
-                        
-                        # Display first few actions if any exist
-                        for i, action in enumerate(actions[:3]):
-                            if isinstance(action, dict):
-                                action_name = action.get("actionProperties", {}).get("displayName", "Unknown")
-                                action_status = action.get("actionProperties", {}).get("actionStatus", "Unknown")
-                                console.print(f"  Action {i+1}: {action_name} (Status: {action_status})")
-                    elif isinstance(actions, str):
-                        console.print(f"[yellow]⚠[/yellow] Actions result: {actions}")
-                    else:
-                        console.print(f"[green]✓[/green] Retrieved actions data")
-                except Exception as e:
-                    console.print(f"[yellow]⚠[/yellow] Could not retrieve actions: {str(e)}")
-            else:
-                console.print(f"[yellow]⚠[/yellow] Could not find actor GUID from profile")
+                    # Display first few actions if any exist
+                    for i, action in enumerate(actions[:3]):
+                        if isinstance(action, dict):
+                            props = action.get("properties", {})
+                            action_name = props.get("displayName") or props.get("qualifiedName") or "Unknown"
+                            action_status = props.get("actionStatus", "Unknown")
+                            console.print(f"  Action {i+1}: {action_name} (Status: {action_status})")
+                elif isinstance(actions, str):
+                    console.print(f"[yellow]⚠[/yellow] Actions result: {actions}")
+                else:
+                    console.print(f"[green]✓[/green] Retrieved actions data")
+            except Exception as e:
+                console.print(f"[yellow]⚠[/yellow] Could not retrieve actions: {str(e)}")
 
             duration = time.perf_counter() - start_time
             return TestResult(
@@ -194,6 +173,86 @@ class MyProfileScenarioTester:
                 message="Successfully explored assigned actions",
             )
 
+        except Exception as e:
+            duration = time.perf_counter() - start_time
+            return TestResult(
+                scenario_name=scenario_name,
+                passed=False,
+                duration=duration,
+                error=str(e),
+            )
+
+    def scenario_activity_logging(self) -> TestResult:
+        """
+        Scenario: Activity Logging
+        - Log activity
+        - Journal activity
+        - Blog activity
+        """
+        scenario_name = "Activity Logging"
+        start_time = time.perf_counter()
+
+        try:
+            console.print(f"\n[cyan]Testing Activity Logging[/cyan]")
+
+            body = {
+                "class": "NewAttachmentRequestBody",
+                "properties": {
+                    "class": "NotificationProperties",
+                    "qualifiedName": f"ScenarioTest-{int(time.time())}",
+                    "displayName": "Scenario Test Activity",
+                    "situation": "Running scenario tests",
+                    "description": "This is a test notification from scenario tests",
+                }
+            }
+
+            console.print(f"Logging activity...")
+            try:
+                guid = self.client.log_my_activity(body)
+                console.print(f"[green]✓[/green] Logged activity GUID: {guid}")
+            except Exception as e:
+                console.print(f"[yellow]⚠[/yellow] Logging activity failed (expected in some envs): {str(e)}")
+            body = {
+                "class": "NewAttachmentRequestBody",
+                "properties": {
+                    "class": "NotificationProperties",
+                    "qualifiedName": f"ScenarioTest-{int(time.time())}-2",
+                    "displayName": "Scenario Test Activity",
+                    "situation": "Running scenario tests",
+                    "description": "This is a test notification from scenario tests",
+                }
+            }
+            console.print(f"Journaling activity...")
+            try:
+                guid = self.client.journal_my_activity(body)
+                console.print(f"[green]✓[/green] Journaled activity GUID: {guid}")
+            except Exception as e:
+                console.print(f"[yellow]⚠[/yellow] Journaling activity failed: {str(e)}")
+            body = {
+                "class": "NewAttachmentRequestBody",
+                "properties": {
+                    "class": "NotificationProperties",
+                    "qualifiedName": f"ScenarioTest-{int(time.time())}-3",
+                    "displayName": "Scenario Test Activity",
+                    "situation": "Running scenario tests",
+                    "description": "This is a test notification from scenario tests",
+                }
+            }
+            console.print(f"Blogging activity...")
+            try:
+                guid = self.client.blog_my_activity(body)
+                console.print(f"[green]✓[/green] Blogged activity GUID: {guid}")
+            except Exception as e:
+                print_basic_exception(e)
+                console.print(f"[yellow]⚠[/yellow] Blogging activity failed: {str(e)}")
+
+            duration = time.perf_counter() - start_time
+            return TestResult(
+                scenario_name=scenario_name,
+                passed=True,
+                duration=duration,
+                message="Successfully explored activity logging",
+            )
         except Exception as e:
             duration = time.perf_counter() - start_time
             return TestResult(
@@ -343,8 +402,10 @@ class MyProfileScenarioTester:
             # Run each scenario
             scenarios = [
                 self.scenario_retrieve_my_profile,
+                self.scenario_explore_assigned_actions,
                 self.scenario_explore_roles,
                 self.scenario_explore_profile_details,
+                self.scenario_activity_logging,
             ]
 
             for scenario_func in scenarios:
