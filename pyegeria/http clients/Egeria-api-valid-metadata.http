@@ -1,7 +1,7 @@
 # Egeria-valid-metadata-api
 
 @baseURL=https://localhost:9443
-@viewServer=view-server
+@viewServer=qs-view-server
 
 ###
 # =====================================================================================================================
@@ -26,8 +26,8 @@ Content-Type: application/json
 # 
 # Further Information: https://egeria-project.org/guides/planning/valid-values/overview/
 
-@typeName=AssetOwner
-@propertyName=collectionType
+@typeName=
+@propertyName=annotationType
 @mapName=
 @preferredValue=Data Journey
 @actualValue=BIGENDIAN
@@ -178,7 +178,7 @@ Content-Type: application/json
 # @name getValidMetadataValues
 # Retrieve all the valid values for the requested property.
 #
-GET {{baseURL}}/servers/{{viewServer}}/api/open-metadata/valid-metadata/get-valid-metadata-values/{{propertyName}}?typeName={{typeName}}&startFrom=0&pageSize=0
+GET {{baseURL}}/servers/{{viewServer}}/api/open-metadata/valid-metadata/get-valid-metadata-values/{{propertyName}}?startFrom=0&pageSize=0
 Authorization: Bearer {{token}}
 Content-Type: application/json
 
