@@ -21,6 +21,7 @@ except ImportError:
 # Import Egeria clients
 try:
     from pyegeria import AssetMaker, PyegeriaException, print_basic_exception
+    from pyegeria.omvs.data_discovery import DataDiscovery
     from pyegeria.models import NewElementRequestBody
     HAS_PYEGERIA = True
 except ImportError:
@@ -198,7 +199,10 @@ def integrate_with_egeria(results: List[Dict[str, Any]], root_path: str, egeria_
     user_password = "secret"
 
     client = AssetMaker(view_server, platform_url, user_id)
+    discovery = DataDiscovery(view_server, platform_url, user_id)
+    
     client.create_egeria_bearer_token(user_id, user_password)
+    discovery.create_egeria_bearer_token(user_id, user_password)
     print(f"user: {user_id}, pwd: {user_password}")
     print(f"Connecting to Egeria at {platform_url} as {user_id}...")
     
@@ -250,6 +254,32 @@ def integrate_with_egeria(results: List[Dict[str, Any]], root_path: str, egeria_
         
         report_guid = client.create_asset(body=body)
         print(f"Created SurveyReport with GUID: {report_guid}")
+
+        # 3. Create annotations for each identified file
+        for res in results:
+            print(f"Creating annotation for {res['name']}...")
+            annotation_qualified_name = f"{qualified_name}::annotation::{res['path']}"
+            
+            annotation_body = {
+                "class": "NewElementRequestBody",
+                "parentGUID": report_guid,
+                "parentRelationshipTypeName": "ReportedAnnotation",
+                "properties": {
+                    "class": "AnnotationProperties",
+                    "qualifiedName": annotation_qualified_name,
+                    "displayName": f"Annotation for {res['name']}",
+                    "summary": f"Identified as {res['type']}",
+                    "annotationType": res["type"],
+                    "jsonProperties": json.dumps(res["details"])
+                }
+            }
+            
+            try:
+                annotation_guid = discovery.create_annotation(body=annotation_body)
+                print(f"Created Annotation with GUID: {annotation_guid}")
+            except Exception as e:
+                print(f"Failed to create annotation for {res['name']}: {e}")
+
     except Exception as e:
         if HAS_PYEGERIA and isinstance(e, PyegeriaException):
             print_basic_exception(e)
