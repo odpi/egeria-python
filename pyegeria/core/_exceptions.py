@@ -427,16 +427,21 @@ def print_basic_exception(e: PyegeriaException):
     standard_errors = ["OMAG-REPOSITORY-HANDLER-404-001",
                        "OMAG-REPOSITORY-HANDLER-404-007",
     ]
-    if e.response_egeria_msg_id and e.response_egeria_msg_id in standard_errors:
-        print(f"\n==> {e.response_egeria_msg}")
+    if hasattr(e, "response_egeria_msg_id") and e.response_egeria_msg_id and e.response_egeria_msg_id in standard_errors:
+        if hasattr(e, "response_egeria_msg") and e.response_egeria_msg:
+            print(f"\n==> {e.response_egeria_msg}")
+        else:
+            print(f"\n==> {str(e)}")
         return
 
-    related_code = e.related_http_code if hasattr(e, "related_http_code") else ""
-    http_reason = e.response.text if e.response else ""
+    related_code = getattr(e, "related_http_code", "")
+    http_reason = ""
+    if hasattr(e, "response") and e.response:
+        http_reason = e.response.text if hasattr(e.response, "text") else ""
     related_response = None
     exception_msg_id = ""
 
-    if e.response:
+    if hasattr(e, "response") and e.response:
         if isinstance(e.response, Response):
             try:
                 related_response = e.response.json()
@@ -448,22 +453,22 @@ def print_basic_exception(e: PyegeriaException):
             exception_msg_id = related_response.get("exceptionErrorMessageId", "")
 
     table = Table(title=f"Exception: {e.__class__.__name__}", show_lines=True, header_style="bold", box=box.HEAVY_HEAD)
-    table.caption = e.pyegeria_code
     table.add_column("Facet", justify="center")
     table.add_column("Item", justify="left", width=80)
 
     if isinstance(e, PyegeriaException):
+        table.caption = getattr(e, "pyegeria_code", "UNKNOWN_ERROR")
         if e.context:
             table.add_row("Context", e.context.get('reason',""), style = "bold yellow")
         error_kind = e.additional_info.get("error_kind", "") if e.additional_info else ""
         if error_kind:
             table.add_row("Error Kind", error_kind)
-        if e.response:
-            table.add_row("HTTP Code", str(e.response_code))
+        if hasattr(e, "response") and e.response:
+            table.add_row("HTTP Code", str(getattr(e, "response_code", "")))
             table.add_row("HTTP Reason", str(http_reason))
             table.add_row("Egeria Code", str(related_code))
             table.add_row("Caller Method", e.context.get("caller method", "---") if e.context else "---")
-            table.add_row("Request URL", str(e.response_url))
+            table.add_row("Request URL", str(getattr(e, "response_url", "")))
             if related_response:
                 if isinstance(related_response, dict):
                     table.add_row("Egeria Message",
@@ -477,11 +482,12 @@ def print_basic_exception(e: PyegeriaException):
                     exception_msg_id = related_response
 
         table.add_row("Egeria Exception Message Id", str(exception_msg_id))
-        table.add_row("Pyegeria Message", e.message)
+        table.add_row("Pyegeria Message", getattr(e, "message", str(e)))
         console.print(table)
 
     else:
-        print(f"\n\n\t  Not an Pyegeria exception {e}")
+        table.add_row("Python Exception", str(e))
+        console.print(table)
 
 def print_validation_error(e: ValidationError):
     """Prints the pydantic validation exception response"""

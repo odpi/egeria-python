@@ -60,19 +60,45 @@ else:
 
 ## Survey Crawler Usage
 
-The `survey_crawler.py` script can be used to scan an entire project or data directory recursively:
+The `survey_crawler.py` script recursively scans a directory for JSON files and identifies their types. It can optionally write results to a CSV file and integrate with Egeria to create Survey Reports.
+
+### Basic Usage
 
 ```bash
+# Basic scan with beautiful terminal output
 python examples/surveys/survey_crawler.py [path_to_scan]
+
+# Scan and save results to CSV
+python examples/surveys/survey_crawler.py [path_to_scan] --csv results.csv
+
+# Display results as a markdown table
+python examples/surveys/survey_crawler.py [path_to_scan] --markdown
+
+# Generate a full markdown report with Vega-Lite charts
+python examples/surveys/survey_crawler.py [path_to_scan] --report survey_report.md
+
+# Scan and integrate with Egeria (creates SurveyReports)
+python examples/surveys/survey_crawler.py [path_to_scan] --egeria --url https://egeria:9443 --user pete
 ```
 
-Example:
+### Egeria Integration Options
 
-```bash
-python examples/surveys/survey_crawler.py examples
-```
+- `--egeria`: Enable integration.
+- `--url`: Egeria platform URL (default: `https://localhost:9443`).
+- `--server`: View server name (default: `view-server`).
+- `--user`: User ID for authentication (default: `pete`).
 
-It will produce a formatted table showing the files identified and their detected artifact types.
+### Reporting Options
+
+- `--markdown`: Prints the findings as a clean markdown table in the console.
+- `--report <path>`: Generates a comprehensive markdown report that includes:
+  - Summary statistics.
+  - **Vega-Lite Graphical Breakdown**: A donut chart showing the ratio of identified JSON files to others.
+  - **Vega-Lite Histogram**: A bar chart showing the distribution of identified artifact types.
+  - Detailed findings table.
+
+**Environment Variables:**
+The script also honors environment variables: `EGERIA_PLATFORM_URL`, `EGERIA_VIEW_SERVER`, and `EGERIA_USER_ID`.
 
 ## Running Tests
 

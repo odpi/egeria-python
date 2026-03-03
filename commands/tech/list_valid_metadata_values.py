@@ -12,7 +12,12 @@ A simple display for glossary terms
 import argparse
 import json
 import os
+import sys
 import time
+from typing import Optional
+
+# Add the repository root to sys.path to ensure local pyegeria is used
+sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "..")))
 
 from rich import box, print
 from rich.console import Console
@@ -24,21 +29,11 @@ from pyegeria import (
     ValidMetadataManager, print_basic_exception,
 
 )
+from pyegeria.core.config import load_app_config, get_app_config
 
-EGERIA_METADATA_STORE = os.environ.get("EGERIA_METADATA_STORE", "active-metadata-store")
-EGERIA_KAFKA_ENDPOINT = os.environ.get("KAFKA_ENDPOINT", "localhost:9092")
-EGERIA_PLATFORM_URL = os.environ.get("EGERIA_PLATFORM_URL", "https://localhost:9443")
-EGERIA_VIEW_SERVER = os.environ.get("EGERIA_VIEW_SERVER", "view-server")
-EGERIA_VIEW_SERVER_URL = os.environ.get(
-    "EGERIA_VIEW_SERVER_URL", "https://localhost:9443"
-)
-EGERIA_INTEGRATION_DAEMON = os.environ.get("EGERIA_INTEGRATION_DAEMON", "integration-daemon")
-EGERIA_ADMIN_USER = os.environ.get("ADMIN_USER", "garygeeke")
-EGERIA_ADMIN_PASSWORD = os.environ.get("ADMIN_PASSWORD", "secret")
-EGERIA_USER = os.environ.get("EGERIA_USER", "erinoverview")
-EGERIA_USER_PASSWORD = os.environ.get("EGERIA_USER_PASSWORD", "secret")
-EGERIA_JUPYTER = bool(os.environ.get("EGERIA_JUPYTER", "False"))
-EGERIA_WIDTH = int(os.environ.get("EGERIA_WIDTH", "200"))
+# Legacy environment variables - now handled via pyegeria.core.config
+# EGERIA_METADATA_STORE = os.environ.get("EGERIA_METADATA_STORE", "active-metadata-store")
+# ... (others removed to use unified config)
 
 
 def display_metadata_values(
@@ -49,13 +44,20 @@ def display_metadata_values(
     username: str,
     user_pass: str,
     save_output: bool,
-    jupyter: bool = EGERIA_JUPYTER,
-    width: int = EGERIA_WIDTH,
+    jupyter: bool = False,
+    width: int = 200,
 ):
-    m_client = ValidMetadataManager(server, url, user_id=username)
-    token = m_client.create_egeria_bearer_token(username, user_pass)
+    try:
+        m_client = ValidMetadataManager(server, url, user_id=username)
+        token = m_client.create_egeria_bearer_token(username, user_pass)
+    except PyegeriaException as e:
+        print_basic_exception(e)
+        return
+    except ValueError as ve:
+        print(f"[red]Input error: {ve}[/red]")
+        return
 
-    def generate_table(property_name: str, type_name: str) -> Table:
+    def generate_table(property_name: str, type_name: Optional[str]) -> Table:
         """Make a new table."""
         table = Table(
             title=f"Valid Metadata Values for Property: {property_name} of type {type_name} @ {time.asctime()}",
@@ -149,10 +151,14 @@ def main():
     # parser.add_argument("--sponsor", help="Name of sponsor to search")
     args = parser.parse_args()
 
-    server = args.server if args.server is not None else EGERIA_VIEW_SERVER
-    url = args.url if args.url is not None else EGERIA_PLATFORM_URL
-    userid = args.userid if args.userid is not None else EGERIA_USER
-    user_pass = args.password if args.password is not None else EGERIA_USER_PASSWORD
+    config = load_app_config()
+    user_profile = config.User_Profile
+    env = config.Environment
+
+    server = args.server if args.server is not None else env.egeria_view_server
+    url = args.url if args.url is not None else env.egeria_platform_url
+    userid = args.userid if args.userid is not None else user_profile.user_name
+    user_pass = args.password if args.password is not None else user_profile.user_pwd
     save_output = args.save_output if args.save_output is not None else False
 
     try:
@@ -160,13 +166,23 @@ def main():
             "Enter the Property to retrieve:", default="projectHealth"
         )
         type_name = Prompt.ask(
-            "Enter the Metadata Type to filter on:", default="Project"
+            "Enter the Metadata Type to filter on (Optional, use :: or leave blank for None):", default="::"
         )
+        if type_name == "":
+            type_name = None
+
         display_metadata_values(
-            property_name, type_name, server, url, userid, user_pass, save_output
+            property_name, type_name, server, url, userid, user_pass, save_output, 
+            jupyter=env.egeria_jupyter, width=env.console_width
         )
+    except PyegeriaException as e:
+        print_basic_exception(e)
+    except ValueError as ve:
+        print(f"[red]Value Error: {ve}[/red]")
     except KeyboardInterrupt:
         pass
+    except Exception as e:
+        print(f"[red]An unexpected error occurred: {e}[/red]")
 
 
 if __name__ == "__main__":
