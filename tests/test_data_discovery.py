@@ -4,6 +4,7 @@ Copyright Contributors to the ODPi Egeria project.
 
 This module tests the DataDiscovery class and methods from data_discovery.py
 """
+import json
 from datetime import datetime
 
 from rich import print
@@ -60,6 +61,27 @@ class TestDataDiscovery:
             try:
                 response = dd_client.create_annotation(body)
                 assert response is not None
+            except (PyegeriaInvalidParameterException, PyegeriaNotFoundException, PyegeriaAPIException):
+                pass
+
+        except PyegeriaConnectionException:
+            print("Skipping test due to connection error")
+        finally:
+            dd_client.close_session()
+
+    def test_find_annotation(self):
+        """Test finding an annotation"""
+        dd_client = DataDiscovery(self.good_view_server_1, self.good_platform1_url, user_id=self.good_user_2)
+        try:
+            dd_client.create_egeria_bearer_token(self.good_user_2, USER_PWD)
+
+
+            try:
+                response = dd_client.find_annotations(search_string="*", output_format="DICT", report_spec="REFERENCEABLE")
+                assert response is not None
+                if isinstance(response, dict|list):
+                    print(f"Found {len(response)} annotations")
+                    print(json.dumps(response, indent=2))
             except (PyegeriaInvalidParameterException, PyegeriaNotFoundException, PyegeriaAPIException):
                 pass
 

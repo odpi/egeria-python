@@ -668,6 +668,12 @@ base_report_specs = FormatSetDict({
             ],
         )
     ],
+    action=ActionParameter(
+        function="MyProfile.get_my_to_dos",
+        optional_params=OPTIONAL_FILTER_PARAMS + TIME_PARAMETERS,
+        required_params=[],
+        spec_params={},
+    )
 ),
 
     "TypeDef": FormatSet(

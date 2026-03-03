@@ -790,7 +790,8 @@ class DataDesigner(ServerClient):
         loop.run_until_complete(self._async_delete_data_field(data_struct_guid, body, cascade_delete))
 
     @dynamic_catch
-    def find_all_data_structures(self, output_format: str = 'JSON', report_spec: str | dict = None) -> list | str:
+    async def _async_find_all_data_structures(self, output_format: str = 'JSON',
+                                              report_spec: str | dict = None) -> list | str:
         """Returns a list of all known data structures. Async version.
 
         Parameters
@@ -816,8 +817,41 @@ class DataDesigner(ServerClient):
 
         """
 
-        return self.find_data_structures(search_string="*", output_format=output_format,
-                                         report_spec=report_spec)
+        return await self._async_find_data_structures(search_string="*",
+                                                      metadata_element_type="DataStructure",
+                                                      output_format=output_format,
+                                                      report_spec=report_spec)
+
+    @dynamic_catch
+    def find_all_data_structures(self, output_format: str = 'JSON', report_spec: str | dict = None) -> list | str:
+        """Returns a list of all known data structures.
+
+        Parameters
+        ----------
+
+        output_format: str, default = "DICT"
+            - output format of the data structure. Possible values: "DICT", "JSON", "MERMAID".
+        report_spec: dict, optional, default = None
+            - The desired output columns/field options.
+        Returns
+        -------
+        [dict] | str
+            Returns a string if no elements are found and a list of dict of elements with the results.
+
+        Raises
+        ------
+        PyegeriaInvalidParameterException
+            one of the parameters is null or invalid or
+        PyegeriaAPIException
+            There is a problem adding the element properties to the metadata repository or
+        PyegeriaUnauthorizedException
+            the requesting user is not authorized to issue this request.
+
+        """
+
+        loop = asyncio.get_event_loop()
+        return loop.run_until_complete(self._async_find_all_data_structures(output_format=output_format,
+                                                                           report_spec=report_spec))
 
     @dynamic_catch
     async def _async_find_data_structures(
@@ -1170,7 +1204,8 @@ class DataDesigner(ServerClient):
         return response
 
     @dynamic_catch
-    def get_data_structure_by_guid(self, guid: str, element_type: Optional[str] = None, body: Optional[str] = None,
+    def get_data_structure_by_guid(self, guid: str, element_type: Optional[str] = None,
+                                   body: Optional[dict | GetRequestBody] = None,
                                    output_format: str = 'JSON', report_spec: str | dict = None) -> list | str:
         """ Get the data structure metadata element with the specified unique identifier..
 
@@ -2368,8 +2403,10 @@ class DataDesigner(ServerClient):
 
         """
 
-        return self.find_data_fields(search_string="*", output_format=output_format,
-                                     report_spec=report_spec, body= body)
+        return await self._async_find_data_fields(search_string="*",
+                                                  metadata_element_type="DataField",
+                                                  output_format=output_format,
+                                                  report_spec=report_spec, body=body)
 
     @dynamic_catch
     def find_all_data_fields(self, output_format: str = 'JSON', report_spec: str | dict = None,
@@ -2818,7 +2855,8 @@ class DataDesigner(ServerClient):
         return response
 
     @dynamic_catch
-    def get_data_field_by_guid(self, guid: str, element_type: Optional[str] = None, body: str | GetRequestBody = None,
+    def get_data_field_by_guid(self, guid: str, element_type: Optional[str] = None,
+                               body: Optional[dict | GetRequestBody] = None,
                                output_format: str = 'JSON', report_spec: str | dict = None) -> list | str:
         """ Get the  data structure metadata element with the specified unique identifier..
 
@@ -3933,10 +3971,10 @@ class DataDesigner(ServerClient):
 
         """
 
-        url = f"{base_path(self, self.view_server)}/data-value-specifications/by-search-string"
-
-        return self.find_data_classes(search_string="*", output_format=output_format,
-                                      report_spec=report_spec)
+        return await self._async_find_data_classes(search_string="*",
+                                                   metadata_element_type="DataClass",
+                                                   output_format=output_format,
+                                                   report_spec=report_spec)
 
     @dynamic_catch
     def find_all_data_classes(self,
@@ -4391,7 +4429,8 @@ class DataDesigner(ServerClient):
         return response
 
     @dynamic_catch
-    def get_data_class_by_guid(self, guid: str, element_type: Optional[str] = None, body: Optional[dict | FilterRequestBody] = None,
+    def get_data_class_by_guid(self, guid: str, element_type: Optional[str] = None,
+                               body: Optional[dict | GetRequestBody] = None,
                                output_format: str = 'JSON',
                                report_spec: str | dict = None) -> list | str:
         """ Get the  data structure metadata element with the specified unique identifier..

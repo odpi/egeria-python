@@ -189,9 +189,9 @@ class TestValidMetadataOMVs:
             )
             token = m_client.create_egeria_bearer_token(self.good_user_2, "secret")
             start_time = time.perf_counter()
-            type_name = "Project"
-            property_name = "projectHealth"
-            preferred_value = "Abandoned"
+            type_name = None
+            property_name = "annotationType"
+            preferred_value = None
 
             response = m_client.get_valid_metadata_value(
                 property_name, type_name, preferred_value, output_format="LIST", report_spec='Valid-Values' )
@@ -223,12 +223,12 @@ class TestValidMetadataOMVs:
             )
             token = m_client.create_egeria_bearer_token(self.good_user_2, "secret")
             start_time = time.perf_counter()
-            type_name = "Project"
-            property_name = "projectHealth"
+            type_name = None
+            property_name = "annotationType"
             # type_name = None
             # property_name = "stewardTypeName"
 
-            response = m_client.get_valid_metadata_values(property_name, type_name, output_format="LIST", report_spec='Valid-Values')
+            response = m_client.get_valid_metadata_values(property_name, type_name, output_format="JSON", report_spec='Valid-Values')
             duration = time.perf_counter() - start_time
 
             print(f"\n\tDuration was {duration} seconds")
@@ -458,7 +458,7 @@ class TestValidMetadataOMVs:
             )
             token = m_client.create_egeria_bearer_token(self.good_user_2, "secret")
             start_time = time.perf_counter()
-            search_string = "port"
+            search_string = "annotation"
 
             response = m_client.find_specification_property(search_string)
             duration = time.perf_counter() - start_time
