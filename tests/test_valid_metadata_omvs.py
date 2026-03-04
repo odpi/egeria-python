@@ -190,7 +190,7 @@ class TestValidMetadataOMVs:
             token = m_client.create_egeria_bearer_token(self.good_user_2, "secret")
             start_time = time.perf_counter()
             type_name = None
-            property_name = "annotationType"
+            property_name = "fileType"
             preferred_value = None
 
             response = m_client.get_valid_metadata_value(
@@ -224,7 +224,7 @@ class TestValidMetadataOMVs:
             token = m_client.create_egeria_bearer_token(self.good_user_2, "secret")
             start_time = time.perf_counter()
             type_name = None
-            property_name = "annotationType"
+            property_name = "fileType"
             # type_name = None
             # property_name = "stewardTypeName"
 

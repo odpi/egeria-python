@@ -23,6 +23,8 @@ from pyegeria.view.output_formatter import (
 
 class ValidMetadataManager(ServerClient):
     """The Valid Metadata OMVS provides APIs for retrieving and updating lists of valid metadata values.
+        These valid values are used by Egeria itself to govern and validate metadata properties.
+
         For more details see: https://egeria-project.org/guides/planning/valid-values/overview/
 
     Attributes:

@@ -4,7 +4,7 @@
 # https://egeria-project.org/concepts/personal-profile
 
 @baseURL=https://localhost:9443
-@viewServer=qs-view-server
+@viewServer=view-server
 
 ###
 # =====================================================================================================================
@@ -15,7 +15,7 @@ POST {{baseURL}}/api/token
 Content-Type: application/json
 
 {
-  "userId" : "erinoverview",
+  "userId" : "peterprofile",
   "password" : "secret"
 }
 
@@ -198,7 +198,6 @@ Content-Type: application/json
   "activityStatusList": ["REQUESTED", "WAITING", "IN_PROGRESS"],
   "asOfTime" : "{{$isoTimestamp}}",
   "effectiveTime" : "{{$isoTimestamp}}",
-  "metadataElementTypeName": "ToDo",
   "forLineage" : false,
   "forDuplicateProcessing" : false
 }
@@ -260,6 +259,7 @@ Content-Type: application/json
 
 
 ###
+# @name journalMyActivity
 # Add the supplied notification to the user's journal.
 #
 # @param serverName name of the server instances for this request
