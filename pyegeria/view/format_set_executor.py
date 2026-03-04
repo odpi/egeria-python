@@ -22,6 +22,11 @@ from loguru import logger
 
 from pyegeria.omvs.classification_explorer import ClassificationExplorer
 from pyegeria.omvs.actor_manager import ActorManager
+from pyegeria.omvs.data_designer import DataDesigner
+from pyegeria.omvs.my_profile import MyProfile
+from pyegeria.omvs.project_manager import ProjectManager
+from pyegeria.omvs.solution_architect import SolutionArchitect
+from pyegeria.omvs.reference_data import ReferenceDataManager
 from pyegeria.egeria_tech_client import EgeriaTech
 from pyegeria.omvs.collection_manager import CollectionManager
 from pyegeria.omvs.governance_officer import GovernanceOfficer
@@ -36,6 +41,7 @@ from pyegeria.view.base_report_formats import (
     get_report_spec_description,
     get_report_registry,
 )
+from pyegeria.omvs.valid_metadata import ValidMetadataManager
 from pyegeria.view.output_formatter import generate_output
 
 
@@ -46,6 +52,13 @@ _CLIENT_CLASS_MAP = {
     "ExternalReference": ExternalReferences,
     "ClassificationExplorer": ClassificationExplorer,
     "ActorManager": ActorManager,
+    "ValidMetadataManager": ValidMetadataManager,
+    "DataDesigner": DataDesigner,
+    "MyProfile": MyProfile,
+    "ProjectManager": ProjectManager,
+    "SolutionArchitect": SolutionArchitect,
+    "ReferenceDataManager": ReferenceDataManager,
+    "reference_data": ReferenceDataManager,
 }
 
 

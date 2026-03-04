@@ -701,7 +701,7 @@ base_report_specs = FormatSetDict({
     "Valid-Values": FormatSet(
         target_type="Valid-Values",
         heading="Valid Values",
-        description="Attributes that describe valid values",
+        description="Attributes that describe valid values used by Egeria for metadata governance.",
         annotations={},  # No specific annotations
         family="Valid-Values",
         formats=[
@@ -721,7 +721,7 @@ base_report_specs = FormatSetDict({
             )
         ],
         action=ActionParameter(
-            function="ValidValueManager.find_valid_values",
+            function="ValidMetadataManager.get_valid_metadata_values",
             optional_params=OPTIONAL_FILTER_PARAMS + TIME_PARAMETERS + ["type_name"],
             required_params=["property_name"],
             spec_params={},
@@ -2160,7 +2160,7 @@ base_report_specs = FormatSetDict({
     "Valid-Value-Def": FormatSet(
         target_type="Valid Value Definition",
         heading="Valid Value Definitions Information",
-        description="Attributes useful to Valid Value Definitions.",
+        description="Attributes useful to Business Reference Data (Valid Value Definitions).",
         aliases=[],
         annotations={"wikilinks": ["[[VV-Def]]"]},
         family="General",

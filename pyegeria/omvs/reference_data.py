@@ -23,10 +23,13 @@ from loguru import logger
 
 class ReferenceDataManager(ServerClient):
     """
-    Manage Reference Data in Egeria..
+    Manage Business Reference Data in Egeria.
+    Reference data is business-oriented data used to categorize or classify other data
+    (e.g., country codes, currency codes). This is distinct from Valid Values which
+    are used by Egeria to govern metadata properties.
 
     This client provides asynchronous and synchronous helpers to create, update, search,
-    and relate Reference Data elements and their subtypes (Campaign, StudyProject, Task, PersonalProject).
+    and relate Reference Data elements.
 
     References
 
@@ -153,7 +156,7 @@ class ReferenceDataManager(ServerClient):
         Parameters
         ----------
         search_string: str,
-            Search string to use to find matching projects. If the search string is '*' then all projects returned.
+            Search string to use to find matching reference data definitions. If the search string is '*' then all items are returned.
         effective_time: str, [default=None], optional
             Effective time of the query. If not specified will default to any time.
         output_format: str, default = "JSON"
@@ -176,7 +179,7 @@ class ReferenceDataManager(ServerClient):
         -------
         List | str
 
-        A list of projects matching the search string. Returns a string if none found.
+        A list of reference data items matching the search string. Returns a string if none found.
 
         Raises
         ------
@@ -232,7 +235,7 @@ class ReferenceDataManager(ServerClient):
         Parameters
         ----------
         search_string: str,
-            Search string to use to find matching projects. If the search string is '*' then all projects returned.
+            Search string to use to find matching reference data definitions. If the search string is '*' then all items are returned.
         effective_time: str, [default=None], optional
             Effective time of the query. If not specified will default to any time.
 
@@ -251,7 +254,7 @@ class ReferenceDataManager(ServerClient):
         -------
         List | str
 
-        A list of projects matching the search string. Returns a string if none found.
+        A list of reference data items matching the search string. Returns a string if none found.
 
         Raises
         ------

@@ -18,6 +18,164 @@ Content-Type: application/json
 
 > {% client.global.set("token", response.body); %}
 
+###
+# =====================================================================================================================
+# Set up new users in the user directory
 
+@platformGUID=add guid here
+@accountUserId=add userId here
+
+
+###
+# @name: setUserAccount
+# Set up or update a user account in the platform metadata security connector
+# The user requires operator permission for the platform.
+#
+# @param serverName  name of called server
+# @param platformGUID unique identifier of the platform
+# @param requestBody requestBody used to create and configure the connector that performs platform security
+# @return void response
+#
+POST {{baseURL}}/servers/{{viewServer}}/api/open-metadata/security-officer/platforms/{{platformGUID}}/user-accounts
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "class" : "UserAccountRequestBody",
+  "userAccount": {
+    "class" : "OpenMetadataUserAccount",
+    "userId": "",
+    "userName": "",
+    "userAccountType": "",
+    "employeeNumber": "",
+    "employeeType": "",
+    "givenName": "",
+    "surname": "",
+    "email": "",
+    "manager": "",
+    "distinguishedName": "",
+    "securityRoles": [""],
+    "securityGroups": [""],
+    "zoneAccess": {
+      "zoneName" : [
+        "READ",
+        "CREATE",
+        "UPDATE_PROPERTIES",
+        "DELETE",
+        "ATTACH",
+        "DETACH",
+        "ADD_MEMBER",
+        "DELETE_MEMBER",
+        "ADD_FEEDBACK",
+        "DELETE_FEEDBACK",
+        "CLASSIFY",
+        "DECLASSIFY",
+        "PUBLISH"]
+    },
+    "otherProperties": {
+      "propertyName1" : "propertyValue1"
+    },
+    "userAccountStatus": "CREDENTIALS_EXPIRED",
+    "secrets": {
+      "clearPassword" : "newSecret1"
+    }
+  }
+}
+
+
+###
+# @name: getUserAccount
+# Return the user account object for the requested user from the platform metadata security connector.
+# Null is returned if no platform security or user account has been set up.
+# The user requires operator permission for the platform unless it is their own user account they are retrieving.
+#
+# @param serverName  name of called server
+# @param platformGUID unique identifier of the platform
+# @param accountUserId    user id of the account
+# @return user account response
+#
+GET {{baseURL}}/servers/{{viewServer}}/api/open-metadata/security-officer/platforms/{{platformGUID}}/user-accounts/{{accountUserId}}
+Authorization: Bearer {{token}}
+
+
+###
+# @name: deleteUserAccount
+# Clear the account for a user with the platform security connector.
+#
+# @param serverName  name of called server
+# @param platformGUID unique identifier of the platform
+# @param accountUserId    user id of the account
+# @return void response
+#
+DELETE {{baseURL}}/servers/{{viewServer}}/api/open-metadata/security-officer/platforms/{{platformGUID}}/user-accounts/{{accountUserId}}
+Authorization: Bearer {{token}}
+
+
+###
+# =====================================================================================================================
+# Manage the structure of the governance zones.
+
+@governanceZoneGUID=add guid here
+@nestedGovernanceZoneGUID=add guid here
+
+###
+# @name: linkGovernanceZones
+# Attach a nested governance zone to a broader governance zone definition.
+#
+# @param serverName         name of called server
+# @param governanceZoneGUID  unique identifier of the first governance zone definition
+# @param nestedGovernanceZoneGUID      unique identifier of the second governance zone definition
+# @param requestBody  description of the relationship.
+#
+# @return void or
+#  InvalidParameterException  one of the parameters is null or invalid.
+#  PropertyServerException    a problem retrieving information from the property server(s).
+#  UserNotAuthorizedException the requesting user is not authorized to issue this request.
+#
+POST {{baseURL}}/servers/{{viewServer}}/api/open-metadata/security-officer/governance-zones/{{governanceZoneGUID}}/governance-zone-hierarchies/{{nestedGovernanceZoneGUID}}/attach
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "class" : "NewRelationshipRequestBody",
+  "properties": {
+    "class": "ZoneHierarchy",
+    "effectiveFrom": "{{$isoTimestamp}}",
+    "effectiveTo": "{{$isoTimestamp}}"
+  },
+  "externalSourceGUID": "add guid here",
+  "externalSourceName": "add qualified name here",
+  "effectiveTime" : "{{$isoTimestamp}}",
+  "forLineage" : false,
+  "forDuplicateProcessing" : false
+}
+
+
+###
+# @name: detachGovernanceZones
+# Detach a governance zone definition from a hierarchical relationship.
+#
+# @param serverName         name of called server
+# @param governanceZoneGUID  unique identifier of the first governance zone definition
+# @param nestedGovernanceZoneGUID      unique identifier of the second governance zone definition
+# @param requestBody  description of the relationship.
+#
+# @return void or
+#  InvalidParameterException  one of the parameters is null or invalid.
+#  PropertyServerException    a problem retrieving information from the property server(s).
+#  UserNotAuthorizedException the requesting user is not authorized to issue this request.
+#
+POST {{baseURL}}/servers/{{viewServer}}/api/open-metadata/security-officer/governance-zones/{{governanceZoneGUID}}/governance-zone-hierarchies/{{nestedGovernanceZoneGUID}}/detach
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "class" : "DeleteRelationshipRequestBody",
+  "externalSourceGUID": "add guid here",
+  "externalSourceName": "add qualified name here",
+  "effectiveTime" : "{{$isoTimestamp}}",
+  "forLineage" : false,
+  "forDuplicateProcessing" : false
+}
 
 

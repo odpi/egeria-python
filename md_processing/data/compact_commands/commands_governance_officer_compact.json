@@ -1,6 +1,6 @@
 {
   "family": "Governance Officer",
-  "exported": "Feb 21, 2026 at 7:55:01 PM",
+  "exported": "Mar 3, 2026 at 11:38:57 AM",
   "attribute_definitions": {
     "Access Control": {
       "variable_name": "access_control",
@@ -1945,6 +1945,63 @@
       "level": "Basic",
       "Journal Entry": ""
     },
+    "Request ID": {
+      "variable_name": "request_id",
+      "inUpdate": true,
+      "attr_labels": "",
+      "examples": "00585a82-0f7d-45ef-9b87-7078665917a9",
+      "default_value": "",
+      "valid_values": [],
+      "existing_element": "",
+      "description": "A user assigned or system generated identifier used across requests.",
+      "generated": true,
+      "style": "Simple",
+      "user_specified": true,
+      "unique": false,
+      "input_required": false,
+      "min_cardinality": 0,
+      "max_cardinality": 1,
+      "level": "Advanced",
+      "Journal Entry": ""
+    },
+    "Resource Description": {
+      "variable_name": "resource_description",
+      "inUpdate": true,
+      "attr_labels": "",
+      "examples": "",
+      "default_value": "",
+      "valid_values": [],
+      "existing_element": "",
+      "description": "A description of the resource being attached.",
+      "generated": false,
+      "style": "Simple",
+      "user_specified": true,
+      "unique": false,
+      "input_required": false,
+      "min_cardinality": 0,
+      "max_cardinality": 1,
+      "level": "Basic",
+      "Journal Entry": ""
+    },
+    "Resource Id": {
+      "variable_name": "resource",
+      "inUpdate": true,
+      "attr_labels": "",
+      "examples": "",
+      "default_value": "",
+      "valid_values": [],
+      "existing_element": "",
+      "description": "The name of the resource to attach to.",
+      "generated": false,
+      "style": "Reference Name",
+      "user_specified": true,
+      "unique": false,
+      "input_required": true,
+      "min_cardinality": 1,
+      "max_cardinality": 1,
+      "level": "Basic",
+      "Journal Entry": ""
+    },
     "Resource Name": {
       "variable_name": "resource_name",
       "inUpdate": true,
@@ -1956,6 +2013,25 @@
       "description": "Name of a resource.",
       "generated": false,
       "style": "Simple",
+      "user_specified": true,
+      "unique": false,
+      "input_required": false,
+      "min_cardinality": 0,
+      "max_cardinality": 1,
+      "level": "Basic",
+      "Journal Entry": ""
+    },
+    "Resource Properties": {
+      "variable_name": "resource_properties",
+      "inUpdate": true,
+      "attr_labels": "",
+      "examples": "",
+      "default_value": "",
+      "valid_values": [],
+      "existing_element": "",
+      "description": "A dictionary of name:value pairs describing properties of the resource use.",
+      "generated": false,
+      "style": "Dictionary",
       "user_specified": true,
       "unique": false,
       "input_required": false,
@@ -2444,6 +2520,16 @@
         "Entitlements",
         "Obligations",
         "Restrictions"
+      ]
+    },
+    "Resource List": {
+      "inherits": null,
+      "own_attributes": [
+        "\"Collection Id\"",
+        "\"Resource Description\"",
+        "\"Resource Id\"",
+        "\"Resource Properties\"",
+        "\"Resource Use\""
       ]
     },
     "Link Command Base": {
