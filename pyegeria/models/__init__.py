@@ -64,6 +64,9 @@ from pyegeria.models.models import (
     RelatedElement,
     AssociatedGlossaryItem,
     OpenMetadataRootElement,
+    OpenMetadataUserAccount,
+    UserAccountRequestBody,
+    ZoneHierarchy,
 )
 from pyegeria.core._exceptions import (
     PyegeriaException,
@@ -144,6 +147,9 @@ __all__ = [
     "RelatedElement",
     "AssociatedGlossaryItem",
     "OpenMetadataRootElement",
+    "OpenMetadataUserAccount",
+    "UserAccountRequestBody",
+    "ZoneHierarchy",
     # Exceptions
     "PyegeriaException",
     "PyegeriaConnectionException",

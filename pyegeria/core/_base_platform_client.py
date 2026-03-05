@@ -192,7 +192,7 @@ class BasePlatformClient:
         return
 
     async def _async_create_egeria_bearer_token(
-            self, user_id: str = None, password: str = None
+            self, user_id: str = None, password: str = None, new_password: str = None
     ) -> str:
         """Create and set an Egeria Platform Bearer Token for the user. Async version
         Parameters
@@ -201,6 +201,8 @@ class BasePlatformClient:
             The user id to authenticate with. If None, then user_id from class instance used.
         password : str, optional
             The password for the user. If None, then user_pwd from class instance is used.
+        new_password : str, optional
+            The new password to set for the user (password reset flow).
 
         Returns
         -------
@@ -229,6 +231,8 @@ class BasePlatformClient:
 
         url = f"{self.platform_url}/api/token"
         data = {"userId": user_id, "password": password}
+        if new_password:
+            data["newPassword"] = new_password
         async with AsyncClient(verify=enable_ssl_check) as client:
             try:
                 response = await client.post(url, json=data, headers=self.headers)
