@@ -183,7 +183,7 @@ class BaseServerClient:
         return
 
     async def _async_create_egeria_bearer_token(
-            self, user_id: str , password: str
+            self, user_id: str = None, password: str = None, new_password: str = None
     ) -> str:
         """Create and set an Egeria Server Bearer Token for the user. Async version
         Parameters
@@ -220,6 +220,8 @@ class BaseServerClient:
 
         url = f"{self.platform_url}/servers/{self.server_name}/api/token"
         data = {"userId": user_id, "password": password}
+        if new_password:
+            data["newPassword"] = new_password
         async with AsyncClient(verify=enable_ssl_check) as client:
             try:
                 response = await client.post(url, json=data, headers=self.headers)
@@ -238,7 +240,7 @@ class BaseServerClient:
             raise PyegeriaInvalidParameterException(None, None, additional_info)
 
     def create_egeria_bearer_token(
-            self, user_id: str = None, password: str = None
+            self, user_id: str = None, password: str = None, new_password: str = None
     ) -> str:
         """Create and set an Egeria Server Bearer Token for the user
         Parameters
@@ -270,7 +272,7 @@ class BaseServerClient:
         """
         loop = asyncio.get_event_loop()
         response = loop.run_until_complete(
-            self._async_create_egeria_bearer_token(user_id, password)
+            self._async_create_egeria_bearer_token(user_id, password, new_password)
         )
         return response
 
@@ -560,7 +562,7 @@ class BaseServerClient:
                     if related_http_code == 200:
                         return response
                     else:
-                        raise PyegeriaAPIException(response, context, additional_info=None)
+                        raise PyegeriaAPIException(response, context, additional_info=json_response)
 
                 else:  # Not JSON - Text?
                     return response

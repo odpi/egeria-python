@@ -299,6 +299,90 @@ class DeleteClassificationRequestBody(RequestBody):
     class_: Annotated[Literal["DeleteClassificationRequestBody"], Field(alias="class")]
 
 
+class OpenMetadataUserAccount(PyegeriaModel):
+    class_: Annotated[Literal["OpenMetadataUserAccount"], Field(alias="class")]
+    user_id: str
+    user_name: str | None = None
+    user_account_type: str | None = None
+    employee_number: str | None = None
+    employee_type: str | None = None
+    given_name: str | None = None
+    surname: str | None = None
+    email: str | None = None
+    manager: str | None = None
+    distinguished_name: str | None = None
+    security_roles: list[str] | None = None
+    security_groups: list[str] | None = None
+    zone_access: dict[str, list[str]] | None = None
+    other_properties: dict[str, str] | None = None
+    user_account_status: str | None = None
+    secrets: dict[str, str] | None = None
+
+
+class ConnectionProperties(ReferenceableProperties):
+    class_: Annotated[Literal["ConnectionProperties"], Field(alias="class")]
+    user_id: str | None = Field(default=None, alias="userId")
+    configuration_properties: dict | None = Field(default=None, alias="configurationProperties")
+
+
+class ConnectorTypeProperties(ReferenceableProperties):
+    class_: Annotated[Literal["ConnectorTypeProperties"], Field(alias="class")]
+    connector_provider_class_name: str | None = Field(default=None, alias="connectorProviderClassName")
+    supported_asset_type: str | None = Field(default=None, alias="supportedAssetType")
+    supported_deployed_implementation_type: str | None = Field(default=None, alias="supportedDeployedImplementationType")
+
+
+class EndpointProperties(ReferenceableProperties):
+    class_: Annotated[Literal["EndpointProperties"], Field(alias="class")]
+    network_address: str | None = Field(default=None, alias="networkAddress")
+    protocol: str | None = None
+    encryption_method: str | None = Field(default=None, alias="encryptionMethod")
+
+
+class ConnectionConnectorTypeProperties(PyegeriaModel):
+    class_: Annotated[Literal["ConnectionConnectorTypeProperties"], Field(alias="class")]
+    effective_from: datetime | None = None
+    effective_to: datetime | None = None
+
+
+class ConnectionEndpointProperties(PyegeriaModel):
+    class_: Annotated[Literal["ConnectionEndpointProperties"], Field(alias="class")]
+    effective_from: datetime | None = None
+    effective_to: datetime | None = None
+
+
+class EmbeddedConnectionProperties(PyegeriaModel):
+    class_: Annotated[Literal["EmbeddedConnectionProperties"], Field(alias="class")]
+    position: int | None = 0
+    display_name: str | None = None
+    arguments: dict | None = None
+    effective_from: datetime | None = None
+    effective_to: datetime | None = None
+
+
+class AssetConnectionProperties(PyegeriaModel):
+    class_: Annotated[Literal["AssetConnectionProperties"], Field(alias="class")]
+    effective_from: datetime | None = None
+    effective_to: datetime | None = None
+
+
+class ServerEndpointProperties(PyegeriaModel):
+    class_: Annotated[Literal["ServerEndpointProperties"], Field(alias="class")]
+    effective_from: datetime | None = None
+    effective_to: datetime | None = None
+
+
+class UserAccountRequestBody(PyegeriaModel):
+    class_: Annotated[Literal["UserAccountRequestBody"], Field(alias="class")]
+    user_account: OpenMetadataUserAccount
+
+
+class ZoneHierarchy(PyegeriaModel):
+    class_: Annotated[Literal["ZoneHierarchy"], Field(alias="class")]
+    effective_from: datetime | None = None
+    effective_to: datetime | None = None
+
+
 class InitialClassifications(PyegeriaModel):
     class_: str = Field(alias="class"),
     other_props: Dict[str, Any] | None = None

@@ -6773,7 +6773,7 @@ class ServerClient(BaseServerClient):
         validated_body = self.validate_new_element_request(body, prop)
         json_body = validated_body.model_dump_json(indent=2, exclude_none=True)
         logger.info(json_body)
-        response = await self._async_make_request("POST", url, json_body)
+        response = await self._async_make_request("POST", url, json_body, is_json=True)
         logger.info(response.json())
         return response.json().get("guid", "NO_GUID_RETURNED")
 
@@ -6795,7 +6795,7 @@ class ServerClient(BaseServerClient):
             validated_body = self.validate_update_element_request(body, prop)
             json_body = validated_body.model_dump_json(indent=2, exclude_none=True)
         logger.info(json_body)
-        response = await self._async_make_request("POST", url, json_body)
+        response = await self._async_make_request("POST", url, json_body, is_json=True)
         logger.info(response.json())
 
     # @dynamic_catch

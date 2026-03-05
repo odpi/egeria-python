@@ -13,6 +13,7 @@ from pyegeria.omvs.automated_curation import AutomatedCuration
 from pyegeria.omvs.classification_explorer import ClassificationExplorer
 from pyegeria.omvs.collection_manager import CollectionManager
 from pyegeria.omvs.community_matters_omvs import CommunityMatters
+from pyegeria.omvs.connection_maker import ConnectionMaker
 from pyegeria.omvs.data_designer import DataDesigner
 from pyegeria.omvs.data_discovery import DataDiscovery
 from pyegeria.omvs.data_engineer import DataEngineer
@@ -34,6 +35,7 @@ from pyegeria.omvs.reference_data import ReferenceDataManager
 from pyegeria.omvs.registered_info import RegisteredInfo
 from pyegeria.omvs.runtime_manager import RuntimeManager
 from pyegeria.omvs.schema_maker import SchemaMaker
+from pyegeria.omvs.security_officer import SecurityOfficer
 from pyegeria.omvs.solution_architect import SolutionArchitect
 from pyegeria.omvs.specification_properties import SpecificationProperties
 from pyegeria.omvs.subject_area import SubjectArea
@@ -109,11 +111,13 @@ class EgeriaTech:
             "external_references": ExternalReferences,
             "external_refs": ExternalReferences,
             "actor_manager": ActorManager,
+            "connection_maker": ConnectionMaker,
             "time_keeper": TimeKeeper,
             "product_manager": ProductManager,
             "location_arena": LocationArena,
             "data_discovery": DataDiscovery,
             "data_engineer": DataEngineer,
+            "security_officer": SecurityOfficer,
             "digital_business": DigitalBusiness,
             "lineage_linker": LineageLinker,
             "schema_maker": SchemaMaker,
@@ -175,11 +179,21 @@ class EgeriaTech:
             f"{self.__class__.__name__!s} object has no attribute {name!r}"
         )
 
-    def create_egeria_bearer_token(self, user_id: str = None, user_pwd: str = None):
+    async def _async_create_egeria_bearer_token(
+            self, user_id: str = None, password: str = None, new_password: str = None
+    ) -> str:
+        """Create token and synchronize it across all instantiated sub-clients (Async)."""
+        # Use a reliable sub-client to generate the token (e.g., collections)
+        helper = self._get_subclient("collections")
+        token_val = await helper._async_create_egeria_bearer_token(user_id, password, new_password)
+        self.set_bearer_token(token_val)
+        return token_val
+
+    def create_egeria_bearer_token(self, user_id: str = None, password: str = None, new_password: str = None) -> str:
         """Create token and synchronize it across all instantiated sub-clients."""
         # Use a reliable sub-client to generate the token (e.g., collections)
         helper = self._get_subclient("collections")
-        token_val = helper.create_egeria_bearer_token(user_id, user_pwd)
+        token_val = helper.create_egeria_bearer_token(user_id, password, new_password)
         self.set_bearer_token(token_val)
         return token_val
 
