@@ -88,4 +88,4 @@ def analyze_json(filepath):
     console.print(f"Total attributes: {total_attributes}")
 
 # Run analysis
-analyze_json("md_processing/data/commands.json")
+analyze_json("../md_processing/data/commands.json")
