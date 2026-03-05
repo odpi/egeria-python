@@ -59,11 +59,11 @@ class TestRuntimeManager:
         "display_name, qualified_name, parameter_name, guid, tech_type, expectation",
         [
             (
-                "integration-daemon",
+                "Local OMAG Server Platform",
                 None,
                 "displayName",
                 None,
-                "Integration Daemon",
+                "OMAG Server Platform",
                 does_not_raise(),
             ),
             (
