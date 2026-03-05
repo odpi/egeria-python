@@ -418,7 +418,7 @@ class MyProfile(AssetMaker):
         }
         ```
         """
-        url = f"{self.my_profile_command_root}"
+        url = f"{self.my_profile_command_root}/new"
         return await self._async_create_element_body_request(url, ["PersonProperties"], body)
 
     @dynamic_catch
