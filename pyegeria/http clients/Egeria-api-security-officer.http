@@ -1,7 +1,7 @@
 # Egeria-security-officer-api
 
 @baseURL=https://localhost:9443
-@viewServer=view-server
+@viewServer=qs-view-server
 
 ###
 # =====================================================================================================================
@@ -12,7 +12,7 @@ POST {{baseURL}}/api/token
 Content-Type: application/json
 
 {
-  "userId" : "peterprofile",
+  "userId" : "garygeeke",
   "password" : "secret"
 }
 
@@ -22,8 +22,8 @@ Content-Type: application/json
 # =====================================================================================================================
 # Set up new users in the user directory
 
-@platformGUID=add guid here
-@accountUserId=add userId here
+@platformGUID=78bdbb2a-e604-4cae-9264-b49f7f190097
+@accountUserId=freddiemercury
 
 
 ###
