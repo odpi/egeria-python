@@ -510,7 +510,7 @@ def add_default_upsert_attributes(attributes: list[dict]) -> list[dict]:
 
                 "min_cardinality": 1,
                 "max_cardinality": 1,
-                "level": "INVISIBLE",
+                "level": "Advanced",
 
             }
         },
@@ -523,7 +523,7 @@ def add_default_upsert_attributes(attributes: list[dict]) -> list[dict]:
                 "default_value": "",
                 "valid_values": "",
                 "existing_element": "",
-                "description": "Only valid if Product Status is set to OTHER. User defined & managed status values.",
+                "description": "Only valid if  Status is set to OTHER. User defined & managed status values.",
                 "generated": False,
                 "style": "Simple",
                 "user_specified": True,
@@ -531,7 +531,7 @@ def add_default_upsert_attributes(attributes: list[dict]) -> list[dict]:
                 "input_required": False,
                 "min_cardinality": 0,
                 "max_cardinality": 1,
-                "level": "Basic",
+                "level": "Advanced",
             }
         },
 
@@ -554,7 +554,7 @@ def add_default_upsert_attributes(attributes: list[dict]) -> list[dict]:
 
                 "min_cardinality": 0,
                 "max_cardinality": 1,
-                "level": "Basic",
+                "level": "Common",
 
             }
         },
@@ -581,29 +581,7 @@ def add_default_upsert_attributes(attributes: list[dict]) -> list[dict]:
 
             }
         },
-        {
-            "URL": {
-                "variable_name": "url",
-                "inUpdate": True,
-                "attr_labels": "",
-                "examples": "",
-                "default_value": "",
-                "valid_values": "",
-                "existing_element": "",
-                "description": "Link to supporting information",
-
-                "generated": False,
-                "style": "Simple",
-                "user_specified": True,
-                "unique": False,
-                "input_required": False,
-
-                "min_cardinality": 0,
-                "max_cardinality": 1,
-                "level": "Basic",
-
-            }
-        },
+        
         {
             "Identifier": {
                 "variable_name": "identifier",
@@ -802,7 +780,7 @@ def add_default_upsert_attributes(attributes: list[dict]) -> list[dict]:
 
                 "min_cardinality": 1,
                 "max_cardinality": 1,
-                "level": "Basic",
+                "level": "Common",
 
             }
         },
@@ -1024,7 +1002,7 @@ def add_default_upsert_attributes(attributes: list[dict]) -> list[dict]:
 
                 "min_cardinality": 0,
                 "max_cardinality": 1,
-                "level": "Basic",
+                "level": "Common",
 
             }
         },
