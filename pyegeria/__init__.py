@@ -108,6 +108,9 @@ from pyegeria.view.output_formatter import (
     resolve_output_formats,
     populate_common_columns,
 )
+from pyegeria.view.format_set_executor import (
+    exec_report_spec
+)
 
 # Combined Clients
 from pyegeria.egeria_client import Egeria
@@ -214,4 +217,5 @@ __all__ = [
     # Logging Utilities
     "config_logging",
     "init_logging",
+    "exec_report_spec",
 ]

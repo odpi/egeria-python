@@ -15,8 +15,8 @@ from pyegeria.core._globals import DEBUG_LEVEL
 
 # Constants
 EGERIA_WIDTH = int(os.environ.get("EGERIA_WIDTH", "200"))
-EGERIA_ROOT_PATH = os.environ.get("EGERIA_ROOT_PATH", ".")
-EGERIA_INBOX_PATH = os.environ.get("EGERIA_INBOX_PATH", ".")
+EGERIA_ROOT_PATH = os.environ.get("EGERIA_ROOT_PATH", "../../md_processing/md_processing_utils")
+EGERIA_INBOX_PATH = os.environ.get("EGERIA_INBOX_PATH", "../../md_processing/md_processing_utils")
 
 console = Console(width=EGERIA_WIDTH)
 
@@ -32,7 +32,7 @@ logger.add(sys.stderr, level="INFO", format=log_format, colorize=True)
 full_file_path = os.path.join(EGERIA_ROOT_PATH, EGERIA_INBOX_PATH, "data_designer_debug.log")
 # logger.add(full_file_path, rotation="1 day", retention="1 week", compression="zip", level="TRACE", format=log_format,
 #            colorize=True)
-logger.add("debug_log", rotation="1 day", retention="1 week", compression="zip", level="TRACE", format=log_format,
+logger.add("../../md_processing/md_processing_utils/debug_log", rotation="1 day", retention="1 week", compression="zip", level="TRACE", format=log_format,
            colorize=True)
 @logger.catch
 def main():
