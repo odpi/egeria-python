@@ -20,20 +20,9 @@ from typing import Any, Dict, Optional
 
 from loguru import logger
 
-from pyegeria.omvs.classification_explorer import ClassificationExplorer
-from pyegeria.omvs.actor_manager import ActorManager
-from pyegeria.omvs.data_designer import DataDesigner
-from pyegeria.omvs.my_profile import MyProfile
-from pyegeria.omvs.project_manager import ProjectManager
-from pyegeria.omvs.solution_architect import SolutionArchitect
-from pyegeria.omvs.reference_data import ReferenceDataManager
-from pyegeria.egeria_tech_client import EgeriaTech
-from pyegeria.omvs.collection_manager import CollectionManager
-from pyegeria.omvs.governance_officer import GovernanceOfficer
-from pyegeria.omvs.glossary_manager import GlossaryManager
+import importlib
 from pyegeria.core._globals import NO_ELEMENTS_FOUND
 from pyegeria.core.config import settings
-from pyegeria.omvs.external_links import ExternalReferences
 from pyegeria.core._exceptions import PyegeriaException
 from pyegeria.view.base_report_formats import (
     select_report_spec,
@@ -41,33 +30,44 @@ from pyegeria.view.base_report_formats import (
     get_report_spec_description,
     get_report_registry,
 )
-from pyegeria.omvs.valid_metadata import ValidMetadataManager
 from pyegeria.view.output_formatter import generate_output
 
 
 _CLIENT_CLASS_MAP = {
-    "CollectionManager": CollectionManager,
-    "GovernanceOfficer": GovernanceOfficer,
-    "GlossaryManager": GlossaryManager,
-    "ExternalReference": ExternalReferences,
-    "ClassificationExplorer": ClassificationExplorer,
-    "ActorManager": ActorManager,
-    "ValidMetadataManager": ValidMetadataManager,
-    "DataDesigner": DataDesigner,
-    "MyProfile": MyProfile,
-    "ProjectManager": ProjectManager,
-    "SolutionArchitect": SolutionArchitect,
-    "ReferenceDataManager": ReferenceDataManager,
-    "reference_data": ReferenceDataManager,
+    "CollectionManager": "pyegeria.omvs.collection_manager.CollectionManager",
+    "GovernanceOfficer": "pyegeria.omvs.governance_officer.GovernanceOfficer",
+    "GlossaryManager": "pyegeria.omvs.glossary_manager.GlossaryManager",
+    "ExternalReference": "pyegeria.omvs.external_links.ExternalReferences",
+    "ClassificationExplorer": "pyegeria.omvs.classification_explorer.ClassificationExplorer",
+    "ActorManager": "pyegeria.omvs.actor_manager.ActorManager",
+    "ValidMetadataManager": "pyegeria.omvs.valid_metadata.ValidMetadataManager",
+    "DataDesigner": "pyegeria.omvs.data_designer.DataDesigner",
+    "MyProfile": "pyegeria.omvs.my_profile.MyProfile",
+    "ProjectManager": "pyegeria.omvs.project_manager.ProjectManager",
+    "SolutionArchitect": "pyegeria.omvs.solution_architect.SolutionArchitect",
+    "ReferenceDataManager": "pyegeria.omvs.reference_data.ReferenceDataManager",
+    "reference_data": "pyegeria.omvs.reference_data.ReferenceDataManager",
 }
 
 
 def _resolve_client_and_method(func_decl: str):
     """Given a function declaration like 'ClassName.method', return (client_class, method_name)."""
+    # Lazy import EgeriaTech to avoid circular dependency
+    from pyegeria.egeria_tech_client import EgeriaTech
+
     if not isinstance(func_decl, str) or "." not in func_decl:
         return (EgeriaTech, None)
     class_name, method_name = func_decl.split(".", 1)
-    client_class = _CLIENT_CLASS_MAP.get(class_name, EgeriaTech)
+    
+    path = _CLIENT_CLASS_MAP.get(class_name)
+    if path and isinstance(path, str):
+        # Lazy import
+        module_path, attr_name = path.rsplit(".", 1)
+        module = importlib.import_module(module_path)
+        client_class = getattr(module, attr_name)
+    else:
+        client_class = EgeriaTech
+        
     return (client_class, method_name)
 
 
