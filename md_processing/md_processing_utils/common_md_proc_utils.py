@@ -47,6 +47,21 @@ _force_rich = os.environ.get("EGERIA_RICH_FORCE", "false").strip().lower() in {"
 console = Console(width=EGERIA_WIDTH, force_terminal=_force_rich, color_system="truecolor" if _force_rich else None)
 PARSE_SUMMARY_MODE = os.environ.get("EGERIA_PARSE_SUMMARY_MODE", "none").lower()
 
+# Ordered visibility: Common > Domain > Basic > Advanced > Expert > Invisible
+# EGERIA_USAGE_LEVEL controls the ceiling; attrs at or below that ceiling are shown.
+
+LEVEL_ORDER = ["Common", "Domain", "Basic", "Advanced", "Expert", "Invisible"]
+
+def _level_visible(attr_level: str, usage_level: str) -> bool:
+    """Return True if attr_level should be shown at the given usage_level."""
+    attr_level = attr_level or "Basic"
+    # Invisible is never shown
+    if attr_level == "Invisible":
+        return False
+    try:
+        return LEVEL_ORDER.index(attr_level) <= LEVEL_ORDER.index(usage_level)
+    except ValueError:
+        return True  # unknown level — show it rather than hide it
 
 def set_parse_summary_mode(mode: str) -> None:
     """Sets when to print parse summaries: all, errors, or none."""
@@ -261,13 +276,7 @@ def parse_upsert_command(egeria_client: EgeriaTech, object_type: str, object_act
                 if for_update is False and object_action == "Update":
                     summary["optional_skipped"] += 1
                     continue
-                if EGERIA_USAGE_LEVEL == "Basic" and level != "Basic":
-                    summary["optional_skipped"] += 1
-                    continue
-                if EGERIA_USAGE_LEVEL == "Advanced" and level in ["Expert", "Invisible"]:
-                    summary["optional_skipped"] += 1
-                    continue
-                if EGERIA_USAGE_LEVEL == "Expert" and level == "Invisible":
+                if not _level_visible(level, EGERIA_USAGE_LEVEL):
                     summary["optional_skipped"] += 1
                     continue
 
@@ -583,13 +592,7 @@ def parse_view_command(egeria_client: EgeriaTech, object_type: str, object_actio
                    f"\n\twith usage level: `{EGERIA_USAGE_LEVEL}` ")
             logger.trace(msg)
 
-            if EGERIA_USAGE_LEVEL == "Basic" and level != "Basic":
-                summary["optional_skipped"] += 1
-                continue
-            if EGERIA_USAGE_LEVEL == "Advanced" and level in ["Expert", "Invisible"]:
-                summary["optional_skipped"] += 1
-                continue
-            if EGERIA_USAGE_LEVEL == "Expert" and level == "Invisible":
+            if not _level_visible(level, EGERIA_USAGE_LEVEL):
                 summary["optional_skipped"] += 1
                 continue
 
