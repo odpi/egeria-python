@@ -1,0 +1,24 @@
+[
+  {
+    "Display Name": "PostgreSQL Relational Database",
+    "Qualified Name": "Egeria:ValidMetadataValue:RelationalDatabase:deployedImplementationType-(PostgreSQL Relational Database)",
+    "GUID": "ff56fc56-c4a1-469e-8040-472e8fe54694",
+    "Description": "A database hosted on a PostgreSQL server.",
+    "Catalog Templates": [
+      {
+        "Catalog Template Name": "~{databaseName}~",
+        "Description": "~{databaseDescription}~",
+        "Placeholder Properties": [
+          {
+            "Property Name": "databaseName",
+            "Description": "Name of the database",
+            "Data Type": "string",
+            "Example": "my_db",
+            "Required": true
+          }
+        ]
+      }
+    ],
+    "Governance Processes": []
+  }
+]

@@ -3,8 +3,8 @@ import os
 import re
 
 # Configuration
-INPUT_FILE = "md_processing/data/commands.json"
-OUTPUT_DIR = "md_processing/data/commands"
+INPUT_FILE = "../md_processing/data/commands.json"
+OUTPUT_DIR = "../md_processing/data/commands"
 
 FAMILY_MAP = {
     "Data Designer": "commands_data_designer.json",

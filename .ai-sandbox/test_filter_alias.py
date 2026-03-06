@@ -2,7 +2,7 @@
 """Test that FilterRequestBody model works correctly with alias"""
 
 import sys
-sys.path.insert(0, '.')
+sys.path.insert(0, '..')
 
 from pydantic import Field, ValidationError
 from typing import Annotated, Literal

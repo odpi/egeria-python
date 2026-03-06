@@ -277,7 +277,7 @@ def main():
     args = parser.parse_args()
     
     # Find all OMVS module files
-    omvs_dir = Path('pyegeria/omvs')
+    omvs_dir = Path('../pyegeria/omvs')
     
     if args.file:
         files = [Path(args.file)]
