@@ -1,6 +1,6 @@
 {
   "family": "Governance Officer",
-  "exported": "Mar 3, 2026 at 11:38:57 AM",
+  "exported": "Mar 5, 2026 at 10:29:32 AM",
   "attribute_definitions": {
     "Access Control": {
       "variable_name": "access_control",
@@ -680,7 +680,7 @@
       "inUpdate": true,
       "attr_labels": "",
       "examples": "",
-      "default_value": "0",
+      "default_value": "ALL",
       "valid_values": [
         "ALL",
         "DATA",

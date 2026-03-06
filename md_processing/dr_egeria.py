@@ -43,6 +43,8 @@ EGERIA_ROOT_PATH = os.environ.get("EGERIA_ROOT_PATH", app_config.pyegeria_root o
 EGERIA_INBOX_PATH = os.environ.get("EGERIA_INBOX_PATH", app_config.dr_egeria_inbox)
 EGERIA_OUTBOX_PATH = os.environ.get("EGERIA_OUTBOX_PATH", app_config.dr_egeria_outbox)
 
+print(f"EGERIA_ROOT_PATH: {EGERIA_ROOT_PATH}  EGERIA_INBOX_PATH: {EGERIA_INBOX_PATH}  EGERIA_OUTBOX_PATH: {EGERIA_OUTBOX_PATH}")
+
 # User credentials and admin credentials are only from environment variables (not stored in config for security)
 EGERIA_ADMIN_USER = os.environ.get("ADMIN_USER", "garygeeke")
 EGERIA_ADMIN_PASSWORD = os.environ.get("ADMIN_PASSWORD", "secret")
