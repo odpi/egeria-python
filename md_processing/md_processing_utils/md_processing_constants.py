@@ -490,6 +490,11 @@ def get_attribute_labels(command: str, attrib_name: str) -> list | None:
 
 def add_default_upsert_attributes(attributes: list[dict]) -> list[dict]:
     new_attributes = attributes
+    # Track existing attribute names to avoid duplicates
+    existing_keys = set()
+    for attr in attributes:
+        existing_keys.update(attr.keys())
+
     default_upsert_attributes = [
         {
             "Status": {
@@ -1093,12 +1098,35 @@ def add_default_upsert_attributes(attributes: list[dict]) -> list[dict]:
             }
         },
     ]
-    new_attributes.extend(default_upsert_attributes)
+
+    for default_attr in default_upsert_attributes:
+        # Each default_attr is a dict with one key, the attribute name
+        for attr_name, default_vals in default_attr.items():
+            if attr_name in existing_keys:
+                # Find the existing attr and update its values IF they are empty or missing
+                for attr_dict in attributes:
+                    if attr_name in attr_dict:
+                        existing_vals = attr_dict[attr_name]
+                        for k, v in default_vals.items():
+                            # If existing value is missing, empty string, or empty list, use default
+                            if k not in existing_vals or existing_vals[k] == "" or existing_vals[k] == []:
+                                if v != "" and v != []:
+                                    existing_vals[k] = v
+                        break
+            else:
+                new_attributes.append(default_attr)
+                existing_keys.add(attr_name)
+
     return new_attributes
 
 
 def add_default_link_attributes(attributes: list[dict]) -> list[dict]:
     new_attributes = attributes
+    # Track existing attribute names to avoid duplicates
+    existing_keys = set()
+    for attr in attributes:
+        existing_keys.update(attr.keys())
+
     default_link_attributes = [
         {
             "Effective Time": {
@@ -1194,5 +1222,23 @@ def add_default_link_attributes(attributes: list[dict]) -> list[dict]:
         }
 
     ]
-    new_attributes.extend(default_link_attributes)
+
+    for default_attr in default_link_attributes:
+        # Each default_attr is a dict with one key, the attribute name
+        for attr_name, default_vals in default_attr.items():
+            if attr_name in existing_keys:
+                # Find the existing attr and update its values IF they are empty or missing
+                for attr_dict in attributes:
+                    if attr_name in attr_dict:
+                        existing_vals = attr_dict[attr_name]
+                        for k, v in default_vals.items():
+                            # If existing value is missing, empty string, or empty list, use default
+                            if k not in existing_vals or existing_vals[k] == "" or existing_vals[k] == []:
+                                if v != "" and v != []:
+                                    existing_vals[k] = v
+                        break
+            else:
+                new_attributes.append(default_attr)
+                existing_keys.add(attr_name)
+
     return new_attributes
