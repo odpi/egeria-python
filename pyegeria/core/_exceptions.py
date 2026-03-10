@@ -284,7 +284,9 @@ class PyegeriaAPIException(PyegeriaException):
             for key, value in related_response.items():
                 msg += f"\t\t* {key} = {format_dict_to_string(value)}\n"
 
-        logger.info(msg, ip=self.response_url, http_code=self.response_code, pyegeria_code=self.pyegeria_code)
+        # Escape braces to prevent loguru from trying to format the message using keyword arguments
+        escaped_msg = msg.replace("{", "{{").replace("}", "}}")
+        logger.info(escaped_msg, ip=self.response_url, http_code=self.response_code, pyegeria_code=self.pyegeria_code)
 
 
 

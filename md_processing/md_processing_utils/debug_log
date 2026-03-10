@@ -1,115 +1,122 @@
-D 2026-03-05T09:05:02.082094-0600 | INFO | main | 135 | Saved command documentation to /Users/dwolfson/localGit/egeria-python/md_processing/md_processing_utils/../family_docs/Data Designer/Create_Data_Class.md | {}
-D 2026-03-05T09:05:02.119206-0600 | INFO | main | 135 | Saved command documentation to /Users/dwolfson/localGit/egeria-python/md_processing/md_processing_utils/../family_docs/Data Designer/Create_Data_Dictionary.md | {}
-D 2026-03-05T09:05:02.158120-0600 | INFO | main | 135 | Saved command documentation to /Users/dwolfson/localGit/egeria-python/md_processing/md_processing_utils/../family_docs/Data Designer/Create_Data_Field.md | {}
-D 2026-03-05T09:05:02.193585-0600 | INFO | main | 135 | Saved command documentation to /Users/dwolfson/localGit/egeria-python/md_processing/md_processing_utils/../family_docs/Data Designer/Create_Data_Grain.md | {}
-D 2026-03-05T09:05:02.224002-0600 | INFO | main | 135 | Saved command documentation to /Users/dwolfson/localGit/egeria-python/md_processing/md_processing_utils/../family_docs/Data Designer/Create_Data_Specification.md | {}
-D 2026-03-05T09:05:02.257269-0600 | INFO | main | 135 | Saved command documentation to /Users/dwolfson/localGit/egeria-python/md_processing/md_processing_utils/../family_docs/Data Designer/Create_Data_Structure.md | {}
-D 2026-03-05T09:05:02.261185-0600 | INFO | main | 135 | Saved command documentation to /Users/dwolfson/localGit/egeria-python/md_processing/md_processing_utils/../family_docs/Data Designer/Link_Data_Field.md | {}
-D 2026-03-05T09:05:02.264015-0600 | INFO | main | 135 | Saved command documentation to /Users/dwolfson/localGit/egeria-python/md_processing/md_processing_utils/../family_docs/Digital Product Manager/Add_Member_to_Collection.md | {}
-D 2026-03-05T09:05:02.270030-0600 | INFO | main | 135 | Saved command documentation to /Users/dwolfson/localGit/egeria-python/md_processing/md_processing_utils/../family_docs/Digital Product Manager/Add_Member->Collection.md | {}
-D 2026-03-05T09:05:02.272667-0600 | INFO | main | 135 | Saved command documentation to /Users/dwolfson/localGit/egeria-python/md_processing/md_processing_utils/../family_docs/Digital Product Manager/Attach_Collection_to_Resource.md | {}
-D 2026-03-05T09:05:02.284129-0600 | INFO | main | 135 | Saved command documentation to /Users/dwolfson/localGit/egeria-python/md_processing/md_processing_utils/../family_docs/Digital Product Manager/Create_Agreement.md | {}
-D 2026-03-05T09:05:02.297146-0600 | INFO | main | 135 | Saved command documentation to /Users/dwolfson/localGit/egeria-python/md_processing/md_processing_utils/../family_docs/Digital Product Manager/Create_CSV_File.md | {}
-D 2026-03-05T09:05:02.327154-0600 | INFO | main | 135 | Saved command documentation to /Users/dwolfson/localGit/egeria-python/md_processing/md_processing_utils/../family_docs/Digital Product Manager/Create_Collection.md | {}
-D 2026-03-05T09:05:02.357071-0600 | INFO | main | 135 | Saved command documentation to /Users/dwolfson/localGit/egeria-python/md_processing/md_processing_utils/../family_docs/Digital Product Manager/Create_Collection_Folder.md | {}
-D 2026-03-05T09:05:02.368631-0600 | INFO | main | 135 | Saved command documentation to /Users/dwolfson/localGit/egeria-python/md_processing/md_processing_utils/../family_docs/Digital Product Manager/Create_Data_Sharing_Agreement.md | {}
-D 2026-03-05T09:05:02.381772-0600 | INFO | main | 135 | Saved command documentation to /Users/dwolfson/localGit/egeria-python/md_processing/md_processing_utils/../family_docs/Digital Product Manager/Create_Digital_Product.md | {}
-D 2026-03-05T09:05:02.412869-0600 | INFO | main | 135 | Saved command documentation to /Users/dwolfson/localGit/egeria-python/md_processing/md_processing_utils/../family_docs/Digital Product Manager/Create_Digital_Product_Catalog.md | {}
-D 2026-03-05T09:05:02.424956-0600 | INFO | main | 135 | Saved command documentation to /Users/dwolfson/localGit/egeria-python/md_processing/md_processing_utils/../family_docs/Digital Product Manager/Create_Digital_Subscription.md | {}
-D 2026-03-05T09:05:02.455255-0600 | INFO | main | 135 | Saved command documentation to /Users/dwolfson/localGit/egeria-python/md_processing/md_processing_utils/../family_docs/Digital Product Manager/Create_Home_Collection.md | {}
-D 2026-03-05T09:05:02.484781-0600 | INFO | main | 135 | Saved command documentation to /Users/dwolfson/localGit/egeria-python/md_processing/md_processing_utils/../family_docs/Digital Product Manager/Create_Namespace.md | {}
-D 2026-03-05T09:05:02.516554-0600 | INFO | main | 135 | Saved command documentation to /Users/dwolfson/localGit/egeria-python/md_processing/md_processing_utils/../family_docs/Digital Product Manager/Create_Recent_Access.md | {}
-D 2026-03-05T09:05:02.547340-0600 | INFO | main | 135 | Saved command documentation to /Users/dwolfson/localGit/egeria-python/md_processing/md_processing_utils/../family_docs/Digital Product Manager/Create_Results_Set.md | {}
-D 2026-03-05T09:05:02.578209-0600 | INFO | main | 135 | Saved command documentation to /Users/dwolfson/localGit/egeria-python/md_processing/md_processing_utils/../family_docs/Digital Product Manager/Create_Root_Collection.md | {}
-D 2026-03-05T09:05:02.608576-0600 | INFO | main | 135 | Saved command documentation to /Users/dwolfson/localGit/egeria-python/md_processing/md_processing_utils/../family_docs/Digital Product Manager/Create_Work_Item_List.md | {}
-D 2026-03-05T09:05:02.611753-0600 | INFO | main | 135 | Saved command documentation to /Users/dwolfson/localGit/egeria-python/md_processing/md_processing_utils/../family_docs/Digital Product Manager/Link_Agreement_Actor.md | {}
-D 2026-03-05T09:05:02.616347-0600 | INFO | main | 135 | Saved command documentation to /Users/dwolfson/localGit/egeria-python/md_processing/md_processing_utils/../family_docs/Digital Product Manager/Link_Agreement_Item.md | {}
-D 2026-03-05T09:05:02.622613-0600 | INFO | main | 135 | Saved command documentation to /Users/dwolfson/localGit/egeria-python/md_processing/md_processing_utils/../family_docs/Digital Product Manager/Link_Agreement->Item.md | {}
-D 2026-03-05T09:05:02.629431-0600 | INFO | main | 135 | Saved command documentation to /Users/dwolfson/localGit/egeria-python/md_processing/md_processing_utils/../family_docs/Digital Product Manager/Link_Agreement->T&C.md | {}
-D 2026-03-05T09:05:02.633681-0600 | INFO | main | 135 | Saved command documentation to /Users/dwolfson/localGit/egeria-python/md_processing/md_processing_utils/../family_docs/Digital Product Manager/Link_Collection->Resource.md | {}
-D 2026-03-05T09:05:02.636714-0600 | INFO | main | 135 | Saved command documentation to /Users/dwolfson/localGit/egeria-python/md_processing/md_processing_utils/../family_docs/Digital Product Manager/Link_Contracts.md | {}
-D 2026-03-05T09:05:02.639959-0600 | INFO | main | 135 | Saved command documentation to /Users/dwolfson/localGit/egeria-python/md_processing/md_processing_utils/../family_docs/Digital Product Manager/Link_Digital_Subscriber.md | {}
-D 2026-03-05T09:05:02.643769-0600 | INFO | main | 135 | Saved command documentation to /Users/dwolfson/localGit/egeria-python/md_processing/md_processing_utils/../family_docs/Digital Product Manager/Link_Product_Dependency.md | {}
-D 2026-03-05T09:05:02.646964-0600 | INFO | main | 135 | Saved command documentation to /Users/dwolfson/localGit/egeria-python/md_processing/md_processing_utils/../family_docs/Digital Product Manager/Link_Product-Product.md | {}
-D 2026-03-05T09:05:02.649725-0600 | INFO | main | 135 | Saved command documentation to /Users/dwolfson/localGit/egeria-python/md_processing/md_processing_utils/../family_docs/Digital Product Manager/Link_Subscriber->Subscription.md | {}
-D 2026-03-05T09:05:02.680758-0600 | INFO | main | 135 | Saved command documentation to /Users/dwolfson/localGit/egeria-python/md_processing/md_processing_utils/../family_docs/Digital Product Manager/Reference_List.md | {}
-D 2026-03-05T09:05:02.715273-0600 | INFO | main | 135 | Saved command documentation to /Users/dwolfson/localGit/egeria-python/md_processing/md_processing_utils/../family_docs/External Reference/Create_Cited_Document.md | {}
-D 2026-03-05T09:05:02.749143-0600 | INFO | main | 135 | Saved command documentation to /Users/dwolfson/localGit/egeria-python/md_processing/md_processing_utils/../family_docs/External Reference/Create_External_Data_Source.md | {}
-D 2026-03-05T09:05:02.782157-0600 | INFO | main | 135 | Saved command documentation to /Users/dwolfson/localGit/egeria-python/md_processing/md_processing_utils/../family_docs/External Reference/Create_External_Model_Source.md | {}
-D 2026-03-05T09:05:02.815932-0600 | INFO | main | 135 | Saved command documentation to /Users/dwolfson/localGit/egeria-python/md_processing/md_processing_utils/../family_docs/External Reference/Create_External_Reference.md | {}
-D 2026-03-05T09:05:02.850665-0600 | INFO | main | 135 | Saved command documentation to /Users/dwolfson/localGit/egeria-python/md_processing/md_processing_utils/../family_docs/External Reference/Create_External_Source_Code.md | {}
-D 2026-03-05T09:05:02.882934-0600 | INFO | main | 135 | Saved command documentation to /Users/dwolfson/localGit/egeria-python/md_processing/md_processing_utils/../family_docs/External Reference/Create_Related_Media.md | {}
-D 2026-03-05T09:05:02.888241-0600 | INFO | main | 135 | Saved command documentation to /Users/dwolfson/localGit/egeria-python/md_processing/md_processing_utils/../family_docs/External Reference/Link_Cited_Document.md | {}
-D 2026-03-05T09:05:02.892039-0600 | INFO | main | 135 | Saved command documentation to /Users/dwolfson/localGit/egeria-python/md_processing/md_processing_utils/../family_docs/External Reference/Link_Cited_Document_Link.md | {}
-D 2026-03-05T09:05:02.895967-0600 | INFO | main | 135 | Saved command documentation to /Users/dwolfson/localGit/egeria-python/md_processing/md_processing_utils/../family_docs/External Reference/Link_External_Reference.md | {}
-D 2026-03-05T09:05:02.899072-0600 | INFO | main | 135 | Saved command documentation to /Users/dwolfson/localGit/egeria-python/md_processing/md_processing_utils/../family_docs/External Reference/Link_External_Reference_Link.md | {}
-D 2026-03-05T09:05:02.904118-0600 | INFO | main | 135 | Saved command documentation to /Users/dwolfson/localGit/egeria-python/md_processing/md_processing_utils/../family_docs/External Reference/Link_Media_Reference.md | {}
-D 2026-03-05T09:05:02.908318-0600 | INFO | main | 135 | Saved command documentation to /Users/dwolfson/localGit/egeria-python/md_processing/md_processing_utils/../family_docs/External Reference/Link_Media_Reference_Link.md | {}
-D 2026-03-05T09:05:02.921861-0600 | INFO | main | 135 | Saved command documentation to /Users/dwolfson/localGit/egeria-python/md_processing/md_processing_utils/../family_docs/Feedback Manager/Create_Comment.md | {}
-D 2026-03-05T09:05:02.933356-0600 | INFO | main | 135 | Saved command documentation to /Users/dwolfson/localGit/egeria-python/md_processing/md_processing_utils/../family_docs/Feedback Manager/Create_Informal_Tag.md | {}
-D 2026-03-05T09:05:02.946345-0600 | INFO | main | 135 | Saved command documentation to /Users/dwolfson/localGit/egeria-python/md_processing/md_processing_utils/../family_docs/Feedback Manager/Create_Journal_Entry.md | {}
-D 2026-03-05T09:05:02.948928-0600 | INFO | main | 135 | Saved command documentation to /Users/dwolfson/localGit/egeria-python/md_processing/md_processing_utils/../family_docs/Feedback Manager/Link_Tag->Element.md | {}
-D 2026-03-05T09:05:02.959666-0600 | INFO | main | 135 | Saved command documentation to /Users/dwolfson/localGit/egeria-python/md_processing/md_processing_utils/../family_docs/General/View_Report.md | {}
-D 2026-03-05T09:05:02.972112-0600 | INFO | main | 135 | Saved command documentation to /Users/dwolfson/localGit/egeria-python/md_processing/md_processing_utils/../family_docs/Glossary/Create_Glossary.md | {}
-D 2026-03-05T09:05:02.985690-0600 | INFO | main | 135 | Saved command documentation to /Users/dwolfson/localGit/egeria-python/md_processing/md_processing_utils/../family_docs/Glossary/Create_Glossary_Term.md | {}
-D 2026-03-05T09:05:02.990575-0600 | INFO | main | 135 | Saved command documentation to /Users/dwolfson/localGit/egeria-python/md_processing/md_processing_utils/../family_docs/Glossary/Link_Term-Term_Relationship.md | {}
-D 2026-03-05T09:05:03.022887-0600 | INFO | main | 135 | Saved command documentation to /Users/dwolfson/localGit/egeria-python/md_processing/md_processing_utils/../family_docs/Governance Officer/Create_Business_Imperative.md | {}
-D 2026-03-05T09:05:03.058355-0600 | INFO | main | 135 | Saved command documentation to /Users/dwolfson/localGit/egeria-python/md_processing/md_processing_utils/../family_docs/Governance Officer/Create_Certification_Type.md | {}
-D 2026-03-05T09:05:03.096940-0600 | INFO | main | 135 | Saved command documentation to /Users/dwolfson/localGit/egeria-python/md_processing/md_processing_utils/../family_docs/Governance Officer/Create_Data_Lens.md | {}
-D 2026-03-05T09:05:03.132425-0600 | INFO | main | 135 | Saved command documentation to /Users/dwolfson/localGit/egeria-python/md_processing/md_processing_utils/../family_docs/Governance Officer/Create_Data_Processing_Purpose.md | {}
-D 2026-03-05T09:05:03.166906-0600 | INFO | main | 135 | Saved command documentation to /Users/dwolfson/localGit/egeria-python/md_processing/md_processing_utils/../family_docs/Governance Officer/Create_Governance_Action.md | {}
-D 2026-03-05T09:05:03.201754-0600 | INFO | main | 135 | Saved command documentation to /Users/dwolfson/localGit/egeria-python/md_processing/md_processing_utils/../family_docs/Governance Officer/Create_Governance_Approach.md | {}
-D 2026-03-05T09:05:03.236116-0600 | INFO | main | 135 | Saved command documentation to /Users/dwolfson/localGit/egeria-python/md_processing/md_processing_utils/../family_docs/Governance Officer/Create_Governance_Control.md | {}
-D 2026-03-05T09:05:03.269752-0600 | INFO | main | 135 | Saved command documentation to /Users/dwolfson/localGit/egeria-python/md_processing/md_processing_utils/../family_docs/Governance Officer/Create_Governance_Definition.md | {}
-D 2026-03-05T09:05:03.303703-0600 | INFO | main | 135 | Saved command documentation to /Users/dwolfson/localGit/egeria-python/md_processing/md_processing_utils/../family_docs/Governance Officer/Create_Governance_Driver.md | {}
-D 2026-03-05T09:05:03.336865-0600 | INFO | main | 135 | Saved command documentation to /Users/dwolfson/localGit/egeria-python/md_processing/md_processing_utils/../family_docs/Governance Officer/Create_Governance_Metric.md | {}
-D 2026-03-05T09:05:03.371007-0600 | INFO | main | 135 | Saved command documentation to /Users/dwolfson/localGit/egeria-python/md_processing/md_processing_utils/../family_docs/Governance Officer/Create_Governance_Obligation.md | {}
-D 2026-03-05T09:05:03.404427-0600 | INFO | main | 135 | Saved command documentation to /Users/dwolfson/localGit/egeria-python/md_processing/md_processing_utils/../family_docs/Governance Officer/Create_Governance_Policy.md | {}
-D 2026-03-05T09:05:03.437006-0600 | INFO | main | 135 | Saved command documentation to /Users/dwolfson/localGit/egeria-python/md_processing/md_processing_utils/../family_docs/Governance Officer/Create_Governance_Principle.md | {}
-D 2026-03-05T09:05:03.472113-0600 | INFO | main | 135 | Saved command documentation to /Users/dwolfson/localGit/egeria-python/md_processing/md_processing_utils/../family_docs/Governance Officer/Create_Governance_Procedure.md | {}
-D 2026-03-05T09:05:03.505929-0600 | INFO | main | 135 | Saved command documentation to /Users/dwolfson/localGit/egeria-python/md_processing/md_processing_utils/../family_docs/Governance Officer/Create_Governance_Responsibility.md | {}
-D 2026-03-05T09:05:03.539528-0600 | INFO | main | 135 | Saved command documentation to /Users/dwolfson/localGit/egeria-python/md_processing/md_processing_utils/../family_docs/Governance Officer/Create_Governance_Rule.md | {}
-D 2026-03-05T09:05:03.574143-0600 | INFO | main | 135 | Saved command documentation to /Users/dwolfson/localGit/egeria-python/md_processing/md_processing_utils/../family_docs/Governance Officer/Create_Governance_Strategy.md | {}
-D 2026-03-05T09:05:03.609205-0600 | INFO | main | 135 | Saved command documentation to /Users/dwolfson/localGit/egeria-python/md_processing/md_processing_utils/../family_docs/Governance Officer/Create_Governance_Zone.md | {}
-D 2026-03-05T09:05:03.643504-0600 | INFO | main | 135 | Saved command documentation to /Users/dwolfson/localGit/egeria-python/md_processing/md_processing_utils/../family_docs/Governance Officer/Create_License_Type.md | {}
-D 2026-03-05T09:05:03.677708-0600 | INFO | main | 135 | Saved command documentation to /Users/dwolfson/localGit/egeria-python/md_processing/md_processing_utils/../family_docs/Governance Officer/Create_Methodology.md | {}
-D 2026-03-05T09:05:03.711829-0600 | INFO | main | 135 | Saved command documentation to /Users/dwolfson/localGit/egeria-python/md_processing/md_processing_utils/../family_docs/Governance Officer/Create_Naming_Standard_Rule.md | {}
-D 2026-03-05T09:05:03.747711-0600 | INFO | main | 135 | Saved command documentation to /Users/dwolfson/localGit/egeria-python/md_processing/md_processing_utils/../family_docs/Governance Officer/Create_Notification_Type.md | {}
-D 2026-03-05T09:05:03.783005-0600 | INFO | main | 135 | Saved command documentation to /Users/dwolfson/localGit/egeria-python/md_processing/md_processing_utils/../family_docs/Governance Officer/Create_Regulation.md | {}
-D 2026-03-05T09:05:03.817135-0600 | INFO | main | 135 | Saved command documentation to /Users/dwolfson/localGit/egeria-python/md_processing/md_processing_utils/../family_docs/Governance Officer/Create_Regulation_Article.md | {}
-D 2026-03-05T09:05:03.851508-0600 | INFO | main | 135 | Saved command documentation to /Users/dwolfson/localGit/egeria-python/md_processing/md_processing_utils/../family_docs/Governance Officer/Create_Security_Access_Control.md | {}
-D 2026-03-05T09:05:03.885298-0600 | INFO | main | 135 | Saved command documentation to /Users/dwolfson/localGit/egeria-python/md_processing/md_processing_utils/../family_docs/Governance Officer/Create_Security_Group.md | {}
-D 2026-03-05T09:05:03.920186-0600 | INFO | main | 135 | Saved command documentation to /Users/dwolfson/localGit/egeria-python/md_processing/md_processing_utils/../family_docs/Governance Officer/Create_Service_Level_Objectives.md | {}
-D 2026-03-05T09:05:03.954081-0600 | INFO | main | 135 | Saved command documentation to /Users/dwolfson/localGit/egeria-python/md_processing/md_processing_utils/../family_docs/Governance Officer/Create_Terms_&_Conditions.md | {}
-D 2026-03-05T09:05:03.987503-0600 | INFO | main | 135 | Saved command documentation to /Users/dwolfson/localGit/egeria-python/md_processing/md_processing_utils/../family_docs/Governance Officer/Create_Threat_Definition.md | {}
-D 2026-03-05T09:05:03.990065-0600 | INFO | main | 135 | Saved command documentation to /Users/dwolfson/localGit/egeria-python/md_processing/md_processing_utils/../family_docs/Governance Officer/Link_Agreement_T&C.md | {}
-D 2026-03-05T09:05:03.993690-0600 | INFO | main | 135 | Saved command documentation to /Users/dwolfson/localGit/egeria-python/md_processing/md_processing_utils/../family_docs/Governance Officer/Link_Associated_Group.md | {}
-D 2026-03-05T09:05:04.001182-0600 | INFO | main | 135 | Saved command documentation to /Users/dwolfson/localGit/egeria-python/md_processing/md_processing_utils/../family_docs/Governance Officer/Link_Certification.md | {}
-D 2026-03-05T09:05:04.003822-0600 | INFO | main | 135 | Saved command documentation to /Users/dwolfson/localGit/egeria-python/md_processing/md_processing_utils/../family_docs/Governance Officer/Link_Governance_Controls.md | {}
-D 2026-03-05T09:05:04.007160-0600 | INFO | main | 135 | Saved command documentation to /Users/dwolfson/localGit/egeria-python/md_processing/md_processing_utils/../family_docs/Governance Officer/Link_Governance_Drivers.md | {}
-D 2026-03-05T09:05:04.010929-0600 | INFO | main | 135 | Saved command documentation to /Users/dwolfson/localGit/egeria-python/md_processing/md_processing_utils/../family_docs/Governance Officer/Link_Governance_Mechanism.md | {}
-D 2026-03-05T09:05:04.013731-0600 | INFO | main | 135 | Saved command documentation to /Users/dwolfson/localGit/egeria-python/md_processing/md_processing_utils/../family_docs/Governance Officer/Link_Governance_Policies.md | {}
-D 2026-03-05T09:05:04.017103-0600 | INFO | main | 135 | Saved command documentation to /Users/dwolfson/localGit/egeria-python/md_processing/md_processing_utils/../family_docs/Governance Officer/Link_Governance_Response.md | {}
-D 2026-03-05T09:05:04.020763-0600 | INFO | main | 135 | Saved command documentation to /Users/dwolfson/localGit/egeria-python/md_processing/md_processing_utils/../family_docs/Governance Officer/Link_Governed_By.md | {}
-D 2026-03-05T09:05:04.029478-0600 | INFO | main | 135 | Saved command documentation to /Users/dwolfson/localGit/egeria-python/md_processing/md_processing_utils/../family_docs/Governance Officer/Link_License.md | {}
-D 2026-03-05T09:05:04.031981-0600 | INFO | main | 135 | Saved command documentation to /Users/dwolfson/localGit/egeria-python/md_processing/md_processing_utils/../family_docs/Governance Officer/Link_Monitored_Resource.md | {}
-D 2026-03-05T09:05:04.036672-0600 | INFO | main | 135 | Saved command documentation to /Users/dwolfson/localGit/egeria-python/md_processing/md_processing_utils/../family_docs/Governance Officer/Link_Notification_Subscriber.md | {}
-D 2026-03-05T09:05:04.040497-0600 | INFO | main | 135 | Saved command documentation to /Users/dwolfson/localGit/egeria-python/md_processing/md_processing_utils/../family_docs/Governance Officer/Link_Regulation_Certification_Type.md | {}
-D 2026-03-05T09:05:04.044306-0600 | INFO | main | 135 | Saved command documentation to /Users/dwolfson/localGit/egeria-python/md_processing/md_processing_utils/../family_docs/Governance Officer/Link_Security_Group_->_Security_Access_Control.md | {}
-D 2026-03-05T09:05:04.052400-0600 | INFO | main | 135 | Saved command documentation to /Users/dwolfson/localGit/egeria-python/md_processing/md_processing_utils/../family_docs/Governance Officer/Link_Terms_&_Conditions.md | {}
-D 2026-03-05T09:05:04.054940-0600 | INFO | main | 135 | Saved command documentation to /Users/dwolfson/localGit/egeria-python/md_processing/md_processing_utils/../family_docs/Governance Officer/Link_Zone_Hierarchy.md | {}
-D 2026-03-05T09:05:04.058572-0600 | INFO | main | 135 | Saved command documentation to /Users/dwolfson/localGit/egeria-python/md_processing/md_processing_utils/../family_docs/Governance Officer/Link_Zone->Zone.md | {}
-D 2026-03-05T09:05:04.073553-0600 | INFO | main | 135 | Saved command documentation to /Users/dwolfson/localGit/egeria-python/md_processing/md_processing_utils/../family_docs/Projects/Create_Campaign.md | {}
-D 2026-03-05T09:05:04.088947-0600 | INFO | main | 135 | Saved command documentation to /Users/dwolfson/localGit/egeria-python/md_processing/md_processing_utils/../family_docs/Projects/Create_Personal_Project.md | {}
-D 2026-03-05T09:05:04.103211-0600 | INFO | main | 135 | Saved command documentation to /Users/dwolfson/localGit/egeria-python/md_processing/md_processing_utils/../family_docs/Projects/Create_Project.md | {}
-D 2026-03-05T09:05:04.117808-0600 | INFO | main | 135 | Saved command documentation to /Users/dwolfson/localGit/egeria-python/md_processing/md_processing_utils/../family_docs/Projects/Create_Study_Project.md | {}
-D 2026-03-05T09:05:04.133599-0600 | INFO | main | 135 | Saved command documentation to /Users/dwolfson/localGit/egeria-python/md_processing/md_processing_utils/../family_docs/Projects/Create_Task.md | {}
-D 2026-03-05T09:05:04.136794-0600 | INFO | main | 135 | Saved command documentation to /Users/dwolfson/localGit/egeria-python/md_processing/md_processing_utils/../family_docs/Projects/Link_Project_Dependency.md | {}
-D 2026-03-05T09:05:04.139707-0600 | INFO | main | 135 | Saved command documentation to /Users/dwolfson/localGit/egeria-python/md_processing/md_processing_utils/../family_docs/Projects/Link_Project_Hierarchy.md | {}
-D 2026-03-05T09:05:04.152646-0600 | INFO | main | 135 | Saved command documentation to /Users/dwolfson/localGit/egeria-python/md_processing/md_processing_utils/../family_docs/Report/Report.md | {}
-D 2026-03-05T09:05:04.166422-0600 | INFO | main | 135 | Saved command documentation to /Users/dwolfson/localGit/egeria-python/md_processing/md_processing_utils/../family_docs/Solution Architect/Create_Information_Supply_Chain.md | {}
-D 2026-03-05T09:05:04.178890-0600 | INFO | main | 135 | Saved command documentation to /Users/dwolfson/localGit/egeria-python/md_processing/md_processing_utils/../family_docs/Solution Architect/Create_Solution_Blueprint.md | {}
-D 2026-03-05T09:05:04.193885-0600 | INFO | main | 135 | Saved command documentation to /Users/dwolfson/localGit/egeria-python/md_processing/md_processing_utils/../family_docs/Solution Architect/Create_Solution_Component.md | {}
-D 2026-03-05T09:05:04.207458-0600 | INFO | main | 135 | Saved command documentation to /Users/dwolfson/localGit/egeria-python/md_processing/md_processing_utils/../family_docs/Solution Architect/Create_Solution_Role.md | {}
-D 2026-03-05T09:05:04.211997-0600 | INFO | main | 135 | Saved command documentation to /Users/dwolfson/localGit/egeria-python/md_processing/md_processing_utils/../family_docs/Solution Architect/Link_Information_Supply_Chain_Peers.md | {}
-D 2026-03-05T09:05:04.215835-0600 | INFO | main | 135 | Saved command documentation to /Users/dwolfson/localGit/egeria-python/md_processing/md_processing_utils/../family_docs/Solution Architect/Link_Solution_Component_Peers.md | {}
+D 2026-03-09T20:50:21.987762-0500 | ERROR | <module> | 271 | An error has been caught in function '<module>', process 'MainProcess' (83261), thread 'MainThread' (8389406976): | {}
+[33m[1mTraceback (most recent call last):[0m
+
+> File "[32m/Users/dwolfson/localGit/egeria-python/md_processing/md_processing_utils/[0m[32m[1mgenerate_md_cmd_templates.py[0m", line [33m271[0m, in [35m<module>[0m
+    [1mmain[0m[1m([0m[1m)[0m
+    [36m└ [0m[36m[1m<function main at 0x1106dbd80>[0m
+
+  File "[32m/Users/dwolfson/localGit/egeria-python/md_processing/md_processing_utils/[0m[32m[1mgenerate_md_cmd_templates.py[0m", line [33m218[0m, in [35mmain[0m
+    [1mattr_level[0m [35m[1m=[0m [1m([0m[1mvalue[0m[35m[1m.[0m[1mget[0m[1m([0m[36m"level"[0m[1m)[0m [35m[1mor[0m [36m"Basic"[0m[1m)[0m[35m[1m.[0m[1mstrip[0m[1m([0m[1m)[0m
+    [36m              └ [0m[36m[1m'Element Id'[0m
+
+[31m[1mAttributeError[0m:[1m 'str' object has no attribute 'get'[0m
+D 2026-03-09T20:51:55.738011-0500 | ERROR | <module> | 271 | An error has been caught in function '<module>', process 'MainProcess' (83314), thread 'MainThread' (8389406976): | {}
+[33m[1mTraceback (most recent call last):[0m
+
+  File "[32m/Users/dwolfson/Applications/PyCharm.app/Contents/plugins/python-ce/helpers/pydev/[0m[32m[1mpydevd.py[0m", line [33m2391[0m, in [35m<module>[0m
+    [1mmain[0m[1m([0m[1m)[0m
+    [36m└ [0m[36m[1m<function main at 0x10db75a80>[0m
+
+  File "[32m/Users/dwolfson/Applications/PyCharm.app/Contents/plugins/python-ce/helpers/pydev/[0m[32m[1mpydevd.py[0m", line [33m2372[0m, in [35mmain[0m
+    [1mglobals[0m [35m[1m=[0m [1mdebugger[0m[35m[1m.[0m[1mrun[0m[1m([0m[1msetup[0m[1m[[0m[36m'file'[0m[1m][0m[1m,[0m [36m[1mNone[0m[1m,[0m [36m[1mNone[0m[1m,[0m [1mis_module[0m[1m)[0m
+    [36m          │        │   │                          └ [0m[36m[1mFalse[0m
+    [36m          │        │   └ [0m[36m[1m{'port': 60066, 'vm_type': None, 'client': '127.0.0.1', 'server': False, 'DEBUG_RECORD_SOCKET_READS': False, 'multiproc': Fal...[0m
+    [36m          │        └ [0m[36m[1m<function PyDB.run at 0x10db745e0>[0m
+    [36m          └ [0m[36m[1m<__main__.PyDB object at 0x10db596a0>[0m
+
+  File "[32m/Users/dwolfson/Applications/PyCharm.app/Contents/plugins/python-ce/helpers/pydev/[0m[32m[1mpydevd.py[0m", line [33m1640[0m, in [35mrun[0m
+    [35m[1mreturn[0m [1mself[0m[35m[1m.[0m[1m_exec[0m[1m([0m[1mis_module[0m[1m,[0m [1mentry_point_fn[0m[1m,[0m [1mmodule_name[0m[1m,[0m [1mfile[0m[1m,[0m [1mglobals[0m[1m,[0m [1mlocals[0m[1m)[0m
+    [36m       │    │     │          │               │            │     │        └ [0m[36m[1m{'__name__': '__main__', '__doc__': '\nThis file contains general utility functions for processing Egeria Markdown\n', '__pac...[0m
+    [36m       │    │     │          │               │            │     └ [0m[36m[1m{'__name__': '__main__', '__doc__': '\nThis file contains general utility functions for processing Egeria Markdown\n', '__pac...[0m
+    [36m       │    │     │          │               │            └ [0m[36m[1m'/Users/dwolfson/localGit/egeria-python/md_processing/md_processing_utils/generate_md_cmd_templates.py'[0m
+    [36m       │    │     │          │               └ [0m[36m[1mNone[0m
+    [36m       │    │     │          └ [0m[36m[1m''[0m
+    [36m       │    │     └ [0m[36m[1mFalse[0m
+    [36m       │    └ [0m[36m[1m<function PyDB._exec at 0x10db74680>[0m
+    [36m       └ [0m[36m[1m<__main__.PyDB object at 0x10db596a0>[0m
+
+  File "[32m/Users/dwolfson/Applications/PyCharm.app/Contents/plugins/python-ce/helpers/pydev/[0m[32m[1mpydevd.py[0m", line [33m1647[0m, in [35m_exec[0m
+    [1mpydev_imports[0m[35m[1m.[0m[1mexecfile[0m[1m([0m[1mfile[0m[1m,[0m [1mglobals[0m[1m,[0m [1mlocals[0m[1m)[0m  [30m[1m# execute the script[0m
+    [36m│             │        │     │        └ [0m[36m[1m{'__name__': '__main__', '__doc__': '\nThis file contains general utility functions for processing Egeria Markdown\n', '__pac...[0m
+    [36m│             │        │     └ [0m[36m[1m{'__name__': '__main__', '__doc__': '\nThis file contains general utility functions for processing Egeria Markdown\n', '__pac...[0m
+    [36m│             │        └ [0m[36m[1m'/Users/dwolfson/localGit/egeria-python/md_processing/md_processing_utils/generate_md_cmd_templates.py'[0m
+    [36m│             └ [0m[36m[1m<function execfile at 0x10cc49580>[0m
+    [36m└ [0m[36m[1m<module '_pydev_bundle.pydev_imports' from '/Users/dwolfson/Applications/PyCharm.app/Contents/plugins/python-ce/helpers/pydev...[0m
+
+  File "[32m/Users/dwolfson/Applications/PyCharm.app/Contents/plugins/python-ce/helpers/pydev/_pydev_imps/[0m[32m[1m_pydev_execfile.py[0m", line [33m18[0m, in [35mexecfile[0m
+    [1mexec[0m[1m([0m[1mcompile[0m[1m([0m[1mcontents[0m[35m[1m+[0m[36m"\n"[0m[1m,[0m [1mfile[0m[1m,[0m [36m'exec'[0m[1m)[0m[1m,[0m [1mglob[0m[1m,[0m [1mloc[0m[1m)[0m
+    [36m             │              │              │     └ [0m[36m[1m{'__name__': '__main__', '__doc__': '\nThis file contains general utility functions for processing Egeria Markdown\n', '__pac...[0m
+    [36m             │              │              └ [0m[36m[1m{'__name__': '__main__', '__doc__': '\nThis file contains general utility functions for processing Egeria Markdown\n', '__pac...[0m
+    [36m             │              └ [0m[36m[1m'/Users/dwolfson/localGit/egeria-python/md_processing/md_processing_utils/generate_md_cmd_templates.py'[0m
+    [36m             └ [0m[36m[1m'"""\nThis file contains general utility functions for processing Egeria Markdown\n"""\nimport os\nimport sys\nimport io\nimp...[0m
+
+> File "[32m/Users/dwolfson/localGit/egeria-python/md_processing/md_processing_utils/[0m[32m[1mgenerate_md_cmd_templates.py[0m", line [33m271[0m, in [35m<module>[0m
+    [1mmain[0m[1m([0m[1m)[0m
+    [36m└ [0m[36m[1m<function main at 0x10ffcd6c0>[0m
+
+  File "[32m/Users/dwolfson/localGit/egeria-python/md_processing/md_processing_utils/[0m[32m[1mgenerate_md_cmd_templates.py[0m", line [33m218[0m, in [35mmain[0m
+    [1mattr_level[0m [35m[1m=[0m [1m([0m[1mvalue[0m[35m[1m.[0m[1mget[0m[1m([0m[36m"level"[0m[1m)[0m [35m[1mor[0m [36m"Basic"[0m[1m)[0m[35m[1m.[0m[1mstrip[0m[1m([0m[1m)[0m
+    [36m              └ [0m[36m[1m'Element Id'[0m
+
+[31m[1mAttributeError[0m:[1m 'str' object has no attribute 'get'[0m
+D 2026-03-09T20:57:36.160208-0500 | ERROR | <module> | 271 | An error has been caught in function '<module>', process 'MainProcess' (83608), thread 'MainThread' (8389406976): | {}
+[33m[1mTraceback (most recent call last):[0m
+
+> File "[32m/Users/dwolfson/localGit/egeria-python/md_processing/md_processing_utils/[0m[32m[1mgenerate_md_cmd_templates.py[0m", line [33m271[0m, in [35m<module>[0m
+    [1mmain[0m[1m([0m[1m)[0m
+    [36m└ [0m[36m[1m<function main at 0x1129f3f60>[0m
+
+  File "[32m/Users/dwolfson/localGit/egeria-python/md_processing/md_processing_utils/[0m[32m[1mgenerate_md_cmd_templates.py[0m", line [33m218[0m, in [35mmain[0m
+    [1mattr_level[0m [35m[1m=[0m [1m([0m[1mvalue[0m[35m[1m.[0m[1mget[0m[1m([0m[36m"level"[0m[1m)[0m [35m[1mor[0m [36m"Basic"[0m[1m)[0m[35m[1m.[0m[1mstrip[0m[1m([0m[1m)[0m
+    [36m              └ [0m[36m[1m'Element Id'[0m
+
+[31m[1mAttributeError[0m:[1m 'str' object has no attribute 'get'[0m
+D 2026-03-09T21:08:28.159710-0500 | ERROR | <module> | 271 | An error has been caught in function '<module>', process 'MainProcess' (9670), thread 'MainThread' (8389406976): | {}
+[33m[1mTraceback (most recent call last):[0m
+
+  File "[32m/Users/dwolfson/Applications/PyCharm.app/Contents/plugins/python-ce/helpers/pydev/[0m[32m[1mpydevd.py[0m", line [33m2391[0m, in [35m<module>[0m
+    [1mmain[0m[1m([0m[1m)[0m
+    [36m└ [0m[36m[1m<function main at 0x10ff19a80>[0m
+
+  File "[32m/Users/dwolfson/Applications/PyCharm.app/Contents/plugins/python-ce/helpers/pydev/[0m[32m[1mpydevd.py[0m", line [33m2372[0m, in [35mmain[0m
+    [1mglobals[0m [35m[1m=[0m [1mdebugger[0m[35m[1m.[0m[1mrun[0m[1m([0m[1msetup[0m[1m[[0m[36m'file'[0m[1m][0m[1m,[0m [36m[1mNone[0m[1m,[0m [36m[1mNone[0m[1m,[0m [1mis_module[0m[1m)[0m
+    [36m          │        │   │                          └ [0m[36m[1mFalse[0m
+    [36m          │        │   └ [0m[36m[1m{'port': 62244, 'vm_type': None, 'client': '127.0.0.1', 'server': False, 'DEBUG_RECORD_SOCKET_READS': False, 'multiproc': Fal...[0m
+    [36m          │        └ [0m[36m[1m<function PyDB.run at 0x10ff185e0>[0m
+    [36m          └ [0m[36m[1m<__main__.PyDB object at 0x10fef96a0>[0m
+
+  File "[32m/Users/dwolfson/Applications/PyCharm.app/Contents/plugins/python-ce/helpers/pydev/[0m[32m[1mpydevd.py[0m", line [33m1640[0m, in [35mrun[0m
+    [35m[1mreturn[0m [1mself[0m[35m[1m.[0m[1m_exec[0m[1m([0m[1mis_module[0m[1m,[0m [1mentry_point_fn[0m[1m,[0m [1mmodule_name[0m[1m,[0m [1mfile[0m[1m,[0m [1mglobals[0m[1m,[0m [1mlocals[0m[1m)[0m
+    [36m       │    │     │          │               │            │     │        └ [0m[36m[1m{'__name__': '__main__', '__doc__': '\nThis file contains general utility functions for processing Egeria Markdown\n', '__pac...[0m
+    [36m       │    │     │          │               │            │     └ [0m[36m[1m{'__name__': '__main__', '__doc__': '\nThis file contains general utility functions for processing Egeria Markdown\n', '__pac...[0m
+    [36m       │    │     │          │               │            └ [0m[36m[1m'/Users/dwolfson/localGit/egeria-python/md_processing/md_processing_utils/generate_md_cmd_templates.py'[0m
+    [36m       │    │     │          │               └ [0m[36m[1mNone[0m
+    [36m       │    │     │          └ [0m[36m[1m''[0m
+    [36m       │    │     └ [0m[36m[1mFalse[0m
+    [36m       │    └ [0m[36m[1m<function PyDB._exec at 0x10ff18680>[0m
+    [36m       └ [0m[36m[1m<__main__.PyDB object at 0x10fef96a0>[0m
+
+  File "[32m/Users/dwolfson/Applications/PyCharm.app/Contents/plugins/python-ce/helpers/pydev/[0m[32m[1mpydevd.py[0m", line [33m1647[0m, in [35m_exec[0m
+    [1mpydev_imports[0m[35m[1m.[0m[1mexecfile[0m[1m([0m[1mfile[0m[1m,[0m [1mglobals[0m[1m,[0m [1mlocals[0m[1m)[0m  [30m[1m# execute the script[0m
+    [36m│             │        │     │        └ [0m[36m[1m{'__name__': '__main__', '__doc__': '\nThis file contains general utility functions for processing Egeria Markdown\n', '__pac...[0m
+    [36m│             │        │     └ [0m[36m[1m{'__name__': '__main__', '__doc__': '\nThis file contains general utility functions for processing Egeria Markdown\n', '__pac...[0m
+    [36m│             │        └ [0m[36m[1m'/Users/dwolfson/localGit/egeria-python/md_processing/md_processing_utils/generate_md_cmd_templates.py'[0m
+    [36m│             └ [0m[36m[1m<function execfile at 0x10efed580>[0m
+    [36m└ [0m[36m[1m<module '_pydev_bundle.pydev_imports' from '/Users/dwolfson/Applications/PyCharm.app/Contents/plugins/python-ce/helpers/pydev...[0m
+
+  File "[32m/Users/dwolfson/Applications/PyCharm.app/Contents/plugins/python-ce/helpers/pydev/_pydev_imps/[0m[32m[1m_pydev_execfile.py[0m", line [33m18[0m, in [35mexecfile[0m
+    [1mexec[0m[1m([0m[1mcompile[0m[1m([0m[1mcontents[0m[35m[1m+[0m[36m"\n"[0m[1m,[0m [1mfile[0m[1m,[0m [36m'exec'[0m[1m)[0m[1m,[0m [1mglob[0m[1m,[0m [1mloc[0m[1m)[0m
+    [36m             │              │              │     └ [0m[36m[1m{'__name__': '__main__', '__doc__': '\nThis file contains general utility functions for processing Egeria Markdown\n', '__pac...[0m
+    [36m             │              │              └ [0m[36m[1m{'__name__': '__main__', '__doc__': '\nThis file contains general utility functions for processing Egeria Markdown\n', '__pac...[0m
+    [36m             │              └ [0m[36m[1m'/Users/dwolfson/localGit/egeria-python/md_processing/md_processing_utils/generate_md_cmd_templates.py'[0m
+    [36m             └ [0m[36m[1m'"""\nThis file contains general utility functions for processing Egeria Markdown\n"""\nimport os\nimport sys\nimport io\nimp...[0m
+
+> File "[32m/Users/dwolfson/localGit/egeria-python/md_processing/md_processing_utils/[0m[32m[1mgenerate_md_cmd_templates.py[0m", line [33m271[0m, in [35m<module>[0m
+    [1mmain[0m[1m([0m[1m)[0m
+    [36m└ [0m[36m[1m<function main at 0x1124c9760>[0m
+
+  File "[32m/Users/dwolfson/localGit/egeria-python/md_processing/md_processing_utils/[0m[32m[1mgenerate_md_cmd_templates.py[0m", line [33m218[0m, in [35mmain[0m
+    [1mattr_level[0m [35m[1m=[0m [1m([0m[1mvalue[0m[35m[1m.[0m[1mget[0m[1m([0m[36m"level"[0m[1m)[0m [35m[1mor[0m [36m"Basic"[0m[1m)[0m[35m[1m.[0m[1mstrip[0m[1m([0m[1m)[0m
+    [36m              └ [0m[36m[1m'Element Id'[0m
+
+[31m[1mAttributeError[0m:[1m 'str' object has no attribute 'get'[0m

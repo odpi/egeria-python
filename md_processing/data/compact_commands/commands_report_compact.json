@@ -1,6 +1,6 @@
 {
   "family": "Report",
-  "exported": "Feb 21, 2026 at 7:49:34 AM",
+  "exported": "Mar 9, 2026 at 3:18:00 PM",
   "attribute_definitions": {
     "Search String": {
       "variable_name": "search_string",
@@ -16,9 +16,9 @@
       "user_specified": true,
       "unique": false,
       "input_required": false,
-      "min_cardinality": 1,
+      "min_cardinality": 0,
       "max_cardinality": 1,
-      "level": "Basic",
+      "level": "Domain",
       "Journal Entry": "An optional search string to filter results by."
     },
     "Output Format": {
@@ -41,9 +41,9 @@
       "user_specified": true,
       "unique": false,
       "input_required": false,
-      "min_cardinality": 1,
+      "min_cardinality": 0,
       "max_cardinality": 1,
-      "level": "Basic",
+      "level": "Domain",
       "Journal Entry": ""
     },
     "Report Spec": {
@@ -54,7 +54,7 @@
       "default_value": "Referenceable",
       "valid_values": [],
       "existing_element": "",
-      "description": "Optional specification of an output format set that defines the attributes\/columns that will be returned.",
+      "description": "The name of the report spec (FormatSet) to run, e.g. 'Digital-Products', 'Collections', 'My-User-MD'. This is the primary identifier for the report — equivalent to --report in the CLI.",
       "generated": false,
       "style": "Simple",
       "user_specified": true,
@@ -62,7 +62,7 @@
       "input_required": true,
       "min_cardinality": 1,
       "max_cardinality": 1,
-      "level": "Basic",
+      "level": "Domain",
       "Journal Entry": ""
     },
     "Starts With": {
@@ -79,9 +79,9 @@
       "user_specified": true,
       "unique": false,
       "input_required": false,
-      "min_cardinality": 1,
+      "min_cardinality": 0,
       "max_cardinality": 1,
-      "level": "Basic",
+      "level": "Domain",
       "Journal Entry": ""
     },
     "Ends With": {
@@ -98,9 +98,9 @@
       "user_specified": true,
       "unique": false,
       "input_required": false,
-      "min_cardinality": 1,
+      "min_cardinality": 0,
       "max_cardinality": 1,
-      "level": "Basic",
+      "level": "Domain",
       "Journal Entry": ""
     },
     "Ignore Case": {
@@ -117,9 +117,9 @@
       "user_specified": true,
       "unique": false,
       "input_required": false,
-      "min_cardinality": 1,
+      "min_cardinality": 0,
       "max_cardinality": 1,
-      "level": "Basic",
+      "level": "Domain",
       "Journal Entry": ""
     },
     "Limit Result by Status": {
@@ -155,7 +155,7 @@
       "user_specified": true,
       "unique": false,
       "input_required": false,
-      "min_cardinality": 1,
+      "min_cardinality": 0,
       "max_cardinality": 1,
       "level": "Advanced",
       "Journal Entry": ""
@@ -174,9 +174,9 @@
       "user_specified": true,
       "unique": false,
       "input_required": false,
-      "min_cardinality": 1,
+      "min_cardinality": 0,
       "max_cardinality": 1,
-      "level": "Basic",
+      "level": "Domain",
       "Journal Entry": ""
     },
     "Metadata Element Subtype Names": {
@@ -193,9 +193,9 @@
       "user_specified": true,
       "unique": false,
       "input_required": false,
-      "min_cardinality": 1,
+      "min_cardinality": 0,
       "max_cardinality": 1,
-      "level": "Basic",
+      "level": "Domain",
       "Journal Entry": ""
     },
     "Skip Relationships": {
@@ -212,9 +212,9 @@
       "user_specified": true,
       "unique": false,
       "input_required": false,
-      "min_cardinality": 1,
+      "min_cardinality": 0,
       "max_cardinality": 1,
-      "level": "Basic",
+      "level": "Advanced",
       "Journal Entry": ""
     },
     "Include Only Relationships": {
@@ -231,9 +231,9 @@
       "user_specified": true,
       "unique": false,
       "input_required": false,
-      "min_cardinality": 1,
+      "min_cardinality": 0,
       "max_cardinality": 1,
-      "level": "Basic",
+      "level": "Advanced",
       "Journal Entry": ""
     },
     "Skip Classified Elements": {
@@ -250,9 +250,9 @@
       "user_specified": true,
       "unique": false,
       "input_required": false,
-      "min_cardinality": 1,
+      "min_cardinality": 0,
       "max_cardinality": 1,
-      "level": "Basic",
+      "level": "Advanced",
       "Journal Entry": ""
     },
     "Include Only Classified Elements": {
@@ -269,9 +269,9 @@
       "user_specified": true,
       "unique": false,
       "input_required": false,
-      "min_cardinality": 1,
+      "min_cardinality": 0,
       "max_cardinality": 1,
-      "level": "Basic",
+      "level": "Advanced",
       "Journal Entry": ""
     },
     "Governance Zone Filter": {
@@ -288,9 +288,9 @@
       "user_specified": true,
       "unique": false,
       "input_required": false,
-      "min_cardinality": 1,
+      "min_cardinality": 0,
       "max_cardinality": 1,
-      "level": "Basic",
+      "level": "Advanced",
       "Journal Entry": ""
     },
     "Graph Query Depth": {
@@ -307,9 +307,9 @@
       "user_specified": true,
       "unique": false,
       "input_required": false,
-      "min_cardinality": 1,
+      "min_cardinality": 0,
       "max_cardinality": 1,
-      "level": "Basic",
+      "level": "Advanced",
       "Journal Entry": ""
     },
     "Effective Time": {
@@ -326,7 +326,7 @@
       "user_specified": true,
       "unique": false,
       "input_required": false,
-      "min_cardinality": 1,
+      "min_cardinality": 0,
       "max_cardinality": 1,
       "level": "Advanced",
       "Journal Entry": ""
@@ -345,12 +345,12 @@
       "user_specified": true,
       "unique": false,
       "input_required": false,
-      "min_cardinality": 1,
+      "min_cardinality": 0,
       "max_cardinality": 1,
-      "level": "Basic",
+      "level": "Advanced",
       "Journal Entry": ""
     },
-    "Sort Order": {
+    "Output Sort Order": {
       "variable_name": "sort_order",
       "inUpdate": false,
       "attr_labels": "",
@@ -372,9 +372,9 @@
       "user_specified": true,
       "unique": false,
       "input_required": false,
-      "min_cardinality": 1,
+      "min_cardinality": 0,
       "max_cardinality": 1,
-      "level": "Basic",
+      "level": "Advanced",
       "Journal Entry": ""
     },
     "Order Property Name": {
@@ -391,9 +391,9 @@
       "user_specified": true,
       "unique": false,
       "input_required": false,
-      "min_cardinality": 1,
+      "min_cardinality": 0,
       "max_cardinality": 1,
-      "level": "Basic",
+      "level": "Advanced",
       "Journal Entry": ""
     },
     "Page Size": {
@@ -410,9 +410,9 @@
       "user_specified": true,
       "unique": false,
       "input_required": false,
-      "min_cardinality": 1,
+      "min_cardinality": 0,
       "max_cardinality": 1,
-      "level": "Basic",
+      "level": "Domain",
       "Journal Entry": ""
     },
     "Start From": {
@@ -429,9 +429,9 @@
       "user_specified": true,
       "unique": false,
       "input_required": false,
-      "min_cardinality": 1,
+      "min_cardinality": 0,
       "max_cardinality": 1,
-      "level": "Basic",
+      "level": "Domain",
       "Journal Entry": ""
     }
   },
@@ -443,12 +443,12 @@
       "qn_prefix": "",
       "alternate_names": [],
       "family": "Report",
-      "description": "Generates formatted reports for any Egeria element type using a report specification that defines which attributes to include and how to format the output. Supports multiple output formats (LIST, FORM, REPORT, MERMAID, DICT) and comprehensive filtering options.",
+      "description": "Runs a named pyegeria report spec (FormatSet) via hey_egeria run_report. Returns formatted output from the Egeria repository — not an element creation command.",
       "verb": "View",
       "upsert": false,
       "attach": false,
       "level": "Basic",
-      "find_method": "",
+      "find_method": "Report.run_report",
       "find_constraints": "",
       "extra_find": "",
       "extra_constraints": "",
@@ -471,12 +471,12 @@
         "Graph Query Depth",
         "Effective Time",
         "AsOfTime",
-        "Sort Order",
+        "Output Sort Order",
         "Order Property Name",
         "Page Size",
         "Start From"
       ],
-      "Journal Entry": ""
+      "Journal Entry": "Runs a pyegeria report spec via hey_egeria run_report. Discovers and executes a named FormatSet against the Egeria repository. Not an element-creation command — no upsert, no qualified name prefix. Output format and report spec control what is returned and how it is rendered."
     }
   }
 }

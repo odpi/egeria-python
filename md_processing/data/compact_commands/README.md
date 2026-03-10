@@ -97,3 +97,18 @@ To add or refactor commands into the compact format:
 The core logic for parsing and expanding these specifications resides in:
 - `md_processing/md_processing_utils/parse_compact_export.py`: Handles JSON parsing, inheritance resolution, and expansion. It includes a robust loader that handles minor JSON syntax issues (like trailing commas or unescaped quotes in nested strings) often found in exports.
 - `md_processing/md_processing_utils/compact_loader.py`: Orchestrates directory-wide loading and conversion to legacy schema.
+
+## Validation
+
+A validation script is provided to ensure the integrity and quality of the compact specifications:
+- `md_processing/md_processing_utils/validate_compact_json.py`: This script checks for duplicate keys, missing mandatory attributes (`style`, `variable_name`), empty descriptions, and broken cross-references (unknown attributes or bundles).
+
+To run the validation:
+```bash
+python3 md_processing/md_processing_utils/validate_compact_json.py
+```
+or using `uv`:
+```bash
+uv run python md_processing/md_processing_utils/validate_compact_json.py
+```
+It is recommended to run this script whenever new attributes, bundles, or commands are added or modified.

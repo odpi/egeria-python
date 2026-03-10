@@ -319,7 +319,7 @@ def parse_upsert_command(egeria_client: EgeriaTech, object_type: str, object_act
                     else:
                         continue
 
-                elif style == 'Valid Value':
+                elif style == 'Valid Value' or style == 'Enum' or style == 'ValidValue':
                     parsed_attributes[key] = proc_valid_value(
                         txt, object_action, labels, attr[key].get('valid_values', None), if_missing, default_value,
                         extracted_attribute=attribute
@@ -380,6 +380,10 @@ def parse_upsert_command(egeria_client: EgeriaTech, object_type: str, object_act
                 elif style == 'Simple Int':
                     parsed_attributes[key] = proc_simple_attribute(
                         txt, object_action, labels, if_missing, default_value, "int", extracted_attribute=attribute
+                        )
+                elif style == 'Simple Float':
+                    parsed_attributes[key] = proc_simple_attribute(
+                        txt, object_action, labels, if_missing, default_value, "float", extracted_attribute=attribute
                         )
                 elif style == 'Simple List':
                     parsed_attributes[key] = proc_simple_attribute(
@@ -845,11 +849,20 @@ def proc_simple_attribute(txt: str, action: str, labels: set, if_missing: str = 
             _attribute_msg("ERROR", msg)
         return {"status": if_missing, "reason": msg, "value": None, "valid": valid, "exists": False}
 
-    if attribute and simp_type == "int" :
+    if attribute and simp_type == "int":
         try:
             attribute = int(attribute)
         except ValueError:
             msg = f"Invalid integer value for attribute with labels `{labels}`: {attribute}"
+            valid = False
+            _attribute_msg("ERROR", msg)
+            return {"status": ERROR, "reason": msg, "value": None, "valid": valid, "exists": True}
+
+    elif attribute and simp_type == "float":
+        try:
+            attribute = float(attribute)
+        except ValueError:
+            msg = f"Invalid float value for attribute with labels `{labels}`: {attribute}"
             valid = False
             _attribute_msg("ERROR", msg)
             return {"status": ERROR, "reason": msg, "value": None, "valid": valid, "exists": True}
