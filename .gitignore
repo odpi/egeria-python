@@ -176,3 +176,4 @@ dmypy.json
 /data/
 /pyegeria/http clients/
 /outbox/
+/.ai-sandbox/

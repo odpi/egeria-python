@@ -120,7 +120,7 @@ def process_gov_definition_upsert_command(egeria_client: EgeriaTech, txt: str,
         qualified_name = parsed_output.get('qualified_name')
         display_name = parsed_output.get('attributes', {}).get('Display Name', {}).get('value')
         guid = parsed_output.get('guid')
-
+        version_identifier = parsed_output.get('attributes',{}).get('Version Identifier', {}).get('value')
         print(Markdown(parsed_output.get('display', '')))
         logger.debug(json.dumps(parsed_output, indent=4))
 
@@ -173,6 +173,9 @@ def process_gov_definition_upsert_command(egeria_client: EgeriaTech, txt: str,
                     logger.error(msg)
                     return None
                 else:
+                    if qualified_name is None:
+                        qualified_name = egeria_client.__create_qualified_name__(object_type,display_name,
+                                                                                 local_qualifier=None, version_identifier=version_identifier)
                     create_body = set_create_body(object_type, parsed_output['attributes'])
                     create_body['properties'] = set_gov_prop_body(object_type, qualified_name,
                                                                   parsed_output['attributes'])
@@ -397,7 +400,7 @@ def process_supporting_gov_def_link_detach_command(egeria_client: EgeriaTech, tx
             elif valid is False:
                 msg = f"==>{object_type} Link with label `{label}` is not valid and can't be created"
                 logger.error(msg)
-                return
+                return None
 
             else:
                 body_prop = {

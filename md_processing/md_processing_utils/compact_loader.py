@@ -17,27 +17,9 @@ def _to_semicolon_str(value: Any) -> str:
     return str(value)
 
 
-def _attr_to_legacy_entry(attr: Dict[str, Any]) -> Dict[str, Any]:
-    # The legacy schema expects a one-item dict: { "Label": { ...metadata... } }
-    label = attr.get("name") or attr.get("variable_name") or "Unknown"
-    meta: Dict[str, Any] = dict(attr)
-    # Remove wrapper key 'name' used only as the label
-    meta.pop("name", None)
-
-    # Normalize 'style' for legacy processor compatibility
-    # The compact JSON might use styles that the legacy parse_upsert_command
-    # needs to map to appropriate processors.
-    style = meta.get("style", "").strip()
-    if not style:
-        style = "Simple"
-    meta["style"] = style
-
-    return {label: meta}
-
-
-def _command_to_legacy_spec(name: str, cdef: Dict[str, Any], expanded: Dict[str, Any]) -> Dict[str, Any]:
+def _command_to_spec(name: str, cdef: Dict[str, Any], expanded: Dict[str, Any]) -> Dict[str, Any]:
     # Copy known top-level fields if present in the compact command
-    legacy: Dict[str, Any] = {}
+    spec: Dict[str, Any] = {}
     for key in (
         "display_name",
         "qn_prefix",
@@ -55,34 +37,35 @@ def _command_to_legacy_spec(name: str, cdef: Dict[str, Any], expanded: Dict[str,
         "Journal Entry",
     ):
         if key in cdef:
-            legacy[key] = cdef[key]
+            spec[key] = cdef[key]
 
     # Normalize alternate_names to the legacy semicolon string
     alt = cdef.get("alternate_names", "")
-    legacy["alternate_names"] = _to_semicolon_str(alt)
+    spec["alternate_names"] = _to_semicolon_str(alt)
 
-    # Build legacy Attributes from expanded attribute definitions
-    attrs_legacy = []
-    for attr in expanded.get("all_attributes", []):
-        attrs_legacy.append(_attr_to_legacy_entry(attr))
-    legacy["Attributes"] = attrs_legacy
+    # Use expanded attributes directly (already resolved and expanded)
+    # We ensure each attribute has a 'style' for processor compatibility
+    attrs = expanded.get("all_attributes", [])
+    for attr in attrs:
+        if not attr.get("style"):
+            attr["style"] = "Simple"
+            
+    spec["Attributes"] = attrs
 
-    return legacy
-
-
+    return spec
 
 
 def load_compact_specs_from_dir(dir_path: str, families_allowlist: Iterable[str] | None = None) -> Dict[str, Dict[str, Any]]:
     """
-    Load all compact command files from a directory and return a mapping suitable
-    for merging into the legacy COMMAND_DEFINITIONS["Command Specifications"].
+    Load all compact command files from a directory and return a mapping 
+    for COMMAND_DEFINITIONS["Command Specifications"].
 
     Args:
         dir_path: Path to directory with compact JSON files.
         families_allowlist: If provided, include only commands whose 'family' is in this set.
 
     Returns:
-        Dict[str, Dict]: { command_name: legacy_style_spec }
+        Dict[str, Dict]: { command_name: command_spec }
     """
     if families_allowlist:
         families = {f.strip() for f in families_allowlist if f and f.strip()}
@@ -136,7 +119,7 @@ def load_compact_specs_from_dir(dir_path: str, families_allowlist: Iterable[str]
 
             try:
                 expanded = expand_command(cdef, all_bundles, all_attr_defs)
-                specs[cname] = _command_to_legacy_spec(cname, cdef, expanded)
+                specs[cname] = _command_to_spec(cname, cdef, expanded)
             except (KeyError, ValueError) as e:
                 logger.warning(f"Skipping command '{cname}' from {fname}: {e}")
                 continue

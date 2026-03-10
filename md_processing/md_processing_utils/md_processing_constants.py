@@ -240,103 +240,52 @@ debug_level = DEBUG_LEVEL
 #         msg = f"ERROR: File {filename} not found."
 #         print(ERROR, msg, debug_level)
 
-def load_commands(filename: str) -> None:
+def load_commands(filename: str = "commands.json") -> None:
     global COMMAND_DEFINITIONS, command_list
 
+    # Initialize empty base
+    COMMAND_DEFINITIONS = {"Command Specifications": {}}
+
+    # Try loading the provided filename (e.g. commands.json)
     try:
         config_path = importlib.resources.files("md_processing") / "data" / filename
-        config_str = config_path.read_text(encoding="utf-8")
-
-        # Validate JSON before attempting to load
-        try:
-            COMMAND_DEFINITIONS = json.loads(config_str)
-            base_specs = COMMAND_DEFINITIONS.get("Command Specifications", {})
-
-            # Optionally merge compact specs from a separate directory
-            if USE_COMPACT_RESOURCES:
-                try:
-                    from md_processing.md_processing_utils.compact_loader import load_compact_specs_from_dir
-
-                    if os.path.isdir(COMPACT_RESOURCE_DIR):
-                        overlay_specs = load_compact_specs_from_dir(
-                            COMPACT_RESOURCE_DIR, COMPACT_FAMILIES if COMPACT_FAMILIES else None
-                        )
-                        if overlay_specs:
-                            # Merge/overlay into base specs
-                            merged = dict(base_specs)
-                            merged.update(overlay_specs)
-                            COMMAND_DEFINITIONS["Command Specifications"] = merged
-                            logger.debug(
-                                f"Loaded {len(overlay_specs)} compact commands from {COMPACT_RESOURCE_DIR}"
-                                + (f" for families: {COMPACT_FAMILIES}" if COMPACT_FAMILIES else "")
-                            )
-                except Exception as merge_err:
-                    logger.warning(f"Compact commands merge skipped due to error: {merge_err}")
-
-            command_list = build_command_list_from_specs(
-                COMMAND_DEFINITIONS.get("Command Specifications", {})
-            )
-            msg = f"Successfully loaded {filename}"
-            logger.debug(msg)
-        except json.JSONDecodeError as json_err:
-            # Provide detailed error information
-            error_line = json_err.lineno
-            error_col = json_err.colno
-            error_pos = json_err.pos
-
-            # Extract context around the error
-            lines = config_str.split('\n')
-            start_line = max(0, error_line - 3)
-            end_line = min(len(lines), error_line + 2)
-
-            context = '\n'.join([
-                f"Line {i + 1}: {lines[i]}"
-                for i in range(start_line, end_line)
-            ])
-
-            error_msg = (
-                f"\n{'=' * 80}\n"
-                f"ERROR: Invalid JSON in {filename}\n"
-                f"{'=' * 80}\n"
-                f"LocationArena: Line {error_line}, Column {error_col} (char position {error_pos})\n"
-                f"Error: {json_err.msg}\n"
-                f"\nContext around error:\n{context}\n"
-                f"{'=' * 80}\n"
-                f"\nPlease fix the JSON syntax error in {filename} at line {error_line}.\n"
-                f"Common issues:\n"
-                f"  - Missing comma between elements\n"
-                f"  - Trailing comma before closing bracket/brace\n"
-                f"  - Unescaped quotes in strings\n"
-                f"  - Missing closing bracket/brace\n"
-                f"{'=' * 80}\n"
-            )
-
-            print(error_msg)
-
-            # Initialize with empty dict to allow application to continue
-            # (though functionality will be limited)
-            COMMAND_DEFINITIONS = {}
-            command_list = ["Provenance"]
-
-            # Re-raise with more context
-            raise json.JSONDecodeError(
-                f"Invalid JSON in {filename}: {json_err.msg}",
-                json_err.doc,
-                json_err.pos
-            ) from json_err
-
-    except FileNotFoundError:
-        msg = f"ERROR: File {filename} not found."
-        print(msg)
-        COMMAND_DEFINITIONS = {}
-        command_list = ["Provenance"]
-        raise FileNotFoundError(msg)
+        if config_path.is_file():
+            config_str = config_path.read_text(encoding="utf-8")
+            try:
+                base_data = json.loads(config_str)
+                COMMAND_DEFINITIONS.update(base_data)
+                logger.debug(f"Loaded base commands from {filename}")
+            except json.JSONDecodeError as json_err:
+                logger.error(f"Invalid JSON in {filename}: {json_err.msg}")
+                # Don't raise, we might still load compact specs
+        else:
+            logger.debug(f"Base command file {filename} not found, proceeding with defaults.")
     except Exception as e:
-        msg = f"ERROR: Unexpected error loading {filename}: {str(e)}"
-        print(msg)
-        COMMAND_DEFINITIONS = {}
-        command_list = ["Provenance"]
-        raise
+        logger.debug(f"Base command file loading skipped: {e}")
+
+    # Optionally merge compact specs from a separate directory
+    if USE_COMPACT_RESOURCES:
+        try:
+            from md_processing.md_processing_utils.compact_loader import load_compact_specs_from_dir
+
+            if os.path.isdir(COMPACT_RESOURCE_DIR):
+                overlay_specs = load_compact_specs_from_dir(
+                    COMPACT_RESOURCE_DIR, COMPACT_FAMILIES if COMPACT_FAMILIES else None
+                )
+                if overlay_specs:
+                    # Merge/overlay into base specs
+                    COMMAND_DEFINITIONS["Command Specifications"].update(overlay_specs)
+                    logger.debug(
+                        f"Loaded {len(overlay_specs)} compact commands from {COMPACT_RESOURCE_DIR}"
+                    )
+        except Exception as merge_err:
+            logger.warning(f"Compact commands merge skipped due to error: {merge_err}")
+
+    command_list = build_command_list_from_specs(
+        COMMAND_DEFINITIONS.get("Command Specifications", {})
+    )
+    msg = f"Command loading complete. Total commands: {len(command_list)}"
+    logger.debug(msg)
 
 
 def validate_json_file(filename: str) -> tuple[bool, str]:

@@ -1,4 +1,4 @@
-# Create Business Imperative
+# Update Business Imperative
 >	The BusinessImperative entity defines a business goal that is critical to the success of the organization.
 
 ## Display Name
@@ -15,7 +15,7 @@ Meet acquisition Business case.
 >	**Valid Values**: ALL,DATA,PRIVACY,SECURITY,IT_INFRASTRUCTURE,SOFTWARE_DEVELOPMENT,CORPORATE,ASSET_MANAGEMENT,OTHER
 
 >	**Default Value**: ALL
-0
+ALL
 
 ## Implications
 >	**Input Required**: False
@@ -64,24 +64,12 @@ We need to demonstrate that we are meeting the business case from the acquisitio
 
 >	**Description**: 
 
-
-## Category
->	**Input Required**: False
-
->	**Description**: 
-
-
 ## Description
 >	**Input Required**: False
 
 >	**Description**: 
 
 Meet the business case for the acquisitions.
-
-## Qualified Name
->	**Input Required**: False
-
->	**Description**: 
 
 
 ## Content Status
@@ -104,3 +92,7 @@ Corporate Business
 
 >	**Description**: A unique qualified name for the element. Generated using the qualified name pattern  if not user specified.
 
+## Journal Entry
+This is a first Journal Entry
+
+___
