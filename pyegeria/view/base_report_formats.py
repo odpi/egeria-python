@@ -749,6 +749,8 @@ base_report_specs = FormatSetDict({
                     Column(name="Effective To", key='effective_to'),
                     Column(name="Version", key='version'),
                     Column(name="Open Metadata Type Name", key='type_name'),
+                    Column(name="Action Targets", key='action_targets', detail_spec="Action-Targets-Detail"),
+                    Column(name="Action Request Sources", key='action_request_sources', detail_spec="Action-Request-Sources-Detail"),
                 ],
             )
         ],
@@ -982,8 +984,8 @@ base_report_specs = FormatSetDict({
                     Column(name="GUID", key='guid'),
                     Column(name="Description", key='description'),
                     Column(name="Catalog Templates", key='catalog_templates', detail_spec="Catalog-Template-Detail"),
-                    # Column(name="Governance Processes", key='governance_action_processes', detail_spec="Governance-Action-Processes-Detail"),
-                    Column(name="Governance Processes", key='governance_processes_d'),
+                    Column(name="Governance Processes", key='governance_action_processes', detail_spec="Governance-Action-Processes-Detail"),
+                    Column(name="External References", key='external_references', detail_spec="External-Reference-Detail"),
                 ],
             )
         ],
@@ -1003,9 +1005,10 @@ base_report_specs = FormatSetDict({
             Format(
                 types=["ALL"],
                 attributes=[
-                    Column(name="Catalog Template Name", key="displayName"),
-                    Column(name="Description", key="description"),
-                    # Column(name="Catalog Template Specs", key="catalog_template"),
+                    Column(name="Catalog Template Name", key="template_display_name"),
+                    Column(name="Description", key="template_description"),
+                    Column(name="Target Asset Name", key="target_display_name"),
+                    Column(name="Target Qualified Name", key="target_qualified_name"),
                     Column(name="Placeholder Properties", key="placeHolderProperty", detail_spec="Place-Holder-Property-Detail"),
                 ],
             )
@@ -1020,10 +1023,11 @@ base_report_specs = FormatSetDict({
             Format(
                 types=["LIST", "REPORT", "DICT", "TABLE"],
                 attributes=[
-                    Column(name="Governance Process Name", key="displayName"),
-                    Column(name="Qualified Name", key="qualifiedName"),
-                    Column(name="Description", key="description"),
+                    Column(name="Governance Process Name", key="proc_display_name"),
+                    Column(name="Qualified Name", key="proc_qualified_name"),
+                    Column(name="Description", key="proc_description"),
                     Column(name="GUID", key="guid"),
+                    Column(name="Governance Action Steps", key="governance_action_steps", detail_spec="Governance-Action-Steps-Detail"),
                 ],
             )
         ],
@@ -1042,6 +1046,88 @@ base_report_specs = FormatSetDict({
                     Column(name="Data Type", key="dataType"),
                     Column(name="Example", key="example"),
                     Column(name="Required", key="required"),
+                ],
+            )
+        ],
+    ),
+    "External-Reference-Detail": FormatSet(
+        target_type="ExternalReferences",
+        heading="External References",
+        description="Detailed External References",
+        family="Automated Curation",
+        formats=[
+            Format(
+                types=["ALL"],
+                attributes=[
+                    Column(name="Reference Name", key="ref_display_name"),
+                    Column(name="Qualified Name", key="ref_qualified_name"),
+                    Column(name="Description", key="ref_description"),
+                    Column(name="URL", key="ref_url"),
+                ],
+            )
+        ],
+    ),
+    "Governance-Action-Steps-Detail": FormatSet(
+        target_type="governanceActionSteps",
+        heading="Governance Action Steps",
+        description="Detailed Governance Action Steps",
+        family="Automated Curation",
+        formats=[
+            Format(
+                types=["ALL"],
+                attributes=[
+                    Column(name="Step Name", key="step_display_name"),
+                    Column(name="Type Name", key="type_display_name"),
+                    Column(name="Status", key="status"),
+                ],
+            )
+        ],
+    ),
+    "Action-Targets-Detail": FormatSet(
+        target_type="actionTargets",
+        heading="Action Targets",
+        description="Detailed Action Targets",
+        family="Automated Curation",
+        formats=[
+            Format(
+                types=["ALL"],
+                attributes=[
+                    Column(name="Target Name", key="target_display_name"),
+                    Column(name="Qualified Name", key="target_qualified_name"),
+                    Column(name="Description", key="target_description"),
+                    Column(name="Action Target Name", key="actionTargetName"),
+                ],
+            )
+        ],
+    ),
+    "Action-Request-Sources-Detail": FormatSet(
+        target_type="actionRequestSources",
+        heading="Action Request Sources",
+        description="Detailed Action Request Sources",
+        family="Automated Curation",
+        formats=[
+            Format(
+                types=["ALL"],
+                attributes=[
+                    Column(name="Source Name", key="source_display_name"),
+                    Column(name="Qualified Name", key="source_qualified_name"),
+                ],
+            )
+        ],
+    ),
+    "Catalog-Target": FormatSet(
+        target_type="CatalogTarget",
+        heading="Catalog Target",
+        description="Detailed Catalog Target Information",
+        family="Automated Curation",
+        formats=[
+            Format(
+                types=["ALL"],
+                attributes=COMMON_COLUMNS + [
+                    Column(name="Target Name", key="target_display_name"),
+                    Column(name="Target Qualified Name", key="target_qualified_name"),
+                    Column(name="Target Description", key="target_description"),
+                    Column(name="Catalog Target Name", key="catalogTargetName"),
                 ],
             )
         ],

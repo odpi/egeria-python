@@ -4,6 +4,7 @@ Copyright Contributors to the ODPi Egeria project.
 
 This module tests the ValidMetadataLists class and methods from valid_metadata_lists.py
 """
+import json
 
 from rich import print
 from rich.console import Console
@@ -43,9 +44,13 @@ class TestValidMetadataLists:
             vml_client.create_egeria_bearer_token(self.good_user_2, USER_PWD)
             
             try:
-                response = vml_client.get_valid_metadata_values(property_name="relationshipType")
+                property_name = "domainIdentifier"
+                response = vml_client.get_valid_metadata_values(property_name=property_name)
+                if isinstance(response, (list, dict)):
+                    console.print(f"Received {len(response)} valid metadata values for property {property_name}\n\n")
+                    console.print(json.dumps(response, indent=2))
                 assert response is not None
-                print(response)
+
             except (PyegeriaInvalidParameterException, PyegeriaNotFoundException, PyegeriaAPIException):
                 pass
 
