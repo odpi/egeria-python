@@ -1662,7 +1662,7 @@ class GovernanceOfficer(ServerClient):
         logger.info(f"Detached governed-by relationshup between: {definition_guid} -> {element_guid}")
 
     @dynamic_catch
-    def detach_governed_by_definitio(self, element_guid: str, definition_guid: str,
+    def detach_governed_by_definition(self, element_guid: str, definition_guid: str,
                                       body: Optional[dict | DeleteRelationshipRequestBody] = None) -> None:
         """ Detach a governance definition from a supporting governance definition.
             Request body is optional.

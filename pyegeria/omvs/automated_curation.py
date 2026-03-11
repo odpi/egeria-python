@@ -120,6 +120,13 @@ class AutomatedCuration(ServerClient):
             t_copy = template.copy()
             
             # Normalize template properties
+            t_copy['template_display_name'] = t_copy.get('displayName') or t_copy.get('templateName')
+            t_copy['template_description'] = t_copy.get('description') or t_copy.get('templateDescription')
+
+            related_props = t_copy.get('relatedElement', {}).get('properties', {})
+            t_copy['target_display_name'] = related_props.get('displayName')
+            t_copy['target_qualified_name'] = related_props.get('qualifiedName')
+
             if 'displayName' not in t_copy:
                 t_copy['displayName'] = t_copy.get('templateName')
             if 'description' not in t_copy:
@@ -159,8 +166,38 @@ class AutomatedCuration(ServerClient):
             t_copy['placeHolderProperty'] = normalized_placeholders
             normalized_templates.append(t_copy)
         catalog_templates = normalized_templates
+
         governance_processes = element.get('governanceActionProcesses',None)
+        # Normalize governance processes for consistent reporting
+        normalized_processes = []
+        for proc in (governance_processes or []):
+            if not isinstance(proc, dict):
+                normalized_processes.append(proc)
+                continue
+            p_copy = proc.copy()
+            proc_props = p_copy.get('relatedElement', {}).get('properties', {})
+            p_copy['proc_display_name'] = proc_props.get('displayName')
+            p_copy['proc_description'] = proc_props.get('description')
+            p_copy['proc_qualified_name'] = proc_props.get('qualifiedName')
+            p_copy['proc_params'] = p_copy.get("specification", {}).get("supportedRequestParameter", {})
+            normalized_processes.append(p_copy)
+        governance_processes = normalized_processes
         external_references = element.get('externalReferences',None)
+        # Normalize external references for consistent reporting
+        normalized_refs = []
+        for ref in (external_references or []):
+            if not isinstance(ref, dict):
+                normalized_refs.append(ref)
+                continue
+            r_copy = ref.copy()
+            ref_props = r_copy.get('relatedElement', {}).get('properties', {})
+            r_copy['ref_display_name'] = ref_props.get('displayName')
+            r_copy['ref_description'] = ref_props.get('description')
+            r_copy['ref_qualified_name'] = ref_props.get('qualifiedName')
+            # Extract URL - it could be in properties or at the root of the ref object
+            r_copy['ref_url'] = ref_props.get('url') or r_copy.get('url')
+            normalized_refs.append(r_copy)
+        external_references = normalized_refs
         url = element.get('url',None)
 
         # Mermaid graph support if present
@@ -188,15 +225,14 @@ class AutomatedCuration(ServerClient):
                 column["value"] = governance_processes
             elif key == "governance_processes":
                 procs = ""
-                specs = ""
                 if governance_processes:
                     for proc in governance_processes:
-                        proc_props = proc['relatedElement'].get("properties", {})
-                        proc_qn = proc_props.get("qualifiedName","")
-                        proc_dn = proc_props.get("displayName","")
-                        proc_description = proc_props.get("description","")
+                        proc_qn = proc.get("proc_qualified_name", "")
+                        proc_dn = proc.get("proc_display_name", "")
+                        proc_description = proc.get("proc_description", "")
 
-                        proc_specs = proc.get("specification",{}).get("supportedRequestParameter",{})
+                        specs = ""
+                        proc_specs = proc.get("proc_params", {})
                         for spec in proc_specs:
                             name = spec.get("name","")
                             description = spec.get("description","")
@@ -218,24 +254,13 @@ class AutomatedCuration(ServerClient):
                                   )
                 column['value'] = procs
             elif key == "governance_processes_d":
-                processes = []
-
-                if governance_processes:
-                    for proc in governance_processes:
-                        procs = {}
-                        proc_props = proc['relatedElement'].get("properties", {})
-                        procs['proc_qualified_name'] = proc_props.get("qualifiedName", "")
-                        procs['proc_display_name'] = proc_props.get("displayName", "")
-                        procs['proc_description'] = proc_props.get("description", "")
-                        procs['proc_params'] = proc.get("specification",{}).get("supportedRequestParameter",{})
-                        processes.append(procs)
-                column['value'] = processes
+                column['value'] = governance_processes
 
             elif key == "external_references":
                 column["value"] = external_references
             elif key == "ref_url":
                 if isinstance(external_references, list) and len(external_references) > 0:
-                    column["value"] = external_references[0].get('relatedElement',{}).get('properties',{}).get('url',"")
+                    column["value"] = external_references[0].get('ref_url',"")
             elif key == "url":
                 column["value"] = url
             elif key == "guid" and column.get("value") is None:
@@ -331,12 +356,26 @@ class AutomatedCuration(ServerClient):
         col_data = populate_columns_from_properties(element, columns_struct)
         columns_list = col_data.get("formats", {}).get("attributes", [])
         header_props = _extract_referenceable_properties(element)
+
+        # Namespace target properties
+        related_props = element.get('relatedElement', {}).get('properties', {})
+        target_display_name = related_props.get('displayName')
+        target_qualified_name = related_props.get('qualifiedName')
+        target_description = related_props.get('description')
+
         for column in columns_list:
             key = column.get("key")
             if key in header_props:
                 column["value"] = header_props.get(key)
             elif isinstance(key, str) and key.lower() == "guid":
                 column["value"] = header_props.get("GUID")
+            elif key == "target_display_name":
+                column["value"] = target_display_name
+            elif key == "target_qualified_name":
+                column["value"] = target_qualified_name
+            elif key == "target_description":
+                column["value"] = target_description
+
         col_data = get_required_relationships(element, col_data)
         mermaid_val = element.get("mermaidGraph", "") or ""
         for column in columns_list:
@@ -368,6 +407,34 @@ class AutomatedCuration(ServerClient):
 
         col_data = populate_columns_from_properties(element, columns_struct)
         columns_list = col_data.get("formats", {}).get("attributes", [])
+
+        # Normalize actionTargets
+        action_targets = element.get('actionTargets', [])
+        normalized_targets = []
+        for target in (action_targets or []):
+            if not isinstance(target, dict):
+                normalized_targets.append(target)
+                continue
+            t_copy = target.copy()
+            related_props = t_copy.get('relatedElement', {}).get('properties', {})
+            t_copy['target_display_name'] = related_props.get('displayName')
+            t_copy['target_qualified_name'] = related_props.get('qualifiedName')
+            t_copy['target_description'] = related_props.get('description')
+            normalized_targets.append(t_copy)
+
+        # Normalize actionRequestSources
+        action_sources = element.get('actionRequestSources', [])
+        normalized_sources = []
+        for source in (action_sources or []):
+            if not isinstance(source, dict):
+                normalized_sources.append(source)
+                continue
+            s_copy = source.copy()
+            related_props = s_copy.get('relatedElement', {}).get('properties', {})
+            s_copy['source_display_name'] = related_props.get('displayName')
+            s_copy['source_qualified_name'] = related_props.get('qualifiedName')
+            normalized_sources.append(s_copy)
+
         header_props = _extract_referenceable_properties(element)
         for col in columns_list:
             key = col.get("key")
@@ -375,6 +442,11 @@ class AutomatedCuration(ServerClient):
                 col["value"] = header_props.get(key)
             elif isinstance(key, str) and key.lower() == "guid":
                 col["value"] = header_props.get("GUID")
+            elif key == "action_targets":
+                col["value"] = normalized_targets
+            elif key == "action_request_sources":
+                col["value"] = normalized_sources
+
         # EngineAction specifics: status, process_name, received_guards, completion_guards, request_type
         status = (
             element.get("properties", {}).get("status")
@@ -436,6 +508,21 @@ class AutomatedCuration(ServerClient):
     def _extract_gov_action_process_properties(self, element: dict, columns_struct: dict) -> dict:
         col_data = populate_columns_from_properties(element, columns_struct)
         columns_list = col_data.get("formats", {}).get("attributes", [])
+
+        # Normalize governanceActionSteps
+        action_steps = element.get('governanceActionSteps', [])
+        normalized_steps = []
+        for step in (action_steps or []):
+            if not isinstance(step, dict):
+                normalized_steps.append(step)
+                continue
+            s_copy = step.copy()
+            # If steps have relatedElements (e.g. the GovernanceActionType), namespace them
+            related_props = s_copy.get('relatedElement', {}).get('properties', {})
+            s_copy['step_display_name'] = s_copy.get('displayName') # step's own name
+            s_copy['type_display_name'] = related_props.get('displayName') # type it's based on
+            normalized_steps.append(s_copy)
+
         header_props = _extract_referenceable_properties(element)
         for col in columns_list:
             key = col.get("key")
@@ -443,6 +530,9 @@ class AutomatedCuration(ServerClient):
                 col["value"] = header_props.get(key)
             elif isinstance(key, str) and key.lower() == "guid":
                 col["value"] = header_props.get("GUID")
+            elif key == "governance_action_steps":
+                col["value"] = normalized_steps
+
         # GAP specifics: processStatus, elementTypeName, stepCount
         proc_status = (
             element.get("properties", {}).get("processStatus")

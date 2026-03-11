@@ -4,6 +4,7 @@ Copyright Contributors to the ODPi Egeria project.
 
 This module tests the ValidTypeLists class and methods from valid_type_lists.py
 """
+import json
 
 from rich import print
 from rich.console import Console
@@ -45,6 +46,10 @@ class TestValidTypeLists:
             try:
                 response = vtl_client.get_all_entity_types()
                 assert response is not None
+                if isinstance(response, (list, dict)):
+                    console.print(f"Received {len(response)} entity types from server\n\n")
+                    console.print(json.dumps(response, indent=2))
+
             except (PyegeriaInvalidParameterException, PyegeriaNotFoundException, PyegeriaAPIException):
                 pass
 

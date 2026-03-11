@@ -216,6 +216,48 @@ Result:
 - LIST master shows role names with a `[details]` link.
 - A "Roles" section appears below the table; each row’s projects appear as a nested table or report using `My-User-Projects-Detail`.
 
+### Handling Hierarchical Conflicts (Namespaced Keys)
+
+Egeria's JSON responses are highly hierarchical, and common keys like `displayName` or `description` are often reused at different levels (e.g., at the root of a template and inside its `relatedElement.properties`).
+
+The default extractor `populate_columns_from_properties` prioritizes properties blocks, which can lead to "shadowing" where the root element's properties are overwritten by nested ones.
+
+#### Short-Term Solution: Namespaced Keys
+To resolve this without changing the core reporting engine, custom extraction functions (like `_extract_tech_type_properties` or `_extract_catalog_target_properties`) can pre-calculate unique, namespaced keys for the report spec to use.
+
+Commonly used namespaced keys in `AutomatedCuration`:
+
+| Key | Origin | Used in Spec |
+|-----|--------|--------------|
+| `template_display_name` | Root `displayName` of a Template | `Catalog-Template-Detail` |
+| `target_display_name` | `displayName` from `relatedElement.properties` | `Catalog-Template-Detail`, `Action-Targets-Detail`, `Catalog-Target` |
+| `proc_display_name` | `displayName` from `relatedElement.properties` of a Process | `Governance-Action-Processes-Detail` |
+| `ref_display_name` | `displayName` from `relatedElement.properties` of an External Reference | `External-Reference-Detail` |
+| `step_display_name` | Root `displayName` of a Governance Action Step | `Governance-Action-Steps-Detail` |
+| `type_display_name` | `displayName` from `relatedElement.properties` of an Action Step's type | `Governance-Action-Steps-Detail` |
+| `source_display_name` | `displayName` from `relatedElement.properties` of a Request Source | `Action-Request-Sources-Detail` |
+
+Example from `base_report_formats.py`:
+```python
+Column(name="Catalog Template Name", key="template_display_name"),
+Column(name="Target Asset Name", key="target_display_name"),
+```
+
+Example from `automated_curation.py` normalization loop:
+```python
+t_copy['template_display_name'] = t_copy.get('displayName')
+related_props = t_copy.get('relatedElement', {}).get('properties', {})
+t_copy['target_display_name'] = related_props.get('displayName')
+```
+
+#### Long-Term Solution: Dot Notation (Future)
+A more robust approach planned for the future is to support path-based keys directly in the `Column` spec. This will allow traversing the hierarchy without needing to modify the extraction logic for every new conflict.
+
+Example (Planned):
+```python
+Column(name="Target Name", key="relatedElement.properties.displayName")
+```
+
 ---
 
 ## Linked Graph REPORTs (REPORT-GRAPH)
