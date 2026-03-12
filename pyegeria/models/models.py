@@ -478,7 +478,7 @@ class LevelIdentifierQueryBody(ResultsRequestBody):
 
 class FilterRequestBody(ResultsRequestBody):
     class_: Annotated[Literal["FilterRequestBody"], Field(alias="class")]
-    filter_string: Annotated[str, Field(alias="filter")]
+    filter_string: Annotated[str | None, Field(alias="filter")] = None
 
 
 class SearchStringRequestBody(ResultsRequestBody):
