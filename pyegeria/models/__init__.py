@@ -1,7 +1,5 @@
 # Model Imports
 from pyegeria.models.models import (
-    MembershipStatus,
-    ValidStatusValues,
     SequencingOrder,
     DeleteMethod,
     to_camel_case,
@@ -81,8 +79,6 @@ from pyegeria.core._exceptions import (
 
 __all__ = [
     # Enums
-    "MembershipStatus",
-    "ValidStatusValues",
     "SequencingOrder",
     "DeleteMethod",
     # Utilities

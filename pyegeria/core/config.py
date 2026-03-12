@@ -137,7 +137,7 @@ class DebugConfig(BaseModel):
 class LoggingConfig(BaseModel):
     """Logging configuration settings"""
     console_filter_levels: List[str] = ["SUCCESS"]
-    console_logging_enabled: List[str] = [ "_exceptions_new", "dr_egeria_md", "tests"]
+    console_logging_enabled: List[str] = [ "_exceptions_new", "dr_egeria", "tests"]
     console_logging_level: str = "ERROR"
     enable_logging: bool = False
     file_logging_level: str = "INFO"
@@ -298,10 +298,27 @@ def load_app_config(env_file: str | None = None):
 
     # Environment
     env = config_dict.setdefault("Environment", {})
-    default_root = env.get("Pyegeria Root") or os.getcwd()
-    env_config_dir = os.getenv("PYEGERIA_CONFIG_DIRECTORY", env_settings.pyegeria_config_directory or "")
-    env_root = os.getenv("PYEGERIA_ROOT_PATH", env_settings.pyegeria_root_path or default_root)
-    env_config_file = os.getenv("PYEGERIA_CONFIG_FILE", env_settings.pyegeria_config_file or "config.json")
+    
+    # Precedence: 
+    # 1. Environment variables (PYEGERIA_ROOT_PATH or EGERIA_ROOT_PATH)
+    # 2. env_settings (from .env file)
+    # 3. config.json (if already merged into env)
+    # 4. default_root ("sample-data" if it exists, otherwise os.getcwd())
+    
+    current_root = env.get("Pyegeria Root") or env_settings.pyegeria_root_path
+    if not current_root:
+        if os.path.exists(os.path.join(os.getcwd(), "sample-data")):
+            default_root = "sample-data"
+        else:
+            default_root = os.getcwd()
+    else:
+        default_root = current_root
+
+    env_root = os.getenv("PYEGERIA_ROOT_PATH") or os.getenv("EGERIA_ROOT_PATH") or default_root
+    
+    env_config_dir = os.getenv("PYEGERIA_CONFIG_DIRECTORY") or env_settings.pyegeria_config_directory or env.get("Pyegeria Config Directory") or ""
+    env_config_file = os.getenv("PYEGERIA_CONFIG_FILE") or env_settings.pyegeria_config_file or env.get("Egeria Config File") or "config.json"
+    
     env["Pyegeria Config Directory"] = env_config_dir
     env["pyegeria_config_directory"] = env_config_dir
     env["Pyegeria Root"] = env_root
@@ -314,8 +331,8 @@ def load_app_config(env_file: str | None = None):
     # Egeria Outbox (new)
     env["Egeria Outbox"] = os.getenv("EGERIA_OUTBOX", env.get("Egeria Outbox", "egeria-outbox"))
     env["Egeria Inbox"] = os.getenv("EGERIA_INBOX", env.get("Egeria Inbox", "egeria-inbox"))
-    env["Dr.Egeria Inbox"] = os.getenv("DR_EGERIA_INBOX_PATH", env.get("Dr.Egeria Inbox", "egeria-inbox/dr-egeria-inbox"))
-    env["Dr.Egeria Outbox"] = os.getenv("DR_EGERIA_OUTBOX_PATH", env.get("Dr.Egeria Outbox", "egeria-outbox/dr-egeria-outbox"))
+    env["Dr.Egeria Inbox"] = os.getenv("DR_EGERIA_INBOX_PATH") or os.getenv("EGERIA_INBOX_PATH") or env.get("Dr.Egeria Inbox") or "egeria-inbox/dr-egeria-inbox"
+    env["Dr.Egeria Outbox"] = os.getenv("DR_EGERIA_OUTBOX_PATH") or os.getenv("EGERIA_OUTBOX_PATH") or env.get("Dr.Egeria Outbox") or "egeria-outbox/dr-egeria-outbox"
     env["Egeria Engine Host"] = os.getenv("EGERIA_ENGINE_HOST", env.get("Egeria Engine Host", "qs-engine-host"))
     env["Egeria Engine Host URL"] = os.getenv("EGERIA_ENGINE_HOST_URL", env.get("Egeria Engine Host URL", "https://localhost:9443"))
     env["Egeria Glossary Path"] = os.getenv("EGERIA_GLOSSARY_PATH", env.get("Egeria Glossary Path", "glossary"))

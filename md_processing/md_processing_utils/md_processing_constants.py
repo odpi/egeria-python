@@ -442,629 +442,558 @@ def add_default_upsert_attributes(attributes: list[dict]) -> list[dict]:
     # Track existing attribute names to avoid duplicates
     existing_keys = set()
     for attr in attributes:
-        existing_keys.update(attr.keys())
+        if not isinstance(attr, dict):
+            continue
+        # Support both old {Label: {props}} and new {name: Label, props} structures
+        if "name" in attr:
+            existing_keys.add(attr["name"])
+        else:
+            existing_keys.update(attr.keys())
 
     default_upsert_attributes = [
         {
-            "Status": {
-                "variable_name": "element_status",
-                "inUpdate": True,
-                "attr_labels": "",
-                "examples": "APPROVED",
-                "default_value": "ACTIVE",
-                "valid_values": "DRAFT; PREPARED; PROPOSED; APPROVED; REJECTED; APPROVED_CONCEPT; UNDER_DEVELOPMENT; DEVELOPMENT_COMPLETE; APPROVED_FOR_DEPLOYMENT; ACTIVE; DISABLED; DEPRECATED; OTHER",
-                "existing_element": "",
-                "description": "The status of the digital product. There is a list of valid values that this conforms to.",
-
-                "generated": False,
-                "style": "Valid Value",
-                "user_specified": True,
-                "unique": False,
-                "input_required": False,
-
-                "min_cardinality": 1,
-                "max_cardinality": 1,
-                "level": "Advanced",
-
-            }
+            "name": "Status",
+            "variable_name": "element_status",
+            "inUpdate": True,
+            "attr_labels": "",
+            "examples": "APPROVED",
+            "default_value": "ACTIVE",
+            "valid_values": "",
+            "property_name": "Status",
+            "existing_element": "",
+            "description": "The status of the digital product. There is a list of valid values that this conforms to.",
+            "generated": False,
+            "style": "Valid Value",
+            "user_specified": True,
+            "unique": False,
+            "input_required": False,
+            "min_cardinality": 1,
+            "max_cardinality": 1,
+            "level": "Advanced",
         },
         {
-            "User Defined Status": {
-                "variable_name": "user_defined_status",
-                "inUpdate": True,
-                "attr_labels": "",
-                "examples": "Pink",
-                "default_value": "",
-                "valid_values": "",
-                "existing_element": "",
-                "description": "Only valid if  Status is set to OTHER. User defined & managed status values.",
-                "generated": False,
-                "style": "Simple",
-                "user_specified": True,
-                "unique": False,
-                "input_required": False,
-                "min_cardinality": 0,
-                "max_cardinality": 1,
-                "level": "Advanced",
-            }
-        },
-
-        {
-            "Category": {
-                "variable_name": "category",
-                "inUpdate": True,
-                "attr_labels": "Category Name",
-                "examples": "",
-                "default_value": "",
-                "valid_values": "",
-                "existing_element": "",
-                "description": "A user specified category name that can be used for example, to define product types or agreement types.",
-
-                "generated": False,
-                "style": "Simple",
-                "user_specified": True,
-                "unique": False,
-                "input_required": False,
-
-                "min_cardinality": 0,
-                "max_cardinality": 1,
-                "level": "Common",
-
-            }
+            "name": "User Defined Status",
+            "variable_name": "user_defined_status",
+            "inUpdate": True,
+            "attr_labels": "",
+            "examples": "Pink",
+            "default_value": "",
+            "valid_values": "",
+            "existing_element": "",
+            "description": "Only valid if  Status is set to OTHER. User defined & managed status values.",
+            "generated": False,
+            "style": "Simple",
+            "user_specified": True,
+            "unique": False,
+            "input_required": False,
+            "min_cardinality": 0,
+            "max_cardinality": 1,
+            "level": "Advanced",
         },
         {
-            "Version Identifier": {
-                "variable_name": "current_version",
-                "inUpdate": True,
-                "attr_labels": "",
-                "examples": "V1.01",
-                "default_value": "1.0",
-                "valid_values": "",
-                "existing_element": "",
-                "description": "Published product version identifier.",
-
-                "generated": False,
-                "style": "Simple",
-                "user_specified": True,
-                "unique": False,
-                "input_required": False,
-
-                "min_cardinality": 0,
-                "max_cardinality": 1,
-                "level": "Basic",
-
-            }
-        },
-        
-        {
-            "Identifier": {
-                "variable_name": "identifier",
-                "inUpdate": True,
-                "attr_labels": "",
-                "examples": "",
-                "default_value": "",
-                "valid_values": "",
-                "existing_element": "",
-                "description": "role identifier",
-
-                "generated": False,
-                "style": "Simple",
-                "user_specified": True,
-                "unique": False,
-                "input_required": False,
-
-                "min_cardinality": 1,
-                "max_cardinality": 1,
-                "level": "Basic",
-
-            }
+            "name": "Category",
+            "variable_name": "category",
+            "inUpdate": True,
+            "attr_labels": "Category Name",
+            "examples": "",
+            "default_value": "",
+            "valid_values": "",
+            "existing_element": "",
+            "description": "A user specified category name that can be used for example, to define product types or agreement types.",
+            "generated": False,
+            "style": "Simple",
+            "user_specified": True,
+            "unique": False,
+            "input_required": False,
+            "min_cardinality": 0,
+            "max_cardinality": 1,
+            "level": "Common",
         },
         {
-            "Classifications": {
-                "variable_name": "classifications",
-                "inUpdate": True,
-                "attr_labels": "classification",
-                "examples": "Folder;  RootCollection; ReferenceList; HomeCollection; ResultSet; RecentAccess; WorkItemList; NameSpace ",
-                "default_value": "",
-                "valid_values": "",
-                "existing_element": "",
-                "description": "Optionally specify the initial classifications for a collection. Multiple classifications can be specified. ",
-
-                "generated": False,
-                "style": "Named DICT",
-                "min_cardinality": 0,
-                "max_cardinality": 1,
-                "level": "Advanced"
-            }
+            "name": "Version Identifier",
+            "variable_name": "current_version",
+            "inUpdate": True,
+            "attr_labels": "",
+            "examples": "V1.01",
+            "default_value": "1.0",
+            "valid_values": "",
+            "existing_element": "",
+            "description": "Published product version identifier.",
+            "generated": False,
+            "style": "Simple",
+            "user_specified": True,
+            "unique": False,
+            "input_required": False,
+            "min_cardinality": 0,
+            "max_cardinality": 1,
+            "level": "Basic",
         },
         {
-            "Is Own Anchor": {
-                "variable_name": "is_own_anchor",
-                "inUpdate": True,
-                "attr_labels": "Own Anchor",
-                "examples": "",
-                "default_value": "True",
-                "valid_values": "",
-                "existing_element": "",
-                "description": "Generally True. ",
-
-                "generated": False,
-                "style": "Bool",
-                "user_specified": True,
-                "unique": False,
-                "input_required": False,
-
-                "min_cardinality": 1,
-                "max_cardinality": 1,
-                "level": "Advanced",
-
-            }
+            "name": "Identifier",
+            "variable_name": "identifier",
+            "inUpdate": True,
+            "attr_labels": "",
+            "examples": "",
+            "default_value": "",
+            "valid_values": "",
+            "existing_element": "",
+            "description": "role identifier",
+            "generated": False,
+            "style": "Simple",
+            "user_specified": True,
+            "unique": False,
+            "input_required": False,
+            "min_cardinality": 1,
+            "max_cardinality": 1,
+            "level": "Basic",
         },
         {
-            "Anchor ID": {
-                "variable_name": "anchor_id",
-                "inUpdate": True,
-                "attr_labels": "",
-                "examples": "",
-                "default_value": "",
-                "valid_values": "",
-                "existing_element": "",
-                "description": "Anchor identity for the collection. Typically a qualified name but if display name is unique then it could be used (not recommended)",
-
-                "generated": False,
-                "style": "Reference Name",
-                "user_specified": True,
-                "unique": True,
-                "input_required": False,
-
-                "min_cardinality": 0,
-                "max_cardinality": 1,
-                "level": "Advanced",
-
-            }
+            "name": "Classifications",
+            "variable_name": "classifications",
+            "inUpdate": True,
+            "attr_labels": "classification",
+            "examples": "Folder;  RootCollection; ReferenceList; HomeCollection; ResultSet; RecentAccess; WorkItemList; NameSpace ",
+            "default_value": "",
+            "valid_values": "",
+            "existing_element": "",
+            "description": "Optionally specify the initial classifications for a collection. Multiple classifications can be specified. ",
+            "generated": False,
+            "style": "Named DICT",
+            "min_cardinality": 0,
+            "max_cardinality": 1,
+            "level": "Advanced"
         },
         {
-            "Parent ID": {
-                "variable_name": "parent_id",
-                "inUpdate": True,
-                "attr_labels": "Parent;",
-                "examples": "DataDict::MyParent",
-                "default_value": "",
-                "valid_values": "",
-                "existing_element": "DataDicti",
-                "description": "Unique name of the parent element.",
-
-                "generated": False,
-                "style": "Reference Name",
-                "user_specified": True,
-                "unique": False,
-                "input_required": False,
-
-                "min_cardinality": 0,
-                "max_cardinality": 1,
-                "level": "Advanced",
-                "Journal Entry": "Should the parent be anything or just a collection?"
-            }
+            "name": "Is Own Anchor",
+            "variable_name": "is_own_anchor",
+            "inUpdate": True,
+            "attr_labels": "Own Anchor",
+            "examples": "",
+            "default_value": "True",
+            "valid_values": "",
+            "existing_element": "",
+            "description": "Generally True. ",
+            "generated": False,
+            "style": "Bool",
+            "user_specified": True,
+            "unique": False,
+            "input_required": False,
+            "min_cardinality": 1,
+            "max_cardinality": 1,
+            "level": "Advanced",
         },
         {
-            "Parent Relationship Type Name": {
-                "variable_name": "parent_rel_type_name",
-                "inUpdate": True,
-                "attr_labels": "",
-                "examples": "",
-                "default_value": "",
-                "valid_values": "",
-                "existing_element": "",
-                "description": "The kind of the relationship to the parent element.",
-
-                "generated": False,
-                "style": "Simple",
-                "user_specified": True,
-                "unique": False,
-                "input_required": False,
-
-                "min_cardinality": 0,
-                "max_cardinality": 1,
-                "level": "Advanced",
-                "Journal Entry": "Any restrictions?"
-            }
+            "name": "Anchor ID",
+            "variable_name": "anchor_id",
+            "inUpdate": True,
+            "attr_labels": "",
+            "examples": "",
+            "default_value": "",
+            "valid_values": "",
+            "existing_element": "",
+            "description": "Anchor identity for the collection. Typically a qualified name but if display name is unique then it could be used (not recommended)",
+            "generated": False,
+            "style": "Reference Name",
+            "user_specified": True,
+            "unique": True,
+            "input_required": False,
+            "min_cardinality": 0,
+            "max_cardinality": 1,
+            "level": "Advanced",
         },
         {
-            "Anchor Scope Name": {
-                "variable_name": "anchor_scope_guid",
-                "inUpdate": True,
-                "attr_labels": "",
-                "examples": "",
-                "default_value": "",
-                "valid_values": "",
-                "existing_element": "DataDict",
-                "description": "Optional qualified name of an anchor scope.",
-
-                "generated": False,
-                "style": "Reference Name",
-                "user_specified": True,
-                "unique": False,
-                "input_required": False,
-
-                "min_cardinality": 0,
-                "max_cardinality": 1,
-                "level": "Advanced",
-
-            }
+            "name": "Parent ID",
+            "variable_name": "parent_id",
+            "inUpdate": True,
+            "attr_labels": "Parent;",
+            "examples": "DataDict::MyParent",
+            "default_value": "",
+            "valid_values": "",
+            "existing_element": "DataDicti",
+            "description": "Unique name of the parent element.",
+            "generated": False,
+            "style": "Reference Name",
+            "user_specified": True,
+            "unique": False,
+            "input_required": False,
+            "min_cardinality": 0,
+            "max_cardinality": 1,
+            "level": "Advanced",
+            "Journal Entry": "Should the parent be anything or just a collection?"
         },
         {
-            "Parent at End1": {
-                "variable_name": "parent_end1",
-                "inUpdate": True,
-                "attr_labels": "",
-                "examples": "",
-                "default_value": "True",
-                "valid_values": "",
-                "existing_element": "",
-                "description": "Is the parent at end1 of the relationship?",
-
-                "generated": False,
-                "style": "Bool",
-                "user_specified": True,
-                "unique": False,
-                "input_required": False,
-
-                "min_cardinality": 0,
-                "max_cardinality": 1,
-                "level": "Advanced",
-
-            }
+            "name": "Parent Relationship Type Name",
+            "variable_name": "parent_rel_type_name",
+            "inUpdate": True,
+            "attr_labels": "",
+            "examples": "",
+            "default_value": "",
+            "valid_values": "",
+            "existing_element": "",
+            "description": "The kind of the relationship to the parent element.",
+            "generated": False,
+            "style": "Simple",
+            "user_specified": True,
+            "unique": False,
+            "input_required": False,
+            "min_cardinality": 0,
+            "max_cardinality": 1,
+            "level": "Advanced",
+            "Journal Entry": "Any restrictions?"
         },
         {
-            "Qualified Name": {
-                "variable_name": "qualified_name",
-                "inUpdate": True,
-                "attr_labels": "",
-                "examples": "dataField::a data field",
-                "default_value": "",
-                "valid_values": "",
-                "existing_element": "",
-                "description": "A unique qualified name for the element. Generated using the qualified name pattern  if not user specified.",
-                "qualified_name_pattern": "local_qualifier::namespace::DataDictionary:display_name::version_id",
-                "generated": True,
-                "style": "QN",
-                "user_specified": True,
-                "unique": True,
-                "input_required": False,
-
-                "min_cardinality": 1,
-                "max_cardinality": 1,
-                "level": "Common",
-
-            }
+            "name": "Anchor Scope Name",
+            "variable_name": "anchor_scope_guid",
+            "inUpdate": True,
+            "attr_labels": "",
+            "examples": "",
+            "default_value": "",
+            "valid_values": "",
+            "existing_element": "DataDict",
+            "description": "Optional qualified name of an anchor scope.",
+            "generated": False,
+            "style": "Reference Name",
+            "user_specified": True,
+            "unique": False,
+            "input_required": False,
+            "min_cardinality": 0,
+            "max_cardinality": 1,
+            "level": "Advanced",
         },
         {
-            "GUID": {
-                "variable_name": "guid",
-                "inUpdate": True,
-                "attr_labels": "Guid; guid",
-                "examples": "00585a82-0f7d-45ef-9b87-7078665917a9",
-                "default_value": "",
-                "valid_values": "",
-                "existing_element": "",
-                "description": "A system generated unique identifier.",
-
-                "generated": True,
-                "style": "GUID",
-                "user_specified": False,
-                "unique": True,
-                "input_required": False,
-
-                "min_cardinality": 1,
-                "max_cardinality": 1,
-                "level": "Basic",
-
-            }
+            "name": "Parent at End1",
+            "variable_name": "parent_end1",
+            "inUpdate": True,
+            "attr_labels": "",
+            "examples": "",
+            "default_value": "True",
+            "valid_values": "",
+            "existing_element": "",
+            "description": "Is the parent at end1 of the relationship?",
+            "generated": False,
+            "style": "Bool",
+            "user_specified": True,
+            "unique": False,
+            "input_required": False,
+            "min_cardinality": 0,
+            "max_cardinality": 1,
+            "level": "Advanced",
         },
         {
-            "Effective Time": {
-                "variable_name": "effective_time",
-                "inUpdate": True,
-                "attr_labels": "",
-                "examples": "",
-                "default_value": "",
-                "valid_values": "",
-                "existing_element": "",
-                "description": "An ISO-8601 string representing the time to use for evaluating effectivity of the elements related to this one.",
-
-                "generated": False,
-                "style": "Simple",
-                "user_specified": True,
-                "unique": False,
-                "input_required": False,
-
-                "min_cardinality": 1,
-                "max_cardinality": 1,
-                "level": "Advanced",
-
-            }
+            "name": "Qualified Name",
+            "variable_name": "qualified_name",
+            "inUpdate": True,
+            "attr_labels": "",
+            "examples": "dataField::a data field",
+            "default_value": "",
+            "valid_values": "",
+            "existing_element": "",
+            "description": "A unique qualified name for the element. Generated using the qualified name pattern  if not user specified.",
+            "qualified_name_pattern": "local_qualifier::namespace::DataDictionary:display_name::version_id",
+            "generated": True,
+            "style": "QN",
+            "user_specified": True,
+            "unique": True,
+            "input_required": False,
+            "min_cardinality": 1,
+            "max_cardinality": 1,
+            "level": "Common",
         },
         {
-            "Effective From": {
-                "variable_name": "effective_from",
-                "inUpdate": True,
-                "attr_labels": "",
-                "examples": "",
-                "default_value": "",
-                "valid_values": "",
-                "existing_element": "",
-                "description": "A string in ISO-8601 format that defines the when an element becomes effective (visible).",
-                "generated": False,
-                "style": "Simple",
-                "user_specified": True,
-                "unique": False,
-                "input_required": False,
-                "min_cardinality": 0,
-                "max_cardinality": 1,
-                "level": "Advanced",
-
-            }
+            "name": "GUID",
+            "variable_name": "guid",
+            "inUpdate": True,
+            "attr_labels": "Guid; guid",
+            "examples": "00585a82-0f7d-45ef-9b87-7078665917a9",
+            "default_value": "",
+            "valid_values": "",
+            "existing_element": "",
+            "description": "A system generated unique identifier.",
+            "generated": True,
+            "style": "GUID",
+            "user_specified": False,
+            "unique": True,
+            "input_required": False,
+            "min_cardinality": 1,
+            "max_cardinality": 1,
+            "level": "Basic",
         },
         {
-            "Effective To": {
-                "variable_name": "effective_to",
-                "inUpdate": True,
-                "attr_labels": "",
-                "examples": "",
-                "default_value": "",
-                "valid_values": "",
-                "existing_element": "",
-                "description": "A string in ISO-8601 format that defines the when an element is no longer effective (visible).",
-
-                "generated": False,
-                "style": "Simple",
-                "user_specified": True,
-                "unique": False,
-                "input_required": False,
-
-                "min_cardinality": 1,
-                "max_cardinality": 1,
-                "level": "Advanced",
-
-            }
+            "name": "Effective Time",
+            "variable_name": "effective_time",
+            "inUpdate": True,
+            "attr_labels": "",
+            "examples": "",
+            "default_value": "",
+            "valid_values": "",
+            "existing_element": "",
+            "description": "An ISO-8601 string representing the time to use for evaluating effectivity of the elements related to this one.",
+            "generated": False,
+            "style": "Simple",
+            "user_specified": True,
+            "unique": False,
+            "input_required": False,
+            "min_cardinality": 1,
+            "max_cardinality": 1,
+            "level": "Advanced",
         },
         {
-            "Merge Update": {
-                "variable_name": "merge_update",
-                "inUpdate": True,
-                "attr_labels": "Merge",
-                "examples": "",
-                "default_value": "True",
-                "valid_values": "",
-                "existing_element": "",
-                "description": "If True, only those attributes specified in the update will be updated; If False, any attributes not provided during the update will be set to None.",
-
-                "generated": False,
-                "style": "Bool",
-                "user_specified": True,
-                "unique": False,
-                "input_required": False,
-
-                "min_cardinality": 0,
-                "max_cardinality": 1,
-                "level": "Advanced",
-
-            }
+            "name": "Effective From",
+            "variable_name": "effective_from",
+            "inUpdate": True,
+            "attr_labels": "",
+            "examples": "",
+            "default_value": "",
+            "valid_values": "",
+            "existing_element": "",
+            "description": "A string in ISO-8601 format that defines the when an element becomes effective (visible).",
+            "generated": False,
+            "style": "Simple",
+            "user_specified": True,
+            "unique": False,
+            "input_required": False,
+            "min_cardinality": 0,
+            "max_cardinality": 1,
+            "level": "Advanced",
         },
         {
-            "Additional Properties": {
-                "variable_name": "additional_properties",
-                "inUpdate": True,
-                "attr_labels": "",
-                "examples": "",
-                "default_value": "",
-                "valid_values": "",
-                "existing_element": "",
-                "description": "Additional user defined values organized as name value pairs in a dictionary.",
-
-                "generated": False,
-                "style": "Dictionary",
-                "user_specified": True,
-                "unique": False,
-                "input_required": False,
-
-                "min_cardinality": 0,
-                "max_cardinality": -1,
-                "level": "Advanced",
-
-            }
+            "name": "Effective To",
+            "variable_name": "effective_to",
+            "inUpdate": True,
+            "attr_labels": "",
+            "examples": "",
+            "default_value": "",
+            "valid_values": "",
+            "existing_element": "",
+            "description": "A string in ISO-8601 format that defines the when an element is no longer effective (visible).",
+            "generated": False,
+            "style": "Simple",
+            "user_specified": True,
+            "unique": False,
+            "input_required": False,
+            "min_cardinality": 1,
+            "max_cardinality": 1,
+            "level": "Advanced",
         },
         {
-            "Extended Properties": {
-                "variable_name": "additional_properties",
-                "inUpdate": True,
-                "attr_labels": "",
-                "examples": "",
-                "default_value": "",
-                "valid_values": "",
-                "existing_element": "",
-                "description": "Additional user defined values organized as name value pairs in a dictionary.",
-                "generated": False,
-                "style": "Named DICT",
-                "user_specified": True,
-                "unique": False,
-                "input_required": False,
-                "min_cardinality": 0,
-                "max_cardinality": -1,
-                "level": "Invisible",
-            }
+            "name": "Merge Update",
+            "variable_name": "merge_update",
+            "inUpdate": True,
+            "attr_labels": "Merge",
+            "examples": "",
+            "default_value": "True",
+            "valid_values": "",
+            "existing_element": "",
+            "description": "If True, only those attributes specified in the update will be updated; If False, any attributes not provided during the update will be set to None.",
+            "generated": False,
+            "style": "Bool",
+            "user_specified": True,
+            "unique": False,
+            "input_required": False,
+            "min_cardinality": 0,
+            "max_cardinality": 1,
+            "level": "Advanced",
         },
         {
-            "External Source GUID": {
-                "variable_name": "external_source_guid",
-                "inUpdate": True,
-                "attr_labels": "",
-                "examples": "",
-                "default_value": "",
-                "valid_values": "",
-                "existing_element": "",
-                "description": "Identifier of an external source that is associated with this element.",
-
-                "generated": False,
-                "style": "Simple",
-                "user_specified": True,
-                "unique": False,
-                "input_required": False,
-
-                "min_cardinality": 0,
-                "max_cardinality": 1,
-                "level": "Advanced",
-
-            }
+            "name": "Additional Properties",
+            "variable_name": "additional_properties",
+            "inUpdate": True,
+            "attr_labels": "",
+            "examples": "",
+            "default_value": "",
+            "valid_values": "",
+            "existing_element": "",
+            "description": "Additional user defined values organized as name value pairs in a dictionary.",
+            "generated": False,
+            "style": "Dictionary",
+            "user_specified": True,
+            "unique": False,
+            "input_required": False,
+            "min_cardinality": 0,
+            "max_cardinality": -1,
+            "level": "Advanced",
         },
         {
-            "External Source Name": {
-                "variable_name": "external_source_name",
-                "inUpdate": True,
-                "attr_labels": "",
-                "examples": "",
-                "default_value": "",
-                "valid_values": "",
-                "existing_element": "",
-                "description": "Name of an external element that is associated with this element.",
-                "generated": False,
-                "style": "Simple",
-                "user_specified": True,
-                "unique": False,
-                "input_required": False,
-                "min_cardinality": 0,
-                "max_cardinality": 1,
-                "level": "Advanced",
-
-            }
+            "name": "Extended Properties",
+            "variable_name": "additional_properties",
+            "inUpdate": True,
+            "attr_labels": "",
+            "examples": "",
+            "default_value": "",
+            "valid_values": "",
+            "existing_element": "",
+            "description": "Additional user defined values organized as name value pairs in a dictionary.",
+            "generated": False,
+            "style": "Named DICT",
+            "user_specified": True,
+            "unique": False,
+            "input_required": False,
+            "min_cardinality": 0,
+            "max_cardinality": -1,
+            "level": "Invisible",
         },
         {
-            "Journal Entry": {
-                "variable_name": "journal_entry",
-                "inUpdate": True,
-                "attr_labels": "",
-                "examples": "",
-                "default_value": "",
-                "valid_values": "",
-                "existing_element": "",
-                "description": "",
-                "generated": False,
-                "style": "Simple",
-                "user_specified": True,
-                "unique": False,
-                "input_required": False,
-
-                "min_cardinality": 0,
-                "max_cardinality": 1,
-                "level": "Common",
-
-            }
+            "name": "External Source GUID",
+            "variable_name": "external_source_guid",
+            "inUpdate": True,
+            "attr_labels": "",
+            "examples": "",
+            "default_value": "",
+            "valid_values": "",
+            "existing_element": "",
+            "description": "Identifier of an external source that is associated with this element.",
+            "generated": False,
+            "style": "Simple",
+            "user_specified": True,
+            "unique": False,
+            "input_required": False,
+            "min_cardinality": 0,
+            "max_cardinality": 1,
+            "level": "Advanced",
         },
         {
-            "URL": {
-                "variable_name": "url",
-                "inUpdate": True,
-                "attr_labels": "",
-                "examples": "",
-                "default_value": "",
-                "valid_values": "",
-                "existing_element": "",
-                "description": "Link to supporting information",
-
-                "generated": False,
-                "style": "Simple",
-                "user_specified": True,
-                "unique": False,
-                "input_required": False,
-
-                "min_cardinality": 0,
-                "max_cardinality": 1,
-                "level": "Basic",
-
-            }
+            "name": "External Source Name",
+            "variable_name": "external_source_name",
+            "inUpdate": True,
+            "attr_labels": "",
+            "examples": "",
+            "default_value": "",
+            "valid_values": "",
+            "existing_element": "",
+            "description": "Name of an external element that is associated with this element.",
+            "generated": False,
+            "style": "Simple",
+            "user_specified": True,
+            "unique": False,
+            "input_required": False,
+            "min_cardinality": 0,
+            "max_cardinality": 1,
+            "level": "Advanced",
         },
         {
-            "Search Keywords": {
-                "variable_name": "search_keywords",
-                "inUpdate": True,
-                "attr_labels": "",
-                "examples": "",
-                "default_value": "",
-                "valid_values": "",
-                "existing_element": "",
-                "description": "Keywords to facilitate finding the element",
-
-                "generated": False,
-                "style": "Simple List",
-                "user_specified": True,
-                "unique": False,
-                "input_required": False,
-
-                "min_cardinality": 0,
-                "max_cardinality": 20,
-                "level": "Basic",
-
-            }
+            "name": "Journal Entry",
+            "variable_name": "journal_entry",
+            "inUpdate": True,
+            "attr_labels": "",
+            "examples": "",
+            "default_value": "",
+            "valid_values": "",
+            "existing_element": "",
+            "description": "",
+            "generated": False,
+            "style": "Simple",
+            "user_specified": True,
+            "unique": False,
+            "input_required": False,
+            "min_cardinality": 0,
+            "max_cardinality": 1,
+            "level": "Common",
         },
         {
-            "Translation Details": {
-                "variable_name": "translation_details",
-                "inUpdate": True,
-                "attr_labels": "",
-                "examples": "",
-                "default_value": "",
-                "valid_values": "",
-                "existing_element": "",
-                "description": "Allow translation information for the element to be provided.",
-                "generated": False,
-                "style": "Named DICT",
-                "user_specified": True,
-                "unique": False,
-                "input_required": False,
-                "min_cardinality": 0,
-                "max_cardinality": -1,
-                "level": "Invisible",
-            }
+            "name": "URL",
+            "variable_name": "url",
+            "inUpdate": True,
+            "attr_labels": "",
+            "examples": "",
+            "default_value": "",
+            "valid_values": "",
+            "existing_element": "",
+            "description": "Link to supporting information",
+            "generated": False,
+            "style": "Simple",
+            "user_specified": True,
+            "unique": False,
+            "input_required": False,
+            "min_cardinality": 0,
+            "max_cardinality": 1,
+            "level": "Basic",
         },
         {
-            "Supplementary Properties": {
-                "variable_name": "supplementary_properties",
-                "inUpdate": True,
-                "attr_labels": "",
-                "examples": "",
-                "default_value": "",
-                "valid_values": "",
-                "existing_element": "",
-                "description": "Provide supplementary information to the element using the structure of a glossary term",
-                "generated": False,
-                "style": "Named DICT",
-                "user_specified": True,
-                "unique": False,
-                "input_required": False,
-                "min_cardinality": 0,
-                "max_cardinality": -1,
-                "level": "Advanced",
-            }
+            "name": "Search Keywords",
+            "variable_name": "search_keywords",
+            "inUpdate": True,
+            "attr_labels": "",
+            "examples": "",
+            "default_value": "",
+            "valid_values": "",
+            "existing_element": "",
+            "description": "Keywords to facilitate finding the element",
+            "generated": False,
+            "style": "Simple List",
+            "user_specified": True,
+            "unique": False,
+            "input_required": False,
+            "min_cardinality": 0,
+            "max_cardinality": 20,
+            "level": "Basic",
+        },
+        {
+            "name": "Translation Details",
+            "variable_name": "translation_details",
+            "inUpdate": True,
+            "attr_labels": "",
+            "examples": "",
+            "default_value": "",
+            "valid_values": "",
+            "existing_element": "",
+            "description": "Allow translation information for the element to be provided.",
+            "generated": False,
+            "style": "Named DICT",
+            "user_specified": True,
+            "unique": False,
+            "input_required": False,
+            "min_cardinality": 0,
+            "max_cardinality": -1,
+            "level": "Invisible",
+        },
+        {
+            "name": "Supplementary Properties",
+            "variable_name": "supplementary_properties",
+            "inUpdate": True,
+            "attr_labels": "",
+            "examples": "",
+            "default_value": "",
+            "valid_values": "",
+            "existing_element": "",
+            "description": "Provide supplementary information to the element using the structure of a glossary term",
+            "generated": False,
+            "style": "Named DICT",
+            "user_specified": True,
+            "unique": False,
+            "input_required": False,
+            "min_cardinality": 0,
+            "max_cardinality": -1,
+            "level": "Advanced",
         },
     ]
 
-    for default_attr in default_upsert_attributes:
-        # Each default_attr is a dict with one key, the attribute name
-        for attr_name, default_vals in default_attr.items():
-            if attr_name in existing_keys:
-                # Find the existing attr and update its values IF they are empty or missing
-                for attr_dict in attributes:
-                    if attr_name in attr_dict:
-                        existing_vals = attr_dict[attr_name]
-                        for k, v in default_vals.items():
-                            # If existing value is missing, empty string, or empty list, use default
-                            if k not in existing_vals or existing_vals[k] == "" or existing_vals[k] == []:
-                                if v != "" and v != []:
-                                    existing_vals[k] = v
-                        break
-            else:
-                new_attributes.append(default_attr)
-                existing_keys.add(attr_name)
+    for default_vals in default_upsert_attributes:
+        attr_name = default_vals["name"]
+        if attr_name in existing_keys:
+            # Find the existing attr and update its values IF they are empty or missing
+            for attr_dict in attributes:
+                # Support both flat and nested structures in the incoming list
+                is_match = False
+                candidate_vals = {}
+                if "name" in attr_dict and attr_dict["name"] == attr_name:
+                    is_match = True
+                    candidate_vals = attr_dict
+                elif attr_name in attr_dict:
+                    is_match = True
+                    if not isinstance(attr_dict[attr_name], dict):
+                        attr_dict[attr_name] = {}
+                    candidate_vals = attr_dict[attr_name]
+                
+                if is_match and isinstance(candidate_vals, dict):
+                    for k, v in default_vals.items():
+                        # If existing value is missing, empty string, or empty list, use default
+                        if k not in candidate_vals or candidate_vals[k] == "" or candidate_vals[k] == []:
+                            if v != "" and v != []:
+                                candidate_vals[k] = v
+                    break
+        else:
+            new_attributes.append(default_vals)
+            existing_keys.add(attr_name)
 
     return new_attributes
 
@@ -1074,120 +1003,119 @@ def add_default_link_attributes(attributes: list[dict]) -> list[dict]:
     # Track existing attribute names to avoid duplicates
     existing_keys = set()
     for attr in attributes:
-        existing_keys.update(attr.keys())
+        if not isinstance(attr, dict):
+            continue
+        # Support both old {Label: {props}} and new {name: Label, props} structures
+        if "name" in attr:
+            existing_keys.add(attr["name"])
+        else:
+            existing_keys.update(attr.keys())
 
     default_link_attributes = [
         {
-            "Effective Time": {
-                "variable_name": "effective_time",
-                "inUpdate": True,
-                "attr_labels": "",
-                "examples": "",
-                "default_value": "",
-                "valid_values": "",
-                "existing_element": "",
-                "description": "An ISO-8601 string representing the time to use for evaluating effectivity of the elements related to this one.",
-
-                "generated": False,
-                "style": "Simple",
-                "user_specified": True,
-                "unique": False,
-                "input_required": False,
-
-                "min_cardinality": 1,
-                "max_cardinality": 1,
-                "level": "Advanced",
-
-            }
+            "name": "Effective Time",
+            "variable_name": "effective_time",
+            "inUpdate": True,
+            "attr_labels": "",
+            "examples": "",
+            "default_value": "",
+            "valid_values": "",
+            "existing_element": "",
+            "description": "An ISO-8601 string representing the time to use for evaluating effectivity of the elements related to this one.",
+            "generated": False,
+            "style": "Simple",
+            "user_specified": True,
+            "unique": False,
+            "input_required": False,
+            "min_cardinality": 1,
+            "max_cardinality": 1,
+            "level": "Advanced",
         },
         {
-            "Effective From": {
-                "variable_name": "effective_from",
-                "inUpdate": True,
-                "attr_labels": "",
-                "examples": "",
-                "default_value": "",
-                "valid_values": "",
-                "existing_element": "",
-                "description": "A string in ISO-8601 format that defines the when an element becomes effective (visible).",
-
-                "generated": False,
-                "style": "Simple",
-                "user_specified": True,
-                "unique": False,
-                "input_required": False,
-
-                "min_cardinality": 0,
-                "max_cardinality": 1,
-                "level": "Advanced",
-
-            }
+            "name": "Effective From",
+            "variable_name": "effective_from",
+            "inUpdate": True,
+            "attr_labels": "",
+            "examples": "",
+            "default_value": "",
+            "valid_values": "",
+            "existing_element": "",
+            "description": "A string in ISO-8601 format that defines the when an element becomes effective (visible).",
+            "generated": False,
+            "style": "Simple",
+            "user_specified": True,
+            "unique": False,
+            "input_required": False,
+            "min_cardinality": 0,
+            "max_cardinality": 1,
+            "level": "Advanced",
         },
         {
-            "Effective To": {
-                "variable_name": "effective_to",
-                "inUpdate": True,
-                "attr_labels": "",
-                "examples": "",
-                "default_value": "",
-                "valid_values": "",
-                "existing_element": "",
-                "description": "A string in ISO-8601 format that defines the when an element is no longer effective (visible).",
-
-                "generated": False,
-                "style": "Simple",
-                "user_specified": True,
-                "unique": False,
-                "input_required": False,
-
-                "min_cardinality": 1,
-                "max_cardinality": 1,
-                "level": "Advanced",
-
-            }
+            "name": "Effective To",
+            "variable_name": "effective_to",
+            "inUpdate": True,
+            "attr_labels": "",
+            "examples": "",
+            "default_value": "",
+            "valid_values": "",
+            "existing_element": "",
+            "description": "A string in ISO-8601 format that defines the when an element is no longer effective (visible).",
+            "generated": False,
+            "style": "Simple",
+            "user_specified": True,
+            "unique": False,
+            "input_required": False,
+            "min_cardinality": 1,
+            "max_cardinality": 1,
+            "level": "Advanced",
         },
         {
-            "Extended Properties": {
-                "variable_name": "additional_properties",
-                "inUpdate": True,
-                "attr_labels": "",
-                "examples": "",
-                "default_value": "",
-                "valid_values": "",
-                "existing_element": "",
-                "description": "Additional user defined values organized as name value pairs in a dictionary.",
-
-                "generated": False,
-                "style": "Dictionary",
-                "user_specified": True,
-                "unique": False,
-                "input_required": False,
-
-                "min_cardinality": 0,
-                "max_cardinality": -1,
-                "level": "Invisible",
-
-            }
+            "name": "Extended Properties",
+            "variable_name": "additional_properties",
+            "inUpdate": True,
+            "attr_labels": "",
+            "examples": "",
+            "default_value": "",
+            "valid_values": "",
+            "existing_element": "",
+            "description": "Additional user defined values organized as name value pairs in a dictionary.",
+            "generated": False,
+            "style": "Dictionary",
+            "user_specified": True,
+            "unique": False,
+            "input_required": False,
+            "min_cardinality": 0,
+            "max_cardinality": -1,
+            "level": "Invisible",
         }
-
     ]
 
-    for default_attr in default_link_attributes:
-        # Each default_attr is a dict with one key, the attribute name
-        for attr_name, default_vals in default_attr.items():
-            if attr_name in existing_keys:
-                # Find the existing attr and update its values IF they are empty or missing
-                for attr_dict in attributes:
-                    if attr_name in attr_dict:
-                        existing_vals = attr_dict[attr_name]
-                        for k, v in default_vals.items():
-                            # If existing value is missing, empty string, or empty list, use default
-                            if k not in existing_vals or existing_vals[k] == "" or existing_vals[k] == []:
-                                if v != "" and v != []:
-                                    existing_vals[k] = v
-                        break
-            else:
-                new_attributes.append(default_attr)
-                existing_keys.add(attr_name)
+    for default_vals in default_link_attributes:
+        attr_name = default_vals["name"]
+        if attr_name in existing_keys:
+            # Find the existing attr and update its values IF they are empty or missing
+            for attr_dict in attributes:
+                # Support both flat and nested structures in the incoming list
+                is_match = False
+                candidate_vals = {}
+                if "name" in attr_dict and attr_dict["name"] == attr_name:
+                    is_match = True
+                    candidate_vals = attr_dict
+                elif attr_name in attr_dict:
+                    is_match = True
+                    if not isinstance(attr_dict[attr_name], dict):
+                        attr_dict[attr_name] = {}
+                    candidate_vals = attr_dict[attr_name]
+
+                if is_match and isinstance(candidate_vals, dict):
+                    for k, v in default_vals.items():
+                        # If existing value is missing, empty string, or empty list, use default
+                        if k not in candidate_vals or candidate_vals[k] == "" or candidate_vals[k] == []:
+                            if v != "" and v != []:
+                                candidate_vals[k] = v
+                    break
+        else:
+            new_attributes.append(default_vals)
+            existing_keys.add(attr_name)
 
     return new_attributes

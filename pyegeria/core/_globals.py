@@ -8,6 +8,29 @@ This common file is used to set some global values and enumerations used by the 
 
 """
 from enum import Enum
+from typing import Any, Type
+
+def resolve_enum(enum_class: Type[Enum], value: str | int) -> int | None:
+    """
+    Resolves a string or integer to its corresponding Egeria enum integer value.
+    Example: resolve_enum(ContentStatus, 'Draft') -> 0
+    """
+    if value is None or value == "":
+        return None
+        
+    if isinstance(value, int):
+        return value
+        
+    v = str(value).strip().upper()
+    try:
+        # Direct name match
+        return enum_class[v].value
+    except (KeyError, ValueError):
+        # Check if it's already an integer string
+        if v.isdigit():
+            return int(v)
+        # Try to match by value name if possible (some enums might have specific logic)
+        return None
 
 is_debug = False
 disable_ssl_warnings = True
@@ -43,43 +66,13 @@ class GovernanceDomains(Enum):
     ASSET_MANAGEMENT= 7
     OTHER= 99
 
-class ContentStatus(Enum):
-    DRAFT = 0
-    PREPARED = 1
-    PROPOSED = 2
-    APPROVED = 3
-    REJECTED = 4
-    ACTIVE = 5
-    DEPRECATED = 6
-    OTHER = 99
-
-class DeploymentStatus(Enum):
-    PROPOSED = 0
-    UNDER_DEVELOPMENT = 1
-    DEVELOPMENT_COMPLETE = 2
-    APPROVED_FOR_DEPLOYMENT = 3
-    REJECTED_FOR_DEPLOYMENT = 4
-    STANDBY = 5
-    ACTIVE = 6
-    DISABLED = 7
-    FAILED = 8
-    OTHER = 99
-
-class ActivityStatus(Enum):
-    REQUESTED = 0
-    APPROVED = 1
-    WAITING = 2
-    ACTIVATING = 3
-    IN_PROGRESS = 4
-    PAUSED = 5
-    FOR_INFO = 6
-    COMPLETED = 7
-    INVALID = 8
-    IGNORED = 9
-    FAILED = 10
-    CANCELLED = 11
-    ABANDONED = 12
-    OTHER = 99
+# Default status values for fallback if dynamic fetching fails
+CONTENT_STATUS = ["DRAFT", "PREPARED", "PROPOSED", "APPROVED", "REJECTED", "ACTIVE", "DEPRECATED", "OTHER"]
+DEPLOYMENT_STATUS = ["PROPOSED", "UNDER_DEVELOPMENT", "DEVELOPMENT_COMPLETE", "APPROVED_FOR_DEPLOYMENT", 
+                     "REJECTED_FOR_DEPLOYMENT", "STANDBY", "ACTIVE", "DISABLED", "FAILED", "OTHER"]
+ACTIVITY_STATUS = ["REQUESTED", "APPROVED", "WAITING", "ACTIVATING", "IN_PROGRESS", "PAUSED", "FOR_INFO", 
+                   "COMPLETED", "INVALID", "IGNORED", "FAILED", "CANCELLED", "ABANDONED", "OTHER"]
+MEMBERSHIP_STATUS = ["UNKNOWN", "DISCOVERED", "PROPOSED", "IMPORTED", "VALIDATED", "DEPRECATED", "OBSOLETE", "OTHER"]
 
 
 
@@ -108,6 +101,4 @@ MERMAID_GRAPH_TITLES = ["Anchor Mermaid Graph", "Information Supply Chain Mermai
                   "Specification Mermaid Graph", "Solution Blueprint Mermaid Graph","Mermaid Graph",
                   "Solution Subcomponent Mermaid Graph","Governance Action Process Mermaid Graph" ]
 TERM_STATUS = ["DRAFT", "PREPARED","PROPOSED","APPROVED", "REJECTED", "ACTIVE", "DEPRECATED", "DELETED", "OTHER"]
-ACTIVITY_STATUS = ["REQUESTED", "APPROVED", "WAITING", "ACTIVATING", "IN_PROGRESS", "PAUSED","FOR_INFO","COMPLETED",
-                   "INVALID","IGNORED","FAILED","CANCELLED", "ABANDONED","OTHER"]
 REPORT_ACRONYMS = ["GUID", "URL", "ID", "QN", "API", "UI"]

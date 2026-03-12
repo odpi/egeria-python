@@ -1,6 +1,6 @@
 {
   "family": "Report",
-  "exported": "Mar 9, 2026 at 3:18:00 PM",
+  "exported": "Mar 11, 2026 at 9:50:58 AM",
   "attribute_definitions": {
     "Search String": {
       "variable_name": "search_string",
@@ -32,7 +32,10 @@
         "FORM",
         "REPORT",
         "MERMAID",
-        "DICT"
+        "DICT",
+        "MD",
+        "TABLE",
+        "JSON"
       ],
       "existing_element": "",
       "description": "Optional specification of output format for the query.",
@@ -129,24 +132,24 @@
       "examples": "",
       "default_value": "['ACTIVE']",
       "valid_values": [
-        "\\'UNKNOWN\\'",
-        "\\'DRAFT\\'",
-        "\\'PREPARED\\'",
-        "\\'PROPOSED\\'",
-        "\\'APPROVED\\'",
-        "\\'REJECTED\\'",
-        "\\'APPROVED_CONCEPT\\'",
-        "\\'UNDER_DEVELOPMENT\\'",
-        "\\'DEVELOPMENT_COMPLETE\\'",
-        "\\'APPROVED_FOR_DEPLOYMENT\\'",
-        "\\'STANDBY\\'",
-        "\\'ACTIVE\\'",
-        "\\'FAILED\\'",
-        "\\'DISABLED\\'",
-        "\\'COMPLETE\\'",
-        "\\'DEPRECATED\\'",
-        "\\'OTHER\\'",
-        "\\'DELETED"
+        "UNKNOWN",
+        "DRAFT",
+        "PREPARED",
+        "PROPOSED",
+        "APPROVED",
+        "REJECTED",
+        "APPROVED_CONCEPT",
+        "UNDER_DEVELOPMENT",
+        "DEVELOPMENT_COMPLETE",
+        "APPROVED_FOR_DEPLOYMENT",
+        "STANDBY",
+        "ACTIVE",
+        "FAILED",
+        "DISABLED",
+        "COMPLETE",
+        "DEPRECATED",
+        "OTHER",
+        "DELETED"
       ],
       "existing_element": "",
       "description": "One of the status values from a list of valid values.",
@@ -435,8 +438,7 @@
       "Journal Entry": ""
     }
   },
-  "bundles": {
-  },
+  "bundles": {},
   "commands": {
     "Report": {
       "display_name": "Report",
