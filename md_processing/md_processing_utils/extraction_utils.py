@@ -3,6 +3,7 @@ This file contains functions for extracting data from text for Egeria Markdown p
 """
 import re
 from typing import Any
+from loguru import logger
 
 from md_processing.md_processing_utils.common_md_utils import (print_msg, find_key_with_value, get_element_dictionary,
                                                                update_element_dictionary)
@@ -10,7 +11,6 @@ from md_processing.md_processing_utils.message_constants import INFO, EXISTS_REQ
 from md_processing.md_processing_utils.md_processing_constants import debug_level
 from pyegeria.core._globals import NO_ELEMENTS_FOUND
 from pyegeria.egeria_tech_client import EgeriaTech
-
 
 def extract_command_plus(block: str) -> tuple[str, str, str] | None:
     """
@@ -156,16 +156,13 @@ def extract_attribute(text: str, labels: List[str]) -> Optional[str]:
                 line for line in extracted_text.splitlines()
                 if not line.lstrip().startswith(">") and not re.match(r'^\s*_+\s*$', line)
             ]
-            # Join the lines back, preserving single newlines
-            cleaned_text = "\n".join(filtered_lines).strip()
-
             if cleaned_text:
                 return cleaned_text  # Return the cleaned and formatted text
     return None
 
 
 
-
+@logger.catch
 def process_simple_attribute(txt: str, labels: set, if_missing: str = INFO) -> str | None:
     """Process a simple attribute based on the provided labels and if_missing value.
        Extract the attribute value from the text and return it if it exists.

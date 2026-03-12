@@ -1,6 +1,6 @@
 {
   "family": "Projects",
-  "exported": "Mar 9, 2026 at 3:18:48 PM",
+  "exported": "Mar 11, 2026 at 9:50:42 AM",
   "attribute_definitions": {
     "Activity Status": {
       "variable_name": "activity_status",
@@ -256,7 +256,7 @@
     "Display Name": {
       "variable_name": "display_name",
       "inUpdate": true,
-      "attr_labels": "",
+      "attr_labels": "\"Term Name\"",
       "examples": "",
       "default_value": "",
       "valid_values": [],
@@ -332,7 +332,7 @@
     "Element Id": {
       "variable_name": "element_id",
       "inUpdate": true,
-      "attr_labels": "",
+      "attr_labels": "Element Name",
       "examples": "",
       "default_value": "",
       "valid_values": [],
@@ -416,6 +416,25 @@
       "description": "The name of an external source",
       "generated": false,
       "style": "Simple",
+      "user_specified": true,
+      "unique": false,
+      "input_required": false,
+      "min_cardinality": 0,
+      "max_cardinality": 1,
+      "level": "Advanced",
+      "Journal Entry": ""
+    },
+    "Glossary Term": {
+      "variable_name": "glossary_term",
+      "inUpdate": true,
+      "attr_labels": "Term",
+      "examples": "Term::Zip Code",
+      "default_value": "",
+      "valid_values": [],
+      "existing_element": "GlossaryTerm",
+      "description": "Term that provides meaning to this field.",
+      "generated": false,
+      "style": "Reference Name",
       "user_specified": true,
       "unique": false,
       "input_required": false,
@@ -1035,7 +1054,7 @@
     "Version Identifier": {
       "variable_name": "version_identifier",
       "inUpdate": true,
-      "attr_labels": "",
+      "attr_labels": "Version",
       "examples": "",
       "default_value": "",
       "valid_values": [],

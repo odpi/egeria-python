@@ -88,6 +88,7 @@ class BaseServerClient:
         self.token_src = token_src
         self.token = token
         self.local_qualifier = local_qualifier or settings.User_Profile.egeria_local_qualifier
+        self._valid_value_cache = {}
 
         self.exc_type = None
         self.exc_value = None

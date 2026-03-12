@@ -29,45 +29,36 @@ from pyegeria import (
     EgeriaTech,
     PyegeriaException, print_basic_exception, print_validation_error,
 )
+from pyegeria.core.config import get_app_config
 from pyegeria.core._exceptions import (
     PyegeriaInvalidParameterException,
     PyegeriaAPIException as PropertyServerException,
     PyegeriaUnauthorizedException as UserNotAuthorizedException,
 )
-# Default glossary GUID can be provided via environment; fall back to None
-EGERIA_HOME_GLOSSARY_GUID = os.environ.get("EGERIA_HOME_GLOSSARY_GUID", None)
+# Load application configuration
+config = get_app_config()
+env = config.Environment
+user_profile = config.User_Profile
 
-disable_ssl_warnings = True
+EGERIA_HOME_GLOSSARY_GUID = user_profile.egeria_home_glossary_name 
+# Looking at the original code, EGERIA_HOME_GLOSSARY_GUID comes from env.
+# Let's check config.py for the exact attribute name.
 
-EGERIA_METADATA_STORE = os.environ.get("EGERIA_METADATA_STORE", "active-metadata-store")
-EGERIA_KAFKA_ENDPOINT = os.environ.get("KAFKA_ENDPOINT", "localhost:9092")
-EGERIA_PLATFORM_URL = os.environ.get("EGERIA_PLATFORM_URL", "https://localhost:9443")
-EGERIA_VIEW_SERVER = os.environ.get("EGERIA_VIEW_SERVER", "view-server")
-EGERIA_VIEW_SERVER_URL = os.environ.get(
-    "EGERIA_VIEW_SERVER_URL", "https://localhost:9443"
-)
-EGERIA_INTEGRATION_DAEMON = os.environ.get("EGERIA_INTEGRATION_DAEMON", "integration-daemon")
-EGERIA_ADMIN_USER = os.environ.get("ADMIN_USER", "garygeeke")
-EGERIA_ADMIN_PASSWORD = os.environ.get("ADMIN_PASSWORD", "secret")
-EGERIA_USER = os.environ.get("EGERIA_USER", "erinoverview")
-EGERIA_USER_PASSWORD = os.environ.get("EGERIA_USER_PASSWORD", "secret")
-EGERIA_JUPYTER = bool(os.environ.get("EGERIA_JUPYTER", "False"))
-EGERIA_WIDTH = int(os.environ.get("EGERIA_WIDTH", "250"))
-EGERIA_GLOSSARY_PATH = os.environ.get("EGERIA_GLOSSARY_PATH", None)
-EGERIA_ROOT_PATH = os.environ.get("EGERIA_ROOT_PATH", "../../")
-EGERIA_INBOX_PATH = os.environ.get("EGERIA_INBOX_PATH", "md_processing/dr_egeria_inbox")
-EGERIA_OUTBOX_PATH = os.environ.get("EGERIA_OUTBOX_PATH", "md_processing/dr_egeria_outbox")
+EGERIA_HOME_GLOSSARY_GUID = user_profile.egeria_home_glossary_name 
+EGERIA_WIDTH = env.console_width
+EGERIA_PLATFORM_URL = env.egeria_platform_url
+EGERIA_VIEW_SERVER = env.egeria_view_server
+EGERIA_VIEW_SERVER_URL = env.egeria_view_server_url
+EGERIA_USER = user_profile.user_name
+EGERIA_USER_PASSWORD = user_profile.user_pwd
+EGERIA_JUPYTER = env.egeria_jupyter
 
 def _get_console_width_from_config(default_width: int = EGERIA_WIDTH) -> int:
-    try:
-        from pyegeria.core.config import settings
-        return int(getattr(settings.Environment, "console_width", default_width) or default_width)
-    except Exception:
-        return default_width
+    return env.console_width
 
 def _get_outbox_dir() -> str:
-    root = os.environ.get("EGERIA_ROOT_PATH", EGERIA_ROOT_PATH)
-    out = os.environ.get("EGERIA_OUTBOX_PATH", EGERIA_OUTBOX_PATH)
+    root = env.pyegeria_root
+    out = env.egeria_outbox
     return os.path.join(root, out)
 
 def _md_to_html(md_text: str) -> str:

@@ -92,13 +92,13 @@ def load_compact_specs_from_dir(dir_path: str, families_allowlist: Iterable[str]
             # Merge attribute definitions with conflict detection
             for aname, adef in data.get("attribute_definitions", {}).items():
                 if aname in all_attr_defs and all_attr_defs[aname] != adef:
-                    logger.warning(f"Attribute '{aname}' in {fname} differs from previous definition.")
+                    logger.debug(f"Attribute '{aname}' in {fname} differs from previous definition.")
                 all_attr_defs[aname] = adef
 
             # Merge bundle definitions with conflict detection
             for bname, bdef in data.get("bundles", {}).items():
                 if bname in all_bundles and all_bundles[bname] != bdef:
-                    logger.warning(f"Bundle '{bname}' in {fname} differs from previous definition.")
+                    logger.debug(f"Bundle '{bname}' in {fname} differs from previous definition.")
                 all_bundles[bname] = bdef
 
             loaded_files.append((fname, data))

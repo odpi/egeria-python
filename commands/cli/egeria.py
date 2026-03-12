@@ -62,7 +62,7 @@ from commands.cat.list_terms import display_glossary_terms
 from commands.cat.list_user_actions import display_user_actions
 from commands.cat.list_user_ids import list_user_ids
 
-from commands.cat.dr_egeria_md import process_markdown_file
+from commands.cat.dr_egeria import process_markdown_file
 
 from commands.cli.ops_config import Config
 from commands.my.get_my_profile import display_my_profile

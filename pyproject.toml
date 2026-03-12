@@ -83,7 +83,8 @@ dependencies = [
     remove_term_from_category = "commands.cat.glossary_actions:remove_term_from_category"
 
 
-    dr_egeria_md = "commands.cat.dr_egeria_md:process_markdown_file"
+    dr_egeria = "commands.cat.dr_egeria:process_markdown_file"
+    dr_egeria_md = "commands.cat.dr_egeria:process_markdown_file"
     dr_egeria_jupyter = "commands.cat.dr_egeria_jupyter:process_jupyter_notebook"
     dr_egeria_help = "commands.cat.dr_egeria_command_help:main"
 
@@ -164,7 +165,9 @@ dependencies = [
     list_solution_components = "commands.tech.list_solution_components:main"
     delete_element = "commands.tech.generic_actions:delete_element"
 
-    gen_report_specs = "md_processing.md_processing_utils.gen_report_specs:main"
+    gen_report_specs = "commands.tech.gen_report_specs:main"
+    gen_md_cmd_templates = "commands.tech.generate_md_cmd_templates:main"
+    gen_dr_help = "commands.tech.generate_dr_help:main"
 
 
 

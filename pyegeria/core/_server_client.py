@@ -326,6 +326,51 @@ class ServerClient(BaseServerClient):
         )
         return result
 
+    async def _async_get_valid_metadata_values(
+        self,
+        property_name: str,
+        type_name: Optional[str] = None,
+    ) -> list:
+        """
+        Fetch valid values for a property. If found in cache, return from cache.
+        Otherwise, fetch from Egeria and cache the result.
+        Async version.
+        """
+        cache_key = f"{property_name}:{type_name}"
+        if cache_key in self._valid_value_cache:
+            return self._valid_value_cache[cache_key]
+
+        url = (
+            f"{self.platform_url}/servers/{self.server_name}/api/open-metadata/valid-metadata"
+            f"/get-valid-metadata-values/{property_name}"
+        )
+        if type_name:
+            url += f"?typeName={type_name}"
+        else:
+            url += "?typeName="
+
+        try:
+            resp = await self._async_make_request("GET", url)
+            elements = resp.json().get("elements", [])
+            self._valid_value_cache[cache_key] = elements
+            return elements
+        except Exception as e:
+            logger.error(f"Error fetching valid values for {property_name}: {e}")
+            return []
+
+    def get_valid_metadata_values(
+        self,
+        property_name: str,
+        type_name: Optional[str] = None,
+    ) -> list:
+        """
+        Synchronous version of _async_get_valid_metadata_values.
+        """
+        loop = asyncio.get_event_loop()
+        return loop.run_until_complete(
+            self._async_get_valid_metadata_values(property_name, type_name)
+        )
+
     def __create_qualified_name__(self, type_name: str, display_name: str, local_qualifier: Optional[str] = None,
                                   version_identifier: Optional[str] = None) -> str:
         """Helper function to create a qualified name for a given type and display name.
@@ -3870,9 +3915,12 @@ class ServerClient(BaseServerClient):
 
         url = f"{self.command_root}feedback-manager/tags/by-name"
 
-        response = await self._async_get_name_request(url, self._generate_feedback_output, tag_name, start_from=0,
-                                                      page_size=0, output_format="JSON", report_spec=None,
-                                                      body=start_from, max_mermaid_node_count=page_size)
+        response = await self._async_get_name_request(url, _type="InformalTag",
+                                                      _gen_output=self._generate_feedback_output,
+                                                      filter_string=tag_name, start_from=start_from,
+                                                      page_size=page_size, output_format=output_format,
+                                                      report_spec=report_spec,
+                                                      body=body)
         return response
 
     @dynamic_catch

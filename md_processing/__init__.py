@@ -1,7 +1,7 @@
 """
 This package contains functions to parse and process Egeria Markdown (Freddie)
 """
-from md_processing.md_commands.governance_officer_commands import (process_gov_definition_upsert_command,
+from md_processing.v1_legacy.md_commands.governance_officer_commands import (process_gov_definition_upsert_command,
                                                                    process_gov_def_link_detach_command,
                                                                    process_supporting_gov_def_link_detach_command,
                                                                    process_gov_def_context_command,
@@ -9,7 +9,7 @@ from md_processing.md_commands.governance_officer_commands import (process_gov_d
                                                                    )
 
 
-from md_processing.md_commands.product_manager_commands import (process_digital_product_upsert_command,
+from md_processing.v1_legacy.md_commands.product_manager_commands import (process_digital_product_upsert_command,
                                                                 process_agreement_upsert_command,
                                                                 process_collection_upsert_command,
                                                                 process_link_agreement_item_command,
@@ -20,32 +20,32 @@ from md_processing.md_commands.product_manager_commands import (process_digital_
                                                                 process_csv_element_upsert_command,
                                                                )
 
-from md_processing.md_commands.solution_architect_commands import (process_blueprint_upsert_command,
+from md_processing.v1_legacy.md_commands.solution_architect_commands import (process_blueprint_upsert_command,
                                                                    process_solution_component_upsert_command,
                                                                    process_component_link_unlink_command,
                                                                    process_information_supply_chain_upsert_command,
                                                                    process_information_supply_chain_link_unlink_command,
                                                                    )
 
-from md_processing.md_commands.data_designer_commands import (process_data_field_upsert_command,
+from md_processing.v1_legacy.md_commands.data_designer_commands import (process_data_field_upsert_command,
                                                               process_data_spec_upsert_command,
                                                               process_data_dict_upsert_command,
                                                               process_data_structure_upsert_command)
 
-from md_processing.md_commands.feedback_commands import (process_add_comment_command, process_journal_entry_command,
+from md_processing.v1_legacy.md_commands.feedback_commands import (process_add_comment_command, process_journal_entry_command,
                                                          process_upsert_note_command, process_attach_note_log_command,
                                                          process_upsert_informal_tag_command, process_tag_element_command)
 
 
 
-from md_processing.md_commands.glossary_commands import (process_glossary_upsert_command,
+from md_processing.v1_legacy.md_commands.glossary_commands import (process_glossary_upsert_command,
                                                          process_term_upsert_command,
                                                          process_link_term_term_relationship_command,
                                                          )
-from md_processing.md_commands.project_commands import (process_project_upsert_command, process_link_project_dependency_command,
+from md_processing.v1_legacy.md_commands.project_commands import (process_project_upsert_command, process_link_project_dependency_command,
                                                         process_link_project_hierarchy_command)
 
-from md_processing.md_commands.ext_ref_commands import (process_external_reference_upsert_command,
+from md_processing.v1_legacy.md_commands.ext_ref_commands import (process_external_reference_upsert_command,
                                                         process_link_to_media_reference_command,
                                                         process_link_to_external_reference_command,
                                                         process_link_to_cited_document_command,
@@ -87,4 +87,4 @@ from md_processing.md_processing_utils.md_processing_constants import (load_comm
 # Import message constants
 
 from md_processing.md_processing_utils.common_md_proc_utils import process_output_command
-from md_processing.md_commands.view_commands import process_format_set_action, process_output_command
+from md_processing.v1_legacy.md_commands.view_commands import process_format_set_action, process_output_command

@@ -13,92 +13,7 @@ from typing import Literal, Annotated, Any, Optional, Dict
 from pydantic import BaseModel, Field, ConfigDict, root_validator, model_validator
 
 
-class MembershipStatus(StrEnum):
-    """
-    Represents the various statuses of membership in a system.
 
-    This class is an enumeration that defines possible states related to the
-    membership lifecycle. These statuses are typically used to denote the
-    state of an item, resource, or entity within a system, and they assist
-    in workflow management or status tracking.
-
-    Attributes:
-        UNKNOWN (MembershipStatus): Status indicating that the current
-            state is not known.
-        DISCOVERED (MembershipStatus): Status indicating that the entity
-            has been identified or uncovered in some way.
-        PROPOSED (MembershipStatus): Status indicating that the entity
-            has been suggested or submitted for consideration.
-        IMPORTED (MembershipStatus): Status indicating that the entity
-            has been brought into a system or context from an external
-            source.
-        VALIDATED (MembershipStatus): Status indicating that the entity
-            has been verified or approved.
-        DEPRECATED (MembershipStatus): Status indicating that the entity
-            is no longer recommended for use and may be phased out.
-        OBSOLETE (MembershipStatus): Status indicating that the entity
-            is no longer in use and is considered outdated.
-        OTHER (MembershipStatus): Status indicating an additional,
-            unspecified, or alternate state not covered by the predefined
-            statuses.
-    """
-    UNKNOWN = "UNKNOWN"
-    DISCOVERED = "DISCOVERED"
-    PROPOSED = "PROPOSED"
-    IMPORTED = "IMPORTED"
-    VALIDATED = "VALIDATED"
-    DEPRECATED = "DEPRECATED"
-    OBSOLETE = "OBSOLETE"
-    OTHER = "OTHER"
-
-
-class ValidStatusValues(StrEnum):
-    """
-    Defines a set of valid status values to represent various states or life-cycle stages.
-
-    This enumeration is designed to provide a standardized set of named constants for indicating
-    statuses related to developmental, operational, or administrative processes. It can be used
-    across different domains where such statuses are required. Each value corresponds to a specific
-    state and is represented by a meaningful string.
-
-    Attributes:
-        UNKNOWN: Represents an unknown state where the specific status is not defined.
-        DRAFT: Indicates that the item or process is in draft mode and not finalized.
-        PREPARED: Denotes readiness but not yet officially deployed or used.
-        PROPOSED: Represents a state where an idea or plan has been proposed but not yet approved.
-        APPROVED: Indicates official approval has been granted for the item or process.
-        REJECTED: Refers to a state where approval was denied.
-        APPROVED_CONCEPT: Marks approval at a conceptual level, potentially requiring further work.
-        UNDER_DEVELOPMENT: Represents an active development stage.
-        DEVELOPMENT_COMPLETE: Indicates development has been finalized.
-        APPROVED_FOR_DEPLOYMENT: Denotes readiness and approval for deployment.
-        STANDBY: Represents a state where the item is ready but not active.
-        ACTIVE: Denotes that the item or process is currently in operation.
-        FAILED: Indicates that the item or process has failed.
-        DISABLED: Represents a state where the item has been intentionally turned off or made inactive.
-        COMPLETE: Indicates that the item or process has been successfully completed.
-        DEPRECATED: Represents a state where the item is considered obsolete or no longer recommended.
-        OTHER: Refers to any state that is not explicitly defined within the enumeration.
-        DELETED: Indicates removal or deletion of the item.
-    """
-    UNKNOWN = "UNKNOWN"
-    DRAFT = "DRAFT"
-    PREPARED = "PREPARED"
-    PROPOSED = "PROPOSED"
-    APPROVED = "APPROVED"
-    REJECTED = "REJECTED"
-    APPROVED_CONCEPT = "APPROVED_CONCEPT"
-    UNDER_DEVELOPMENT = "UNDER_DEVELOPMENT"
-    DEVELOPMENT_COMPLETE = "DEVELOPMENT_COMPLETE"
-    APPROVED_FOR_DEPLOYMENT = "APPROVED_FOR_DEPLOYMENT"
-    STANDBY = "STANDBY"
-    ACTIVE = "ACTIVE"
-    FAILED = "FAILED"
-    DISABLED = "DISABLED"
-    COMPLETE = "COMPLETE"
-    DEPRECATED = "DEPRECATED"
-    OTHER = "OTHER"
-    DELETED = "DELETED"
 
 
 class SequencingOrder(StrEnum):
@@ -550,7 +465,7 @@ class ResultsRequestBody(GetRequestBody):
     anchor_guid: str | None = None
     anchor_domain_name: str | None = None
     anchor_scope_guid: str | None = None
-    limit_results_by_status: list[ValidStatusValues] | None = None  # header status
+    limit_results_by_status: list[str] | None = None  # header status
     sequencing_order: SequencingOrder | None = None
     sequencing_property: str | None = None
     start_from: int = 0

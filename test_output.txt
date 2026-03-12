@@ -1,0 +1,61 @@
+F
+=================================== FAILURES ===================================
+__________________________ test_connection_lifecycle ___________________________
+tests/test_connection_maker.py:45: in test_connection_lifecycle
+    conn_guid = await connection_maker._async_create_connection(conn_body)
+                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+pyegeria/omvs/connection_maker.py:44: in _async_create_connection
+    return await self._async_create_element_body_request(url, ["ConnectionProperties"], body)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+pyegeria/core/_server_client.py:6776: in _async_create_element_body_request
+    response = await self._async_make_request("POST", url, json_body, is_json=True)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+pyegeria/core/_base_server_client.py:565: in _async_make_request
+    raise PyegeriaAPIException(response, context, additional_info=json_response)
+E   pyegeria.core._exceptions.PyegeriaAPIException: 
+E   
+E   => 	SERVER_ERROR_500
+E   =>	Egeria detected error: `https://localhost:9443/servers/qs-view-server/api/open-metadata/connection-maker/connections`.
+E   	* Context: 
+E   		* class name=`BaseServerClient`
+E   		* caller method=`_async_create_element_body_request`
+E   	* Egeria error information: 
+E   	* class= `GUIDResponse`
+E   	* requestId= `ef8824a7-46cc-4dea-a521-551e1e4f4dc7`
+E   	* relatedHTTPCode= `409`
+E   	* exceptionClassName= `org.odpi.openmetadata.frameworks.openmetadata.ffdc.InvalidParameterException`
+E   	* exceptionSubclassName= `org.odpi.openmetadata.frameworks.openmetadata.ffdc.InvalidParameterException`
+E   	* actionDescription= `createMetadataElementInStore`
+E   	* exceptionErrorMessage= `OMAG-COMMON-409-001 Method createMetadataElementInStore of service Open Metadata Store Services is not able to create an instance of type Connection because parameter name qualifiedName is defined as a unique property and value TestConnection::LifeCycle is not available for use`
+E   	* exceptionErrorMessageId= `OMAG-COMMON-409-001`
+E   	* exceptionErrorMessageParameters= `[`createMetadataElementInStore`, `Open Metadata Store Services`, `Connection`, `qualifiedName`, `TestConnection::LifeCycle`]`
+E   	* exceptionSystemAction= `The system cannot process the request because the unique property for this new entity is not permitted either because it is a reserved value, or it is already in use.`
+E   	* exceptionUserAction= `Retry the request with a different unique parameter name.`
+E   	* exceptionProperties= `{`parameterName`: `qualifiedName`}`
+
+During handling of the above exception, another exception occurred:
+tests/test_connection_maker.py:68: in test_connection_lifecycle
+    pytest.fail(f"Connection lifecycle failed: {e}")
+E   Failed: Connection lifecycle failed: 
+E   
+E   => 	SERVER_ERROR_500
+E   =>	Egeria detected error: `https://localhost:9443/servers/qs-view-server/api/open-metadata/connection-maker/connections`.
+E   	* Context: 
+E   		* class name=`BaseServerClient`
+E   		* caller method=`_async_create_element_body_request`
+E   	* Egeria error information: 
+E   	* class= `GUIDResponse`
+E   	* requestId= `ef8824a7-46cc-4dea-a521-551e1e4f4dc7`
+E   	* relatedHTTPCode= `409`
+E   	* exceptionClassName= `org.odpi.openmetadata.frameworks.openmetadata.ffdc.InvalidParameterException`
+E   	* exceptionSubclassName= `org.odpi.openmetadata.frameworks.openmetadata.ffdc.InvalidParameterException`
+E   	* actionDescription= `createMetadataElementInStore`
+E   	* exceptionErrorMessage= `OMAG-COMMON-409-001 Method createMetadataElementInStore of service Open Metadata Store Services is not able to create an instance of type Connection because parameter name qualifiedName is defined as a unique property and value TestConnection::LifeCycle is not available for use`
+E   	* exceptionErrorMessageId= `OMAG-COMMON-409-001`
+E   	* exceptionErrorMessageParameters= `[`createMetadataElementInStore`, `Open Metadata Store Services`, `Connection`, `qualifiedName`, `TestConnection::LifeCycle`]`
+E   	* exceptionSystemAction= `The system cannot process the request because the unique property for this new entity is not permitted either because it is a reserved value, or it is already in use.`
+E   	* exceptionUserAction= `Retry the request with a different unique parameter name.`
+E   	* exceptionProperties= `{`parameterName`: `qualifiedName`}`
+=========================== short test summary info ============================
+FAILED tests/test_connection_maker.py::test_connection_lifecycle - Failed: Co...
+1 failed, 3861 warnings in 0.36s
