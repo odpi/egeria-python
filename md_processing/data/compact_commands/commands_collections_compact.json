@@ -1,6 +1,6 @@
 {
   "family": "Collections",
-  "exported": "Mar 11, 2026 at 9:48:44 AM",
+  "exported": "Mar 13, 2026 at 3:41:42 PM",
   "attribute_definitions": {
     "Activity Status": {
       "variable_name": "activity_status",
@@ -175,7 +175,7 @@
       "examples": "",
       "default_value": "",
       "valid_values": [],
-      "existing_element": "",
+      "existing_element": "Referenceable",
       "description": "The unique identifier (qualified name or GUID) of the collection.",
       "generated": false,
       "style": "Reference Name",
@@ -424,6 +424,44 @@
       "level": "Advanced",
       "Journal Entry": ""
     },
+    "For Duplicate Processing": {
+      "variable_name": "for_duplicate_processing",
+      "inUpdate": true,
+      "attr_labels": "",
+      "examples": "",
+      "default_value": "",
+      "valid_values": [],
+      "existing_element": "",
+      "description": "Flag indicating if the request is to support duplicate processing.",
+      "generated": false,
+      "style": "Bool",
+      "user_specified": true,
+      "unique": false,
+      "input_required": false,
+      "min_cardinality": 1,
+      "max_cardinality": 1,
+      "level": "Advanced",
+      "Journal Entry": ""
+    },
+    "For Lineage": {
+      "variable_name": "for_lineage",
+      "inUpdate": true,
+      "attr_labels": "",
+      "examples": "",
+      "default_value": "",
+      "valid_values": [],
+      "existing_element": "",
+      "description": "Flag indicating if the request is to support lineage.",
+      "generated": false,
+      "style": "Bool",
+      "user_specified": true,
+      "unique": false,
+      "input_required": false,
+      "min_cardinality": 1,
+      "max_cardinality": 1,
+      "level": "Advanced",
+      "Journal Entry": ""
+    },
     "Glossary Term": {
       "variable_name": "glossary_term",
       "inUpdate": true,
@@ -522,7 +560,7 @@
     "Label": {
       "variable_name": "label",
       "inUpdate": true,
-      "attr_labels": "",
+      "attr_labels": "Wire Label",
       "examples": "",
       "default_value": "",
       "valid_values": [],
@@ -574,6 +612,25 @@
       "min_cardinality": 0,
       "max_cardinality": 1,
       "level": "Advanced",
+      "Journal Entry": ""
+    },
+    "Namespace Path": {
+      "variable_name": "namespace_path",
+      "inUpdate": true,
+      "attr_labels": "",
+      "examples": "",
+      "default_value": "",
+      "valid_values": [],
+      "existing_element": "",
+      "description": "The namespace path that qualifies the element's name within a larger naming hierarchy.",
+      "generated": false,
+      "style": "Simple String",
+      "user_specified": true,
+      "unique": false,
+      "input_required": false,
+      "min_cardinality": 0,
+      "max_cardinality": 1,
+      "level": "Domain",
       "Journal Entry": ""
     },
     "Notes": {
@@ -1136,7 +1193,7 @@
       "valid_values": [
         "UNKNOWN",
         "DISCOVERED",
-        "PROPEOSED",
+        "PROPOSED",
         "IMPORTED",
         "VALIDATED",
         "DEPRECATED",
@@ -1165,6 +1222,21 @@
         "User Defined Content Status"
       ]
     },
+    "Request Base": {
+      "inherits": null,
+      "own_attributes": [
+        "Effective From",
+        "Effective Time",
+        "Effective To",
+        "Extended Properties",
+        "External Source GUID",
+        "External Source Name",
+        "For Duplicate Processing",
+        "For Lineage",
+        "Journal Entry",
+        "Request ID"
+      ]
+    },
     "Referenceable": {
       "inherits": "New-Element",
       "own_attributes": [
@@ -1190,18 +1262,11 @@
       ]
     },
     "New-Element": {
-      "inherits": null,
+      "inherits": "Request Base",
       "own_attributes": [
         "Anchor ID",
-        "Effective From",
-        "Effective Time",
-        "Effective To",
-        "Extended Properties",
-        "External Source GUID",
-        "External Source Name",
         "Glossary Term",
         "Is Own Anchor",
-        "Journal Entry",
         "Merge Update",
         "Parent at End1",
         "Parent ID",
@@ -1224,15 +1289,15 @@
       "inherits": null,
       "own_attributes": [
         "Element Id",
-        "Resource Id",
-        "Resource Use",
         "Resource Description",
+        "Resource Id",
         "Resource Properties",
+        "Resource Use",
         "Watch Resource"
       ]
     },
     "Link Command Base": {
-      "inherits": null,
+      "inherits": "Request Base",
       "own_attributes": [
         "Description",
         "Label"
@@ -1252,7 +1317,7 @@
       "own_attributes": []
     },
     "Collection Membership": {
-      "inherits": null,
+      "inherits": "Link Command Base",
       "own_attributes": [
         "Confidence",
         "Expression",
@@ -1260,9 +1325,6 @@
         "Membership Status",
         "Notes",
         "Source",
-        "Steward",
-        "Steward Property Name",
-        "Steward Type Name",
         "User Defined Status"
       ]
     }
@@ -1276,7 +1338,7 @@
         "Create Root Collection",
         "Create Folder"
       ],
-      "family": "Digital Product Manager",
+      "family": "Collections",
       "description": "Create or update a generic collection. While it can be used to create specific kinds of collections, you cannot set the collection-specific properties - so use the appropriate Dr.Egeria command to set all of the properties.",
       "verb": "Create",
       "upsert": true,
@@ -1296,7 +1358,7 @@
       "alternate_names": [
         "Root Collection"
       ],
-      "family": "Digital Product Manager",
+      "family": "Collections",
       "description": "Create a RootCollection - a master collection serving as the starting node for an independent collection hierarchy.",
       "verb": "Create",
       "upsert": true,
@@ -1314,7 +1376,7 @@
       "display_name": "Home Collection",
       "qn_prefix": "HomeCollection",
       "alternate_names": [],
-      "family": "Digital Product Manager",
+      "family": "Collections",
       "description": "Create a home collection to store things like favorites.",
       "verb": "Create",
       "upsert": true,
@@ -1335,7 +1397,7 @@
         "Folder",
         "Create Folder"
       ],
-      "family": "Digital Product Manager",
+      "family": "Collections",
       "description": "Create a CollectionFolder - a collection used to organize subsets of metadata elements within a larger collection hierarchy.",
       "verb": "Create",
       "upsert": true,
@@ -1353,7 +1415,7 @@
       "display_name": "Namespace",
       "qn_prefix": "Namespace",
       "alternate_names": [],
-      "family": "Digital Product Manager",
+      "family": "Collections",
       "description": "Create a Namespace collection - a collection of elements organized by namespace.",
       "verb": "Create",
       "upsert": true,
@@ -1371,7 +1433,7 @@
       "display_name": "Results Set",
       "qn_prefix": "ResultsSet",
       "alternate_names": [],
-      "family": "Digital Product Manager",
+      "family": "Collections",
       "description": "Create a ResultsSet collection - a collection of elements that are the results from a specific request or query.",
       "verb": "Create",
       "upsert": true,
@@ -1389,7 +1451,7 @@
       "display_name": "Recent Access",
       "qn_prefix": "RecentAccess",
       "alternate_names": [],
-      "family": "Digital Product Manager",
+      "family": "Collections",
       "description": "Create a RecentAccess collection - a collection of elements accessed recently by a user.",
       "verb": "Create",
       "upsert": true,
@@ -1407,7 +1469,7 @@
       "display_name": "Work Item List",
       "qn_prefix": "WorkItemList",
       "alternate_names": [],
-      "family": "Digital Product Manager",
+      "family": "Collections",
       "description": "Create a WorkItemList collection - a collection organizing work items such as ToDos or Tasks.",
       "verb": "Create",
       "upsert": true,
@@ -1430,7 +1492,7 @@
         "Member to Folder",
         "Member->Collection"
       ],
-      "family": "Digital Product Manager",
+      "family": "Collections",
       "description": "Add\/Remove a member to\/from a collection.",
       "verb": "Add",
       "upsert": false,

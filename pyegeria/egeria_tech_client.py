@@ -94,6 +94,9 @@ class EgeriaTech:
             "valid_metadata": ValidMetadataManager,
             "explorer": MetadataExplorer,
             "metadata_explorer": MetadataExplorer,
+            # TODO: Fix method collisions between MetadataExplorer and MetadataExpert.
+            # Currently __getattr__ resolves to MetadataExplorer for generic element fetches 
+            # (which causes 400 errors if the view server doesn't support the explorer API).
             "expert": MetadataExpert,
             "metadata_expert": MetadataExpert,
             "sol_arch": SolutionArchitect,

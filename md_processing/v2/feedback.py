@@ -68,6 +68,7 @@ class FeedbackProcessor(AsyncBaseCommandProcessor):
                 body = set_update_body("Comment", attributes)
                 body['properties'] = prop_body
                 await self.client._async_update_comment(guid, body)
+                self.parsed_output["guid"] = guid
                 logger.success(f"Updated Comment '{display_name}'")
                 return await self.client._async_get_comment_by_guid(guid, output_format='MD')
             
@@ -77,6 +78,7 @@ class FeedbackProcessor(AsyncBaseCommandProcessor):
                 body["properties"] = prop_body
                 guid = await self.client._async_add_comment_to_element(associated_guid, body_slimmer(body))
                 if guid:
+                    self.parsed_output["guid"] = guid
                     update_element_dictionary(qualified_name, {'guid': guid, 'display_name': display_name})
                     logger.success(f"Created Comment '{display_name}'")
                     return await self.client._async_get_comment_by_guid(guid, output_format='MD')
@@ -95,6 +97,7 @@ class FeedbackProcessor(AsyncBaseCommandProcessor):
                 note_entry=note_entry
             )
             if guid:
+                self.parsed_output["guid"] = guid
                 logger.success(f"Added Journal Entry to '{journal_name}'")
                 return await self.client._async_get_note_by_guid(guid, output_format='MD')
 
@@ -107,6 +110,7 @@ class FeedbackProcessor(AsyncBaseCommandProcessor):
                 body = set_update_body("Note", attributes)
                 body['properties'] = prop_body
                 await self.client._async_update_note(guid, body_slimmer(body))
+                self.parsed_output["guid"] = guid
                 logger.success(f"Updated Note '{display_name}'")
                 return await self.client._async_get_note_by_guid(guid, output_format='MD')
             # Create Note omitted for brev since it was create_project in sync code? 
@@ -145,12 +149,14 @@ class TagProcessor(AsyncBaseCommandProcessor):
             guid = self.parsed_output.get("guid") or (self.as_is_element['elementHeader']['guid'] if self.as_is_element else None)
             if not guid: return self.command.original_text
             await self.client._async_update_tag_description(guid, description)
+            self.parsed_output["guid"] = guid
             logger.success(f"Updated Tag '{display_name}'")
             return await self.client._async_get_tag_by_guid(guid, output_format='MD')
 
         elif verb == "Create":
             guid = await self.client._async_create_informal_tag(display_name, description, qualified_name)
             if guid:
+                self.parsed_output["guid"] = guid
                 update_element_dictionary(qualified_name, {'guid': guid, 'display_name': display_name})
                 logger.success(f"Created Tag '{display_name}'")
                 return await self.client._async_get_tag_by_guid(guid, output_format='MD')
@@ -216,17 +222,19 @@ class ExternalReferenceProcessor(AsyncBaseCommandProcessor):
             body = set_update_body("External Reference", attributes)
             body['properties'] = prop_body
             await self.client._async_update_external_reference(guid, body)
+            self.parsed_output["guid"] = guid
             logger.success(f"Updated {object_type} '{display_name}'")
-            return await self.client._async_get_external_reference_by_guid(guid, element_type=mapped_type, output_format='MD')
+            return await self.render_result_markdown(guid)
 
         elif verb == "Create":
             body = set_create_body(object_type, attributes)
             body["properties"] = prop_body
             guid = await self.client._async_create_external_reference(body=body_slimmer(body))
             if guid:
+                self.parsed_output["guid"] = guid
                 update_element_dictionary(qualified_name, {'guid': guid, 'display_name': display_name})
                 logger.success(f"Created {object_type} '{display_name}'")
-                return await self.client._async_get_external_reference_by_guid(guid, element_type=mapped_type, output_format='MD')
+                return await self.render_result_markdown(guid)
 
         return self.command.original_text
 
@@ -247,8 +255,8 @@ class FeedbackLinkProcessor(AsyncBaseCommandProcessor):
         attributes = self.parsed_output["attributes"]
         
         if "Tag" in object_type:
-            tag_guid = attributes.get('Tag ID', {}).get('guid')
-            elem_guid = attributes.get('Element ID', {}).get('guid')
+            tag_guid = attributes.get('Tag Id', {}).get('guid') or attributes.get('Tag ID', {}).get('guid')
+            elem_guid = attributes.get('Element Name', {}).get('guid') or attributes.get('Element Id', {}).get('guid')
             if verb in ["Link", "Attach", "Add"]:
                 await self.client._async_add_tag_to_element(elem_guid, tag_guid)
             else:
@@ -256,10 +264,12 @@ class FeedbackLinkProcessor(AsyncBaseCommandProcessor):
             logger.success(f"Updated Tag link")
             
         elif "External Reference" in object_type:
-            elem_guid = attributes.get('Element Name', {}).get('guid')
+            # Note: Parser maps 'Element Name' to its spec key. 
+            # In v2, we should use the label as it appears in the MD or the spec key.
+            elem_guid = attributes.get('Element Name', {}).get('guid') or attributes.get('Element Id', {}).get('guid')
             ref_guid = attributes.get('External Reference', {}).get('guid')
             if verb in ["Link", "Attach", "Add"]:
-                body = set_rel_request_body_for_type("ExternalReferencesLink", attributes)
+                body = set_rel_request_body_for_type("ExternalReferenceLink", attributes)
                 body['properties'] = set_rel_prop_body("ExternalReferenceLink", attributes)
                 await self.client._async_link_external_reference(elem_guid, ref_guid, body=body_slimmer(body))
             else:
@@ -268,7 +278,7 @@ class FeedbackLinkProcessor(AsyncBaseCommandProcessor):
             logger.success(f"Updated External Reference link")
             
         elif "Media" in object_type or "Cited" in object_type:
-            elem_guid = attributes.get('Element Name', {}).get('guid')
+            elem_guid = attributes.get('Element Name', {}).get('guid') or attributes.get('Element Id', {}).get('guid')
             ref_guid = (attributes.get('Media Reference') or attributes.get('Cited Document', {})).get('guid')
             if verb in ["Link", "Attach", "Add"]:
                  #CitedDocumentLink is the default for media too in sync code

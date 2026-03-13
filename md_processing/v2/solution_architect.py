@@ -11,7 +11,7 @@ from md_processing.md_processing_utils.md_processing_constants import get_comman
 from md_processing.md_processing_utils.common_md_utils import (
     set_element_prop_body, set_create_body, set_update_body, 
     set_rel_request_body, set_rel_prop_body,
-    update_element_dictionary, add_note_in_dr_e
+    update_element_dictionary, add_note_in_dr_e, async_add_note_in_dr_e
 )
 from pyegeria.core.utils import body_slimmer
 
@@ -59,15 +59,17 @@ class BlueprintProcessor(AsyncBaseCommandProcessor):
 
             body = set_update_body("Solution Blueprint", attributes)
             body['properties'] = set_element_prop_body("Solution Blueprint", qualified_name, attributes)
+            body = body_slimmer(body)
             
             await self.client._async_update_solution_blueprint(guid, body)
-            if status:
-                await self.client._async_update_solution_element_status(guid, status)
+            self.parsed_output["guid"] = guid
+            # if status:
+            #     await self.client._async_update_solution_element_status(guid, status)
             
             await self._sync_components(guid, comp_guids, not merge_update)
             
             if journal_entry:
-                await self.client._async_add_note_in_dr_e(qualified_name, display_name, journal_entry)
+                await async_add_note_in_dr_e(self.client, qualified_name, display_name, journal_entry)
 
             logger.success(f"Updated Blueprint '{display_name}'")
             update_element_dictionary(qualified_name, {'guid': guid, 'display_name': display_name})
@@ -76,6 +78,7 @@ class BlueprintProcessor(AsyncBaseCommandProcessor):
         elif verb == "Create":
             body = set_create_body("Solution Blueprint", attributes)
             body['properties'] = set_element_prop_body("Solution Blueprint", qualified_name, attributes)
+            body = body_slimmer(body)
             
             guid = await self.client._async_create_solution_blueprint(body)
             if guid:
@@ -176,11 +179,12 @@ class ComponentProcessor(AsyncBaseCommandProcessor):
                 "properties": prop_body
             })
             await self.client._async_update_solution_component(guid, body)
+            self.parsed_output["guid"] = guid
             
             await self._sync_all_rels(guid, supply_chain_guids, parent_comp_guids, actor_guids, blueprint_guids, keywords, not merge_update)
             
             if journal_entry:
-                await self.client._async_add_note_in_dr_e(qualified_name, display_name, journal_entry)
+                await async_add_note_in_dr_e(self.client, qualified_name, display_name, journal_entry)
 
             logger.success(f"Updated Component '{display_name}'")
             update_element_dictionary(qualified_name, {'guid': guid, 'display_name': display_name})
@@ -362,6 +366,7 @@ class SupplyChainProcessor(AsyncBaseCommandProcessor):
             body = set_update_body("InformationSupplyChain", attributes)
             body['properties'] = prop_body
             await self.client._async_update_info_supply_chain(guid, body)
+            self.parsed_output["guid"] = guid
             
             # Sync parents/nested
             await self._sync_rels(guid, in_sc_guids, nested_sc_guids, not merge_update)
@@ -464,7 +469,7 @@ class SolutionLinkProcessor(AsyncBaseCommandProcessor):
         description = attributes.get('Description', {}).get('value')
         
         if not (id1 and id2):
-            return self.command.original_text
+            return self.command.raw_block
 
         if verb in ["Link", "Attach", "Add"]:
             body = {

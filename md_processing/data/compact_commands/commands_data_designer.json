@@ -1,6 +1,6 @@
 {
   "family": "Data Designer",
-  "exported": "Mar 11, 2026 at 9:49:17 AM",
+  "exported": "Mar 13, 2026 at 3:42:07 PM",
   "attribute_definitions": {
     "Activity Status": {
       "variable_name": "activity_status",
@@ -175,7 +175,7 @@
       "examples": "",
       "default_value": "",
       "valid_values": [],
-      "existing_element": "",
+      "existing_element": "Referenceable",
       "description": "The unique identifier (qualified name or GUID) of the collection.",
       "generated": false,
       "style": "Reference Name",
@@ -424,6 +424,44 @@
       "level": "Advanced",
       "Journal Entry": ""
     },
+    "For Duplicate Processing": {
+      "variable_name": "for_duplicate_processing",
+      "inUpdate": true,
+      "attr_labels": "",
+      "examples": "",
+      "default_value": "",
+      "valid_values": [],
+      "existing_element": "",
+      "description": "Flag indicating if the request is to support duplicate processing.",
+      "generated": false,
+      "style": "Bool",
+      "user_specified": true,
+      "unique": false,
+      "input_required": false,
+      "min_cardinality": 1,
+      "max_cardinality": 1,
+      "level": "Advanced",
+      "Journal Entry": ""
+    },
+    "For Lineage": {
+      "variable_name": "for_lineage",
+      "inUpdate": true,
+      "attr_labels": "",
+      "examples": "",
+      "default_value": "",
+      "valid_values": [],
+      "existing_element": "",
+      "description": "Flag indicating if the request is to support lineage.",
+      "generated": false,
+      "style": "Bool",
+      "user_specified": true,
+      "unique": false,
+      "input_required": false,
+      "min_cardinality": 1,
+      "max_cardinality": 1,
+      "level": "Advanced",
+      "Journal Entry": ""
+    },
     "Glossary Term": {
       "variable_name": "glossary_term",
       "inUpdate": true,
@@ -522,7 +560,7 @@
     "Label": {
       "variable_name": "label",
       "inUpdate": true,
-      "attr_labels": "",
+      "attr_labels": "Wire Label",
       "examples": "",
       "default_value": "",
       "valid_values": [],
@@ -574,6 +612,25 @@
       "min_cardinality": 0,
       "max_cardinality": 1,
       "level": "Advanced",
+      "Journal Entry": ""
+    },
+    "Namespace Path": {
+      "variable_name": "namespace_path",
+      "inUpdate": true,
+      "attr_labels": "",
+      "examples": "",
+      "default_value": "",
+      "valid_values": [],
+      "existing_element": "",
+      "description": "The namespace path that qualifies the element's name within a larger naming hierarchy.",
+      "generated": false,
+      "style": "Simple String",
+      "user_specified": true,
+      "unique": false,
+      "input_required": false,
+      "min_cardinality": 0,
+      "max_cardinality": 1,
+      "level": "Domain",
       "Journal Entry": ""
     },
     "Notes": {
@@ -1740,25 +1797,6 @@
       "level": "Domain",
       "Journal Entry": "Alternative name patterns for the element — often expressed as regular expressions."
     },
-    "Namespace Path": {
-      "variable_name": "namespace_path",
-      "inUpdate": true,
-      "attr_labels": "",
-      "examples": "",
-      "default_value": "",
-      "valid_values": [],
-      "existing_element": "",
-      "description": "The namespace path that qualifies the element's name within a larger naming hierarchy.",
-      "generated": false,
-      "style": "Simple String",
-      "user_specified": true,
-      "unique": false,
-      "input_required": false,
-      "min_cardinality": 0,
-      "max_cardinality": 1,
-      "level": "Domain",
-      "Journal Entry": ""
-    },
     "Ordered Values": {
       "variable_name": "ordered_values",
       "inUpdate": true,
@@ -2016,6 +2054,21 @@
         "User Defined Content Status"
       ]
     },
+    "Request Base": {
+      "inherits": null,
+      "own_attributes": [
+        "Effective From",
+        "Effective Time",
+        "Effective To",
+        "Extended Properties",
+        "External Source GUID",
+        "External Source Name",
+        "For Duplicate Processing",
+        "For Lineage",
+        "Journal Entry",
+        "Request ID"
+      ]
+    },
     "Referenceable": {
       "inherits": "New-Element",
       "own_attributes": [
@@ -2041,18 +2094,11 @@
       ]
     },
     "New-Element": {
-      "inherits": null,
+      "inherits": "Request Base",
       "own_attributes": [
         "Anchor ID",
-        "Effective From",
-        "Effective Time",
-        "Effective To",
-        "Extended Properties",
-        "External Source GUID",
-        "External Source Name",
         "Glossary Term",
         "Is Own Anchor",
-        "Journal Entry",
         "Merge Update",
         "Parent at End1",
         "Parent ID",
@@ -2075,15 +2121,15 @@
       "inherits": null,
       "own_attributes": [
         "Element Id",
-        "Resource Id",
-        "Resource Use",
         "Resource Description",
+        "Resource Id",
         "Resource Properties",
+        "Resource Use",
         "Watch Resource"
       ]
     },
     "Link Command Base": {
-      "inherits": null,
+      "inherits": "Request Base",
       "own_attributes": [
         "Description",
         "Label"
@@ -2109,74 +2155,74 @@
     "Data Structure Base": {
       "inherits": "Authored Referenceable",
       "own_attributes": [
-        "\"In Data Dictionary\"",
-        "\"In Data Specification\"",
-        "\"Name Patterns\"",
-        "\"Namespace Path\""
+        "In Data Dictionary",
+        "In Data Specification",
+        "Name Patterns",
+        "Namespace Path"
       ]
     },
     "Data Field Base": {
       "inherits": "Authored Referenceable",
       "own_attributes": [
-        "\"Aliases\"",
-        "\"Data Class\"",
-        "\"Data Type\"",
-        "\"Default Value\"",
-        "\"In Data Field\"",
-        "\"In Data Structure\"",
-        "\"Is Nullable\"",
-        "\"Length\"",
-        "\"Maximum Cardinality\"",
-        "\"Minimum Cardinality\"",
-        "\"Minimum Length\"",
-        "\"Name Patterns\"",
-        "\"Namespace Path\"",
-        "\"Ordered Values\"",
-        "\"Position\"",
-        "\"Precision\"",
-        "\"Sort Order\"",
-        "\"Units\""
+        "Aliases",
+        "Data Class",
+        "Data Type",
+        "Default Value",
+        "In Data Field",
+        "In Data Structure",
+        "Is Nullable",
+        "Length",
+        "Maximum Cardinality",
+        "Minimum Cardinality",
+        "Minimum Length",
+        "Name Patterns",
+        "Namespace Path",
+        "Ordered Values",
+        "Position",
+        "Precision",
+        "Sort Order",
+        "Units"
       ]
     },
     "Data Class Base": {
       "inherits": "Data Value Specification Base",
       "own_attributes": [
-        "\"Allow Duplicate Values\"",
-        "\"Average Value\"",
-        "\"Containing Data Class\"",
-        "\"Data Patterns\"",
-        "\"Default Value\"",
-        "\"Is Case Sensitive\"",
-        "\"Is Nullable\"",
-        "\"Sample Values\"",
-        "\"Value List\"",
-        "\"Value Range From\"",
-        "\"Value Range To\""
+        "Allow Duplicate Values",
+        "Average Value",
+        "Containing Data Class",
+        "Data Patterns",
+        "Default Value",
+        "Is Case Sensitive",
+        "Is Nullable",
+        "Sample Values",
+        "Value List",
+        "Value Range From",
+        "Value Range To"
       ]
     },
     "Data Value Specification Base": {
       "inherits": "Authored Referenceable",
       "own_attributes": [
-        "\"Absolute Uncertainty\"",
-        "\"Data Type\"",
-        "\"In Data Value Specification\"",
-        "\"Match Property Names\"",
-        "\"Match Threshold\"",
-        "\"Name Patterns\"",
-        "\"Namespace Path\"",
-        "\"Relative Uncertainty\"",
-        "\"Specializes Data Value Specification\"",
-        "\"Specification\"",
-        "\"Specification Details\"",
-        "\"Units\""
+        "Absolute Uncertainty",
+        "Data Type",
+        "In Data Value Specification",
+        "Match Property Names",
+        "Match Threshold",
+        "Name Patterns",
+        "Namespace Path",
+        "Relative Uncertainty",
+        "Specializes Data Value Specification",
+        "Specification",
+        "Specification Details",
+        "Units"
       ]
     },
     "Data Field Link Base": {
       "inherits": "Link Command Base",
       "own_attributes": [
-        "\"Link Relationship Type Name\"",
-        "\"Linked Data Field 1\"",
-        "\"Linked Data Field 2\""
+        "Link Relationship Type Name",
+        "Linked Data Field 1",
+        "Linked Data Field 2"
       ]
     }
   },

@@ -20,18 +20,6 @@ class CollectionProcessor(AsyncBaseCommandProcessor):
     Processor for Collections (Folders, Root Collections).
     """
 
-    def get_command_spec(self) -> Dict[str, Any]:
-        return get_command_spec("Collection")
-
-    async def fetch_as_is(self) -> Optional[Dict[str, Any]]:
-        qualified_name = self.parsed_output.get("qualified_name")
-        if not qualified_name:
-            return None
-        try:
-            return await self.client._async_get_collection_by_name(qualified_name)
-        except PyegeriaException:
-            return None
-
     async def apply_changes(self) -> str:
         verb = self.command.verb
         attributes = self.parsed_output["attributes"]
@@ -48,6 +36,7 @@ class CollectionProcessor(AsyncBaseCommandProcessor):
             body['properties'] = set_element_prop_body("Collection", qualified_name, attributes)
             
             await self.client._async_update_collection(guid, body)
+            self.parsed_output["guid"] = guid
             if status:
                 await self.client._async_update_collection_status(guid, status)
             
@@ -57,7 +46,12 @@ class CollectionProcessor(AsyncBaseCommandProcessor):
 
         elif verb == "Create":
             body = set_create_body(self.command.object_type, attributes)
-            body["initialClassifications"] = set_object_classifications(self.command.object_type, attributes, ["Folder", "Root Collection"])
+            # Only add classifications if they are not already implied by the object type (like Folder or RootCollection)
+            classifications = ["Folder", "Root Collection"]
+            if self.command.object_type in ["Folder", "RootCollection", "Root Collection"]:
+                classifications = []
+                
+            body["initialClassifications"] = set_object_classifications(self.command.object_type, attributes, classifications)
             body["properties"] = set_element_prop_body("Collection", qualified_name, attributes)
             
             parent_guid = body.get('parentGuid')
@@ -67,6 +61,7 @@ class CollectionProcessor(AsyncBaseCommandProcessor):
 
             guid = await self.client._async_create_collection(body=body)
             if guid:
+                self.parsed_output["guid"] = guid
                 update_element_dictionary(qualified_name, {'guid': guid, 'display_name': display_name})
                 logger.success(f"Created Collection '{display_name}'")
                 return await self.client._async_get_collection_by_guid(guid, output_format='MD')
@@ -80,15 +75,6 @@ class ProductProcessor(AsyncBaseCommandProcessor):
 
     def get_command_spec(self) -> Dict[str, Any]:
         return get_command_spec("Digital Product")
-
-    async def fetch_as_is(self) -> Optional[Dict[str, Any]]:
-        qualified_name = self.parsed_output.get("qualified_name")
-        if not qualified_name:
-            return None
-        try:
-            return await self.client._async_get_collection_by_name(qualified_name) # Digital products are collections
-        except PyegeriaException:
-            return None
 
     async def apply_changes(self) -> str:
         verb = self.command.verb
@@ -106,6 +92,7 @@ class ProductProcessor(AsyncBaseCommandProcessor):
             body = set_update_body("Digital Product", attributes)
             body['properties'] = prop_body
             await self.client._async_update_digital_product(guid, body)
+            self.parsed_output["guid"] = guid
             
             logger.success(f"Updated Product '{display_name}'")
             update_element_dictionary(qualified_name, {'guid': guid, 'display_name': display_name})
@@ -117,6 +104,7 @@ class ProductProcessor(AsyncBaseCommandProcessor):
             
             guid = await self.client._async_create_digital_product(body_slimmer(body))
             if guid:
+                self.parsed_output["guid"] = guid
                 update_element_dictionary(qualified_name, {'guid': guid, 'display_name': display_name})
                 logger.success(f"Created Product '{display_name}'")
                 return await self.client._async_get_collection_by_guid(guid, element_type='Digital Product', output_format='MD')
@@ -130,15 +118,6 @@ class AgreementProcessor(AsyncBaseCommandProcessor):
 
     def get_command_spec(self) -> Dict[str, Any]:
         return get_command_spec("Agreement")
-
-    async def fetch_as_is(self) -> Optional[Dict[str, Any]]:
-        qualified_name = self.parsed_output.get("qualified_name")
-        if not qualified_name:
-            return None
-        try:
-            return await self.client._async_get_collection_by_name(qualified_name) # Agreements are collections
-        except PyegeriaException:
-            return None
 
     async def apply_changes(self) -> str:
         verb = self.command.verb
@@ -154,6 +133,7 @@ class AgreementProcessor(AsyncBaseCommandProcessor):
             body = set_update_body(self.command.object_type, attributes)
             body['properties'] = set_element_prop_body(self.command.object_type, qualified_name, attributes)
             await self.client._async_update_agreement(guid, body)
+            self.parsed_output["guid"] = guid
             
             logger.success(f"Updated Agreement '{display_name}'")
             update_element_dictionary(qualified_name, {'guid': guid, 'display_name': display_name})
@@ -166,6 +146,7 @@ class AgreementProcessor(AsyncBaseCommandProcessor):
             
             guid = await self.client._async_create_agreement(body=body)
             if guid:
+                self.parsed_output["guid"] = guid
                 update_element_dictionary(qualified_name, {'guid': guid, 'display_name': display_name})
                 logger.success(f"Created Agreement '{display_name}'")
                 return await self.client._async_get_collection_by_guid(guid, element_type=self.command.object_type, output_format='MD')
@@ -203,6 +184,7 @@ class CSVElementProcessor(AsyncBaseCommandProcessor):
         )
 
         if guid:
+            self.parsed_output["guid"] = guid
             update_element_dictionary(qualified_name, {'guid': guid, 'display_name': display_name})
             logger.success(f"Created CSV Element '{display_name}'")
             return f"# Created CSV Element\n\nGUID: {guid}\nQualified Name: {qualified_name}"
@@ -301,7 +283,23 @@ class ProductLinkProcessor(AsyncBaseCommandProcessor):
                 await self.client._async_link_subscriber(guid_sub, guid_sn, body)
 
             logger.success(f"Linked {object_type}")
-            return f"\n\n# {verb} {object_type}\n\nOperation completed."
+            
+            # Format the output with attributes for better feedback
+            header = f"\n\n# {verb} {object_type}\n\nOperation completed.\n\n"
+            if "Collection Member" in object_type:
+                header += "## Associated Elements\n"
+                header += f"- **Collection Id**: `{attributes.get('Collection Id', {}).get('value')}`\n"
+                header += f"- **Element Id**: `{attributes.get('Element Id', {}).get('value')}`\n\n"
+            
+            header += "## Link Properties\n"
+            # Exclude standard command identifiers when dumping properties
+            for k, v in attributes.items():
+                if k not in ["Collection Id", "Element Id", "Digital Product 1", "Digital Product 2", "Subscriber Id", "Subscription", "Resource Id", "Agreement Name", "Item Name", "Qualified Name", "Display Name"]:
+                    val = v.get("value")
+                    if val:
+                        header += f"- **{k}**: {val}\n"
+            
+            return header
 
         elif verb in ["Detach", "Unlink", "Remove"]:
             body = set_delete_request_body(object_type, attributes)

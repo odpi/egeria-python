@@ -1,6 +1,6 @@
 {
   "family": "Glossary",
-  "exported": "Mar 11, 2026 at 9:50:10 AM",
+  "exported": "Mar 13, 2026 at 3:55:28 PM",
   "attribute_definitions": {
     "Activity Status": {
       "variable_name": "activity_status",
@@ -175,7 +175,7 @@
       "examples": "",
       "default_value": "",
       "valid_values": [],
-      "existing_element": "",
+      "existing_element": "Referenceable",
       "description": "The unique identifier (qualified name or GUID) of the collection.",
       "generated": false,
       "style": "Reference Name",
@@ -424,6 +424,44 @@
       "level": "Advanced",
       "Journal Entry": ""
     },
+    "For Duplicate Processing": {
+      "variable_name": "for_duplicate_processing",
+      "inUpdate": true,
+      "attr_labels": "",
+      "examples": "",
+      "default_value": "",
+      "valid_values": [],
+      "existing_element": "",
+      "description": "Flag indicating if the request is to support duplicate processing.",
+      "generated": false,
+      "style": "Bool",
+      "user_specified": true,
+      "unique": false,
+      "input_required": false,
+      "min_cardinality": 1,
+      "max_cardinality": 1,
+      "level": "Advanced",
+      "Journal Entry": ""
+    },
+    "For Lineage": {
+      "variable_name": "for_lineage",
+      "inUpdate": true,
+      "attr_labels": "",
+      "examples": "",
+      "default_value": "",
+      "valid_values": [],
+      "existing_element": "",
+      "description": "Flag indicating if the request is to support lineage.",
+      "generated": false,
+      "style": "Bool",
+      "user_specified": true,
+      "unique": false,
+      "input_required": false,
+      "min_cardinality": 1,
+      "max_cardinality": 1,
+      "level": "Advanced",
+      "Journal Entry": ""
+    },
     "Glossary Term": {
       "variable_name": "glossary_term",
       "inUpdate": true,
@@ -522,7 +560,7 @@
     "Label": {
       "variable_name": "label",
       "inUpdate": true,
-      "attr_labels": "",
+      "attr_labels": "Wire Label",
       "examples": "",
       "default_value": "",
       "valid_values": [],
@@ -574,6 +612,25 @@
       "min_cardinality": 0,
       "max_cardinality": 1,
       "level": "Advanced",
+      "Journal Entry": ""
+    },
+    "Namespace Path": {
+      "variable_name": "namespace_path",
+      "inUpdate": true,
+      "attr_labels": "",
+      "examples": "",
+      "default_value": "",
+      "valid_values": [],
+      "existing_element": "",
+      "description": "The namespace path that qualifies the element's name within a larger naming hierarchy.",
+      "generated": false,
+      "style": "Simple String",
+      "user_specified": true,
+      "unique": false,
+      "input_required": false,
+      "min_cardinality": 0,
+      "max_cardinality": 1,
+      "level": "Domain",
       "Journal Entry": ""
     },
     "Notes": {
@@ -1304,6 +1361,21 @@
         "User Defined Content Status"
       ]
     },
+    "Request Base": {
+      "inherits": null,
+      "own_attributes": [
+        "Effective From",
+        "Effective Time",
+        "Effective To",
+        "Extended Properties",
+        "External Source GUID",
+        "External Source Name",
+        "For Duplicate Processing",
+        "For Lineage",
+        "Journal Entry",
+        "Request ID"
+      ]
+    },
     "Referenceable": {
       "inherits": "New-Element",
       "own_attributes": [
@@ -1329,18 +1401,11 @@
       ]
     },
     "New-Element": {
-      "inherits": null,
+      "inherits": "Request Base",
       "own_attributes": [
         "Anchor ID",
-        "Effective From",
-        "Effective Time",
-        "Effective To",
-        "Extended Properties",
-        "External Source GUID",
-        "External Source Name",
         "Glossary Term",
         "Is Own Anchor",
-        "Journal Entry",
         "Merge Update",
         "Parent at End1",
         "Parent ID",
@@ -1363,15 +1428,15 @@
       "inherits": null,
       "own_attributes": [
         "Element Id",
-        "Resource Id",
-        "Resource Use",
         "Resource Description",
+        "Resource Id",
         "Resource Properties",
+        "Resource Use",
         "Watch Resource"
       ]
     },
     "Link Command Base": {
-      "inherits": null,
+      "inherits": "Request Base",
       "own_attributes": [
         "Description",
         "Label"
@@ -1396,25 +1461,27 @@
     "Glossary Term Base": {
       "inherits": "Authored Referenceable",
       "own_attributes": [
-        "Glossary Name",
-        "Summary",
-        "Folders",
         "Abbreviation",
         "Example",
+        "Folders",
+        "Glossary Name",
+        "Summary",
         "Usage"
       ]
     },
     "Term-Term Link Base": {
       "inherits": "Link Command Base",
       "own_attributes": [
+        "Confidence",
+        "Expression",
+        "Relationship Type",
+        "Source",
+        "Steward",
+        "Steward Property Name",
+        "Steward Type Name",
         "Term 1",
         "Term 2",
-        "Relationship Type",
-        "Expression",
-        "Confidence",
-        "Term Status",
-        "Steward",
-        "Source"
+        "Term Status"
       ]
     }
   },

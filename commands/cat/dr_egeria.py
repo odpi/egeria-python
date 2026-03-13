@@ -3,7 +3,6 @@ This is an ongoing experiment in parsing and playing with Freddie docs
 """
 import os
 import sys
-
 import click
 from loguru import logger
 from rich.console import Console
@@ -11,7 +10,8 @@ from rich.prompt import Prompt
 
 from pyegeria.core._exceptions import PyegeriaException
 from pyegeria.core.config import settings
-from md_processing.dr_egeria import process_md_file
+from md_processing.dr_egeria import process_md_file_v2
+import asyncio
 
 # Configure logging
 log_format = "{time} | {level} | {function} | {line} | {message} | {extra}"
@@ -55,8 +55,18 @@ def process_markdown_file(input_file: str, output_folder:str, directive: str, se
     Process a markdown file by parsing and executing Dr. Egeria md_commands. Write output to a new file.
     """
     try:
-        process_md_file(input_file, output_folder, directive, server, url, userid, user_pass,
-                        parse_summary=parse_summary, attribute_logs=attribute_logs)
+        # Instantiate the client
+        from pyegeria import EgeriaTech
+        client = EgeriaTech(server, url, userid, user_pass)
+        
+        asyncio.run(process_md_file_v2(
+            input_file=input_file, 
+            output_folder=output_folder, 
+            directive=directive, 
+            client=client,
+            parse_summary=parse_summary,
+            attribute_logs=attribute_logs
+        ))
         logger.info(f"Called process_markdown_file with input file {input_file}")
     except PyegeriaException as e:
         logger.error(f"Error processing markdown file {input_file}: {e}")

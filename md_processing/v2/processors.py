@@ -72,12 +72,17 @@ class AsyncBaseCommandProcessor(ABC):
             err_msg = "; ".join(errors) if errors else "General validation failure"
             full_message = f"Validation failed: {err_msg}"
             logger.error(f"{full_message} for {self.command.verb} {self.command.object_type}")
+            logger.debug(f"Parsed Output: {self.parsed_output}")
+            
+            # Even if invalid, we want to show the diagnosis table if possible
+            output = await self.validate_only()
             return {
-                "output": self.command.raw_block,
+                "output": output,
                 "status": "failure",
                 "message": full_message,
                 "verb": self.command.verb,
-                "object_type": self.command.object_type
+                "object_type": self.command.object_type,
+                "errors": errors
             }
 
         # 3. Ensure qualified_name is populated
@@ -107,33 +112,83 @@ class AsyncBaseCommandProcessor(ABC):
             header = self.as_is_element.get('elementHeader', {})
             self.parsed_output["guid"] = header.get('guid')
 
-        # 5. Record this element in the shared 'planned_elements' set (if it's a create-like action)
+        # 5. Record this element in the shared 'planned_elements' set
         current_qn = self.parsed_output.get("qualified_name")
         planned = self.context.get("planned_elements")
-        if isinstance(planned, set) and current_qn and self.command.verb in ["Create", "Define", "Register", "Add"]:
+        if isinstance(planned, set) and current_qn and self.command.verb in ["Create", "Define", "Register", "Add", "Update", "Modify", "Upsert"]:
             planned.add(current_qn)
 
         # 6. Dry-run validation (optional/future)
 
-        # 7. Global Lookups and Existential Checks for References (Relationship commands)
-        if self.command.verb in ["Link", "Attach", "Add"]:
-            # Check for attributes that are likely references (Contain 'Id' or 'Name' and aren't 'Display Name' or 'Qualified Name')
-            for attr_name, attr_data in attributes.items():
-                if any(k in attr_name for k in ["Id", "GUID", "Name"]) and attr_name not in ["Display Name", "Qualified Name", "Description"]:
-                    val = attr_data.get("value")
-                    if val and not attr_data.get("guid"):
-                        # Try to resolve GUID from cache or Egeria
-                        guid = await self.resolve_element_guid(val)
-                        if guid:
-                            attr_data["guid"] = guid
-                            attr_data["exists"] = True
-                        else:
-                            attr_data["exists"] = False
-                            attr_data["valid"] = False
-                            logger.error(f"Referenced element '{val}' for attribute '{attr_name}' not found.")
-                            if "errors" not in self.parsed_output:
-                                 self.parsed_output["errors"] = []
-                            self.parsed_output["errors"].append(f"Referenced element '{val}' for attribute '{attr_name}' not found.")
+        # 7. Global Lookups and Existential Checks for References
+        # We check all attributes that look like references or are marked as Reference Name/ID in spec
+        for attr_name, attr_data in attributes.items():
+            # Get the style from the spec if possible
+            spec_style = "Simple"
+            spec = self.get_command_spec()
+            if spec:
+                spec_attrs = spec.get("Attributes", spec.get("attributes", []))
+                for a in spec_attrs:
+                    if isinstance(a, dict):
+                        # Flattened or nested
+                        if a.get("name") == attr_name:
+                            spec_style = a.get("style", "Simple")
+                            break
+                        elif attr_name in a:
+                            val = a[attr_name]
+                            if isinstance(val, dict):
+                                spec_style = val.get("style", "Simple")
+                                break
+                            else:
+                                # In compact specs, it might just be the value
+                                spec_style = "Simple"
+                                break
+            
+            # Heuristics for identifying what attributes represent references to other elements
+            # We exclude common string attributes that might contain keywords like "Reference" or "Name"
+            non_ref_names = [
+                "Display Name", "Qualified Name", "Description", 
+                "Reference Abstract", "Reference Title", "Reference Description",
+                "Abstract", "Title", "Category", "Organization", "URL", "License", "Copyright"
+            ]
+            
+            is_ref_candidate = (
+                spec_style in ["Reference Name", "ID", "GUID", "Reference"]
+            ) or (
+                any(k in attr_name for k in ["Id", "GUID", "Name", "Reference"]) 
+                and attr_name not in non_ref_names
+                and spec_style != "Simple" # If spec explicitly says Simple, trust it unless it looks very much like an ID
+            )
+            
+            # More precise check: if it's already got a GUID, don't re-resolve. 
+            # If it's a value but no GUID, and it's a candidate, try to resolve.
+            val = attr_data.get("value")
+            if val and not attr_data.get("guid") and is_ref_candidate:
+                # Try to resolve GUID from cache or Egeria
+                guid = await self.resolve_element_guid(val)
+                if guid:
+                    attr_data["guid"] = guid
+                    # If it's a 'Planned' element, it counts as exists for validation
+                    attr_data["exists"] = True
+                    if guid.startswith("(Planned:"):
+                        attr_data["is_planned"] = True
+                else:
+                    # If it's a candidate ref and we couldn't resolve it, mark as not found
+                    attr_data["exists"] = False
+                    attr_data["valid"] = False
+                    msg = f"Referenced element '{val}' for attribute '{attr_name}' not found."
+                    if attr_data.get("warnings") is None: attr_data["warnings"] = []
+                    attr_data["warnings"].append(msg)
+                    if directive == "validate":
+                        logger.warning(msg)
+                        if "warnings" not in self.parsed_output:
+                            self.parsed_output["warnings"] = []
+                        self.parsed_output.get("warnings", []).append(msg)
+                    else:
+                        logger.error(msg)
+                        if "errors" not in self.parsed_output:
+                            self.parsed_output["errors"] = []
+                        self.parsed_output.get("errors", []).append(msg)
 
         # 7. Check for existence of the target element (As-Is state)
         if self.as_is_element:
@@ -142,10 +197,23 @@ class AsyncBaseCommandProcessor(ABC):
             logger.debug(f"Element NOT found for QN: '{current_qn}'")
             self.parsed_output["exists"] = False
             if self.command.verb == "Update":
-                logger.error(f"Target element for 'Update' not found: {self.parsed_output.get('qualified_name') or self.command.object_type}")
+                logger.debug(f"Target element for 'Update' not found: {self.parsed_output.get('qualified_name') or self.command.object_type}")
                 if "errors" not in self.parsed_output:
                     self.parsed_output["errors"] = []
                 self.parsed_output["errors"].append(f"Target element for 'Update' not found.")
+                
+                if directive == "validate":
+                    logger.info("Validation mode: Proceeding to validate_only despite missing update target.")
+                    output = await self.validate_only()
+                    return {
+                        "output": output,
+                        "status": "failure",
+                        "message": f"Target element for Update not found.",
+                        "verb": self.command.verb,
+                        "object_type": self.command.object_type,
+                        "errors": self.parsed_output["errors"]
+                    }
+
                 return {
                     "output": self.command.raw_block,
                     "status": "failure",
@@ -186,7 +254,8 @@ class AsyncBaseCommandProcessor(ABC):
             qn = self.parsed_output.get("qualified_name")
             guid = self.parsed_output.get("guid") or attributes.get("guid")
             if qn and guid:
-                update_element_dictionary(qn, {"guid": guid, "display_name": display_name or qn})
+                d_name = self.parsed_output.get("display_name") or qn
+                update_element_dictionary(qn, {"guid": guid, "display_name": d_name})
 
         return {
             "output": output,
@@ -199,10 +268,13 @@ class AsyncBaseCommandProcessor(ABC):
             "warnings": self.parsed_output.get("warnings", [])
         }
 
-    def derive_qualified_name(self, attributes: Dict[str, Any]) -> str:
+    def derive_qualified_name(self, attributes: Optional[Dict[str, Any]] = None) -> str:
         """
         Derive a qualified_name from 'Display Name' (or other basis) and the command spec.
         """
+        if attributes is None:
+            attributes = self.parsed_output.get("attributes", {})
+            
         # 1. Find the best attribute to use as a name basis
         display_name = attributes.get("Display Name", {}).get("value")
         if not display_name:
@@ -241,7 +313,8 @@ class AsyncBaseCommandProcessor(ABC):
         if qn_prefix.endswith(':'):
             qn_prefix = qn_prefix[:-1]
 
-        # Extract Version Identifier if present 
+        # Extract local qualifier (Namespace Path) and Version Identifier if present 
+        local_qualifier = attributes.get("Namespace Path", {}).get("value")
         version_identifier = attributes.get("Version Identifier", {}).get("value")
 
         # Reach into 'collections' subclient which is guaranteed to have the helper
@@ -250,11 +323,17 @@ class AsyncBaseCommandProcessor(ABC):
             return helper.__create_qualified_name__(
                 type_name=qn_prefix,
                 display_name=display_name,
+                local_qualifier=local_qualifier,
                 version_identifier=version_identifier or ""
             )
         else:
             # Basic fallback if SDK helper unavailable
-            return f"{qn_prefix}::{display_name}"
+            q_name = f"{qn_prefix}::{display_name}"
+            if local_qualifier:
+                q_name = f"{local_qualifier}::{q_name}"
+            if version_identifier:
+                q_name = f"{q_name}::{version_identifier}"
+            return q_name
 
     async def render_result_markdown(self, guid: str) -> str:
         """
@@ -299,31 +378,42 @@ class AsyncBaseCommandProcessor(ABC):
 
     async def fetch_element(self, guid: str) -> Optional[Dict[str, Any]]:
         """
-        Fetch the element bean for rendering. 
-        Subclasses should override if MetadataExplorer is unavailable.
-        """
-    async def fetch_element(self, guid: str) -> Optional[Dict[str, Any]]:
-        """
         Fetch the details of an element by GUID. 
         Subclasses should override if MetadataExplorer is unavailable or if a specific OMAS method is needed.
         """
         try:
-            # First try generic element retrieval
-            return await self.client._async_get_metadata_element_by_guid(guid)
-        except (PyegeriaException, AttributeError):
-            # Fallback for servers without MetadataExplorer
-            logger.debug("Generic element fetch failed, trying specific lookup fallback")
-            return None
+            # First try MetadataExplorer (most detailed properties)
+            res = await self.client._async_get_metadata_element_by_guid(guid)
+            if res and isinstance(res, dict):
+                return res
+        except Exception as e:
+            logger.debug(f"MetadataExplorer fetch failed: {e}")
+            
+        try:
+            # Fallback to ClassificationExplorer if MetadataExplorer is missing
+            logger.debug("Trying ClassificationExplorer fallback for element fetch.")
+            res = await getattr(self.client, "_async_get_element_by_guid_")(guid)
+            if res and isinstance(res, dict):
+                # The structure from classification-explorer comes under "element" usually
+                if "element" in res:
+                    return res["element"]
+                return res
+        except Exception as e:
+            logger.debug(f"ClassificationExplorer fallback failed: {e}")
+
+        return None
 
     async def resolve_element_guid(self, name_or_guid: str) -> Optional[str]:
         """
-        Try to resolve a GUID from a string which could be a GUID, a Qualified Name, 
-        or a Display Name.
-        Checks the local cache first, then Egeria.
+        Resolves a name or GUID to a GUID using various strategies.
+        Returns None if not found, or f"(Planned: {name})" if it's a forward reference.
         """
         if not name_or_guid:
             return None
             
+        import sys
+        sys.stdout.flush()
+
         # 1. Is it a GUID?
         try:
             uuid.UUID(name_or_guid)
@@ -331,77 +421,71 @@ class AsyncBaseCommandProcessor(ABC):
         except ValueError:
             pass
             
-        # 2. Check local cache
+        # 2. Check local cache (real elements first!)
         key = find_key_with_value(name_or_guid)
         if key:
             cache_info = get_element_dictionary().get(key)
             if cache_info and "guid" in cache_info:
                 return cache_info["guid"]
-        
-        # 2b. Check 'planned_elements' (for forward references in same batch)
-        planned = self.context.get("planned_elements")
-        if isinstance(planned, set) and name_or_guid in planned:
-            # Return a special string to indicate it exists but has no real GUID yet
+
+        # 3. Check current batch (planned_elements)
+        planned = self.context.get("planned_elements", set())
+        if name_or_guid in planned:
             return f"(Planned: {name_or_guid})"
         
-        # 3. Check Egeria (expensive fallback)
+        # 4. Check Egeria (strict lookup)
         try:
-            # 3a. If it looks like a qualified name (contains ::), try exact unique name lookup
-            # This is much more robust for the Create -> Update transition
+            # 4a. Use SDK's strict name-to-GUID resolution
+            # This checks QN, Display Name, Resource Name, and Identifier.
+            # It raises PyegeriaException if multiple matches are found.
+            try:
+                res = await self.client._async_get_guid_for_name(name_or_guid)
+                if res and res != "No element found" and isinstance(res, str):
+                    logger.debug(f"resolve_element_guid: SDK strict lookup for '{name_or_guid}' returned: {res}")
+                    return res
+            except PyegeriaException as e:
+                # Catch multiple matches error
+                if "Multiple elements found" in str(e):
+                    msg = f"Multiple elements found for name '{name_or_guid}'. Please use a unique Qualified Name."
+                    logger.error(msg)
+                    if "errors" not in self.parsed_output:
+                        self.parsed_output["errors"] = []
+                    self.parsed_output["errors"].append(msg)
+                    return None
+                logger.debug(f"SDK strict lookup failed for '{name_or_guid}': {e}")
+
+            # 4b. Fallback: If it looks like a QN, try MetadataExplorer unique name lookup
             if "::" in name_or_guid:
-                # EgeriaTech delegates to MetadataExplorer
                 try:
                     res = await self.client._async_get_metadata_guid_by_unique_name(name_or_guid, "qualifiedName")
-                    logger.debug(f"Step 3a: MetadataExplorer lookup for '{name_or_guid}' returned: {res}")
                     if res and res != "No element found" and isinstance(res, str):
                         return res
-                except (PyegeriaException, AttributeError) as e:
-                    logger.debug(f"Step 3a: MetadataExplorer lookup failed or unavailable: {e}")
-            
-            # 3b. Try specific search if it's a known type and we have a name
-            # We use find_method if available in spec
+                except Exception:
+                    pass
+
+            # 4c. Try find_method search from spec
             spec = self.get_command_spec()
             find_method_name = spec.get("find_method")
             if find_method_name:
                 try:
-                    # Parse 'Manager.method' or just 'method'
                     method_parts = find_method_name.split('.')
                     mgr_method = method_parts[-1]
-                    # Direct delegation usually handles it
                     method = getattr(self.client, f"_async_{mgr_method}", None)
                     if method:
-                        # Extract name basis properly (handling version identifiers)
                         parts = name_or_guid.split("::")
-                        # Based on our __create_qualified_name__ logic:
-                        # [prefix, type, name, version] -> parts[-2]
-                        # [prefix, type, name] -> parts[-1]
-                        # [type, name] -> parts[-1]
-                        
                         basis = parts[-2] if len(parts) >= 4 else parts[-1]
-                        logger.debug(f"Step 3b: Specific search using {mgr_method} for basis '{basis}'")
-                        results = await method(basis)
+                        results = await method(basis or name_or_guid)
                         if isinstance(results, list) and len(results) > 0:
                             for res in results:
-                                header = res.get("elementHeader", {})
-                                qn = header.get("qualifiedName") or res.get("properties", {}).get("qualifiedName")
-                                logger.debug(f"Step 3b: Checking result '{qn}' against '{name_or_guid}'")
+                                qn = (res.get("elementHeader", {}).get("qualifiedName") or 
+                                      res.get("properties", {}).get("qualifiedName"))
                                 if qn == name_or_guid:
-                                    return header.get("guid") or res.get("guid") or res.get("elementHeader",{}).get("guid")
-                        else:
-                            logger.debug(f"Step 3b: No results found for basis '{basis}'")
-                except Exception as e:
-                    logger.debug(f"Step 3b: Specific search failed: {e}")
+                                    return res.get("guid") or res.get("elementHeader", {}).get("guid")
+                except Exception:
+                    pass
 
-            # 3c. Try by name (generic search or specific client method)
-            # For now, let's use a generic search if possible, or common lookup
-            # Many processors have specific lookup logic. Maybe we can leverage that.
-            element = await self.client._async_get_metadata_element_by_name(name_or_guid)
-            if element:
-                header = element.get("elementHeader")
-                if header and "guid" in header:
-                    return header["guid"]
-        except Exception:
-            pass
+        except Exception as e:
+            logger.debug(f"resolve_element_guid: Unexpected error resolving '{name_or_guid}': {e}")
             
         return None
 
@@ -411,6 +495,14 @@ class AsyncBaseCommandProcessor(ABC):
         Checks the cache first.
         """
         qn = self.parsed_output.get("qualified_name")
+        
+        # If QN is missing but Display Name is present, try deriving it
+        if not qn:
+            qn = self.derive_qualified_name()
+            if qn:
+                logger.debug(f"fetch_as_is: Derived QN '{qn}' for identification")
+                self.parsed_output["qualified_name"] = qn
+
         if qn:
             # 1. Check Cache
             cache_info = get_element_dictionary().get(qn)
@@ -424,7 +516,7 @@ class AsyncBaseCommandProcessor(ABC):
             
             # 2. Check Egeria (Harden against missing cache in new sessions)
             guid = await self.resolve_element_guid(qn)
-            logger.debug(f"fetch_as_is: resolve_element_guid for '{qn}' returned: {guid}")
+            logger.debug(f"fetch_as_is: resolve_element_guid returned: {guid}")
             if guid and not guid.startswith("(Planned:"):
                 try:
                     element = await self.fetch_element(guid)
@@ -452,6 +544,9 @@ class AsyncBaseCommandProcessor(ABC):
         Generates a rich markdown diagnostic summary of what *would* happen.
         """
         logger.info(f"DRY RUN: Validating {self.command.verb} {self.command.object_type}")
+        if not self.parsed_output:
+            logger.error("validate_only: self.parsed_output is None!")
+            return "### Error: No parsed data available for validation."
         
         attributes = self.parsed_output.get("attributes", {})
         qualified_name = self.parsed_output.get("qualified_name")
@@ -481,6 +576,8 @@ class AsyncBaseCommandProcessor(ABC):
             # Visual feedback for existential validation
             if details.get("exists") is False:
                 status = "❌ Not Found"
+            elif details.get("is_planned"):
+                status = "🕒 Planned"
             else:
                 status = "✅ Valid" if details.get("valid") else "❌ Invalid"
                 
