@@ -1,6 +1,6 @@
 {
   "family": "External References",
-  "exported": "Mar 11, 2026 at 9:49:54 AM",
+  "exported": "Mar 13, 2026 at 3:55:12 PM",
   "attribute_definitions": {
     "Activity Status": {
       "variable_name": "activity_status",
@@ -175,7 +175,7 @@
       "examples": "",
       "default_value": "",
       "valid_values": [],
-      "existing_element": "",
+      "existing_element": "Referenceable",
       "description": "The unique identifier (qualified name or GUID) of the collection.",
       "generated": false,
       "style": "Reference Name",
@@ -424,6 +424,44 @@
       "level": "Advanced",
       "Journal Entry": ""
     },
+    "For Duplicate Processing": {
+      "variable_name": "for_duplicate_processing",
+      "inUpdate": true,
+      "attr_labels": "",
+      "examples": "",
+      "default_value": "",
+      "valid_values": [],
+      "existing_element": "",
+      "description": "Flag indicating if the request is to support duplicate processing.",
+      "generated": false,
+      "style": "Bool",
+      "user_specified": true,
+      "unique": false,
+      "input_required": false,
+      "min_cardinality": 1,
+      "max_cardinality": 1,
+      "level": "Advanced",
+      "Journal Entry": ""
+    },
+    "For Lineage": {
+      "variable_name": "for_lineage",
+      "inUpdate": true,
+      "attr_labels": "",
+      "examples": "",
+      "default_value": "",
+      "valid_values": [],
+      "existing_element": "",
+      "description": "Flag indicating if the request is to support lineage.",
+      "generated": false,
+      "style": "Bool",
+      "user_specified": true,
+      "unique": false,
+      "input_required": false,
+      "min_cardinality": 1,
+      "max_cardinality": 1,
+      "level": "Advanced",
+      "Journal Entry": ""
+    },
     "Glossary Term": {
       "variable_name": "glossary_term",
       "inUpdate": true,
@@ -522,7 +560,7 @@
     "Label": {
       "variable_name": "label",
       "inUpdate": true,
-      "attr_labels": "",
+      "attr_labels": "Wire Label",
       "examples": "",
       "default_value": "",
       "valid_values": [],
@@ -574,6 +612,25 @@
       "min_cardinality": 0,
       "max_cardinality": 1,
       "level": "Advanced",
+      "Journal Entry": ""
+    },
+    "Namespace Path": {
+      "variable_name": "namespace_path",
+      "inUpdate": true,
+      "attr_labels": "",
+      "examples": "",
+      "default_value": "",
+      "valid_values": [],
+      "existing_element": "",
+      "description": "The namespace path that qualifies the element's name within a larger naming hierarchy.",
+      "generated": false,
+      "style": "Simple String",
+      "user_specified": true,
+      "unique": false,
+      "input_required": false,
+      "min_cardinality": 0,
+      "max_cardinality": 1,
+      "level": "Domain",
       "Journal Entry": ""
     },
     "Notes": {
@@ -1228,25 +1285,6 @@
       "level": "Domain",
       "Journal Entry": ""
     },
-    "Element Name": {
-      "variable_name": "element_name",
-      "inUpdate": true,
-      "attr_labels": "Referenceable",
-      "examples": "",
-      "default_value": "",
-      "valid_values": [],
-      "existing_element": "Referenceable",
-      "description": "A referenceable to link to the external reference.",
-      "generated": false,
-      "style": "Reference Name",
-      "user_specified": true,
-      "unique": false,
-      "input_required": true,
-      "min_cardinality": 1,
-      "max_cardinality": 1,
-      "level": "Domain",
-      "Journal Entry": ""
-    },
     "External Reference": {
       "variable_name": "external_reference",
       "inUpdate": true,
@@ -1725,6 +1763,21 @@
         "User Defined Content Status"
       ]
     },
+    "Request Base": {
+      "inherits": null,
+      "own_attributes": [
+        "Effective From",
+        "Effective Time",
+        "Effective To",
+        "Extended Properties",
+        "External Source GUID",
+        "External Source Name",
+        "For Duplicate Processing",
+        "For Lineage",
+        "Journal Entry",
+        "Request ID"
+      ]
+    },
     "Referenceable": {
       "inherits": "New-Element",
       "own_attributes": [
@@ -1750,18 +1803,11 @@
       ]
     },
     "New-Element": {
-      "inherits": null,
+      "inherits": "Request Base",
       "own_attributes": [
         "Anchor ID",
-        "Effective From",
-        "Effective Time",
-        "Effective To",
-        "Extended Properties",
-        "External Source GUID",
-        "External Source Name",
         "Glossary Term",
         "Is Own Anchor",
-        "Journal Entry",
         "Merge Update",
         "Parent at End1",
         "Parent ID",
@@ -1784,15 +1830,15 @@
       "inherits": null,
       "own_attributes": [
         "Element Id",
-        "Resource Id",
-        "Resource Use",
         "Resource Description",
+        "Resource Id",
         "Resource Properties",
+        "Resource Use",
         "Watch Resource"
       ]
     },
     "Link Command Base": {
-      "inherits": null,
+      "inherits": "Request Base",
       "own_attributes": [
         "Description",
         "Label"
@@ -1810,53 +1856,54 @@
     "External Reference Base": {
       "inherits": "Authored Referenceable",
       "own_attributes": [
-        "Reference Title",
-        "Reference Abstract",
-        "Organization",
-        "Sources",
-        "License",
+        "Attribution",
         "Copyright",
-        "Attribution"
+        "License",
+        "Organization",
+        "Reference Abstract",
+        "Reference Title",
+        "Sources"
       ]
     },
     "Related Media Base": {
       "inherits": "External Reference Base",
       "own_attributes": [
-        "Media Type",
-        "Media Type Other Id",
         "Default Media Usage",
-        "Default Media Usage Other Id"
+        "Default Media Usage Other Id",
+        "Media Type",
+        "Media Type Other Id"
       ]
     },
     "Cited Document Base": {
       "inherits": "External Reference Base",
       "own_attributes": [
-        "Number of Pages",
-        "Page Range",
-        "Publication Series",
-        "Publication Series Volume",
-        "Publisher",
         "Edition",
         "First Publication Date",
-        "Publication Date",
+        "Number of Pages",
+        "Page Range",
         "Publication City",
+        "Publication Date",
+        "Publication Numbers",
+        "Publication Series",
+        "Publication Series Volume",
         "Publication Year",
-        "Publication Numbers"
+        "Publisher"
       ]
     },
     "External Reference Link": {
       "inherits": "Link Command Base",
       "own_attributes": [
-        "Element Name",
-        "External Reference"
+        "Element Id",
+        "External Reference",
+        "Reference Id"
       ]
     },
     "Media Reference Link": {
       "inherits": "Link Command Base",
       "own_attributes": [
-        "Element Name",
-        "Media Reference",
+        "Element Id",
         "Media Id",
+        "Media Reference",
         "Media Usage",
         "Media Usage Other Id"
       ]
@@ -1864,10 +1911,10 @@
     "Cited Document Link": {
       "inherits": "Link Command Base",
       "own_attributes": [
-        "Element Name",
         "Cited Document",
-        "Reference Id",
-        "Pages"
+        "Element Id",
+        "Pages",
+        "Reference Id"
       ]
     }
   },

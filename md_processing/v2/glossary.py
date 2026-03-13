@@ -51,6 +51,7 @@ class GlossaryProcessor(AsyncBaseCommandProcessor):
             body['properties'] = prop_body
             
             await self.client._async_update_collection(guid, body)
+            self.parsed_output["guid"] = guid
             # if status:
             #     await self.client._async_update_collection_status(guid, status)
                 
@@ -78,6 +79,7 @@ class GlossaryProcessor(AsyncBaseCommandProcessor):
             
             guid = await self.client._async_create_collection(body=body)
             if guid:
+                self.parsed_output["guid"] = guid
                 update_element_dictionary(qualified_name, {'guid': guid, 'display_name': display_name})
                 logger.success(f"Created {object_type} '{display_name}'")
                 return await self.client._async_get_glossary_by_guid(guid, output_format='MD')
@@ -127,6 +129,7 @@ class TermProcessor(AsyncBaseCommandProcessor):
             body['properties'] = prop_body
             
             await self.client._async_update_glossary_term(guid, body)
+            self.parsed_output["guid"] = guid
             if status:
                 await self.client._async_update_glossary_term_status(guid, status)
             
@@ -148,6 +151,7 @@ class TermProcessor(AsyncBaseCommandProcessor):
 
             guid = await self.client._async_create_glossary_term(body=body)
             if guid:
+                self.parsed_output["guid"] = guid
                 await self._sync_term_memberships(guid, to_be_collection_guids, replace_all=True)
                 update_element_dictionary(qualified_name, {'guid': guid, 'display_name': display_name})
                 logger.success(f"Created Term '{display_name}'")

@@ -76,6 +76,11 @@ def _write_attr_block(out: io.StringIO, key: str, value: dict, client: Optional[
     """Write a single ## attribute block into the StringIO buffer."""
     out.write(f"\n## {key}\n")
     out.write(f">\t**Input Required**: {value.get('input_required', 'false')}\n\n")
+    
+    attr_type = value.get("data_type") or value.get("style") or ""
+    if attr_type:
+        out.write(f">\t**Attribute Type**: {attr_type}\n\n")
+        
     out.write(f">\t**Description**: {value.get('description', '')}\n\n")
 
     labels = value.get("attr_labels") or ""
@@ -120,6 +125,11 @@ def _print_attr(key: str, value: dict, client: Optional[ServerClient] = None) ->
     """Mirror of _write_attr_block for console output."""
     print(f"\n## {key}")
     print(f">\tInput Required: {value.get('input_required', 'false')}")
+    
+    attr_type = value.get("data_type") or value.get("style") or ""
+    if attr_type:
+        print(f">\tAttribute Type: {attr_type}")
+        
     print(f">\tDescription: {value.get('description', '')}")
     labels = value.get("attr_labels") or ""
     if labels.strip():
@@ -329,8 +339,8 @@ def main():
                 if not attr_list:
                     continue   # omit empty sections entirely
 
-                command_output.write(f"\n# {section_title}\n")
-                print(f"\n# {section_title}")
+                # command_output.write(f"\n# {section_title}\n")
+                # print(f"\n# {section_title}")
 
                 for key, value in attr_list:
                     _write_attr_block(command_output, key, value, client=client)

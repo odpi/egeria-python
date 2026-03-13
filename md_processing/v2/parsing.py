@@ -18,8 +18,6 @@ class AttributeFirstParser:
     def __init__(self, command: DrECommand, client: Optional[Any] = None):
         self.command = command
         self.client = client
-        # Ensure specs are loaded
-        load_commands("commands.json")
         self.spec = get_command_spec(f"{command.verb} {command.object_type}")
         self.parsed_attributes = {}
         self.errors = []
@@ -116,20 +114,31 @@ class AttributeFirstParser:
                     label_map[l] = (canonical_name, details)
 
     def _process_attribute_value(self, value: str, details: dict) -> Any:
+        if value is None:
+            return None
+        value = value.strip()
         style = details.get("style", "Simple")
         
         if style == "Simple" or style == "ID" or style == "Reference Name":
-            return value.strip()
+            val = value
+            if not val:
+                # If it's a date-like attribute, return None to satisfy Pydantic/SDK
+                name = details.get("name", "")
+                if any(x in name for x in ["Time", "Date", "From", "To"]):
+                    return None
+            return val
             
         elif style == "Boolean":
-            v = value.strip().lower()
+            v = value.lower()
             return v in {"true", "yes", "1", "on"}
             
         elif style == "Dictionary" or style == "KeyValue":
             return parse_key_value(value)
             
         elif style == "Valid Value":
-            v = value.strip()
+            v = value
+            if not v:
+                return v
             # 1. Try dynamic lookup if client is available
             if self.client and hasattr(self.client, "get_valid_metadata_values"):
                 # Use property_name from details if available, else name
@@ -178,12 +187,12 @@ class AttributeFirstParser:
                 return resolved
             else:
                 # Fallback if marked as Enumeration but no class found (maybe older spec)
-                return value.strip()
+                return value
             
         elif style == "List" or style == "NameList" or style == "Simple List":
             return [v.strip() for v in re.split(r'[,\n]', value) if v.strip()]
             
-        return value.strip()
+        return value
 
 def parse_dr_egeria_content(text: str) -> List[Dict[str, Any]]:
     """Helper to extract and parse all commands in one go."""

@@ -9,6 +9,12 @@ Dr.Egeria v2 is a complete re-architecture of the Egeria Markdown (Freddie) proc
 3. **Robustness**: Universal extraction handles commands in Markdown docs, Jupyter Notebooks, and LLM prompts.
 4. **Literate Programming**: Supports modern Markdown structures like tables and lists for attribute definition.
 
+## Design Decisions
+
+- **Strict Specification Adherence**: The `AttributeFirstParser` is intentionally specification-agnostic. It does not contain hardcoded logic for specific verbs or objects (e.g., "Display Name should be optional for Links"). If a requirement exists in the Egeria type system, it must be defined in the JSON specification.
+- **Diagnostic-First Validation**: Validation is treated as a first-class citizen. Even when a command fails to parse or execute, the system attempts to provide a diagnostic table to help the user identify missing or incorrect attributes.
+- **Inter-Command Dependency Management**: The system tracks "Planned" elements (those defined in the current markdown file but not yet in Egeria) to allow subsequent commands to resolve their GUIDs without requiring a multi-pass process.
+
 ## Architecture Overview
 
 ### 1. Extraction (`extraction.py`)

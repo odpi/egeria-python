@@ -82,6 +82,25 @@ Commands compose bundles and custom attributes to define an operation.
 }
 ```
 
+#### Alternate Names Guidance
+
+When providing `alternate_names` for a command, it is recommended to specify **only the object part** of the command (e.g., `"Solution Component"` instead of `"Link Solution Component"`).
+
+Dr. Egeria automatically expands these names using the **verb family** of the primary command. For example, if a command is in the `Link` family (which includes `Link`, `Attach`, `Add`, `Unlink`, `Detach`, `Remove`), providing `"Solution Component"` as an alternate name will automatically allow all of the following:
+- `Link Solution Component`
+- `Attach Solution Component`
+- `Add Solution Component`
+- `Unlink Solution Component` (if the command supports the Unlink verb family)
+- etc.
+
+If you specify a full phrase like `"Attach Solution Component"`, the system will still extract the object part and apply the verb expansion logic, but specifying just the object is cleaner and more standard.
+
+### Maintenance and Best Practices
+
+- **Avoid Hardcoding Logic**: Do not add special-purpose logic to parsers or processors to accommodate specification errors. If an attribute should be optional (e.g., `Display Name` for technical links), update the `input_required` flag in the relevant `attribute_definition` or `bundle`.
+- **Inheritance vs Redundancy**: Leverage `bundles` to manage common attributes. If a property is missing across a command family, check if it should be added to a base bundle (like `Link Command Base`) rather than individual commands.
+- **Test Before Emit**: Use the `validate_compact_json.py` script to ensure that changes to the specification do not break inheritance chains or cross-references.
+
 ## Adding New Commands
 
 To add or refactor commands into the compact format:

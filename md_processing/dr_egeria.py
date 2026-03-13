@@ -9,7 +9,6 @@ from datetime import datetime
 
 from loguru import logger
 from pydantic import ValidationError
-from rich import print
 from rich.console import Console
 from rich.table import Table
 
@@ -55,6 +54,7 @@ EGERIA_VIEW_SERVER_URL = app_config.egeria_view_server_url
 EGERIA_INTEGRATION_DAEMON = app_config.egeria_integration_daemon
 EGERIA_INTEGRATION_DAEMON_URL = app_config.egeria_integration_daemon_url
 EGERIA_WIDTH = int(app_config.console_width or 220)
+console = Console(width=EGERIA_WIDTH)
 EGERIA_JUPYTER = bool(app_config.egeria_jupyter)
 EGERIA_GLOSSARY_PATH = app_config.egeria_glossary_path
 EGERIA_ROOT_PATH = app_config.pyegeria_root
@@ -80,12 +80,9 @@ async def process_md_file_v2(input_file: str, output_folder: str, directive: str
     
     full_file_path = os.path.join(EGERIA_ROOT_PATH, EGERIA_INBOX_PATH, input_file)
     logger.info(f"v2: Processing Markdown File: {full_file_path}")
-    print(f"v2: Processing Markdown File: {full_file_path}")
+    console.print(f"v2: Processing Markdown File: {full_file_path}")
 
-    if directive == "validate":
-        print("\n[bold yellow]*** WARNING: VALIDATION MODE ***[/bold yellow]")
-        print("[yellow]Dr. Egeria will check your commands and metadata, but NO CHANGES will be made to Egeria.[/yellow]\n")
-    elif directive == "process":
+    if directive == "process":
         print("\n[bold red]*** WARNING: PROCESS MODE ***[/bold red]")
         print("[red]Dr. Egeria will EXECUTE these commands and make PERMANENT CHANGES to Egeria.[/red]\n")
     
@@ -100,6 +97,12 @@ async def process_md_file_v2(input_file: str, output_folder: str, directive: str
     extractor = UniversalExtractor(content)
     commands = extractor.extract_commands()
     
+    if not commands:
+        logger.warning(f"No valid Egeria Markdown commands found in {full_file_path}")
+        console.print(f"[bold yellow]Warning:[/bold yellow] No valid Egeria commands could be parsed from [cyan]'{input_file}'[/cyan].")
+        console.print("Ensure your markdown file uses correctly formatted headers (e.g. `## Create Glossary`) that match known commands.")
+        return
+        
     # 2. Setup v2 Dispatcher
     dispatcher = v2Dispatcher(client)
     from md_processing.md_processing_utils.md_processing_constants import get_command_spec, build_command_variants
@@ -145,6 +148,8 @@ async def process_md_file_v2(input_file: str, output_folder: str, directive: str
         dispatcher.register(proj_cmd, ProjectProcessor)
 
     # Product Manager
+    register_processor("Create Collection", CollectionProcessor)
+    register_processor("Update Collection", CollectionProcessor)
     register_processor("Create Root Collection", CollectionProcessor)
     register_processor("Update Root Collection", CollectionProcessor)
     register_processor("Create Folder", CollectionProcessor)
@@ -239,29 +244,30 @@ async def process_md_file_v2(input_file: str, output_folder: str, directive: str
         if res["status"] == "success" and directive == "process":
             updated = True
 
-    print("\n")
-    print(summary_table)
-    print("\n")
+    console.print("\n")
+    console.print(summary_table)
+    console.print("\n")
+
+    has_warnings = any(res.get("warnings") for res in results)
 
     # Display warnings for both validate and process
-    has_warnings = any(res.get("warnings") for res in results)
     if has_warnings:
-        print("[bold yellow]Processing Warnings:[/bold yellow]\n")
+        console.print("[bold yellow]Processing Warnings:[/bold yellow]\n")
         for res in results:
             warnings = res.get("warnings", [])
             if warnings:
-                print(f"[yellow]-- {res['verb']} {res['object_type']} ({res.get('qualified_name', 'Unknown')}) --[/yellow]")
+                console.print(f"[yellow]-- {res['verb']} {res['object_type']} ({res.get('qualified_name', 'Unknown')}) --[/yellow]")
                 for w in warnings:
-                    print(f"   [yellow]* {w}[/yellow]")
-        print("\n")
+                    console.print(f"   [yellow]* {w}[/yellow]")
+        console.print("\n")
 
     if directive == "validate":
         from md_processing.md_processing_utils.common_md_utils import render_markdown
-        print("[bold cyan]Validation Diagnosis Summary:[/bold cyan]\n")
+        console.print("[bold cyan]Validation Diagnosis Summary:[/bold cyan]\n")
         for res in results:
             if res.get("output"):
                 render_markdown(res["output"])
-        print("\n")
+        console.print("\n")
 
     if directive == "process" and updated:
         # Re-assemble the file (simplified for now, using the joined outputs)
@@ -280,11 +286,11 @@ async def process_md_file_v2(input_file: str, output_folder: str, directive: str
         with open(new_file_path, 'w') as f2:
             f2.write(content_to_write)
             
-        print(f"==> [bold green]SUCCESS[/bold green]: Output written to [blue]{new_file_path}[/blue]")
+        console.print(f"==> [bold green]SUCCESS[/bold green]: Output written to [blue]{new_file_path}[/blue]")
     elif directive == "process":
-        print("[yellow]No updates detected. New File not created.[/yellow]")
+        console.print("[yellow]No updates detected. New File not created.[/yellow]")
 
-    print(f"\n[bold green]v2: Processing complete for '{input_file}'[/bold green]")
+    console.print(f"\n[bold green]v2: Processing complete for '{input_file}'[/bold green]")
     logger.info("v2: Processing complete")
 
 
@@ -307,7 +313,7 @@ def process_md_file(input_file: str, output_folder: str, directive: str, server:
     set_attribute_log_level(attribute_logs)
 
     cmd_list = command_list
-    console = Console(width=int(EGERIA_WIDTH))
+    # console = Console(width=int(EGERIA_WIDTH))
     client = EgeriaTech(server, url, user_id=userid)
     token = client.create_egeria_bearer_token(userid, user_pass)
     
@@ -320,12 +326,9 @@ def process_md_file(input_file: str, output_folder: str, directive: str, server:
     logger.info(f"Processing Markdown File: {full_file_path}")
     print(f"Processing Markdown File: {full_file_path}")
 
-    if directive == "validate":
-        print("\n[bold yellow]*** WARNING: VALIDATION MODE ***[/bold yellow]")
-        print("[yellow]Dr. Egeria will check your commands and metadata, but NO CHANGES will be made to Egeria.[/yellow]\n")
-    elif directive == "process":
-        print("\n[bold red]*** WARNING: PROCESS MODE ***[/bold red]")
-        print("[red]Dr. Egeria will EXECUTE these commands and make PERMANENT CHANGES to Egeria.[/red]\n")
+    if directive != "validate":
+        console.print("\n[bold red]*** WARNING: PROCESS MODE ***[/bold red]")
+        console.print("[red]Dr. Egeria will EXECUTE these commands and make PERMANENT CHANGES to Egeria.[/red]\n")
     try:
         with open(full_file_path, 'r') as f:
             lines = f.readlines()
@@ -446,23 +449,19 @@ def process_md_file(input_file: str, output_folder: str, directive: str, server:
 
 if __name__ == "__main__":
     import argparse
-    parser = argparse.ArgumentParser(description="Process Dr. Egeria Markdown files.")
+    import asyncio
+    parser = argparse.ArgumentParser(description="Process Dr. Egeria Markdown files using v2.")
     parser.add_argument("--input-file", required=True, help="Input markdown file name (in Inbox)")
     parser.add_argument("--output-folder", default="", help="Optional output subfolder (in Outbox)")
     parser.add_argument("--directive", default="process", choices=["display", "validate", "process"], help="Action to perform")
-    parser.add_argument("--server", default=EGERIA_VIEW_SERVER, help="Egeria view server name")
-    parser.add_argument("--url", default=EGERIA_VIEW_SERVER_URL, help="Egeria platform URL")
-    parser.add_argument("--userid", default=EGERIA_USER, help="Egeria user ID")
-    parser.add_argument("--pass", dest="user_pass", default=EGERIA_USER_PASSWORD, help="Egeria user password")
     
     args = parser.parse_args()
     
-    process_md_file(
-        args.input_file, 
-        args.output_folder, 
-        args.directive, 
-        args.server, 
-        args.url, 
-        args.userid, 
-        args.user_pass
+    # Run the async v2 processor
+    asyncio.run(
+        process_md_file_v2(
+            args.input_file, 
+            args.directive, 
+            args.output_folder
+        )
     )

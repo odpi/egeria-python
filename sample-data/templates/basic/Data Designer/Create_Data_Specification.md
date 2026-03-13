@@ -3,26 +3,28 @@
 >
 >	**Alternative Names**: Data Spec
 
-# Required
-
 ## Display Name
 >	**Input Required**: True
+
+>	**Attribute Type**: Simple
 
 >	**Description**: The common name of an element.
 
 >	**Alternative Labels**: "Term Name"
 
 
-# Common Properties
-
 ## Journal Entry
 >	**Input Required**: False
+
+>	**Attribute Type**: Simple
 
 >	**Description**: A text entry into a journal.
 
 
 ## Category
 >	**Input Required**: False
+
+>	**Attribute Type**: Simple
 
 >	**Description**: A user-defined category for the element, used to group related elements for display or search purposes.
 
@@ -32,25 +34,31 @@
 ## Description
 >	**Input Required**: False
 
+>	**Attribute Type**: Simple
+
 >	**Description**: A description.
 
 
 ## Qualified Name
 >	**Input Required**: False
 
+>	**Attribute Type**: QN
+
 >	**Description**: The unique, text name of an element.
 
 
-# Additional Properties
-
 ## Search Keywords
 >	**Input Required**: False
+
+>	**Attribute Type**: Simple List
 
 >	**Description**: A list of search keywords.
 
 
 ## GUID
 >	**Input Required**: False
+
+>	**Attribute Type**: GUID
 
 >	**Description**: A unique identifier - typically of an element in this context.
 
@@ -60,17 +68,23 @@
 ## Identifier
 >	**Input Required**: False
 
+>	**Attribute Type**: Simple
+
 >	**Description**: An identier
 
 
 ## URL
 >	**Input Required**: False
 
+>	**Attribute Type**: Simple
+
 >	**Description**: URL for further information.
 
 
 ## Version Identifier
 >	**Input Required**: False
+
+>	**Attribute Type**: Simple
 
 >	**Description**: The version of the element
 
