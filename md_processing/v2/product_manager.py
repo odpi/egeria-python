@@ -286,7 +286,7 @@ class ProductLinkProcessor(AsyncBaseCommandProcessor):
             
             # Format the output with attributes for better feedback
             header = f"\n\n# {verb} {object_type}\n\nOperation completed.\n\n"
-            if "Collection Member" in object_type:
+            if "Member to Collection" in object_type or "Collection Member" in object_type:
                 header += "## Associated Elements\n"
                 header += f"- **Collection Id**: `{attributes.get('Collection Id', {}).get('value')}`\n"
                 header += f"- **Element Id**: `{attributes.get('Element Id', {}).get('value')}`\n\n"

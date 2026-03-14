@@ -78,7 +78,13 @@ async def process_md_file_v2(input_file: str, output_folder: str, directive: str
     set_parse_summary_mode(parse_summary)
     set_attribute_log_level(attribute_logs)
     
-    full_file_path = os.path.join(EGERIA_ROOT_PATH, EGERIA_INBOX_PATH, input_file)
+    if os.path.exists(input_file):
+        full_file_path = input_file
+    elif EGERIA_INBOX_PATH in input_file:
+        full_file_path = os.path.join(EGERIA_ROOT_PATH, input_file)
+    else:
+        full_file_path = os.path.join(EGERIA_ROOT_PATH, EGERIA_INBOX_PATH, input_file)
+        
     logger.info(f"v2: Processing Markdown File: {full_file_path}")
     console.print(f"v2: Processing Markdown File: {full_file_path}")
 
