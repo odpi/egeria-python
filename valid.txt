@@ -1,0 +1,138 @@
+2026-03-14T09:49:03.335245-0400 | INFO | process_md_file_v2 | 88 | v2: Processing Markdown File: sample-data/egeria-inbox/dr-egeria-inbox/Flex.md | {}
+v2: Processing Markdown File: sample-data/egeria-inbox/dr-egeria-inbox/Flex.md
+2026-03-14T09:49:03.394710-0400 | INFO | __init__ | 268 | 
+
+=> 	CLIENT_ERROR_400
+=>	Client error occurred with status code `https://localhost:9443/servers/qs-view-server/api/open-metadata/external-links/external-references/by-name`.
+	* Context: 
+		* class name=`BaseServerClient`
+		* caller method=`_async_get_name_request`
+	* System Action: The client is unable to connect to the Egeria platform.
+	* User Action: Check the URL to ensure the valid platform url, server, user id are correct.
+	* HTTP Code: 401
+ | {'ip': URL('https://localhost:9443/servers/qs-view-server/api/open-metadata/external-links/external-references/by-name'), 'http_code': 401, 'pyegeria_code': 'CLIENT_ERROR_400'}
+2026-03-14T09:49:03.399735-0400 | INFO | execute | 206 | Validation mode: Proceeding to validate_only despite missing update target. | {}
+2026-03-14T09:49:03.399778-0400 | INFO | validate_only | 546 | DRY RUN: Validating Update Cited Document | {}
+2026-03-14T09:49:03.409420-0400 | INFO | __init__ | 268 | 
+
+=> 	CLIENT_ERROR_400
+=>	Client error occurred with status code `https://localhost:9443/servers/qs-view-server/api/open-metadata/classification-explorer/elements/by-exact-property-value`.
+	* Context: 
+		* class name=`BaseServerClient`
+		* caller method=`_async_get_elements_by_property_value`
+	* System Action: The client is unable to connect to the Egeria platform.
+	* User Action: Check the URL to ensure the valid platform url, server, user id are correct.
+	* HTTP Code: 401
+ | {'ip': URL('https://localhost:9443/servers/qs-view-server/api/open-metadata/classification-explorer/elements/by-exact-property-value'), 'http_code': 401, 'pyegeria_code': 'CLIENT_ERROR_400'}
+2026-03-14T09:49:03.409637-0400 | WARNING | execute | 183 | Referenced element 'My-Radio-Collections' for attribute 'Collection Id' not found. | {}
+2026-03-14T09:49:03.414954-0400 | INFO | __init__ | 268 | 
+
+=> 	CLIENT_ERROR_400
+=>	Client error occurred with status code `https://localhost:9443/servers/qs-view-server/api/open-metadata/classification-explorer/elements/by-exact-property-value`.
+	* Context: 
+		* class name=`BaseServerClient`
+		* caller method=`_async_get_elements_by_property_value`
+	* System Action: The client is unable to connect to the Egeria platform.
+	* User Action: Check the URL to ensure the valid platform url, server, user id are correct.
+	* HTTP Code: 401
+ | {'ip': URL('https://localhost:9443/servers/qs-view-server/api/open-metadata/classification-explorer/elements/by-exact-property-value'), 'http_code': 401, 'pyegeria_code': 'CLIENT_ERROR_400'}
+2026-03-14T09:49:03.415116-0400 | WARNING | execute | 183 | Referenced element 'Flex' for attribute 'Element Id' not found. | {}
+2026-03-14T09:49:03.415257-0400 | INFO | validate_only | 546 | DRY RUN: Validating Add Member to Collection | {}
+
+
+                                  Dr. Egeria v2 Processing Summary                                   
+┏━━━━━━━━━━━━━━━━━━━━━━━━━━┳━━━━━━━━━┳━━━━━━━━━━━━━━━━┳━━━━━━┳━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┓
+┃ Command                  ┃ Status  ┃ Qualified Name ┃ GUID ┃ Message                              ┃
+┡━━━━━━━━━━━━━━━━━━━━━━━━━━╇━━━━━━━━━╇━━━━━━━━━━━━━━━━╇━━━━━━╇━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┩
+│ Update Cited Document    │ FAILURE │                │      │ Target element for Update not found. │
+│ Add Member to Collection │ SUCCESS │                │      │ Validated Add Member to Collection   │
+└──────────────────────────┴─────────┴────────────────┴──────┴──────────────────────────────────────┘
+
+
+Processing Warnings:
+
+-- Add Member to Collection (Unknown) --
+   * Referenced element 'My-Radio-Collections' for attribute 'Collection Id' not found.
+   * Referenced element 'Flex' for attribute 'Element Id' not found.
+
+
+Validation Diagnosis Summary:
+
+                                                                              Validation Diagnosis: Update Cited Document                                                                               
+
+Proposed Action: Create Qualified Name: PDR::Cited Document::Flex                                                                                                                                       
+
+                                                                                           Parsed Attributes                                                                                            
+
+                                                                  
+  Attribute                   Value                     Status    
+ ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 
+  Display Name                Flex                      ✅ Valid  
+  Attribution                                           ✅ Valid  
+  Copyright                                             ✅ Valid  
+  License                                               ✅ Valid  
+  Organization                Elecraft                  ✅ Valid  
+  Reference Abstract                                    ✅ Valid  
+  Reference Title             Flex Transceiver Manual   ✅ Valid  
+  Sources                     {}                        ✅ Valid  
+  Edition                                               ✅ Valid  
+  Number of Pages                                       ✅ Valid  
+  Page Range                                            ✅ Valid  
+  Publication City                                      ✅ Valid  
+  Publication Numbers         []                        ✅ Valid  
+  Publication Series                                    ✅ Valid  
+  Publication Series Volume                             ✅ Valid  
+  Publication Year                                      ✅ Valid  
+  Publisher                                             ✅ Valid  
+  Journal Entry                                         ✅ Valid  
+  Category                                              ✅ Valid  
+  Description                 My second flex radio      ✅ Valid  
+  Qualified Name                                        ✅ Valid  
+  Content Status                                        ✅ Valid  
+  Search Keywords             []                        ✅ Valid  
+  GUID                                                  ✅ Valid  
+  Identifier                                            ✅ Valid  
+  URL                         https://flexradio.com/    ✅ Valid  
+  Version Identifier                                    ✅ Valid  
+  Authors                     []                        ✅ Valid  
+                                                                  
+
+                                                                                               ❌ Errors                                                                                                
+
+ • Target element for 'Update' not found.                                                                                                                                                               
+
+────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
+                                                                             Validation Diagnosis: Add Member to Collection                                                                             
+
+Proposed Action: Create Qualified Name: PDR::Member to Collection::My-Radio-Collections                                                                                                                 
+
+                                                                                           Parsed Attributes                                                                                            
+
+                                                                                         
+  Attribute              Value                                             Status        
+ ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 
+  Label                  Add Flex to Radio Collection                      ✅ Valid      
+  Expression                                                               ✅ Valid      
+  Membership Rationale                                                     ✅ Valid      
+  Membership Status                                                        ✅ Valid      
+  Notes                                                                    ✅ Valid      
+  Source                                                                   ✅ Valid      
+  Collection Id          My-Radio-Collections                              ❌ Not Found  
+  Element Id             Flex                                              ❌ Not Found  
+  Journal Entry                                                            ✅ Valid      
+  Description                                                              ✅ Valid      
+  Qualified Name         PDR::Member to Collection::My-Radio-Collections   ✅ Valid      
+                                                                                         
+
+                                                                                               ⚠️ Warnings                                                                                               
+
+ • Referenced element 'My-Radio-Collections' for attribute 'Collection Id' not found.                                                                                                                   
+ • Referenced element 'Flex' for attribute 'Element Id' not found.                                                                                                                                      
+
+────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
+
+
+
+v2: Processing complete for 'sample-data/egeria-inbox/dr-egeria-inbox/Flex.md'
+2026-03-14T09:49:03.428604-0400 | INFO | process_md_file_v2 | 300 | v2: Processing complete | {}
+2026-03-14T09:49:03.428739-0400 | INFO | process_markdown_file | 70 | Called process_markdown_file with input file sample-data/egeria-inbox/dr-egeria-inbox/Flex.md | {}
