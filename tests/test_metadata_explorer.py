@@ -90,7 +90,7 @@ class TestMetadataExpert:
     def test_get_element_by_guid(self):
 
         # guid = "4e12a28c-56e7-48ab-838b-8fc157e3b710"  # a glossary
-        guid = '5dc94eb4-5cf9-41f5-b24c-cfb8fc7e1772'  # a term
+        guid = '2550ce66-9e89-4eff-911a-4e4b6980e464'  # a term
         try:
             m_client = MetadataExpert(self.view_server, self.platform_url, self.user_id)
 
