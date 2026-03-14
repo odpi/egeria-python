@@ -1,0 +1,14 @@
+Starting test_v2_manual.py
+Imports successful
+Client created
+Running asyncio
+Inside main async run
+v2: Processing Markdown File: sample-data/egeria-inbox/dr-egeria-inbox/sample-data/egeria-inbox/dr-egeria-inbox/Flex.md
+
+[bold red]*** WARNING: PROCESS MODE ***[/bold red]
+[red]Dr. Egeria will EXECUTE these commands and make PERMANENT CHANGES to Egeria.[/red]
+
+Error: File not found at path: sample-data/egeria-inbox/dr-egeria-inbox/sample-data/egeria-inbox/dr-egeria-inbox/Flex.md
+process_md_file_v2 returned
+Asyncio finished
+Finished test_v2_manual.py
