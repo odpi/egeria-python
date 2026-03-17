@@ -14,7 +14,7 @@ from rich.table import Table
 
 import asyncio
 from md_processing import (extract_command, process_provenance_command, get_current_datetime_string, command_list)
-from md_processing.md_processing_utils.common_md_proc_utils import set_parse_summary_mode
+from md_processing.md_processing_utils.common_md_proc_utils import set_parse_summary_mode, set_usage_level
 from md_processing.md_processing_utils.common_md_utils import set_attribute_log_level, ALL_GOVERNANCE_DEFINITIONS
 from md_processing.md_processing_utils.md_processing_constants import PROJECT_COMMANDS
 from md_processing.v1_legacy.command_mapping import setup_dispatcher
@@ -71,32 +71,36 @@ EGERIA_USER_PASSWORD = os.environ.get("EGERIA_USER_PASSWORD", "secret")
 EGERIA_HOME_GLOSSARY_GUID = os.environ.get("EGERIA_HOME_GLOSSARY_GUID", None)
 
 async def process_md_file_v2(input_file: str, output_folder: str, directive: str, client: EgeriaTech, 
-                            parse_summary: str = "none", attribute_logs: str = "debug") -> None:
+                            parse_summary: str = "none", attribute_logs: str = "debug",
+                            usage_level: str = None) -> None:
     """
     Async processing path for Dr.Egeria v2.
     """
+    if usage_level:
+        set_usage_level(usage_level)
     set_parse_summary_mode(parse_summary)
     set_attribute_log_level(attribute_logs)
-    
-    if os.path.exists(input_file):
-        full_file_path = input_file
+
+    expanded_input = os.path.abspath(os.path.expanduser(input_file))
+    if os.path.exists(expanded_input):
+        full_file_path = expanded_input
     elif EGERIA_INBOX_PATH in input_file:
-        full_file_path = os.path.join(EGERIA_ROOT_PATH, input_file)
+        full_file_path = os.path.abspath(os.path.expanduser(os.path.join(EGERIA_ROOT_PATH, input_file)))
     else:
-        full_file_path = os.path.join(EGERIA_ROOT_PATH, EGERIA_INBOX_PATH, input_file)
-        
+        full_file_path = os.path.abspath(os.path.expanduser(os.path.join(EGERIA_ROOT_PATH, EGERIA_INBOX_PATH, input_file)))
+
     logger.info(f"v2: Processing Markdown File: {full_file_path}")
-    console.print(f"v2: Processing Markdown File: {full_file_path}")
+    console.print(f"[cyan]v2: Processing Markdown File: {full_file_path}[/cyan]")
 
     if directive == "process":
-        print("\n[bold red]*** WARNING: PROCESS MODE ***[/bold red]")
-        print("[red]Dr. Egeria will EXECUTE these commands and make PERMANENT CHANGES to Egeria.[/red]\n")
+        console.print("\n[bold cyan]*** INFO: PROCESS MODE ***[/bold cyan]")
+        console.print("[cyan]Dr. Egeria will EXECUTE these commands and make PERMANENT CHANGES to Egeria.[/cyan]\n")
     
     try:
         with open(full_file_path, 'r') as f:
             content = f.read()
     except FileNotFoundError:
-        print(f"Error: File not found at path: {full_file_path}")
+        console.print(f"[red]Error: File not found at path: {full_file_path}[/red]")
         return
 
     # 1. Extract commands using UniversalExtractor
@@ -232,6 +236,7 @@ async def process_md_file_v2(input_file: str, output_folder: str, directive: str
     summary_table = Table(title="Dr. Egeria v2 Processing Summary", show_header=True, header_style="bold magenta")
     summary_table.add_column("Command", style="cyan")
     summary_table.add_column("Status", style="bold")
+    summary_table.add_column("Found", style="green")
     summary_table.add_column("Qualified Name", style="magenta")
     summary_table.add_column("GUID", style="yellow")
     summary_table.add_column("Message")
@@ -240,9 +245,11 @@ async def process_md_file_v2(input_file: str, output_folder: str, directive: str
     for res in results:
         final_output.append(res["output"])
         status_color = "green" if res["status"] == "success" else "red" if res["status"] == "failure" else "yellow"
+        found_str = "Yes" if res.get("found") else "No"
         summary_table.add_row(
             f"{res['verb']} {res['object_type']}",
             f"[{status_color}]{res['status'].upper()}[/{status_color}]",
+            found_str,
             res.get("qualified_name", ""),
             res.get("guid", ""),
             res["message"]
@@ -283,9 +290,9 @@ async def process_md_file_v2(input_file: str, output_folder: str, directive: str
         new_filename = f"processed-{get_current_datetime_string()}-{filename}"
         
         if output_folder:
-            new_file_path = os.path.join(EGERIA_ROOT_PATH, EGERIA_OUTBOX_PATH, output_folder, new_filename)
+            new_file_path = os.path.abspath(os.path.expanduser(os.path.join(EGERIA_ROOT_PATH, EGERIA_OUTBOX_PATH, output_folder, new_filename)))
         else:
-            new_file_path = os.path.join(EGERIA_ROOT_PATH, EGERIA_OUTBOX_PATH, new_filename)
+            new_file_path = os.path.abspath(os.path.expanduser(os.path.join(EGERIA_ROOT_PATH, EGERIA_OUTBOX_PATH, new_filename)))
             
         os.makedirs(os.path.dirname(new_file_path), exist_ok=True)
 
@@ -303,16 +310,18 @@ async def process_md_file_v2(input_file: str, output_folder: str, directive: str
 @logger.catch
 def process_md_file(input_file: str, output_folder: str, directive: str, server: str, url: str, userid: str,
                           user_pass: str, parse_summary: str = "none",
-                          attribute_logs: str = "debug") -> None:
+                          attribute_logs: str = "debug", usage_level: str = None) -> None:
     """
     Process a markdown file by parsing and executing Dr. Egeria md_commands. Write output to a new file.
     """
+    if usage_level:
+        set_usage_level(usage_level)
     use_v2 = os.environ.get("DR_EGERIA_V2", "true").lower() in ("true", "1", "yes")
 
     if use_v2:
         client = EgeriaTech(server, url, user_id=userid)
         client.create_egeria_bearer_token(userid, user_pass)
-        asyncio.run(process_md_file_v2(input_file, output_folder, directive, client, parse_summary, attribute_logs))
+        asyncio.run(process_md_file_v2(input_file, output_folder, directive, client, parse_summary, attribute_logs, usage_level))
         return
 
     set_parse_summary_mode(parse_summary)
@@ -327,19 +336,19 @@ def process_md_file(input_file: str, output_folder: str, directive: str, server:
     dispatcher = setup_dispatcher()
 
     updated = False
-    full_file_path = os.path.join(EGERIA_ROOT_PATH, EGERIA_INBOX_PATH, input_file)
+    full_file_path = os.path.abspath(os.path.expanduser(os.path.join(EGERIA_ROOT_PATH, EGERIA_INBOX_PATH, input_file)))
     logger.info("\n\n====================================================\n\n")
     logger.info(f"Processing Markdown File: {full_file_path}")
-    print(f"Processing Markdown File: {full_file_path}")
+    console.print(f"[cyan]Processing Markdown File: {full_file_path}[/cyan]")
 
     if directive != "validate":
-        console.print("\n[bold red]*** WARNING: PROCESS MODE ***[/bold red]")
-        console.print("[red]Dr. Egeria will EXECUTE these commands and make PERMANENT CHANGES to Egeria.[/red]\n")
+        console.print("\n[bold cyan]*** INFO: PROCESS MODE ***[/bold cyan]")
+        console.print("[cyan]Dr. Egeria will EXECUTE these commands and make PERMANENT CHANGES to Egeria.[/cyan]\n")
     try:
         with open(full_file_path, 'r') as f:
             lines = f.readlines()
     except FileNotFoundError:
-        print(f"Error: File not found at path: {full_file_path}")
+        console.print(f"[red]Error: File not found at path: {full_file_path}[/red]")
         return {}  # Return empty dict if file not found
 
     final_output = []
@@ -433,19 +442,19 @@ def process_md_file(input_file: str, output_folder: str, directive: str, server:
             new_filename = f"processed-{get_current_datetime_string()}-{filename}"  # Create the new filename
             
             if output_folder:
-                new_file_path = os.path.join(EGERIA_ROOT_PATH, EGERIA_OUTBOX_PATH, output_folder, new_filename)
+                new_file_path = os.path.abspath(os.path.expanduser(os.path.join(EGERIA_ROOT_PATH, EGERIA_OUTBOX_PATH, output_folder, new_filename)))
             else:
-                new_file_path = os.path.join(EGERIA_ROOT_PATH, EGERIA_OUTBOX_PATH, new_filename)
+                new_file_path = os.path.abspath(os.path.expanduser(os.path.join(EGERIA_ROOT_PATH, EGERIA_OUTBOX_PATH, new_filename)))
             os.makedirs(os.path.dirname(new_file_path), exist_ok=True)
 
             with open(new_file_path, 'w') as f2:
                 f2.write(final_output)
                 if not prov_found:
                     f2.write(prov_output)
-            print(f"\n==> Output written to {new_file_path}")
+            console.print(f"\n==> Output written to [blue]{new_file_path}[/blue]")
         else:
             if directive != 'display':
-                print("\nNo updates detected. New File not created.")
+                console.print("\n[yellow]No updates detected. New File not created.[/yellow]")
                 # logger.error(f"===> Unknown Command?  <===") 
 
     except PyegeriaException as e:
@@ -463,11 +472,13 @@ if __name__ == "__main__":
     
     args = parser.parse_args()
     
-    # Run the async v2 processor
+    # Run the async v2 processor (mocking client for simple CLI run)
+    client = EgeriaTech(settings.Environment.egeria_view_server, settings.Environment.egeria_view_server_url, user_id=os.environ.get("EGERIA_USER", "erinoverview"))
     asyncio.run(
         process_md_file_v2(
             args.input_file, 
-            args.directive, 
-            args.output_folder
+            args.output_folder,
+            args.directive,
+            client
         )
     )

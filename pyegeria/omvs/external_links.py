@@ -247,7 +247,7 @@ class ExternalReferences(ServerClient):
                 "name": "Add display name here",
                 "description": "Add description of the external_reference here",
                 "category": "Add appropriate valid value for type",
-                "numberOfPates": int,
+                "numberOfPages": int,
                 "pageRange": "Add page range here",
                 "publicationSeries": "Add publication series here",
                 "publicationSeriesVolume": "Add publication series volume here",

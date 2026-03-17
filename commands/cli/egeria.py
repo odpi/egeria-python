@@ -139,6 +139,7 @@ from commands.tech.list_solution_roles import solution_role_list
 from commands.tech.list_tech_templates import display_templates_spec
 from commands.tech.list_valid_metadata_values import display_metadata_values
 from commands.tech.element_actions import delete_element
+from commands.tech.gen_report_specs import main as gen_report_specs_cli
 
 import sys
 
@@ -419,6 +420,8 @@ my_tell.add_command(reassign_todo)
 def tech(ctx):
     """Commands for tech Users"""
     pass
+
+tech.add_command(gen_report_specs_cli, name="gen-report-specs")
 
 @tech.group("tell")
 @click.pass_context

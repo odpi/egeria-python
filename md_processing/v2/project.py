@@ -40,6 +40,7 @@ class ProjectProcessor(AsyncBaseCommandProcessor):
         # ProjectManager expects 'name' instead of 'displayName' and 'plannedEndDate' instead of 'endDate'
         prop_body = {
             "class": "ProjectProperties",
+            "typeName": self.command.object_type.replace(" ", ""),
             "qualifiedName": qualified_name,
             "name": display_name,
             "description": attributes.get('Description', {}).get('value'),
@@ -61,7 +62,7 @@ class ProjectProcessor(AsyncBaseCommandProcessor):
             body['properties'] = prop_body
             await self.client._async_update_project(guid, body)
             
-            logger.success(f"Updated Project '{display_name}'")
+            logger.success(f"Updated Project '{display_name}' with GUID {guid}")
             update_element_dictionary(qualified_name, {'guid': guid, 'display_name': display_name})
             return await self.render_result_markdown(guid)
 
@@ -75,7 +76,7 @@ class ProjectProcessor(AsyncBaseCommandProcessor):
             if guid:
                 self.parsed_output["guid"] = guid
                 update_element_dictionary(qualified_name, {'guid': guid, 'display_name': display_name})
-                logger.success(f"Created Project '{display_name}'")
+                logger.success(f"Created Project '{display_name}' with GUID {guid}")
                 return await self.render_result_markdown(guid)
 
         return self.command.original_text

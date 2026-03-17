@@ -322,7 +322,7 @@ def test_find_elements_by_property_value():
 
 
 def test_get_element_by_guid():
-    element_guid = '6ec2c097-9d6e-4e9d-ab51-186d2c437443'
+    element_guid = 'dae76285-bef7-45a0-9f32-4854294d969b'
     try:
         c_client = ClassificationExplorer(view_server, platform_url)
 

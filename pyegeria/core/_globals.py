@@ -55,16 +55,25 @@ star_ratings = (
     "THREE_STARS",
     "TWO_STARS",
 )
-class GovernanceDomains(Enum):
-    ALL= 0
-    DATA= 1
-    PRIVACY= 2
-    SECURITY= 3
-    IT_INFRASTRUCTURE= 4
-    SOFTWARE_DEVELOPMENT= 5
-    CORPORATE= 6
-    ASSET_MANAGEMENT= 7
-    OTHER= 99
+# class GovernanceDomains(Enum):
+#     All= 0
+#     Data= 1
+#     Privacy= 2
+#     Security= 3
+#     IT Infrastructure= 4
+#     Software Development= 5
+#     Corporate= 6
+#     Asset Management= 7
+#     Other= 99
+GovernanceDomains = Enum('GovernanceDomains', [('Unclassified', 0),
+                                               ('Data', 1),
+                                               ('Privacy',2),
+                                               ('Security',3),
+                                               ('IT Infrastructure',4),
+                                               ('Software Development',5),
+                                               ('Corporate',6),
+                                               ('Asset Management',7),
+                                               ('Other',99)])
 
 # Default status values for fallback if dynamic fetching fails
 CONTENT_STATUS = ["DRAFT", "PREPARED", "PROPOSED", "APPROVED", "REJECTED", "ACTIVE", "DEPRECATED", "OTHER"]

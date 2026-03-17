@@ -55,13 +55,43 @@ LEVEL_ORDER = ["Common", "Domain", "Basic", "Advanced", "Expert", "Invisible"]
 def _level_visible(attr_level: str, usage_level: str) -> bool:
     """Return True if attr_level should be shown at the given usage_level."""
     attr_level = attr_level or "Basic"
+    usage_level = usage_level or "Advanced"
+
     # Invisible is never shown
     if attr_level == "Invisible":
         return False
+
+    # User's definition:
+    # Basic usage: includes everything except Invisible and Advanced (Common, Domain, Basic)
+    # Advanced usage: includes everything except Invisible (Common, Domain, Basic, Advanced, Expert)
+
+    if usage_level == "Basic":
+        ceiling_idx = LEVEL_ORDER.index("Basic")
+    elif usage_level == "Advanced":
+        ceiling_idx = LEVEL_ORDER.index("Expert")
+    else:
+        try:
+            ceiling_idx = LEVEL_ORDER.index(usage_level)
+        except ValueError:
+            ceiling_idx = LEVEL_ORDER.index("Expert")
+
     try:
-        return LEVEL_ORDER.index(attr_level) <= LEVEL_ORDER.index(usage_level)
+        return LEVEL_ORDER.index(attr_level) <= ceiling_idx
     except ValueError:
         return True  # unknown level — show it rather than hide it
+
+
+def set_usage_level(level: str) -> None:
+    """Sets the Egeria usage level: Basic or Advanced."""
+    global EGERIA_USAGE_LEVEL
+    if not level:
+        return
+    normalized = level.strip().capitalize()
+    if normalized in {"Basic", "Advanced"} or normalized in LEVEL_ORDER:
+        EGERIA_USAGE_LEVEL = normalized
+    else:
+        logger.warning(f"Invalid usage level: {level}. Keeping {EGERIA_USAGE_LEVEL}")
+
 
 def set_parse_summary_mode(mode: str) -> None:
     """Sets when to print parse summaries: all, errors, or none."""

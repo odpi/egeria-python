@@ -121,6 +121,9 @@ print(cfg.Logging.enable_logging)
   python scripts/validate_env.py --env config/env
   python scripts/validate_env.py               # auto-detects ./config/env or ./.env
 
+- Sync Report Specs with Dr.Egeria Commands:
+  hey_egeria tech gen-report-specs md_processing/data/compact_commands --merge
+
 ### Testing
 
 By default, running pytest executes unit tests that use monkeypatching/fakes and do not contact a live Egeria.

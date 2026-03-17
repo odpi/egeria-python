@@ -71,9 +71,9 @@ class BlueprintProcessor(AsyncBaseCommandProcessor):
             if journal_entry:
                 await async_add_note_in_dr_e(self.client, qualified_name, display_name, journal_entry)
 
-            logger.success(f"Updated Blueprint '{display_name}'")
+            logger.success(f"Updated Blueprint '{display_name}' with GUID {guid}")
             update_element_dictionary(qualified_name, {'guid': guid, 'display_name': display_name})
-            return await self.client._async_get_solution_blueprints_by_name(qualified_name, output_format='MD')
+            return await self.render_result_markdown(guid)
 
         elif verb == "Create":
             body = set_create_body("Solution Blueprint", attributes)
@@ -88,8 +88,8 @@ class BlueprintProcessor(AsyncBaseCommandProcessor):
                     await self.client._async_add_note_in_dr_e(qualified_name, display_name, journal_entry)
                 
                 update_element_dictionary(qualified_name, {'guid': guid, 'display_name': display_name})
-                logger.success(f"Created Blueprint '{display_name}'")
-                return await self.client._async_get_solution_blueprint_by_guid(guid, output_format='MD')
+                logger.success(f"Created Blueprint '{display_name}' with GUID {guid}")
+                return await self.render_result_markdown(guid)
 
         return self.command.original_text
 
@@ -98,7 +98,7 @@ class BlueprintProcessor(AsyncBaseCommandProcessor):
         as_is = {c['elementHeader']['guid'] for c in bp_element.get('solutionComponents', [])}
         
         async def add_fn(comp_guid):
-            body = {"class": "NewRelationshipRequestBody", "properties": {"class": "SolutionBlueprintCompositionProperties", "description": "linked by Dr.Egeria v2"}}
+            body = {"class": "NewRelationshipRequestBody", "properties": {"class": "SolutionBlueprintCompositionProperties", "typeName": "SolutionBlueprintComposition", "description": "linked by Dr.Egeria v2"}}
             await self.client._async_link_solution_component_to_blueprint(guid, comp_guid, body)
             
         async def remove_fn(comp_guid):
@@ -143,6 +143,7 @@ class ComponentProcessor(AsyncBaseCommandProcessor):
         # 1. Properties
         prop_body = {
             "class": "SolutionComponentProperties",
+            "typeName": "SolutionComponent",
             "qualifiedName": qualified_name,
             "displayName": display_name,
             "description": attributes.get('Description', {}).get('value'),
@@ -186,9 +187,9 @@ class ComponentProcessor(AsyncBaseCommandProcessor):
             if journal_entry:
                 await async_add_note_in_dr_e(self.client, qualified_name, display_name, journal_entry)
 
-            logger.success(f"Updated Component '{display_name}'")
+            logger.success(f"Updated Component '{display_name}' with GUID {guid}")
             update_element_dictionary(qualified_name, {'guid': guid, 'display_name': display_name})
-            return await self.client._async_get_solution_component_by_guid(guid, output_format='MD')
+            return await self.render_result_markdown(guid)
 
         elif verb == "Create":
             body = body_slimmer({
@@ -210,8 +211,8 @@ class ComponentProcessor(AsyncBaseCommandProcessor):
                     await self.client._async_add_note_in_dr_e(qualified_name, display_name, journal_entry)
                 
                 update_element_dictionary(qualified_name, {'guid': guid, 'display_name': display_name})
-                logger.success(f"Created Component '{display_name}'")
-                return await self.client._async_get_solution_component_by_guid(guid, output_format='MD')
+                logger.success(f"Created Component '{display_name}' with GUID {guid}")
+                return await self.render_result_markdown(guid)
 
         return self.command.original_text
 
@@ -242,7 +243,7 @@ class ComponentProcessor(AsyncBaseCommandProcessor):
         # 4. Blueprints
         as_is_bps = set(rel_els.get("blueprint_guids", []))
         await self.sync_members(as_is_bps, bp_guids,
-                               lambda bp: self.client._async_link_solution_component_to_blueprint(bp, guid, {"class": "NewRelationshipRequestBody", "properties": {"class": "SolutionBlueprintCompositionProperties", "description": "linked by Dr.Egeria v2"}}),
+                               lambda bp: self.client._async_link_solution_component_to_blueprint(bp, guid, {"class": "NewRelationshipRequestBody", "properties": {"class": "SolutionBlueprintCompositionProperties", "typeName": "SolutionBlueprintComposition", "description": "linked by Dr.Egeria v2"}}),
                                lambda bp: self.client._async_detach_solution_component_from_blueprint(bp, guid, None),
                                replace_all)
         
@@ -345,6 +346,7 @@ class SupplyChainProcessor(AsyncBaseCommandProcessor):
         
         prop_body = {
             "class": "InformationSupplyChainProperties",
+            "typeName": "InformationSupplyChain",
             "qualifiedName": qualified_name,
             "displayName": display_name,
             "description": attributes.get('Description', {}).get('value'),
@@ -374,9 +376,9 @@ class SupplyChainProcessor(AsyncBaseCommandProcessor):
             if journal_entry:
                 await self.client._async_add_note_in_dr_e(qualified_name, display_name, journal_entry)
 
-            logger.success(f"Updated Supply Chain '{display_name}'")
+            logger.success(f"Updated Supply Chain '{display_name}' with GUID {guid}")
             update_element_dictionary(qualified_name, {'guid': guid, 'display_name': display_name})
-            return await self.client._async_get_info_supply_chain_by_guid(guid, output_format='MD')
+            return await self.render_result_markdown(guid)
 
         elif verb == "Create":
             body = set_create_body("InformationSupplyChain", attributes)
@@ -390,8 +392,8 @@ class SupplyChainProcessor(AsyncBaseCommandProcessor):
                     await self.client._async_add_note_in_dr_e(qualified_name, display_name, journal_entry)
                 
                 update_element_dictionary(qualified_name, {'guid': guid, 'display_name': display_name})
-                logger.success(f"Created Supply Chain '{display_name}'")
-                return await self.client._async_get_info_supply_chain_by_guid(guid, output_format='MD')
+                logger.success(f"Created Supply Chain '{display_name}' with GUID {guid}")
+                return await self.render_result_markdown(guid)
 
         return self.command.original_text
 
