@@ -32,26 +32,35 @@ class DataCollectionProcessor(AsyncBaseCommandProcessor):
         display_name = attributes.get('Display Name', {}).get('value', qualified_name)
         status = attributes.get('Status', {}).get('value', None)
 
+        # 1. Map type
+        mapped_type = "Collection"
+        if "Specification" in object_type: 
+            mapped_type = "DataSpec"
+        elif "Dictionary" in object_type: 
+            mapped_type = "DataDictionary"
+            
+        prop_body = set_element_prop_body(mapped_type, qualified_name, attributes)
+
         if verb == "Update":
             guid = self.parsed_output.get("guid") or (self.as_is_element['elementHeader']['guid'] if self.as_is_element else None)
             if not guid:
                 return self.command.original_text
 
             body = set_update_body(object_type, attributes)
-            body['properties'] = set_element_prop_body(object_type, qualified_name, attributes)
+            body['properties'] = prop_body
             
             await self.client._async_update_collection(guid, body)
             self.parsed_output["guid"] = guid
             if status:
                 await self.client._async_update_collection_status(guid, status)
             
-            logger.success(f"Updated {object_type} '{display_name}'")
+            logger.success(f"Updated {object_type} '{display_name}' with GUID {guid}")
             update_element_dictionary(qualified_name, {'guid': guid, 'display_name': display_name})
-            return await self.client._async_get_collection_by_guid(guid, element_type=object_type, output_format='MD')
+            return await self.render_result_markdown(guid)
 
         elif verb == "Create":
             body = set_create_body(object_type, attributes)
-            body["properties"] = set_element_prop_body(object_type, qualified_name, attributes)
+            body["properties"] = prop_body
             
             # Handle parent hierarchy if present
             parent_guid = body.get('parentGuid')
@@ -63,8 +72,8 @@ class DataCollectionProcessor(AsyncBaseCommandProcessor):
             if guid:
                 self.parsed_output["guid"] = guid
                 update_element_dictionary(qualified_name, {'guid': guid, 'display_name': display_name})
-                logger.success(f"Created {object_type} '{display_name}'")
-                return await self.client._async_get_collection_by_guid(guid, object_type, output_format='MD')
+                logger.success(f"Created {object_type} '{display_name}' with GUID {guid}")
+                return await self.render_result_markdown(guid)
 
         return self.command.original_text
 
@@ -112,9 +121,9 @@ class DataStructureProcessor(AsyncBaseCommandProcessor):
             
             await self._sync_memberships(guid, to_be_guids, not merge_update)
             
-            logger.success(f"Updated Data Structure '{display_name}'")
+            logger.success(f"Updated Data Structure '{display_name}' with GUID {guid}")
             update_element_dictionary(qualified_name, {'guid': guid, 'display_name': display_name})
-            return await self.client._async_get_data_structure_by_guid(guid, output_format='MD')
+            return await self.render_result_markdown(guid)
 
         elif verb == "Create":
             body = set_create_body("Data Structure", attributes)
@@ -125,8 +134,8 @@ class DataStructureProcessor(AsyncBaseCommandProcessor):
                 self.parsed_output["guid"] = guid
                 await self._sync_memberships(guid, to_be_guids, replace_all=True)
                 update_element_dictionary(qualified_name, {'guid': guid, 'display_name': display_name})
-                logger.success(f"Created Data Structure '{display_name}'")
-                return await self.client._async_get_data_structure_by_guid(guid, output_format='MD')
+                logger.success(f"Created Data Structure '{display_name}' with GUID {guid}")
+                return await self.render_result_markdown(guid)
 
         return self.command.original_text
 
@@ -190,9 +199,9 @@ class DataFieldProcessor(AsyncBaseCommandProcessor):
             
             await self._sync_all_rels(guid, data_struct_guids, parent_field_guids, term_guids, data_class_guid, data_dict_guids, not merge_update)
             
-            logger.success(f"Updated Data Field '{display_name}'")
+            logger.success(f"Updated Data Field '{display_name}' with GUID {guid}")
             update_element_dictionary(qualified_name, {'guid': guid, 'display_name': display_name})
-            return await self.client._async_get_data_field_by_guid(guid, output_format='MD')
+            return await self.render_result_markdown(guid)
 
         elif verb == "Create":
             body = set_create_body("Data Field", attributes)
@@ -203,8 +212,8 @@ class DataFieldProcessor(AsyncBaseCommandProcessor):
                 self.parsed_output["guid"] = guid
                 await self._sync_all_rels(guid, data_struct_guids, parent_field_guids, term_guids, data_class_guid, data_dict_guids, replace_all=True)
                 update_element_dictionary(qualified_name, {'guid': guid, 'display_name': display_name})
-                logger.success(f"Created Data Field '{display_name}'")
-                return await self.client._async_get_data_field_by_guid(guid, output_format='MD')
+                logger.success(f"Created Data Field '{display_name}' with GUID {guid}")
+                return await self.render_result_markdown(guid)
 
         return self.command.original_text
 
@@ -318,7 +327,7 @@ class DataClassProcessor(AsyncBaseCommandProcessor):
             
             await self._sync_all_rels(guid, containing_dc_guids, term_guids, specializes_dc_guids, data_dict_guids, not merge_update)
             
-            logger.success(f"Updated Data Class '{display_name}'")
+            logger.success(f"Updated Data Class '{display_name}' with GUID {guid}")
             update_element_dictionary(qualified_name, {'guid': guid, 'display_name': display_name})
             return await self.client._async_get_data_class_by_guid(guid, None, 'MD')
 
@@ -329,7 +338,7 @@ class DataClassProcessor(AsyncBaseCommandProcessor):
                 self.parsed_output["guid"] = guid
                 await self._sync_all_rels(guid, containing_dc_guids, term_guids, specializes_dc_guids, data_dict_guids, replace_all=True)
                 update_element_dictionary(qualified_name, {'guid': guid, 'display_name': display_name})
-                logger.success(f"Created Data Class '{display_name}'")
+                logger.success(f"Created Data Class '{display_name}' with GUID {guid}")
                 return await self.client._async_get_data_class_by_guid(guid, None, 'MD')
 
         return self.command.original_text

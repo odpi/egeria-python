@@ -40,9 +40,9 @@ class CollectionProcessor(AsyncBaseCommandProcessor):
             if status:
                 await self.client._async_update_collection_status(guid, status)
             
-            logger.success(f"Updated Collection '{display_name}'")
+            logger.success(f"Updated Collection '{display_name}' with GUID {guid}")
             update_element_dictionary(qualified_name, {'guid': guid, 'display_name': display_name})
-            return await self.client._async_get_collection_by_guid(guid, element_type="Collection", output_format='MD')
+            return await self.render_result_markdown(guid)
 
         elif verb == "Create":
             body = set_create_body(self.command.object_type, attributes)
@@ -63,8 +63,8 @@ class CollectionProcessor(AsyncBaseCommandProcessor):
             if guid:
                 self.parsed_output["guid"] = guid
                 update_element_dictionary(qualified_name, {'guid': guid, 'display_name': display_name})
-                logger.success(f"Created Collection '{display_name}'")
-                return await self.client._async_get_collection_by_guid(guid, output_format='MD')
+                logger.success(f"Created Collection '{display_name}' with GUID {guid}")
+                return await self.render_result_markdown(guid)
 
         return self.command.original_text
 
@@ -94,9 +94,9 @@ class ProductProcessor(AsyncBaseCommandProcessor):
             await self.client._async_update_digital_product(guid, body)
             self.parsed_output["guid"] = guid
             
-            logger.success(f"Updated Product '{display_name}'")
+            logger.success(f"Updated Product '{display_name}' with GUID {guid}")
             update_element_dictionary(qualified_name, {'guid': guid, 'display_name': display_name})
-            return await self.client._async_get_collection_by_guid(guid, element_type='Digital Product', output_format='MD')
+            return await self.render_result_markdown(guid)
 
         elif verb == "Create":
             body = set_create_body(self.command.object_type, attributes)
@@ -106,8 +106,8 @@ class ProductProcessor(AsyncBaseCommandProcessor):
             if guid:
                 self.parsed_output["guid"] = guid
                 update_element_dictionary(qualified_name, {'guid': guid, 'display_name': display_name})
-                logger.success(f"Created Product '{display_name}'")
-                return await self.client._async_get_collection_by_guid(guid, element_type='Digital Product', output_format='MD')
+                logger.success(f"Created Product '{display_name}' with GUID {guid}")
+                return await self.render_result_markdown(guid)
 
         return self.command.original_text
 
@@ -121,35 +121,53 @@ class AgreementProcessor(AsyncBaseCommandProcessor):
 
     async def apply_changes(self) -> str:
         verb = self.command.verb
+        object_type = self.command.object_type
         attributes = self.parsed_output["attributes"]
         qualified_name = self.parsed_output["qualified_name"]
         display_name = attributes.get('Display Name', {}).get('value', qualified_name)
+
+        # 1. Map type and properties
+        mapped_type = "Agreement"
+        if "Subscription" in object_type:
+            mapped_type = "DigitalSubscription"
+
+        prop_body = set_element_prop_body(mapped_type, qualified_name, attributes)
+        prop_body.update({
+            "agreementType": attributes.get('Agreement Type', {}).get('value'),
+            "agreementStatus": attributes.get('Agreement Status', {}).get('value'),
+        })
+
+        if mapped_type == "DigitalSubscription":
+            prop_body.update({
+                "subscriberType": attributes.get('Subscriber Type', {}).get('value'),
+                "subscriberId": attributes.get('Subscriber Id', {}).get('value'),
+            })
 
         if verb == "Update":
             guid = self.parsed_output.get("guid") or (self.as_is_element['elementHeader']['guid'] if self.as_is_element else None)
             if not guid:
                 return self.command.original_text
 
-            body = set_update_body(self.command.object_type, attributes)
-            body['properties'] = set_element_prop_body(self.command.object_type, qualified_name, attributes)
+            body = set_update_body(object_type, attributes)
+            body['properties'] = prop_body
             await self.client._async_update_agreement(guid, body)
             self.parsed_output["guid"] = guid
             
-            logger.success(f"Updated Agreement '{display_name}'")
+            logger.success(f"Updated Agreement '{display_name}' with GUID {guid}")
             update_element_dictionary(qualified_name, {'guid': guid, 'display_name': display_name})
-            return await self.client._async_get_collection_by_guid(guid, element_type=self.command.object_type, output_format='MD')
+            return await self.render_result_markdown(guid)
 
         elif verb == "Create":
-            body = set_create_body(self.command.object_type, attributes)
-            body["initialClassifications"] = set_object_classifications(self.command.object_type, attributes, ["Data Sharing Agreement"])
-            body["properties"] = set_element_prop_body("Agreement", qualified_name, attributes)
+            body = set_create_body(object_type, attributes)
+            body["initialClassifications"] = set_object_classifications(object_type, attributes, ["Data Sharing Agreement"])
+            body["properties"] = prop_body
             
             guid = await self.client._async_create_agreement(body=body)
             if guid:
                 self.parsed_output["guid"] = guid
                 update_element_dictionary(qualified_name, {'guid': guid, 'display_name': display_name})
-                logger.success(f"Created Agreement '{display_name}'")
-                return await self.client._async_get_collection_by_guid(guid, element_type=self.command.object_type, output_format='MD')
+                logger.success(f"Created Agreement '{display_name}' with GUID {guid}")
+                return await self.render_result_markdown(guid)
 
         return self.command.original_text
 
@@ -186,7 +204,7 @@ class CSVElementProcessor(AsyncBaseCommandProcessor):
         if guid:
             self.parsed_output["guid"] = guid
             update_element_dictionary(qualified_name, {'guid': guid, 'display_name': display_name})
-            logger.success(f"Created CSV Element '{display_name}'")
+            logger.success(f"Created CSV Element '{display_name}' with GUID {guid}")
             return f"# Created CSV Element\n\nGUID: {guid}\nQualified Name: {qualified_name}"
 
         return self.command.original_text
@@ -215,6 +233,7 @@ class ProductLinkProcessor(AsyncBaseCommandProcessor):
                 guid2 = attributes.get('Item Name', {}).get('guid')
                 body['properties'] = {
                     "class": "AgreementItemProperties",
+                    "typeName": "AgreementItem",
                     "agreementItemId": attributes.get("Agreement Item Id", {}).get("value"),
                     "agreementItemTypeName": attributes.get("Agreement Item Type", {}).get("value"),
                     "agreementStart": attributes.get("Agreement Start", {}).get("value"),
@@ -233,6 +252,7 @@ class ProductLinkProcessor(AsyncBaseCommandProcessor):
                 guid_el = attributes.get('Element Id', {}).get('guid')
                 body['properties'] = {
                     "class": "CollectionMembershipProperties",
+                    "typeName": "CollectionMembership",
                     "membershipRationale": attributes.get('Membership Rationale', {}).get('value'),
                     "expression": attributes.get('Expression', {}).get('value'),
                     "membershipStatus": attributes.get('Membership Status', {}).get('value', 'ACTIVE').upper(),
@@ -251,6 +271,7 @@ class ProductLinkProcessor(AsyncBaseCommandProcessor):
                 guid2 = attributes.get('Digital Product 2')
                 body['properties'] = {
                     "class": "DigitalProductDependencyProperties",
+                    "typeName": "DigitalProductDependency",
                     "label": attributes.get('Label', {}).get('value'),
                     "description": attributes.get('Description', {}).get('value'),
                     "effectiveFrom": attributes.get('Effective From', {}).get('value'),
@@ -263,6 +284,7 @@ class ProductLinkProcessor(AsyncBaseCommandProcessor):
                 guid_res = attributes.get('Resource Id', {}).get('guid')
                 body['properties'] = {
                     "class": "ResourceListProperties",
+                    "typeName": "ResourceList",
                     "resourceUse": attributes.get('Resource Use', {}).get('value'),
                     "resourceDescription": attributes.get('Resource Description', {}).get('value'),
                     "resourceProperties": attributes.get('Resource Properties', {}).get('value'),
@@ -276,6 +298,7 @@ class ProductLinkProcessor(AsyncBaseCommandProcessor):
                 guid_sn = attributes.get('Subscription', {}).get('guid')
                 body['properties'] = {
                     "class": "DigitalSubscriberProperties",
+                    "typeName": "DigitalSubscriber",
                     "subscriberId": attributes.get('Subscriber Id', {}).get('value'),
                     "effectiveFrom": attributes.get('Effective From', {}).get('value'),
                     "effectiveTo": attributes.get('Effective To', {}).get('value'),

@@ -61,6 +61,7 @@ class PyegeriaSettings(BaseSettings):
     pyegeria_user_report_specs_dir: str = "~/.pyegeria/report_specs"
     egeria_user_name: str = ""
     egeria_user_password: str = ""
+    egeria_usage_level: str = "Advanced"
     
     model_config = SettingsConfigDict(
         env_file=".env",
@@ -384,6 +385,7 @@ def load_app_config(env_file: str | None = None):
     user["Egeria Home Collection"] = os.getenv("EGERIA_HOME_COLLECTION", user.get("Egeria Home Collection", "MyHome"))
     user["Egeria Home Glossary Name"] = os.getenv("EGERIA_HOME_GLOSSARY_NAME", user.get("Egeria Home Glossary Name", "Egeria-Markdown"))
     user["Egeria Local Qualifier"] = os.getenv("EGERIA_LOCAL_QUALIFIER", user.get("Egeria Local Qualifier", "PDR"))
+    user["Egeria Usage Level"] = os.getenv("EGERIA_USAGE_LEVEL", user.get("Egeria Usage Level", env_settings.egeria_usage_level or "Advanced"))
 
     user_name = os.getenv("EGERIA_USER", user.get("user_name") or env_settings.egeria_user_name or None)
     user_pwd = os.getenv("EGERIA_USER_PASSWORD", user.get("user_pwd") or env_settings.egeria_user_password or None)
@@ -579,6 +581,7 @@ def pretty_print_config(env_file: str | None = None, safe: bool = True, to_conso
         ("User Profile", "Egeria Home Collection"): "EGERIA_HOME_COLLECTION",
         ("User Profile", "Egeria Home Glossary Name"): "EGERIA_HOME_GLOSSARY_NAME",
         ("User Profile", "Egeria Local Qualifier"): "EGERIA_LOCAL_QUALIFIER",
+        ("User Profile", "Egeria Usage Level"): "EGERIA_USAGE_LEVEL",
         ("User Profile", "user_name"): "EGERIA_USER",
         ("User Profile", "user_pwd"): "EGERIA_USER_PASSWORD",
         # Feature flag example

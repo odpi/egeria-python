@@ -397,6 +397,43 @@ Place this JSON file into your user specs directory and call `load_user_report_s
 
 ---
 
+## Generating Report Specs from Commands
+
+pyegeria includes a powerful tool, `gen-report-specs`, that can automatically generate report specifications from Egeria command definitions (compact commands). This ensures that the metadata you create or update using Dr.Egeria can be consistently reported on using the same attribute names and types.
+
+### Using the `gen-report-specs` CLI
+
+The tool is available as a command within the `hey_egeria tech` group:
+
+```bash
+# Get help and see available options
+hey_egeria tech gen-report-specs --help
+
+# Generate report specs from a directory of compact commands and list them
+hey_egeria tech gen-report-specs md_processing/data/compact_commands --emit dict --list
+```
+
+### Key Features:
+- **Attribute Resolution**: Automatically resolves attributes from inherited `bundles` and `attribute_definitions` across multiple JSON files.
+- **Multiple Output Modes**:
+  - `--emit dict`: Generates an in-memory `FormatSetDict` (useful for quick verification).
+  - `--emit code`: Generates Python code that can be pasted into `base_report_formats.py`.
+  - `--emit json`: Generates a JSON file that can be loaded at runtime.
+- **Persistent Updates (`--merge`)**: When using the `--merge` flag, the tool automatically updates the managed `# --- GENERATED FORMAT SETS ---` section in `pyegeria/view/base_report_formats.py`. This is the easiest way to keep your built-in report specs in sync with your command definitions.
+
+### Example: Syncing with Dr.Egeria Commands
+
+If you have added new commands to Dr.Egeria and want to be able to run reports on the resulting metadata:
+
+```bash
+# Update base_report_formats.py with all specs found in the compact_commands directory
+hey_egeria tech gen-report-specs md_processing/data/compact_commands --merge
+```
+
+The tool will find all `.json` files in the directory, resolve all command attributes, generate matching `FormatSet` objects, and upsert them into the `base_report_formats.py` source file.
+
+---
+
 ## Discoverability & Introspection
 
 - List all spec names (optionally grouped): `report_spec_list(show_family=True, sort_by_family=True)`

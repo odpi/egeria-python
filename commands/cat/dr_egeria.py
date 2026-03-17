@@ -48,9 +48,11 @@ console = Console(width=EGERIA_WIDTH)
               type=click.Choice(["all", "errors", "none"], case_sensitive=False))
 @click.option("--attribute-logs", default="debug", help="Per-attribute log verbosity",
               type=click.Choice(["debug", "info", "none"], case_sensitive=False))
+@click.option("--usage-level", default=None, help="Egeria usage level (Basic or Advanced)",
+              type=click.Choice(["Basic", "Advanced"], case_sensitive=False))
 @logger.catch
 def process_markdown_file(input_file: str, output_folder:str, directive: str, server: str, url: str, userid: str,
-                          user_pass: str, parse_summary: str, attribute_logs: str) -> None:
+                          user_pass: str, parse_summary: str, attribute_logs: str, usage_level: str) -> None:
     """
     Process a markdown file by parsing and executing Dr. Egeria md_commands. Write output to a new file.
     """
@@ -58,14 +60,15 @@ def process_markdown_file(input_file: str, output_folder:str, directive: str, se
         # Instantiate the client
         from pyegeria import EgeriaTech
         client = EgeriaTech(server, url, userid, user_pass)
-        
+        client.create_egeria_bearer_token()
         asyncio.run(process_md_file_v2(
             input_file=input_file, 
             output_folder=output_folder, 
             directive=directive, 
             client=client,
             parse_summary=parse_summary,
-            attribute_logs=attribute_logs
+            attribute_logs=attribute_logs,
+            usage_level=usage_level
         ))
         logger.info(f"Called process_markdown_file with input file {input_file}")
     except PyegeriaException as e:
@@ -80,7 +83,10 @@ def _running_in_pycharm_debugger() -> bool:
 if __name__ == "__main__":
     if _running_in_pycharm_debugger():
         input_file = Prompt.ask("Markdown File name to process:", default="dr_egeria_intro_part1.md")
-        process_md_file(input_file, "", "process", EGERIA_VIEW_SERVER, EGERIA_VIEW_SERVER_URL, EGERIA_USER,
-                        EGERIA_USER_PASSWORD, parse_summary="all", attribute_logs="debug")
+        directive = Prompt.ask("How to process the file?", default="validate")
+        usage_level = Prompt.ask("Usage level (basic, advanced):", default="basic")
+        process_markdown_file.callback(input_file, "", directive,
+                              EGERIA_VIEW_SERVER, EGERIA_VIEW_SERVER_URL, EGERIA_USER,
+                        EGERIA_USER_PASSWORD, parse_summary="all", attribute_logs="debug", usage_level=usage_level)
     else:
         process_markdown_file()

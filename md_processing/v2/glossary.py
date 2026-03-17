@@ -55,11 +55,10 @@ class GlossaryProcessor(AsyncBaseCommandProcessor):
             # if status:
             #     await self.client._async_update_collection_status(guid, status)
                 
-            logger.success(f"Updated {object_type} '{display_name}'")
+            logger.success(f"Updated {object_type} '{display_name}' with GUID {guid}")
             update_element_dictionary(qualified_name, {'guid': guid, 'display_name': display_name})
             
-            return await self.client._async_get_glossary_by_guid(guid, 
-                                                                  output_format='MD', report_spec="DrE-Glossary")
+            return await self.render_result_markdown(guid)
 
         elif verb == "Create":
             body = set_create_body(object_type, attributes)
@@ -81,8 +80,8 @@ class GlossaryProcessor(AsyncBaseCommandProcessor):
             if guid:
                 self.parsed_output["guid"] = guid
                 update_element_dictionary(qualified_name, {'guid': guid, 'display_name': display_name})
-                logger.success(f"Created {object_type} '{display_name}'")
-                return await self.client._async_get_glossary_by_guid(guid, output_format='MD')
+                logger.success(f"Created {object_type} '{display_name}' with GUID {guid}")
+                return await self.render_result_markdown(guid)
             
         return self.command.original_text
 
@@ -136,9 +135,9 @@ class TermProcessor(AsyncBaseCommandProcessor):
             # Async sync memberships
             await self._sync_term_memberships(guid, to_be_collection_guids, merge_update)
             
-            logger.success(f"Updated Term '{display_name}'")
+            logger.success(f"Updated Term '{display_name}' with GUID {guid}")
             update_element_dictionary(qualified_name, {'guid': guid, 'display_name': display_name})
-            return await self.client._async_get_term_by_guid(guid, element_type='GlossaryTerm', output_format='MD')
+            return await self.render_result_markdown(guid)
 
         elif verb == "Create":
             body = set_create_body("GlossaryTerm", attributes)
@@ -154,8 +153,8 @@ class TermProcessor(AsyncBaseCommandProcessor):
                 self.parsed_output["guid"] = guid
                 await self._sync_term_memberships(guid, to_be_collection_guids, replace_all=True)
                 update_element_dictionary(qualified_name, {'guid': guid, 'display_name': display_name})
-                logger.success(f"Created Term '{display_name}'")
-                return await self.client._async_get_term_by_guid(guid, "Term", output_format='MD')
+                logger.success(f"Created Term '{display_name}' with GUID {guid}")
+                return await self.render_result_markdown(guid)
 
         return self.command.original_text
 

@@ -8,6 +8,7 @@ from typing import Any, Dict, List, Optional
 from loguru import logger
 
 from pyegeria import EgeriaTech, PyegeriaException
+from pyegeria.core.utils import make_format_set_name_from_type
 from pyegeria.view.base_report_formats import select_report_spec
 from pyegeria.view.output_formatter import generate_output
 
@@ -82,6 +83,7 @@ class AsyncBaseCommandProcessor(ABC):
                 "message": full_message,
                 "verb": self.command.verb,
                 "object_type": self.command.object_type,
+                "found": self.parsed_output.get("exists", False),
                 "errors": errors
             }
 
@@ -211,6 +213,7 @@ class AsyncBaseCommandProcessor(ABC):
                         "message": f"Target element for Update not found.",
                         "verb": self.command.verb,
                         "object_type": self.command.object_type,
+                        "found": False,
                         "errors": self.parsed_output["errors"]
                     }
 
@@ -219,7 +222,8 @@ class AsyncBaseCommandProcessor(ABC):
                     "status": "failure",
                     "message": f"Target element for Update not found.",
                     "verb": self.command.verb,
-                    "object_type": self.command.object_type
+                    "object_type": self.command.object_type,
+                    "found": False
                 }
 
         # 6. Action Dispatch
@@ -234,6 +238,8 @@ class AsyncBaseCommandProcessor(ABC):
                 "message": f"Validated {self.command.verb} {self.command.object_type}",
                 "verb": self.command.verb,
                 "object_type": self.command.object_type,
+                "guid": self.parsed_output.get("guid"),
+                "found": self.parsed_output.get("exists", False),
                 "warnings": self.parsed_output.get("warnings", [])
             }
         
@@ -244,15 +250,17 @@ class AsyncBaseCommandProcessor(ABC):
                 "status": "failure",
                 "message": f"Execution blocked: {'; '.join(self.parsed_output['errors'])}",
                 "verb": self.command.verb,
-                "object_type": self.command.object_type
+                "object_type": self.command.object_type,
+                "guid": self.parsed_output.get("guid"),
+                "found": self.parsed_output.get("exists", False)
             }
 
         output = await self.apply_changes()
         
         # 7. Post-execution: Update the cache on success
+        guid = self.parsed_output.get("guid") or attributes.get("guid")
         if output and not output.startswith(self.command.raw_block): # Basic success check
             qn = self.parsed_output.get("qualified_name")
-            guid = self.parsed_output.get("guid") or attributes.get("guid")
             if qn and guid:
                 d_name = self.parsed_output.get("display_name") or qn
                 update_element_dictionary(qn, {"guid": guid, "display_name": d_name})
@@ -260,11 +268,12 @@ class AsyncBaseCommandProcessor(ABC):
         return {
             "output": output,
             "status": "success",
-            "message": f"Executed {self.command.verb} {self.command.object_type}",
+            "message": f"Executed {self.command.verb} {self.command.object_type}" + (f" (GUID: {guid})" if guid else ""),
             "verb": self.command.verb,
             "object_type": self.command.object_type,
-            "guid": self.parsed_output.get("guid") or attributes.get("guid"),
+            "guid": guid,
             "qualified_name": self.parsed_output.get("qualified_name"),
+            "found": self.parsed_output.get("exists", False),
             "warnings": self.parsed_output.get("warnings", [])
         }
 
@@ -343,8 +352,8 @@ class AsyncBaseCommandProcessor(ABC):
             return self.command.raw_block
             
         # 1. Determine the report spec name
-        # Convention: <Type>-DrE
-        report_spec_name = f"{self.command.object_type}-DrE"
+        # Convention: <Type>-DrE (spaces replaced with dashes)
+        report_spec_name = make_format_set_name_from_type(self.command.object_type)
         
         # 2. Fetch the element dictionary
         try:
@@ -440,7 +449,8 @@ class AsyncBaseCommandProcessor(ABC):
             # It raises PyegeriaException if multiple matches are found.
             try:
                 res = await self.client._async_get_guid_for_name(name_or_guid)
-                if res and res != "No element found" and isinstance(res, str):
+                # Ensure it's not a "not found" indicator string
+                if res and isinstance(res, str) and not res.startswith("No ") and " found" not in res and not res.startswith("(Planned:"):
                     logger.debug(f"resolve_element_guid: SDK strict lookup for '{name_or_guid}' returned: {res}")
                     return res
             except PyegeriaException as e:
@@ -454,14 +464,6 @@ class AsyncBaseCommandProcessor(ABC):
                     return None
                 logger.debug(f"SDK strict lookup failed for '{name_or_guid}': {e}")
 
-            # 4b. Fallback: If it looks like a QN, try MetadataExplorer unique name lookup
-            if "::" in name_or_guid:
-                try:
-                    res = await self.client._async_get_metadata_guid_by_unique_name(name_or_guid, "qualifiedName")
-                    if res and res != "No element found" and isinstance(res, str):
-                        return res
-                except Exception:
-                    pass
 
             # 4c. Try find_method search from spec
             spec = self.get_command_spec()
@@ -517,8 +519,15 @@ class AsyncBaseCommandProcessor(ABC):
             # 2. Check Egeria (Harden against missing cache in new sessions)
             guid = await self.resolve_element_guid(qn)
             logger.debug(f"fetch_as_is: resolve_element_guid returned: {guid}")
-            if guid and not guid.startswith("(Planned:"):
+            if guid and isinstance(guid, str) and not guid.startswith("(Planned:") and not guid.startswith("No "):
                 try:
+                    # Sanity check: is it a GUID?
+                    try:
+                        uuid.UUID(guid)
+                    except (ValueError, TypeError):
+                        logger.debug(f"fetch_as_is: Resolved string '{guid}' is not a valid GUID. Skipping fetch.")
+                        return None
+
                     element = await self.fetch_element(guid)
                     if element:
                         logger.debug(f"fetch_as_is: Element found in Egeria for GUID '{guid}'")

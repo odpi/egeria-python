@@ -241,13 +241,6 @@ IBM Research
 
 > **Default Value**: 1.0
 
-## Classifications
->
-> **Input Required**: False
-
-> **Description**: Optionally specify the initial classifications for a collection. Multiple classifications can be specified.
-
-> **Alternative Labels**: classification
 
 ## Qualified Name
 >
@@ -337,23 +330,7 @@ Python Library
 
 DeployedSoftwareComponent
 
-## User Defined Status
->
-> **Input Required**: False
 
-> **Description**: Supporting user managed lifecycle statuses. Only used if the Initial Status is set to OTHER.
-
-> **Default Value**: DRAFT
-
-## Initial Status
->
-> **Input Required**: False
-
-> **Description**: Optional lifecycle status. If not specified, set to ACTIVE. If set to Other then the value in User Defined Status will be used.
-
-> **Valid Values**: DRAFT; PREPARED; PROPOSED; APPROVED; REJECTED; ACTIVE; DISABLED; DEPRECATED; OTHER
-
-> **Default Value**: ACTIVE
 
 ## In Solution Components
 >
@@ -449,7 +426,7 @@ SolutionBlueprint::Data-Prep-Prod-Blueprint-for-ML-OPs::0.1
 
 ____
 
-# Link External Reference Link
+# Link External Reference
 
 ## Element Name
 

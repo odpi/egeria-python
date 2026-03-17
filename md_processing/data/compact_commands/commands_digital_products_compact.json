@@ -1,6 +1,6 @@
 {
   "family": "Digital Products",
-  "exported": "Mar 13, 2026 at 3:50:20 PM",
+  "exported": "Mar 14, 2026 at 10:08:16 AM",
   "attribute_definitions": {
     "Activity Status": {
       "variable_name": "activity_status",
@@ -422,6 +422,82 @@
       "min_cardinality": 0,
       "max_cardinality": 1,
       "level": "Advanced",
+      "Journal Entry": ""
+    },
+    "File Encoding": {
+      "variable_name": "file_encoding",
+      "inUpdate": true,
+      "attr_labels": "",
+      "examples": "",
+      "default_value": "UTF-8",
+      "valid_values": [],
+      "existing_element": "",
+      "description": "Encoding of the file.",
+      "generated": false,
+      "style": "Simple",
+      "user_specified": true,
+      "unique": false,
+      "input_required": false,
+      "min_cardinality": 0,
+      "max_cardinality": 1,
+      "level": "Basic",
+      "Journal Entry": ""
+    },
+    "File Extension": {
+      "variable_name": "file_extension",
+      "inUpdate": true,
+      "attr_labels": "",
+      "examples": "",
+      "default_value": "csv",
+      "valid_values": [],
+      "existing_element": "",
+      "description": "Typically CSV.",
+      "generated": false,
+      "style": "Simple",
+      "user_specified": true,
+      "unique": false,
+      "input_required": false,
+      "min_cardinality": 0,
+      "max_cardinality": 1,
+      "level": "Basic",
+      "Journal Entry": ""
+    },
+    "File Path": {
+      "variable_name": "file_path",
+      "inUpdate": true,
+      "attr_labels": "File Path Name",
+      "examples": "\/home\/mumble.csv",
+      "default_value": "",
+      "valid_values": [],
+      "existing_element": "",
+      "description": "Path to the file including file name. File system name is pre-pended if set.",
+      "generated": false,
+      "style": "Simple",
+      "user_specified": true,
+      "unique": false,
+      "input_required": false,
+      "min_cardinality": 0,
+      "max_cardinality": 1,
+      "level": "Basic",
+      "Journal Entry": ""
+    },
+    "File System Name": {
+      "variable_name": "file_system_name",
+      "inUpdate": true,
+      "attr_labels": "",
+      "examples": "",
+      "default_value": "",
+      "valid_values": [],
+      "existing_element": "",
+      "description": "Optional  file system name to be prepended in front of the path name.",
+      "generated": false,
+      "style": "Simple",
+      "user_specified": true,
+      "unique": false,
+      "input_required": false,
+      "min_cardinality": 0,
+      "max_cardinality": 1,
+      "level": "Basic",
       "Journal Entry": ""
     },
     "For Duplicate Processing": {
@@ -1783,6 +1859,31 @@
       "extra_constraints": "",
       "bundle": "Agreement Base",
       "custom_attributes": [],
+      "Journal Entry": ""
+    },
+    "Create CSV File": {
+      "display_name": "CSV File",
+      "qn_prefix": "CSVFile",
+      "alternate_names": [
+        "Create CSV"
+      ],
+      "family": "Digital Product Manager",
+      "description": "Create a CSV File asset.",
+      "verb": "Create",
+      "upsert": true,
+      "attach": false,
+      "level": "Basic",
+      "find_method": "",
+      "find_constraints": "",
+      "extra_find": "",
+      "extra_constraints": "",
+      "bundle": "Authored Referenceable",
+      "custom_attributes": [
+        "File System Name",
+        "File Encoding",
+        "File Extension",
+        "File Path"
+      ],
       "Journal Entry": ""
     },
     "Create Digital Subscription": {

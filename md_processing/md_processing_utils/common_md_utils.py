@@ -313,7 +313,7 @@ def set_rel_prop_body(object_type: str, attributes: dict)->dict:
         "class": prop_name + "Properties",
         "description": attributes['Description'].get('value', None),
         "label": attributes.get('Label', {}).get('value', None) or attributes.get('Link Label', {}).get('value', None),
-        "typeName" : attributes.get('Type Name', {}).get('value', None),
+        "typeName" : attributes.get('Type Name', {}).get('value') or prop_name,
         "effectiveFrom": attributes.get('Effective From', {}).get('value', None),
         "effectiveTo": attributes.get('Effective To', {}).get('value', None),
         "extendedProperties": attributes.get('Extended Properties', {}).get('value', None),
@@ -335,6 +335,7 @@ def set_element_prop_body(object_type: str, qualified_name: str, attributes: dic
 
     return {
         "class": prop_name + "Properties",
+        "typeName": prop_name,
         "displayName": attributes.get('Display Name', {}).get('value', None),
         "qualifiedName" : qualified_name,
         "description": attributes['Description'].get('value', None),

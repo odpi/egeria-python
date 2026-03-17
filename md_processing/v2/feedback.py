@@ -56,6 +56,7 @@ class FeedbackProcessor(AsyncBaseCommandProcessor):
             
             prop_body = {
                 "class": "CommentProperties",
+                "typeName": "Comment",
                 "displayName": display_name,
                 "qualifiedName": qualified_name,
                 "description": comment_text,
@@ -69,7 +70,7 @@ class FeedbackProcessor(AsyncBaseCommandProcessor):
                 body['properties'] = prop_body
                 await self.client._async_update_comment(guid, body)
                 self.parsed_output["guid"] = guid
-                logger.success(f"Updated Comment '{display_name}'")
+                logger.success(f"Updated Comment '{display_name}' with GUID {guid}")
                 return await self.client._async_get_comment_by_guid(guid, output_format='MD')
             
             elif verb == "Create":
@@ -80,7 +81,7 @@ class FeedbackProcessor(AsyncBaseCommandProcessor):
                 if guid:
                     self.parsed_output["guid"] = guid
                     update_element_dictionary(qualified_name, {'guid': guid, 'display_name': display_name})
-                    logger.success(f"Created Comment '{display_name}'")
+                    logger.success(f"Created Comment '{display_name}' with GUID {guid}")
                     return await self.client._async_get_comment_by_guid(guid, output_format='MD')
 
         elif "Journal Entry" in object_type:
@@ -98,7 +99,7 @@ class FeedbackProcessor(AsyncBaseCommandProcessor):
             )
             if guid:
                 self.parsed_output["guid"] = guid
-                logger.success(f"Added Journal Entry to '{journal_name}'")
+                logger.success(f"Added Journal Entry to '{journal_name}' with GUID {guid}")
                 return await self.client._async_get_note_by_guid(guid, output_format='MD')
 
         elif "Note" in object_type:
@@ -111,7 +112,7 @@ class FeedbackProcessor(AsyncBaseCommandProcessor):
                 body['properties'] = prop_body
                 await self.client._async_update_note(guid, body_slimmer(body))
                 self.parsed_output["guid"] = guid
-                logger.success(f"Updated Note '{display_name}'")
+                logger.success(f"Updated Note '{display_name}' with GUID {guid}")
                 return await self.client._async_get_note_by_guid(guid, output_format='MD')
             # Create Note omitted for brev since it was create_project in sync code? 
             # Looking closer at sync code: body = set_create_body... guid = egeria_client.create_project (??)
@@ -150,7 +151,7 @@ class TagProcessor(AsyncBaseCommandProcessor):
             if not guid: return self.command.original_text
             await self.client._async_update_tag_description(guid, description)
             self.parsed_output["guid"] = guid
-            logger.success(f"Updated Tag '{display_name}'")
+            logger.success(f"Updated Tag '{display_name}' with GUID {guid}")
             return await self.client._async_get_tag_by_guid(guid, output_format='MD')
 
         elif verb == "Create":
@@ -158,7 +159,7 @@ class TagProcessor(AsyncBaseCommandProcessor):
             if guid:
                 self.parsed_output["guid"] = guid
                 update_element_dictionary(qualified_name, {'guid': guid, 'display_name': display_name})
-                logger.success(f"Created Tag '{display_name}'")
+                logger.success(f"Created Tag '{display_name}' with GUID {guid}")
                 return await self.client._async_get_tag_by_guid(guid, output_format='MD')
 
         return self.command.original_text
@@ -191,10 +192,16 @@ class ExternalReferenceProcessor(AsyncBaseCommandProcessor):
 
         # 1. Map type and properties
         mapped_type = "ExternalReference"
-        if "Media" in object_type: mapped_type = "RelatedMedia"
-        elif "Cited" in object_type: mapped_type = "CitedDocument"
+        if "Media" in object_type: 
+            mapped_type = "RelatedMedia"
+        elif "Cited" in object_type: 
+            mapped_type = "CitedDocument"
+        elif "Data Source" in object_type:
+            mapped_type = "ExternalDataSource"
+        elif "Model Source" in object_type:
+            mapped_type = "ExternalModelSource"
         
-        prop_body = set_element_prop_body("External Reference", qualified_name, attributes)
+        prop_body = set_element_prop_body(mapped_type, qualified_name, attributes)
         prop_body.update({
             "referenceTitle": attributes.get('Reference Title', {}).get('value'),
             "referenceAbstract": attributes.get('Reference Abstract', {}).get('value'),
@@ -208,22 +215,40 @@ class ExternalReferenceProcessor(AsyncBaseCommandProcessor):
         })
         
         if mapped_type == "RelatedMedia":
-            prop_body["class"] = "RelatedProperties"
-            prop_body["mediaType"] = attributes.get('Media Type', {}).get('value')
+            prop_body.update({
+                "mediaType": attributes.get('Media Type', {}).get('value'),
+                "mediaTypeOtherId": attributes.get('Media Type Other ID', {}).get('value'),
+                "defaultMediaUsage": attributes.get('Default Media Usage', {}).get('value'),
+                "defaultMediaUsageOtherId": attributes.get('Default Media Usage Other ID', {}).get('value'),
+                "datePublished": attributes.get('Date Published', {}).get('value'),
+                "dateConnected": attributes.get('Date Connected', {}).get('value'),
+                "dateCreated": attributes.get('Date Created', {}).get('value'),
+            })
         elif mapped_type == "CitedDocument":
-            prop_body["class"] = "CitedDocumentProperties"
-            prop_body["publisher"] = attributes.get('Publisher', {}).get('value')
-            # ... and other cited doc props if needed
-
+            prop_body.update({
+                "publisher": attributes.get('Publisher', {}).get('value'),
+                "numberOfPages": attributes.get('Number of Pages', {}).get('value'),
+                "pageRange": attributes.get('Page Range', {}).get('value'),
+                "publicationSeries": attributes.get('Publication Series', {}).get('value'),
+                "publicationSeriesVolume": attributes.get('Publication Series Volume', {}).get('value'),
+                "edition": attributes.get('Edition', {}).get('value'),
+                "firstPublicationDate": attributes.get('First Publication Date', {}).get('value'),
+                "publicationDate": attributes.get('Publication Date', {}).get('value'),
+                "publicationCity": attributes.get('Publication City', {}).get('value'),
+                "publicationYear": attributes.get('Publication Year', {}).get('value'),
+                "publicationNumbers": attributes.get('Publication Numbers', {}).get('value'),
+                "defaultMediaUsage": attributes.get('Default Media Usage', {}).get('value'),
+                "defaultMediaUsageOtherId": attributes.get('Default Media Usage Other ID', {}).get('value'),
+            })
         if verb == "Update":
             guid = self.parsed_output.get("guid") or (self.as_is_element['elementHeader']['guid'] if self.as_is_element else None)
             if not guid: return self.command.original_text
             
-            body = set_update_body("External Reference", attributes)
+            body = set_update_body(object_type, attributes)
             body['properties'] = prop_body
             await self.client._async_update_external_reference(guid, body)
             self.parsed_output["guid"] = guid
-            logger.success(f"Updated {object_type} '{display_name}'")
+            logger.success(f"Updated {object_type} '{display_name}' with GUID {guid}")
             return await self.render_result_markdown(guid)
 
         elif verb == "Create":
@@ -233,7 +258,7 @@ class ExternalReferenceProcessor(AsyncBaseCommandProcessor):
             if guid:
                 self.parsed_output["guid"] = guid
                 update_element_dictionary(qualified_name, {'guid': guid, 'display_name': display_name})
-                logger.success(f"Created {object_type} '{display_name}'")
+                logger.success(f"Created {object_type} '{display_name}' with GUID {guid}")
                 return await self.render_result_markdown(guid)
 
         return self.command.original_text

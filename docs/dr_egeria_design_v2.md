@@ -100,4 +100,15 @@ The v2 JSON dictionary (e.g., `commands_project_compact.json`) forms the contrac
 
 The system is extensible. To support new types or capabilities in Egeria:
 1. One generates a new compact command definition.
-2. The `v2Dispatcher` natively understands the new types without requiring custom hard-coded classes if they follow traditional primitive property architectures. Ensure to map verbs ("Create", "Update", "Setup", "Define") accurately. 
+2. The `v2Dispatcher` natively understands the new types without requiring custom hard-coded classes if they follow traditional primitive property architectures. Ensure to map verbs ("Create", "Update", "Setup", "Define") accurately.
+
+## Integration with Report Specs
+
+To provide a consistent experience between creating metadata with Dr.Egeria and reporting on it within `pyegeria`, the same compact command definitions are used to automatically generate Report Specs.
+
+The tool `hey_egeria tech gen-report-specs` can be used to:
+- Resolve all attributes from command bundles and definitions.
+- Generate standard `FormatSet` objects for each command.
+- Automatically update `pyegeria/view/base_report_formats.py` with the latest generated specs using the `--merge` flag.
+
+This ensures that the `Display Names`, `keys`, and `descriptions` used in Dr.Egeria markdown files are identical to the labels and data fields used in pyegeria reports.
