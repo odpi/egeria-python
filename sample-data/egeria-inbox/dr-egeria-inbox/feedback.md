@@ -38,7 +38,7 @@ STANDARD_COMMENT
 
 ____
 
-# cCreate Journal Entry
+# Create Journal Entry
 
 ## Journal Name
 

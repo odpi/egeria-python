@@ -238,7 +238,6 @@ async def process_md_file_v2(input_file: str, output_folder: str, directive: str
     summary_table.add_column("Status", style="bold")
     summary_table.add_column("Found", style="green")
     summary_table.add_column("Qualified Name", style="magenta")
-    summary_table.add_column("GUID", style="yellow")
     summary_table.add_column("Message")
 
     updated = False
@@ -251,7 +250,6 @@ async def process_md_file_v2(input_file: str, output_folder: str, directive: str
             f"[{status_color}]{res['status'].upper()}[/{status_color}]",
             found_str,
             res.get("qualified_name", ""),
-            res.get("guid", ""),
             res["message"]
         )
         if res["status"] == "success" and directive == "process":
@@ -274,9 +272,10 @@ async def process_md_file_v2(input_file: str, output_folder: str, directive: str
                     console.print(f"   [yellow]* {w}[/yellow]")
         console.print("\n")
 
-    if directive == "validate":
+    if directive in ["validate", "display"]:
         from md_processing.md_processing_utils.common_md_utils import render_markdown
-        console.print("[bold cyan]Validation Diagnosis Summary:[/bold cyan]\n")
+        title = "Validation Diagnosis Summary" if directive == "validate" else "Display Summary"
+        console.print(f"[bold cyan]{title}:[/bold cyan]\n")
         for res in results:
             if res.get("output"):
                 render_markdown(res["output"])

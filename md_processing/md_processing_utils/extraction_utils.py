@@ -156,6 +156,7 @@ def extract_attribute(text: str, labels: List[str]) -> Optional[str]:
                 line for line in extracted_text.splitlines()
                 if not line.lstrip().startswith(">") and not re.match(r'^\s*_+\s*$', line)
             ]
+            cleaned_text = "\n".join(filtered_lines).strip()
             if cleaned_text:
                 return cleaned_text  # Return the cleaned and formatted text
     return None

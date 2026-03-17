@@ -1026,7 +1026,7 @@ def proc_valid_value(txt: str, action: str, labels: set, valid_values: [], if_mi
         if attribute not in v_values:
             msg = f"Invalid value for attribute `{labels}` attribute is `{attribute}`"
             _attribute_msg("WARNING", msg)
-            return {"status": WARNING, "reason": msg, "value": attribute, "valid": False, "exists": True}
+            return {"status": WARNING, "reason": msg, "value": attribute, "valid": True, "exists": True}
 
     return {"status": INFO, "OK": "OK", "value": attribute, "valid": valid, "exists": True}
 

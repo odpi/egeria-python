@@ -14,6 +14,9 @@ Dr.Egeria v2 is a complete re-architecture of the Egeria Markdown (Freddie) proc
 - **Strict Specification Adherence**: The `AttributeFirstParser` is intentionally specification-agnostic. It does not contain hardcoded logic for specific verbs or objects (e.g., "Display Name should be optional for Links"). If a requirement exists in the Egeria type system, it must be defined in the JSON specification.
 - **Diagnostic-First Validation**: Validation is treated as a first-class citizen. Even when a command fails to parse or execute, the system attempts to provide a diagnostic table to help the user identify missing or incorrect attributes.
 - **Inter-Command Dependency Management**: The system tracks "Planned" elements (those defined in the current markdown file but not yet in Egeria) to allow subsequent commands to resolve their GUIDs without requiring a multi-pass process.
+- **Graceful Attribute Validation**: Attributes with styles `Enum` or `Valid Value` (those that don't match the defined set in the specification) are now flagged as **WARNINGS** instead of **ERRORS**. This allows processing to continue even if values are unknown, deferring final validation to the Egeria server.
+- **Reference Resolution Resilience**: If a reference (e.g., to a term or glossary) cannot be resolved, it is flagged as a **WARNING** rather than an **ERROR**. This prevents a missing dependency from blocking the entire processing pipeline.
+- **Reference Candidate Heuristic**: The processor now smarter about identifying which attributes are actually element references. It avoids attempting to resolve GUIDs for attributes that are clearly data fields (like Enums, Valid Values, Dictionaries, or Integers).
 
 ## Architecture Overview
 
@@ -26,7 +29,8 @@ The `UniversalExtractor` identifies DrE command blocks (`# Verb Object`) and the
 The `AttributeFirstParser` maps raw Markdown attributes to the canonical command specification.
 
 - **KeyValue Parsing**: Supports tables (`| Key | Value |`), lists (`* Key: Value`), and inline maps.
-- **Enum Resolution**: Maps user-friendly labels (e.g., 'Draft') to Egeria internal integers.
+- **Enum Resolution**: Maps user-friendly labels (e.g., 'Draft') to Egeria internal integers. The resolution is case-insensitive and normalizes spaces and underscores to improve mapping reliability.
+- **Improved Property Handling**: Uses safe access for optional fields (like `Description`) and prevents runtime crashes if metadata is missing from the input document.
 
 ### 3. Dispatching (`dispatcher.py`)
 
@@ -39,6 +43,7 @@ The `v2Dispatcher` routes extracted `DrECommand` objects to their respective `As
 Every command family implements a subclass of `AsyncBaseCommandProcessor`.
 
 - **Standard Flow**: `Parse -> Validate -> Fetch As-Is -> Action Dispatch`.
+- **Efficient Existence Checks**: Integrates `__async_get_guid__` into the reference resolution logic, providing a more reliable and efficient method for verifying if elements already exist in Egeria.
 - **Relationship Sync**: Includes generic logic for synchronizing one-to-many relationships.
 
 ## Usage

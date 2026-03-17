@@ -84,8 +84,7 @@ class BlueprintProcessor(AsyncBaseCommandProcessor):
             if guid:
                 self.parsed_output["guid"] = guid
                 await self._sync_components(guid, comp_guids, replace_all=True)
-                if journal_entry:
-                    await self.client._async_add_note_in_dr_e(qualified_name, display_name, journal_entry)
+                await async_add_note_in_dr_e(self.client, qualified_name, display_name, journal_entry)
                 
                 update_element_dictionary(qualified_name, {'guid': guid, 'display_name': display_name})
                 logger.success(f"Created Blueprint '{display_name}' with GUID {guid}")
