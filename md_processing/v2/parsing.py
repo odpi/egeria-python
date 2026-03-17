@@ -59,6 +59,8 @@ class AttributeFirstParser:
                 continue
 
             canonical_name, details = match
+            # print(f"DEBUG: Processing {canonical_name}, style={details.get('style')}, value={raw_value}")
+            pre_warnings = len(self.warnings)
             parsed_value = self._process_attribute_value(raw_value, details)
             if parsed_value is not None:
                 # Use canonical_name for compatibility with legacy helpers (e.g. 'Description')
@@ -66,7 +68,7 @@ class AttributeFirstParser:
                     "value": parsed_value,
                     "valid": True,
                     "exists": True,
-                    "status": "INFO"
+                    "status": "INFO" if len(self.warnings) == pre_warnings else "WARNING"
                 }
 
         # Check for required attributes
@@ -135,7 +137,7 @@ class AttributeFirstParser:
         elif style == "Dictionary" or style == "KeyValue":
             return parse_key_value(value)
             
-        elif style == "Valid Value":
+        elif style in {"Valid Value", "Enum", "ValidValue"}:
             v = value
             if not v:
                 return v
@@ -162,6 +164,10 @@ class AttributeFirstParser:
             # 2. Fallback to hardcoded list in spec
             valid_values = details.get("valid_values", [])
             if not valid_values:
+                # If it's styled as Enum but no valid_values, it might be an unresolved Enumeration
+                # Try to resolve it if it's potentially an enum
+                if style == "Enum" or style == "ValidValue":
+                     return self._process_attribute_value(value, {**details, "style": "Enumeration"})
                 return v
             
             # Case-insensitive match

@@ -7,7 +7,7 @@ from abc import ABC, abstractmethod
 from typing import Any, Dict, List, Optional
 from loguru import logger
 
-from pyegeria import EgeriaTech, PyegeriaException
+from pyegeria import EgeriaTech, PyegeriaException, NO_ELEMENTS_FOUND
 from pyegeria.core.utils import make_format_set_name_from_type
 from pyegeria.view.base_report_formats import select_report_spec
 from pyegeria.view.output_formatter import generate_output
@@ -67,6 +67,18 @@ class AsyncBaseCommandProcessor(ABC):
         spec = self.get_command_spec()
         self.parsed_output = self.parser.parse()
         
+        # 1a. Handle 'display' directive immediately (skip all Egeria lookups)
+        if directive == "display":
+            output = await self.display_only()
+            return {
+                "output": output,
+                "status": "success",
+                "message": f"Displayed {self.command.verb} {self.command.object_type}",
+                "verb": self.command.verb,
+                "object_type": self.command.object_type,
+                "warnings": self.parsed_output.get("warnings", [])
+            }
+
         # 2. Pre-flight Validation (check required fields, etc.)
         if not self.parsed_output.get("valid", True):
             errors = self.parsed_output.get("errors", [])
@@ -151,7 +163,8 @@ class AsyncBaseCommandProcessor(ABC):
             non_ref_names = [
                 "Display Name", "Qualified Name", "Description", 
                 "Reference Abstract", "Reference Title", "Reference Description",
-                "Abstract", "Title", "Category", "Organization", "URL", "License", "Copyright"
+                "Abstract", "Title", "Category", "Organization", "URL", "License", "Copyright",
+                "Identifier", "Domain", "Summary"
             ]
             
             is_ref_candidate = (
@@ -159,7 +172,7 @@ class AsyncBaseCommandProcessor(ABC):
             ) or (
                 any(k in attr_name for k in ["Id", "GUID", "Name", "Reference"]) 
                 and attr_name not in non_ref_names
-                and spec_style != "Simple" # If spec explicitly says Simple, trust it unless it looks very much like an ID
+                and spec_style not in ["Simple", "Enum", "Valid Value", "ValidValue", "Dictionary", "KeyValue", "Enumeration", "Integer", "Boolean"]
             )
             
             # More precise check: if it's already got a GUID, don't re-resolve. 
@@ -177,20 +190,16 @@ class AsyncBaseCommandProcessor(ABC):
                 else:
                     # If it's a candidate ref and we couldn't resolve it, mark as not found
                     attr_data["exists"] = False
-                    attr_data["valid"] = False
+                    attr_data["valid"] = True # Treat as valid to avoid blocking; let Egeria validate
                     msg = f"Referenced element '{val}' for attribute '{attr_name}' not found."
                     if attr_data.get("warnings") is None: attr_data["warnings"] = []
                     attr_data["warnings"].append(msg)
-                    if directive == "validate":
-                        logger.warning(msg)
-                        if "warnings" not in self.parsed_output:
-                            self.parsed_output["warnings"] = []
-                        self.parsed_output.get("warnings", []).append(msg)
-                    else:
-                        logger.error(msg)
-                        if "errors" not in self.parsed_output:
-                            self.parsed_output["errors"] = []
-                        self.parsed_output.get("errors", []).append(msg)
+                    
+                    # Always treat as warning, never as error, per user requirement to continue
+                    logger.warning(msg)
+                    if "warnings" not in self.parsed_output:
+                        self.parsed_output["warnings"] = []
+                    self.parsed_output.get("warnings", []).append(msg)
 
         # 7. Check for existence of the target element (As-Is state)
         if self.as_is_element:
@@ -232,10 +241,11 @@ class AsyncBaseCommandProcessor(ABC):
             # If relationship and missing ends, the validate_only output should reflect this.
             # We check errors at the end of validate_only
             status = "success" if not self.parsed_output.get("errors") else "failure"
+            guid = self.parsed_output.get("guid")
             return {
                 "output": output,
                 "status": status,
-                "message": f"Validated {self.command.verb} {self.command.object_type}",
+                "message": f"Validated {self.command.verb} {self.command.object_type}" + (f" (GUID: {guid})" if guid else ""),
                 "verb": self.command.verb,
                 "object_type": self.command.object_type,
                 "guid": self.parsed_output.get("guid"),
@@ -245,10 +255,11 @@ class AsyncBaseCommandProcessor(ABC):
         
         # Check for blockers before applying changes
         if self.parsed_output.get("errors"):
+            guid = self.parsed_output.get("guid")
             return {
                 "output": self.command.raw_block,
                 "status": "failure",
-                "message": f"Execution blocked: {'; '.join(self.parsed_output['errors'])}",
+                "message": f"Execution blocked: {'; '.join(self.parsed_output['errors'])}" + (f" (GUID: {guid})" if guid else ""),
                 "verb": self.command.verb,
                 "object_type": self.command.object_type,
                 "guid": self.parsed_output.get("guid"),
@@ -388,19 +399,11 @@ class AsyncBaseCommandProcessor(ABC):
     async def fetch_element(self, guid: str) -> Optional[Dict[str, Any]]:
         """
         Fetch the details of an element by GUID. 
-        Subclasses should override if MetadataExplorer is unavailable or if a specific OMAS method is needed.
+        Subclasses should override if MetadataExpert/Explorer is unavailable or if a specific OMAS method is needed.
         """
         try:
-            # First try MetadataExplorer (most detailed properties)
-            res = await self.client._async_get_metadata_element_by_guid(guid)
-            if res and isinstance(res, dict):
-                return res
-        except Exception as e:
-            logger.debug(f"MetadataExplorer fetch failed: {e}")
-            
-        try:
-            # Fallback to ClassificationExplorer if MetadataExplorer is missing
-            logger.debug("Trying ClassificationExplorer fallback for element fetch.")
+            # First try ClassificationExplorer (most standard and lightweight)
+            logger.debug("Trying ClassificationExplorer for element fetch.")
             res = await getattr(self.client, "_async_get_element_by_guid_")(guid)
             if res and isinstance(res, dict):
                 # The structure from classification-explorer comes under "element" usually
@@ -408,7 +411,16 @@ class AsyncBaseCommandProcessor(ABC):
                     return res["element"]
                 return res
         except Exception as e:
-            logger.debug(f"ClassificationExplorer fallback failed: {e}")
+            logger.debug(f"ClassificationExplorer fetch failed: {e}")
+
+        try:
+            # Fallback to MetadataExpert (more detailed properties)
+            # Reordered subclients in EgeriaTech ensure this hits metadata-expert first
+            res = await self.client._async_get_metadata_element_by_guid(guid)
+            if res and isinstance(res, dict):
+                return res
+        except Exception as e:
+            logger.debug(f"MetadataExpert/Explorer fetch failed: {e}")
 
         return None
 
@@ -442,9 +454,24 @@ class AsyncBaseCommandProcessor(ABC):
         if name_or_guid in planned:
             return f"(Planned: {name_or_guid})"
         
-        # 4. Check Egeria (strict lookup)
+        # 4. Check Egeria (Existence Check)
         try:
-            # 4a. Use SDK's strict name-to-GUID resolution
+            # 4a. Use __async_get_guid__ as suggested by user for existence check
+            # This is a lightweight call to classification-explorer
+            try:
+                res = await self.client.__async_get_guid__(qualified_name=name_or_guid)
+                if res and res != NO_ELEMENTS_FOUND:
+                    logger.debug(f"resolve_element_guid: __async_get_guid__ for QN '{name_or_guid}' returned: {res}")
+                    return res
+                
+                res = await self.client.__async_get_guid__(display_name=name_or_guid)
+                if res and res != NO_ELEMENTS_FOUND:
+                    logger.debug(f"resolve_element_guid: __async_get_guid__ for Display Name '{name_or_guid}' returned: {res}")
+                    return res
+            except Exception as e:
+                logger.debug(f"__async_get_guid__ failed: {e}")
+
+            # 4b. Use SDK's strict name-to-GUID resolution as fallback
             # This checks QN, Display Name, Resource Name, and Identifier.
             # It raises PyegeriaException if multiple matches are found.
             try:
@@ -546,6 +573,39 @@ class AsyncBaseCommandProcessor(ABC):
     async def apply_changes(self) -> str:
         """Apply side-effects to Egeria. Returns the updated markdown."""
         pass
+
+    async def display_only(self) -> str:
+        """
+        Display-only logic. Skips validation and Egeria lookups.
+        Generates a clean markdown summary of the parsed attributes.
+        """
+        logger.info(f"DISPLAY ONLY: {self.command.verb} {self.command.object_type}")
+        if not self.parsed_output:
+            logger.error("display_only: self.parsed_output is None!")
+            return "### Error: No parsed data available for display."
+        
+        attributes = self.parsed_output.get("attributes", {})
+        qualified_name = self.parsed_output.get("qualified_name")
+        
+        report = [
+            f"### Command: {self.command.verb} {self.command.object_type}",
+            f"**Qualified Name**: `{qualified_name}`",
+            "",
+            "#### Parsed Attributes",
+            "| Attribute | Value |",
+            "| :--- | :--- |"
+        ]
+        
+        for name, details in attributes.items():
+            val = str(details.get("value", ""))
+            # Truncate long values
+            if len(val) > 50:
+                val = val[:47] + "..."
+            
+            report.append(f"| {name} | {val} |")
+            
+        report.append("\n---")
+        return "\n".join(report)
 
     async def validate_only(self) -> str:
         """

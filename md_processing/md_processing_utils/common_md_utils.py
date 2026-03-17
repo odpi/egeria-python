@@ -12,7 +12,7 @@ from rich.markdown import Markdown
 
 from pyegeria import ServerClient, PyegeriaException
 from pyegeria.core.utils import (camel_to_title_case)
-from pyegeria.core._globals import DEBUG_LEVEL, GovernanceDomains
+from pyegeria.core._globals import DEBUG_LEVEL, GovernanceDomains, resolve_enum
 from md_processing.md_processing_utils.message_constants import message_types
 
 # Constants
@@ -311,7 +311,7 @@ def set_rel_prop_body(object_type: str, attributes: dict)->dict:
 
     return {
         "class": prop_name + "Properties",
-        "description": attributes['Description'].get('value', None),
+        "description": attributes.get('Description', {}).get('value', None),
         "label": attributes.get('Label', {}).get('value', None) or attributes.get('Link Label', {}).get('value', None),
         "typeName" : attributes.get('Type Name', {}).get('value') or prop_name,
         "effectiveFrom": attributes.get('Effective From', {}).get('value', None),
@@ -338,7 +338,7 @@ def set_element_prop_body(object_type: str, qualified_name: str, attributes: dic
         "typeName": prop_name,
         "displayName": attributes.get('Display Name', {}).get('value', None),
         "qualifiedName" : qualified_name,
-        "description": attributes['Description'].get('value', None),
+        "description": attributes.get('Description', {}).get('value', None),
         "category": attributes.get('Category', {}).get('value', None),
         "identifier": attributes.get('Identifier', {}).get('value', None),
         "userDefinedStatus": attributes.get('User Defined Status', {}).get('value', None),
@@ -390,8 +390,12 @@ def set_update_status_body(object_type: str, attributes: dict)->dict:
 def set_gov_prop_body(object_type: str, qualified_name: str, attributes: dict)->dict:
     prop_name = object_type.replace(" ", "")
     prop_bod = set_element_prop_body(object_type, qualified_name, attributes)
-    domain_id = attributes.get('Domain Identifier', {}).get('value', None)
-    prop_bod["domainIdentifier"] = GovernanceDomains[domain_id].value
+    domain_id = attributes.get('Domain Identifier', {}).get('value', 0)
+    resolved_domain = resolve_enum(GovernanceDomains, domain_id)
+    if resolved_domain is not None:
+        prop_bod["domainIdentifier"] = resolved_domain
+    else:
+        prop_bod["domainIdentifier"] = domain_id
     prop_bod["displayName"]= attributes.get('Display Name', {}).get('value', None)
     prop_bod['qualifiedName'] = qualified_name
     prop_bod["versionIdentifier"] = attributes.get('Version Identifier', {}).get('value', None)
@@ -403,9 +407,9 @@ def set_gov_prop_body(object_type: str, qualified_name: str, attributes: dict)->
     prop_bod["implications"] = attributes.get('Implication', {}).get('value', [])
     prop_bod["outcomes"] = attributes.get('Outcomes', {}).get('value', [])
     prop_bod["results"] = attributes.get('Results', {}).get('value', []) or []
-    prop_bod["effectiveFrom"] = attributes.get('Effective From', {}).get('value', None),
-    prop_bod["effectiveTo"] = attributes.get('Effective To', {}).get('value', None),
-    prop_bod["additionalProperties"] = attributes.get('Additional Properties', {}).get('value', None),
+    prop_bod["effectiveFrom"] = attributes.get('Effective From', {}).get('value', None)
+    prop_bod["effectiveTo"] = attributes.get('Effective To', {}).get('value', None)
+    prop_bod["additionalProperties"] = attributes.get('Additional Properties', {}).get('value', None)
     prop_bod["extendedProperties"] = attributes.get('Extended Properties', {}).get('value', None)
 
 
@@ -440,7 +444,7 @@ def update_gov_body_for_type(object_type: str, body: dict, attributes: dict) -> 
         body['namePatterns'] = attributes.get('Name Patterns', {}).get('value', [])
         return body
     elif object_type in ["TermsAndConditions", "Certification Type", "License Type"]:
-        entitlements = attributes.get('Entitlementss', {}).get('value', {}) if attributes.get('Entitlementss',None) else None
+        entitlements = attributes.get('Entitlements', {}).get('value', {}) if attributes.get('Entitlements',None) else None
         restrictions = attributes.get('Restrictions', {}).get('value', {}) if attributes.get('Restrictions',None) else None
         obligations = attributes.get('Obligations', {}).get('value', {}) if attributes.get('Obligations',None) else None
         body['entitlements'] = entitlements

@@ -30,6 +30,7 @@ An examples folder holds some useful examples showing different facets of using 
 For detailed information on using pyegeria, see:
 - [docs/user_programming.md](docs/user_programming.md): A comprehensive guide to the programming model, configuration, and client usage.
 - [docs/output-formats-and-report-specs.md](docs/output-formats-and-report-specs.md): Guidance on output formats and report specs (including nested/master–detail).
+- [md_processing/v2/README.md](md_processing/v2/README.md): Detailed documentation on the Dr. Egeria v2 (Async) markdown processing engine, including rules for attribute validation and reference resolution.
 
 ### Report specs: families and filtering
 

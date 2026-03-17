@@ -10,7 +10,7 @@ This common file is used to set some global values and enumerations used by the 
 from enum import Enum
 from typing import Any, Type
 
-def resolve_enum(enum_class: Type[Enum], value: str | int) -> int | None:
+def resolve_enum(enum_class: Type[Any], value: str | int) -> int | None:
     """
     Resolves a string or integer to its corresponding Egeria enum integer value.
     Example: resolve_enum(ContentStatus, 'Draft') -> 0
@@ -23,13 +23,18 @@ def resolve_enum(enum_class: Type[Enum], value: str | int) -> int | None:
         
     v = str(value).strip().upper()
     try:
-        # Direct name match
-        return enum_class[v].value
-    except (KeyError, ValueError):
-        # Check if it's already an integer string
+        # Normalized case-insensitive search through enum members
+        v_clean = v.replace('_', ' ').replace('-', ' ')
+        for member in enum_class:
+            m_name = member.name.upper().replace('_', ' ').replace('-', ' ')
+            if v_clean == m_name:
+                return member.value
+
+        # 3. Check if it's already an integer string
         if v.isdigit():
             return int(v)
-        # Try to match by value name if possible (some enums might have specific logic)
+        return None
+    except (KeyError, ValueError):
         return None
 
 is_debug = False

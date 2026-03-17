@@ -19,7 +19,7 @@ Milvus
 >	**Description**: A unique qualified name for the element. Generated using the qualified name pattern  if not user specified.
 
 ## URL
-[Milvus | High-Performance Vector Database Built for Scale](https://milvus.io/)- Vector Indexing & Storage & RAG
+[Milvus | High-Performance Vector Database Built for Scale](https://milvus.io/)
 
 ## Category
 >	**Input Required**: False
@@ -60,22 +60,7 @@ SoftwareServer
 >	**Alternative Labels**: Planned Deployed Impl Type
 
 DataStore
-## User Defined Status
->	**Input Required**: False
 
->	**Description**: Supporting user managed lifecycle statuses. Only used if the Initial Status is set to OTHER.
-
->	**Default Value**: DRAFT
-
-
-## Initial Status
->	**Input Required**: False
-
->	**Description**: Optional lifecycle status. If not specified, set to ACTIVE. If set to Other then the value in User Defined Status will be used.
-
->	**Valid Values**: DRAFT; PREPARED; PROPOSED; APPROVED; REJECTED; ACTIVE; DISABLED; DEPRECATED; OTHER
-
->	**Default Value**: ACTIVE
 
 
 ## In Solution Components
