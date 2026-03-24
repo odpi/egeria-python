@@ -6,8 +6,10 @@ import re
 from typing import Any, Dict, List, Optional
 from loguru import logger
 
-from pyegeria.core._globals import resolve_enum, CONTENT_STATUS, ACTIVITY_STATUS, DEPLOYMENT_STATUS, GovernanceDomains
+import pyegeria.core._globals as pyeg_globals
 from md_processing.md_processing_utils.md_processing_constants import get_command_spec, load_commands
+import md_processing.md_processing_utils.md_processing_constants as md_constants
+from md_processing.md_processing_utils.common_md_utils import normalize_value
 from .extraction import DrECommand
 from .utils import parse_key_value
 
@@ -15,9 +17,10 @@ class AttributeFirstParser:
     """
     Parses a DrECommand by mapping its raw attributes to the canonical command specification.
     """
-    def __init__(self, command: DrECommand, client: Optional[Any] = None):
+    def __init__(self, command: DrECommand, client: Optional[Any] = None, directive: str = "process"):
         self.command = command
         self.client = client
+        self.directive = directive
         self.spec = get_command_spec(f"{command.verb} {command.object_type}")
         self.parsed_attributes = {}
         self.errors = []
@@ -130,72 +133,104 @@ class AttributeFirstParser:
                     return None
             return val
             
-        elif style == "Boolean":
-            v = value.lower()
+        elif style in {"Boolean", "Bool"}:
+            v = str(value).lower()
             return v in {"true", "yes", "1", "on"}
             
         elif style == "Dictionary" or style == "KeyValue":
             return parse_key_value(value)
             
-        elif style in {"Valid Value", "Enum", "ValidValue"}:
+        elif style in {"Enum", "Enumeration"}:
             v = value
             if not v:
                 return v
+
+            enum_type_name = details.get("enum_type")
+            if not enum_type_name and details.get("name") == "Domain Identifier":
+                enum_type_name = "GovernanceDomains"
+
+            resolved_val = None
+            if enum_type_name:
+                # Look up in _globals or md_constants
+                enum_obj = getattr(pyeg_globals, enum_type_name, None)
+                if enum_obj is None:
+                    enum_obj = getattr(md_constants, enum_type_name, None)
+
+                if enum_obj is not None:
+                    if isinstance(enum_obj, type) and issubclass(enum_obj, pyeg_globals.Enum):
+                        resolved_val = pyeg_globals.resolve_enum(enum_obj, v)
+                    elif isinstance(enum_obj, (list, set, tuple)):
+                        v_norm = normalize_value(v)
+                        for item in enum_obj:
+                            if normalize_value(str(item)) == v_norm:
+                                resolved_val = item
+                                break
+
+            if resolved_val is not None:
+                return resolved_val
+
+            # Fallback to hardcoded list in spec
+            valid_values = details.get("valid_values", [])
+            v_norm = normalize_value(v)
+            for vv in valid_values:
+                if normalize_value(vv) == v_norm:
+                    return vv
+
+            # Mismatch handling
+            msg = f"Value '{v}' is not a valid enum value for '{enum_type_name or details.get('name', 'attribute')}'"
+            if self.directive == "validate":
+                self.warnings.append(msg)
+            else:
+                self.errors.append(msg)
+            return v
+
+        elif style in {"Valid Value", "ValidValue"}:
+            v = value
+            if not v:
+                return v
+
             # 1. Try dynamic lookup if client is available
             if self.client and hasattr(self.client, "get_valid_metadata_values"):
-                # Use property_name from details if available, else name
                 prop_name = details.get("property_name") or details.get("name")
                 type_name = details.get("type_name")
-                
+
                 try:
                     valid_elements = self.client.get_valid_metadata_values(prop_name, type_name)
                     if isinstance(valid_elements, list) and len(valid_elements) > 0:
-                        v_upper = v.upper()
+                        v_norm = normalize_value(v)
                         for el in valid_elements:
                             pref_val = el.get("preferredValue")
-                            if pref_val and pref_val.upper() == v_upper:
+                            disp_name = el.get("displayName")
+
+                            if (pref_val and normalize_value(pref_val) == v_norm) or \
+                               (disp_name and normalize_value(disp_name) == v_norm):
+                                data_type = el.get("dataType", "string").lower()
+                                if data_type in ["int", "integer"] and pref_val is not None:
+                                    try:
+                                        return int(pref_val)
+                                    except (ValueError, TypeError):
+                                        return pref_val
                                 return pref_val
-                        
-                        self.warnings.append(f"Value '{v}' is not a valid metadata value for '{prop_name}'")
-                        return v
+
                 except Exception as e:
                     logger.debug(f"Dynamic valid value lookup failed for {prop_name}: {e}")
 
             # 2. Fallback to hardcoded list in spec
             valid_values = details.get("valid_values", [])
-            if not valid_values:
-                # If it's styled as Enum but no valid_values, it might be an unresolved Enumeration
-                # Try to resolve it if it's potentially an enum
-                if style == "Enum" or style == "ValidValue":
-                     return self._process_attribute_value(value, {**details, "style": "Enumeration"})
-                return v
-            
-            # Case-insensitive match
-            v_upper = v.upper()
+            v_norm = normalize_value(v)
             for vv in valid_values:
-                if vv.upper() == v_upper:
+                if normalize_value(vv) == v_norm:
                     return vv
-            
-            self.warnings.append(f"Value '{v}' is not in valid values list for {details.get('name', 'attribute')}")
-            return v
 
-        elif style == "Enumeration":
-            enum_type_name = details.get("enum_type", "GovernanceDomains")
-            enum_class = {
-                "GovernanceDomains": GovernanceDomains
-            }.get(enum_type_name)
-            
-            if enum_class:
-                resolved = resolve_enum(enum_class, value)
-                if resolved is None:
-                    self.warnings.append(f"Could not resolve enum value '{value}' for {enum_type_name}")
-                    return value
-                return resolved
+            # Mismatch handling
+            msg = f"Value '{v}' is not a valid metadata value for '{details.get('name', 'attribute')}'"
+            if self.directive == "validate":
+                self.warnings.append(msg)
             else:
-                # Fallback if marked as Enumeration but no class found (maybe older spec)
-                return value
+                self.errors.append(msg)
+            return v
             
-        elif style == "List" or style == "NameList" or style == "Simple List":
+        elif style in {"List", "NameList", "Simple List", "Reference Name List"}:
             return [v.strip() for v in re.split(r'[,\n]', value) if v.strip()]
             
         return value
@@ -208,6 +243,9 @@ def parse_dr_egeria_content(text: str) -> List[Dict[str, Any]]:
     
     results = []
     for cmd in commands:
+        if not cmd.is_command:
+            continue
+            
         parser = AttributeFirstParser(cmd)
         ir = parser.parse()
         results.append({

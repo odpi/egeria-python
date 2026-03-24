@@ -19,6 +19,7 @@ from md_processing.md_processing_utils.common_md_utils import (
     get_current_datetime_string,
     split_tb_string,
     str_to_bool,
+    normalize_value,
     print_msg,
     debug_level as common_debug_level,
 )
@@ -114,13 +115,13 @@ def _render_parse_summary(summary: dict) -> None:
 
     table = Table(title="Parse Summary", show_header=True, header_style="bold")
     table.add_column("Command", overflow="fold")
-    table.add_column("Status", justify="center")
+    table.add_column("Status", justify="center", overflow="fold")
     table.add_column("Errors", overflow="fold")
     table.add_column("Warnings", overflow="fold")
-    table.add_column("Req Parsed", justify="right")
-    table.add_column("Req Missing", justify="right")
-    table.add_column("Opt Parsed", justify="right")
-    table.add_column("Opt Skipped", justify="right")
+    table.add_column("Req Parsed", justify="right", overflow="fold")
+    table.add_column("Req Missing", justify="right", overflow="fold")
+    table.add_column("Opt Parsed", justify="right", overflow="fold")
+    table.add_column("Opt Skipped", justify="right", overflow="fold")
 
     status = summary["status"]
     status_style = "green" if status == "OK" else ("yellow" if status == "WARN" else "red")
@@ -205,7 +206,7 @@ def render_command_table(parsed_output: dict, directive: str, summary_message: s
     table = Table(title=parsed_output.get("command", "Command"), show_header=True, header_style="bold")
     table.add_column("Attribute", overflow="fold")
     table.add_column("Value", overflow="fold")
-    table.add_column("Status", justify="center")
+    table.add_column("Status", justify="center", overflow="fold")
 
     for key, meta in parsed_output.get("attributes", {}).items():
         value = _format_value(meta.get("value"))
@@ -428,7 +429,7 @@ def parse_upsert_command(egeria_client: EgeriaTech, object_type: str, object_act
                     parsed_attributes[key] = proc_simple_attribute(
                         txt, object_action, labels, if_missing, default_value, extracted_attribute=attribute
                         )
-                elif style == 'Bool':
+                elif style in ['Bool','bool','boolean', 'Simple Boolean']:
                     parsed_attributes[key] = proc_bool_attribute(
                         txt, object_action, labels, if_missing, default_value, extracted_attribute=attribute
                         )
@@ -1021,9 +1022,17 @@ def proc_valid_value(txt: str, action: str, labels: set, valid_values: [], if_mi
         return {"status": if_missing, "reason": msg, "value": None, "valid": valid, "exists": False}
     else:
         # Todo: look at moving validation into pydantic or another style...
-        if "Status" in labels:
-            attribute = attribute.upper()
-        if attribute not in v_values:
+        
+        # Format-flexible match
+        attr_norm = normalize_value(attribute)
+        found_match = False
+        for vv in v_values:
+            if normalize_value(vv) == attr_norm:
+                attribute = vv
+                found_match = True
+                break
+        
+        if not found_match:
             msg = f"Invalid value for attribute `{labels}` attribute is `{attribute}`"
             _attribute_msg("WARNING", msg)
             return {"status": WARNING, "reason": msg, "value": attribute, "valid": True, "exists": True}

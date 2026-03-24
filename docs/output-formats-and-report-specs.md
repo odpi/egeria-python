@@ -44,6 +44,7 @@ pyegeria supports multiple output types. Each report spec declares which types i
 - MD: Plain Markdown (legacy simple rendering).
 - MERMAID: Mermaid graph text for supported responses.
 - HTML: HTML wrapper around Markdown (when enabled in generators).
+- TABLE: Used for generating a rich textual table for terminal display.
 
 Tip: Use DICT for APIs and automation; use LIST for dashboards/browsing; use REPORT for deep, readable details; use FORM when producing updateable forms.
 

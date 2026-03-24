@@ -16,10 +16,9 @@ from .solution_architect import (
     SupplyChainProcessor, SolutionLinkProcessor
 )
 from .project import ProjectProcessor, ProjectLinkProcessor
-from .product_manager import (
-    CollectionProcessor, ProductProcessor, 
-    AgreementProcessor, CSVElementProcessor,
-    ProductLinkProcessor
+from .collection_manager_processor import (
+    CollectionManagerProcessor, CSVElementProcessor,
+    CollectionLinkProcessor
 )
 from .governance import (
     GovernanceProcessor, GovernanceLinkProcessor,

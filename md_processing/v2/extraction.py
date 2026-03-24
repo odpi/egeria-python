@@ -21,6 +21,7 @@ class DrECommand:
     raw_block: str = ""
     start_line: int = 0
     end_line: int = 0
+    is_command: bool = True
 
 class UniversalExtractor:
     """
@@ -60,7 +61,19 @@ class UniversalExtractor:
                     attributes=attributes,
                     raw_block=block_text,
                     start_line=start_line,
-                    end_line=start_line + block_text.count('\n')
+                    end_line=start_line + block_text.count('\n'),
+                    is_command=True
+                ))
+            else:
+                # Preservation: include non-command blocks as-is
+                commands.append(DrECommand(
+                    verb="",
+                    object_type="",
+                    attributes={},
+                    raw_block=block_text,
+                    start_line=start_line,
+                    end_line=start_line + block_text.count('\n'),
+                    is_command=False
                 ))
         return commands
 

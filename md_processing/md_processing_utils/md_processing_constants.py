@@ -79,14 +79,19 @@ GOV_COM_LIST = ["Create Business Imperative", "Update Business Imperative",
 
                 ]
 
-SIMPLE_BASE_COLLECTIONS: set = {"Collection", "Home Collection", "Digital Product", "Result Set", "Recent Access",
-                                "Reference List", "Work Item List", "Data Sharing Agreement", "namespacePath", "Agreement",
-                                "Digital Subscription", "Data Product", "Subscription",
-                                "Root Collection", "Folder", "Context Event Collection", "Name Space Collection",
-                                # "Data Specifications", "Data Specifications", "Data Specs", "Data Specs",
-                                # "Data Dictionaries", "Data Dictionaries",
-                                "Event Set Collection", "Naming Standard Ruleset", "Digital Product Catalog"
-                                }
+COLLECTION_SUBTYPES = [
+    "Collection", "Root Collection", "Home Collection", "Collection Folder",
+    "Namespace", "Results Set", "Recent Access", "Work Item List", "Folio",
+    "Digital Product", "Digital Product Catalog", "Digital Product Family",
+    "Agreement", "Digital Subscription", "Data Sharing Agreement", "Data Dictionary", "Data Spec",
+    "Glossary"
+]
+
+SIMPLE_BASE_COLLECTIONS: set = set(COLLECTION_SUBTYPES) | {
+    "Reference List", "namespacePath", "Subscription", "Folder",
+    "Context Event Collection", "Name Space Collection",
+    "Event Set Collection", "Naming Standard Ruleset"
+}
 LIST_COMMANDS = {"Run Report"}
 
 SIMPLE_COLLECTIONS: set = set()
@@ -99,9 +104,11 @@ for element in SIMPLE_BASE_COLLECTIONS:
 
 COLLECTIONS_LIST = []
 
-PROJECT_COMMANDS = ["Create Project", "Update Project", "Create Campaign", "Update Campaign",
-                    "Create Task", "Update Task", "Create Study Project", "Update Study Project",
-                    "Create Personal Project", "Update Personal Project"]
+PROJECT_SUBTYPES = ["Project", "Campaign", "Task", "Study Project", "Personal Project"]
+PROJECT_COMMANDS = []
+for proj_type in PROJECT_SUBTYPES:
+    PROJECT_COMMANDS.append(f"Create {proj_type}")
+    PROJECT_COMMANDS.append(f"Update {proj_type}")
 
 LINK_EXT_REF = ["Link External Reference", "Link Referenceable->External Reference", "Attach External Reference",
                 "Detach External Reference", "Detach External Reference Link", "Link External Data Source",

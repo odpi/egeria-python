@@ -118,6 +118,7 @@ def _extract_referenceable_properties(element: dict[str, Any]) -> dict[str, Any]
 
     return {
         "GUID": guid,
+        "guid": guid,
         "metadata_collection_id": metadata_collection_id,
         "metadata_collection_name": metadata_collection_name,
         "origin_category": origin_category,
@@ -466,11 +467,11 @@ def make_md_attribute(attribute_name: str, attribute_value: str|list|dict, outpu
 
 def format_for_markdown_table(text: str, guid: str = None) -> str:
     """
-    Format text for markdown tables by replacing newlines with spaces and escaping pipe characters.
+    Format text for markdown tables by joining list items with commas, replacing newlines with spaces, and escaping pipe characters.
     No truncation is applied to allow full-length text display regardless of console width.
 
     Args:
-        text (str): The text to format
+        text (str|list): The text or list of items to format
 
     Returns:
         str: Formatted text safe for markdown tables
@@ -478,7 +479,7 @@ def format_for_markdown_table(text: str, guid: str = None) -> str:
     if text is None:
         return ""
     if isinstance(text, list):
-        text = "\n".join([str(i) for i in text])
+        text = ", ".join([str(i) for i in text])
     if not isinstance(text, str):
         text = str(text)
 
@@ -1822,6 +1823,9 @@ def generate_output(elements: Union[Dict, List[Dict]],
     Returns:
         Formatted output as string or list of dictionaries
     """
+    if extract_properties_func is None:
+        extract_properties_func = _extract_referenceable_properties
+
     if search_string is None:
         search_string = kwargs.get('filter_string')
 

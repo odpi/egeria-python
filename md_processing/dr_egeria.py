@@ -11,20 +11,22 @@ from loguru import logger
 from pydantic import ValidationError
 from rich.console import Console
 from rich.table import Table
+from rich.box import Box
+from rich.markdown import Markdown
 
 import asyncio
 from md_processing import (extract_command, process_provenance_command, get_current_datetime_string, command_list)
 from md_processing.md_processing_utils.common_md_proc_utils import set_parse_summary_mode, set_usage_level
 from md_processing.md_processing_utils.common_md_utils import set_attribute_log_level, ALL_GOVERNANCE_DEFINITIONS
-from md_processing.md_processing_utils.md_processing_constants import PROJECT_COMMANDS
+from md_processing.md_processing_utils.md_processing_constants import PROJECT_SUBTYPES, COLLECTION_SUBTYPES
 from md_processing.v1_legacy.command_mapping import setup_dispatcher
 from md_processing.v2 import (
     UniversalExtractor, v2Dispatcher, AsyncBaseCommandProcessor,
-    GlossaryProcessor, TermProcessor, TermRelationshipProcessor,
+    TermProcessor, TermRelationshipProcessor,
     DataCollectionProcessor, DataStructureProcessor, DataFieldProcessor, DataClassProcessor,
     BlueprintProcessor, ComponentProcessor, SupplyChainProcessor, SolutionLinkProcessor,
     ProjectProcessor, ProjectLinkProcessor,
-    CollectionProcessor, ProductProcessor, AgreementProcessor, CSVElementProcessor, ProductLinkProcessor,
+    CollectionManagerProcessor, CSVElementProcessor, CollectionLinkProcessor,
     GovernanceProcessor, GovernanceLinkProcessor, GovernanceContextProcessor,
     FeedbackProcessor, TagProcessor, ExternalReferenceProcessor, FeedbackLinkProcessor
 )
@@ -128,7 +130,6 @@ async def process_md_file_v2(input_file: str, output_folder: str, directive: str
             dispatcher.register(base_command, processor_cls)
 
     # Glossary
-    register_processor("Create Glossary", GlossaryProcessor)
     register_processor("Create Glossary Term", TermProcessor)
     register_processor("Link Term-Term Relationship", TermRelationshipProcessor)
 
@@ -154,27 +155,22 @@ async def process_md_file_v2(input_file: str, output_folder: str, directive: str
     register_processor("Link Project Hierarchy", ProjectLinkProcessor)
 
     # Alternate Project Commands (Campaign, Task, etc.)
-    for proj_cmd in PROJECT_COMMANDS:
-        dispatcher.register(proj_cmd, ProjectProcessor)
+    for proj_type in PROJECT_SUBTYPES:
+        register_processor(f"Create {proj_type}", ProjectProcessor)
+        register_processor(f"Update {proj_type}", ProjectProcessor)
 
-    # Product Manager
-    register_processor("Create Collection", CollectionProcessor)
-    register_processor("Update Collection", CollectionProcessor)
-    register_processor("Create Root Collection", CollectionProcessor)
-    register_processor("Update Root Collection", CollectionProcessor)
-    register_processor("Create Folder", CollectionProcessor)
-    register_processor("Update Folder", CollectionProcessor)
-    register_processor("Create Digital Product", ProductProcessor)
-    register_processor("Update Digital Product", ProductProcessor)
-    register_processor("Create Data Sharing Agreement", AgreementProcessor)
-    register_processor("Update Data Sharing Agreement", AgreementProcessor)
+    # Collection Manager
+    for coll_type in COLLECTION_SUBTYPES:
+        register_processor(f"Create {coll_type}", CollectionManagerProcessor)
+        register_processor(f"Update {coll_type}", CollectionManagerProcessor)
+
     register_processor("Create CSV Element", CSVElementProcessor)
-    register_processor("Add Member to Collection", ProductLinkProcessor)
-    register_processor("Link Agreement Item", ProductLinkProcessor)
-    register_processor("Link Product Dependency", ProductLinkProcessor)
-    register_processor("Link Product-Product", ProductLinkProcessor)
-    register_processor("Attach Collection to Resource", ProductLinkProcessor)
-    register_processor("Link Digital Subscriber", ProductLinkProcessor)
+    register_processor("Add Member to Collection", CollectionLinkProcessor)
+    register_processor("Link Agreement Item", CollectionLinkProcessor)
+    register_processor("Link Product Dependency", CollectionLinkProcessor)
+    register_processor("Link Product-Product", CollectionLinkProcessor)
+    register_processor("Attach Collection to Resource", CollectionLinkProcessor)
+    register_processor("Link Digital Subscriber", CollectionLinkProcessor)
 
     # Governance
     from md_processing.md_processing_utils.md_processing_constants import GOV_COM_LIST
@@ -218,7 +214,7 @@ async def process_md_file_v2(input_file: str, output_folder: str, directive: str
     register_processor("Update Cited Document", ExternalReferenceProcessor)
     register_processor("Link Cited Document", FeedbackLinkProcessor)
     register_processor("Detach Cited Document", FeedbackLinkProcessor)
-    
+
     context = {
         "directive": directive,
         "input_file": input_file,
@@ -233,27 +229,69 @@ async def process_md_file_v2(input_file: str, output_folder: str, directive: str
     
     # 4. Handle results and display summary
     final_output = []
-    summary_table = Table(title="Dr. Egeria v2 Processing Summary", show_header=True, header_style="bold magenta")
-    summary_table.add_column("Command", style="cyan")
-    summary_table.add_column("Status", style="bold")
-    summary_table.add_column("Found", style="green")
-    summary_table.add_column("Qualified Name", style="magenta")
-    summary_table.add_column("Message")
+    
+    # 4a. Print analysis to console (for both validate and process)
+    for res in results:
+        if res.get("analysis"):
+            console.print(f"\n[bold blue]=== Command Analysis: {res.get('verb')} {res.get('object_type')} ===[/bold blue]")
+            console.print(Markdown(res["analysis"]))
+            console.print("\n")
+    
+    # Custom box style for dotted line row separators
+    DOTTED = Box(
+        "┏━┳┓\n"
+        "┃ ┃┃\n"
+        "┡━╇┩\n"
+        "│ ││\n"
+        "├·┼┤\n"
+        "├─┼┤\n"
+        "│ ││\n"
+        "└─┴┘\n"
+    )
+
+    summary_table = Table(title="Dr. Egeria v2 Processing Summary", show_header=True, header_style="bold magenta", 
+                          show_lines=True, box=DOTTED)
+    summary_table.add_column("Command", style="cyan", overflow="fold")
+    summary_table.add_column("Status", style="bold", overflow="fold")
+    summary_table.add_column("Found", style="green", overflow="fold")
+    summary_table.add_column("Display Name", style="blue", overflow="fold")
+    summary_table.add_column("Qualified Name", style="magenta", overflow="fold")
+    summary_table.add_column("Message", min_width=36, overflow="fold")
 
     updated = False
+    prov_found = False
     for res in results:
-        final_output.append(res["output"])
+        # Handle provenance section if encountered
+        if res.get("verb") == "Provenance":
+            prov_found = True
+            final_output.append(process_provenance_command(input_file, ""))
+        else:
+            final_output.append(res["output"])
+
+        # Only add actual commands to the summary table
+        if not res.get("is_command", True):
+            continue
+
+        # Skip Provenance from summary table as it's a meta-command
+        if res.get("verb") == "Provenance":
+            continue
+
         status_color = "green" if res["status"] == "success" else "red" if res["status"] == "failure" else "yellow"
         found_str = "Yes" if res.get("found") else "No"
         summary_table.add_row(
             f"{res['verb']} {res['object_type']}",
             f"[{status_color}]{res['status'].upper()}[/{status_color}]",
             found_str,
+            res.get("display_name", ""),
             res.get("qualified_name", ""),
             res["message"]
         )
         if res["status"] == "success" and directive == "process":
             updated = True
+
+    # Add Provenance if not already present
+    if not prov_found:
+        final_output.append(process_provenance_command(input_file, ""))
 
     console.print("\n")
     console.print(summary_table)
@@ -272,7 +310,7 @@ async def process_md_file_v2(input_file: str, output_folder: str, directive: str
                     console.print(f"   [yellow]* {w}[/yellow]")
         console.print("\n")
 
-    if directive in ["validate", "display"]:
+    if directive == "display":
         from md_processing.md_processing_utils.common_md_utils import render_markdown
         title = "Validation Diagnosis Summary" if directive == "validate" else "Display Summary"
         console.print(f"[bold cyan]{title}:[/bold cyan]\n")
@@ -281,9 +319,21 @@ async def process_md_file_v2(input_file: str, output_folder: str, directive: str
                 render_markdown(res["output"])
         console.print("\n")
 
+    if directive == "validate":
+        from md_processing.md_processing_utils.common_md_utils import render_markdown
+        title = "Validation Diagnosis Summary" if directive == "validate" else "Display Summary"
+        console.print(f"[bold cyan]{title}:[/bold cyan]\n")
+        for res in results:
+            # Skip non-command blocks (intro text, etc.) in validate/display mode
+            if not res.get("is_command", True):
+                continue
+
+            if res.get("output"):
+                render_markdown(res["output"])
+        console.print("\n")
     if directive == "process" and updated:
-        # Re-assemble the file (simplified for now, using the joined outputs)
-        content_to_write = "\n---\n".join(final_output)
+        # Re-assemble the file (using joined outputs)
+        content_to_write = "\n".join(final_output)
         
         path, filename = os.path.split(input_file)
         new_filename = f"processed-{get_current_datetime_string()}-{filename}"

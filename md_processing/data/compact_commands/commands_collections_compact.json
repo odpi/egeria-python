@@ -1,6 +1,6 @@
 {
   "family": "Collections",
-  "exported": "Mar 13, 2026 at 3:41:42 PM",
+  "exported": "Mar 23, 2026 at 9:13:02 PM",
   "attribute_definitions": {
     "Activity Status": {
       "variable_name": "activity_status",
@@ -45,7 +45,7 @@
       "existing_element": "SolutionActorRole",
       "description": "Actors or Solution Roles related to this element.",
       "generated": false,
-      "style": "Reference Name List",
+      "style": "Simple List",
       "user_specified": true,
       "unique": false,
       "input_required": false,
@@ -111,6 +111,25 @@
       "level": "Domain",
       "Journal Entry": ""
     },
+    "Aliases": {
+      "variable_name": "aliases",
+      "inUpdate": true,
+      "attr_labels": "Alias",
+      "examples": "",
+      "default_value": "",
+      "valid_values": [],
+      "existing_element": "",
+      "description": "Alternative names for this  field, used in different systems or contexts.",
+      "generated": false,
+      "style": "Simple List",
+      "user_specified": true,
+      "unique": false,
+      "input_required": false,
+      "min_cardinality": 0,
+      "max_cardinality": 1,
+      "level": "Common",
+      "Journal Entry": ""
+    },
     "Anchor ID": {
       "variable_name": "anchor_id",
       "inUpdate": true,
@@ -118,8 +137,27 @@
       "examples": "",
       "default_value": "",
       "valid_values": [],
-      "existing_element": "",
+      "existing_element": "Referenceable",
       "description": "Name of the anchoring element.",
+      "generated": false,
+      "style": "Reference Name",
+      "user_specified": true,
+      "unique": false,
+      "input_required": false,
+      "min_cardinality": 0,
+      "max_cardinality": 1,
+      "level": "Advanced",
+      "Journal Entry": ""
+    },
+    "Anchor Scope ID": {
+      "variable_name": "anchor_scope_id",
+      "inUpdate": true,
+      "attr_labels": "Anchor Scope",
+      "examples": "",
+      "default_value": "",
+      "valid_values": [],
+      "existing_element": "",
+      "description": "Anchor scope to restrict search.",
       "generated": false,
       "style": "Reference Name",
       "user_specified": true,
@@ -175,7 +213,7 @@
       "examples": "",
       "default_value": "",
       "valid_values": [],
-      "existing_element": "Referenceable",
+      "existing_element": "Collection",
       "description": "The unique identifier (qualified name or GUID) of the collection.",
       "generated": false,
       "style": "Reference Name",
@@ -206,6 +244,59 @@
       "level": "Advanced",
       "Journal Entry": ""
     },
+    "Confidence Classification": {
+      "variable_name": "confidence_classification",
+      "inUpdate": true,
+      "attr_labels": "",
+      "examples": "",
+      "default_value": "",
+      "valid_values": [
+        "UNCLASSIFIED",
+        "AD_HOC",
+        "TRANSACTIONAL",
+        "AUTHORITATIVE",
+        "DERIVED",
+        "OBSOLETE",
+        "OTHER"
+      ],
+      "existing_element": "",
+      "description": "Classification from 0422. Structure: {status_identifier: int, confidence: int, steward: str, steward_type_name: str, steward_property_name: str, source: str, notes: str, level_identifier: int}. level_identifier uses ConfidenceLevel enum: UNCLASSIFIED=0, AD_HOC=1, TRANSACTIONAL=2, AUTHORITATIVE=3, DERIVED=4, OBSOLETE=5, OTHER=99.",
+      "generated": false,
+      "style": "Valid Value",
+      "user_specified": true,
+      "unique": false,
+      "input_required": false,
+      "min_cardinality": 1,
+      "max_cardinality": 1,
+      "level": "Advanced",
+      "Journal Entry": ""
+    },
+    "Confidentiality Classification": {
+      "variable_name": "confidentiality_classification",
+      "inUpdate": true,
+      "attr_labels": "",
+      "examples": "",
+      "default_value": "",
+      "valid_values": [
+        "UNCLASSIFIED",
+        "INTERNAL",
+        "CONFIDENTIAL",
+        "SENSITIVE",
+        "RESTRICTED",
+        "OTHER"
+      ],
+      "existing_element": "",
+      "description": "Classification from 0422. Structure: {status_identifier: int, confidence: int, steward: str, steward_type_name: str, steward_property_name: str, source: str, notes: str, level_identifier: int}. level_identifier uses ConfidentialityLevel enum: UNCLASSIFIED=0, INTERNAL=1, CONFIDENTIAL=2, SENSITIVE=3, RESTRICTED=4, OTHER=99.",
+      "generated": false,
+      "style": "Valid Value",
+      "user_specified": true,
+      "unique": false,
+      "input_required": false,
+      "min_cardinality": 1,
+      "max_cardinality": 1,
+      "level": "Advanced",
+      "Journal Entry": ""
+    },
     "Content Status": {
       "variable_name": "content_status",
       "inUpdate": true,
@@ -232,6 +323,32 @@
       "min_cardinality": 1,
       "max_cardinality": 1,
       "level": "Common",
+      "Journal Entry": ""
+    },
+    "Criticality Classification": {
+      "variable_name": "criticality_classification",
+      "inUpdate": true,
+      "attr_labels": "",
+      "examples": "",
+      "default_value": "",
+      "valid_values": [
+        "UNCLASSIFIED",
+        "MARGINAL",
+        "IMPORTANT",
+        "CRITICAL",
+        "CATASTROPHIC",
+        "OTHER"
+      ],
+      "existing_element": "",
+      "description": "Classification from 0422. Structure: {status_identifier: int, confidence: int, steward: str, steward_type_name: str, steward_property_name: str, source: str, notes: str, level_identifier: int}. level_identifier uses CriticalityLevel enum: UNCLASSIFIED=0, MARGINAL=1, IMPORTANT=2, CRITICAL=3, CATASTROPHIC=4, OTHER=99.",
+      "generated": false,
+      "style": "Valid Value",
+      "user_specified": true,
+      "unique": false,
+      "input_required": false,
+      "min_cardinality": 1,
+      "max_cardinality": 1,
+      "level": "Advanced",
       "Journal Entry": ""
     },
     "Description": {
@@ -336,7 +453,7 @@
       "examples": "",
       "default_value": "",
       "valid_values": [],
-      "existing_element": "",
+      "existing_element": "Referenceable",
       "description": "The unique identifier (qualified name or GUID) of the element being referenced.",
       "generated": false,
       "style": "Reference Name",
@@ -346,6 +463,25 @@
       "min_cardinality": 1,
       "max_cardinality": 1,
       "level": "Domain",
+      "Journal Entry": ""
+    },
+    "Entitlements": {
+      "variable_name": "entitlements",
+      "inUpdate": true,
+      "attr_labels": "",
+      "examples": "Allowed to use within the organization.",
+      "default_value": "",
+      "valid_values": [],
+      "existing_element": "",
+      "description": "A dictionary of property:value pairs describing entitlements.",
+      "generated": false,
+      "style": "Dictionary",
+      "user_specified": true,
+      "unique": false,
+      "input_required": false,
+      "min_cardinality": 0,
+      "max_cardinality": 1,
+      "level": "Common",
       "Journal Entry": ""
     },
     "Expression": {
@@ -364,7 +500,7 @@
       "input_required": false,
       "min_cardinality": 0,
       "max_cardinality": 1,
-      "level": "Domain",
+      "level": "Advanced",
       "Journal Entry": ""
     },
     "Extended Properties": {
@@ -484,7 +620,7 @@
     "GUID": {
       "variable_name": "guid",
       "inUpdate": true,
-      "attr_labels": "",
+      "attr_labels": "guid; Guid",
       "examples": "",
       "default_value": "",
       "valid_values": [],
@@ -516,7 +652,32 @@
       "input_required": false,
       "min_cardinality": 1,
       "max_cardinality": 1,
-      "level": "Basic",
+      "level": "Advanced",
+      "Journal Entry": ""
+    },
+    "Impact Classification": {
+      "variable_name": "impact_classification",
+      "inUpdate": true,
+      "attr_labels": "",
+      "examples": "",
+      "default_value": "",
+      "valid_values": [
+        "UNCLASSIFIED",
+        "LOW",
+        "MEDIUM",
+        "HIGH",
+        "OTHER"
+      ],
+      "existing_element": "",
+      "description": "Classification from 0422. Structure: {status_identifier: int, confidence: int, steward: str, steward_type_name: str, steward_property_name: str, source: str, notes: str, severity_identifier: int}. severity_identifier uses ImpactSeverity enum: UNCLASSIFIED=0, LOW=1, MEDIUM=2, HIGH=3, OTHER=99.",
+      "generated": false,
+      "style": "Valid Value",
+      "user_specified": true,
+      "unique": false,
+      "input_required": false,
+      "min_cardinality": 1,
+      "max_cardinality": 1,
+      "level": "Advanced",
       "Journal Entry": ""
     },
     "Is Own Anchor": {
@@ -579,7 +740,7 @@
     "Merge Update": {
       "variable_name": "merge_update",
       "inUpdate": true,
-      "attr_labels": "",
+      "attr_labels": "isMergeUpdate",
       "examples": "",
       "default_value": "true",
       "valid_values": [],
@@ -614,25 +775,6 @@
       "level": "Advanced",
       "Journal Entry": ""
     },
-    "Namespace Path": {
-      "variable_name": "namespace_path",
-      "inUpdate": true,
-      "attr_labels": "",
-      "examples": "",
-      "default_value": "",
-      "valid_values": [],
-      "existing_element": "",
-      "description": "The namespace path that qualifies the element's name within a larger naming hierarchy.",
-      "generated": false,
-      "style": "Simple String",
-      "user_specified": true,
-      "unique": false,
-      "input_required": false,
-      "min_cardinality": 0,
-      "max_cardinality": 1,
-      "level": "Domain",
-      "Journal Entry": ""
-    },
     "Notes": {
       "variable_name": "notes",
       "inUpdate": true,
@@ -652,6 +794,25 @@
       "level": "Domain",
       "Journal Entry": ""
     },
+    "Obligations": {
+      "variable_name": "obligations",
+      "inUpdate": true,
+      "attr_labels": "",
+      "examples": "required to report on usage",
+      "default_value": "",
+      "valid_values": [],
+      "existing_element": "",
+      "description": "A dictionary of property:value pairs describing obligations.",
+      "generated": false,
+      "style": "Dictionary",
+      "user_specified": true,
+      "unique": false,
+      "input_required": false,
+      "min_cardinality": 0,
+      "max_cardinality": 1,
+      "level": "Domain",
+      "Journal Entry": ""
+    },
     "Parent at End1": {
       "variable_name": "parent_at_end1",
       "inUpdate": true,
@@ -662,7 +823,7 @@
       "existing_element": "",
       "description": "A flag indicating if the parent is at end1 of the relationship",
       "generated": false,
-      "style": "bool",
+      "style": "Bool",
       "user_specified": true,
       "unique": false,
       "input_required": false,
@@ -678,7 +839,7 @@
       "examples": "",
       "default_value": "",
       "valid_values": [],
-      "existing_element": "",
+      "existing_element": "Referenceable",
       "description": "Name of the parent",
       "generated": false,
       "style": "Reference Name",
@@ -728,6 +889,44 @@
       "level": "Advanced",
       "Journal Entry": ""
     },
+    "Prime Word Classification": {
+      "variable_name": "prime_word_classification",
+      "inUpdate": true,
+      "attr_labels": "",
+      "examples": "",
+      "default_value": "False",
+      "valid_values": [],
+      "existing_element": "",
+      "description": "Classification from 0438. Applied to Referenceable. Marker classification (no attributes) indicating the element is a prime word in a naming standard.",
+      "generated": false,
+      "style": "Bool",
+      "user_specified": true,
+      "unique": false,
+      "input_required": false,
+      "min_cardinality": 1,
+      "max_cardinality": 1,
+      "level": "Advanced",
+      "Journal Entry": ""
+    },
+    "Purpose": {
+      "variable_name": "purpose",
+      "inUpdate": true,
+      "attr_labels": "",
+      "examples": "",
+      "default_value": "",
+      "valid_values": [],
+      "existing_element": "",
+      "description": "The purpose of this collection — a short description of why it exists or what it is used for.",
+      "generated": false,
+      "style": "Simple",
+      "user_specified": true,
+      "unique": false,
+      "input_required": false,
+      "min_cardinality": 1,
+      "max_cardinality": 1,
+      "level": "Common",
+      "Journal Entry": ""
+    },
     "Purposes": {
       "variable_name": "purposes",
       "inUpdate": true,
@@ -736,7 +935,7 @@
       "default_value": "",
       "valid_values": [],
       "existing_element": "",
-      "description": "A list of project purposes.",
+      "description": "A list of purposes for this project (array&lt;string&gt;). Note: distinct from Collection.purpose (string, singular) which is a separate attribute on Collection Base.",
       "generated": false,
       "style": "Simple List",
       "user_specified": true,
@@ -744,7 +943,7 @@
       "input_required": false,
       "min_cardinality": 0,
       "max_cardinality": 1,
-      "level": "Domain",
+      "level": "Common",
       "Journal Entry": ""
     },
     "Qualified Name": {
@@ -811,7 +1010,7 @@
       "examples": "",
       "default_value": "",
       "valid_values": [],
-      "existing_element": "",
+      "existing_element": "Referenceable",
       "description": "The unique identifier (qualified name or GUID) of the supporting resource in a ResourceList relationship.",
       "generated": false,
       "style": "Reference Name",
@@ -859,6 +1058,72 @@
       "min_cardinality": 1,
       "max_cardinality": 1,
       "level": "Domain",
+      "Journal Entry": ""
+    },
+    "Restrictions": {
+      "variable_name": "restrictions",
+      "inUpdate": true,
+      "attr_labels": "",
+      "examples": "forbidden to resell ",
+      "default_value": "",
+      "valid_values": [],
+      "existing_element": "",
+      "description": "A dictionary of property:value pairs describing restrictions.",
+      "generated": false,
+      "style": "Dictionary",
+      "user_specified": true,
+      "unique": false,
+      "input_required": false,
+      "min_cardinality": 0,
+      "max_cardinality": 1,
+      "level": "Common",
+      "Journal Entry": ""
+    },
+    "Retention Classification": {
+      "variable_name": "retention_classification",
+      "inUpdate": true,
+      "attr_labels": "",
+      "examples": "",
+      "default_value": "",
+      "valid_values": [
+        "UNCLASSIFIED",
+        "TEMPORARY",
+        "PROJECT_LIFETIME",
+        "TEAM_LIFETIME",
+        "CONTRACT_LIFETIME",
+        "REGULATED_LIFETIME",
+        "TIMEBOXED_LIFETIME",
+        "OTHER"
+      ],
+      "existing_element": "",
+      "description": "Classification from 0422. Structure: {status_identifier: int, confidence: int, steward: str, steward_type_name: str, steward_property_name: str, source: str, notes: str, basis_identifier: int, associated_guid: str, archive_after: date, delete_after: date}. basis_identifier uses RetentionBasis enum: UNCLASSIFIED=0, TEMPORARY=1, PROJECT_LIFETIME=2, TEAM_LIFETIME=3, CONTRACT_LIFETIME=4, REGULATED_LIFETIME=5, TIMEBOXED_LIFETIME=6, OTHER=99.",
+      "generated": false,
+      "style": "Valid Value",
+      "user_specified": true,
+      "unique": false,
+      "input_required": false,
+      "min_cardinality": 1,
+      "max_cardinality": 1,
+      "level": "Advanced",
+      "Journal Entry": ""
+    },
+    "Scope": {
+      "variable_name": "scope",
+      "inUpdate": true,
+      "attr_labels": "",
+      "examples": "",
+      "default_value": "",
+      "valid_values": [],
+      "existing_element": "",
+      "description": "Scope of the definition or element.",
+      "generated": false,
+      "style": "Simple",
+      "user_specified": true,
+      "unique": false,
+      "input_required": false,
+      "min_cardinality": 0,
+      "max_cardinality": 1,
+      "level": "Common",
       "Journal Entry": ""
     },
     "Search Keywords": {
@@ -915,7 +1180,7 @@
       "input_required": false,
       "min_cardinality": 1,
       "max_cardinality": 1,
-      "level": "Domain",
+      "level": "Advanced",
       "Journal Entry": ""
     },
     "Start Date": {
@@ -952,6 +1217,33 @@
       "unique": false,
       "input_required": false,
       "min_cardinality": 1,
+      "max_cardinality": 1,
+      "level": "Advanced",
+      "Journal Entry": ""
+    },
+    "Status Identifier": {
+      "variable_name": "status_identifier",
+      "inUpdate": true,
+      "attr_labels": "",
+      "examples": "",
+      "default_value": "",
+      "valid_values": [
+        "IMPORTED",
+        "PROPOSED",
+        "OTHER",
+        "DEPRECATED",
+        "OBSOLETE",
+        "VALIDATED",
+        "DISCOVERED"
+      ],
+      "existing_element": "",
+      "description": "Status of a classification assignment.",
+      "generated": false,
+      "style": "Valid Value",
+      "user_specified": true,
+      "unique": false,
+      "input_required": false,
+      "min_cardinality": 0,
       "max_cardinality": 1,
       "level": "Advanced",
       "Journal Entry": ""
@@ -1068,6 +1360,25 @@
       "min_cardinality": 0,
       "max_cardinality": 1,
       "level": "Domain",
+      "Journal Entry": ""
+    },
+    "Usage Measurements": {
+      "variable_name": "usage_measurements",
+      "inUpdate": true,
+      "attr_labels": "",
+      "examples": "",
+      "default_value": "",
+      "valid_values": [],
+      "existing_element": "",
+      "description": "A dictionary of property:value pairs describing usage measurements.",
+      "generated": false,
+      "style": "Dictionary",
+      "user_specified": true,
+      "unique": false,
+      "input_required": false,
+      "min_cardinality": 0,
+      "max_cardinality": 1,
+      "level": "Common",
       "Journal Entry": ""
     },
     "User Defined Content Status": {
@@ -1265,6 +1576,7 @@
       "inherits": "Request Base",
       "own_attributes": [
         "Anchor ID",
+        "Anchor Scope ID",
         "Glossary Term",
         "Is Own Anchor",
         "Merge Update",
@@ -1283,6 +1595,12 @@
         "Entitlements",
         "Obligations",
         "Restrictions"
+      ]
+    },
+    "Collection Base": {
+      "inherits": "Authored Referenceable",
+      "own_attributes": [
+        "Purpose"
       ]
     },
     "Resource List": {
@@ -1312,12 +1630,8 @@
         "Source"
       ]
     },
-    "Collection Base": {
-      "inherits": "Authored Referenceable",
-      "own_attributes": []
-    },
     "Collection Membership": {
-      "inherits": "Link Command Base",
+      "inherits": null,
       "own_attributes": [
         "Confidence",
         "Expression",
@@ -1325,6 +1639,9 @@
         "Membership Status",
         "Notes",
         "Source",
+        "Steward",
+        "Steward Property Name",
+        "Steward Type Name",
         "User Defined Status"
       ]
     }
@@ -1409,7 +1726,7 @@
       "extra_constraints": "",
       "bundle": "Collection Base",
       "custom_attributes": [],
-      "Journal Entry": ""
+      "Journal Entry": "If the collection folder  is in another collection, the Parent Relationship Type Name is CollectionMembership."
     },
     "Create Namespace": {
       "display_name": "Namespace",
