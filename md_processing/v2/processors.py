@@ -249,16 +249,16 @@ class AsyncBaseCommandProcessor(ABC):
                     else:
                         # If it's a candidate ref and we couldn't resolve it, mark as not found
                         attr_data["exists"] = False
-                        attr_data["valid"] = True # Treat as valid to avoid blocking; let Egeria validate
+                        attr_data["valid"] = False # Treat as invalid to block execution
                         msg = f"Referenced element '{val}' for attribute '{attr_name}' not found."
-                        if attr_data.get("warnings") is None: attr_data["warnings"] = []
-                        attr_data["warnings"].append(msg)
+                        if attr_data.get("errors") is None: attr_data["errors"] = []
+                        attr_data["errors"].append(msg)
                         
-                        # Always treat as warning, never as error, per user requirement to continue
-                        logger.warning(msg)
-                        if "warnings" not in self.parsed_output:
-                            self.parsed_output["warnings"] = []
-                        self.parsed_output.get("warnings", []).append(msg)
+                        logger.error(msg)
+                        if "errors" not in self.parsed_output:
+                            self.parsed_output["errors"] = []
+                        self.parsed_output.get("errors", []).append(msg)
+
 
         # 7. Check for existence of the target element (As-Is state)
         if self.as_is_element:
@@ -566,26 +566,7 @@ class AsyncBaseCommandProcessor(ABC):
             except Exception as e:
                 logger.debug(f"__async_get_guid__ failed: {e}")
 
-            # 4c. Try find_method search from spec
-            spec = self.get_command_spec()
-            find_method_name = spec.get("find_method")
-            if find_method_name:
-                try:
-                    method_parts = find_method_name.split('.')
-                    mgr_method = method_parts[-1]
-                    method = getattr(self.client, f"_async_{mgr_method}", None)
-                    if method:
-                        parts = name_or_guid.split("::")
-                        basis = parts[-2] if len(parts) >= 4 else parts[-1]
-                        results = await method(basis or name_or_guid)
-                        if isinstance(results, list) and len(results) > 0:
-                            for res in results:
-                                qn = (res.get("elementHeader", {}).get("qualifiedName") or 
-                                      res.get("properties", {}).get("qualifiedName"))
-                                if qn == name_or_guid:
-                                    return res.get("guid") or res.get("elementHeader", {}).get("guid")
-                except Exception:
-                    pass
+
 
         except Exception as e:
             logger.debug(f"resolve_element_guid: Unexpected error resolving '{name_or_guid}': {e}")
@@ -647,6 +628,14 @@ class AsyncBaseCommandProcessor(ABC):
     async def apply_changes(self) -> str:
         """Apply side-effects to Egeria. Returns the updated markdown."""
         pass
+
+    async def analyze_relationships(self) -> List[Dict[str, Any]]:
+        """
+        Analyze what relationships would be created/deleted.
+        Subclasses should override this to return a list of dictionaries with info.
+        E.g. [{'type': 'Collection Membership', 'added': [...], 'removed': [...]}]
+        """
+        return []
 
     async def display_only(self) -> str:
         """
@@ -734,6 +723,28 @@ class AsyncBaseCommandProcessor(ABC):
         if expanded:
             report.append("\n#### Rendered Attribute Details\n")
             report.extend(expanded)
+            
+        # Add Relationship Analysis
+        rel_analysis = await self.analyze_relationships()
+        if rel_analysis:
+            report.append("\n#### 🔗 Relationship Changes")
+            for rel in rel_analysis:
+                rel_type = rel.get('type', 'Relationship')
+                added = rel.get('added', [])
+                removed = rel.get('removed', [])
+                unchanged = rel.get('unchanged', [])
+                
+                if not added and not removed:
+                    report.append(f"- **{rel_type}**: No changes.")
+                else:
+                    report.append(f"- **{rel_type}**:")
+                    if added:
+                        report.append(f"  - 🟢 **Adding**: {', '.join(added)}")
+                    if removed:
+                        report.append(f"  - 🔴 **Removing**: {', '.join(removed)}")
+                    if unchanged:
+                        report.append(f"  - ⚪ **Unchanged**: {', '.join(unchanged)}")
+
             
         if errors:
             report.append("\n#### ❌ Errors")

@@ -152,56 +152,45 @@ from the previous process step.
 
 ___  
 
-# Update Term
 
-## Display Name
+# Update Glossary Term
+
+## Glossary Term Name 
 
 Command
 
-## Summary
-
-Commands are how a user of the Dr.Egeria markdown language requests an action.2
-
-## Glossary Name
-
-Egeria-Markdown
-
-## Collection Folders
-
-Processing Dr.Egeria Markdown
-
-## Status
-
-ACTIVE
+## Display Name
+Command
 
 ## Description
-
 Commands are how a user can request Egeria to take an action such as Create or Update an Egeria element. Freddie
 provides
-a limited (but growing) set of commands. Dr.Egeria commands align with the pyegeria 'hey-egeria' command line interface.
+a limited (but growing) set of commands. Dr.Egeria commands align with the pyegeria ''hey-egeria'' command line interface.
 
-## Examples
+## Qualified Name
+myLocal::Glossary Term::Command::0.2
 
-Create Glossary or
-Update Glossary or
-Create Term or
-Update Term
+## GUID
+3face2ec-6836-4517-9d1d-bbf4ca5a3805
 
-## Usage
+## Status
+ACTIVE
 
-Commands are used in the Dr.Egeria markdown language.
+## Search Keywords
+
+
+## Identifier
+
+
+## URL
+None
 
 ## Version Identifier
 
-## Merge Update
 
-False
+## Authors
 
-0.2
 
-## Qualified Name
-
-myLocal::Glossary Term::Command::0.2
 
 ___
 
@@ -363,3 +352,9 @@ ___
 If you now look at the processed document that was created, you can see the results of the commands that we have run.
 
 In part 3, we will add more categories and terms to the glossary and create a simple category hierarchy. See you there!
+
+
+
+# Provenance:
+ 
+* Derived from processing file dr_egeria_intro_part2.md on 2026-03-24 13:26

@@ -207,7 +207,9 @@ class TermProcessor(AsyncBaseCommandProcessor):
 
     async def _sync_term_memberships(self, term_guid: str, to_be_guids: List[str], replace_all: bool):
         """Standardized helper for term collection sync."""
-        current_collections = await self.client._async_get_attached_collections(term_guid)
+        current_collections = await self.client._async_get_related_elements(
+            term_guid, relationship_type="CollectionMembership", start_at_end=2
+        )
         as_is_guids = {c['elementHeader']['guid'] for c in current_collections} if current_collections and not isinstance(current_collections, str) else set()
         
         # Build map of GUID to name for current collections for better feedback
@@ -224,7 +226,12 @@ class TermProcessor(AsyncBaseCommandProcessor):
             await self.client._async_add_to_collection(collection_guid, term_guid)
             
         async def remove_fn(collection_guid):
-            await self.client._async_remove_from_collection(collection_guid, term_guid)
+            body = {
+                "class": "DeleteRelationshipRequestBody",
+                "forLineage": False,
+                "forDuplicateProcessing": False
+            }
+            await self.client._async_remove_from_collection(collection_guid, term_guid, body=body)
             
         sync_res = await self.sync_members(as_is_guids, to_be_set, add_fn, remove_fn, replace_all)
         
@@ -246,6 +253,64 @@ class TermProcessor(AsyncBaseCommandProcessor):
             
         if sync_res.get("errors"):
             self.add_related_result("Collection Memberships Sync", status="failure", message="; ".join(sync_res["errors"]))
+
+    async def analyze_relationships(self) -> List[Dict[str, Any]]:
+        results = []
+        if self.command.verb not in ["Create", "Update"]:
+            return results
+            
+        attributes = self.parsed_output.get("attributes", {})
+        
+        glossary_guids = attributes.get("Glossary Name", {}).get("guid_list", [])
+        if not glossary_guids and attributes.get("Glossary Name", {}).get("guid"):
+            glossary_guids = [attributes["Glossary Name"]["guid"]]
+            
+        folder_guids = attributes.get("Folders", {}).get("guid_list", [])
+        if not folder_guids and attributes.get("Folders", {}).get("guid"):
+            folder_guids = [attributes["Folders"]["guid"]]
+            
+        to_be_guids = list(set(glossary_guids) | set(folder_guids))
+        to_be_guids = [g for g in to_be_guids if g]
+        
+        merge_update = attributes.get('Merge Update', {}).get('value', True)
+        if self.command.verb == "Create":
+            merge_update = False
+            
+        guid = self.parsed_output.get("guid") or (self.as_is_element['elementHeader']['guid'] if getattr(self, 'as_is_element', None) else None)
+        
+        as_is_guids = set()
+        guid_to_name = {}
+        
+        if guid:
+            try:
+                current_collections = await self.client._async_get_related_elements(
+                    guid, relationship_type="CollectionMembership", start_at_end=2
+                )
+                if current_collections and not isinstance(current_collections, str):
+                    for c in current_collections:
+                        c_guid = c['elementHeader']['guid']
+                        as_is_guids.add(c_guid)
+                        name = c.get('properties', {}).get('displayName') or c.get('properties', {}).get('qualifiedName') or c_guid
+                        guid_to_name[c_guid] = name
+            except Exception:
+                pass
+                
+        to_be_set = set(to_be_guids)
+        replace_all = not merge_update
+        
+        to_add_guids = to_be_set - as_is_guids
+        to_remove_guids = (as_is_guids - to_be_set) if replace_all else set()
+        unchanged_guids = as_is_guids.intersection(to_be_set)
+        
+        if to_be_set or as_is_guids:
+            results.append({
+                "type": "Collection Folder & Glossary Memberships",
+                "added": list(to_add_guids),
+                "removed": [guid_to_name.get(g, g) for g in to_remove_guids],
+                "unchanged": [guid_to_name.get(g, g) for g in unchanged_guids]
+            })
+            
+        return results
 
 class TermRelationshipProcessor(AsyncBaseCommandProcessor):
     """
