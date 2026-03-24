@@ -64,7 +64,7 @@ def load_archive(file_name, server_name, view_server, url, userid, password, tim
     try:
         s_client = EgeriaTech(view_server, url, userid, password)
         token = s_client.create_egeria_bearer_token()
-        server_guid = s_client.__get_guid__(display_name = server_name, property_name = "resourceName", tech_type = "MetadataStore")
+        server_guid = s_client.__get_guid__(display_name = server_name, property_name = "additionalProperties", tech_type = "MetadataStore")
         file_name = file_name.strip()
         if server_guid == "No elements found":
             raise click.ClickException("Didn't find the metadata store")

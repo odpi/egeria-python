@@ -1075,8 +1075,8 @@ base_report_specs = FormatSetDict({
                     Column(name="Catalog Template Name", key="template_display_name"),
                     Column(name="Catalog Template GUID", key="template_guid"),
                     Column(name="Description", key="template_description"),
-                    Column(name="Target Asset Name", key="target_display_name"),
-                    Column(name="Target Qualified Name", key="target_qualified_name"),
+                    # Column(name="Target Asset Name", key="target_display_name"),
+                    # Column(name="Target Qualified Name", key="target_qualified_name"),
                     Column(name="Placeholder Properties", key="placeHolderProperty", detail_spec="Place-Holder-Property-Detail"),
                 ],
             )
