@@ -81,12 +81,12 @@ def _running_in_pycharm_debugger() -> bool:
     return sys.gettrace() is not None or os.environ.get("PYCHARM_HOSTED") is not None
 
 if __name__ == "__main__":
-    if _running_in_pycharm_debugger():
-        input_file = Prompt.ask("Markdown File name to process:", default="dr_egeria_intro_part1.md")
-        directive = Prompt.ask("How to process the file?", default="validate")
-        usage_level = Prompt.ask("Usage level (basic, advanced):", default="basic")
-        process_markdown_file.callback(input_file, "", directive,
-                              EGERIA_VIEW_SERVER, EGERIA_VIEW_SERVER_URL, EGERIA_USER,
-                        EGERIA_USER_PASSWORD, parse_summary="all", attribute_logs="debug", usage_level=usage_level)
-    else:
-        process_markdown_file()
+    # if _running_in_pycharm_debugger():
+    input_file = Prompt.ask("Markdown File name to process:", default="dr_egeria_intro_part1.md")
+    directive = Prompt.ask("How to process the file?", default="validate")
+    usage_level = Prompt.ask("Usage level (basic, advanced):", default="basic")
+    process_markdown_file.callback(input_file, "", directive,
+                            EGERIA_VIEW_SERVER, EGERIA_VIEW_SERVER_URL, EGERIA_USER,
+                    EGERIA_USER_PASSWORD, parse_summary="all", attribute_logs="debug", usage_level=usage_level)
+    # else:
+    #     process_markdown_file()
