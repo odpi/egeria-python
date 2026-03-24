@@ -247,13 +247,14 @@ def delete_term(server, url, userid, password, timeout, term_guid):
     token = m_client.create_egeria_bearer_token()
     try:
         term_guid = term_guid.strip()
-        term_info = m_client.get_terms_by_guid(term_guid)
+        term_info = m_client.get_term_by_guid(term_guid)
 
         m_client.delete_term(term_guid)
 
         click.echo(
-            f"Deleted term with GUID: {term_guid} and Display Name: {term_info['glossaryTermProperties']['displayName']}"
+            f"Deleted term with GUID: {term_guid} and Display Name: {term_info['properties']['displayName']}"
         )
+
 
     except (PyegeriaAPIException, PyegeriaClientException) as e:
         print_basic_exception(e)

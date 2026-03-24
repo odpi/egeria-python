@@ -44,11 +44,36 @@ class TestValidMetadataLists:
             vml_client.create_egeria_bearer_token(self.good_user_2, USER_PWD)
             
             try:
-                property_name = "domainIdentifier"
+                property_name = "contentStatus"
                 response = vml_client.get_valid_metadata_values(property_name=property_name)
                 if isinstance(response, (list, dict)):
                     console.print(f"Received {len(response)} valid metadata values for property {property_name}\n\n")
                     console.print(json.dumps(response, indent=2))
+                assert response is not None
+
+            except (PyegeriaInvalidParameterException, PyegeriaNotFoundException, PyegeriaAPIException):
+                pass
+
+        except PyegeriaConnectionException:
+            print("Skipping test due to connection error")
+        finally:
+            vml_client.close_session()
+
+    def test_get_valid_metadata_values_list(self):
+        """Test getting valid metadata values"""
+        vml_client = ValidMetadataLists(self.good_view_server_1, self.good_platform1_url, user_id=self.good_user_2)
+        try:
+            vml_client.create_egeria_bearer_token(self.good_user_2, USER_PWD)
+
+            try:
+                property_name = "confidenceLevel"
+                response = vml_client.get_valid_metadata_values(property_name=property_name)
+                if isinstance(response, (list, dict)):
+                    console.print(f"Received {len(response)} valid metadata values for property {property_name}\n\n")
+                    preferred_values_str = "; ".join(item["preferredValue"] for item in response)
+                    console.print(preferred_values_str)
+                else:
+                    print(f"Didn't find values for property {property_name}")
                 assert response is not None
 
             except (PyegeriaInvalidParameterException, PyegeriaNotFoundException, PyegeriaAPIException):

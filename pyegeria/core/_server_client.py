@@ -258,7 +258,7 @@ class ServerClient(BaseServerClient):
                 name = f"{tech_type}::{display_name}"
                 body = {
                     "class": "NameRequestBody",
-                    "displayName": name,
+                    "name": name,
                     "namePropertyName": property_name,
                     "forLineage": False,
                     "forDuplicateProcessing": False,
@@ -275,7 +275,7 @@ class ServerClient(BaseServerClient):
                 body = {
                     # "class": "NameRequestBody",
                     "class": "UniqueNameRequestBody",
-                    "name": display_name,
+                    "displayName": display_name,
                     "namePropertyName": property_name,
                     "forLineage": False,
                     "forDuplicateProcessing": False,

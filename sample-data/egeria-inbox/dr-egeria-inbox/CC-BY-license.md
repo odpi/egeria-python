@@ -36,13 +36,6 @@ Open Licenses
 >	Default Value: 0
 ALL
 
-## Document Identifier
->	Input Required: False
-
->	Description: A user supplied identifier for the governance document.
-
->	Alternative Labels: Doc Id
-
 
 ## Version Identifier
 >	Input Required: False
@@ -96,7 +89,7 @@ Simple and free use of licensed IP.
 
 
 
-## Status
+## Content Status
 >	Input Required: False
 
 >	Description: The status of the license type definition. There is a list of valid values that this conforms to.

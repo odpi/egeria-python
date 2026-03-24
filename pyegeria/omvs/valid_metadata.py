@@ -1356,9 +1356,10 @@ class ValidMetadataManager(ServerClient):
 
         url = (
             f"{self.platform_url}/servers/{self.view_server}{self.valid_m_command_base}/get-valid-metadata-values/{property_name}"
-            f"?typeName={type_name}&startFrom={start_from}&pageSize={page_size}"
+            f"?startFrom={start_from}&pageSize={page_size}"
         )
-
+        if type_name:
+            url += f"&typeName={type_name}"
         resp = await self._async_make_request("GET", url)
         elements = resp.json().get("elements", NO_ELEMENTS_FOUND)
         if elements == NO_ELEMENTS_FOUND or elements is None or elements == []:

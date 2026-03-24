@@ -1,70 +1,84 @@
 # Create Solution Component
 > Creates or updates a reusable solution component — a building block of a solution blueprint or information supply chain.
 
-# Required
-
 ## Display Name
 >	**Input Required**: True
+
+>	**Attribute Type**: Simple
 
 >	**Description**: The common name of an element.
 
 >	**Alternative Labels**: "Term Name"
 
 
-# Create Solution Component Properties
-
-## Solution Component Type
+## Actors
 >	**Input Required**: False
 
->	**Description**: Type of solution component.
+>	**Attribute Type**: Reference Name List
 
-
-## Planned Deployed Implementation Type
->	**Input Required**: False
-
->	**Description**: The planned implementation type for deployment.
-
-
-## Solution SubComponents
->	**Input Required**: False
-
->	**Description**: Solution sub-components of this component. In current approach the parent does not specify sub-components; components specify their parents instead.
-
-
-## In Solution Components
->	**Input Required**: False
-
->	**Description**: Solution components that include this one.
-
-
-## In Solution Blueprints
->	**Input Required**: False
-
->	**Description**: Solution blueprints that contain this component.
+>	**Description**: Actors or Solution Roles related to this element.
 
 
 ## In Information Supply Chains
 >	**Input Required**: False
 
+>	**Attribute Type**: Reference Name List
+
 >	**Description**: The information supply chains that this component is a member of.
 
 
-## Actors
+## In Solution Blueprints
 >	**Input Required**: False
 
->	**Description**: Actors or Solution Roles related to this element.
+>	**Attribute Type**: Reference Name List
+
+>	**Description**: Solution blueprints that contain this component.
 
 
-# Common Properties
+## In Solution Components
+>	**Input Required**: False
+
+>	**Attribute Type**: Reference Name List
+
+>	**Description**: Solution components that include this one.
+
+
+## Planned Deployed Implementation Type
+>	**Input Required**: False
+
+>	**Attribute Type**: Simple
+
+>	**Description**: The planned implementation type for deployment.
+
+
+## Solution Component Type
+>	**Input Required**: False
+
+>	**Attribute Type**: Simple
+
+>	**Description**: Type of solution component.
+
+
+## Solution SubComponents
+>	**Input Required**: False
+
+>	**Attribute Type**: Reference Name List
+
+>	**Description**: Solution sub-components of this component. In current approach the parent does not specify sub-components; components specify their parents instead.
+
 
 ## Journal Entry
 >	**Input Required**: False
+
+>	**Attribute Type**: Simple
 
 >	**Description**: A text entry into a journal.
 
 
 ## Category
 >	**Input Required**: False
+
+>	**Attribute Type**: Simple
 
 >	**Description**: A user-defined category for the element, used to group related elements for display or search purposes.
 
@@ -74,25 +88,31 @@
 ## Description
 >	**Input Required**: False
 
+>	**Attribute Type**: Simple
+
 >	**Description**: A description.
 
 
 ## Qualified Name
 >	**Input Required**: False
 
+>	**Attribute Type**: QN
+
 >	**Description**: The unique, text name of an element.
 
 
-# Additional Properties
-
 ## Search Keywords
 >	**Input Required**: False
+
+>	**Attribute Type**: Simple List
 
 >	**Description**: A list of search keywords.
 
 
 ## GUID
 >	**Input Required**: False
+
+>	**Attribute Type**: GUID
 
 >	**Description**: A unique identifier - typically of an element in this context.
 
@@ -102,17 +122,23 @@
 ## Identifier
 >	**Input Required**: False
 
+>	**Attribute Type**: Simple
+
 >	**Description**: An identier
 
 
 ## URL
 >	**Input Required**: False
 
+>	**Attribute Type**: Simple
+
 >	**Description**: URL for further information.
 
 
 ## Version Identifier
 >	**Input Required**: False
+
+>	**Attribute Type**: Simple
 
 >	**Description**: The version of the element
 

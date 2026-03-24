@@ -10,7 +10,7 @@ This common file is used to set some global values and enumerations used by the 
 from enum import Enum
 from typing import Any, Type
 
-def resolve_enum(enum_class: Type[Enum], value: str | int) -> int | None:
+def resolve_enum(enum_class: Type[Any], value: str | int) -> int | None:
     """
     Resolves a string or integer to its corresponding Egeria enum integer value.
     Example: resolve_enum(ContentStatus, 'Draft') -> 0
@@ -21,15 +21,21 @@ def resolve_enum(enum_class: Type[Enum], value: str | int) -> int | None:
     if isinstance(value, int):
         return value
         
-    v = str(value).strip().upper()
+    v = str(value).upper()
     try:
-        # Direct name match
-        return enum_class[v].value
-    except (KeyError, ValueError):
-        # Check if it's already an integer string
+        # Normalized case-insensitive search through enum members
+        # Replace separators with spaces and collapse multiple spaces
+        v_clean = ' '.join(v.replace('_', ' ').replace('-', ' ').split())
+        for member in enum_class:
+            m_name = ' '.join(member.name.upper().replace('_', ' ').replace('-', ' ').split())
+            if v_clean == m_name:
+                return member.value
+
+        # 3. Check if it's already an integer string
         if v.isdigit():
             return int(v)
-        # Try to match by value name if possible (some enums might have specific logic)
+        return None
+    except (KeyError, ValueError):
         return None
 
 is_debug = False
@@ -55,16 +61,25 @@ star_ratings = (
     "THREE_STARS",
     "TWO_STARS",
 )
-class GovernanceDomains(Enum):
-    ALL= 0
-    DATA= 1
-    PRIVACY= 2
-    SECURITY= 3
-    IT_INFRASTRUCTURE= 4
-    SOFTWARE_DEVELOPMENT= 5
-    CORPORATE= 6
-    ASSET_MANAGEMENT= 7
-    OTHER= 99
+# class GovernanceDomains(Enum):
+#     All= 0
+#     Data= 1
+#     Privacy= 2
+#     Security= 3
+#     IT Infrastructure= 4
+#     Software Development= 5
+#     Corporate= 6
+#     Asset Management= 7
+#     Other= 99
+GovernanceDomains = Enum('GovernanceDomains', [('Unclassified', 0),
+                                               ('Data', 1),
+                                               ('Privacy',2),
+                                               ('Security',3),
+                                               ('IT Infrastructure',4),
+                                               ('Software Development',5),
+                                               ('Corporate',6),
+                                               ('Asset Management',7),
+                                               ('Other',99)])
 
 # Default status values for fallback if dynamic fetching fails
 CONTENT_STATUS = ["DRAFT", "PREPARED", "PROPOSED", "APPROVED", "REJECTED", "ACTIVE", "DEPRECATED", "OTHER"]
@@ -74,7 +89,9 @@ ACTIVITY_STATUS = ["REQUESTED", "APPROVED", "WAITING", "ACTIVATING", "IN_PROGRES
                    "COMPLETED", "INVALID", "IGNORED", "FAILED", "CANCELLED", "ABANDONED", "OTHER"]
 MEMBERSHIP_STATUS = ["UNKNOWN", "DISCOVERED", "PROPOSED", "IMPORTED", "VALIDATED", "DEPRECATED", "OBSOLETE", "OTHER"]
 
+RELATIONSHIP_TYPES = ["RelatedTerm", "Synonym", "Antonym", "PreferredTerm", "ReplacementTerm", "Translation", "IsA", "ValidValue"]
 
+# RELATIONSHIP_TYPES_MAP = {rel_type: i for i, rel_type in enumerate(RELATIONSHIP_TYPES)}
 
 TEMPLATE_GUIDS: dict[str, str] = {}
 INTEGRATION_GUIDS: dict[str, str] = {}

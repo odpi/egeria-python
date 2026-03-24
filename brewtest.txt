@@ -1,0 +1,10 @@
+Traceback (most recent call last):
+  File "<string>", line 1, in <module>
+    import pyegeria
+  File "/Users/dwolfson/antigravity-pyegeria/egeria-python/pyegeria/__init__.py", line 4, in <module>
+    from pyegeria.core.config import load_app_config, get_app_config, pretty_print_config
+  File "/Users/dwolfson/antigravity-pyegeria/egeria-python/pyegeria/core/__init__.py", line 4, in <module>
+    from pyegeria.core._server_client import ServerClient
+  File "/Users/dwolfson/antigravity-pyegeria/egeria-python/pyegeria/core/_server_client.py", line 18, in <module>
+    from httpx import Response
+ModuleNotFoundError: No module named 'httpx'

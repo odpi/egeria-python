@@ -11,7 +11,7 @@ from md_processing.md_processing_utils.md_processing_constants import get_comman
 from md_processing.md_processing_utils.common_md_utils import (
     set_element_prop_body, set_create_body, set_update_body, 
     set_rel_request_body, set_rel_prop_body,
-    update_element_dictionary, add_note_in_dr_e
+    update_element_dictionary, add_note_in_dr_e, async_add_note_in_dr_e
 )
 from pyegeria.core.utils import body_slimmer
 
@@ -58,50 +58,72 @@ class BlueprintProcessor(AsyncBaseCommandProcessor):
                 return self.command.original_text
 
             body = set_update_body("Solution Blueprint", attributes)
-            body['properties'] = set_element_prop_body("Solution Blueprint", qualified_name, attributes)
+            prop_body = set_element_prop_body("Solution Blueprint", qualified_name, attributes)
+            body['properties'] = self.filter_update_properties(prop_body, body.get('mergeUpdate', True))
             
             await self.client._async_update_solution_blueprint(guid, body)
-            if status:
-                await self.client._async_update_solution_element_status(guid, status)
+            self.parsed_output["guid"] = guid
+            # if status:
+            #     await self.client._async_update_solution_element_status(guid, status)
             
-            await self._sync_components(guid, comp_guids, not merge_update)
+            sync_res = await self._sync_components(guid, comp_guids, not merge_update)
+            if sync_res.get("added") or sync_res.get("removed"):
+                self.add_related_result("Components Sync", message=f"Added {len(sync_res['added'])}, Removed {len(sync_res['removed'])}")
+            if sync_res.get("errors"):
+                self.add_related_result("Components Sync", status="failure", message="; ".join(sync_res["errors"]))
             
             if journal_entry:
-                await self.client._async_add_note_in_dr_e(qualified_name, display_name, journal_entry)
+                try:
+                    j_guid = await async_add_note_in_dr_e(self.client, qualified_name, display_name, journal_entry)
+                    if j_guid:
+                        self.add_related_result("Journal Entry", j_guid)
+                except Exception as e:
+                    self.add_related_result("Journal Entry", status="failure", message=str(e))
 
-            logger.success(f"Updated Blueprint '{display_name}'")
+            logger.success(f"Updated Blueprint '{display_name}' with GUID {guid}")
             update_element_dictionary(qualified_name, {'guid': guid, 'display_name': display_name})
-            return await self.client._async_get_solution_blueprints_by_name(qualified_name, output_format='MD')
+            return await self.render_result_markdown(guid)
 
         elif verb == "Create":
             body = set_create_body("Solution Blueprint", attributes)
             body['properties'] = set_element_prop_body("Solution Blueprint", qualified_name, attributes)
+            body = body_slimmer(body)
             
             guid = await self.client._async_create_solution_blueprint(body)
             if guid:
                 self.parsed_output["guid"] = guid
-                await self._sync_components(guid, comp_guids, replace_all=True)
+                sync_res = await self._sync_components(guid, comp_guids, replace_all=True)
+                if sync_res.get("added") or sync_res.get("removed"):
+                    self.add_related_result("Components Sync", message=f"Added {len(sync_res['added'])}, Removed {len(sync_res['removed'])}")
+                if sync_res.get("errors"):
+                    self.add_related_result("Components Sync", status="failure", message="; ".join(sync_res["errors"]))
+
                 if journal_entry:
-                    await self.client._async_add_note_in_dr_e(qualified_name, display_name, journal_entry)
+                    try:
+                        j_guid = await async_add_note_in_dr_e(self.client, qualified_name, display_name, journal_entry)
+                        if j_guid:
+                            self.add_related_result("Journal Entry", j_guid)
+                    except Exception as e:
+                        self.add_related_result("Journal Entry", status="failure", message=str(e))
                 
                 update_element_dictionary(qualified_name, {'guid': guid, 'display_name': display_name})
-                logger.success(f"Created Blueprint '{display_name}'")
-                return await self.client._async_get_solution_blueprint_by_guid(guid, output_format='MD')
+                logger.success(f"Created Blueprint '{display_name}' with GUID {guid}")
+                return await self.render_result_markdown(guid)
 
         return self.command.original_text
 
-    async def _sync_components(self, guid: str, to_be_guids: Set[str], replace_all: bool):
+    async def _sync_components(self, guid: str, to_be_guids: Set[str], replace_all: bool) -> Dict[str, Any]:
         bp_element = await self.client._async_get_solution_blueprint_by_guid(guid)
         as_is = {c['elementHeader']['guid'] for c in bp_element.get('solutionComponents', [])}
         
         async def add_fn(comp_guid):
-            body = {"class": "NewRelationshipRequestBody", "properties": {"class": "SolutionBlueprintCompositionProperties", "description": "linked by Dr.Egeria v2"}}
+            body = {"class": "NewRelationshipRequestBody", "properties": {"class": "SolutionBlueprintCompositionProperties", "typeName": "SolutionBlueprintComposition", "description": "linked by Dr.Egeria v2"}}
             await self.client._async_link_solution_component_to_blueprint(guid, comp_guid, body)
             
         async def remove_fn(comp_guid):
             await self.client._async_detach_solution_component_from_blueprint(guid, comp_guid, None)
             
-        await self.sync_members(as_is, to_be_guids, add_fn, remove_fn, replace_all)
+        return await self.sync_members(as_is, to_be_guids, add_fn, remove_fn, replace_all)
 
 class ComponentProcessor(AsyncBaseCommandProcessor):
     """
@@ -140,6 +162,7 @@ class ComponentProcessor(AsyncBaseCommandProcessor):
         # 1. Properties
         prop_body = {
             "class": "SolutionComponentProperties",
+            "typeName": "SolutionComponent",
             "qualifiedName": qualified_name,
             "displayName": display_name,
             "description": attributes.get('Description', {}).get('value'),
@@ -176,15 +199,23 @@ class ComponentProcessor(AsyncBaseCommandProcessor):
                 "properties": prop_body
             })
             await self.client._async_update_solution_component(guid, body)
+            self.parsed_output["guid"] = guid
             
-            await self._sync_all_rels(guid, supply_chain_guids, parent_comp_guids, actor_guids, blueprint_guids, keywords, not merge_update)
+            sync_res = await self._sync_all_rels(guid, supply_chain_guids, parent_comp_guids, actor_guids, blueprint_guids, keywords, not merge_update)
+            if any(sync_res.values()):
+                self.add_related_result("Relationships Sync", message=f"Updated relationships (Success: {len(sync_res['added']) + len(sync_res['removed'])}, Errors: {len(sync_res['errors'])})")
             
             if journal_entry:
-                await self.client._async_add_note_in_dr_e(qualified_name, display_name, journal_entry)
+                try:
+                    j_guid = await async_add_note_in_dr_e(self.client, qualified_name, display_name, journal_entry)
+                    if j_guid:
+                        self.add_related_result("Journal Entry", j_guid)
+                except Exception as e:
+                    self.add_related_result("Journal Entry", status="failure", message=str(e))
 
-            logger.success(f"Updated Component '{display_name}'")
+            logger.success(f"Updated Component '{display_name}' with GUID {guid}")
             update_element_dictionary(qualified_name, {'guid': guid, 'display_name': display_name})
-            return await self.client._async_get_solution_component_by_guid(guid, output_format='MD')
+            return await self.render_result_markdown(guid)
 
         elif verb == "Create":
             body = body_slimmer({
@@ -201,54 +232,70 @@ class ComponentProcessor(AsyncBaseCommandProcessor):
             guid = await self.client._async_create_solution_component(body)
             if guid:
                 self.parsed_output["guid"] = guid
-                await self._sync_all_rels(guid, supply_chain_guids, parent_comp_guids, actor_guids, blueprint_guids, keywords, replace_all=True)
+                sync_res = await self._sync_all_rels(guid, supply_chain_guids, parent_comp_guids, actor_guids, blueprint_guids, keywords, replace_all=True)
+                if any(sync_res.values()):
+                    self.add_related_result("Relationships Sync", message=f"Initial relationships (Success: {len(sync_res['added']) + len(sync_res['removed'])}, Errors: {len(sync_res['errors'])})")
+
                 if journal_entry:
-                    await self.client._async_add_note_in_dr_e(qualified_name, display_name, journal_entry)
+                    try:
+                        j_guid = await async_add_note_in_dr_e(self.client, qualified_name, display_name, journal_entry)
+                        if j_guid:
+                            self.add_related_result("Journal Entry", j_guid)
+                    except Exception as e:
+                        self.add_related_result("Journal Entry", status="failure", message=str(e))
                 
                 update_element_dictionary(qualified_name, {'guid': guid, 'display_name': display_name})
-                logger.success(f"Created Component '{display_name}'")
-                return await self.client._async_get_solution_component_by_guid(guid, output_format='MD')
+                logger.success(f"Created Component '{display_name}' with GUID {guid}")
+                return await self.render_result_markdown(guid)
 
         return self.command.original_text
 
-    async def _sync_all_rels(self, guid: str, sc_guids: Set[str], parent_guids: Set[str], actor_guids: Set[str], bp_guids: Set[str], keywords: Set[str], replace_all: bool):
+    async def _sync_all_rels(self, guid: str, sc_guids: Set[str], parent_guids: Set[str], actor_guids: Set[str], bp_guids: Set[str], keywords: Set[str], replace_all: bool) -> Dict[str, Any]:
         rel_els = await self._get_component_related_elements(guid)
+        combined_results = {"added": [], "removed": [], "errors": []}
         
         # 1. Supply Chains
         as_is_sc = set(rel_els.get("supply_chain_guids", []))
-        await self.sync_members(as_is_sc, sc_guids,
+        res = await self.sync_members(as_is_sc, sc_guids,
                                lambda sc: self.client._async_link_design_to_implementation(sc, guid, None),
                                lambda sc: self.client._async_detach_design_from_implementation(sc, guid),
                                replace_all)
+        for k in combined_results: combined_results[k].extend(res.get(k, []))
                                
         # 2. Parent Components
         as_is_parents = set(rel_els.get("parent_component_guids", []))
-        await self.sync_members(as_is_parents, parent_guids,
+        res = await self.sync_members(as_is_parents, parent_guids,
                                lambda p: self.client._async_link_subcomponent(p, guid, None),
                                lambda p: self.client._async_detach_sub_component(p, guid, None),
                                replace_all)
+        for k in combined_results: combined_results[k].extend(res.get(k, []))
                                
         # 3. Actors
         as_is_actors = set(rel_els.get("actor_guids", []))
-        await self.sync_members(as_is_actors, actor_guids,
+        res = await self.sync_members(as_is_actors, actor_guids,
                                lambda a: self.client._async_link_component_to_actor(a, guid, None),
                                lambda a: self.client._async_detach_component_actor(a, guid, None),
                                replace_all)
+        for k in combined_results: combined_results[k].extend(res.get(k, []))
                                
         # 4. Blueprints
         as_is_bps = set(rel_els.get("blueprint_guids", []))
-        await self.sync_members(as_is_bps, bp_guids,
-                               lambda bp: self.client._async_link_solution_component_to_blueprint(bp, guid, {"class": "NewRelationshipRequestBody", "properties": {"class": "SolutionBlueprintCompositionProperties", "description": "linked by Dr.Egeria v2"}}),
+        res = await self.sync_members(as_is_bps, bp_guids,
+                               lambda bp: self.client._async_link_solution_component_to_blueprint(bp, guid, {"class": "NewRelationshipRequestBody", "properties": {"class": "SolutionBlueprintCompositionProperties", "typeName": "SolutionBlueprintComposition", "description": "linked by Dr.Egeria v2"}}),
                                lambda bp: self.client._async_detach_solution_component_from_blueprint(bp, guid, None),
                                replace_all)
+        for k in combined_results: combined_results[k].extend(res.get(k, []))
         
         # 5. Keywords
         as_is_kw = set(rel_els.get("keywords_list", {}).keys())
         kw_map = rel_els.get("keywords_list", {})
-        await self.sync_members(as_is_kw, keywords,
+        res = await self.sync_members(as_is_kw, keywords,
                                lambda k: self.client._async_add_search_keyword_to_element(guid, k),
                                lambda k: self.client._async_remove_search_keyword(kw_map[k]),
                                replace_all)
+        for k in combined_results: combined_results[k].extend(res.get(k, []))
+
+        return combined_results
 
     async def _get_component_related_elements(self, guid: str) -> Dict[str, Any]:
         response = await self.client._async_get_solution_component_by_guid(guid)
@@ -341,6 +388,7 @@ class SupplyChainProcessor(AsyncBaseCommandProcessor):
         
         prop_body = {
             "class": "InformationSupplyChainProperties",
+            "typeName": "InformationSupplyChain",
             "qualifiedName": qualified_name,
             "displayName": display_name,
             "description": attributes.get('Description', {}).get('value'),
@@ -360,18 +408,26 @@ class SupplyChainProcessor(AsyncBaseCommandProcessor):
                 return self.command.original_text
 
             body = set_update_body("InformationSupplyChain", attributes)
-            body['properties'] = prop_body
+            body['properties'] = self.filter_update_properties(prop_body, body.get('mergeUpdate', True))
             await self.client._async_update_info_supply_chain(guid, body)
+            self.parsed_output["guid"] = guid
             
             # Sync parents/nested
-            await self._sync_rels(guid, in_sc_guids, nested_sc_guids, not merge_update)
+            sync_res = await self._sync_rels(guid, in_sc_guids, nested_sc_guids, not merge_update)
+            if any(sync_res.values()):
+                self.add_related_result("Relationships Sync", message=f"Updated relationships (Success: {len(sync_res['added']) + len(sync_res['removed'])}, Errors: {len(sync_res['errors'])})")
             
             if journal_entry:
-                await self.client._async_add_note_in_dr_e(qualified_name, display_name, journal_entry)
+                try:
+                    j_guid = await async_add_note_in_dr_e(self.client, qualified_name, display_name, journal_entry)
+                    if j_guid:
+                        self.add_related_result("Journal Entry", j_guid)
+                except Exception as e:
+                    self.add_related_result("Journal Entry", status="failure", message=str(e))
 
-            logger.success(f"Updated Supply Chain '{display_name}'")
+            logger.success(f"Updated Supply Chain '{display_name}' with GUID {guid}")
             update_element_dictionary(qualified_name, {'guid': guid, 'display_name': display_name})
-            return await self.client._async_get_info_supply_chain_by_guid(guid, output_format='MD')
+            return await self.render_result_markdown(guid)
 
         elif verb == "Create":
             body = set_create_body("InformationSupplyChain", attributes)
@@ -380,32 +436,45 @@ class SupplyChainProcessor(AsyncBaseCommandProcessor):
             guid = await self.client._async_create_info_supply_chain(body)
             if guid:
                 self.parsed_output["guid"] = guid
-                await self._sync_rels(guid, in_sc_guids, nested_sc_guids, replace_all=True)
+                sync_res = await self._sync_rels(guid, in_sc_guids, nested_sc_guids, replace_all=True)
+                if any(sync_res.values()):
+                    self.add_related_result("Relationships Sync", message=f"Initial relationships (Success: {len(sync_res['added']) + len(sync_res['removed'])}, Errors: {len(sync_res['errors'])})")
+
                 if journal_entry:
-                    await self.client._async_add_note_in_dr_e(qualified_name, display_name, journal_entry)
+                    try:
+                        j_guid = await async_add_note_in_dr_e(self.client, qualified_name, display_name, journal_entry)
+                        if j_guid:
+                            self.add_related_result("Journal Entry", j_guid)
+                    except Exception as e:
+                        self.add_related_result("Journal Entry", status="failure", message=str(e))
                 
                 update_element_dictionary(qualified_name, {'guid': guid, 'display_name': display_name})
-                logger.success(f"Created Supply Chain '{display_name}'")
-                return await self.client._async_get_info_supply_chain_by_guid(guid, output_format='MD')
+                logger.success(f"Created Supply Chain '{display_name}' with GUID {guid}")
+                return await self.render_result_markdown(guid)
 
         return self.command.original_text
 
-    async def _sync_rels(self, guid: str, parent_guids: Set[str], nested_guids: Set[str], replace_all: bool):
+    async def _sync_rels(self, guid: str, parent_guids: Set[str], nested_guids: Set[str], replace_all: bool) -> Dict[str, Any]:
         rel_els = await self._get_supply_chain_rel_elements(guid)
+        combined_results = {"added": [], "removed": [], "errors": []}
         
         # 1. Parents
         as_is_parents = set(rel_els.get("parent_guids", []))
-        await self.sync_members(as_is_parents, parent_guids,
+        res = await self.sync_members(as_is_parents, parent_guids,
                                lambda p: self.client._async_compose_info_supply_chains(p, guid, None),
                                lambda p: self.client._async_decompose_info_supply_chains(p, guid, None),
                                replace_all)
+        for k in combined_results: combined_results[k].extend(res.get(k, []))
                                
         # 2. Nested
         as_is_nested = set(rel_els.get("nested_guids", []))
-        await self.sync_members(as_is_nested, nested_guids,
+        res = await self.sync_members(as_is_nested, nested_guids,
                                lambda n: self.client._async_compose_info_supply_chains(guid, n, None),
                                lambda n: self.client._async_decompose_info_supply_chains(guid, n, None),
                                replace_all)
+        for k in combined_results: combined_results[k].extend(res.get(k, []))
+
+        return combined_results
 
     async def _get_supply_chain_rel_elements(self, guid: str) -> Dict[str, Any]:
         el_struct = await self.client._async_get_info_supply_chain_by_guid(guid)
@@ -464,7 +533,7 @@ class SolutionLinkProcessor(AsyncBaseCommandProcessor):
         description = attributes.get('Description', {}).get('value')
         
         if not (id1 and id2):
-            return self.command.original_text
+            return self.command.raw_block
 
         if verb in ["Link", "Attach", "Add"]:
             body = {

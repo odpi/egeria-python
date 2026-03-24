@@ -28,19 +28,6 @@ class GovernanceProcessor(AsyncBaseCommandProcessor):
         except PyegeriaException:
             return None
 
-    async def fetch_as_is(self) -> Optional[Dict[str, Any]]:
-        qualified_name = self.parsed_output.get("qualified_name")
-        if not qualified_name:
-            return None
-        try:
-            # First get the GUID for the qualified name
-            guid = await self.client._async_get_guid_for_name(qualified_name, type_name=self.command.object_type)
-            if guid and guid != "NOT_FOUND":
-                return await self.client._async_get_governance_definition_by_guid(guid)
-            return None
-        except PyegeriaException:
-            return None
-
     async def apply_changes(self) -> str:
         verb = self.command.verb
         object_type = self.command.object_type
@@ -57,16 +44,17 @@ class GovernanceProcessor(AsyncBaseCommandProcessor):
                 return self.command.original_text
             self.parsed_output["guid"] = guid
 
-            body = body_slimmer({
+            body = {
                 "class": "UpdateElementRequestBody",
-                "properties": prop_body
-            })
+                "properties": self.filter_update_properties(prop_body, attributes.get('Merge Update', {}).get('value', True)),
+                "mergeUpdate": attributes.get('Merge Update', {}).get('value', True)
+            }
             await self.client._async_update_governance_definition(guid, body)
             
             # Relationships
             await self._sync_rels(guid, attributes)
             
-            logger.success(f"Updated {object_type} '{display_name}'")
+            logger.success(f"Updated {object_type} '{display_name}' with GUID {guid}")
             update_element_dictionary(qualified_name, {'guid': guid, 'display_name': display_name})
             return await self.render_result_markdown(guid)
 
@@ -79,7 +67,7 @@ class GovernanceProcessor(AsyncBaseCommandProcessor):
                 self.parsed_output["guid"] = guid
                 await self._sync_rels(guid, attributes)
                 update_element_dictionary(qualified_name, {'guid': guid, 'display_name': display_name})
-                logger.success(f"Created {object_type} '{display_name}'")
+                logger.success(f"Created {object_type} '{display_name}' with GUID {guid}")
                 return await self.render_result_markdown(guid)
 
         return self.command.original_text
@@ -89,9 +77,18 @@ class GovernanceProcessor(AsyncBaseCommandProcessor):
         to_be_drivers = attributes.get("Governance Drivers", {}).get("guid_list", [])
         
         for policy in to_be_supports:
-            await self.client._async_attach_supporting_definitions(policy, "GovernanceImplementation", guid)
+            try:
+                await self.client._async_attach_supporting_definitions(policy, "GovernanceImplementation", guid)
+                self.add_related_result("Supports Policy", policy)
+            except Exception as e:
+                self.add_related_result("Supports Policy", policy, status="failure", message=str(e))
+
         for driver in to_be_drivers:
-            await self.client._async_attach_supporting_definitions(driver, "GovernanceResponse", guid)
+            try:
+                await self.client._async_attach_supporting_definitions(driver, "GovernanceResponse", guid)
+                self.add_related_result("Governance Driver", driver)
+            except Exception as e:
+                self.add_related_result("Governance Driver", driver, status="failure", message=str(e))
 
 class GovernanceLinkProcessor(AsyncBaseCommandProcessor):
     """
@@ -134,6 +131,7 @@ class GovernanceLinkProcessor(AsyncBaseCommandProcessor):
                 if "Supporting" in object_type:
                     body['properties'] = {
                         "class": "SupportingDefinitionProperties",
+                        "typeName": rel_type,
                         "rationale": attributes.get('Rationale', {}).get('value'),
                         "effectiveFrom": attributes.get('Effective From', {}).get('value'),
                         "effectiveTo": attributes.get('Effective To', {}).get('value'),

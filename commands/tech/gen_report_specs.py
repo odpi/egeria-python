@@ -1,88 +1,51 @@
 """
-Generate report FormatSet specifications for pyegeria from a commands.json file.
+Generate report FormatSet specifications for pyegeria from command specifications (compact commands).
 
 Overview
-- This utility reads a Dr Egeria style commands.json (aka Command Specifications)
+- This utility reads Dr. Egeria style command specifications (JSON files)
   and converts relevant entries (by default, only those with a display name
   beginning with "Create") into pyegeria FormatSet definitions. These can be:
   - returned in-memory as a FormatSetDict
-  - saved to a JSON file that can be loaded by pyegeria.base_report_formats.load_report_specs
+  - saved to a JSON file that can be loaded by pyegeria.view.base_report_formats.load_report_specs
   - saved as a Python module that defines a dictionary of FormatSet objects
   - merged directly into the built-in report_specs registry at runtime
+  - persisted into the base_report_formats.py source file (using --merge)
 
 Typical uses
 - Quickly scaffold report formats for new content types defined in your command
   specifications, without hand-writing every Column/Format block.
-- Keep generated formats alongside your hand-curated ones and iterate as the
-  command specifications evolve.
+- Keep generated formats in sync with your Dr. Egeria command definitions.
 
-What this script extracts
-- Target type: from each command's display_name
-- Columns: only attributes marked with level == "Basic" are included. The
-  column name comes from the attribute label; the column key from the
-  attribute's variable_name.
+What this tool extracts
+- Target type: from each command's display_name (e.g., "Create Asset" -> "Asset")
+- Columns: attributes are resolved from inherited bundles and attribute_definitions.
 - Action parameter: if a find_method is present on the command, an ActionParameter
-  is created with:
-  - function = find_method
-  - required_params = ["search_string"]
-  - optional_params = pyegeria.base_report_formats.OPTIONAL_PARAMS
-  - spec_params = parsed find_constraints (see parsing notes below)
-
-Constraints parsing
-- find_constraints may be a dict or a JSON string (sometimes double-escaped).
-  We try, in order: direct JSON, unquoted JSON, and a simple single-to-double
-  quote substitution for dict-like strings. Failures yield an empty dict, and
-  a debug message is logged.
-
-Naming
-- Each FormatSet key and heading are derived from the command's display_name.
-  The key is display_name with spaces replaced by '-' and suffixed with '-DrE'.
-  Example: "Create Governance Strategy Definition" -> "Create-Governance-Strategy-Definition-DrE".
+  is created to allow running reports directly from the spec.
 
 CLI usage examples
-- Save to JSON (default mode):
-    poetry run python -m md_processing.md_processing_utils.gen_report_specs \
-        md_processing/data/commands.json md_processing/data/generated_format_sets.json --emit json
+- Run as part of the main CLI:
+    hey_egeria tech gen-report-specs md_processing/data/compact_commands --emit dict --list
 
-- Emit Python code to a .py file:
-    poetry run python -m md_processing.md_processing_utils.gen_report_specs \
-        md_processing/data/commands.json md_processing/data/generated_report_specs.py --emit code
+- Persistently update base_report_formats.py with generated specs:
+    hey_egeria tech gen-report-specs md_processing/data/compact_commands --merge
 
-- Build in-memory only and list set names:
-    poetry run python -m md_processing.md_processing_utils.gen_report_specs \
-        md_processing/data/commands.json --emit dict --list
+- Save to JSON:
+    hey_egeria tech gen-report-specs md_processing/data/compact_commands --emit json --output-file my_specs.json
 
-- Merge generated sets into the built-in registry (report_specs):
-    poetry run python -m md_processing.md_processing_utils.gen_report_specs \
-        md_processing/data/commands.json --emit dict --merge --list
-
-Programmatic usage
-- Build in memory:
-    from md_processing.md_processing_utils.gen_report_specs import generate_format_sets
-    sets = generate_format_sets("md_processing/data/commands.json")
-
-- Save JSON that can be loaded by pyegeria:
-    from md_processing.md_processing_utils.gen_report_specs import save_generated_format_sets
-    save_generated_format_sets("md_processing/data/commands.json", "md_processing/data/generated_format_sets.json")
-
-- Save as importable Python module:
-    from md_processing.md_processing_utils.gen_report_specs import save_generated_format_sets_code
-    save_generated_format_sets_code("md_processing/data/commands.json", "md_processing/data/generated_report_specs.py")
-
-- Merge directly into built-ins at runtime:
-    from md_processing.md_processing_utils.gen_report_specs import merge_generated_report_specs
-    merge_generated_format_sets("md_processing/data/commands.json")
+- Emit Python code:
+    hey_egeria tech gen-report-specs md_processing/data/compact_commands --emit code --output-file my_specs.py
 
 Notes
 - Only commands whose key or display_name begins with "Create" are included by
-  default. Pass include_only_create=False to include all commands.
-- default_types controls the Format.types field, and defaults to ["ALL"].
-- This script logs progress with loguru.
+  default.
+- When pointing to a directory, all JSON files are merged to resolve bundles and
+  attribute definitions before generating specs.
 """
 import json
 import re
 import argparse
 import os
+import click
 from pathlib import Path
 from typing import Iterable, List, Optional
 
@@ -157,22 +120,24 @@ def _safe_parse_constraints(s) -> dict:
     logger.debug(f"Could not parse find_constraints: {s!r} -> {{}}")
     return {}
 
-def _extract_columns_from_attributes(attributes: Iterable[dict], include_all: bool = False) -> List[Column]:
+def _extract_columns_from_attributes(attributes: Iterable[dict], usage_level: str = None) -> List[Column]:
     """Extract Columns from a command's Attributes list.
 
     Parameters
     - attributes: iterable of dict entries. Support both old single-key
       mapping (Label -> metadata) and new flat mapping (name, variable_name, level, etc.).
+    - usage_level: Egeria usage level (Basic or Advanced). If None, uses EGERIA_USAGE_LEVEL.
 
     Behavior
-    - By default, only items with level == "Basic" are included
-    - When include_all=True, all attributes are included regardless of level
+    - Visibility is determined by common_md_proc_utils._level_visible
     - Duplicate variable_name values are de-duplicated
     - Column.name is the label; Column.key is the variable_name
 
     Returns
     - List[Column]
     """
+    from md_processing.md_processing_utils.common_md_proc_utils import _level_visible, EGERIA_USAGE_LEVEL
+    target_usage = usage_level or EGERIA_USAGE_LEVEL
 
     cols: List[Column] = []
     seen: set[str] = set()
@@ -180,7 +145,7 @@ def _extract_columns_from_attributes(attributes: Iterable[dict], include_all: bo
     def process_attr(label, details):
         if not isinstance(details, dict):
             return
-        if not include_all and details.get("level") != "Basic":
+        if not _level_visible(details.get("level"), target_usage):
             return
         key = details.get("variable_name")
         if not key or key in seen:
@@ -212,22 +177,134 @@ def _derive_target_type(cmd_key: str, cmd_obj: dict) -> str:
     return display_name
 
 
+def _resolve_compact_commands(data: dict) -> dict:
+    """Resolve attributes for compact command specifications.
+
+    Compact format has:
+    - attribute_definitions: map of label -> details
+    - bundles: map of bundle_name -> { inherits, own_attributes }
+    - commands: map of cmd_name -> { ..., bundle, custom_attributes }
+
+    This function returns a commands map where each command has an "Attributes"
+    list compatible with the legacy format.
+    """
+    commands = data.get("commands", {})
+    bundles = data.get("bundles", {})
+    attr_defs = data.get("attribute_definitions", {})
+
+    resolved_commands = {}
+    for cmd_key, cmd_obj in commands.items():
+        if not isinstance(cmd_obj, dict):
+            resolved_commands[cmd_key] = cmd_obj
+            continue
+
+        # Resolve attributes
+        resolved_attrs = []
+        seen_attr_names = set()
+
+        def add_attr(name):
+            if name in seen_attr_names:
+                return
+            if name in attr_defs:
+                # Add as a mapping (label -> details) for compatibility with old structure
+                resolved_attrs.append({name: attr_defs[name]})
+                seen_attr_names.add(name)
+
+        # 1. From bundle (and its ancestors)
+        # Collect bundle path: child -> parent -> ...
+        bundle_path = []
+        curr_bundle = cmd_obj.get("bundle")
+        visited = set()
+        while curr_bundle and curr_bundle in bundles and curr_bundle not in visited:
+            visited.add(curr_bundle)
+            bundle_path.append(curr_bundle)
+            curr_bundle = bundles[curr_bundle].get("inherits")
+
+        # Process bundle path in reverse to get base attributes first
+        for b_name in reversed(bundle_path):
+            for attr_name in bundles[b_name].get("own_attributes", []):
+                add_attr(attr_name)
+
+        # 2. From custom_attributes
+        for attr_name in cmd_obj.get("custom_attributes", []):
+            add_attr(attr_name)
+
+        new_cmd = cmd_obj.copy()
+        if resolved_attrs:
+            new_cmd["Attributes"] = resolved_attrs
+        resolved_commands[cmd_key] = new_cmd
+
+    return resolved_commands
+
+
 def _load_command_specs(path: Path) -> dict:
     if path.is_dir():
-        merged: dict = {}
-        for spec_path in sorted(path.glob("*.json")):
-            data = json.loads(spec_path.read_text(encoding="utf-8"))
-            specs = data.get("Command Specifications", {})
-            for key, value in specs.items():
-                if key in merged:
-                    logger.warning(f"Duplicate command {key!r} in {spec_path.name}; overwriting previous")
-                merged[key] = value
-        logger.info(f"Loaded command specs from {path} with {len(merged)} commands")
-        return merged
+        merged_compact = {"commands": {}, "attribute_definitions": {}, "bundles": {}}
+        legacy_specs = {}
+        has_compact = False
 
+        for spec_path in sorted(path.glob("*.json")):
+            try:
+                data = json.loads(spec_path.read_text(encoding="utf-8"))
+                # If it looks like compact format (any of these keys present)
+                is_compact = isinstance(data, dict) and any(
+                    k in data for k in ["commands", "attribute_definitions", "bundles"]
+                )
+
+                if is_compact:
+                    has_compact = True
+                    if "commands" in data:
+                        for k, v in data["commands"].items():
+                            if k in merged_compact["commands"]:
+                                logger.warning(
+                                    f"Duplicate command {k!r} in {spec_path.name}; overwriting previous"
+                                )
+                            merged_compact["commands"][k] = v
+                    if "attribute_definitions" in data:
+                        merged_compact["attribute_definitions"].update(
+                            data["attribute_definitions"]
+                        )
+                    if "bundles" in data:
+                        merged_compact["bundles"].update(data["bundles"])
+                elif isinstance(data, dict):
+                    # Could be legacy "Command Specifications" or just a dict of commands
+                    specs = data.get("Command Specifications") or data.get("commands")
+                    if specs and isinstance(specs, dict):
+                        legacy_specs.update(specs)
+                    else:
+                        legacy_specs.update(data)
+            except Exception as e:
+                logger.error(f"Failed to load {spec_path}: {e}")
+
+        if has_compact:
+            # Resolve compact commands using the global context across all files
+            resolved = _resolve_compact_commands(merged_compact)
+            # Also include any legacy specs found in the same directory
+            resolved.update(legacy_specs)
+            logger.info(
+                f"Loaded command specs from {path} with {len(resolved)} commands (cross-file compact resolution used)"
+            )
+            return resolved
+        else:
+            logger.info(
+                f"Loaded legacy command specs from {path} with {len(legacy_specs)} commands"
+            )
+            return legacy_specs
+
+    # Handle single file path
     data = json.loads(path.read_text(encoding="utf-8"))
     if isinstance(data, dict):
-        items_iter = data.items()
+        # Support both legacy "Command Specifications" and compact "commands"
+        if "commands" in data and "attribute_definitions" in data:
+            data = _resolve_compact_commands(data)
+            items_iter = data.items()
+        else:
+            specs = data.get("Command Specifications") or data.get("commands")
+            if specs is not None and isinstance(specs, dict):
+                items_iter = specs.items()
+            else:
+                # If neither key exists, assume the dict itself IS the command map
+                items_iter = data.items()
     elif isinstance(data, list):
         def _key_for(idx, obj):
             dn = str(obj.get("display_name", "")).strip()
@@ -236,7 +313,8 @@ def _load_command_specs(path: Path) -> dict:
         items_iter = ((_key_for(i, obj), obj) for i, obj in enumerate(data))
     else:
         raise ValueError("commands.json root must be an object/dict or an array of command objects")
-    data = dict(items_iter).get("Command Specifications", {})
+
+    data = dict(items_iter)
     logger.info(
         f"Loaded commands.json from {path} with {len(data)} commands"
     )
@@ -246,7 +324,8 @@ def build_format_sets_from_commands(
     commands_json_path: str | Path,
     *,
     include_only_create: bool = True,
-    default_types: Optional[List[str]] = None
+    default_types: Optional[List[str]] = None,
+    usage_level: str = None
 ) -> FormatSetDict:
     """Build a FormatSetDict from a commands.json file.
 
@@ -258,12 +337,13 @@ def build_format_sets_from_commands(
       or display_name starts with "Create".
     - default_types: the list used for Format.types for each produced Format
       (defaults to ["ALL"]).
+    - usage_level: Egeria usage level override (Basic or Advanced).
 
     Returns
     - FormatSetDict keyed by set names derived from display_name + "-DrE".
 
     Notes
-    - Columns are derived from Attributes entries whose level == "Basic".
+    - Columns are derived from Attributes entries based on usage_level.
     - If find_method is present, an ActionParameter is created.
     """
     path = Path(commands_json_path)
@@ -291,9 +371,12 @@ def build_format_sets_from_commands(
             logger.debug(f"Skip {cmd_key!r}: could not derive set name from display_name={display_name!r}")
             continue
 
-        columns = _extract_columns_from_attributes(cmd_obj.get("Attributes", []), include_all=False)
+        columns = _extract_columns_from_attributes(cmd_obj.get("Attributes", []), usage_level=usage_level)
         if not columns:
-            columns = _extract_columns_from_attributes(cmd_obj.get("Attributes", []), include_all=True)
+            # Fallback to Advanced usage if Basic returned nothing
+            if usage_level != "Advanced":
+                columns = _extract_columns_from_attributes(cmd_obj.get("Attributes", []), usage_level="Advanced")
+            
             if not columns:
                 logger.debug(f"Skip {set_name}: no attributes")
                 continue
@@ -398,9 +481,9 @@ def merge_generated_format_sets(
     )
     count = 0
     for name, fs in gen.items():
-        report_specs[name] = fs
+        report_specs.upsert(name, fs)
         count += 1
-    logger.info(f"Merged {count} generated format sets into built-ins")
+    logger.info(f"Merged {count} generated format sets into built-ins (upsert)")
     return count
 
 
@@ -565,7 +648,64 @@ def save_generated_format_sets_code(
     return out
 
 
-def main():
+def _update_base_report_formats_file(sets: FormatSetDict):
+    try:
+        import pyegeria.view.base_report_formats as brf
+        target_path = Path(brf.__file__)
+    except ImportError:
+        target_path = Path("pyegeria/view/base_report_formats.py")
+
+    if not target_path.exists():
+        logger.debug(f"Target path {target_path} does not exist, skipping file update")
+        return
+
+    content = target_path.read_text(encoding="utf-8")
+    start_marker = "# --- GENERATED FORMAT SETS ---"
+    end_marker = "# --- END GENERATED FORMAT SETS ---"
+
+    if start_marker not in content or end_marker not in content:
+        logger.debug(f"Markers not found in {target_path}, skipping file update")
+        return
+
+    entries = []
+    for name in sorted(sets.keys(), key=lambda s: s.lower()):
+        fs = sets[name]
+        entries.append(f"    {_py_literal(name)}: {_format_formatset(fs)}")
+
+    new_section = (
+        f"{start_marker}\n"
+        f"# This section is updated by gen-report-specs.\n"
+        f"generated_format_sets = FormatSetDict({{\n"
+        + ",\n".join(entries) +
+        "\n})\n"
+        f"{end_marker}"
+    )
+
+    import re
+    pattern = re.escape(start_marker) + r".*?" + re.escape(end_marker)
+    new_content = re.sub(pattern, new_section, content, flags=re.DOTALL)
+
+    if new_content != content:
+        target_path.write_text(new_content, encoding="utf-8")
+        logger.info(f"Updated generated section in {target_path}")
+    else:
+        logger.debug(f"No changes to {target_path}")
+
+
+@click.command(name="gen-report-specs")
+@click.argument("commands_json", required=False)
+@click.argument("output_path", required=False)
+@click.option(
+    "--emit",
+    type=click.Choice(["json", "dict", "code"]),
+    default="json",
+    help="Output mode",
+)
+@click.option("--merge", is_flag=True, help="Merge into built-in registry")
+@click.option("--list", "list_names", is_flag=True, help="List set names")
+@click.option("--usage-level", default=None, help="Egeria usage level (Basic or Advanced)",
+              type=click.Choice(["Basic", "Advanced"], case_sensitive=False))
+def main(commands_json, output_path, emit, merge, list_names, usage_level):
     """CLI entry point for generating report FormatSets from commands.json.
 
     Notes
@@ -588,86 +728,56 @@ def main():
     - --merge: also merge generated sets into built-in report_specs at runtime
     - --list: when emitting dict (or after merge), list set names to stdout
     """
-    parser = argparse.ArgumentParser(description="Generate FormatSets from commands.json")
-    parser.add_argument("commands_json", nargs="?", help="Path to commands.json or directory of command specs")
-    parser.add_argument("output_json", nargs="?", help="Path to output JSON file (when --emit json)")
-    parser.add_argument("--emit", choices=["json", "dict", "code"], default="json",
-                        help="Choose output mode: save JSON file, write Python code, or work with in-memory FormatSetDict")
-    parser.add_argument("--merge", action="store_true",
-                        help="Merge generated sets into built-in registry (report_specs)")
-    parser.add_argument("--list", action="store_true",
-                        help="When emitting dict (and/or after merge), list set name to stdout")
-    
     config = get_app_config()
     env = config.Environment
 
-    args = parser.parse_args()
-
     try:
-        input_file = args.commands_json or Prompt.ask(
-            "Enter commands.json or directory:", default=os.path.join(env.pyegeria_root, "md_processing/data/commands.json")
+        input_file = commands_json or Prompt.ask(
+            "Enter commands.json or directory:",
+            default=os.path.join(env.pyegeria_root, "md_processing/data/commands.json"),
         )
 
-        saved_path = None
-        sets = None
+        sets = build_format_sets_from_commands(input_file, usage_level=usage_level)
 
-        if args.emit == "json":
-            output_file = args.output_json or Prompt.ask(
+        if emit == "json":
+            output_file = output_path or Prompt.ask(
                 "Output File:", default="md_processing/data/generated_format_sets.json"
             )
-            saved_path = save_generated_format_sets(input_file, output_file)
-            if args.merge:
-                from pyegeria.view.base_report_formats import load_report_specs
-                load_report_specs(output_file, merge=True)
-                logger.info("Merged saved JSON into built-in registry")
-        elif args.emit == "code":
-            output_file = args.output_json or Prompt.ask(
+            Path(output_file).parent.mkdir(parents=True, exist_ok=True)
+            sets.save_to_json(output_file)
+            logger.info(f"Saved JSON for {len(sets)} generated format sets to {output_file}")
+            if merge:
+                from pyegeria.view.base_report_formats import report_specs
+                for name, fs in sets.items():
+                    report_specs.upsert(name, fs)
+                _update_base_report_formats_file(sets)
+        elif emit == "code":
+            output_file = output_path or Prompt.ask(
                 "Output Python File:", default="pyegeria/dr_egeria_reports.py"
             )
-            saved_path = save_generated_format_sets_code(input_file, output_file)
-            logger.info(f"Generated Python code written to {saved_path}")
-        else:
-            sets = generate_format_sets(input_file)
-            logger.info(f"Generated {len(sets)} format sets (in-memory FormatSetDict)")
-
-        if args.emit == "code" and args.merge and saved_path:
-            try:
-                import importlib.util
-
-                abs_output_file = saved_path.resolve()
-                spec = importlib.util.spec_from_file_location("_gen_fs_module", abs_output_file)
-                if spec is None or spec.loader is None:
-                    raise ImportError(f"Could not create module spec from {abs_output_file}")
-
-                mod = importlib.util.module_from_spec(spec)
-                spec.loader.exec_module(mod)  # type: ignore
-
-                generated = getattr(mod, "generated_format_sets", None)
-                if generated:
-                    from pyegeria.view.base_report_formats import report_specs
-                    merged = 0
-                    for name, fs in generated.items():
-                        report_specs[name] = fs
-                        merged += 1
-                    logger.info(f"Merged {merged} generated format sets from code into built-ins")
-                else:
-                    logger.warning("No 'generated_format_sets' found in generated code module")
-            except Exception as e:
-                logger.error(f"Failed to import and merge generated code: {e}")
-
-        if args.emit == "dict" and sets is not None:
-            if args.merge:
+            code = format_sets_to_python_code(sets)
+            Path(output_file).parent.mkdir(parents=True, exist_ok=True)
+            Path(output_file).write_text(code, encoding="utf-8")
+            logger.info(f"Saved Python code for {len(sets)} generated format sets to {output_file}")
+            if merge:
                 from pyegeria.view.base_report_formats import report_specs
-                merged = 0
                 for name, fs in sets.items():
-                    report_specs[name] = fs
-                    merged += 1
-                logger.info(f"Merged {merged} generated format sets into built-ins")
-            if args.list:
-                names = sorted(list(sets.keys()))
-                print(f"Generated set names ({len(names)}):")
-                for n in names:
-                    print(f"- {n}")
+                    report_specs.upsert(name, fs)
+                _update_base_report_formats_file(sets)
+        else:
+            # emit == "dict"
+            logger.info(f"Generated {len(sets)} format sets (in-memory FormatSetDict)")
+            if merge:
+                from pyegeria.view.base_report_formats import report_specs
+                for name, fs in sets.items():
+                    report_specs.upsert(name, fs)
+                _update_base_report_formats_file(sets)
+
+        if list_names and sets is not None:
+            names = sorted(list(sets.keys()))
+            print(f"Generated set names ({len(names)}):")
+            for n in names:
+                print(f"- {n}")
     except (KeyboardInterrupt, EOFError):
         # Graceful exit when user cancels or stdin is not interactive
         pass

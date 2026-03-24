@@ -29,16 +29,7 @@ I try to do as much in Jupyter Lab as I can - and will also run things in Docker
 >	**Description**: A user specified category name that can be used for example, to define product types or agreement types.
 
 ML-OPs
-## Status
->	**Input Required**: False
 
->	**Description**: The status of the solution blueprint. There is a list of valid values that this conforms to.
-
->	**Valid Values**: DRAFT; PREPARED; PROPOSED; APPROVED; REJECTED;  ACTIVE; DEPRECATED; OTHER
-
->	**Default Value**: ACTIVE
-
-DRAFT
 ## Version Identifier
 >	**Input Required**: False
 

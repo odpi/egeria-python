@@ -150,12 +150,12 @@ def display_integration_daemon_status(
                 caption=f"Integration Daemon Status for Server '{integ_server}' @ Platform - {integ_url}",
                 expand=True,
             )
-            table.add_column("Connector Name", min_width=15)
-            table.add_column("Status", max_width=6)
-            table.add_column("Last Refresh Time", min_width=12)
-            table.add_column("Min Refresh (mins)", max_width=6)
-            table.add_column("Target Element", min_width=20)
-            table.add_column("Exception Message", min_width=10)
+            table.add_column("Connector Name", min_width=15, overflow="fold")
+            table.add_column("Status", max_width=10, overflow="fold")
+            table.add_column("Last Refresh Time", min_width=12, overflow="fold")
+            table.add_column("Min Refresh (mins)", max_width=10, overflow="fold")
+            table.add_column("Target Element", min_width=20, overflow="fold")
+            table.add_column("Exception Message", min_width=10, overflow="fold")
 
         # Now get the integration connector report
         token = s_client.create_egeria_bearer_token()
@@ -179,9 +179,9 @@ def display_integration_daemon_status(
             if connector_guid != "---":
                 targets = s_client.get_catalog_targets(connector_guid)
                 tgt_tab = Table()
-                tgt_tab.add_column("Target")
-                tgt_tab.add_column("UniqueName")
-                tgt_tab.add_column("Relationship GUID", no_wrap=True)
+                tgt_tab.add_column("Target", overflow="fold")
+                tgt_tab.add_column("UniqueName", overflow="fold")
+                tgt_tab.add_column("Relationship GUID", overflow="fold")
 
                 if type(targets) == list:
                     targets_md = True

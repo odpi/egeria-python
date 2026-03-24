@@ -224,7 +224,7 @@ class TestValidMetadataOMVs:
             token = m_client.create_egeria_bearer_token(self.good_user_2, "secret")
             start_time = time.perf_counter()
             type_name = None
-            property_name = "domainIdentifier"
+            property_name = "confidence"
             # type_name = None
             # property_name = "stewardTypeName"
 
@@ -295,12 +295,8 @@ class TestValidMetadataOMVs:
             )
             token = m_client.create_egeria_bearer_token(self.good_user_2, "secret")
             start_time = time.perf_counter()
-            type_name = "Project"
-            property_name = "purposes"
-            preferred_value = "1 month"
-            map_name = "expectedDuration"
-            # type_name = None
-            # property_name = "stewardTypeName"
+            type_name = None
+            property_name = "activityType"
 
             response = m_client.get_valid_metadata_values(property_name, type_name,
                                                              output_format="DICT", report_spec='Valid-Values')
@@ -458,7 +454,7 @@ class TestValidMetadataOMVs:
             )
             token = m_client.create_egeria_bearer_token(self.good_user_2, "secret")
             start_time = time.perf_counter()
-            search_string = "annotation"
+            search_string = "Confidence"
 
             response = m_client.find_specification_property(search_string)
             duration = time.perf_counter() - start_time

@@ -78,11 +78,11 @@ def body_slimmer(body: dict) -> dict:
 
     slimmed = {}
     for key, value in body.items():
-        if value and not isinstance(value, tuple):
+        if value is not None and not isinstance(value, tuple):
             if isinstance(value, dict):
                 # Recursively slim embedded dictionaries
                 slimmed_value = body_slimmer(value)
-                if slimmed_value:  # Only include non-empty dictionaries
+                if slimmed_value or value == {}:  # Only include non-empty dictionaries, unless it was explicitly empty
                     slimmed[key] = slimmed_value
             else:
                 slimmed[key] = value

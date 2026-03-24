@@ -18,8 +18,13 @@ from textual.widgets import DataTable
 
 from pyegeria import (
     AutomatedCuration,
-PyegeriaAPIException, PyegeriaClientException, print_basic_exception, print_exception_table    RegisteredInfo,
-    _client,
+    PyegeriaAPIException as PropertyServerException,
+    PyegeriaClientException,
+    PyegeriaInvalidParameterException as InvalidParameterException,
+    PyegeriaUnauthorizedException as UserNotAuthorizedException,
+    print_basic_exception as print_exception_response,
+    print_exception_table,
+    RegisteredInfo,
 )
 
 console = Console()
@@ -98,9 +103,9 @@ def display_templates_spec(
                 # width=500
             )
 
-            table.add_column("Name", width=20)
-            table.add_column("Template Name", width=20)
-            table.add_column("Template GUID", width=38, no_wrap=True)
+            table.add_column("Name", width=20, overflow="fold")
+            table.add_column("Template Name", width=20, overflow="fold")
+            table.add_column("Template GUID", width=38, overflow="fold")
             if placeholders:
                 table.add_column("Placeholders")
 
@@ -138,11 +143,11 @@ def display_templates_spec(
                         template_guid = template["relatedElement"]["guid"]
                         if placeholders:
                             placeholder_table = Table(expand=False, show_lines=True)
-                            placeholder_table.add_column("Name", width=20, no_wrap=True)
-                            placeholder_table.add_column("Type", width=10)
-                            placeholder_table.add_column("Required", width=10)
-                            placeholder_table.add_column("Example", width=20)
-                            placeholder_table.add_column("Description", width=40)
+                            placeholder_table.add_column("Name", width=20, overflow="fold")
+                            placeholder_table.add_column("Type", width=10, overflow="fold")
+                            placeholder_table.add_column("Required", width=10, overflow="fold")
+                            placeholder_table.add_column("Example", width=20, overflow="fold")
+                            placeholder_table.add_column("Description", width=40, overflow="fold")
 
                             for placeholder in specification:
                                 placeholder_data_type = placeholder["dataType"]

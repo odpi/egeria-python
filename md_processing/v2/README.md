@@ -9,6 +9,22 @@ Dr.Egeria v2 is a complete re-architecture of the Egeria Markdown (Freddie) proc
 3. **Robustness**: Universal extraction handles commands in Markdown docs, Jupyter Notebooks, and LLM prompts.
 4. **Literate Programming**: Supports modern Markdown structures like tables and lists for attribute definition.
 
+## Design Decisions
+
+- **Strict Specification Adherence**: The `AttributeFirstParser` is intentionally specification-agnostic. It does not contain hardcoded logic for specific verbs or objects (e.g., "Display Name should be optional for Links"). If a requirement exists in the Egeria type system, it must be defined in the JSON specification.
+- **Diagnostic-First Validation**: Validation is treated as a first-class citizen. Even when a command fails to parse or execute, the system provides a diagnostic analysis including the "Command Analysis" and "Parsed Attributes" tables. When using the `process` directive, this diagnostic information is output to the console (using `rich.markdown`) to keep the resulting Markdown file clean and focused on the processed report.
+- **Reference Name List Support**: Attributes can be defined with the `Reference Name List` style, allowing users to provide multiple element names or GUIDs separated by commas or newlines. The parser automatically splits these into individual identifiers for resolution.
+- **Merge Update Semantics**: The `Merge Update` attribute (mapped to Egeria's `isMergeUpdate`) defaults to `True`. When `True`, synchronization operations (like folder or glossary memberships) are additive. When `False`, the system performs a full synchronization, removing existing memberships not specified in the command.
+- **Inter-Command Dependency Management**: The system tracks "Planned" elements (those defined in the current markdown file but not yet in Egeria) to allow subsequent commands to resolve their GUIDs without requiring a multi-pass process.
+- **Graceful Attribute Validation**: Attributes with styles `Enum` or `Valid Value` (those that don't match the defined set in the specification) are now flagged as **WARNINGS** instead of **ERRORS**. This allows processing to continue even if values are unknown, deferring final validation to the Egeria server.
+- **Reference Resolution Resilience**: If a reference (e.g., to a term or glossary) cannot be resolved, it is flagged as a **WARNING** rather than an **ERROR**. This prevents a missing dependency from blocking the entire processing pipeline.
+- **Qualified Name Integrity**: The name resolution logic treats strings containing colons as single identifiers. This ensures that Egeria's standard Qualified Names (which often use `::` as a separator) are resolved correctly without being incorrectly split by the processor.
+- **Reference Candidate Heuristic**: The processor is smarter about identifying which attributes are actually element references. It avoids attempting to resolve GUIDs for attributes that are clearly data fields (like Enums, Valid Values, Dictionaries, or Integers).
+- **Multi-Step Result Reporting**: Complex commands that perform multiple Egeria operations (e.g., creating a blueprint and attaching a journal entry) now track and report all secondary outcomes. This ensures users receive feedback on partial successes and all generated GUIDs.
+- **Dynamic Subtype Registration**: The v2 engine automatically handles various subtypes for **Collections** and **Projects**. If a new subtype is added to Egeria (e.g., a new type of `Collection`), adding it to the `COLLECTION_SUBTYPES` list in `md_processing_constants.py` will automatically enable support with the correct unified processor (`CollectionManagerProcessor`).
+- **Unified Collection Management**: All collection subtypes (Root Collections, Folders, Products, Agreements, and even Glossaries) are handled by a single, robust `CollectionManagerProcessor`. This processor automatically manages subtype-specific properties, parent relationships, status updates, and journal entries.
+- **Document Preservation**: Dr.Egeria now preserves all non-command text in the input Markdown file, copying it to the output file along with processed command blocks. A `# Provenance:` section is appended at the end to track the document's processing history.
+
 ## Architecture Overview
 
 ### 1. Extraction (`extraction.py`)
@@ -20,7 +36,10 @@ The `UniversalExtractor` identifies DrE command blocks (`# Verb Object`) and the
 The `AttributeFirstParser` maps raw Markdown attributes to the canonical command specification.
 
 - **KeyValue Parsing**: Supports tables (`| Key | Value |`), lists (`* Key: Value`), and inline maps.
-- **Enum Resolution**: Maps user-friendly labels (e.g., 'Draft') to Egeria internal integers.
+- **Enum and Valid Value Resolution**: Maps user-friendly labels (e.g., 'Draft') to Egeria internal values or integers. The resolution is case-insensitive and normalizes spaces, underscores, and dashes (e.g., `in progress`, `IN_PROGRESS`, and `in-progress` all resolve to the same value).
+- **Automatic Transformation**: User input is automatically transformed to match the canonical form if a case-insensitive match is found, ensuring data consistency even with loose input.
+- **Improved Property Handling**: Uses safe access for optional fields (like `Description`) and prevents runtime crashes if metadata is missing from the input document.
+- **Table Formatting**: List-style attributes (like `Reference Name List`) are rendered in Markdown tables with clear comma separators (`", "`), improving readability over newline or space-joined values.
 
 ### 3. Dispatching (`dispatcher.py`)
 
@@ -33,7 +52,9 @@ The `v2Dispatcher` routes extracted `DrECommand` objects to their respective `As
 Every command family implements a subclass of `AsyncBaseCommandProcessor`.
 
 - **Standard Flow**: `Parse -> Validate -> Fetch As-Is -> Action Dispatch`.
-- **Relationship Sync**: Includes generic logic for synchronizing one-to-many relationships.
+- **Efficient Existence Checks**: Integrates `__async_get_guid__` into the reference resolution logic, providing a more reliable and efficient method for verifying if elements already exist in Egeria.
+- **Secondary Operation Reporting**: Uses `add_related_result` to track operations like journal entries, membership syncing, and term linking. These are summarized in the final execution message.
+- **Relationship Sync**: Includes generic logic for synchronizing one-to-many relationships, catching individual failures so that one bad link doesn't block the rest.
 
 ## Usage
 
@@ -50,15 +71,24 @@ pip install -e .
 The v2 engine is integrated into the `dr_egeria` script (located in `commands/cat/dr_egeria.py`).
 
 ```bash
-# Process a file using the v2 engine (default)
-dr_egeria --input-file report.md --directive process
+# Display the file contents (parse-only, no validation or Egeria lookup)
+dr_egeria --input-file report.md --directive display
 
-# Or using python directly
-python commands/cat/dr_egeria.py --input-file report.md --directive process
+# Validate the file against Egeria (checks existence and attributes)
+dr_egeria --input-file report.md --directive validate
+
+# Process the file and make permanent changes to Egeria
+dr_egeria --input-file report.md --directive process
 
 # Explicitly disable v2 and fallback to legacy sync engine
 DR_EGERIA_V2=false dr_egeria --input-file report.md
 ```
+
+### Output Summary
+
+The processing results are presented in a concise table. The `GUID` of the processed element is included directly in the `Message` column for easier tracking. Related results (like new Journal Entries) are appended to the message as well:
+
+`Executed Update Solution Blueprint (GUID: fb6cc...d) | Related: Journal Entry (GUID: a188...2)`
 
 ### Environment Variables
 
