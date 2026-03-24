@@ -30,7 +30,7 @@ ___
 
 # Create Glossary  
 
-## Displauy Name  
+## Display Name  
 
 Egeria-Markdown  
 
@@ -65,6 +65,7 @@ commands, validates the Egeria content and sends the requests to be sent to Eger
 ACTIVE
 
 ## Qualified Name
+Glossary::Egeria-Markdown
 
 ## GUID  
 
@@ -75,12 +76,12 @@ ___
 The block of markdown above is a request to create a new Egeria Glossary called `Egeria-Markdown`. Let's briefly walk  
 through. The command starts when we see `# Create Glossary`. This is a known phrase in Dr.Egeria. When we see this
 phrase we recognize that this is an Egeria markdown request block. The request block ends if we encounter another `#` or  
-`___`, or run out of text. Within this request block we note some **attributes** that begin with a `##`. The first that  we encounter is `## Glossary Name`. Not all attributes need to be filled in. Later, we'll process this file and demonstrate  how to tell - but first, lets look at the attributes shown:  
-
-* `## Glossary Name` - this is the display name of the glossary. In this case the name is `Egeria-Markdown` As you can see, the value of the attribute is the plain text that follows it.  
+`___`, or run out of text. Within this request block we note some **attributes** that begin with a `##`. The first that  we encounter is `## Display Name`. Not all attributes need to be filled in. Later, we'll process this file and demonstrate  how to tell - but first, lets look at the attributes shown:  
+* `## Display Name` - this is the name of the glossary. In this case the name is `Egeria-Markdown` As you can see, the value of the attribute is the plain text that follows it.   
 * `## Language` - what language will the terms of the glossary be in (yes there are ways to have mixed language but  Dr.Egeria strives to be as simple as possible).  
 * `## Description` - a description of the glossary and its purpose.  
-* `## Usage` - how the glossary is meant to be used, and by whom.  
+* `## Usage` - how the glossary is meant to be used, and by whom.
+* `## Version Identifier` - an optional version identifier for the glossary. 
 * `## Qualified Name` - every element in Egeria must have a unique qualified name that we use to distinguish it from all other elements. The qualified name is meant to be understandable by humans, although it may follow formatting conventions. This attribute can be left blank for now - it will be automatically generated if empty.  
 * `## GUID` - same story as qualified name except that this is meant for automation and not people.  It is always created for us.
 
@@ -89,17 +90,17 @@ more details a bit later).
 
 ## Great! That was easy  
 
-We now have a nice, clean, new...and empty...glossary - guess we better start filling it. Lets start filling it with terms.
+We now have a nice, clean, new...and empty...glossary - guess we better start filling it. Lets start defining some terms.
 
 ___
 
-# Create Term  
+# Create Glossary Term  
 
 ## Display Name  
 
 Command  
 
-## In Glossary  
+## Glossary Name
 
 Glossary::Egeria-Markdown  
 
@@ -110,7 +111,8 @@ Commands are how a user of the Dr.Egeria markdown language request an action.
 ## Description  
 
 Commands are how a user can request Egeria to take an action such as Create or Update an Egeria element. Dr.Egeria  
-provides a limited (but growing) set of commands. Dr.Egeria commands align with the pyegeria 'hey-egeria'
+provides a limited (but growing) set of commands. Dr.Egeria  
+commands align with the pyegeria 'hey-egeria'
 command line interface and, of course, the underlying Egeria REST API.  
 
 The commands currently use the following verbs to act on Egeria elements:
@@ -124,20 +126,20 @@ The commands currently use the following verbs to act on Egeria elements:
 
 ## Example  
 
-    Create Glossary or  
-    Update Glossary or  
-    Create Term or  
-    Update Term  
+Create Glossary or  
+Update Glossary or  
+Create Glossary Term or  
+Update Glossary Term  
       
 ## Usage  
 
-    Commands are used in the Dr.Egeria markdown language.  
+Commands are used in the Dr.Egeria markdown language.  
       
 ## Version Identifier  
 
-   0.2
+0.2
 
-## Status  
+## Content Status  
 
 ACTIVE
 
@@ -147,23 +149,23 @@ ACTIVE
 
 ___  
 
-# Create Term  
-
-## In Glossary  
-
-    Glossary::Egeria-Markdown  
+# Create Glossary Term
       
 ## Display Name  
 
-    Source  
-      
+Markdown Source 
+
+## Glossary Name
+
+Glossary::Egeria-Markdown 
+
 ## Summary  
 
-    Source of the markdown content.  
+Source of the Dr.Egeria commands (markdown content).  
       
 ## Description  
 
-    Source of the markdown content - could be jupter or plain markdown file.  
+Source of the markdown content - could be jupyter or plain markdown file.  
       
 ## Abbreviation  
 
@@ -173,11 +175,11 @@ ___
 
 ## Version Identifier  
 
-    0.2 
+0.2 
       
-## Status  
+## Content Status  
 
-    ACTIVE
+ACTIVE
 
 ## Qualified Name
 
@@ -185,23 +187,23 @@ ___
 
 ___  
 
-# Create Term  
+# Create Glossary Term  
 
-## In Glossary  
-
-    Glossary::Egeria-Markdown  
-      
 ## Display Name  
 
-    Directive  
+Directive
+## Glossary Name 
+
+Glossary::Egeria-Markdown  
+
       
 ## Summary  
 
-    A directive defines how the command is to be processed.  
+A directive defines how the command is to be processed.  
       
 ## Description  
 
-    Directives are one of:  
+Directives are one of:  
       
 * display - just display what we've found  
 * validate - check the validity of the requested action  
@@ -211,7 +213,7 @@ ___
 
     0.1  
       
-## Status  
+## Content Status  
 
 ACTIVE
 

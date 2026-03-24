@@ -65,6 +65,18 @@ def str_to_bool(value: str) -> bool:
     """Converts a string to a boolean value."""
     return value.lower() in ("yes", "true", "t", "1")
 
+
+def normalize_value(value: str | int | None) -> str:
+    """Normalize a string for case-insensitive and format-flexible comparison.
+       Strips whitespace, converts to upper case, replaces underscores/dashes with spaces,
+       and collapses multiple spaces.
+    """
+    if value is None:
+        return ""
+    # Replace separators with spaces, then collapse multiple spaces and strip
+    s = str(value).upper().replace('_', ' ').replace('-', ' ')
+    return ' '.join(s.split())
+
 def render_markdown(markdown_text: str) -> None:
     """Renders the given markdown text in the console."""
     console.print(Markdown(markdown_text))
@@ -273,8 +285,8 @@ def set_create_body(object_type: str, attributes: dict)->dict:
         "anchorGUID": attributes.get('Anchor ID', {}).get('guid', None),
         "isOwnAnchor": attributes.get('Is Own Anchor', {}).get('value', True),
         "parentGUID": attributes.get('Parent ID', {}).get('guid', None),
-        "parentRelationshipTypeName": attributes.get('Parent Relationship Type Name', {}).get('value', None),
-        "parentRelationshipProperties": attributes.get('Parent Relationship Properties', {}).get('value', None),
+        "parentRelationshipTypeName": attributes.get('Parent Relationship Type Name', {}).get('value', None) or attributes.get('Parent Relationship Type', {}).get('value', None),
+        "parentRelationshipProperties": attributes.get('Parent Relationship Attributes', {}).get('value', None) or attributes.get('Parent Relationship Properties', {}).get('value', None),
         "parentAtEnd1": attributes.get('Parent at End1', {}).get('value', True),
         "anchorScopeGUID": attributes.get('Anchor Scope GUID', {}).get('guid', None),
         "properties": "",
@@ -341,7 +353,8 @@ def set_element_prop_body(object_type: str, qualified_name: str, attributes: dic
         "description": attributes.get('Description', {}).get('value', None),
         "category": attributes.get('Category', {}).get('value', None),
         "identifier": attributes.get('Identifier', {}).get('value', None),
-        "userDefinedStatus": attributes.get('User Defined Status', {}).get('value', None),
+        "contentStatus": attributes.get('Content Status', {}).get('value', None) or attributes.get('Status', {}).get('value', None),
+        "userDefinedContentStatus": attributes.get('User Defined Content Status', {}).get('value', None),
         "versionIdentifier": attributes.get('Version Identifier', {}).get('value', None),
         "effectiveFrom": attributes.get('Effective From', {}).get('value', None),
         "effectiveTo": attributes.get('Effective To', {}).get('value', None),
@@ -351,7 +364,49 @@ def set_element_prop_body(object_type: str, qualified_name: str, attributes: dic
         "serviceLevels": attributes.get('Service Levels', {}).get('value', None),
         }
 
-def set_product_body(object_type: str, qualified_name: str, attributes: dict)->dict:
+def set_collection_manager_body(object_type: str, qualified_name: str, attributes: dict) -> dict:
+    """
+    Build the INNER element-specific Properties body for Collection Manager elements.
+    Handles subtypes like Digital Product, Agreement, Digital Subscription, etc.
+    """
+    prop_bod = set_element_prop_body(object_type, qualified_name, attributes)
+
+    # Handle Digital Product and Digital Product Family
+    if "Digital Product" in object_type:
+        prop_bod.update({
+            "productName": attributes.get('Product Name', {}).get('value', None),
+            "maturity": attributes.get('Maturity', {}).get('value', None),
+            "serviceLife": attributes.get('Service Life', {}).get('value', None),
+            "introductionDate": attributes.get('Introduction Date', {}).get('value', None),
+            "withdrawalDate": attributes.get('Withdrawal Date', {}).get('value', None),
+            "nextVersionDate": attributes.get('Next Version Date', {}).get('value', None),
+        })
+
+    # Handle Agreement and Digital Subscription
+    if "Agreement" in object_type or "Subscription" in object_type:
+        prop_bod.update({
+            "agreementType": attributes.get('Agreement Type', {}).get('value', None),
+            "agreementStatus": attributes.get('Agreement Status', {}).get('value', None),
+        })
+        if "Subscription" in object_type:
+            prop_bod.update({
+                "subscriberType": attributes.get('Subscriber Type', {}).get('value', None),
+                "subscriberId": attributes.get('Subscriber Id', {}).get('value', None),
+                "supportLevel": attributes.get('Support Level', {}).get('value', None),
+                "serviceLevels": attributes.get('Service Levels', {}).get('value', None),
+            })
+
+    # Handle Glossary
+    if "Glossary" in object_type:
+        prop_bod.update({
+            "language": attributes.get('Language', {}).get('value', "English"),
+            "usage": attributes.get('Usage', {}).get('value', None),
+        })
+
+    return prop_bod
+
+
+def set_product_body(object_type: str, qualified_name: str, attributes: dict) -> dict:
     prop_bod = set_element_prop_body(object_type, qualified_name, attributes)
     prop_bod["identifier"] = attributes.get('Identifier', {}).get('value', None)
     prop_bod["productName"] = attributes.get('Product Name', {}).get('value', None)

@@ -44,10 +44,11 @@ class GovernanceProcessor(AsyncBaseCommandProcessor):
                 return self.command.original_text
             self.parsed_output["guid"] = guid
 
-            body = body_slimmer({
+            body = {
                 "class": "UpdateElementRequestBody",
-                "properties": prop_body
-            })
+                "properties": self.filter_update_properties(prop_body, attributes.get('Merge Update', {}).get('value', True)),
+                "mergeUpdate": attributes.get('Merge Update', {}).get('value', True)
+            }
             await self.client._async_update_governance_definition(guid, body)
             
             # Relationships
@@ -76,9 +77,18 @@ class GovernanceProcessor(AsyncBaseCommandProcessor):
         to_be_drivers = attributes.get("Governance Drivers", {}).get("guid_list", [])
         
         for policy in to_be_supports:
-            await self.client._async_attach_supporting_definitions(policy, "GovernanceImplementation", guid)
+            try:
+                await self.client._async_attach_supporting_definitions(policy, "GovernanceImplementation", guid)
+                self.add_related_result("Supports Policy", policy)
+            except Exception as e:
+                self.add_related_result("Supports Policy", policy, status="failure", message=str(e))
+
         for driver in to_be_drivers:
-            await self.client._async_attach_supporting_definitions(driver, "GovernanceResponse", guid)
+            try:
+                await self.client._async_attach_supporting_definitions(driver, "GovernanceResponse", guid)
+                self.add_related_result("Governance Driver", driver)
+            except Exception as e:
+                self.add_related_result("Governance Driver", driver, status="failure", message=str(e))
 
 class GovernanceLinkProcessor(AsyncBaseCommandProcessor):
     """

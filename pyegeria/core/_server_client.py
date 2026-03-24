@@ -275,7 +275,7 @@ class ServerClient(BaseServerClient):
                 body = {
                     # "class": "NameRequestBody",
                     "class": "UniqueNameRequestBody",
-                    "name": display_name,
+                    "displayName": display_name,
                     "namePropertyName": property_name,
                     "forLineage": False,
                     "forDuplicateProcessing": False,

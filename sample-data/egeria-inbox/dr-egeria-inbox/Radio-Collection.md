@@ -1,6 +1,6 @@
 # My Radio Collection
 
-# Update Collection
+# Create Collection
 >
 > Create or update a generic collection. While it can be used to create specific kinds of collections, you cannot set the collection-specific properties - so use the appropriate Dr.Egeria command to set all of the properties.
 >
@@ -67,7 +67,7 @@ PDR::Collection::My-Radio-Collection
 > **Valid Values**: DRAFT,PREPARED,PROPOSED,APPROVED,REJECTED,ACTIVE,DEPRECATED,OTHER
 
 > **Default Value**: ACTIVE
-
+DRAFT
 ## Search Keywords
 >
 > **Input Required**: False
@@ -76,6 +76,7 @@ PDR::Collection::My-Radio-Collection
 
 > **Description**: A list of search keywords.
 
+> 
 ## GUID
 >
 > **Input Required**: False

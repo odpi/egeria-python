@@ -58,6 +58,44 @@ class CollectionProperties(ReferenceableProperties):
     class_: Annotated[Literal["CollectionProperties"], Field(alias="class")]
 
 
+class RootCollectionProperties(CollectionProperties):
+    class_: Annotated[Literal["RootCollectionProperties"], Field(alias="class")]
+
+
+class HomeCollectionProperties(CollectionProperties):
+    class_: Annotated[Literal["HomeCollectionProperties"], Field(alias="class")]
+
+
+class CollectionFolderProperties(CollectionProperties):
+    class_: Annotated[Literal["CollectionFolderProperties"], Field(alias="class")]
+
+
+class NamespaceProperties(CollectionProperties):
+    class_: Annotated[Literal["NamespaceProperties"], Field(alias="class")]
+
+
+class ResultsSetProperties(CollectionProperties):
+    class_: Annotated[Literal["ResultsSetProperties"], Field(alias="class")]
+
+
+class RecentAccessProperties(CollectionProperties):
+    class_: Annotated[Literal["RecentAccessProperties"], Field(alias="class")]
+
+
+class WorkItemListProperties(CollectionProperties):
+    class_: Annotated[Literal["WorkItemListProperties"], Field(alias="class")]
+
+
+class FolioProperties(CollectionProperties):
+    class_: Annotated[Literal["FolioProperties"], Field(alias="class")]
+
+
+class GlossaryProperties(CollectionProperties):
+    class_: Annotated[Literal["GlossaryProperties"], Field(alias="class")]
+    language: str | None = "English"
+    usage: str | None = None
+
+
 class DataSpecProperties(CollectionProperties):
     class_: Annotated[Literal["DataSpecProperties"], Field(alias="class")]
 
@@ -70,6 +108,10 @@ class AgreementProperties(CollectionProperties):
     class_: Annotated[Literal["AgreementProperties"], Field(alias="class")]
     identifier: str | None = None
     user_defined_status: str | None = None
+
+
+class DataSharingAgreementProperties(AgreementProperties):
+    class_: Annotated[Literal["DataSharingAgreementProperties"], Field(alias="class")]
 
 class DigitalSubscriptionProperties(AgreementProperties):
     class_: Annotated[Literal["DigitalSubscriptionProperties"], Field(alias="class")]
@@ -100,9 +142,31 @@ class DigitalProductFamilyProperties(CollectionProperties):
     withdrawal_date: datetime | None = None
 
 
+class DigitalProductCatalogProperties(CollectionProperties):
+    class_: Annotated[Literal["DigitalProductCatalogProperties"], Field(alias="class")]
+
+
 class Collections(PyegeriaModel):
-    collection: Union[CollectionProperties, DigitalSubscriptionProperties, DigitalProductProperties, DigitalProductFamilyProperties,AgreementProperties,
-                      DataSpecProperties, DataDictionaryProperties] = Field(desciminator="class_")
+    collection: Union[
+        CollectionProperties,
+        DigitalSubscriptionProperties,
+        DigitalProductProperties,
+        DigitalProductFamilyProperties,
+        AgreementProperties,
+        DataSpecProperties,
+        DataDictionaryProperties,
+        RootCollectionProperties,
+        HomeCollectionProperties,
+        CollectionFolderProperties,
+        NamespaceProperties,
+        ResultsSetProperties,
+        RecentAccessProperties,
+        WorkItemListProperties,
+        FolioProperties,
+        DigitalProductCatalogProperties,
+        GlossaryProperties,
+        DataSharingAgreementProperties,
+    ] = Field(discriminator="class_")
 
 
 class CollectionManager(ServerClient):
@@ -5661,8 +5725,6 @@ class CollectionManager(ServerClient):
             **kwargs
         )
 
-
-from typing import Union, Dict, List, Optional
 
 if __name__ == "__main__":
     print("Main-Collection Manager")

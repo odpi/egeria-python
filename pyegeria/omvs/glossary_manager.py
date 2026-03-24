@@ -126,20 +126,23 @@ class GlossaryManager(CollectionManager):
             If there are issues in communications, message format, or Egeria errors.
         """
         if body is None:
-            qualified_name = self.__create_qualified_name__("Glossary", display_name)
-            body = {
-                "class": "NewElementRequestBody",
-                "is_own_anchor": True,
-                "properties": {
-                    "class": "GlossaryProperties",
-                    "displayName": display_name,
-                    "qualifiedName": qualified_name,
-                    "description": description,
-                    "language": language,
-                    "usage": usage,
-                    "category": category
-                    },
-                }
+            if isinstance(display_name, (dict, NewElementRequestBody)):
+                body = display_name
+            else:
+                qualified_name = self.__create_qualified_name__("Glossary", display_name)
+                body = {
+                    "class": "NewElementRequestBody",
+                    "is_own_anchor": True,
+                    "properties": {
+                        "class": "GlossaryProperties",
+                        "displayName": display_name,
+                        "qualifiedName": qualified_name,
+                        "description": description,
+                        "language": language,
+                        "usage": usage,
+                        "category": category
+                        },
+                    }
         response = await self._async_create_collection(body=body)
         return response
 
@@ -935,7 +938,7 @@ class GlossaryManager(CollectionManager):
     async def _async_update_glossary_term_status(
             self,
             glossary_term_guid: str,
-            term_status: str = "DRAFT",
+            term_status: str = "ACTIVE",
             body: Optional[dict | UpdateElementRequestBody] = None,
     ) -> None:
         """Update the status of a term. Async version.
@@ -963,9 +966,12 @@ class GlossaryManager(CollectionManager):
 
         if body is None:
             body = {
-             "class": "UpdateElementRequestBody",
-             "contentStatus": term_status,
-             "mergeUpdate": True,
+                "class": "UpdateElementRequestBody",
+                "properties": {
+                    "class": "GlossaryTermProperties",
+                    "contentStatus": term_status,
+                },
+                "mergeUpdate": True,
             }
         await self._async_update_glossary_term( glossary_term_guid, body)
         logger.info(f"Updated term status {glossary_term_guid}")
@@ -974,7 +980,7 @@ class GlossaryManager(CollectionManager):
     @dynamic_catch
     def update_glossary_term_status(
             self,
-            glossary_term_guid: str, term_status: str = "DRAFT",
+            glossary_term_guid: str, term_status: str = "ACTIVE",
             body: Optional[dict | UpdateElementRequestBody] = None,
             ) -> None:
         """Add the data field values classification to a glossary term
@@ -1016,6 +1022,7 @@ class GlossaryManager(CollectionManager):
         loop.run_until_complete(
             self._async_update_glossary_term_status(
                 glossary_term_guid,
+                term_status,
                 body,
                 )
             )

@@ -11,7 +11,8 @@ from md_processing.md_processing_utils.md_processing_constants import get_comman
 from md_processing.md_processing_utils.common_md_utils import (
     set_element_prop_body, set_create_body, set_update_body, 
     update_element_dictionary, set_delete_request_body,
-    set_rel_prop_body, set_rel_request_body_for_type
+    set_rel_prop_body, set_rel_request_body_for_type,
+    async_add_note_in_dr_e
 )
 from pyegeria.core.utils import body_slimmer
 
@@ -67,7 +68,7 @@ class FeedbackProcessor(AsyncBaseCommandProcessor):
                 guid = self.parsed_output.get("guid")
                 if not guid: return self.command.original_text
                 body = set_update_body("Comment", attributes)
-                body['properties'] = prop_body
+                body['properties'] = self.filter_update_properties(prop_body, body.get('mergeUpdate', True))
                 await self.client._async_update_comment(guid, body)
                 self.parsed_output["guid"] = guid
                 logger.success(f"Updated Comment '{display_name}' with GUID {guid}")
@@ -109,8 +110,8 @@ class FeedbackProcessor(AsyncBaseCommandProcessor):
                 guid = self.parsed_output.get("guid")
                 if not guid: return self.command.original_text
                 body = set_update_body("Note", attributes)
-                body['properties'] = prop_body
-                await self.client._async_update_note(guid, body_slimmer(body))
+                body['properties'] = self.filter_update_properties(prop_body, body.get('mergeUpdate', True))
+                await self.client._async_update_note(guid, body)
                 self.parsed_output["guid"] = guid
                 logger.success(f"Updated Note '{display_name}' with GUID {guid}")
                 return await self.client._async_get_note_by_guid(guid, output_format='MD')
@@ -189,6 +190,7 @@ class ExternalReferenceProcessor(AsyncBaseCommandProcessor):
         attributes = self.parsed_output["attributes"]
         qualified_name = self.parsed_output["qualified_name"]
         display_name = attributes.get('Display Name', {}).get('value', qualified_name)
+        journal_entry = attributes.get('Journal Entry', {}).get('value')
 
         # 1. Map type and properties
         mapped_type = "ExternalReference"
@@ -248,6 +250,15 @@ class ExternalReferenceProcessor(AsyncBaseCommandProcessor):
             body['properties'] = prop_body
             await self.client._async_update_external_reference(guid, body)
             self.parsed_output["guid"] = guid
+            
+            if journal_entry:
+                try:
+                    j_guid = await async_add_note_in_dr_e(self.client, qualified_name, display_name, journal_entry)
+                    if j_guid:
+                        self.add_related_result("Journal Entry", j_guid)
+                except Exception as e:
+                    self.add_related_result("Journal Entry", status="failure", message=str(e))
+
             logger.success(f"Updated {object_type} '{display_name}' with GUID {guid}")
             return await self.render_result_markdown(guid)
 
@@ -257,6 +268,15 @@ class ExternalReferenceProcessor(AsyncBaseCommandProcessor):
             guid = await self.client._async_create_external_reference(body=body_slimmer(body))
             if guid:
                 self.parsed_output["guid"] = guid
+
+                if journal_entry:
+                    try:
+                        j_guid = await async_add_note_in_dr_e(self.client, qualified_name, display_name, journal_entry)
+                        if j_guid:
+                            self.add_related_result("Journal Entry", j_guid)
+                    except Exception as e:
+                        self.add_related_result("Journal Entry", status="failure", message=str(e))
+
                 update_element_dictionary(qualified_name, {'guid': guid, 'display_name': display_name})
                 logger.success(f"Created {object_type} '{display_name}' with GUID {guid}")
                 return await self.render_result_markdown(guid)

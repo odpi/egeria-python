@@ -14,11 +14,14 @@ A glossary for testing.
     extractor = UniversalExtractor(text)
     commands = extractor.extract_commands()
     
-    assert len(commands) == 1
-    assert commands[0].verb == "Create"
-    assert commands[0].object_type == "Glossary"
-    assert commands[0].attributes["Display Name"] == "My New Glossary"
-    assert commands[0].attributes["Description"] == "A glossary for testing."
+    # Filter only actual commands
+    actual_commands = [c for c in commands if c.is_command]
+    
+    assert len(actual_commands) == 1
+    assert actual_commands[0].verb == "Create"
+    assert actual_commands[0].object_type == "Glossary"
+    assert actual_commands[0].attributes["Display Name"] == "My New Glossary"
+    assert actual_commands[0].attributes["Description"] == "A glossary for testing."
 
 def test_mixed_markdown_extraction():
     text = """
@@ -39,11 +42,19 @@ Footer text.
     extractor = UniversalExtractor(text)
     commands = extractor.extract_commands()
     
-    assert len(commands) == 2
-    assert commands[0].verb == "Create"
-    assert commands[0].object_type == "Term"
-    assert commands[1].verb == "Update"
-    assert commands[1].object_type == "Glossary"
+    # Filter only actual commands
+    actual_commands = [c for c in commands if c.is_command]
+    
+    assert len(actual_commands) == 2
+    assert actual_commands[0].verb == "Create"
+    assert actual_commands[0].object_type == "Term"
+    assert actual_commands[1].verb == "Update"
+    assert actual_commands[1].object_type == "Glossary"
+    
+    # Check that non-command text is preserved as blocks
+    assert any(not c.is_command and "introductory text" in c.raw_block for c in commands)
+    # Note: 'Footer text' is part of the previous command block unless separated by ---
+    assert any("Footer text" in c.raw_block for c in commands)
 
 def test_headless_command_extraction():
     # Headless command (no leading #)
@@ -51,9 +62,12 @@ def test_headless_command_extraction():
     extractor = UniversalExtractor(text)
     commands = extractor.extract_commands()
     
-    assert len(commands) == 1
-    assert commands[0].verb == "Create"
-    assert commands[0].object_type == "Project"
+    # Filter only actual commands
+    actual_commands = [c for c in commands if c.is_command]
+    
+    assert len(actual_commands) == 1
+    assert actual_commands[0].verb == "Create"
+    assert actual_commands[0].object_type == "Project"
 
 def test_attribute_preservation():
     # Test that provenance lines (>) are filtered out but newlines are preserved
@@ -67,7 +81,10 @@ Line 2
     extractor = UniversalExtractor(text)
     commands = extractor.extract_commands()
     
-    desc = commands[0].attributes["Description"]
+    # Filter only actual commands
+    actual_commands = [c for c in commands if c.is_command]
+    
+    desc = actual_commands[0].attributes["Description"]
     assert "Line 1" in desc
     assert "Line 2" in desc
     assert "provenance" not in desc

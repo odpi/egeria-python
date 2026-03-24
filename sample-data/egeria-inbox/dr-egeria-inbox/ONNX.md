@@ -227,9 +227,8 @@ AnalyticsEngine
 
 > **Alternative Labels**: In Solution Blueprints
 
-SolutionBlueprint::Initial-Data-Prep-Blueprint-for-ML-OPs::0.1
 
-## In Information Supply Chains
+## In Information Supply Chain
 >
 > **Input Required**: False
 

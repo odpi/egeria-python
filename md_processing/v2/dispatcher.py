@@ -9,6 +9,9 @@ from loguru import logger
 from pyegeria import EgeriaTech
 from md_processing.v2.extraction import DrECommand
 from md_processing.v2.processors import AsyncBaseCommandProcessor
+from md_processing.md_processing_utils.md_processing_constants import COLLECTION_SUBTYPES, PROJECT_SUBTYPES
+from md_processing.v2.collection_manager_processor import CollectionManagerProcessor
+from md_processing.v2.project import ProjectProcessor
 
 class v2Dispatcher:
     """
@@ -28,9 +31,26 @@ class v2Dispatcher:
         """
         Extract the full command name (Verb + Object) and route to the processor.
         """
+        if not command.is_command:
+            return {
+                "output": command.raw_block,
+                "status": "success",
+                "message": "Block preserved",
+                "verb": "",
+                "object_type": "",
+                "is_command": False
+            }
+
         command_key = f"{command.verb} {command.object_type}"
         processor_cls = self.processors.get(command_key)
         
+        if not processor_cls:
+            # Fallback for known collection and project subtypes if not explicitly registered
+            if command.object_type in COLLECTION_SUBTYPES:
+                processor_cls = CollectionManagerProcessor
+            elif command.object_type in PROJECT_SUBTYPES:
+                processor_cls = ProjectProcessor
+
         if not processor_cls:
             logger.warning(f"v2Dispatcher: No processor registered for '{command_key}'")
             return {

@@ -9,7 +9,8 @@ from md_processing.v2.processors import AsyncBaseCommandProcessor
 from md_processing.md_processing_utils.md_processing_constants import get_command_spec
 from md_processing.md_processing_utils.common_md_utils import (
     set_element_prop_body, set_create_body, set_update_body, 
-    set_object_classifications, update_element_dictionary
+    set_object_classifications, update_element_dictionary,
+    async_add_note_in_dr_e
 )
 
 class GlossaryProcessor(AsyncBaseCommandProcessor):
@@ -32,11 +33,12 @@ class GlossaryProcessor(AsyncBaseCommandProcessor):
         
         # 1. Prepare properties
         prop_body = set_element_prop_body("Glossary", qualified_name, attributes)
-        prop_body["languager"] = attributes.get('Language', {}).get('value', None)
+        prop_body["language"] = attributes.get('Language', {}).get('value', None)
         prop_body["usage"] = attributes.get('Usage', {}).get('value', None)
         
         display_name = attributes.get('Display Name', {}).get('value', qualified_name)
         status = attributes.get('Status', {}).get('value', None)
+        journal_entry = attributes.get('Journal Entry', {}).get('value')
 
         if verb == "Update":
             guid = self.parsed_output.get("guid")
@@ -44,16 +46,24 @@ class GlossaryProcessor(AsyncBaseCommandProcessor):
                 guid = self.as_is_element['elementHeader']['guid']
                 
             if not guid:
-                 logger.error(f"Cannot update {display_name}: GUID not found")
-                 return self.command.original_text
+                logger.error(f"Cannot update {display_name}: GUID not found")
+                return self.command.original_text
 
             body = set_update_body("Glossary", attributes)
-            body['properties'] = prop_body
+            body['properties'] = self.filter_update_properties(prop_body, body.get('mergeUpdate', True))
             
             await self.client._async_update_collection(guid, body)
             self.parsed_output["guid"] = guid
             # if status:
             #     await self.client._async_update_collection_status(guid, status)
+            
+            if journal_entry:
+                try:
+                    j_guid = await async_add_note_in_dr_e(self.client, qualified_name, display_name, journal_entry)
+                    if j_guid:
+                        self.add_related_result("Journal Entry", j_guid)
+                except Exception as e:
+                    self.add_related_result("Journal Entry", status="failure", message=str(e))
                 
             logger.success(f"Updated {object_type} '{display_name}' with GUID {guid}")
             update_element_dictionary(qualified_name, {'guid': guid, 'display_name': display_name})
@@ -79,6 +89,15 @@ class GlossaryProcessor(AsyncBaseCommandProcessor):
             guid = await self.client._async_create_collection(body=body)
             if guid:
                 self.parsed_output["guid"] = guid
+
+                if journal_entry:
+                    try:
+                        j_guid = await async_add_note_in_dr_e(self.client, qualified_name, display_name, journal_entry)
+                        if j_guid:
+                            self.add_related_result("Journal Entry", j_guid)
+                    except Exception as e:
+                        self.add_related_result("Journal Entry", status="failure", message=str(e))
+
                 update_element_dictionary(qualified_name, {'guid': guid, 'display_name': display_name})
                 logger.success(f"Created {object_type} '{display_name}' with GUID {guid}")
                 return await self.render_result_markdown(guid)
@@ -104,6 +123,7 @@ class TermProcessor(AsyncBaseCommandProcessor):
         display_name = attributes.get('Display Name', {}).get('value', qualified_name)
         status = attributes.get('Status', {}).get('value', None)
         merge_update = attributes.get('Merge Update', {}).get('value', True)
+        journal_entry = attributes.get('Journal Entry', {}).get('value')
 
         # 1. Properties
         prop_body = set_element_prop_body("GlossaryTerm", qualified_name, attributes)
@@ -114,9 +134,17 @@ class TermProcessor(AsyncBaseCommandProcessor):
         prop_body["usage"] = attributes.get('Usage', {}).get('value', None)
         prop_body["user_defined_status"] = attributes.get('UserDefinedStatus', {}).get('value', None)
         
-        glossary_guid = attributes.get("Glossary", {}).get('guid', None)
-        folder_guids = attributes.get("Folder", {}).get("guid_list", [])
-        to_be_collection_guids = [glossary_guid] + (folder_guids if isinstance(folder_guids, list) else [folder_guids])
+        # 2. Extract collection GUIDs
+        # We may have one or more collections listed (Glossary Name, Folders)
+        glossary_guids = attributes.get("Glossary Name", {}).get("guid_list", [])
+        if not glossary_guids and attributes.get("Glossary Name", {}).get("guid"):
+            glossary_guids = [attributes["Glossary Name"]["guid"]]
+            
+        folder_guids = attributes.get("Folders", {}).get("guid_list", [])
+        if not folder_guids and attributes.get("Folders", {}).get("guid"):
+            folder_guids = [attributes["Folders"]["guid"]]
+            
+        to_be_collection_guids = list(set(glossary_guids) | set(folder_guids))
         to_be_collection_guids = [g for g in to_be_collection_guids if g]
 
         if verb == "Update":
@@ -125,15 +153,24 @@ class TermProcessor(AsyncBaseCommandProcessor):
                 return self.command.original_text
 
             body = set_update_body("GlossaryTerm", attributes)
-            body['properties'] = prop_body
+            body['properties'] = self.filter_update_properties(prop_body, body.get('mergeUpdate', True))
             
             await self.client._async_update_glossary_term(guid, body)
             self.parsed_output["guid"] = guid
             if status:
                 await self.client._async_update_glossary_term_status(guid, status)
             
-            # Async sync memberships
-            await self._sync_term_memberships(guid, to_be_collection_guids, merge_update)
+            # Sync memberships: if merge_update is True, we only add (replace_all=False)
+            # If merge_update is False, we synchronize (replace_all=True)
+            await self._sync_term_memberships(guid, to_be_collection_guids, not merge_update)
+            
+            if journal_entry:
+                try:
+                    j_guid = await async_add_note_in_dr_e(self.client, qualified_name, display_name, journal_entry)
+                    if j_guid:
+                        self.add_related_result("Journal Entry", j_guid)
+                except Exception as e:
+                    self.add_related_result("Journal Entry", status="failure", message=str(e))
             
             logger.success(f"Updated Term '{display_name}' with GUID {guid}")
             update_element_dictionary(qualified_name, {'guid': guid, 'display_name': display_name})
@@ -145,13 +182,23 @@ class TermProcessor(AsyncBaseCommandProcessor):
             
             # Anchor Scope check
             anchor_scope_guid = attributes.get("Anchor Scope", {}).get('guid', None)
-            if anchor_scope_guid is None and glossary_guid:
-                body["anchorScopeGUID"] = glossary_guid
+            if anchor_scope_guid is None and glossary_guids:
+                body["anchorScopeGUID"] = glossary_guids[0] # Use first glossary as anchor if not specified
 
             guid = await self.client._async_create_glossary_term(body=body)
             if guid:
                 self.parsed_output["guid"] = guid
+                # For Create, we always want to ensure it's in all listed collections
                 await self._sync_term_memberships(guid, to_be_collection_guids, replace_all=True)
+
+                if journal_entry:
+                    try:
+                        j_guid = await async_add_note_in_dr_e(self.client, qualified_name, display_name, journal_entry)
+                        if j_guid:
+                            self.add_related_result("Journal Entry", j_guid)
+                    except Exception as e:
+                        self.add_related_result("Journal Entry", status="failure", message=str(e))
+
                 update_element_dictionary(qualified_name, {'guid': guid, 'display_name': display_name})
                 logger.success(f"Created Term '{display_name}' with GUID {guid}")
                 return await self.render_result_markdown(guid)
@@ -160,25 +207,45 @@ class TermProcessor(AsyncBaseCommandProcessor):
 
     async def _sync_term_memberships(self, term_guid: str, to_be_guids: List[str], replace_all: bool):
         """Standardized helper for term collection sync."""
-        # 1. Fetch current (As-Is)
-        # We need to find which collections this term is currently in.
-        # This usually involves getting terms' collections.
-        # For simplicity in this first port, we'll implement the logic here.
-        
-        # Note: In v1 this was handled by sync_collection_memberships
-        # For v2, we'll use the AsyncBaseCommandProcessor.sync_members helper
-        
         current_collections = await self.client._async_get_attached_collections(term_guid)
         as_is_guids = {c['elementHeader']['guid'] for c in current_collections} if current_collections and not isinstance(current_collections, str) else set()
+        
+        # Build map of GUID to name for current collections for better feedback
+        guid_to_name = {}
+        if current_collections and not isinstance(current_collections, str):
+            for c in current_collections:
+                guid = c['elementHeader']['guid']
+                name = c.get('properties', {}).get('displayName') or c.get('properties', {}).get('qualifiedName') or guid
+                guid_to_name[guid] = name
+                
         to_be_set = set(to_be_guids)
         
         async def add_fn(collection_guid):
-            await self.client._async_add_term_to_collection(term_guid, collection_guid)
+            await self.client._async_add_to_collection(collection_guid, term_guid)
             
         async def remove_fn(collection_guid):
-            await self.client._async_remove_term_from_collection(term_guid, collection_guid)
+            await self.client._async_remove_from_collection(collection_guid, term_guid)
             
-        await self.sync_members(as_is_guids, to_be_set, add_fn, remove_fn, replace_all)
+        sync_res = await self.sync_members(as_is_guids, to_be_set, add_fn, remove_fn, replace_all)
+        
+        if sync_res.get("added") or sync_res.get("removed"):
+            added_names = []
+            for g in sync_res["added"]:
+                # Try to find name in input attributes if it matched a guid
+                added_names.append(g) # For now just GUID
+                
+            removed_names = [guid_to_name.get(g, g) for g in sync_res["removed"]]
+            
+            msg = f"Sync: Added {len(sync_res['added'])} collection(s), Removed {len(sync_res['removed'])} collection(s)."
+            if sync_res["added"]:
+                msg += f" Added: {', '.join(sync_res['added'])}"
+            if sync_res["removed"]:
+                msg += f" Removed: {', '.join(removed_names)}"
+                
+            self.add_related_result("Collection Memberships Sync", message=msg)
+            
+        if sync_res.get("errors"):
+            self.add_related_result("Collection Memberships Sync", status="failure", message="; ".join(sync_res["errors"]))
 
 class TermRelationshipProcessor(AsyncBaseCommandProcessor):
     """

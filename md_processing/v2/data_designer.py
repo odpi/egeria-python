@@ -11,7 +11,7 @@ from md_processing.md_processing_utils.md_processing_constants import get_comman
 from md_processing.md_processing_utils.common_md_utils import (
     set_element_prop_body, set_create_body, set_update_body, 
     set_rel_request_body, set_rel_prop_body, set_data_field_body,
-    update_element_dictionary
+    update_element_dictionary, async_add_note_in_dr_e
 )
 from pyegeria.core.utils import body_slimmer
 
@@ -31,6 +31,7 @@ class DataCollectionProcessor(AsyncBaseCommandProcessor):
         qualified_name = self.parsed_output["qualified_name"]
         display_name = attributes.get('Display Name', {}).get('value', qualified_name)
         status = attributes.get('Status', {}).get('value', None)
+        journal_entry = attributes.get('Journal Entry', {}).get('value')
 
         # 1. Map type
         mapped_type = "Collection"
@@ -47,13 +48,21 @@ class DataCollectionProcessor(AsyncBaseCommandProcessor):
                 return self.command.original_text
 
             body = set_update_body(object_type, attributes)
-            body['properties'] = prop_body
+            body['properties'] = self.filter_update_properties(prop_body, body.get('mergeUpdate', True))
             
             await self.client._async_update_collection(guid, body)
             self.parsed_output["guid"] = guid
             if status:
                 await self.client._async_update_collection_status(guid, status)
             
+            if journal_entry:
+                try:
+                    j_guid = await async_add_note_in_dr_e(self.client, qualified_name, display_name, journal_entry)
+                    if j_guid:
+                        self.add_related_result("Journal Entry", j_guid)
+                except Exception as e:
+                    self.add_related_result("Journal Entry", status="failure", message=str(e))
+
             logger.success(f"Updated {object_type} '{display_name}' with GUID {guid}")
             update_element_dictionary(qualified_name, {'guid': guid, 'display_name': display_name})
             return await self.render_result_markdown(guid)
@@ -71,6 +80,15 @@ class DataCollectionProcessor(AsyncBaseCommandProcessor):
             guid = await self.client._async_create_collection(body=body)
             if guid:
                 self.parsed_output["guid"] = guid
+
+                if journal_entry:
+                    try:
+                        j_guid = await async_add_note_in_dr_e(self.client, qualified_name, display_name, journal_entry)
+                        if j_guid:
+                            self.add_related_result("Journal Entry", j_guid)
+                    except Exception as e:
+                        self.add_related_result("Journal Entry", status="failure", message=str(e))
+
                 update_element_dictionary(qualified_name, {'guid': guid, 'display_name': display_name})
                 logger.success(f"Created {object_type} '{display_name}' with GUID {guid}")
                 return await self.render_result_markdown(guid)
@@ -98,6 +116,7 @@ class DataStructureProcessor(AsyncBaseCommandProcessor):
         qualified_name = self.parsed_output["qualified_name"]
         display_name = attributes.get('Display Name', {}).get('value', qualified_name)
         merge_update = attributes.get('Merge Update', {}).get('value', True)
+        journal_entry = attributes.get('Journal Entry', {}).get('value')
 
         prop_body = set_element_prop_body("Data Structure", qualified_name, attributes)
         prop_body['namespace'] = attributes.get('Namespace', {}).get('value', None)
@@ -115,12 +134,20 @@ class DataStructureProcessor(AsyncBaseCommandProcessor):
                 return self.command.original_text
 
             body = set_update_body("Data Structure", attributes)
-            body['properties'] = prop_body
+            body['properties'] = self.filter_update_properties(prop_body, body.get('mergeUpdate', True))
             await self.client._async_update_data_structure(guid, body)
             self.parsed_output["guid"] = guid
             
             await self._sync_memberships(guid, to_be_guids, not merge_update)
             
+            if journal_entry:
+                try:
+                    j_guid = await async_add_note_in_dr_e(self.client, qualified_name, display_name, journal_entry)
+                    if j_guid:
+                        self.add_related_result("Journal Entry", j_guid)
+                except Exception as e:
+                    self.add_related_result("Journal Entry", status="failure", message=str(e))
+
             logger.success(f"Updated Data Structure '{display_name}' with GUID {guid}")
             update_element_dictionary(qualified_name, {'guid': guid, 'display_name': display_name})
             return await self.render_result_markdown(guid)
@@ -133,6 +160,15 @@ class DataStructureProcessor(AsyncBaseCommandProcessor):
             if guid:
                 self.parsed_output["guid"] = guid
                 await self._sync_memberships(guid, to_be_guids, replace_all=True)
+
+                if journal_entry:
+                    try:
+                        j_guid = await async_add_note_in_dr_e(self.client, qualified_name, display_name, journal_entry)
+                        if j_guid:
+                            self.add_related_result("Journal Entry", j_guid)
+                    except Exception as e:
+                        self.add_related_result("Journal Entry", status="failure", message=str(e))
+
                 update_element_dictionary(qualified_name, {'guid': guid, 'display_name': display_name})
                 logger.success(f"Created Data Structure '{display_name}' with GUID {guid}")
                 return await self.render_result_markdown(guid)
@@ -151,7 +187,11 @@ class DataStructureProcessor(AsyncBaseCommandProcessor):
         async def remove_fn(coll_guid):
             await self.client._async_remove_from_collection(coll_guid, guid)
             
-        await self.sync_members(as_is, to_be_guids, add_fn, remove_fn, replace_all)
+        sync_res = await self.sync_members(as_is, to_be_guids, add_fn, remove_fn, replace_all)
+        if sync_res.get("added") or sync_res.get("removed"):
+            self.add_related_result("Collection Memberships Sync", message=f"Added {len(sync_res['added'])}, Removed {len(sync_res['removed'])}")
+        if sync_res.get("errors"):
+            self.add_related_result("Collection Memberships Sync", status="failure", message="; ".join(sync_res["errors"]))
 
     async def fetch_element(self, guid: str) -> Optional[Dict[str, Any]]:
         try:
@@ -174,6 +214,7 @@ class DataFieldProcessor(AsyncBaseCommandProcessor):
         qualified_name = self.parsed_output["qualified_name"]
         display_name = attributes.get('Display Name', {}).get('value', qualified_name)
         merge_update = attributes.get('Merge Update', {}).get('value', False) # Default to false for fields?
+        journal_entry = attributes.get('Journal Entry', {}).get('value')
 
         # 1. Properties
         props_body = set_data_field_body("Data Field", qualified_name, attributes)
@@ -190,15 +231,23 @@ class DataFieldProcessor(AsyncBaseCommandProcessor):
         if verb == "Update":
             guid = self.parsed_output.get("guid") or (self.as_is_element['elementHeader']['guid'] if self.as_is_element else None)
             if not guid:
-                 return self.command.original_text
+                return self.command.original_text
 
             body = set_update_body("Data Field", attributes)
-            body['properties'] = props_body
+            body['properties'] = self.filter_update_properties(props_body, body.get('mergeUpdate', True))
             await self.client._async_update_data_field(guid, body)
             self.parsed_output["guid"] = guid
             
             await self._sync_all_rels(guid, data_struct_guids, parent_field_guids, term_guids, data_class_guid, data_dict_guids, not merge_update)
             
+            if journal_entry:
+                try:
+                    j_guid = await async_add_note_in_dr_e(self.client, qualified_name, display_name, journal_entry)
+                    if j_guid:
+                        self.add_related_result("Journal Entry", j_guid)
+                except Exception as e:
+                    self.add_related_result("Journal Entry", status="failure", message=str(e))
+
             logger.success(f"Updated Data Field '{display_name}' with GUID {guid}")
             update_element_dictionary(qualified_name, {'guid': guid, 'display_name': display_name})
             return await self.render_result_markdown(guid)
@@ -211,6 +260,15 @@ class DataFieldProcessor(AsyncBaseCommandProcessor):
             if guid:
                 self.parsed_output["guid"] = guid
                 await self._sync_all_rels(guid, data_struct_guids, parent_field_guids, term_guids, data_class_guid, data_dict_guids, replace_all=True)
+
+                if journal_entry:
+                    try:
+                        j_guid = await async_add_note_in_dr_e(self.client, qualified_name, display_name, journal_entry)
+                        if j_guid:
+                            self.add_related_result("Journal Entry", j_guid)
+                    except Exception as e:
+                        self.add_related_result("Journal Entry", status="failure", message=str(e))
+
                 update_element_dictionary(qualified_name, {'guid': guid, 'display_name': display_name})
                 logger.success(f"Created Data Field '{display_name}' with GUID {guid}")
                 return await self.render_result_markdown(guid)
@@ -224,40 +282,60 @@ class DataFieldProcessor(AsyncBaseCommandProcessor):
         
         # 1. Data Structures
         as_is_ds = set(rel_els.get("data_structure_guids", []))
-        await self.sync_members(as_is_ds, ds_guids, 
+        sync_res = await self.sync_members(as_is_ds, ds_guids, 
                                lambda ds: self.client._async_link_member_data_field(ds, guid, None),
                                lambda ds: self.client._async_detach_member_data_field(ds, guid, None),
                                replace_all)
+        if sync_res.get("added") or sync_res.get("removed"):
+            self.add_related_result("Data Structures Sync", message=f"Added {len(sync_res['added'])}, Removed {len(sync_res['removed'])}")
+        if sync_res.get("errors"):
+            self.add_related_result("Data Structures Sync", status="failure", message="; ".join(sync_res["errors"]))
         
         # 2. Parent Fields
         as_is_parents = set(rel_els.get("parent_guids", []))
-        await self.sync_members(as_is_parents, parent_guids,
+        sync_res = await self.sync_members(as_is_parents, parent_guids,
                                lambda p: self.client._async_link_nested_data_field(p, guid, None),
                                lambda p: self.client._async_detach_nested_data_field(p, guid, None),
                                replace_all)
+        if sync_res.get("added") or sync_res.get("removed"):
+            self.add_related_result("Parent Fields Sync", message=f"Added {len(sync_res['added'])}, Removed {len(sync_res['removed'])}")
+        if sync_res.get("errors"):
+            self.add_related_result("Parent Fields Sync", status="failure", message="; ".join(sync_res["errors"]))
         
         # 3. Terms (Semantic Definitions)
         as_is_terms = set(rel_els.get("assigned_meanings_guids", []))
-        await self.sync_members(as_is_terms, term_guids,
+        sync_res = await self.sync_members(as_is_terms, term_guids,
                                lambda t: self.client._async_link_semantic_definition(guid, t, None),
                                lambda t: self.client._async_detach_semantic_definition(guid, t, None),
                                replace_all)
+        if sync_res.get("added") or sync_res.get("removed"):
+            self.add_related_result("Semantic Definitions Sync", message=f"Added {len(sync_res['added'])}, Removed {len(sync_res['removed'])}")
+        if sync_res.get("errors"):
+            self.add_related_result("Semantic Definitions Sync", status="failure", message="; ".join(sync_res["errors"]))
                                
         # 4. Data Class
         as_is_dc = set(rel_els.get("data_class_guids", []))
         to_be_dc = {dc_guid} if dc_guid else set()
-        await self.sync_members(as_is_dc, to_be_dc,
+        sync_res = await self.sync_members(as_is_dc, to_be_dc,
                                lambda dc: self.client._async_link_data_class_definition(guid, dc, None),
                                lambda dc: self.client._async_detach_data_class_definition(guid, dc, None),
                                replace_all)
+        if sync_res.get("added") or sync_res.get("removed"):
+            self.add_related_result("Data Class Sync", message=f"Added {len(sync_res['added'])}, Removed {len(sync_res['removed'])}")
+        if sync_res.get("errors"):
+            self.add_related_result("Data Class Sync", status="failure", message="; ".join(sync_res["errors"]))
 
         # 5. Data Dictionaries (Collections)
         memberships = await self.client._async_get_data_memberships(self.client._async_get_data_field_by_guid, guid)
         as_is_dicts = set(memberships.get("DictList", []))
-        await self.sync_members(as_is_dicts, dict_guids,
+        sync_res = await self.sync_members(as_is_dicts, dict_guids,
                                lambda d: self.client._async_add_to_collection(d, guid),
                                lambda d: self.client._async_remove_from_collection(d, guid),
                                replace_all)
+        if sync_res.get("added") or sync_res.get("removed"):
+            self.add_related_result("Data Dictionaries Sync", message=f"Added {len(sync_res['added'])}, Removed {len(sync_res['removed'])}")
+        if sync_res.get("errors"):
+            self.add_related_result("Data Dictionaries Sync", status="failure", message="; ".join(sync_res["errors"]))
 
     async def fetch_element(self, guid: str) -> Optional[Dict[str, Any]]:
         try:
@@ -280,6 +358,7 @@ class DataClassProcessor(AsyncBaseCommandProcessor):
         qualified_name = self.parsed_output["qualified_name"]
         display_name = attributes.get('Display Name', {}).get('value', qualified_name)
         merge_update = attributes.get('Merge Update', {}).get('value', True)
+        journal_entry = attributes.get('Journal Entry', {}).get('value')
 
         # 1. Complex Property Body
         # (Leveraging the existing pattern from v1, but could be cleaner)
@@ -327,6 +406,14 @@ class DataClassProcessor(AsyncBaseCommandProcessor):
             
             await self._sync_all_rels(guid, containing_dc_guids, term_guids, specializes_dc_guids, data_dict_guids, not merge_update)
             
+            if journal_entry:
+                try:
+                    j_guid = await async_add_note_in_dr_e(self.client, qualified_name, display_name, journal_entry)
+                    if j_guid:
+                        self.add_related_result("Journal Entry", j_guid)
+                except Exception as e:
+                    self.add_related_result("Journal Entry", status="failure", message=str(e))
+
             logger.success(f"Updated Data Class '{display_name}' with GUID {guid}")
             update_element_dictionary(qualified_name, {'guid': guid, 'display_name': display_name})
             return await self.client._async_get_data_class_by_guid(guid, None, 'MD')
@@ -337,6 +424,15 @@ class DataClassProcessor(AsyncBaseCommandProcessor):
             if guid:
                 self.parsed_output["guid"] = guid
                 await self._sync_all_rels(guid, containing_dc_guids, term_guids, specializes_dc_guids, data_dict_guids, replace_all=True)
+
+                if journal_entry:
+                    try:
+                        j_guid = await async_add_note_in_dr_e(self.client, qualified_name, display_name, journal_entry)
+                        if j_guid:
+                            self.add_related_result("Journal Entry", j_guid)
+                    except Exception as e:
+                        self.add_related_result("Journal Entry", status="failure", message=str(e))
+
                 update_element_dictionary(qualified_name, {'guid': guid, 'display_name': display_name})
                 logger.success(f"Created Data Class '{display_name}' with GUID {guid}")
                 return await self.client._async_get_data_class_by_guid(guid, None, 'MD')
@@ -348,32 +444,48 @@ class DataClassProcessor(AsyncBaseCommandProcessor):
         
         # 1. Containing Classes
         as_is_cont = set(rel_els.get("nested_data_class_guids", []))
-        await self.sync_members(as_is_cont, cont_guids,
+        sync_res = await self.sync_members(as_is_cont, cont_guids,
                                lambda dc: self.client._async_link_nested_data_class(dc, guid),
                                lambda dc: self.client._async_detach_nested_data_class(dc, guid),
                                replace_all)
+        if sync_res.get("added") or sync_res.get("removed"):
+            self.add_related_result("Containing Classes Sync", message=f"Added {len(sync_res['added'])}, Removed {len(sync_res['removed'])}")
+        if sync_res.get("errors"):
+            self.add_related_result("Containing Classes Sync", status="failure", message="; ".join(sync_res["errors"]))
                                
         # 2. Terms
         as_is_terms = set(rel_els.get("assigned_meanings_guids", []))
-        await self.sync_members(as_is_terms, term_guids,
+        sync_res = await self.sync_members(as_is_terms, term_guids,
                                lambda t: self.client._async_link_semantic_definition(guid, t),
                                lambda t: self.client._async_detach_semantic_definition(guid, t),
                                replace_all)
+        if sync_res.get("added") or sync_res.get("removed"):
+            self.add_related_result("Semantic Definitions Sync", message=f"Added {len(sync_res['added'])}, Removed {len(sync_res['removed'])}")
+        if sync_res.get("errors"):
+            self.add_related_result("Semantic Definitions Sync", status="failure", message="; ".join(sync_res["errors"]))
                                
         # 3. Specializes
         as_is_spec = set(rel_els.get("specialized_data_class_guids", []))
-        await self.sync_members(as_is_spec, spec_guids,
+        sync_res = await self.sync_members(as_is_spec, spec_guids,
                                lambda dc: self.client._async_link_specialist_data_class(dc, guid),
                                lambda dc: self.client._async_detach_specialist_data_class(dc, guid),
                                replace_all)
+        if sync_res.get("added") or sync_res.get("removed"):
+            self.add_related_result("Specializes Classes Sync", message=f"Added {len(sync_res['added'])}, Removed {len(sync_res['removed'])}")
+        if sync_res.get("errors"):
+            self.add_related_result("Specializes Classes Sync", status="failure", message="; ".join(sync_res["errors"]))
 
         # 4. Data Dictionaries
         memberships = await self.client._async_get_data_memberships(self.client._async_get_data_class_by_guid, guid)
         as_is_dicts = set(memberships.get("DictList", []))
-        await self.sync_members(as_is_dicts, dict_guids,
+        sync_res = await self.sync_members(as_is_dicts, dict_guids,
                                lambda d: self.client._async_add_to_collection(d, guid),
                                lambda d: self.client._async_remove_from_collection(d, guid),
                                replace_all)
+        if sync_res.get("added") or sync_res.get("removed"):
+            self.add_related_result("Data Dictionaries Sync", message=f"Added {len(sync_res['added'])}, Removed {len(sync_res['removed'])}")
+        if sync_res.get("errors"):
+            self.add_related_result("Data Dictionaries Sync", status="failure", message="; ".join(sync_res["errors"]))
 
     async def fetch_element(self, guid: str) -> Optional[Dict[str, Any]]:
         try:

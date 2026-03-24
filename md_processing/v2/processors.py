@@ -10,7 +10,7 @@ from loguru import logger
 from pyegeria import EgeriaTech, PyegeriaException, NO_ELEMENTS_FOUND
 from pyegeria.core.utils import make_format_set_name_from_type
 from pyegeria.view.base_report_formats import select_report_spec
-from pyegeria.view.output_formatter import generate_output
+from pyegeria.view.output_formatter import generate_output, format_for_markdown_table
 
 from md_processing.v2.extraction import DrECommand
 from md_processing.v2.parsing import AttributeFirstParser
@@ -34,9 +34,11 @@ class AsyncBaseCommandProcessor(ABC):
         if "request_id" not in self.context:
             self.context["request_id"] = str(uuid.uuid4())
             
-        self.parser = AttributeFirstParser(self.command, client=self.client)
+        directive = self.context.get("directive", "process")
+        self.parser = AttributeFirstParser(self.command, client=self.client, directive=directive)
         self.parsed_output = None
         self.as_is_element = None
+        self.related_results = []
         
         # Resolve canonical name from spec
         spec = self.get_command_spec()
@@ -56,6 +58,12 @@ class AsyncBaseCommandProcessor(ABC):
         spec = get_command_spec(f"{self.command.verb} {self.command.object_type}")
         return spec or {}
 
+    def add_related_result(self, label: str, guid: Optional[str] = None, status: str = "success", message: Optional[str] = None):
+        """Record the outcome of a secondary operation."""
+        self.related_results.append({
+            "label": label, "guid": guid, "status": status, "message": message
+        })
+
     async def execute(self) -> Dict[str, Any]:
         """
         Orchestrate the command execution flow.
@@ -66,42 +74,24 @@ class AsyncBaseCommandProcessor(ABC):
         # 1. Parse attributes using the spec-agnostic parser
         spec = self.get_command_spec()
         self.parsed_output = self.parser.parse()
-        
-        # 1a. Handle 'display' directive immediately (skip all Egeria lookups)
-        if directive == "display":
-            output = await self.display_only()
-            return {
-                "output": output,
-                "status": "success",
-                "message": f"Displayed {self.command.verb} {self.command.object_type}",
-                "verb": self.command.verb,
-                "object_type": self.command.object_type,
-                "warnings": self.parsed_output.get("warnings", [])
-            }
-
-        # 2. Pre-flight Validation (check required fields, etc.)
-        if not self.parsed_output.get("valid", True):
-            errors = self.parsed_output.get("errors", [])
-            err_msg = "; ".join(errors) if errors else "General validation failure"
-            full_message = f"Validation failed: {err_msg}"
-            logger.error(f"{full_message} for {self.command.verb} {self.command.object_type}")
-            logger.debug(f"Parsed Output: {self.parsed_output}")
-            
-            # Even if invalid, we want to show the diagnosis table if possible
-            output = await self.validate_only()
-            return {
-                "output": output,
-                "status": "failure",
-                "message": full_message,
-                "verb": self.command.verb,
-                "object_type": self.command.object_type,
-                "found": self.parsed_output.get("exists", False),
-                "errors": errors
-            }
-
-        # 3. Ensure qualified_name is populated
         attributes = self.parsed_output.get("attributes", {})
-        
+
+        # Extract Display Name if present
+        display_name = attributes.get("Display Name", {}).get("value")
+        if not display_name:
+            # Fallback to other name-like attributes if possible
+            for k, v in attributes.items():
+                if any(k.endswith(s) for s in [" Name", " ID", " Id"]) and k != "Qualified Name":
+                    display_name = v.get("value")
+                    if display_name:
+                        break
+        if not display_name:
+            display_name = attributes.get("Name", {}).get("value")
+
+        if display_name:
+            self.parsed_output["display_name"] = display_name
+
+        # 1a. Ensure qualified_name is derived early if possible
         if not self.parsed_output.get("qualified_name"):
             qn = self.derive_qualified_name(attributes)
             if qn:
@@ -114,11 +104,68 @@ class AsyncBaseCommandProcessor(ABC):
                         "exists": True,
                         "status": "INFO"
                     }
-        
-        # 4. Fetch As-Is state (Lookup by GUID or QN)
+
+        # 1b. Handle 'display' directive
+        if directive == "display":
+            self.as_is_element = await self.fetch_as_is()
+            if self.as_is_element:
+                output = await self.render_result_markdown(self.as_is_element.get('elementHeader', {}).get('guid'))
+            else:
+                output = await self.display_only()
+            
+            return {
+                "output": output,
+                "status": "success",
+                "message": f"Displayed {self.command.verb} {self.command.object_type}",
+                "verb": self.command.verb,
+                "object_type": self.command.object_type,
+                "display_name": self.parsed_output.get("display_name"),
+                "qualified_name": self.parsed_output.get("qualified_name"),
+                "warnings": self.parsed_output.get("warnings", [])
+            }
+
+        # 2. Pre-flight Validation (check required fields, etc.)
+        if not self.parsed_output.get("valid", True):
+            errors = self.parsed_output.get("errors", [])
+            err_msg = "; ".join(errors) if errors else "General validation failure"
+            full_message = f"Validation failed: {err_msg}"
+            logger.error(f"{full_message} for {self.command.verb} {self.command.object_type}")
+            logger.debug(f"Parsed Output: {self.parsed_output}")
+            
+            # Even if invalid, we want to show the diagnosis table if possible
+            analysis = await self.validate_only()
+            return {
+                "output": analysis if directive == "validate" else self.command.raw_block,
+                "analysis": analysis,
+                "status": "failure",
+                "message": full_message,
+                "verb": self.command.verb,
+                "object_type": self.command.object_type,
+                "display_name": self.parsed_output.get("display_name"),
+                "qualified_name": self.parsed_output.get("qualified_name"),
+                "found": self.parsed_output.get("exists", False),
+                "errors": errors
+            }
+
+        # 3. Handle As-Is state and other pre-execution steps
+        # Fetch As-Is state (Lookup by GUID or QN)
         # We do this BEFORE recording in planned_elements to avoid self-shadowing 
         # (where an element sees itself in 'planned' and skips the Egeria lookup)
         self.as_is_element = await self.fetch_as_is()
+        
+        # 4a. Check for duplicate display_name if we are creating a new element
+        if not self.as_is_element and self.command.verb in ["Create", "Define", "Register", "Add", "Upsert"]:
+            display_name = attributes.get("Display Name", {}).get("value")
+            if display_name:
+                existing_guid = await self.resolve_element_guid(display_name, tech_type=self.command.object_type)
+                if existing_guid and not existing_guid.startswith("(Planned:"):
+                    msg = f"Warning: An element with Display Name '{display_name}' already exists in Egeria (QN or Display Name match)."
+                    logger.warning(msg)
+                    if "warnings" not in self.parsed_output:
+                        self.parsed_output["warnings"] = []
+                    if msg not in self.parsed_output["warnings"]:
+                        self.parsed_output["warnings"].append(msg)
+
         if self.as_is_element:
             # Transition to Update
             self.command.verb = "Update"
@@ -140,22 +187,20 @@ class AsyncBaseCommandProcessor(ABC):
             # Get the style from the spec if possible
             spec_style = "Simple"
             spec = self.get_command_spec()
+            spec_existing = ""
             if spec:
                 spec_attrs = spec.get("Attributes", spec.get("attributes", []))
                 for a in spec_attrs:
                     if isinstance(a, dict):
-                        # Flattened or nested
                         if a.get("name") == attr_name:
                             spec_style = a.get("style", "Simple")
+                            spec_existing = a.get("existing_element", "")
                             break
                         elif attr_name in a:
                             val = a[attr_name]
                             if isinstance(val, dict):
                                 spec_style = val.get("style", "Simple")
-                                break
-                            else:
-                                # In compact specs, it might just be the value
-                                spec_style = "Simple"
+                                spec_existing = val.get("existing_element", "")
                                 break
             
             # Heuristics for identifying what attributes represent references to other elements
@@ -168,38 +213,52 @@ class AsyncBaseCommandProcessor(ABC):
             ]
             
             is_ref_candidate = (
-                spec_style in ["Reference Name", "ID", "GUID", "Reference"]
+                spec_style in ["Reference Name", "ID", "GUID", "Reference", "Reference Name List"]
+            ) or (
+                spec_existing != "" and spec_style in ["Simple", "Simple List", "List", "NameList"]
             ) or (
                 any(k in attr_name for k in ["Id", "GUID", "Name", "Reference"]) 
                 and attr_name not in non_ref_names
                 and spec_style not in ["Simple", "Enum", "Valid Value", "ValidValue", "Dictionary", "KeyValue", "Enumeration", "Integer", "Boolean"]
             )
             
-            # More precise check: if it's already got a GUID, don't re-resolve. 
-            # If it's a value but no GUID, and it's a candidate, try to resolve.
+            # More precise check: if it's already got a GUID or guid_list, don't re-resolve. 
+            # If it's a value but no GUID/guid_list, and it's a candidate, try to resolve.
             val = attr_data.get("value")
-            if val and not attr_data.get("guid") and is_ref_candidate:
-                # Try to resolve GUID from cache or Egeria
-                guid = await self.resolve_element_guid(val)
-                if guid:
-                    attr_data["guid"] = guid
-                    # If it's a 'Planned' element, it counts as exists for validation
-                    attr_data["exists"] = True
-                    if guid.startswith("(Planned:"):
-                        attr_data["is_planned"] = True
+            if val and not attr_data.get("guid") and not attr_data.get("guid_list") and is_ref_candidate:
+                if isinstance(val, list):
+                    guid_list = []
+                    for item in val:
+                        guid = await self.resolve_element_guid(item, tech_type=spec_existing)
+                        if guid:
+                            guid_list.append(guid)
+                    if guid_list:
+                        attr_data["guid_list"] = guid_list
+                        attr_data["exists"] = len(guid_list) == len(val)
+                        if any(g.startswith("(Planned:") for g in guid_list):
+                            attr_data["is_planned"] = True
                 else:
-                    # If it's a candidate ref and we couldn't resolve it, mark as not found
-                    attr_data["exists"] = False
-                    attr_data["valid"] = True # Treat as valid to avoid blocking; let Egeria validate
-                    msg = f"Referenced element '{val}' for attribute '{attr_name}' not found."
-                    if attr_data.get("warnings") is None: attr_data["warnings"] = []
-                    attr_data["warnings"].append(msg)
-                    
-                    # Always treat as warning, never as error, per user requirement to continue
-                    logger.warning(msg)
-                    if "warnings" not in self.parsed_output:
-                        self.parsed_output["warnings"] = []
-                    self.parsed_output.get("warnings", []).append(msg)
+                    # Try to resolve GUID from cache or Egeria
+                    guid = await self.resolve_element_guid(val, tech_type=spec_existing)
+                    if guid:
+                        attr_data["guid"] = guid
+                        # If it's a 'Planned' element, it counts as exists for validation
+                        attr_data["exists"] = True
+                        if guid.startswith("(Planned:"):
+                            attr_data["is_planned"] = True
+                    else:
+                        # If it's a candidate ref and we couldn't resolve it, mark as not found
+                        attr_data["exists"] = False
+                        attr_data["valid"] = True # Treat as valid to avoid blocking; let Egeria validate
+                        msg = f"Referenced element '{val}' for attribute '{attr_name}' not found."
+                        if attr_data.get("warnings") is None: attr_data["warnings"] = []
+                        attr_data["warnings"].append(msg)
+                        
+                        # Always treat as warning, never as error, per user requirement to continue
+                        logger.warning(msg)
+                        if "warnings" not in self.parsed_output:
+                            self.parsed_output["warnings"] = []
+                        self.parsed_output.get("warnings", []).append(msg)
 
         # 7. Check for existence of the target element (As-Is state)
         if self.as_is_element:
@@ -213,41 +272,34 @@ class AsyncBaseCommandProcessor(ABC):
                     self.parsed_output["errors"] = []
                 self.parsed_output["errors"].append(f"Target element for 'Update' not found.")
                 
-                if directive == "validate":
-                    logger.info("Validation mode: Proceeding to validate_only despite missing update target.")
-                    output = await self.validate_only()
-                    return {
-                        "output": output,
-                        "status": "failure",
-                        "message": f"Target element for Update not found.",
-                        "verb": self.command.verb,
-                        "object_type": self.command.object_type,
-                        "found": False,
-                        "errors": self.parsed_output["errors"]
-                    }
-
+                analysis = await self.validate_only()
                 return {
-                    "output": self.command.raw_block,
+                    "output": analysis if directive == "validate" else self.command.raw_block,
+                    "analysis": analysis,
                     "status": "failure",
                     "message": f"Target element for Update not found.",
                     "verb": self.command.verb,
                     "object_type": self.command.object_type,
-                    "found": False
+                    "found": False,
+                    "errors": self.parsed_output["errors"]
                 }
 
-        # 6. Action Dispatch
+        # 8. Decouple Analysis from Output
+        analysis = await self.validate_only()
+
+        # 9. Action Dispatch
         if directive == "validate":
-            output = await self.validate_only()
-            # If relationship and missing ends, the validate_only output should reflect this.
-            # We check errors at the end of validate_only
             status = "success" if not self.parsed_output.get("errors") else "failure"
             guid = self.parsed_output.get("guid")
             return {
-                "output": output,
+                "output": analysis,
+                "analysis": analysis,
                 "status": status,
                 "message": f"Validated {self.command.verb} {self.command.object_type}" + (f" (GUID: {guid})" if guid else ""),
                 "verb": self.command.verb,
                 "object_type": self.command.object_type,
+                "display_name": self.parsed_output.get("display_name"),
+                "qualified_name": self.parsed_output.get("qualified_name"),
                 "guid": self.parsed_output.get("guid"),
                 "found": self.parsed_output.get("exists", False),
                 "warnings": self.parsed_output.get("warnings", [])
@@ -258,17 +310,20 @@ class AsyncBaseCommandProcessor(ABC):
             guid = self.parsed_output.get("guid")
             return {
                 "output": self.command.raw_block,
+                "analysis": analysis,
                 "status": "failure",
                 "message": f"Execution blocked: {'; '.join(self.parsed_output['errors'])}" + (f" (GUID: {guid})" if guid else ""),
                 "verb": self.command.verb,
                 "object_type": self.command.object_type,
+                "display_name": self.parsed_output.get("display_name"),
+                "qualified_name": self.parsed_output.get("qualified_name"),
                 "guid": self.parsed_output.get("guid"),
                 "found": self.parsed_output.get("exists", False)
             }
 
         output = await self.apply_changes()
         
-        # 7. Post-execution: Update the cache on success
+        # 10. Post-execution: Update the cache on success
         guid = self.parsed_output.get("guid") or attributes.get("guid")
         if output and not output.startswith(self.command.raw_block): # Basic success check
             qn = self.parsed_output.get("qualified_name")
@@ -276,12 +331,23 @@ class AsyncBaseCommandProcessor(ABC):
                 d_name = self.parsed_output.get("display_name") or qn
                 update_element_dictionary(qn, {"guid": guid, "display_name": d_name})
 
+        message = f"Executed {self.command.verb} {self.command.object_type}" + (f" (GUID: {guid})" if guid else "")
+        if self.related_results:
+            rel_parts = [
+                f"{r['label']}" + (f" (GUID: {r['guid']})" if r.get('guid') else "") + 
+                (f" - {r['status'].upper()}" if r.get('status') != "success" else "")
+                for r in self.related_results
+            ]
+            message += " | Related: " + "; ".join(rel_parts)
+
         return {
             "output": output,
+            "analysis": analysis,
             "status": "success",
-            "message": f"Executed {self.command.verb} {self.command.object_type}" + (f" (GUID: {guid})" if guid else ""),
+            "message": message,
             "verb": self.command.verb,
             "object_type": self.command.object_type,
+            "display_name": self.parsed_output.get("display_name"),
             "guid": guid,
             "qualified_name": self.parsed_output.get("qualified_name"),
             "found": self.parsed_output.get("exists", False),
@@ -364,7 +430,8 @@ class AsyncBaseCommandProcessor(ABC):
             
         # 1. Determine the report spec name
         # Convention: <Type>-DrE (spaces replaced with dashes)
-        report_spec_name = make_format_set_name_from_type(self.command.object_type)
+        # Use canonical_object_type to ensure we get 'Glossary-Term-DrE' instead of 'Term-DrE'
+        report_spec_name = make_format_set_name_from_type(self.canonical_object_type)
         
         # 2. Fetch the element dictionary
         try:
@@ -379,7 +446,12 @@ class AsyncBaseCommandProcessor(ABC):
         # 3. Select the report spec
         columns_struct = select_report_spec(report_spec_name, "MD")
         if not columns_struct:
-            logger.warning(f"Report spec '{report_spec_name}' not found. Falling back to default.")
+            msg = f"Report spec '{report_spec_name}' not found. Falling back to default."
+            logger.warning(msg)
+            if "warnings" not in self.parsed_output:
+                self.parsed_output["warnings"] = []
+            if msg not in self.parsed_output["warnings"]:
+                self.parsed_output["warnings"].append(msg)
             columns_struct = select_report_spec("Referenceable", "MD")
 
         # 4. Generate the output
@@ -403,13 +475,15 @@ class AsyncBaseCommandProcessor(ABC):
         """
         try:
             # First try ClassificationExplorer (most standard and lightweight)
-            logger.debug("Trying ClassificationExplorer for element fetch.")
+            print(f"DEBUG: fetch_element('{guid}') using client {self.client}")
             res = await getattr(self.client, "_async_get_element_by_guid_")(guid)
+            print(f"DEBUG: fetch_element returned {res is not None}")
             if res and isinstance(res, dict):
                 # The structure from classification-explorer comes under "element" usually
                 if "element" in res:
                     return res["element"]
                 return res
+            return res
         except Exception as e:
             logger.debug(f"ClassificationExplorer fetch failed: {e}")
 
@@ -424,17 +498,16 @@ class AsyncBaseCommandProcessor(ABC):
 
         return None
 
-    async def resolve_element_guid(self, name_or_guid: str) -> Optional[str]:
+    async def resolve_element_guid(self, name_or_guid: str, tech_type: Optional[str] = None) -> Optional[str]:
         """
         Resolves a name or GUID to a GUID using various strategies.
         Returns None if not found, or f"(Planned: {name})" if it's a forward reference.
         """
-        if not name_or_guid:
+        if not name_or_guid or not str(name_or_guid).strip():
             return None
-            
-        import sys
-        sys.stdout.flush()
-
+        
+        name_or_guid = str(name_or_guid).strip()
+        
         # 1. Is it a GUID?
         try:
             uuid.UUID(name_or_guid)
@@ -459,38 +532,39 @@ class AsyncBaseCommandProcessor(ABC):
             # 4a. Use __async_get_guid__ as suggested by user for existence check
             # This is a lightweight call to classification-explorer
             try:
-                res = await self.client.__async_get_guid__(qualified_name=name_or_guid)
+                # Try as Qualified Name first (with tech_type hint)
+                res = await self.client.__async_get_guid__(qualified_name=name_or_guid, tech_type=tech_type)
                 if res and res != NO_ELEMENTS_FOUND:
-                    logger.debug(f"resolve_element_guid: __async_get_guid__ for QN '{name_or_guid}' returned: {res}")
+                    logger.debug(f"resolve_element_guid: __async_get_guid__ for QN '{name_or_guid}' (hint={tech_type}) returned: {res}")
                     return res
                 
-                res = await self.client.__async_get_guid__(display_name=name_or_guid)
+                # Try as Display Name (with tech_type hint)
+                res = await self.client.__async_get_guid__(display_name=name_or_guid, tech_type=tech_type)
                 if res and res != NO_ELEMENTS_FOUND:
-                    logger.debug(f"resolve_element_guid: __async_get_guid__ for Display Name '{name_or_guid}' returned: {res}")
+                    logger.debug(f"resolve_element_guid: __async_get_guid__ for Display Name '{name_or_guid}' (hint={tech_type}) returned: {res}")
                     return res
+
+                # 4b. Use SDK's strict name-to-GUID resolution as fallback
+                # This checks QN, Display Name, Resource Name, and Identifier.
+                try:
+                    res = await self.client._async_get_guid_for_name(name_or_guid)
+                    # Ensure it's not a "not found" indicator string
+                    if res and isinstance(res, str) and not res.startswith("No ") and " found" not in res and not res.startswith("(Planned:"):
+                        logger.debug(f"resolve_element_guid: SDK strict lookup for '{name_or_guid}' returned: {res}")
+                        return res
+                except PyegeriaException as e:
+                    # Catch multiple matches error
+                    if "Multiple elements found" in str(e):
+                        msg = f"Multiple elements found for name '{name_or_guid}'. Please use a unique Qualified Name."
+                        logger.error(msg)
+                        if "errors" not in self.parsed_output:
+                            self.parsed_output["errors"] = []
+                        self.parsed_output["errors"].append(msg)
+                        return None
+                    logger.debug(f"SDK strict lookup failed for '{name_or_guid}': {e}")
+
             except Exception as e:
                 logger.debug(f"__async_get_guid__ failed: {e}")
-
-            # 4b. Use SDK's strict name-to-GUID resolution as fallback
-            # This checks QN, Display Name, Resource Name, and Identifier.
-            # It raises PyegeriaException if multiple matches are found.
-            try:
-                res = await self.client._async_get_guid_for_name(name_or_guid)
-                # Ensure it's not a "not found" indicator string
-                if res and isinstance(res, str) and not res.startswith("No ") and " found" not in res and not res.startswith("(Planned:"):
-                    logger.debug(f"resolve_element_guid: SDK strict lookup for '{name_or_guid}' returned: {res}")
-                    return res
-            except PyegeriaException as e:
-                # Catch multiple matches error
-                if "Multiple elements found" in str(e):
-                    msg = f"Multiple elements found for name '{name_or_guid}'. Please use a unique Qualified Name."
-                    logger.error(msg)
-                    if "errors" not in self.parsed_output:
-                        self.parsed_output["errors"] = []
-                    self.parsed_output["errors"].append(msg)
-                    return None
-                logger.debug(f"SDK strict lookup failed for '{name_or_guid}': {e}")
-
 
             # 4c. Try find_method search from spec
             spec = self.get_command_spec()
@@ -597,10 +671,8 @@ class AsyncBaseCommandProcessor(ABC):
         ]
         
         for name, details in attributes.items():
-            val = str(details.get("value", ""))
-            # Truncate long values
-            if len(val) > 50:
-                val = val[:47] + "..."
+            raw = details.get("value", "")
+            val = format_for_markdown_table(raw)
             
             report.append(f"| {name} | {val} |")
             
@@ -623,12 +695,15 @@ class AsyncBaseCommandProcessor(ABC):
         errors = self.parsed_output.get("errors", [])
         warnings = self.parsed_output.get("warnings", [])
         
-        target_verb = "Update" if exists else "Create"
-        guid_info = f" (GUID: {self.as_is_element['elementHeader']['guid']})" if exists else ""
+        target_verb = self.command.verb
+        guid_info = ""
+        if exists:
+            guid = self.as_is_element.get('elementHeader', {}).get('guid') or self.parsed_output.get("guid")
+            guid_info = f" (GUID: {guid})" if guid else ""
         
         report = [
-            f"### Validation Diagnosis: {self.command.verb} {self.command.object_type}",
-            f"**Proposed Action**: {target_verb}{guid_info}",
+            f"### Command Analysis: {self.command.verb} {self.command.object_type}",
+            f"**Action**: {target_verb}{guid_info}",
             f"**Qualified Name**: `{qualified_name}`",
             "",
             "#### Parsed Attributes",
@@ -637,10 +712,8 @@ class AsyncBaseCommandProcessor(ABC):
         ]
         
         for name, details in attributes.items():
-            val = str(details.get("value", ""))
-            # Truncate long values
-            if len(val) > 50:
-                val = val[:47] + "..."
+            raw = details.get("value", "")
+            val = format_for_markdown_table(raw)
             
             # Visual feedback for existential validation
             if details.get("exists") is False:
@@ -651,6 +724,16 @@ class AsyncBaseCommandProcessor(ABC):
                 status = "✅ Valid" if details.get("valid") else "❌ Invalid"
                 
             report.append(f"| {name} | {val} | {status} |")
+            
+        expanded = []
+        for name, details in attributes.items():
+            raw = details.get("value", "")
+            if isinstance(raw, str) and ("\n" in raw or any(raw.strip().startswith(p) for p in ("- ", "* ", "1.", "#", ">", "```"))):
+                expanded.append(f"##### {name}\n\n{raw}\n")
+
+        if expanded:
+            report.append("\n#### Rendered Attribute Details\n")
+            report.extend(expanded)
             
         if errors:
             report.append("\n#### ❌ Errors")
@@ -680,18 +763,41 @@ class AsyncBaseCommandProcessor(ABC):
         to_add = to_be_guids - as_is_guids
         to_remove = (as_is_guids - to_be_guids) if replace_all else set()
         
-        results = {"added": [], "removed": []}
+        results = {"added": [], "removed": [], "errors": []}
         
         if to_add:
             logger.debug(f"Sync: Adding {len(to_add)} members")
             for guid in to_add:
-                await add_coro(guid)
-                results["added"].append(guid)
+                try:
+                    await add_coro(guid)
+                    results["added"].append(guid)
+                except Exception as e:
+                    logger.error(f"Sync: Failed to add member {guid}: {e}")
+                    results["errors"].append(f"Add {guid}: {e}")
                 
         if to_remove:
             logger.debug(f"Sync: Removing {len(to_remove)} members")
             for guid in to_remove:
-                await remove_coro(guid)
-                results["removed"].append(guid)
+                try:
+                    await remove_coro(guid)
+                    results["removed"].append(guid)
+                except Exception as e:
+                    logger.error(f"Sync: Failed to remove member {guid}: {e}")
+                    results["errors"].append(f"Remove {guid}: {e}")
                 
         return results
+
+    def filter_update_properties(self, properties: Dict[str, Any], merge_update: bool) -> Dict[str, Any]:
+        """
+        Filters properties for an update operation.
+        If merge_update is True, it removes all None values to avoid overwriting 
+        existing properties with nulls in Egeria.
+        """
+        if not merge_update:
+            return properties
+            
+        # If merge_update is True, we only keep non-None values.
+        # We MUST preserve core identification fields like 'class' and 'typeName'
+        # which are used by the SDK to identify the property structure.
+        identification_keys = {"class", "typeName"}
+        return {k: v for k, v in properties.items() if v is not None or k in identification_keys}

@@ -21,12 +21,13 @@ def resolve_enum(enum_class: Type[Any], value: str | int) -> int | None:
     if isinstance(value, int):
         return value
         
-    v = str(value).strip().upper()
+    v = str(value).upper()
     try:
         # Normalized case-insensitive search through enum members
-        v_clean = v.replace('_', ' ').replace('-', ' ')
+        # Replace separators with spaces and collapse multiple spaces
+        v_clean = ' '.join(v.replace('_', ' ').replace('-', ' ').split())
         for member in enum_class:
-            m_name = member.name.upper().replace('_', ' ').replace('-', ' ')
+            m_name = ' '.join(member.name.upper().replace('_', ' ').replace('-', ' ').split())
             if v_clean == m_name:
                 return member.value
 
@@ -88,7 +89,9 @@ ACTIVITY_STATUS = ["REQUESTED", "APPROVED", "WAITING", "ACTIVATING", "IN_PROGRES
                    "COMPLETED", "INVALID", "IGNORED", "FAILED", "CANCELLED", "ABANDONED", "OTHER"]
 MEMBERSHIP_STATUS = ["UNKNOWN", "DISCOVERED", "PROPOSED", "IMPORTED", "VALIDATED", "DEPRECATED", "OBSOLETE", "OTHER"]
 
+RELATIONSHIP_TYPES = ["RelatedTerm", "Synonym", "Antonym", "PreferredTerm", "ReplacementTerm", "Translation", "IsA", "ValidValue"]
 
+# RELATIONSHIP_TYPES_MAP = {rel_type: i for i, rel_type in enumerate(RELATIONSHIP_TYPES)}
 
 TEMPLATE_GUIDS: dict[str, str] = {}
 INTEGRATION_GUIDS: dict[str, str] = {}
