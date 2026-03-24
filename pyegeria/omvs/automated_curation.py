@@ -212,6 +212,7 @@ class AutomatedCuration(ServerClient):
                 specs = ""
                 for template in (catalog_templates or []):
                     spec = template.get('specification', {})
+
                     for placeholder in (spec.get('placeholderProperty', []) or []):
                         specs += (f"* Placeholder Property: {placeholder.get('name','')}\n\t"
                                   f"Type: {placeholder.get('dataType',"")}\n\t"
@@ -221,6 +222,7 @@ class AutomatedCuration(ServerClient):
                 column["value"] = specs
             elif key == "catalog_templates":
                 column["value"] = catalog_templates
+
             elif key == "governance_action_processes":
                 column["value"] = governance_processes
             elif key == "governance_processes":

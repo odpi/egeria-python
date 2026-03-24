@@ -169,9 +169,9 @@ Commands are how a user of the Dr.Egeria markdown language requests an action.
 ## Glossary Name
 Egeria-Markdown
 
-## Collection Folders
+## Folders
 
-CollectionFolder::Writing Dr.Egeria Markdown, CollectionFolder::Processing Dr.Egeria Markdown
+Writing Dr.Egeria Markdown, Processing Dr.Egeria Markdown
 
 ## Status
 ACTIVE

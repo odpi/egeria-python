@@ -1073,6 +1073,7 @@ base_report_specs = FormatSetDict({
                 types=["ALL"],
                 attributes=[
                     Column(name="Catalog Template Name", key="template_display_name"),
+                    Column(name="Catalog Template GUID", key="template_guid"),
                     Column(name="Description", key="template_description"),
                     Column(name="Target Asset Name", key="target_display_name"),
                     Column(name="Target Qualified Name", key="target_qualified_name"),
@@ -1603,7 +1604,28 @@ base_report_specs = FormatSetDict({
             function="CollectionManager.find_collections",
             required_params=["search_string"],
             optional_params=OPTIONAL_SEARCH_PARAMS,
-            spec_params={"metadata_element_typs": ["FolderCollection"]},
+            spec_params={"metadata_element_type": "FolderCollection"},
+        )
+    ),
+    "BusinessCapabilities": FormatSet(
+        target_type="BusinessCapability",
+        heading="Common Business Capability Information",
+        description="Attributes generic to all Business Capabilities.",
+        aliases=[],
+        annotations=COMMON_ANNOTATIONS,
+        family="Digital Business",
+        formats=[Format(
+            types=["ALL"],
+            attributes=BASIC_COLLECTIONS_COLUMNS + [
+                    Column(name='Business Capability Type', key='business_capability_type'),
+                    Column(name='Business Implementation Type', key='business_implementation_type')
+            ]
+        )],  # Reusing common formats
+        action=ActionParameter(
+            function="CollectionManager.find_collections",
+            required_params=["search_string"],
+            optional_params=OPTIONAL_SEARCH_PARAMS,
+            spec_params={"metadata_element_type": "BusinessCapability"},
         )
     ),
 
