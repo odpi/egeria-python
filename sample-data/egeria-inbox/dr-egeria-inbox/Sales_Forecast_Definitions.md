@@ -5,8 +5,7 @@
 >	**Input Required**: True
 
 >	**Description**: 
-Meet acquisition Business case.
-
+Sales-Forecasts
 ## Domain Identifier
 >	**Input Required**: False
 
@@ -15,7 +14,7 @@ Meet acquisition Business case.
 >	**Valid Values**: ALL,DATA,PRIVACY,SECURITY,IT_INFRASTRUCTURE,SOFTWARE_DEVELOPMENT,CORPORATE,ASSET_MANAGEMENT,OTHER
 
 >	**Default Value**: ALL
-ALL
+Corporate
 
 ## Implications
 >	**Input Required**: False
@@ -69,7 +68,8 @@ We need to demonstrate that we are meeting the business case from the acquisitio
 
 >	**Description**: 
 
-Meet the business case for the acquisitions.
+Meet acquisition Business case. The board will be satiated.
+
 
 
 ## Content Status

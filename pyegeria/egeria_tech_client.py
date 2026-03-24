@@ -92,10 +92,12 @@ class EgeriaTech:
             "runtime_manager": RuntimeManager,
             "valid": ValidMetadataManager,
             "valid_metadata": ValidMetadataManager,
-            "explorer": MetadataExplorer,
-            "metadata_explorer": MetadataExplorer,
             "expert": MetadataExpert,
             "metadata_expert": MetadataExpert,
+            "explorer": MetadataExplorer,
+            "metadata_explorer": MetadataExplorer,
+            # TODO: Fix method collisions between MetadataExplorer and MetadataExpert.
+            # Prioritize MetadataExpert (which uses the standard expert marker) over Explorer.
             "sol_arch": SolutionArchitect,
             "solution_architect": SolutionArchitect,
             "designer": DataDesigner,

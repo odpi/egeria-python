@@ -21,6 +21,7 @@ class DrECommand:
     raw_block: str = ""
     start_line: int = 0
     end_line: int = 0
+    is_command: bool = True
 
 class UniversalExtractor:
     """
@@ -32,10 +33,10 @@ class UniversalExtractor:
     def __init__(self, text: str):
         self.text = text
         # Regex to find command start: Match # <Verb> <Object> or a headless line starting with a verb
-        # Headless mode is triggered if the text doesn't start with '#' or is a single block
+        # Accounts for horizontal rules or whitespace that might be the actual first characters of the block text
         verbs_pattern = "|".join(STANDARD_VERBS)
         self.cmd_header_rx = re.compile(
-            rf"^(?:#\s+)?(?P<verb>{verbs_pattern})\s+(?P<object>[^#\n_]+)", 
+            rf"^(?:\s*_+|[-]+\s*\n)?(?:#\s+)?(?P<verb>{verbs_pattern})\s+(?P<object>[^#\n_]+)", 
             re.MULTILINE | re.IGNORECASE
         )
 
@@ -60,7 +61,19 @@ class UniversalExtractor:
                     attributes=attributes,
                     raw_block=block_text,
                     start_line=start_line,
-                    end_line=start_line + block_text.count('\n')
+                    end_line=start_line + block_text.count('\n'),
+                    is_command=True
+                ))
+            else:
+                # Preservation: include non-command blocks as-is
+                commands.append(DrECommand(
+                    verb="",
+                    object_type="",
+                    attributes={},
+                    raw_block=block_text,
+                    start_line=start_line,
+                    end_line=start_line + block_text.count('\n'),
+                    is_command=False
                 ))
         return commands
 

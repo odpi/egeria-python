@@ -322,7 +322,7 @@ def test_find_elements_by_property_value():
 
 
 def test_get_element_by_guid():
-    element_guid = '6ec2c097-9d6e-4e9d-ab51-186d2c437443'
+    element_guid = 'dae76285-bef7-45a0-9f32-4854294d969b'
     try:
         c_client = ClassificationExplorer(view_server, platform_url)
 
@@ -678,6 +678,37 @@ def test_find_related_elements_with_property_value():
         property_value,
         property_names,
         open_metadata_type_name,
+    )
+
+    if type(response) is list:
+        print_json(data=response)
+    elif type(response) is str:
+        console.print("\n\n\t Response is " + response)
+
+    assert True
+
+def test_find_root_elements():
+    # metadata_element_type = 'Project'
+    open_metadata_type_name = "ValidMetadataValue"
+    property_value = "Clinical Trials Management"
+    property_names = ["name", "qualifiedName"]
+    # property_value = "Partner"
+    # property_names = ["teamType"]
+    search_properties =  {
+            "class" : "SearchProperties",
+            "conditions": [ {
+              "property" : "preferredValue",
+              "operator": "IS_NULL"}],
+            "matchCriteria": "ANY"
+          }
+
+    c_client = ClassificationExplorer(view_server, platform_url)
+
+    bearer_token = c_client.create_egeria_bearer_token(user, password)
+    response = c_client.find_root_elements(
+        open_metadata_type_name,
+        search_properties
+
     )
 
     if type(response) is list:

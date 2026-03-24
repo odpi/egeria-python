@@ -44,16 +44,21 @@ LEVEL_ORDER = ["Common", "Domain", "Basic", "Advanced", "Expert", "Invisible"]
 def _level_visible(attr_level: str, usage_level: str = "Advanced") -> bool:
     """Return True if attr_level should be rendered at the given usage_level ceiling.
 
-    'Invisible' and 'Expert' are never rendered in templates.
-    Unknown level values default to visible so nothing is accidentally hidden.
+    'Invisible' is never rendered in templates.
+    'Expert' and 'Advanced' are only rendered when usage_level is 'Advanced'.
     """
     attr_level = (attr_level or "Basic").strip()
-    if attr_level in ("Invisible", "Expert"):
+    if attr_level == "Invisible":
         return False
-    try:
-        return LEVEL_ORDER.index(attr_level) <= LEVEL_ORDER.index(usage_level)
-    except ValueError:
-        return True  # unknown value — show rather than hide
+
+    # User's definition:
+    # Basic usage: Common, Domain, Basic
+    # Advanced usage: Common, Domain, Basic, Advanced, Expert
+    if usage_level == "Basic":
+        return attr_level in ("Common", "Domain", "Basic")
+
+    # Advanced usage level (or any other) defaults to everything except Invisible
+    return True
 
 
 load_commands('commands.json')
@@ -76,6 +81,11 @@ def _write_attr_block(out: io.StringIO, key: str, value: dict, client: Optional[
     """Write a single ## attribute block into the StringIO buffer."""
     out.write(f"\n## {key}\n")
     out.write(f">\t**Input Required**: {value.get('input_required', 'false')}\n\n")
+    
+    attr_type = value.get("data_type") or value.get("style") or ""
+    if attr_type:
+        out.write(f">\t**Attribute Type**: {attr_type}\n\n")
+        
     out.write(f">\t**Description**: {value.get('description', '')}\n\n")
 
     labels = value.get("attr_labels") or ""
@@ -120,6 +130,11 @@ def _print_attr(key: str, value: dict, client: Optional[ServerClient] = None) ->
     """Mirror of _write_attr_block for console output."""
     print(f"\n## {key}")
     print(f">\tInput Required: {value.get('input_required', 'false')}")
+    
+    attr_type = value.get("data_type") or value.get("style") or ""
+    if attr_type:
+        print(f">\tAttribute Type: {attr_type}")
+        
     print(f">\tDescription: {value.get('description', '')}")
     labels = value.get("attr_labels") or ""
     if labels.strip():
@@ -189,7 +204,9 @@ def main():
     command-specific attributes.
     """
     parser = argparse.ArgumentParser(description="Generate markdown command templates organised by family.")
-    parser.add_argument("--advanced", action="store_true", default=False, help="Enable advanced level attributes")
+    parser.add_argument("--usage-level", dest="usage_level", choices=["Basic", "Advanced"], default=None,
+                        help="Egeria usage level (Basic or Advanced)")
+    parser.add_argument("--advanced", action="store_true", default=False, help="Enable advanced level attributes (deprecated: use --usage-level)")
     parser.add_argument("--family", type=str, default=None, help="Generate for a specific family")
     parser.add_argument("--server", default=env.egeria_view_server, help="Egeria view server name")
     parser.add_argument("--url", default=env.egeria_view_server_url, help="Egeria platform URL")
@@ -208,8 +225,13 @@ def main():
 
     commands = COMMAND_DEFINITIONS["Command Specifications"]
 
+    # Determine usage level
+    usage_level = args.usage_level
+    if not usage_level:
+        usage_level = "Advanced" if args.advanced else (os.environ.get("EGERIA_USAGE_LEVEL") or user_profile.egeria_usage_level or "Advanced")
+    
     # Create base output directory if it doesn't exist
-    usage_folder = "advanced" if args.advanced else "basic"
+    usage_folder = usage_level.lower()
     base_output_dir = os.path.join(EGERIA_ROOT_PATH, "templates", usage_folder)
     os.makedirs(base_output_dir, exist_ok=True)
 
@@ -217,7 +239,6 @@ def main():
     # Group commands by family — include any command with a visible level
     # -----------------------------------------------------------------------
     families: dict[str, list[str]] = {}
-    usage_level = "Advanced" if args.advanced else "Basic"
     for command, values in commands.items():
         if command == "exported":
             continue
@@ -329,8 +350,8 @@ def main():
                 if not attr_list:
                     continue   # omit empty sections entirely
 
-                command_output.write(f"\n# {section_title}\n")
-                print(f"\n# {section_title}")
+                # command_output.write(f"\n# {section_title}\n")
+                # print(f"\n# {section_title}")
 
                 for key, value in attr_list:
                     _write_attr_block(command_output, key, value, client=client)

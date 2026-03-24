@@ -1,20 +1,20 @@
 # Create Data Structure
 > Creates or updates a data structure — a collection of data fields that defines the structure for a data source.
 
-# Required
-
 ## Display Name
 >	**Input Required**: True
+
+>	**Attribute Type**: Simple
 
 >	**Description**: The common name of an element.
 
 >	**Alternative Labels**: "Term Name"
 
 
-# Data Structure Properties
-
 ## In Data Dictionary
 >	**Input Required**: False
+
+>	**Attribute Type**: Reference Name
 
 >	**Description**: The data dictionary that contains this data structure.
 
@@ -22,19 +22,55 @@
 ## In Data Specification
 >	**Input Required**: False
 
+>	**Attribute Type**: Reference Name
+
 >	**Description**: The data specification that contains this data structure.
 
 
-# Common Properties
+## Name Patterns
+>	**Input Required**: False
+
+>	**Attribute Type**: Simple List
+
+>	**Description**: Name patterns for naming standard rules.
+
+
+## Namespace Path
+>	**Input Required**: False
+
+>	**Attribute Type**: Simple String
+
+>	**Description**: The namespace path that qualifies the element's name within a larger naming hierarchy.
+
+
+## In Data Dictionary
+>	**Input Required**: False
+
+>	**Attribute Type**: Reference Name
+
+>	**Description**: The data dictionary that contains this data structure.
+
+
+## In Data Specification
+>	**Input Required**: False
+
+>	**Attribute Type**: Reference Name
+
+>	**Description**: The data specification that contains this data structure.
+
 
 ## Journal Entry
 >	**Input Required**: False
+
+>	**Attribute Type**: Simple
 
 >	**Description**: A text entry into a journal.
 
 
 ## Category
 >	**Input Required**: False
+
+>	**Attribute Type**: Simple
 
 >	**Description**: A user-defined category for the element, used to group related elements for display or search purposes.
 
@@ -44,17 +80,23 @@
 ## Description
 >	**Input Required**: False
 
+>	**Attribute Type**: Simple
+
 >	**Description**: A description.
 
 
 ## Qualified Name
 >	**Input Required**: False
 
+>	**Attribute Type**: QN
+
 >	**Description**: The unique, text name of an element.
 
 
 ## Content Status
 >	**Input Required**: False
+
+>	**Attribute Type**: Valid Value
 
 >	**Description**: The lifecycle status of an element.
 
@@ -63,16 +105,18 @@
 >	**Default Value**: ACTIVE
 
 
-# Additional Properties
-
 ## Search Keywords
 >	**Input Required**: False
+
+>	**Attribute Type**: Simple List
 
 >	**Description**: A list of search keywords.
 
 
 ## GUID
 >	**Input Required**: False
+
+>	**Attribute Type**: GUID
 
 >	**Description**: A unique identifier - typically of an element in this context.
 
@@ -82,17 +126,23 @@
 ## Identifier
 >	**Input Required**: False
 
+>	**Attribute Type**: Simple
+
 >	**Description**: An identier
 
 
 ## URL
 >	**Input Required**: False
 
+>	**Attribute Type**: Simple
+
 >	**Description**: URL for further information.
 
 
 ## Version Identifier
 >	**Input Required**: False
+
+>	**Attribute Type**: Simple
 
 >	**Description**: The version of the element
 
@@ -103,6 +153,8 @@
 
 ## Authors
 >	**Input Required**: False
+
+>	**Attribute Type**: Simple List
 
 >	**Description**: The authors.
 

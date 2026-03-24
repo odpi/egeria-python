@@ -395,8 +395,8 @@ def print_exception_table(e: PyegeriaException):
 
     table = Table(title=f"Exception: {e.__class__.__name__}", show_lines=True, header_style="bold", box=box.HEAVY_HEAD)
     table.caption = e.pyegeria_code
-    table.add_column("Facet", justify="center")
-    table.add_column("Item", justify="center")
+    table.add_column("Facet", justify="center", overflow="fold")
+    table.add_column("Item", justify="center", overflow="fold")
 
     if isinstance(e, PyegeriaException):
         table.add_row("HTTP Code", str(e.response_code))
@@ -408,8 +408,8 @@ def print_exception_table(e: PyegeriaException):
         table.add_row("Request URL", str(e.response_url))
         if e.response_code and related_response:
             item_table = Table(show_lines = True, header_style="bold")
-            item_table.add_column("Item", justify="center")
-            item_table.add_column("Detail", justify="left")
+            item_table.add_column("Item", justify="center", overflow="fold")
+            item_table.add_column("Detail", justify="left", overflow="fold")
             for key, value in related_response.items():
                 item_table.add_row(key, format_dict_to_string(value))
             table.add_row("Egeria Details", item_table)
@@ -455,8 +455,8 @@ def print_basic_exception(e: PyegeriaException):
             exception_msg_id = related_response.get("exceptionErrorMessageId", "")
 
     table = Table(title=f"Exception: {e.__class__.__name__}", show_lines=True, header_style="bold", box=box.HEAVY_HEAD)
-    table.add_column("Facet", justify="center")
-    table.add_column("Item", justify="left", width=80)
+    table.add_column("Facet", justify="center", overflow="fold")
+    table.add_column("Item", justify="left", min_width=80, overflow="fold")
 
     if isinstance(e, PyegeriaException):
         table.caption = getattr(e, "pyegeria_code", "UNKNOWN_ERROR")

@@ -12,7 +12,7 @@ from rich.markdown import Markdown
 
 from pyegeria import ServerClient, PyegeriaException
 from pyegeria.core.utils import (camel_to_title_case)
-from pyegeria.core._globals import DEBUG_LEVEL, GovernanceDomains
+from pyegeria.core._globals import DEBUG_LEVEL, GovernanceDomains, resolve_enum
 from md_processing.md_processing_utils.message_constants import message_types
 
 # Constants
@@ -64,6 +64,18 @@ def split_tb_string(input: str)-> [Any]:
 def str_to_bool(value: str) -> bool:
     """Converts a string to a boolean value."""
     return value.lower() in ("yes", "true", "t", "1")
+
+
+def normalize_value(value: str | int | None) -> str:
+    """Normalize a string for case-insensitive and format-flexible comparison.
+       Strips whitespace, converts to upper case, replaces underscores/dashes with spaces,
+       and collapses multiple spaces.
+    """
+    if value is None:
+        return ""
+    # Replace separators with spaces, then collapse multiple spaces and strip
+    s = str(value).upper().replace('_', ' ').replace('-', ' ')
+    return ' '.join(s.split())
 
 def render_markdown(markdown_text: str) -> None:
     """Renders the given markdown text in the console."""
@@ -273,8 +285,8 @@ def set_create_body(object_type: str, attributes: dict)->dict:
         "anchorGUID": attributes.get('Anchor ID', {}).get('guid', None),
         "isOwnAnchor": attributes.get('Is Own Anchor', {}).get('value', True),
         "parentGUID": attributes.get('Parent ID', {}).get('guid', None),
-        "parentRelationshipTypeName": attributes.get('Parent Relationship Type Name', {}).get('value', None),
-        "parentRelationshipProperties": attributes.get('Parent Relationship Properties', {}).get('value', None),
+        "parentRelationshipTypeName": attributes.get('Parent Relationship Type Name', {}).get('value', None) or attributes.get('Parent Relationship Type', {}).get('value', None),
+        "parentRelationshipProperties": attributes.get('Parent Relationship Attributes', {}).get('value', None) or attributes.get('Parent Relationship Properties', {}).get('value', None),
         "parentAtEnd1": attributes.get('Parent at End1', {}).get('value', True),
         "anchorScopeGUID": attributes.get('Anchor Scope GUID', {}).get('guid', None),
         "properties": "",
@@ -311,9 +323,9 @@ def set_rel_prop_body(object_type: str, attributes: dict)->dict:
 
     return {
         "class": prop_name + "Properties",
-        "description": attributes['Description'].get('value', None),
+        "description": attributes.get('Description', {}).get('value', None),
         "label": attributes.get('Label', {}).get('value', None) or attributes.get('Link Label', {}).get('value', None),
-        "typeName" : attributes.get('Type Name', {}).get('value', None),
+        "typeName" : attributes.get('Type Name', {}).get('value') or prop_name,
         "effectiveFrom": attributes.get('Effective From', {}).get('value', None),
         "effectiveTo": attributes.get('Effective To', {}).get('value', None),
         "extendedProperties": attributes.get('Extended Properties', {}).get('value', None),
@@ -335,12 +347,14 @@ def set_element_prop_body(object_type: str, qualified_name: str, attributes: dic
 
     return {
         "class": prop_name + "Properties",
+        "typeName": prop_name,
         "displayName": attributes.get('Display Name', {}).get('value', None),
         "qualifiedName" : qualified_name,
-        "description": attributes['Description'].get('value', None),
+        "description": attributes.get('Description', {}).get('value', None),
         "category": attributes.get('Category', {}).get('value', None),
         "identifier": attributes.get('Identifier', {}).get('value', None),
-        "userDefinedStatus": attributes.get('User Defined Status', {}).get('value', None),
+        "contentStatus": attributes.get('Content Status', {}).get('value', None) or attributes.get('Status', {}).get('value', None),
+        "userDefinedContentStatus": attributes.get('User Defined Content Status', {}).get('value', None),
         "versionIdentifier": attributes.get('Version Identifier', {}).get('value', None),
         "effectiveFrom": attributes.get('Effective From', {}).get('value', None),
         "effectiveTo": attributes.get('Effective To', {}).get('value', None),
@@ -350,7 +364,49 @@ def set_element_prop_body(object_type: str, qualified_name: str, attributes: dic
         "serviceLevels": attributes.get('Service Levels', {}).get('value', None),
         }
 
-def set_product_body(object_type: str, qualified_name: str, attributes: dict)->dict:
+def set_collection_manager_body(object_type: str, qualified_name: str, attributes: dict) -> dict:
+    """
+    Build the INNER element-specific Properties body for Collection Manager elements.
+    Handles subtypes like Digital Product, Agreement, Digital Subscription, etc.
+    """
+    prop_bod = set_element_prop_body(object_type, qualified_name, attributes)
+
+    # Handle Digital Product and Digital Product Family
+    if "Digital Product" in object_type:
+        prop_bod.update({
+            "productName": attributes.get('Product Name', {}).get('value', None),
+            "maturity": attributes.get('Maturity', {}).get('value', None),
+            "serviceLife": attributes.get('Service Life', {}).get('value', None),
+            "introductionDate": attributes.get('Introduction Date', {}).get('value', None),
+            "withdrawalDate": attributes.get('Withdrawal Date', {}).get('value', None),
+            "nextVersionDate": attributes.get('Next Version Date', {}).get('value', None),
+        })
+
+    # Handle Agreement and Digital Subscription
+    if "Agreement" in object_type or "Subscription" in object_type:
+        prop_bod.update({
+            "agreementType": attributes.get('Agreement Type', {}).get('value', None),
+            "agreementStatus": attributes.get('Agreement Status', {}).get('value', None),
+        })
+        if "Subscription" in object_type:
+            prop_bod.update({
+                "subscriberType": attributes.get('Subscriber Type', {}).get('value', None),
+                "subscriberId": attributes.get('Subscriber Id', {}).get('value', None),
+                "supportLevel": attributes.get('Support Level', {}).get('value', None),
+                "serviceLevels": attributes.get('Service Levels', {}).get('value', None),
+            })
+
+    # Handle Glossary
+    if "Glossary" in object_type:
+        prop_bod.update({
+            "language": attributes.get('Language', {}).get('value', "English"),
+            "usage": attributes.get('Usage', {}).get('value', None),
+        })
+
+    return prop_bod
+
+
+def set_product_body(object_type: str, qualified_name: str, attributes: dict) -> dict:
     prop_bod = set_element_prop_body(object_type, qualified_name, attributes)
     prop_bod["identifier"] = attributes.get('Identifier', {}).get('value', None)
     prop_bod["productName"] = attributes.get('Product Name', {}).get('value', None)
@@ -389,8 +445,12 @@ def set_update_status_body(object_type: str, attributes: dict)->dict:
 def set_gov_prop_body(object_type: str, qualified_name: str, attributes: dict)->dict:
     prop_name = object_type.replace(" ", "")
     prop_bod = set_element_prop_body(object_type, qualified_name, attributes)
-    domain_id = attributes.get('Domain Identifier', {}).get('value', None)
-    prop_bod["domainIdentifier"] = GovernanceDomains[domain_id].value
+    domain_id = attributes.get('Domain Identifier', {}).get('value', 0)
+    resolved_domain = resolve_enum(GovernanceDomains, domain_id)
+    if resolved_domain is not None:
+        prop_bod["domainIdentifier"] = resolved_domain
+    else:
+        prop_bod["domainIdentifier"] = domain_id
     prop_bod["displayName"]= attributes.get('Display Name', {}).get('value', None)
     prop_bod['qualifiedName'] = qualified_name
     prop_bod["versionIdentifier"] = attributes.get('Version Identifier', {}).get('value', None)
@@ -402,9 +462,9 @@ def set_gov_prop_body(object_type: str, qualified_name: str, attributes: dict)->
     prop_bod["implications"] = attributes.get('Implication', {}).get('value', [])
     prop_bod["outcomes"] = attributes.get('Outcomes', {}).get('value', [])
     prop_bod["results"] = attributes.get('Results', {}).get('value', []) or []
-    prop_bod["effectiveFrom"] = attributes.get('Effective From', {}).get('value', None),
-    prop_bod["effectiveTo"] = attributes.get('Effective To', {}).get('value', None),
-    prop_bod["additionalProperties"] = attributes.get('Additional Properties', {}).get('value', None),
+    prop_bod["effectiveFrom"] = attributes.get('Effective From', {}).get('value', None)
+    prop_bod["effectiveTo"] = attributes.get('Effective To', {}).get('value', None)
+    prop_bod["additionalProperties"] = attributes.get('Additional Properties', {}).get('value', None)
     prop_bod["extendedProperties"] = attributes.get('Extended Properties', {}).get('value', None)
 
 
@@ -439,7 +499,7 @@ def update_gov_body_for_type(object_type: str, body: dict, attributes: dict) -> 
         body['namePatterns'] = attributes.get('Name Patterns', {}).get('value', [])
         return body
     elif object_type in ["TermsAndConditions", "Certification Type", "License Type"]:
-        entitlements = attributes.get('Entitlementss', {}).get('value', {}) if attributes.get('Entitlementss',None) else None
+        entitlements = attributes.get('Entitlements', {}).get('value', {}) if attributes.get('Entitlements',None) else None
         restrictions = attributes.get('Restrictions', {}).get('value', {}) if attributes.get('Restrictions',None) else None
         obligations = attributes.get('Obligations', {}).get('value', {}) if attributes.get('Obligations',None) else None
         body['entitlements'] = entitlements
@@ -586,6 +646,18 @@ def add_note_in_dr_e(client: ServerClient, qualified_name: str, display_name: st
         note_display_name = f"{qualified_name}-Journal-Entry-{datetime.now().strftime('%Y-%m-%d %H:%M')}"
         journal_entry_guid = client.add_journal_entry(note_log_qn, qualified_name, note_log_display_name,
                                                       note_display_name, journal_entry)
+        logger.info(f"Added journal entry `{journal_entry_guid}` to `{qualified_name}`")
+        return journal_entry_guid
+    else:
+        return None
+
+async def async_add_note_in_dr_e(client: ServerClient, qualified_name: str, display_name: str, journal_entry: str) -> str:
+    if journal_entry:
+        note_log_qn = f"{qualified_name}-NoteLog"
+        note_log_display_name = f"{display_name}-NoteLog"
+        note_display_name = f"{qualified_name}-Journal-Entry-{datetime.now().strftime('%Y-%m-%d %H:%M')}"
+        journal_entry_guid = await client._async_add_journal_entry(note_log_qn, qualified_name, note_log_display_name,
+                                                                 note_display_name, journal_entry)
         logger.info(f"Added journal entry `{journal_entry_guid}` to `{qualified_name}`")
         return journal_entry_guid
     else:

@@ -1,6 +1,6 @@
 {
   "family": "Report",
-  "exported": "Mar 11, 2026 at 9:50:58 AM",
+  "exported": "Mar 22, 2026 at 9:05:12 PM",
   "attribute_definitions": {
     "Search String": {
       "variable_name": "search_string",
@@ -19,7 +19,7 @@
       "min_cardinality": 0,
       "max_cardinality": 1,
       "level": "Domain",
-      "Journal Entry": "An optional search string to filter results by."
+      "Journal Entry": ""
     },
     "Output Format": {
       "variable_name": "output_format",
@@ -438,7 +438,8 @@
       "Journal Entry": ""
     }
   },
-  "bundles": {},
+  "bundles": {
+  },
   "commands": {
     "Report": {
       "display_name": "Report",
@@ -454,7 +455,7 @@
       "find_constraints": "",
       "extra_find": "",
       "extra_constraints": "",
-      "bundle": "",
+      "bundle": "Governance Definition Core",
       "custom_attributes": [
         "Search String",
         "Output Format",
@@ -476,7 +477,8 @@
         "Output Sort Order",
         "Order Property Name",
         "Page Size",
-        "Start From"
+        "Start From",
+        "Anchor Scope ID"
       ],
       "Journal Entry": "Runs a pyegeria report spec via hey_egeria run_report. Discovers and executes a named FormatSet against the Egeria repository. Not an element-creation command — no upsert, no qualified name prefix. Output format and report spec control what is returned and how it is rendered."
     }

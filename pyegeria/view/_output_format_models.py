@@ -349,6 +349,59 @@ class FormatSet(BaseModel):
             return getattr(self, key)
         return default
 
+    def merge_with(self, other: "FormatSet") -> "FormatSet":
+        """Deep merge another FormatSet into this one.
+
+        Updates simple fields (heading, description, target_type, family, action)
+        if the other one has non-empty values.
+
+        The formats list is merged based on the 'types' of each format. If a format
+        with the same set of types exists, it is replaced. Otherwise, it is appended.
+        """
+        if other.heading:
+            self.heading = other.heading
+        if other.description:
+            self.description = other.description
+        if other.target_type:
+            self.target_type = other.target_type
+        if other.family:
+            self.family = other.family
+        if other.action:
+            self.action = other.action
+        if other.get_additional_props:
+            self.get_additional_props = other.get_additional_props
+        if other.question_spec:
+            self.question_spec = other.question_spec
+
+        # Merge aliases
+        if other.aliases:
+            existing_aliases = set(self.aliases or [])
+            existing_aliases.update(other.aliases)
+            self.aliases = sorted(list(existing_aliases))
+
+        # Merge formats
+        # Since formats is a list of Format objects, we merge based on the types they support.
+        for other_fmt in other.formats:
+            # Ensure other_fmt is a Format object
+            if isinstance(other_fmt, dict):
+                other_fmt = Format(**other_fmt)
+
+            other_types = set(other_fmt.types)
+            found = False
+            for i, existing_fmt in enumerate(self.formats):
+                if isinstance(existing_fmt, dict):
+                    existing_fmt = Format(**existing_fmt)
+                    self.formats[i] = existing_fmt
+
+                if set(existing_fmt.types) == other_types:
+                    self.formats[i] = other_fmt
+                    found = True
+                    break
+            if not found:
+                self.formats.append(other_fmt)
+
+        return self
+
 class FormatSetDict(Dict[str, FormatSet]):
     """
     A dictionary of format sets, with methods for backward compatibility.
@@ -367,6 +420,7 @@ class FormatSetDict(Dict[str, FormatSet]):
         Find a format set by either name or alias.
         
         This method first checks if the key exists directly in the dictionary.
+        It also tries to normalize spaces to dashes as a robustness measure.
         If not found, it searches through all format sets to find one with a matching alias.
         
         Args:
@@ -379,7 +433,11 @@ class FormatSetDict(Dict[str, FormatSet]):
         # First try to find by name (key)
         format_set = super().get(key, None)
         
-        # If not found by name, try to find by alias
+        # Second try: normalize spaces to dashes (e.g., 'Business Imperative-DrE' -> 'Business-Imperative-DrE')
+        if format_set is None and isinstance(key, str) and " " in key:
+            format_set = super().get(key.replace(" ", "-"), None)
+        
+        # If not found by name/normalized name, try to find by alias
         if format_set is None:
             for value in self.values():
                 if key in value.aliases:
@@ -486,7 +544,24 @@ class FormatSetDict(Dict[str, FormatSet]):
             bool: True if the format set exists, False otherwise
         """
         return self.find_by_name_or_alias(key, None) is not None
-    
+
+    def upsert(self, key: str, value: Union[FormatSet, Dict[str, Any]]) -> None:
+        """
+        Add a format set if it doesn't exist, or deep merge it if it does.
+        
+        Args:
+            key: The name of the format set
+            value: The FormatSet object or dictionary to upsert
+        """
+        if isinstance(value, dict):
+            value = FormatSet(**value)
+            
+        existing = self.find_by_name_or_alias(key, None)
+        if existing:
+            existing.merge_with(value)
+        else:
+            self[key] = value
+
     def to_dict(self):
         """Convert all format sets to dictionaries."""
         return {key: value.dict() for key, value in self.items()}

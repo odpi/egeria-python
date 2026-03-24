@@ -14,11 +14,12 @@ There are common patterns we try to follow across the different element types. l
 Most of the common patterns use common helper functions in _server_client.py. 
 
 Do not make changes to _server_client.py, or other core files without permission.
-
+Do not make changes outside of the immediate scope with permissions.
 Do not make changes without permission to files other than the specific ones being requested.
 
 Put documents intended for the developer (as opposed to use) and test code meant for your understanding (as opposed to 
 standard pyegeria tests) in the folder egeria-python/.ai/.ai-sandbox
 
+When debugging or investigating an issue. First report on what you believe the issue is and your proposed solution, get confirmation from the user and then make the proposed changes after approval.
 Review your plan of execution with me before proceeding. Get confirmation before significant changes.
 Discuss bugs you've found and improvements you'd like to make before doing so - unless I give you the go-ahead for this request.
