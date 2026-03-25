@@ -506,7 +506,7 @@ class TestGlossaryManager:
             )
 
             token = g_client.create_egeria_bearer_token(self.good_user_2, "secret")
-            term_guid = "7bb48da4-f242-4deb-9293-375bb67bbbcf"
+            term_guid = "acca7cf3-40d4-40fd-9922-5c74075e9651"
 
             response = g_client.get_term_by_guid(term_guid, output_format = 'JSON')
 
