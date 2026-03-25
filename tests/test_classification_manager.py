@@ -575,7 +575,7 @@ def test_get_all_related_elements():
     # element_guid = "d156faa6-90cf-4be8-b3c1-c002f3e9a0e5" # branch database
     # element_guid = "da0442bf-818f-406b-99dc-83b72605cc98"
     # element_guid = "8b9cce34-ff42-4f9d-b4b3-6317c8a767c3"  # Retail schema
-    element_guid = "0182bacf-32c4-40f0-91b5-2462dfeab50c"
+    element_guid = "acca7cf3-40d4-40fd-9922-5c74075e9651"
     bearer_token = c_client.create_egeria_bearer_token(user, password)
     response = c_client.get_related_elements(element_guid, relationship_type=None)
 
@@ -591,7 +591,7 @@ def test_get_all_related_elements():
 def test_get_related_elements():
     # metadata_element_type = 'CertificationType'
     # element_guid = '2ce8d10d-08a2-4fca-b0c2-1d5a335d00fc'
-    element_guid = "10662294-52d0-43c5-9aa3-19922e478e69"
+    element_guid = "acca7cf3-40d4-40fd-9922-5c74075e9651"
     # metadata_element_type = "Organization"
     # metadata_element_type = "CSVFile"
     # metadata_element_type = "InformationSupplyChain"

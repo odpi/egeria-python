@@ -477,7 +477,7 @@ class TestGlossaryManager:
             )
 
             token = g_client.create_egeria_bearer_token(self.good_user_2, "secret")
-            term_name = "Calico"
+            term_name = "Term1"
             glossary_guid = "70ae4d54-05bb-4411-96e6-697d0640a10e"
             response = g_client.get_terms_by_name(term_name)
 
@@ -708,15 +708,14 @@ class TestGlossaryManager:
             token = g_client.create_egeria_bearer_token(self.good_user_2, "secret")
 
 
-            guid1 = "16fe1b6f-b66c-490e-bc23-a47d0510b433"
-            guid2 = "ecf8b8d6-e593-4240-839c-019b820f1897"
-            relationship_type = "Antonym"
+            guid1 = "acca7cf3-40d4-40fd-9922-5c74075e9651"
+            guid2 = "0836cb4e-d7df-4057-a3a0-5ec9afc1ab6a"
+            relationship_type = "Synonym"
             body = {
                 "class": "NewRelationshipRequestBody",
                 "properties": {
-                    "class": "GlossaryTermRelationship"
-                    # "confidence": 10,
-                    # "description": "Why not",
+                    "class": "GlossaryTermRelationshipProperties",
+                    "description": "Why not",
                     # "status": "DRAFT",
                     # "steward": "Martha"
                 }
