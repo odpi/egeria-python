@@ -35,7 +35,7 @@ class CollectionManagerProcessor(AsyncBaseCommandProcessor):
         if verb == "Update":
             guid = self.parsed_output.get("guid") or (self.as_is_element['elementHeader']['guid'] if self.as_is_element else None)
             if not guid:
-                return self.command.original_text
+                return self.command.raw_block
 
             body = set_update_body(object_type, attributes)
             prop_body = set_collection_manager_body(object_type, qualified_name, attributes)
@@ -148,7 +148,7 @@ class CollectionManagerProcessor(AsyncBaseCommandProcessor):
                 logger.success(f"Created {object_type} '{display_name}' with GUID {guid}")
                 return await self.render_result_markdown(guid)
 
-        return self.command.original_text
+        return self.command.raw_block
 
 class CSVElementProcessor(AsyncBaseCommandProcessor):
     """
@@ -163,7 +163,7 @@ class CSVElementProcessor(AsyncBaseCommandProcessor):
 
     async def apply_changes(self) -> str:
         if self.command.verb != "Create":
-            return self.command.original_text
+            return self.command.raw_block
             
         attributes = self.parsed_output["attributes"]
         qualified_name = self.parsed_output["qualified_name"]
@@ -186,7 +186,7 @@ class CSVElementProcessor(AsyncBaseCommandProcessor):
             logger.success(f"Created CSV Element '{display_name}' with GUID {guid}")
             return f"# Created CSV Element\n\nGUID: {guid}\nQualified Name: {qualified_name}"
 
-        return self.command.original_text
+        return self.command.raw_block
 
 class CollectionLinkProcessor(AsyncBaseCommandProcessor):
     """
@@ -319,4 +319,4 @@ class CollectionLinkProcessor(AsyncBaseCommandProcessor):
             logger.success(f"Detached {object_type}")
             return f"\n\n# {verb} {object_type}\n\nOperation completed."
 
-        return self.command.original_text
+        return self.command.raw_block

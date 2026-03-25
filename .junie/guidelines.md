@@ -8,12 +8,13 @@ pyegeria is a Python client for Egeria, an open metadata and governance platform
   - **_client.py**: Base client implementation
   - **egeria_*.py**: Client interfaces for different services
   - ***_omvs.py**: Open Metadata View Services clients
-  - **commands/**: CLI commands organized by category
+- **commands/**: CLI commands organized by category
     - **cat/**: Catalog-related commands
     - **cli/**: CLI interface commands
     - **my/**: User-specific commands
     - **ops/**: Operations-related commands
     - **tech/**: Technical commands
+- **md_processing**: Dr. Egeria markdown processor code
 - **tests/**: Test files mirroring the main package structure
 - **examples/**: Example usage and configurations
   - **Jupyter Notebooks/**: Interactive examples
@@ -22,7 +23,7 @@ pyegeria is a Python client for Egeria, an open metadata and governance platform
 
 ## Tech Stack
 - **Python**: 3.12+
-- **Dependency Management**: Poetry
+- **Dependency Management**: uv
 - **HTTP Clients**: httpx, requests
 - **CLI Tools**: click, trogon, textual
 - **Testing**: pytest
@@ -47,12 +48,12 @@ The project provides numerous CLI commands for interacting with Egeria:
 
 ```bash
 # Install the package
-poetry install
+uv add
 
 # Run a object_action (examples)
-poetry run list_assets
-poetry run list_terms
-poetry run hey_egeria  # Main CLI entry point
+uvr list_assets
+uvr list_terms
+uvr run hey_egeria  # Main CLI entry point
 ```
 
 You can also use the library programmatically:

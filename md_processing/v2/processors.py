@@ -431,7 +431,11 @@ class AsyncBaseCommandProcessor(ABC):
         # 1. Determine the report spec name
         # Convention: <Type>-DrE (spaces replaced with dashes)
         # Use canonical_object_type to ensure we get 'Glossary-Term-DrE' instead of 'Term-DrE'
-        report_spec_name = make_format_set_name_from_type(self.canonical_object_type)
+        base_report_spec_name = make_format_set_name_from_type(self.canonical_object_type)
+        
+        from md_processing.md_processing_utils.common_md_proc_utils import EGERIA_USAGE_LEVEL
+        level_suffix = f"-{EGERIA_USAGE_LEVEL.capitalize()}" if getattr(EGERIA_USAGE_LEVEL, 'capitalize', None) else "-Basic"
+        report_spec_name = f"{base_report_spec_name}{level_suffix}"
         
         # 2. Fetch the element dictionary
         try:
@@ -445,6 +449,9 @@ class AsyncBaseCommandProcessor(ABC):
 
         # 3. Select the report spec
         columns_struct = select_report_spec(report_spec_name, "MD")
+        if not columns_struct:
+            columns_struct = select_report_spec(base_report_spec_name, "MD")
+            
         if not columns_struct:
             msg = f"Report spec '{report_spec_name}' not found. Falling back to default."
             logger.warning(msg)

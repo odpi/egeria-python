@@ -189,7 +189,7 @@ class RequestBody(PyegeriaModel):
 class NewRelationshipRequestBody(RequestBody):
     class_: Annotated[Literal["NewRelationshipRequestBody"], Field(alias="class")]
     make_anchor: bool | None = False
-    anchor_scope_guid: str | None = None
+    anchor_scope_guids: list[str] | None = None
     properties: dict | None = None
     relationship_properties: dict | None = Field(default=None, alias="relationshipProperties")
 
@@ -331,7 +331,7 @@ class NewElementRequestBody(RequestBody):
     class_: Annotated[Literal["NewElementRequestBody"], Field(alias="class")]
     anchor_guid: str | None = None
     is_own_anchor: bool | None = True
-    anchor_scope_guid: str | None = None
+    anchor_scope_guids: list[str] | None = None
     initial_classifications:  Dict[str, InitialClassifications] | None = None
     parent_relationship_properties: dict | None = None
     properties: dict | None = None
@@ -361,7 +361,7 @@ class TemplateRequestBody(PyegeriaModel):
     class_: Annotated[Literal["TemplateRequestBody"], Field(alias="class")]
     anchor_guid: str | None = None
     is_own_anchor: bool | None = True
-    anchor_scope_guid: str | None = None
+    anchor_scope_guids: list[str] | None = None
     initial_classifications: dict | None = None  # unsure
     parent_guid: str | None = None
     parent_relationship_type_name: str | None = None

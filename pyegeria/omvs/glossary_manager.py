@@ -2195,16 +2195,15 @@ class GlossaryManager(CollectionManager):
             body = {
                 "class": "NewRelationshipRequestBody",
                 "properties":
-                    {"class": "GlossaryTermRelationship" }
+                    {"class": "GlossaryTermRelationshipProperties",
+                     "confidence": 100}
                 }
-
-
 
         url = (
             f"{self.platform_url}/servers/{self.view_server}/api/open-metadata/glossary-manager/glossaries/"
             f"terms/{term1_guid}/relationships/{relationship_type}/terms/{term2_guid}"
         )
-        await self._async_new_relationship_request(url, ["GlossaryTermRelationship"],body)
+        await self._async_new_relationship_request(url, ["GlossaryTermRelationshipProperties"],body)
         logger.info(f"Added relationship between {term1_guid} and {term2_guid} of type {relationship_type}")
 
     def add_relationship_between_terms(

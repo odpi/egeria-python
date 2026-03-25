@@ -20,12 +20,12 @@ class CommandRewriter:
         if verb == "Create" and exists:
             logger.info(f"Rewriting 'Create {object_type}' to 'Update {object_type}' as it already exists.")
             command.verb = "Update"
-            command.original_text = command.original_text.replace("Create", "Update", 1)
+            command.raw_block = command.raw_block.replace("Create", "Update", 1)
         elif verb == "Update" and not exists:
             # For some types, we might want to auto-create, but usually we just log an error or proceed
             # Sync code often switched Update -> Create if not exists.
             logger.info(f"Rewriting 'Update {object_type}' to 'Create {object_type}' as it does not exist.")
             command.verb = "Create"
-            command.original_text = command.original_text.replace("Update", "Create", 1)
+            command.raw_block = command.raw_block.replace("Update", "Create", 1)
             
         return command

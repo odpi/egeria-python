@@ -132,6 +132,9 @@ async def process_md_file_v2(input_file: str, output_folder: str, directive: str
     # Glossary
     register_processor("Create Glossary Term", TermProcessor)
     register_processor("Link Term-Term Relationship", TermRelationshipProcessor)
+    register_processor("Unlink Term-Term Relationship", TermRelationshipProcessor)
+    register_processor("Remove Term-Term Relationship", TermRelationshipProcessor)
+    register_processor("Detach Term-Term Relationship", TermRelationshipProcessor)
 
     # Data Designer
     register_processor("Create Data Specification", DataCollectionProcessor)
@@ -348,7 +351,11 @@ async def process_md_file_v2(input_file: str, output_folder: str, directive: str
         with open(new_file_path, 'w') as f2:
             f2.write(content_to_write)
             
-        console.print(f"==> [bold green]SUCCESS[/bold green]: Output written to [blue]{new_file_path}[/blue]")
+        has_failures = any(res.get("status") == "failure" for res in results if res.get("is_command", True) and res.get("verb") != "Provenance")
+        if has_failures:
+            console.print(f"==> [bold yellow]COMPLETED WITH ERRORS[/bold yellow]: Output written to [blue]{new_file_path}[/blue]")
+        else:
+            console.print(f"==> [bold green]SUCCESS[/bold green]: Output written to [blue]{new_file_path}[/blue]")
     elif directive == "process":
         console.print("[yellow]No updates detected. New File not created.[/yellow]")
 

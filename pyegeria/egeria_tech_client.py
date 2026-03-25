@@ -25,7 +25,6 @@ from pyegeria.omvs.governance_officer import GovernanceOfficer
 from pyegeria.omvs.lineage_linker import LineageLinker
 from pyegeria.omvs.location_arena import LocationArena
 from pyegeria.omvs.metadata_expert import MetadataExpert
-from pyegeria.omvs.metadata_explorer_omvs import MetadataExplorer
 from pyegeria.omvs.my_profile import MyProfile
 from pyegeria.omvs.notification_manager import NotificationManager
 from pyegeria.omvs.people_organizer import PeopleOrganizer
@@ -94,10 +93,6 @@ class EgeriaTech:
             "valid_metadata": ValidMetadataManager,
             "expert": MetadataExpert,
             "metadata_expert": MetadataExpert,
-            "explorer": MetadataExplorer,
-            "metadata_explorer": MetadataExplorer,
-            # TODO: Fix method collisions between MetadataExplorer and MetadataExpert.
-            # Prioritize MetadataExpert (which uses the standard expert marker) over Explorer.
             "sol_arch": SolutionArchitect,
             "solution_architect": SolutionArchitect,
             "designer": DataDesigner,

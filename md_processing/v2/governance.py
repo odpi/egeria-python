@@ -41,7 +41,7 @@ class GovernanceProcessor(AsyncBaseCommandProcessor):
         if verb == "Update":
             guid = self.parsed_output.get("guid") or (self.as_is_element['elementHeader']['guid'] if self.as_is_element else None)
             if not guid:
-                return self.command.original_text
+                return self.command.raw_block
             self.parsed_output["guid"] = guid
 
             body = {
@@ -70,7 +70,7 @@ class GovernanceProcessor(AsyncBaseCommandProcessor):
                 logger.success(f"Created {object_type} '{display_name}' with GUID {guid}")
                 return await self.render_result_markdown(guid)
 
-        return self.command.original_text
+        return self.command.raw_block
 
     async def _sync_rels(self, guid: str, attributes: Dict[str, Any]):
         to_be_supports = attributes.get("Supports Policies", {}).get("guid_list", [])
@@ -110,7 +110,7 @@ class GovernanceLinkProcessor(AsyncBaseCommandProcessor):
         label = attributes.get('Link Label', {}).get('value', "")
         
         if not (guid1 and guid2):
-            return self.command.original_text
+            return self.command.raw_block
 
         # Determine relationship type name
         rel_type = ""
@@ -162,7 +162,7 @@ class GovernanceLinkProcessor(AsyncBaseCommandProcessor):
             logger.success(f"Detached Governance {object_type}")
             return f"\n\n# {verb} {object_type}\n\nOperation completed."
 
-        return self.command.original_text
+        return self.command.raw_block
 
 class GovernanceContextProcessor(AsyncBaseCommandProcessor):
     """
@@ -180,7 +180,7 @@ class GovernanceContextProcessor(AsyncBaseCommandProcessor):
         output_format = attributes.get('Output Format', {}).get('value', 'LIST')
         
         if not guid:
-            return self.command.original_text
+            return self.command.raw_block
             
         body = set_update_body(self.command.object_type, attributes)
         struct = await self.client._async_get_gov_def_in_context(guid, body=body, output_format=output_format)
