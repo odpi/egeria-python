@@ -111,12 +111,12 @@ class TestCollectionManager:
             start_time = time.perf_counter()
             search_string = "*"
             classification_name = None
-            element_type = ["DigitalProduct"]
+            element_type = ["DigitalProductCatalog","DigitalProductFamily"]
             output_format = "DICT"
             report_spec = "BasicCollections"
 
             response = c_client.find_collections(search_string = search_string, classification_names = classification_name
-                                                 ,metadata_element_subtypes=element_type, max_mermaid_note_count=5
+                                                 ,metadata_element_subtypes=element_type, max_mermaid_node_count=5
                                                  ,output_format=output_format, report_spec=report_spec)
             duration = time.perf_counter() - start_time
             if response:

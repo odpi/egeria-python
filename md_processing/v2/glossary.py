@@ -47,7 +47,7 @@ class GlossaryProcessor(AsyncBaseCommandProcessor):
                 
             if not guid:
                 logger.error(f"Cannot update {display_name}: GUID not found")
-                return self.command.original_text
+                return self.command.raw_block
 
             body = set_update_body("Glossary", attributes)
             body['properties'] = self.filter_update_properties(prop_body, body.get('mergeUpdate', True))
@@ -102,7 +102,7 @@ class GlossaryProcessor(AsyncBaseCommandProcessor):
                 logger.success(f"Created {object_type} '{display_name}' with GUID {guid}")
                 return await self.render_result_markdown(guid)
             
-        return self.command.original_text
+        return self.command.raw_block
 
 class TermProcessor(AsyncBaseCommandProcessor):
     """
@@ -150,7 +150,7 @@ class TermProcessor(AsyncBaseCommandProcessor):
         if verb == "Update":
             guid = self.parsed_output.get("guid") or (self.as_is_element['elementHeader']['guid'] if self.as_is_element else None)
             if not guid:
-                return self.command.original_text
+                return self.command.raw_block
 
             body = set_update_body("GlossaryTerm", attributes)
             body['properties'] = self.filter_update_properties(prop_body, body.get('mergeUpdate', True))
@@ -203,7 +203,7 @@ class TermProcessor(AsyncBaseCommandProcessor):
                 logger.success(f"Created Term '{display_name}' with GUID {guid}")
                 return await self.render_result_markdown(guid)
 
-        return self.command.original_text
+        return self.command.raw_block
 
     async def _sync_term_memberships(self, term_guid: str, to_be_guids: List[str], replace_all: bool):
         """Standardized helper for term collection sync."""
@@ -318,7 +318,7 @@ class TermRelationshipProcessor(AsyncBaseCommandProcessor):
     """
 
     def get_command_spec(self) -> Dict[str, Any]:
-        return get_command_spec("Term Relationship")
+        return get_command_spec("Link Term-Term Relationship")
 
     async def fetch_as_is(self) -> Optional[Dict[str, Any]]:
         # Relationship lookup is more complex; for now we return None to force creation
@@ -330,23 +330,36 @@ class TermRelationshipProcessor(AsyncBaseCommandProcessor):
         term1_qname = attributes.get('Term 1', {}).get('qualified_name', None)
         term2_guid = attributes.get('Term 2', {}).get('guid', None)
         term2_qname = attributes.get('Term 2', {}).get('qualified_name', None)
-        relationship = attributes.get('Relationship', {}).get('value', None)
+        
+        relationship = attributes.get('Relationship Type', {}).get('value', None)
+        if not relationship:
+            # Fallback for old templates
+            relationship = attributes.get('Relationship', {}).get('value', None)
         
         if not (term1_guid and term2_guid and relationship):
-            logger.error(f"TermRelationshipProcessor: Missing required identifiers")
-            return self.command.original_text
+            msg = f"TermRelationshipProcessor: Missing required identifiers (Term 1 GUID: {bool(term1_guid)}, Term 2 GUID: {bool(term2_guid)}, Relationship: {bool(relationship)})"
+            logger.error(msg)
+            self.parsed_output['valid'] = False
+            self.parsed_output['reason'] = msg
+            return self.command.raw_block
             
         logger.info(f"TermRelationshipProcessor: Linking '{term1_qname}' to '{term2_qname}' via '{relationship}'")
         
         try:
-            await self.client._async_add_relationship_between_terms(term1_guid, term2_guid, relationship)
-            logger.success(f"Linked terms via {relationship}")
+            if self.command.verb in ["Unlink", "Detach", "Remove"]:
+                await self.client._async_remove_relationship_between_terms(term1_guid, term2_guid, relationship)
+                logger.success(f"Unlinked terms via {relationship}")
+            else:
+                await self.client._async_add_relationship_between_terms(term1_guid, term2_guid, relationship)
+                logger.success(f"Linked terms via {relationship}")
             
             # Standard v2 relationship output
-            return (f"\n\n# Update Term-Term Relationship\n\n"
+            return (f"\n\n# {self.command.verb} Term-Term Relationship\n\n"
                     f"## Term 1 Name:\n\n{term1_qname}\n\n"
                     f"## Term 2 Name:\n\n{term2_qname}\n\n"
                     f"## Term Relationship:\n\n{relationship}")
         except PyegeriaException as e:
             logger.error(f"Failed to link terms: {e}")
-            return self.command.original_text
+            self.parsed_output['valid'] = False
+            self.parsed_output['reason'] = str(e)
+            return self.command.raw_block

@@ -76,7 +76,6 @@ class MetadataExpert(ServerClient):
         logger.debug(f"{self.__class__.__name__} initialized")
         self.command_root: str = (
             f"{self.platform_url}/servers/{self.view_server}/api/open-metadata/metadata-expert")
-        self.metadata_explorer_command_root = self.command_root
         self.metadata_expert_command_root = self.command_root
 
     @dynamic_catch
@@ -3458,6 +3457,7 @@ class MetadataExpert(ServerClient):
 
         url = (
             f"{base_path(self, self.view_server)}/relationships/{guid}/history"
+            f"?oldestFirst={str(bool(oldest_first)).lower()}"
         )
 
         response: Response = await self._async_make_request(
@@ -3546,4 +3546,3 @@ class MetadataExpert(ServerClient):
         return response
 
 
-MetadataExplorer = MetadataExpert

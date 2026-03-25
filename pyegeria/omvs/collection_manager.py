@@ -1412,7 +1412,7 @@ class CollectionManager(ServerClient):
           "class": "NewElementRequestBody",
           "anchorGUID": "anchor GUID, if set then isOwnAnchor=false",
           "isOwnAnchor": false,
-          "anchorScopeGUID": "optional GUID of search scope",
+          "anchorScopeGUIDs": ["optional GUIDs of search scope"],
           "parentGUID": "parent GUID, if set, set all parameters beginning 'parent'",
           "parentRelationshipTypeName": "open metadata type name",
           "parentAtEnd1": true,
@@ -1435,7 +1435,7 @@ class CollectionManager(ServerClient):
           "class": "NewElementRequestBody",
           "anchorGUID": "anchor GUID, if set then isOwnAnchor=false",
           "isOwnAnchor": false,
-          "anchorScopeGUID": "optional GUID of search scope",
+          "anchorScopeGUIDs": ["optional GUIDs of search scope"],
           "initialClassifications": {
             "RootCollection": {}
           },
@@ -1556,7 +1556,7 @@ class CollectionManager(ServerClient):
           "class": "NewElementRequestBody",
           "anchorGUID": "anchor GUID, if set then isOwnAnchor=false",
           "isOwnAnchor": false,
-          "anchorScopeGUID": "optional GUID of search scope",
+          "anchorScopeGUIDs": ["optional GUIDs of search scope"],
           "parentGUID": "parent GUID, if set, set all parameters beginning 'parent'",
           "parentRelationshipTypeName": "open metadata type name",
           "parentAtEnd1": true,
@@ -1579,7 +1579,7 @@ class CollectionManager(ServerClient):
           "class": "NewElementRequestBody",
           "anchorGUID": "anchor GUID, if set then isOwnAnchor=false",
           "isOwnAnchor": false,
-          "anchorScopeGUID": "optional GUID of search scope",
+          "anchorScopeGUIDs": ["optional GUIDs of search scope"],
           "initialClassifications": {
             "RootCollection": {}
           },
@@ -1846,7 +1846,7 @@ class CollectionManager(ServerClient):
           "class": "NewElementRequestBody",
           "anchorGUID": "anchor GUID, if set then isOwnAnchor=false",
           "isOwnAnchor": false,
-          "anchorScopeGUID": "optional GUID of search scope",
+          "anchorScopeGUIDs": ["optional GUIDs of search scope"],
           "parentGUID": "parent GUID, if set, set all parameters beginning 'parent'",
           "parentRelationshipTypeName": "open metadata type name",
           "parentAtEnd1": true,
@@ -1869,7 +1869,7 @@ class CollectionManager(ServerClient):
           "class": "NewElementRequestBody",
           "anchorGUID": "anchor GUID, if set then isOwnAnchor=false",
           "isOwnAnchor": false,
-          "anchorScopeGUID": "optional GUID of search scope",
+          "anchorScopeGUIDs": ["optional GUIDs of search scope"],
           "initialClassifications": {
             "RootCollection": {}
           },
@@ -1990,7 +1990,7 @@ class CollectionManager(ServerClient):
           "class": "NewElementRequestBody",
           "anchorGUID": "anchor GUID, if set then isOwnAnchor=false",
           "isOwnAnchor": false,
-          "anchorScopeGUID": "optional GUID of search scope",
+          "anchorScopeGUIDs": ["optional GUIDs of search scope"],
           "parentGUID": "parent GUID, if set, set all parameters beginning 'parent'",
           "parentRelationshipTypeName": "open metadata type name",
           "parentAtEnd1": true,
@@ -2013,7 +2013,7 @@ class CollectionManager(ServerClient):
           "class": "NewElementRequestBody",
           "anchorGUID": "anchor GUID, if set then isOwnAnchor=false",
           "isOwnAnchor": false,
-          "anchorScopeGUID": "optional GUID of search scope",
+          "anchorScopeGUIDs": ["optional GUIDs of search scope"],
           "initialClassifications": {
             "RootCollection": {}
           },
@@ -2103,7 +2103,7 @@ class CollectionManager(ServerClient):
           "class": "NewElementRequestBody",
           "anchorGUID": "anchor GUID, if set then isOwnAnchor=false",
           "isOwnAnchor": false,
-          "anchorScopeGUID": "optional GUID of search scope",
+          "anchorScopeGUIDs": ["optional GUIDs of search scope"],
           "parentGUID": "parent GUID, if set, set all parameters beginning 'parent'",
           "parentRelationshipTypeName": "open metadata type name",
           "parentAtEnd1": true,
@@ -2126,7 +2126,7 @@ class CollectionManager(ServerClient):
           "class": "NewElementRequestBody",
           "anchorGUID": "anchor GUID, if set then isOwnAnchor=false",
           "isOwnAnchor": false,
-          "anchorScopeGUID": "optional GUID of search scope",
+          "anchorScopeGUIDs": ["optional GUIDs of search scope"],
           "initialClassifications": {
             "RootCollection": {}
           },
@@ -2245,7 +2245,7 @@ class CollectionManager(ServerClient):
           "class": "NewElementRequestBody",
           "anchorGUID": "anchor GUID, if set then isOwnAnchor=false",
           "isOwnAnchor": false,
-          "anchorScopeGUID": "optional GUID of search scope",
+          "anchorScopeGUIDs": ["optional GUIDs of search scope"],
           "parentGUID": "parent GUID, if set, set all parameters beginning 'parent'",
           "parentRelationshipTypeName": "open metadata type name",
           "parentAtEnd1": true,
@@ -2268,7 +2268,7 @@ class CollectionManager(ServerClient):
           "class": "NewElementRequestBody",
           "anchorGUID": "anchor GUID, if set then isOwnAnchor=false",
           "isOwnAnchor": false,
-          "anchorScopeGUID": "optional GUID of search scope",
+          "anchorScopeGUIDs": ["optional GUIDs of search scope"],
           "initialClassifications": {
             "RootCollection": {}
           },

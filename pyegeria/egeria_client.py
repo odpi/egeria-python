@@ -34,7 +34,6 @@ from pyegeria.omvs.governance_officer import GovernanceOfficer
 from pyegeria.omvs.lineage_linker import LineageLinker
 from pyegeria.omvs.location_arena import LocationArena
 from pyegeria.omvs.metadata_expert import MetadataExpert
-from pyegeria.omvs.metadata_explorer_omvs import MetadataExplorer
 from pyegeria.omvs.my_profile import MyProfile
 from pyegeria.omvs.notification_manager import NotificationManager
 from pyegeria.omvs.people_organizer import PeopleOrganizer
@@ -95,8 +94,6 @@ class Egeria:
             "digital_business": DigitalBusiness,
             "expert": MetadataExpert,
             "metadata_expert": MetadataExpert,
-            "explorer": MetadataExplorer,
-            "metadata_explorer": MetadataExplorer,
             "external_refs": ExternalReferences,
             "external_references": ExternalReferences,
             "feedback": FeedbackManager,
