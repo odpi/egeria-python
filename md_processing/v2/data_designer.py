@@ -45,7 +45,7 @@ class DataCollectionProcessor(AsyncBaseCommandProcessor):
         if verb == "Update":
             guid = self.parsed_output.get("guid") or (self.as_is_element['elementHeader']['guid'] if self.as_is_element else None)
             if not guid:
-                return self.command.original_text
+                return self.command.raw_block
 
             body = set_update_body(object_type, attributes)
             body['properties'] = self.filter_update_properties(prop_body, body.get('mergeUpdate', True))
@@ -93,7 +93,7 @@ class DataCollectionProcessor(AsyncBaseCommandProcessor):
                 logger.success(f"Created {object_type} '{display_name}' with GUID {guid}")
                 return await self.render_result_markdown(guid)
 
-        return self.command.original_text
+        return self.command.raw_block
 
     async def fetch_element(self, guid: str) -> Optional[Dict[str, Any]]:
         try:
@@ -131,7 +131,7 @@ class DataStructureProcessor(AsyncBaseCommandProcessor):
         if verb == "Update":
             guid = self.parsed_output.get("guid") or (self.as_is_element['elementHeader']['guid'] if self.as_is_element else None)
             if not guid:
-                return self.command.original_text
+                return self.command.raw_block
 
             body = set_update_body("Data Structure", attributes)
             body['properties'] = self.filter_update_properties(prop_body, body.get('mergeUpdate', True))
@@ -173,7 +173,7 @@ class DataStructureProcessor(AsyncBaseCommandProcessor):
                 logger.success(f"Created Data Structure '{display_name}' with GUID {guid}")
                 return await self.render_result_markdown(guid)
 
-        return self.command.original_text
+        return self.command.raw_block
 
     async def _sync_memberships(self, guid: str, to_be_guids: set, replace_all: bool):
         # Fetch current memberships
@@ -231,7 +231,7 @@ class DataFieldProcessor(AsyncBaseCommandProcessor):
         if verb == "Update":
             guid = self.parsed_output.get("guid") or (self.as_is_element['elementHeader']['guid'] if self.as_is_element else None)
             if not guid:
-                return self.command.original_text
+                return self.command.raw_block
 
             body = set_update_body("Data Field", attributes)
             body['properties'] = self.filter_update_properties(props_body, body.get('mergeUpdate', True))
@@ -273,7 +273,7 @@ class DataFieldProcessor(AsyncBaseCommandProcessor):
                 logger.success(f"Created Data Field '{display_name}' with GUID {guid}")
                 return await self.render_result_markdown(guid)
 
-        return self.command.original_text
+        return self.command.raw_block
 
     async def _sync_all_rels(self, guid: str, ds_guids: set, parent_guids: set, term_guids: set, dc_guid: str, dict_guids: set, replace_all: bool):
         """Unified relationship sync for Data Field."""
@@ -398,7 +398,7 @@ class DataClassProcessor(AsyncBaseCommandProcessor):
         if verb == "Update":
             guid = self.parsed_output.get("guid") or (self.as_is_element['elementHeader']['guid'] if self.as_is_element else None)
             if not guid:
-                return self.command.original_text
+                return self.command.raw_block
 
             body = {"class": "UpdateElementRequestBody", "properties": props}
             await self.client._async_update_data_class(guid, body, not merge_update)
@@ -437,7 +437,7 @@ class DataClassProcessor(AsyncBaseCommandProcessor):
                 logger.success(f"Created Data Class '{display_name}' with GUID {guid}")
                 return await self.client._async_get_data_class_by_guid(guid, None, 'MD')
 
-        return self.command.original_text
+        return self.command.raw_block
 
     async def _sync_all_rels(self, guid: str, cont_guids: set, term_guids: set, spec_guids: set, dict_guids: set, replace_all: bool):
         rel_els = await self.client._async_get_data_class_rel_elements(guid)

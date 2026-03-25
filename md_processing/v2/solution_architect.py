@@ -55,7 +55,7 @@ class BlueprintProcessor(AsyncBaseCommandProcessor):
         if verb == "Update":
             guid = self.parsed_output.get("guid") or (self.as_is_element['elementHeader']['guid'] if self.as_is_element else None)
             if not guid:
-                return self.command.original_text
+                return self.command.raw_block
 
             body = set_update_body("Solution Blueprint", attributes)
             prop_body = set_element_prop_body("Solution Blueprint", qualified_name, attributes)
@@ -110,7 +110,7 @@ class BlueprintProcessor(AsyncBaseCommandProcessor):
                 logger.success(f"Created Blueprint '{display_name}' with GUID {guid}")
                 return await self.render_result_markdown(guid)
 
-        return self.command.original_text
+        return self.command.raw_block
 
     async def _sync_components(self, guid: str, to_be_guids: Set[str], replace_all: bool) -> Dict[str, Any]:
         bp_element = await self.client._async_get_solution_blueprint_by_guid(guid)
@@ -191,7 +191,7 @@ class ComponentProcessor(AsyncBaseCommandProcessor):
         if verb == "Update":
             guid = self.parsed_output.get("guid") or (self.as_is_element['elementHeader']['guid'] if self.as_is_element else None)
             if not guid:
-                return self.command.original_text
+                return self.command.raw_block
 
             body = body_slimmer({
                 "class": "UpdateElementRequestBody",
@@ -248,7 +248,7 @@ class ComponentProcessor(AsyncBaseCommandProcessor):
                 logger.success(f"Created Component '{display_name}' with GUID {guid}")
                 return await self.render_result_markdown(guid)
 
-        return self.command.original_text
+        return self.command.raw_block
 
     async def _sync_all_rels(self, guid: str, sc_guids: Set[str], parent_guids: Set[str], actor_guids: Set[str], bp_guids: Set[str], keywords: Set[str], replace_all: bool) -> Dict[str, Any]:
         rel_els = await self._get_component_related_elements(guid)
@@ -405,7 +405,7 @@ class SupplyChainProcessor(AsyncBaseCommandProcessor):
         if verb == "Update":
             guid = self.parsed_output.get("guid") or (self.as_is_element['elementHeader']['guid'] if self.as_is_element else None)
             if not guid:
-                return self.command.original_text
+                return self.command.raw_block
 
             body = set_update_body("InformationSupplyChain", attributes)
             body['properties'] = self.filter_update_properties(prop_body, body.get('mergeUpdate', True))
@@ -452,7 +452,7 @@ class SupplyChainProcessor(AsyncBaseCommandProcessor):
                 logger.success(f"Created Supply Chain '{display_name}' with GUID {guid}")
                 return await self.render_result_markdown(guid)
 
-        return self.command.original_text
+        return self.command.raw_block
 
     async def _sync_rels(self, guid: str, parent_guids: Set[str], nested_guids: Set[str], replace_all: bool) -> Dict[str, Any]:
         rel_els = await self._get_supply_chain_rel_elements(guid)
@@ -564,4 +564,4 @@ class SolutionLinkProcessor(AsyncBaseCommandProcessor):
             logger.success(f"Detached {object_type} via '{label}'")
             return f"\n\n# {verb} {object_type}\n\nDetached {id1} from {id2} via {label}"
 
-        return self.command.original_text
+        return self.command.raw_block

@@ -371,36 +371,37 @@ def build_format_sets_from_commands(
             logger.debug(f"Skip {cmd_key!r}: could not derive set name from display_name={display_name!r}")
             continue
 
-        columns = _extract_columns_from_attributes(cmd_obj.get("Attributes", []), usage_level=usage_level)
-        if not columns:
-            # Fallback to Advanced usage if Basic returned nothing
-            if usage_level != "Advanced":
-                columns = _extract_columns_from_attributes(cmd_obj.get("Attributes", []), usage_level="Advanced")
-            
+        levels_to_generate = [usage_level.capitalize()] if usage_level else ["Basic", "Advanced"]
+        
+        for lvl in levels_to_generate:
+            columns = _extract_columns_from_attributes(cmd_obj.get("Attributes", []), usage_level=lvl)
             if not columns:
-                logger.debug(f"Skip {set_name}: no attributes")
-                continue
+                if lvl == "Basic":
+                    columns = _extract_columns_from_attributes(cmd_obj.get("Attributes", []), usage_level="Advanced")
+                if not columns:
+                    logger.debug(f"Skip {set_name}-{lvl}: no attributes")
+                    continue
 
-        find_method = cmd_obj.get("find_method") or ""
-        constraints = _safe_parse_constraints(cmd_obj.get("find_constraints"))
-        action = None
-        if find_method:
-            action = ActionParameter(
-                function=find_method,
-                required_params=["search_string"],
-                optional_params=OPTIONAL_SEARCH_PARAMS,
-                spec_params=constraints or {},
+            find_method = cmd_obj.get("find_method") or ""
+            constraints = _safe_parse_constraints(cmd_obj.get("find_constraints"))
+            action = None
+            if find_method:
+                action = ActionParameter(
+                    function=find_method,
+                    required_params=["search_string"],
+                    optional_params=OPTIONAL_SEARCH_PARAMS,
+                    spec_params=constraints or {},
+                )
+
+            fs = FormatSet(
+                target_type=display_name,
+                heading=f"{set_name}-{lvl} Attributes",
+                description=f"Auto-generated format for {display_name} (Create, {lvl}).",
+                family=cmd_obj.get("family"),
+                formats=[Format(types=types, attributes=columns)],
+                action=action
             )
-
-        fs = FormatSet(
-            target_type=display_name,
-            heading=f"{set_name} Attributes",
-            description=f"Auto-generated format for {display_name} (Create).",
-            family=cmd_obj.get("family"),
-            formats=[Format(types=types, attributes=columns)],
-            action=action
-        )
-        results[set_name] = fs
+            results[f"{set_name}-{lvl}"] = fs
 
     return results
 

@@ -57,7 +57,7 @@ class ProjectProcessor(AsyncBaseCommandProcessor):
         if verb == "Update":
             guid = self.parsed_output.get("guid") or (self.as_is_element['elementHeader']['guid'] if self.as_is_element else None)
             if not guid:
-                 return self.command.original_text
+                 return self.command.raw_block
             self.parsed_output["guid"] = guid
 
             body = set_update_body(base_type, attributes)
@@ -98,7 +98,7 @@ class ProjectProcessor(AsyncBaseCommandProcessor):
                 logger.success(f"Created Project '{display_name}' with GUID {guid}")
                 return await self.render_result_markdown(guid)
 
-        return self.command.original_text
+        return self.command.raw_block
 
 class ProjectLinkProcessor(AsyncBaseCommandProcessor):
     """
@@ -120,7 +120,7 @@ class ProjectLinkProcessor(AsyncBaseCommandProcessor):
         label = attributes.get('Link Label', {}).get('value', "")
         
         if not (parent_guid and child_guid):
-            return self.command.original_text
+            return self.command.raw_block
 
         if verb in ["Link", "Attach", "Add"]:
             if "Hierarchy" in object_type:
@@ -142,4 +142,4 @@ class ProjectLinkProcessor(AsyncBaseCommandProcessor):
             logger.success(f"Detached Project {object_type}")
             return f"\n\n# {verb} {object_type}\n\nDetached {child_guid} from {parent_guid} ({label})"
 
-        return self.command.original_text
+        return self.command.raw_block

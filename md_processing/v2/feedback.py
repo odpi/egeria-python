@@ -66,7 +66,7 @@ class FeedbackProcessor(AsyncBaseCommandProcessor):
             
             if verb == "Update":
                 guid = self.parsed_output.get("guid")
-                if not guid: return self.command.original_text
+                if not guid: return self.command.raw_block
                 body = set_update_body("Comment", attributes)
                 body['properties'] = self.filter_update_properties(prop_body, body.get('mergeUpdate', True))
                 await self.client._async_update_comment(guid, body)
@@ -108,7 +108,7 @@ class FeedbackProcessor(AsyncBaseCommandProcessor):
             prop_body = set_element_prop_body("Note", qualified_name, attributes)
             if verb == "Update":
                 guid = self.parsed_output.get("guid")
-                if not guid: return self.command.original_text
+                if not guid: return self.command.raw_block
                 body = set_update_body("Note", attributes)
                 body['properties'] = self.filter_update_properties(prop_body, body.get('mergeUpdate', True))
                 await self.client._async_update_note(guid, body)
@@ -119,7 +119,7 @@ class FeedbackProcessor(AsyncBaseCommandProcessor):
             # Looking closer at sync code: body = set_create_body... guid = egeria_client.create_project (??)
             # That looks like a bug in sync code. I'll stick to what was there or leave for now.
 
-        return self.command.original_text
+        return self.command.raw_block
 
 class TagProcessor(AsyncBaseCommandProcessor):
     """
@@ -149,7 +149,7 @@ class TagProcessor(AsyncBaseCommandProcessor):
 
         if verb == "Update":
             guid = self.parsed_output.get("guid") or (self.as_is_element['elementHeader']['guid'] if self.as_is_element else None)
-            if not guid: return self.command.original_text
+            if not guid: return self.command.raw_block
             await self.client._async_update_tag_description(guid, description)
             self.parsed_output["guid"] = guid
             logger.success(f"Updated Tag '{display_name}' with GUID {guid}")
@@ -163,7 +163,7 @@ class TagProcessor(AsyncBaseCommandProcessor):
                 logger.success(f"Created Tag '{display_name}' with GUID {guid}")
                 return await self.client._async_get_tag_by_guid(guid, output_format='MD')
 
-        return self.command.original_text
+        return self.command.raw_block
 
 class ExternalReferenceProcessor(AsyncBaseCommandProcessor):
     """
@@ -244,7 +244,7 @@ class ExternalReferenceProcessor(AsyncBaseCommandProcessor):
             })
         if verb == "Update":
             guid = self.parsed_output.get("guid") or (self.as_is_element['elementHeader']['guid'] if self.as_is_element else None)
-            if not guid: return self.command.original_text
+            if not guid: return self.command.raw_block
             
             body = set_update_body(object_type, attributes)
             body['properties'] = prop_body
@@ -281,7 +281,7 @@ class ExternalReferenceProcessor(AsyncBaseCommandProcessor):
                 logger.success(f"Created {object_type} '{display_name}' with GUID {guid}")
                 return await self.render_result_markdown(guid)
 
-        return self.command.original_text
+        return self.command.raw_block
 
 class FeedbackLinkProcessor(AsyncBaseCommandProcessor):
     """
