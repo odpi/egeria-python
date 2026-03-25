@@ -1764,8 +1764,9 @@ base_report_specs = FormatSetDict({
             function="CollectionManager.find_collections",
             required_params=["search_string"],
             optional_params=OPTIONAL_SEARCH_PARAMS + ['body'],
-            spec_params={"metadata_element_subtypes": ["DigitalProductCatalog"],"_type":"DigitalProductCatalog"},
-        ),
+            # spec_params={"metadata_element_subtypes": ["DigitalProductCatalog"],"_type":"DigitalProductCatalog"},
+            spec__params={"metadata_element_type": "DigitalProductCatalog", "_type":"DigitalProductCatalog"}
+        )
     ),
     "Digital-Product-Catalog-MyE": FormatSet(
         target_type="DigitalProductCatalog",
@@ -1788,7 +1789,8 @@ base_report_specs = FormatSetDict({
             function="CollectionManager.find_collections",
             required_params=["search_string"],
             optional_params=OPTIONAL_SEARCH_PARAMS,
-            spec_params={"metadata_element_subtypes": ["DigitalProductCatalog"], "_type":"DigitalProductCatalog"},
+            # spec_params={"metadata_element_subtypes": ["DigitalProductCatalog"], "_type":"DigitalProductCatalog"},
+            spec_params={"metadata_element_type": "DigitalProductCatalog","_type":"DigitalProductCatalog"}
         ),
     ),
 
