@@ -22,6 +22,7 @@
 - `pyegeria/view/output_formatter.py` + `pyegeria/view/base_report_formats.py`: materialization/rendering and report spec registry.
 - `commands/cli/*`: `hey_egeria` command groups and TUI entrypoints over SDK operations.
 - `md_processing/` + `commands/cat/dr_egeria.py`: Dr.Egeria v2 parser/dispatcher/processor pipeline over SDK operations.
+- `md_processing/v2/parsing.py`: `AttributeFirstParser.parse()` is asynchronous and utilizes a class-level cache (`_valid_values_cache`) for metadata validation results from Egeria.
 
 ## Contributor workflows
 - Dev setup: `uv sync`, activate `.venv`, run tests from repo root.
@@ -40,6 +41,8 @@
 - [HIGH SIGNAL] Preserve lazy-loading behavior in facade clients; do not eagerly instantiate all subclients unless clearly justified.
 - [HIGH SIGNAL] For config-sensitive changes, respect precedence: explicit args > env vars > `.env` > JSON config > defaults.
 - [HIGH SIGNAL] When changing command attributes, verify both markdown processing (`dr_egeria`) and generated report specs still agree on keys/labels.
+- [HIGH SIGNAL] Use the fuzzy-matching preposition stripping rule in `v2/dispatcher.py` to allow natural Markdown headers without adding redundant `alternate_names` to the JSON spec.
+- [HIGH SIGNAL] To prevent command mis-mapping, always check that the header verb matches its intended verb group (CREATE, LINK, VIEW) in `find_alternate_names`.
 
 ## Integration constraints before refactors
 - Many flows assume a live HTTPS Egeria view server; self-signed localhost behavior is common in this repo.

@@ -109,14 +109,16 @@ class TestCollectionManager:
             c_client = EgeriaTech(self.good_server_2, self.good_platform1_url, user_id=self.good_user_2, )
             token = c_client.create_egeria_bearer_token(self.good_user_2, "secret")
             start_time = time.perf_counter()
-            search_string = "*"
+            search_string = "roleType"
             classification_name = None
-            element_type = ["DigitalProductCatalog","DigitalProductFamily"]
-            output_format = "DICT"
+            # element_type = ["DigitalProductCatalog","DigitalProductFamily"]
+            element_type = None
+            output_format = "JSON"
             report_spec = "BasicCollections"
 
             response = c_client.find_collections(search_string = search_string, classification_names = classification_name
-                                                 ,metadata_element_subtypes=element_type, max_mermaid_node_count=5
+                                                 ,metadata_element_subtypes=element_type, max_mermaid_node_count=5,
+                                                 include_only_relationships = [""]
                                                  ,output_format=output_format, report_spec=report_spec)
             duration = time.perf_counter() - start_time
             if response:
@@ -234,7 +236,7 @@ class TestCollectionManager:
                         ],
                     "annotations": {"wikilinks": ["[[Agreements]]", "[[Egeria]]"]}
                 }
-            search_string = "GeoSpatial"
+            search_string = "Data"
             request_body = SearchStringRequestBody(
                 class_ = "SearchStringRequestBody",
                 search_string=search_string,
@@ -247,7 +249,7 @@ class TestCollectionManager:
 
                 )
 
-            response = c_client.find_collections(request_body, output_format="DICT", report_spec="Collections")
+            response = c_client.find_collections(body=request_body, output_format="DICT", report_spec="Collections")
             duration = time.perf_counter() - start_time
 
             print(f"\n\tNumber elements {len(response)} & Duration was {duration:.2f} seconds")
@@ -2143,6 +2145,34 @@ class TestCollectionManager:
                     c_client.close_session()
             except Exception:
                 pass
+
+
+
+    def test_detach_subscriber(self):
+        subscriber = "49245167-a38c-4f2b-9c3d-f4da3b69fab8"
+        subscription = "17a7ba3e-71e2-466f-8470-0d12c26b4d44"
+
+        try:
+            c_client = CollectionManager(self.good_view_server_1, self.good_platform1_url, user_id=self.good_user_2, )
+
+            token = c_client.create_egeria_bearer_token(self.good_user_2, "secret")
+            start_time = time.perf_counter()
+
+            c_client.detach_subscriber(subscriber, subscription)
+            duration = time.perf_counter() - start_time
+
+
+            print(f"\n\tDuration was {duration} seconds\n")
+
+            assert True
+
+        except (PyegeriaInvalidParameterException,  PyegeriaConnectionException, PyegeriaAPIException, PyegeriaUnknownException,) as e:
+            print_exception_table(e)
+            assert False, "Invalid request"
+        finally:
+            c_client.close_session()
+
+
     #
     # def test_create_data_sharing_agreement(self):
     #     try:

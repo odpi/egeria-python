@@ -180,7 +180,6 @@ class RequestBody(PyegeriaModel):
     external_source_guid: str | None = None
     external_source_name: str | None = None
     effective_time: datetime | None = None
-    governance_zone_filter: list[str] | None = None
     for_lineage: bool | None = False
     for_duplicate_processing: bool | None = False
     request_id: str | None = None
@@ -188,8 +187,8 @@ class RequestBody(PyegeriaModel):
 
 class NewRelationshipRequestBody(RequestBody):
     class_: Annotated[Literal["NewRelationshipRequestBody"], Field(alias="class")]
-    make_anchor: bool | None = False
-    anchor_scope_guids: list[str] | None = None
+    make_anchor: bool | None = False # do I make element at end2 an anchor to end1
+    anchor_scope_guids: list[str] | None = None # in anchor classification for end2
     properties: dict | None = None
     relationship_properties: dict | None = Field(default=None, alias="relationshipProperties")
 
@@ -440,7 +439,7 @@ class NewRelatedElementsRequestBody(RequestBody):
 #     for_duplicate_processing: bool | None = False
 
 
-class GetRequestBody(PyegeriaModel):
+class GetRequestBody(RequestBody):
     class_: Annotated[Literal["GetRequestBody"], Field(alias="class")]
     metadata_element_type_name: str | None = None
     metadata_element_subtype_names: list[str] | None = None
@@ -452,12 +451,7 @@ class GetRequestBody(PyegeriaModel):
     max_mermaid_node_count: int | None = None
     governance_zone_filter: list[str]  | None= None
     as_of_time: datetime | None = None
-    effective_time: datetime | None = None
-    for_lineage: bool | None = False
-    for_duplicate_processing: bool | None = False
     relationships_page_size: int = 0
-
-
 
 class ResultsRequestBody(GetRequestBody):
     class_: Annotated[Literal["ResultsRequestBody"], Field(alias="class")]

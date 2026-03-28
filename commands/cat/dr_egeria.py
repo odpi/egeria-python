@@ -50,9 +50,10 @@ console = Console(width=EGERIA_WIDTH)
               type=click.Choice(["debug", "info", "none"], case_sensitive=False))
 @click.option("--usage-level", default=None, help="Egeria usage level (Basic or Advanced)",
               type=click.Choice(["Basic", "Advanced"], case_sensitive=False))
+@click.option("--summary-only", is_flag=True, default=False, help="Only display the summary table and errors/warnings")
 @logger.catch
 def process_markdown_file(input_file: str, output_folder:str, directive: str, server: str, url: str, userid: str,
-                          user_pass: str, parse_summary: str, attribute_logs: str, usage_level: str) -> None:
+                          user_pass: str, parse_summary: str, attribute_logs: str, usage_level: str, summary_only: bool) -> None:
     """
     Process a markdown file by parsing and executing Dr. Egeria md_commands. Write output to a new file.
     """
@@ -68,7 +69,8 @@ def process_markdown_file(input_file: str, output_folder:str, directive: str, se
             client=client,
             parse_summary=parse_summary,
             attribute_logs=attribute_logs,
-            usage_level=usage_level
+            usage_level=usage_level,
+            summary_only=summary_only
         ))
         logger.info(f"Called process_markdown_file with input file {input_file}")
     except PyegeriaException as e:
@@ -87,6 +89,7 @@ if __name__ == "__main__":
     usage_level = Prompt.ask("Usage level (basic, advanced):", default="basic")
     process_markdown_file.callback(input_file, "", directive,
                             EGERIA_VIEW_SERVER, EGERIA_VIEW_SERVER_URL, EGERIA_USER,
-                    EGERIA_USER_PASSWORD, parse_summary="all", attribute_logs="debug", usage_level=usage_level)
+                    EGERIA_USER_PASSWORD, parse_summary="all", attribute_logs="debug", usage_level=usage_level,
+                    summary_only=False)
     # else:
     #     process_markdown_file()

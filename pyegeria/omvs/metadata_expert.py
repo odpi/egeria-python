@@ -15,7 +15,7 @@ from pyegeria.models import (NewOpenMetadataElementRequestBody, TemplateRequestB
                              ArchiveRequestBody, NewClassificationRequestBody,
                              NewRelatedElementsRequestBody, SearchStringRequestBody,
                              FilterRequestBody, GetRequestBody, ResultsRequestBody,
-                             SearchStringRequestBody as SearchStringBody)
+                             SearchStringRequestBody as SearchStringBody, DeleteElementRequestBody)
 from pyegeria.core.utils import body_slimmer, dynamic_catch
 from pyegeria.core._server_client import ServerClient, max_paging_size
 from pyegeria.core._globals import default_time_out, NO_ELEMENTS_FOUND
@@ -378,7 +378,7 @@ class MetadataExpert(ServerClient):
         return loop.run_until_complete(self._async_delete_metadata_element(metadata_element_guid, body))
 
     @dynamic_catch
-    async def _async_archive_metadata_element(self, metadata_element_guid: str, body: Optional[dict | ArchiveRequestBody] = None) -> None:
+    async def _async_archive_metadata_element(self, metadata_element_guid: str, body: Optional[dict | DeleteElementRequestBody] = None) -> None:
         """
         Archive a specific metadata element. Async version.
 
@@ -386,36 +386,59 @@ class MetadataExpert(ServerClient):
         ----------
         metadata_element_guid : str
             Unique identifier of the metadata element to archive.
-        body : dict | ArchiveRequestBody, optional
+        body : dict | DeleteElementRequestBody, optional
             Archiving details.
 
         Notes
         -----
         Sample JSON body:
         {
-          "class" : "ArchiveRequestBody",
-          "externalSourceGUID" :  "",
-          "externalSourceName" : "",
-          "archiveProperties" : {
-            "archiveDate" : "2024-01-01T00:00:00.000+00:00",
-            "archiveProcess" : "",
-            "archiveProperties": {
-               "propertyName1" : "propertyValue1",
-               "propertyName2" : "propertyValue2"
-            }
+          "class": "DeleteElementRequestBody",
+          "externalSourceGUID": "",
+          "externalSourceName": "",
+          "archiveDate": "{{$isoTimestamp}}",
+          "archiveProcess": "",
+          "archiveProperties": {
+             "propertyName1": "propertyValue1",
+             "propertyName2": "propertyValue2"
           },
-          "forLineage" : false,
-          "forDuplicateProcessing" : false,
-          "effectiveTime" : "2024-01-01T00:00:00.000+00:00"
+          "forLineage": false,
+          "forDuplicateProcessing": false,
+          "effectiveTime": "{{$isoTimestamp}}"
         }
         """
         url = f"{self.command_root}/metadata-elements/{metadata_element_guid}/archive"
         await self._async_archive_body_request(url, body)
 
     @dynamic_catch
-    def archive_metadata_element(self, metadata_element_guid: str, body: Optional[dict | ArchiveRequestBody] = None) -> None:
+    def archive_metadata_element(self, metadata_element_guid: str, body: Optional[dict | DeleteElementRequestBody] = None) -> None:
         """
         Archive a specific metadata element.
+
+        Parameters
+        ----------
+        metadata_element_guid : str
+            Unique identifier of the metadata element to archive.
+        body : dict | DeleteElementRequestBody, optional
+            Archiving details.
+
+        Notes
+        -----
+        Sample JSON body:
+        {
+          "class": "DeleteElementRequestBody",
+          "externalSourceGUID": "",
+          "externalSourceName": "",
+          "archiveDate": "{{$isoTimestamp}}",
+          "archiveProcess": "",
+          "archiveProperties": {
+             "propertyName1": "propertyValue1",
+             "propertyName2": "propertyValue2"
+          },
+          "forLineage": false,
+          "forDuplicateProcessing": false,
+          "effectiveTime": "{{$isoTimestamp}}"
+        }
         """
         loop = asyncio.get_event_loop()
         return loop.run_until_complete(self._async_archive_metadata_element(metadata_element_guid, body))

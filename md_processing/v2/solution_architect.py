@@ -524,7 +524,7 @@ class SolutionLinkProcessor(AsyncBaseCommandProcessor):
 
     async def apply_changes(self) -> str:
         verb = self.command.verb
-        object_type = self.command.object_type
+        object_type = getattr(self, 'canonical_object_type', self.command.object_type)
         attributes = self.parsed_output["attributes"]
         
         id1 = attributes.get('Component1', {}).get('guid') or attributes.get('Segment1', {}).get('guid')

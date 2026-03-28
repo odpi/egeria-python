@@ -90,7 +90,7 @@ ACTIVITY_STATUS = ["REQUESTED", "APPROVED", "WAITING", "ACTIVATING", "IN_PROGRES
 MEMBERSHIP_STATUS = ["UNKNOWN", "DISCOVERED", "PROPOSED", "IMPORTED", "VALIDATED", "DEPRECATED", "OBSOLETE", "OTHER"]
 
 RELATIONSHIP_TYPES = ["RelatedTerm", "Synonym", "Antonym", "PreferredTerm", "ReplacementTerm", "Translation", "IsA", "ValidValue"]
-
+PROJECT_TYPES=["Project","Campaign","Task","PersonalProject","StudyProject","Experiment"]
 # RELATIONSHIP_TYPES_MAP = {rel_type: i for i, rel_type in enumerate(RELATIONSHIP_TYPES)}
 
 TEMPLATE_GUIDS: dict[str, str] = {}

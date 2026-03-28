@@ -1,6 +1,6 @@
 {
   "family": "Collections",
-  "exported": "Mar 23, 2026 at 9:13:02 PM",
+  "exported": "Mar 27, 2026 at 3:14:05 PM",
   "attribute_definitions": {
     "Activity Status": {
       "variable_name": "activity_status",
@@ -168,6 +168,25 @@
       "level": "Advanced",
       "Journal Entry": ""
     },
+    "Anchor Scope IDs": {
+      "variable_name": "anchor_scope_ids",
+      "inUpdate": true,
+      "attr_labels": "",
+      "examples": "",
+      "default_value": "",
+      "valid_values": [],
+      "existing_element": "",
+      "description": "A list of IDs that are anchor scopes for this element.",
+      "generated": false,
+      "style": "Reference Name List",
+      "user_specified": true,
+      "unique": false,
+      "input_required": false,
+      "min_cardinality": 0,
+      "max_cardinality": 1,
+      "level": "Advanced",
+      "Journal Entry": ""
+    },
     "Authors": {
       "variable_name": "authors",
       "inUpdate": true,
@@ -190,7 +209,7 @@
     "Category": {
       "variable_name": "category",
       "inUpdate": true,
-      "attr_labels": "",
+      "attr_labels": "Category Name",
       "examples": "",
       "default_value": "",
       "valid_values": [],
@@ -222,7 +241,7 @@
       "input_required": false,
       "min_cardinality": 1,
       "max_cardinality": 1,
-      "level": "Domain",
+      "level": "Common",
       "Journal Entry": ""
     },
     "Confidence": {
@@ -449,7 +468,7 @@
     "Element Id": {
       "variable_name": "element_id",
       "inUpdate": true,
-      "attr_labels": "Element Name",
+      "attr_labels": "Element Name; Member Id",
       "examples": "",
       "default_value": "",
       "valid_values": [],
@@ -462,7 +481,7 @@
       "input_required": false,
       "min_cardinality": 1,
       "max_cardinality": 1,
-      "level": "Domain",
+      "level": "Common",
       "Journal Entry": ""
     },
     "Entitlements": {
@@ -735,6 +754,25 @@
       "min_cardinality": 1,
       "max_cardinality": 1,
       "level": "Domain",
+      "Journal Entry": ""
+    },
+    "Make Anchor": {
+      "variable_name": "make_anchor",
+      "inUpdate": true,
+      "attr_labels": "",
+      "examples": "",
+      "default_value": "false",
+      "valid_values": [],
+      "existing_element": "",
+      "description": "Is the element at end2 an anchor to end1?",
+      "generated": false,
+      "style": "Bool",
+      "user_specified": true,
+      "unique": false,
+      "input_required": false,
+      "min_cardinality": 1,
+      "max_cardinality": 1,
+      "level": "Advanced",
       "Journal Entry": ""
     },
     "Merge Update": {
@@ -1047,7 +1085,35 @@
       "attr_labels": "",
       "examples": "",
       "default_value": "",
-      "valid_values": [],
+      "valid_values": [
+        "Validate Resource",
+        "Hosted Service",
+        "Supporting Template",
+        "Called Service",
+        "Supporting Person",
+        "Member Template",
+        "Supporting Team",
+        "Derived Element Template",
+        "Generate Insight",
+        "Activity Folder",
+        "Inform Steward",
+        "Certify Resource",
+        "Provision Resource",
+        "Hosted Connector",
+        "Improve Metadata Element",
+        "Survey Resource",
+        "Hosted Governance Engine",
+        "Watch Metadata Element",
+        "Data Specification",
+        "Choose Path",
+        "Supporting Process",
+        "Configure Connector",
+        "Catalog Resource",
+        "Create Subscription",
+        "Uncatalog Resource",
+        "Related Information",
+        "Cancel Subscription"
+      ],
       "existing_element": "",
       "description": "Describes how the resource is being used. From the ResourceList relationship (0019).",
       "generated": false,
@@ -1057,7 +1123,7 @@
       "input_required": false,
       "min_cardinality": 1,
       "max_cardinality": 1,
-      "level": "Domain",
+      "level": "Common",
       "Journal Entry": ""
     },
     "Restrictions": {
@@ -1617,8 +1683,10 @@
     "Link Command Base": {
       "inherits": "Request Base",
       "own_attributes": [
+        "Anchor Scope IDs",
         "Description",
-        "Label"
+        "Label",
+        "Make Anchor"
       ]
     },
     "Asset": {
@@ -1650,11 +1718,7 @@
     "Create Collection": {
       "display_name": "Collection",
       "qn_prefix": "Collection",
-      "alternate_names": [
-        "Folder",
-        "Create Root Collection",
-        "Create Folder"
-      ],
+      "alternate_names": [],
       "family": "Collections",
       "description": "Create or update a generic collection. While it can be used to create specific kinds of collections, you cannot set the collection-specific properties - so use the appropriate Dr.Egeria command to set all of the properties.",
       "verb": "Create",
@@ -1712,7 +1776,7 @@
       "qn_prefix": "CollectionFolder",
       "alternate_names": [
         "Folder",
-        "Create Folder"
+        "Folders"
       ],
       "family": "Collections",
       "description": "Create a CollectionFolder - a collection used to organize subsets of metadata elements within a larger collection hierarchy.",
@@ -1807,7 +1871,9 @@
         "Member",
         "Member to Collection",
         "Member to Folder",
-        "Member->Collection"
+        "Member->Collection",
+        "Member from Collection",
+        "Member from Folder"
       ],
       "family": "Collections",
       "description": "Add\/Remove a member to\/from a collection.",
@@ -1830,7 +1896,8 @@
       "display_name": "Collection->Resource",
       "qn_prefix": "",
       "alternate_names": [
-        "Collection to Resource"
+        "Collection to Resource",
+        "Collection from Resource"
       ],
       "family": "Collections",
       "description": "Connect an existing collection to an element using the ResourceList relationship.",

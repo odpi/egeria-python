@@ -12,6 +12,7 @@ from md_processing.md_processing_utils.md_processing_constants import get_comman
 from md_processing.md_processing_utils.common_md_utils import (
     set_gov_prop_body, set_create_body, set_update_body, 
     update_element_dictionary, set_delete_request_body,
+    set_delete_rel_request_body,
     set_peer_gov_def_request_body, set_rel_prop_body,
     set_rel_request_body, ALL_GOVERNANCE_DEFINITIONS
 )
@@ -30,7 +31,7 @@ class GovernanceProcessor(AsyncBaseCommandProcessor):
 
     async def apply_changes(self) -> str:
         verb = self.command.verb
-        object_type = self.command.object_type
+        object_type = getattr(self, 'canonical_object_type', self.command.object_type)
         attributes = self.parsed_output["attributes"]
         qualified_name = self.parsed_output["qualified_name"]
         display_name = attributes.get('Display Name', {}).get('value', qualified_name)
@@ -102,7 +103,7 @@ class GovernanceLinkProcessor(AsyncBaseCommandProcessor):
 
     async def apply_changes(self) -> str:
         verb = self.command.verb
-        object_type = self.command.object_type
+        object_type = getattr(self, 'canonical_object_type', self.command.object_type)
         attributes = self.parsed_output["attributes"]
         
         guid1 = (attributes.get('Definition 1') or attributes.get('Referenceable', {})).get('guid')
@@ -151,7 +152,7 @@ class GovernanceLinkProcessor(AsyncBaseCommandProcessor):
             return f"\n\n# {verb} {object_type}\n\nOperation completed."
 
         elif verb in ["Detach", "Unlink", "Remove"]:
-            body = set_delete_request_body(object_type, attributes)
+            body = set_delete_rel_request_body(object_type, attributes)
             if "Peer" in object_type:
                 await self.client._async_detach_peer_definitions(guid1, rel_type, guid2, body)
             elif "Supporting" in object_type:

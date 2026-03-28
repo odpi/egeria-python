@@ -26,7 +26,7 @@ class DataCollectionProcessor(AsyncBaseCommandProcessor):
 
     async def apply_changes(self) -> str:
         verb = self.command.verb
-        object_type = self.command.object_type
+        object_type = getattr(self, 'canonical_object_type', self.command.object_type)
         attributes = self.parsed_output["attributes"]
         qualified_name = self.parsed_output["qualified_name"]
         display_name = attributes.get('Display Name', {}).get('value', qualified_name)

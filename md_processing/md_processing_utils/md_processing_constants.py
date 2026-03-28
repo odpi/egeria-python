@@ -137,6 +137,8 @@ FEEDBACK_COMMANDS = ["Create Comment", "Update Comment", "Create Journal Entry",
                      "Create Informal Tag", "Update Informal Tag", "Link Tag->Element", "Link Tag", "Detach Tag"]
 
 LINK_VERBS = ("Link", "Attach", "Add", "Detach", "Unlink", "Remove")
+CREATION_LINK_VERBS = {"Link", "Attach", "Add"}
+REMOVAL_LINK_VERBS = {"Detach", "Unlink", "Remove"}
 CREATE_VERBS = ("Create", "Update")
 VIEW_VERBS = ("View", "List", "Run")
 ALL_VERBS = set(LINK_VERBS + CREATE_VERBS + VIEW_VERBS)
@@ -168,7 +170,20 @@ def _parse_alternate_names(spec: dict) -> list[str]:
 
 def _expand_command_phrase(verb: str, noun: str, allow_update: bool) -> set[str]:
     if verb in LINK_VERBS:
-        return {f"{v} {noun}".strip() for v in LINK_VERBS}
+        phrases = set()
+        for v in LINK_VERBS:
+            target_noun = noun
+            # If we're moving from creation to removal, swap 'to' -> 'from'
+            if v in REMOVAL_LINK_VERBS and verb in CREATION_LINK_VERBS:
+                if " to " in noun:
+                    target_noun = noun.replace(" to ", " from ")
+            # If we're moving from removal to creation, swap 'from' -> 'to'
+            elif v in CREATION_LINK_VERBS and verb in REMOVAL_LINK_VERBS:
+                if " from " in noun:
+                    target_noun = noun.replace(" from ", " to ")
+
+            phrases.add(f"{v} {target_noun}".strip())
+        return phrases
     if verb in VIEW_VERBS:
         if noun == "Report":
             return {"View Report", "Run Report"}
@@ -402,21 +417,67 @@ def find_alternate_names(command: str) -> str | None:
     global COMMAND_DEFINITIONS
 
     comm_spec = COMMAND_DEFINITIONS.get('Command Specifications', {})
+    normalized_command = " ".join(command.split())
+    if not normalized_command:
+        return None
+    
+    parts = normalized_command.split(maxsplit=1)
+    command_verb = parts[0]
+    
+    # Identify command verb family
+    def get_verb_family(verb):
+        if verb in LINK_VERBS:
+            return "LINK"
+        if verb in CREATE_VERBS:
+            return "CREATE"
+        if verb in VIEW_VERBS:
+            return "VIEW"
+        return None
+
+    cmd_family = get_verb_family(command_verb)
+
+    # Pass 1 & 2: Match alternate names, respecting verb family
     for key, value in comm_spec.items():
-        if isinstance(value, dict):
-            v = value.get('alternate_names', "")
-            v = [item.strip() for item in v.split(';') if item.strip()] if v else []
-            verb = command.split()[0] if command else ""
-            normalized_command = " ".join(command.split())
-            # normalized_alternates = (" ".join(s.split()) for s in v)
-            if (normalized_command in v):
-                return key
-            elif does_command_match(normalized_command, v):
-                return key
-            else:
-                key_parts = key.split(maxsplit=1)
-                if len(key_parts) == 2 and does_command_match(normalized_command, [key_parts[1]]):
-                    return key
+        if not isinstance(value, dict):
+            continue
+        
+        spec_verb = value.get('verb', key.split(maxsplit=1)[0])
+        spec_family = get_verb_family(spec_verb)
+        
+        # If verbs families are both known and different, skip
+        if cmd_family and spec_family and cmd_family != spec_family:
+            continue
+
+        v_str = value.get('alternate_names', "")
+        v_list = [item.strip() for item in v_str.split(';') if item.strip()] if v_str else []
+        
+        # Exact match
+        if normalized_command in v_list:
+            return key
+            
+        # Synonym-aware match
+        if does_command_match(normalized_command, v_list):
+            return key
+
+    # Pass 3: Noun-based fallback, respecting verb family
+    for key, value in comm_spec.items():
+        if not isinstance(value, dict):
+            continue
+        
+        spec_verb = value.get('verb', key.split(maxsplit=1)[0])
+        spec_family = get_verb_family(spec_verb)
+        
+        if cmd_family and spec_family and cmd_family != spec_family:
+            continue
+        elif not cmd_family and command_verb != spec_verb:
+            # If family is unknown, at least require verb to match exactly if they differ
+            continue
+
+        key_parts = key.split(maxsplit=1)
+        noun = key_parts[1] if len(key_parts) == 2 else key_parts[0]
+        if does_command_match(normalized_command, [noun]):
+            return key
+
     return None
 
 
@@ -520,7 +581,7 @@ def add_default_upsert_attributes(attributes: list[dict]) -> list[dict]:
             "name": "Version Identifier",
             "variable_name": "current_version",
             "inUpdate": True,
-            "attr_labels": "",
+            "attr_labels": "Version",
             "examples": "V1.01",
             "default_value": "1.0",
             "valid_values": "",
@@ -539,7 +600,7 @@ def add_default_upsert_attributes(attributes: list[dict]) -> list[dict]:
             "name": "Identifier",
             "variable_name": "identifier",
             "inUpdate": True,
-            "attr_labels": "",
+            "attr_labels": "ID",
             "examples": "",
             "default_value": "",
             "valid_values": "",

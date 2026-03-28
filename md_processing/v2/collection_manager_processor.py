@@ -12,6 +12,7 @@ from md_processing.md_processing_utils.common_md_utils import (
     set_create_body, set_update_body,
     update_element_dictionary,
     set_collection_manager_body, set_rel_request_body, set_delete_request_body,
+    set_delete_rel_request_body,
     async_add_note_in_dr_e, set_object_classifications
 )
 from pyegeria.core.utils import body_slimmer
@@ -25,7 +26,7 @@ class CollectionManagerProcessor(AsyncBaseCommandProcessor):
 
     async def apply_changes(self) -> str:
         verb = self.command.verb
-        object_type = self.command.object_type
+        object_type = getattr(self, 'canonical_object_type', self.command.object_type)
         attributes = self.parsed_output["attributes"]
         qualified_name = self.parsed_output["qualified_name"]
         display_name = attributes.get('Display Name', {}).get('value', qualified_name)
@@ -37,8 +38,9 @@ class CollectionManagerProcessor(AsyncBaseCommandProcessor):
             if not guid:
                 return self.command.raw_block
 
-            body = set_update_body(object_type, attributes)
-            prop_body = set_collection_manager_body(object_type, qualified_name, attributes)
+            actual_object_type = "Agreement" if object_type == "Data Sharing Agreement" else object_type
+            body = set_update_body(actual_object_type, attributes)
+            prop_body = set_collection_manager_body(actual_object_type, qualified_name, attributes)
             body['properties'] = self.filter_update_properties(prop_body, body.get('mergeUpdate', True))
             
             # Dynamic routing for update based on type
@@ -79,8 +81,9 @@ class CollectionManagerProcessor(AsyncBaseCommandProcessor):
             return await self.render_result_markdown(guid)
 
         elif verb == "Create":
-            body = set_create_body(object_type, attributes)
-            body["properties"] = set_collection_manager_body(object_type, qualified_name, attributes)
+            actual_object_type = "Agreement" if object_type == "Data Sharing Agreement" else object_type
+            body = set_create_body(actual_object_type, attributes)
+            body["properties"] = set_collection_manager_body(actual_object_type, qualified_name, attributes)
             
             # Handle classifications if present (e.g. for Taxonomy, CanonicalVocabulary)
             classifications = attributes.get('Classifications', {}).get('name_list', None)
@@ -88,12 +91,20 @@ class CollectionManagerProcessor(AsyncBaseCommandProcessor):
                 # If classifications are specified, use them. 
                 # Otherwise if it is a Glossary, we might have default classifications.
                 body["initialClassifications"] = set_object_classifications(object_type, attributes, classifications)
+            elif object_type == "Data Sharing Agreement":
+                # Data Sharing Agreement is an Agreement with a specific classification
+                body["initialClassifications"] = {
+                    "DataSharingAgreement": {
+                        "class": "DataSharingAgreementProperties"
+                    }
+                }
             elif "Glossary" in object_type:
                 # Default classifications for Glossary if not specified
                 body["initialClassifications"] = {
                     "Taxonomy": {"class": "TaxonomyProperties"},
                     "CanonicalVocabulary": {"class": "CanonicalVocabularyProperties"}
                 }
+            
 
             # Handle parent relationship for collections if specified
             if body.get('parentGUID') and not body.get('parentRelationshipTypeName'):
@@ -207,7 +218,7 @@ class CollectionLinkProcessor(AsyncBaseCommandProcessor):
         if verb in ["Link", "Attach", "Add"]:
             body = set_rel_request_body(object_type, attributes)
             
-            if "Agreement Item" in object_type:
+            if "Agreement Item" in object_type or "Agreement to Item" in object_type:
                 guid1 = attributes.get('Agreement Name', {}).get('guid')
                 guid2 = attributes.get('Item Name', {}).get('guid')
                 body['properties'] = {
@@ -215,8 +226,8 @@ class CollectionLinkProcessor(AsyncBaseCommandProcessor):
                     "typeName": "AgreementItem",
                     "agreementItemId": attributes.get("Agreement Item Id", {}).get("value"),
                     "agreementItemTypeName": attributes.get("Agreement Item Type", {}).get("value"),
-                    "agreementStart": attributes.get("Agreement Start", {}).get("value"),
-                    "agreementEnd": attributes.get("Agreement End", {}).get("value"),
+                    "agreementStart": attributes.get("Agreement Start Date", {}).get("value"),
+                    "agreementEnd": attributes.get("Agreement End Date", {}).get("value"),
                     "restrictions": attributes.get("Restrictions", {}).get("value"),
                     "obligations": attributes.get("Obligations", {}).get("value"),
                     "entitlements": attributes.get("Entitlements", {}).get("value"),
@@ -225,6 +236,28 @@ class CollectionLinkProcessor(AsyncBaseCommandProcessor):
                     "effectiveTo": attributes.get("Effective To", {}).get("value")
                 }
                 await self.client._async_link_agreement_item(guid1, guid2, body)
+                
+            elif "Agreement Actor" in object_type or "Agreement to Actor" in object_type:
+                guid_ag = attributes.get('Agreement Name', {}).get('guid')
+                actor_data = attributes.get('Actors', {})
+                actor_guids = actor_data.get('guid_list') or ([actor_data.get('guid')] if actor_data.get('guid') else [])
+                
+                body['properties'] = {
+                    "class": "AgreementActorProperties",
+                    "typeName": "AgreementActor",
+                    "actorRole": attributes.get("Actor Name", {}).get("value"),
+                    "agreementStart": attributes.get("Agreement Start Date", {}).get("value"),
+                    "agreementEnd": attributes.get("Agreement End Date", {}).get("value"),
+                    "restrictions": attributes.get("Restrictions", {}).get("value"),
+                    "obligations": attributes.get("Obligations", {}).get("value"),
+                    "entitlements": attributes.get("Entitlements", {}).get("value"),
+                    "usageMeasurements": attributes.get("Usage Measurements", {}).get("value"),
+                    "effectiveFrom": attributes.get("Effective From", {}).get("value"),
+                    "effectiveTo": attributes.get("Effective To", {}).get("value")
+                }
+                for guid_ac in actor_guids:
+                    if guid_ac:
+                        await self.client._async_link_agreement_actor(guid_ag, guid_ac, body)
                 
             elif "Collection Member" in object_type or "Member to Collection" in object_type:
                 guid_coll = attributes.get('Collection Id', {}).get('guid')
@@ -274,7 +307,7 @@ class CollectionLinkProcessor(AsyncBaseCommandProcessor):
                 
             elif "Subscriber" in object_type:
                 guid_sub = attributes.get('Subscriber Id', {}).get('guid')
-                guid_sn = attributes.get('Subscription', {}).get('guid')
+                guid_sn = attributes.get('Subscription Id', {}).get('guid')
                 body['properties'] = {
                     "class": "DigitalSubscriberProperties",
                     "typeName": "DigitalSubscriber",
@@ -304,9 +337,16 @@ class CollectionLinkProcessor(AsyncBaseCommandProcessor):
             return header
 
         elif verb in ["Detach", "Unlink", "Remove"]:
-            body = set_delete_request_body(object_type, attributes)
-            if "Agreement Item" in object_type:
+            body = set_delete_rel_request_body(object_type, attributes)
+            if "Agreement Item" in object_type or "Agreement to Item" in object_type:
                 await self.client._async_detach_agreement_item(attributes.get('Agreement Name', {}).get('guid'), attributes.get('Item Name', {}).get('guid'), body)
+            elif "Agreement Actor" in object_type or "Agreement to Actor" in object_type:
+                guid_ag = attributes.get('Agreement Name', {}).get('guid')
+                actor_data = attributes.get('Actors', {})
+                actor_guids = actor_data.get('guid_list') or ([actor_data.get('guid')] if actor_data.get('guid') else [])
+                for guid_ac in actor_guids:
+                    if guid_ac:
+                        await self.client._async_detach_agreement_actor(guid_ag, guid_ac, body)
             elif "Collection Membership" in object_type or "Collection Member" in object_type:
                 await self.client._async_remove_from_collection(attributes.get('Collection Id', {}).get('guid'), attributes.get('Element Id', {}).get('guid'), body)
             elif "Product Dependency" in object_type:
@@ -314,7 +354,7 @@ class CollectionLinkProcessor(AsyncBaseCommandProcessor):
             elif "Attach Collection" in object_type or "Resource List" in object_type:
                 await self.client._async_detach_collection(attributes.get('Resource Id', {}).get('guid'), attributes.get('Collection Id', {}).get('guid'), body)
             elif "Subscriber" in object_type:
-                await self.client._async_detach_subscriber(attributes.get('Subscriber Id', {}).get('guid'), attributes.get('Subscription', {}).get('guid'), body)
+                await self.client._async_detach_subscriber(attributes.get('Subscriber Id', {}).get('guid'), attributes.get('Subscription Id', {}).get('guid'), body)
                 
             logger.success(f"Detached {object_type}")
             return f"\n\n# {verb} {object_type}\n\nOperation completed."

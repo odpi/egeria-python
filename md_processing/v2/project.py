@@ -10,7 +10,8 @@ from md_processing.md_processing_utils.md_processing_constants import get_comman
 from md_processing.md_processing_utils.common_md_utils import (
     set_element_prop_body, set_create_body, set_update_body, 
     set_object_classifications, update_element_dictionary,
-    set_delete_request_body, set_rel_request_body_for_type,
+    set_delete_request_body, set_delete_rel_request_body,
+    set_rel_request_body_for_type,
     async_add_note_in_dr_e
 )
 from pyegeria.core.utils import body_slimmer
@@ -29,6 +30,7 @@ class ProjectProcessor(AsyncBaseCommandProcessor):
 
     async def apply_changes(self) -> str:
         verb = self.command.verb
+        object_type = getattr(self, 'canonical_object_type', self.command.object_type)
         attributes = self.parsed_output["attributes"]
         qualified_name = self.parsed_output["qualified_name"]
         display_name = attributes.get('Display Name', {}).get('value', qualified_name)
@@ -42,16 +44,23 @@ class ProjectProcessor(AsyncBaseCommandProcessor):
         # ProjectManager expects 'name' instead of 'displayName' and 'plannedEndDate' instead of 'endDate'
         prop_body = {
             "class": "ProjectProperties",
-            "typeName": self.command.object_type.replace(" ", ""),
+            # "typeName": self.command.object_type.replace(" ", ""),
             "qualifiedName": qualified_name,
-            "name": display_name,
+            "displayName": display_name,
             "description": attributes.get('Description', {}).get('value'),
             "identifier": attributes.get('Identifier', {}).get('value'),
             "projectStatus": attributes.get('Project Status', {}).get('value'),
             "projectPhase": attributes.get('Project Phase', {}).get('value'),
             "projectHealth": attributes.get('Project Health', {}).get('value'),
-            "startDate": attributes.get('Start Date', {}).get('value'),
-            "plannedEndDate": attributes.get('End Date', {}).get('value'),
+            "plannedStartDate": attributes.get('Planned Start Date', {}).get('value'),
+            "plannedCompletionDate": attributes.get('Planned Completion Date', {}).get('value'),
+            "actualStartDate": attributes.get('Actual Start Date', {}).get('value'),
+            "actualCompletionDate": attributes.get('Actual Completion Date', {}).get('value'),
+            "mission": attributes.get('Mission', {}).get('value'),
+            "purposes": attributes.get('Purposes', {}).get('value'),
+            "priority": attributes.get('Priority', {}).get('value'),
+            "successCriteria": attributes.get('Success Criteria', {}).get('value'),
+            "contentStatus": attributes.get('Content Status', {}).get('value'),
         }
 
         if verb == "Update":
@@ -62,7 +71,7 @@ class ProjectProcessor(AsyncBaseCommandProcessor):
 
             body = set_update_body(base_type, attributes)
             body['properties'] = self.filter_update_properties(prop_body, body.get('mergeUpdate', True))
-            await self.client._async_update_project(guid, body)
+            await self.client._async_update_project(project_guid=guid, body=body)
             
             if journal_entry:
                 try:
@@ -79,7 +88,7 @@ class ProjectProcessor(AsyncBaseCommandProcessor):
         elif verb == "Create":
             body = set_create_body(base_type, attributes)
             # Apply classifications based on the actual object_type (e.g., Campaign)
-            body["initialClassifications"] = set_object_classifications(self.command.object_type, attributes, project_types)
+            body["initialClassifications"] = set_object_classifications(object_type, attributes, project_types)
             body["properties"] = prop_body
             
             guid = await self.client._async_create_project(body=body_slimmer(body))
@@ -112,7 +121,7 @@ class ProjectLinkProcessor(AsyncBaseCommandProcessor):
 
     async def apply_changes(self) -> str:
         verb = self.command.verb
-        object_type = self.command.object_type
+        object_type = getattr(self, 'canonical_object_type', self.command.object_type)
         attributes = self.parsed_output["attributes"]
         
         parent_guid = attributes.get('Parent Project', {}).get('guid')
@@ -124,7 +133,9 @@ class ProjectLinkProcessor(AsyncBaseCommandProcessor):
 
         if verb in ["Link", "Attach", "Add"]:
             if "Hierarchy" in object_type:
-                await self.client._async_set_project_hierarchy(project_guid=child_guid, parent_project_guid=parent_guid)
+                body = set_rel_request_body_for_type("ProjectHierarchy", attributes)
+
+                await self.client._async_set_project_hierarchy(project_guid=child_guid, parent_project_guid=parent_guid, body=body_slimmer(body))
             else:
                 body = set_rel_request_body_for_type("ProjectDependency", attributes)
                 await self.client._async_set_project_dependency(project_guid=child_guid, upstream_project_guid=parent_guid, body=body_slimmer(body))
@@ -133,7 +144,7 @@ class ProjectLinkProcessor(AsyncBaseCommandProcessor):
             return f"\n\n# {verb} {object_type}\n\nLinked {child_guid} to {parent_guid} ({label})"
 
         elif verb in ["Detach", "Unlink", "Remove"]:
-            body = set_delete_request_body(object_type, attributes)
+            body = set_delete_rel_request_body(object_type, attributes)
             if "Hierarchy" in object_type:
                 await self.client._async_clear_project_hierarchy(child_guid, parent_guid, body)
             else:

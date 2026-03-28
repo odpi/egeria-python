@@ -238,9 +238,9 @@ class ServerClient(BaseServerClient):
 
         if qualified_name:
             body = {
-                "class": "NameRequestBody",
-                "name": qualified_name,
-                "namePropertyName": "qualifiedName",
+                "class": "FindPropertyNameProperties",
+                "propertyValue": qualified_name,
+                "propertyName": "qualifiedName",
                 "forLineage": False,
                 "forDuplicateProcessing": False,
                 "effectiveTime": None,
@@ -257,9 +257,9 @@ class ServerClient(BaseServerClient):
             if (tech_type) and (property_name == "qualifiedName"):
                 name = f"{tech_type}::{display_name}"
                 body = {
-                    "class": "NameRequestBody",
-                    "name": name,
-                    "namePropertyName": property_name,
+                    "class": "FindPropertyNameProperties",
+                    "propertyValue": name,
+                    "propertyName": property_name,
                     "forLineage": False,
                     "forDuplicateProcessing": False,
                     "effectiveTime": None,
@@ -273,10 +273,9 @@ class ServerClient(BaseServerClient):
                 return result.json().get("guid", NO_ELEMENTS_FOUND)
             else:
                 body = {
-                    # "class": "NameRequestBody",
-                    "class": "UniqueNameRequestBody",
-                    "displayName": display_name,
-                    "namePropertyName": property_name,
+                    "class": "FindPropertyNameProperties",
+                    "propertyValue": display_name,
+                    "propertyName": property_name,
                     "forLineage": False,
                     "forDuplicateProcessing": False,
                     "effectiveTime": None,

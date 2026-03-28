@@ -44,7 +44,7 @@ class TestValidMetadataLists:
             vml_client.create_egeria_bearer_token(self.good_user_2, USER_PWD)
             
             try:
-                property_name = "contentStatus"
+                property_name = "resourceUse"
                 response = vml_client.get_valid_metadata_values(property_name=property_name)
                 if isinstance(response, (list, dict)):
                     console.print(f"Received {len(response)} valid metadata values for property {property_name}\n\n")

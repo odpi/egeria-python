@@ -3450,6 +3450,11 @@ class CollectionManager(ServerClient):
                   "property2Name" : "property2Value"
                 }
               },
+              "initialClassifications": {
+                    "DataSharingAgreement": {
+                        "class": "DataSharingAgreementProperties"
+                    }
+                },
               "externalSourceGUID": "add guid here",
               "externalSourceName": "add qualified name here",
               "effectiveTime" : "{{$isoTimestamp}}",
@@ -4686,7 +4691,7 @@ class CollectionManager(ServerClient):
         }
         """
         url = (
-            f"{self.platform_url}/servers/{self.view_server}/api/open-metadata/collection-manager/collections"
+            f"{self.platform_url}/servers/{self.view_server}/api/open-metadata/collection-manager"
             f"/subscribers/"
             f"{subscriber_guid}/subscriptions/{subscription_guid}/attach")
         await self._async_new_relationship_request(url, "DigitalSubscriberProperties", body)
@@ -4784,9 +4789,9 @@ class CollectionManager(ServerClient):
         }
         """
         url = (
-            f"{self.platform_url}/servers/{self.view_server}/api/open-metadata/collection-manager/collections"
-            f"/agreements/"
-            f"{subscriber_guid}/agreement-actors/{subscription_guid}/detach")
+            f"{self.platform_url}/servers/{self.view_server}/api/open-metadata/collection-manager"
+            f"/subscribers/"
+            f"{subscriber_guid}/subscriptions/{subscription_guid}/detach")
         await self._async_delete_relationship_request(url, body)
         logger.info(f"Detached subscriber {subscriber_guid} from subscription {subscription_guid}")
 
