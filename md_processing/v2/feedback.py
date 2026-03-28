@@ -11,6 +11,7 @@ from md_processing.md_processing_utils.md_processing_constants import get_comman
 from md_processing.md_processing_utils.common_md_utils import (
     set_element_prop_body, set_create_body, set_update_body, 
     update_element_dictionary, set_delete_request_body,
+    set_delete_rel_request_body,
     set_rel_prop_body, set_rel_request_body_for_type,
     async_add_note_in_dr_e
 )
@@ -20,9 +21,6 @@ class FeedbackProcessor(AsyncBaseCommandProcessor):
     """
     Processor for Comments, Journal Entries, and Notes.
     """
-
-    def get_command_spec(self) -> Dict[str, Any]:
-        return get_command_spec(self.command.object_type)
 
     async def fetch_as_is(self) -> Optional[Dict[str, Any]]:
         qualified_name = self.parsed_output.get("qualified_name")
@@ -45,7 +43,7 @@ class FeedbackProcessor(AsyncBaseCommandProcessor):
 
     async def apply_changes(self) -> str:
         verb = self.command.verb
-        object_type = self.command.object_type
+        object_type = getattr(self, 'canonical_object_type', self.command.object_type)
         attributes = self.parsed_output["attributes"]
         qualified_name = self.parsed_output["qualified_name"]
         display_name = attributes.get('Display Name', {}).get('value')
@@ -170,9 +168,6 @@ class ExternalReferenceProcessor(AsyncBaseCommandProcessor):
     Processor for External References, Media, and Cited Documents.
     """
 
-    def get_command_spec(self) -> Dict[str, Any]:
-        return get_command_spec(self.command.object_type)
-
     async def fetch_as_is(self) -> Optional[Dict[str, Any]]:
         qualified_name = self.parsed_output.get("qualified_name")
         if not qualified_name: return None
@@ -186,7 +181,7 @@ class ExternalReferenceProcessor(AsyncBaseCommandProcessor):
 
     async def apply_changes(self) -> str:
         verb = self.command.verb
-        object_type = self.command.object_type
+        object_type = getattr(self, 'canonical_object_type', self.command.object_type)
         attributes = self.parsed_output["attributes"]
         qualified_name = self.parsed_output["qualified_name"]
         display_name = attributes.get('Display Name', {}).get('value', qualified_name)
@@ -202,6 +197,8 @@ class ExternalReferenceProcessor(AsyncBaseCommandProcessor):
             mapped_type = "ExternalDataSource"
         elif "Model Source" in object_type:
             mapped_type = "ExternalModelSource"
+        elif "Source Code" in object_type:
+            mapped_type = "ExternalSourceCode"
         
         prop_body = set_element_prop_body(mapped_type, qualified_name, attributes)
         prop_body.update({
@@ -288,15 +285,12 @@ class FeedbackLinkProcessor(AsyncBaseCommandProcessor):
     Processor for Tagging and External Reference links.
     """
 
-    def get_command_spec(self) -> Dict[str, Any]:
-        return get_command_spec(self.command.object_type)
-
     async def fetch_as_is(self) -> Optional[Dict[str, Any]]:
         return None
 
     async def apply_changes(self) -> str:
         verb = self.command.verb
-        object_type = self.command.object_type
+        object_type = getattr(self, 'canonical_object_type', self.command.object_type)
         attributes = self.parsed_output["attributes"]
         
         if "Tag" in object_type:
@@ -309,30 +303,58 @@ class FeedbackLinkProcessor(AsyncBaseCommandProcessor):
             logger.success(f"Updated Tag link")
             
         elif "External Reference" in object_type:
-            # Note: Parser maps 'Element Name' to its spec key. 
-            # In v2, we should use the label as it appears in the MD or the spec key.
             elem_guid = attributes.get('Element Name', {}).get('guid') or attributes.get('Element Id', {}).get('guid')
             ref_guid = attributes.get('External Reference', {}).get('guid')
             if verb in ["Link", "Attach", "Add"]:
                 body = set_rel_request_body_for_type("ExternalReferenceLink", attributes)
-                body['properties'] = set_rel_prop_body("ExternalReferenceLink", attributes)
+                props = set_rel_prop_body("ExternalReferenceLink", attributes)
+                props["referenceId"] = attributes.get('Reference Id', {}).get('value') or \
+                                      attributes.get('Reference ID', {}).get('value') or \
+                                      props.get('label')
+                body['properties'] = props
                 await self.client._async_link_external_reference(elem_guid, ref_guid, body=body_slimmer(body))
             else:
-                body = set_delete_request_body(object_type, attributes)
+                body = set_delete_rel_request_body(object_type, attributes)
                 await self.client._async_detach_external_reference(elem_guid, ref_guid, body)
             logger.success(f"Updated External Reference link")
             
-        elif "Media" in object_type or "Cited" in object_type:
+        elif "Media Reference" in object_type:
             elem_guid = attributes.get('Element Name', {}).get('guid') or attributes.get('Element Id', {}).get('guid')
-            ref_guid = (attributes.get('Media Reference') or attributes.get('Cited Document', {})).get('guid')
+            ref_guid = (attributes.get('Media Reference', {}) or attributes.get('Media Reference Link', {})).get('guid')
+            if not ref_guid:
+                ref_guid = (attributes.get('Media') or {}).get('guid')
+            
             if verb in ["Link", "Attach", "Add"]:
-                 #CitedDocumentLink is the default for media too in sync code
+                body = set_rel_request_body_for_type("MediaReferenceLink", attributes)
+                props = set_rel_prop_body("MediaReference", attributes)
+                props.update({
+                    "mediaId": attributes.get('Media Id', {}).get('value') or attributes.get('Media ID', {}).get('value'),
+                    "mediaUsage": attributes.get('Media Usage', {}).get('value'),
+                    "mediaUsageOtherId": attributes.get('Media Usage Other Id', {}).get('value'),
+                })
+                body['properties'] = props
+                await self.client._async_link_media_reference(elem_guid, ref_guid, body=body_slimmer(body))
+            else:
+                body = set_delete_rel_request_body(object_type, attributes)
+                await self.client._async_detach_media_reference(elem_guid, ref_guid, body)
+            logger.success(f"Updated Media Reference link")
+            
+        elif "Cited Document" in object_type:
+            elem_guid = attributes.get('Element Name', {}).get('guid') or attributes.get('Element Id', {}).get('guid')
+            ref_guid = attributes.get('Cited Document', {}).get('guid')
+            
+            if verb in ["Link", "Attach", "Add"]:
                 body = set_rel_request_body_for_type("CitedDocumentLink", attributes)
-                body['properties'] = set_rel_prop_body("CitedDocumentLink", attributes)
+                props = set_rel_prop_body("CitedDocumentLink", attributes)
+                props.update({
+                    "referenceId": attributes.get('Reference Id', {}).get('value') or attributes.get('Reference ID', {}).get('value'),
+                    "pages": attributes.get('Pages', {}).get('value'),
+                })
+                body['properties'] = props
                 await self.client._async_link_cited_document(elem_guid, ref_guid, body=body_slimmer(body))
             else:
-                body = set_delete_request_body(object_type, attributes)
+                body = set_delete_rel_request_body(object_type, attributes)
                 await self.client._async_detach_cited_document(elem_guid, ref_guid, body)
-            logger.success(f"Updated {object_type} link")
+            logger.success(f"Updated Cited Document link")
 
         return f"\n\n# {verb} {object_type}\n\nOperation completed."

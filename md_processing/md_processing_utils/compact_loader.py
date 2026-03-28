@@ -50,7 +50,14 @@ def _command_to_spec(name: str, cdef: Dict[str, Any], expanded: Dict[str, Any]) 
         if not attr.get("style"):
             attr["style"] = "Simple"
             
-    spec["Attributes"] = attrs
+    # Apply defaults from md_processing_constants to fill in missing labels/etc.
+    from .md_processing_constants import add_default_upsert_attributes, add_default_link_attributes
+    if spec.get("upsert"):
+        spec["Attributes"] = add_default_upsert_attributes(attrs)
+    elif spec.get("attach"):
+        spec["Attributes"] = add_default_link_attributes(attrs)
+    else:
+        spec["Attributes"] = attrs
 
     return spec
 
@@ -91,8 +98,14 @@ def load_compact_specs_from_dir(dir_path: str, families_allowlist: Iterable[str]
 
             # Merge attribute definitions with conflict detection
             for aname, adef in data.get("attribute_definitions", {}).items():
-                if aname in all_attr_defs and all_attr_defs[aname] != adef:
-                    logger.debug(f"Attribute '{aname}' in {fname} differs from previous definition.")
+                if aname in all_attr_defs:
+                    # If the existing definition has valid_values and the new one doesn't, keep the old one
+                    # This prevents files with empty valid_values from overwriting complete ones.
+                    if all_attr_defs[aname].get("valid_values") and not adef.get("valid_values"):
+                        continue
+                    
+                    if all_attr_defs[aname] != adef:
+                        logger.debug(f"Attribute '{aname}' in {fname} differs from previous definition.")
                 all_attr_defs[aname] = adef
 
             # Merge bundle definitions with conflict detection

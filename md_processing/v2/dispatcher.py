@@ -12,6 +12,7 @@ from md_processing.v2.processors import AsyncBaseCommandProcessor
 from md_processing.md_processing_utils.md_processing_constants import COLLECTION_SUBTYPES, PROJECT_SUBTYPES
 from md_processing.v2.collection_manager_processor import CollectionManagerProcessor
 from md_processing.v2.project import ProjectProcessor
+from md_processing.v2.view import ViewProcessor
 
 class v2Dispatcher:
     """
@@ -45,11 +46,24 @@ class v2Dispatcher:
         processor_cls = self.processors.get(command_key)
         
         if not processor_cls:
+            # Fuzzy match: strip prepositions (to, from, etc.) to bridge gap between MD and registry
+            prepositions = {"to", "from", "at", "in", "on", "for", "with", "by", "into", "onto", "of"}
+            parts = command.object_type.split()
+            stripped_parts = [p for p in parts if p.lower() not in prepositions]
+            if len(stripped_parts) != len(parts):
+                fuzzy_key = f"{command.verb} {' '.join(stripped_parts)}"
+                processor_cls = self.processors.get(fuzzy_key)
+                if processor_cls:
+                    logger.debug(f"v2Dispatcher: Fuzzy matched '{command_key}' to '{fuzzy_key}'")
+
+        if not processor_cls:
             # Fallback for known collection and project subtypes if not explicitly registered
             if command.object_type in COLLECTION_SUBTYPES:
                 processor_cls = CollectionManagerProcessor
             elif command.object_type in PROJECT_SUBTYPES:
                 processor_cls = ProjectProcessor
+            elif command.verb == "View":
+                processor_cls = ViewProcessor
 
         if not processor_cls:
             logger.warning(f"v2Dispatcher: No processor registered for '{command_key}'")

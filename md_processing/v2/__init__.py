@@ -28,3 +28,4 @@ from .feedback import (
     FeedbackProcessor, TagProcessor,
     ExternalReferenceProcessor, FeedbackLinkProcessor
 )
+from .view import ViewProcessor

@@ -28,7 +28,8 @@ from md_processing.v2 import (
     ProjectProcessor, ProjectLinkProcessor,
     CollectionManagerProcessor, CSVElementProcessor, CollectionLinkProcessor,
     GovernanceProcessor, GovernanceLinkProcessor, GovernanceContextProcessor,
-    FeedbackProcessor, TagProcessor, ExternalReferenceProcessor, FeedbackLinkProcessor
+    FeedbackProcessor, TagProcessor, ExternalReferenceProcessor, FeedbackLinkProcessor,
+    ViewProcessor
 )
 
 from pyegeria import EgeriaTech, PyegeriaException, print_basic_exception, print_validation_error
@@ -74,7 +75,7 @@ EGERIA_HOME_GLOSSARY_GUID = os.environ.get("EGERIA_HOME_GLOSSARY_GUID", None)
 
 async def process_md_file_v2(input_file: str, output_folder: str, directive: str, client: EgeriaTech, 
                             parse_summary: str = "none", attribute_logs: str = "debug",
-                            usage_level: str = None) -> None:
+                            usage_level: str = None, summary_only: bool = False) -> None:
     """
     Async processing path for Dr.Egeria v2.
     """
@@ -170,6 +171,7 @@ async def process_md_file_v2(input_file: str, output_folder: str, directive: str
     register_processor("Create CSV Element", CSVElementProcessor)
     register_processor("Add Member to Collection", CollectionLinkProcessor)
     register_processor("Link Agreement Item", CollectionLinkProcessor)
+    register_processor("Link Agreement Actor", CollectionLinkProcessor)
     register_processor("Link Product Dependency", CollectionLinkProcessor)
     register_processor("Link Product-Product", CollectionLinkProcessor)
     register_processor("Attach Collection to Resource", CollectionLinkProcessor)
@@ -192,6 +194,8 @@ async def process_md_file_v2(input_file: str, output_folder: str, directive: str
     register_processor("Detach Governance Supporting", GovernanceLinkProcessor)
     register_processor("Link Governed By", GovernanceLinkProcessor)
     register_processor("Detach Governed By", GovernanceLinkProcessor)
+    # Reporting / View
+    register_processor("View Report", ViewProcessor)
     register_processor("View Governance Definition Context", GovernanceContextProcessor)
 
     # Feedback / Tags / External References
@@ -211,12 +215,18 @@ async def process_md_file_v2(input_file: str, output_folder: str, directive: str
     register_processor("Detach External Reference", FeedbackLinkProcessor)
     register_processor("Create Related Media", ExternalReferenceProcessor)
     register_processor("Update Related Media", ExternalReferenceProcessor)
-    register_processor("Link Related Media", FeedbackLinkProcessor)
-    register_processor("Detach Related Media", FeedbackLinkProcessor)
+    register_processor("Link Media Reference", FeedbackLinkProcessor)
+    register_processor("Detach Media Reference", FeedbackLinkProcessor)
     register_processor("Create Cited Document", ExternalReferenceProcessor)
     register_processor("Update Cited Document", ExternalReferenceProcessor)
     register_processor("Link Cited Document", FeedbackLinkProcessor)
     register_processor("Detach Cited Document", FeedbackLinkProcessor)
+    register_processor("Create External Data Source", ExternalReferenceProcessor)
+    register_processor("Update External Data Source", ExternalReferenceProcessor)
+    register_processor("Create External Model Source", ExternalReferenceProcessor)
+    register_processor("Update External Model Source", ExternalReferenceProcessor)
+    register_processor("Create External Source Code", ExternalReferenceProcessor)
+    register_processor("Update External Source Code", ExternalReferenceProcessor)
 
     context = {
         "directive": directive,
@@ -230,15 +240,11 @@ async def process_md_file_v2(input_file: str, output_folder: str, directive: str
     # sophisticated strategy in the future.
     results = await dispatcher.dispatch_batch(commands, context)
     
-    # 4. Handle results and display summary
+    # 4. Handle results
     final_output = []
-    
-    # 4a. Print analysis to console (for both validate and process)
-    for res in results:
-        if res.get("analysis"):
-            console.print(f"\n[bold blue]=== Command Analysis: {res.get('verb')} {res.get('object_type')} ===[/bold blue]")
-            console.print(Markdown(res["analysis"]))
-            console.print("\n")
+
+    # 4a. Print analysis to console (for both validate and process) if not summary_only
+    # (Removed redundant loop, consolidation in progress)
     
     # Custom box style for dotted line row separators
     DOTTED = Box(
@@ -263,15 +269,33 @@ async def process_md_file_v2(input_file: str, output_folder: str, directive: str
 
     updated = False
     prov_found = False
+    
+    # Process results for summary, file assembly, and display
     for res in results:
-        # Handle provenance section if encountered
+        # 4a. Display command analysis or block content (if not summary_only)
+        if not summary_only:
+            is_cmd = res.get("is_command", True)
+            if is_cmd:
+                if res.get("analysis"):
+                    console.print(f"\n[bold blue]=== Command Analysis: {res.get('verb')} {res.get('object_type')} ===[/bold blue]")
+                    console.print(Markdown(res["analysis"]))
+                    console.print("\n")
+                elif directive in ("validate", "display") and res.get("output"):
+                    from md_processing.md_processing_utils.common_md_utils import render_markdown
+                    render_markdown(res["output"])
+            else:
+                if directive in ("validate", "display") and res.get("output"):
+                    from md_processing.md_processing_utils.common_md_utils import render_markdown
+                    render_markdown(res["output"])
+
+        # 4b. Handle provenance section if encountered
         if res.get("verb") == "Provenance":
             prov_found = True
             final_output.append(process_provenance_command(input_file, ""))
         else:
             final_output.append(res["output"])
 
-        # Only add actual commands to the summary table
+        # 4c. Only add actual commands to the summary table
         if not res.get("is_command", True):
             continue
 
@@ -296,13 +320,22 @@ async def process_md_file_v2(input_file: str, output_folder: str, directive: str
     if not prov_found:
         final_output.append(process_provenance_command(input_file, ""))
 
-    console.print("\n")
-    console.print(summary_table)
-    console.print("\n")
+    # (Consolidated loops, no separate output print here)
 
+    # Display warnings and errors (always, even in summary_only)
     has_warnings = any(res.get("warnings") for res in results)
+    has_errors = any(res.get("errors") for res in results if res.get("is_command", True))
 
-    # Display warnings for both validate and process
+    if has_errors:
+        console.print("[bold red]Processing Errors:[/bold red]\n")
+        for res in results:
+            errors = res.get("errors", [])
+            if errors:
+                console.print(f"[red]-- {res['verb']} {res['object_type']} ({res.get('qualified_name', 'Unknown')}) --[/red]")
+                for e in errors:
+                    console.print(f"   [red]* {e}[/red]")
+        console.print("\n")
+
     if has_warnings:
         console.print("[bold yellow]Processing Warnings:[/bold yellow]\n")
         for res in results:
@@ -313,27 +346,10 @@ async def process_md_file_v2(input_file: str, output_folder: str, directive: str
                     console.print(f"   [yellow]* {w}[/yellow]")
         console.print("\n")
 
-    if directive == "display":
-        from md_processing.md_processing_utils.common_md_utils import render_markdown
-        title = "Validation Diagnosis Summary" if directive == "validate" else "Display Summary"
-        console.print(f"[bold cyan]{title}:[/bold cyan]\n")
-        for res in results:
-            if res.get("output"):
-                render_markdown(res["output"])
-        console.print("\n")
-
-    if directive == "validate":
-        from md_processing.md_processing_utils.common_md_utils import render_markdown
-        title = "Validation Diagnosis Summary" if directive == "validate" else "Display Summary"
-        console.print(f"[bold cyan]{title}:[/bold cyan]\n")
-        for res in results:
-            # Skip non-command blocks (intro text, etc.) in validate/display mode
-            if not res.get("is_command", True):
-                continue
-
-            if res.get("output"):
-                render_markdown(res["output"])
-        console.print("\n")
+    # Finally, print the summary table last
+    console.print("\n")
+    console.print(summary_table)
+    console.print("\n")
     if directive == "process" and updated:
         # Re-assemble the file (using joined outputs)
         content_to_write = "\n".join(final_output)
@@ -366,7 +382,8 @@ async def process_md_file_v2(input_file: str, output_folder: str, directive: str
 @logger.catch
 def process_md_file(input_file: str, output_folder: str, directive: str, server: str, url: str, userid: str,
                           user_pass: str, parse_summary: str = "none",
-                          attribute_logs: str = "debug", usage_level: str = None) -> None:
+                          attribute_logs: str = "debug", usage_level: str = None,
+                          summary_only: bool = False) -> None:
     """
     Process a markdown file by parsing and executing Dr. Egeria md_commands. Write output to a new file.
     """
@@ -377,7 +394,7 @@ def process_md_file(input_file: str, output_folder: str, directive: str, server:
     if use_v2:
         client = EgeriaTech(server, url, user_id=userid)
         client.create_egeria_bearer_token(userid, user_pass)
-        asyncio.run(process_md_file_v2(input_file, output_folder, directive, client, parse_summary, attribute_logs, usage_level))
+        asyncio.run(process_md_file_v2(input_file, output_folder, directive, client, parse_summary, attribute_logs, usage_level, summary_only))
         return
 
     set_parse_summary_mode(parse_summary)
@@ -525,6 +542,7 @@ if __name__ == "__main__":
     parser.add_argument("--input-file", required=True, help="Input markdown file name (in Inbox)")
     parser.add_argument("--output-folder", default="", help="Optional output subfolder (in Outbox)")
     parser.add_argument("--directive", default="process", choices=["display", "validate", "process"], help="Action to perform")
+    parser.add_argument("--summary-only", action="store_true", help="Only display the summary table and errors/warnings")
     
     args = parser.parse_args()
     
@@ -535,6 +553,7 @@ if __name__ == "__main__":
             args.input_file, 
             args.output_folder,
             args.directive,
-            client
+            client,
+            summary_only=args.summary_only
         )
     )

@@ -2,6 +2,7 @@
 Standardized parsing logic for Dr.Egeria v2 commands.
 Implements the Attribute-First (Spec-Agnostic) parsing strategy.
 """
+import asyncio
 import re
 from typing import Any, Dict, List, Optional
 from loguru import logger
@@ -17,6 +18,8 @@ class AttributeFirstParser:
     """
     Parses a DrECommand by mapping its raw attributes to the canonical command specification.
     """
+    _valid_values_cache = {}  # key: (prop_name, type_name) -> list[dict]
+    
     def __init__(self, command: DrECommand, client: Optional[Any] = None, directive: str = "process"):
         self.command = command
         self.client = client
@@ -26,7 +29,7 @@ class AttributeFirstParser:
         self.errors = []
         self.warnings = []
 
-    def parse(self) -> Dict[str, Any]:
+    async def parse(self) -> Dict[str, Any]:
         if not self.spec:
             logger.error(f"No specification found for command: {self.command.verb} {self.command.object_type}")
             self.errors.append(f"No specification found for command: {self.command.verb} {self.command.object_type}")
@@ -64,13 +67,15 @@ class AttributeFirstParser:
             canonical_name, details = match
             # print(f"DEBUG: Processing {canonical_name}, style={details.get('style')}, value={raw_value}")
             pre_warnings = len(self.warnings)
-            parsed_value = self._process_attribute_value(raw_value, details)
+            parsed_value = await self._process_attribute_value(raw_value, details)
             if parsed_value is not None:
                 # Use canonical_name for compatibility with legacy helpers (e.g. 'Description')
                 self.parsed_attributes[canonical_name] = {
                     "value": parsed_value,
                     "valid": True,
                     "exists": True,
+                    "style": details.get("style", "Simple"),
+                    "existing_element": details.get("existing_element", ""),
                     "status": "INFO" if len(self.warnings) == pre_warnings else "WARNING"
                 }
 
@@ -109,16 +114,27 @@ class AttributeFirstParser:
 
     def _add_to_label_map(self, label_map: Dict[str, Any], canonical_name: str, details: Dict[str, Any]):
         """Helper to index an attribute by its canonical name and all alternate labels."""
+        # Ensure variable_name is present
+        if "variable_name" not in details:
+            details["variable_name"] = canonical_name.lower().replace(" ", "_")
+
         label_map[canonical_name.lower()] = (canonical_name, details)
         alt_labels = details.get("attr_labels", "")
         if alt_labels:
-            # Labels can be comma or semicolon separated
-            for label in re.split(r'[,;]', str(alt_labels)):
-                l = label.strip().lower()
+            if isinstance(alt_labels, str):
+                # Labels can be comma or semicolon separated
+                labels = re.split(r'[,;]', alt_labels)
+            elif isinstance(alt_labels, list):
+                labels = alt_labels
+            else:
+                labels = [str(alt_labels)]
+
+            for label in labels:
+                l = str(label).strip().lower()
                 if l:
                     label_map[l] = (canonical_name, details)
 
-    def _process_attribute_value(self, value: str, details: dict) -> Any:
+    async def _process_attribute_value(self, value: str, details: dict) -> Any:
         if value is None:
             return None
         value = value.strip()
@@ -189,21 +205,50 @@ class AttributeFirstParser:
             if not v:
                 return v
 
-            # 1. Try dynamic lookup if client is available
-            if self.client and hasattr(self.client, "get_valid_metadata_values"):
+            if self.client:
+                # Resolve property name (e.g., "Resource Use" -> "resourceUse")
                 prop_name = details.get("property_name") or details.get("name")
+                if not details.get("property_name") and prop_name:
+                    parts = re.split(r'[\s_]+', str(prop_name))
+                    prop_name = parts[0].lower() + ''.join(x.capitalize() for x in parts[1:])
+                
                 type_name = details.get("type_name")
+                map_name = details.get("map_name")
 
                 try:
-                    valid_elements = self.client.get_valid_metadata_values(prop_name, type_name)
+                    vm_client = getattr(self.client, "valid_metadata", self.client)
+                    valid = None
+                    
+                    # 1. Attempt direct validation call
+                    if map_name and hasattr(vm_client, "_async_validate_metadata_map_value"):
+                        valid = await vm_client._async_validate_metadata_map_value(prop_name, type_name, map_name, v)
+                    elif hasattr(vm_client, "_async_validate_metadata_value"):
+                        valid = await vm_client._async_validate_metadata_value(prop_name, type_name, v)
+                    
+                    if valid is True:
+                        return v
+                    elif valid is False:
+                        # Egeria is the source of truth - failure here might just mean it's a DisplayName
+                        # Or it might truly be invalid. We check the list as a fallback.
+                        pass
+                    
+                    # 2. Check Cache for the list (to handle DisplayName -> PreferredValue mapping)
+                    cache_key = (prop_name, type_name)
+                    if cache_key not in self._valid_values_cache:
+                        if hasattr(vm_client, "_async_get_valid_metadata_values"):
+                            self._valid_values_cache[cache_key] = await vm_client._async_get_valid_metadata_values(prop_name, type_name)
+                        else:
+                            self._valid_values_cache[cache_key] = []
+                    
+                    valid_elements = self._valid_values_cache[cache_key]
                     if isinstance(valid_elements, list) and len(valid_elements) > 0:
                         v_norm = normalize_value(v)
                         for el in valid_elements:
                             pref_val = el.get("preferredValue")
                             disp_name = el.get("displayName")
-
                             if (pref_val and normalize_value(pref_val) == v_norm) or \
                                (disp_name and normalize_value(disp_name) == v_norm):
+                                # Return the preferred value (with correct type)
                                 data_type = el.get("dataType", "string").lower()
                                 if data_type in ["int", "integer"] and pref_val is not None:
                                     try:
@@ -211,23 +256,29 @@ class AttributeFirstParser:
                                     except (ValueError, TypeError):
                                         return pref_val
                                 return pref_val
+                        
+                        # Not in the Egeria list - fatal error
+                        self.errors.append(f"Value '{v}' is not a valid metadata value for '{details.get('name')}' (Validated by Egeria)")
+                        return v
 
                 except Exception as e:
-                    logger.debug(f"Dynamic valid value lookup failed for {prop_name}: {e}")
+                    logger.debug(f"Dynamic validation failed for {prop_name}: {e}. Falling back to spec.")
 
-            # 2. Fallback to hardcoded list in spec
+            # 3. Fallback to Specification if offline or server check failed
             valid_values = details.get("valid_values", [])
             v_norm = normalize_value(v)
             for vv in valid_values:
                 if normalize_value(vv) == v_norm:
                     return vv
 
-            # Mismatch handling
+            # Mismatch handling - make it a warning unless it's strictly required
             msg = f"Value '{v}' is not a valid metadata value for '{details.get('name', 'attribute')}'"
-            if self.directive == "validate":
-                self.warnings.append(msg)
+            if self.directive == "validate" or not details.get("input_required", False):
+                if msg not in self.warnings:
+                    self.warnings.append(msg)
             else:
-                self.errors.append(msg)
+                if msg not in self.errors:
+                    self.errors.append(msg)
             return v
             
         elif style in {"List", "NameList", "Simple List", "Reference Name List"}:
@@ -235,7 +286,7 @@ class AttributeFirstParser:
             
         return value
 
-def parse_dr_egeria_content(text: str) -> List[Dict[str, Any]]:
+async def parse_dr_egeria_content(text: str) -> List[Dict[str, Any]]:
     """Helper to extract and parse all commands in one go."""
     from .extraction import UniversalExtractor
     extractor = UniversalExtractor(text)
@@ -247,7 +298,7 @@ def parse_dr_egeria_content(text: str) -> List[Dict[str, Any]]:
             continue
             
         parser = AttributeFirstParser(cmd)
-        ir = parser.parse()
+        ir = await parser.parse()
         results.append({
             "verb": cmd.verb,
             "object_type": cmd.object_type,

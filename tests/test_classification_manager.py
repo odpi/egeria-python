@@ -286,12 +286,12 @@ def test_find_elements_by_property_value():
     # metadata_element_type = "ValidValueDefinition"
     # metadata_element_type = None
     # metadata_element_type = "ArchiveFile"
-    open_metadata_type_name = "DigitalProduct"
+    open_metadata_type_name = "Project"
     # metadata_element_type = None
     # property_names = ["name"]
     # property_value = "Set up new clinical trial"
-    property_names = ["displayName"]
-    property_value = "Open Metadata Digital Product Data Dictionary"
+    property_names = ["qualifiedName"]
+    property_value = "Project::SalesForecast::GovernanceProgram::2026::1.0"
 
     try:
         c_client = EgeriaTech(view_server, platform_url, user, password)
@@ -322,7 +322,7 @@ def test_find_elements_by_property_value():
 
 
 def test_get_element_by_guid():
-    element_guid = 'dae76285-bef7-45a0-9f32-4854294d969b'
+    element_guid = '4cc5bde4-2455-437a-aba8-fb1514faac75'
     try:
         c_client = ClassificationExplorer(view_server, platform_url)
 
@@ -378,7 +378,7 @@ def test_get_actor_for_guid():
 
 def test_get_guid_for_name():
     open_metadata_type_name = None
-    property_value = "PostgreSQLServer::CreateAndSurveyGovernanceActionProcess"
+    property_value = "Campaign:Sustainability"
     # property_value = "simple-metadata-store"
     # property_value = "Sustainability Glossary"
     # property_value = "qs-view-server"
@@ -404,13 +404,13 @@ def test_get_element_guid_by_unique_name():
     # property_value = "Person:UK:324713"
     # property_value = "simple-metadata-store"
     # property_value = "FileDirectory:CreateAndSurveyGovernanceActionProcess"
-    property_value = "Open Metadata Digital Product Data Dictionary"
+    property_value = "DigitalProduct::OpenMetadataDigitalProduct::roleType::roleType Valid Values"
 
     c_client = ClassificationExplorer(view_server, platform_url)
     try:
         bearer_token = c_client.create_egeria_bearer_token(user, password)
         start_time = time.perf_counter()
-        result = c_client.get_element_guid_by_unique_name(property_value, "displayName")
+        result = c_client.get_element_guid_by_unique_name(property_value, "qualifiedName")
         duration = time.perf_counter() - start_time
         print(f"\n\tDuration was {duration} seconds")
         if isinstance(result, list|dict):

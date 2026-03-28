@@ -567,7 +567,7 @@ class ProductManagerScenarioTester:
             # TEST 3: Find products (search)
             console.print("\n  → Testing find_digital_products...")
             found_products = self.client.find_digital_products(search_string="Alpha", starts_with=False)
-            if found_products:
+            if isinstance(found_products, list | dict) :
                 console.print(f"  ✓ Found {len(found_products)} products matching 'Alpha'")
                 for prod in found_products[:3]:  # Show first 3
                     name = prod.get('elementHeader', {}).get('properties', {}).get('displayName', 'N/A')

@@ -98,7 +98,7 @@ class TestSecurityOfficer:
             s_client.create_egeria_bearer_token(self.good_user_1, USER_PWD)
 
             # Retrieve Gary Geeke's account as a test (assuming it exists)
-            user_id = "garygeeke"
+            user_id = "freddiemercury" + datetime.now().strftime("%H%M%S")
             response = s_client.get_user_account(self.good_platform_name, user_id)
             print(f"\n\nRetrieved user account for: {user_id}")
             print_json(data=response)

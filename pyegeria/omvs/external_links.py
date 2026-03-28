@@ -667,9 +667,9 @@ class ExternalReferences(ServerClient):
           "forDuplicateProcessing": false
         }
         """
-        url = (f"{self.command_root}/elements/{element_guid}/external_references/{ext_ref_guid}/detach")
+        url = (f"{self.command_root}/elements/{element_guid}/external-references/{ext_ref_guid}/detach")
 
-        await self._async_delete_element_request(url, body)
+        await self._async_delete_relationship_request(url, body)
         logger.info(f"Detached element {element_guid} from external reference {ext_ref_guid}")
 
     def detach_external_reference(self, element_guid: str, ext_ref_guid: str, body: Optional[dict | DeleteRelationshipRequestBody] = None):

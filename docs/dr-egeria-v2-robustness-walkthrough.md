@@ -62,6 +62,37 @@ I verified the entire `dr-egeria-inbox` including:
 
 ---
 
+### 7. Egeria-First Validation and Async Parsing
+
+To ensure Egeria remains the source of truth for metadata validation while maintaining performance:
+
+- **Async Parser**: The `AttributeFirstParser` has been refactored to be fully asynchronous, allowing non-blocking calls to Egeria's validation services (`_async_validate_metadata_value`).
+- **Validation Caching**: Implemented a class-level cache for valid metadata values, significantly reducing the number of redundant network requests for common attributes like `Resource Use`.
+- **Display Name Mapping**: The parser now automatically maps user-friendly `displayName` values (e.g., "Catalog Resource") to Egeria's internal `preferredValue` by fetching and matching against the live valid value list if direct validation is inconclusive.
+- **CamelCase Resolution**: Added logic to automatically resolve Egeria property names (e.g., `resourceUse`) from markdown labels (e.g., `Resource Use`) if explicit mapping is missing in the command specification.
+
+---
+
+### 8. Fuzzy Command Matching and Digital Product Agreements
+
+To handle the variety of ways users express relationships in Markdown while maintaining strict SDK mappings:
+
+- **Fuzzy Matching**: The Dispatcher now includes a preposition-stripping fallback. If a direct match for a command like `Link Agreement to Actor` fails, it automatically attempts a match for `Link Agreement Actor`. This ensures natural, human-readable headers work without redundant specification entries.
+- **Agreement Relationships**: The `CollectionLinkProcessor` has been extended to support the `Agreement Actor` and `Agreement Item` relationship types. It now handles the resolution of multiple actor GUIDs and performs both linking and detachment operations correctly.
+- **Spec-Driven Attribute Mapping**: Processor attribute mapping has been synchronized with the latest `commands_digital_products_compact.json` to ensure that labels like `Agreement Start Date` are correctly processed.
+
+---
+
+### 9. External Reference Support and Verb-Family Alignment
+
+Dr. Egeria v2 now provides first-class support for the `External Reference` family of metadata, including highly specialized subtypes like `Cited Document` and `Media`.
+
+- **Comprehensive External Reference Support**: Added new command registrations and processor logic for `External Data Source`, `External Model Source`, `Source Code`, `Related Media`, and `Cited Document`. This includes support for bibliographic metadata fields and media-specific attributes.
+- **Verb-Family Aware Command Resolution**: To avoid ambiguity when commands for different operations share similar nouns (e.g., `# Update External Reference` vs. `# Link External Reference`), the command resolution logic in `md_processing_constants.py` was refactored. It now enforces that the verb group of the header (CREATE, LINK, VIEW) matches the verb group of the candidate specification. This ensures synonyms like `Modify` (CREATE group) correctly map to creation/update specs even if a link spec contains similar keywords.
+- **Enhanced Relationship Logic**: Link and detach operations for `Media Reference` and `Cited Document` are now routed to specialized SDK methods, ensuring the correct `MediaReferenceProperties` or `CitedDocumentLinkProperties` are used in the Egeria request.
+
+---
+
 ## Conclusion
 
 Dr.Egeria v2 is now a production-ready, resilient metadata processing engine. It provides high-fidelity validation of complex documents, reduces redundant API traffic through intelligent caching, and gracefully handles the transition between creation and updates.

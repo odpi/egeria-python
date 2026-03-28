@@ -73,7 +73,7 @@ class AsyncBaseCommandProcessor(ABC):
         
         # 1. Parse attributes using the spec-agnostic parser
         spec = self.get_command_spec()
-        self.parsed_output = self.parser.parse()
+        self.parsed_output = await self.parser.parse()
         attributes = self.parsed_output.get("attributes", {})
 
         # Extract Display Name if present
@@ -184,24 +184,9 @@ class AsyncBaseCommandProcessor(ABC):
         # 7. Global Lookups and Existential Checks for References
         # We check all attributes that look like references or are marked as Reference Name/ID in spec
         for attr_name, attr_data in attributes.items():
-            # Get the style from the spec if possible
-            spec_style = "Simple"
-            spec = self.get_command_spec()
-            spec_existing = ""
-            if spec:
-                spec_attrs = spec.get("Attributes", spec.get("attributes", []))
-                for a in spec_attrs:
-                    if isinstance(a, dict):
-                        if a.get("name") == attr_name:
-                            spec_style = a.get("style", "Simple")
-                            spec_existing = a.get("existing_element", "")
-                            break
-                        elif attr_name in a:
-                            val = a[attr_name]
-                            if isinstance(val, dict):
-                                spec_style = val.get("style", "Simple")
-                                spec_existing = val.get("existing_element", "")
-                                break
+            # Get the style from the attribute data (provided by AttributeFirstParser) or fallback to spec
+            spec_style = attr_data.get("style", "Simple")
+            spec_existing = attr_data.get("existing_element", "")
             
             # Heuristics for identifying what attributes represent references to other elements
             # We exclude common string attributes that might contain keywords like "Reference" or "Name"
@@ -264,25 +249,33 @@ class AsyncBaseCommandProcessor(ABC):
         if self.as_is_element:
             logger.debug(f"Element found! GUID: {self.parsed_output.get('guid')}")
         else:
-            logger.debug(f"Element NOT found for QN: '{current_qn}'")
-            self.parsed_output["exists"] = False
-            if self.command.verb == "Update":
-                logger.debug(f"Target element for 'Update' not found: {self.parsed_output.get('qualified_name') or self.command.object_type}")
-                if "errors" not in self.parsed_output:
-                    self.parsed_output["errors"] = []
-                self.parsed_output["errors"].append(f"Target element for 'Update' not found.")
-                
-                analysis = await self.validate_only()
-                return {
-                    "output": analysis if directive == "validate" else self.command.raw_block,
-                    "analysis": analysis,
-                    "status": "failure",
-                    "message": f"Target element for Update not found.",
-                    "verb": self.command.verb,
-                    "object_type": self.command.object_type,
-                    "found": False,
-                    "errors": self.parsed_output["errors"]
-                }
+            # Check if it's planned (defined earlier in the document)
+            guid = await self.resolve_element_guid(current_qn)
+            if guid and guid.startswith("(Planned:"):
+                logger.debug(f"Element is Planned! GUID: {guid}")
+                self.parsed_output["exists"] = True
+                self.parsed_output["guid"] = guid
+                self.parsed_output["is_planned"] = True
+            else:
+                logger.debug(f"Element NOT found for QN: '{current_qn}'")
+                self.parsed_output["exists"] = False
+                if self.command.verb == "Update":
+                    logger.debug(f"Target element for 'Update' not found: {self.parsed_output.get('qualified_name') or self.command.object_type}")
+                    if "errors" not in self.parsed_output:
+                        self.parsed_output["errors"] = []
+                    self.parsed_output["errors"].append(f"Target element for 'Update' not found.")
+                    
+                    analysis = await self.validate_only()
+                    return {
+                        "output": analysis if directive == "validate" else self.command.raw_block,
+                        "analysis": analysis,
+                        "status": "failure",
+                        "message": f"Target element for Update not found.",
+                        "verb": self.command.verb,
+                        "object_type": self.command.object_type,
+                        "found": False,
+                        "errors": self.parsed_output["errors"]
+                    }
 
         # 8. Decouple Analysis from Output
         analysis = await self.validate_only()
@@ -321,7 +314,22 @@ class AsyncBaseCommandProcessor(ABC):
                 "found": self.parsed_output.get("exists", False)
             }
 
-        output = await self.apply_changes()
+        try:
+            output = await self.apply_changes()
+        except Exception as e:
+            logger.exception(f"Error applying changes for {self.command.verb} {self.command.object_type}")
+            return {
+                "output": self.command.raw_block,
+                "analysis": analysis,
+                "status": "failure",
+                "message": f"Execution failed: {str(e)}",
+                "verb": self.command.verb,
+                "object_type": self.command.object_type,
+                "display_name": self.parsed_output.get("display_name"),
+                "qualified_name": self.parsed_output.get("qualified_name"),
+                "found": self.parsed_output.get("exists", False),
+                "errors": [str(e)]
+            }
         
         # 10. Post-execution: Update the cache on success
         guid = self.parsed_output.get("guid") or attributes.get("guid")
@@ -694,7 +702,11 @@ class AsyncBaseCommandProcessor(ABC):
         target_verb = self.command.verb
         guid_info = ""
         if exists:
-            guid = self.as_is_element.get('elementHeader', {}).get('guid') or self.parsed_output.get("guid")
+            guid = ""
+            if self.as_is_element:
+                guid = self.as_is_element.get('elementHeader', {}).get('guid')
+            if not guid:
+                guid = self.parsed_output.get("guid") or ""
             guid_info = f" (GUID: {guid})" if guid else ""
         
         report = [

@@ -564,6 +564,16 @@ def set_delete_request_body(object_type: str, attributes: dict)->dict:
         "forDuplicateProcessing": attributes.get('For Duplicate Processing', {}).get('value', False)
         }
 
+def set_delete_rel_request_body(object_type: str, attributes: dict)->dict:
+    return {
+        "class": "DeleteRelationshipRequestBody",
+        "externalSourceGUID": attributes.get('External Source GUID', {}).get('guid', None),
+        "externalSourceName": attributes.get('External Source Name', {}).get('value', None),
+        "effectiveTime": attributes.get('Effective Time', {}).get('value', None),
+        "forLineage": attributes.get('For Lineage', {}).get('value', False),
+        "forDuplicateProcessing": attributes.get('For Duplicate Processing', {}).get('value', False)
+        }
+
 
 
 def set_filter_request_body(object_type: str, attributes: dict)->dict:

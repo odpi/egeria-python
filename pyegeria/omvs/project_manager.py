@@ -1889,7 +1889,7 @@ class ProjectManager(ServerClient):
 
         """
 
-        url = "{self.project_command_base}/{project_guid}/project-dependencies/{upstream_project_guid}/detach"
+        url = f"{self.project_command_base}/{project_guid}/project-dependencies/{upstream_project_guid}/detach"
 
         await self._async_delete_relationship_request(url, body)
         logger.info(
@@ -1973,7 +1973,7 @@ class ProjectManager(ServerClient):
 
         """
         url = (
-            f"{self.project_command_base}/{parent_project_guid}/project-dependencies/{project_guid}/attach"
+            f"{self.project_command_base}/{parent_project_guid}/project-hierarchies/{project_guid}/attach"
         )
         await self._async_new_relationship_request(url, ["ProjectHierarchyProperties"], body)
         logger.info(f"Project {project_guid} managed by -> {parent_project_guid}")
@@ -2058,7 +2058,7 @@ class ProjectManager(ServerClient):
 
         """
 
-        url = "{self.project_command_base}/{parent_project_guid}/project-dependencies/{project_guid}/detach"
+        url = f"{self.project_command_base}/{parent_project_guid}/project-hierarchies/{project_guid}/detach"
 
         await self._async_delete_relationship_request(url, body)
         logger.info(

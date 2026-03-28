@@ -1,6 +1,6 @@
 {
   "family": "Feedback",
-  "exported": "Mar 22, 2026 at 9:03:45 PM",
+  "exported": "Mar 27, 2026 at 3:51:56 PM",
   "attribute_definitions": {
     "Activity Status": {
       "variable_name": "activity_status",
@@ -111,6 +111,25 @@
       "level": "Domain",
       "Journal Entry": ""
     },
+    "Aliases": {
+      "variable_name": "aliases",
+      "inUpdate": true,
+      "attr_labels": "Alias",
+      "examples": "",
+      "default_value": "",
+      "valid_values": [],
+      "existing_element": "",
+      "description": "Alternative names for this  field, used in different systems or contexts.",
+      "generated": false,
+      "style": "Simple List",
+      "user_specified": true,
+      "unique": false,
+      "input_required": false,
+      "min_cardinality": 0,
+      "max_cardinality": 1,
+      "level": "Common",
+      "Journal Entry": ""
+    },
     "Anchor ID": {
       "variable_name": "anchor_id",
       "inUpdate": true,
@@ -149,6 +168,25 @@
       "level": "Advanced",
       "Journal Entry": ""
     },
+    "Anchor Scope IDs": {
+      "variable_name": "anchor_scope_ids",
+      "inUpdate": true,
+      "attr_labels": "",
+      "examples": "",
+      "default_value": "",
+      "valid_values": [],
+      "existing_element": "",
+      "description": "A list of IDs that are anchor scopes for this element.",
+      "generated": false,
+      "style": "Reference Name List",
+      "user_specified": true,
+      "unique": false,
+      "input_required": false,
+      "min_cardinality": 0,
+      "max_cardinality": 1,
+      "level": "Advanced",
+      "Journal Entry": ""
+    },
     "Authors": {
       "variable_name": "authors",
       "inUpdate": true,
@@ -171,7 +209,7 @@
     "Category": {
       "variable_name": "category",
       "inUpdate": true,
-      "attr_labels": "",
+      "attr_labels": "Category Name",
       "examples": "",
       "default_value": "",
       "valid_values": [],
@@ -203,7 +241,7 @@
       "input_required": false,
       "min_cardinality": 1,
       "max_cardinality": 1,
-      "level": "Domain",
+      "level": "Common",
       "Journal Entry": ""
     },
     "Confidence": {
@@ -430,7 +468,7 @@
     "Element Id": {
       "variable_name": "element_id",
       "inUpdate": true,
-      "attr_labels": "Element Name",
+      "attr_labels": "Element Name; Member Id",
       "examples": "",
       "default_value": "",
       "valid_values": [],
@@ -443,7 +481,7 @@
       "input_required": false,
       "min_cardinality": 1,
       "max_cardinality": 1,
-      "level": "Domain",
+      "level": "Common",
       "Journal Entry": ""
     },
     "Entitlements": {
@@ -481,7 +519,7 @@
       "input_required": false,
       "min_cardinality": 0,
       "max_cardinality": 1,
-      "level": "Domain",
+      "level": "Advanced",
       "Journal Entry": ""
     },
     "Extended Properties": {
@@ -601,7 +639,7 @@
     "GUID": {
       "variable_name": "guid",
       "inUpdate": true,
-      "attr_labels": "",
+      "attr_labels": "guid; Guid",
       "examples": "",
       "default_value": "",
       "valid_values": [],
@@ -633,7 +671,7 @@
       "input_required": false,
       "min_cardinality": 1,
       "max_cardinality": 1,
-      "level": "Basic",
+      "level": "Advanced",
       "Journal Entry": ""
     },
     "Impact Classification": {
@@ -718,10 +756,29 @@
       "level": "Domain",
       "Journal Entry": ""
     },
+    "Make Anchor": {
+      "variable_name": "make_anchor",
+      "inUpdate": true,
+      "attr_labels": "",
+      "examples": "",
+      "default_value": "false",
+      "valid_values": [],
+      "existing_element": "",
+      "description": "Is the element at end2 an anchor to end1?",
+      "generated": false,
+      "style": "Bool",
+      "user_specified": true,
+      "unique": false,
+      "input_required": false,
+      "min_cardinality": 1,
+      "max_cardinality": 1,
+      "level": "Advanced",
+      "Journal Entry": ""
+    },
     "Merge Update": {
       "variable_name": "merge_update",
       "inUpdate": true,
-      "attr_labels": "",
+      "attr_labels": "isMergeUpdate",
       "examples": "",
       "default_value": "true",
       "valid_values": [],
@@ -1028,7 +1085,35 @@
       "attr_labels": "",
       "examples": "",
       "default_value": "",
-      "valid_values": [],
+      "valid_values": [
+        "Validate Resource",
+        "Hosted Service",
+        "Supporting Template",
+        "Called Service",
+        "Supporting Person",
+        "Member Template",
+        "Supporting Team",
+        "Derived Element Template",
+        "Generate Insight",
+        "Activity Folder",
+        "Inform Steward",
+        "Certify Resource",
+        "Provision Resource",
+        "Hosted Connector",
+        "Improve Metadata Element",
+        "Survey Resource",
+        "Hosted Governance Engine",
+        "Watch Metadata Element",
+        "Data Specification",
+        "Choose Path",
+        "Supporting Process",
+        "Configure Connector",
+        "Catalog Resource",
+        "Create Subscription",
+        "Uncatalog Resource",
+        "Related Information",
+        "Cancel Subscription"
+      ],
       "existing_element": "",
       "description": "Describes how the resource is being used. From the ResourceList relationship (0019).",
       "generated": false,
@@ -1038,7 +1123,7 @@
       "input_required": false,
       "min_cardinality": 1,
       "max_cardinality": 1,
-      "level": "Domain",
+      "level": "Common",
       "Journal Entry": ""
     },
     "Restrictions": {
@@ -1161,7 +1246,7 @@
       "input_required": false,
       "min_cardinality": 1,
       "max_cardinality": 1,
-      "level": "Domain",
+      "level": "Advanced",
       "Journal Entry": ""
     },
     "Start Date": {
@@ -1794,8 +1879,10 @@
     "Link Command Base": {
       "inherits": "Request Base",
       "own_attributes": [
+        "Anchor Scope IDs",
         "Description",
-        "Label"
+        "Label",
+        "Make Anchor"
       ]
     },
     "Asset": {

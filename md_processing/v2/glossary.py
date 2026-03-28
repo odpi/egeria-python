@@ -27,7 +27,7 @@ class GlossaryProcessor(AsyncBaseCommandProcessor):
 
     async def apply_changes(self) -> str:
         verb = self.command.verb
-        object_type = self.command.object_type
+        object_type = getattr(self, 'canonical_object_type', self.command.object_type)
         attributes = self.parsed_output["attributes"]
         qualified_name = self.parsed_output["qualified_name"]
         
@@ -281,7 +281,7 @@ class TermProcessor(AsyncBaseCommandProcessor):
         as_is_guids = set()
         guid_to_name = {}
         
-        if guid:
+        if guid and not guid.startswith("(Planned:"):
             try:
                 current_collections = await self.client._async_get_related_elements(
                     guid, relationship_type="CollectionMembership", start_at_end=2
