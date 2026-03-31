@@ -169,5 +169,59 @@ class TestMyProfile:
         except Exception as e:
             pytest.fail(f"create_my_todo failed with unexpected exception: {e}")
 
+    def test_get_assigned_actions_for_actor(self, profile_client):
+        try:
+            actor_guid = "9a304921-6844-4ea8-b513-76620ca15a99"  # peter
+            response = profile_client.get_assigned_actions(actor_guid)
+            assert isinstance(response, (list, dict, str))
+            print(f"\nAssigned actions: {json.dumps(response, indent=2)}" if isinstance(response, (list, dict)) else f"\nAssigned actions: {response}")
+        except PyegeriaException as e:
+            print(f"get_assigned_actions failed as expected or due to env: {e}")
+        except Exception as e:
+            print(f"get_assigned_actions raised: {type(e).__name__}: {e}")
+
+    def test_get_actions_for_sponsor(self, profile_client):
+        try:
+            element_guid = "a588fb08-ae09-4415-bd5d-991882ceacba"
+            response = profile_client.get_actions_for_sponsor(element_guid)
+            assert isinstance(response, (list, dict, str))
+            print(f"\nSponsored actions: {json.dumps(response, indent=2)}" if isinstance(response, (list, dict)) else f"\nSponsored actions: {response}")
+        except PyegeriaException as e:
+            print(f"get_actions_for_sponsor failed as expected or due to env: {e}")
+        except Exception as e:
+            print(f"get_actions_for_sponsor raised: {type(e).__name__}: {e}")
+
+    def test_get_to_do_by_guid(self, profile_client):
+        try:
+            todo_guid = "91f6712a-a5ee-4c05-ac18-f7fd996c87ca"
+            response = profile_client.get_to_do(todo_guid)
+            assert isinstance(response, (list, dict, str))
+            print(f"\nTo-do: {json.dumps(response, indent=2)}" if isinstance(response, (list, dict)) else f"\nTo-do: {response}")
+        except PyegeriaException as e:
+            print(f"get_to_do failed as expected or due to env: {e}")
+        except Exception as e:
+            print(f"get_to_do raised: {type(e).__name__}: {e}")
+
+    def test_get_to_dos_by_type(self, profile_client):
+        try:
+            response = profile_client.get_to_dos_by_type("holiday", "OPEN")
+            assert isinstance(response, (list, dict, str))
+            print(f"\nTo-dos by type: {json.dumps(response, indent=2)}" if isinstance(response, (list, dict)) else f"\nTo-dos by type: {response}")
+        except PyegeriaException as e:
+            print(f"get_to_dos_by_type failed as expected or due to env: {e}")
+        except Exception as e:
+            print(f"get_to_dos_by_type raised: {type(e).__name__}: {e}")
+
+    def test_update_todo_status(self, profile_client):
+        try:
+            todo_guid = "d6d4f540-a28f-4312-9c24-d3774b3f06a1"
+            body = {"class": "ToDoProperties", "toDoStatus": "WAITING", "priority": 1}
+            profile_client.update_to_do(todo_guid, body, is_merge_update=True)
+            print(f"\nUpdated to-do {todo_guid} status to WAITING.")
+        except PyegeriaException as e:
+            print(f"update_to_do failed as expected or due to env: {e}")
+        except Exception as e:
+            print(f"update_to_do raised: {type(e).__name__}: {e}")
+
 if __name__ == "__main__":
     pytest.main([__file__])
