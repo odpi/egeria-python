@@ -97,6 +97,59 @@ class TestAutomatedCuration:
         finally:
             a_client.close_session()
 
+    def test_create_secrets_store_element_from_template(self):
+        """Test creating a secrets store file element from the standard template.
+
+        Expects the Core Content Pack to be loaded so that the default template GUID
+        ``130d819e-e17d-46bf-bfea-d09d862e341f`` is available.
+        """
+        try:
+            a_client = AutomatedCuration(
+                self.good_view_server_1,
+                self.good_platform1_url,
+                user_id=self.good_user_2,
+                user_pwd="secret",
+            )
+            token = a_client.create_egeria_bearer_token()
+
+            body = {
+                "templateGUID": "130d819e-e17d-46bf-bfea-d09d862e341f",
+                "isOwnAnchor": True,
+                "placeholderPropertyValues": {
+                    "fileSystemName": "",
+                    "filePathName": "secrets/testSecrets.omsecrets",
+                    "fileName": "testSecrets.omsecrets",
+                    "description": "Test secrets store created by unit test",
+                    "fileType": "Open Metadata Secrets Store File",
+                    "fileExtension": "omsecrets",
+                    "fileEncoding": "YAML",
+                    "versionIdentifier": "V1.0",
+                },
+            }
+
+            start_time = time.perf_counter()
+            response = a_client.create_secrets_store_element_from_template(body)
+            duration = time.perf_counter() - start_time
+            print(f"\n\tDuration was {duration} seconds")
+
+            if isinstance(response, dict):
+                guid = response.get("guid")
+                console.log(f"Created secrets store element with GUID: {guid}")
+            elif isinstance(response, str):
+                console.log(f"Created secrets store element with GUID: {response}")
+            assert True
+
+        except (
+            PyegeriaInvalidParameterException,
+            PyegeriaAPIException,
+            PyegeriaUnauthorizedException,
+        ) as e:
+            print_exception_response(e)
+            assert False, "Invalid request"
+
+        finally:
+            a_client.close_session()
+
     def test_create_folder_asset(self) -> str:
         try:
             a_client = AutomatedCuration(

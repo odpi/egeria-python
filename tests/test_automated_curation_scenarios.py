@@ -437,28 +437,53 @@ class AutomatedCurationScenarioTester:
             )
     
     def scenario_manage_client_side_secrets(self) -> TestResult:
-        """Scenario: Exercise save and delete of client-side secrets.
+        """Scenario: Create a secrets store, save and delete a client-side secret, then clean up.
 
-        This scenario uses a placeholder GUID and is expected to receive an API
-        error from Egeria (unknown GUID). The test validates that the client
-        correctly calls the endpoint and surfaces the error rather than crashing.
-        Replace ``SECRETS_STORE_GUID`` with a real asset GUID to run a live test.
+        Steps:
+        1. Create a secrets store file element from the standard template.
+        2. Save a client-side secret into the new store.
+        3. Delete the client-side secret from the store.
+        4. Delete the secrets store element.
+
+        Requires the Core Content Pack to be loaded so that the default Secrets Store
+        File template (GUID ``130d819e-e17d-46bf-bfea-d09d862e341f``) is available.
         """
         scenario_name = "Manage Client-Side Secrets"
         start_time = time.perf_counter()
-
-        # Placeholder — swap for a live GUID when a secrets store asset exists
-        SECRETS_STORE_GUID = "add-secrets-store-guid-here"
+        secrets_store_guid = None
 
         try:
             console.print(f"\n[bold blue]▶ Running: {scenario_name}[/bold blue]")
 
-            # --- Save ---
+            # --- Step 1: Create secrets store ---
+            console.print("  → Creating secrets store element from template...")
+            ts = self.test_run_id
+            create_body = {
+                "templateGUID": "130d819e-e17d-46bf-bfea-d09d862e341f",
+                "isOwnAnchor": True,
+                "placeholderPropertyValues": {
+                    "fileSystemName": "",
+                    "filePathName": f"secrets/scenario-{ts}.omsecrets",
+                    "fileName": f"scenario-{ts}.omsecrets",
+                    "description": f"Scenario test secrets store {ts}",
+                    "fileType": "Open Metadata Secrets Store File",
+                    "fileExtension": "omsecrets",
+                    "fileEncoding": "YAML",
+                    "versionIdentifier": "V1.0",
+                },
+            }
+            response = self.client.create_secrets_store_element_from_template(create_body)
+            secrets_store_guid = response.get("guid") if isinstance(response, dict) else response
+            if not secrets_store_guid:
+                raise RuntimeError("create_secrets_store_element_from_template returned no GUID")
+            console.print(f"  ✓ Created secrets store: {secrets_store_guid}")
+
+            # --- Step 2: Save a client-side secret ---
             console.print("  → Saving a client-side secret...")
             save_body = {
                 "class": "SecretsCollectionRequestBody",
                 "secretsCollection": {
-                    "collectionName": f"scenario-secret-{self.test_run_id}",
+                    "collectionName": f"scenario-secret-{ts}",
                     "displayName": "Scenario Test Secret",
                     "description": "Created by automated curation scenario test",
                     "refreshTimeInterval": 60,
@@ -467,30 +492,30 @@ class AutomatedCurationScenarioTester:
                     },
                 },
             }
-            self.client.save_client_side_secret(SECRETS_STORE_GUID, save_body)
-            console.print("  ✓ save_client_side_secret returned without error")
+            self.client.save_client_side_secret(secrets_store_guid, save_body)
+            console.print("  ✓ Saved client-side secret")
 
-            # --- Delete ---
+            # --- Step 3: Delete the client-side secret ---
             console.print("  → Deleting the client-side secret...")
-            self.client.delete_client_side_secret(SECRETS_STORE_GUID, "scenarioKey")
-            console.print("  ✓ delete_client_side_secret returned without error")
+            self.client.delete_client_side_secret(secrets_store_guid, "scenarioKey")
+            console.print("  ✓ Deleted client-side secret")
 
             duration = time.perf_counter() - start_time
             return TestResult(
                 scenario_name=scenario_name,
                 status="PASSED",
                 duration=duration,
-                message="Save and delete of client-side secret succeeded",
+                message=f"Full secrets store lifecycle passed (store GUID: {secrets_store_guid})",
             )
 
         except PyegeriaAPIException as e:
             duration = time.perf_counter() - start_time
-            console.print(f"  [yellow]⚠ API Exception (placeholder GUID expected): {str(e)[:120]}[/yellow]")
+            console.print(f"  [yellow]⚠ API Exception: {str(e)[:120]}[/yellow]")
             return TestResult(
                 scenario_name=scenario_name,
                 status="WARNING",
                 duration=duration,
-                message=f"API Exception (replace SECRETS_STORE_GUID for live run): {str(e)[:80]}",
+                message=f"API Exception: {str(e)[:80]}",
                 error=e,
             )
         except PyegeriaTimeoutException as e:

@@ -673,6 +673,103 @@ class AutomatedCuration(ServerClient):
         )
         return response
 
+    async def _async_create_secrets_store_element_from_template(
+            self,
+            body: dict,
+    ) -> str:
+        """Create a secrets store file element from a template. Async version.
+
+        Parameters
+        ----------
+        body : dict
+            The full template request body. Must include ``templateGUID``, ``isOwnAnchor``,
+            and ``placeholderPropertyValues``.
+
+        Returns
+        -------
+        str
+            The GUID of the newly created secrets store element.
+
+        Raises
+        ------
+        PyegeriaException
+            If there are issues in communications, message format, or Egeria errors.
+
+        Notes
+        -----
+        See: https://egeria-project.org/features/templated-cataloguing/overview/
+
+        Sample body:
+        ```json
+        {
+          "templateGUID": "130d819e-e17d-46bf-bfea-d09d862e341f",
+          "isOwnAnchor": true,
+          "placeholderPropertyValues": {
+            "fileSystemName": "",
+            "filePathName": "secrets/mySecrets.omsecrets",
+            "fileName": "mySecrets.omsecrets",
+            "description": "Add description",
+            "fileType": "Open Metadata Secrets Store File",
+            "fileExtension": "omsecrets",
+            "fileEncoding": "YAML",
+            "versionIdentifier": "V1.0"
+          }
+        }
+        ```
+        """
+        body_s = body_slimmer(body)
+        return await self._async_create_elem_from_template(body_s)
+
+    def create_secrets_store_element_from_template(
+            self,
+            body: dict,
+    ) -> str:
+        """Create a secrets store file element from a template.
+
+        Parameters
+        ----------
+        body : dict
+            The full template request body. Must include ``templateGUID``, ``isOwnAnchor``,
+            and ``placeholderPropertyValues``.
+
+        Returns
+        -------
+        str
+            The GUID of the newly created secrets store element.
+
+        Raises
+        ------
+        PyegeriaException
+            If there are issues in communications, message format, or Egeria errors.
+
+        Notes
+        -----
+        See: https://egeria-project.org/features/templated-cataloguing/overview/
+
+        Sample body:
+        ```json
+        {
+          "templateGUID": "130d819e-e17d-46bf-bfea-d09d862e341f",
+          "isOwnAnchor": true,
+          "placeholderPropertyValues": {
+            "fileSystemName": "",
+            "filePathName": "secrets/mySecrets.omsecrets",
+            "fileName": "mySecrets.omsecrets",
+            "description": "Add description",
+            "fileType": "Open Metadata Secrets Store File",
+            "fileExtension": "omsecrets",
+            "fileEncoding": "YAML",
+            "versionIdentifier": "V1.0"
+          }
+        }
+        ```
+        """
+        loop = asyncio.get_event_loop()
+        response = loop.run_until_complete(
+            self._async_create_secrets_store_element_from_template(body)
+        )
+        return response
+
     async def _async_create_kafka_server_element_from_template(
             self,
             kafka_server: str,
