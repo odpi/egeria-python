@@ -675,15 +675,40 @@ class AutomatedCuration(ServerClient):
 
     async def _async_create_secrets_store_element_from_template(
             self,
-            body: dict,
+            file_path_name: str,
+            file_name: str,
+            description: str,
+            version_identifier: str,
+            file_system_name: Optional[str] = None,
+            file_type: str = "Open Metadata Secrets Store File",
+            file_extension: str = "omsecrets",
+            file_encoding: str = "YAML",
     ) -> str:
-        """Create a secrets store file element from a template. Async version.
+        """Create a YAML File Secrets Collection element from a template. Async version.
 
         Parameters
         ----------
-        body : dict
-            The full template request body. Must include ``templateGUID``, ``isOwnAnchor``,
-            and ``placeholderPropertyValues``.
+        file_path_name : str
+            Full path name of the secrets store file,
+            e.g. ``secrets/mySecrets.omsecrets``.
+        file_name : str
+            File name without enclosing directory names,
+            e.g. ``mySecrets.omsecrets``.
+        description : str
+            A description of the secrets store.
+        version_identifier : str
+            Version identifier, e.g. ``V1.0``.
+        file_system_name : str, optional
+            Name of the file system the secrets store file is hosted on.
+        file_type : str, optional
+            The type of the secrets store file.
+            Defaults to ``"Open Metadata Secrets Store File"``.
+        file_extension : str, optional
+            File extension of the secrets store file.
+            Defaults to ``"omsecrets"``.
+        file_encoding : str, optional
+            Encoding of the secrets store file.
+            Defaults to ``"YAML"``.
 
         Returns
         -------
@@ -699,7 +724,9 @@ class AutomatedCuration(ServerClient):
         -----
         See: https://egeria-project.org/features/templated-cataloguing/overview/
 
-        Sample body:
+        The template is looked up by the technology type name
+        ``"YAML File Secrets Collection"``.  The equivalent manual body is:
+
         ```json
         {
           "templateGUID": "130d819e-e17d-46bf-bfea-d09d862e341f",
@@ -717,20 +744,63 @@ class AutomatedCuration(ServerClient):
         }
         ```
         """
+        template_guid = await self._async_get_template_guid_for_technology_type(
+            "YAML File Secrets Collection"
+        )
+        body = {
+            "class": "TemplateRequestBody",
+            "templateGUID": template_guid,
+            "isOwnAnchor": True,
+            "placeholderPropertyValues": {
+                "fileSystemName": file_system_name,
+                "filePathName": file_path_name,
+                "fileName": file_name,
+                "description": description,
+                "fileType": file_type,
+                "fileExtension": file_extension,
+                "fileEncoding": file_encoding,
+                "versionIdentifier": version_identifier,
+            },
+        }
         body_s = body_slimmer(body)
         return await self._async_create_elem_from_template(body_s)
 
     def create_secrets_store_element_from_template(
             self,
-            body: dict,
+            file_path_name: str,
+            file_name: str,
+            description: str,
+            version_identifier: str,
+            file_system_name: Optional[str] = None,
+            file_type: str = "Open Metadata Secrets Store File",
+            file_extension: str = "omsecrets",
+            file_encoding: str = "YAML",
     ) -> str:
-        """Create a secrets store file element from a template.
+        """Create a YAML File Secrets Collection element from a template.
 
         Parameters
         ----------
-        body : dict
-            The full template request body. Must include ``templateGUID``, ``isOwnAnchor``,
-            and ``placeholderPropertyValues``.
+        file_path_name : str
+            Full path name of the secrets store file,
+            e.g. ``secrets/mySecrets.omsecrets``.
+        file_name : str
+            File name without enclosing directory names,
+            e.g. ``mySecrets.omsecrets``.
+        description : str
+            A description of the secrets store.
+        version_identifier : str
+            Version identifier, e.g. ``V1.0``.
+        file_system_name : str, optional
+            Name of the file system the secrets store file is hosted on.
+        file_type : str, optional
+            The type of the secrets store file.
+            Defaults to ``"Open Metadata Secrets Store File"``.
+        file_extension : str, optional
+            File extension of the secrets store file.
+            Defaults to ``"omsecrets"``.
+        file_encoding : str, optional
+            Encoding of the secrets store file.
+            Defaults to ``"YAML"``.
 
         Returns
         -------
@@ -746,7 +816,9 @@ class AutomatedCuration(ServerClient):
         -----
         See: https://egeria-project.org/features/templated-cataloguing/overview/
 
-        Sample body:
+        The template is looked up by the technology type name
+        ``"YAML File Secrets Collection"``.  The equivalent manual body is:
+
         ```json
         {
           "templateGUID": "130d819e-e17d-46bf-bfea-d09d862e341f",
@@ -766,7 +838,10 @@ class AutomatedCuration(ServerClient):
         """
         loop = asyncio.get_event_loop()
         response = loop.run_until_complete(
-            self._async_create_secrets_store_element_from_template(body)
+            self._async_create_secrets_store_element_from_template(
+                file_path_name, file_name, description, version_identifier,
+                file_system_name, file_type, file_extension, file_encoding,
+            )
         )
         return response
 

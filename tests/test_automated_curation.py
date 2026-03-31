@@ -98,10 +98,10 @@ class TestAutomatedCuration:
             a_client.close_session()
 
     def test_create_secrets_store_element_from_template(self):
-        """Test creating a secrets store file element from the standard template.
+        """Test creating a YAML File Secrets Collection element from a template.
 
-        Expects the Core Content Pack to be loaded so that the default template GUID
-        ``130d819e-e17d-46bf-bfea-d09d862e341f`` is available.
+        Expects the Core Content Pack to be loaded so that the technology type
+        ``"YAML File Secrets Collection"`` and its template are available.
         """
         try:
             a_client = AutomatedCuration(
@@ -112,23 +112,13 @@ class TestAutomatedCuration:
             )
             token = a_client.create_egeria_bearer_token()
 
-            body = {
-                "templateGUID": "130d819e-e17d-46bf-bfea-d09d862e341f",
-                "isOwnAnchor": True,
-                "placeholderPropertyValues": {
-                    "fileSystemName": "",
-                    "filePathName": "secrets/testSecrets.omsecrets",
-                    "fileName": "testSecrets.omsecrets",
-                    "description": "Test secrets store created by unit test",
-                    "fileType": "Open Metadata Secrets Store File",
-                    "fileExtension": "omsecrets",
-                    "fileEncoding": "YAML",
-                    "versionIdentifier": "V1.0",
-                },
-            }
-
             start_time = time.perf_counter()
-            response = a_client.create_secrets_store_element_from_template(body)
+            response = a_client.create_secrets_store_element_from_template(
+                file_path_name="secrets/testSecrets.omsecrets",
+                file_name="testSecrets.omsecrets",
+                description="Test secrets store created by unit test",
+                version_identifier="V1.0",
+            )
             duration = time.perf_counter() - start_time
             print(f"\n\tDuration was {duration} seconds")
 

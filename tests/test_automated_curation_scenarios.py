@@ -458,21 +458,12 @@ class AutomatedCurationScenarioTester:
             # --- Step 1: Create secrets store ---
             console.print("  → Creating secrets store element from template...")
             ts = self.test_run_id
-            create_body = {
-                "templateGUID": "130d819e-e17d-46bf-bfea-d09d862e341f",
-                "isOwnAnchor": True,
-                "placeholderPropertyValues": {
-                    "fileSystemName": "",
-                    "filePathName": f"secrets/scenario-{ts}.omsecrets",
-                    "fileName": f"scenario-{ts}.omsecrets",
-                    "description": f"Scenario test secrets store {ts}",
-                    "fileType": "Open Metadata Secrets Store File",
-                    "fileExtension": "omsecrets",
-                    "fileEncoding": "YAML",
-                    "versionIdentifier": "V1.0",
-                },
-            }
-            response = self.client.create_secrets_store_element_from_template(create_body)
+            response = self.client.create_secrets_store_element_from_template(
+                file_path_name=f"secrets/scenario-{ts}.omsecrets",
+                file_name=f"scenario-{ts}.omsecrets",
+                description=f"Scenario test secrets store {ts}",
+                version_identifier="V1.0",
+            )
             secrets_store_guid = response.get("guid") if isinstance(response, dict) else response
             if not secrets_store_guid:
                 raise RuntimeError("create_secrets_store_element_from_template returned no GUID")
