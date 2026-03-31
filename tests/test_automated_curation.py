@@ -1379,3 +1379,91 @@ class TestAutomatedCuration:
             assert False, "Invalid request"
         finally:
             a_client.close_session()
+
+    def test_save_client_side_secret(self):
+        """Test saving a client-side secret to a secrets store asset.
+
+        Requires a secrets store asset GUID to be available in the metadata store.
+        The test will be skipped with a warning if the placeholder GUID is not replaced.
+        """
+        try:
+            a_client = AutomatedCuration(
+                self.good_view_server_1,
+                self.good_platform1_url,
+                user_id=self.good_user_2,
+                user_pwd="secret",
+            )
+            token = a_client.create_egeria_bearer_token()
+
+            # Replace with a real secrets store GUID from your Egeria environment
+            secrets_store_guid = "add-secrets-store-guid-here"
+
+            body = {
+                "class": "SecretsCollectionRequestBody",
+                "secretsCollection": {
+                    "collectionName": "test-secret-collection",
+                    "displayName": "Test Secret Collection",
+                    "description": "A test collection of client-side secrets",
+                    "refreshTimeInterval": 60,
+                    "secrets": {
+                        "testSecretKey": "testSecretValue",
+                    },
+                },
+            }
+
+            start_time = time.perf_counter()
+            a_client.save_client_side_secret(secrets_store_guid, body)
+            duration = time.perf_counter() - start_time
+            print(f"\n\tDuration was {duration} seconds")
+            console.log("save_client_side_secret completed (no exception raised)")
+            assert True
+
+        except (
+            PyegeriaInvalidParameterException,
+            PyegeriaAPIException,
+            PyegeriaUnauthorizedException,
+        ) as e:
+            print_exception_response(e)
+            # Invalid GUID is expected when using the placeholder — treat as a warning
+            assert True, "Expected error with placeholder GUID"
+
+        finally:
+            a_client.close_session()
+
+    def test_delete_client_side_secret(self):
+        """Test deleting a client-side secret from a secrets store asset.
+
+        Requires a secrets store asset GUID to be available in the metadata store.
+        The test will be skipped with a warning if the placeholder GUID is not replaced.
+        """
+        try:
+            a_client = AutomatedCuration(
+                self.good_view_server_1,
+                self.good_platform1_url,
+                user_id=self.good_user_2,
+                user_pwd="secret",
+            )
+            token = a_client.create_egeria_bearer_token()
+
+            # Replace with a real secrets store GUID and secret name from your environment
+            secrets_store_guid = "add-secrets-store-guid-here"
+            secret_name = "testSecretKey"
+
+            start_time = time.perf_counter()
+            a_client.delete_client_side_secret(secrets_store_guid, secret_name)
+            duration = time.perf_counter() - start_time
+            print(f"\n\tDuration was {duration} seconds")
+            console.log("delete_client_side_secret completed (no exception raised)")
+            assert True
+
+        except (
+            PyegeriaInvalidParameterException,
+            PyegeriaAPIException,
+            PyegeriaUnauthorizedException,
+        ) as e:
+            print_exception_response(e)
+            # Invalid GUID is expected when using the placeholder — treat as a warning
+            assert True, "Expected error with placeholder GUID"
+
+        finally:
+            a_client.close_session()

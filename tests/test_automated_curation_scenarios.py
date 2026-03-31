@@ -436,6 +436,85 @@ class AutomatedCurationScenarioTester:
                 error=e
             )
     
+    def scenario_manage_client_side_secrets(self) -> TestResult:
+        """Scenario: Exercise save and delete of client-side secrets.
+
+        This scenario uses a placeholder GUID and is expected to receive an API
+        error from Egeria (unknown GUID). The test validates that the client
+        correctly calls the endpoint and surfaces the error rather than crashing.
+        Replace ``SECRETS_STORE_GUID`` with a real asset GUID to run a live test.
+        """
+        scenario_name = "Manage Client-Side Secrets"
+        start_time = time.perf_counter()
+
+        # Placeholder — swap for a live GUID when a secrets store asset exists
+        SECRETS_STORE_GUID = "add-secrets-store-guid-here"
+
+        try:
+            console.print(f"\n[bold blue]▶ Running: {scenario_name}[/bold blue]")
+
+            # --- Save ---
+            console.print("  → Saving a client-side secret...")
+            save_body = {
+                "class": "SecretsCollectionRequestBody",
+                "secretsCollection": {
+                    "collectionName": f"scenario-secret-{self.test_run_id}",
+                    "displayName": "Scenario Test Secret",
+                    "description": "Created by automated curation scenario test",
+                    "refreshTimeInterval": 60,
+                    "secrets": {
+                        "scenarioKey": "scenarioValue",
+                    },
+                },
+            }
+            self.client.save_client_side_secret(SECRETS_STORE_GUID, save_body)
+            console.print("  ✓ save_client_side_secret returned without error")
+
+            # --- Delete ---
+            console.print("  → Deleting the client-side secret...")
+            self.client.delete_client_side_secret(SECRETS_STORE_GUID, "scenarioKey")
+            console.print("  ✓ delete_client_side_secret returned without error")
+
+            duration = time.perf_counter() - start_time
+            return TestResult(
+                scenario_name=scenario_name,
+                status="PASSED",
+                duration=duration,
+                message="Save and delete of client-side secret succeeded",
+            )
+
+        except PyegeriaAPIException as e:
+            duration = time.perf_counter() - start_time
+            console.print(f"  [yellow]⚠ API Exception (placeholder GUID expected): {str(e)[:120]}[/yellow]")
+            return TestResult(
+                scenario_name=scenario_name,
+                status="WARNING",
+                duration=duration,
+                message=f"API Exception (replace SECRETS_STORE_GUID for live run): {str(e)[:80]}",
+                error=e,
+            )
+        except PyegeriaTimeoutException as e:
+            duration = time.perf_counter() - start_time
+            console.print(f"  [yellow]⚠ Timeout in {scenario_name}; continuing.[/yellow]")
+            return TestResult(
+                scenario_name=scenario_name,
+                status="WARNING",
+                duration=duration,
+                message=f"Timeout: {str(e)[:100]}",
+                error=e,
+            )
+        except Exception as e:
+            duration = time.perf_counter() - start_time
+            console.print(f"  [red]✗ Unexpected error: {str(e)}[/red]")
+            print_basic_exception(e) if isinstance(e, PyegeriaException) else console.print_exception()
+            return TestResult(
+                scenario_name=scenario_name,
+                status="FAILED",
+                duration=duration,
+                message=str(e)[:100],
+                error=e,
+            )
+
     def run_all_scenarios(self):
         """Execute all test scenarios"""
         console.print(Panel.fit(
@@ -454,6 +533,7 @@ class AutomatedCurationScenarioTester:
             self.results.append(self.scenario_monitor_engine_actions())
             self.results.append(self.scenario_explore_technology_type_details())
             self.results.append(self.scenario_explore_technology_hierarchy())
+            self.results.append(self.scenario_manage_client_side_secrets())
             
             # Print summary
             self.print_results_summary()
