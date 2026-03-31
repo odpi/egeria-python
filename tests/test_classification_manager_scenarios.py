@@ -81,7 +81,7 @@ class ClassificationManagerScenarioTester:
 
             # Create test Glossary
             glossary_qname = f"Glossary::Scenario::{self.test_run_id}"
-            glossary_guid = self.client.create_glossary(
+            response = self.client.create_glossary(
                 display_name=f"Scenario Test Glossary {self.test_run_id}",
                 description="Glossary for classification scenario testing",
                 body=NewElementRequestBody(
@@ -89,6 +89,7 @@ class ClassificationManagerScenarioTester:
                     properties={"class": "GlossaryProperties", "qualifiedName": glossary_qname}
                 )
             )
+            glossary_guid = response.get("guid") if isinstance(response, dict) else response
             self.created_guids.append(glossary_guid)
             console.print(f"✓ Created test Glossary: {glossary_guid}")
 
@@ -96,7 +97,7 @@ class ClassificationManagerScenarioTester:
             term_names = ["Confidential Term", "Owned Term", "Origin Term"]
             for name in term_names:
                 term_qname = f"Term::{name}::{self.test_run_id}"
-                term_guid = self.client.create_glossary_term(
+                response = self.client.create_glossary_term(
                     body=NewElementRequestBody(
                         class_="NewElementRequestBody",
                         anchor_guid=glossary_guid,
@@ -107,6 +108,7 @@ class ClassificationManagerScenarioTester:
                         }
                     )
                 )
+                term_guid = response.get("guid") if isinstance(response, dict) else response
                 self.created_guids.append(term_guid)
                 console.print(f"✓ Created test Term '{name}': {term_guid}")
 
