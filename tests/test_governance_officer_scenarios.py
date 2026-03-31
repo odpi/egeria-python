@@ -120,7 +120,8 @@ class GovernanceOfficerScenarioTester:
                 },
             }
 
-            def_guid = self.client.create_governance_definition(body)
+            response = self.client.create_governance_definition(body)
+            def_guid = response.get("guid") if isinstance(response, dict) else response
             self.created_definitions.append(def_guid)
             console.print(f"[green]✓[/green] Created governance definition with GUID: {def_guid}")
 
@@ -216,7 +217,8 @@ class GovernanceOfficerScenarioTester:
                     },
                 }
 
-                guid = self.client.create_governance_definition(body)
+                response = self.client.create_governance_definition(body)
+                guid = response.get("guid") if isinstance(response, dict) else response
                 created_guids.append(guid)
                 self.created_definitions.append(guid)
                 console.print(f"[green]✓[/green] Created: {guid}")
@@ -304,7 +306,8 @@ class GovernanceOfficerScenarioTester:
                 },
             }
 
-            template_guid = self.client.create_governance_definition(template_body)
+            response = self.client.create_governance_definition(template_body)
+            template_guid = response.get("guid") if isinstance(response, dict) else response
             self.created_definitions.append(template_guid)
             console.print(f"[green]✓[/green] Created template: {template_guid}")
 
@@ -324,7 +327,8 @@ class GovernanceOfficerScenarioTester:
                 },
             }
 
-            new_guid = self.client.create_governance_definition_from_template(from_template_body)
+            response = self.client.create_governance_definition_from_template(from_template_body)
+            new_guid = response.get("guid") if isinstance(response, dict) else response
             self.created_definitions.append(new_guid)
             console.print(f"[green]✓[/green] Created from template: {new_guid}")
 

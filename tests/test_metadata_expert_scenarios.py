@@ -43,7 +43,8 @@ def run_scenario():
                 }
             }
         }
-        guid = client.create_metadata_element(create_body)
+        response = client.create_metadata_element(create_body)
+        guid = response.get("guid") if isinstance(response, dict) else response
         console.print(f"   Created element with GUID: [green]{guid}[/green]")
         
         # 2. Update Element
