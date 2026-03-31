@@ -205,7 +205,8 @@ class ExternalLinksScenarioTester:
                 }
             }
             
-            guid = self.client.create_external_reference(body)
+            response = self.client.create_external_reference(body)
+            guid = response.get("guid") if isinstance(response, dict) else response
             
             if guid:
                 created_guids.append(guid)
@@ -342,12 +343,10 @@ class ExternalLinksScenarioTester:
                     }
                 }
  
-                guid = self.client.create_external_reference(body)
+                response = self.client.create_external_reference(body)
+                guid = response.get("guid") if isinstance(response, dict) else response
                 
                 if guid:
-                    created_guids.append(guid)
-                    self.created_external_refs.append(guid)
-                    doc_guids.append(guid)
                     console.print(f"  ✓ Created cited document '{doc_type}': {guid}")
             
             console.print(f"  ✓ Created {len(doc_guids)} cited documents")
@@ -426,12 +425,10 @@ class ExternalLinksScenarioTester:
                     }
                 }
                 console.print(f"{json.dumps(body, indent=2)}")
-                guid = self.client.create_external_reference(body)
+                response = self.client.create_external_reference(body)
+                guid = response.get("guid") if isinstance(response, dict) else response
                 
                 if guid:
-                    created_guids.append(guid)
-                    self.created_external_refs.append(guid)
-                    media_guids.append(guid)
                     console.print(f"  ✓ Created related media '{media_name}': {guid}")
             
             console.print(f"  ✓ Created {len(media_guids)} related media references")

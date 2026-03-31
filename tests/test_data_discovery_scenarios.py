@@ -59,7 +59,8 @@ class DataDiscoveryScenarioTester:
         start_time = time.perf_counter()
         try:
             # 1. Create an asset to annotate
-            asset_guid = self.asset_maker.create_csv_asset("DiscoveryAsset", "Asset for discovery", "discovery.csv")
+            response = self.asset_maker.create_csv_asset("DiscoveryAsset", "Asset for discovery", "discovery.csv")
+            asset_guid = response.get("guid") if isinstance(response, dict) else response
 
             # 2. Create an annotation for the asset
             body = {
@@ -72,8 +73,8 @@ class DataDiscoveryScenarioTester:
                     "annotationType": "Data Discovery",
                 }
             }
-            ann_guid = self.client.create_annotation(body)
-            
+            response = self.client.create_annotation(body)
+            ann_guid = response.get("guid") if isinstance(response, dict) else response
             # 3. Find annotation
             found = self.client.find_annotations(search_string=f"Annotation::{asset_guid}")
             

@@ -62,7 +62,8 @@ class SubjectAreaScenarioTester:
                     "displayName": "Parent Subject Area",
                 }
             }
-            parent_guid = self.client.create_subject_area(parent_body)
+            response = self.client.create_subject_area(parent_body)
+            parent_guid = response.get("guid") if isinstance(response, dict) else response
 
             # 2. Create child subject area
             child_body = {
@@ -73,7 +74,8 @@ class SubjectAreaScenarioTester:
                     "displayName": "Child Subject Area",
                 }
             }
-            child_guid = self.client.create_subject_area(child_body)
+            response = self.client.create_subject_area(child_body)
+            child_guid = response.get("guid") if isinstance(response, dict) else response
 
             # 3. Link them
             link_body = {"class": "NewRelationshipRequestBody", "properties": {"class": "SubjectAreaHierarchyProperties"}}

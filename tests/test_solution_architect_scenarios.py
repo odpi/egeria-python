@@ -202,7 +202,8 @@ class SolutionArchitectScenarioTester:
         if chain_data.purposes:
             body["properties"]["purposes"] = chain_data.purposes
             
-        guid = self.client.create_info_supply_chain(body)
+        response = self.client.create_info_supply_chain(body)
+        guid = response.get("guid") if isinstance(response, dict) else response
         if guid:
             self.created_supply_chains.append(guid)
             chain_data.guid = guid
@@ -220,7 +221,8 @@ class SolutionArchitectScenarioTester:
                 "description": blueprint_data.description,
             }
         }
-        guid = self.client.create_solution_blueprint(body)
+        response = self.client.create_solution_blueprint(body)
+        guid = response.get("guid") if isinstance(response, dict) else response
         if guid:
             self.created_blueprints.append(guid)
             blueprint_data.guid = guid
@@ -238,7 +240,8 @@ class SolutionArchitectScenarioTester:
                 "description": component_data.description,
             }
         }
-        guid = self.client.create_solution_component(body)
+        response = self.client.create_solution_component(body)
+        guid = response.get("guid") if isinstance(response, dict) else response
         if guid:
             self.created_components.append(guid)
             component_data.guid = guid

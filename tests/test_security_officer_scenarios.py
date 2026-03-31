@@ -332,7 +332,8 @@ class SecurityOfficerScenarioTester:
                     "description": "Beloved singer and song-writer."
                 }
             }
-            profile_guid = await freddie_new.my_profile._async_add_my_profile(profile_body)
+            response = await freddie_new.my_profile._async_add_my_profile(profile_body)
+            profile_guid = response.get("guid") if isinstance(response, dict) else response
             self.created_profiles.append(profile_guid)
             console.print(f"  ✓ (Step 6) Freddie created his own metadata profile")
 

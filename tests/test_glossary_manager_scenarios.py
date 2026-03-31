@@ -117,9 +117,10 @@ class GlossaryScenarioTester:
 
             # Step 1: Create glossary
             console.print(f"\n[cyan]Creating glossary: {display_name}[/cyan]")
-            glossary_guid = self.client.create_glossary(
+            response = self.client.create_glossary(
                 display_name, description, language, usage
             )
+            glossary_guid = response.get("guid") if isinstance(response, dict) else response
             self.created_glossaries.append(glossary_guid)
             console.print(f"[green]✓[/green] Created glossary with GUID: {glossary_guid}")
 
@@ -210,12 +211,13 @@ class GlossaryScenarioTester:
 
             # Step 1: Create glossary
             console.print(f"\n[cyan]Creating glossary: {glossary_name}[/cyan]")
-            glossary_guid = self.client.create_glossary(
+            response = self.client.create_glossary(
                 glossary_name,
                 "Glossary for term management testing",
                 "English",
                 "Testing term operations"
             )
+            glossary_guid = response.get("guid") if isinstance(response, dict) else response
             self.created_glossaries.append(glossary_guid)
             console.print(f"[green]✓[/green] Created glossary: {glossary_guid}")
 
@@ -248,7 +250,8 @@ class GlossaryScenarioTester:
                     properties=prop_body.model_dump(exclude_none=True),
                 )
 
-                term_guid = self.client.create_glossary_term(body)
+                response = self.client.create_glossary_term(body)
+                term_guid = response.get("guid") if isinstance(response, dict) else response
                 created_term_guids.append(term_guid)
                 self.created_terms.append(term_guid)
                 console.print(f"[green]✓[/green] Created term: {term_name} ({term_guid})")
@@ -354,12 +357,13 @@ class GlossaryScenarioTester:
 
             for name in glossary_names:
                 console.print(f"\n[cyan]Creating glossary: {name}[/cyan]")
-                guid = self.client.create_glossary(
+                response = self.client.create_glossary(
                     name,
                     f"Test glossary for {name}",
                     "English",
                     "Search testing"
                 )
+                guid = response.get("guid") if isinstance(response, dict) else response
                 created_guids.append(guid)
                 self.created_glossaries.append(guid)
                 console.print(f"[green]✓[/green] Created: {guid}")
@@ -451,24 +455,26 @@ class GlossaryScenarioTester:
             # Step 1: Create source glossary
             source_name = f"Source_Glossary_{timestamp}"
             console.print(f"\n[cyan]Creating source glossary: {source_name}[/cyan]")
-            source_guid = self.client.create_glossary(
+            response = self.client.create_glossary(
                 source_name,
                 "Source glossary for term copy",
                 "English",
                 "Testing term copy"
             )
+            source_guid = response.get("guid") if isinstance(response, dict) else response
             self.created_glossaries.append(source_guid)
             console.print(f"[green]✓[/green] Created source glossary: {source_guid}")
 
             # Step 2: Create target glossary
             target_name = f"Target_Glossary_{timestamp}"
             console.print(f"\n[cyan]Creating target glossary: {target_name}[/cyan]")
-            target_guid = self.client.create_glossary(
+            response = self.client.create_glossary(
                 target_name,
                 "Target glossary for term copy",
                 "English",
                 "Testing term copy"
             )
+            target_guid = response.get("guid") if isinstance(response, dict) else response
             self.created_glossaries.append(target_guid)
             console.print(f"[green]✓[/green] Created target glossary: {target_guid}")
 
@@ -496,14 +502,16 @@ class GlossaryScenarioTester:
                 properties=prop_body.model_dump(exclude_none=True),
             )
 
-            term_guid = self.client.create_glossary_term(body)
+            response = self.client.create_glossary_term(body)
+            term_guid = response.get("guid") if isinstance(response, dict) else response
             self.created_terms.append(term_guid)
             console.print(f"[green]✓[/green] Created term: {term_guid}")
 
             # Step 4: Copy term to target glossary
             copied_name = f"CopiedTerm_{timestamp}"
             console.print(f"\n[cyan]Copying term to target glossary as: {copied_name}[/cyan]")
-            copied_guid = self.client.create_term_copy(target_guid, term_guid, copied_name)
+            response = self.client.create_term_copy(target_guid, term_guid, copied_name)
+            copied_guid = response.get("guid") if isinstance(response, dict) else response
             self.created_terms.append(copied_guid)
             console.print(f"[green]✓[/green] Copied term: {copied_guid}")
 
