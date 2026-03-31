@@ -432,7 +432,8 @@ class AssetMakerScenarioTester:
                 }
             }
             console.print(json.dumps(from_template_body, indent=2))
-            new_asset_guid = self.client.create_asset_from_template(body=from_template_body)
+            response = self.client.create_asset_from_template(body=from_template_body)
+            new_asset_guid = response.get("guid") if isinstance(response, dict) else response
             
             if new_asset_guid:
                 created_guids.append(new_asset_guid)
