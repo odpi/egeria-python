@@ -121,9 +121,11 @@ class PeopleOrganizerScenarioTester:
             }
         }
         
-        guid1 = self.egeria.create_actor_profile(body1)
+        response1 = self.egeria.create_actor_profile(body1)
+        guid1 = response1.get("guid") if isinstance(response1, dict) else response1
         self.created_guids.append(guid1)
-        guid2 = self.egeria.create_actor_profile(body2)
+        response2 = self.egeria.create_actor_profile(body2)
+        guid2 = response2.get("guid") if isinstance(response2, dict) else response2
         self.created_guids.append(guid2)
         
         # 2. Link them as peers
@@ -166,9 +168,11 @@ class PeopleOrganizerScenarioTester:
             }
         }
         
-        guid1 = self.egeria.create_actor_profile(body1)
+        response1 = self.egeria.create_actor_profile(body1)
+        guid1 = response1.get("guid") if isinstance(response1, dict) else response1
         self.created_guids.append(guid1)
-        guid2 = self.egeria.create_actor_profile(body2)
+        response2 = self.egeria.create_actor_profile(body2)
+        guid2 = response2.get("guid") if isinstance(response2, dict) else response2
         self.created_guids.append(guid2)
         
         # 2. Link them

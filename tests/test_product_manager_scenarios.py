@@ -207,7 +207,8 @@ class ProductManagerScenarioTester:
                 }
             }
             
-            guid = self.client.create_digital_product(body)
+            response = self.client.create_digital_product(body)
+            guid = response.get("guid") if isinstance(response, dict) else response
             
             if guid:
                 created_guids.append(guid)
@@ -294,7 +295,8 @@ class ProductManagerScenarioTester:
                 }
             }
             
-            consumer_product_guid = self.client.create_digital_product(consumer_body)
+            response = self.client.create_digital_product(consumer_body)
+            consumer_product_guid = response.get("guid") if isinstance(response, dict) else response
             if consumer_product_guid:
                 created_guids.append(consumer_product_guid)
                 self.created_products.append(consumer_product_guid)
@@ -317,7 +319,8 @@ class ProductManagerScenarioTester:
                 }
             }
             
-            consumed_product_guid = self.client.create_digital_product(consumed_body)
+            response = self.client.create_digital_product(consumed_body)
+            consumed_product_guid = response.get("guid") if isinstance(response, dict) else response
             if consumed_product_guid:
                 created_guids.append(consumed_product_guid)
                 self.created_products.append(consumed_product_guid)
@@ -406,7 +409,8 @@ class ProductManagerScenarioTester:
                 }
             }
             
-            product_guid = self.client.create_digital_product(product_body)
+            response = self.client.create_digital_product(product_body)
+            product_guid = response.get("guid") if isinstance(response, dict) else response
             if product_guid:
                 created_guids.append(product_guid)
                 self.created_products.append(product_guid)
@@ -432,7 +436,8 @@ class ProductManagerScenarioTester:
                 }
             }
             
-            manager_role_guid = actor_client.create_actor_role(role_body)
+            response = actor_client.create_actor_role(role_body)
+            manager_role_guid = response.get("guid") if isinstance(response, dict) else response
             if manager_role_guid:
                 created_guids.append(manager_role_guid)
                 console.print(f"  ✓ Created manager role: {manager_role_guid}")
@@ -528,7 +533,8 @@ class ProductManagerScenarioTester:
                     }
                 }
                 
-                guid = self.client.create_digital_product(body)
+                response = self.client.create_digital_product(body)
+                guid = response.get("guid") if isinstance(response, dict) else response
                 if guid:
                     created_guids.append(guid)
                     self.created_products.append(guid)
@@ -647,7 +653,8 @@ class ProductManagerScenarioTester:
                 }
             }
             
-            guid = self.client.create_digital_product(body)
+            response = self.client.create_digital_product(body)
+            guid = response.get("guid") if isinstance(response, dict) else response
             if guid:
                 created_guids.append(guid)
                 console.print(f"  ✓ Created product for deletion: {guid}")
@@ -727,7 +734,8 @@ class ProductManagerScenarioTester:
                 }
             }
             
-            guid = self.client.create_digital_product_catalog(body)
+            response = self.client.create_digital_product_catalog(body)
+            guid = response.get("guid") if isinstance(response, dict) else response
             
             if guid:
                 created_guids.append(guid)
@@ -822,7 +830,8 @@ class ProductManagerScenarioTester:
                     }
                 }
                 
-                guid = self.client.create_digital_product_catalog(body)
+                response = self.client.create_digital_product_catalog(body)
+                guid = response.get("guid") if isinstance(response, dict) else response
                 if guid:
                     created_guids.append(guid)
                     self.created_products.append(guid)
