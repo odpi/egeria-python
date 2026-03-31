@@ -42,8 +42,8 @@ SF-Comment-Smoke-Test
 ## Commented On Element
 DigitalProduct::SalesForecast::Pipeline::1.2
 
-## GUID
-
+## Description
+A minimal comment to test the Create Comment command. Commented On Element is required
 ___
 
 # FB-02: Create Comment — STANDARD_COMMENT, user-specified QN
