@@ -96,6 +96,13 @@ class SecurityOfficerScenarioTester:
             )
             console.print(f"✓ Platform GUID discovered: {self.platform_guid}")
 
+            # Pre-clean the known scenario test user so scenario 2 always starts fresh.
+            try:
+                self.client.delete_user_account(PLATFORM_NAME, "freddiemercury", platform_guid=self.platform_guid)
+                console.print("✓ Pre-deleted existing 'freddiemercury' account")
+            except Exception:
+                console.print("- No pre-existing 'freddiemercury' account to delete")
+
             console.print(f"✓ Connected to {PLATFORM_URL}")
             console.print(f"✓ Authenticated as {USER_ID}")
             console.print(f"✓ Test Run ID: {self.test_run_id}\n")
@@ -250,15 +257,13 @@ class SecurityOfficerScenarioTester:
 
         console.print(f"\n[bold blue]▶ Scenario 2: {scenario_name}[/bold blue]")
         try:
-            # 1) Gary deletes freddiemercury's account (ensure clean start)
-            # Use gary client for deletion
+            # 1) Ensure no leftover account from a prior run (setup() already attempted this;
+            #    this is a redundant safety-net delete immediately before creation).
             try:
-                # Check for existence first to avoid 500 if not there (though delete usually handles it)
-                # But per user: "if the account isn't there that's fine. If it is there delete it if not there continue"
                 await self.client._async_delete_user_account(PLATFORM_NAME, account_user_id, platform_guid=self.platform_guid)
-                console.print(f"  ✓ (Step 1) Gary deleted existing account for {account_user_id}")
+                console.print(f"  ✓ (Step 1) Deleted any pre-existing account for {account_user_id}")
             except Exception:
-                console.print(f"  - (Step 1) No existing account for {account_user_id} to delete (or already clean)")
+                console.print(f"  - (Step 1) No pre-existing account for {account_user_id} — clean to create")
 
             # 2) Gary creates a new account for Freddie
             account_body = {
