@@ -93,6 +93,17 @@ Dr. Egeria v2 now provides first-class support for the `External Reference` fami
 
 ---
 
+### 10. Feedback Support: Comments, Ratings, and Likes
+
+Dr. Egeria v2 has been extended to support the full range of Egeria's feedback mechanisms, including comments, star ratings, and likes.
+
+- **Comment Attachment Logic**: Implemented `Attach Comment` (and `Detach Comment`) in the `FeedbackLinkProcessor`. Since the Egeria View Service primarily supports creating new comment attachments, the processor includes logic to fetch an existing comment's text and copy it to a new attachment if a direct link is not possible.
+- **Rating and Like Support**: Added support for `Attach Rating` (with star levels and review text) and `Attach Like` (with optional emoji support), utilizing the specialized `_async_add_rating_to_element` and `_async_add_like_to_element` SDK methods.
+- **Accepted Answer Linking**: Implemented `Link Accept Answer` to connect question comments with their corresponding answering comments via the `AcceptedAnswer` relationship.
+- **Removal Synonyms**: Ensured that `Detach`, `Unlink`, and `Remove` synonyms are correctly routed to the appropriate removal methods (e.g., `_async_remove_rating_from_element`, `_async_clear_accepted_answer`) for all feedback types.
+
+---
+
 ## Conclusion
 
 Dr.Egeria v2 is now a production-ready, resilient metadata processing engine. It provides high-fidelity validation of complex documents, reduces redundant API traffic through intelligent caching, and gracefully handles the transition between creation and updates.

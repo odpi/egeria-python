@@ -1,6 +1,6 @@
 {
   "family": "Feedback",
-  "exported": "Mar 27, 2026 at 3:51:56 PM",
+  "exported": "Mar 27, 2026 at 9:06:11 PM",
   "attribute_definitions": {
     "Activity Status": {
       "variable_name": "activity_status",
@@ -1628,7 +1628,7 @@
     },
     "Commented On Element": {
       "variable_name": "commented_on_element",
-      "inUpdate": true,
+      "inUpdate": false,
       "attr_labels": "",
       "examples": "",
       "default_value": "",
@@ -1639,7 +1639,7 @@
       "style": "Reference Name",
       "user_specified": true,
       "unique": false,
-      "input_required": false,
+      "input_required": true,
       "min_cardinality": 1,
       "max_cardinality": 1,
       "level": "Domain",
@@ -1899,7 +1899,9 @@
     "Create Comment": {
       "display_name": "Comment",
       "qn_prefix": "Comment",
-      "alternate_names": [],
+      "alternate_names": [
+        "Add Comment"
+      ],
       "family": "Feedback",
       "description": "Creates a comment on a metadata element.",
       "verb": "Create",
@@ -1912,6 +1914,7 @@
       "extra_constraints": "",
       "bundle": "Referenceable",
       "custom_attributes": [
+        "Commented On Element",
         "Comment Type"
       ],
       "Journal Entry": ""
@@ -1932,27 +1935,6 @@
       "extra_constraints": "",
       "bundle": "Referenceable",
       "custom_attributes": [],
-      "Journal Entry": ""
-    },
-    "Attach Comment": {
-      "display_name": "Element->Comment",
-      "qn_prefix": "",
-      "alternate_names": [],
-      "family": "Feedback",
-      "description": "Attach a comment to a referenceable element via the AttachedComment relationship.",
-      "verb": "Link",
-      "upsert": false,
-      "attach": false,
-      "level": "Basic",
-      "find_method": "",
-      "find_constraints": "",
-      "extra_find": "",
-      "extra_constraints": "",
-      "bundle": "Link Command Base",
-      "custom_attributes": [
-        "Comment",
-        "Commented On Element"
-      ],
       "Journal Entry": ""
     },
     "Attach Rating": {

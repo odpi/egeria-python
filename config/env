@@ -26,7 +26,7 @@ PYEGERIA_ROOT_PATH="~/localGit/egeria-python/sample-data"
 PYEGERIA_USER_REPORT_SPECS_DIR="~/.pyegeria/report_specs"
 # Deprecated: kept for backward compatibility if set in external environments
 # PYEGERIA_USER_FORMAT_SETS_DIR="~/.pyegeria/format_sets"
-CONSOLE_WIDTH=130
+CONSOLE_WIDTH=200
 EGERIA_WIDTH=130
 # Preferred variable name
 EGERIA_USER=erinoverview

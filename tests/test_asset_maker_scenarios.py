@@ -208,8 +208,8 @@ class AssetMakerScenarioTester:
                 }
             }
             
-            guid = self.client.create_asset(body=body)
-            
+            response = self.client.create_asset(body=body)
+            guid = response.get("guid") if isinstance(response, dict) else response
             if guid:
                 created_guids.append(guid)
                 self.created_assets.append(guid)
@@ -330,8 +330,8 @@ class AssetMakerScenarioTester:
                     }
                 }
                 
-                guid = self.client.create_asset(body=body)
-                
+                response = self.client.create_asset(body=body)
+                guid = response.get("guid") if isinstance(response, dict) else response
                 if guid:
                     created_guids.append(guid)
                     self.created_assets.append(guid)
@@ -410,8 +410,8 @@ class AssetMakerScenarioTester:
                 }
             }
             
-            template_guid = self.client.create_asset(body=template_body)
-            
+            response = self.client.create_asset(body=template_body)
+            template_guid = response.get("guid") if isinstance(response, dict) else response
             if template_guid:
                 created_guids.append(template_guid)
                 self.created_assets.append(template_guid)

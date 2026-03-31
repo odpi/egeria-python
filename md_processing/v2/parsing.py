@@ -80,6 +80,8 @@ class AttributeFirstParser:
                 }
 
         # Check for required attributes
+        is_update = self.command.verb.lower() in {"update", "modify", "patch"}
+        
         for attr_obj in spec_attrs:
             if not isinstance(attr_obj, dict):
                 continue
@@ -98,7 +100,20 @@ class AttributeFirstParser:
                 if not isinstance(details, dict):
                     continue
 
-            if details.get("input_required", False) and canonical_name not in self.parsed_attributes:
+            # If it's an update operation, check if the attribute should even be in an update.
+            # If inUpdate is false, then we shouldn't require it during update.
+            input_required = details.get("input_required", False)
+            if is_update:
+                if not details.get("inUpdate", True):
+                    input_required = False
+                    # If the user provided it, we might want to skip it from parsed_attributes too
+                    # but it's already in there from the first loop.
+                    # We should probably remove it if it's not allowed in update.
+                    if canonical_name in self.parsed_attributes:
+                        del self.parsed_attributes[canonical_name]
+                    continue
+            
+            if input_required and canonical_name not in self.parsed_attributes:
                 self.errors.append(f"Missing required attribute: '{canonical_name}'")
 
         qn_obj = self.parsed_attributes.get("Qualified Name", self.parsed_attributes.get("qualified_name"))

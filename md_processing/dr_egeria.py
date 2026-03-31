@@ -227,6 +227,14 @@ async def process_md_file_v2(input_file: str, output_folder: str, directive: str
     register_processor("Update External Model Source", ExternalReferenceProcessor)
     register_processor("Create External Source Code", ExternalReferenceProcessor)
     register_processor("Update External Source Code", ExternalReferenceProcessor)
+    register_processor("Attach Comment", FeedbackLinkProcessor)
+    register_processor("Detach Comment", FeedbackLinkProcessor)
+    register_processor("Attach Rating", FeedbackLinkProcessor)
+    register_processor("Detach Rating", FeedbackLinkProcessor)
+    register_processor("Attach Like", FeedbackLinkProcessor)
+    register_processor("Detach Like", FeedbackLinkProcessor)
+    register_processor("Link Accept Answer", FeedbackLinkProcessor)
+    register_processor("Unlink Accept Answer", FeedbackLinkProcessor)
 
     context = {
         "directive": directive,
