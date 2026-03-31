@@ -112,7 +112,8 @@ class ProjectManagerScenarioTester:
                 },
             }
 
-            project_guid = self.client.create_project(body=body)
+            response = self.client.create_project(body=body)
+            project_guid = response.get("guid") if isinstance(response, dict) else response
             self.created_projects.append(project_guid)
             console.print(f"[green]✓[/green] Created project with GUID: {project_guid}")
 
@@ -213,7 +214,8 @@ class ProjectManagerScenarioTester:
                     },
                 }
 
-                guid = self.client.create_project(body=body)
+                response = self.client.create_project(body=body)
+                guid = response.get("guid") if isinstance(response, dict) else response
                 created_guids.append(guid)
                 self.created_projects.append(guid)
                 console.print(f"[green]✓[/green] Created: {guid}")
@@ -307,7 +309,8 @@ class ProjectManagerScenarioTester:
                 },
             }
 
-            template_guid = self.client.create_project(body=template_body)
+            response = self.client.create_project(body=template_body)
+            template_guid = response.get("guid") if isinstance(response, dict) else response
             self.created_projects.append(template_guid)
             console.print(f"[green]✓[/green] Created template: {template_guid}")
 
@@ -327,7 +330,8 @@ class ProjectManagerScenarioTester:
                 },
             }
 
-            new_guid = self.client.create_project_from_template(body=from_template_body)
+            response = self.client.create_project_from_template(body=from_template_body)
+            new_guid = response.get("guid") if isinstance(response, dict) else response
             self.created_projects.append(new_guid)
             console.print(f"[green]✓[/green] Created from template: {new_guid}")
 
@@ -404,7 +408,8 @@ class ProjectManagerScenarioTester:
                 },
             }
 
-            parent_guid = self.client.create_project(body=parent_body)
+            response = self.client.create_project(body=parent_body)
+            parent_guid = response.get("guid") if isinstance(response, dict) else response
             self.created_projects.append(parent_guid)
             console.print(f"[green]✓[/green] Created parent project: {parent_guid}")
 
@@ -426,7 +431,8 @@ class ProjectManagerScenarioTester:
                     },
                 }
 
-                child_guid = self.client.create_project(body=child_body)
+                response = self.client.create_project(body=child_body)
+                child_guid = response.get("guid") if isinstance(response, dict) else response
                 child_guids.append(child_guid)
                 self.created_projects.append(child_guid)
                 console.print(f"[green]✓[/green] Created child project: {child_guid}")

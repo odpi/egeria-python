@@ -1105,6 +1105,7 @@ class ServerClient(BaseServerClient):
                 "properties": {
                     "class": "CommentProperties",
                     "qualifiedName": self.make_feedback_qn("Comment", element_guid),
+                    "commentText": comment,
                     "description": comment,
                     "commentType": comment_type
                 }
@@ -1115,7 +1116,7 @@ class ServerClient(BaseServerClient):
 
         url = f"{self.command_root}feedback-manager/elements/{element_guid}/comments"
         response = await self._async_make_request("POST", url, body)
-        return response.json().get("guid", "NO_GUID_RETURNED")
+        return response.json()
 
     def add_comment_to_element(
             self,
@@ -1198,6 +1199,7 @@ class ServerClient(BaseServerClient):
                 "mergeUpdate": merge_update,
                 "properties": {
                     "class": "CommentProperties",
+                    "commentText": comment,
                     "description": comment,
                     "commentType": comment_type
                 }
@@ -1206,7 +1208,7 @@ class ServerClient(BaseServerClient):
             context = {"issue": "Invalid comment and body not provided"}
             raise PyegeriaInvalidParameterException(context=context)
 
-        url = f"{self.command_root}feedback-manager/comments{comment_guid}/update"
+        url = f"{self.command_root}feedback-manager/comments/{comment_guid}/update"
         await self._async_update_element_body_request(url, ["Comment"], body)
 
     def update_comment(
@@ -3597,9 +3599,10 @@ class ServerClient(BaseServerClient):
     @dynamic_catch
     async def _async_create_informal_tag(
             self,
-            display_name: str,
-            description: str,
-            qualified_name: str = None
+            display_name: str = None,
+            description: str = None,
+            qualified_name: str = None,
+            body: dict = None,
     ) -> str:
         """
         Creates a new informal tag and returns the unique identifier for it. Async Version.
@@ -3613,6 +3616,8 @@ class ServerClient(BaseServerClient):
             - The description of the informal tag.
         qualified_name: str, optional
             - The qualified name of the informal tag. If not provided, it will be generated.
+        body: dict, optional
+            - Body of the request. Overrides other parameters if present.
 
         Returns
         -------
@@ -3623,28 +3628,33 @@ class ServerClient(BaseServerClient):
         PyegeriaException
         """
         url = f"{self.command_root}feedback-manager/tags"
-        if display_name is None:
-            raise PyegeriaInvalidParameterException(context={"reason": "display_name is required"})
-        if qualified_name is None:
-            qualified_name = self.make_feedback_qn("InformalTag", None, display_name)
-        body = {
-            "class": "NewElementRequestBody",
-            "properties": {
-                "class": "InformalTagProperties",
-                "displayName": display_name,
-                "qualifiedName" : qualified_name,
-                "description": description
+       
+
+        if body is None:
+            if display_name is None:
+                raise PyegeriaInvalidParameterException(context={"reason": "display_name is required"})
+            if qualified_name is None:
+                qualified_name = self.make_feedback_qn("InformalTag", None, display_name)
+            body = {
+                "class": "NewElementRequestBody",
+                "properties": {
+                    "class": "InformalTagProperties",
+                    "name": display_name,
+                    "displayName": display_name,
+                    "qualifiedName" : qualified_name,
+                    "description": description
+                }
             }
-        }
         response = await self._async_create_element_body_request(url, ["InformalTagProperties"], body)
         return response
 
     @dynamic_catch
     def create_informal_tag(
             self,
-            display_name: str,
-            description: str,
-            qualified_name: str = None
+            display_name: str = None,
+            description: str = None,
+            qualified_name: str = None,
+            body: dict = None,
     ) -> str:
         """
         Creates a new informal tag and returns the unique identifier for it.
@@ -3658,6 +3668,8 @@ class ServerClient(BaseServerClient):
             - The description of the informal tag.
         qualified_name: str, optional
             - The qualified name of the informal tag. If not provided, it will be created automatically.
+        body: dict, optional
+            - Body of the request. Overrides other parameters if present.
 
         Returns
         -------
@@ -3669,7 +3681,7 @@ class ServerClient(BaseServerClient):
         """
         loop = asyncio.get_event_loop()
         response = loop.run_until_complete(
-            self._async_create_informal_tag(display_name, description, qualified_name)
+            self._async_create_informal_tag(display_name, description, qualified_name, body)
         )
         return response
 
@@ -4482,7 +4494,7 @@ class ServerClient(BaseServerClient):
             self,
             element_guid: str,
             tag_guid: str,
-            body: dict = {},
+            body: dict = None,
 
     ) -> dict | str:
         """
@@ -4521,7 +4533,7 @@ class ServerClient(BaseServerClient):
             self,
             element_guid: str,
             tag_guid: str,
-            body: dict = {},
+            body: dict = None,
 
     ) -> dict | str:
         """
@@ -4816,9 +4828,6 @@ class ServerClient(BaseServerClient):
         PyegeriaUnauthorizedException
             The requesting user is not authorized to issue this request.
         """
-        if body is None:
-            body = {}
-        
         url = f"{self.command_root}feedback-manager/elements/{element_guid}/likes/remove"
         
         response = await self._async_make_request("POST", url, body)
@@ -5093,9 +5102,6 @@ class ServerClient(BaseServerClient):
         PyegeriaUnauthorizedException
             The requesting user is not authorized to issue this request.
         """
-        if body is None:
-            body = {}
-        
         url = f"{self.command_root}feedback-manager/elements/{element_guid}/ratings/remove"
         
         response = await self._async_make_request("POST", url, body)
@@ -6806,32 +6812,32 @@ class ServerClient(BaseServerClient):
 
     @dynamic_catch
     async def _async_create_attachment_body_request(self, url: str, prop: Optional[list[str]] = None,
-                                                    body: Optional[dict | NewAttachmentRequestBody] = None) -> str:
+                                                    body: Optional[dict | NewAttachmentRequestBody] = None) -> dict:
         validated_body = self.validate_new_attachment_request(body, prop)
         json_body = validated_body.model_dump_json(indent=2, exclude_none=True)
         logger.info(json_body)
         response = await self._async_make_request("POST", url, json_body)
         logger.info(response.json())
-        return response.json().get("guid", "NO_GUID_RETURNED")
+        return response.json()
 
     @dynamic_catch
     async def _async_create_element_body_request(self, url: str, prop: Optional[list[str]] = None,
-                                                 body: Optional[dict | NewElementRequestBody] = None) -> str:
+                                                 body: Optional[dict | NewElementRequestBody] = None) -> dict:
         validated_body = self.validate_new_element_request(body, prop)
         json_body = validated_body.model_dump_json(indent=2, exclude_none=True)
         logger.info(json_body)
         response = await self._async_make_request("POST", url, json_body, is_json=True)
         logger.info(response.json())
-        return response.json().get("guid", "NO_GUID_RETURNED")
+        return response.json()
 
     @dynamic_catch
-    async def _async_create_element_from_template(self, url: str, body: Optional[dict | TemplateRequestBody] = None) -> str:
+    async def _async_create_element_from_template(self, url: str, body: Optional[dict | TemplateRequestBody] = None) -> dict:
         validated_body = self.validate_new_element_from_template_request(body)
         json_body = validated_body.model_dump_json(indent=2, exclude_none=True)
         logger.info(json_body)
         response = await self._async_make_request("POST", url, json_body, is_json=True)
         logger.info(response.json())
-        return response.json().get("guid", "NO_GUID_RETURNED")
+        return response.json()
 
     @dynamic_catch
     async def _async_update_element_body_request(self, url: str, prop: Optional[list[str]] = None,

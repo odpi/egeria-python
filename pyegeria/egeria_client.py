@@ -11,7 +11,6 @@ for all use cases..using the more role based clients is often appropriate:
     * EgeriaTech - for technical users such as data scientists and engineers
 
 """
-from typing import Optional, Dict, Any
 
 from pyegeria.egeria_config_client import EgeriaConfig
 from pyegeria.omvs.action_author import ActionAuthor
@@ -27,7 +26,7 @@ from pyegeria.omvs.data_discovery import DataDiscovery
 from pyegeria.omvs.data_engineer import DataEngineer
 from pyegeria.omvs.digital_business import DigitalBusiness
 from pyegeria.omvs.external_links import ExternalReferences
-from pyegeria.omvs.feedback_manager import FeedbackManager
+from pyegeria.deprecated.feedback_manager import FeedbackManager
 from pyegeria.omvs.full_omag_server_config import FullServerConfig
 from pyegeria.omvs.glossary_manager import GlossaryManager
 from pyegeria.omvs.governance_officer import GovernanceOfficer

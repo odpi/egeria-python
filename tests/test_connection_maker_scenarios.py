@@ -41,7 +41,8 @@ async def test_full_connection_setup_scenario(connection_maker):
                 "networkAddress": "localhost:9000"
             }
         }
-        ep_guid = await connection_maker._async_create_endpoint(ep_body)
+        response = await connection_maker._async_create_endpoint(ep_body)
+        ep_guid = response.get("guid") if isinstance(response, dict) else response
         assert ep_guid is not None
         
         # 2. Create Connector Type
@@ -54,7 +55,8 @@ async def test_full_connection_setup_scenario(connection_maker):
                 "connectorProviderClassName": "org.odpi.egeria.test.ScenarioProvider"
             }
         }
-        ct_guid = await connection_maker._async_create_connector_type(ct_body)
+        response = await connection_maker._async_create_connector_type(ct_body)
+        ct_guid = response.get("guid") if isinstance(response, dict) else response
         assert ct_guid is not None
         
         # 3. Create Connection
@@ -66,7 +68,8 @@ async def test_full_connection_setup_scenario(connection_maker):
                 "displayName": "Scenario Connection"
             }
         }
-        conn_guid = await connection_maker._async_create_connection(conn_body)
+        response = await connection_maker._async_create_connection(conn_body)
+        conn_guid = response.get("guid") if isinstance(response, dict) else response
         assert conn_guid is not None
         
         # 4. Attach Connector Type

@@ -15,8 +15,8 @@ from datetime import datetime
 from rich.console import Console
 from rich.table import Table
 from rich.panel import Panel
-
-from pyegeria.omvs import FeedbackManager, GlossaryManager
+from pyegeria.core import ServerClient
+from pyegeria.omvs import GlossaryManager
 from pyegeria.core._exceptions import (
     PyegeriaException,
     PyegeriaTimeoutException,
@@ -56,7 +56,7 @@ class FeedbackScenarioTester:
     def setup(self):
         """Initialize the clients and create a test element"""
         try:
-            self.feedback_client = FeedbackManager(
+            self.feedback_client = ServerClient(
                 self.view_server,
                 self.platform_url,
                 user_id=self.user,
@@ -82,7 +82,8 @@ class FeedbackScenarioTester:
                 "English",
                 "Testing purposes only"
             )
-            self.test_element_guid = response
+
+            self.test_element_guid = response.get("guid")
             
             console.print("[green]✓[/green] Clients initialized and test element created successfully")
             return True

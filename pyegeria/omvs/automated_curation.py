@@ -673,6 +673,178 @@ class AutomatedCuration(ServerClient):
         )
         return response
 
+    async def _async_create_secrets_store_element_from_template(
+            self,
+            file_path_name: str,
+            file_name: str,
+            description: str,
+            version_identifier: str,
+            file_system_name: Optional[str] = None,
+            file_type: str = "Open Metadata Secrets Store File",
+            file_extension: str = "omsecrets",
+            file_encoding: str = "YAML",
+    ) -> str:
+        """Create a YAML File Secrets Collection element from a template. Async version.
+
+        Parameters
+        ----------
+        file_path_name : str
+            Full path name of the secrets store file,
+            e.g. ``secrets/mySecrets.omsecrets``.
+        file_name : str
+            File name without enclosing directory names,
+            e.g. ``mySecrets.omsecrets``.
+        description : str
+            A description of the secrets store.
+        version_identifier : str
+            Version identifier, e.g. ``V1.0``.
+        file_system_name : str, optional
+            Name of the file system the secrets store file is hosted on.
+        file_type : str, optional
+            The type of the secrets store file.
+            Defaults to ``"Open Metadata Secrets Store File"``.
+        file_extension : str, optional
+            File extension of the secrets store file.
+            Defaults to ``"omsecrets"``.
+        file_encoding : str, optional
+            Encoding of the secrets store file.
+            Defaults to ``"YAML"``.
+
+        Returns
+        -------
+        str
+            The GUID of the newly created secrets store element.
+
+        Raises
+        ------
+        PyegeriaException
+            If there are issues in communications, message format, or Egeria errors.
+
+        Notes
+        -----
+        See: https://egeria-project.org/features/templated-cataloguing/overview/
+
+        The template is looked up by the technology type name
+        ``"YAML File Secrets Collection"``.  The equivalent manual body is:
+
+        ```json
+        {
+          "templateGUID": "130d819e-e17d-46bf-bfea-d09d862e341f",
+          "isOwnAnchor": true,
+          "placeholderPropertyValues": {
+            "fileSystemName": "",
+            "filePathName": "secrets/mySecrets.omsecrets",
+            "fileName": "mySecrets.omsecrets",
+            "description": "Add description",
+            "fileType": "Open Metadata Secrets Store File",
+            "fileExtension": "omsecrets",
+            "fileEncoding": "YAML",
+            "versionIdentifier": "V1.0"
+          }
+        }
+        ```
+        """
+        template_guid = await self._async_get_template_guid_for_technology_type(
+            "YAML File Secrets Collection"
+        )
+        body = {
+            "class": "TemplateRequestBody",
+            "templateGUID": template_guid,
+            "isOwnAnchor": True,
+            "placeholderPropertyValues": {
+                "fileSystemName": file_system_name,
+                "filePathName": file_path_name,
+                "fileName": file_name,
+                "description": description,
+                "fileType": file_type,
+                "fileExtension": file_extension,
+                "fileEncoding": file_encoding,
+                "versionIdentifier": version_identifier,
+            },
+        }
+        body_s = body_slimmer(body)
+        return await self._async_create_elem_from_template(body_s)
+
+    def create_secrets_store_element_from_template(
+            self,
+            file_path_name: str,
+            file_name: str,
+            description: str,
+            version_identifier: str,
+            file_system_name: Optional[str] = None,
+            file_type: str = "Open Metadata Secrets Store File",
+            file_extension: str = "omsecrets",
+            file_encoding: str = "YAML",
+    ) -> str:
+        """Create a YAML File Secrets Collection element from a template.
+
+        Parameters
+        ----------
+        file_path_name : str
+            Full path name of the secrets store file,
+            e.g. ``secrets/mySecrets.omsecrets``.
+        file_name : str
+            File name without enclosing directory names,
+            e.g. ``mySecrets.omsecrets``.
+        description : str
+            A description of the secrets store.
+        version_identifier : str
+            Version identifier, e.g. ``V1.0``.
+        file_system_name : str, optional
+            Name of the file system the secrets store file is hosted on.
+        file_type : str, optional
+            The type of the secrets store file.
+            Defaults to ``"Open Metadata Secrets Store File"``.
+        file_extension : str, optional
+            File extension of the secrets store file.
+            Defaults to ``"omsecrets"``.
+        file_encoding : str, optional
+            Encoding of the secrets store file.
+            Defaults to ``"YAML"``.
+
+        Returns
+        -------
+        str
+            The GUID of the newly created secrets store element.
+
+        Raises
+        ------
+        PyegeriaException
+            If there are issues in communications, message format, or Egeria errors.
+
+        Notes
+        -----
+        See: https://egeria-project.org/features/templated-cataloguing/overview/
+
+        The template is looked up by the technology type name
+        ``"YAML File Secrets Collection"``.  The equivalent manual body is:
+
+        ```json
+        {
+          "templateGUID": "130d819e-e17d-46bf-bfea-d09d862e341f",
+          "isOwnAnchor": true,
+          "placeholderPropertyValues": {
+            "fileSystemName": "",
+            "filePathName": "secrets/mySecrets.omsecrets",
+            "fileName": "mySecrets.omsecrets",
+            "description": "Add description",
+            "fileType": "Open Metadata Secrets Store File",
+            "fileExtension": "omsecrets",
+            "fileEncoding": "YAML",
+            "versionIdentifier": "V1.0"
+          }
+        }
+        ```
+        """
+        loop = asyncio.get_event_loop()
+        response = loop.run_until_complete(
+            self._async_create_secrets_store_element_from_template(
+                file_path_name, file_name, description, version_identifier,
+                file_system_name, file_type, file_extension, file_encoding,
+            )
+        )
+        return response
+
     async def _async_create_kafka_server_element_from_template(
             self,
             kafka_server: str,
@@ -1905,6 +2077,191 @@ class AutomatedCuration(ServerClient):
             )
         )
         return response
+
+    #
+    # Client-Side Secrets
+    # https://egeria-project.org/concepts/client-side-secret
+    #
+
+    async def _async_save_client_side_secret(
+        self,
+        secrets_store_guid: str,
+        body: dict,
+    ) -> None:
+        """Creates or replaces the details of a client-side secret in the requested secret store. Async version.
+
+        Parameters
+        ----------
+        secrets_store_guid : str
+            The unique identifier of the secrets store asset.
+        body : dict
+            A dict containing the secrets collection details. Must use class
+            ``SecretsCollectionRequestBody`` with a ``secretsCollection`` property.
+
+        Returns
+        -------
+        None
+
+        Raises
+        ------
+        PyegeriaException
+            If there are issues in communications, message format, or Egeria errors.
+
+        Notes
+        -----
+        Sample JSON body:
+        ```json
+        {
+          "class": "SecretsCollectionRequestBody",
+          "secretsCollection": {
+            "collectionName": "add secret name here",
+            "displayName": "add display name here",
+            "description": "add description here",
+            "refreshTimeInterval": 60,
+            "secrets": {
+              "secretName1": "secretValue1",
+              "secretName2": "secretValue2"
+            },
+            "tokenAPI": {
+              "httpRequestType": "GET",
+              "url": "Add URL for REST API call to retrieve bearer token.",
+              "contentType": "application/json",
+              "requestBody": {
+                "requestBodyProperty1": "value1"
+              },
+              "responseBodyMapping": {
+                "responseProperty1": "secretName1"
+              }
+            }
+          }
+        }
+        ```
+        """
+        validate_guid(secrets_store_guid)
+        url = f"{self.curation_command_root}/secrets-stores/{secrets_store_guid}/client-side-secret/save"
+        new_body = body_slimmer(body)
+        await self._async_make_request("POST", url, new_body)
+
+    @dynamic_catch
+    def save_client_side_secret(
+        self,
+        secrets_store_guid: str,
+        body: dict,
+    ) -> None:
+        """Creates or replaces the details of a client-side secret in the requested secret store.
+
+        Parameters
+        ----------
+        secrets_store_guid : str
+            The unique identifier of the secrets store asset.
+        body : dict
+            A dict containing the secrets collection details. Must use class
+            ``SecretsCollectionRequestBody`` with a ``secretsCollection`` property.
+
+        Returns
+        -------
+        None
+
+        Raises
+        ------
+        PyegeriaException
+            If there are issues in communications, message format, or Egeria errors.
+
+        Notes
+        -----
+        Sample JSON body:
+        ```json
+        {
+          "class": "SecretsCollectionRequestBody",
+          "secretsCollection": {
+            "collectionName": "add secret name here",
+            "displayName": "add display name here",
+            "description": "add description here",
+            "refreshTimeInterval": 60,
+            "secrets": {
+              "secretName1": "secretValue1",
+              "secretName2": "secretValue2"
+            },
+            "tokenAPI": {
+              "httpRequestType": "GET",
+              "url": "Add URL for REST API call to retrieve bearer token.",
+              "contentType": "application/json",
+              "requestBody": {
+                "requestBodyProperty1": "value1"
+              },
+              "responseBodyMapping": {
+                "responseProperty1": "secretName1"
+              }
+            }
+          }
+        }
+        ```
+        """
+        loop = asyncio.get_event_loop()
+        loop.run_until_complete(self._async_save_client_side_secret(secrets_store_guid, body))
+
+    async def _async_delete_client_side_secret(
+        self,
+        secrets_store_guid: str,
+        secret_name: str,
+    ) -> None:
+        """Deletes a client-side secret from the requested secret store. Async version.
+
+        Parameters
+        ----------
+        secrets_store_guid : str
+            The unique identifier of the secrets store asset.
+        secret_name : str
+            The name of the secret to delete.
+
+        Returns
+        -------
+        None
+
+        Raises
+        ------
+        PyegeriaException
+            If there are issues in communications, message format, or Egeria errors.
+
+        Notes
+        -----
+        See: https://egeria-project.org/concepts/client-side-secret
+        """
+        validate_guid(secrets_store_guid)
+        url = f"{self.curation_command_root}/secrets-stores/{secrets_store_guid}/client-side-secret/delete"
+        body = {"class": "NameRequestBody", "name": secret_name}
+        await self._async_make_request("POST", url, body)
+
+    @dynamic_catch
+    def delete_client_side_secret(
+        self,
+        secrets_store_guid: str,
+        secret_name: str,
+    ) -> None:
+        """Deletes a client-side secret from the requested secret store.
+
+        Parameters
+        ----------
+        secrets_store_guid : str
+            The unique identifier of the secrets store asset.
+        secret_name : str
+            The name of the secret to delete.
+
+        Returns
+        -------
+        None
+
+        Raises
+        ------
+        PyegeriaException
+            If there are issues in communications, message format, or Egeria errors.
+
+        Notes
+        -----
+        See: https://egeria-project.org/concepts/client-side-secret
+        """
+        loop = asyncio.get_event_loop()
+        loop.run_until_complete(self._async_delete_client_side_secret(secrets_store_guid, secret_name))
 
     #
     # Engine Actions

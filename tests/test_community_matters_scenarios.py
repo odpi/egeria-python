@@ -206,7 +206,8 @@ class CommunityMattersScenarioTester:
                 }
             }
             
-            guid = self.client.create_community(body=body)
+            response = self.client.create_community(body=body)
+            guid = response.get("guid") if isinstance(response, dict) else response
             
             if guid:
                 created_guids.append(guid)
@@ -333,7 +334,8 @@ class CommunityMattersScenarioTester:
                     }
                 }
                 
-                guid = self.client.create_community(body=body)
+                response = self.client.create_community(body=body)
+                guid = response.get("guid") if isinstance(response, dict) else response
                 
                 if guid:
                     created_guids.append(guid)
@@ -416,7 +418,8 @@ class CommunityMattersScenarioTester:
                 }
             }
             
-            template_guid = self.client.create_community(body=template_body)
+            response = self.client.create_community(body=template_body)
+            template_guid = response.get("guid") if isinstance(response, dict) else response
             
             if template_guid:
                 created_guids.append(template_guid)
@@ -438,7 +441,8 @@ class CommunityMattersScenarioTester:
                 }
             }
 
-            new_community_guid = self.client.create_community_from_template(body=from_template_body)
+            response = self.client.create_community_from_template(body=from_template_body)
+            new_community_guid = response.get("guid") if isinstance(response, dict) else response
             
             if new_community_guid:
                 created_guids.append(new_community_guid)
@@ -506,7 +510,8 @@ class CommunityMattersScenarioTester:
                 }
             }
             
-            guid = self.client.create_community(body=body)
+            response = self.client.create_community(body=body)
+            guid = response.get("guid") if isinstance(response, dict) else response
             
             if guid:
                 created_guids.append(guid)

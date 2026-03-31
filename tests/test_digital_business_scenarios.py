@@ -184,7 +184,8 @@ class DigitalBusinessScenarioTester:
                 }
             }
             
-            capability_guid = self.client.create_business_capability(body1)
+            response = self.client.create_business_capability(body1)
+            capability_guid = response.get("guid") if isinstance(response, dict) else response
             if capability_guid:
                 created_guids.append(capability_guid)
                 self.created_capabilities.append(capability_guid)
@@ -205,7 +206,8 @@ class DigitalBusinessScenarioTester:
                 }
             }
             
-            supporting_guid = self.client.create_business_capability(body2)
+            response = self.client.create_business_capability(body2)
+            supporting_guid = response.get("guid") if isinstance(response, dict) else response
             if supporting_guid:
                 created_guids.append(supporting_guid)
                 self.created_capabilities.append(supporting_guid)
@@ -294,7 +296,8 @@ class DigitalBusinessScenarioTester:
                 }
             }
             
-            capability_guid = self.client.create_business_capability(capability_body)
+            response = self.client.create_business_capability(capability_body)
+            capability_guid = response.get("guid") if isinstance(response, dict) else response
             if capability_guid:
                 created_guids.append(capability_guid)
                 self.created_capabilities.append(capability_guid)
@@ -317,7 +320,8 @@ class DigitalBusinessScenarioTester:
                 }
             }
             
-            element_guid = self.client.create_business_capability(element_body)
+            response = self.client.create_business_capability(element_body)
+            element_guid = response.get("guid") if isinstance(response, dict) else response
             if element_guid:
                 created_guids.append(element_guid)
                 self.created_capabilities.append(element_guid)
@@ -401,7 +405,8 @@ class DigitalBusinessScenarioTester:
                 }
             }
             
-            element_guid = self.client.create_business_capability(element_body)
+            response = self.client.create_business_capability(element_body)
+            element_guid = response.get("guid") if isinstance(response, dict) else response
             if element_guid:
                 created_guids.append(element_guid)
                 self.created_capabilities.append(element_guid)
@@ -484,7 +489,8 @@ class DigitalBusinessScenarioTester:
                 }
             }
             
-            guid = self.client.create_business_capability(body)
+            response = self.client.create_business_capability(body)
+            guid = response.get("guid") if isinstance(response, dict) else response
             
             if guid:
                 created_guids.append(guid)
@@ -582,7 +588,8 @@ class DigitalBusinessScenarioTester:
                     }
                 }
                 
-                guid = self.client.create_business_capability(body)
+                response = self.client.create_business_capability(body)
+                guid = response.get("guid") if isinstance(response, dict) else response
                 if guid:
                     created_guids.append(guid)
                     self.created_capabilities.append(guid)

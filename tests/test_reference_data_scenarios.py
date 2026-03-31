@@ -148,7 +148,8 @@ class ReferenceDataScenarioTester:
                 "description": vv_data.description,
             }
         }
-        guid = self.client.create_valid_value_definition(body)
+        response = self.client.create_valid_value_definition(body)
+        guid = response.get("guid") if isinstance(response, dict) else response
         if guid:
             self.created_valid_values.append(guid)
             vv_data.guid = guid

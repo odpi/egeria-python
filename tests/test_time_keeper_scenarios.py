@@ -150,7 +150,7 @@ class TimeKeeperScenarioTester:
             
             # 1. Create two context events
             ce1_qname = f"CE1::{self.test_run_id}"
-            ce1_guid = self.tk_client.create_context_event({
+            response = self.tk_client.create_context_event({
                 "class": "NewElementRequestBody",
                 "properties": {
                     "class": "ContextEventProperties",
@@ -158,11 +158,12 @@ class TimeKeeperScenarioTester:
                     "displayName": "Parent Event",
                 }
             })
+            ce1_guid = response.get("guid") if isinstance(response, dict) else response
             created.append(ce1_guid)
             console.print(f"  ✓ Created Parent Context Event: {ce1_guid}")
 
             ce2_qname = f"CE2::{self.test_run_id}"
-            ce2_guid = self.tk_client.create_context_event({
+            response = self.tk_client.create_context_event({
                 "class": "NewElementRequestBody",
                 "properties": {
                     "class": "ContextEventProperties",
@@ -170,6 +171,7 @@ class TimeKeeperScenarioTester:
                     "displayName": "Child Event",
                 }
             })
+            ce2_guid = response.get("guid") if isinstance(response, dict) else response
             created.append(ce2_guid)
             console.print(f"  ✓ Created Child Context Event: {ce2_guid}")
 
@@ -197,7 +199,8 @@ class TimeKeeperScenarioTester:
                   },
 
                 }
-            asset_guid = self.asset_maker.create_asset(body=asset_body)
+            response = self.asset_maker.create_asset(body=asset_body)
+            asset_guid = response.get("guid") if isinstance(response, dict) else response
             console.print(asset_guid)
             created.append(asset_guid)
             console.print(f"  ✓ Created Evidence Asset: {asset_guid}")

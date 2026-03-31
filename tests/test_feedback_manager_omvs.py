@@ -2,7 +2,7 @@
 SPDX-License-Identifier: Apache-2.0
 Copyright Contributors to the ODPi Egeria project.
 
-This module is for testing the FeedbackManager class and methods.
+This module is for testing the ServerClient class and methods.
 The routines assume that pytest is being used as the test tool and framework.
 
 A running Egeria environment is needed to run these tests.
@@ -24,12 +24,12 @@ from pyegeria.core._exceptions import (
     PyegeriaAPIException,
     PyegeriaUnauthorizedException,
 )
-from pyegeria.omvs.feedback_manager import FeedbackManager
-
+# from pyegeria.omvs.feedback_manager import ServerClient
+from pyegeria.core._server_client import ServerClient
 disable_ssl_warnings = True
 
 
-class TestFeedbackManager:
+class TestServerClient:
     good_platform1_url = "https://localhost:9443"
     good_platform2_url = "https://oak.local:9443"
     bad_platform1_url = "https://localhost:9443"
@@ -51,12 +51,12 @@ class TestFeedbackManager:
     good_view_server_2 = "qs-view-server"
     bad_server_1 = "coco"
     bad_server_2 = ""
-    test_element_guid = "49bc1002-1b0a-4194-9305-3607c713726d"
+    test_element_guid = "eced5eee-1230-484c-b0aa-d2eeca33f48f"
 
     def test_add_like_to_element(self):
         """Test adding a like to an element"""
         try:
-            f_client = FeedbackManager(
+            f_client = ServerClient(
                 self.good_view_server_2,
                 self.good_platform1_url,
                 user_id=self.good_user_2,
@@ -79,7 +79,7 @@ class TestFeedbackManager:
             duration = time.perf_counter() - start_time
             
             print(f"\n\tDuration was {duration} seconds")
-            print(f"\n\tResponse was: {json.dumps(response, indent=2)}")
+            print(f"\n\tResponse was:\n {json.dumps(response, indent=2)}")
             
             assert True, "Like added successfully"
 
@@ -104,7 +104,7 @@ class TestFeedbackManager:
     def test_add_rating_to_element(self):
         """Test adding a rating to an element"""
         try:
-            f_client = FeedbackManager(
+            f_client = ServerClient(
                 self.good_view_server_2,
                 self.good_platform1_url,
                 user_id=self.good_user_2,
@@ -119,8 +119,12 @@ class TestFeedbackManager:
             
             # Rating body with star rating and review
             rating_body = {
-                "starRating": 5,
-                "review": "Excellent element!"
+                "class": "NewAttachmentRequestBody",
+                "properties": {
+                    "class": "RatingProperties",
+                    "starRating": "TWO_STARS",
+                    "review": "Junk"
+                }
             }
             
             start_time = time.perf_counter()
@@ -157,7 +161,7 @@ class TestFeedbackManager:
     def test_get_attached_likes(self):
         """Test retrieving likes attached to an element"""
         try:
-            f_client = FeedbackManager(
+            f_client = ServerClient(
                 self.good_view_server_2,
                 self.good_platform1_url,
                 user_id=self.good_user_2,
@@ -167,12 +171,11 @@ class TestFeedbackManager:
             token = f_client.create_egeria_bearer_token(
                 self.good_user_2, self.good_user_2_pwd
             )
-            
-            test_element_guid = "test-element-guid-123"
+
             
             start_time = time.perf_counter()
             response = f_client.get_attached_likes(
-                test_element_guid,
+                self.test_element_guid,
                 start_from=0,
                 page_size=50
             )
@@ -204,7 +207,7 @@ class TestFeedbackManager:
     def test_get_attached_ratings(self):
         """Test retrieving ratings attached to an element"""
         try:
-            f_client = FeedbackManager(
+            f_client = ServerClient(
                 self.good_view_server_2,
                 self.good_platform1_url,
                 user_id=self.good_user_2,
@@ -215,11 +218,10 @@ class TestFeedbackManager:
                 self.good_user_2, self.good_user_2_pwd
             )
             
-            test_element_guid = "test-element-guid-123"
-            
+
             start_time = time.perf_counter()
             response = f_client.get_attached_ratings(
-                test_element_guid,
+                self.test_element_guid,
                 start_from=0,
                 page_size=50
             )
@@ -251,7 +253,7 @@ class TestFeedbackManager:
     def test_remove_like_from_element(self):
         """Test removing a like from an element"""
         try:
-            f_client = FeedbackManager(
+            f_client = ServerClient(
                 self.good_view_server_2,
                 self.good_platform1_url,
                 user_id=self.good_user_2,
@@ -261,13 +263,10 @@ class TestFeedbackManager:
             token = f_client.create_egeria_bearer_token(
                 self.good_user_2, self.good_user_2_pwd
             )
-            
-            test_element_guid = "test-element-guid-123"
-            
+
             start_time = time.perf_counter()
             response = f_client.remove_like_from_element(
-                test_element_guid,
-                body={}
+                self.test_element_guid
             )
             duration = time.perf_counter() - start_time
             
@@ -297,7 +296,7 @@ class TestFeedbackManager:
     def test_remove_rating_from_element(self):
         """Test removing a rating from an element"""
         try:
-            f_client = FeedbackManager(
+            f_client = ServerClient(
                 self.good_view_server_2,
                 self.good_platform1_url,
                 user_id=self.good_user_2,
@@ -307,13 +306,11 @@ class TestFeedbackManager:
             token = f_client.create_egeria_bearer_token(
                 self.good_user_2, self.good_user_2_pwd
             )
-            
-            test_element_guid = "test-element-guid-123"
+
             
             start_time = time.perf_counter()
             response = f_client.remove_rating_from_element(
-                test_element_guid,
-                body={}
+                self.test_element_guid
             )
             duration = time.perf_counter() - start_time
             
@@ -342,4 +339,4 @@ class TestFeedbackManager:
 
 
 if __name__ == "__main__":
-    print("Running FeedbackManager unit tests...")
+    print("Running ServerClient unit tests...")

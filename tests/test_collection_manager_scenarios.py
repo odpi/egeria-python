@@ -204,12 +204,13 @@ class CollectionManagerScenarioTester:
                 }
             }
             
-            guid = self.client.create_collection(
+            response = self.client.create_collection(
                 display_name=collection_data.display_name,
                 description=collection_data.description,
                 category=collection_data.category,
                 body=body
             )
+            guid = response.get("guid") if isinstance(response, dict) else response
             
             if guid:
                 created_guids.append(guid)
@@ -331,12 +332,13 @@ class CollectionManagerScenarioTester:
                 }
             }
             
-            root_guid = self.client.create_collection(
+            response = self.client.create_collection(
                 display_name=root_data.display_name,
                 description=root_data.description,
                 category=root_data.category,
                 body=root_body
             )
+            root_guid = response.get("guid") if isinstance(response, dict) else response
             
             if root_guid:
                 created_guids.append(root_guid)
@@ -362,12 +364,13 @@ class CollectionManagerScenarioTester:
                     }
                 }
                 
-                child_guid = self.client.create_collection(
+                response = self.client.create_collection(
                     display_name=child_data.display_name,
                     description=child_data.description,
                     category=child_data.category,
                     body=child_body
                 )
+                child_guid = response.get("guid") if isinstance(response, dict) else response
                 
                 if child_guid:
                     created_guids.append(child_guid)
@@ -459,7 +462,8 @@ class CollectionManagerScenarioTester:
                 }
             }
             
-            product_guid = self.client.create_digital_product(product_body)
+            response = self.client.create_digital_product(product_body)
+            product_guid = response.get("guid") if isinstance(response, dict) else response
             
             if product_guid:
                 created_guids.append(product_guid)
@@ -567,12 +571,13 @@ class CollectionManagerScenarioTester:
                 }
             }
             
-            parent_guid = self.client.create_collection(
+            response = self.client.create_collection(
                 display_name=parent_data.display_name,
                 description=parent_data.description,
                 category=parent_data.category,
                 body=parent_body
             )
+            parent_guid = response.get("guid") if isinstance(response, dict) else response
             
             if parent_guid:
                 created_guids.append(parent_guid)
@@ -598,12 +603,13 @@ class CollectionManagerScenarioTester:
                     }
                 }
                 
-                member_guid = self.client.create_collection(
+                response = self.client.create_collection(
                     display_name=member_data.display_name,
                     description=member_data.description,
                     category=member_data.category,
                     body=member_body
                 )
+                member_guid = response.get("guid") if isinstance(response, dict) else response
                 
                 if member_guid:
                     created_guids.append(member_guid)

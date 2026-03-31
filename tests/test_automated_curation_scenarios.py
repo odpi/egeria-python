@@ -436,6 +436,101 @@ class AutomatedCurationScenarioTester:
                 error=e
             )
     
+    def scenario_manage_client_side_secrets(self) -> TestResult:
+        """Scenario: Create a secrets store, save and delete a client-side secret, then clean up.
+
+        Steps:
+        1. Create a secrets store file element from the standard template.
+        2. Save a client-side secret into the new store.
+        3. Delete the client-side secret from the store.
+        4. Delete the secrets store element.
+
+        Requires the Core Content Pack to be loaded so that the default Secrets Store
+        File template (GUID ``130d819e-e17d-46bf-bfea-d09d862e341f``) is available.
+        """
+        scenario_name = "Manage Client-Side Secrets"
+        start_time = time.perf_counter()
+        secrets_store_guid = None
+
+        try:
+            console.print(f"\n[bold blue]▶ Running: {scenario_name}[/bold blue]")
+
+            # --- Step 1: Create secrets store ---
+            console.print("  → Creating secrets store element from template...")
+            ts = self.test_run_id
+            response = self.client.create_secrets_store_element_from_template(
+                file_path_name=f"secrets/scenario-{ts}.omsecrets",
+                file_name=f"scenario-{ts}.omsecrets",
+                description=f"Scenario test secrets store {ts}",
+                version_identifier="V1.0",
+            )
+            secrets_store_guid = response.get("guid") if isinstance(response, dict) else response
+            if not secrets_store_guid:
+                raise RuntimeError("create_secrets_store_element_from_template returned no GUID")
+            console.print(f"  ✓ Created secrets store: {secrets_store_guid}")
+
+            # --- Step 2: Save a client-side secret ---
+            console.print("  → Saving a client-side secret...")
+            save_body = {
+                "class": "SecretsCollectionRequestBody",
+                "secretsCollection": {
+                    "collectionName": f"scenario-secret-{ts}",
+                    "displayName": "Scenario Test Secret",
+                    "description": "Created by automated curation scenario test",
+                    "refreshTimeInterval": 60,
+                    "secrets": {
+                        "scenarioKey": "scenarioValue",
+                    },
+                },
+            }
+            self.client.save_client_side_secret(secrets_store_guid, save_body)
+            console.print("  ✓ Saved client-side secret")
+
+            # --- Step 3: Delete the client-side secret ---
+            console.print("  → Deleting the client-side secret...")
+            self.client.delete_client_side_secret(secrets_store_guid, "scenarioKey")
+            console.print("  ✓ Deleted client-side secret")
+
+            duration = time.perf_counter() - start_time
+            return TestResult(
+                scenario_name=scenario_name,
+                status="PASSED",
+                duration=duration,
+                message=f"Full secrets store lifecycle passed (store GUID: {secrets_store_guid})",
+            )
+
+        except PyegeriaAPIException as e:
+            duration = time.perf_counter() - start_time
+            console.print(f"  [yellow]⚠ API Exception: {str(e)[:120]}[/yellow]")
+            return TestResult(
+                scenario_name=scenario_name,
+                status="WARNING",
+                duration=duration,
+                message=f"API Exception: {str(e)[:80]}",
+                error=e,
+            )
+        except PyegeriaTimeoutException as e:
+            duration = time.perf_counter() - start_time
+            console.print(f"  [yellow]⚠ Timeout in {scenario_name}; continuing.[/yellow]")
+            return TestResult(
+                scenario_name=scenario_name,
+                status="WARNING",
+                duration=duration,
+                message=f"Timeout: {str(e)[:100]}",
+                error=e,
+            )
+        except Exception as e:
+            duration = time.perf_counter() - start_time
+            console.print(f"  [red]✗ Unexpected error: {str(e)}[/red]")
+            print_basic_exception(e) if isinstance(e, PyegeriaException) else console.print_exception()
+            return TestResult(
+                scenario_name=scenario_name,
+                status="FAILED",
+                duration=duration,
+                message=str(e)[:100],
+                error=e,
+            )
+
     def run_all_scenarios(self):
         """Execute all test scenarios"""
         console.print(Panel.fit(
@@ -454,6 +549,7 @@ class AutomatedCurationScenarioTester:
             self.results.append(self.scenario_monitor_engine_actions())
             self.results.append(self.scenario_explore_technology_type_details())
             self.results.append(self.scenario_explore_technology_hierarchy())
+            self.results.append(self.scenario_manage_client_side_secrets())
             
             # Print summary
             self.print_results_summary()

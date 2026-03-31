@@ -241,7 +241,8 @@ class NotificationManagerScenarioTester:
                 }
             }
             
-            notification_type_guid = self.gov_officer.create_governance_definition(body=notification_body)
+            response = self.gov_officer.create_governance_definition(body=notification_body)
+            notification_type_guid = response.get("guid") if isinstance(response, dict) else response
             if notification_type_guid:
                 created_guids.append(notification_type_guid)
                 self.created_notification_types.append(notification_type_guid)
@@ -261,7 +262,8 @@ class NotificationManagerScenarioTester:
                 }
             }
             
-            monitored_resource_guid = self.collection_client.create_collection(body=resource_body)
+            response = self.collection_client.create_collection(body=resource_body)
+            monitored_resource_guid = response.get("guid") if isinstance(response, dict) else response
             if monitored_resource_guid:
                 created_guids.append(monitored_resource_guid)
                 self.created_collections.append(monitored_resource_guid)
@@ -348,7 +350,8 @@ class NotificationManagerScenarioTester:
                 }
             }
             
-            notification_type_guid = self.gov_officer.create_governance_definition(notification_body)
+            response = self.gov_officer.create_governance_definition(notification_body)
+            notification_type_guid = response.get("guid") if isinstance(response, dict) else response
             if notification_type_guid:
                 created_guids.append(notification_type_guid)
                 self.created_notification_types.append(notification_type_guid)
@@ -368,7 +371,8 @@ class NotificationManagerScenarioTester:
                 }
             }
             
-            subscriber_guid = self.actor_client.create_actor_profile(subscriber_body)
+            response = self.actor_client.create_actor_profile(subscriber_body)
+            subscriber_guid = response.get("guid") if isinstance(response, dict) else response
             if subscriber_guid:
                 created_guids.append(subscriber_guid)
                 self.created_actors.append(subscriber_guid)
@@ -454,7 +458,8 @@ class NotificationManagerScenarioTester:
                 }
             }
             
-            notification_type_guid = self.gov_officer.create_governance_definition(notification_body)
+            response = self.gov_officer.create_governance_definition(notification_body)
+            notification_type_guid = response.get("guid") if isinstance(response, dict) else response
             if notification_type_guid:
                 created_guids.append(notification_type_guid)
                 self.created_notification_types.append(notification_type_guid)
@@ -474,7 +479,8 @@ class NotificationManagerScenarioTester:
                 }
             }
             
-            monitored_resource_guid = self.collection_client.create_collection(body=resource_body_create)
+            response = self.collection_client.create_collection(body=resource_body_create)
+            monitored_resource_guid = response.get("guid") if isinstance(response, dict) else response
             if monitored_resource_guid:
                 created_guids.append(monitored_resource_guid)
                 self.created_collections.append(monitored_resource_guid)
@@ -495,7 +501,8 @@ class NotificationManagerScenarioTester:
                 }
             }
             
-            subscriber_guid = self.actor_client.create_actor_profile(subscriber_body_create)
+            response = self.actor_client.create_actor_profile(subscriber_body_create)
+            subscriber_guid = response.get("guid") if isinstance(response, dict) else response
             if subscriber_guid:
                 created_guids.append(subscriber_guid)
                 self.created_actors.append(subscriber_guid)

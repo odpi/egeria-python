@@ -151,7 +151,8 @@ class LocationScenarioTester:
                 "description": loc_data.description,
             }
         }
-        guid = self.client.create_location(body)
+        response = self.client.create_location(body)
+        guid = response.get("guid") if isinstance(response, dict) else response
         if guid:
             self.created_locations.append(guid)
             loc_data.guid = guid

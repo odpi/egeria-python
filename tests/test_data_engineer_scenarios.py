@@ -172,7 +172,8 @@ class DataEngineerScenarioTester:
             )
             
             console.print("  Creating test TabularDataSet...")
-            guid = self.asset_maker.create_asset(body=body)
+            response = self.asset_maker.create_asset(body=body)
+            guid = response.get("guid") if isinstance(response, dict) else response
             created_guids.append(guid)
             self.created_assets.append(guid)
             console.print(f"  ✓ Created asset with GUID: {guid}")

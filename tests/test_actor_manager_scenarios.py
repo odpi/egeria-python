@@ -196,7 +196,8 @@ class ActorManagerScenarioTester:
                 "description": profile_data.description,
             }
         }
-        guid = self.client.create_actor_profile(body)
+        response= self.client.create_actor_profile(body)
+        guid = response.get('guid',None)
         if guid:
             self.created_profiles.append(guid)
             profile_data.guid = guid
@@ -217,7 +218,8 @@ class ActorManagerScenarioTester:
         if role_data.scope:
             body["properties"]["scope"] = role_data.scope
             
-        guid = self.client.create_actor_role(body)
+        response =  self.client.create_actor_role(body)
+        guid = response.get('guid',None)
         if guid:
             self.created_roles.append(guid)
             role_data.guid = guid
@@ -234,7 +236,8 @@ class ActorManagerScenarioTester:
                 "userId": identity_data.user_id,
             }
         }
-        guid = self.client.create_user_identity(body)
+        response =  self.client.create_user_identity(body)
+        guid = response.get('guid',None)
         if guid:
             self.created_identities.append(guid)
             identity_data.guid = guid
@@ -279,7 +282,14 @@ class ActorManagerScenarioTester:
             }
             
             for key, profile in profiles.items():
-                guid = self._create_actor_profile(profile)
+                response = self._create_actor_profile(profile)
+                if isinstance(response,dict):
+                    guid = response.get('guid',None)
+                else:
+                    if isinstance(response,str):
+                        guid = response
+                    else:
+                        guid = None
                 created_guids.append(guid)
                 console.print(f"  ✓ Created profile: {profile.display_name}")
             
@@ -520,7 +530,7 @@ class ActorManagerScenarioTester:
             ]
             
             for identity in identities:
-                guid = self._create_user_identity(identity)
+                guid =  self._create_user_identity(identity)
                 created_guids.append(guid)
                 console.print(f"  ✓ Created user identity: {identity.user_id}")
             
@@ -605,7 +615,8 @@ class ActorManagerScenarioTester:
                     "contactMethodValue": "scenario4@example.com"
                 }
             }
-            contact_guid = self.client.create_contact_details(contact_body)
+            response = self.client.create_contact_details(contact_body)
+            contact_guid = response.get('guid',None)
             created_guids.append(contact_guid)
             console.print(f"  [green]✓[/green] Created Contact Details: {contact_guid}")
 

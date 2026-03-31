@@ -63,7 +63,8 @@ class SchemaMakerScenarioTester:
                     "displayName": "Scenario Schema Type",
                 }
             }
-            guid = self.client.create_schema_type(body)
+            response = self.client.create_schema_type(body)
+            guid = response.get("guid") if isinstance(response, dict) else response
             
             # 2. Update it
             update_body = {

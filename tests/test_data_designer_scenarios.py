@@ -230,7 +230,8 @@ class DataDesignerScenarioTester:
                 }
             }
             
-            guid = self.client.create_data_structure(body)
+            response = self.client.create_data_structure(body)
+            guid = response.get("guid") if isinstance(response, dict) else response
             
             if guid:
                 created_guids.append(guid)
@@ -357,7 +358,8 @@ class DataDesignerScenarioTester:
                 }
             }
             
-            struct_guid = self.client.create_data_structure(struct_body)
+            response = self.client.create_data_structure(struct_body)
+            struct_guid = response.get("guid") if isinstance(response, dict) else response
             
             if struct_guid:
                 created_guids.append(struct_guid)
@@ -388,7 +390,8 @@ class DataDesignerScenarioTester:
                     }
                 }
                 
-                field_guid = self.client.create_data_field(field_body)
+                response = self.client.create_data_field(field_body)
+                field_guid = response.get("guid") if isinstance(response, dict) else response
                 
                 if field_guid:
                     created_guids.append(field_guid)
@@ -461,7 +464,8 @@ class DataDesignerScenarioTester:
                     }
                 }
 
-                class_guid = self.client.create_data_class(class_body)
+                response = self.client.create_data_class(class_body)
+                class_guid = response.get("guid") if isinstance(response, dict) else response
 
                 if class_guid:
                     created_guids.append(class_guid)
@@ -527,7 +531,8 @@ class DataDesignerScenarioTester:
                 }
             }
 
-            spec_guid = self.client.create_data_value_specification(spec_body)
+            response = self.client.create_data_value_specification(spec_body)
+            spec_guid = response.get("guid") if isinstance(response, dict) else response
             if spec_guid:
                 created_guids.append(spec_guid)
                 self.created_data_classes.append(spec_guid)  # Using this list for cleanup
@@ -545,7 +550,8 @@ class DataDesignerScenarioTester:
                     "description": "A test data grain for lifecycle testing"
                 }
             }
-            grain_guid = self.client.create_data_grain(grain_body)
+            response = self.client.create_data_grain(grain_body)
+            grain_guid = response.get("guid") if isinstance(response, dict) else response
             if grain_guid:
                 created_guids.append(grain_guid)
                 self.created_data_classes.append(grain_guid)

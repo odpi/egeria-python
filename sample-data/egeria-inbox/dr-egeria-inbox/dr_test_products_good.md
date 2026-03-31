@@ -292,7 +292,7 @@ ___
 DigitalProduct::SalesForecast::Pipeline::1.2
 
 ## Digital Product 2
-PDR::DigitalProduct::Sales-Forecast-Data-Feed
+Sales Forecast Data Feed
 
 ## Dependency Description
 The Sales Forecast Pipeline Product is listed and discoverable via the

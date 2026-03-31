@@ -96,6 +96,28 @@ class SecurityOfficerScenarioTester:
             )
             console.print(f"✓ Platform GUID discovered: {self.platform_guid}")
 
+            # Pre-clean the known scenario test user so scenario 2 always starts fresh.
+            try:
+                self.client.delete_user_account(PLATFORM_NAME, "freddiemercury", platform_guid=self.platform_guid)
+                console.print("✓ Pre-deleted existing 'freddiemercury' account")
+            except Exception:
+                console.print("- No pre-existing 'freddiemercury' account to delete")
+
+            # Also delete the personal profile for freddiemercury if it still exists from a
+            # prior interrupted run — the profile is independent of the security account.
+            try:
+                profile_guid = self.actor_client.get_guid_for_name(
+                    "PersonProperties::freddiemercury",
+                    property_name=["qualifiedName"],
+                )
+                if profile_guid and profile_guid != "NO_ELEMENTS_FOUND":
+                    self.actor_client.delete_actor_profile(profile_guid, cascade=True)
+                    console.print(f"✓ Pre-deleted existing 'freddiemercury' profile: {profile_guid}")
+                else:
+                    console.print("- No pre-existing 'freddiemercury' profile to delete")
+            except Exception:
+                console.print("- No pre-existing 'freddiemercury' profile to delete")
+
             console.print(f"✓ Connected to {PLATFORM_URL}")
             console.print(f"✓ Authenticated as {USER_ID}")
             console.print(f"✓ Test Run ID: {self.test_run_id}\n")
@@ -250,15 +272,13 @@ class SecurityOfficerScenarioTester:
 
         console.print(f"\n[bold blue]▶ Scenario 2: {scenario_name}[/bold blue]")
         try:
-            # 1) Gary deletes freddiemercury's account (ensure clean start)
-            # Use gary client for deletion
+            # 1) Ensure no leftover account from a prior run (setup() already attempted this;
+            #    this is a redundant safety-net delete immediately before creation).
             try:
-                # Check for existence first to avoid 500 if not there (though delete usually handles it)
-                # But per user: "if the account isn't there that's fine. If it is there delete it if not there continue"
                 await self.client._async_delete_user_account(PLATFORM_NAME, account_user_id, platform_guid=self.platform_guid)
-                console.print(f"  ✓ (Step 1) Gary deleted existing account for {account_user_id}")
+                console.print(f"  ✓ (Step 1) Deleted any pre-existing account for {account_user_id}")
             except Exception:
-                console.print(f"  - (Step 1) No existing account for {account_user_id} to delete (or already clean)")
+                console.print(f"  - (Step 1) No pre-existing account for {account_user_id} — clean to create")
 
             # 2) Gary creates a new account for Freddie
             account_body = {
@@ -332,7 +352,8 @@ class SecurityOfficerScenarioTester:
                     "description": "Beloved singer and song-writer."
                 }
             }
-            profile_guid = await freddie_new.my_profile._async_add_my_profile(profile_body)
+            response = await freddie_new.my_profile._async_add_my_profile(profile_body)
+            profile_guid = response.get("guid") if isinstance(response, dict) else response
             self.created_profiles.append(profile_guid)
             console.print(f"  ✓ (Step 6) Freddie created his own metadata profile")
 
@@ -426,6 +447,78 @@ class SecurityOfficerScenarioTester:
             console.print(f"\n[bold red]✗ {failed} scenario(s) failed[/bold red]\n")
             return 1
 
+    def scenario_3_security_access_control_lifecycle(self) -> TestResult:
+        """Full lifecycle test for security access controls: set → get → delete."""
+        scenario_name = "Scenario 3: Security Access Control Lifecycle"
+        start_time = time.perf_counter()
+        try:
+            console.print(f"\n[bold blue]▶ Running: {scenario_name}[/bold blue]")
+
+            ts = self.test_run_id
+            control_name = f"test-ctrl-{ts}"
+
+            # --- Step 1: Set (create) a security access control ---
+            console.print("  → Setting security access control...")
+            body = {
+                "class": "SecurityAccessControlRequestBody",
+                "securityAccessControl": {
+                    "controlName": control_name,
+                    "displayName": "Scenario Test Control",
+                    "description": f"Security access control created by scenario test {ts}",
+                    "controlTypeName": "ScenarioTestControl",
+                    "associatedSecurityList": {
+                        "readOperation": ["callie", "erinoverview"]
+                    },
+                    "securityLabels": [],
+                    "securityProperties": {"environment": "scenario-test"},
+                },
+            }
+            self.client.set_security_access_control(
+                PLATFORM_NAME, body, platform_guid=self.platform_guid
+            )
+            console.print(f"  ✓ Set security access control: {control_name}")
+
+            # --- Step 2: Get the control back ---
+            console.print("  → Retrieving security access control...")
+            control = self.client.get_security_access_control(
+                PLATFORM_NAME, control_name, platform_guid=self.platform_guid
+            )
+            console.print(f"  ✓ Retrieved: {control}")
+
+            # --- Step 3: Update the control (set with new description) ---
+            console.print("  → Updating security access control...")
+            body["securityAccessControl"]["description"] = f"Updated description {ts}"
+            self.client.set_security_access_control(
+                PLATFORM_NAME, body, platform_guid=self.platform_guid
+            )
+            console.print("  ✓ Updated security access control")
+
+            # --- Step 4: Delete the control ---
+            console.print("  → Deleting security access control...")
+            self.client.delete_security_access_control(
+                PLATFORM_NAME, control_name, platform_guid=self.platform_guid
+            )
+            console.print(f"  ✓ Deleted security access control: {control_name}")
+
+            duration = time.perf_counter() - start_time
+            return TestResult(
+                scenario_name=scenario_name,
+                status="PASSED",
+                duration=duration,
+                message=f"Full lifecycle completed for control '{control_name}'",
+            )
+
+        except Exception as e:
+            duration = time.perf_counter() - start_time
+            console.print(f"  [yellow]⚠ {scenario_name}: {str(e)}[/yellow]")
+            return TestResult(
+                scenario_name=scenario_name,
+                status="WARNING",
+                duration=duration,
+                message=str(e),
+                error=e,
+            )
+
     def run_all_scenarios(self):
         """Execute all test scenarios"""
         if not self.setup():
@@ -434,6 +527,7 @@ class SecurityOfficerScenarioTester:
         try:
             self.results.append(self.scenario_1_user_lifecycle())
             self.results.append(self.scenario_2_coco_manage_users())
+            self.results.append(self.scenario_3_security_access_control_lifecycle())
 
             self.cleanup_created_users()
             return self.generate_report()

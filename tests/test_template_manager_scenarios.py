@@ -145,7 +145,8 @@ class TemplateScenarioTester:
                 }
             }
             
-            guid = self.tech.expert.create_metadata_element(body)
+            response = self.tech.expert.create_metadata_element(body)
+            guid = response.get("guid") if isinstance(response, dict) else response
             self.created_elements.append(guid)
             created_in_scenario.append(guid)
             console.print(f"  [green]✓[/green] Created base element: {guid}")
@@ -177,7 +178,8 @@ class TemplateScenarioTester:
                     }
                 }
             }
-            new_guid = self.tech.expert.create_metadata_element_from_template(from_template_body)
+            response = self.tech.expert.create_metadata_element_from_template(from_template_body)
+            new_guid = response.get("guid") if isinstance(response, dict) else response
             self.created_elements.append(new_guid)
             created_in_scenario.append(new_guid)
             console.print(f"  [green]✓[/green] Created new element from template: {new_guid}")
@@ -215,7 +217,7 @@ class TemplateScenarioTester:
         try:
             # 1. Create a "parent" element (e.g. an Asset)
             qname_asset = self._unique_qname("Asset")
-            asset_guid = self.tech.expert.create_metadata_element({
+            response = self.tech.expert.create_metadata_element({
                 "class": "NewOpenMetadataElementRequestBody",
                 "typeName": "Asset",
                 "properties": {
@@ -225,12 +227,13 @@ class TemplateScenarioTester:
                     }
                 }
             })
+            asset_guid = response.get("guid") if isinstance(response, dict) else response
             self.created_elements.append(asset_guid)
             created_in_scenario.append(asset_guid)
             
             # 2. Create a template element
             qname_template = self._unique_qname("CatalogTemplate")
-            template_guid = self.tech.expert.create_metadata_element({
+            response = self.tech.expert.create_metadata_element({
                 "class": "NewOpenMetadataElementRequestBody",
                 "typeName": "Referenceable",
                 "properties": {
@@ -240,6 +243,7 @@ class TemplateScenarioTester:
                     }
                 }
             })
+            template_guid = response.get("guid") if isinstance(response, dict) else response
             self.created_elements.append(template_guid)
             created_in_scenario.append(template_guid)
             
