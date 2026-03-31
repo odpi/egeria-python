@@ -178,3 +178,183 @@ class SecurityOfficer(ServerClient):
                 governance_zone_guid, nested_governance_zone_guid, body
             )
         )
+
+    # =====================================================================
+    # Security Access Controls
+    # =====================================================================
+
+    @dynamic_catch
+    async def _async_set_security_access_control(
+        self,
+        platform_name: str,
+        body: Union[dict, Any],
+        platform_guid: str = None,
+    ) -> None:
+        """Set up or update a security access control in the platform metadata security connector.
+        Async version.
+
+        Parameters
+        ----------
+        platform_name : str
+            Name of the platform to update (used to look up its GUID unless ``platform_guid``
+            is provided directly).
+        body : dict or SecurityAccessControlRequestBody
+            Request body.  Expected shape::
+
+                {
+                    "class": "SecurityAccessControlRequestBody",
+                    "securityAccessControl": {
+                        "controlName": "<name>",
+                        "displayName": "",
+                        "description": "",
+                        "controlTypeName": "",
+                        "associatedSecurityList": {
+                            "operationName": ["user1", "user2"]
+                        },
+                        "mappingProperties": {"property1": "value1"},
+                        "securityLabels": [],
+                        "securityProperties": {"property1": "value1"},
+                        "otherProperties": {"property1": "value1"}
+                    }
+                }
+
+        platform_guid : str, optional
+            Pre-resolved GUID of the platform, bypassing the name lookup.
+        """
+        if not platform_guid:
+            platform_guid = await self.__get_platform_guid__(platform_name)
+        url = f"{self.security_officer_base_url}/platforms/{platform_guid}/security-access-control"
+
+        if hasattr(body, "model_dump_json"):
+            payload = body.model_dump_json(exclude_none=True, by_alias=True)
+        else:
+            payload = json.dumps(body)
+
+        await self._async_make_request("POST", url, payload)
+
+    @dynamic_catch
+    def set_security_access_control(
+        self,
+        platform_name: str,
+        body: Union[dict, Any],
+        platform_guid: str = None,
+    ) -> None:
+        """Set up or update a security access control in the platform metadata security connector.
+
+        Parameters
+        ----------
+        platform_name : str
+            Name of the platform to update.
+        body : dict
+            Request body.  See :meth:`_async_set_security_access_control` for the expected shape.
+        platform_guid : str, optional
+            Pre-resolved GUID of the platform, bypassing the name lookup.
+        """
+        loop = asyncio.get_event_loop()
+        return loop.run_until_complete(
+            self._async_set_security_access_control(platform_name, body, platform_guid)
+        )
+
+    @dynamic_catch
+    async def _async_get_security_access_control(
+        self,
+        platform_name: str,
+        control_name: str,
+        platform_guid: str = None,
+    ) -> Optional[dict]:
+        """Return the named security access control object from the platform metadata security
+        connector.  Returns ``None`` if no matching control has been set up.  Async version.
+
+        Parameters
+        ----------
+        platform_name : str
+            Name of the platform to query.
+        control_name : str
+            Name of the security access control to retrieve.
+        platform_guid : str, optional
+            Pre-resolved GUID of the platform, bypassing the name lookup.
+        """
+        if not platform_guid:
+            platform_guid = await self.__get_platform_guid__(platform_name)
+        url = (
+            f"{self.security_officer_base_url}/platforms/{platform_guid}"
+            f"/security-access-control/{control_name}"
+        )
+        response = await self._async_make_request("GET", url)
+        if response:
+            return response.json().get("securityAccessControl")
+        return None
+
+    @dynamic_catch
+    def get_security_access_control(
+        self,
+        platform_name: str,
+        control_name: str,
+        platform_guid: str = None,
+    ) -> Optional[dict]:
+        """Return the named security access control object from the platform metadata security
+        connector.  Returns ``None`` if no matching control has been set up.
+
+        Parameters
+        ----------
+        platform_name : str
+            Name of the platform to query.
+        control_name : str
+            Name of the security access control to retrieve.
+        platform_guid : str, optional
+            Pre-resolved GUID of the platform, bypassing the name lookup.
+        """
+        loop = asyncio.get_event_loop()
+        return loop.run_until_complete(
+            self._async_get_security_access_control(platform_name, control_name, platform_guid)
+        )
+
+    @dynamic_catch
+    async def _async_delete_security_access_control(
+        self,
+        platform_name: str,
+        control_name: str,
+        platform_guid: str = None,
+    ) -> None:
+        """Clear the named security access control from the platform security connector.
+        Async version.
+
+        Parameters
+        ----------
+        platform_name : str
+            Name of the platform to update.
+        control_name : str
+            Name of the security access control to remove.
+        platform_guid : str, optional
+            Pre-resolved GUID of the platform, bypassing the name lookup.
+        """
+        if not platform_guid:
+            platform_guid = await self.__get_platform_guid__(platform_name)
+        url = (
+            f"{self.security_officer_base_url}/platforms/{platform_guid}"
+            f"/security-access-control/{control_name}"
+        )
+        await self._async_make_request("DELETE", url)
+
+    @dynamic_catch
+    def delete_security_access_control(
+        self,
+        platform_name: str,
+        control_name: str,
+        platform_guid: str = None,
+    ) -> None:
+        """Clear the named security access control from the platform security connector.
+
+        Parameters
+        ----------
+        platform_name : str
+            Name of the platform to update.
+        control_name : str
+            Name of the security access control to remove.
+        platform_guid : str, optional
+            Pre-resolved GUID of the platform, bypassing the name lookup.
+        """
+        loop = asyncio.get_event_loop()
+        return loop.run_until_complete(
+            self._async_delete_security_access_control(platform_name, control_name, platform_guid)
+        )

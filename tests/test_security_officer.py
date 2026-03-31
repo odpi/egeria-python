@@ -230,3 +230,131 @@ class TestSecurityOfficer:
             assert False, "Connection error"
         finally:
             s_client.close_session()
+
+    def test_set_security_access_control(self):
+        """Test setting a security access control on the platform."""
+        try:
+            s_client = SecurityOfficer(
+                self.good_server_1, self.good_platform1_url, user_id=self.good_user_1
+            )
+            s_client.create_egeria_bearer_token(self.good_user_1, USER_PWD)
+
+            control_name = "test-control-" + datetime.now().strftime("%H%M%S")
+            body = {
+                "class": "SecurityAccessControlRequestBody",
+                "securityAccessControl": {
+                    "controlName": control_name,
+                    "displayName": "Test Access Control",
+                    "description": "Unit test security access control",
+                    "controlTypeName": "TestControl",
+                    "associatedSecurityList": {
+                        "readOperation": ["testuser1", "testuser2"]
+                    },
+                    "securityLabels": [],
+                    "securityProperties": {"environment": "test"},
+                },
+            }
+
+            start_time = time.perf_counter()
+            s_client.set_security_access_control(self.good_platform_name, body)
+            duration = time.perf_counter() - start_time
+            print(f"\n\tDuration was {duration} seconds")
+            print(f"\n\nSet security access control: {control_name}")
+            assert True
+
+        except (
+            PyegeriaInvalidParameterException,
+            PyegeriaAPIException,
+            PyegeriaUnauthorizedException,
+            PyegeriaNotFoundException,
+        ) as e:
+            print_exception_table(e)
+            assert False, "Invalid request"
+        except PyegeriaConnectionException as e:
+            print_basic_exception(e)
+            assert False, "Connection error"
+        finally:
+            s_client.close_session()
+
+    def test_get_security_access_control(self):
+        """Test retrieving a security access control from the platform."""
+        try:
+            s_client = SecurityOfficer(
+                self.good_server_1, self.good_platform1_url, user_id=self.good_user_1
+            )
+            s_client.create_egeria_bearer_token(self.good_user_1, USER_PWD)
+
+            control_name = "test-control-get-" + datetime.now().strftime("%H%M%S")
+            # Create the control first
+            body = {
+                "class": "SecurityAccessControlRequestBody",
+                "securityAccessControl": {
+                    "controlName": control_name,
+                    "displayName": "Test Get Control",
+                    "description": "Unit test security access control for get",
+                },
+            }
+            s_client.set_security_access_control(self.good_platform_name, body)
+
+            start_time = time.perf_counter()
+            response = s_client.get_security_access_control(self.good_platform_name, control_name)
+            duration = time.perf_counter() - start_time
+            print(f"\n\tDuration was {duration} seconds")
+            print(f"\n\nRetrieved security access control: {response}")
+            assert True
+
+        except (
+            PyegeriaInvalidParameterException,
+            PyegeriaAPIException,
+            PyegeriaUnauthorizedException,
+            PyegeriaNotFoundException,
+        ) as e:
+            print_exception_table(e)
+            assert False, "Invalid request"
+        except PyegeriaConnectionException as e:
+            print_basic_exception(e)
+            assert False, "Connection error"
+        finally:
+            s_client.close_session()
+
+    def test_delete_security_access_control(self):
+        """Test deleting a security access control from the platform."""
+        try:
+            s_client = SecurityOfficer(
+                self.good_server_1, self.good_platform1_url, user_id=self.good_user_1
+            )
+            s_client.create_egeria_bearer_token(self.good_user_1, USER_PWD)
+
+            control_name = "test-control-del-" + datetime.now().strftime("%H%M%S")
+            # Create the control first
+            body = {
+                "class": "SecurityAccessControlRequestBody",
+                "securityAccessControl": {
+                    "controlName": control_name,
+                    "displayName": "Test Delete Control",
+                    "description": "Unit test security access control for delete",
+                },
+            }
+            s_client.set_security_access_control(self.good_platform_name, body)
+
+            # Now delete it
+            start_time = time.perf_counter()
+            s_client.delete_security_access_control(self.good_platform_name, control_name)
+            duration = time.perf_counter() - start_time
+            print(f"\n\tDuration was {duration} seconds")
+            print(f"\n\nDeleted security access control: {control_name}")
+            assert True
+
+        except (
+            PyegeriaInvalidParameterException,
+            PyegeriaAPIException,
+            PyegeriaUnauthorizedException,
+            PyegeriaNotFoundException,
+        ) as e:
+            print_exception_table(e)
+            assert False, "Invalid request"
+        except PyegeriaConnectionException as e:
+            print_basic_exception(e)
+            assert False, "Connection error"
+        finally:
+            s_client.close_session()

@@ -427,6 +427,78 @@ class SecurityOfficerScenarioTester:
             console.print(f"\n[bold red]✗ {failed} scenario(s) failed[/bold red]\n")
             return 1
 
+    def scenario_3_security_access_control_lifecycle(self) -> TestResult:
+        """Full lifecycle test for security access controls: set → get → delete."""
+        scenario_name = "Scenario 3: Security Access Control Lifecycle"
+        start_time = time.perf_counter()
+        try:
+            console.print(f"\n[bold blue]▶ Running: {scenario_name}[/bold blue]")
+
+            ts = self.test_run_id
+            control_name = f"test-ctrl-{ts}"
+
+            # --- Step 1: Set (create) a security access control ---
+            console.print("  → Setting security access control...")
+            body = {
+                "class": "SecurityAccessControlRequestBody",
+                "securityAccessControl": {
+                    "controlName": control_name,
+                    "displayName": "Scenario Test Control",
+                    "description": f"Security access control created by scenario test {ts}",
+                    "controlTypeName": "ScenarioTestControl",
+                    "associatedSecurityList": {
+                        "readOperation": ["callie", "erinoverview"]
+                    },
+                    "securityLabels": [],
+                    "securityProperties": {"environment": "scenario-test"},
+                },
+            }
+            self.client.set_security_access_control(
+                PLATFORM_NAME, body, platform_guid=self.platform_guid
+            )
+            console.print(f"  ✓ Set security access control: {control_name}")
+
+            # --- Step 2: Get the control back ---
+            console.print("  → Retrieving security access control...")
+            control = self.client.get_security_access_control(
+                PLATFORM_NAME, control_name, platform_guid=self.platform_guid
+            )
+            console.print(f"  ✓ Retrieved: {control}")
+
+            # --- Step 3: Update the control (set with new description) ---
+            console.print("  → Updating security access control...")
+            body["securityAccessControl"]["description"] = f"Updated description {ts}"
+            self.client.set_security_access_control(
+                PLATFORM_NAME, body, platform_guid=self.platform_guid
+            )
+            console.print("  ✓ Updated security access control")
+
+            # --- Step 4: Delete the control ---
+            console.print("  → Deleting security access control...")
+            self.client.delete_security_access_control(
+                PLATFORM_NAME, control_name, platform_guid=self.platform_guid
+            )
+            console.print(f"  ✓ Deleted security access control: {control_name}")
+
+            duration = time.perf_counter() - start_time
+            return TestResult(
+                scenario_name=scenario_name,
+                status="PASSED",
+                duration=duration,
+                message=f"Full lifecycle completed for control '{control_name}'",
+            )
+
+        except Exception as e:
+            duration = time.perf_counter() - start_time
+            console.print(f"  [yellow]⚠ {scenario_name}: {str(e)}[/yellow]")
+            return TestResult(
+                scenario_name=scenario_name,
+                status="WARNING",
+                duration=duration,
+                message=str(e),
+                error=e,
+            )
+
     def run_all_scenarios(self):
         """Execute all test scenarios"""
         if not self.setup():
@@ -435,6 +507,7 @@ class SecurityOfficerScenarioTester:
         try:
             self.results.append(self.scenario_1_user_lifecycle())
             self.results.append(self.scenario_2_coco_manage_users())
+            self.results.append(self.scenario_3_security_access_control_lifecycle())
 
             self.cleanup_created_users()
             return self.generate_report()
