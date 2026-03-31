@@ -103,6 +103,21 @@ class SecurityOfficerScenarioTester:
             except Exception:
                 console.print("- No pre-existing 'freddiemercury' account to delete")
 
+            # Also delete the personal profile for freddiemercury if it still exists from a
+            # prior interrupted run — the profile is independent of the security account.
+            try:
+                profile_guid = self.actor_client.get_guid_for_name(
+                    "PersonProperties::freddiemercury",
+                    property_name=["qualifiedName"],
+                )
+                if profile_guid and profile_guid != "NO_ELEMENTS_FOUND":
+                    self.actor_client.delete_actor_profile(profile_guid, cascade=True)
+                    console.print(f"✓ Pre-deleted existing 'freddiemercury' profile: {profile_guid}")
+                else:
+                    console.print("- No pre-existing 'freddiemercury' profile to delete")
+            except Exception:
+                console.print("- No pre-existing 'freddiemercury' profile to delete")
+
             console.print(f"✓ Connected to {PLATFORM_URL}")
             console.print(f"✓ Authenticated as {USER_ID}")
             console.print(f"✓ Test Run ID: {self.test_run_id}\n")
