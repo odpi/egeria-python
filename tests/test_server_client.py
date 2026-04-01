@@ -424,6 +424,50 @@ class TestServerClientFeedback:
         finally:
             s_client.close_session()
 
+    def test_get_guid_for_name(self):
+        """Test retrieving likes attached to an element"""
+        try:
+            s_client = ServerClient(
+                self.good_view_server_2,
+                self.good_platform1_url,
+                user_id=self.good_user_2,
+                user_pwd=self.good_user_2_pwd,
+            )
+
+            token = s_client.create_egeria_bearer_token(
+                self.good_user_2, self.good_user_2_pwd
+            )
+
+            # test_element_guid = "test-element-guid-123"
+
+            start_time = time.perf_counter()
+            response = s_client.__get_guid__(display_name="My first comment", property_name="displayName"
+            )
+            duration = time.perf_counter() - start_time
+
+            print(f"\n\tDuration was {duration} seconds")
+            print(f"\n\tResponse was: {json.dumps(response, indent=2)}")
+
+            assert True, "Likes retrieved successfully"
+
+        except PyegeriaInvalidParameterException as e:
+            print_exception_table(e)
+            assert False, "Invalid parameter exception"
+        except PyegeriaAPIException as e:
+            print_exception_table(e)
+            assert False, "API exception"
+        except PyegeriaUnauthorizedException as e:
+            print_exception_table(e)
+            assert False, "Unauthorized exception"
+        except ValidationError as e:
+            print_validation_error(e)
+            assert False, "Validation error"
+        except Exception as e:
+            print_basic_exception(e)
+            assert False, "Unexpected exception"
+        finally:
+            s_client.close_session()
+
 
 if __name__ == "__main__":
     print("Running ServerClient feedback unit tests...")

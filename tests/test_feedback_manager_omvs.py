@@ -338,5 +338,49 @@ class TestServerClient:
             f_client.close_session()
 
 
+    def test_find_comments(self):
+        """Test retrieving ratings attached to an element"""
+        try:
+            f_client = ServerClient(
+                self.good_view_server_2,
+                self.good_platform1_url,
+                user_id=self.good_user_2,
+                user_pwd=self.good_user_2_pwd,
+            )
+
+            token = f_client.create_egeria_bearer_token(
+                self.good_user_2, self.good_user_2_pwd
+            )
+
+            start_time = time.perf_counter()
+            search_string = "*"
+            response = f_client.find_comments(
+                search_string=search_string, output_format="DICT", report_spec="Comment-DrE-Basic"
+            )
+            duration = time.perf_counter() - start_time
+
+            print(f"\n\tDuration was {duration} seconds")
+            print(f"\n\tResponse was: {json.dumps(response, indent=2)}")
+
+            assert True, "Ratings retrieved successfully"
+
+        except PyegeriaInvalidParameterException as e:
+            print_exception_table(e)
+            assert False, "Invalid parameter exception"
+        except PyegeriaAPIException as e:
+            print_exception_table(e)
+            assert False, "API exception"
+        except PyegeriaUnauthorizedException as e:
+            print_exception_table(e)
+            assert False, "Unauthorized exception"
+        except ValidationError as e:
+            print_validation_error(e)
+            assert False, "Validation error"
+        except Exception as e:
+            print_basic_exception(e)
+            assert False, "Unexpected exception"
+        finally:
+            f_client.close_session()
+
 if __name__ == "__main__":
     print("Running ServerClient unit tests...")

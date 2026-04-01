@@ -240,7 +240,7 @@ def test_get_elements_by_property_value():
     # metadata_element_type = 'Project'
     # property_value = "Campaign:Clinical Trials Management"
     # metadata_element_type = "ValidValueDefinition"
-    metadata_element_type_name = None
+    metadata_element_type_name = "Comment"
     # property_value = "Unity Catalog Catalog"
     # property_names = ["name", "qualifiedName"]
     # metadata_element_type = "Asset"
@@ -248,7 +248,7 @@ def test_get_elements_by_property_value():
     # property_value = "default"
     # property_names = ["name", "qualifiedName"]
     property_names = ["name", "displayName", 'qualifiedName']
-    property_value = "BusinessArea::RES"
+    property_value = "PDR::Comment::My-first-comment"
     # property_names = ["anchorGUID"]
     try:
         c_client = ClassificationExplorer(view_server, platform_url)
@@ -258,8 +258,7 @@ def test_get_elements_by_property_value():
         result = c_client.get_elements_by_property_value(
             property_value,
             property_names,
-            metadata_element_type=metadata_element_type_name,
-            as_of_time="2025-12-01",
+            metadata_element_type=metadata_element_type_name
         )
         duration = time.perf_counter() - start_time
         print(f"\n\tDuration was {duration} seconds")
