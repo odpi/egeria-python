@@ -3688,6 +3688,7 @@ class ServerClient(BaseServerClient):
             self,
             tag_guid: str,
             description: str,
+            body: Optional[dict | UpdateElementRequestBody] = None,
 
     ) -> None:
         """
@@ -3708,11 +3709,18 @@ class ServerClient(BaseServerClient):
         Raises
         ------
         PyegeriaException
+
+        Args:
+            body ():
         """
         body = {
-            "class": "InformalTagUpdateRequestBody",
-            "description": description
-        }
+            "class": "UpdateElementRequestBody",
+            "mergeUpdate": True,
+            "properties": {
+                "class": "InformalTagProperties",
+                "description": description
+            }
+        } if body is None else body
 
         url = f"{self.command_root}feedback-manager/tags/{tag_guid}/update"
 
@@ -3723,6 +3731,7 @@ class ServerClient(BaseServerClient):
             self,
             tag_guid: str,
             description: str,
+            body: Optional[dict | UpdateElementRequestBody] = None,
 
     ) -> None:
         """
@@ -3742,6 +3751,9 @@ class ServerClient(BaseServerClient):
         Raises
         ------
         PyegeriaException
+
+        Args:
+            body ():
         """
         loop = asyncio.get_event_loop()
         response = loop.run_until_complete(

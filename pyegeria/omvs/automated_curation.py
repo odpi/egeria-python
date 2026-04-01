@@ -679,7 +679,7 @@ class AutomatedCuration(ServerClient):
             file_name: str,
             description: str,
             version_identifier: str,
-            file_system_name: Optional[str] = None,
+            file_system_name: Optional[str] = "",
             file_type: str = "Open Metadata Secrets Store File",
             file_extension: str = "omsecrets",
             file_encoding: str = "YAML",
@@ -759,8 +759,8 @@ class AutomatedCuration(ServerClient):
                 "fileType": file_type,
                 "fileExtension": file_extension,
                 "fileEncoding": file_encoding,
-                "versionIdentifier": version_identifier,
-            },
+                "versionIdentifier": version_identifier
+            }
         }
         body_s = body_slimmer(body)
         return await self._async_create_elem_from_template(body_s)
@@ -771,7 +771,7 @@ class AutomatedCuration(ServerClient):
             file_name: str,
             description: str,
             version_identifier: str,
-            file_system_name: Optional[str] = None,
+            file_system_name: Optional[str] = "",
             file_type: str = "Open Metadata Secrets Store File",
             file_extension: str = "omsecrets",
             file_encoding: str = "YAML",

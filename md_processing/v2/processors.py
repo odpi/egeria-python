@@ -58,6 +58,14 @@ class AsyncBaseCommandProcessor(ABC):
         spec = get_command_spec(f"{self.command.verb} {self.command.object_type}")
         return spec or {}
 
+    def is_report_view_command(self) -> bool:
+        """True when this command is a report runner, not an element-targeting command."""
+        return self.command.verb.lower() == "view" and self.command.object_type.strip().lower() == "report"
+
+    def supports_target_element_lookup(self) -> bool:
+        """Whether this command should resolve/track a target element by qualified name."""
+        return not self.is_report_view_command()
+
     def add_related_result(self, label: str, guid: Optional[str] = None, status: str = "success", message: Optional[str] = None):
         """Record the outcome of a secondary operation."""
         self.related_results.append({
@@ -77,22 +85,25 @@ class AsyncBaseCommandProcessor(ABC):
         attributes = self.parsed_output.get("attributes", {})
 
         # Extract Display Name if present
-        display_name = attributes.get("Display Name", {}).get("value")
-        if not display_name:
-            # Fallback to other name-like attributes if possible
-            for k, v in attributes.items():
-                if any(k.endswith(s) for s in [" Name", " ID", " Id"]) and k != "Qualified Name":
-                    display_name = v.get("value")
-                    if display_name:
-                        break
-        if not display_name:
-            display_name = attributes.get("Name", {}).get("value")
+        if self.is_report_view_command():
+            display_name = attributes.get("Report Spec", {}).get("value")
+        else:
+            display_name = attributes.get("Display Name", {}).get("value")
+            if not display_name:
+                # Fallback to other name-like attributes if possible
+                for k, v in attributes.items():
+                    if any(k.endswith(s) for s in [" Name", " ID", " Id"]) and k != "Qualified Name":
+                        display_name = v.get("value")
+                        if display_name:
+                            break
+            if not display_name:
+                display_name = attributes.get("Name", {}).get("value")
 
         if display_name:
             self.parsed_output["display_name"] = display_name
 
         # 1a. Ensure qualified_name is derived early if possible
-        if not self.parsed_output.get("qualified_name"):
+        if self.supports_target_element_lookup() and not self.parsed_output.get("qualified_name"):
             qn = self.derive_qualified_name(attributes)
             if qn:
                 self.parsed_output["qualified_name"] = qn
@@ -151,8 +162,11 @@ class AsyncBaseCommandProcessor(ABC):
         # Fetch As-Is state (Lookup by GUID or QN)
         # We do this BEFORE recording in planned_elements to avoid self-shadowing 
         # (where an element sees itself in 'planned' and skips the Egeria lookup)
-        self.as_is_element = await self.fetch_as_is()
-        
+        if self.supports_target_element_lookup():
+            self.as_is_element = await self.fetch_as_is()
+        else:
+            self.as_is_element = None
+
         # 4a. Check for duplicate display_name if we are creating a new element
         if not self.as_is_element and self.command.verb in ["Create", "Define", "Register", "Add", "Upsert"]:
             display_name = attributes.get("Display Name", {}).get("value")
@@ -245,36 +259,37 @@ class AsyncBaseCommandProcessor(ABC):
 
 
         # 7. Check for existence of the target element (As-Is state)
-        if self.as_is_element:
-            logger.debug(f"Element found! GUID: {self.parsed_output.get('guid')}")
-        else:
-            # Check if it's planned (defined earlier in the document)
-            guid = await self.resolve_element_guid(current_qn)
-            if guid and guid.startswith("(Planned:"):
-                logger.debug(f"Element is Planned! GUID: {guid}")
-                self.parsed_output["exists"] = True
-                self.parsed_output["guid"] = guid
-                self.parsed_output["is_planned"] = True
+        if self.supports_target_element_lookup():
+            if self.as_is_element:
+                logger.debug(f"Element found! GUID: {self.parsed_output.get('guid')}")
             else:
-                logger.debug(f"Element NOT found for QN: '{current_qn}'")
-                self.parsed_output["exists"] = False
-                if self.command.verb == "Update":
-                    logger.debug(f"Target element for 'Update' not found: {self.parsed_output.get('qualified_name') or self.command.object_type}")
-                    if "errors" not in self.parsed_output:
-                        self.parsed_output["errors"] = []
-                    self.parsed_output["errors"].append(f"Target element for 'Update' not found.")
-                    
-                    analysis = await self.validate_only()
-                    return {
-                        "output": analysis if directive == "validate" else self.command.raw_block,
-                        "analysis": analysis,
-                        "status": "failure",
-                        "message": f"Target element for Update not found.",
-                        "verb": self.command.verb,
-                        "object_type": self.command.object_type,
-                        "found": False,
-                        "errors": self.parsed_output["errors"]
-                    }
+                # Check if it's planned (defined earlier in the document)
+                guid = await self.resolve_element_guid(current_qn)
+                if guid and guid.startswith("(Planned:"):
+                    logger.debug(f"Element is Planned! GUID: {guid}")
+                    self.parsed_output["exists"] = True
+                    self.parsed_output["guid"] = guid
+                    self.parsed_output["is_planned"] = True
+                else:
+                    logger.debug(f"Element NOT found for QN: '{current_qn}'")
+                    self.parsed_output["exists"] = False
+                    if self.command.verb == "Update":
+                        logger.debug(f"Target element for 'Update' not found: {self.parsed_output.get('qualified_name') or self.command.object_type}")
+                        if "errors" not in self.parsed_output:
+                            self.parsed_output["errors"] = []
+                        self.parsed_output["errors"].append(f"Target element for 'Update' not found.")
+
+                        analysis = await self.validate_only()
+                        return {
+                            "output": analysis if directive == "validate" else self.command.raw_block,
+                            "analysis": analysis,
+                            "status": "failure",
+                            "message": f"Target element for Update not found.",
+                            "verb": self.command.verb,
+                            "object_type": self.command.object_type,
+                            "found": False,
+                            "errors": self.parsed_output["errors"]
+                        }
 
         # 8. Decouple Analysis from Output
         analysis = await self.validate_only()
@@ -418,6 +433,9 @@ class AsyncBaseCommandProcessor(ABC):
         """
         Derive a qualified_name from 'Display Name' (or other basis) and the command spec.
         """
+        if not self.supports_target_element_lookup():
+            return ""
+
         if attributes is None:
             attributes = self.parsed_output.get("attributes", {})
             
@@ -657,6 +675,9 @@ class AsyncBaseCommandProcessor(ABC):
         Standardized lookup for the target element. 
         Checks the cache first.
         """
+        if not self.supports_target_element_lookup():
+            return None
+
         qn = self.parsed_output.get("qualified_name")
         
         # If QN is missing but Display Name is present, try deriving it
@@ -727,17 +748,25 @@ class AsyncBaseCommandProcessor(ABC):
             return "### Error: No parsed data available for display."
         
         attributes = self.parsed_output.get("attributes", {})
-        qualified_name = self.parsed_output.get("qualified_name")
-        
-        report = [
-            f"### Command: {self.command.verb} {self.command.object_type}",
-            f"**Qualified Name**: `{qualified_name}`",
-            "",
+        report = [f"### Command: {self.command.verb} {self.command.object_type}"]
+        if self.is_report_view_command():
+            report_spec = attributes.get("Report Spec", {}).get("value", "")
+            output_format = attributes.get("Output Format", {}).get("value", "JSON")
+            report.extend([
+                f"**Report Spec**: `{report_spec}`",
+                f"**Output Format**: `{output_format}`",
+                ""
+            ])
+        else:
+            qualified_name = self.parsed_output.get("qualified_name")
+            report.extend([f"**Qualified Name**: `{qualified_name}`", ""])
+
+        report.extend([
             "#### Parsed Attributes",
             "| Attribute | Value |",
             "| :--- | :--- |"
-        ]
-        
+        ])
+
         for name, details in attributes.items():
             raw = details.get("value", "")
             val = format_for_markdown_table(raw)
@@ -758,7 +787,6 @@ class AsyncBaseCommandProcessor(ABC):
             return "### Error: No parsed data available for validation."
         
         attributes = self.parsed_output.get("attributes", {})
-        qualified_name = self.parsed_output.get("qualified_name")
         exists = self.parsed_output.get("exists", False)
         errors = self.parsed_output.get("errors", [])
         warnings = self.parsed_output.get("warnings", [])
@@ -775,14 +803,26 @@ class AsyncBaseCommandProcessor(ABC):
         
         report = [
             f"### Command Analysis: {self.command.verb} {self.command.object_type}",
-            f"**Action**: {target_verb}{guid_info}",
-            f"**Qualified Name**: `{qualified_name}`",
-            "",
+            f"**Action**: {target_verb}{guid_info}"
+        ]
+        if self.is_report_view_command():
+            report_spec = attributes.get("Report Spec", {}).get("value", "")
+            output_format = attributes.get("Output Format", {}).get("value", "JSON")
+            report.extend([
+                f"**Report Spec**: `{report_spec}`",
+                f"**Output Format**: `{output_format}`",
+                ""
+            ])
+        else:
+            qualified_name = self.parsed_output.get("qualified_name")
+            report.extend([f"**Qualified Name**: `{qualified_name}`", ""])
+
+        report.extend([
             "#### Parsed Attributes",
             "| Attribute | Value | Status |",
             "| :--- | :--- | :--- |"
-        ]
-        
+        ])
+
         for name, details in attributes.items():
             raw = details.get("value", "")
             val = format_for_markdown_table(raw)

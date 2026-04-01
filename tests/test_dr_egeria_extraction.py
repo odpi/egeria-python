@@ -1,7 +1,9 @@
 import pytest
+from typing import Any, cast
 from md_processing.v2.extraction import UniversalExtractor, DrECommand
 from md_processing.v2.parsing import AttributeFirstParser, parse_dr_egeria_content
 from md_processing.v2.utils import parse_key_value
+from md_processing.v2.view import ViewProcessor
 
 def test_standard_command_extraction():
     text = """
@@ -98,7 +100,8 @@ def test_parse_key_value():
     kv = parse_key_value(text_list)
     assert kv == {"x": "y", "z": "10"}
 
-def test_extract_and_parse_integration():
+@pytest.mark.asyncio
+async def test_extract_and_parse_integration():
     text = """
 # Create Glossary
 ## Display Name
@@ -106,9 +109,64 @@ Integrated Glossary
 ## Description
 Testing integration.
 """
-    results = parse_dr_egeria_content(text)
+    results = await parse_dr_egeria_content(text)
     assert len(results) == 1
     attrs = results[0]["attributes"]
     # Looking for 'Display Name' (canonical) or 'display_name' (variable name)
     assert "Display Name" in attrs or "display_name" in attrs
     assert results[0]["verb"] == "Create"
+
+
+@pytest.mark.asyncio
+async def test_view_report_keeps_metadata_name_filters_as_simple_attributes():
+    cmd = DrECommand(
+        verb="View",
+        object_type="Report",
+        attributes={
+            "Report Spec": "Digital-Products",
+            "Metadata Element Type Name": "DigitalProduct",
+            "Metadata Element Subtype Names": "RootCollection\nCollectionFolder",
+            "Output Format": "LIST",
+        },
+        raw_block="# View Report",
+    )
+
+    parser = AttributeFirstParser(cmd)
+    parsed = await parser.parse()
+
+    assert parsed["attributes"]["Metadata Element Type Name"]["style"] == "Simple"
+    assert parsed["attributes"]["Metadata Element Type Name"]["value"] == "DigitalProduct"
+    assert parsed["attributes"]["Metadata Element Subtype Names"]["style"] == "Simple List"
+    assert parsed["attributes"]["Metadata Element Subtype Names"]["value"] == ["RootCollection", "CollectionFolder"]
+
+
+@pytest.mark.asyncio
+async def test_view_report_validation_output_uses_report_context_not_qualified_name(monkeypatch):
+    async def _fake_run_report(**kwargs):
+        return {"kind": "text", "content": "ok"}
+
+    # Keep report execution local/offline for tests.
+    monkeypatch.setattr("md_processing.v2.view._async_run_report", _fake_run_report)
+
+    cmd = DrECommand(
+        verb="View",
+        object_type="Report",
+        attributes={
+            "Report Spec": "Digital-Products",
+            "Output Format": "LIST",
+            "Metadata Element Type Name": "DigitalProduct",
+        },
+        raw_block="# View Report",
+    )
+
+    processor = ViewProcessor(client=cast(Any, object()), command=cmd, context={"directive": "validate"})
+    result = await processor.execute()
+
+    assert result["status"] == "success"
+    assert "**Action**: View" in result["analysis"]
+    assert "**Report Spec**: `Digital-Products`" in result["analysis"]
+    assert "**Output Format**: `LIST`" in result["analysis"]
+    assert "**Qualified Name**" not in result["analysis"]
+    assert result.get("qualified_name") in (None, "")
+
+

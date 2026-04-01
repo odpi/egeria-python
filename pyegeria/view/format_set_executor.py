@@ -31,7 +31,7 @@ from pyegeria.view.base_report_formats import (
     get_report_registry,
 )
 from pyegeria.view.output_formatter import generate_output
-
+from pyegeria.egeria_tech_client import EgeriaTech
 
 _CLIENT_CLASS_MAP = {
     "CollectionManager": "pyegeria.omvs.collection_manager.CollectionManager",

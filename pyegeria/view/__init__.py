@@ -15,9 +15,6 @@ from pyegeria.view.output_formatter import (
     populate_common_columns,
 
 )
-from pyegeria.view.format_set_executor import (
-    exec_report_spec
-)
 __all__ = [
     "construct_mermaid_web",
     "construct_mermaid_jup",
@@ -28,5 +25,4 @@ __all__ = [
     "generate_output",
     "resolve_output_formats",
     "populate_common_columns",
-    "exec_report_spec"
 ]
