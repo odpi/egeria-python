@@ -1105,7 +1105,6 @@ class ServerClient(BaseServerClient):
                 "properties": {
                     "class": "CommentProperties",
                     "qualifiedName": self.make_feedback_qn("Comment", element_guid),
-                    "commentText": comment,
                     "description": comment,
                     "commentType": comment_type
                 }
@@ -1199,7 +1198,6 @@ class ServerClient(BaseServerClient):
                 "mergeUpdate": merge_update,
                 "properties": {
                     "class": "CommentProperties",
-                    "commentText": comment,
                     "description": comment,
                     "commentType": comment_type
                 }

@@ -4,13 +4,13 @@
 
 My first comment
 
-## Associated Element
+## Commented on Element
 
-Sales Regions
+DigitalProductCatalog::SalesAnalytics::1.0
 
-## Comment Text
+## Description
 
-This is my first comment and its on Sales Regions
+This is my first comment and its on Sales Analytics
 
 ## Comment Type
 
@@ -24,11 +24,11 @@ ____
 
 My first reply
 
-## Associated Element
+## Commented on Element
 
 My first comment
 
-## Comment Text
+## Description
 
 My first reply to my first comment
 

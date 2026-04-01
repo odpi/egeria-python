@@ -555,7 +555,11 @@ if __name__ == "__main__":
     args = parser.parse_args()
     
     # Run the async v2 processor (mocking client for simple CLI run)
-    client = EgeriaTech(settings.Environment.egeria_view_server, settings.Environment.egeria_view_server_url, user_id=os.environ.get("EGERIA_USER", "erinoverview"))
+    user = os.environ.get("EGERIA_USER", "erinoverview")
+    password = os.environ.get("EGERIA_USER_PASSWORD", "secret")
+    client = EgeriaTech(settings.Environment.egeria_view_server, settings.Environment.egeria_view_server_url, user_id=user)
+    client.create_egeria_bearer_token(user, password)
+    
     asyncio.run(
         process_md_file_v2(
             args.input_file, 

@@ -238,11 +238,10 @@ class AsyncBaseCommandProcessor(ABC):
                         msg = f"Referenced element '{val}' for attribute '{attr_name}' not found."
                         if attr_data.get("errors") is None: attr_data["errors"] = []
                         attr_data["errors"].append(msg)
-                        
                         logger.error(msg)
                         if "errors" not in self.parsed_output:
                             self.parsed_output["errors"] = []
-                        self.parsed_output.get("errors", []).append(msg)
+                        self.parsed_output["errors"].append(msg)
 
 
         # 7. Check for existence of the target element (As-Is state)
@@ -313,6 +312,59 @@ class AsyncBaseCommandProcessor(ABC):
                 "guid": self.parsed_output.get("guid"),
                 "found": self.parsed_output.get("exists", False)
             }
+
+        # Resolve any Planned GUIDs before applying changes
+        attributes = self.parsed_output.get("attributes", {})
+        for attr_name, attr_data in attributes.items():
+            if attr_data.get("is_planned"):
+                val = attr_data.get("value")
+                if attr_data.get("guid") and str(attr_data["guid"]).startswith("(Planned:"):
+                    real_guid = await self.resolve_element_guid(val)
+                    if real_guid and not str(real_guid).startswith("(Planned:"):
+                        attr_data["guid"] = real_guid
+                        attr_data["is_planned"] = False
+                    else:
+                        msg = f"Prerequisite element '{val}' was not successfully created or found."
+                        logger.error(msg)
+                        return {
+                            "output": self.command.raw_block,
+                            "analysis": analysis,
+                            "status": "failure",
+                            "message": f"Execution blocked: {msg}",
+                            "verb": self.command.verb,
+                            "object_type": self.command.object_type
+                        }
+                
+                list_val = attr_data.get("guid_list")
+                if list_val and any(str(g).startswith("(Planned:") for g in list_val):
+                    new_list = []
+                    names = attr_data.get("value", [])
+                    if isinstance(names, list) and len(names) == len(list_val):
+                        failed_names = []
+                        for idx, g in enumerate(list_val):
+                            if str(g).startswith("(Planned:"):
+                                real_g = await self.resolve_element_guid(names[idx])
+                                if real_g and not str(real_g).startswith("(Planned:"):
+                                    new_list.append(real_g)
+                                else:
+                                    failed_names.append(names[idx])
+                            else:
+                                new_list.append(g)
+                        
+                        if failed_names:
+                            msg = f"Prerequisite elements {failed_names} were not successfully created or found."
+                            logger.error(msg)
+                            return {
+                                "output": self.command.raw_block,
+                                "analysis": analysis,
+                                "status": "failure",
+                                "message": f"Execution blocked: {msg}",
+                                "verb": self.command.verb,
+                                "object_type": self.command.object_type
+                            }
+                        else:
+                            attr_data["guid_list"] = new_list
+                            attr_data["is_planned"] = False
 
         try:
             output = await self.apply_changes()
@@ -403,9 +455,11 @@ class AsyncBaseCommandProcessor(ABC):
         spec = self.get_command_spec()
         qn_prefix = (spec.get("qn_prefix") if spec else None) or self.command.object_type
         
-        # Strip trailing colon if present
-        if qn_prefix.endswith(':'):
-            qn_prefix = qn_prefix[:-1]
+        # Strip trailing colon and sanitize spaces if present (Egeria types cannot have spaces)
+        if qn_prefix:
+            qn_prefix = qn_prefix.replace(" ", "")
+            if qn_prefix.endswith(':'):
+                qn_prefix = qn_prefix[:-1]
 
         # Extract local qualifier (Namespace Path) and Version Identifier if present 
         local_qualifier = attributes.get("Namespace Path", {}).get("value")
@@ -523,6 +577,18 @@ class AsyncBaseCommandProcessor(ABC):
         
         name_or_guid = str(name_or_guid).strip()
         
+        # Ensure Egeria Type definitions contain no spaces, and remap
+        # pseudo-types (classifications disguised as types in commands) to
+        # their actual Egeria base entity types for API lookups.
+        if tech_type:
+            tech_type = tech_type.replace(" ", "")
+            remap = {
+                "DataSharingAgreement": "Agreement"
+            }
+            if tech_type in remap:
+                logger.debug(f"resolve_element_guid: Remapping pseudo-type '{tech_type}' to '{remap[tech_type]}'")
+                tech_type = remap[tech_type]
+            
         # 1. Is it a GUID?
         try:
             uuid.UUID(name_or_guid)
@@ -544,45 +610,43 @@ class AsyncBaseCommandProcessor(ABC):
         
         # 4. Check Egeria (Existence Check)
         try:
-            # 4a. Use __async_get_guid__ as suggested by user for existence check
-            # This is a lightweight call to classification-explorer
+            # Use SDK's strict name-to-GUID resolution
+            # This checks QN, Display Name, Resource Name, and Identifier via repository-services.
+            res = None
             try:
-                # Try as Qualified Name first (with tech_type hint)
-                res = await self.client.__async_get_guid__(qualified_name=name_or_guid, tech_type=tech_type)
-                if res and res != NO_ELEMENTS_FOUND:
-                    logger.debug(f"resolve_element_guid: __async_get_guid__ for QN '{name_or_guid}' (hint={tech_type}) returned: {res}")
-                    return res
+                # Pass 1: Try WITH type constraint (fastest, avoids ambiguity)
+                res = await self.client._async_get_guid_for_name(name_or_guid, type_name=tech_type)
+            except PyegeriaException as e:
+                # Catch multiple matches error
+                if "Multiple elements found" in str(e):
+                    msg = f"Multiple elements found for name '{name_or_guid}' (Pass 1). Please use a unique Qualified Name."
+                    logger.error(msg)
+                    if "errors" not in self.parsed_output:
+                        self.parsed_output["errors"] = []
+                    self.parsed_output["errors"].append(msg)
+                    return None
+                logger.debug(f"SDK strict lookup (Pass 1) failed for '{name_or_guid}': {e}")
                 
-                # Try as Display Name (with tech_type hint)
-                res = await self.client.__async_get_guid__(display_name=name_or_guid, tech_type=tech_type)
-                if res and res != NO_ELEMENTS_FOUND:
-                    logger.debug(f"resolve_element_guid: __async_get_guid__ for Display Name '{name_or_guid}' (hint={tech_type}) returned: {res}")
-                    return res
-
-                # 4b. Use SDK's strict name-to-GUID resolution as fallback
-                # This checks QN, Display Name, Resource Name, and Identifier.
+            # Pass 2: If no result (or if type was invalid), try WITHOUT type constraint
+            is_not_found = not res or (isinstance(res, str) and (res.startswith("No ") or " found" in res))
+            if is_not_found and tech_type:
                 try:
                     res = await self.client._async_get_guid_for_name(name_or_guid)
-                    # Ensure it's not a "not found" indicator string
-                    if res and isinstance(res, str) and not res.startswith("No ") and " found" not in res and not res.startswith("(Planned:"):
-                        logger.debug(f"resolve_element_guid: SDK strict lookup for '{name_or_guid}' returned: {res}")
-                        return res
                 except PyegeriaException as e:
-                    # Catch multiple matches error
                     if "Multiple elements found" in str(e):
-                        msg = f"Multiple elements found for name '{name_or_guid}'. Please use a unique Qualified Name."
+                        msg = f"Multiple elements found for name '{name_or_guid}' (Pass 2). Please use a unique Qualified Name."
                         logger.error(msg)
                         if "errors" not in self.parsed_output:
                             self.parsed_output["errors"] = []
                         self.parsed_output["errors"].append(msg)
                         return None
-                    logger.debug(f"SDK strict lookup failed for '{name_or_guid}': {e}")
+                    logger.debug(f"SDK strict lookup (Pass 2) failed for '{name_or_guid}': {e}")
 
-            except Exception as e:
-                logger.debug(f"__async_get_guid__ failed: {e}")
-
-
-
+            # Ensure it's not a "not found" indicator string
+            if res and isinstance(res, str) and not res.startswith("No ") and " found" not in res and not res.startswith("(Planned:"):
+                logger.debug(f"resolve_element_guid: SDK strict lookup for '{name_or_guid}' returned: {res}")
+                return res
+                
         except Exception as e:
             logger.debug(f"resolve_element_guid: Unexpected error resolving '{name_or_guid}': {e}")
             
@@ -614,7 +678,7 @@ class AsyncBaseCommandProcessor(ABC):
                     pass
             
             # 2. Check Egeria (Harden against missing cache in new sessions)
-            guid = await self.resolve_element_guid(qn)
+            guid = await self.resolve_element_guid(qn, tech_type=self.command.object_type)
             logger.debug(f"fetch_as_is: resolve_element_guid returned: {guid}")
             if guid and isinstance(guid, str) and not guid.startswith("(Planned:") and not guid.startswith("No "):
                 try:
