@@ -100,6 +100,13 @@ class DataSpecProperties(CollectionProperties):
     class_: Annotated[Literal["DataSpecProperties"], Field(alias="class")]
 
 
+class ReportTypeProperties(CollectionProperties):
+    class_: Annotated[Literal["ReportTypeProperties"], Field(alias="class")]
+    created_time: datetime | None = None
+    lastModifiedTime: datetime | None = None
+    lastModifier: str | None = None
+
+
 class DataDictionaryProperties(CollectionProperties):
     class_: Annotated[Literal["DataDictionaryProperties"], Field(alias="class")]
 
@@ -2039,6 +2046,213 @@ class CollectionManager(ServerClient):
 
         return asyncio.get_event_loop().run_until_complete(
             self._async_create_data_spec_collection(display_name, description,category,
+                                                 classification_name, body))
+
+    @dynamic_catch
+    async def _async_create_report_type_collection(self, display_name: Optional[str] = None, description: Optional[str] = None,
+                                                category: Optional[str] = None, classification_name: Optional[str] = None,
+                                                 body: Optional[dict | NewElementRequestBody] = None) -> str:
+        """ Create a new reportType collection. If the body is not present, the display_name, description, category
+            and classification will be used to create a simple, self-anchored collection.
+            Collections: https://egeria-project.org/concepts/collection
+            Async version.
+
+        Parameters
+        ----------
+        display_name: str, optional
+            The display name of the collection. The display name will be used to manufacture a qualified name. An
+            exception will be raised if a unique qualified name can't be manufactured.
+        description: str, optional
+            The description of the collection.
+        category: str, optional
+            An optional user-assigned category for the collection.
+        classification: str, optional
+            An initial classification for the collection. This can be used to distinguish, for instance, Folders
+            from Root Collections.
+
+        body: dict | NewElementRequestBody, optional
+            A dict or NewElementRequestBody representing the details of the collection to create. If supplied, this
+            information will be used to create the collection and the other attributes will be ignored. The body is
+            validated before being used.
+
+        Returns
+        -------
+        str - the guid of the created collection
+
+        Raises
+        ------
+        PyegeriaException
+            One of the pyegeria exceptions will be raised if there are issues in communications, message format or
+            Egeria errors.
+        ValidationError
+            Pydantic validation errors are raised if the body does not conform to the NewElementRequestBody.
+        NotAuthorizedException
+          The principle specified by the user_id does not have authorization for the requested action
+
+        Notes:
+        -----
+        simple:
+        {
+          "class": "NewElementRequestBody",
+          "isOwnAnchor": true,
+          "properties": {
+            "class": "CollectionProperties",
+            "qualifiedName": "Must provide a unique name here",
+            "displayName": "Add display name here",
+            "description": "Add description of the collection here",
+            "category": "Add appropriate valid value for type"
+          }
+        }
+
+
+
+        """
+        if body:
+            validated_body = self.validate_new_element_request(body,"ReportTypeProperties")
+        elif display_name is not None:
+            qualified_name = self.__create_qualified_name__("ReportType", display_name)
+            logger.info(f"\n\tDisplayName was {display_name}, classification {classification_name}\n")
+            if classification_name:
+                initial_classification_dict = {
+                    classification_name: {
+                    "class" : "ClassificationProperties"
+                    }
+                }
+            else:
+                initial_classification_dict = None
+            collection_properties = ReportTypeProperties( class_ = "ReportTypeProperties",
+                                                             qualified_name = qualified_name,
+                                                             display_name = display_name,
+                                                             description = description,
+                                                             category = category
+                                                             )
+            body = {
+                "class" :"NewElementRequestBody",
+                "isOwnAnchor": True,
+                "initialClassifications": initial_classification_dict,
+                "properties": collection_properties.model_dump()
+                }
+            validated_body = NewElementRequestBody.model_validate(body)
+        else:
+            raise PyegeriaInvalidParameterException(additional_info={"reason": "Invalid input parameters"})
+
+
+        url = f"{self.collection_command_root}"
+        json_body = validated_body.model_dump_json(indent=2, exclude_none=True, by_alias=True)
+        logger.info(json_body)
+        resp = await self._async_make_request("POST", url, json_body, is_json=True)
+        logger.info(f"Create collection with GUID: {resp.json().get('guid')}")
+        return resp.json().get("guid", NO_GUID_RETURNED)
+
+    @dynamic_catch
+    def create_report_type_collection(self, display_name: Optional[str] = None, description: Optional[str] = None,
+                                category: Optional[str] = None, classification_name: Optional[str] = None,
+                                body: Optional[dict | NewElementRequestBody] = None) -> str:
+        """ Create a new report type collection. If the body is not present, the display_name, description, category
+            and classification will be used to create a simple, self-anchored collection.
+            Collections: https://egeria-project.org/concepts/collection
+
+        Parameters
+        ----------
+        display_name: str, optional
+            The display name of the collection. The display name will be used to manufacture a qualified name. An
+            exception will be raised if a unique qualified name can't be manufactured.
+        description: str, optional
+            The description of the collection.
+        category: str, optional
+            An optional user-assigned category for the collection.
+        classification_name: str, optional
+            An initial classification for the collection. This can be used to distinguish, for instance, Folders
+            from Root Collections.
+
+        body: dict | NewElementRequestBody, optional
+            A dict or NewElementRequestBody representing the details of the collection to create. If supplied, this
+            information will be used to create the collection and the other attributes will be ignored. The body is
+            validated before being used.
+
+        Returns
+        -------
+        str - the guid of the created collection
+
+        Raises
+        ------
+        PyegeriaException
+            One of the pyegeria exceptions will be raised if there are issues in communications, message format or
+            Egeria errors.
+        ValidationError
+            Pydantic validation errors are raised if the body does not conform to the NewElementRequestBody.
+        NotAuthorizedException
+          The principle specified by the user_id does not have authorization for the requested action
+
+        Notes:
+        -----
+        simple:
+        {
+          "class": "NewElementRequestBody",
+          "isOwnAnchor": true,
+          "properties": {
+            "class": "CollectionProperties",
+            "qualifiedName": "Must provide a unique name here",
+            "displayName": "Add display name here",
+            "description": "Add description of the collection here",
+            "category": "Add appropriate valid value for type"
+          }
+        }
+
+        anchored:
+        {
+          "class": "NewElementRequestBody",
+          "anchorGUID": "anchor GUID, if set then isOwnAnchor=false",
+          "isOwnAnchor": false,
+          "anchorScopeGUIDs": ["optional GUIDs of search scope"],
+          "parentGUID": "parent GUID, if set, set all parameters beginning 'parent'",
+          "parentRelationshipTypeName": "open metadata type name",
+          "parentAtEnd1": true,
+          "properties": {
+            "class": "CollectionProperties",
+            "qualifiedName": "Must provide a unique name here",
+            "displayName": "Add display name here",
+            "description": "Add description of the collection here",
+            "category": "Add appropriate valid value for type"
+          },
+          "externalSourceGUID": "add guid here",
+          "externalSourceName": "add qualified name here",
+          "effectiveTime": "{{$isoTimestamp}}",
+          "forLineage": false,
+          "forDuplicateProcessing": false
+        }
+
+        a root collection:
+        {
+          "class": "NewElementRequestBody",
+          "anchorGUID": "anchor GUID, if set then isOwnAnchor=false",
+          "isOwnAnchor": false,
+          "anchorScopeGUIDs": ["optional GUIDs of search scope"],
+          "initialClassifications": {
+            "RootCollection": {}
+          },
+          "parentGUID": "parent GUID, if set, set all parameters beginning 'parent'",
+          "parentRelationshipTypeName": "open metadata type name",
+          "parentAtEnd1": true,
+          "properties": {
+            "class": "CollectionProperties",
+            "qualifiedName": "Must provide a unique name here",
+            "displayName": "Add display name here",
+            "description": "Add description of the collection here",
+            "category": "Add appropriate valid value for type"
+          },
+          "externalSourceGUID": "add guid here",
+          "externalSourceName": "add qualified name here",
+          "effectiveTime": "{{$isoTimestamp}}",
+          "forLineage": false,
+          "forDuplicateProcessing": false
+        }
+
+
+             """
+
+        return asyncio.get_event_loop().run_until_complete(
+            self._async_create_report_type_collection(display_name, description,category,
                                                  classification_name, body))
 
 
