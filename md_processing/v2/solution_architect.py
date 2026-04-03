@@ -89,7 +89,8 @@ class BlueprintProcessor(AsyncBaseCommandProcessor):
             body['properties'] = set_element_prop_body("Solution Blueprint", qualified_name, attributes)
             body = body_slimmer(body)
             
-            guid = await self.client._async_create_solution_blueprint(body)
+            raw_guid = await self.client._async_create_solution_blueprint(body)
+            guid = self.extract_guid_or_raise(raw_guid, "Create Solution Blueprint")
             if guid:
                 self.parsed_output["guid"] = guid
                 sync_res = await self._sync_components(guid, comp_guids, replace_all=True)
@@ -229,7 +230,8 @@ class ComponentProcessor(AsyncBaseCommandProcessor):
             body["parentRelationshipTypeName"] = attributes.get('Parent Relationship Type Name', {}).get('value')
             body["isOwnAnchor"] = attributes.get('Is Own Anchor', {}).get('value', body["parentGUID"] is None)
 
-            guid = await self.client._async_create_solution_component(body)
+            raw_guid = await self.client._async_create_solution_component(body)
+            guid = self.extract_guid_or_raise(raw_guid, "Create Solution Component")
             if guid:
                 self.parsed_output["guid"] = guid
                 sync_res = await self._sync_all_rels(guid, supply_chain_guids, parent_comp_guids, actor_guids, blueprint_guids, keywords, replace_all=True)
@@ -433,7 +435,8 @@ class SupplyChainProcessor(AsyncBaseCommandProcessor):
             body = set_create_body("InformationSupplyChain", attributes)
             body['properties'] = prop_body
             
-            guid = await self.client._async_create_info_supply_chain(body)
+            raw_guid = await self.client._async_create_info_supply_chain(body)
+            guid = self.extract_guid_or_raise(raw_guid, "Create Information Supply Chain")
             if guid:
                 self.parsed_output["guid"] = guid
                 sync_res = await self._sync_rels(guid, in_sc_guids, nested_sc_guids, replace_all=True)

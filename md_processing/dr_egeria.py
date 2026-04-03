@@ -4,7 +4,7 @@ This is an ongoing experiment in parsing and playing with Freddie docs
 import os
 import sys
 import uuid
-from typing import Type
+from typing import Type, Callable
 from datetime import datetime
 
 from loguru import logger
@@ -17,7 +17,7 @@ from rich.markdown import Markdown
 import asyncio
 from md_processing import (extract_command, process_provenance_command, get_current_datetime_string, command_list)
 from md_processing.md_processing_utils.common_md_proc_utils import set_parse_summary_mode, set_usage_level
-from md_processing.md_processing_utils.common_md_utils import set_attribute_log_level, ALL_GOVERNANCE_DEFINITIONS
+from md_processing.md_processing_utils.common_md_utils import set_attribute_log_level
 from md_processing.md_processing_utils.md_processing_constants import PROJECT_SUBTYPES, COLLECTION_SUBTYPES
 from md_processing.v1_legacy.command_mapping import setup_dispatcher
 from md_processing.v2 import (
@@ -73,7 +73,34 @@ EGERIA_USER_PASSWORD = os.environ.get("EGERIA_USER_PASSWORD", "secret")
 # Legacy environment variables (deprecated, kept for backward compatibility)
 EGERIA_HOME_GLOSSARY_GUID = os.environ.get("EGERIA_HOME_GLOSSARY_GUID", None)
 
-async def process_md_file_v2(input_file: str, output_folder: str, directive: str, client: EgeriaTech, 
+
+def register_governance_processors(register_processor: Callable[[str, Type[AsyncBaseCommandProcessor]], None]) -> None:
+    """Register governance processors from compact command specs to avoid hard-coded drift."""
+    from md_processing.md_processing_utils.md_processing_constants import (
+        COMMAND_DEFINITIONS,
+        build_command_variants,
+        load_commands,
+    )
+
+    load_commands()
+    specs = COMMAND_DEFINITIONS.get("Command Specifications", {})
+    link_verbs = {"Link", "Attach", "Add", "Detach", "Unlink", "Remove"}
+
+    for base_name, spec in specs.items():
+        if not isinstance(spec, dict):
+            continue
+        if spec.get("family") != "Governance Officer":
+            continue
+
+        variants = build_command_variants(base_name, spec)
+        processor_cls = GovernanceLinkProcessor if base_name.split(" ", 1)[0] in link_verbs else GovernanceProcessor
+        for variant in variants:
+            register_processor(variant, processor_cls)
+
+    # Context retrieval is not in compact command specs; keep explicit registration.
+    register_processor("View Governance Definition Context", GovernanceContextProcessor)
+
+async def process_md_file_v2(input_file: str, output_folder: str, directive: str, client: EgeriaTech,
                             parse_summary: str = "none", attribute_logs: str = "debug",
                             usage_level: str = None, summary_only: bool = False) -> None:
     """
@@ -177,26 +204,10 @@ async def process_md_file_v2(input_file: str, output_folder: str, directive: str
     register_processor("Attach Collection to Resource", CollectionLinkProcessor)
     register_processor("Link Digital Subscriber", CollectionLinkProcessor)
 
-    # Governance
-    from md_processing.md_processing_utils.md_processing_constants import GOV_COM_LIST
-    for gov_cmd in GOV_COM_LIST:
-        register_processor(gov_cmd, GovernanceProcessor)
-    
-    # Fallback to catch any from the list that might be missing from GOV_COM_LIST or use a different verb
-    for gov_type in ALL_GOVERNANCE_DEFINITIONS + ["Data Lens"]:
-        register_processor(f"Create {gov_type}", GovernanceProcessor)
-        register_processor(f"Update {gov_type}", GovernanceProcessor)
-    
-    # Generic registration for gov links
-    register_processor("Link Governance Peer", GovernanceLinkProcessor)
-    register_processor("Detach Governance Peer", GovernanceLinkProcessor)
-    register_processor("Link Governance Supporting", GovernanceLinkProcessor)
-    register_processor("Detach Governance Supporting", GovernanceLinkProcessor)
-    register_processor("Link Governed By", GovernanceLinkProcessor)
-    register_processor("Detach Governed By", GovernanceLinkProcessor)
+    # Governance (spec-driven to keep coverage aligned with compact commands)
+    register_governance_processors(register_processor)
     # Reporting / View
     register_processor("View Report", ViewProcessor)
-    register_processor("View Governance Definition Context", GovernanceContextProcessor)
 
     # Feedback / Tags / External References
     register_processor("Add Comment", FeedbackProcessor)
@@ -268,7 +279,8 @@ async def process_md_file_v2(input_file: str, output_folder: str, directive: str
 
     summary_table = Table(title="Dr. Egeria v2 Processing Summary", show_header=True, header_style="bold magenta", 
                           show_lines=True, box=DOTTED)
-    summary_table.add_column("Command", style="cyan", overflow="fold")
+    summary_table.add_column("Markdown Command", style="cyan", overflow="fold")
+    summary_table.add_column("Canonical Command", style="bright_cyan", overflow="fold")
     summary_table.add_column("Status", style="bold", overflow="fold")
     summary_table.add_column("Found", style="green", overflow="fold")
     summary_table.add_column("Display Name", style="blue", overflow="fold")
@@ -314,7 +326,8 @@ async def process_md_file_v2(input_file: str, output_folder: str, directive: str
         status_color = "green" if res["status"] == "success" else "red" if res["status"] == "failure" else "yellow"
         found_str = "Yes" if res.get("found") else "No"
         summary_table.add_row(
-            f"{res['verb']} {res['object_type']}",
+            f"{res.get('verb', '')} {res.get('markdown_object_type', res.get('object_type', ''))}".strip(),
+            f"{res.get('verb', '')} {res.get('object_type', '')}".strip(),
             f"[{status_color}]{res['status'].upper()}[/{status_color}]",
             found_str,
             res.get("display_name", ""),

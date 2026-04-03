@@ -135,15 +135,17 @@ class CollectionManagerProcessor(AsyncBaseCommandProcessor):
                 # Some methods require body=body, others take body as positional
                 try:
                     if "Glossary" == object_type:
-                        guid = await method(display_name=display_name, body=body)
+                        raw_guid = await method(display_name=display_name, body=body)
                     else:
-                        guid = await method(body=body_slimmer(body)) if "Digital Product" in object_type else await method(body=body)
+                        raw_guid = await method(body=body_slimmer(body)) if "Digital Product" in object_type else await method(body=body)
                 except TypeError:
-                    guid = await method(body)
+                    raw_guid = await method(body)
             else:
                 # Generic fallback for any other collection subtype
-                guid = await self.client._async_create_collection(body=body, prop=[object_type.replace(" ", "")])
-                
+                raw_guid = await self.client._async_create_collection(body=body, prop=[object_type.replace(" ", "")])
+
+            guid = self.extract_guid_or_raise(raw_guid, f"Create {object_type}")
+
             if guid:
                 self.parsed_output["guid"] = guid
 
@@ -180,7 +182,7 @@ class CSVElementProcessor(AsyncBaseCommandProcessor):
         qualified_name = self.parsed_output["qualified_name"]
         display_name = attributes.get('Display Name', {}).get('value', qualified_name)
         
-        guid = await self.client._async_get_create_csv_data_file_element_from_template(
+        raw_guid = await self.client._async_get_create_csv_data_file_element_from_template(
             attributes.get('File Name', {}).get('value'),
             attributes.get('File Type', {}).get('value'),
             attributes.get('File Path', {}).get('value'),
@@ -190,6 +192,7 @@ class CSVElementProcessor(AsyncBaseCommandProcessor):
             attributes.get('File System Name', {}).get('value'),
             attributes.get('Description', {}).get('value')
         )
+        guid = self.extract_guid_or_raise(raw_guid, "Create CSV Element")
 
         if guid:
             self.parsed_output["guid"] = guid

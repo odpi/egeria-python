@@ -1,20 +1,23 @@
 
-# ER-13: Link Media Reference — verb Link
+# GO-27: Create Security Group — with Distinguished Name
 
-> Links a Related Media reference to a referenceable.
-> Element Name and Media Reference are both input_required.
-> Exercises Media Usage (Valid Value) and Media Id.
+# Create Security Group
 
-# Link Media Reference
+## Display Name
+Board Forecast Readers
 
-## Element Name
-DigitalProduct::SalesForecast::Pipeline::1.2
+## Summary
+Security group for principals authorised to read the board-level Sales Forecast report.
 
-## Media Reference
-RelatedMedia::SalesForecast::Dashboard::Q1-2026::1.0
+## Description
+Members of this security group have read access to the final board-presented
+Sales Forecast report and associated data quality attestations.
 
-## Media Usage
-ILLUSTRATION
 
-## Media Id
-SF-DASHBOARD-Q1-2026-001
+## Distinguished Name
+cn=BoardForecastReaders,ou=SecurityGroups,dc=example,dc=com
+
+## Qualified Name
+SecurityGroup::SalesForecast::BoardForecastReaders::1.0
+
+## GUID

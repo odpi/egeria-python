@@ -77,7 +77,8 @@ class DataCollectionProcessor(AsyncBaseCommandProcessor):
                 body['parentRelationshipTypeName'] = "CollectionMembership"
                 body['parentAtEnd1'] = True
 
-            guid = await self.client._async_create_collection(body=body)
+            raw_guid = await self.client._async_create_collection(body=body)
+            guid = self.extract_guid_or_raise(raw_guid, f"Create {object_type}")
             if guid:
                 self.parsed_output["guid"] = guid
 
@@ -156,7 +157,8 @@ class DataStructureProcessor(AsyncBaseCommandProcessor):
             body = set_create_body("Data Structure", attributes)
             body['properties'] = prop_body
             
-            guid = await self.client._async_create_data_structure(body_slimmer(body))
+            raw_guid = await self.client._async_create_data_structure(body_slimmer(body))
+            guid = self.extract_guid_or_raise(raw_guid, "Create Data Structure")
             if guid:
                 self.parsed_output["guid"] = guid
                 await self._sync_memberships(guid, to_be_guids, replace_all=True)
@@ -256,7 +258,8 @@ class DataFieldProcessor(AsyncBaseCommandProcessor):
             body = set_create_body("Data Field", attributes)
             body['properties'] = props_body
             
-            guid = await self.client._async_create_data_field(body)
+            raw_guid = await self.client._async_create_data_field(body)
+            guid = self.extract_guid_or_raise(raw_guid, "Create Data Field")
             if guid:
                 self.parsed_output["guid"] = guid
                 await self._sync_all_rels(guid, data_struct_guids, parent_field_guids, term_guids, data_class_guid, data_dict_guids, replace_all=True)
@@ -420,7 +423,8 @@ class DataClassProcessor(AsyncBaseCommandProcessor):
 
         elif verb == "Create":
             body = {"class": "NewElementRequestBody", "properties": props}
-            guid = await self.client._async_create_data_class(body)
+            raw_guid = await self.client._async_create_data_class(body)
+            guid = self.extract_guid_or_raise(raw_guid, "Create Data Class")
             if guid:
                 self.parsed_output["guid"] = guid
                 await self._sync_all_rels(guid, containing_dc_guids, term_guids, specializes_dc_guids, data_dict_guids, replace_all=True)

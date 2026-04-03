@@ -41,8 +41,10 @@
 # View Report
 
 ## Report Spec
-Referenceable
+Default
 
+## Page Size 
+5
 ___
 
 # RP-02: Report — explicit Search String and Output Format LIST
@@ -105,7 +107,7 @@ ___
 # View Report
 
 ## Report Spec
-Glossary
+Glossaries
 
 ## Search String
 Pipeline
@@ -141,7 +143,7 @@ ___
 # View Report
 
 ## Report Spec
-Glossary
+Glossaries
 
 ## Search String
 Forecast
@@ -253,7 +255,7 @@ ___
 # View Report
 
 ## Report Spec
-Glossary
+Glossaries
 
 ## Search String
 *
@@ -276,7 +278,7 @@ ___
 # View Report
 
 ## Report Spec
-Glossary
+Glossaries
 
 ## Search String
 *
@@ -321,7 +323,7 @@ ___
 # View Report
 
 ## Report Spec
-Glossary
+Glossaries
 
 ## Search String
 *
@@ -491,7 +493,7 @@ ___
 # View Report
 
 ## Report Spec
-Glossary
+Glossaries
 
 ## Search String
 pipeline

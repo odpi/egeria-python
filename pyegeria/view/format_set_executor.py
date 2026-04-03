@@ -14,16 +14,18 @@ Notes
 from __future__ import annotations
 
 import asyncio
+import inspect
 import json
 import sys
 from typing import Any, Dict, Optional
 
 from loguru import logger
+from pydantic import ValidationError
 
 import importlib
 from pyegeria.core._globals import NO_ELEMENTS_FOUND
 from pyegeria.core.config import settings
-from pyegeria.core._exceptions import PyegeriaException
+from pyegeria.core._exceptions import PyegeriaException, print_validation_error
 from pyegeria.view.base_report_formats import (
     select_report_spec,
     get_report_spec_heading,
@@ -50,6 +52,17 @@ _CLIENT_CLASS_MAP = {
 }
 
 
+def _resolve_report_target_type(fmt: Dict[str, Any], report_name: str) -> str:
+    """Return safe target type for rendering and warn when a spec omits it."""
+    target_type = fmt.get("target_type") if isinstance(fmt, dict) else None
+    if target_type is None:
+        logger.warning(
+            f"Report spec '{report_name}' has target_type=None. Falling back to 'Referenceable'."
+        )
+        return "Referenceable"
+    return str(target_type)
+
+
 def _resolve_client_and_method(func_decl: str):
     """Given a function declaration like 'ClassName.method', return (client_class, method_name)."""
     # Lazy import EgeriaTech to avoid circular dependency
@@ -69,6 +82,162 @@ def _resolve_client_and_method(func_decl: str):
         client_class = EgeriaTech
         
     return (client_class, method_name)
+
+
+def _resolve_action_target_client(egeria_client: EgeriaTech, client_class: type) -> Any:
+    """Resolve the concrete client instance to invoke for a report action."""
+    if client_class is EgeriaTech or isinstance(egeria_client, client_class):
+        return egeria_client
+
+    # Prefer an existing lazy-loaded subclient that exactly matches the declared class.
+    subclient_map = getattr(egeria_client, "_subclient_map", {})
+    if isinstance(subclient_map, dict) and hasattr(egeria_client, "_get_subclient"):
+        for attr_name, sub_cls in subclient_map.items():
+            if sub_cls is client_class:
+                return egeria_client._get_subclient(attr_name)
+
+    # Fallback for non-standard clients outside EgeriaTech's map.
+    return client_class(
+        egeria_client.view_server,
+        egeria_client.platform_url,
+        user_id=egeria_client.user_id,
+        user_pwd=egeria_client.user_pwd,
+        token=egeria_client.token,
+    )
+
+
+def _normalize_report_params(params: Dict[str, Any], action_mode: str = "generic") -> Dict[str, Any]:
+    """Normalize Dr.Egeria/CLI param aliases to action-call names and drop empty optionals."""
+    normalized = dict(params or {})
+
+    search_alias_target = "filter_string" if action_mode == "get" else "search_string"
+    aliases = {
+        search_alias_target: ["search_string"],
+        "property_value": ["search_string"],
+        "metadata_element_type": ["metadata_element_type_name", "metadata_element_name"],
+        "metadata_element_subtypes": ["metadata_element_subtype_names"],
+        "limit_results_by_status": ["limit_result_by_status"],
+        "sequencing_order": ["sort_order", "output_sort_order"],
+        "sequencing_property": ["order_property_name"],
+        "anchor_scope_guid": ["anchor_scope_id"],
+    }
+
+    for canonical_key, alias_keys in aliases.items():
+        if canonical_key in normalized and normalized.get(canonical_key) not in (None, "", []):
+            continue
+        for alias_key in alias_keys:
+            alias_value = normalized.get(alias_key)
+            if alias_value not in (None, "", []):
+                normalized[canonical_key] = alias_value
+                break
+
+    # Some filters are list-valued in request models; accept common scalar forms
+    # from markdown/CLI and coerce to list[str] for downstream body validation.
+    list_like_keys = {
+        "limit_results_by_status",
+        "limit_result_by_status",
+        "metadata_element_subtypes",
+        "metadata_element_subtype_names",
+        "skip_relationships",
+        "include_only_relationships",
+        "skip_classified_elements",
+        "include_only_classified_elements",
+        "governance_zone_filter",
+        "classification_names",
+    }
+
+    def _to_string_list(raw_value: Any) -> Any:
+        if isinstance(raw_value, str):
+            text = raw_value.strip()
+            if text.startswith("[") and text.endswith("]"):
+                text = text[1:-1]
+            parts = [
+                p.strip().strip("\"'")
+                for p in text.replace("\n", ",").split(",")
+                if p.strip()
+            ]
+            return parts if parts else ([] if text == "" else [text])
+        if isinstance(raw_value, tuple | set):
+            return [str(v).strip() for v in raw_value if str(v).strip()]
+        return raw_value
+
+    for list_key in list_like_keys:
+        if list_key in normalized:
+            normalized[list_key] = _to_string_list(normalized.get(list_key))
+
+    cleaned: Dict[str, Any] = {}
+    for key, value in normalized.items():
+        if isinstance(value, str):
+            value = value.strip()
+            if value == "":
+                continue
+        elif isinstance(value, (list, tuple, set)):
+            value = [v for v in value if v not in (None, "")]
+            if len(value) == 0:
+                continue
+        if value is None:
+            continue
+        cleaned[key] = value
+
+    return cleaned
+
+
+def _extract_param_value(params: Dict[str, Any], param_name: str, action_mode: str = "generic") -> Any:
+    """Get action parameter value with tolerance for known alias names."""
+    if param_name in params:
+        return params[param_name]
+
+    search_aliases = ["search_string"]
+    if action_mode == "get":
+        search_aliases = ["search_string", "property_value"]
+
+    alias_lookup = {
+        "property_value": search_aliases,
+        "search_string": ["property_value"],
+        "filter_string": ["search_string", "property_value", "filter"],
+        "filter": ["search_string", "property_value", "filter_string"],
+        "metadata_element_type": ["metadata_element_type_name", "metadata_element_name"],
+        "metadata_element_name": ["metadata_element_type", "metadata_element_type_name"],
+        "metadata_element_subtypes": ["metadata_element_subtype_names"],
+        "limit_results_by_status": ["limit_result_by_status"],
+        "sequencing_order": ["sort_order", "output_sort_order"],
+        "sequencing_property": ["order_property_name"],
+        "anchor_scope_guid": ["anchor_scope_id"],
+    }
+    for alias in alias_lookup.get(param_name, []):
+        if alias in params:
+            return params[alias]
+    return None
+
+
+def _infer_action_mode(method_name: Optional[str]) -> str:
+    base_name = (method_name or "").replace("_async_", "")
+    if base_name.startswith("get_"):
+        return "get"
+    if base_name.startswith("find_"):
+        return "find"
+    return "generic"
+
+
+def _merge_signature_params(func: Any, params: Dict[str, Any], call_params: Dict[str, Any]) -> Dict[str, Any]:
+    """Add extra normalized params that the resolved function explicitly accepts."""
+    try:
+        sig = inspect.signature(func)
+    except Exception:
+        return call_params
+
+    accepted = set(sig.parameters.keys())
+    has_var_kw = any(p.kind == inspect.Parameter.VAR_KEYWORD for p in sig.parameters.values())
+
+    merged = dict(call_params)
+    for key, value in (params or {}).items():
+        if key in {"output_format", "report_spec"}:
+            continue
+        if key in merged:
+            continue
+        if key in accepted or has_var_kw:
+            merged[key] = value
+    return merged
 
 
 def _validate_report_spec_params(report_spec, params):
@@ -165,32 +334,50 @@ async def _async_run_report(
     if "action" not in fmt:
         raise ValueError(f"Output format set '{report_name}' does not have an action property.")
 
+    safe_target_type = _resolve_report_target_type(fmt, report_name)
+
     action = fmt["action"]
     func_decl = action.get("function")
+    method_name = None
     if isinstance(func_decl, str) and "." in func_decl:
         class_name, method_name = func_decl.split(".")
-
-    if not method_name.startswith("_async_"):
-        method_name = "_async_" + method_name
-        func_decl = class_name + "." + method_name
+        if not method_name.startswith("_async_"):
+            method_name = "_async_" + method_name
+            func_decl = class_name + "." + method_name
+    else:
+        raise ValueError(f"Invalid action function declaration for report '{report_name}': {func_decl!r}")
 
     required_params = action.get("required_params", action.get("user_params", [])) or []
     optional_params = action.get("optional_params", []) or []
     spec_params = action.get("spec_params", {}) or {}
     print(f"func_decl={func_decl}", file=sys.stderr)
+    action_mode = _infer_action_mode(method_name)
+    params = _normalize_report_params(params, action_mode=action_mode)
+
     # Build call params: required/optional provided by caller + fixed spec_params
     call_params: Dict[str, Any] = {}
+    missing_required: list[str] = []
 
     # Populate required and optional params when provided
     for p in required_params:
-        if p in params and params[p] is not None:
-            call_params[p] = params[p]
+        value = _extract_param_value(params, p, action_mode=action_mode)
+        if value is not None:
+            call_params[p] = value
         elif p not in spec_params:
-            # Missing required param
+            # Missing required param — collect for a single clear error
+            missing_required.append(p)
             logger.warning(f"Required parameter '{p}' not provided for format set '{report_name}'.")
+
+    if missing_required:
+        raise ValueError(
+            f"Report '{report_name}' requires the following parameter(s) that were not provided: "
+            f"{', '.join(missing_required)}. Please add them to your command."
+        )
+
     for p in optional_params:
-        if p in params and params[p] is not None:
-            call_params[p] = params[p]
+        value = _extract_param_value(params, p, action_mode=action_mode)
+        if value is not None:
+            call_params[p] = value
 
     # Include fixed specifics
     call_params.update(spec_params)
@@ -200,12 +387,13 @@ async def _async_run_report(
     call_params["report_spec"] = report_name
 
     client_class, method_name = _resolve_client_and_method(func_decl)
+    target_client = _resolve_action_target_client(egeria_client, client_class)
 
 
     try:
-        func = getattr(egeria_client, method_name) if method_name and hasattr(egeria_client, method_name) else None
+        func = getattr(target_client, method_name) if method_name and hasattr(target_client, method_name) else None
         # Add logging to validate func
-        msg = f"DEBUG: func={func}, method_name={method_name}, client_class={client_class}"
+        msg = f"DEBUG: func={func}, method_name={method_name}, client_class={client_class}, target_client={type(target_client)}"
         logger.debug(msg)
         print(msg, file=sys.stderr)
 
@@ -213,6 +401,8 @@ async def _async_run_report(
             raise TypeError(
                 f"Resolved function '{method_name}'  not found in client class '{client_class.__name__}' is not callable."
             )
+
+        call_params = _merge_signature_params(func, params, call_params)
         # Only (re)create a bearer token if one is not already set on the client.
         try:
             existing_token = None
@@ -246,7 +436,7 @@ async def _async_run_report(
                     search_string=call_params.get("search_string")
                     or call_params.get("filter_string")
                     or "All",
-                    entity_type=fmt.get("target_type", "Referenceable"),
+                    entity_type=safe_target_type,
                     output_format=output_format,
                     columns_struct=fmt,
                 )
@@ -268,6 +458,9 @@ async def _async_run_report(
 
     except PyegeriaException as e:
         # Re-raise with a simpler message for upstream mapping
+        raise
+    except ValidationError as e:
+        print_validation_error(e)
         raise
 
 
@@ -292,7 +485,7 @@ def exec_report_spec(
     - {"kind":"unknown","raw": any}
     """
     output_format = (output_format or "DICT").upper()
-    params = dict(params or {})
+    params = _normalize_report_params(dict(params or {}), action_mode="find")
 
     # Resolve the format set and action
     if isinstance(format_set_name, dict):
@@ -335,6 +528,8 @@ def exec_report_spec(
     if "action" not in fmt:
         raise ValueError(f"Output report spec '{format_set_name}' does not have an action property.")
 
+    safe_target_type = _resolve_report_target_type(fmt, str(format_set_name))
+
     action = fmt["action"]
     func_decl = action.get("function")
     required_params = action.get("required_params", action.get("user_params", [])) or []
@@ -346,14 +541,16 @@ def exec_report_spec(
 
     # Populate required and optional params when provided
     for p in required_params:
-        if p in params and params[p] is not None:
-            call_params[p] = params[p]
+        value = _extract_param_value(params, p, action_mode="find")
+        if value is not None:
+            call_params[p] = value
         elif p not in spec_params:
             # Missing required param
             logger.warning(f"Required parameter '{p}' not provided for report spec '{format_set_name}'.")
     for p in optional_params:
-        if p in params and params[p] is not None:
-            call_params[p] = params[p]
+        value = _extract_param_value(params, p, action_mode="find")
+        if value is not None:
+            call_params[p] = value
 
     # Include fixed specifics
     call_params.update(spec_params)
@@ -390,7 +587,7 @@ def exec_report_spec(
                     search_string=call_params.get("search_string")
                     or call_params.get("filter_string")
                     or "All",
-                    entity_type=fmt.get("target_type", "Referenceable"),
+                    entity_type=safe_target_type,
                     output_format=output_format,
                     columns_struct=fmt,
                 )
@@ -412,6 +609,9 @@ def exec_report_spec(
 
     except PyegeriaException as e:
         # Re-raise with a simpler message for upstream mapping
+        raise
+    except ValidationError as e:
+        print_validation_error(e)
         raise
     except ValueError as e:
         import traceback

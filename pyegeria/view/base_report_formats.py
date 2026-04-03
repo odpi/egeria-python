@@ -473,15 +473,16 @@ base_report_specs = FormatSetDict({
                 ],
             )
         ],
-        action=ActionParameter(
-            function="ClassificationExplorer.get_elements_by_property_value",
-            optional_params=OPTIONAL_FILTER_PARAMS + ["metadata_element_type"] + TIME_PARAMETERS,
-            required_params=["property_value"],
-            spec_params={"property_names": ["displayName", "qualifiedName"]},
-        )
+        # action=ActionParameter(
+        #     function="ClassificationExplorer.get_elements_by_property_value",
+        #     optional_params=OPTIONAL_FILTER_PARAMS + ["metadata_element_type"] + TIME_PARAMETERS,
+        #     required_params=["property_value"],
+        #     spec_params={"property_names": ["displayName", "qualifiedName"]},
+        # )
     ),
     "Default": FormatSet(
         heading="Default Base Attributes",
+        target_type="Any Metadata Element",
         description="Was a valid combination of report_spec and output_format provided?",
         annotations={},  # No specific annotations
         family="General",
@@ -505,10 +506,9 @@ base_report_specs = FormatSetDict({
             )
         ],
         action=ActionParameter(
-            function="ClassificationExplorer.get_elements_by_property_value",
-            optional_params=OPTIONAL_FILTER_PARAMS + ["metadata_element_type"] + TIME_PARAMETERS,
-            required_params=["property_value"],
-            spec_params={"property_names": ["displayName", "qualifiedName"]},
+            function="ClassificationExplorer.get_elements",
+            optional_params=OPTIONAL_FILTER_PARAMS + ["metadata_element_type"] + TIME_PARAMETERS ,
+            # spec_params={"property_names": ["displayName", "qualifiedName"]},
         )
     ),
     "Element-By-Owner": FormatSet(

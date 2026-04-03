@@ -35,22 +35,26 @@ EGERIA_ROOT_PATH = os.environ.get("EGERIA_ROOT_PATH", "../../")
 EGERIA_INBOX_PATH = os.environ.get("EGERIA_INBOX_PATH", "md_processing/dr_egeria_inbox")
 EGERIA_OUTBOX_PATH = os.environ.get("EGERIA_OUTBOX_PATH", "md_processing/dr_egeria_outbox")
 
-GENERAL_GOVERNANCE_DEFINITIONS = ["Governance Definition", "Business Imperative", "Regulation Article", "Threat",
-                                  "Governance Policy", "Governance Principle", "Governance Obligation",
-                                  "Governance Approach",
-                                  "Governance Processing Purpose"]
+GENERAL_GOVERNANCE_DEFINITIONS = [
+    "Governance Definition", "Business Imperative", "Regulation Article", "Threat",
+    "Governance Policy", "Governance Principle", "Governance Obligation",
+    "Governance Approach", "Data Processing Purpose",
+]
 GOVERNANCE_DRIVERS = ["Governance Driver", "Governance Strategy", "Governance Imperative", "Regulation",
                      "Regulation Article", "Threat"]
 GOVERNANCE_POLICIES = ["Governance Policy", "Governance Principle", "Governance Obligation", "Governance Approach"]
 
 
-GOVERNANCE_CONTROLS = ["Governance Control", "Governance Rule", "Service Level Objective", "Governance Action",
-                        "Security Access Control", "Governance Procedure","Governance Responsibility",
-                       "Subject Area Definition", "Data Processing Purposes", "Methodology"]
+GOVERNANCE_CONTROLS = [
+    "Governance Control", "Governance Rule", "Service Level Objective", "Service Level Objectives",
+    "Governance Action", "Security Access Control", "Governance Procedure", "Governance Responsibility",
+    "Subject Area Definition", "Methodology", "Governance Metric",
+]
 
-ALL_GOVERNANCE_DEFINITIONS = GENERAL_GOVERNANCE_DEFINITIONS + GOVERNANCE_CONTROLS + ["Governance Strategy", "Regulation",
-                                                "Security Group", "GovernanceMetric",
-                                                "Naming Standard Rule", "TermsAndConditions", "Certification Type", "License Type"]
+ALL_GOVERNANCE_DEFINITIONS = GENERAL_GOVERNANCE_DEFINITIONS + GOVERNANCE_CONTROLS + [
+    "Governance Strategy", "Regulation", "Security Group", "Governance Zone", "Notification Type",
+    "Naming Standard Rule", "TermsAndConditions", "Terms & Conditions", "Certification Type", "License Type",
+]
 console = Console(width=EGERIA_WIDTH)
 debug_level = DEBUG_LEVEL
 ATTRIBUTE_LOG_LEVEL = os.environ.get("EGERIA_ATTRIBUTE_LOG_LEVEL", "debug").lower()
@@ -331,6 +335,24 @@ def set_rel_prop_body(object_type: str, attributes: dict)->dict:
         "extendedProperties": attributes.get('Extended Properties', {}).get('value', None),
         }
 
+
+def _to_egeria_type_name(object_type: str) -> str:
+    """Normalize human-readable object labels into canonical Egeria type names."""
+    aliases = {
+        "Terms & Conditions": "TermsAndConditions",
+        "Terms and Conditions": "TermsAndConditions",
+        "T&C": "TermsAndConditions",
+    }
+    if object_type in aliases:
+        return aliases[object_type]
+
+    tokens = re.findall(r"[A-Za-z0-9]+", object_type or "")
+    if not tokens:
+        return (object_type or "").replace(" ", "")
+    if len(tokens) == 1:
+        return tokens[0]
+    return "".join(token[:1].upper() + token[1:] for token in tokens)
+
 def set_element_prop_body(object_type: str, qualified_name: str, attributes: dict)->dict:
     """
     Build the INNER element-specific Properties body to be placed under the outer body's "properties" key.
@@ -342,7 +364,7 @@ def set_element_prop_body(object_type: str, qualified_name: str, attributes: dic
     - outer["properties"] = props
     - client.create_xxx(outer)
     """
-    prop_name = object_type.replace(" ", "")
+    prop_name = _to_egeria_type_name(object_type)
     display_name = attributes.get('Display Name', {}).get('value', None)
 
     return {
@@ -488,7 +510,19 @@ def update_gov_body_for_type(object_type: str, body: dict, attributes: dict) -> 
     elif object_type in GOVERNANCE_CONTROLS:
         body['implementationDescription'] = attributes.get('Implementation Description', {}).get('value', None)
         return body
-    elif object_type == "Security Group":
+    elif object_type in {"Security Group", "SecurityGroup"}:
+        # Some servers model SecurityGroup with a narrower property set than other governance definitions.
+        for field in [
+            "domainIdentifier",
+            "summary",
+            "scope",
+            "importance",
+            "implications",
+            "outcomes",
+            "results",
+            "usage",
+        ]:
+            body.pop(field, None)
         body['distinguishedName'] = attributes.get('Distinguished Name', {}).get('value', None)
         return body
     elif object_type == "GovernanceMetric":
@@ -498,7 +532,19 @@ def update_gov_body_for_type(object_type: str, body: dict, attributes: dict) -> 
     elif object_type == "Naming Standard Rule":
         body['namePatterns'] = attributes.get('Name Patterns', {}).get('value', [])
         return body
-    elif object_type in ["TermsAndConditions", "Certification Type", "License Type"]:
+    elif object_type == "Governance Zone":
+        body['criteria'] = attributes.get('Criteria', {}).get('value', None)
+        return body
+    elif object_type == "Notification Type":
+        body['plannedCompletionDate'] = attributes.get('Planned Completion Date', {}).get('value', None)
+        body['multipleNotificationsPermitted'] = attributes.get('Multiple Notifications Permitted', {}).get('value', None)
+        body['nextScheduledNotification'] = attributes.get('Next Scheduled Notification', {}).get('value', None)
+        body['notificationCount'] = attributes.get('Notification Count', {}).get('value', None)
+        body['notificationInterval'] = attributes.get('Notification Interval', {}).get('value', None)
+        body['minimumNotificationInterval'] = attributes.get('Minimum Notification Interval', {}).get('value', None)
+        body['plannedStartDate'] = attributes.get('Planned Start Date', {}).get('value', None)
+        return body
+    elif object_type in ["TermsAndConditions", "Terms and Conditions", "Terms & Conditions", "Certification Type", "License Type"]:
         entitlements = attributes.get('Entitlements', {}).get('value', {}) if attributes.get('Entitlements',None) else None
         restrictions = attributes.get('Restrictions', {}).get('value', {}) if attributes.get('Restrictions',None) else None
         obligations = attributes.get('Obligations', {}).get('value', {}) if attributes.get('Obligations',None) else None
@@ -507,6 +553,9 @@ def update_gov_body_for_type(object_type: str, body: dict, attributes: dict) -> 
         body['obligations'] = obligations
 
         return body
+
+    # Preserve base governance fields for subtypes without dedicated custom mappings.
+    return body
 
 
 def set_rel_request_body(object_type: str, attributes: dict)->dict:

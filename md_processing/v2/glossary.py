@@ -86,7 +86,8 @@ class GlossaryProcessor(AsyncBaseCommandProcessor):
 
             body["properties"] = prop_body
             
-            guid = await self.client._async_create_collection(body=body)
+            raw_guid = await self.client._async_create_collection(body=body)
+            guid = self.extract_guid_or_raise(raw_guid, f"Create {object_type}")
             if guid:
                 self.parsed_output["guid"] = guid
 
@@ -185,7 +186,8 @@ class TermProcessor(AsyncBaseCommandProcessor):
             if anchor_scope_guid is None and glossary_guids:
                 body["anchorScopeGUID"] = glossary_guids[0] # Use first glossary as anchor if not specified
 
-            guid = await self.client._async_create_glossary_term(body=body)
+            raw_guid = await self.client._async_create_glossary_term(body=body)
+            guid = self.extract_guid_or_raise(raw_guid, "Create Glossary Term")
             if guid:
                 self.parsed_output["guid"] = guid
                 # For Create, we always want to ensure it's in all listed collections

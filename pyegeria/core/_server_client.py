@@ -6140,6 +6140,9 @@ class ServerClient(BaseServerClient):
                                   body: dict | SearchStringRequestBody | FindPropertyNamesRequestBody = None,
                                   **kwargs) -> Any:
 
+        if isinstance(metadata_element_type, str) and not metadata_element_type.strip():
+            metadata_element_type = None
+
         if isinstance(body, (SearchStringRequestBody, FindPropertyNamesRequestBody)):
             validated_body = body
         elif isinstance(body, dict):
@@ -6179,6 +6182,8 @@ class ServerClient(BaseServerClient):
                     "anchorDomainName": anchor_domain,
                     "anchorScopeGuid": anchor_scope_guid,
                 }
+                if not metadata_element_type:
+                    body.pop("metadataElementTypeName", None)
                 validated_body = FindPropertyNamesRequestBody.model_validate(body)
             else:
                 body = {
@@ -6210,6 +6215,8 @@ class ServerClient(BaseServerClient):
                     "pageSize": page_size
 
                 }
+                if not metadata_element_type:
+                    body.pop("metadataElementTypeName", None)
                 validated_body = SearchStringRequestBody.model_validate(body)
 
         json_body = validated_body.model_dump_json(indent=2, exclude_none=True)

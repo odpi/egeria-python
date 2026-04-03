@@ -4,6 +4,7 @@ Implements the Attribute-First (Spec-Agnostic) parsing strategy.
 """
 import asyncio
 import re
+from difflib import get_close_matches
 from typing import Any, Dict, List, Optional
 from loguru import logger
 
@@ -60,8 +61,18 @@ class AttributeFirstParser:
         for raw_label, raw_value in self.command.attributes.items():
             match = label_map.get(raw_label.lower())
             if not match:
-                logger.warning(f"Unknown attribute label: '{raw_label}'")
-                self.warnings.append(f"Unknown attribute label: '{raw_label}'")
+                close_keys = get_close_matches(raw_label.lower(), list(label_map.keys()), n=3, cutoff=0.72)
+                suggestions = []
+                for key in close_keys:
+                    canonical = label_map[key][0]
+                    if canonical not in suggestions:
+                        suggestions.append(canonical)
+                if suggestions:
+                    msg = f"Unknown attribute label: '{raw_label}'. Did you mean: {', '.join(suggestions)}?"
+                else:
+                    msg = f"Unknown attribute label: '{raw_label}'"
+                logger.warning(msg)
+                self.warnings.append(msg)
                 continue
 
             canonical_name, details = match
@@ -114,7 +125,16 @@ class AttributeFirstParser:
                     continue
             
             if input_required and canonical_name not in self.parsed_attributes:
-                self.errors.append(f"Missing required attribute: '{canonical_name}'")
+                provided_labels = list(self.command.attributes.keys())
+                msg = f"Missing required attribute: '{canonical_name}'"
+                if provided_labels:
+                    msg += f". Provided attributes: {', '.join(provided_labels)}"
+                    close_labels = get_close_matches(canonical_name.lower(), [lbl.lower() for lbl in provided_labels], n=2, cutoff=0.72)
+                    if close_labels:
+                        original = [lbl for lbl in provided_labels if lbl.lower() in set(close_labels)]
+                        if original:
+                            msg += f". Check label spelling/casing near: {', '.join(original)}"
+                self.errors.append(msg)
 
         qn_obj = self.parsed_attributes.get("Qualified Name", self.parsed_attributes.get("qualified_name"))
         qn_value = qn_obj.get("value") if isinstance(qn_obj, dict) else qn_obj
@@ -129,9 +149,11 @@ class AttributeFirstParser:
 
     def _add_to_label_map(self, label_map: Dict[str, Any], canonical_name: str, details: Dict[str, Any]):
         """Helper to index an attribute by its canonical name and all alternate labels."""
-        # Ensure variable_name is present
+        # Ensure variable_name and name are present so _process_attribute_value can inspect them
         if "variable_name" not in details:
             details["variable_name"] = canonical_name.lower().replace(" ", "_")
+        if "name" not in details:
+            details["name"] = canonical_name
 
         label_map[canonical_name.lower()] = (canonical_name, details)
         alt_labels = details.get("attr_labels", "")

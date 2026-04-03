@@ -62,7 +62,7 @@ class FeedbackProcessor(AsyncBaseCommandProcessor):
                 body['class'] = "NewAttachmentRequestBody"
                 body["properties"] = prop_body
                 response = await self.client._async_add_comment_to_element(associated_guid, body=body_slimmer(body))
-                guid = response.get("guid") if isinstance(response, dict) else response
+                guid = self.extract_guid_or_raise(response, "Create Comment")
                 if guid:
                     self.parsed_output["guid"] = guid
                     update_element_dictionary(qualified_name, {'guid': guid, 'display_name': display_name})
@@ -85,6 +85,7 @@ class FeedbackProcessor(AsyncBaseCommandProcessor):
                 note_log_display_name=journal_name,
                 note_entry=note_entry
             )
+            guid = self.extract_guid_or_raise(guid, "Create Journal Entry")
             if guid:
                 self.parsed_output["guid"] = guid
                 logger.success(f"Added Journal Entry to '{journal_name}' with GUID {guid}")
@@ -133,7 +134,7 @@ class TagProcessor(AsyncBaseCommandProcessor):
 
         elif verb == "Create":
             response = await self.client._async_create_informal_tag(display_name, description, qualified_name)
-            guid = response.get("guid") if isinstance(response, dict) else response
+            guid = self.extract_guid_or_raise(response, "Create Informal Tag")
             if guid:
                 self.parsed_output["guid"] = guid
                 update_element_dictionary(qualified_name, {'guid': guid, 'display_name': display_name})
@@ -231,14 +232,8 @@ class ExternalReferenceProcessor(AsyncBaseCommandProcessor):
             body = set_create_body(object_type, attributes)
             body["properties"] = prop_body
             response = await self.client._async_create_external_reference(body=body_slimmer(body))
-            
-            # Extract the actual guid string if the API returned a raw dict response.
-            guid = None
-            if isinstance(response, str):
-                guid = response
-            elif isinstance(response, dict):
-                guid = response.get("guid") or response.get("elementHeader", {}).get("guid")
-                
+            guid = self.extract_guid_or_raise(response, f"Create {object_type}")
+
             if guid:
                 self.parsed_output["guid"] = guid
 

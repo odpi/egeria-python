@@ -6,7 +6,7 @@ import asyncio
 from typing import Dict, Type, Optional, Any, List
 from loguru import logger
 
-from pyegeria import EgeriaTech
+from pyegeria import EgeriaTech, PyegeriaException, print_basic_exception
 from md_processing.v2.extraction import DrECommand
 from md_processing.v2.processors import AsyncBaseCommandProcessor
 from md_processing.md_processing_utils.md_processing_constants import COLLECTION_SUBTYPES, PROJECT_SUBTYPES
@@ -78,6 +78,17 @@ class v2Dispatcher:
         processor = processor_cls(self.client, command, context)
         try:
             return await processor.execute()
+        except PyegeriaException as e:
+            logger.exception(f"Error executing command '{command_key}'")
+            print_basic_exception(e)
+            return {
+                "output": command.raw_block,
+                "status": "failure",
+                "message": f"Execution failed: {str(e)}",
+                "verb": command.verb,
+                "object_type": command.object_type,
+                "error": str(e)
+            }
         except Exception as e:
             logger.exception(f"Error executing command '{command_key}'")
             return {

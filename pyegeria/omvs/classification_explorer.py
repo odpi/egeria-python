@@ -2336,9 +2336,9 @@ body: Optional[dict | FilterRequestBody] = None,
     #
     async def _async_get_elements(
             self,
-            metadata_element_type: str,
+            metadata_element_type: str="Referenceable",
             start_from: int = 0,
-            page_size: int = 0,
+            page_size: int = 10,
             output_format: str = "JSON",
             report_spec: dict | str = None,
             body: Optional[dict | ResultsRequestBody] = None,
@@ -2389,9 +2389,9 @@ body: Optional[dict | FilterRequestBody] = None,
 
     def get_elements(
             self,
-            metadata_element_type: str,
+            metadata_element_type: str = "Referenceable",
             start_from: int = 0,
-            page_size: int = 0,
+            page_size: int = 10,
             output_format: str = "JSON",
             report_spec: dict | str = None,
             body: Optional[dict | ResultsRequestBody] = None,
@@ -2443,13 +2443,14 @@ body: Optional[dict | FilterRequestBody] = None,
 
     async def _async_get_elements_by_property_value(
             self,
-            property_value: str,
+            property_value: str = None,
             property_names: Optional[list[str]] = None,
             metadata_element_name: Optional[str] = None,
             starts_with: bool = True,
             ends_with: bool = False,
             ignore_case: bool = False,
             anchor_domain: Optional[str] = None,
+            anchor_scope_guid: Optional[str] = None,
             metadata_element_subtypes: Optional[list[str]] = None,
             skip_relationships: Optional[list[str]] = None,
             include_only_relationships: Optional[list[str]] = None,
@@ -2540,7 +2541,7 @@ body: Optional[dict | FilterRequestBody] = None,
         Args:
             report_spec ():
         """
-        if property_value in ["","*"] or property_value is None:
+        if property_value in [""] or property_value is None:
             context: dict = {}
             context['method'] = "_async_get_elements_by_property_value"
             context['reason'] = "Invalid property value"
@@ -2552,6 +2553,7 @@ body: Optional[dict | FilterRequestBody] = None,
         return await self._async_find_request(url, "Referenceable", self._generate_referenceable_output, property_value,
                                               starts_with=starts_with, ends_with=ends_with, ignore_case=ignore_case,
                                               anchor_domain=anchor_domain, metadata_element_type=metadata_element_name,
+                                              anchor_scope_guid=anchor_scope_guid,
                                               metadata_element_subtypes=metadata_element_subtypes,
                                               skip_relationships=skip_relationships,
                                               include_only_relationships=include_only_relationships,
@@ -2569,13 +2571,14 @@ body: Optional[dict | FilterRequestBody] = None,
 
     def get_elements_by_property_value(
             self,
-            property_value: str,
+            property_value: str = None,
             property_names: Optional[list[str]] = None,
             metadata_element_type: Optional[str] = None,
             starts_with: bool = True,
             ends_with: bool = False,
             ignore_case: bool = False,
             anchor_domain: Optional[str] = None,
+            anchor_scope_guid: Optional[str] = None,
             metadata_element_subtypes: Optional[list[str]] = None,
             skip_relationships: Optional[list[str]] = None,
             include_only_relationships: Optional[list[str]] = None,
@@ -2674,6 +2677,7 @@ body: Optional[dict | FilterRequestBody] = None,
                 ends_with,
                 ignore_case,
                 anchor_domain,
+                anchor_scope_guid,
                 metadata_element_subtypes,
                 skip_relationships,
                 include_only_relationships,

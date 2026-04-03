@@ -82,6 +82,11 @@ When rendering nested collections in horizontal formats (`LIST` and CLI `TABLE`)
 
 The `format_set_executor.py` (`exec_report_spec` and `_async_run_report`) has been refactored to use the centralized `generate_output` pipeline for all narrative formats. This ensures that features like master-detail and smart summarization are consistently available whether calling SDK methods directly or executing report specs through CLI tools.
 
+### Runtime Safety in Report Execution
+
+- **Missing `target_type`**: If a resolved report spec has `target_type = None`, the executor logs a warning and falls back to `Referenceable` to keep LIST/REPORT rendering stable.
+- **Validation Errors**: Pydantic `ValidationError` exceptions raised during request/body coercion are printed via `print_validation_error` and then re-raised for upstream handling.
+
 ## Search vs Filter Semantics
 
 - **Find Methods**: Use `search_string`. These typically perform substring or regex matching on the server.
@@ -91,7 +96,7 @@ The `format_set_executor.py` (`exec_report_spec` and `_async_run_report`) has be
 ## Handling Kwargs
 
 - **Pass-through**: `**kwargs` are forwarded from the initial manager call -> `_async_find_request` (or similar) -> Output Generator -> `_generate_formatted_output` -> `generate_output`.
-- **Usage**: Extra kwargs are currently "accepted but ignored" by the formatting layer unless they match specific supported flags (like `report_spec`). This allows future extensions (e.g., `include_relationships=False`) without changing intermediate signatures.
+- **Usage**: Extra kwargs are accepted and selectively consumed by the formatter/executor (for example `report_spec`, filter/search aliases, and formatting flags). Unknown kwargs remain non-breaking and are ignored by layers that do not use them.
 
 ## Migration Guide for New Managers
 

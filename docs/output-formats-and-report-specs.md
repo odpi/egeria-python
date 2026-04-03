@@ -122,6 +122,10 @@ Most client methods already call the output pipeline for you. Under the hood, th
 - `resolve_output_formats(entity_type: str, output_format: str, report_spec: str|dict|None)`: flexible resolver used by clients (by name, by dict, or by entity type default).
 - `generate_output(...)`: orchestrates DICT/LIST/REPORT/FORM rendering given elements and a spec. It supports an `include_preamble` parameter (default `True`) to control whether the report header/preamble is included; this is automatically disabled during recursive master-detail calls to prevent redundant headings.
 
+### `target_type` fallback behavior
+
+If a report spec resolves successfully but has `target_type = None`, pyegeria logs a warning and falls back to `Referenceable` for rendering. This prevents LIST/REPORT failures caused by missing type labels in a spec.
+
 ### Type matching and the 'ALL' shorthand
 
 When you request an `output_format`, pyegeria selects the best matching `Format` inside the `formats` list for the chosen spec:
@@ -308,8 +312,20 @@ By default, pyegeria applies a **normalization** process to these graphs to ensu
    - `hexagon` → `{{text}}`
    - Unknown or document shapes → `[text]` (standard square box)
 
-### Disabling Normalization
-If you are using a modern Mermaid renderer that supports the native Egeria output, you can disable this transformation by changing the `NORMALIZE_MERMAID` flag in `pyegeria/view/output_formatter.py` to `False`.
+### Configuring Normalization
+Mermaid normalization defaults to enabled. You can control it without code changes:
+
+- JSON config: set `Environment -> Egeria Normalize Mermaid` in your selected config profile.
+- Environment variables:
+  - Preferred: `PYEGERIA_NORMALIZE_MERMAID` (`true/false`)
+  - Backward-compatible fallback: `EGERIA_NORMALIZE_MERMAID`
+
+Precedence for Mermaid normalization is:
+1. Environment variables
+2. Config value (`Environment.egeria_normalize_mermaid`)
+3. Built-in default (`true`)
+
+Invalid env values are ignored and fall back to config/default.
 
 ---
 
@@ -541,6 +557,7 @@ Tip: You can combine `find_report_specs` to discover candidates and then `run_re
 - Detail link not shown: the master column has `detail_spec` but the value is empty. Ensure nested elements are materialized and (for generic promotion) that the linked spec’s `target_type` matches the nested element’s `type`.
 - GUID not visible: include a `Column(name="GUID", key="guid", format=True)` in the detail spec. The formatter maps `guid` and formats it safely for tables/links.
 - FORM output shows summaries only: this is by design to keep forms concise and editable.
+- Pydantic validation failures in report execution: these are surfaced with structured validation details (via `print_validation_error`) before being re-raised. Start by checking field names and expected types in the printed validation table.
 
 ---
 

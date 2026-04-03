@@ -29,7 +29,7 @@ from pyegeria.core.utils import body_slimmer, dynamic_catch
 
 COLLECTION_PROPERTIES_LIST = ["CollectionProperties", "DataDictionaryProperties",
                               "DataSpecProperties", "DigitalProductProperties",
-                              "AgreementProperties"]
+                              "AgreementProperties","RootCollectionProperties", "HomeCollectionProperties",]
 
 AGREEMENT_PROPERTIES_LIST = ["AgreementProperties", "DigitalSubscriptionProperties",]
 

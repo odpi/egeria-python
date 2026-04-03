@@ -8,7 +8,7 @@ from loguru import logger
 from rich.console import Console
 from rich.prompt import Prompt
 
-from pyegeria.core._exceptions import PyegeriaException
+from pyegeria.core._exceptions import PyegeriaException, print_basic_exception
 from pyegeria.core.config import settings
 from md_processing.dr_egeria import process_md_file_v2
 import asyncio
@@ -29,7 +29,7 @@ EGERIA_VIEW_SERVER_URL = os.environ.get("EGERIA_VIEW_SERVER_URL", app_config.ege
 # User credentials are only from environment variables or command line (not stored in config for security)
 EGERIA_USER = os.environ.get("EGERIA_USER", "erinoverview")
 EGERIA_USER_PASSWORD = os.environ.get("EGERIA_USER_PASSWORD", "secret")
-EGERIA_WIDTH = int(os.environ.get("EGERIA_WIDTH", app_config.console_width or 220))
+EGERIA_WIDTH = int(os.environ.get("EGERIA_WIDTH", app_config.console_width or 190))
 EGERIA_JUPYTER = os.environ.get("EGERIA_JUPYTER", str(app_config.egeria_jupyter)).lower() in ("true", "1", "yes")
 
 console = Console(width=EGERIA_WIDTH)
@@ -74,8 +74,11 @@ def process_markdown_file(input_file: str, output_folder:str, directive: str, se
         ))
         logger.info(f"Called process_markdown_file with input file {input_file}")
     except PyegeriaException as e:
+        console.print_exception()
+        print_basic_exception(e)
         logger.error(f"Error processing markdown file {input_file}: {e}")
     except Exception as e:
+        console.print_exception()
         logger.error(f"Unexpected error processing markdown file {input_file}: {e}")
 
 

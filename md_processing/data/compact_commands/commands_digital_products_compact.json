@@ -1,6 +1,6 @@
 {
   "family": "Digital Products",
-  "exported": "Mar 26, 2026 at 8:10:21 PM",
+  "exported": "Apr 2, 2026 at 3:44:48 PM",
   "attribute_definitions": {
     "Activity Status": {
       "variable_name": "activity_status",
@@ -42,10 +42,10 @@
       "examples": "",
       "default_value": "",
       "valid_values": [],
-      "existing_element": "SolutionActorRole",
+      "existing_element": "actorRole",
       "description": "Actors or Solution Roles related to this element.",
       "generated": false,
-      "style": "Simple List",
+      "style": "Reference Name List",
       "user_specified": true,
       "unique": false,
       "input_required": false,
@@ -88,6 +88,25 @@
       "unique": false,
       "input_required": false,
       "min_cardinality": 0,
+      "max_cardinality": 1,
+      "level": "Domain",
+      "Journal Entry": ""
+    },
+    "Agreement Name": {
+      "variable_name": "agreement_name",
+      "inUpdate": true,
+      "attr_labels": "",
+      "examples": "",
+      "default_value": "",
+      "valid_values": [],
+      "existing_element": "Agreement",
+      "description": "The name of the agreement to add an item to. Using qualified names is recommended.",
+      "generated": false,
+      "style": "Reference Name",
+      "user_specified": true,
+      "unique": false,
+      "input_required": true,
+      "min_cardinality": 1,
       "max_cardinality": 1,
       "level": "Domain",
       "Journal Entry": ""
@@ -156,7 +175,7 @@
       "examples": "",
       "default_value": "",
       "valid_values": [],
-      "existing_element": "",
+      "existing_element": "Referenceable",
       "description": "Anchor scope to restrict search.",
       "generated": false,
       "style": "Reference Name",
@@ -1580,25 +1599,6 @@
       "level": "Domain",
       "Journal Entry": ""
     },
-    "Agreement Name": {
-      "variable_name": "agreement_name",
-      "inUpdate": true,
-      "attr_labels": "",
-      "examples": "",
-      "default_value": "",
-      "valid_values": [],
-      "existing_element": "Agreement",
-      "description": "The name of the agreement to add an item to. Using qualified names is recommended.",
-      "generated": false,
-      "style": "Reference Name",
-      "user_specified": true,
-      "unique": false,
-      "input_required": true,
-      "min_cardinality": 1,
-      "max_cardinality": 1,
-      "level": "Domain",
-      "Journal Entry": ""
-    },
     "Agreement Type": {
       "variable_name": "agreement_type",
       "inUpdate": true,
@@ -1849,7 +1849,7 @@
     "Subscriber Id": {
       "variable_name": "subscriber_id",
       "inUpdate": true,
-      "attr_labels": "",
+      "attr_labels": "Subscriber; Subscriber ID",
       "examples": "",
       "default_value": "",
       "valid_values": [],
@@ -1868,7 +1868,7 @@
     "Subscription Id": {
       "variable_name": "subscription_id",
       "inUpdate": true,
-      "attr_labels": "",
+      "attr_labels": "Subscription;Subscription ID",
       "examples": "",
       "default_value": "",
       "valid_values": [],
@@ -2155,9 +2155,7 @@
     "Create Agreement": {
       "display_name": "Agreement",
       "qn_prefix": "Agreement",
-      "alternate_names": [
-        "Data Sharing Agreement"
-      ],
+      "alternate_names": [],
       "family": "Digital Product Manager",
       "description": "A kind of collection that represents an Agreement. This is for generic agreements. Specific kinds of agreements have their own commands.",
       "verb": "Create",

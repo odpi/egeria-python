@@ -15,6 +15,7 @@
                 "Egeria Engine Host URL": "https://host.docker.internal:9443",
                 "Egeria Glossary Path": "/home/jovyan/loading-bay/glossary",
                 "Egeria Mermaid Folder": "/home/jovyan/work/mermaid_graphs",
+                "Egeria Normalize Mermaid": true,
                 "console_width": 190
         },
         "Logging": {

@@ -91,7 +91,8 @@ class ProjectProcessor(AsyncBaseCommandProcessor):
             body["initialClassifications"] = set_object_classifications(object_type, attributes, project_types)
             body["properties"] = prop_body
             
-            guid = await self.client._async_create_project(body=body_slimmer(body))
+            raw_guid = await self.client._async_create_project(body=body_slimmer(body))
+            guid = self.extract_guid_or_raise(raw_guid, "Create Project")
             if guid:
                 self.parsed_output["guid"] = guid
 

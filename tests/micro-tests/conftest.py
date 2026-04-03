@@ -3,7 +3,6 @@ Minimal pytest configuration for framework validation tests.
 """
 
 import pytest
-from .conftest_full import mock_egeria_tech_client  # NEW: exposes the missing fixture
 
 
 @pytest.fixture

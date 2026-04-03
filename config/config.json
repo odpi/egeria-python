@@ -18,6 +18,7 @@
     "Egeria Jupyter": true,
     "Egeria Kafka Endpoint": "localhost:9192",
     "Egeria Mermaid Folder": "egeria-outbox/mermaid-graphs",
+    "Egeria Normalize Mermaid": true,
     "Egeria Metadata Store": "qs-metadata-store",
     "Egeria Platform URL": "https://localhost:9443",
     "Egeria View Server": "qs-view-server2",

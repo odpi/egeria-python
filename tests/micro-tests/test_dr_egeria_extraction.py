@@ -91,6 +91,20 @@ Line 2
     assert "Line 2" in desc
     assert "provenance" not in desc
 
+
+def test_prose_with_command_words_is_not_treated_as_command():
+    text = """
+# Governance Officer FAQ
+In this section we explain how to create governance definitions safely.
+Do not run anything from this paragraph directly.
+"""
+    extractor = UniversalExtractor(text)
+    commands = extractor.extract_commands()
+
+    actual_commands = [c for c in commands if c.is_command]
+    assert len(actual_commands) == 0
+    assert any("Governance Officer FAQ" in c.raw_block for c in commands)
+
 def test_parse_key_value():
     text = "| Key | Value |\n| --- | --- |\n| a | 1 |\n| b | 2 |"
     kv = parse_key_value(text)
@@ -168,5 +182,33 @@ async def test_view_report_validation_output_uses_report_context_not_qualified_n
     assert "**Output Format**: `LIST`" in result["analysis"]
     assert "**Qualified Name**" not in result["analysis"]
     assert result.get("qualified_name") in (None, "")
+
+
+@pytest.mark.asyncio
+async def test_view_report_anchor_scope_id_resolves_when_declared_reference_style(monkeypatch):
+    async def _fake_run_report(**kwargs):
+        return {"kind": "text", "content": "ok"}
+
+    monkeypatch.setattr("md_processing.v2.view._async_run_report", _fake_run_report)
+
+    cmd = DrECommand(
+        verb="View",
+        object_type="Report",
+        attributes={
+            "Report Spec": "Collections",
+            "Search String": "*",
+            "Output Format": "LIST",
+            "Anchor Scope ID": "Collection::SalesForecast::Root::1.0",
+        },
+        raw_block="# View Report",
+    )
+
+    processor = ViewProcessor(client=cast(Any, object()), command=cmd, context={"directive": "validate"})
+    result = await processor.execute()
+
+    # If the command spec marks Anchor Scope ID as a reference-style attribute,
+    # unresolved values should fail validation.
+    assert result["status"] == "failure"
+    assert "Referenced element" in result.get("analysis", "")
 
 
