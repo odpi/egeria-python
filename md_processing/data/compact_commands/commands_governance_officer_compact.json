@@ -1,6 +1,6 @@
 {
   "family": "Governance Officer",
-  "exported": "Apr 3, 2026 at 9:19:48 AM",
+  "exported": "Apr 4, 2026 at 4:16:02 PM",
   "attribute_definitions": {
     "Activity Status": {
       "variable_name": "activity_status",
@@ -244,6 +244,44 @@
       "level": "Common",
       "Journal Entry": ""
     },
+    "Certification Type": {
+      "variable_name": "certification_type",
+      "inUpdate": true,
+      "attr_labels": "",
+      "examples": "Apache 2'",
+      "default_value": "",
+      "valid_values": [],
+      "existing_element": "CertificationType",
+      "description": "The license type being used for the license.",
+      "generated": false,
+      "style": "Reference Name",
+      "user_specified": true,
+      "unique": false,
+      "input_required": true,
+      "min_cardinality": 1,
+      "max_cardinality": 1,
+      "level": "Domain",
+      "Journal Entry": ""
+    },
+    "Class Word Classification": {
+      "variable_name": "class_word_classification",
+      "inUpdate": true,
+      "attr_labels": "",
+      "examples": "",
+      "default_value": "False",
+      "valid_values": [],
+      "existing_element": "",
+      "description": "Classification from 0438. Applied to Referenceable. Marker classification (no attributes) indicating the element is a class word in a naming standard.",
+      "generated": false,
+      "style": "Bool",
+      "user_specified": true,
+      "unique": false,
+      "input_required": false,
+      "min_cardinality": 1,
+      "max_cardinality": 1,
+      "level": "Advanced",
+      "Journal Entry": ""
+    },
     "Collection Id": {
       "variable_name": "collection_id",
       "inUpdate": true,
@@ -363,6 +401,25 @@
       "level": "Common",
       "Journal Entry": ""
     },
+    "Created Time": {
+      "variable_name": "created_time",
+      "inUpdate": true,
+      "attr_labels": "",
+      "examples": "",
+      "default_value": "",
+      "valid_values": [],
+      "existing_element": "",
+      "description": "The time at which an element  was created.",
+      "generated": false,
+      "style": "Simple",
+      "user_specified": true,
+      "unique": false,
+      "input_required": false,
+      "min_cardinality": 0,
+      "max_cardinality": 1,
+      "level": "Advanced",
+      "Journal Entry": ""
+    },
     "Criticality Classification": {
       "variable_name": "criticality_classification",
       "inUpdate": true,
@@ -408,6 +465,25 @@
       "level": "Common",
       "Journal Entry": ""
     },
+    "Details": {
+      "variable_name": "details",
+      "inUpdate": true,
+      "attr_labels": "",
+      "examples": "",
+      "default_value": "",
+      "valid_values": [],
+      "existing_element": "",
+      "description": "Details of the certification.",
+      "generated": false,
+      "style": "Simple",
+      "user_specified": true,
+      "unique": false,
+      "input_required": false,
+      "min_cardinality": 1,
+      "max_cardinality": 1,
+      "level": "Domain",
+      "Journal Entry": ""
+    },
     "Display Name": {
       "variable_name": "display_name",
       "inUpdate": true,
@@ -444,6 +520,25 @@
       "min_cardinality": 1,
       "max_cardinality": 1,
       "level": "Domain",
+      "Journal Entry": ""
+    },
+    "Document Identifier": {
+      "variable_name": "document_identifier",
+      "inUpdate": true,
+      "attr_labels": "Doc Id",
+      "examples": "",
+      "default_value": "",
+      "valid_values": [],
+      "existing_element": "",
+      "description": "A user supplied identifier for the governance document.",
+      "generated": false,
+      "style": "Simple",
+      "user_specified": true,
+      "unique": false,
+      "input_required": false,
+      "min_cardinality": 1,
+      "max_cardinality": 1,
+      "level": "Basic",
       "Journal Entry": ""
     },
     "Effective From": {
@@ -516,7 +611,7 @@
       "style": "Reference Name",
       "user_specified": true,
       "unique": false,
-      "input_required": false,
+      "input_required": true,
       "min_cardinality": 1,
       "max_cardinality": 1,
       "level": "Common",
@@ -615,6 +710,82 @@
       "min_cardinality": 0,
       "max_cardinality": 1,
       "level": "Advanced",
+      "Journal Entry": ""
+    },
+    "File Encoding": {
+      "variable_name": "file_encoding",
+      "inUpdate": true,
+      "attr_labels": "",
+      "examples": "",
+      "default_value": "UTF-8",
+      "valid_values": [],
+      "existing_element": "",
+      "description": "Encoding of the file.",
+      "generated": false,
+      "style": "Simple",
+      "user_specified": true,
+      "unique": false,
+      "input_required": false,
+      "min_cardinality": 0,
+      "max_cardinality": 1,
+      "level": "Basic",
+      "Journal Entry": ""
+    },
+    "File Extension": {
+      "variable_name": "file_extension",
+      "inUpdate": true,
+      "attr_labels": "",
+      "examples": "",
+      "default_value": "csv",
+      "valid_values": [],
+      "existing_element": "",
+      "description": "Typically CSV.",
+      "generated": false,
+      "style": "Simple",
+      "user_specified": true,
+      "unique": false,
+      "input_required": false,
+      "min_cardinality": 0,
+      "max_cardinality": 1,
+      "level": "Basic",
+      "Journal Entry": ""
+    },
+    "File Path": {
+      "variable_name": "file_path",
+      "inUpdate": true,
+      "attr_labels": "File Path Name",
+      "examples": "\/home\/mumble.csv",
+      "default_value": "",
+      "valid_values": [],
+      "existing_element": "",
+      "description": "Path to the file including file name. File system name is pre-pended if set.",
+      "generated": false,
+      "style": "Simple",
+      "user_specified": true,
+      "unique": false,
+      "input_required": false,
+      "min_cardinality": 0,
+      "max_cardinality": 1,
+      "level": "Basic",
+      "Journal Entry": ""
+    },
+    "File System Name": {
+      "variable_name": "file_system_name",
+      "inUpdate": true,
+      "attr_labels": "",
+      "examples": "",
+      "default_value": "",
+      "valid_values": [],
+      "existing_element": "",
+      "description": "Optional  file system name to be prepended in front of the path name.",
+      "generated": false,
+      "style": "Simple",
+      "user_specified": true,
+      "unique": false,
+      "input_required": false,
+      "min_cardinality": 0,
+      "max_cardinality": 1,
+      "level": "Basic",
       "Journal Entry": ""
     },
     "For Duplicate Processing": {
@@ -794,6 +965,44 @@
       "level": "Domain",
       "Journal Entry": ""
     },
+    "Last Modified Time": {
+      "variable_name": "last_modified_time",
+      "inUpdate": true,
+      "attr_labels": "",
+      "examples": "",
+      "default_value": "",
+      "valid_values": [],
+      "existing_element": "",
+      "description": "The time at which an element  was last modified.",
+      "generated": false,
+      "style": "Simple",
+      "user_specified": true,
+      "unique": false,
+      "input_required": false,
+      "min_cardinality": 0,
+      "max_cardinality": 1,
+      "level": "Advanced",
+      "Journal Entry": ""
+    },
+    "Last Modifier": {
+      "variable_name": "last_modifier",
+      "inUpdate": true,
+      "attr_labels": "",
+      "examples": "",
+      "default_value": "",
+      "valid_values": [],
+      "existing_element": "",
+      "description": "Who made the last modification.",
+      "generated": false,
+      "style": "Simple",
+      "user_specified": true,
+      "unique": false,
+      "input_required": false,
+      "min_cardinality": 0,
+      "max_cardinality": 1,
+      "level": "Advanced",
+      "Journal Entry": ""
+    },
     "Make Anchor": {
       "variable_name": "make_anchor",
       "inUpdate": true,
@@ -830,6 +1039,44 @@
       "min_cardinality": 1,
       "max_cardinality": 1,
       "level": "Advanced",
+      "Journal Entry": ""
+    },
+    "Modifier Classification": {
+      "variable_name": "modifier_classification",
+      "inUpdate": true,
+      "attr_labels": "",
+      "examples": "",
+      "default_value": "False",
+      "valid_values": [],
+      "existing_element": "",
+      "description": "Classification from 0438. Applied to Referenceable. Marker classification (no attributes) indicating the element is a modifier in a naming standard.",
+      "generated": false,
+      "style": "Bool",
+      "user_specified": true,
+      "unique": false,
+      "input_required": false,
+      "min_cardinality": 1,
+      "max_cardinality": 1,
+      "level": "Advanced",
+      "Journal Entry": ""
+    },
+    "Monitoring Control": {
+      "variable_name": "monitoring_control",
+      "inUpdate": false,
+      "attr_labels": "",
+      "examples": "",
+      "default_value": "",
+      "valid_values": [],
+      "existing_element": "GovernanceControl",
+      "description": "The GovernanceControl responsible for monitoring.",
+      "generated": false,
+      "style": "Reference Name",
+      "user_specified": true,
+      "unique": false,
+      "input_required": true,
+      "min_cardinality": 1,
+      "max_cardinality": 1,
+      "level": "Domain",
       "Journal Entry": ""
     },
     "Namespace": {
@@ -957,6 +1204,25 @@
       "description": "The type of parent relationship.",
       "generated": false,
       "style": "Simple",
+      "user_specified": true,
+      "unique": false,
+      "input_required": false,
+      "min_cardinality": 0,
+      "max_cardinality": 1,
+      "level": "Advanced",
+      "Journal Entry": ""
+    },
+    "Policy Management Point": {
+      "variable_name": "policy_management_point",
+      "inUpdate": true,
+      "attr_labels": "",
+      "examples": "",
+      "default_value": "",
+      "valid_values": [],
+      "existing_element": "",
+      "description": "Combined classification from 0435. Applied to Referenceable. Structure: {point_type: str, name: str, description: str}. point_type is one of: PolicyAdministrationPoint, PolicyDecisionPoint, PolicyEnforcementPoint, PolicyInformationPoint, PolicyRetrievalPoint. A Referenceable may have multiple policy management point classifications simultaneously.",
+      "generated": false,
+      "style": "Dictionary",
       "user_specified": true,
       "unique": false,
       "input_required": false,
@@ -1428,6 +1694,25 @@
       "level": "Domain",
       "Journal Entry": ""
     },
+    "Supports Policies": {
+      "variable_name": "supports_policies",
+      "inUpdate": true,
+      "attr_labels": "Policies Supported; Policy Supported",
+      "examples": "",
+      "default_value": "",
+      "valid_values": [],
+      "existing_element": "Policies - Governance Principles; Governance Obligations; Governance Approaches",
+      "description": "The policies that this governance control supports.",
+      "generated": false,
+      "style": "Reference Name List",
+      "user_specified": true,
+      "unique": false,
+      "input_required": false,
+      "min_cardinality": 1,
+      "max_cardinality": 1,
+      "level": "Domain",
+      "Journal Entry": ""
+    },
     "URL": {
       "variable_name": "url",
       "inUpdate": true,
@@ -1633,25 +1918,6 @@
       "unique": true,
       "input_required": false,
       "min_cardinality": 0,
-      "max_cardinality": 1,
-      "level": "Domain",
-      "Journal Entry": ""
-    },
-    "Certification Type": {
-      "variable_name": "certification_type",
-      "inUpdate": true,
-      "attr_labels": "",
-      "examples": "Apache 2'",
-      "default_value": "",
-      "valid_values": [],
-      "existing_element": "CertificationType",
-      "description": "The license type being used for the license.",
-      "generated": false,
-      "style": "Reference Name",
-      "user_specified": true,
-      "unique": false,
-      "input_required": true,
-      "min_cardinality": 1,
       "max_cardinality": 1,
       "level": "Domain",
       "Journal Entry": ""
@@ -1882,44 +2148,6 @@
       "min_cardinality": 0,
       "max_cardinality": 1,
       "level": "Domain",
-      "Journal Entry": ""
-    },
-    "Details": {
-      "variable_name": "details",
-      "inUpdate": true,
-      "attr_labels": "",
-      "examples": "",
-      "default_value": "",
-      "valid_values": [],
-      "existing_element": "",
-      "description": "Details of the certification.",
-      "generated": false,
-      "style": "Simple",
-      "user_specified": true,
-      "unique": false,
-      "input_required": false,
-      "min_cardinality": 1,
-      "max_cardinality": 1,
-      "level": "Domain",
-      "Journal Entry": ""
-    },
-    "Document Identifier": {
-      "variable_name": "document_identifier",
-      "inUpdate": true,
-      "attr_labels": "Doc Id",
-      "examples": "",
-      "default_value": "",
-      "valid_values": [],
-      "existing_element": "",
-      "description": "A user supplied identifier for the governance document.",
-      "generated": false,
-      "style": "Simple",
-      "user_specified": true,
-      "unique": false,
-      "input_required": false,
-      "min_cardinality": 1,
-      "max_cardinality": 1,
-      "level": "Basic",
       "Journal Entry": ""
     },
     "Domain Identifier": {
@@ -2521,25 +2749,6 @@
       "level": "Domain",
       "Journal Entry": ""
     },
-    "Modifier Classification": {
-      "variable_name": "modifier_classification",
-      "inUpdate": true,
-      "attr_labels": "",
-      "examples": "",
-      "default_value": "False",
-      "valid_values": [],
-      "existing_element": "",
-      "description": "Classification from 0438. Applied to Referenceable. Marker classification (no attributes) indicating the element is a modifier in a naming standard.",
-      "generated": false,
-      "style": "Bool",
-      "user_specified": true,
-      "unique": false,
-      "input_required": false,
-      "min_cardinality": 1,
-      "max_cardinality": 1,
-      "level": "Advanced",
-      "Journal Entry": ""
-    },
     "Monitored Resource": {
       "variable_name": "monitored_resource",
       "inUpdate": false,
@@ -2549,25 +2758,6 @@
       "valid_values": [],
       "existing_element": "Referenceable",
       "description": "The monitored referenceable endpoint in a MonitoredResource relationship.",
-      "generated": false,
-      "style": "Reference Name",
-      "user_specified": true,
-      "unique": false,
-      "input_required": true,
-      "min_cardinality": 1,
-      "max_cardinality": 1,
-      "level": "Domain",
-      "Journal Entry": ""
-    },
-    "Monitoring Control": {
-      "variable_name": "monitoring_control",
-      "inUpdate": false,
-      "attr_labels": "",
-      "examples": "",
-      "default_value": "",
-      "valid_values": [],
-      "existing_element": "GovernanceControl",
-      "description": "The GovernanceControl responsible for monitoring.",
       "generated": false,
       "style": "Reference Name",
       "user_specified": true,
@@ -2804,25 +2994,6 @@
       "min_cardinality": 1,
       "max_cardinality": 1,
       "level": "Domain",
-      "Journal Entry": ""
-    },
-    "Policy Management Point": {
-      "variable_name": "policy_management_point",
-      "inUpdate": true,
-      "attr_labels": "",
-      "examples": "",
-      "default_value": "",
-      "valid_values": [],
-      "existing_element": "",
-      "description": "Combined classification from 0435. Applied to Referenceable. Structure: {point_type: str, name: str, description: str}. point_type is one of: PolicyAdministrationPoint, PolicyDecisionPoint, PolicyEnforcementPoint, PolicyInformationPoint, PolicyRetrievalPoint. A Referenceable may have multiple policy management point classifications simultaneously.",
-      "generated": false,
-      "style": "Dictionary",
-      "user_specified": true,
-      "unique": false,
-      "input_required": false,
-      "min_cardinality": 0,
-      "max_cardinality": 1,
-      "level": "Advanced",
       "Journal Entry": ""
     },
     "Rationale": {
@@ -3072,25 +3243,6 @@
       "level": "Domain",
       "Journal Entry": ""
     },
-    "Supports Policies": {
-      "variable_name": "supports_policies",
-      "inUpdate": true,
-      "attr_labels": "Policies Supported; Policy Supported",
-      "examples": "",
-      "default_value": "",
-      "valid_values": [],
-      "existing_element": "Policies - Governance Principles; Governance Obligations; Governance Approaches",
-      "description": "The policies that this governance control supports.",
-      "generated": false,
-      "style": "Reference Name List",
-      "user_specified": true,
-      "unique": false,
-      "input_required": false,
-      "min_cardinality": 1,
-      "max_cardinality": 1,
-      "level": "Domain",
-      "Journal Entry": ""
-    },
     "Target": {
       "variable_name": "target",
       "inUpdate": true,
@@ -3293,6 +3445,7 @@
       "find_constraints": "{\"metadata_element_type\": \"BusinessImperative\"}",
       "extra_find": "",
       "extra_constraints": "",
+      "OM_TYPE": "BusinessImperative",
       "bundle": "Governance Driver",
       "custom_attributes": [],
       "Journal Entry": ""
@@ -3311,6 +3464,7 @@
       "find_constraints": "{\"metadata_element_type\": \"CertificationType\"}",
       "extra_find": "",
       "extra_constraints": "",
+      "OM_TYPE": "CertificationType",
       "bundle": "Terms and Conditions",
       "custom_attributes": [],
       "Journal Entry": ""
@@ -3329,6 +3483,7 @@
       "find_constraints": "{\"metadata_element_type\": \"DataLens\"}",
       "extra_find": "",
       "extra_constraints": "",
+      "OM_TYPE": "DataLens",
       "bundle": "Governance Control Base",
       "custom_attributes": [
         "Max Height",
@@ -3357,6 +3512,7 @@
       "find_constraints": "{\"metadata_element_type\": \"DataProcessingPurpose\"}",
       "extra_find": "",
       "extra_constraints": "",
+      "OM_TYPE": "DataProcessingPurpose",
       "bundle": "Governance Control Base",
       "custom_attributes": [],
       "Journal Entry": ""
@@ -3375,6 +3531,7 @@
       "find_constraints": "{\"metadata_element_type\": \"GovernanceAction\"}",
       "extra_find": "",
       "extra_constraints": "",
+      "OM_TYPE": "GovernanceAction",
       "bundle": "Governance Control Base",
       "custom_attributes": [],
       "Journal Entry": ""
@@ -3393,6 +3550,7 @@
       "find_constraints": "{\"metadata_element_type\": \"GovernanceApproach\"}",
       "extra_find": "",
       "extra_constraints": "",
+      "OM_TYPE": "GovernanceApproach",
       "bundle": "Governance Policy",
       "custom_attributes": [],
       "Journal Entry": ""
@@ -3411,6 +3569,7 @@
       "find_constraints": "{\"metadata_element_type\": \"GovernanceControl\"}",
       "extra_find": "",
       "extra_constraints": "",
+      "OM_TYPE": "GovernanceControl",
       "bundle": "Governance Control Base",
       "custom_attributes": [],
       "Journal Entry": ""
@@ -3429,6 +3588,7 @@
       "find_constraints": "{\"metadata_element_type\": \"GovernanceDefinition\"}",
       "extra_find": "",
       "extra_constraints": "",
+      "OM_TYPE": "GovernanceDefinition",
       "bundle": "Governance Definition Core",
       "custom_attributes": [],
       "Journal Entry": ""
@@ -3447,6 +3607,7 @@
       "find_constraints": "{\"metadata_element_type\": \"GovernanceDriver\"}",
       "extra_find": "",
       "extra_constraints": "",
+      "OM_TYPE": "GovernanceDriver",
       "bundle": "Governance Driver",
       "custom_attributes": [],
       "Journal Entry": ""
@@ -3465,6 +3626,7 @@
       "find_constraints": "{\"metadata_element_type\": \"GovernanceMetric\"}",
       "extra_find": "",
       "extra_constraints": "",
+      "OM_TYPE": "GovernanceMetric",
       "bundle": "Governance Control Base",
       "custom_attributes": [
         "Measurement",
@@ -3486,6 +3648,7 @@
       "find_constraints": "{\"metadata_element_type\": \"GovernanceObligation\"}",
       "extra_find": "",
       "extra_constraints": "",
+      "OM_TYPE": "GovernanceObligation",
       "bundle": "Governance Policy",
       "custom_attributes": [],
       "Journal Entry": ""
@@ -3504,6 +3667,7 @@
       "find_constraints": "{\"metadata_element_type\": \"GovernancePolicy\"}",
       "extra_find": "",
       "extra_constraints": "",
+      "OM_TYPE": "GovernancePolicy",
       "bundle": "Governance Policy",
       "custom_attributes": [],
       "Journal Entry": ""
@@ -3522,6 +3686,7 @@
       "find_constraints": "{\"metadata_element_type\": \"GovernancePrinciple\"}",
       "extra_find": "",
       "extra_constraints": "",
+      "OM_TYPE": "GovernancePrinciple",
       "bundle": "Governance Policy",
       "custom_attributes": [],
       "Journal Entry": ""
@@ -3540,6 +3705,7 @@
       "find_constraints": "{\"metadata_element_type\": \"GovernanceProcedure\"}",
       "extra_find": "",
       "extra_constraints": "",
+      "OM_TYPE": "GovernanceProcedure",
       "bundle": "Governance Control Base",
       "custom_attributes": [],
       "Journal Entry": ""
@@ -3558,6 +3724,7 @@
       "find_constraints": "{\"metadata_element_type\": \"GovernanceResponsibility\"}",
       "extra_find": "",
       "extra_constraints": "",
+      "OM_TYPE": "GovernanceResponsibility",
       "bundle": "Governance Control Base",
       "custom_attributes": [],
       "Journal Entry": ""
@@ -3576,6 +3743,7 @@
       "find_constraints": "{\"metadata_element_type\": \"GovernanceRule\"}",
       "extra_find": "",
       "extra_constraints": "",
+      "OM_TYPE": "GovernanceRule",
       "bundle": "Governance Control Base",
       "custom_attributes": [],
       "Journal Entry": ""
@@ -3594,6 +3762,7 @@
       "find_constraints": "{\"metadata_element_type\": \"GovernanceStrategy\"}",
       "extra_find": "",
       "extra_constraints": "",
+      "OM_TYPE": "GovernanceStrategy",
       "bundle": "Governance Driver",
       "custom_attributes": [
         "Business Imperatives"
@@ -3614,6 +3783,7 @@
       "find_constraints": "{\"metadata_element_type\": \"GovernanceZone\"}",
       "extra_find": "",
       "extra_constraints": "",
+      "OM_TYPE": "GovernanceZone",
       "bundle": "Security Access Control",
       "custom_attributes": [
         "Criteria"
@@ -3634,6 +3804,7 @@
       "find_constraints": "{\"metadata_element_type\": \"LicenseType\"}",
       "extra_find": "",
       "extra_constraints": "",
+      "OM_TYPE": "LicenseType",
       "bundle": "Terms and Conditions",
       "custom_attributes": [],
       "Journal Entry": ""
@@ -3652,6 +3823,7 @@
       "find_constraints": "{\"metadata_element_type\": \"Methodology\"}",
       "extra_find": "",
       "extra_constraints": "",
+      "OM_TYPE": "Methodology",
       "bundle": "Governance Control Base",
       "custom_attributes": [],
       "Journal Entry": ""
@@ -3670,6 +3842,7 @@
       "find_constraints": "{\"metadata_element_type\": \"NamingStandardRule\"}",
       "extra_find": "",
       "extra_constraints": "",
+      "OM_TYPE": "NamingStandardRule",
       "bundle": "Governance Control Base",
       "custom_attributes": [
         "Name Patterns"
@@ -3690,6 +3863,7 @@
       "find_constraints": "{\"metadata_element_type\": \"NotificationType\"}",
       "extra_find": "",
       "extra_constraints": "",
+      "OM_TYPE": "NotificationType",
       "bundle": "Governance Control Base",
       "custom_attributes": [
         "Planned Completion Date",
@@ -3716,6 +3890,7 @@
       "find_constraints": "{\"metadata_element_type\": \"Regulation\"}",
       "extra_find": "",
       "extra_constraints": "",
+      "OM_TYPE": "Regulation",
       "bundle": "Governance Driver",
       "custom_attributes": [
         "Regulation Source",
@@ -3737,6 +3912,7 @@
       "find_constraints": "{\"metadata_element_type\": \"RegulationArticle\"}",
       "extra_find": "",
       "extra_constraints": "",
+      "OM_TYPE": "RegulationArticle",
       "bundle": "Governance Driver",
       "custom_attributes": [],
       "Journal Entry": ""
@@ -3755,6 +3931,7 @@
       "find_constraints": "{\"metadata_element_type\": \"SecurityAccessControl\"}",
       "extra_find": "",
       "extra_constraints": "",
+      "OM_TYPE": "SecurityAccessControl",
       "bundle": "Security Access Control",
       "custom_attributes": [],
       "Journal Entry": ""
@@ -3775,6 +3952,7 @@
       "find_constraints": "{\"metadata_element_type\": \"ServiceLevelObjective\"}",
       "extra_find": "",
       "extra_constraints": "",
+      "OM_TYPE": "ServiceLevelObjective",
       "bundle": "Governance Control Base",
       "custom_attributes": [],
       "Journal Entry": ""
@@ -3796,6 +3974,7 @@
       "find_constraints": "{\"metadata_element_type\": \"TermsAndConditions\"}",
       "extra_find": "",
       "extra_constraints": "",
+      "OM_TYPE": "TermsAndConditions",
       "bundle": "Terms and Conditions",
       "custom_attributes": [],
       "Journal Entry": ""
@@ -3816,6 +3995,7 @@
       "find_constraints": "{\"metadata_element_type\": \"Threat\"}",
       "extra_find": "",
       "extra_constraints": "",
+      "OM_TYPE": "Threat",
       "bundle": "Governance Driver",
       "custom_attributes": [],
       "Journal Entry": ""
@@ -3837,6 +4017,7 @@
       "find_constraints": "",
       "extra_find": "",
       "extra_constraints": "",
+      "OM_TYPE": "AgreementTerms",
       "bundle": "Link Command Base",
       "custom_attributes": [
         "Terms & Conditions Id",
@@ -3858,6 +4039,7 @@
       "find_constraints": "",
       "extra_find": "",
       "extra_constraints": "",
+      "OM_TYPE": "AssociatedGroup",
       "bundle": "Link Command Base",
       "custom_attributes": [
         "Access Control",
@@ -3880,6 +4062,7 @@
       "find_constraints": "",
       "extra_find": "",
       "extra_constraints": "",
+      "OM_TYPE": "Certification",
       "bundle": "Link Command Base",
       "custom_attributes": [
         "Certificate GUID",
@@ -3917,6 +4100,7 @@
       "find_constraints": "",
       "extra_find": "",
       "extra_constraints": "",
+      "OM_TYPE": "GovernanceControlLink",
       "bundle": "Link Command Base",
       "custom_attributes": [
         "Governance Control 1",
@@ -3938,6 +4122,7 @@
       "find_constraints": "",
       "extra_find": "",
       "extra_constraints": "",
+      "OM_TYPE": "GovernanceDriverLink",
       "bundle": "Link Command Base",
       "custom_attributes": [
         "Governance Driver 1",
@@ -3959,6 +4144,7 @@
       "find_constraints": "",
       "extra_find": "",
       "extra_constraints": "",
+      "OM_TYPE": "GovernanceMechanismLink",
       "bundle": "Link Command Base",
       "custom_attributes": [
         "Rationale",
@@ -3981,6 +4167,7 @@
       "find_constraints": "",
       "extra_find": "",
       "extra_constraints": "",
+      "OM_TYPE": "GovernancePolicyLink",
       "bundle": "Link Command Base",
       "custom_attributes": [
         "Governance Policy 1",
@@ -4002,6 +4189,7 @@
       "find_constraints": "",
       "extra_find": "",
       "extra_constraints": "",
+      "OM_TYPE": "GovernanceResponse",
       "bundle": "Link Command Base",
       "custom_attributes": [
         "Rationale",
@@ -4024,6 +4212,7 @@
       "find_constraints": "",
       "extra_find": "",
       "extra_constraints": "",
+      "OM_TYPE": "GovernedBy",
       "bundle": "Link Command Base",
       "custom_attributes": [
         "Governance Definition",
@@ -4045,6 +4234,7 @@
       "find_constraints": "",
       "extra_find": "",
       "extra_constraints": "",
+      "OM_TYPE": "License",
       "bundle": "Link Command Base",
       "custom_attributes": [
         "Conditions",
@@ -4082,6 +4272,7 @@
       "find_constraints": "",
       "extra_find": "",
       "extra_constraints": "",
+      "OM_TYPE": "MonitoredResource",
       "bundle": "Link Command Base",
       "custom_attributes": [
         "Monitored Resource",
@@ -4103,10 +4294,11 @@
       "find_constraints": "",
       "extra_find": "",
       "extra_constraints": "",
+      "OM_TYPE": "NotificationSubscriber",
       "bundle": "Link Command Base",
       "custom_attributes": [
-        "Subscriber",
         "Notification Type",
+        "Subscriber",
         "Activity Status",
         "Zone Membership",
         "Last Notification"
@@ -4127,6 +4319,7 @@
       "find_constraints": "",
       "extra_find": "",
       "extra_constraints": "",
+      "OM_TYPE": "RegulationCertificationType",
       "bundle": "Link Command Base",
       "custom_attributes": [
         "Certification Type",
@@ -4148,6 +4341,7 @@
       "find_constraints": "",
       "extra_find": "",
       "extra_constraints": "",
+      "OM_TYPE": "ZoneHierarchy",
       "bundle": "Link Command Base",
       "custom_attributes": [
         "Parent Zone",
