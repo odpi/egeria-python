@@ -41,8 +41,8 @@ log_format = "{time} | {level} | {function} | {line} | {message} | {extra}"
 # Only configure logging if we are running as main
 if __name__ == "__main__":
     logger.remove()
-    logger.add(sys.stderr, level="INFO", format=log_format, colorize=True)
-    logger.add("debug_log.log", rotation="1 day", retention="1 week", compression="zip", level="INFO", format=log_format,
+    logger.add(sys.stderr, level="WARNING", format=log_format, colorize=True)
+    logger.add("debug_log.log", rotation="1 day", retention="1 week", compression="zip", level="WARNING", format=log_format,
                colorize=True)
 
 # Load configuration from config/config.json with environment variable overrides
@@ -101,7 +101,7 @@ def register_governance_processors(register_processor: Callable[[str, Type[Async
     register_processor("View Governance Definition Context", GovernanceContextProcessor)
 
 async def process_md_file_v2(input_file: str, output_folder: str, directive: str, client: EgeriaTech,
-                            parse_summary: str = "none", attribute_logs: str = "debug",
+                            parse_summary: str = "none", attribute_logs: str = "info",
                             usage_level: str = None, summary_only: bool = False) -> None:
     """
     Async processing path for Dr.Egeria v2.

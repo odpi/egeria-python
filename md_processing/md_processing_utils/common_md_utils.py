@@ -425,6 +425,10 @@ def set_collection_manager_body(object_type: str, qualified_name: str, attribute
             "usage": attributes.get('Usage', {}).get('value', None),
         })
 
+    # Handle Security subtypes
+    if object_type in ["Security Group", "Security List", "Security Role", "SecurityGroup", "SecurityList", "SecurityRole"]:
+        prop_bod['distinguishedName'] = attributes.get('Distinguished Name', {}).get('value', None)
+
     return prop_bod
 
 

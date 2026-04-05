@@ -16,8 +16,8 @@ import asyncio
 # Configure logging
 log_format = "{time} | {level} | {function} | {line} | {message} | {extra}"
 logger.remove()
-logger.add(sys.stderr, level="INFO", format=log_format, colorize=True)
-logger.add("debug_log.log", rotation="1 day", retention="1 week", compression="zip", level="TRACE", format=log_format,
+logger.add(sys.stderr, level="WARNING", format=log_format, colorize=True)
+logger.add("debug_log.log", rotation="1 day", retention="1 week", compression="zip", level="WARNING", format=log_format,
            colorize=True)
 
 # Load configuration from config/config.json with environment variable overrides
@@ -46,7 +46,7 @@ console = Console(width=EGERIA_WIDTH)
 @click.option("--user_pass", default=EGERIA_USER_PASSWORD, help="Egeria user password")
 @click.option("--parse-summary", default="none", help="When to show parse summaries",
               type=click.Choice(["all", "errors", "none"], case_sensitive=False))
-@click.option("--attribute-logs", default="debug", help="Per-attribute log verbosity",
+@click.option("--attribute-logs", default="info", help="Per-attribute log verbosity",
               type=click.Choice(["debug", "info", "none"], case_sensitive=False))
 @click.option("--usage-level", default=None, help="Egeria usage level (Basic or Advanced)",
               type=click.Choice(["Basic", "Advanced"], case_sensitive=False))

@@ -33,12 +33,16 @@ class DataCollectionProcessor(AsyncBaseCommandProcessor):
         status = attributes.get('Status', {}).get('value', None)
         journal_entry = attributes.get('Journal Entry', {}).get('value')
 
+        spec = self.get_command_spec()
+        om_type = spec.get("OM_TYPE")
+
         # 1. Map type
-        mapped_type = "Collection"
-        if "Specification" in object_type: 
-            mapped_type = "DataSpec"
-        elif "Dictionary" in object_type: 
-            mapped_type = "DataDictionary"
+        mapped_type = om_type or "Collection"
+        if not om_type:
+            if "Specification" in object_type: 
+                mapped_type = "DataSpec"
+            elif "Dictionary" in object_type: 
+                mapped_type = "DataDictionary"
             
         prop_body = set_element_prop_body(mapped_type, qualified_name, attributes)
 
@@ -47,7 +51,7 @@ class DataCollectionProcessor(AsyncBaseCommandProcessor):
             if not guid:
                 return self.command.raw_block
 
-            body = set_update_body(object_type, attributes)
+            self.last_body = body = set_update_body(om_type or object_type, attributes)
             body['properties'] = self.filter_update_properties(prop_body, body.get('mergeUpdate', True))
             
             await self.client._async_update_collection(guid, body)
@@ -68,7 +72,7 @@ class DataCollectionProcessor(AsyncBaseCommandProcessor):
             return await self.render_result_markdown(guid)
 
         elif verb == "Create":
-            body = set_create_body(object_type, attributes)
+            self.last_body = body = set_create_body(om_type or object_type, attributes)
             body["properties"] = prop_body
             
             # Handle parent hierarchy if present
@@ -119,7 +123,10 @@ class DataStructureProcessor(AsyncBaseCommandProcessor):
         merge_update = attributes.get('Merge Update', {}).get('value', True)
         journal_entry = attributes.get('Journal Entry', {}).get('value')
 
-        prop_body = set_element_prop_body("Data Structure", qualified_name, attributes)
+        spec = self.get_command_spec()
+        om_type = spec.get("OM_TYPE")
+
+        prop_body = set_element_prop_body(om_type or "Data Structure", qualified_name, attributes)
         prop_body['namespace'] = attributes.get('Namespace', {}).get('value', None)
         
         # Collection memberships
@@ -134,7 +141,7 @@ class DataStructureProcessor(AsyncBaseCommandProcessor):
             if not guid:
                 return self.command.raw_block
 
-            body = set_update_body("Data Structure", attributes)
+            self.last_body = body = set_update_body(om_type or "Data Structure", attributes)
             body['properties'] = self.filter_update_properties(prop_body, body.get('mergeUpdate', True))
             await self.client._async_update_data_structure(guid, body)
             self.parsed_output["guid"] = guid
@@ -154,7 +161,7 @@ class DataStructureProcessor(AsyncBaseCommandProcessor):
             return await self.render_result_markdown(guid)
 
         elif verb == "Create":
-            body = set_create_body("Data Structure", attributes)
+            self.last_body = body = set_create_body("Data Structure", attributes)
             body['properties'] = prop_body
             
             raw_guid = await self.client._async_create_data_structure(body_slimmer(body))
@@ -218,8 +225,11 @@ class DataFieldProcessor(AsyncBaseCommandProcessor):
         merge_update = attributes.get('Merge Update', {}).get('value', False) # Default to false for fields?
         journal_entry = attributes.get('Journal Entry', {}).get('value')
 
+        spec = self.get_command_spec()
+        om_type = spec.get("OM_TYPE")
+
         # 1. Properties
-        props_body = set_data_field_body("Data Field", qualified_name, attributes)
+        props_body = set_data_field_body(om_type or "Data Field", qualified_name, attributes)
         
         # 2. Relationships
         data_struct_guids = set(attributes.get('In Data Structure', {}).get('guid_list', []))
@@ -235,7 +245,7 @@ class DataFieldProcessor(AsyncBaseCommandProcessor):
             if not guid:
                 return self.command.raw_block
 
-            body = set_update_body("Data Field", attributes)
+            self.last_body = body = set_update_body(om_type or "Data Field", attributes)
             body['properties'] = self.filter_update_properties(props_body, body.get('mergeUpdate', True))
             await self.client._async_update_data_field(guid, body)
             self.parsed_output["guid"] = guid
@@ -255,7 +265,7 @@ class DataFieldProcessor(AsyncBaseCommandProcessor):
             return await self.render_result_markdown(guid)
 
         elif verb == "Create":
-            body = set_create_body("Data Field", attributes)
+            self.last_body = body = set_create_body(om_type or "Data Field", attributes)
             body['properties'] = props_body
             
             raw_guid = await self.client._async_create_data_field(body)
@@ -363,10 +373,13 @@ class DataClassProcessor(AsyncBaseCommandProcessor):
         merge_update = attributes.get('Merge Update', {}).get('value', True)
         journal_entry = attributes.get('Journal Entry', {}).get('value')
 
+        spec = self.get_command_spec()
+        om_type = spec.get("OM_TYPE")
+
         # 1. Complex Property Body
         # (Leveraging the existing pattern from v1, but could be cleaner)
         props = {
-            "class": "DataClassProperties",
+            "class": f"{om_type or 'DataClass'}Properties",
             "qualifiedName": qualified_name,
             "displayName": display_name,
             "description": attributes.get('Description', {}).get('value'),
@@ -403,7 +416,7 @@ class DataClassProcessor(AsyncBaseCommandProcessor):
             if not guid:
                 return self.command.raw_block
 
-            body = {"class": "UpdateElementRequestBody", "properties": props}
+            self.last_body = body = {"class": "UpdateElementRequestBody", "properties": props}
             await self.client._async_update_data_class(guid, body, not merge_update)
             self.parsed_output["guid"] = guid
             
@@ -422,7 +435,7 @@ class DataClassProcessor(AsyncBaseCommandProcessor):
             return await self.client._async_get_data_class_by_guid(guid, None, 'MD')
 
         elif verb == "Create":
-            body = {"class": "NewElementRequestBody", "properties": props}
+            self.last_body = body = {"class": "NewElementRequestBody", "properties": props}
             raw_guid = await self.client._async_create_data_class(body)
             guid = self.extract_guid_or_raise(raw_guid, "Create Data Class")
             if guid:

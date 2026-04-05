@@ -72,7 +72,6 @@ GOV_COM_LIST = ["Create Business Imperative", "Update Business Imperative",
                 "Create Governance Responsibility", "Update Governance Responsibility",
                 "Create Governance Procedure", "Update Governance Procedure",
                 "Create Security Access Control", "Update Security Access Control",
-                "Create Security Group", "Update Security Group",
                 "Create Naming Standard Rule", "Update Naming Standard Rule",
                 "Create Certification Type", "Update Certification Type",
                 "Create License Type", "Update License Type",
@@ -84,7 +83,7 @@ COLLECTION_SUBTYPES = [
     "Namespace", "Results Set", "Recent Access", "Work Item List", "Folio",
     "Digital Product", "Digital Product Catalog", "Digital Product Family",
     "Agreement", "Digital Subscription", "Data Sharing Agreement", "Data Dictionary", "Data Spec",
-    "Glossary"
+    "Glossary", "Security Group", "Security List", "Security Role"
 ]
 
 SIMPLE_BASE_COLLECTIONS: set = set(COLLECTION_SUBTYPES) | {

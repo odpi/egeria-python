@@ -52,13 +52,16 @@ class BlueprintProcessor(AsyncBaseCommandProcessor):
         
         comp_guids = set(attributes.get('Solution Components', {}).get('guid_list', []))
 
+        spec = self.get_command_spec()
+        om_type = spec.get("OM_TYPE")
+
         if verb == "Update":
             guid = self.parsed_output.get("guid") or (self.as_is_element['elementHeader']['guid'] if self.as_is_element else None)
             if not guid:
                 return self.command.raw_block
 
-            body = set_update_body("Solution Blueprint", attributes)
-            prop_body = set_element_prop_body("Solution Blueprint", qualified_name, attributes)
+            body = set_update_body(om_type or "Solution Blueprint", attributes)
+            prop_body = set_element_prop_body(om_type or "Solution Blueprint", qualified_name, attributes)
             body['properties'] = self.filter_update_properties(prop_body, body.get('mergeUpdate', True))
             
             await self.client._async_update_solution_blueprint(guid, body)
@@ -85,8 +88,8 @@ class BlueprintProcessor(AsyncBaseCommandProcessor):
             return await self.render_result_markdown(guid)
 
         elif verb == "Create":
-            body = set_create_body("Solution Blueprint", attributes)
-            body['properties'] = set_element_prop_body("Solution Blueprint", qualified_name, attributes)
+            body = set_create_body(om_type or "Solution Blueprint", attributes)
+            body['properties'] = set_element_prop_body(om_type or "Solution Blueprint", qualified_name, attributes)
             body = body_slimmer(body)
             
             raw_guid = await self.client._async_create_solution_blueprint(body)
@@ -160,10 +163,13 @@ class ComponentProcessor(AsyncBaseCommandProcessor):
         merge_update = attributes.get('Merge Update', {}).get('value', True)
         journal_entry = attributes.get('Journal Entry', {}).get('value')
         
+        spec = self.get_command_spec()
+        om_type = spec.get("OM_TYPE")
+
         # 1. Properties
         prop_body = {
-            "class": "SolutionComponentProperties",
-            "typeName": "SolutionComponent",
+            "class": f"{om_type or 'SolutionComponent'}Properties",
+            "typeName": om_type or "SolutionComponent",
             "qualifiedName": qualified_name,
             "displayName": display_name,
             "description": attributes.get('Description', {}).get('value'),
@@ -388,9 +394,12 @@ class SupplyChainProcessor(AsyncBaseCommandProcessor):
         merge_update = attributes.get('Merge Update', {}).get('value', True)
         journal_entry = attributes.get('Journal Entry', {}).get('value')
         
+        spec = self.get_command_spec()
+        om_type = spec.get("OM_TYPE")
+
         prop_body = {
-            "class": "InformationSupplyChainProperties",
-            "typeName": "InformationSupplyChain",
+            "class": f"{om_type or 'InformationSupplyChain'}Properties",
+            "typeName": om_type or "InformationSupplyChain",
             "qualifiedName": qualified_name,
             "displayName": display_name,
             "description": attributes.get('Description', {}).get('value'),
@@ -409,7 +418,7 @@ class SupplyChainProcessor(AsyncBaseCommandProcessor):
             if not guid:
                 return self.command.raw_block
 
-            body = set_update_body("InformationSupplyChain", attributes)
+            body = set_update_body(om_type or "InformationSupplyChain", attributes)
             body['properties'] = self.filter_update_properties(prop_body, body.get('mergeUpdate', True))
             await self.client._async_update_info_supply_chain(guid, body)
             self.parsed_output["guid"] = guid
@@ -432,7 +441,7 @@ class SupplyChainProcessor(AsyncBaseCommandProcessor):
             return await self.render_result_markdown(guid)
 
         elif verb == "Create":
-            body = set_create_body("InformationSupplyChain", attributes)
+            body = set_create_body(om_type or "InformationSupplyChain", attributes)
             body['properties'] = prop_body
             
             raw_guid = await self.client._async_create_info_supply_chain(body)
@@ -530,6 +539,9 @@ class SolutionLinkProcessor(AsyncBaseCommandProcessor):
         object_type = getattr(self, 'canonical_object_type', self.command.object_type)
         attributes = self.parsed_output["attributes"]
         
+        spec = self.get_command_spec()
+        om_type = spec.get("OM_TYPE")
+
         id1 = attributes.get('Component1', {}).get('guid') or attributes.get('Segment1', {}).get('guid')
         id2 = attributes.get('Component2', {}).get('guid') or attributes.get('Segment2', {}).get('guid')
         label = attributes.get('Wire Label', {}).get('value') or attributes.get('Link Label', {}).get('value')
@@ -542,7 +554,7 @@ class SolutionLinkProcessor(AsyncBaseCommandProcessor):
             body = {
                 "class": "NewRelationshipRequestBody",
                 "properties": {
-                    "class": "SolutionLinkingWireProperties" if "Component" in object_type else "InformationSupplyChainLinkProperties",
+                    "class": f"{om_type}Properties" if om_type else ("SolutionLinkingWireProperties" if "Component" in object_type else "InformationSupplyChainLinkProperties"),
                     "label": label,
                     "description": description,
                     "effectiveFrom": attributes.get('Effective From', {}).get('value'),

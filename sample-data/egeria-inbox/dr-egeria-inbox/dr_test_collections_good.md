@@ -20,7 +20,7 @@
 >   Removal       — Detach, Unlink, Remove (all equivalent)
 >
 > Content Status valid values: DRAFT, PREPARED, PROPOSED, APPROVED, REJECTED,
->                               ACTIVE, DEPRECATED, OTHER
+>                               PROPOSED, DEPRECATED, OTHER
 > Membership Status valid values: UNKNOWN, DISCOVERED, PROPOSED, IMPORTED,
 >                                  VALIDATED, DEPRECATED, OBSOLETE, OTHER
 
@@ -105,7 +105,7 @@ Primary governance container for the Q1 2026 forecasting initiative.
 Central governance container for all Sales Forecast metadata and lineage.
 
 ## Content Status
-ACTIVE
+PROPOSED
 
 ## Version Identifier
 1.0
@@ -150,10 +150,10 @@ Sales Forecast Master Collection
 Collection::SalesForecast::Master::1.0
 
 ## Content Status
-ACTIVE
+PROPOSED
 
 ## Journal Entry
-Status confirmed ACTIVE following governance board approval on 2026-03-20.
+Status confirmed PROPOSED following governance board approval on 2026-03-20.
 
 ___
 
@@ -186,7 +186,7 @@ Root collection for the entire Sales Forecasting metadata hierarchy.
 Serve as the top-level anchor for all Sales Forecast sub-collections.
 
 ## Content Status
-ACTIVE
+PROPOSED
 
 ## Version Identifier
 1.0
@@ -219,7 +219,7 @@ Collection::SalesForecast::Root::1.0
 CollectionMembership
 
 ## Content Status
-ACTIVE
+PROPOSED
 
 ## Version Identifier
 1.0
@@ -317,7 +317,7 @@ Work item list tracking outstanding data quality remediation tasks for the
 Sales Forecasting pipeline identified during the Q4 2025 quality review.
 
 ## Content Status
-ACTIVE
+PROPOSED
 
 ## Version Identifier
 1.0
@@ -359,7 +359,7 @@ cn=BoardForecastReaders,ou=SecurityGroups,dc=example,dc=com
 jane.smith@example.com
 
 ## Content Status
-ACTIVE
+PROPOSED
 
 ## Qualified Name
 SecurityGroup::SalesForecast::BoardForecastReaders::1.0
@@ -386,7 +386,7 @@ Define the identity list for pipeline infrastructure access control.
 cn=SFPipelineIdentities,ou=SecurityLists,dc=example,dc=com
 
 ## Content Status
-ACTIVE
+PROPOSED
 
 ## Qualified Name
 SecurityList::SalesForecast::PipelineIdentities::1.0
@@ -413,7 +413,7 @@ Consolidate data steward access rights for Sales Forecast governance.
 cn=SFDataStewardRole,ou=SecurityRoles,dc=example,dc=com
 
 ## Content Status
-ACTIVE
+PROPOSED
 
 ## Qualified Name
 SecurityRole::SalesForecast::DataSteward::1.0
@@ -437,6 +437,8 @@ Collection::SalesForecast::Root::1.0
 ## Element Id
 Collection::SalesForecast::DataStructures::1.0
 
+## Membership Status
+PROPOSED
 ___
 
 # HP-18: Add Member to Collection — Domain-level attributes
@@ -603,7 +605,7 @@ ___
 >   HP-01 to HP-16 : All Create commands executed. GUIDs filled. Create verb swapped to Update.
 >   HP-03, HP-07 to HP-16 : QN in output matches user-specified value exactly.
 >   HP-01, HP-02, HP-06 : QN in output is auto-generated (non-empty).
->   HP-02 : Content Status=DRAFT in output (tests non-ACTIVE value).
+>   HP-02 : Content Status=DRAFT in output (tests non-PROPOSED value).
 >   HP-05, HP-06 : Update commands locate and update existing elements. No GUID slot.
 >   HP-14 to HP-16 : Security Group/List/Role — Purpose and Distinguished Name in output;
 >                    Domain Identifier and Implementation Description NOT present

@@ -1,6 +1,6 @@
 {
   "family": "Collections",
-  "exported": "Apr 4, 2026 at 4:13:31 PM",
+  "exported": "Apr 4, 2026 at 9:25:06 PM",
   "attribute_definitions": {
     "Activity Status": {
       "variable_name": "activity_status",
@@ -1889,7 +1889,7 @@
       "inUpdate": true,
       "attr_labels": "",
       "examples": "",
-      "default_value": "",
+      "default_value": "PROPOSED",
       "valid_values": [
         "UNKNOWN",
         "DISCOVERED",
@@ -2199,7 +2199,7 @@
       "display_name": "Security Group",
       "qn_prefix": "SecurityGroup",
       "alternate_names": [],
-      "family": "Governance Officer",
+      "family": "Collections",
       "description": "A group (collection) of actors that need to be given the same access to a specific set of resources.",
       "verb": "Create",
       "upsert": false,
@@ -2220,7 +2220,7 @@
       "display_name": "Security List",
       "qn_prefix": "SecurityList",
       "alternate_names": [],
-      "family": "Governance Officer",
+      "family": "Collections",
       "description": "A group (collection) of identities that need to be given the same access to a specific set of resources.",
       "verb": "Create",
       "upsert": false,
@@ -2241,7 +2241,7 @@
       "display_name": "Security Role",
       "qn_prefix": "SecurityRole",
       "alternate_names": [],
-      "family": "Governance Officer",
+      "family": "Collections",
       "description": "A group (collection) of roles that need to be given the same access to a specific set of resources.",
       "verb": "Create",
       "upsert": false,

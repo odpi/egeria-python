@@ -149,9 +149,12 @@ class GovernanceProcessor(AsyncBaseCommandProcessor):
         attributes = self.parsed_output["attributes"]
         qualified_name = self.parsed_output["qualified_name"]
         display_name = attributes.get('Display Name', {}).get('value', qualified_name)
+
+        spec = self.get_command_spec()
+        om_type = spec.get("OM_TYPE")
         
         # 1. Properties
-        prop_body = set_gov_prop_body(object_type, qualified_name, attributes)
+        prop_body = set_gov_prop_body(om_type or object_type, qualified_name, attributes)
         prop_body = self._prune_security_group_properties(prop_body, self.egeria_type_name)
 
         if verb == "Update":
@@ -160,7 +163,7 @@ class GovernanceProcessor(AsyncBaseCommandProcessor):
                 return self.command.raw_block
             self.parsed_output["guid"] = guid
 
-            body = {
+            self.last_body = body = {
                 "class": "UpdateElementRequestBody",
                 "properties": self.filter_update_properties(prop_body, attributes.get('Merge Update', {}).get('value', True)),
                 "mergeUpdate": attributes.get('Merge Update', {}).get('value', True)
@@ -175,11 +178,11 @@ class GovernanceProcessor(AsyncBaseCommandProcessor):
             return await self.render_result_markdown(guid)
 
         elif verb == "Create":
-            body = set_create_body(object_type, attributes)
+            self.last_body = body = set_create_body(om_type or object_type, attributes)
             create_props = dict(prop_body)
             # Always use the most specific subtype properties class for create payloads.
             # set_gov_prop_body()/update_gov_body_for_type already choose the correct class.
-            outgoing_type_name = str(create_props.get("typeName") or self.egeria_type_name or object_type)
+            outgoing_type_name = str(create_props.get("typeName") or self.egeria_type_name or om_type or object_type)
 
             # Defensive: always prune SecurityGroup governance-only fields based on the outgoing type,
             # even if spec/type derivation drifts.
@@ -320,6 +323,9 @@ class GovernanceLinkProcessor(AsyncBaseCommandProcessor):
         established_verbs = {"Link", "Attach", "Add"}
         remove_verbs = {"Detach", "Unlink", "Remove"}
 
+        spec = self.get_command_spec()
+        om_type = spec.get("OM_TYPE")
+
         endpoint_map = {
             "Governance Response": ("Driver", "Policy"),
             "Governance Mechanism": ("Policy", "Mechanism"),
@@ -362,22 +368,20 @@ class GovernanceLinkProcessor(AsyncBaseCommandProcessor):
 
         if verb in established_verbs:
             if object_type in {"Governance Drivers", "Governance Policies", "Governance Controls"}:
-                rel_map = {
+                rel_type = om_type or {
                     "Governance Drivers": "GovernanceDriverLink",
                     "Governance Policies": "GovernancePolicyLink",
                     "Governance Controls": "GovernanceControlLink",
-                }
-                rel_type = rel_map[object_type]
-                body = set_peer_gov_def_request_body(object_type, attributes)
+                }.get(object_type)
+                body = set_peer_gov_def_request_body(om_type or object_type, attributes)
                 await self.client._async_link_peer_definitions(left_guid, rel_type, right_guid, body)
 
             elif object_type in {"Governance Response", "Governance Mechanism"}:
-                rel_map = {
+                rel_type = om_type or {
                     "Governance Response": "GovernanceResponse",
                     "Governance Mechanism": "GovernanceMechanism",
-                }
-                rel_type = rel_map[object_type]
-                body = set_peer_gov_def_request_body(object_type, attributes)
+                }.get(object_type)
+                body = set_peer_gov_def_request_body(om_type or object_type, attributes)
                 body["properties"] = {
                     "class": "SupportingDefinitionProperties",
                     "typeName": rel_type,
@@ -486,7 +490,7 @@ class GovernanceLinkProcessor(AsyncBaseCommandProcessor):
                     "Regulation Certification Type": "RegulationCertificationType",
                 }
                 rel_type = rel_map[object_type]
-                body = set_peer_gov_def_request_body(object_type, attributes)
+                self.last_body = body = set_peer_gov_def_request_body(object_type, attributes)
                 await self.client._async_link_peer_definitions(left_guid, rel_type, right_guid, body)
 
             elif object_type == "Monitored Resource":
@@ -500,7 +504,7 @@ class GovernanceLinkProcessor(AsyncBaseCommandProcessor):
             return f"\n\n# {verb} {object_type}\n\nOperation completed."
 
         elif verb in remove_verbs:
-            body = set_delete_rel_request_body(object_type, attributes)
+            self.last_body = body = set_delete_rel_request_body(object_type, attributes)
             if object_type in {"Governance Drivers", "Governance Policies", "Governance Controls"}:
                 rel_map = {
                     "Governance Drivers": "GovernanceDriverLink",

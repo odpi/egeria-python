@@ -35,6 +35,7 @@ def _command_to_spec(name: str, cdef: Dict[str, Any], expanded: Dict[str, Any]) 
         "extra_find",
         "extra_constraints",
         "Journal Entry",
+        "OM_TYPE",
     ):
         if key in cdef:
             spec[key] = cdef[key]

@@ -41,6 +41,7 @@ class AsyncBaseCommandProcessor(ABC):
         self.parsed_output = None
         self.as_is_element = None
         self.related_results = []
+        self.last_body = None
         self.markdown_verb = self.command.source_verb or self.command.verb
         self.markdown_object_type = self.command.source_object_type or self.command.object_type
         
@@ -139,6 +140,10 @@ class AsyncBaseCommandProcessor(ABC):
 
     def _derive_egeria_type_name(self) -> str:
         spec = self.get_command_spec()
+        om_type = spec.get("OM_TYPE")
+        if om_type:
+            return om_type
+
         find_constraints = spec.get("find_constraints") if spec else None
         if find_constraints:
             parsed_constraints = None
@@ -506,6 +511,9 @@ class AsyncBaseCommandProcessor(ABC):
         try:
             output = await self.apply_changes()
         except PyegeriaException as e:
+            logger.error(f"Command String: {self.command.raw_block}")
+            if self.last_body:
+                logger.error(f"Request Body: {json.dumps(self.last_body, indent=2, default=str)}")
             logger.exception(f"Error applying changes for {self.command.verb} {self.command.object_type}")
             print_basic_exception(e)
             return {
@@ -522,6 +530,9 @@ class AsyncBaseCommandProcessor(ABC):
                 "errors": [str(e)]
             }
         except Exception as e:
+            logger.error(f"Command String: {self.command.raw_block}")
+            if self.last_body:
+                logger.error(f"Request Body: {json.dumps(self.last_body, indent=2, default=str)}")
             logger.exception(f"Error applying changes for {self.command.verb} {self.command.object_type}")
             return {
                 "output": self.command.raw_block,
@@ -702,9 +713,9 @@ class AsyncBaseCommandProcessor(ABC):
         """
         try:
             # First try ClassificationExplorer (most standard and lightweight)
-            print(f"DEBUG: fetch_element('{guid}') using client {self.client}")
+            logger.debug(f"fetch_element('{guid}') using client {self.client}")
             res = await getattr(self.client, "_async_get_element_by_guid_")(guid)
-            print(f"DEBUG: fetch_element returned {res is not None}")
+            logger.debug(f"fetch_element returned {res is not None}")
             if res and isinstance(res, dict):
                 # The structure from classification-explorer comes under "element" usually
                 if "element" in res:

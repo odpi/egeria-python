@@ -6,6 +6,7 @@ This module provides a basic MCP server for Egeria.
 import re
 import sys
 import nest_asyncio
+from loguru import logger
 
 from typing import Any, Dict, Optional, Literal
 
@@ -49,7 +50,7 @@ def main() -> None:
         """ Runs ONCE when the server starts.
             Initializes the Egeria client and stores it in the server's state.
         """
-        print("DEBUG: Initializing Egeria client...", file=sys.stderr)
+        logger.debug("Initializing Egeria client...")
         from pyegeria.core.config import settings as _settings
         user_id = _settings.User_Profile.user_name
         user_pwd = _settings.User_Profile.user_pwd
@@ -60,15 +61,15 @@ def main() -> None:
             user_id,
             user_pwd
         )
-        print("DEBUG: Egeria Client initialized", file=sys.stderr)
+        logger.debug("Egeria Client initialized")
         GLOBAL_EGERIA_CLIENT.create_egeria_bearer_token("erinoverview", "secret")
-        print("DEBUG: Egeria Client connected", file=sys.stderr)
+        logger.debug("Egeria Client connected")
 
     except ValidationError as e:
         print_validation_error(e)
         raise
     except Exception as e:
-        print(f"DEBUG: Exception occurred: {str(e)}", file=sys.stderr)
+        logger.debug(f"Exception occurred: {str(e)}")
         raise
 
     srv = FastMCP(name="pyegeria-mcp")
@@ -78,13 +79,13 @@ def main() -> None:
     @srv.tool(name="list_reports")
     def list_reports_tool(output_type: Literal["DICT", "JSON", "MARKDOWN"] = "DICT") -> Dict[str, Any]:
         """Lists all available reports (FormatSets)."""
-        print("DEBUG: Listing reports...", file=sys.stderr)
+        logger.debug("Listing reports...")
         return _ok(list_reports())
 
     @srv.tool(name="find_report_specs")
     def find_report_specs_tool(perspective: str=None, question: str=None, report_spec: str=None, output_type: Literal["DICT", "JSON", "MARKDOWN"] = "DICT") -> Dict[str, Any]:
         """Finds report specs that match the given perspective, question, and report spec."""
-        print("DEBUG: Finding report specs...", file=sys.stderr)
+        logger.debug("Finding report specs...")
         return _ok(run_find_report_specs(perspective=perspective, question=question, report_spec=report_spec))
 
 
@@ -94,11 +95,11 @@ def main() -> None:
         # FastMCP handles validation of 'name' and 'output_type' types automatically.
         effective_output_type = "REPORT" if output_type == "MARKDOWN" else ("DICT" if output_type == "JSON" else output_type)
 
-        print(f"DEBUG: Describing report: {name} with output type: {effective_output_type}", file=sys.stderr)
+        logger.debug(f"Describing report: {name} with output type: {effective_output_type}")
         try:
             return _ok(describe_report(name, effective_output_type))
         except Exception as e:
-            print(f"DEBUG: Exception during describe_report: {str(e)}", file=sys.stderr)
+            logger.debug(f"Exception during describe_report: {str(e)}")
             raise
 
     @srv.tool(name="run_report")
@@ -140,12 +141,12 @@ def main() -> None:
         # Filter out None values before passing to run_report
         params = {k: v for k, v in params.items() if v is not None}
 
-        print(f"DEBUG: Running report={report_name} with params={params}", file=sys.stderr)
+        logger.debug(f"Running report={report_name} with params={params}")
 
         try:
 
             egeria_client: EgeriaTech = GLOBAL_EGERIA_CLIENT
-            print("DEBUG: Egeria Client connected", file=sys.stderr)
+            logger.debug("Egeria Client connected")
             result = await asyncio.wait_for(
                 _async_run_report_tool(
                     report=report_name,
@@ -155,11 +156,11 @@ def main() -> None:
                 timeout=30  # Adjust timeout as needed
             )
 
-            print("DEBUG: run_report completed successfully", file=sys.stderr)
+            logger.debug("run_report completed successfully")
             return _ok(result)
         except Exception as e:
             # Re-raise the exception to be sent back as a JSON-RPC error
-            print(f"DEBUG: Exception occurred: {str(e)}", file=sys.stderr)
+            logger.debug(f"Exception occurred: {str(e)}")
             raise
 
     @srv.tool(name="prompt")
@@ -168,20 +169,20 @@ def main() -> None:
         Handles natural language queries from the user.
         In a production environment, this would call an LLM API.
         """
-        print(f"DEBUG: Received natural language prompt: {prompt}", file=sys.stderr)
+        logger.debug(f"Received natural language prompt: {prompt}")
 
         # Example of simple logic: If the user asks to list reports, delegate to the tool.
         if "list" in prompt.lower() and "reports" in prompt.lower():
-            print("DEBUG: Delegating prompt to list_reports tool.", file=sys.stderr)
+            logger.debug("Delegating prompt to list_reports tool.")
             return list_reports()  # This is sync, so no await needed
         elif "run" in prompt.lower() and "report" in prompt.lower():
-            print("DEBUG: Delegating prompt to run_report tool.", file=sys.stderr)
+            logger.debug("Delegating prompt to run_report tool.")
 
             match = re.search(r'report\s+([a-zA-Z0-9]+)', prompt, re.IGNORECASE)
             report_name = match.group(1) if match else None
 
             if report_name:
-                print(f"DEBUG: Extracted report name: {report_name}", file=sys.stderr)
+                logger.debug(f"Extracted report name: {report_name}")
 
                 page_size_match = re.search(r'page size of\s+(\d+)', prompt, re.IGNORECASE)
                 page_size = int(page_size_match.group(1)) if page_size_match else None

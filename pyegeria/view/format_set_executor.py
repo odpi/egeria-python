@@ -254,11 +254,11 @@ async def safe_call_tool(func, **call_params):
     try:
         if asyncio.iscoroutinefunction(func):
             # If it's an async function, call it with await
-            print("DEBUG: Function is async, using await.", file=sys.stderr)
+            logger.debug("Function is async, using await.")
             result = await func(**call_params)
         else:
             # If it's a synchronous function, call it directly
-            print("DEBUG: Function is sync, calling directly.", file=sys.stderr)
+            logger.debug("Function is sync, calling directly.")
             result = func(**call_params)
 
         return result
@@ -350,10 +350,8 @@ async def _async_run_report(
     required_params = action.get("required_params", action.get("user_params", [])) or []
     optional_params = action.get("optional_params", []) or []
     spec_params = action.get("spec_params", {}) or {}
-    print(f"func_decl={func_decl}", file=sys.stderr)
     action_mode = _infer_action_mode(method_name)
     params = _normalize_report_params(params, action_mode=action_mode)
-
     # Build call params: required/optional provided by caller + fixed spec_params
     call_params: Dict[str, Any] = {}
     missing_required: list[str] = []
@@ -393,9 +391,8 @@ async def _async_run_report(
     try:
         func = getattr(target_client, method_name) if method_name and hasattr(target_client, method_name) else None
         # Add logging to validate func
-        msg = f"DEBUG: func={func}, method_name={method_name}, client_class={client_class}, target_client={type(target_client)}"
+        msg = f"func={func}, method_name={method_name}, client_class={client_class}, target_client={type(target_client)}"
         logger.debug(msg)
-        print(msg, file=sys.stderr)
 
         if func is None or not callable(func):
             raise TypeError(
@@ -409,16 +406,16 @@ async def _async_run_report(
             if hasattr(egeria_client, "get_token"):
                 existing_token = egeria_client.get_token()
             if not existing_token:
-                print("DEBUG: No existing bearer token; attempting async creation...", file=sys.stderr)
+                logger.debug("No existing bearer token; attempting async creation...")
                 if user_name and user_pwd:
                     await egeria_client._async_create_egeria_bearer_token(user_name, user_pwd)
                 else:
-                    print("DEBUG: Missing credentials; skipping token creation and relying on pre-initialized token.", file=sys.stderr)
+                    logger.debug("Missing credentials; skipping token creation and relying on pre-initialized token.")
             else:
-                print("DEBUG: Using existing bearer token.", file=sys.stderr)
+                logger.debug("Using existing bearer token.")
         except Exception as auth_err:
             # Do not fail the entire call if token refresh fails; downstream call may still work
-            print(f"DEBUG: Token creation/lookup issue: {auth_err}", file=sys.stderr)
+            logger.debug(f"Token creation/lookup issue: {auth_err}")
         result = await func(**call_params)
 
         if not result or result == NO_ELEMENTS_FOUND:
