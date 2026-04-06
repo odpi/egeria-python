@@ -1,6 +1,6 @@
 {
   "family": "Digital Products",
-  "exported": "Apr 5, 2026 at 3:36:35 PM",
+  "exported": "Apr 6, 2026 at 12:40:55 PM",
   "attribute_definitions": {
     "Activity Status": {
       "variable_name": "activity_status",
@@ -607,6 +607,25 @@
       "valid_values": [],
       "existing_element": "Referenceable",
       "description": "The unique identifier (qualified name or GUID) of the element being referenced.",
+      "generated": false,
+      "style": "Reference Name",
+      "user_specified": true,
+      "unique": false,
+      "input_required": true,
+      "min_cardinality": 1,
+      "max_cardinality": 1,
+      "level": "Common",
+      "Journal Entry": ""
+    },
+    "Element2 Id": {
+      "variable_name": "element2_id",
+      "inUpdate": true,
+      "attr_labels": "",
+      "examples": "",
+      "default_value": "",
+      "valid_values": [],
+      "existing_element": "Referenceable",
+      "description": "The unique identifier (qualified name or GUID) of a second element being referenced.",
       "generated": false,
       "style": "Reference Name",
       "user_specified": true,
@@ -2402,7 +2421,7 @@
       ]
     },
     "Resource List": {
-      "inherits": null,
+      "inherits": "Link Command Base",
       "own_attributes": [
         "Element Id",
         "Resource Description",
@@ -2428,6 +2447,21 @@
         "Namespace Path",
         "Resource Name",
         "Source"
+      ]
+    },
+    "Collection Membership": {
+      "inherits": "Link Command Base",
+      "own_attributes": [
+        "Confidence",
+        "Expression",
+        "Membership Rationale",
+        "Membership Status",
+        "Notes",
+        "Source",
+        "Steward",
+        "Steward Property Name",
+        "Steward Type Name",
+        "User Defined Status"
       ]
     },
     "Digital Product Base": {

@@ -1,6 +1,6 @@
 {
   "family": "Report",
-  "exported": "Apr 4, 2026 at 4:16:27 PM",
+  "exported": "Apr 6, 2026 at 12:43:27 PM",
   "attribute_definitions": {
     "Search String": {
       "variable_name": "search_string",
@@ -438,7 +438,8 @@
       "Journal Entry": ""
     }
   },
-  "bundles": {},
+  "bundles": {
+  },
   "commands": {
     "Report": {
       "display_name": "Report",
@@ -454,7 +455,7 @@
       "find_constraints": "",
       "extra_find": "",
       "extra_constraints": "",
-      "OM_TYPE": "Referenceable",
+      "OM_TYPE": "",
       "bundle": "",
       "custom_attributes": [
         "Search String",

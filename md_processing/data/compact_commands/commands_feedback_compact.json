@@ -1,6 +1,6 @@
 {
   "family": "Feedback",
-  "exported": "Apr 5, 2026 at 3:35:45 PM",
+  "exported": "Apr 6, 2026 at 12:41:41 PM",
   "attribute_definitions": {
     "Activity Status": {
       "variable_name": "activity_status",
@@ -607,6 +607,25 @@
       "valid_values": [],
       "existing_element": "Referenceable",
       "description": "The unique identifier (qualified name or GUID) of the element being referenced.",
+      "generated": false,
+      "style": "Reference Name",
+      "user_specified": true,
+      "unique": false,
+      "input_required": true,
+      "min_cardinality": 1,
+      "max_cardinality": 1,
+      "level": "Common",
+      "Journal Entry": ""
+    },
+    "Element2 Id": {
+      "variable_name": "element2_id",
+      "inUpdate": true,
+      "attr_labels": "",
+      "examples": "",
+      "default_value": "",
+      "valid_values": [],
+      "existing_element": "Referenceable",
+      "description": "The unique identifier (qualified name or GUID) of a second element being referenced.",
       "generated": false,
       "style": "Reference Name",
       "user_specified": true,
@@ -2189,7 +2208,7 @@
       ]
     },
     "Resource List": {
-      "inherits": null,
+      "inherits": "Link Command Base",
       "own_attributes": [
         "Element Id",
         "Resource Description",
@@ -2215,6 +2234,21 @@
         "Namespace Path",
         "Resource Name",
         "Source"
+      ]
+    },
+    "Collection Membership": {
+      "inherits": "Link Command Base",
+      "own_attributes": [
+        "Confidence",
+        "Expression",
+        "Membership Rationale",
+        "Membership Status",
+        "Notes",
+        "Source",
+        "Steward",
+        "Steward Property Name",
+        "Steward Type Name",
+        "User Defined Status"
       ]
     }
   },
@@ -2253,7 +2287,7 @@
       "upsert": true,
       "attach": false,
       "level": "Basic",
-      "find_method": "ServerClient.find_informal_tags",
+      "find_method": "ServerClient.find_tags",
       "find_constraints": "",
       "extra_find": "",
       "extra_constraints": "",

@@ -1,6 +1,6 @@
 {
   "family": "Glossary",
-  "exported": "Apr 4, 2026 at 4:15:49 PM",
+  "exported": "Apr 6, 2026 at 12:42:02 PM",
   "attribute_definitions": {
     "Activity Status": {
       "variable_name": "activity_status",
@@ -607,6 +607,25 @@
       "valid_values": [],
       "existing_element": "Referenceable",
       "description": "The unique identifier (qualified name or GUID) of the element being referenced.",
+      "generated": false,
+      "style": "Reference Name",
+      "user_specified": true,
+      "unique": false,
+      "input_required": true,
+      "min_cardinality": 1,
+      "max_cardinality": 1,
+      "level": "Common",
+      "Journal Entry": ""
+    },
+    "Element2 Id": {
+      "variable_name": "element2_id",
+      "inUpdate": true,
+      "attr_labels": "",
+      "examples": "",
+      "default_value": "",
+      "valid_values": [],
+      "existing_element": "Referenceable",
+      "description": "The unique identifier (qualified name or GUID) of a second element being referenced.",
       "generated": false,
       "style": "Reference Name",
       "user_specified": true,
@@ -2373,7 +2392,7 @@
       ]
     },
     "Resource List": {
-      "inherits": null,
+      "inherits": "Link Command Base",
       "own_attributes": [
         "Element Id",
         "Resource Description",
@@ -2399,6 +2418,21 @@
         "Namespace Path",
         "Resource Name",
         "Source"
+      ]
+    },
+    "Collection Membership": {
+      "inherits": "Link Command Base",
+      "own_attributes": [
+        "Confidence",
+        "Expression",
+        "Membership Rationale",
+        "Membership Status",
+        "Notes",
+        "Source",
+        "Steward",
+        "Steward Property Name",
+        "Steward Type Name",
+        "User Defined Status"
       ]
     },
     "Glossary Base": {
@@ -2545,11 +2579,11 @@
       "upsert": false,
       "attach": false,
       "level": "Basic",
-      "find_method": "name",
+      "find_method": "",
       "find_constraints": "",
       "extra_find": "",
       "extra_constraints": "",
-      "OM_TYPE": "TermRelationship",
+      "OM_TYPE": "",
       "bundle": "Term-Term Link Base",
       "custom_attributes": [],
       "Journal Entry": ""

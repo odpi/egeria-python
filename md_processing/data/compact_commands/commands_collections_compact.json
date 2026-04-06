@@ -1,6 +1,6 @@
 {
   "family": "Collections",
-  "exported": "Apr 6, 2026 at 9:29:08 AM",
+  "exported": "Apr 6, 2026 at 12:39:56 PM",
   "attribute_definitions": {
     "Activity Status": {
       "variable_name": "activity_status",
@@ -2012,7 +2012,7 @@
       ]
     },
     "Resource List": {
-      "inherits": null,
+      "inherits": "Link Command Base",
       "own_attributes": [
         "Element Id",
         "Resource Description",
@@ -2020,21 +2020,6 @@
         "Resource Properties",
         "Resource Use",
         "Watch Resource"
-      ]
-    },
-    "Collection Membership": {
-      "inherits": null,
-      "own_attributes": [
-        "Confidence",
-        "Expression",
-        "Membership Rationale",
-        "Membership Status",
-        "Notes",
-        "Source",
-        "Steward",
-        "Steward Property Name",
-        "Steward Type Name",
-        "User Defined Status"
       ]
     },
     "Link Command Base": {
@@ -2053,6 +2038,21 @@
         "Namespace Path",
         "Resource Name",
         "Source"
+      ]
+    },
+    "Collection Membership": {
+      "inherits": "Link Command Base",
+      "own_attributes": [
+        "Confidence",
+        "Expression",
+        "Membership Rationale",
+        "Membership Status",
+        "Notes",
+        "Source",
+        "Steward",
+        "Steward Property Name",
+        "Steward Type Name",
+        "User Defined Status"
       ]
     }
   },

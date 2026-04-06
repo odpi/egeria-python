@@ -1,6 +1,6 @@
 {
   "family": "Governance Officer",
-  "exported": "Apr 4, 2026 at 4:16:02 PM",
+  "exported": "Apr 6, 2026 at 12:42:23 PM",
   "attribute_definitions": {
     "Activity Status": {
       "variable_name": "activity_status",
@@ -607,6 +607,25 @@
       "valid_values": [],
       "existing_element": "Referenceable",
       "description": "The unique identifier (qualified name or GUID) of the element being referenced.",
+      "generated": false,
+      "style": "Reference Name",
+      "user_specified": true,
+      "unique": false,
+      "input_required": true,
+      "min_cardinality": 1,
+      "max_cardinality": 1,
+      "level": "Common",
+      "Journal Entry": ""
+    },
+    "Element2 Id": {
+      "variable_name": "element2_id",
+      "inUpdate": true,
+      "attr_labels": "",
+      "examples": "",
+      "default_value": "",
+      "valid_values": [],
+      "existing_element": "Referenceable",
+      "description": "The unique identifier (qualified name or GUID) of a second element being referenced.",
       "generated": false,
       "style": "Reference Name",
       "user_specified": true,
@@ -3205,8 +3224,8 @@
       "level": "Domain",
       "Journal Entry": ""
     },
-    "Security Group": {
-      "variable_name": "security_group",
+    "Security List": {
+      "variable_name": "security_list",
       "inUpdate": false,
       "attr_labels": "",
       "examples": "",
@@ -3362,7 +3381,7 @@
       ]
     },
     "Resource List": {
-      "inherits": null,
+      "inherits": "Link Command Base",
       "own_attributes": [
         "Element Id",
         "Resource Description",
@@ -3388,6 +3407,21 @@
         "Namespace Path",
         "Resource Name",
         "Source"
+      ]
+    },
+    "Collection Membership": {
+      "inherits": "Link Command Base",
+      "own_attributes": [
+        "Confidence",
+        "Expression",
+        "Membership Rationale",
+        "Membership Status",
+        "Notes",
+        "Source",
+        "Steward",
+        "Steward Property Name",
+        "Steward Type Name",
+        "User Defined Status"
       ]
     },
     "Governance Definition Core": {
@@ -4017,20 +4051,20 @@
       "find_constraints": "",
       "extra_find": "",
       "extra_constraints": "",
-      "OM_TYPE": "AgreementTerms",
-      "bundle": "Link Command Base",
+      "OM_TYPE": "CollectionMembership",
+      "bundle": "Collection Membership",
       "custom_attributes": [
         "Terms & Conditions Id",
         "Agreement Name"
       ],
       "Journal Entry": ""
     },
-    "Link Associated Group": {
-      "display_name": "Associated Group",
+    "Link Associated List": {
+      "display_name": "Associated List",
       "qn_prefix": "",
       "alternate_names": [],
       "family": "Governance Officer",
-      "description": "Establishes that a Security Access Control applies to this Security Group.",
+      "description": "Establishes that a Security Access Control applies to this Security List, Group or Role.",
       "verb": "Link",
       "upsert": false,
       "attach": false,
@@ -4039,12 +4073,12 @@
       "find_constraints": "",
       "extra_find": "",
       "extra_constraints": "",
-      "OM_TYPE": "AssociatedGroup",
+      "OM_TYPE": "AssociatedSecurityList",
       "bundle": "Link Command Base",
       "custom_attributes": [
         "Access Control",
         "Operation Name",
-        "Security Group"
+        "Security List"
       ],
       "Journal Entry": ""
     },

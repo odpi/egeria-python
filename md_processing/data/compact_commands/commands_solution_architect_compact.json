@@ -1,6 +1,6 @@
 {
   "family": "Solution Architect",
-  "exported": "Apr 6, 2026 at 9:30:03 AM",
+  "exported": "Apr 6, 2026 at 12:43:57 PM",
   "attribute_definitions": {
     "Activity Status": {
       "variable_name": "activity_status",
@@ -2526,7 +2526,7 @@
       ]
     },
     "Resource List": {
-      "inherits": null,
+      "inherits": "Link Command Base",
       "own_attributes": [
         "Element Id",
         "Resource Description",
@@ -2534,21 +2534,6 @@
         "Resource Properties",
         "Resource Use",
         "Watch Resource"
-      ]
-    },
-    "Collection Membership": {
-      "inherits": null,
-      "own_attributes": [
-        "Confidence",
-        "Expression",
-        "Membership Rationale",
-        "Membership Status",
-        "Notes",
-        "Source",
-        "Steward",
-        "Steward Property Name",
-        "Steward Type Name",
-        "User Defined Status"
       ]
     },
     "Link Command Base": {
@@ -2567,6 +2552,21 @@
         "Namespace Path",
         "Resource Name",
         "Source"
+      ]
+    },
+    "Collection Membership": {
+      "inherits": "Link Command Base",
+      "own_attributes": [
+        "Confidence",
+        "Expression",
+        "Membership Rationale",
+        "Membership Status",
+        "Notes",
+        "Source",
+        "Steward",
+        "Steward Property Name",
+        "Steward Type Name",
+        "User Defined Status"
       ]
     },
     "ISC Base": {
@@ -2624,7 +2624,7 @@
       ]
     },
     "ISC Segment Link Base": {
-      "inherits": "Link Command Base",
+      "inherits": "Collection Membership",
       "own_attributes": [
         "ISC Child",
         "ISC Parent"
@@ -2784,7 +2784,10 @@
       "extra_constraints": "",
       "OM_TYPE": "CollectionMembership",
       "bundle": "Collection Membership",
-      "custom_attributes": [],
+      "custom_attributes": [
+        "Blueprint",
+        "Blueprint Child"
+      ],
       "Journal Entry": ""
     },
     "Link Solution Component to Blueprint": {
@@ -2876,7 +2879,7 @@
       "Journal Entry": "Links a solution role to a solution component via SolutionComponentActorProperties. The role attribute describes the role the actor plays with the component. pyegeria: link_component_to_actor(role_guid, component_guid, body)"
     },
     "Link Solution Design": {
-      "display_name": "solution_design",
+      "display_name": "Link Solution Design",
       "qn_prefix": "",
       "alternate_names": [
         "Blueprint to Element"

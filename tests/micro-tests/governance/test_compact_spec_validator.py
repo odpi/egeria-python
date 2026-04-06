@@ -30,7 +30,7 @@ def test_validate_compact_spec_file_warns_on_ignored_find_constraints_keys(tmp_p
                 "find_constraints": json.dumps(
                     {
                         "metadata_element_type": "Threat",
-                        "classification_name": "GovernanceDefinitionStatus",
+                        "some_unknown_filter": "GovernanceDefinitionStatus",
                     }
                 )
             }
@@ -42,6 +42,48 @@ def test_validate_compact_spec_file_warns_on_ignored_find_constraints_keys(tmp_p
     findings = validate_compact_spec_file(file_path)
     codes = {f.code for f in findings}
     assert "FIND_CONSTRAINTS_KEYS_IGNORED_BY_PROCESSING" in codes
+
+
+def test_validate_compact_spec_file_does_not_warn_for_intentional_classification_names_key(tmp_path):
+    payload = {
+        "commands": {
+            "Create Data Sharing Agreement": {
+                "find_constraints": json.dumps(
+                    {
+                        "metadata_element_type": "Agreement",
+                        "classification_names": ["DataSharingAgreement"],
+                    }
+                )
+            }
+        }
+    }
+    file_path = tmp_path / "compact_classification_names.json"
+    file_path.write_text(json.dumps(payload), encoding="utf-8")
+
+    findings = validate_compact_spec_file(file_path)
+    codes = {f.code for f in findings}
+    assert "FIND_CONSTRAINTS_KEYS_IGNORED_BY_PROCESSING" not in codes
+
+
+def test_validate_compact_spec_file_does_not_warn_for_intentional_classification_name_key(tmp_path):
+    payload = {
+        "commands": {
+            "Create Data Sharing Agreement": {
+                "find_constraints": json.dumps(
+                    {
+                        "metadata_element_type": "Agreement",
+                        "classification_name": "DataSharingAgreement",
+                    }
+                )
+            }
+        }
+    }
+    file_path = tmp_path / "compact_classification_name.json"
+    file_path.write_text(json.dumps(payload), encoding="utf-8")
+
+    findings = validate_compact_spec_file(file_path)
+    codes = {f.code for f in findings}
+    assert "FIND_CONSTRAINTS_KEYS_IGNORED_BY_PROCESSING" not in codes
 
 
 def test_validate_compact_spec_file_errors_on_bad_find_constraints_json(tmp_path):

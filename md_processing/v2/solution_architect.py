@@ -591,6 +591,12 @@ class SolutionLinkProcessor(AsyncBaseCommandProcessor):
             # Try to get type constraint for ID1
             type1 = None
             spec_attrs = spec.get("attribute_definitions", {})
+            if not spec_attrs:
+                spec_attrs = {
+                    a.get("name"): a
+                    for a in spec.get("Attributes", [])
+                    if isinstance(a, dict) and isinstance(a.get("name"), str)
+                }
             if id1_key in spec_attrs:
                 type1 = spec_attrs[id1_key].get("existing_element")
             elif "Collection Id" in id1_key:
@@ -602,6 +608,12 @@ class SolutionLinkProcessor(AsyncBaseCommandProcessor):
             # Try to get type constraint for ID2
             type2 = None
             spec_attrs = spec.get("attribute_definitions", {})
+            if not spec_attrs:
+                spec_attrs = {
+                    a.get("name"): a
+                    for a in spec.get("Attributes", [])
+                    if isinstance(a, dict) and isinstance(a.get("name"), str)
+                }
             if id2_key in spec_attrs:
                 type2 = spec_attrs[id2_key].get("existing_element")
             
@@ -654,7 +666,7 @@ class SolutionLinkProcessor(AsyncBaseCommandProcessor):
             elif om_type == "SolutionBlueprintComposition":
                 await self.client._async_link_solution_component_to_blueprint(id1, id2, body)
             elif om_type == "SolutionDesign":
-                await self.client._async_link_solution_design(id1, id2, body)
+                await self.client._async_link_solution_design(id2, id1, body)
             elif om_type == "CollectionMembership":
                  from pyegeria.core.utils import body_slimmer
                  await self.client._async_add_to_collection(id1, id2, body_slimmer(body))
