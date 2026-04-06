@@ -3,6 +3,16 @@
 >
 >	**Alternative Names**: Referenceable->Media Reference; Media Reference
 
+## Element Name
+>	**Input Required**: True
+
+>	**Attribute Type**: Reference Name
+
+>	**Description**: A referenceable to link to the external reference.
+
+>	**Alternative Labels**: Referenceable
+
+
 ## Media Reference
 >	**Input Required**: True
 
@@ -19,16 +29,6 @@
 >	**Description**: A label used to identify or categorise a relationship link.
 
 >	**Alternative Labels**: Wire Label
-
-
-## Element Id
->	**Input Required**: False
-
->	**Attribute Type**: Reference Name
-
->	**Description**: The unique identifier (qualified name or GUID) of the element being referenced.
-
->	**Alternative Labels**: Element Name
 
 
 ## Media Id

@@ -90,8 +90,18 @@ class AttributeFirstParser:
                     "status": "INFO" if len(self.warnings) == pre_warnings else "WARNING"
                 }
 
-        # Check for required attributes
-        is_update = self.command.verb.lower() in {"update", "modify", "patch"}
+        # Check for required attributes and apply defaults
+        verb_lower = self.command.verb.lower()
+        is_update = verb_lower in {"update", "modify", "patch"}
+        
+        # Only apply defaults for "creation-like" or "establishment" verbs
+        # We skip for updates (to keep them sparse) and for read/delete operations.
+        skip_defaults_verbs = {
+            "update", "modify", "patch", 
+            "delete", "remove", "detach", "unlink",
+            "view", "list", "search", "find", "display", "run", "provenance"
+        }
+        apply_defaults = verb_lower not in skip_defaults_verbs
         
         for attr_obj in spec_attrs:
             if not isinstance(attr_obj, dict):
@@ -135,6 +145,30 @@ class AttributeFirstParser:
                         if original:
                             msg += f". Check label spelling/casing near: {', '.join(original)}"
                 self.errors.append(msg)
+            
+            # Apply default value if missing or empty and we are in a creation-like operation
+            existing = self.parsed_attributes.get(canonical_name)
+            is_empty = False
+            if existing:
+                val = existing.get("value")
+                if val is None or (isinstance(val, (str, list)) and not val):
+                    is_empty = True
+
+            if (canonical_name not in self.parsed_attributes or is_empty) and apply_defaults:
+                default_value = details.get("default_value")
+                if default_value is not None and str(default_value).strip() != "" and apply_defaults:
+                    logger.debug(f"Applying default value '{default_value}' for {canonical_name}")
+                    parsed_default = await self._process_attribute_value(str(default_value), details)
+                    if parsed_default is not None:
+                         self.parsed_attributes[canonical_name] = {
+                            "value": parsed_default,
+                            "valid": True,
+                            "exists": canonical_name in self.parsed_attributes,
+                            "style": details.get("style", "Simple"),
+                            "existing_element": details.get("existing_element", ""),
+                            "status": "INFO",
+                            "is_default": True
+                        }
 
         qn_obj = self.parsed_attributes.get("Qualified Name", self.parsed_attributes.get("qualified_name"))
         qn_value = qn_obj.get("value") if isinstance(qn_obj, dict) else qn_obj
@@ -156,6 +190,8 @@ class AttributeFirstParser:
             details["name"] = canonical_name
 
         label_map[canonical_name.lower()] = (canonical_name, details)
+        # Also register snake_case version of canonical_name
+        label_map[canonical_name.lower().replace(" ", "_")] = (canonical_name, details)
         alt_labels = details.get("attr_labels", "")
         if alt_labels:
             if isinstance(alt_labels, str):

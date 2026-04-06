@@ -2874,6 +2874,177 @@ class SolutionArchitect(ServerClient):
         loop.run_until_complete(self._async_link_solution_component_to_blueprint(blueprint_guid, component_guid, body))
 
     @dynamic_catch
+    async def _async_link_solution_design(self, blueprint_guid: str, element_guid: str,
+                                              body: dict | NewRelationshipRequestBody) -> None:
+        """ Connect a solution blueprint to a referenceable element. Async Version.
+
+        Parameters
+        ----------
+        blueprint_guid: str
+            guid of the blueprint to connect to.
+        element_guid: str
+            guid of the referenceable element to link.
+        body: dict | NewRelationshipRequestBody
+            The body describing the link.
+
+        Returns
+        -------
+        None
+
+        Raises
+        ------
+        PyegeriaInvalidParameterException
+            one of the parameters is null or invalid or
+        PyegeriaAPIException
+            There is a problem adding the element properties to the metadata repository or
+        PyegeriaUnauthorizedException
+            the requesting user is not authorized to issue this request.
+
+        Notes
+        ----
+
+        Body structure:
+        {
+          "class" : "NewRelationshipRequestBody",
+          "properties": {
+            "class": "SolutionDesignProperties",
+            "role": "Add role that the element plays in the solution blueprint here",
+            "description": "Add description of the element in the context of the solution blueprint.",
+            "effectiveFrom": "{{$isoTimestamp}}",
+            "effectiveTo": "{{$isoTimestamp}}"
+          },
+          "externalSourceGUID": "add guid here",
+          "externalSourceName": "add qualified name here",
+          "effectiveTime" : "{{$isoTimestamp}}",
+          "forLineage" : false,
+          "forDuplicateProcessing" : false
+        }
+
+        """
+
+        url = (f"{self.platform_url}/servers/{self.view_server}/api/open-metadata/solution-architect/"
+               f"solution-blueprints/{blueprint_guid}/referenceable/{element_guid}/attach")
+
+        await self._async_new_relationship_request(url, ["SolutionDesignProperties"], body)
+        logger.info(f"Linked referenceable element to blueprint {element_guid} -> {blueprint_guid}")
+
+    @dynamic_catch
+    def link_solution_design(self, blueprint_guid: str, element_guid: str, body: dict | NewRelationshipRequestBody) -> None:
+        """ Connect a solution blueprint to a referenceable element.
+
+        Parameters
+        ----------
+        blueprint_guid: str
+            guid of the blueprint to connect to.
+        element_guid: str
+            guid of the referenceable element to link.
+        body: dict | NewRelationshipRequestBody
+            The body describing the link.
+
+        Returns
+        -------
+        None
+
+        Raises
+        ------
+        PyegeriaInvalidParameterException
+            one of the parameters is null or invalid or
+        PyegeriaAPIException
+            There is a problem adding the element properties to the metadata repository or
+        PyegeriaUnauthorizedException
+            the requesting user is not authorized to issue this request.
+
+        Notes
+        ----
+
+        Body structure:
+         {
+          "class" : "RelationshipRequestBody",
+          "properties": {
+            "class": "SolutionDesignProperties",
+            "role": "Add role that the element plays in the solution blueprint here",
+            "description": "Add description of the element in the context of the solution blueprint.",
+            "effectiveFrom": "{{$isoTimestamp}}",
+            "effectiveTo": "{{$isoTimestamp}}"
+          },
+          "externalSourceGUID": "add guid here",
+          "externalSourceName": "add qualified name here",
+          "effectiveTime" : "{{$isoTimestamp}}",
+          "forLineage" : false,
+          "forDuplicateProcessing" : false
+        }
+        """
+        loop = asyncio.get_event_loop()
+        loop.run_until_complete(self._async_link_solution_design(blueprint_guid, element_guid, body))
+
+    @dynamic_catch
+    async def _async_detach_solution_design(self, blueprint_guid: str, element_guid: str,
+                                                body: Optional[dict | DeleteRelationshipRequestBody] = None) -> None:
+        """ Detach a referenceable element from a solution blueprint.
+            Async Version.
+
+        Parameters
+        ----------
+        blueprint_guid: str
+            The GUID of the blueprint.
+        element_guid: str
+            The GUID of the element to detach.
+        body: dict | DeleteRelationshipRequestBody
+             The body describing the deletion.
+
+        Returns
+        -------
+        None
+
+        Raises
+        ------
+        PyegeriaInvalidParameterException
+            one of the parameters is null or invalid or
+        PyegeriaAPIException
+            There is a problem adding the element properties to the metadata repository or
+        PyegeriaUnauthorizedException
+            the requesting user is not authorized to issue this request.
+
+        """
+
+        url = (f"{self.platform_url}/servers/{self.view_server}/api/open-metadata/solution-architect/"
+               f"solution-blueprints/{blueprint_guid}/referenceable/{element_guid}/detach")
+
+        await self._async_delete_relationship_request(url, body)
+        logger.info(f"Detached element {element_guid} from blueprint {blueprint_guid}")
+
+    @dynamic_catch
+    def detach_solution_design(self, blueprint_guid: str, element_guid: str,
+                                   body: Optional[dict | DeleteRelationshipRequestBody] = None) -> None:
+        """ Detach a referenceable element from a solution blueprint.
+
+        Parameters
+        ----------
+        blueprint_guid: str
+            The GUID of the blueprint.
+        element_guid: str
+            The GUID of the element to detach.
+        body: dict | DeleteRelationshipRequestBody
+             The body describing the deletion.
+
+        Returns
+        -------
+        None
+
+        Raises
+        ------
+        PyegeriaInvalidParameterException
+            one of the parameters is null or invalid or
+        PyegeriaAPIException
+            There is a problem adding the element properties to the metadata repository or
+        PyegeriaUnauthorizedException
+            the requesting user is not authorized to issue this request.
+
+        """
+        loop = asyncio.get_event_loop()
+        loop.run_until_complete(self._async_detach_solution_design(blueprint_guid, element_guid, body))
+
+    @dynamic_catch
     async def _async_detach_solution_component_from_blueprint(self, blueprint_guid: str, component_guid: str,
                                                               body: Optional[dict | DeleteRelationshipRequestBody] = None) -> None:
         """ Detach a solution component from a solution blueprint.

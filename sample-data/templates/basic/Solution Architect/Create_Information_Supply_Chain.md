@@ -35,22 +35,6 @@
 >	**Description**: A list of supply chains that compose this supply chain.
 
 
-## Purposes
->	**Input Required**: False
-
->	**Attribute Type**: Simple List
-
->	**Description**: A list of project purposes.
-
-
-## Scope
->	**Input Required**: False
-
->	**Attribute Type**: Simple
-
->	**Description**: Scope of the definition.
-
-
 ## Journal Entry
 >	**Input Required**: False
 
@@ -85,6 +69,42 @@
 >	**Description**: The unique, text name of an element.
 
 
+## Content Status
+>	**Input Required**: False
+
+>	**Attribute Type**: Valid Value
+
+>	**Description**: The lifecycle status of an element.
+
+>	**Valid Values**: DRAFT,PREPARED,PROPOSED,APPROVED,REJECTED,ACTIVE,DEPRECATED,OTHER
+
+>	**Default Value**: ACTIVE
+
+
+## Purpose
+>	**Input Required**: False
+
+>	**Attribute Type**: Simple
+
+>	**Description**: The purpose of this collection — a short description of why it exists or what it is used for.
+
+
+## Purposes
+>	**Input Required**: False
+
+>	**Attribute Type**: Simple List
+
+>	**Description**: A list of purposes for this project (array&lt;string&gt;). Note: distinct from Collection.purpose (string, singular) which is a separate attribute on Collection Base.
+
+
+## Scope
+>	**Input Required**: False
+
+>	**Attribute Type**: Simple
+
+>	**Description**: Scope of the definition or element.
+
+
 ## Search Keywords
 >	**Input Required**: False
 
@@ -100,15 +120,7 @@
 
 >	**Description**: A unique identifier - typically of an element in this context.
 
->	**Alternative Labels**: Guid; guid
-
-
-## Identifier
->	**Input Required**: False
-
->	**Attribute Type**: Simple
-
->	**Description**: An identier
+>	**Alternative Labels**: guid; Guid
 
 
 ## URL
@@ -129,4 +141,12 @@
 >	**Alternative Labels**: Version
 
 >	**Default Value**: 1.0
+
+
+## Authors
+>	**Input Required**: False
+
+>	**Attribute Type**: Simple List
+
+>	**Description**: The authors.
 

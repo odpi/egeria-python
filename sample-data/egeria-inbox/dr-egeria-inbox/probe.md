@@ -12,7 +12,7 @@ Collection::SalesForecast::Root::1.0
 ## Element Id
 Collection::SalesForecast::DataStructures::1.0
 ## Membership Status
-PROPOSED
+
 ___
 
 # HP-18: Add Member to Collection — Domain-level attributes
@@ -28,8 +28,6 @@ Collection::SalesForecast::Master::1.0
 ## Element Id
 Collection::SalesForecast::DataStructures::1.0
 
-## Membership Status
-VALIDATED
 
 ## Membership Rationale
 Data Structures folder validated as complete and accurate for Q1 2026 forecasting.
@@ -58,8 +56,7 @@ Collection::SalesForecast::Master::1.0
 ## Element Id
 DataStructure::CRMOpportunity::Salesforce::1.0
 
-## Membership Status
-VALIDATED
+
 
 ## Membership Rationale
 CRM Opportunity data is the primary input source for the sales forecasting pipeline.

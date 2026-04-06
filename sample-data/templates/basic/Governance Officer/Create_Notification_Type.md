@@ -55,14 +55,6 @@
 >	**Description**: A list of expected results.
 
 
-## Scope
->	**Input Required**: False
-
->	**Attribute Type**: Simple
-
->	**Description**: Scope of the definition.
-
-
 ## Summary
 >	**Input Required**: False
 
@@ -79,12 +71,22 @@
 >	**Description**: The usage guidance for this element — how it is intended to be used in context.
 
 
+## Implementation Description
+>	**Input Required**: False
+
+>	**Attribute Type**: Simple
+
+>	**Description**: Describes how this governance control is implemented.
+
+>	**Alternative Labels**: Implementation
+
+
 ## Planned Completion Date
 >	**Input Required**: False
 
 >	**Attribute Type**: Simple
 
->	**Description**: The planned completion date for the notification type.
+>	**Description**: Planned project end date as an ISO 8601 string.
 
 
 ## Multiple Notifications Permitted
@@ -134,7 +136,7 @@
 
 >	**Attribute Type**: Simple
 
->	**Description**: The planned start date for the notification type.
+>	**Description**: Planned project start date as an ISO 8601 string.
 
 
 ## Journal Entry
@@ -183,6 +185,14 @@
 >	**Default Value**: ACTIVE
 
 
+## Scope
+>	**Input Required**: False
+
+>	**Attribute Type**: Simple
+
+>	**Description**: Scope of the definition or element.
+
+
 ## Search Keywords
 >	**Input Required**: False
 
@@ -198,15 +208,7 @@
 
 >	**Description**: A unique identifier - typically of an element in this context.
 
->	**Alternative Labels**: Guid; guid
-
-
-## Identifier
->	**Input Required**: False
-
->	**Attribute Type**: Simple
-
->	**Description**: An identier
+>	**Alternative Labels**: guid; Guid
 
 
 ## URL

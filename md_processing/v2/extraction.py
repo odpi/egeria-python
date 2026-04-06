@@ -37,7 +37,7 @@ class UniversalExtractor:
         # Regex for a command header line: # <Verb> <Object> or headless <Verb> <Object>
         verbs_pattern = "|".join(STANDARD_VERBS)
         self.cmd_header_rx = re.compile(
-            rf"^\s*(?:#\s+)?(?P<verb>{verbs_pattern})\s+(?P<object>[^#\n_]+)\s*$",
+            rf"^\s*(?P<header>#+\s+)?(?P<verb>{verbs_pattern})\s+(?P<object>[^#\n_]+)\s*$",
             re.IGNORECASE,
         )
 

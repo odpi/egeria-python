@@ -11,6 +11,22 @@
 >	**Alternative Labels**: "Term Name"
 
 
+## Actual Completion Date
+>	**Input Required**: False
+
+>	**Attribute Type**: Simple
+
+>	**Description**: The actual date the project completed as an ISO 8601 string.
+
+
+## Actual Start Date
+>	**Input Required**: False
+
+>	**Attribute Type**: Simple
+
+>	**Description**: The actual date the project started as an ISO 8601 string.
+
+
 ## Mission
 >	**Input Required**: False
 
@@ -19,12 +35,20 @@
 >	**Description**: The project mission statement.
 
 
-## Planned End Date
+## Planned Completion Date
 >	**Input Required**: False
 
 >	**Attribute Type**: Simple
 
 >	**Description**: Planned project end date as an ISO 8601 string.
+
+
+## Planned Start Date
+>	**Input Required**: False
+
+>	**Attribute Type**: Simple
+
+>	**Description**: Planned project start date as an ISO 8601 string.
 
 
 ## Priority
@@ -102,17 +126,13 @@
 ## Project Type
 >	**Input Required**: False
 
->	**Attribute Type**: Simple
+>	**Attribute Type**: Enum
 
 >	**Description**: A string classifying the project. Supported values are Campaign, Task, PersonalProject and StudyProject.
 
+>	**Valid Values**: Project,Campaign,Task,PersonalProject,StudyProject,Experiment
 
-## Start Date
->	**Input Required**: False
-
->	**Attribute Type**: Simple
-
->	**Description**: Date at which the license or certification takes effect.
+>	**Default Value**: Project
 
 
 ## Success Criteria
@@ -157,6 +177,26 @@
 >	**Description**: The unique, text name of an element.
 
 
+## Content Status
+>	**Input Required**: False
+
+>	**Attribute Type**: Valid Value
+
+>	**Description**: The lifecycle status of an element.
+
+>	**Valid Values**: DRAFT,PREPARED,PROPOSED,APPROVED,REJECTED,ACTIVE,DEPRECATED,OTHER
+
+>	**Default Value**: ACTIVE
+
+
+## Purposes
+>	**Input Required**: False
+
+>	**Attribute Type**: Simple List
+
+>	**Description**: A list of purposes for this project (array&lt;string&gt;). Note: distinct from Collection.purpose (string, singular) which is a separate attribute on Collection Base.
+
+
 ## Search Keywords
 >	**Input Required**: False
 
@@ -172,15 +212,7 @@
 
 >	**Description**: A unique identifier - typically of an element in this context.
 
->	**Alternative Labels**: Guid; guid
-
-
-## Identifier
->	**Input Required**: False
-
->	**Attribute Type**: Simple
-
->	**Description**: An identier
+>	**Alternative Labels**: guid; Guid
 
 
 ## URL
@@ -201,4 +233,12 @@
 >	**Alternative Labels**: Version
 
 >	**Default Value**: 1.0
+
+
+## Authors
+>	**Input Required**: False
+
+>	**Attribute Type**: Simple List
+
+>	**Description**: The authors.
 

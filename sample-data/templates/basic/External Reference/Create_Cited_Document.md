@@ -224,15 +224,7 @@
 
 >	**Description**: A unique identifier - typically of an element in this context.
 
->	**Alternative Labels**: Guid; guid
-
-
-## Identifier
->	**Input Required**: False
-
->	**Attribute Type**: Simple
-
->	**Description**: An identier
+>	**Alternative Labels**: guid; Guid
 
 
 ## URL

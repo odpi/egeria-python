@@ -14,7 +14,7 @@
 ## Absolute Uncertainty
 >	**Input Required**: False
 
->	**Attribute Type**: Simple Long
+>	**Attribute Type**: Simple Float
 
 >	**Description**: The absolute margin of error for numeric values in this data value specification (in the same units as the value).
 
@@ -22,7 +22,7 @@
 ## Data Type
 >	**Input Required**: False
 
->	**Attribute Type**: Simple String
+>	**Attribute Type**: Simple
 
 >	**Description**: The data type of the field or value specification (e.g. string, int, date, boolean).
 
@@ -44,7 +44,7 @@
 ## Match Property Names
 >	**Input Required**: False
 
->	**Attribute Type**: Simple Array
+>	**Attribute Type**: Simple List
 
 >	**Description**: The names of the properties used when matching values against this data value specification.
 
@@ -52,7 +52,7 @@
 ## Match Threshold
 >	**Input Required**: False
 
->	**Attribute Type**: Simple Integer
+>	**Attribute Type**: Simple Int
 
 >	**Description**: The confidence threshold (0-100) required for a value to be considered a match for this data value specification.
 
@@ -68,7 +68,7 @@
 ## Namespace Path
 >	**Input Required**: False
 
->	**Attribute Type**: Simple String
+>	**Attribute Type**: Simple
 
 >	**Description**: The namespace path that qualifies the element's name within a larger naming hierarchy.
 
@@ -76,7 +76,7 @@
 ## Relative Uncertainty
 >	**Input Required**: False
 
->	**Attribute Type**: Simple Long
+>	**Attribute Type**: Simple Float
 
 >	**Description**: The relative margin of error for values in this data value specification, expressed as a percentage (0-100).
 
@@ -92,7 +92,7 @@
 ## Specification
 >	**Input Required**: False
 
->	**Attribute Type**: Simple String
+>	**Attribute Type**: Simple
 
 >	**Description**: A formal or technical specification string that describes the valid values or format for this data value specification.
 
@@ -100,7 +100,7 @@
 ## Specification Details
 >	**Input Required**: False
 
->	**Attribute Type**: Simple Map
+>	**Attribute Type**: Dictionary
 
 >	**Description**: Additional key-value details that extend the formal specification for this data value specification.
 
@@ -108,7 +108,7 @@
 ## Units
 >	**Input Required**: False
 
->	**Attribute Type**: Simple String
+>	**Attribute Type**: Simple
 
 >	**Description**: The unit of measure for numeric values in this field or specification (e.g. metres, kg, USD).
 
@@ -116,7 +116,7 @@
 ## Allow Duplicate Values
 >	**Input Required**: False
 
->	**Attribute Type**: Simple Boolean
+>	**Attribute Type**: Bool
 
 >	**Description**: If true, the data class allows duplicate values in the data field.
 
@@ -126,7 +126,7 @@
 ## Average Value
 >	**Input Required**: False
 
->	**Attribute Type**: Simple String
+>	**Attribute Type**: Simple
 
 >	**Description**: A typical or average value for the data class, used in data quality assessments.
 
@@ -142,7 +142,7 @@
 ## Data Patterns
 >	**Input Required**: False
 
->	**Attribute Type**: Simple Array
+>	**Attribute Type**: Simple List
 
 >	**Description**: Regular expressions or patterns that describe the format of valid values for this data class.
 
@@ -150,7 +150,7 @@
 ## Default Value
 >	**Input Required**: False
 
->	**Attribute Type**: Simple String
+>	**Attribute Type**: Simple
 
 >	**Description**: The default value assigned to this field or data class when no value is supplied.
 
@@ -158,7 +158,7 @@
 ## Is Case Sensitive
 >	**Input Required**: False
 
->	**Attribute Type**: Simple Boolean
+>	**Attribute Type**: Bool
 
 >	**Description**: If true, values for this data class or field are case-sensitive.
 
@@ -168,7 +168,7 @@
 ## Is Nullable
 >	**Input Required**: False
 
->	**Attribute Type**: Simple Boolean
+>	**Attribute Type**: Bool
 
 >	**Description**: If true, the field may hold null values.
 
@@ -178,7 +178,7 @@
 ## Sample Values
 >	**Input Required**: False
 
->	**Attribute Type**: Simple Array
+>	**Attribute Type**: Simple List
 
 >	**Description**: Representative example values that illustrate the expected content of this data class or field.
 
@@ -186,7 +186,7 @@
 ## Value List
 >	**Input Required**: False
 
->	**Attribute Type**: Simple Array
+>	**Attribute Type**: Simple List
 
 >	**Description**: An enumerated list of valid values for this data class.
 
@@ -194,7 +194,7 @@
 ## Value Range From
 >	**Input Required**: False
 
->	**Attribute Type**: Simple String
+>	**Attribute Type**: Simple
 
 >	**Description**: The lower bound of the valid value range for this data class.
 
@@ -202,103 +202,9 @@
 ## Value Range To
 >	**Input Required**: False
 
->	**Attribute Type**: Simple String
+>	**Attribute Type**: Simple
 
 >	**Description**: The upper bound of the valid value range for this data class.
-
-
-## Is Case Sensitive
->	**Input Required**: False
-
->	**Attribute Type**: Simple Boolean
-
->	**Description**: If true, values for this data class or field are case-sensitive.
-
->	**Default Value**: false
-
-
-## Data Patterns
->	**Input Required**: False
-
->	**Attribute Type**: Simple Array
-
->	**Description**: Regular expressions or patterns that describe the format of valid values for this data class.
-
-
-## Is Nullable
->	**Input Required**: False
-
->	**Attribute Type**: Simple Boolean
-
->	**Description**: If true, the field may hold null values.
-
->	**Default Value**: true
-
-
-## Allow Duplicate Values
->	**Input Required**: False
-
->	**Attribute Type**: Simple Boolean
-
->	**Description**: If true, the data class allows duplicate values in the data field.
-
->	**Default Value**: true
-
-
-## Average Value
->	**Input Required**: False
-
->	**Attribute Type**: Simple String
-
->	**Description**: A typical or average value for the data class, used in data quality assessments.
-
-
-## Sample Values
->	**Input Required**: False
-
->	**Attribute Type**: Simple Array
-
->	**Description**: Representative example values that illustrate the expected content of this data class or field.
-
-
-## Value List
->	**Input Required**: False
-
->	**Attribute Type**: Simple Array
-
->	**Description**: An enumerated list of valid values for this data class.
-
-
-## Value Range From
->	**Input Required**: False
-
->	**Attribute Type**: Simple String
-
->	**Description**: The lower bound of the valid value range for this data class.
-
-
-## Value Range To
->	**Input Required**: False
-
->	**Attribute Type**: Simple String
-
->	**Description**: The upper bound of the valid value range for this data class.
-
-
-## Containing Data Class
->	**Input Required**: False
-
->	**Attribute Type**: Reference Name
-
->	**Description**: The data class that this data class is composed within (DataClassComposition relationship).
-
-
-## Default Value
->	**Input Required**: False
-
->	**Attribute Type**: Simple String
-
->	**Description**: The default value assigned to this field or data class when no value is supplied.
 
 
 ## Journal Entry
@@ -362,15 +268,7 @@
 
 >	**Description**: A unique identifier - typically of an element in this context.
 
->	**Alternative Labels**: Guid; guid
-
-
-## Identifier
->	**Input Required**: False
-
->	**Attribute Type**: Simple
-
->	**Description**: An identier
+>	**Alternative Labels**: guid; Guid
 
 
 ## URL

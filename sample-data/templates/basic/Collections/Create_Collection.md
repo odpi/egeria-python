@@ -1,7 +1,5 @@
 # Create Collection
 > Create or update a generic collection. While it can be used to create specific kinds of collections, you cannot set the collection-specific properties - so use the appropriate Dr.Egeria command to set all of the properties.
->
->	**Alternative Names**: Folder; Create Root Collection; Create Folder
 
 ## Display Name
 >	**Input Required**: True
@@ -59,6 +57,14 @@
 >	**Default Value**: ACTIVE
 
 
+## Purpose
+>	**Input Required**: False
+
+>	**Attribute Type**: Simple
+
+>	**Description**: The purpose of this collection — a short description of why it exists or what it is used for.
+
+
 ## Search Keywords
 >	**Input Required**: False
 
@@ -74,15 +80,7 @@
 
 >	**Description**: A unique identifier - typically of an element in this context.
 
->	**Alternative Labels**: Guid; guid
-
-
-## Identifier
->	**Input Required**: False
-
->	**Attribute Type**: Simple
-
->	**Description**: An identier
+>	**Alternative Labels**: guid; Guid
 
 
 ## URL

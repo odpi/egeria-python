@@ -229,6 +229,21 @@ class ValidMetadataManager(ServerClient):
             **kwargs,
         )
 
+    @staticmethod
+    def _extract_typedef_list(payload: Any) -> list[dict]:
+        """Normalize valid-metadata typedef payload variants to a list of typedef dicts."""
+        if isinstance(payload, list):
+            return [item for item in payload if isinstance(item, dict)]
+        if not isinstance(payload, dict):
+            return []
+
+        for key in ("typeDefList", "typeDefs", "elements"):
+            value = payload.get(key)
+            if isinstance(value, list):
+                return [item for item in value if isinstance(item, dict)]
+
+        return []
+
     async def _async_setup_valid_metadata_value(
         self, property_name: str, type_name: str, body: dict
     ):
@@ -1791,8 +1806,8 @@ class ValidMetadataManager(ServerClient):
         url = f"{self.platform_url}/servers/{self.view_server}{self.valid_m_command_base}/open-metadata-types/entity-defs"
 
         resp = await self._async_make_request("GET", url)
-        elements = resp.json().get("typeDefList", NO_ELEMENTS_FOUND)
-        if elements == NO_ELEMENTS_FOUND or elements is None or elements == []:
+        elements = self._extract_typedef_list(resp.json())
+        if not elements:
             return NO_ELEMENTS_FOUND
         if output_format != "JSON":
             return self._generate_entity_output(elements, None, "TypeDef", output_format, report_spec)
@@ -1863,8 +1878,8 @@ class ValidMetadataManager(ServerClient):
         url = f"{self.platform_url}/servers/{self.view_server}{self.valid_m_command_base}/open-metadata-types/relationship-defs"
 
         resp = await self._async_make_request("GET", url)
-        elements = resp.json().get("typeDefList", NO_ELEMENTS_FOUND)
-        if elements == NO_ELEMENTS_FOUND or elements is None or elements == []:
+        elements = self._extract_typedef_list(resp.json())
+        if not elements:
             return NO_ELEMENTS_FOUND
         if output_format != "JSON":
             return self._generate_entity_output(elements, None, "TypeDef", output_format, report_spec)

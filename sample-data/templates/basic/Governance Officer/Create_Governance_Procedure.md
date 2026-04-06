@@ -55,14 +55,6 @@
 >	**Description**: A list of expected results.
 
 
-## Scope
->	**Input Required**: False
-
->	**Attribute Type**: Simple
-
->	**Description**: Scope of the definition.
-
-
 ## Summary
 >	**Input Required**: False
 
@@ -77,6 +69,16 @@
 >	**Attribute Type**: Simple
 
 >	**Description**: The usage guidance for this element — how it is intended to be used in context.
+
+
+## Implementation Description
+>	**Input Required**: False
+
+>	**Attribute Type**: Simple
+
+>	**Description**: Describes how this governance control is implemented.
+
+>	**Alternative Labels**: Implementation
 
 
 ## Journal Entry
@@ -125,6 +127,14 @@
 >	**Default Value**: ACTIVE
 
 
+## Scope
+>	**Input Required**: False
+
+>	**Attribute Type**: Simple
+
+>	**Description**: Scope of the definition or element.
+
+
 ## Search Keywords
 >	**Input Required**: False
 
@@ -140,15 +150,7 @@
 
 >	**Description**: A unique identifier - typically of an element in this context.
 
->	**Alternative Labels**: Guid; guid
-
-
-## Identifier
->	**Input Required**: False
-
->	**Attribute Type**: Simple
-
->	**Description**: An identier
+>	**Alternative Labels**: guid; Guid
 
 
 ## URL

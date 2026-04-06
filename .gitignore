@@ -180,3 +180,6 @@ dmypy.json
 /test_sync_members.py
 /convert_defaults.py
 /sample-data/egeria-outbox/
+/.ai/
+/.ai-sandbox/
+/.aiassistant/

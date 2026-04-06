@@ -4144,7 +4144,7 @@
       "find_constraints": "",
       "extra_find": "",
       "extra_constraints": "",
-      "OM_TYPE": "GovernanceMechanismLink",
+      "OM_TYPE": "GovernanceMechanism",
       "bundle": "Link Command Base",
       "custom_attributes": [
         "Rationale",

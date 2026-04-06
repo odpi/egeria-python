@@ -75,8 +75,8 @@ class v2Dispatcher:
                 "object_type": command.object_type
             }
             
-        processor = processor_cls(self.client, command, context)
         try:
+            processor = processor_cls(self.client, command, context)
             return await processor.execute()
         except PyegeriaException as e:
             logger.exception(f"Error executing command '{command_key}'")

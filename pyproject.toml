@@ -3,7 +3,7 @@
 
 [project]
 name = "pyegeria"
-version = "5.5.4.9"
+version = "5.9.0"
 license = 'Apache-2.0'
 license-files = ["LICENSE"]
 authors = [{name = "Dan Wolfson", email = "dan.wolfson@pdr-associates.com"},]
@@ -151,10 +151,10 @@ dependencies = [
     list_elements_for_classification = "commands.tech.list_elements_for_classification:main"
     list_all_related_elements = "commands.tech.list_all_related_elements:main"
     list_related_elements_with_prop_value = "commands.tech.list_related_elements_with_prop_value:main"
-
+    validate_compact_specs = "commands.tech.validate_compact_specs:main"
     get_tech_type_template = "commands.tech.get_tech_type_template:main"
     list_relationships = "commands.tech.list_relationships:main"
-
+    generate_md_cmd_templates = "commands.tech.generate_md_cmd_template:main"
     list_valid_metadata_values = "commands.tech.list_valid_metadata_values:main"
     list_anchored_elements = "commands.tech.list_anchored_elements:main"
     list_gov_action_processes = "commands.tech.list_gov_action_processes:main"

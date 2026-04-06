@@ -1,6 +1,6 @@
 {
   "family": "Feedback",
-  "exported": "Apr 4, 2026 at 4:15:34 PM",
+  "exported": "Apr 5, 2026 at 3:35:45 PM",
   "attribute_definitions": {
     "Activity Status": {
       "variable_name": "activity_status",
@@ -2231,7 +2231,7 @@
       "upsert": true,
       "attach": false,
       "level": "Basic",
-      "find_method": "FeedbackManager.find_comments",
+      "find_method": "ServerClient.find_comments",
       "find_constraints": "",
       "extra_find": "",
       "extra_constraints": "",
@@ -2253,7 +2253,7 @@
       "upsert": true,
       "attach": false,
       "level": "Basic",
-      "find_method": "FeedbackManager.find_informal_tags",
+      "find_method": "ServerClient.find_informal_tags",
       "find_constraints": "",
       "extra_find": "",
       "extra_constraints": "",
@@ -2272,7 +2272,7 @@
       "upsert": true,
       "attach": false,
       "level": "Basic",
-      "find_method": "FeedbackManager.find_ratings",
+      "find_method": "",
       "find_constraints": "",
       "extra_find": "",
       "extra_constraints": "",

@@ -25,6 +25,7 @@ from md_processing.v2 import (
     TermProcessor, TermRelationshipProcessor,
     DataCollectionProcessor, DataStructureProcessor, DataFieldProcessor, DataClassProcessor,
     BlueprintProcessor, ComponentProcessor, SupplyChainProcessor, SolutionLinkProcessor,
+    SolutionArchitectProcessor,
     ProjectProcessor, ProjectLinkProcessor,
     CollectionManagerProcessor, CSVElementProcessor, CollectionLinkProcessor,
     GovernanceProcessor, GovernanceLinkProcessor, GovernanceContextProcessor,
@@ -73,6 +74,40 @@ EGERIA_USER_PASSWORD = os.environ.get("EGERIA_USER_PASSWORD", "secret")
 # Legacy environment variables (deprecated, kept for backward compatibility)
 EGERIA_HOME_GLOSSARY_GUID = os.environ.get("EGERIA_HOME_GLOSSARY_GUID", None)
 
+
+def register_solution_architect_processors(register_processor: Callable[[str, Type[AsyncBaseCommandProcessor]], None]) -> None:
+    """Register solution architect processors from compact command specs."""
+    from md_processing.md_processing_utils.md_processing_constants import (
+        COMMAND_DEFINITIONS,
+        build_command_variants,
+        load_commands,
+    )
+
+    load_commands()
+    specs = COMMAND_DEFINITIONS.get("Command Specifications", {})
+    link_verbs = {"Link", "Attach", "Add", "Detach", "Unlink", "Remove"}
+
+    for base_name, spec in specs.items():
+        if not isinstance(spec, dict):
+            continue
+        if spec.get("family") != "Solution Architect":
+            continue
+        
+        variants = build_command_variants(base_name, spec)
+        
+        # Determine processor class
+        if base_name.split(" ", 1)[0] in link_verbs:
+            processor_cls = SolutionLinkProcessor
+        elif "Blueprint" in base_name:
+            processor_cls = BlueprintProcessor
+        elif "Component" in base_name and "Link" not in base_name:
+            processor_cls = ComponentProcessor
+        elif "Information Supply Chain" in base_name and "Link" not in base_name:
+            processor_cls = SupplyChainProcessor
+        else:
+            processor_cls = SolutionArchitectProcessor
+            
+        register_processor(base_name, processor_cls)
 
 def register_governance_processors(register_processor: Callable[[str, Type[AsyncBaseCommandProcessor]], None]) -> None:
     """Register governance processors from compact command specs to avoid hard-coded drift."""
@@ -172,13 +207,8 @@ async def process_md_file_v2(input_file: str, output_folder: str, directive: str
     register_processor("Create Data Class", DataClassProcessor)
     register_processor("Link Data Field", DataFieldProcessor) # Uses same processor as fields usually? Or generic link?
 
-    # Solution Architect
-    register_processor("Create Solution Blueprint", BlueprintProcessor)
-    register_processor("Create Solution Component", ComponentProcessor)
-    register_processor("Create Information Supply Chain", SupplyChainProcessor)
-    register_processor("Link Solution Component Peers", SolutionLinkProcessor)
-    register_processor("Link Information Supply Chain Peers", SolutionLinkProcessor)
-    register_processor("Link Information Supply Chain Segment", SolutionLinkProcessor)
+    # Solution Architect (spec-driven to keep coverage aligned with compact commands)
+    register_solution_architect_processors(register_processor)
 
     # Project
     register_processor("Create Project", ProjectProcessor)

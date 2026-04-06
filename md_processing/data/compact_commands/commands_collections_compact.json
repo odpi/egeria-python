@@ -1,6 +1,6 @@
 {
   "family": "Collections",
-  "exported": "Apr 4, 2026 at 9:25:06 PM",
+  "exported": "Apr 5, 2026 at 10:22:05 AM",
   "attribute_definitions": {
     "Activity Status": {
       "variable_name": "activity_status",
@@ -1907,7 +1907,7 @@
       "user_specified": true,
       "unique": false,
       "input_required": false,
-      "min_cardinality": 0,
+      "min_cardinality": 1,
       "max_cardinality": 1,
       "level": "Domain",
       "Journal Entry": ""

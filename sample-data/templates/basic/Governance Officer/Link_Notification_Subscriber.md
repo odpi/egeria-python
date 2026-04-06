@@ -1,20 +1,20 @@
 # Link Notification Subscriber
 > Links a Referenceable as a subscriber to a NotificationType, defining the subscription parameters.
 
+## Notification Type
+>	**Input Required**: True
+
+>	**Attribute Type**: Reference Name
+
+>	**Description**: The NotificationType entity to link the subscriber to or for a monitored resource.
+
+
 ## Subscriber
 >	**Input Required**: True
 
 >	**Attribute Type**: Reference Name
 
 >	**Description**: The Referenceable entity subscribing to the notification type.
-
-
-## Notification Type
->	**Input Required**: True
-
->	**Attribute Type**: Reference Name
-
->	**Description**: The NotificationType entity to link the subscriber to.
 
 
 ## Label

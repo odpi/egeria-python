@@ -1,24 +1,16 @@
 # Add Member to Collection
 > Add/Remove a member to/from a collection.
 >
->	**Alternative Names**: Member; Member to Collection; Member to Folder; Member->Collection
+>	**Alternative Names**: Member; Member to Collection; Member to Folder; Member->Collection; Member from Collection; Member from Folder
 
-## Label
->	**Input Required**: False
+## Element Id
+>	**Input Required**: True
 
->	**Attribute Type**: Simple
+>	**Attribute Type**: Reference Name
 
->	**Description**: A label used to identify or categorise a relationship link.
+>	**Description**: The unique identifier (qualified name or GUID) of the element being referenced.
 
->	**Alternative Labels**: Wire Label
-
-
-## Expression
->	**Input Required**: False
-
->	**Attribute Type**: Simple
-
->	**Description**: An expression describing a membership, relationship or classification.
+>	**Alternative Labels**: Element Name; Member Id
 
 
 ## Membership Rationale
@@ -38,6 +30,8 @@
 
 >	**Valid Values**: UNKNOWN,DISCOVERED,PROPOSED,IMPORTED,VALIDATED,DEPRECATED,OBSOLETE,OTHER
 
+>	**Default Value**: PROPOSED
+
 
 ## Notes
 >	**Input Required**: False
@@ -47,46 +41,12 @@
 >	**Description**: Notes and observations about the element.
 
 
-## Source
->	**Input Required**: False
-
->	**Attribute Type**: Simple
-
->	**Description**: The source of the information.
-
-
 ## Collection Id
 >	**Input Required**: False
 
 >	**Attribute Type**: Reference Name
 
 >	**Description**: The unique identifier (qualified name or GUID) of the collection.
-
-
-## Element Id
->	**Input Required**: False
-
->	**Attribute Type**: Reference Name
-
->	**Description**: The unique identifier (qualified name or GUID) of the element being referenced.
-
->	**Alternative Labels**: Element Name
-
-
-## Journal Entry
->	**Input Required**: False
-
->	**Attribute Type**: Simple
-
->	**Description**: A text entry into a journal.
-
-
-## Description
->	**Input Required**: False
-
->	**Attribute Type**: Simple
-
->	**Description**: A description.
 
 
 ## Category
@@ -107,12 +67,22 @@
 >	**Description**: A unique qualified name for the element. Generated using the qualified name pattern  if not user specified.
 
 
+## Journal Entry
+>	**Input Required**: False
+
+>	**Attribute Type**: Simple
+
+>	**Description**: 
+
+
 ## Version Identifier
 >	**Input Required**: False
 
 >	**Attribute Type**: Simple
 
 >	**Description**: Published product version identifier.
+
+>	**Alternative Labels**: Version
 
 >	**Default Value**: 1.0
 
@@ -123,6 +93,8 @@
 >	**Attribute Type**: Simple
 
 >	**Description**: role identifier
+
+>	**Alternative Labels**: ID
 
 
 ## GUID

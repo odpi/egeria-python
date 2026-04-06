@@ -1,7 +1,7 @@
 # Create Collection Folder
 > Create a CollectionFolder - a collection used to organize subsets of metadata elements within a larger collection hierarchy.
 >
->	**Alternative Names**: Folder; Create Folder
+>	**Alternative Names**: Folder; Folders
 
 ## Display Name
 >	**Input Required**: True
@@ -59,6 +59,14 @@
 >	**Default Value**: ACTIVE
 
 
+## Purpose
+>	**Input Required**: False
+
+>	**Attribute Type**: Simple
+
+>	**Description**: The purpose of this collection — a short description of why it exists or what it is used for.
+
+
 ## Search Keywords
 >	**Input Required**: False
 
@@ -74,15 +82,7 @@
 
 >	**Description**: A unique identifier - typically of an element in this context.
 
->	**Alternative Labels**: Guid; guid
-
-
-## Identifier
->	**Input Required**: False
-
->	**Attribute Type**: Simple
-
->	**Description**: An identier
+>	**Alternative Labels**: guid; Guid
 
 
 ## URL

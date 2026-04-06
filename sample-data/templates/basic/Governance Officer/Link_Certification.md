@@ -101,14 +101,6 @@
 >	**Description**: Date at which the license or certification expires.
 
 
-## Entitlements
->	**Input Required**: False
-
->	**Attribute Type**: Dictionary
-
->	**Description**: A dictionary of property:value pairs describing entitlements.
-
-
 ## Obligations
 >	**Input Required**: False
 
@@ -141,14 +133,6 @@
 >	**Description**: The open metadata type name of the element receiving the certification (used with Recipient Property Name).
 
 
-## Restrictions
->	**Input Required**: False
-
->	**Attribute Type**: Dictionary
-
->	**Description**: A dictionary of property:value pairs describing restrictions.
-
-
 ## Start Date
 >	**Input Required**: False
 
@@ -171,4 +155,20 @@
 >	**Attribute Type**: Simple
 
 >	**Description**: A description.
+
+
+## Entitlements
+>	**Input Required**: False
+
+>	**Attribute Type**: Dictionary
+
+>	**Description**: A dictionary of property:value pairs describing entitlements.
+
+
+## Restrictions
+>	**Input Required**: False
+
+>	**Attribute Type**: Dictionary
+
+>	**Description**: A dictionary of property:value pairs describing restrictions.
 

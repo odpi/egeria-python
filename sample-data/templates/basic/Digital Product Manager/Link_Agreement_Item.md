@@ -1,5 +1,7 @@
 # Link Agreement Item
 > Attach or detach an agreement to an element referenced in its definition. Agreement item can be any referenceable element.
+>
+>	**Alternative Names**: Agreement from Item; Agreement to Item
 
 ## Agreement Name
 >	**Input Required**: True
@@ -15,6 +17,16 @@
 >	**Attribute Type**: Reference Name
 
 >	**Description**: The name of the referenceable item to add to an agreement. Using qualified names is recommended.
+
+
+## Label
+>	**Input Required**: False
+
+>	**Attribute Type**: Simple
+
+>	**Description**: A label used to identify or categorise a relationship link.
+
+>	**Alternative Labels**: Wire Label
 
 
 ## Agreement End Date
@@ -41,20 +53,44 @@
 >	**Description**: Date when the agreement becomes effective, in ISO 8601 format.
 
 
-## Entitlements
->	**Input Required**: False
-
->	**Attribute Type**: Dictionary
-
->	**Description**: A dictionary of property:value pairs describing entitlements.
-
-
 ## Obligations
 >	**Input Required**: False
 
 >	**Attribute Type**: Dictionary
 
 >	**Description**: A dictionary of property:value pairs describing obligations.
+
+
+## Agreement Item Id
+>	**Input Required**: False
+
+>	**Attribute Type**: Simple
+
+>	**Description**: A user specified agreement item identifier.
+
+
+## Journal Entry
+>	**Input Required**: False
+
+>	**Attribute Type**: Simple
+
+>	**Description**: A text entry into a journal.
+
+
+## Description
+>	**Input Required**: False
+
+>	**Attribute Type**: Simple
+
+>	**Description**: A description.
+
+
+## Entitlements
+>	**Input Required**: False
+
+>	**Attribute Type**: Dictionary
+
+>	**Description**: A dictionary of property:value pairs describing entitlements.
 
 
 ## Restrictions
@@ -71,12 +107,4 @@
 >	**Attribute Type**: Dictionary
 
 >	**Description**: A dictionary of property:value pairs describing usage measurements.
-
-
-## Agreement Item Id
->	**Input Required**: False
-
->	**Attribute Type**: Simple
-
->	**Description**: A user specified agreement item identifier.
 

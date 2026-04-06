@@ -39,14 +39,6 @@
 >	**Default Value**: GovernanceRole
 
 
-## Scope
->	**Input Required**: False
-
->	**Attribute Type**: Simple
-
->	**Description**: Scope of the definition.
-
-
 ## Title
 >	**Input Required**: False
 
@@ -89,6 +81,26 @@
 >	**Description**: The unique, text name of an element.
 
 
+## Content Status
+>	**Input Required**: False
+
+>	**Attribute Type**: Valid Value
+
+>	**Description**: The lifecycle status of an element.
+
+>	**Valid Values**: DRAFT,PREPARED,PROPOSED,APPROVED,REJECTED,ACTIVE,DEPRECATED,OTHER
+
+>	**Default Value**: ACTIVE
+
+
+## Scope
+>	**Input Required**: False
+
+>	**Attribute Type**: Simple
+
+>	**Description**: Scope of the definition or element.
+
+
 ## Search Keywords
 >	**Input Required**: False
 
@@ -104,15 +116,7 @@
 
 >	**Description**: A unique identifier - typically of an element in this context.
 
->	**Alternative Labels**: Guid; guid
-
-
-## Identifier
->	**Input Required**: False
-
->	**Attribute Type**: Simple
-
->	**Description**: An identier
+>	**Alternative Labels**: guid; Guid
 
 
 ## URL
@@ -133,4 +137,12 @@
 >	**Alternative Labels**: Version
 
 >	**Default Value**: 1.0
+
+
+## Authors
+>	**Input Required**: False
+
+>	**Attribute Type**: Simple List
+
+>	**Description**: The authors.
 

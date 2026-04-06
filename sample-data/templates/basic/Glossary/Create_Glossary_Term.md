@@ -16,11 +16,11 @@
 ## Glossary Name
 >	**Input Required**: True
 
->	**Attribute Type**: Reference Name
+>	**Attribute Type**: Reference Name List
 
 >	**Description**: Zero or more existing glossaries that this term is a member of.
 
->	**Alternative Labels**: In Glossary
+>	**Alternative Labels**: Glossary Name; Glossaries; In Glossaries; In Glossary; Glossary Names
 
 
 ## Abbreviation
@@ -44,9 +44,11 @@
 ## Folders
 >	**Input Required**: False
 
->	**Attribute Type**: Simple List
+>	**Attribute Type**: Reference Name List
 
 >	**Description**: Existing folder collections that you'd like to make the term a member of.
+
+>	**Alternative Labels**: Folders; Collection Folders
 
 
 ## Summary
@@ -111,6 +113,16 @@
 >	**Default Value**: ACTIVE
 
 
+## Aliases
+>	**Input Required**: False
+
+>	**Attribute Type**: Simple List
+
+>	**Description**: Alternative names for this  field, used in different systems or contexts.
+
+>	**Alternative Labels**: Alias
+
+
 ## Search Keywords
 >	**Input Required**: False
 
@@ -126,15 +138,7 @@
 
 >	**Description**: A unique identifier - typically of an element in this context.
 
->	**Alternative Labels**: Guid; guid
-
-
-## Identifier
->	**Input Required**: False
-
->	**Attribute Type**: Simple
-
->	**Description**: An identier
+>	**Alternative Labels**: guid; Guid
 
 
 ## URL

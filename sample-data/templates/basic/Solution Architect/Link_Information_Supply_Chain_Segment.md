@@ -1,20 +1,20 @@
 # Link Information Supply Chain Segment
 > Links or unlinks an information supply chain segment to a Referenceable that is its logical source or destination, via the InformationSupplyChainLink relationship.
 
-## ISC Endpoint
+## ISC Child
+>	**Input Required**: True
+
+>	**Attribute Type**: Reference Name
+
+>	**Description**: A Referenceable that is a logical child of the information supply chain segment.
+
+
+## ISC Parent
 >	**Input Required**: True
 
 >	**Attribute Type**: Reference Name
 
 >	**Description**: A Referenceable that is a logical source or destination for the information supply chain segment.
-
-
-## ISC Segment
->	**Input Required**: True
-
->	**Attribute Type**: Reference Name
-
->	**Description**: The information supply chain segment to link to a logical source or destination.
 
 
 ## Label

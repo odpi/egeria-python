@@ -19,6 +19,16 @@
 >	**Description**: The second Digital Product in a DigitalProductDependency relationship.
 
 
+## Label
+>	**Input Required**: False
+
+>	**Attribute Type**: Simple
+
+>	**Description**: A label used to identify or categorise a relationship link.
+
+>	**Alternative Labels**: Wire Label
+
+
 ## Dependency Description
 >	**Input Required**: False
 
@@ -33,4 +43,20 @@
 >	**Attribute Type**: Simple
 
 >	**Description**: Description of the dependency between two digital products.
+
+
+## Journal Entry
+>	**Input Required**: False
+
+>	**Attribute Type**: Simple
+
+>	**Description**: A text entry into a journal.
+
+
+## Description
+>	**Input Required**: False
+
+>	**Attribute Type**: Simple
+
+>	**Description**: A description.
 

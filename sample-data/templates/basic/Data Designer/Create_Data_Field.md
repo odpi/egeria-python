@@ -11,14 +11,6 @@
 >	**Alternative Labels**: "Term Name"
 
 
-## Aliases
->	**Input Required**: False
-
->	**Attribute Type**: Simple Array
-
->	**Description**: Alternative names for this data field, used in different systems or contexts.
-
-
 ## Data Class
 >	**Input Required**: False
 
@@ -30,7 +22,7 @@
 ## Data Type
 >	**Input Required**: False
 
->	**Attribute Type**: Simple String
+>	**Attribute Type**: Simple
 
 >	**Description**: The data type of the field or value specification (e.g. string, int, date, boolean).
 
@@ -42,7 +34,7 @@
 ## Default Value
 >	**Input Required**: False
 
->	**Attribute Type**: Simple String
+>	**Attribute Type**: Simple
 
 >	**Description**: The default value assigned to this field or data class when no value is supplied.
 
@@ -66,7 +58,7 @@
 ## Is Nullable
 >	**Input Required**: False
 
->	**Attribute Type**: Simple Boolean
+>	**Attribute Type**: Bool
 
 >	**Description**: If true, the field may hold null values.
 
@@ -76,7 +68,7 @@
 ## Length
 >	**Input Required**: False
 
->	**Attribute Type**: Simple Integer
+>	**Attribute Type**: Simple Int
 
 >	**Description**: The maximum number of characters or digits allowed in the field.
 
@@ -84,7 +76,7 @@
 ## Maximum Cardinality
 >	**Input Required**: False
 
->	**Attribute Type**: Simple Integer
+>	**Attribute Type**: Simple Int
 
 >	**Description**: The maximum number of times this field may appear in the containing data structure (-1 means unbounded).
 
@@ -94,7 +86,7 @@
 ## Minimum Cardinality
 >	**Input Required**: False
 
->	**Attribute Type**: Simple Integer
+>	**Attribute Type**: Simple Int
 
 >	**Description**: The minimum number of times this field must appear in the containing data structure.
 
@@ -104,7 +96,7 @@
 ## Minimum Length
 >	**Input Required**: False
 
->	**Attribute Type**: Simple Integer
+>	**Attribute Type**: Simple Int
 
 >	**Description**: The minimum number of characters or digits required in the field.
 
@@ -120,7 +112,7 @@
 ## Namespace Path
 >	**Input Required**: False
 
->	**Attribute Type**: Simple String
+>	**Attribute Type**: Simple
 
 >	**Description**: The namespace path that qualifies the element's name within a larger naming hierarchy.
 
@@ -128,7 +120,7 @@
 ## Ordered Values
 >	**Input Required**: False
 
->	**Attribute Type**: Simple Boolean
+>	**Attribute Type**: Bool
 
 >	**Description**: If true, the values in this field are ordered (i.e. sequence matters).
 
@@ -136,7 +128,7 @@
 ## Position
 >	**Input Required**: False
 
->	**Attribute Type**: Simple Integer
+>	**Attribute Type**: Simple Int
 
 >	**Description**: The ordinal position of the data field within its containing data structure.
 
@@ -146,7 +138,7 @@
 ## Precision
 >	**Input Required**: False
 
->	**Attribute Type**: Simple Integer
+>	**Attribute Type**: Simple Int
 
 >	**Description**: The number of significant digits after the decimal point for numeric fields.
 
@@ -154,7 +146,7 @@
 ## Sort Order
 >	**Input Required**: False
 
->	**Attribute Type**: Simple String
+>	**Attribute Type**: Simple
 
 >	**Description**: The sort order for values in this field. Valid values from DataItemSortOrder enum: UNKNOWN, UNSORTED, ASCENDING, DESCENDING, OTHER.
 
@@ -162,23 +154,15 @@
 ## Units
 >	**Input Required**: False
 
->	**Attribute Type**: Simple String
+>	**Attribute Type**: Simple
 
 >	**Description**: The unit of measure for numeric values in this field or specification (e.g. metres, kg, USD).
-
-
-## Aliases
->	**Input Required**: False
-
->	**Attribute Type**: Simple Array
-
->	**Description**: Alternative names for this data field, used in different systems or contexts.
 
 
 ## Allow Duplicate Values
 >	**Input Required**: False
 
->	**Attribute Type**: Simple Boolean
+>	**Attribute Type**: Bool
 
 >	**Description**: If true, the data class allows duplicate values in the data field.
 
@@ -196,7 +180,7 @@
 ## Data Type
 >	**Input Required**: False
 
->	**Attribute Type**: Simple String
+>	**Attribute Type**: Simple
 
 >	**Description**: The data type of the field or value specification (e.g. string, int, date, boolean).
 
@@ -208,7 +192,7 @@
 ## Default Value
 >	**Input Required**: False
 
->	**Attribute Type**: Simple String
+>	**Attribute Type**: Simple
 
 >	**Description**: The default value assigned to this field or data class when no value is supplied.
 
@@ -232,7 +216,7 @@
 ## Is Nullable
 >	**Input Required**: False
 
->	**Attribute Type**: Simple Boolean
+>	**Attribute Type**: Bool
 
 >	**Description**: If true, the field may hold null values.
 
@@ -242,7 +226,7 @@
 ## Length
 >	**Input Required**: False
 
->	**Attribute Type**: Simple Integer
+>	**Attribute Type**: Simple Int
 
 >	**Description**: The maximum number of characters or digits allowed in the field.
 
@@ -250,7 +234,7 @@
 ## Maximum Cardinality
 >	**Input Required**: False
 
->	**Attribute Type**: Simple Integer
+>	**Attribute Type**: Simple Int
 
 >	**Description**: The maximum number of times this field may appear in the containing data structure (-1 means unbounded).
 
@@ -260,7 +244,7 @@
 ## Minimum Cardinality
 >	**Input Required**: False
 
->	**Attribute Type**: Simple Integer
+>	**Attribute Type**: Simple Int
 
 >	**Description**: The minimum number of times this field must appear in the containing data structure.
 
@@ -270,7 +254,7 @@
 ## Minimum Length
 >	**Input Required**: False
 
->	**Attribute Type**: Simple Integer
+>	**Attribute Type**: Simple Int
 
 >	**Description**: The minimum number of characters or digits required in the field.
 
@@ -286,7 +270,7 @@
 ## Ordered Values
 >	**Input Required**: False
 
->	**Attribute Type**: Simple Boolean
+>	**Attribute Type**: Bool
 
 >	**Description**: If true, the values in this field are ordered (i.e. sequence matters).
 
@@ -294,7 +278,7 @@
 ## Position
 >	**Input Required**: False
 
->	**Attribute Type**: Simple Integer
+>	**Attribute Type**: Simple Int
 
 >	**Description**: The ordinal position of the data field within its containing data structure.
 
@@ -304,7 +288,7 @@
 ## Precision
 >	**Input Required**: False
 
->	**Attribute Type**: Simple Integer
+>	**Attribute Type**: Simple Int
 
 >	**Description**: The number of significant digits after the decimal point for numeric fields.
 
@@ -312,7 +296,7 @@
 ## Sort Order
 >	**Input Required**: False
 
->	**Attribute Type**: Simple String
+>	**Attribute Type**: Simple
 
 >	**Description**: The sort order for values in this field. Valid values from DataItemSortOrder enum: UNKNOWN, UNSORTED, ASCENDING, DESCENDING, OTHER.
 
@@ -320,7 +304,7 @@
 ## Units
 >	**Input Required**: False
 
->	**Attribute Type**: Simple String
+>	**Attribute Type**: Simple
 
 >	**Description**: The unit of measure for numeric values in this field or specification (e.g. metres, kg, USD).
 
@@ -371,6 +355,26 @@
 >	**Default Value**: ACTIVE
 
 
+## Aliases
+>	**Input Required**: False
+
+>	**Attribute Type**: Simple List
+
+>	**Description**: Alternative names for this  field, used in different systems or contexts.
+
+>	**Alternative Labels**: Alias
+
+
+## Aliases
+>	**Input Required**: False
+
+>	**Attribute Type**: Simple List
+
+>	**Description**: Alternative names for this  field, used in different systems or contexts.
+
+>	**Alternative Labels**: Alias
+
+
 ## Search Keywords
 >	**Input Required**: False
 
@@ -386,15 +390,7 @@
 
 >	**Description**: A unique identifier - typically of an element in this context.
 
->	**Alternative Labels**: Guid; guid
-
-
-## Identifier
->	**Input Required**: False
-
->	**Attribute Type**: Simple
-
->	**Description**: An identier
+>	**Alternative Labels**: guid; Guid
 
 
 ## URL

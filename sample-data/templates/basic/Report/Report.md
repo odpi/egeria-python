@@ -132,6 +132,8 @@
 
 >	**Description**: Published product version identifier.
 
+>	**Alternative Labels**: Version
+
 >	**Default Value**: 1.0
 
 
@@ -141,6 +143,8 @@
 >	**Attribute Type**: Simple
 
 >	**Description**: role identifier
+
+>	**Alternative Labels**: ID
 
 
 ## GUID

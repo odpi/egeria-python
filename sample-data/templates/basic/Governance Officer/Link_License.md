@@ -69,14 +69,6 @@
 >	**Description**: Date at which the license or certification expires.
 
 
-## Entitlements
->	**Input Required**: False
-
->	**Attribute Type**: Dictionary
-
->	**Description**: A dictionary of property:value pairs describing entitlements.
-
-
 ## License GUID
 >	**Input Required**: False
 
@@ -141,14 +133,6 @@
 >	**Description**: A dictionary of property:value pairs describing obligations.
 
 
-## Restrictions
->	**Input Required**: False
-
->	**Attribute Type**: Dictionary
-
->	**Description**: A dictionary of property:value pairs describing restrictions.
-
-
 ## Start Date
 >	**Input Required**: False
 
@@ -171,4 +155,20 @@
 >	**Attribute Type**: Simple
 
 >	**Description**: A description.
+
+
+## Entitlements
+>	**Input Required**: False
+
+>	**Attribute Type**: Dictionary
+
+>	**Description**: A dictionary of property:value pairs describing entitlements.
+
+
+## Restrictions
+>	**Input Required**: False
+
+>	**Attribute Type**: Dictionary
+
+>	**Description**: A dictionary of property:value pairs describing restrictions.
 

@@ -78,13 +78,7 @@ class AsyncBaseCommandProcessor(ABC):
         def _find_guid(payload: Any) -> Optional[str]:
             if isinstance(payload, str):
                 candidate = payload.strip()
-                if not candidate:
-                    return None
-                try:
-                    uuid.UUID(candidate)
-                    return candidate
-                except (ValueError, TypeError):
-                    return None
+                return candidate if candidate else None
 
             if isinstance(payload, dict):
                 for key in ("guid", "elementGUID", "elementGuid"):
@@ -118,13 +112,8 @@ class AsyncBaseCommandProcessor(ABC):
         if not isinstance(guid, str) or not guid.strip():
             raise ValueError(f"{operation} did not return a GUID string. Raw response type: {type(raw_guid).__name__}")
 
-        guid = guid.strip()
-        try:
-            uuid.UUID(guid)
-            return guid
-        except (ValueError, TypeError):
-            raise ValueError(f"{operation} returned an invalid GUID value: {guid}")
-
+        return guid.strip()
+    
     def get_command_spec(self) -> Dict[str, Any]:
         """Return the JSON specification for this command family."""
         if self.command_spec:
@@ -167,6 +156,8 @@ class AsyncBaseCommandProcessor(ABC):
                             return type_name.strip()
 
         # Fallback for specs without explicit metadata type constraints.
+        if not self.canonical_object_type:
+            return None
         words = [w for w in re.split(r"[^A-Za-z0-9]+", self.canonical_object_type) if w]
         if words:
             return "".join(w[0].upper() + w[1:] for w in words)
@@ -865,18 +856,10 @@ class AsyncBaseCommandProcessor(ABC):
                 except Exception:
                     pass
             
-            # 2. Check Egeria (Harden against missing cache in new sessions)
             guid = await self.resolve_element_guid(qn, tech_type=self.egeria_type_name)
             logger.debug(f"fetch_as_is: resolve_element_guid returned: {guid}")
             if guid and isinstance(guid, str) and not guid.startswith("(Planned:") and not guid.startswith("No "):
                 try:
-                    # Sanity check: is it a GUID?
-                    try:
-                        uuid.UUID(guid)
-                    except (ValueError, TypeError):
-                        logger.debug(f"fetch_as_is: Resolved string '{guid}' is not a valid GUID. Skipping fetch.")
-                        return None
-
                     element = await self.fetch_element(guid)
                     if element:
                         logger.debug(f"fetch_as_is: Element found in Egeria for GUID '{guid}'")
@@ -994,8 +977,10 @@ class AsyncBaseCommandProcessor(ABC):
             raw = details.get("value", "")
             val = format_for_markdown_table(raw)
             
-            # Visual feedback for existential validation
-            if details.get("exists") is False:
+            # Visual feedback for validation
+            if details.get("is_default"):
+                status = "ℹ️ Default"
+            elif details.get("exists") is False:
                 status = "❌ Not Found"
             elif details.get("is_planned"):
                 status = "🕒 Planned"

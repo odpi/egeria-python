@@ -1,20 +1,20 @@
 # Link Monitored Resource
-> Links a GovernanceControl to a Referenceable that it monitors.
+> Links a Notification Type to a Referenceable that it monitors.
 
 ## Monitored Resource
 >	**Input Required**: True
 
 >	**Attribute Type**: Reference Name
 
->	**Description**: The Referenceable element being monitored by the governance control.
+>	**Description**: The monitored referenceable endpoint in a MonitoredResource relationship.
 
 
-## Monitoring Control
+## Notification Type
 >	**Input Required**: True
 
 >	**Attribute Type**: Reference Name
 
->	**Description**: The GovernanceControl responsible for monitoring.
+>	**Description**: The NotificationType entity to link the subscriber to or for a monitored resource.
 
 
 ## Label

@@ -61,6 +61,26 @@
 >	**Description**: The unique, text name of an element.
 
 
+## Content Status
+>	**Input Required**: False
+
+>	**Attribute Type**: Valid Value
+
+>	**Description**: The lifecycle status of an element.
+
+>	**Valid Values**: DRAFT,PREPARED,PROPOSED,APPROVED,REJECTED,ACTIVE,DEPRECATED,OTHER
+
+>	**Default Value**: ACTIVE
+
+
+## Purpose
+>	**Input Required**: False
+
+>	**Attribute Type**: Simple
+
+>	**Description**: The purpose of this collection — a short description of why it exists or what it is used for.
+
+
 ## Search Keywords
 >	**Input Required**: False
 
@@ -76,15 +96,7 @@
 
 >	**Description**: A unique identifier - typically of an element in this context.
 
->	**Alternative Labels**: Guid; guid
-
-
-## Identifier
->	**Input Required**: False
-
->	**Attribute Type**: Simple
-
->	**Description**: An identier
+>	**Alternative Labels**: guid; Guid
 
 
 ## URL
@@ -105,4 +117,12 @@
 >	**Alternative Labels**: Version
 
 >	**Default Value**: 1.0
+
+
+## Authors
+>	**Input Required**: False
+
+>	**Attribute Type**: Simple List
+
+>	**Description**: The authors.
 

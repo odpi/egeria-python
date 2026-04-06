@@ -19,12 +19,12 @@
 >	**Description**: Actors or Solution Roles related to this element.
 
 
-## In Information Supply Chains
+## In Information Supply Chain
 >	**Input Required**: False
 
 >	**Attribute Type**: Reference Name List
 
->	**Description**: The information supply chains that this component is a member of.
+>	**Description**: Supply chains that this supply chain is a segment of.
 
 
 ## In Solution Blueprints
@@ -101,6 +101,18 @@
 >	**Description**: The unique, text name of an element.
 
 
+## Content Status
+>	**Input Required**: False
+
+>	**Attribute Type**: Valid Value
+
+>	**Description**: The lifecycle status of an element.
+
+>	**Valid Values**: DRAFT,PREPARED,PROPOSED,APPROVED,REJECTED,ACTIVE,DEPRECATED,OTHER
+
+>	**Default Value**: ACTIVE
+
+
 ## Search Keywords
 >	**Input Required**: False
 
@@ -116,15 +128,7 @@
 
 >	**Description**: A unique identifier - typically of an element in this context.
 
->	**Alternative Labels**: Guid; guid
-
-
-## Identifier
->	**Input Required**: False
-
->	**Attribute Type**: Simple
-
->	**Description**: An identier
+>	**Alternative Labels**: guid; Guid
 
 
 ## URL
@@ -145,4 +149,12 @@
 >	**Alternative Labels**: Version
 
 >	**Default Value**: 1.0
+
+
+## Authors
+>	**Input Required**: False
+
+>	**Attribute Type**: Simple List
+
+>	**Description**: The authors.
 

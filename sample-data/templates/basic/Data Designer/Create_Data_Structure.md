@@ -27,6 +27,14 @@
 >	**Description**: The data specification that contains this data structure.
 
 
+## In Data Structure
+>	**Input Required**: False
+
+>	**Attribute Type**: Reference Name
+
+>	**Description**: The data structure that contains this data field (MemberDataField relationship).
+
+
 ## Name Patterns
 >	**Input Required**: False
 
@@ -38,7 +46,7 @@
 ## Namespace Path
 >	**Input Required**: False
 
->	**Attribute Type**: Simple String
+>	**Attribute Type**: Simple
 
 >	**Description**: The namespace path that qualifies the element's name within a larger naming hierarchy.
 
@@ -120,15 +128,7 @@
 
 >	**Description**: A unique identifier - typically of an element in this context.
 
->	**Alternative Labels**: Guid; guid
-
-
-## Identifier
->	**Input Required**: False
-
->	**Attribute Type**: Simple
-
->	**Description**: An identier
+>	**Alternative Labels**: guid; Guid
 
 
 ## URL

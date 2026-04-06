@@ -14,7 +14,7 @@
 ## Absolute Uncertainty
 >	**Input Required**: False
 
->	**Attribute Type**: Simple Long
+>	**Attribute Type**: Simple Float
 
 >	**Description**: The absolute margin of error for numeric values in this data value specification (in the same units as the value).
 
@@ -22,7 +22,7 @@
 ## Data Type
 >	**Input Required**: False
 
->	**Attribute Type**: Simple String
+>	**Attribute Type**: Simple
 
 >	**Description**: The data type of the field or value specification (e.g. string, int, date, boolean).
 
@@ -44,7 +44,7 @@
 ## Match Property Names
 >	**Input Required**: False
 
->	**Attribute Type**: Simple Array
+>	**Attribute Type**: Simple List
 
 >	**Description**: The names of the properties used when matching values against this data value specification.
 
@@ -52,7 +52,7 @@
 ## Match Threshold
 >	**Input Required**: False
 
->	**Attribute Type**: Simple Integer
+>	**Attribute Type**: Simple Int
 
 >	**Description**: The confidence threshold (0-100) required for a value to be considered a match for this data value specification.
 
@@ -68,7 +68,7 @@
 ## Namespace Path
 >	**Input Required**: False
 
->	**Attribute Type**: Simple String
+>	**Attribute Type**: Simple
 
 >	**Description**: The namespace path that qualifies the element's name within a larger naming hierarchy.
 
@@ -76,7 +76,7 @@
 ## Relative Uncertainty
 >	**Input Required**: False
 
->	**Attribute Type**: Simple Long
+>	**Attribute Type**: Simple Float
 
 >	**Description**: The relative margin of error for values in this data value specification, expressed as a percentage (0-100).
 
@@ -92,7 +92,7 @@
 ## Specification
 >	**Input Required**: False
 
->	**Attribute Type**: Simple String
+>	**Attribute Type**: Simple
 
 >	**Description**: A formal or technical specification string that describes the valid values or format for this data value specification.
 
@@ -100,7 +100,7 @@
 ## Specification Details
 >	**Input Required**: False
 
->	**Attribute Type**: Simple Map
+>	**Attribute Type**: Dictionary
 
 >	**Description**: Additional key-value details that extend the formal specification for this data value specification.
 
@@ -108,7 +108,7 @@
 ## Units
 >	**Input Required**: False
 
->	**Attribute Type**: Simple String
+>	**Attribute Type**: Simple
 
 >	**Description**: The unit of measure for numeric values in this field or specification (e.g. metres, kg, USD).
 
@@ -116,7 +116,7 @@
 ## Granularity Basis
 >	**Input Required**: False
 
->	**Attribute Type**: Simple String
+>	**Attribute Type**: Simple
 
 >	**Description**: The basis on which the granularity is defined (e.g. time period, geographic region, customer segment). UML type: string — no enum defined in Egeria open types.
 
@@ -124,7 +124,7 @@
 ## Grain Statement
 >	**Input Required**: False
 
->	**Attribute Type**: Simple String
+>	**Attribute Type**: Simple
 
 >	**Description**: A human-readable statement describing the granularity of the data grain (e.g. 'one row per customer per day').
 
@@ -132,7 +132,7 @@
 ## Interval
 >	**Input Required**: False
 
->	**Attribute Type**: Simple Long
+>	**Attribute Type**: Simple Float
 
 >	**Description**: The time interval in milliseconds between data captures for time-based data grains.
 
@@ -198,15 +198,7 @@
 
 >	**Description**: A unique identifier - typically of an element in this context.
 
->	**Alternative Labels**: Guid; guid
-
-
-## Identifier
->	**Input Required**: False
-
->	**Attribute Type**: Simple
-
->	**Description**: An identier
+>	**Alternative Labels**: guid; Guid
 
 
 ## URL

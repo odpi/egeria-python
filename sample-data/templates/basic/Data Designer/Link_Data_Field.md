@@ -30,7 +30,7 @@
 ## Link Relationship Type Name
 >	**Input Required**: False
 
->	**Attribute Type**: Simple String
+>	**Attribute Type**: Simple
 
 >	**Description**: The open metadata type name of the relationship used in a LinkedDataField connection.
 
@@ -38,7 +38,7 @@
 ## Link Relationship Type Name
 >	**Input Required**: False
 
->	**Attribute Type**: Simple String
+>	**Attribute Type**: Simple
 
 >	**Description**: The open metadata type name of the relationship used in a LinkedDataField connection.
 

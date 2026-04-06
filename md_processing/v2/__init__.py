@@ -13,7 +13,8 @@ from .data_designer import (
 )
 from .solution_architect import (
     BlueprintProcessor, ComponentProcessor,
-    SupplyChainProcessor, SolutionLinkProcessor
+    SupplyChainProcessor, SolutionLinkProcessor,
+    SolutionArchitectProcessor
 )
 from .project import ProjectProcessor, ProjectLinkProcessor
 from .collection_manager_processor import (
