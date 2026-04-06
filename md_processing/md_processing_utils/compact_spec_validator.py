@@ -17,6 +17,7 @@ from pyegeria.omvs.valid_metadata import ValidMetadataManager
 
 
 _SUPPORTED_PROCESSOR_TYPE_KEYS = {"metadata_element_type", "metadata_element_types"}
+_INTENTIONAL_NON_PROCESSING_KEYS = {"classification_names", "classification_name"}
 _FIND_METHOD_PATTERN = re.compile(r"^[A-Za-z_][A-Za-z0-9_]*\.[A-Za-z_][A-Za-z0-9_]*$")
 
 
@@ -185,7 +186,11 @@ def _validate_type_keys(find_constraints: dict[str, Any]) -> list[SpecFinding]:
             )
         )
 
-    ignored = sorted(k for k in find_constraints.keys() if k not in _SUPPORTED_PROCESSOR_TYPE_KEYS)
+    ignored = sorted(
+        k
+        for k in find_constraints.keys()
+        if k not in _SUPPORTED_PROCESSOR_TYPE_KEYS and k not in _INTENTIONAL_NON_PROCESSING_KEYS
+    )
     if ignored:
         findings.append(
             SpecFinding(

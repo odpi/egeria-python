@@ -61,21 +61,28 @@ class AttributeFirstParser:
         for raw_label, raw_value in self.command.attributes.items():
             match = label_map.get(raw_label.lower())
             if not match:
-                close_keys = get_close_matches(raw_label.lower(), list(label_map.keys()), n=3, cutoff=0.72)
-                suggestions = []
-                for key in close_keys:
-                    canonical = label_map[key][0]
-                    if canonical not in suggestions:
-                        suggestions.append(canonical)
-                if suggestions:
-                    msg = f"Unknown attribute label: '{raw_label}'. Did you mean: {', '.join(suggestions)}?"
+                # Fallback: if it's not in the spec but contains a GUID or is a link command, preserve it anyway
+                # This is useful for link commands with flexible attributes like "Blueprint Parent".
+                is_link_cmd = self.command.verb.lower() in {"link", "attach", "add", "unlink", "detach", "remove"}
+                if is_link_cmd or "(guid:" in raw_value or re.search(r'[0-9a-f]{8}-[0-9a-f]{4}', raw_value, re.I):
+                    details = {"style": "ID", "variable_name": raw_label.lower().replace(" ", "_")}
+                    canonical_name = raw_label
                 else:
-                    msg = f"Unknown attribute label: '{raw_label}'"
-                logger.warning(msg)
-                self.warnings.append(msg)
-                continue
-
-            canonical_name, details = match
+                    close_keys = get_close_matches(raw_label.lower(), list(label_map.keys()), n=3, cutoff=0.72)
+                    suggestions = []
+                    for key in close_keys:
+                        canonical = label_map[key][0]
+                        if canonical not in suggestions:
+                            suggestions.append(canonical)
+                    if suggestions:
+                        msg = f"Unknown attribute label: '{raw_label}'. Did you mean: {', '.join(suggestions)}?"
+                    else:
+                        msg = f"Unknown attribute label: '{raw_label}'"
+                    logger.warning(msg)
+                    self.warnings.append(msg)
+                    continue
+            else:
+                canonical_name, details = match
             # print(f"DEBUG: Processing {canonical_name}, style={details.get('style')}, value={raw_value}")
             pre_warnings = len(self.warnings)
             parsed_value = await self._process_attribute_value(raw_value, details)
@@ -286,6 +293,8 @@ class AttributeFirstParser:
                     prop_name = parts[0].lower() + ''.join(x.capitalize() for x in parts[1:])
                 
                 type_name = details.get("type_name")
+                if not type_name:
+                    type_name = None
                 map_name = details.get("map_name")
 
                 try:

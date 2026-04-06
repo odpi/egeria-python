@@ -1,6 +1,6 @@
 {
   "family": "Solution Architect",
-  "exported": "Apr 5, 2026 at 8:36:16 PM",
+  "exported": "Apr 6, 2026 at 9:30:03 AM",
   "attribute_definitions": {
     "Activity Status": {
       "variable_name": "activity_status",
@@ -1903,6 +1903,25 @@
       "level": "Domain",
       "Journal Entry": ""
     },
+    "Blueprint Child": {
+      "variable_name": "blueprint_child",
+      "inUpdate": true,
+      "attr_labels": "",
+      "examples": "",
+      "default_value": "",
+      "valid_values": [],
+      "existing_element": "SolutionBlueprint",
+      "description": "A named solution blueprint.",
+      "generated": false,
+      "style": "Reference Name",
+      "user_specified": true,
+      "unique": false,
+      "input_required": true,
+      "min_cardinality": 1,
+      "max_cardinality": 1,
+      "level": "Domain",
+      "Journal Entry": ""
+    },
     "Canonical Name": {
       "variable_name": "canonical_name",
       "inUpdate": true,
@@ -2517,6 +2536,21 @@
         "Watch Resource"
       ]
     },
+    "Collection Membership": {
+      "inherits": null,
+      "own_attributes": [
+        "Confidence",
+        "Expression",
+        "Membership Rationale",
+        "Membership Status",
+        "Notes",
+        "Source",
+        "Steward",
+        "Steward Property Name",
+        "Steward Type Name",
+        "User Defined Status"
+      ]
+    },
     "Link Command Base": {
       "inherits": "Request Base",
       "own_attributes": [
@@ -2646,7 +2680,7 @@
       "upsert": true,
       "attach": false,
       "level": "Basic",
-      "find_method": "SolutionArchitech.find_solution_components",
+      "find_method": "SolutionArchitect.find_solution_components",
       "find_constraints": "",
       "extra_find": "",
       "extra_constraints": "",
@@ -2720,7 +2754,7 @@
       "qn_prefix": "",
       "alternate_names": [],
       "family": "Solution Architect",
-      "description": "Links or unlinks an information supply chain child segment to an Information Supply Chain.",
+      "description": "Links or unlinks an information supply chain child segment to an Information Supply Chain using CollectionMembership.",
       "verb": "Link",
       "upsert": false,
       "attach": false,
@@ -2729,8 +2763,27 @@
       "find_constraints": "",
       "extra_find": "",
       "extra_constraints": "",
-      "OM_TYPE": "InformationSupplyChainComposition",
+      "OM_TYPE": "CollectionMembership",
       "bundle": "ISC Segment Link Base",
+      "custom_attributes": [],
+      "Journal Entry": ""
+    },
+    "Link Blueprint Child": {
+      "display_name": "Link Blueprint Child",
+      "qn_prefix": "",
+      "alternate_names": [],
+      "family": "Solution Architect",
+      "description": "Links or unlinks an blueprint child segment to an parent blueprint using CollectionMembership.",
+      "verb": "Link",
+      "upsert": false,
+      "attach": false,
+      "level": "Basic",
+      "find_method": "",
+      "find_constraints": "",
+      "extra_find": "",
+      "extra_constraints": "",
+      "OM_TYPE": "CollectionMembership",
+      "bundle": "Collection Membership",
       "custom_attributes": [],
       "Journal Entry": ""
     },
@@ -2749,7 +2802,7 @@
       "extra_find": "",
       "extra_constraints": "",
       "OM_TYPE": "CollectionMembership",
-      "bundle": "Link Command Base",
+      "bundle": "Collection Membership",
       "custom_attributes": [
         "Blueprint",
         "Component1"
@@ -2771,7 +2824,7 @@
       "extra_find": "",
       "extra_constraints": "",
       "OM_TYPE": "CollectionMembership",
-      "bundle": "Link Command Base",
+      "bundle": "Collection Membership",
       "custom_attributes": [
         "Blueprint",
         "Solution Role"

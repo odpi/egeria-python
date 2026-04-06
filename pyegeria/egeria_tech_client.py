@@ -19,7 +19,7 @@ from pyegeria.omvs.data_discovery import DataDiscovery
 from pyegeria.omvs.data_engineer import DataEngineer
 from pyegeria.omvs.digital_business import DigitalBusiness
 from pyegeria.omvs.external_links import ExternalReferences
-from pyegeria.deprecated.feedback_manager import FeedbackManager
+from pyegeria.core._server_client import ServerClient
 from pyegeria.omvs.glossary_manager import GlossaryManager
 from pyegeria.omvs.governance_officer import GovernanceOfficer
 from pyegeria.omvs.lineage_linker import LineageLinker
@@ -126,8 +126,8 @@ class EgeriaTech:
             "asset_maker": AssetMaker,
             "community": CommunityMatters,
             "community_matters": CommunityMatters,
-            "feedback": FeedbackManager,
-            "feedback_manager": FeedbackManager,
+            "feedback": ServerClient,
+            "feedback_manager": ServerClient,
             "my_profile": MyProfile,
             "notifications": NotificationManager,
             "notification_manager": NotificationManager,

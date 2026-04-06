@@ -337,7 +337,7 @@ Establishes the composition relationship between the calculation engine and its 
 ## Component1
 SolutionComponent::Sales Data Ingestion Component
  
-## Actor Role
+## Solution Role
 SolutionRole::Sales Data Steward
  
 ## Description

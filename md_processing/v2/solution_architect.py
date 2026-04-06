@@ -561,13 +561,13 @@ class SolutionLinkProcessor(AsyncBaseCommandProcessor):
             id2_key = custom_attrs[1]
         else:
             # Fallback for ID1
-            for k in ["Component1", "Segment1", "Blueprint", "Collection Id", "Parent Id", "ISC Parent", "Parent", "Isc Parent", "Element Id"]:
+            for k in ["Component1", "Segment1", "Blueprint", "Blueprint Parent", "Parent Blueprint", "Collection Id", "Parent Id", "ISC Parent", "Parent", "Isc Parent", "Element Id"]:
                 if k in attributes:
                     id1_key = k
                     break
             
             # Fallback for ID2
-            for k in ["Component2", "Segment2", "Element", "Member Id", "Child Id", "ISC Child", "Actor", "Role", "Child", "Element2 Id", "Element Id", "Component Child", "Isc Child"]:
+            for k in ["Component2", "Segment2", "Element", "Member Id", "Child Id", "ISC Child", "Actor", "Role", "Child", "Blueprint Child", "Child Blueprint", "Element2 Id", "Element Id", "Component Child", "Isc Child", "Solution Role"]:
                 if k in attributes and k != id1_key:
                     id2_key = k
                     break
@@ -586,6 +586,27 @@ class SolutionLinkProcessor(AsyncBaseCommandProcessor):
         id1 = attributes.get(id1_key, {}).get('guid')
         id2 = attributes.get(id2_key, {}).get('guid')
         
+        # If not GUIDs, attempt resolution from name
+        if not id1 and attributes.get(id1_key, {}).get('value'):
+            # Try to get type constraint for ID1
+            type1 = None
+            spec_attrs = spec.get("attribute_definitions", {})
+            if id1_key in spec_attrs:
+                type1 = spec_attrs[id1_key].get("existing_element")
+            elif "Collection Id" in id1_key:
+                type1 = "Collection"
+            
+            id1 = await self.resolve_element_guid(attributes[id1_key]['value'], tech_type=type1)
+
+        if not id2 and attributes.get(id2_key, {}).get('value'):
+            # Try to get type constraint for ID2
+            type2 = None
+            spec_attrs = spec.get("attribute_definitions", {})
+            if id2_key in spec_attrs:
+                type2 = spec_attrs[id2_key].get("existing_element")
+            
+            id2 = await self.resolve_element_guid(attributes[id2_key]['value'], tech_type=type2)
+
         if not (id1 and id2):
             logger.warning(f"Missing GUIDs for {object_type}: {id1_key}={id1}, {id2_key}={id2}")
             return self.command.raw_block
@@ -605,7 +626,10 @@ class SolutionLinkProcessor(AsyncBaseCommandProcessor):
             if om_type in ["SolutionLinkingWire", "InformationSupplyChainLink", "InformationSupplyChainComposition"]:
                  properties["label"] = label
             elif om_type == "CollectionMembership":
-                 properties["membershipRationale"] = description
+                 properties["membershipRationale"] = attributes.get('Membership Rationale', {}).get('value') or description
+                 # Additional CollectionMembership properties
+                 properties["expression"] = attributes.get('Expression', {}).get('value')
+                 properties["membershipStatus"] = attributes.get('Membership Status', {}).get('value', 'ACTIVE').upper()
             else:
                  # Composition and Design relationships use 'role'
                  properties["role"] = attributes.get("Role", {}).get("value") or attributes.get("Solution Role", {}).get("value") or label
@@ -632,7 +656,8 @@ class SolutionLinkProcessor(AsyncBaseCommandProcessor):
             elif om_type == "SolutionDesign":
                 await self.client._async_link_solution_design(id1, id2, body)
             elif om_type == "CollectionMembership":
-                 await self.client._async_add_to_collection(id1, id2, body)
+                 from pyegeria.core.utils import body_slimmer
+                 await self.client._async_add_to_collection(id1, id2, body_slimmer(body))
             else:
                  logger.warning(f"OM_TYPE {om_type} not yet supported in SolutionLinkProcessor")
                  return self.command.raw_block

@@ -161,7 +161,7 @@ class AsyncBaseCommandProcessor(ABC):
         words = [w for w in re.split(r"[^A-Za-z0-9]+", self.canonical_object_type) if w]
         if words:
             return "".join(w[0].upper() + w[1:] for w in words)
-        return self.canonical_object_type
+        return self.canonical_object_type or None
 
     def is_report_view_command(self) -> bool:
         """True when this command is a report runner, not an element-targeting command."""
@@ -737,6 +737,11 @@ class AsyncBaseCommandProcessor(ABC):
         
         name_or_guid = str(name_or_guid).strip()
         
+        # Extract GUID from (guid:...) if present
+        guid_match = re.search(r'\(guid:([^)]+)\)', name_or_guid)
+        if guid_match:
+            return guid_match.group(1).strip()
+        
         # Ensure Egeria Type definitions contain no spaces, and remap
         # pseudo-types (classifications disguised as types in commands) to
         # their actual Egeria base entity types for API lookups.
@@ -776,7 +781,7 @@ class AsyncBaseCommandProcessor(ABC):
             unsupported_type_warnings = self.context.setdefault("_unsupported_lookup_types_warned", set())
             try:
                 # Pass 1: Try WITH type constraint (fastest, avoids ambiguity)
-                res = await self.client._async_get_guid_for_name(name_or_guid, type_name=tech_type)
+                res = await self.client._async_get_guid_for_name(name_or_guid, type_name=tech_type or None)
             except PyegeriaException as e:
                 # Catch multiple matches error
                 if "Multiple elements found" in str(e):

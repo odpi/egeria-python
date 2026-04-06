@@ -16644,7 +16644,7 @@
       }
     ],
     "action": {
-      "function": "FeedbackManager.find_comments",
+      "function": "ServerClient.find_comments",
       "required_params": [
         "search_string"
       ],
@@ -17152,7 +17152,7 @@
       }
     ],
     "action": {
-      "function": "FeedbackManager.find_informal_tags",
+      "function": "ServerClient.find_informal_tags",
       "required_params": [
         "search_string"
       ],
