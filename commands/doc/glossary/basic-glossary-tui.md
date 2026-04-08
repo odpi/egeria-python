@@ -71,6 +71,30 @@
 
 ![out-delete-term 2024-11-07 at 03.57.25.png](images/out-delete-term 2024-11-07 at 03.57.25.png)
 
+## Update a term
+
+Use `hey_egeria cat tell glossary update-term` to update properties of an existing term. You must supply the GUID of
+the term to update (`--term-guid`) together with any properties you wish to change (summary, description, abbreviation,
+examples, usage, version).
+
+Key options:
+- `--term-guid` *(required)* — GUID of the term to update
+- `--summary` — Short summary definition
+- `--description` — Full description
+- `--abbrev` — Abbreviation
+- `--examples` — Example usage
+- `--usage` — Usage notes
+- `--version` — Version identifier (default `1.0`)
+
+## Update term status
+
+Use `hey_egeria cat tell glossary update-term-status` to change the lifecycle status of an existing term without
+modifying any other properties.
+
+Key options:
+- `--term-guid` *(required)* — GUID of the term to update
+- `--status` *(required)* — New status value; one of the valid `TERM_STATUS` choices (e.g. `DRAFT`, `ACTIVE`, `DEPRECATED`, `OBSOLETE`)
+
 ## Import & Export terms 
 #### We can import terms from a CSV formatted file and export terms to a CSV formatted file. 
 

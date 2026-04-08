@@ -13,6 +13,16 @@
 >	**Alternative Labels**: Element Name; Member Id
 
 
+## Label
+>	**Input Required**: False
+
+>	**Attribute Type**: Simple
+
+>	**Description**: A label used to identify or categorise a relationship link.
+
+>	**Alternative Labels**: Wire Label
+
+
 ## Membership Rationale
 >	**Input Required**: False
 
@@ -41,6 +51,22 @@
 >	**Description**: Notes and observations about the element.
 
 
+## Journal Entry
+>	**Input Required**: False
+
+>	**Attribute Type**: Simple
+
+>	**Description**: A text entry into a journal.
+
+
+## Description
+>	**Input Required**: False
+
+>	**Attribute Type**: Simple
+
+>	**Description**: A description.
+
+
 ## Collection Id
 >	**Input Required**: False
 
@@ -65,14 +91,6 @@
 >	**Attribute Type**: QN
 
 >	**Description**: A unique qualified name for the element. Generated using the qualified name pattern  if not user specified.
-
-
-## Journal Entry
->	**Input Required**: False
-
->	**Attribute Type**: Simple
-
->	**Description**: 
 
 
 ## Version Identifier

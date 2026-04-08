@@ -262,22 +262,24 @@ def delete_term(server, url, userid, password, timeout, term_guid):
         m_client.close_session()
 
 @click.command("import-terms-from-csv")
-@click.option("--glossary_name", help="Name of Glossary", required=True)
-@click.option("--file_name", help="Name of CSV file", required=True)
+@click.option("--glossary-name", required=True, help="Display name of the target glossary")
+@click.option("--file-name", required=True, help="Name of the CSV file to import")
 @click.option(
-    "--input_file", help="Path of CSV file", default=app_config.egeria_glossary_path, required=False
+    "--file-path",
+    default=app_config.egeria_glossary_path,
+    required=False,
+    help="Directory containing the CSV file (defaults to EGERIA_GLOSSARY_PATH)",
 )
 @click.option(
-    "--verbose",
-    is_flag=True,
+    "--verbose/--no-verbose",
     default=True,
-    help="If set, result descriptions are provided",
+    help="Show per-row import results",
 )
 @click.option(
-    "--upsert",
-    is_flag=True,
+    "--upsert/--no-upsert",
     default=True,
-    help="If set, terms will be updated if they exist; otherwise they would be appended",
+    help="Update existing terms when a matching qualified name is found; "
+         "disable to always insert",
 )
 @click.option("--server", default=app_config.egeria_view_server, help="Egeria view server to use")
 @click.option(
@@ -288,8 +290,8 @@ def delete_term(server, url, userid, password, timeout, term_guid):
 @click.option("--timeout", default=60, help="Number of seconds to wait")
 def import_terms_csv(
         glossary_name: str,
-        file_path: str,
         file_name: str,
+        file_path: str,
         verbose: bool,
         upsert: bool,
         server: str,
@@ -298,23 +300,27 @@ def import_terms_csv(
         password: str,
         timeout: int,
 ):
-    """Load terms from file into the glossary specified"""
+    """Import glossary terms from a CSV file into the named glossary.
+
+    The CSV must contain the columns produced by the export-terms-csv command:
+    Term Name, Qualified Name, Abbreviation, Summary, Description, Examples,
+    Usage, Version Identifier, Status.
+    """
     m_client = EgeriaTech(server, url, user_id=userid, user_pwd=password)
-    token = m_client.create_egeria_bearer_token()
+    m_client.create_egeria_bearer_token()
     try:
-        result = m_client.load_terms_from_csv_file(
+        result = m_client.import_glossary_terms_from_csv(
             glossary_name,
             file_name,
             file_path=file_path,
             upsert=upsert,
             verbose=verbose,
         )
-
         click.echo(
-            f"Loaded terms from  into glossary: {glossary_name} from {file_name}"
+            f"Imported terms into glossary '{glossary_name}' from '{file_name}'"
         )
-        if verbose:
-            print(f"\n Verbose output:\n{json.dumps(result, indent=2)}")
+        if verbose and result:
+            print(f"\nPer-row results:\n{json.dumps(result, indent=2)}")
 
     except (PyegeriaAPIException, PyegeriaClientException) as e:
         print_basic_exception(e)
@@ -324,13 +330,16 @@ def import_terms_csv(
 
 @click.command("export-terms-csv")
 @click.option(
-    "--glossary_guid",
-    help="GUID of Glossary to export",
+    "--glossary-guid",
     required=True,
+    help="GUID of the glossary to export",
 )
-@click.option("--file_name", help="Name of CSV file", required=True)
+@click.option("--file-name", required=True, help="Output CSV file name")
 @click.option(
-    "--input_file", help="Path of CSV file", default=app_config.egeria_glossary_path, required=False
+    "--file-path",
+    default=app_config.egeria_glossary_path,
+    required=False,
+    help="Directory in which to write the CSV (defaults to EGERIA_GLOSSARY_PATH)",
 )
 @click.option("--server", default=app_config.egeria_view_server, help="Egeria view server to use")
 @click.option(
@@ -340,16 +349,25 @@ def import_terms_csv(
 @click.option("--password", default=EGERIA_USER_PASSWORD, help="Egeria user password")
 @click.option("--timeout", default=60, help="Number of seconds to wait")
 def export_terms_csv(
-        glossary_guid: str, file_name, file_path, server, url, userid, password, timeout
+        glossary_guid: str,
+        file_name: str,
+        file_path: str,
+        server: str,
+        url: str,
+        userid: str,
+        password: str,
+        timeout: int,
 ):
-    """Export the glossary specified"""
-    m_client = EgeriaTech(server, url, user_id=userid, user_pwd=password)
-    token = m_client.create_egeria_bearer_token()
-    try:
-        result = m_client.export_glossary_to_csv(glossary_guid, file_name, file_path)
+    """Export all terms from a glossary to a CSV file.
 
+    The output file can be re-imported with the import-terms-from-csv command.
+    """
+    m_client = EgeriaTech(server, url, user_id=userid, user_pwd=password)
+    m_client.create_egeria_bearer_token()
+    try:
+        count = m_client.export_glossary_to_csv(glossary_guid, file_name, file_path)
         click.echo(
-            f"Exported {result} terms  from glossary: {glossary_guid} into {file_name}"
+            f"Exported {count} term(s) from glossary '{glossary_guid}' into '{file_name}'"
         )
 
     except (PyegeriaAPIException, PyegeriaClientException) as e:

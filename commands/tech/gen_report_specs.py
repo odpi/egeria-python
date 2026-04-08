@@ -56,6 +56,84 @@ from pyegeria.core.config import get_app_config
 from pyegeria.view._output_format_models import Column, Format, ActionParameter, FormatSet, FormatSetDict
 from pyegeria.view.base_report_formats import OPTIONAL_SEARCH_PARAMS  # ["page_size","start_from","starts_with","ends_with","ignore_case"]
 
+
+GENERATED_REPORT_EXCLUDED_KEYS = {
+    "anchor_id",
+    "anchor_scope_id",
+    "anchor_scope_ids",
+    "external_source_guid",
+    "external_source_name",
+    "for_duplicate_processing",
+    "for_lineage",
+    "journal_entry",
+    "merge_update",
+    "parent_at_end1",
+    "parent_id",
+    "parent_relationship_attributes",
+    "parent_relationship_type_name",
+    "request_id",
+    "search_keywords",
+}
+
+LIST_PRIORITY_KEYS = ["display_name", "qualified_name", "guid"]
+LIST_DEMOTED_KEYS = {"version_identifier"}
+LIST_LAST_KEY = "category"
+
+# Keys excluded from LIST output only (still present in ALL/FORM/REPORT).
+LIST_EXCLUDED_KEYS = {
+    "url",
+}
+
+
+def _clone_column(col: Column) -> Column:
+    if hasattr(col, "model_dump"):
+        return Column(**col.model_dump())
+    return Column(**col.dict())
+
+
+def _filter_generated_columns(columns: List[Column]) -> List[Column]:
+    """Remove keys excluded from ALL generated formats (LIST and ALL)."""
+    return [
+        _clone_column(col)
+        for col in columns
+        if getattr(col, "key", None) not in GENERATED_REPORT_EXCLUDED_KEYS
+    ]
+
+
+def _filter_list_columns(columns: List[Column]) -> List[Column]:
+    """Remove keys excluded specifically from LIST output (superset of _filter_generated_columns)."""
+    return [
+        col
+        for col in columns
+        if getattr(col, "key", None) not in LIST_EXCLUDED_KEYS
+    ]
+
+
+def _is_status_like_key(key: str) -> bool:
+    if not isinstance(key, str):
+        return False
+    return key == "status" or key.endswith("_status") or key == "status_identifier"
+
+
+def _order_list_columns(columns: List[Column]) -> List[Column]:
+    keyed_columns = [col for col in columns if getattr(col, "key", None)]
+    original_positions = {col.key: idx for idx, col in enumerate(keyed_columns)}
+    priority_rank = {key: idx for idx, key in enumerate(LIST_PRIORITY_KEYS)}
+
+    def sort_key(col: Column):
+        key = col.key
+        if key in priority_rank:
+            return (0, priority_rank[key], original_positions.get(key, 10_000))
+        if key == LIST_LAST_KEY:
+            return (4, 0, original_positions.get(key, 10_000))
+        if key in LIST_DEMOTED_KEYS:
+            return (2, 0, original_positions.get(key, 10_000))
+        if _is_status_like_key(key):
+            return (3, 0, original_positions.get(key, 10_000))
+        return (1, 0, original_positions.get(key, 10_000))
+
+    return [_clone_column(col) for col in sorted(keyed_columns, key=sort_key)]
+
 def _is_create_command(cmd_key: str, cmd_obj: dict) -> bool:
     """Return True if a command should be treated as a "Create" command.
 
@@ -166,6 +244,21 @@ def _extract_columns_from_attributes(attributes: Iterable[dict], usage_level: st
                 process_attr(label, details)
 
     return cols
+
+
+def _build_generated_formats(columns: List[Column], default_types: Optional[List[str]] = None) -> List[Format]:
+    filtered_columns = _filter_generated_columns(columns)
+    if not filtered_columns:
+        return []
+
+    if default_types is not None:
+        return [Format(types=default_types, attributes=filtered_columns)]
+
+    list_columns = _order_list_columns(_filter_list_columns(filtered_columns))
+    return [
+        Format(types=["LIST"], attributes=list_columns),
+        Format(types=["ALL"], attributes=filtered_columns),
+    ]
 
 
 def _derive_target_type(cmd_key: str, cmd_obj: dict) -> str:
@@ -393,12 +486,17 @@ def build_format_sets_from_commands(
                     spec_params=constraints or {},
                 )
 
+            formats = _build_generated_formats(columns, default_types=default_types)
+            if not formats:
+                logger.debug(f"Skip {set_name}-{lvl}: no remaining attributes after generated filtering")
+                continue
+
             fs = FormatSet(
                 target_type=display_name,
                 heading=f"{set_name}-{lvl} Attributes",
                 description=f"Auto-generated format for {display_name} (Create, {lvl}).",
                 family=cmd_obj.get("family"),
-                formats=[Format(types=types, attributes=columns)],
+                formats=formats,
                 action=action
             )
             results[f"{set_name}-{lvl}"] = fs
@@ -657,16 +755,14 @@ def _update_base_report_formats_file(sets: FormatSetDict):
         target_path = Path("pyegeria/view/base_report_formats.py")
 
     if not target_path.exists():
-        logger.debug(f"Target path {target_path} does not exist, skipping file update")
-        return
+        return "file_missing", target_path
 
     content = target_path.read_text(encoding="utf-8")
     start_marker = "# --- GENERATED FORMAT SETS ---"
     end_marker = "# --- END GENERATED FORMAT SETS ---"
 
     if start_marker not in content or end_marker not in content:
-        logger.debug(f"Markers not found in {target_path}, skipping file update")
-        return
+        return "markers_missing", target_path
 
     entries = []
     for name in sorted(sets.keys(), key=lambda s: s.lower()):
@@ -688,9 +784,46 @@ def _update_base_report_formats_file(sets: FormatSetDict):
 
     if new_content != content:
         target_path.write_text(new_content, encoding="utf-8")
-        logger.info(f"Updated generated section in {target_path}")
+        return "updated", target_path
     else:
-        logger.debug(f"No changes to {target_path}")
+        return "no_change", target_path
+
+
+def _merge_generated_sets_and_report_status(sets: FormatSetDict) -> None:
+    from pyegeria.view.base_report_formats import report_specs
+
+    merged_count = 0
+    for name, fs in sets.items():
+        report_specs.upsert(name, fs)
+        merged_count += 1
+
+    file_status, target_path = _update_base_report_formats_file(sets)
+    base_msg = f"Merged {merged_count} generated format sets into runtime registry."
+    target_msg = f"Generated section target: {target_path}"
+
+    if file_status == "updated":
+        status_msg = f"{base_msg} Updated generated section in {target_path}."
+        logger.info(status_msg)
+        click.echo(status_msg)
+    elif file_status == "no_change":
+        status_msg = f"{base_msg} Generated section in {target_path} already up to date."
+        logger.info(status_msg)
+        click.echo(status_msg)
+    elif file_status == "markers_missing":
+        status_msg = f"{base_msg} WARNING: generated-section markers not found in {target_path}; skipped file update."
+        logger.warning(status_msg)
+        click.secho(status_msg, fg="yellow")
+    elif file_status == "file_missing":
+        status_msg = f"{base_msg} WARNING: target file {target_path} was not found; skipped file update."
+        logger.warning(status_msg)
+        click.secho(status_msg, fg="yellow")
+    else:
+        status_msg = f"{base_msg} WARNING: merge status unknown for {target_path}; skipped file update."
+        logger.warning(status_msg)
+        click.secho(status_msg, fg="yellow")
+
+    logger.info(target_msg)
+    click.echo(target_msg)
 
 
 @click.command(name="gen-report-specs")
@@ -702,7 +835,11 @@ def _update_base_report_formats_file(sets: FormatSetDict):
     default="json",
     help="Output mode",
 )
-@click.option("--merge", is_flag=True, help="Merge into built-in registry")
+@click.option(
+    "--merge",
+    is_flag=True,
+    help="Merge into runtime report registry and sync generated section in pyegeria/view/base_report_formats.py.",
+)
 @click.option("--list", "list_names", is_flag=True, help="List set names")
 @click.option("--usage-level", default=None, help="Egeria usage level (Basic or Advanced)",
               type=click.Choice(["Basic", "Advanced"], case_sensitive=False))
@@ -748,10 +885,7 @@ def main(commands_json, output_path, emit, merge, list_names, usage_level):
             sets.save_to_json(output_file)
             logger.info(f"Saved JSON for {len(sets)} generated format sets to {output_file}")
             if merge:
-                from pyegeria.view.base_report_formats import report_specs
-                for name, fs in sets.items():
-                    report_specs.upsert(name, fs)
-                _update_base_report_formats_file(sets)
+                _merge_generated_sets_and_report_status(sets)
         elif emit == "code":
             output_file = output_path or Prompt.ask(
                 "Output Python File:", default="pyegeria/dr_egeria_reports.py"
@@ -761,18 +895,12 @@ def main(commands_json, output_path, emit, merge, list_names, usage_level):
             Path(output_file).write_text(code, encoding="utf-8")
             logger.info(f"Saved Python code for {len(sets)} generated format sets to {output_file}")
             if merge:
-                from pyegeria.view.base_report_formats import report_specs
-                for name, fs in sets.items():
-                    report_specs.upsert(name, fs)
-                _update_base_report_formats_file(sets)
+                _merge_generated_sets_and_report_status(sets)
         else:
             # emit == "dict"
             logger.info(f"Generated {len(sets)} format sets (in-memory FormatSetDict)")
             if merge:
-                from pyegeria.view.base_report_formats import report_specs
-                for name, fs in sets.items():
-                    report_specs.upsert(name, fs)
-                _update_base_report_formats_file(sets)
+                _merge_generated_sets_and_report_status(sets)
 
         if list_names and sets is not None:
             names = sorted(list(sets.keys()))

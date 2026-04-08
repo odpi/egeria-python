@@ -45,7 +45,7 @@ The architecture is built around several decoupled components that work in tande
 
 ## Execution Flow
 
-The typical execution flow when a user runs `dr_egeria --input-file myfile.md --directive process` is as follows:
+The typical execution flow when a user runs `dr_egeria --input-file myfile.md --process` is as follows:
 
 ### Phase 1: Initialization and Parsing
 1. `dr_egeria` CLI receives the request, sets up environment variables, and instantiates the `ServerClient`.
@@ -157,3 +157,58 @@ The tool `hey_egeria tech gen-report-specs` can be used to:
 - Automatically update `pyegeria/view/base_report_formats.py` with the latest generated specs using the `--merge` flag.
 
 This ensures that the `Display Names`, `keys`, and `descriptions` used in Dr.Egeria markdown files are identical to the labels and data fields used in pyegeria reports.
+
+## Debug Mode
+
+Dr.Egeria v2 ships a built-in request debugger activated with the `--debug` flag (CLI) or `debug=True` kwarg (Python API). It is designed to be **non-invasive**: it patches and restores a single method, never persists state between calls, and adds zero overhead when disabled.
+
+### What it prints
+
+For every HTTP call made to the Egeria server, the debug mode prints three pieces of information to the Rich console:
+
+```
+[DEBUG] POST → https://host:9443/servers/viewServer/api/open-metadata/…/attach
+[DEBUG] Called from: pyegeria/omvs/data_designer.py:2418 in _async_link_nested_data_field()
+             ← pyegeria/core/_server_client.py:6887 in _async_new_relationship_request()
+             ← md_processing/v2/data_designer.py:695 in apply_changes()
+[DEBUG] Body:
+{
+  "class": "NewRelationshipRequestBody",
+  "properties": {
+    "class": "MemberDataFieldProperties"
+  }
+}
+```
+
+Additionally, just before each command's `apply_changes()` is called the processor prints a cyan boundary line:
+
+```
+══ DEBUG CMD: Link Data Field | display_name='CustomerID' | GUID=abc123 ══
+```
+
+### How it works
+
+1. `process_md_file_v2` saves a reference to `BaseServerClient._async_make_request`.
+2. It replaces the method on the **class** with a closure (`_debug_make_request`) that:
+   - Resolves the call-chain via `inspect.stack()`, walking up to 15 frames and collecting the first 3 that are outside asyncio/stdlib internals.
+   - Displays the HTTP method, URL (with query params if present), call chain, and pretty-printed JSON body.
+   - Delegates to the original method unchanged.
+3. `"debug": True` is placed in the shared `context` dict, making it available to every processor.
+4. `AsyncBaseCommandProcessor.execute()` reads `self.context.get("debug")` and prints a per-command header before delegating to `apply_changes()`.
+5. After the entire batch completes (or raises), `process_md_file_v2` unconditionally restores the original method from its saved reference.
+
+### Usage
+
+```bash
+# CLI
+hey_egeria cat process-markdown-file --input-file MyFile.md --debug
+
+# __main__
+python -m md_processing.dr_egeria --input-file MyFile.md --debug
+```
+
+```python
+# Programmatic
+await process_md_file_v2(input_file, output_folder, directive, client, debug=True)
+```
+

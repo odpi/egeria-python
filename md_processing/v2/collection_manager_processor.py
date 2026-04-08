@@ -5,9 +5,6 @@ from typing import Dict, Any, Optional
 from loguru import logger
 
 from md_processing.v2.processors import AsyncBaseCommandProcessor
-from md_processing.md_processing_utils.md_processing_constants import (
-    get_command_spec
-)
 from md_processing.md_processing_utils.common_md_utils import (
     set_create_body, set_update_body,
     update_element_dictionary,
@@ -183,8 +180,6 @@ class CSVElementProcessor(AsyncBaseCommandProcessor):
     Processor for CSV Elements from Template.
     """
 
-    def get_command_spec(self) -> Dict[str, Any]:
-        return get_command_spec("CSV Element")
 
     async def fetch_as_is(self) -> Optional[Dict[str, Any]]:
         return None # Create only for now
@@ -222,8 +217,6 @@ class CollectionLinkProcessor(AsyncBaseCommandProcessor):
     Processor for Agreement Items, Collection Membership, product dependencies, etc.
     """
 
-    def get_command_spec(self) -> Dict[str, Any]:
-        return get_command_spec(self.command.object_type)
 
     async def fetch_as_is(self) -> Optional[Dict[str, Any]]:
         return None

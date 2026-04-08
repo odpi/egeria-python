@@ -455,7 +455,7 @@ def set_data_field_body(object_type: str, qualified_name: str, attributes: dict)
     prop_bod["minimumLength"] = attributes.get('Minimum Length', {}).get('value', None)
     prop_bod["length"] = attributes.get('Length', {}).get('value', None)
     prop_bod["precision"] = attributes.get('Precision', {}).get('value', None)
-    prop_bod["orderedValues"] = attributes.get('Ordered Values', {}).get('value', [])
+    prop_bod["orderedValues"] = attributes.get('Ordered Values', {}).get('value', None)
     prop_bod["sortOrder"] = attributes.get('Sort Order', {}).get('value', None)
     return prop_bod
 

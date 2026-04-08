@@ -19,13 +19,12 @@ We have successfully implemented the core execution engine for Dr.Egeria v2, ado
   - Routes extracted commands to class-based processors.
   - Decouples command identification from execution logic.
 
-### 3. Switchable Main Path
+### 3. v2 as the Only Engine
 
 - **Location**: [dr_egeria.py](file:///Users/dwolfson/antigravity-pyegeria/egeria-python/md_processing/dr_egeria.py)
 - **Features**:
-  - Bridges the legacy sync loop with the new async engine.
-  - **Default Engine**: Dr.Egeria v2 is now the default processing path.
-  - **Override**: Use `DR_EGERIA_V2=false` as an environment variable to fallback to the legacy engine.
+  - All processing uses the v2 async pipeline exclusively.
+  - The legacy v1 engine (`md_processing/v1_legacy/`) has been removed.
 
 ## Verification Results
 
@@ -43,7 +42,7 @@ I verified the v2 engine's compatibility with legacy DrE markdown samples using 
 - **Infrastructure Fixes**: Resolved bugs in `processors.py` regarding parser initialization and `DrECommand.raw_block` attribute naming.
 
 ```bash
-PYTHONPATH=. DR_EGERIA_V2=true EGERIA_ROOT_PATH=sample-data python commands/cat/dr_egeria_md.py --input-file Simple-Data-Lens.md --directive validate
+PYTHONPATH=. EGERIA_ROOT_PATH=sample-data python commands/cat/dr_egeria_md.py --input-file Simple-Data-Lens.md --directive validate
 ```
 
 ## Phase Status Summary
@@ -51,15 +50,14 @@ PYTHONPATH=. DR_EGERIA_V2=true EGERIA_ROOT_PATH=sample-data python commands/cat/
 - [x] **v2 Baseline**: Core async infrastructure and execution engine.
 - [x] **Command Porting**: All 7+ command families are now registered in the v2 dispatcher.
 - [x] **Rewriter**: Automatic `Create` -> `Update` transition logic integrated into `AsyncBaseCommandProcessor.execute()`.
-- [x] **Legacy Support**: Verified against old DrE samples with fallback to legacy engine if needed.
 
 ## Phase 5 & 6 Accomplishments
 
-### 1. Legacy Cleanup & Deprecation
+### 1. Legacy Removal
 
-- Moved all legacy sync command handlers and dispatchers to `md_processing/v1_legacy/`.
-- Updated `dr_egeria.py` to use the new legacy path for fallback processing (`DR_EGERIA_V2=false`).
-- Verified that the fallback path remains fully functional.
+- Removed `md_processing/v1_legacy/` entirely.
+- The v2 async engine is now the sole processing path.
+- Tests migrated from module-based dispatch discovery to family-based spec discovery.
 
 ### 2. Sequential Execution for Correctness
 
@@ -80,7 +78,7 @@ PYTHONPATH=. DR_EGERIA_V2=true EGERIA_ROOT_PATH=sample-data python commands/cat/
 
 ```bash
 # Sequential execution of multiple commands in feedback.md
-PYTHONPATH=. DR_EGERIA_V2=true EGERIA_ROOT_PATH=sample-data python commands/cat/dr_egeria_md.py --input-file feedback.md --directive validate
+PYTHONPATH=. EGERIA_ROOT_PATH=sample-data python commands/cat/dr_egeria_md.py --input-file feedback.md --directive validate
 ```
 
 ### 5. Invocation & Dependency Fixes
@@ -114,11 +112,8 @@ dr_egeria --input-file project.md --directive validate
 - [x] **v2 Baseline**: Core async infrastructure and execution engine.
 - [x] **Command Porting**: All 7+ command families ported and registered.
 - [x] **Rewriter**: Automatic `Create` -> `Update` transition logic integrated.
-- [x] **Legacy Support**: Codebase cleaned and legacy paths deprecated but preserved.
+- [x] **v1 Legacy Removed**: `md_processing/v1_legacy/` deleted; v2 is the only engine.
 - [x] **Correctness**: Sequential execution engine ensures reliable dependency handling.
 - [x] **Developer Experience**: Unified entry points, consistent arguments, and comprehensive documentation.
 - [x] **Infrastructure**: Correctly registered scripts and documented installation process.
 - [x] **Robustness**: Smart path discovery and unified configuration handling.
-
-> [!TIP]
-> The v2 engine is now the default. To use the old engine for any reason, set `DR_EGERIA_V2=false` in your environment.

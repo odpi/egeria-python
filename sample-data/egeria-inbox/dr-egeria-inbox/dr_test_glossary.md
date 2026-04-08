@@ -372,7 +372,7 @@ ___
 GlossaryTerm::SalesForecast::Opportunity::1.0
 
 ## Term 2
-PDR::Glossary Term::Sales-Forecast
+PDR::GlossaryTerm::Sales-Forecast::1.0
 
 ## Relationship Type
 Synonym

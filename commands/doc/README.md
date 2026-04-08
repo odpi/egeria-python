@@ -66,7 +66,7 @@ Each command has a number of optional, and often some mandatory parameters. Ther
 | create_todo                        | Create a new ToDo item                                       |     | ✓  |     |      |        |
 | delete_glossary                    | Delete the specified glossary                                | ✓   |    |     |      |        |
 | delete_term                        | Delete the specified term                                    | ✓   |    |     |      |        |
-| export_terms_to_file               | Export the specified glossary                                | ✓   |    |     |      |        |
+| export_terms_csv                   | Export the specified glossary to a CSV file                  | ✓   |    |     |      |        |
 | get_asset_graph                    | Display a tree graph of information about an asset           | ✓   |    |     |      |        |
 | get_collection                     | Display a information about a collection                     | ✓   |    |     |      |        |
 | get_element_graph                  | Return a table of elements and matching elements             |     |    |     | ✓    |        |
@@ -116,7 +116,7 @@ Each command has a number of optional, and often some mandatory parameters. Ther
 | list_valid_metadata_values         | List valid metadata (reference) values                       |     |    |     | ✓    |        |
 | load_archive                       | Load an archive/content-pack into Egeria                     |     |    | ✓   |      |        |
 | load_archive_tui                   | Load an archive/content-pack into Egeria                     |     |    | ✓   |      |        |
-| load_terms_from_file               | Import glossary terms from a CSV file                        | ✓   |    |     |      |        |
+| import_terms_csv                   | Import glossary terms from a CSV file                        | ✓   |    |     |      |        |
 | mark_todo_complete                 | Mark a to-do item as complete                                |     | ✓  |     |      |        |
 | monitor_asset_events               | Monitor asset events                                         |     |    | ✓   |      |        |
 | monitor_coco_status                | Monitor status of Coco Sample servers                        |     |    | ✓   |      |        |
@@ -136,6 +136,8 @@ Each command has a number of optional, and often some mandatory parameters. Ther
 | restart_integration_daemon         | Restart and integration daemon                               |     |    | ✓   |      |        |
 | start_daemon                       | Start or restart an OMAG server from its known configuration |     |    | ✓   |      |        |
 | stop_daemon                        | Stop an OMAG server daemon                                   |     |    | ✓   |      |        |
+| update_term                        | Update properties of an existing glossary term               | ✓   |    |     |      |        |
+| update_term_status                 | Update the status of an existing glossary term               | ✓   |    |     |      |        |
 
 
 # Visual Command Reference

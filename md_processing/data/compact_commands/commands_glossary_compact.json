@@ -1,6 +1,6 @@
 {
   "family": "Glossary",
-  "exported": "Apr 6, 2026 at 12:42:02 PM",
+  "exported": "Apr 8, 2026 at 1:34:44 PM",
   "attribute_definitions": {
     "Activity Status": {
       "variable_name": "activity_status",
@@ -2011,8 +2011,8 @@
       "style": "Reference Name List",
       "user_specified": true,
       "unique": false,
-      "input_required": true,
-      "min_cardinality": 1,
+      "input_required": false,
+      "min_cardinality": 0,
       "max_cardinality": 1,
       "level": "Domain",
       "Journal Entry": ""

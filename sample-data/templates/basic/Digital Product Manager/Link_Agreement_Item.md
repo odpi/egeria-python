@@ -61,14 +61,6 @@
 >	**Description**: A dictionary of property:value pairs describing obligations.
 
 
-## Agreement Item Id
->	**Input Required**: False
-
->	**Attribute Type**: Simple
-
->	**Description**: A user specified agreement item identifier.
-
-
 ## Journal Entry
 >	**Input Required**: False
 

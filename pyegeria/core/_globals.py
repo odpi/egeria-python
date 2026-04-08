@@ -117,4 +117,4 @@ MERMAID_GRAPH_TITLES = ["Anchor Mermaid Graph", "Information Supply Chain Mermai
                   "Specification Mermaid Graph", "Solution Blueprint Mermaid Graph","Mermaid Graph",
                   "Solution Subcomponent Mermaid Graph","Governance Action Process Mermaid Graph" ]
 TERM_STATUS = ["DRAFT", "PREPARED","PROPOSED","APPROVED", "REJECTED", "ACTIVE", "DEPRECATED", "DELETED", "OTHER"]
-REPORT_ACRONYMS = ["GUID", "URL", "ID", "QN", "API", "UI"]
+REPORT_ACRONYMS = ["GUID", "ID", "QN", "API", "UI"]

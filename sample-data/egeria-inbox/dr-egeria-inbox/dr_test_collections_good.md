@@ -482,7 +482,7 @@ ___
 Collection::SalesForecast::Master::1.0
 
 ## Element Id
-DataStructure::CRMOpportunity::Salesforce::1.0
+Collection::SalesForecast::DataStructures::1.0
 
 ## Membership Status
 VALIDATED
@@ -550,14 +550,14 @@ ___
 Collection::SalesForecast::Master::1.0
 
 ## Element Id
-DataCatalog::EnterpriseCatalog::1.0
+Campaign:Clinical Trials Management
 
 ## Resource Description
 Enterprise data catalog providing lineage and provenance for all Sales Forecast
 domain metadata elements.
 
 ## Resource Id
-Catalog::SalesForecast::EnterpriseCatalog::1.0
+Collection::SalesForecast::Master::1.0
 
 ## Resource Use
 Related Information

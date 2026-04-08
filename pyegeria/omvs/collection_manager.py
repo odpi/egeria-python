@@ -1692,6 +1692,82 @@ class CollectionManager(ServerClient):
         return asyncio.get_event_loop().run_until_complete(
             self._async_create_collection(display_name=display_name, description=description, category=category,
                                           initial_classifications=[], prop=[prop], body=body))
+    @dynamic_catch
+    def create_folio(self, display_name: Optional[str] = None, description: Optional[str] = None,
+                                      category: Optional[str] = None, body: Optional[dict | NewElementRequestBody] = None) -> str:
+        """ Create a new collection of subtype Folio.
+            Create Collections: https://egeria-project.org/concepts/collection
+            Async version.
+
+            Parameters
+            ----------
+            display_name: str
+                The display name of the element. Will also be used as the basis of the qualified_name.
+            description: str
+                A description of the collection.
+            category: str
+                Adds an user supplied valid value for the collection type.
+            body: dict | NewElementRequestBody, Optional = None
+                The body of the collection request. Supersedes other parameters.
+
+            Returns
+            -------
+            str - the guid of the created collection
+
+            Raises
+            ------
+            PyegeriaException
+              Error in the request or response
+            ValueError
+              Pydantic validation error
+            NotAuthorizedException
+              The principle specified by the user_id does not have authorization for the requested action
+
+        """
+        prop = "Folio"
+
+        return asyncio.get_event_loop().run_until_complete(
+            self._async_create_collection(display_name=display_name, description=description, category=category,
+                                          initial_classifications=[], prop=[prop], body=body))
+
+    @dynamic_catch
+    def create_subject_area(self, display_name: Optional[str] = None, description: Optional[str] = None,
+                                category: Optional[str] = None,
+                                body: Optional[dict | NewElementRequestBody] = None) -> str:
+        """ Create a new collection of subtype SubjectArea.
+            Create Collections: https://egeria-project.org/concepts/collection
+            Async version.
+
+            Parameters
+            ----------
+            display_name: str
+                The display name of the element. Will also be used as the basis of the qualified_name.
+            description: str
+                A description of the collection.
+            category: str
+                Adds an user supplied valid value for the collection type.
+            body: dict | NewElementRequestBody, Optional = None
+                The body of the collection request. Supersedes other parameters.
+
+            Returns
+            -------
+            str - the guid of the created collection
+
+            Raises
+            ------
+            PyegeriaException
+              Error in the request or response
+            ValueError
+              Pydantic validation error
+            NotAuthorizedException
+              The principle specified by the user_id does not have authorization for the requested action
+
+        """
+        prop = "SubjectArea"
+
+        return asyncio.get_event_loop().run_until_complete(
+            self._async_create_collection(display_name=display_name, description=description, category=category,
+                                          initial_classifications=[], prop=[prop], body=body))
 
     @dynamic_catch
     def create_reference_list_collection(self, display_name: Optional[str] = None, description: Optional[str] = None,
@@ -5396,6 +5472,34 @@ class CollectionManager(ServerClient):
             f"{parent_guid}/collections/{collection_guid}/attach")
         await self._async_new_relationship_request(url, "ResourceListProperties", body)
         logger.info(f"Attached {collection_guid} to {parent_guid}")
+
+    @dynamic_catch
+    async def _async_attach_data_description(self, element_guid: str, collection_guid: str,
+                                             body: dict | NewRelationshipRequestBody = None):
+        """Attach a data description collection to an element (DataDescription relationship). Async version.
+
+        Parameters
+        ----------
+        element_guid: str
+            The unique identifier of the element to describe.
+        collection_guid: str
+            The identifier of the data description collection being attached.
+        body: dict | NewRelationshipRequestBody, optional, default = None
+            A structure representing the details of the relationship.
+        """
+        url = (
+            f"{self.platform_url}/servers/"
+            f"{self.view_server}/api/open-metadata/collection-manager/metadata-elements/"
+            f"{element_guid}/data-descriptions/{collection_guid}/attach")
+        await self._async_new_relationship_request(url, "DataDescriptionProperties", body)
+        logger.info(f"Attached data description {collection_guid} to element {element_guid}")
+
+    @dynamic_catch
+    def attach_data_description(self, element_guid: str, collection_guid: str,
+                                body: dict | NewRelationshipRequestBody = None):
+        """Attach a data description collection to an element (DataDescription relationship)."""
+        loop = asyncio.get_event_loop()
+        loop.run_until_complete(self._async_attach_data_description(element_guid, collection_guid, body))
 
     @dynamic_catch
     def attach_collection(self, parent_guid: str, collection_guid: str,

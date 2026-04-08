@@ -348,7 +348,7 @@ DigitalProduct::SalesForecast::Pipeline::1.2
 
 ## Digital Product 2
 
-Sales Forecast Data Feed
+PDR::DigitalProduct::Sales-Forecast-Data-Feed::1.0
 
 ## Dependency Description
 

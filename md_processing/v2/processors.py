@@ -128,7 +128,7 @@ class AsyncBaseCommandProcessor(ABC):
         return self.command.object_type
 
     def _derive_egeria_type_name(self) -> str:
-        spec = self.get_command_spec()
+        spec = self.get_command_spec() or {}
         om_type = spec.get("OM_TYPE")
         if om_type:
             return om_type
@@ -280,12 +280,20 @@ class AsyncBaseCommandProcessor(ABC):
             if display_name:
                 existing_guid = await self.resolve_element_guid(display_name, tech_type=self.egeria_type_name)
                 if existing_guid and not existing_guid.startswith("(Planned:"):
-                    msg = f"Warning: An element with Display Name '{display_name}' already exists in Egeria (QN or Display Name match)."
-                    logger.warning(msg)
-                    if "warnings" not in self.parsed_output:
-                        self.parsed_output["warnings"] = []
-                    if msg not in self.parsed_output["warnings"]:
-                        self.parsed_output["warnings"].append(msg)
+                    # Try to fetch the full element and transition to Update to avoid 409 conflicts
+                    try:
+                        element = await self.fetch_element(existing_guid)
+                        if element:
+                            self.as_is_element = element
+                            logger.info(f"Element with Display Name '{display_name}' found in Egeria (GUID: {existing_guid}). Transitioning to Update.")
+                        else:
+                            msg = f"Warning: An element with Display Name '{display_name}' already exists in Egeria (QN or Display Name match) but could not be fetched."
+                            logger.warning(msg)
+                            self._add_warning(msg)
+                    except Exception as fetch_err:
+                        msg = f"Warning: An element with Display Name '{display_name}' already exists in Egeria (QN or Display Name match)."
+                        logger.warning(f"{msg} Fetch error: {fetch_err}")
+                        self._add_warning(msg)
 
         if self.as_is_element:
             # Transition to Update
@@ -309,9 +317,19 @@ class AsyncBaseCommandProcessor(ABC):
                 # Get the style from the attribute data (provided by AttributeFirstParser) or fallback to spec
                 spec_style = attr_data.get("style", "Simple")
                 spec_existing = attr_data.get("existing_element", "")
-            
-            # Heuristics for identifying what attributes represent references to other elements
-            # We exclude common string attributes that might contain keywords like "Reference" or "Name"
+
+                # --- PATCH: Only use valid element types for endpoint GUID resolution ---
+                # If spec_existing looks like a relationship type, skip it as a type constraint.
+                # Relationship types in Egeria are usually CamelCase with no 'Element' suffix and not OpenMetadataRoot.
+                # We'll use a simple heuristic: if it ends with 'Description', 'Assignment', 'Relationship', or is in a known set, skip it.
+                RELATIONSHIP_TYPE_SUFFIXES = ("Description", "Assignment", "Relationship", "Link", "Reference", "Membership", "Dependency", "Composition")
+                KNOWN_RELATIONSHIP_TYPES = {"DataDescription", "DataValueAssignment", "DataValueComposition", "DataValueDefinition", "DataClassComposition", "CertificationTypeAssignment", "CollectionMembership", "ProductDependency"}
+                sanitized_spec_existing = spec_existing
+                if spec_existing and (spec_existing.endswith(RELATIONSHIP_TYPE_SUFFIXES) or spec_existing in KNOWN_RELATIONSHIP_TYPES):
+                    sanitized_spec_existing = None
+
+                # Heuristics for identifying what attributes represent references to other elements
+                # We exclude common string attributes that might contain keywords like "Reference" or "Name"
                 non_ref_names = [
                     "Display Name", "Qualified Name", "Description", 
                     "Reference Abstract", "Reference Title", "Reference Description",
@@ -320,7 +338,7 @@ class AsyncBaseCommandProcessor(ABC):
                 ]
 
                 explicit_ref_styles = {"Reference Name", "Reference Name List", "Reference", "ID", "GUID"}
-            
+
                 if self.is_report_view_command():
                     is_ref_candidate = spec_style in explicit_ref_styles
                 else:
@@ -333,15 +351,15 @@ class AsyncBaseCommandProcessor(ABC):
                         and attr_name not in non_ref_names
                         and spec_style not in ["Simple", "Enum", "Valid Value", "ValidValue", "Dictionary", "KeyValue", "Enumeration", "Integer", "Boolean"]
                     )
-            
-            # More precise check: if it's already got a GUID or guid_list, don't re-resolve. 
-            # If it's a value but no GUID/guid_list, and it's a candidate, try to resolve.
+
+                # More precise check: if it's already got a GUID or guid_list, don't re-resolve.
+                # If it's a value but no GUID/guid_list, and it's a candidate, try to resolve.
                 val = attr_data.get("value")
                 if val and not attr_data.get("guid") and not attr_data.get("guid_list") and is_ref_candidate:
                     if isinstance(val, list):
                         guid_list = []
                         for item in val:
-                            guid = await self.resolve_element_guid(item, tech_type=spec_existing)
+                            guid = await self.resolve_element_guid(item, tech_type=sanitized_spec_existing)
                             if guid:
                                 guid_list.append(guid)
                         if guid_list:
@@ -351,7 +369,7 @@ class AsyncBaseCommandProcessor(ABC):
                                 attr_data["is_planned"] = True
                     else:
                         # Try to resolve GUID from cache or Egeria
-                        guid = await self.resolve_element_guid(val, tech_type=spec_existing)
+                        guid = await self.resolve_element_guid(val, tech_type=sanitized_spec_existing)
                         if guid:
                             attr_data["guid"] = guid
                             # If it's a 'Planned' element, it counts as exists for validation
@@ -500,6 +518,12 @@ class AsyncBaseCommandProcessor(ABC):
                             attr_data["is_planned"] = False
 
         try:
+            if self.context.get("debug"):
+                print(
+                    f"\n\033[1;36m══ DEBUG CMD: {self.command.verb} {self.command.object_type}"
+                    f" | display_name={self.parsed_output.get('display_name', '')!r}"
+                    f" | GUID={self.parsed_output.get('guid', 'new')} ══\033[0m"
+                )
             output = await self.apply_changes()
         except PyegeriaException as e:
             logger.error(f"Command String: {self.command.raw_block}")
@@ -541,7 +565,7 @@ class AsyncBaseCommandProcessor(ABC):
         
         # 10. Post-execution: Update the cache on success
         guid = self.parsed_output.get("guid") or attributes.get("guid")
-        if output and not output.startswith(self.command.raw_block): # Basic success check
+        if isinstance(output, str) and output and not output.startswith(self.command.raw_block): # Basic success check
             qn = self.parsed_output.get("qualified_name")
             if qn and guid:
                 d_name = self.parsed_output.get("display_name") or qn
@@ -832,6 +856,52 @@ class AsyncBaseCommandProcessor(ABC):
             logger.debug(f"resolve_element_guid: Unexpected error resolving '{name_or_guid}': {e}")
             
         return None
+
+    async def _extract_memberships_async(self, async_get_fn, guid: str) -> dict:
+        """
+        Async helper that fetches an element by GUID and extracts its
+        collection memberships (DictList / SpecList).
+
+        Works by awaiting the provided async getter function, then extracting
+        the 'memberOfCollections' list from the response and classifying each
+        entry by collectionType.
+
+        Parameters
+        ----------
+        async_get_fn : coroutine function
+            An async callable that accepts (guid, output_format="JSON") and
+            returns the element dict.
+        guid : str
+            The GUID of the element to fetch.
+
+        Returns
+        -------
+        dict  {"DictList": [...], "SpecList": [...], "CollectionDetails": [...]}
+        """
+        result = {"DictList": [], "SpecList": [], "CollectionDetails": []}
+        try:
+            info = await async_get_fn(guid, output_format="JSON")
+            if not info or not isinstance(info, dict):
+                return result
+            for member_rel in info.get("memberOfCollections", []):
+                related = member_rel.get("relatedElement", {})
+                props = related.get("properties", {})
+                coll_guid = related.get("elementHeader", {}).get("guid")
+                collection_type = props.get("collectionType")
+                if coll_guid:
+                    if collection_type == "Data Dictionary":
+                        result["DictList"].append(coll_guid)
+                    elif collection_type == "Data Specification":
+                        result["SpecList"].append(coll_guid)
+                    result["CollectionDetails"].append({
+                        "guid": coll_guid,
+                        "description": props.get("description"),
+                        "collectionType": collection_type,
+                        "qualifiedName": props.get("qualifiedName"),
+                    })
+        except Exception as e:
+            logger.warning(f"_extract_memberships_async: failed to get memberships for {guid}: {e}")
+        return result
 
     async def fetch_as_is(self) -> Optional[Dict[str, Any]]:
         """

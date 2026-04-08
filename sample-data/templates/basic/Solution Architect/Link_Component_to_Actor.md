@@ -19,7 +19,7 @@
 >	**Alternative Labels**: Wire Label
 
 
-## Role
+## Solution Role
 >	**Input Required**: False
 
 >	**Attribute Type**: Reference Name

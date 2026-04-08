@@ -14,11 +14,13 @@
 ## Role Domain Identifier
 >	**Input Required**: False
 
->	**Attribute Type**: Simple Int
+>	**Attribute Type**: Enum
 
->	**Description**: Governance domain identifier for the solution role. Default 0 means all domains.
+>	**Description**: String representing the governance domain. All domains is ALL
 
->	**Default Value**: 0
+>	**Valid Values**: ALL,DATA,PRIVACY,SECURITY,IT_INFRASTRUCTURE,SOFTWARE_DEVELOPMENT,CORPORATE,ASSET_MANAGEMENT,OTHER
+
+>	**Default Value**: ALL
 
 
 ## Role Identifier

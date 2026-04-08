@@ -1,33 +1,17 @@
 # Dr.Egeria Refactoring Walkthrough
 
-I have refactored the `Dr.Egeria` markdown command processor to replace the monolithic `if-elif` dispatch logic with a flexible, registry-based approach.
+This document describes the historical refactoring of the `Dr.Egeria` markdown command processor.
 
-## Changes
+## Phase 1: Registry-Based Dispatch (historical)
 
-### 1. Command Dispatcher
+The original monolithic `if-elif` dispatch logic was replaced with a registry-based `CommandDispatcher` class (`command_dispatcher.py`) and a corresponding `command_mapping.py` that called `setup_dispatcher()` to register all v1 sync handlers.
 
-Created `md_processing/command_dispatcher.py` containing the `CommandDispatcher` class. This class allows registering command handlers and dispatching them dynamically.
+## Phase 2: v2 Async Engine
 
-### 2. Command Mapping
+The v1 sync dispatcher and all associated handler modules were superseded by the v2 async engine (`md_processing/v2/`). The v2 dispatcher (`V2Dispatcher`) routes commands to `AsyncBaseCommandProcessor` subclasses, driven by compact command specs in `md_processing/data/compact_commands/`.
 
-Created `md_processing/command_dispatcher.py` (actually `md_processing/command_mapping.py`) which:
+## Phase 5 & 6: v1 Legacy Removal
 
-- Imports all command handler functions.
-- Defines `setup_dispatcher()` which registers each command string to its corresponding handler.
+The `md_processing/v1_legacy/` directory (containing the old `CommandDispatcher`, `command_mapping.py`, and all v1 handler modules) was deleted. The `DR_EGERIA_V2` environment variable switch was removed. All processing now goes through the v2 pipeline.
 
-### 3. Simplified `dr_egeria.py`
-
-Refactored `md_processing/dr_egeria.py` to:
-
-- Initialize the dispatcher using `setup_dispatcher()`.
-- Replace the 100+ lines of `if potential_command == ...` with a single `dispatcher.dispatch(...)` call.
-- Preserved the special handling for the `Provenance` command as it mimics the original logic.
-
-## Verification
-
-- **Syntax Check**: All modified and new files passed syntax validation (`python -m py_compile`).
-- **Logic**: The dispatcher logic mirrors the original direct calls. The `Provenance` exception was preserved to ensure identical behavior for that specific case.
-
-## Results
-
-The code is now significantly cleaner, easier to maintain, and ready for further extensions (e.g., adding new commands only requires updating the mapping, not the main processor loop).
+Tests previously driven by `commands_for_module(MODULE)` (which introspected the v1 dispatcher registry) were migrated to `commands_for_family(FAMILY)` (which reads command names directly from the compact spec `COMMAND_DEFINITIONS`).

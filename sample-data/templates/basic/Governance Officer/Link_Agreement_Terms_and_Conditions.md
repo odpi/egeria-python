@@ -29,6 +29,34 @@
 >	**Alternative Labels**: Wire Label
 
 
+## Membership Rationale
+>	**Input Required**: False
+
+>	**Attribute Type**: Simple
+
+>	**Description**: Rationale for membership.
+
+
+## Membership Status
+>	**Input Required**: False
+
+>	**Attribute Type**: Valid Value
+
+>	**Description**: The status of adding a member to a collection.
+
+>	**Valid Values**: UNKNOWN,DISCOVERED,PROPOSED,IMPORTED,VALIDATED,DEPRECATED,OBSOLETE,OTHER
+
+>	**Default Value**: PROPOSED
+
+
+## Notes
+>	**Input Required**: False
+
+>	**Attribute Type**: Simple
+
+>	**Description**: Notes and observations about the element.
+
+
 ## Journal Entry
 >	**Input Required**: False
 

@@ -2,7 +2,7 @@
 v2 Dispatcher for Dr.Egeria.
 Routes commands to their respective AsyncBaseCommandProcessor subclasses.
 """
-import asyncio
+
 from typing import Dict, Type, Optional, Any, List
 from loguru import logger
 
@@ -13,8 +13,9 @@ from md_processing.md_processing_utils.md_processing_constants import COLLECTION
 from md_processing.v2.collection_manager_processor import CollectionManagerProcessor
 from md_processing.v2.project import ProjectProcessor
 from md_processing.v2.view import ViewProcessor
+from md_processing.v2.rewriters import CommandRewriter
 
-class v2Dispatcher:
+class V2Dispatcher:
     """
     Registry and router for v2 command processors.
     """
@@ -22,6 +23,7 @@ class v2Dispatcher:
     def __init__(self, client: EgeriaTech):
         self.client = client
         self.processors: Dict[str, Type[AsyncBaseCommandProcessor]] = {}
+        self.command_rewriter = CommandRewriter(self)
 
     def register(self, command_name: str, processor_cls: Type[AsyncBaseCommandProcessor]):
         """Register a processor class for a specific command name (e.g. 'Create Glossary')."""
@@ -74,9 +76,11 @@ class v2Dispatcher:
                 "verb": command.verb,
                 "object_type": command.object_type
             }
-            
         try:
             processor = processor_cls(self.client, command, context)
+            # --- Upsert logic: rewrite command if needed before execution ---
+            if hasattr(processor, 'parsed_output') and processor.parsed_output:
+                command = await self.command_rewriter.rewrite(command, processor.parsed_output)
             return await processor.execute()
         except PyegeriaException as e:
             logger.exception(f"Error executing command '{command_key}'")

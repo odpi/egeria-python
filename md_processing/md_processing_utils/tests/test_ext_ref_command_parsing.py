@@ -3,16 +3,16 @@ import pytest
 from md_processing.md_processing_utils.tests.command_parsing_helpers import (
     FakeEgeriaClient,
     build_command_block,
-    commands_for_module,
+    commands_for_family,
     parse_command,
     resolve_command_spec,
     required_attribute_keys,
 )
 
-MODULE = "md_processing.md_commands.ext_ref_commands"
+FAMILY = "External Reference"
 
 
-@pytest.mark.parametrize("command", commands_for_module(MODULE))
+@pytest.mark.parametrize("command", commands_for_family(FAMILY))
 def test_ext_ref_command_parsing(command, skip_reporter, missing_spec_reporter):
     _, status = resolve_command_spec(command)
     if status == "missing_spec":

@@ -1,3 +1,7 @@
+from md_processing.md_processing_utils.md_processing_constants import load_commands
+
+# Ensure compact command specs are loaded before any v2 processing
+load_commands()
 """
 This is an ongoing experiment in parsing and playing with Freddie docs
 """
@@ -5,23 +9,21 @@ import os
 import sys
 import uuid
 from typing import Type, Callable
-from datetime import datetime
+import re
 
 from loguru import logger
-from pydantic import ValidationError
 from rich.console import Console
 from rich.table import Table
 from rich.box import Box
 from rich.markdown import Markdown
 
 import asyncio
-from md_processing import (extract_command, process_provenance_command, get_current_datetime_string, command_list)
+from md_processing import (process_provenance_command, get_current_datetime_string)
 from md_processing.md_processing_utils.common_md_proc_utils import set_parse_summary_mode, set_usage_level
 from md_processing.md_processing_utils.common_md_utils import set_attribute_log_level
 from md_processing.md_processing_utils.md_processing_constants import PROJECT_SUBTYPES, COLLECTION_SUBTYPES
-from md_processing.v1_legacy.command_mapping import setup_dispatcher
 from md_processing.v2 import (
-    UniversalExtractor, v2Dispatcher, AsyncBaseCommandProcessor,
+    UniversalExtractor, V2Dispatcher, AsyncBaseCommandProcessor,
     TermProcessor, TermRelationshipProcessor,
     DataCollectionProcessor, DataStructureProcessor, DataFieldProcessor, DataClassProcessor,
     BlueprintProcessor, ComponentProcessor, SupplyChainProcessor, SolutionLinkProcessor,
@@ -137,7 +139,8 @@ def register_governance_processors(register_processor: Callable[[str, Type[Async
 
 async def process_md_file_v2(input_file: str, output_folder: str, directive: str, client: EgeriaTech,
                             parse_summary: str = "none", attribute_logs: str = "info",
-                            usage_level: str = None, summary_only: bool = False) -> None:
+                            usage_level: str = None, summary_only: bool = False,
+                            debug: bool = False) -> None:
     """
     Async processing path for Dr.Egeria v2.
     """
@@ -145,6 +148,63 @@ async def process_md_file_v2(input_file: str, output_folder: str, directive: str
         set_usage_level(usage_level)
     set_parse_summary_mode(parse_summary)
     set_attribute_log_level(attribute_logs)
+
+    # Debug mode: intercept all HTTP requests to log URL and body to the console
+    _orig_make_request = None
+    if debug:
+        import json as _json_debug
+        from pyegeria.core._base_server_client import BaseServerClient
+        _orig_make_request = BaseServerClient._async_make_request
+
+        async def _debug_make_request(self_inner, request_type, endpoint,
+                                      payload=None, time_out=30, is_json=True, params=None):
+            import inspect as _inspect
+
+            _url_str = endpoint
+            if params:
+                _url_str += f"  (params: {params})"
+
+            # Walk up the call stack and collect up to 3 relevant frames,
+            # skipping asyncio/stdlib internals and this closure itself.
+            _skip_path_parts = {'asyncio', 'concurrent', 'importlib', 'contextlib'}
+            _skip_file_prefixes = ('<frozen', '<string', '<stdin')
+            _frames = []
+            for _fi in _inspect.stack()[1:15]:
+                _fname = _fi.filename
+                if any(_fname.startswith(p) for p in _skip_file_prefixes):
+                    continue
+                _norm = _fname.replace('\\', '/')
+                if any(part in _norm for part in _skip_path_parts):
+                    continue
+                # Show last 3 path components for readability
+                _short = '/'.join(_norm.split('/')[-3:])
+                _frames.append(f"{_short}:{_fi.lineno} in {_fi.function}()")
+                if len(_frames) >= 3:
+                    break
+            _caller_str = "\n             ← ".join(_frames) if _frames else "unknown"
+
+            console.print(f"\n[bold dark_orange][DEBUG] {request_type} → {_url_str}[/bold dark_orange]")
+            console.print(f"[dark_orange][DEBUG] Called from: {_caller_str}[/dark_orange]")
+            if payload is not None:
+                if isinstance(payload, dict):
+                    console.print(
+                        f"[dark_orange][DEBUG] Body:\n{_json_debug.dumps(payload, indent=2)}[/dark_orange]"
+                    )
+                elif isinstance(payload, str):
+                    try:
+                        _parsed = _json_debug.loads(payload)
+                        console.print(
+                            f"[dark_orange][DEBUG] Body:\n{_json_debug.dumps(_parsed, indent=2)}[/dark_orange]"
+                        )
+                    except Exception:
+                        console.print(f"[dark_orange][DEBUG] Body: {payload}[/dark_orange]")
+            return await _orig_make_request(self_inner, request_type, endpoint,
+                                            payload, time_out, is_json, params)
+
+        BaseServerClient._async_make_request = _debug_make_request
+        console.print(
+            "[bold yellow][DEBUG] Request debug mode ENABLED — all Egeria API requests will be logged.[/bold yellow]\n"
+        )
 
     expanded_input = os.path.abspath(os.path.expanduser(input_file))
     if os.path.exists(expanded_input):
@@ -179,18 +239,43 @@ async def process_md_file_v2(input_file: str, output_folder: str, directive: str
         return
         
     # 2. Setup v2 Dispatcher
-    dispatcher = v2Dispatcher(client)
+    dispatcher = V2Dispatcher(client)
     from md_processing.md_processing_utils.md_processing_constants import get_command_spec, build_command_variants
 
+    def normalize_command_key(key: str) -> str:
+        # Collapse all whitespace to single spaces and strip
+        return re.sub(r'\s+', ' ', key).strip() if key else key
+
     def register_processor(base_command: str, processor_cls: Type[AsyncBaseCommandProcessor]):
-        """Register a processor for a base command and all its variants/alternates."""
+        """Register a processor for a base command and all its variants/alternates, normalizing whitespace and including display/alternate names."""
         spec = get_command_spec(base_command)
+        registered = set()
         if spec:
+            # Register main command
+            main_key = normalize_command_key(base_command)
+            if main_key not in registered:
+                dispatcher.register(main_key, processor_cls)
+                registered.add(main_key)
+            # Register display_name
+            display_name = normalize_command_key(spec.get('display_name', ''))
+            if display_name and display_name not in registered:
+                dispatcher.register(display_name, processor_cls)
+                registered.add(display_name)
+            # Register alternate_names
+            for alt in spec.get('alternate_names', []):
+                alt_key = normalize_command_key(alt)
+                if alt_key and alt_key not in registered:
+                    dispatcher.register(alt_key, processor_cls)
+                    registered.add(alt_key)
+            # Register all variants
             variants = build_command_variants(base_command, spec)
             for variant in variants:
-                dispatcher.register(variant, processor_cls)
+                vkey = normalize_command_key(variant)
+                if vkey and vkey not in registered:
+                    dispatcher.register(vkey, processor_cls)
+                    registered.add(vkey)
         else:
-            dispatcher.register(base_command, processor_cls)
+            dispatcher.register(normalize_command_key(base_command), processor_cls)
 
     # Glossary
     register_processor("Create Glossary Term", TermProcessor)
@@ -200,12 +285,31 @@ async def process_md_file_v2(input_file: str, output_folder: str, directive: str
     register_processor("Detach Term-Term Relationship", TermRelationshipProcessor)
 
     # Data Designer
+    from md_processing.v2.data_designer import (
+        DataValueSpecificationProcessor, DataClassProcessor, DataStructureProcessor, DataFieldProcessor, DataGrainProcessor,
+        LinkDataFieldProcessor, LinkFieldToStructureProcessor, LinkDataValueDefinitionProcessor, LinkDataValueCompositionProcessor,
+        LinkDataClassCompositionProcessor, LinkCertificationTypeToStructureProcessor, AttachDataDescriptionProcessor,
+        AssignDataValueSpecificationProcessor, AttachDataValueSpecificationProcessor
+    )
+
     register_processor("Create Data Specification", DataCollectionProcessor)
     register_processor("Create Data Dictionary", DataCollectionProcessor)
     register_processor("Create Data Structure", DataStructureProcessor)
     register_processor("Create Data Field", DataFieldProcessor)
     register_processor("Create Data Class", DataClassProcessor)
-    register_processor("Link Data Field", DataFieldProcessor) # Uses same processor as fields usually? Or generic link?
+    register_processor("Create Data Value Specification", DataValueSpecificationProcessor)
+    register_processor("Update Data Value Specification", DataValueSpecificationProcessor)
+    register_processor("Create Data Grain", DataGrainProcessor)
+    register_processor("Link Data Field", LinkDataFieldProcessor)
+    register_processor("Link Field to Structure", LinkFieldToStructureProcessor)
+    register_processor("Link Data Value Definition", LinkDataValueDefinitionProcessor)
+    register_processor("Link Data Value Composition", LinkDataValueCompositionProcessor)
+    register_processor("Link Data Class Composition", LinkDataClassCompositionProcessor)
+    register_processor("Link Certification Type to Data Structure", LinkCertificationTypeToStructureProcessor)
+    # Fix whitespace for Attach Data Description to Element
+    register_processor("Attach Data Description to Element", AttachDataDescriptionProcessor)
+    register_processor("Assign Data Value Specification", AssignDataValueSpecificationProcessor)
+    register_processor("Attach Data Value Specification to Element", AttachDataValueSpecificationProcessor)
 
     # Solution Architect (spec-driven to keep coverage aligned with compact commands)
     register_solution_architect_processors(register_processor)
@@ -280,15 +384,36 @@ async def process_md_file_v2(input_file: str, output_folder: str, directive: str
     context = {
         "directive": directive,
         "input_file": input_file,
-        "request_id": str(uuid.uuid4())
+        "request_id": str(uuid.uuid4()),
+        "debug": debug,
     }
     
     # 3. Execution (Parallel)
     # We dispatch all commands in the document concurrently.
     # Note: Complex documents with inter-command dependencies may require a more 
     # sophisticated strategy in the future.
-    results = await dispatcher.dispatch_batch(commands, context)
-    
+    try:
+        results = await dispatcher.dispatch_batch(commands, context)
+    except Exception as e:
+        from pyegeria.core._exceptions import print_basic_exception, print_validation_error
+        import traceback
+        from pydantic import ValidationError
+        console.print("[bold red]Exception occurred during batch processing:[/bold red]")
+        traceback.print_exc()
+        if hasattr(e, 'response'):
+            console.print(f"[red]Response: {getattr(e, 'response', None)}[/red]")
+        if hasattr(e, 'status_code'):
+            console.print(f"[red]Status code: {getattr(e, 'status_code', None)}[/red]")
+        if hasattr(e, 'request'):
+            console.print(f"[red]Request: {getattr(e, 'request', None)}[/red]")
+        if isinstance(e, ValidationError):
+            print_validation_error(e)
+        elif 'Pyegeria' in type(e).__name__:
+            print_basic_exception(e)
+        else:
+            console.print(f"[red]{repr(e)}[/red]")
+        return
+
     # 4. Handle results
     final_output = []
 
@@ -426,6 +551,14 @@ async def process_md_file_v2(input_file: str, output_folder: str, directive: str
     elif directive == "process":
         console.print("[yellow]No updates detected. New File not created.[/yellow]")
 
+    # Restore the original _async_make_request if we monkey-patched it
+    if _orig_make_request is not None:
+        from pyegeria.core._base_server_client import BaseServerClient
+        BaseServerClient._async_make_request = _orig_make_request
+        console.print(
+            "\n[bold yellow][DEBUG] Request debug mode DISABLED — Egeria API request logging stopped.[/bold yellow]"
+        )
+
     console.print(f"\n[bold green]v2: Processing complete for '{input_file}'[/bold green]")
     logger.info("v2: Processing complete")
 
@@ -434,157 +567,18 @@ async def process_md_file_v2(input_file: str, output_folder: str, directive: str
 def process_md_file(input_file: str, output_folder: str, directive: str, server: str, url: str, userid: str,
                           user_pass: str, parse_summary: str = "none",
                           attribute_logs: str = "debug", usage_level: str = None,
-                          summary_only: bool = False) -> None:
+                          summary_only: bool = False, debug: bool = False) -> None:
     """
     Process a markdown file by parsing and executing Dr. Egeria md_commands. Write output to a new file.
+
+    This always uses the v2 async engine. The legacy v1 engine has been removed.
     """
     if usage_level:
         set_usage_level(usage_level)
-    use_v2 = os.environ.get("DR_EGERIA_V2", "true").lower() in ("true", "1", "yes")
-
-    if use_v2:
-        client = EgeriaTech(server, url, user_id=userid)
-        client.create_egeria_bearer_token(userid, user_pass)
-        asyncio.run(process_md_file_v2(input_file, output_folder, directive, client, parse_summary, attribute_logs, usage_level, summary_only))
-        return
-
-    set_parse_summary_mode(parse_summary)
-    set_attribute_log_level(attribute_logs)
-
-    cmd_list = command_list
-    # console = Console(width=int(EGERIA_WIDTH))
     client = EgeriaTech(server, url, user_id=userid)
-    token = client.create_egeria_bearer_token(userid, user_pass)
-    
-    # Initialize the dispatcher
-    dispatcher = setup_dispatcher()
-
-    updated = False
-    full_file_path = os.path.abspath(os.path.expanduser(os.path.join(EGERIA_ROOT_PATH, EGERIA_INBOX_PATH, input_file)))
-    logger.info("\n\n====================================================\n\n")
-    logger.info(f"Processing Markdown File: {full_file_path}")
-    console.print(f"[cyan]Processing Markdown File: {full_file_path}[/cyan]")
-
-    if directive != "validate":
-        console.print("\n[bold cyan]*** INFO: PROCESS MODE ***[/bold cyan]")
-        console.print("[cyan]Dr. Egeria will EXECUTE these commands and make PERMANENT CHANGES to Egeria.[/cyan]\n")
-    try:
-        with open(full_file_path, 'r') as f:
-            lines = f.readlines()
-    except FileNotFoundError:
-        console.print(f"[red]Error: File not found at path: {full_file_path}[/red]")
-        return {}  # Return empty dict if file not found
-
-    final_output = []
-    prov_found = False
-    prov_output = (f"\n# Provenance\n\n* Results from processing file {input_file} on "
-                   f"{datetime.now().strftime('%Y-%m-%d %H:%M')}\n")
-    h1_blocks = []
-    current_block = ""
-    in_h1_block = False
-
-    # Helper function to process the current block
-    def process_current_block(current_block):
-        nonlocal updated, final_output, prov_found, prov_output, h1_blocks, in_h1_block
-
-        if not current_block:
-            return  # No block to process
-
-        potential_command = extract_command(current_block)  # Extract object_action
-        if potential_command in cmd_list:
-            # Process the block based on the object_action
-            if potential_command == "Provenance":
-                result = process_provenance_command(input_file, current_block)
-                prov_found = True
-            else:
-                # Use the dispatcher for all other commands
-                result = dispatcher.dispatch(potential_command, client, current_block, directive)
-
-            # Error handling logic
-            if result is None and potential_command != "Provenance":
-                handler = dispatcher.get_handler(potential_command)
-                if not handler:
-                     print(f"\n===> Unknown command: {potential_command}")
-                
-            if result:
-                if directive == "process":
-                    updated = True
-                    final_output.append(result)
-                elif directive == "validate":
-                    pass 
-            elif directive == "process":
-                # Only warn if it looked like a valid command but failed (or was unknown)
-                print(f"\n==>\tErrors found while processing command: \'{potential_command}\'\n"
-                      f"\tPlease correct and try again. \n")
-                final_output.append(current_block)
-                final_output.append('\n____\n')
-        else:
-            # If there is no object_action, append the block as-is
-            final_output.append(current_block)
-
-    # Main parsing loop
-    for line in lines:
-        line = line.strip()  # Remove leading/trailing whitespace
-
-        # Handle a new H1 block (starting with `# `)
-        if line.startswith("# "):
-            if in_h1_block:
-                # Process the current block before starting a new one
-                process_current_block(current_block)
-
-            # Start a new H1 block
-            current_block = line
-            in_h1_block = True
-
-        # Handle the end of a block (line starts with `---`)
-        elif line.startswith("___") or line.startswith("---"):
-            if in_h1_block:
-                # Process the current block when it ends with `---`
-                current_block += f"\n{line}"
-                process_current_block(current_block)
-                current_block = ""  # Clear the block
-                in_h1_block = False
-
-        # Add lines to the current H1 block
-        elif in_h1_block:
-            current_block += f"\n{line}"
-
-        # Append non-H1 content directly to the output
-        else:
-            final_output.append(line)
-
-    # Ensure the final H1 block is processed if the file doesn't end with `---`
-    if in_h1_block:
-        process_current_block(current_block)
-
-    # Join the final output list into a single string
-    final_output = "\n".join(final_output) if isinstance(final_output, list) else final_output
-
-    try:
-        if updated:
-            path, filename = os.path.split(input_file)  # Get both parts
-            new_filename = f"processed-{get_current_datetime_string()}-{filename}"  # Create the new filename
-            
-            if output_folder:
-                new_file_path = os.path.abspath(os.path.expanduser(os.path.join(EGERIA_ROOT_PATH, EGERIA_OUTBOX_PATH, output_folder, new_filename)))
-            else:
-                new_file_path = os.path.abspath(os.path.expanduser(os.path.join(EGERIA_ROOT_PATH, EGERIA_OUTBOX_PATH, new_filename)))
-            os.makedirs(os.path.dirname(new_file_path), exist_ok=True)
-
-            with open(new_file_path, 'w') as f2:
-                f2.write(final_output)
-                if not prov_found:
-                    f2.write(prov_output)
-            console.print(f"\n==> Output written to [blue]{new_file_path}[/blue]")
-        else:
-            if directive != 'display':
-                console.print("\n[yellow]No updates detected. New File not created.[/yellow]")
-                # logger.error(f"===> Unknown Command?  <===") 
-
-    except PyegeriaException as e:
-        print_basic_exception(e)
-    except ValidationError as e:
-        print_validation_error(e)
+    client.create_egeria_bearer_token(userid, user_pass)
+    asyncio.run(process_md_file_v2(input_file, output_folder, directive, client, parse_summary, attribute_logs,
+                                   usage_level, summary_only, debug=debug))
 
 if __name__ == "__main__":
     import argparse
@@ -592,23 +586,40 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Process Dr. Egeria Markdown files using v2.")
     parser.add_argument("--input-file", required=True, help="Input markdown file name (in Inbox)")
     parser.add_argument("--output-folder", default="", help="Optional output subfolder (in Outbox)")
-    parser.add_argument("--directive", default="process", choices=["display", "validate", "process"], help="Action to perform")
+    parser.add_argument("--directive", default="validate",
+                        choices=["display", "validate", "process"],
+                        help="Action to perform (default: validate). Overridden by --validate or --process.")
+    parser.add_argument("--validate", dest="do_validate", action="store_true",
+                        help="Shortcut: validate without making changes (overrides --directive)")
+    parser.add_argument("--process", dest="do_process", action="store_true",
+                        help="Shortcut: execute all commands and write to Egeria (overrides --directive)")
+    parser.add_argument("--advanced", action="store_true", help="Use Advanced usage level (default: Basic)")
     parser.add_argument("--summary-only", action="store_true", help="Only display the summary table and errors/warnings")
-    
+    parser.add_argument("--debug", action="store_true", help="Print each Egeria API request URL and body to the console")
+
     args = parser.parse_args()
-    
-    # Run the async v2 processor (mocking client for simple CLI run)
+
+    # Resolve directive: explicit shortcut flags take priority
+    directive = args.directive
+    if args.do_process:
+        directive = "process"
+    elif args.do_validate:
+        directive = "validate"
+
+    # Run the async v2 processor
     user = os.environ.get("EGERIA_USER", "erinoverview")
     password = os.environ.get("EGERIA_USER_PASSWORD", "secret")
     client = EgeriaTech(settings.Environment.egeria_view_server, settings.Environment.egeria_view_server_url, user_id=user)
     client.create_egeria_bearer_token(user, password)
-    
+
     asyncio.run(
         process_md_file_v2(
-            args.input_file, 
+            args.input_file,
             args.output_folder,
-            args.directive,
+            directive,
             client,
-            summary_only=args.summary_only
+            usage_level="Advanced" if args.advanced else "Basic",
+            summary_only=args.summary_only,
+            debug=args.debug,
         )
     )

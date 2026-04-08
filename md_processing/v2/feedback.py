@@ -7,7 +7,6 @@ import json
 
 from pyegeria import EgeriaTech, PyegeriaException, COMMENT_TYPES
 from md_processing.v2.processors import AsyncBaseCommandProcessor
-from md_processing.md_processing_utils.md_processing_constants import get_command_spec
 from md_processing.md_processing_utils.common_md_utils import (
     set_element_prop_body, set_create_body, set_update_body, 
     update_element_dictionary, set_delete_request_body,
@@ -114,8 +113,6 @@ class TagProcessor(AsyncBaseCommandProcessor):
     Processor for Informal Tags.
     """
 
-    def get_command_spec(self) -> Dict[str, Any]:
-        return get_command_spec("Informal Tag")
 
     async def apply_changes(self) -> str:
         verb = self.command.verb

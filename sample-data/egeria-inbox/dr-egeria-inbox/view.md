@@ -8,7 +8,8 @@ LIST
 ## Report Spec
 > ## What about this line?
 Solution-Blueprint
-
+## Search String
+*
 ____
 
 # View Report

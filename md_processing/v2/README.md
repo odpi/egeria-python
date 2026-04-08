@@ -27,6 +27,7 @@ Dr.Egeria v2 is a complete re-architecture of the Egeria Markdown (Freddie) proc
 - **Dynamic Subtype Registration**: The v2 engine automatically handles various subtypes for **Collections** and **Projects**. If a new subtype is added to Egeria (e.g., a new type of `Collection`), adding it to the `COLLECTION_SUBTYPES` list in `md_processing_constants.py` will automatically enable support with the correct unified processor (`CollectionManagerProcessor`).
 - **Unified Collection Management**: All collection subtypes (Root Collections, Folders, Products, Agreements, and even Glossaries) are handled by a single, robust `CollectionManagerProcessor`. This processor automatically manages subtype-specific properties, parent relationships, status updates, and journal entries.
 - **Document Preservation**: Dr.Egeria now preserves all non-command text in the input Markdown file, copying it to the output file along with processed command blocks. A `# Provenance:` section is appended at the end to track the document's processing history.
+- **Non-Invasive Debug Instrumentation**: The `--debug` flag temporarily monkey-patches `BaseServerClient._async_make_request` for the duration of a single `process_md_file_v2` call. The original method is always restored (even on failure), so debug runs cannot affect subsequent calls or other tests in the same process. Per-command context is printed via `AsyncBaseCommandProcessor.execute()` before `apply_changes()` fires, giving a clear boundary between commands in the debug stream.
 
 ## Architecture Overview
 
@@ -75,17 +76,70 @@ pip install -e .
 The v2 engine is integrated into the `dr_egeria` script (located in `commands/cat/dr_egeria.py`).
 
 ```bash
-# Display the file contents (parse-only, no validation or Egeria lookup)
+# --- Directive shortcuts (recommended) ---
+
+# Validate the file against Egeria (default if no flag is given)
+dr_egeria --input-file report.md --validate
+
+# Execute all commands and make permanent changes to Egeria
+dr_egeria --input-file report.md --process
+
+# --- Full --directive option (for display mode or explicit control) ---
+
+# Display the file contents (parse-only, no Egeria lookup)
 dr_egeria --input-file report.md --directive display
 
-# Validate the file against Egeria (checks existence and attributes)
+# Validate (equivalent to --validate)
 dr_egeria --input-file report.md --directive validate
 
-# Process the file and make permanent changes to Egeria
+# Process (equivalent to --process)
 dr_egeria --input-file report.md --directive process
 
-# Explicitly disable v2 and fallback to legacy sync engine
-DR_EGERIA_V2=false dr_egeria --input-file report.md
+# --- Directive resolution order (highest priority first) ---
+# 1. --process flag  → "process"
+# 2. --validate flag → "validate"
+# 3. --directive     → value provided (default: "validate")
+
+# --- Other flags ---
+
+# Advanced usage level (shows extra attributes; default is Basic)
+dr_egeria --input-file report.md --validate --advanced
+
+# Debug: print every Egeria API request URL and body to the console
+dr_egeria --input-file report.md --process --debug
+
+# Show only the summary table (suppress per-command analysis output)
+dr_egeria --input-file report.md --process --summary-only
+```
+
+### Debug Mode (`--debug`)
+
+When `--debug` is set, every HTTP request sent to Egeria is printed to the console **before** it is dispatched. For each request you will see:
+
+| Item | Description |
+|------|-------------|
+| **Method + URL** | The HTTP verb and full endpoint, e.g. `POST → https://host:9443/…/elements/{guid}/…/attach` |
+| **Call chain** | Up to 3 stack frames showing `file:line in function()`, walking from the SDK helper up to the processor that triggered the call |
+| **Request body** | The JSON body pretty-printed at 2-space indent (both `dict` and pre-serialised `str` forms are handled) |
+
+The per-command boundary is announced before `apply_changes()` is called with a cyan header line:
+
+```
+══ DEBUG CMD: Create Data Field | display_name='CustomerID' | GUID=new ══
+```
+
+Debug mode is implemented as a temporary monkey-patch of `BaseServerClient._async_make_request` that is **automatically restored** when `process_md_file_v2` returns (or raises), so it does not persist across calls.
+
+The flag is also available when running the module directly:
+
+```bash
+python -m md_processing.dr_egeria --input-file MyFile.md --debug
+```
+
+And can be passed programmatically:
+
+```python
+await process_md_file_v2(input_file, output_folder, directive, client, debug=True)
 ```
 
 ### Output Summary
@@ -96,7 +150,6 @@ The processing results are presented in a concise table. The `GUID` of the proce
 
 ### Environment Variables
 
-- `DR_EGERIA_V2`: Set to `true` (default) or `false`.
 - `EGERIA_ROOT_PATH`: Base directory for inbox/outbox.
 - `EGERIA_INBOX_PATH`: Path to folder containing input files.
 - `EGERIA_OUTBOX_PATH`: Path to folder for processed output.
@@ -159,6 +212,6 @@ To add a new command family (e.g., "AI Manager"):
     - Update `dr_egeria.py` to import your new processor.
     - Call `dispatcher.register("Create AI Element", AIProcessor)` in the v2 setup block.
 
-## Legacy Compatibility
+## Engine History
 
-Legacy code has been moved to `v1_legacy/`. The system will automatically fallback to this code if `DR_EGERIA_V2=false` is specified.
+The v2 async engine replaced the former sync v1 engine (previously in `md_processing/v1_legacy/`). The v1 code has been removed; all processing now goes through the v2 pipeline.

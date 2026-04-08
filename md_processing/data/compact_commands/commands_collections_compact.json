@@ -1,6 +1,6 @@
 {
   "family": "Collections",
-  "exported": "Apr 6, 2026 at 12:39:56 PM",
+  "exported": "Apr 7, 2026 at 3:24:52 PM",
   "attribute_definitions": {
     "Activity Status": {
       "variable_name": "activity_status",
@@ -2093,6 +2093,46 @@
       "extra_find": "",
       "extra_constraints": "",
       "OM_TYPE": "RootCollection",
+      "bundle": "Collection Base",
+      "custom_attributes": [],
+      "Journal Entry": ""
+    },
+    "Create Folio": {
+      "display_name": "Folio",
+      "qn_prefix": "Folio",
+      "alternate_names": [
+        "Folio Collection"
+      ],
+      "family": "Collections",
+      "description": "Create a Folio - a  collection of your work.",
+      "verb": "Create",
+      "upsert": true,
+      "attach": false,
+      "level": "Basic",
+      "find_method": "CollectionManager.find_collections",
+      "find_constraints": "{\"metadata_element_type\": \"Folio\"}",
+      "extra_find": "",
+      "extra_constraints": "",
+      "OM_TYPE": "Folio",
+      "bundle": "Collection Base",
+      "custom_attributes": [],
+      "Journal Entry": ""
+    },
+    "Create Subject Area": {
+      "display_name": "Subject Area",
+      "qn_prefix": "SubjectArea",
+      "alternate_names": [],
+      "family": "Collections",
+      "description": "Create a SubjectArea - a  collection of material on the same topic.",
+      "verb": "Create",
+      "upsert": true,
+      "attach": false,
+      "level": "Basic",
+      "find_method": "CollectionManager.find_collections",
+      "find_constraints": "{\"metadata_element_type\": \"SubjectArea\"}",
+      "extra_find": "",
+      "extra_constraints": "",
+      "OM_TYPE": "SubjectArea",
       "bundle": "Collection Base",
       "custom_attributes": [],
       "Journal Entry": ""

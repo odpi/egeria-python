@@ -409,7 +409,7 @@ Place this JSON file into your user specs directory and call `load_user_report_s
 ### Notes on keys and labels
 
 - Column `key` can be snake_case or camelCase. The formatter tries exact, then `to_camel_case`, then uppercase (useful for `GUID`).
-- Display labels are prettified (camel/snake → Title Case) and respect common acronyms (GUID, URL, ID, API, UI).
+- Display labels are prettified (camel/snake → Title Case) and respect common acronyms (GUID, ID, QN, API, UI).
 - Use `detail_spec` to implement master–detail links. The linked spec’s `target_type` drives automatic promotion of nested elements when possible.
 
 ---

@@ -1,6 +1,6 @@
 {
   "family": "Data Designer",
-  "exported": "Apr 6, 2026 at 12:40:23 PM",
+  "exported": "Apr 8, 2026 at 7:07:17 AM",
   "attribute_definitions": {
     "Activity Status": {
       "variable_name": "activity_status",
@@ -1922,6 +1922,33 @@
       "level": "Domain",
       "Journal Entry": ""
     },
+    "Assignment Status": {
+      "variable_name": "assignment_status",
+      "inUpdate": false,
+      "attr_labels": "",
+      "examples": "",
+      "default_value": "DISCOVERED",
+      "valid_values": [
+        "DISCOVERED",
+        "PROPOSED",
+        "IMPORTED",
+        "VALIDATED",
+        "DEPRECATED",
+        "OBSOLETE",
+        "OTHER"
+      ],
+      "existing_element": "",
+      "description": "Status of a value assignment.",
+      "generated": false,
+      "style": "Valid Value",
+      "user_specified": true,
+      "unique": false,
+      "input_required": false,
+      "min_cardinality": 0,
+      "max_cardinality": 1,
+      "level": "Domain",
+      "Journal Entry": ""
+    },
     "Average Value": {
       "variable_name": "average_value",
       "inUpdate": true,
@@ -2535,6 +2562,25 @@
       "level": "Domain",
       "Journal Entry": ""
     },
+    "Method": {
+      "variable_name": "method",
+      "inUpdate": false,
+      "attr_labels": "",
+      "examples": "",
+      "default_value": "",
+      "valid_values": [],
+      "existing_element": "",
+      "description": "A method for value assignment.",
+      "generated": false,
+      "style": "Simple List",
+      "user_specified": true,
+      "unique": false,
+      "input_required": false,
+      "min_cardinality": 0,
+      "max_cardinality": 1,
+      "level": "Domain",
+      "Journal Entry": "Alternative name patterns for the element — often expressed as regular expressions."
+    },
     "Minimum Cardinality": {
       "variable_name": "minimum_cardinality",
       "inUpdate": true,
@@ -2774,6 +2820,25 @@
       "description": "Additional key-value details that extend the formal specification for this data value specification.",
       "generated": false,
       "style": "Dictionary",
+      "user_specified": true,
+      "unique": false,
+      "input_required": false,
+      "min_cardinality": 0,
+      "max_cardinality": 1,
+      "level": "Domain",
+      "Journal Entry": ""
+    },
+    "Threshold": {
+      "variable_name": "threshold",
+      "inUpdate": false,
+      "attr_labels": "",
+      "examples": "",
+      "default_value": "",
+      "valid_values": [],
+      "existing_element": "",
+      "description": "Threshold  for assignment.",
+      "generated": false,
+      "style": "Simple Int",
       "user_specified": true,
       "unique": false,
       "input_required": false,
@@ -3056,6 +3121,19 @@
         "Units"
       ]
     },
+    "Data Value Assignment Base": {
+      "inherits": "Link Command Base",
+      "own_attributes": [
+        "Assignment Status",
+        "Confidence",
+        "Method",
+        "Source",
+        "Steward",
+        "Steward Property Name",
+        "Steward Type Name",
+        "Threshold"
+      ]
+    },
     "Data Field Link Base": {
       "inherits": "Link Command Base",
       "own_attributes": [
@@ -3087,10 +3165,12 @@
       "custom_attributes": [],
       "Journal Entry": ""
     },
-    "Attach Data Description  to Element": {
+    "Attach Data Description to Element": {
       "display_name": "Data Description->Element",
       "qn_prefix": "",
-      "alternate_names": [],
+      "alternate_names": [
+        "Attach Data Description->Element"
+      ],
       "family": "Data Designer",
       "description": "Connect an existing data describing collection to an element using the DataDescription relationship (0580).\n",
       "verb": "Link",
@@ -3109,11 +3189,11 @@
       ],
       "Journal Entry": ""
     },
-    "Create Data Specification": {
-      "display_name": "Data Specification",
+    "Create Data Spec": {
+      "display_name": "Data Spec",
       "qn_prefix": "DataSpec",
       "alternate_names": [
-        "Data Spec"
+        "Data Specification"
       ],
       "family": "Data Designer",
       "description": "Creates or updates a data specification — a collection describing the data requirements for a project or initiative. Its members are typically data structures. Implemented as a Collection with the DataSpec classification.",
@@ -3122,7 +3202,7 @@
       "attach": false,
       "level": "Basic",
       "find_method": "CollectionManager.find_collections",
-      "find_constraints": "{\"metadata_element_type\": \"DataSpecification\"}",
+      "find_constraints": "{\"metadata_element_type\": \"DataSpec\"}",
       "extra_find": "",
       "extra_constraints": "",
       "OM_TYPE": "DataSpec",
@@ -3242,8 +3322,8 @@
       "upsert": true,
       "attach": false,
       "level": "Basic",
-      "find_method": "DataDesigner.find_data_value_specification",
-      "find_constraints": "",
+      "find_method": "DataDesigner.find_data_value_specifications",
+      "find_constraints": "{\"metadata_element_type\": \"DataValueSpecification\"}",
       "extra_find": "",
       "extra_constraints": "",
       "OM_TYPE": "DataValueSpecification",
@@ -3261,7 +3341,7 @@
       "upsert": true,
       "attach": false,
       "level": "Basic",
-      "find_method": "DataDesigner.find_data_grains",
+      "find_method": "DataDesigner.find_data_value_specifications",
       "find_constraints": "{\"metadata_element_type\": \"DataGrain\"}",
       "extra_find": "",
       "extra_constraints": "",
@@ -3297,10 +3377,13 @@
       ],
       "Journal Entry": ""
     },
-    "Link Field to Structure": {
+    "Link Data Field to Data Structure": {
       "display_name": "Link Data Field to Data Structure",
       "qn_prefix": "",
-      "alternate_names": [],
+      "alternate_names": [
+        "Link Data Field to Structure",
+        "Link Field to Structure"
+      ],
       "family": "Data Designer",
       "description": "Links a data field to a data structure via the MemberDataField relationship.",
       "verb": "Link",
@@ -3319,10 +3402,13 @@
       ],
       "Journal Entry": ""
     },
-    "Link Data Value Definition": {
-      "display_name": "Link Data Value Definition",
+    "Assign Data Value Specification": {
+      "display_name": "Assign Data Value Specification",
       "qn_prefix": "",
-      "alternate_names": [],
+      "alternate_names": [
+        "Link Data Value Specification",
+        "Attach Data Value Specification to Element"
+      ],
       "family": "Data Designer",
       "description": "Link a data value specification, DataClass, DataGrain,  to a referenceable element providing a definition.",
       "verb": "Link",
@@ -3333,8 +3419,8 @@
       "find_constraints": "",
       "extra_find": "",
       "extra_constraints": "",
-      "OM_TYPE": "DataValueDefinition",
-      "bundle": "Link Command Base",
+      "OM_TYPE": "DataValueAssignment",
+      "bundle": "Data Value Assignment Base",
       "custom_attributes": [
         "Data Value Specification",
         "Element Id"
@@ -3386,7 +3472,7 @@
       "Journal Entry": ""
     },
     "Link Certification Type to Data Structure": {
-      "display_name": "Link  Certification Type to Data Structure",
+      "display_name": "Link Certification Type to Data Structure",
       "qn_prefix": "",
       "alternate_names": [],
       "family": "Data Designer",

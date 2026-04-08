@@ -1,20 +1,22 @@
 # Link Information Supply Chain Peers
 > Links or unlinks two information supply chain segments.
 
-## Segment1
+## Element Id
 >	**Input Required**: True
 
 >	**Attribute Type**: Reference Name
 
->	**Description**: The first information supply chain segment to link.
+>	**Description**: The unique identifier (qualified name or GUID) of the element being referenced.
+
+>	**Alternative Labels**: Element Name; Member Id
 
 
-## Segment2
+## Element2 Id
 >	**Input Required**: True
 
 >	**Attribute Type**: Reference Name
 
->	**Description**: The second information supply chain segment to link.
+>	**Description**: The unique identifier (qualified name or GUID) of a second element being referenced.
 
 
 ## Label
