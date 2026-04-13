@@ -1067,9 +1067,25 @@ ___
 
 # Next steps
 
-In our next installment we will create a category hierarchy and update some terms to use it.
+While this is just a short introduction to Dr.Egeria, you can see that it is already quite powerful. 
+You can create and update glossaries, categories and terms, and you can list them in a variety of formats.
+This is just a small sample of what you can do. Dr.Egeria currently supports over 120 different commands across
+10 different categories:
 
+* Collections - for working with collections of elements, collections are used throughout Egeria as an organizing principle.
+* Data Designer - for defining data dictionaries, specifications, structures, structures, and more.
+* Digital Products - for defining digital products for reuse of metadata, assets, and insight. 
+* External References - Link external artifacts into Egeria.
+* Feedback - Allows users to add comments, ratings blogs, and other feedback to Egeria elements.
+* Glossary - for working with glossaries and terms.
+* Governance Officer - Enables a broad range of governance definitions and actions.
+* Project - Define and manage projects in Egeria.
+* Report - for executing an extensible set of reports over Egeria elements, in a variety of output types.
+* Solution Architect - Enables definition of Solution Blueprints, Information Supply Chains and Solution Components..
 
+This is an ever growing list - new commands are being added frequently. To help you find and use Dr.Egeria commands, 
+we you can find commands with dr_egeria_help or you can view templates for each command in the Templates directory. 
+Subsequent tutorials will cover both of these features.
 
 # Provenance
 
