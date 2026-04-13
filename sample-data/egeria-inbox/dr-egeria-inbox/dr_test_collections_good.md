@@ -10,9 +10,19 @@
 > always carry a user-specified Qualified Name. This allows reliable cross-referencing
 > within the document without needing system-generated GUIDs.
 >
-> Verb synonyms in use:
->   Relationship establishment — Add, Link, Attach (all equivalent)
->   Relationship removal      — Detach, Unlink, Remove (all equivalent)
+> GUID appears only in Create commands — system fills it on first processing.
+> Update commands are identified by Qualified Name — no GUID.
+> Relationship commands (Add Member, Attach Collection, Detach, Unlink) are identified
+> by their endpoint attributes — no GUID.
+>
+> Verb synonyms:
+>   Establishment — Add, Link, Attach (all equivalent)
+>   Removal       — Detach, Unlink, Remove (all equivalent)
+>
+> Content Status valid values: DRAFT, PREPARED, PROPOSED, APPROVED, REJECTED,
+>                               PROPOSED, DEPRECATED, OTHER
+> Membership Status valid values: UNKNOWN, DISCOVERED, PROPOSED, IMPORTED,
+>                                  VALIDATED, DEPRECATED, OBSOLETE, OTHER
 
 ---
 
@@ -26,12 +36,14 @@
 ## Display Name
 Sales Forecast Smoke Test
 
+## GUID
+
 ___
 
 # HP-02: Create Collection — common optional fields, QN auto-generated
 
-> Exercises Description, Category (with alt label Category Name), Content Status (Valid Value),
-> Version Identifier (with alt label Version), Search Keywords (Simple List),
+> Exercises Description, Category (alt label Category Name), Content Status (Valid Value),
+> Version Identifier (alt label Version), Search Keywords (Simple List),
 > Authors (Simple List), URL, Journal Entry, Purpose (Collection Base own attr).
 > QN left empty to verify auto-generation.
 
@@ -93,7 +105,7 @@ Primary governance container for the Q1 2026 forecasting initiative.
 Central governance container for all Sales Forecast metadata and lineage.
 
 ## Content Status
-ACTIVE
+PROPOSED
 
 ## Version Identifier
 1.0
@@ -108,7 +120,6 @@ ___
 # HP-04: Create Collection — alternative command name (Folder)
 
 > Tests that the alias Folder is recognised as Create Collection.
-> Expected: processed identically to Create Collection.
 
 # Folder
 
@@ -125,11 +136,10 @@ Collection::SalesForecast::AltNameTest::1.0
 
 ___
 
-# HP-05: Update Collection — identify by user-specified QN
+# HP-05: Update Collection — identified by Qualified Name
 
-> Update flavor. Element identified by Qualified Name — no GUID required.
-> Only changed fields need to be provided; Merge Update defaults to True.
-> Expected: matching element updated, output shows filled GUID.
+> Update flavor. No GUID. Element located by Qualified Name.
+> Only changed fields provided; Merge Update defaults to True.
 
 # Update Collection
 
@@ -140,16 +150,14 @@ Sales Forecast Master Collection
 Collection::SalesForecast::Master::1.0
 
 ## Content Status
-ACTIVE
+PROPOSED
 
 ## Journal Entry
-Status promoted to ACTIVE following governance board approval on 2026-03-20.
-
-## GUID
+Status confirmed PROPOSED following governance board approval on 2026-03-20.
 
 ___
 
-# HP-06: Update Collection — identify by Display Name only
+# HP-06: Update Collection — identified by Display Name only
 
 > No QN provided. Dr.Egeria forms a QN from Display Name and attempts to match.
 > Expected: element matched and updated, QN filled in output.
@@ -162,13 +170,9 @@ Sales Forecast Smoke Test
 ## Description
 Updated description added after initial smoke test creation.
 
-## GUID
-
 ___
 
 # HP-07: Create Root Collection
-
-> Creates a RootCollection. User-specified QN for reliable downstream reference.
 
 # Create Root Collection
 
@@ -182,7 +186,7 @@ Root collection for the entire Sales Forecasting metadata hierarchy.
 Serve as the top-level anchor for all Sales Forecast sub-collections.
 
 ## Content Status
-ACTIVE
+PROPOSED
 
 ## Version Identifier
 1.0
@@ -196,9 +200,9 @@ ___
 
 # HP-08: Create Collection Folder — nested under root
 
-> Creates a CollectionFolder. Tests Parent ID (Reference Name) and
-> Parent Relationship Type Name per spec: CollectionMembership when
-> the folder is inside another collection.
+> Tests Parent ID (Reference Name) and Parent Relationship Type Name (Simple).
+> Per spec: Parent Relationship Type Name is CollectionMembership when folder
+> is inside another collection.
 
 # Create Collection Folder
 
@@ -215,7 +219,7 @@ Collection::SalesForecast::Root::1.0
 CollectionMembership
 
 ## Content Status
-ACTIVE
+PROPOSED
 
 ## Version Identifier
 1.0
@@ -313,7 +317,7 @@ Work item list tracking outstanding data quality remediation tasks for the
 Sales Forecasting pipeline identified during the Q4 2025 quality review.
 
 ## Content Status
-ACTIVE
+PROPOSED
 
 ## Version Identifier
 1.0
@@ -325,9 +329,105 @@ Collection::WorkItemList::SalesForecast::DataQuality::1.0
 
 ___
 
-# HP-14: Add Member to Collection — minimal, verb Add
+---
+
+# HP-14: Create Security Group — with Distinguished Name (Simple) and Purpose (Simple)
+
+> Security Group is now a Collection-based command (Collection Base bundle).
+> Available attrs: Purpose (Simple), Authors (Simple List), Content Status (Valid Value),
+> plus all Referenceable attrs (Display Name, Description, QN etc.).
+> Distinguished Name is a custom attr (Simple).
+> NOT available: Domain Identifier, Importance, Implementation Description
+> (those belong to the Governance bundle chain, not Collection Base).
+
+# Create Security Group
+
+## Display Name
+Board Forecast Readers
+
+## Description
+Members of this group have read access to the board-level Sales Forecast
+report and associated data quality attestations.
+
+## Purpose
+Control read access to the board-level Sales Forecast report.
+
+## Distinguished Name
+cn=BoardForecastReaders,ou=SecurityGroups,dc=example,dc=com
+
+## Authors
+jane.smith@example.com
+
+## Content Status
+PROPOSED
+
+## Qualified Name
+SecurityGroup::SalesForecast::BoardForecastReaders::1.0
+
+## GUID
+
+___
+
+# HP-15: Create Security List — with Distinguished Name
+
+# Create Security List
+
+## Display Name
+Sales Forecast Pipeline Identities
+
+## Description
+List of system identities authorised to access the Sales Forecast pipeline
+data processing infrastructure.
+
+## Purpose
+Define the identity list for pipeline infrastructure access control.
+
+## Distinguished Name
+cn=SFPipelineIdentities,ou=SecurityLists,dc=example,dc=com
+
+## Content Status
+PROPOSED
+
+## Qualified Name
+SecurityList::SalesForecast::PipelineIdentities::1.0
+
+## GUID
+
+___
+
+# HP-16: Create Security Role — with Distinguished Name
+
+# Create Security Role
+
+## Display Name
+Sales Forecast Data Steward Role
+
+## Description
+Role grouping granting data steward permissions across all Sales Forecast
+governed data assets in the SalesAnalytics governance zone.
+
+## Purpose
+Consolidate data steward access rights for Sales Forecast governance.
+
+## Distinguished Name
+cn=SFDataStewardRole,ou=SecurityRoles,dc=example,dc=com
+
+## Content Status
+PROPOSED
+
+## Qualified Name
+SecurityRole::SalesForecast::DataSteward::1.0
+
+## GUID
+
+___
+
+---
+
+# HP-17: Add Member to Collection — minimal, verb Add
 
 > Minimum required for membership: Collection Id and Element Id only.
+> No GUID on relationship commands — identified by endpoints.
 
 # Add Member to Collection
 
@@ -337,13 +437,14 @@ Collection::SalesForecast::Root::1.0
 ## Element Id
 Collection::SalesForecast::DataStructures::1.0
 
-
+## Membership Status
+PROPOSED
 ___
 
-# HP-15: Add Member to Collection — Domain-level attributes
+# HP-18: Add Member to Collection — Domain-level attributes
 
-> Exercises Domain-level membership attributes processed in both basic and advanced mode:
-> Membership Status (Valid Value), Membership Rationale, Notes.
+> Exercises Domain-level membership attributes: Membership Status (Valid Value),
+> Membership Rationale (Simple), Notes (Simple).
 
 # Add Member to Collection
 
@@ -362,26 +463,27 @@ Data Structures folder validated as complete and accurate for Q1 2026 forecastin
 ## Notes
 Reviewed and approved by Sales Analytics team on 2026-03-01.
 
-
 ___
 
-# HP-16: Add Member to Collection — Advanced attributes, verb synonym Link
+# HP-19: Add Member to Collection — Advanced attributes, verb synonym Link
 
 > Uses establish synonym Link and all Advanced-level membership attributes:
-> Expression, Confidence, Steward, Steward Type Name, Steward Property Name,
-> Source, User Defined Status.
+> Expression (Simple), Confidence (Simple Int), Steward (Simple),
+> Steward Type Name (Simple), Steward Property Name (Simple), Source (Simple),
+> User Defined Status (Simple).
 >
-> In BASIC mode: Advanced attributes must be silently skipped.
->   Membership Status, Membership Rationale, Notes (Domain) still processed.
-> In ADVANCED mode: all fields must appear in output.
+> In BASIC mode: Advanced attributes silently skipped; Membership Status,
+>   Membership Rationale, Notes (Domain level) still processed.
+> In ADVANCED mode: all fields appear in output.
 
-# Add Member to Collection
+# Link Member to Collection
 
 ## Collection Id
 Collection::SalesForecast::Master::1.0
 
 ## Element Id
-DatabricksUnityCatalogServer:CreateAndSurveyGovernanceActionProcess
+Collection::SalesForecast::DataStructures::1.0
+
 ## Membership Status
 VALIDATED
 
@@ -411,12 +513,12 @@ Reviewed and approved by Sales Analytics team on 2026-03-01.
 
 ___
 
-# HP-17: Attach Collection to Resource — using an existing project as resource
+# HP-20: Attach Collection to Resource — existing project as resource
 
-> Demonstrates that the resource endpoint can be any existing Egeria element,
-> not just catalogs. Uses the project Campaign:Clinical Trials Management.
-> Tests Resource Description, Resource Use (freeform), Watch Resource (Bool).
-> Verb: Attach.
+> Demonstrates that the resource endpoint can be any existing Egeria element.
+> Uses the project Campaign:Clinical Trials Management.
+> Resource Use is freeform (Valid Value attr with no values populated in spec).
+> Watch Resource — Bool.
 
 # Attach Collection to Resource
 
@@ -431,19 +533,16 @@ Clinical Trials Management project linked as a downstream consumer of Sales Fore
 governance definitions for cross-domain reporting purposes.
 
 ## Resource Use
-Generate Insight 
+Related Information
 
 ## Watch Resource
 True
 
-
 ___
 
-# HP-18: Attach Collection to Resource — full Resource List attributes
+# HP-21: Attach Collection to Resource — full Resource List attributes
 
-> Tests Resource Id (Reference Name), Resource Properties (Dictionary),
-> Resource Use, Watch Resource.
-> Verb: Attach (synonym for Link).
+> Tests Resource Id (Reference Name), Resource Properties (Dictionary).
 
 # Attach Collection to Resource
 
@@ -451,17 +550,17 @@ ___
 Collection::SalesForecast::Master::1.0
 
 ## Element Id
-DigitalProduct::OpenMetadataDigitalProduct::LOCATIONS-LIST::List of Locations_dataSpec
+Campaign:Clinical Trials Management
 
 ## Resource Description
 Enterprise data catalog providing lineage and provenance for all Sales Forecast
 domain metadata elements.
 
 ## Resource Id
-DatabricksUnityCatalogServer:CreateAndSurveyGovernanceActionProcess
+Collection::SalesForecast::Master::1.0
 
 ## Resource Use
-Generate Insight
+Related Information
 
 ## Watch Resource
 True
@@ -469,14 +568,12 @@ True
 ## Resource Properties
 {"catalog_version": "3.2", "refresh_schedule": "daily", "owner_team": "Sales Analytics"}
 
-
 ___
 
-# HP-19: Detach Member from Collection — verb Detach
+# HP-22: Detach Member from Collection — verb Detach
 
-> Removes the membership established in HP-14.
-> Only Collection Id and Element Id needed to identify the relationship.
-> Detach, Unlink, and Remove are all equivalent removal verbs.
+> Removes the membership established in HP-17.
+> Identified by Collection Id and Element Id — no GUID.
 
 # Detach Member from Collection
 
@@ -486,13 +583,11 @@ Collection::SalesForecast::Root::1.0
 ## Element Id
 Collection::SalesForecast::DataStructures::1.0
 
-
 ___
 
-# HP-20: Unlink Collection from Resource — verb Unlink
+# HP-23: Unlink Collection from Resource — verb Unlink
 
-> Removes the ResourceList relationship established in HP-17.
-> Unlink used here; Detach and Remove are equivalent synonyms.
+> Removes the ResourceList relationship established in HP-20.
 
 # Unlink Collection from Resource
 
@@ -502,18 +597,20 @@ Collection::SalesForecast::Master::1.0
 ## Element Id
 Campaign:Clinical Trials Management
 
-
-
 ___
 
-> End of happy path tests.
+> End of Collections happy path tests.
 >
 > Expected outcomes:
->   HP-01 to HP-13 : All Create/Update commands executed. GUIDs filled. Create verb swapped to Update.
->   HP-03, HP-07 to HP-13 : QN in output matches user-specified value exactly.
+>   HP-01 to HP-16 : All Create commands executed. GUIDs filled. Create verb swapped to Update.
+>   HP-03, HP-07 to HP-16 : QN in output matches user-specified value exactly.
 >   HP-01, HP-02, HP-06 : QN in output is auto-generated (non-empty).
->   HP-05, HP-06 : Update commands locate and update existing elements.
->   HP-14 to HP-18 : Relationship commands executed. GUIDs filled.
->   HP-19, HP-20 : Relationships removed.
->   HP-16 in basic mode : Expression, Confidence, Steward fields silently skipped.
->   HP-16 in advanced mode : All fields present in output.
+>   HP-02 : Content Status=DRAFT in output (tests non-PROPOSED value).
+>   HP-05, HP-06 : Update commands locate and update existing elements. No GUID slot.
+>   HP-14 to HP-16 : Security Group/List/Role — Purpose and Distinguished Name in output;
+>                    Domain Identifier and Implementation Description NOT present
+>                    (Collection Base bundle, not Governance bundle chain).
+>   HP-17 to HP-21 : Relationship commands executed. No GUID slot.
+>   HP-19 in basic mode : Expression, Confidence, Steward fields silently skipped.
+>   HP-19 in advanced mode : All fields present in output.
+>   HP-22, HP-23 : Relationships removed. No GUID slot.

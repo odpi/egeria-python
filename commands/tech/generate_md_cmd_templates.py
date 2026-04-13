@@ -12,8 +12,9 @@ from loguru import logger
 from rich import print
 from rich.console import Console
 
+from md_processing.md_processing_utils import md_processing_constants
 from md_processing.md_processing_utils.md_processing_constants import (load_commands,
-                                                                       COMMAND_DEFINITIONS, add_default_link_attributes,
+                                                                       add_default_link_attributes,
                                                                        add_default_upsert_attributes)
 
 from pyegeria import ServerClient, EgeriaTech
@@ -32,7 +33,6 @@ EGERIA_INBOX_PATH = env.egeria_inbox
 console = Console(width=EGERIA_WIDTH)
 
 debug_level = config.Debug.debug_mode
-global COMMAND_DEFINITIONS
 
 # ---------------------------------------------------------------------------
 # Level ordering and visibility
@@ -59,7 +59,6 @@ def _level_visible(attr_level: str, usage_level: str = "Advanced") -> bool:
 
     # Advanced usage level (or any other) defaults to everything except Invisible
     return True
-
 
 load_commands('commands.json')
 
@@ -223,7 +222,7 @@ def main():
         except Exception as e:
             logger.warning(f"Could not connect to Egeria: {e}. Falling back to static values.")
 
-    commands = COMMAND_DEFINITIONS["Command Specifications"]
+    commands = md_processing_constants.COMMAND_DEFINITIONS.get("Command Specifications", {})
 
     # Determine usage level
     usage_level = args.usage_level
@@ -277,11 +276,14 @@ def main():
             distinguished_attributes = values['Attributes']
             alternate_names = values.get("alternate_names") or ""
 
-            if command_verb == "Link":
+            from md_processing.md_processing_utils.md_processing_constants import LINK_VERBS
+            if command_verb in LINK_VERBS:
                 attributes = add_default_link_attributes(copy.deepcopy(distinguished_attributes))
-            else:
-                # Create, Update, and anything else uses upsert defaults
+            elif command_verb in ["Create", "Update"]:
+                # Create, Update uses upsert defaults
                 attributes = add_default_upsert_attributes(copy.deepcopy(distinguished_attributes))
+            else:
+                attributes = copy.deepcopy(distinguished_attributes)
 
             # -----------------------------------------------------------
             # Bucket attributes into sections.

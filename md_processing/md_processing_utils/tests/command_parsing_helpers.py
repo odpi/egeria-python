@@ -2,7 +2,6 @@ from __future__ import annotations
 
 from typing import Iterable
 
-from md_processing.command_mapping import setup_dispatcher
 from md_processing.md_processing_utils.common_md_proc_utils import (
     EGERIA_USAGE_LEVEL,
     parse_upsert_command,
@@ -41,12 +40,16 @@ class FakeEgeriaClient:
         return f"guid::{qualified_name}"
 
 
-def commands_for_module(module_name: str) -> list[str]:
-    dispatcher = setup_dispatcher()
+
+def commands_for_family(family: str) -> list[str]:
+    """Return all command names in COMMAND_DEFINITIONS that belong to the given family."""
+    from md_processing.md_processing_utils.md_processing_constants import COMMAND_DEFINITIONS, load_commands
+    load_commands()
+    specs = COMMAND_DEFINITIONS.get("Command Specifications", {})
     return sorted([
         command
-        for command, handler in dispatcher._registry.items()
-        if getattr(handler, "__module__", "") == module_name
+        for command, spec in specs.items()
+        if isinstance(spec, dict) and spec.get("family", "") == family
     ])
 
 

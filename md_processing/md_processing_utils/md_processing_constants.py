@@ -72,7 +72,6 @@ GOV_COM_LIST = ["Create Business Imperative", "Update Business Imperative",
                 "Create Governance Responsibility", "Update Governance Responsibility",
                 "Create Governance Procedure", "Update Governance Procedure",
                 "Create Security Access Control", "Update Security Access Control",
-                "Create Security Group", "Update Security Group",
                 "Create Naming Standard Rule", "Update Naming Standard Rule",
                 "Create Certification Type", "Update Certification Type",
                 "Create License Type", "Update License Type",
@@ -84,7 +83,7 @@ COLLECTION_SUBTYPES = [
     "Namespace", "Results Set", "Recent Access", "Work Item List", "Folio",
     "Digital Product", "Digital Product Catalog", "Digital Product Family",
     "Agreement", "Digital Subscription", "Data Sharing Agreement", "Data Dictionary", "Data Spec",
-    "Glossary"
+    "Glossary", "Security Group", "Security List", "Security Role"
 ]
 
 SIMPLE_BASE_COLLECTIONS: set = set(COLLECTION_SUBTYPES) | {
@@ -375,13 +374,30 @@ def find_json_errors(filename: str, max_errors: int = 10) -> list[str]:
 def get_command_spec(command: str, body_type: str = None) -> dict | None:
     global COMMAND_DEFINITIONS
 
-    com = COMMAND_DEFINITIONS.get('Command Specifications', {}).get(command, None)
-    if com:
-        return com
-    else:
-        obj = find_alternate_names(command)
-        if obj:
-            return COMMAND_DEFINITIONS.get('Command Specifications', {}).get(obj, None)
+    _canonical_name, spec = resolve_command_spec(command)
+    return spec
+
+
+def resolve_command_spec(command: str) -> tuple[str | None, dict | None]:
+    """Resolve a user command (including aliases) to canonical command name + spec."""
+    global COMMAND_DEFINITIONS
+
+    normalized_command = " ".join((command or "").split())
+    if not normalized_command:
+        return None, None
+
+    specs = COMMAND_DEFINITIONS.get('Command Specifications', {})
+    direct = specs.get(normalized_command)
+    if isinstance(direct, dict):
+        return normalized_command, direct
+
+    canonical_name = find_alternate_names(normalized_command)
+    if canonical_name:
+        resolved = specs.get(canonical_name)
+        if isinstance(resolved, dict):
+            return canonical_name, resolved
+
+    return None, None
 
 
 def does_command_match(command: str, alt_names: list[str]) -> bool:

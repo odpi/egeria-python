@@ -1,4 +1,5 @@
 # Digital Products Family — Happy Path Tests
+
 # Sales Forecast Theme
 
 > This document tests the Dr.Egeria Digital Products command family under normal conditions.
@@ -14,8 +15,8 @@
 > Relationship commands are identified by their endpoint attributes.
 >
 > Verb synonyms:
->   Establish: Link, Attach, Add (all equivalent)
->   Remove:    Detach, Unlink, Remove (all equivalent)
+> Establish: Link, Attach, Add (all equivalent)
+> Remove:    Detach, Unlink, Remove (all equivalent)
 
 ---
 
@@ -26,6 +27,7 @@
 # Create Digital Product
 
 ## Display Name
+
 Sales Forecast Data Feed
 
 ## GUID
@@ -42,59 +44,73 @@ ___
 # Create Digital Product
 
 ## Display Name
+
 Sales Forecast Pipeline Product
 
 ## Description
+
 A digital product providing governed access to the Sales Forecasting pipeline outputs,
 including opportunity data, revenue projections, and pipeline health metrics.
 
 ## Purpose
+
 Provide a governed, subscription-based data product for Sales Forecast consumers
 across Finance, Sales Operations, and Executive Reporting.
 
 ## Product Name
+
 Sales Forecast Pipeline
 
-## Product Status
-ACTIVE
-
 ## Product Type
+
 Periodic Delta
 
 ## Current Version
+
 1.2
 
 ## Introduction Date
+
 2025-01-01
 
 ## Next Version Date
+
 2026-07-01
 
 ## Service Life
+
 3 years
 
 ## Withdrawal Date
+
 2028-01-01
 
 ## Maturity
+
 Production
 
 ## Category
+
 Sales Analytics
 
 ## Content Status
+
 ACTIVE
 
 ## Version Identifier
+
 1.2
 
 ## Search Keywords
+
 sales forecast, pipeline, CRM, revenue, data product
 
 ## Journal Entry
+
 Version 1.2 released following Q4 2025 data quality remediation.
 
 ## Qualified Name
+
 DigitalProduct::SalesForecast::Pipeline::1.2
 
 ## GUID
@@ -109,22 +125,28 @@ ___
 # Create Digital Product Catalog
 
 ## Display Name
+
 Sales Analytics Digital Product Catalog
 
 ## Description
+
 Root catalog organising all digital products in the Sales Analytics domain,
 including forecast feeds, pipeline health products, and CRM data products.
 
 ## Purpose
+
 Single browsable catalog for all governed Sales Analytics data products.
 
 ## Content Status
+
 ACTIVE
 
 ## Version Identifier
+
 1.0
 
 ## Qualified Name
+
 DigitalProductCatalog::SalesAnalytics::1.0
 
 ## GUID
@@ -139,18 +161,23 @@ ___
 # Update Digital Product
 
 ## Display Name
+
 Sales Forecast Pipeline Product
 
 ## Qualified Name
+
 DigitalProduct::SalesForecast::Pipeline::1.2
 
 ## Current Version
+
 1.3
 
 ## Next Version Date
+
 2026-10-01
 
 ## Journal Entry
+
 Version bumped to 1.3 following March 2026 pipeline refresh.
 
 ___
@@ -163,25 +190,32 @@ ___
 # Create Agreement
 
 ## Display Name
+
 Sales Forecast Data Access Agreement
 
 ## Description
+
 Generic agreement governing access to Sales Forecast data products by
 internal business units.
 
 ## Agreement Type
+
 DataAccessAgreement
 
 ## Purpose
+
 Define the terms under which internal consumers may access Sales Forecast data products.
 
 ## Content Status
+
 ACTIVE
 
 ## Version Identifier
+
 1.0
 
 ## Qualified Name
+
 Agreement::SalesForecast::DataAccess::1.0
 
 ## GUID
@@ -196,25 +230,32 @@ ___
 # Create Data Sharing Agreement
 
 ## Display Name
+
 Sales Forecast — Finance Data Sharing Agreement
 
 ## Description
+
 Data sharing agreement between the Sales Analytics team and the Finance department
 for access to Q1 2026 Sales Forecast outputs for budget reconciliation.
 
 ## Agreement Type
+
 DataSharingAgreement
 
 ## Purpose
+
 Govern the sharing of Sales Forecast data with Finance for budget reconciliation.
 
 ## Content Status
+
 ACTIVE
 
 ## Version Identifier
+
 1.0
 
 ## Qualified Name
+
 Agreement::SalesForecast::Finance::DataSharing::1.0
 
 ## GUID
@@ -229,31 +270,40 @@ ___
 # Create Digital Subscription
 
 ## Display Name
+
 Finance Team — Sales Forecast Subscription
 
 ## Description
+
 Premium subscription for the Finance team to access the Sales Forecast Pipeline Product,
 with business-hours support and daily data refresh.
 
 ## Subscription Level
+
 Premium
 
 ## Support Level
+
 BusinessHours
 
 ## Agreement Type
+
 DigitalSubscription
 
 ## Purpose
+
 Provide the Finance team governed subscription access to Sales Forecast Pipeline data.
 
 ## Content Status
+
 ACTIVE
 
 ## Version Identifier
+
 1.0
 
 ## Qualified Name
+
 DigitalSubscription::SalesForecast::Finance::Premium::1.0
 
 ## GUID
@@ -267,15 +317,19 @@ ___
 # Update Digital Subscription
 
 ## Display Name
+
 Finance Team — Sales Forecast Subscription
 
 ## Qualified Name
+
 DigitalSubscription::SalesForecast::Finance::Premium::1.0
 
 ## Support Level
+
 24x7
 
 ## Journal Entry
+
 Support level upgraded to 24x7 following Finance executive escalation.
 
 ___
@@ -289,12 +343,15 @@ ___
 # Link Product Dependency
 
 ## Digital Product 1
+
 DigitalProduct::SalesForecast::Pipeline::1.2
 
 ## Digital Product 2
-Sales Forecast Data Feed
+
+PDR::DigitalProduct::Sales-Forecast-Data-Feed::1.0
 
 ## Dependency Description
+
 The Sales Forecast Pipeline Product is listed and discoverable via the
 Sales Analytics Digital Product Catalog.
 
@@ -308,10 +365,11 @@ ___
 # Link Agreement to Actor
 
 ## Agreement Name
+
 Agreement::SalesForecast::Finance::DataSharing::1.0
 
 ## Actors
-jane.smith@example.com
+<jane.smith@example.com>
 
 ___
 
@@ -323,12 +381,15 @@ ___
 # Attach Agreement to Item
 
 ## Agreement Name
+
 Agreement::SalesForecast::Finance::DataSharing::1.0
 
 ## Item Name
+
 DigitalProduct::SalesForecast::Pipeline::1.2
 
 ## Agreement Item Id
+
 SF-FINANCE-ITEM-001
 
 ___
@@ -341,30 +402,39 @@ ___
 # Link Agreement Item
 
 ## Agreement Name
+
 Agreement::SalesForecast::DataAccess::1.0
 
 ## Item Name
+
 DigitalProduct::SalesForecast::Pipeline::1.2
 
 ## Agreement Item Id
+
 SF-ACCESS-ITEM-001
 
 ## Agreement Start Date
+
 2026-01-01
 
 ## Agreement End Date
+
 2026-12-31
 
 ## Entitlements
+
 {"read_access": "permitted", "export_to_excel": "permitted", "share_externally": "not_permitted"}
 
 ## Obligations
+
 {"report_usage": "quarterly", "notify_on_breach": "immediately"}
 
 ## Restrictions
+
 {"resale": "forbidden", "sublicensing": "forbidden"}
 
 ## Usage Measurements
+
 {"max_api_calls_per_day": "10000", "max_users": "50"}
 
 ___
@@ -377,9 +447,11 @@ ___
 # Add Digital Subscriber
 
 ## Subscription Id
+
 DigitalSubscription::SalesForecast::Finance::Premium::1.0
 
 ## Subscriber Id
+
 Campaign:Sustainability
 
 ___
@@ -392,9 +464,11 @@ ___
 # Detach Product Dependency
 
 ## Digital Product 1
+
 DigitalProduct::SalesForecast::Pipeline::1.2
 
 ## Digital Product 2
+
 DigitalProductCatalog::SalesAnalytics::1.0
 
 ___
@@ -407,9 +481,11 @@ ___
 # Unlink Digital Subscriber
 
 ## Subscription Id
+
 DigitalSubscription::SalesForecast::Finance::Premium::1.0
 
 ## Subscriber Id
+
 Campaign:Sustainability
 
 ___
@@ -417,11 +493,11 @@ ___
 > End of Digital Products happy path tests.
 >
 > Expected outcomes:
->   DP-01          : GUID filled, QN auto-generated, verb swapped to Update Digital Product
->   DP-02, DP-03   : GUID filled, user-specified QN preserved exactly, verb swapped
->   DP-05 to DP-07 : GUID filled, user-specified QN preserved, verb swapped
->   DP-04, DP-08   : Update commands locate element by QN, apply changes, no GUID slot
->   DP-09 to DP-13 : Relationship commands executed, no GUID slot
->   DP-14, DP-15   : Relationships removed
->   DP-11          : Attach synonym accepted, processed as Link Agreement Item
->   DP-13          : Add synonym accepted, processed as Link Digital Subscriber
+> DP-01          : GUID filled, QN auto-generated, verb swapped to Update Digital Product
+> DP-02, DP-03   : GUID filled, user-specified QN preserved exactly, verb swapped
+> DP-05 to DP-07 : GUID filled, user-specified QN preserved, verb swapped
+> DP-04, DP-08   : Update commands locate element by QN, apply changes, no GUID slot
+> DP-09 to DP-13 : Relationship commands executed, no GUID slot
+> DP-14, DP-15   : Relationships removed
+> DP-11          : Attach synonym accepted, processed as Link Agreement Item
+> DP-13          : Add synonym accepted, processed as Link Digital Subscriber

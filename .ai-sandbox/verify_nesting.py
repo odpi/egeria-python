@@ -4,7 +4,7 @@ from pyegeria.omvs.my_profile import MyProfile
 
 def test_nesting():
     # Load callie.json
-    with open('../callie.json', 'r') as f:
+    with open('../sample-data/callie.json', 'r') as f:
         data = json.load(f)
     
     element = data['element']

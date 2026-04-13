@@ -17,6 +17,7 @@ Functions in this module may raise the following exceptions:
 
 import copy
 from datetime import datetime
+import os
 import re
 from typing import Any, Callable, Dict, List, Optional, Tuple, Union
 
@@ -46,8 +47,33 @@ from pyegeria.models import to_camel_case
 #    - 'hexagon' -> {{text}}
 #    - Others (e.g. 'doc') -> [text] (standard square box)
 #
-# Set to False to preserve the native Egeria output for modern Mermaid renderers.
-NORMALIZE_MERMAID = False
+# Set to False to preserve native Egeria output for modern Mermaid renderers.
+# Control order: env var -> pyegeria config (Environment.egeria_normalize_mermaid) -> default.
+def _resolve_normalize_mermaid_flag(default: bool = True) -> bool:
+    raw = os.environ.get("PYEGERIA_NORMALIZE_MERMAID")
+    if raw is None:
+        raw = os.environ.get("EGERIA_NORMALIZE_MERMAID")
+    if raw is not None:
+        val = str(raw).strip().lower()
+        if val in {"1", "true", "yes", "y", "on"}:
+            return True
+        if val in {"0", "false", "no", "n", "off"}:
+            return False
+
+    try:
+        from pyegeria.core.config import get_app_config
+
+        cfg = get_app_config()
+        cfg_val = getattr(getattr(cfg, "Environment", None), "egeria_normalize_mermaid", None)
+        if isinstance(cfg_val, bool):
+            return cfg_val
+    except Exception:
+        pass
+
+    return default
+
+
+NORMALIZE_MERMAID = _resolve_normalize_mermaid_flag(default=True)
 
 """
 Note on select_report_spec function:
@@ -898,7 +924,7 @@ def generate_entity_md_table(elements: List[Dict],
         str: Markdown table
     """
     # Handle pluralization - if entity_type ends with 'y', use 'ies' instead of 's'
-    target_type = columns_struct.get('target_type', entity_type)
+    target_type = columns_struct.get('target_type') or entity_type or "Referenceable"
     # if target_type.endswith('y'):
     #     target_type = target_type.replace('y', 'ies')
     # else:
@@ -946,10 +972,6 @@ def generate_entity_md_table(elements: List[Dict],
             returned_struct = extract_properties_func(element, local_columns_struct)
         except TypeError:
             returned_struct = None
-
-        # For help mode, bypass extraction
-        if output_format == "help":
-            returned_struct = {"formats": {"attributes": columns}}
 
         # Additional props (if any)
         additional_props = {}
@@ -1109,11 +1131,10 @@ def generate_entity_dict(elements: List[Dict],
         if local_columns_struct is not None:
             try:
                 returned_struct = extract_properties_func(element, local_columns_struct)
-            except TypeError as e:
-                logger.info(f"Error - didn't find extractor?: {e}")
+            except TypeError:
                 returned_struct = None
 
-        # Get additional properties if function is provided
+        # Additional props (if any)
         additional_props = {}
         if get_additional_props_func:
             additional_props = get_additional_props_func(element, guid, output_format)
@@ -1835,9 +1856,7 @@ def generate_output(elements: Union[Dict, List[Dict]],
         if columns_struct:
             columns = columns_struct.get('formats', {}).get('attributes', None)
 
-    target_type = columns_struct.get('target_type', entity_type) if columns_struct else entity_type
-    if target_type is None:
-        target_type = entity_type
+    target_type = (columns_struct.get('target_type') if columns_struct else None) or entity_type or "Referenceable"
 
     # Ensure elements is a list
     if isinstance(elements, dict):
@@ -1890,7 +1909,7 @@ def generate_output(elements: Union[Dict, List[Dict]],
         return generate_entity_md_table(
             elements=elements,
             search_string=search_string,
-            entity_type=entity_type,
+            entity_type=target_type,
             extract_properties_func=extract_properties_func,
             columns_struct=columns_struct,
             get_additional_props_func=get_additional_props_func,

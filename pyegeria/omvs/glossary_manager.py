@@ -83,7 +83,7 @@ class GlossaryManager(CollectionManager):
     #
     #       Get Valid Values for Enumerations
     #
-
+    @dynamic_catch
     def __validate_term_status__(self, status: str) -> bool:
         """Return True if the status is a legal glossary term status"""
         recognized_term_status = self.get_glossary_term_statuses()
@@ -146,6 +146,7 @@ class GlossaryManager(CollectionManager):
         response = await self._async_create_collection(body=body)
         return response
 
+    @dynamic_catch
     def create_glossary(self, display_name: str, description: Optional[str] = None, language: str = "English",
                                usage: Optional[str] = None,
                                category: Optional[str] = None, body: Optional[dict | NewElementRequestBody] = None) -> str:
@@ -182,6 +183,7 @@ class GlossaryManager(CollectionManager):
             )
         return response
 
+    @dynamic_catch
     async def _async_delete_glossary(self, glossary_guid: str, body: Optional[dict | DeleteElementRequestBody] = None,
                                      cascade: bool = False) -> None:
         """Delete glossary. Async version.
@@ -203,6 +205,7 @@ class GlossaryManager(CollectionManager):
 
         logger.info(f"Deleted glossary {glossary_guid} with cascade {cascade}")
 
+    @dynamic_catch
     def delete_glossary(self, glossary_guid: str, body: Optional[dict | DeleteElementRequestBody] = None, cascade: bool = False) -> None:
         """Delete a new glossary.
 
@@ -222,6 +225,7 @@ class GlossaryManager(CollectionManager):
         loop = asyncio.get_event_loop()
         loop.run_until_complete(self._async_delete_glossary(glossary_guid, body, cascade))
 
+    @dynamic_catch
     async def _async_update_glossary(
             self,
             glossary_guid: str,
@@ -255,6 +259,7 @@ class GlossaryManager(CollectionManager):
         await self._async_update_collection(glossary_guid, body)
         logger.info(f"Updated glossary {glossary_guid}")
 
+    @dynamic_catch
     def update_glossary(
             self,
             glossary_guid: str,
@@ -302,6 +307,7 @@ class GlossaryManager(CollectionManager):
     #
     #  Terms
     #
+    @dynamic_catch
     async def _async_create_glossary_term(
             self, body: dict | NewElementRequestBody
             ) -> str:
@@ -328,6 +334,7 @@ class GlossaryManager(CollectionManager):
         )
         return await self._async_create_element_body_request(url, "GlossaryTermProperties", body)
 
+    @dynamic_catch
     def create_glossary_term(self, body: dict | NewElementRequestBody) -> str:
         """Create a term for a glossary.
 
@@ -353,7 +360,8 @@ class GlossaryManager(CollectionManager):
 
         return response
 
-    def load_terms_from_csv_file(
+    @dynamic_catch
+    async def _async_import_glossary_terms_from_csv(
             self,
             glossary_name: str,
             filename: str,
@@ -361,70 +369,69 @@ class GlossaryManager(CollectionManager):
             upsert: bool = True,
             verbose: bool = True,
             ) -> List[dict] | None:
-        """This method loads glossary terms into the specified glossary from the indicated file.
+        """Import glossary terms from a CSV file into the specified glossary. Async version.
 
         Parameters
         ----------
-            glossary_name : str
-                Name of the glossary to import terms into.
-            file_path: str, default is EGERIA_GLOSSARY_PATH if specified or None
-                If EGERIA_GLOSSARY_PATH environment variable is set, then it will be used in forming the
-                prepended to the filename parameter to form the full path to the file.
-            filename: str
-                Path to the file to import terms from. File is assumed to be in CSV format. The path
-                is relative to where the python method is being called from.
-            upsert: bool, default = True
-                If true, terms from the file are inserted into the glossary if no qualified name is specified;
-                if a qualified name is specified in the file, then the file values for this term will over-ride the
-                values in the glossary. If false, the row in the file will be appended to the glossary, possibly
-                resulting in duplicate term names - which is legal (since the qualified names will be unique).
-
-            verbose: bool, default = True
-                If true, a JSON structure will be returned indicating the import status of each row.
-
+        glossary_name : str
+            Name of the glossary to import terms into.
+        filename : str
+            Name of the CSV file to import terms from.
+        file_path : str, optional
+            Directory path to prepend to ``filename``.  Defaults to the
+            ``EGERIA_GLOSSARY_PATH`` environment variable, or ``None``.
+        upsert : bool, default True
+            When True and a row contains a ``Qualified Name`` that matches an
+            existing term, that term is updated with the row values.  When False
+            (or when no qualified name is supplied) the row is always inserted as
+            a new term.
+        verbose : bool, default True
+            When True, return a list of per-row status dicts.
 
         Returns
         -------
-        [dict]:
-            If verbose is True, import status for each row
-        None:
-            If verbose is False
+        list[dict] | None
+            Per-row import status when ``verbose`` is True, otherwise None.
 
         Raises
         ------
-         PyegeriaInvalidParameterException
-             If the client passes incorrect parameters on the request - such as bad URLs or invalid values.
-         PyegeriaAPIException
-             Raised by the server when an issue arises in processing a valid request.
-         NotAuthorizedException
-             The principle specified by the user_id does not have authorization for the requested action.
+        FileNotFoundError
+            If the resolved file path does not exist.
+        PyegeriaInvalidParameterException
+            If the CSV contains unrecognised column headers.
+        PyegeriaAPIException
+            Raised by the server when an issue arises in processing a valid request.
+
         Notes
         -----
-            Keep in mind that the file path is relative to where the python method is being called from -
-            not relative to the Egeria platform.
+        The CSV must use the column headers exported by
+        :meth:`export_glossary_to_csv`:
+        ``Term Name``, ``Qualified Name``, ``Abbreviation``, ``Summary``,
+        ``Description``, ``Examples``, ``Usage``, ``Version Identifier``,
+        ``Status``.
 
+        The file path is relative to the caller, not the Egeria platform.
         """
-
-        # Check that glossary exists and get guid
+        # Check that the glossary exists and retrieve its GUID
         glossaries = self.get_glossaries_by_name(glossary_name)
-        if type(glossaries) is not list:
-            return "Unknown glossary"
+        if not isinstance(glossaries, list) or len(glossaries) == 0:
+            raise ValueError(f"Glossary '{glossary_name}' not found.")
         if len(glossaries) > 1:
+            props_key = "properties"
             glossary_error = (
                 "Multiple glossaries found - please use a qualified name from below\n"
             )
             for g in glossaries:
+                g_props = g.get(props_key, g.get("glossaryProperties", {}))
                 glossary_error += (
-                    f"Display Name: {g['glossaryProperties']['displayName']}\tQualified Name:"
-                    f" {g['glossaryProperties']['qualifiedName']}\n"
+                    f"Display Name: {g_props.get('displayName', '---')}\t"
+                    f"Qualified Name: {g_props.get('qualifiedName', '---')}\n"
                 )
-            raise Exception(glossary_error)
-            sys.exit(1)
+            raise ValueError(glossary_error)
 
-        # Now we know we have a single glossary so we can get the guid
         glossary_guid = glossaries[0]["elementHeader"]["guid"]
 
-        term_properties = {
+        valid_term_properties = {
             "Term Name",
             "Qualified Name",
             "Abbreviation",
@@ -436,137 +443,125 @@ class GlossaryManager(CollectionManager):
             "Status",
             }
 
-        if file_path:
-            full_file_path = os.path.join(file_path, filename)
-        else:
-            full_file_path = filename
-
+        full_file_path = os.path.join(file_path, filename) if file_path else filename
         if not os.path.isfile(full_file_path):
             raise FileNotFoundError(
-                f"Did not find file with path {file_path} and name {filename}"
-                )
-        # process file
-        with open(full_file_path, mode="r") as file:
-            # Create a CSV reader object
-            csv_reader = csv.DictReader(file)
-            headers = csv_reader.fieldnames
-            term_info = []
-            # check that the column headers are known
-            if all(header in term_properties for header in headers) is False:
-                raise PyegeriaInvalidParameterException(
-                    None,
-                    context={"caller_method": "load_terms_from_csv"},
-                    additional_info={"reason": "Invalid headers in CSV File"},
+                f"CSV file not found: {full_file_path}"
                 )
 
-            # process each row and validate values
+        create_url = (
+            f"{self.platform_url}/servers/{self.view_server}"
+            f"/api/open-metadata/glossary-manager/glossaries/terms"
+        )
+
+        with open(full_file_path, mode="r", encoding="utf-8") as file:
+            csv_reader = csv.DictReader(file)
+            headers = csv_reader.fieldnames or []
+            term_info = []
+
+            if not all(h in valid_term_properties for h in headers):
+                raise PyegeriaInvalidParameterException(
+                    None,
+                    context={"caller_method": "import_glossary_terms_from_csv"},
+                    additional_info={"reason": "Unrecognised column headers in CSV file"},
+                )
+
             for row in csv_reader:
-                # Parse the file. When the value '---' is encountered, make the value None.git+https:
-                term_name = row.get("Term Name", " ")
+                term_name = row.get("Term Name", "").strip()
                 if len(term_name) < 2:
                     term_info.append(
                         {
                             "term_name": "---",
                             "qualified_name": "---",
                             "term_guid": "---",
-                            "error": "missing or invalid term names - skipping",
+                            "error": "Missing or too-short term name — row skipped",
                             }
                         )
                     continue
-                qualified_name = row.get("Qualified Name", None)
-                abbrev_in = row.get("Abbreviation", None)
-                abbrev = None if abbrev_in == "---" else abbrev_in
 
-                summary_in = row.get("Summary", None)
-                summary = None if summary_in == "---" else summary_in
+                qualified_name = row.get("Qualified Name") or None
+                abbrev = row.get("Abbreviation") or None
+                if abbrev == "---":
+                    abbrev = None
+                summary = row.get("Summary") or None
+                if summary == "---":
+                    summary = None
+                description = row.get("Description") or None
+                if description == "---":
+                    description = None
+                examples = row.get("Examples") or None
+                if examples == "---":
+                    examples = None
+                usage = row.get("Usage") or None
+                if usage == "---":
+                    usage = None
+                version = row.get("Version Identifier") or "1.0"
+                status = (row.get("Status") or "DRAFT").upper()
 
-                description_in = row.get("Description", None)
-                description = None if description_in == "---" else description_in
-
-                examples_in = row.get("Examples", None)
-                examples = None if examples_in == "---" else examples_in
-
-                usage_in = row.get("Usage", None)
-                usage = None if usage_in == "---" else usage_in
-
-                version = row.get("Version Identifier", "1.0")
-                status = row.get("Status", "DRAFT").upper()
-                if self.__validate_term_status__(status) is False:
+                if not self.__validate_term_status__(status):
                     term_info.append(
                         {
-                            "term_name": "---",
-                            "qualified_name": "---",
+                            "term_name": term_name,
+                            "qualified_name": qualified_name or "---",
                             "term_guid": "---",
-                            "error": "invalid term status",
+                            "error": f"Invalid term status '{status}' — row skipped",
                             }
                         )
                     continue
 
-                if upsert:
-                    # If upsert is set we need to see if it can be done (there must be a valid qualified name) and then
-                    # do the update for the row - if there is no qualified name we will treat the row as an insert.
-                    if qualified_name:
-                        term_stuff = self.get_terms_by_name(
-                            qualified_name, glossary_guid
-                            )
-                        if type(term_stuff) is str:
-                            # An existing term was not found with that qualified name
-                            term_info.append(
-                                {
-                                    "term_name": term_name,
-                                    "qualified_name": qualified_name,
-                                    "error": "Matching term not found - skipping",
-                                    }
-                                )
-                            continue
-                        elif len(term_stuff) > 1:
-                            term_info.append(
-                                {
-                                    "term_name": term_name,
-                                    "qualified_name": qualified_name,
-                                    "error": "Multiple matching terms - skipping",
-                                    }
-                                )
-                            continue
-                        else:
-                            # An existing term was found - so update it! Get the existing values and overlay
-                            # values from file when present
-
-                            body = {
-                                "class": "ReferenceableRequestBody",
-                                "elementProperties": {
-                                    "class": "GlossaryTermProperties",
-                                    "qualifiedName": qualified_name,
-                                    "displayName": term_name,
-                                    "summary": summary,
-                                    "description": description,
-                                    "abbreviation": abbrev,
-                                    "examples": examples,
-                                    "usage": usage,
-                                    "publishVersionIdentifier": version,
-                                    },
-                                "updateDescription": "Update from file import via upsert",
+                if upsert and qualified_name:
+                    # Try to find an existing term by qualified name
+                    term_stuff = self.get_terms_by_name(filter_string=qualified_name)
+                    if isinstance(term_stuff, str):
+                        # Not found — treat as a new insert
+                        pass
+                    elif len(term_stuff) > 1:
+                        term_info.append(
+                            {
+                                "term_name": term_name,
+                                "qualified_name": qualified_name,
+                                "error": "Multiple matching terms found — row skipped",
                                 }
-                            term_guid = term_stuff[0]["elementHeader"]["guid"]
-                            self.update_term(
-                                term_guid, body_slimmer(body), is_merge_update=True
-                                )
-                            term_info.append(
-                                {
-                                    "term_name": term_name,
-                                    "qualified_name": qualified_name,
-                                    "term_guid": term_guid,
-                                    "updated": "the term was updated",
-                                    }
-                                )
-                            continue
+                            )
+                        continue
+                    elif len(term_stuff) == 1:
+                        # Existing term found — perform a merge update
+                        term_guid = term_stuff[0]["elementHeader"]["guid"]
+                        update_body = body_slimmer({
+                            "class": "UpdateElementRequestBody",
+                            "mergeUpdate": True,
+                            "properties": {
+                                "class": "GlossaryTermProperties",
+                                "qualifiedName": qualified_name,
+                                "displayName": term_name,
+                                "summary": summary,
+                                "description": description,
+                                "abbreviation": abbrev,
+                                "examples": examples,
+                                "usage": usage,
+                                "publishVersionIdentifier": version,
+                                },
+                            })
+                        await self._async_update_glossary_term(term_guid, update_body)
+                        term_info.append(
+                            {
+                                "term_name": term_name,
+                                "qualified_name": qualified_name,
+                                "term_guid": term_guid,
+                                "action": "updated",
+                                }
+                            )
+                        continue
 
-                # Add the term
-                term_qualified_name = self.__create_qualified_name__("Term", term_name)
-
-                body = {
-                    "class": "ReferenceableRequestBody",
-                    "elementProperties": {
+                # Insert as a new term
+                term_qualified_name = qualified_name or self.__create_qualified_name__("Term", term_name)
+                create_body = body_slimmer({
+                    "class": "NewElementRequestBody",
+                    "parentGUID": glossary_guid,
+                    "parentRelationshipTypeName": "CollectionMembership",
+                    "isOwnAnchor": True,
+                    "parentAtEnd1": True,
+                    "properties": {
                         "class": "GlossaryTermProperties",
                         "qualifiedName": term_qualified_name,
                         "displayName": term_name,
@@ -578,47 +573,134 @@ class GlossaryManager(CollectionManager):
                         "publishVersionIdentifier": version,
                         },
                     "initialStatus": status,
-                    }
-
-                # Add the term
-                term_guid = self.create_controlled_glossary_term(
-                    glossary_guid, body_slimmer(body)
-                    )
+                    })
+                resp = await self._async_make_request("POST", create_url, create_body)
+                term_guid = resp.json().get("guid", NO_GUID_RETURNED)
                 term_info.append(
                     {
                         "term_name": term_name,
                         "qualified_name": term_qualified_name,
                         "term_guid": term_guid,
+                        "action": "created",
                         }
                     )
-        if verbose:
-            return term_info
-        else:
-            return
 
+        return term_info if verbose else None
+
+    @dynamic_catch
+    def import_glossary_terms_from_csv(
+            self,
+            glossary_name: str,
+            filename: str,
+            file_path: str = os.environ.get("EGERIA_GLOSSARY_PATH", None),
+            upsert: bool = True,
+            verbose: bool = True,
+            ) -> List[dict] | None:
+        """Import glossary terms from a CSV file into the specified glossary.
+
+        Parameters
+        ----------
+        glossary_name : str
+            Name of the glossary to import terms into.
+        filename : str
+            Name of the CSV file to import terms from.
+        file_path : str, optional
+            Directory path to prepend to ``filename``.  Defaults to the
+            ``EGERIA_GLOSSARY_PATH`` environment variable, or ``None``.
+        upsert : bool, default True
+            When True and a row contains a ``Qualified Name`` that matches an
+            existing term, that term is updated with the row values.  When False
+            (or when no qualified name is supplied) the row is always inserted as
+            a new term.
+        verbose : bool, default True
+            When True, return a list of per-row status dicts.
+
+        Returns
+        -------
+        list[dict] | None
+            Per-row import status when ``verbose`` is True, otherwise None.
+
+        Raises
+        ------
+        FileNotFoundError
+            If the resolved file path does not exist.
+        PyegeriaInvalidParameterException
+            If the CSV contains unrecognised column headers.
+        PyegeriaAPIException
+            Raised by the server when an issue arises in processing a valid request.
+
+        Notes
+        -----
+        The CSV must use the column headers exported by
+        :meth:`export_glossary_to_csv`:
+        ``Term Name``, ``Qualified Name``, ``Abbreviation``, ``Summary``,
+        ``Description``, ``Examples``, ``Usage``, ``Version Identifier``,
+        ``Status``.
+
+        The file path is relative to the caller, not the Egeria platform.
+        """
+        loop = asyncio.get_event_loop()
+        return loop.run_until_complete(
+            self._async_import_glossary_terms_from_csv(
+                glossary_name, filename, file_path, upsert, verbose
+                )
+            )
+
+    def load_terms_from_csv_file(
+            self,
+            glossary_name: str,
+            filename: str,
+            file_path: str = os.environ.get("EGERIA_GLOSSARY_PATH", None),
+            upsert: bool = True,
+            verbose: bool = True,
+            ) -> List[dict] | None:
+        """Backward-compatible alias for :meth:`import_glossary_terms_from_csv`."""
+        return self.import_glossary_terms_from_csv(
+            glossary_name, filename, file_path, upsert, verbose
+            )
+
+    @dynamic_catch
     async def _async_export_glossary_to_csv(
             self,
             glossary_guid: str,
             target_file: str,
             file_path: str = os.environ.get("EGERIA_GLOSSARY_PATH", None),
             ) -> int:
-        """Export all the terms in a glossary to a CSV file. Async version
+        """Export all terms in a glossary to a CSV file. Async version.
 
-        Parameters:
-        -----------
-        glossary_guid: str
-            Identity of the glossary to export.
-        target_file: str
-            Complete file name with path and extension to export to.
-        input_file: str, default is EGERIA_GLOSSARY_PATH if specified or None
-                If EGERIA_GLOSSARY_PATH environment variable is set, then it will be used in forming the
-                prepended to the filename parameter to form the full path to the file.
+        Parameters
+        ----------
+        glossary_guid : str
+            GUID of the glossary whose terms are to be exported.
+        target_file : str
+            Output file name (without directory).
+        file_path : str, optional
+            Directory in which to write ``target_file``.  Defaults to the
+            ``EGERIA_GLOSSARY_PATH`` environment variable, or the current
+            working directory when not set.
 
-        Returns:
-            int: Number of rows exported.
+        Returns
+        -------
+        int
+            Number of term rows written to the CSV.
+
+        Notes
+        -----
+        The output CSV uses the same column headers expected by
+        :meth:`import_glossary_terms_from_csv` so a round-trip
+        export → edit → import is straightforward.
         """
-
-        term_list = await self._async_get_terms_for_glossary(glossary_guid)
+        # Retrieve all terms belonging to this glossary.
+        # anchor_scope_guid scopes the search to the specific glossary.
+        term_list = await self._async_find_glossary_terms(
+            search_string="*",
+            anchor_scope_guid=glossary_guid,
+            output_format="JSON",
+            page_size=0,
+            )
+        if isinstance(term_list, str):
+            # No terms found
+            term_list = []
 
         header = [
             "Term Name",
@@ -631,27 +713,41 @@ class GlossaryManager(CollectionManager):
             "Version Identifier",
             "Status",
             ]
-        if file_path:
-            full_file_path = os.path.join(file_path, target_file)
-        else:
+
+        full_file_path = os.path.join(file_path, target_file) if file_path else target_file
+        target_dir = os.path.dirname(os.path.abspath(full_file_path))
+        try:
+            os.makedirs(target_dir, exist_ok=True)
+        except OSError as exc:
+            # The configured path (e.g. /home/jovyan from EGERIA_GLOSSARY_PATH) may not
+            # be accessible on this OS.  Fall back to writing in the current directory
+            # and let the caller know.
+            import warnings
+            warnings.warn(
+                f"Cannot create directory '{target_dir}' ({exc}); "
+                f"writing '{target_file}' to the current working directory instead.",
+                RuntimeWarning,
+                stacklevel=2,
+            )
             full_file_path = target_file
 
-        with open(full_file_path, mode="w") as file:
+        with open(full_file_path, mode="w", newline="", encoding="utf-8") as file:
             csv_writer = csv.DictWriter(file, fieldnames=header)
             csv_writer.writeheader()
             count = 0
             for term in term_list:
-                term_name = term["glossaryTermProperties"]["displayName"]
-                qualified_name = term["glossaryTermProperties"]["qualifiedName"]
-                abbrev = term["glossaryTermProperties"].get("abbreviation", "---")
-                summary = term["glossaryTermProperties"].get("summary", "---")
-                description = term["glossaryTermProperties"].get("description", "---")
-                examples = term["glossaryTermProperties"].get("examples", "---")
-                usage = term["glossaryTermProperties"].get("usage", "---")
-                version = term["glossaryTermProperties"].get(
-                    "publishVersionIdentifier", "---"
-                    )
-                status = term["elementHeader"]["status"]
+                # The REST API returns term attributes under "properties" (not the
+                # legacy "glossaryTermProperties" key used by older Egeria clients).
+                props = term.get("properties") or term.get("glossaryTermProperties", {})
+                term_name = props.get("displayName", "---")
+                qualified_name = props.get("qualifiedName", "---")
+                abbrev = props.get("abbreviation", "---") or "---"
+                summary = props.get("summary", "---") or "---"
+                description = props.get("description", "---") or "---"
+                examples = props.get("examples", "---") or "---"
+                usage = props.get("usage", "---") or "---"
+                version = props.get("publishVersionIdentifier", "---") or "---"
+                status = term.get("elementHeader", {}).get("status", "DRAFT")
 
                 csv_writer.writerow(
                     {
@@ -666,39 +762,48 @@ class GlossaryManager(CollectionManager):
                         "Status": status,
                         }
                     )
-
                 count += 1
+
         return count
 
+    @dynamic_catch
     def export_glossary_to_csv(
             self,
             glossary_guid: str,
             target_file: str,
             file_path: str = os.environ.get("EGERIA_GLOSSARY_PATH", None),
             ) -> int:
-        """Export all the terms in a glossary to a CSV file.
+        """Export all terms in a glossary to a CSV file.
 
-        Parameters:
-        -----------
-        glossary_guid: str
-            Identity of the glossary to export.
-        target_file: str
-            Complete file name with path and extension to export to.
-        input_file: str, default is EGERIA_GLOSSARY_PATH if specified or None
-                If EGERIA_GLOSSARY_PATH environment variable is set, then it will be used in forming the
-                prepended to the filename parameter to form the full path to the file.
+        Parameters
+        ----------
+        glossary_guid : str
+            GUID of the glossary whose terms are to be exported.
+        target_file : str
+            Output file name (without directory).
+        file_path : str, optional
+            Directory in which to write ``target_file``.  Defaults to the
+            ``EGERIA_GLOSSARY_PATH`` environment variable, or the current
+            working directory when not set.
 
-        Returns:
-            int: Number of rows exported.
+        Returns
+        -------
+        int
+            Number of term rows written to the CSV.
+
+        Notes
+        -----
+        The output CSV uses the same column headers expected by
+        :meth:`import_glossary_terms_from_csv` so a round-trip
+        export → edit → import is straightforward.
         """
-
         loop = asyncio.get_event_loop()
-        response = loop.run_until_complete(
+        return loop.run_until_complete(
             self._async_export_glossary_to_csv(glossary_guid, target_file, file_path)
             )
 
-        return response
 
+    @dynamic_catch
     async def _async_create_term_copy(
             self,
             glossary_guid: str,
@@ -780,6 +885,7 @@ class GlossaryManager(CollectionManager):
         logger.info(f"Create Term from template with GUID: {guid}")
         return guid
 
+    @dynamic_catch
     def create_term_copy(
             self,
             glossary_guid: str,
@@ -1070,7 +1176,7 @@ class GlossaryManager(CollectionManager):
         await self._async_delete_element_request(url, body, cascade)
         logger.info(f"Deleted collection {term_guid} with cascade {cascade}")
 
-
+    @dynamic_catch
     def delete_term(
             self,
             term_guid: str,
@@ -1108,6 +1214,7 @@ class GlossaryManager(CollectionManager):
             self._async_delete_term(term_guid, cascade, body)
             )
 
+    @dynamic_catch
     async def _async_move_term(
             self,
             term_guid: str,
@@ -1147,7 +1254,7 @@ class GlossaryManager(CollectionManager):
         await self._async_delete_relationship_request(url, body)
         logger.info(f"Moved collection {term_guid} to glossary {glossary_guid}")
 
-
+    @dynamic_catch
     def move_term(
             self,
             term_guid: str,
@@ -1195,8 +1302,7 @@ class GlossaryManager(CollectionManager):
     #   From glossary browser
     #
 
-
-
+    @dynamic_catch
     async def _async_add_is_abstract_concepts(
             self, term_guid: str, body: Optional[dict | NewClassificationRequestBody] = None,
             ) -> None:
@@ -1261,7 +1367,7 @@ class GlossaryManager(CollectionManager):
         await self._async_new_classification_request(url, "AbstractConceptProperties", body)
         logger.info(f"Added AbstractConcept classification to {term_guid}")
 
-
+    @dynamic_catch
     def add_is_abstract_concept(
             self, term_guid: str,  body: Optional[dict | NewClassificationRequestBody] = None,
             ) -> None:
@@ -1318,6 +1424,7 @@ class GlossaryManager(CollectionManager):
             self._async_add_is_abstract_concepts(term_guid, body)
             )
 
+    @dynamic_catch
     async def _async_remove_is_abstract_concepts(
             self, term_guid: str, body: Optional[dict | DeleteClassificationRequestBody] = None,
             ) -> None:
@@ -1373,6 +1480,7 @@ class GlossaryManager(CollectionManager):
         await self._async_delete_classification_request(url, body)
         logger.info(f"Removed AbstractConcept classification to {term_guid}")
 
+    @dynamic_catch
     def remove_is_abstract_concept(
             self, term_guid: str, body: Optional[dict | DeleteClassificationRequestBody] = None,
             ) -> None:
@@ -1429,7 +1537,7 @@ class GlossaryManager(CollectionManager):
             self._async_remove_is_abstract_concepts(term_guid, body)
             )
 
-
+    @dynamic_catch
     async def _async_add_is_context_definition(
             self, term_guid: str, body: Optional[dict | NewClassificationRequestBody] = None,
             ) -> None:
@@ -1494,8 +1602,7 @@ class GlossaryManager(CollectionManager):
         await self._async_new_classification_request(url, "ContextDefinitionProperties", body)
         logger.info(f"Added AbstractConcept classification to {term_guid}")
 
-
-
+    @dynamic_catch
     def add_is_context_definition(
             self, term_guid: str,  body: Optional[dict | NewClassificationRequestBody] = None,
             ) -> None:
@@ -1552,6 +1659,7 @@ class GlossaryManager(CollectionManager):
             self._async_add_is_context_definition(term_guid, body)
             )
 
+    @dynamic_catch
     async def _async_remove_is_context_definition(
             self, term_guid: str, body: Optional[dict | DeleteClassificationRequestBody] = None,
             ) -> None:
@@ -1607,6 +1715,7 @@ class GlossaryManager(CollectionManager):
         await self._async_delete_classification_request(url, body)
         logger.info(f"Removed ContextDefinition classification to {term_guid}")
 
+    @dynamic_catch
     def remove_is_context_definition(
             self, term_guid: str, body: Optional[dict | DeleteClassificationRequestBody] = None,
             ) -> None:
@@ -1663,7 +1772,7 @@ class GlossaryManager(CollectionManager):
             self._async_remove_is_context_definition(term_guid, body)
             )
 
-
+    @dynamic_catch
     async def _async_add_is_data_value(
             self, term_guid: str, body: Optional[dict | NewClassificationRequestBody] = None,
             ) -> None:
@@ -1728,8 +1837,7 @@ class GlossaryManager(CollectionManager):
         await self._async_new_classification_request(url, "DataValueProperties", body)
         logger.info(f"Added DataValue classification to {term_guid}")
 
-
-
+    @dynamic_catch
     def add_is_data_value(
             self, term_guid: str,  body: Optional[dict | NewClassificationRequestBody] = None,
             ) -> None:
@@ -1786,6 +1894,7 @@ class GlossaryManager(CollectionManager):
             self._async_add_is_data_value(term_guid, body)
             )
 
+    @dynamic_catch
     async def _async_remove_is_data_value(
             self, term_guid: str, body: Optional[dict | DeleteClassificationRequestBody] = None,
             ) -> None:
@@ -1841,6 +1950,7 @@ class GlossaryManager(CollectionManager):
         await self._async_delete_classification_request(url, body)
         logger.info(f"Removed DataValue classification to {term_guid}")
 
+    @dynamic_catch
     def remove_is_data_value(
             self, term_guid: str, body: Optional[dict | DeleteClassificationRequestBody] = None,
             ) -> None:
@@ -1896,8 +2006,8 @@ class GlossaryManager(CollectionManager):
         loop.run_until_complete(
             self._async_remove_is_data_value(term_guid, body)
             )
-        
-        
+
+    @dynamic_catch
     async def _async_add_activity_description(
             self, term_guid: str, activity_type: int = None, body: Optional[dict | NewClassificationRequestBody] = None,
             ) -> None:
@@ -1962,8 +2072,7 @@ class GlossaryManager(CollectionManager):
         await self._async_new_classification_request(url, "ActivityDescriptionProperties", body)
         logger.info(f"Added DataValue classification to {term_guid}")
 
-
-
+    @dynamic_catch
     def add_activity_description(
             self, term_guid: str,  activity_type: int = None, body: Optional[dict | NewClassificationRequestBody] = None,
             ) -> None:
@@ -2020,6 +2129,7 @@ class GlossaryManager(CollectionManager):
             self._async_add_activity_description(term_guid, activity_type, body)
             )
 
+    @dynamic_catch
     async def _async_remove_activity_description(
             self, term_guid: str, body: Optional[dict | DeleteClassificationRequestBody] = None,
             ) -> None:
@@ -2075,6 +2185,7 @@ class GlossaryManager(CollectionManager):
         await self._async_delete_classification_request(url, body)
         logger.info(f"Removed ActivityDescription classification to {term_guid}")
 
+    @dynamic_catch
     def remove_activity_description(
             self, term_guid: str, body: Optional[dict | DeleteClassificationRequestBody] = None,
             ) -> None:
@@ -2135,6 +2246,7 @@ class GlossaryManager(CollectionManager):
     #   Term - Term Relationships
     #
 
+    @dynamic_catch
     async def _async_add_relationship_between_terms(
             self, term1_guid: str, term2_guid: str, relationship_type: str, body: Optional[dict | NewRelationshipRequestBody] = None,
             ) -> None:
@@ -2206,6 +2318,7 @@ class GlossaryManager(CollectionManager):
         await self._async_new_relationship_request(url, ["GlossaryTermRelationshipProperties"],body)
         logger.info(f"Added relationship between {term1_guid} and {term2_guid} of type {relationship_type}")
 
+    @dynamic_catch
     def add_relationship_between_terms(
             self, term1_guid: str, term2_guid: str, relationship_type: str, body: Optional[dict | NewRelationshipRequestBody] = None,
             ) -> None:
@@ -2263,6 +2376,7 @@ class GlossaryManager(CollectionManager):
                                                        body)
             )
 
+    @dynamic_catch
     async def _async_update_relationship_between_terms(
             self, term1_guid: str, term2_guid: str, relationship_type: str, body: Optional[dict | UpdateRelationshipRequestBody] = None
             ) -> None:
@@ -2328,6 +2442,7 @@ class GlossaryManager(CollectionManager):
         await self._async_update_relationship_request(url, "GlossaryTermRelationship", body)
         logger.info(f"Updated relationship between {term1_guid} and {term2_guid} of type {relationship_type}")
 
+    @dynamic_catch
     def update_relationship_between_terms(
             self, term1_guid: str, term2_guid: str, relationship_type: str, body: Optional[dict | UpdateRelationshipRequestBody] = None
             ) -> None:
@@ -2386,6 +2501,7 @@ class GlossaryManager(CollectionManager):
                                                           body)
             )
 
+    @dynamic_catch
     async def _async_remove_relationship_between_terms(
             self, term1_guid: str, term2_guid: str, relationship_type: str, body: Optional[dict | DeleteRelationshipRequestBody] = None,
             ) -> None:
@@ -2433,6 +2549,7 @@ class GlossaryManager(CollectionManager):
 
         await self._async_delete_relationship_request(url, body)
 
+    @dynamic_catch
     def remove_relationship_between_terms(
             self, term1_guid: str, term2_guid: str, relationship_type: str, body: Optional[dict | DeleteRelationshipRequestBody] = None) -> None:
 
@@ -2472,7 +2589,7 @@ class GlossaryManager(CollectionManager):
     #
     # Integrated Glossary Browser methods
     #
-
+    @dynamic_catch
     def _extract_glossary_properties(self, element: dict, columns_struct: dict) -> dict:
         """Extract glossary columns for rendering.
 
@@ -2521,6 +2638,7 @@ class GlossaryManager(CollectionManager):
                     extra['categories_qualified_names'] = ", \n".join(cat_qn_list)
         return overlay_additional_values(col_data, extra)
 
+    @dynamic_catch
     def _extract_term_properties(self, element: dict, columns_struct: dict) -> dict:
         """Extract glossary term columns for rendering.
 
@@ -2560,6 +2678,7 @@ class GlossaryManager(CollectionManager):
             pass
         return col_data
 
+    @dynamic_catch
     def _get_term_additional_properties(self, element: dict, term_guid: str, output_format: str = None) -> dict:
         additional: dict = {}
         try:
@@ -2598,6 +2717,7 @@ class GlossaryManager(CollectionManager):
             pass
         return additional
 
+    @dynamic_catch
     def _generate_glossary_output(self, elements: dict | list[dict], search_string: Optional[str] = None,
                                   element_type_name: Optional[str] = None,
                                   output_format: str = 'DICT',
@@ -2613,6 +2733,7 @@ class GlossaryManager(CollectionManager):
             **kwargs
         )
 
+    @dynamic_catch
     def _generate_term_output(self, elements: dict | list[dict], search_string: Optional[str] = None,
                                element_type_name: Optional[str] = None,
                                output_format: str = 'DICT',
@@ -2628,45 +2749,53 @@ class GlossaryManager(CollectionManager):
             **kwargs
         )
 
+    @dynamic_catch
     async def _async_get_glossary_term_statuses(self) -> [str]:
         url = (f"{self.platform_url}/servers/{self.view_server}"
                f"/api/open-metadata/glossary-manager/glossaries/terms/status-list")
         response = await self._async_make_request("GET", url)
         return response.json().get("statuses", [])
 
+    @dynamic_catch
     def get_glossary_term_statuses(self) -> [str]:
         loop = asyncio.get_event_loop()
         response = loop.run_until_complete(self._async_get_glossary_term_statuses())
         return response
 
+    @dynamic_catch
     async def _async_get_glossary_term_rel_statuses(self) -> [str]:
         url = (f"{self.platform_url}/servers/{self.view_server}"
                f"/api/open-metadata/glossary-manager/glossaries/terms/relationships/status-list")
         response = await self._async_make_request("GET", url)
         return response.json().get("statuses", [])
 
+    @dynamic_catch
     def get_glossary_term_rel_statuses(self) -> [str]:
         loop = asyncio.get_event_loop()
         response = loop.run_until_complete(self._async_get_glossary_term_rel_statuses())
         return response
 
+    @dynamic_catch
     async def _async_get_glossary_term_activity_types(self) -> [str]:
         url = (f"{self.platform_url}/servers/{self.view_server}"
                f"/api/open-metadata/glossary-manager/glossaries/terms/activity-types")
         response = await self._async_make_request("GET", url)
         return response.json().get("types", [])
 
+    @dynamic_catch
     def get_glossary_term_activity_types(self) -> [str]:
         loop = asyncio.get_event_loop()
-        response = loop.run_until_complete(self._async_get_glossary_term_statuses())
+        response = loop.run_until_complete(self._async_get_glossary_term_activity_types())
         return response
 
+    @dynamic_catch
     async def _async_get_term_relationship_types(self) -> [str]:
         url = (f"{self.platform_url}/servers/{self.view_server}"
                f"/api/open-metadata/glossary-manager/glossaries/terms/relationships/type-names")
         response = await self._async_make_request("GET", url)
         return response.json().get("names", [])
 
+    @dynamic_catch
     def get_term_relationship_types(self) -> [str]:
         loop = asyncio.get_event_loop()
         response = loop.run_until_complete(self._async_get_term_relationship_types())
@@ -2892,6 +3021,7 @@ class GlossaryManager(CollectionManager):
                                                                   property_names=property_names,
                                                                   body=body))
 
+    @dynamic_catch
     async def _async_get_glossaries_by_name(self, filter_string: Optional[str] = None, classification_names: Optional[list[str]] = None,
                                              body: Optional[dict | FilterRequestBody] = None,
                                              start_from: int = 0, page_size: int = 0,
@@ -2899,7 +3029,7 @@ class GlossaryManager(CollectionManager):
                                              report_spec: str | dict = None) -> dict | str:
         return await self._async_get_collections_by_name(filter_string, classification_names, body, start_from, page_size, output_format, report_spec)
 
-
+    @dynamic_catch
     def get_glossaries_by_name(self, filter_string: Optional[str] = None, classification_names: Optional[list[str]] = None,
                                              body: Optional[dict | FilterRequestBody] = None,
                                              start_from: int = 0, page_size: int = 0,
@@ -2911,13 +3041,13 @@ class GlossaryManager(CollectionManager):
                                                output_format, report_spec))
         return response
 
+    @dynamic_catch
     async def _async_get_glossary_by_guid(self, glossary_guid: str, element_type: str = "Glossary", body: Optional[dict | GetRequestBody] = None,
                                           output_format: str = "JSON", report_spec: str | dict = None) -> dict | str:
 
         return await self._async_get_collection_by_guid(glossary_guid, element_type, body, output_format, report_spec)
 
-
-
+    @dynamic_catch
     def get_glossary_by_guid(self, glossary_guid: str, element_type: str = "Glossary", body: dict| GetRequestBody=None,
                              output_format: str = "JSON", report_spec: str | dict = None) -> dict | str:
         loop = asyncio.get_event_loop()
@@ -2925,8 +3055,7 @@ class GlossaryManager(CollectionManager):
             self._async_get_glossary_by_guid(glossary_guid, element_type, body,output_format, report_spec))
         return response
 
-
-
+    @dynamic_catch
     async def _async_get_terms_by_name(self, filter_string: Optional[str] = None, classification_names: Optional[list[str]] = None,
                                              body: Optional[dict | FilterRequestBody] = None,
                                              start_from: int = 0, page_size: int = 0,
@@ -2941,6 +3070,7 @@ class GlossaryManager(CollectionManager):
                                                       report_spec=report_spec, body=body)
         return response
 
+    @dynamic_catch
     def get_terms_by_name(self, filter_string: Optional[str] = None, classification_names: Optional[list[str]] = None,
                                              body: Optional[dict | FilterRequestBody] = None,
                                              start_from: int = 0, page_size: int = 0,
@@ -2952,6 +3082,7 @@ class GlossaryManager(CollectionManager):
                                            output_format, report_spec))
         return response
 
+    @dynamic_catch
     async def _async_get_term_by_guid(self, term_guid: str, element_type: str = "GlossaryTerm", body: dict| GetRequestBody=None,
                              output_format: str = "JSON", report_spec: str | dict = None) -> dict | str:
         url = (f"{self.platform_url}/servers/{self.view_server}/api/open-metadata/glossary-manager/glossaries/terms/"
@@ -2962,6 +3093,7 @@ class GlossaryManager(CollectionManager):
                                                       body=body)
         return response
 
+    @dynamic_catch
     def get_term_by_guid(self, term_guid: str, element_type: str = "GlossaryTerm", body: dict| GetRequestBody=None,
                              output_format: str = "JSON", report_spec: str | dict = None) -> dict | str:
         loop = asyncio.get_event_loop()

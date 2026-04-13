@@ -31,8 +31,11 @@ class GlossaryProcessor(AsyncBaseCommandProcessor):
         attributes = self.parsed_output["attributes"]
         qualified_name = self.parsed_output["qualified_name"]
         
+        spec = self.get_command_spec()
+        om_type = spec.get("OM_TYPE")
+
         # 1. Prepare properties
-        prop_body = set_element_prop_body("Glossary", qualified_name, attributes)
+        prop_body = set_element_prop_body(om_type or "Glossary", qualified_name, attributes)
         prop_body["language"] = attributes.get('Language', {}).get('value', None)
         prop_body["usage"] = attributes.get('Usage', {}).get('value', None)
         
@@ -49,7 +52,7 @@ class GlossaryProcessor(AsyncBaseCommandProcessor):
                 logger.error(f"Cannot update {display_name}: GUID not found")
                 return self.command.raw_block
 
-            body = set_update_body("Glossary", attributes)
+            self.last_body = body = set_update_body(om_type or "Glossary", attributes)
             body['properties'] = self.filter_update_properties(prop_body, body.get('mergeUpdate', True))
             
             await self.client._async_update_collection(guid, body)
@@ -71,7 +74,7 @@ class GlossaryProcessor(AsyncBaseCommandProcessor):
             return await self.render_result_markdown(guid)
 
         elif verb == "Create":
-            body = set_create_body(object_type, attributes)
+            self.last_body = body = set_create_body(om_type or object_type, attributes)
             body["initialClassifications"] = set_object_classifications(
                 object_type, attributes, ["Taxonomy", "CanonicalVocabulary"]
             )
@@ -86,7 +89,8 @@ class GlossaryProcessor(AsyncBaseCommandProcessor):
 
             body["properties"] = prop_body
             
-            guid = await self.client._async_create_collection(body=body)
+            raw_guid = await self.client._async_create_collection(body=body)
+            guid = self.extract_guid_or_raise(raw_guid, f"Create {object_type}")
             if guid:
                 self.parsed_output["guid"] = guid
 
@@ -125,8 +129,11 @@ class TermProcessor(AsyncBaseCommandProcessor):
         merge_update = attributes.get('Merge Update', {}).get('value', True)
         journal_entry = attributes.get('Journal Entry', {}).get('value')
 
+        spec = self.get_command_spec()
+        om_type = spec.get("OM_TYPE")
+
         # 1. Properties
-        prop_body = set_element_prop_body("GlossaryTerm", qualified_name, attributes)
+        prop_body = set_element_prop_body(om_type or "GlossaryTerm", qualified_name, attributes)
         prop_body["aliases"] = attributes.get('Aliases', {}).get('value', None)
         prop_body["summary"] = attributes.get('Summary', {}).get('value', None)
         prop_body["examples"] = attributes.get('Examples', {}).get('value', None)
@@ -152,7 +159,7 @@ class TermProcessor(AsyncBaseCommandProcessor):
             if not guid:
                 return self.command.raw_block
 
-            body = set_update_body("GlossaryTerm", attributes)
+            self.last_body = body = set_update_body(om_type or "GlossaryTerm", attributes)
             body['properties'] = self.filter_update_properties(prop_body, body.get('mergeUpdate', True))
             
             await self.client._async_update_glossary_term(guid, body)
@@ -177,7 +184,7 @@ class TermProcessor(AsyncBaseCommandProcessor):
             return await self.render_result_markdown(guid)
 
         elif verb == "Create":
-            body = set_create_body("GlossaryTerm", attributes)
+            self.last_body = body = set_create_body(om_type or "GlossaryTerm", attributes)
             body["properties"] = prop_body
             
             # Anchor Scope check
@@ -185,7 +192,8 @@ class TermProcessor(AsyncBaseCommandProcessor):
             if anchor_scope_guid is None and glossary_guids:
                 body["anchorScopeGUID"] = glossary_guids[0] # Use first glossary as anchor if not specified
 
-            guid = await self.client._async_create_glossary_term(body=body)
+            raw_guid = await self.client._async_create_glossary_term(body=body)
+            guid = self.extract_guid_or_raise(raw_guid, "Create Glossary Term")
             if guid:
                 self.parsed_output["guid"] = guid
                 # For Create, we always want to ensure it's in all listed collections

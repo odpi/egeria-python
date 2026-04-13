@@ -140,6 +140,7 @@ from commands.tech.list_tech_templates import display_templates_spec
 from commands.tech.list_valid_metadata_values import display_metadata_values
 from commands.tech.element_actions import delete_element
 from commands.tech.gen_report_specs import main as gen_report_specs_cli
+from commands.tech.validate_compact_specs import main as validate_compact_specs_cli
 
 import sys
 
@@ -422,6 +423,7 @@ def tech(ctx):
     pass
 
 tech.add_command(gen_report_specs_cli, name="gen-report-specs")
+tech.add_command(validate_compact_specs_cli, name="validate-compact-specs")
 
 @tech.group("tell")
 @click.pass_context

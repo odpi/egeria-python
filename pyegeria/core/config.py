@@ -112,6 +112,7 @@ class EnvironmentConfig(BaseModel):
     egeria_jupyter: bool = Field(default=True, alias="Egeria Jupyter")
     egeria_kafka_endpoint: str = Field(default="localhost:9192", alias="Egeria Kafka Endpoint")
     egeria_mermaid_folder: str = Field(default="egeria-outbox/mermaid-graphs", alias="Egeria Mermaid Folder")
+    egeria_normalize_mermaid: bool = Field(default=True, alias="Egeria Normalize Mermaid")
     egeria_metadata_store: str = Field(default="qs-metadata-store", alias="Egeria Metadata Store")
     egeria_platform_url: str = Field(default="https://localhost:9443", alias="Egeria Platform URL")
     egeria_view_server_url: str = Field(default="https://localhost:9443", alias="Egeria View Server URL")
@@ -346,6 +347,13 @@ def load_app_config(env_file: str | None = None):
         "EGERIA_MERMAID_FOLDER",
         env.get("Egeria Mermaid Folder", "egeria-outbox/mermaid-graphs"),
     )
+    env["Egeria Normalize Mermaid"] = _parse_bool_value(
+        os.getenv(
+            "PYEGERIA_NORMALIZE_MERMAID",
+            os.getenv("EGERIA_NORMALIZE_MERMAID", env.get("Egeria Normalize Mermaid", True)),
+        )
+    )
+    env["egeria_normalize_mermaid"] = env["Egeria Normalize Mermaid"]
     env["Egeria Metadata Store"] = os.getenv("EGERIA_METADATA_STORE", env.get("Egeria Metadata Store", "qs-metadata-store"))
     env["Egeria Platform URL"] = os.getenv("EGERIA_PLATFORM_URL", env.get("Egeria Platform URL", "https://localhost:9443"))
     env["Egeria View Server"] = os.getenv("EGERIA_VIEW_SERVER", env.get("Egeria View Server", "qs-view-server"))
@@ -558,6 +566,7 @@ def pretty_print_config(env_file: str | None = None, safe: bool = True, to_conso
         ("Environment", "Egeria Jupyter"): "EGERIA_JUPYTER",
         ("Environment", "Egeria Kafka Endpoint"): "EGERIA_KAFKA",
         ("Environment", "Egeria Mermaid Folder"): "EGERIA_MERMAID_FOLDER",
+        ("Environment", "Egeria Normalize Mermaid"): "PYEGERIA_NORMALIZE_MERMAID",
         ("Environment", "Egeria Metadata Store"): "EGERIA_METADATA_STORE",
         ("Environment", "Egeria Platform URL"): "EGERIA_PLATFORM_URL",
         ("Environment", "Egeria View Server"): "EGERIA_VIEW_SERVER",

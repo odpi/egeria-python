@@ -4,6 +4,7 @@ Implements the Attribute-First (Spec-Agnostic) parsing strategy.
 """
 import asyncio
 import re
+from difflib import get_close_matches
 from typing import Any, Dict, List, Optional
 from loguru import logger
 
@@ -60,11 +61,28 @@ class AttributeFirstParser:
         for raw_label, raw_value in self.command.attributes.items():
             match = label_map.get(raw_label.lower())
             if not match:
-                logger.warning(f"Unknown attribute label: '{raw_label}'")
-                self.warnings.append(f"Unknown attribute label: '{raw_label}'")
-                continue
-
-            canonical_name, details = match
+                # Fallback: if it's not in the spec but contains a GUID or is a link command, preserve it anyway
+                # This is useful for link commands with flexible attributes like "Blueprint Parent".
+                is_link_cmd = self.command.verb.lower() in {"link", "attach", "add", "unlink", "detach", "remove"}
+                if is_link_cmd or "(guid:" in raw_value or re.search(r'[0-9a-f]{8}-[0-9a-f]{4}', raw_value, re.I):
+                    details = {"style": "ID", "variable_name": raw_label.lower().replace(" ", "_")}
+                    canonical_name = raw_label
+                else:
+                    close_keys = get_close_matches(raw_label.lower(), list(label_map.keys()), n=3, cutoff=0.72)
+                    suggestions = []
+                    for key in close_keys:
+                        canonical = label_map[key][0]
+                        if canonical not in suggestions:
+                            suggestions.append(canonical)
+                    if suggestions:
+                        msg = f"Unknown attribute label: '{raw_label}'. Did you mean: {', '.join(suggestions)}?"
+                    else:
+                        msg = f"Unknown attribute label: '{raw_label}'"
+                    logger.warning(msg)
+                    self.warnings.append(msg)
+                    continue
+            else:
+                canonical_name, details = match
             # print(f"DEBUG: Processing {canonical_name}, style={details.get('style')}, value={raw_value}")
             pre_warnings = len(self.warnings)
             parsed_value = await self._process_attribute_value(raw_value, details)
@@ -79,8 +97,18 @@ class AttributeFirstParser:
                     "status": "INFO" if len(self.warnings) == pre_warnings else "WARNING"
                 }
 
-        # Check for required attributes
-        is_update = self.command.verb.lower() in {"update", "modify", "patch"}
+        # Check for required attributes and apply defaults
+        verb_lower = self.command.verb.lower()
+        is_update = verb_lower in {"update", "modify", "patch"}
+        
+        # Only apply defaults for "creation-like" or "establishment" verbs
+        # We skip for updates (to keep them sparse) and for read/delete operations.
+        skip_defaults_verbs = {
+            "update", "modify", "patch", 
+            "delete", "remove", "detach", "unlink",
+            "view", "list", "search", "find", "display", "run", "provenance"
+        }
+        apply_defaults = verb_lower not in skip_defaults_verbs
         
         for attr_obj in spec_attrs:
             if not isinstance(attr_obj, dict):
@@ -114,7 +142,40 @@ class AttributeFirstParser:
                     continue
             
             if input_required and canonical_name not in self.parsed_attributes:
-                self.errors.append(f"Missing required attribute: '{canonical_name}'")
+                provided_labels = list(self.command.attributes.keys())
+                msg = f"Missing required attribute: '{canonical_name}'"
+                if provided_labels:
+                    msg += f". Provided attributes: {', '.join(provided_labels)}"
+                    close_labels = get_close_matches(canonical_name.lower(), [lbl.lower() for lbl in provided_labels], n=2, cutoff=0.72)
+                    if close_labels:
+                        original = [lbl for lbl in provided_labels if lbl.lower() in set(close_labels)]
+                        if original:
+                            msg += f". Check label spelling/casing near: {', '.join(original)}"
+                self.errors.append(msg)
+            
+            # Apply default value if missing or empty and we are in a creation-like operation
+            existing = self.parsed_attributes.get(canonical_name)
+            is_empty = False
+            if existing:
+                val = existing.get("value")
+                if val is None or (isinstance(val, (str, list)) and not val):
+                    is_empty = True
+
+            if (canonical_name not in self.parsed_attributes or is_empty) and apply_defaults:
+                default_value = details.get("default_value")
+                if default_value is not None and str(default_value).strip() != "" and apply_defaults:
+                    logger.debug(f"Applying default value '{default_value}' for {canonical_name}")
+                    parsed_default = await self._process_attribute_value(str(default_value), details)
+                    if parsed_default is not None:
+                         self.parsed_attributes[canonical_name] = {
+                            "value": parsed_default,
+                            "valid": True,
+                            "exists": canonical_name in self.parsed_attributes,
+                            "style": details.get("style", "Simple"),
+                            "existing_element": details.get("existing_element", ""),
+                            "status": "INFO",
+                            "is_default": True
+                        }
 
         qn_obj = self.parsed_attributes.get("Qualified Name", self.parsed_attributes.get("qualified_name"))
         qn_value = qn_obj.get("value") if isinstance(qn_obj, dict) else qn_obj
@@ -129,11 +190,15 @@ class AttributeFirstParser:
 
     def _add_to_label_map(self, label_map: Dict[str, Any], canonical_name: str, details: Dict[str, Any]):
         """Helper to index an attribute by its canonical name and all alternate labels."""
-        # Ensure variable_name is present
+        # Ensure variable_name and name are present so _process_attribute_value can inspect them
         if "variable_name" not in details:
             details["variable_name"] = canonical_name.lower().replace(" ", "_")
+        if "name" not in details:
+            details["name"] = canonical_name
 
         label_map[canonical_name.lower()] = (canonical_name, details)
+        # Also register snake_case version of canonical_name
+        label_map[canonical_name.lower().replace(" ", "_")] = (canonical_name, details)
         alt_labels = details.get("attr_labels", "")
         if alt_labels:
             if isinstance(alt_labels, str):
@@ -228,6 +293,8 @@ class AttributeFirstParser:
                     prop_name = parts[0].lower() + ''.join(x.capitalize() for x in parts[1:])
                 
                 type_name = details.get("type_name")
+                if not type_name:
+                    type_name = None
                 map_name = details.get("map_name")
 
                 try:

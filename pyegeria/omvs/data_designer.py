@@ -45,10 +45,243 @@ def base_path(client, view_server: str):
 
 
 class DataDesigner(ServerClient):
-    """DataDesigner is a class that extends the Client class. The Data Designer OMVS provides APIs for
-      building specifications for data. This includes common data fields in a data dictionary, data specifications
-      for a project and data classes for data quality validation.
-    """
+    @dynamic_catch
+    def find_data_value_specifications(self, search: str = "", start_from: int = 0, page_size: int = 100) -> list:
+        """
+        Find data value specifications by search string (qualified name, display name, etc).
+        """
+        url = f"{base_path(self, self.view_server)}/data-value-specifications/by-search-string"
+        body = {
+            "class": "SearchStringRequestBody",
+            "searchString": search,
+            "startFrom": start_from,
+            "pageSize": page_size
+        }
+        loop = asyncio.get_event_loop()
+        return loop.run_until_complete(self._async_find_data_value_specifications(url, body))
+
+    @dynamic_catch
+    async def _async_find_data_value_specifications(self, url: str, body: dict) -> list:
+        response = await self._async_post(url, body)
+        if response and isinstance(response, dict):
+            return response.get("elements", [])
+        return []
+    @dynamic_catch
+    async def _async_link_specialized_data_value_specification(self, spec_guid: str, grain_guid: str, body: dict | None = None) -> None:
+        """
+        Link a specialized data value specification (grain) to a data value specification. Async version.
+        """
+        url = f"{base_path(self, self.view_server)}/data-value-specifications/{spec_guid}/specialized-data-value-specifications/{grain_guid}/attach"
+        await self._async_new_relationship_request(url, ["DataValueHierarchyProperties"], body)
+
+    @dynamic_catch
+    def link_specialized_data_value_specification(self, spec_guid: str, grain_guid: str, body: dict | None = None) -> None:
+        """
+        Link a specialized data value specification (grain) to a data value specification.
+        """
+        loop = asyncio.get_event_loop()
+        loop.run_until_complete(self._async_link_specialized_data_value_specification(spec_guid, grain_guid, body))
+
+    @dynamic_catch
+    async def _async_detach_specialized_data_value_specification(self, spec_guid: str, grain_guid: str, body: dict | None = None, cascade_delete: bool = False) -> None:
+        """
+        Detach a specialized data value specification (grain) from a data value specification. Async version.
+        """
+        url = f"{base_path(self, self.view_server)}/data-value-specifications/{spec_guid}/specialized-data-value-specification-definition/{grain_guid}/detach"
+        await self._async_delete_relationship_request(url, body, cascade_delete)
+
+    @dynamic_catch
+    def detach_specialized_data_value_specification(self, spec_guid: str, grain_guid: str, body: dict | None = None, cascade_delete: bool = False) -> None:
+        """
+        Detach a specialized data value specification (grain) from a data value specification.
+        """
+        loop = asyncio.get_event_loop()
+        loop.run_until_complete(self._async_detach_specialized_data_value_specification(spec_guid, grain_guid, body, cascade_delete))
+
+    @dynamic_catch
+    async def _async_delete_data_value_specification(self, guid: str, body: dict | None = None, cascade_delete: bool = False) -> None:
+        """
+        Delete a data value specification, data class, or data grain by GUID. Async version.
+        """
+        url = f"{base_path(self, self.view_server)}/data-value-specifications/{guid}/delete"
+        await self._async_delete_element_request(url, body, cascade_delete)
+
+    @dynamic_catch
+    def delete_data_value_specification(self, guid: str, body: dict | None = None, cascade_delete: bool = False) -> None:
+        """
+        Delete a data value specification, data class, or data grain by GUID.
+        """
+        loop = asyncio.get_event_loop()
+        loop.run_until_complete(self._async_delete_data_value_specification(guid, body, cascade_delete))
+    @dynamic_catch
+    async def _async_create_data_value_specification(self, body: dict | NewElementRequestBody) -> str:
+        """
+        Create a new data value specification with parameters defined in the body. Async version.
+        Parameters
+        ----------
+        body: dict
+            - a dictionary containing the properties of the data value specification to be created.
+        Returns
+        -------
+        str
+            The GUID of the element - or "No element found"
+        """
+        url = f"{base_path(self, self.view_server)}/data-value-specifications"
+        return await self._async_create_element_body_request(url, ["DataValueSpecification"], body)
+
+    @dynamic_catch
+    def create_data_value_specification(self, body: dict | NewElementRequestBody) -> str:
+        """
+        Create a new data value specification with parameters defined in the body.
+        Parameters
+        ----------
+        body: dict
+            - a dictionary containing the properties of the data value specification to be created.
+        Returns
+        -------
+        str
+            The GUID of the element - or "No element found"
+        """
+        loop = asyncio.get_event_loop()
+        return loop.run_until_complete(self._async_create_data_value_specification(body))
+
+    @dynamic_catch
+    async def _async_create_data_grain(self, body: dict | NewElementRequestBody) -> str:
+        """
+        Create a new data grain with parameters defined in the body. Async version.
+        Parameters
+        ----------
+        body: dict
+            - a dictionary containing the properties of the data grain to be created.
+        Returns
+        -------
+        str
+            The GUID of the element - or "No element found"
+        """
+        # Ensure the correct type is set for grain
+        url = f"{base_path(self, self.view_server)}/data-value-specifications"
+        return await self._async_create_element_body_request(url, ["DataGrain"], body)
+
+    @dynamic_catch
+    def create_data_grain(self, body: dict | NewElementRequestBody) -> str:
+        """
+        Create a new data grain with parameters defined in the body.
+        Parameters
+        ----------
+        body: dict
+            - a dictionary containing the properties of the data grain to be created.
+        Returns
+        -------
+        str
+            The GUID of the element - or "No element found"
+        """
+        loop = asyncio.get_event_loop()
+        return loop.run_until_complete(self._async_create_data_grain(body))
+    #
+    # DataDesigner is a class that extends the Client class. The Data Designer OMVS provides APIs for
+    # building specifications for data. This includes common data fields in a data dictionary, data specifications
+    # for a project and data classes for data quality validation.
+    #
+
+    @dynamic_catch
+    async def _async_create_data_class(self, body: dict | NewElementRequestBody) -> str:
+        """
+        Create a new data class with parameters defined in the body. Async version.
+
+        Parameters
+        ----------
+        body: dict
+            - a dictionary containing the properties of the data class to be created.
+
+        Returns
+        -------
+        str
+            The GUID of the element - or "No element found"
+        """
+        url = f"{base_path(self, self.view_server)}/data-value-specifications"
+        return await self._async_create_element_body_request(url, ["DataClass"], body)
+
+    @dynamic_catch
+    def create_data_class(self, body: dict | NewElementRequestBody) -> str:
+        """
+        Create a new data class with parameters defined in the body.
+
+        Parameters
+        ----------
+        body: dict
+            - a dictionary containing the properties of the data class to be created.
+
+        Returns
+        -------
+        str
+            The GUID of the element - or "No element found"
+        """
+        loop = asyncio.get_event_loop()
+        return loop.run_until_complete(self._async_create_data_class(body))
+
+    @dynamic_catch
+    async def _async_delete_data_class(self, data_class_guid: str, body: dict = None,
+                                       cascade_delete: bool = False) -> None:
+        """
+        Delete a data class by GUID. Async version.
+        DataClass is a subtype of DataValueSpecification and shares the same endpoint.
+
+        Parameters
+        ----------
+        data_class_guid: str
+            - the GUID of the data class to delete.
+        body: dict, optional
+            - a dictionary containing additional properties.
+        cascade_delete: bool, optional
+            - if True, then all nested data classes will be deleted as well.
+
+        Returns
+        -------
+        None
+
+        Raises
+        ------
+        PyegeriaInvalidParameterException
+            one of the parameters is null or invalid or
+        PyegeriaAPIException
+            There is a problem adding the element properties to the metadata repository or
+        PyegeriaUnauthorizedException
+            the requesting user is not authorized to issue this request.
+        """
+        url = f"{base_path(self, self.view_server)}/data-value-specifications/{data_class_guid}/delete"
+        await self._async_delete_element_request(url, body, cascade_delete)
+        logger.info(f"Data class {data_class_guid} deleted.")
+
+    @dynamic_catch
+    def delete_data_class(self, data_class_guid: str, body: dict = None, cascade_delete: bool = False) -> None:
+        """
+        Delete a data class by GUID.
+        DataClass is a subtype of DataValueSpecification and shares the same endpoint.
+
+        Parameters
+        ----------
+        data_class_guid: str
+            - the GUID of the data class to delete.
+        body: dict, optional
+            - a dictionary containing additional properties.
+        cascade_delete: bool, optional
+            - if True, then all nested data classes will be deleted as well.
+
+        Returns
+        -------
+        None
+
+        Raises
+        ------
+        PyegeriaInvalidParameterException
+            one of the parameters is null or invalid or
+        PyegeriaAPIException
+            There is a problem adding the element properties to the metadata repository or
+        PyegeriaUnauthorizedException
+            the requesting user is not authorized to issue this request.
+        """
+        loop = asyncio.get_event_loop()
+        loop.run_until_complete(self._async_delete_data_class(data_class_guid, body, cascade_delete))
 
     def __init__(self, view_server_name: str, platform_url: str, user_id: Optional[str] = None, user_pwd: Optional[str] = None,
                  token: Optional[str] = None, ):
@@ -688,6 +921,40 @@ class DataDesigner(ServerClient):
         loop.run_until_complete(
             self._async_detach_member_data_field(parent_data_struct_guid, member_data_field_guid, body, cascade_delete))
 
+
+    @dynamic_catch
+    async def _async_link_nested_data_field(self, parent_data_field_guid: str, nested_data_field_guid: str,
+                                             body: Optional[dict | NewRelationshipRequestBody] = None) -> None:
+        """Link a nested data field to a parent data field (NestedDataField relationship). Async version."""
+        url = (f"{base_path(self, self.view_server)}/data-fields/{parent_data_field_guid}"
+               f"/nested-data-fields/{nested_data_field_guid}/attach")
+        await self._async_new_relationship_request(url, ["NestedDataFieldProperties"], body)
+        logger.info(f"Nested data field {nested_data_field_guid} linked to parent {parent_data_field_guid}.")
+
+    @dynamic_catch
+    def link_nested_data_field(self, parent_data_field_guid: str, nested_data_field_guid: str,
+                               body: Optional[dict | NewRelationshipRequestBody] = None) -> None:
+        """Link a nested data field to a parent data field (NestedDataField relationship)."""
+        loop = asyncio.get_event_loop()
+        loop.run_until_complete(self._async_link_nested_data_field(parent_data_field_guid, nested_data_field_guid, body))
+
+    @dynamic_catch
+    async def _async_detach_nested_data_field(self, parent_data_field_guid: str, nested_data_field_guid: str,
+                                               body: Optional[dict] = None, cascade_delete: bool = False) -> None:
+        """Detach a nested data field from its parent data field. Async version."""
+        url = (f"{base_path(self, self.view_server)}/data-fields/{parent_data_field_guid}"
+               f"/nested-data-fields/{nested_data_field_guid}/detach")
+        await self._async_delete_relationship_request(url, body, cascade_delete)
+        logger.info(f"Nested data field {nested_data_field_guid} detached from parent {parent_data_field_guid}.")
+
+    @dynamic_catch
+    def detach_nested_data_field(self, parent_data_field_guid: str, nested_data_field_guid: str,
+                                  body: Optional[dict] = None, cascade_delete: bool = False) -> None:
+        """Detach a nested data field from its parent data field."""
+        loop = asyncio.get_event_loop()
+        loop.run_until_complete(self._async_detach_nested_data_field(
+            parent_data_field_guid, nested_data_field_guid, body, cascade_delete))
+
     @dynamic_catch
     async def _async_delete_data_structure(self, data_struct_guid: str, body: dict = None,
                                            cascade_delete: bool = False) -> None:
@@ -787,7 +1054,7 @@ class DataDesigner(ServerClient):
         """
 
         loop = asyncio.get_event_loop()
-        loop.run_until_complete(self._async_delete_data_field(data_struct_guid, body, cascade_delete))
+        loop.run_until_complete(self._async_delete_data_structure(data_struct_guid, body, cascade_delete))
 
     @dynamic_catch
     async def _async_find_all_data_structures(self, output_format: str = 'JSON',
@@ -1245,7 +1512,7 @@ class DataDesigner(ServerClient):
           "asOfTime": "{{$isoTimestamp}}",
           "effectiveTime": "{{$isoTimestamp}}",
           "forLineage": false,
-          "forDuplicateProcessing": false
+          "forDuplicateProcessing" : false
         }
 
     """
@@ -1501,6 +1768,13 @@ class DataDesigner(ServerClient):
 
         data_field_entry = self.get_data_field_by_guid(guid, output_format="JSON")
         if isinstance(data_field_entry, str):
+            return None
+        return self.get_data_rel_elements_dict(data_field_entry)
+
+    async def _async_get_data_field_rel_elements(self, guid: str) -> dict | None:
+        """Async version: return the lists of objects related to a data field."""
+        data_field_entry = await self._async_get_data_field_by_guid(guid, output_format="JSON")
+        if isinstance(data_field_entry, str) or data_field_entry is None:
             return None
         return self.get_data_rel_elements_dict(data_field_entry)
 
@@ -1760,6 +2034,68 @@ class DataDesigner(ServerClient):
         return response
 
     @dynamic_catch
+    async def _async_delete_data_field(self, data_field_guid: str, body: dict = None,
+                                       cascade_delete: bool = False) -> None:
+        """
+        Delete a data field by GUID. Async version.
+
+        Parameters
+        ----------
+        data_field_guid: str
+            - the GUID of the data field to delete.
+        body: dict, optional
+            - a dictionary containing additional properties.
+        cascade_delete: bool, optional
+            - if True, then all child data fields will be deleted as well.
+
+        Returns
+        -------
+        None
+
+        Raises
+        ------
+        PyegeriaInvalidParameterException
+            one of the parameters is null or invalid or
+        PyegeriaAPIException
+            There is a problem adding the element properties to the metadata repository or
+        PyegeriaUnauthorizedException
+            the requesting user is not authorized to issue this request.
+        """
+        url = f"{base_path(self, self.view_server)}/data-fields/{data_field_guid}/delete"
+        await self._async_delete_element_request(url, body, cascade_delete)
+        logger.info(f"Data field {data_field_guid} deleted.")
+
+    @dynamic_catch
+    def delete_data_field(self, data_field_guid: str, body: dict = None, cascade_delete: bool = False) -> None:
+        """
+        Delete a data field by GUID.
+
+        Parameters
+        ----------
+        data_field_guid: str
+            - the GUID of the data field to delete.
+        body: dict, optional
+            - a dictionary containing additional properties.
+        cascade_delete: bool, optional
+            - if True, then all child data fields will be deleted as well.
+
+        Returns
+        -------
+        None
+
+        Raises
+        ------
+        PyegeriaInvalidParameterException
+            one of the parameters is null or invalid or
+        PyegeriaAPIException
+            There is a problem adding the element properties to the metadata repository or
+        PyegeriaUnauthorizedException
+            the requesting user is not authorized to issue this request.
+        """
+        loop = asyncio.get_event_loop()
+        loop.run_until_complete(self._async_delete_data_field(data_field_guid, body, cascade_delete))
+
+    @dynamic_catch
     async def _async_create_data_field_from_template(self, body: dict | TemplateRequestBody) -> str:
         """
         Create a new metadata element to represent a data class using an existing metadata element as a template.
@@ -1908,14 +2244,14 @@ class DataDesigner(ServerClient):
         return response
 
     @dynamic_catch
-    async def _async_update_data_field(self, data_field_guid: str, body: dict | UpdateElementRequestBody) -> None:
+    async def _async_update_data_structure(self, data_struct_guid: str, body: dict | UpdateElementRequestBody) -> None:
         """
-        Update the properties of a data class. Async version.
+        Update the properties of a data structure. Async version.
 
         Parameters
         ----------
-        data_field_guid: str
-            - the GUID of the data class to be updated.
+        data_struct_guid: str
+            - the GUID of the data structure to be updated.
         body: dict
             - a dictionary containing the properties of the data structure to be created.
 
@@ -1925,143 +2261,112 @@ class DataDesigner(ServerClient):
 
         Raises
         ------
-        PyegeriaInvalidParameterException
-            one of the parameters is null or invalid or
-        PyegeriaAPIException
-            There is a problem adding the element properties to the metadata repository or
-        PyegeriaUnauthorizedException
-            the requesting user is not authorized to issue this request.
+        PyegeriaException
+
+        ValidationError
 
         Note
         ----
-
         Full sample body:
-
-       {
-          "class" : "UpdateDataFieldRequestBody",
-          "requestId": "add optional request id here",
-          "externalSourceGUID": "add guid here",
-          "externalSourceName": "add qualified name here",
-          "effectiveTime" : "{{$isoTimestamp}}",
-          "forLineage" : false,
-          "forDuplicateProcessing" : false,
+        {
+          "class" : "UpdateElementRequestBody",
+          "requestId": "A request id",
+          "mergeUpdate": true,
           "properties": {
-            "class" : "DataFieldProperties",
+            "class" : "DataStructureProperties",
             "qualifiedName": "add unique name here",
             "displayName": "add short name here",
-            "namespacePath": "",
             "description": "add description here",
-            "versionIdentifier": "add version",
-            "aliases": ["alias1", "alias2"],
-            "namePatterns": [],
-            "isDeprecated": false,
-            "isNullable" : false,
-            "defaultValue": "",
-            "dataType": "",
-            "minimumLength": 0,
-            "length": 0,
-            "precision": 0,
-            "orderedValues": false,
-            "sortOrder": "UNSORTED",
+            "namespacePath": "add namespace for this structure",
+            "versionIdentifier": "add version for this structure",
             "additionalProperties": {
               "property1" : "propertyValue1",
               "property2" : "propertyValue2"
             },
             "effectiveFrom": "{{$isoTimestamp}}",
             "effectiveTo": "{{$isoTimestamp}}"
-          }
+          },
+          "externalSourceGUID": "add guid here",
+          "externalSourceName": "add qualified name here",
+          "effectiveTime" : "{{$isoTimestamp}}",
+          "forLineage" : false,
+          "forDuplicateProcessing" : false
         }
 
         """
 
-        url = f"{base_path(self, self.view_server)}/data-fields/{data_field_guid}/update"
-
-        await self._async_update_element_body_request(url, ["DataField"], body)
-        logger.info(f"Data Field {data_field_guid} updated.")
+        url = f"{base_path(self, self.view_server)}/data-structures/{data_struct_guid}/update"
+        await self._async_update_element_body_request(url, ["DataStructure"], body)
+        logger.info(f"Data structure {data_struct_guid} updated.")
 
     @dynamic_catch
-    def update_data_field(self, data_field_guid: str, body: dict | UpdateElementRequestBody) -> None:
+    def update_data_structure(self, data_struct_guid: str, body: dict | UpdateElementRequestBody) -> None:
         """
-        Update the properties of a data class.
+        Update the properties of a data structure.
 
         Parameters
         ----------
-        data_field_guid: str
-            - the GUID of the data class to be updated.
+        data_struct_guid: str
+            - the GUID of the data structure to be updated.
         body: dict
             - a dictionary containing the properties of the data structure to be created.
-        replace_all_properties: bool, default = False
-            - if true, then all properties will be replaced with the new ones. Otherwise, only the specified ones
-              will be replaced.
+
         Returns
         -------
         None
 
         Raises
         ------
-        PyegeriaInvalidParameterException
-            one of the parameters is null or invalid or
-        PyegeriaAPIException
-            There is a problem adding the element properties to the metadata repository or
-        PyegeriaUnauthorizedException
-            the requesting user is not authorized to issue this request.
+        PyegeriaException
+
+        ValidationError
 
         Note
         ----
-
         Full sample body:
-
-       {
-          "class" : "UpdateDataFieldRequestBody",
-          "requestId": "add optional request id here",
-          "externalSourceGUID": "add guid here",
-          "externalSourceName": "add qualified name here",
-          "effectiveTime" : "{{$isoTimestamp}}",
-          "forLineage" : false,
-          "forDuplicateProcessing" : false,
+        {
+          "class" : "UpdateElementRequestBody",
+          "requestId": "A request id",
+          "mergeUpdate": true,
           "properties": {
-            "class" : "DataFieldProperties",
+            "class" : "DataStructureProperties",
             "qualifiedName": "add unique name here",
             "displayName": "add short name here",
-            "namespacePath": "",
             "description": "add description here",
-            "versionIdentifier": "add version",
-            "aliases": ["alias1", "alias2"],
-            "namePatterns": [],
-            "isDeprecated": false,
-            "isNullable" : false,
-            "defaultValue": "",
-            "dataType": "",
-            "minimumLength": 0,
-            "length": 0,
-            "precision": 0,
-            "orderedValues": false,
-            "sortOrder": "UNSORTED",
+            "namespacePath": "add namespace for this structure",
+            "versionIdentifier": "add version for this structure",
             "additionalProperties": {
               "property1" : "propertyValue1",
               "property2" : "propertyValue2"
             },
             "effectiveFrom": "{{$isoTimestamp}}",
             "effectiveTo": "{{$isoTimestamp}}"
-          }
+          },
+          "externalSourceGUID": "add guid here",
+          "externalSourceName": "add qualified name here",
+          "effectiveTime" : "{{$isoTimestamp}}",
+          "forLineage" : false,
+          "forDuplicateProcessing" : false
         }
+
         """
 
         loop = asyncio.get_event_loop()
-        loop.run_until_complete(self._async_update_data_field(data_field_guid, body))
+        loop.run_until_complete(
+            self._async_update_data_structure(data_struct_guid, body))
 
     @dynamic_catch
-    async def _async_link_nested_data_field(self, parent_data_field_guid: str, nested_data_field_guid: str,
+    async def _async_link_member_data_field(self, parent_data_struct_guid: str, member_data_field_guid: str,
                                             body: Optional[dict | NewRelationshipRequestBody] = None) -> None:
         """
-        Connect a nested data field to a data field. Request body is optional. Async version.
+        Connect a data structure to a data field. Async version.
 
         Parameters
         ----------
-        parent_data_field_guid: str
-            - the GUID of the parent data field the nested data field will be connected to.
-        nested_data_field_guid: str
-            - the GUID of the nested data field to be connected.
+        parent_data_struct_guid: str
+            - the GUID of the parent data structure the data class will be connected to.
+        member_data_field_guid: str
+            - the GUID of the data class to be connected.
         body: dict, optional
             - a dictionary containing additional properties.
 
@@ -2082,157 +2387,241 @@ class DataDesigner(ServerClient):
         ----
 
         Full sample body:
-
         {
           "class" : "NewRelationshipRequestBody",
-          "requestId": "add optional request id here",
-          "externalSourceGUID": "add guid here",
-          "externalSourceName": "add qualified name here",
-          "effectiveTime" : "{{$isoTimestamp}}",
-          "forLineage" : false,
-          "forDuplicateProcessing" : false,
+          "requestId": "A request id",
           "properties": {
-            "class": "NestedDataFieldProperties",
+            "class": "MemberDataFieldProperties",
             "dataFieldPosition": 0,
             "minCardinality": 0,
             "maxCardinality": 0,
             "effectiveFrom": "{{$isoTimestamp}}",
             "effectiveTo": "{{$isoTimestamp}}"
-          }
+          },
+          "externalSourceGUID": "add guid here",
+          "externalSourceName": "add qualified name here",
+          "effectiveTime" : "{{$isoTimestamp}}",
+          "forLineage" : false,
+          "forDuplicateProcessing" : false
         }
 
         """
 
+        url = (f"{base_path(self, self.view_server)}/data-structures/{parent_data_struct_guid}"
+               f"/member-data-fields/{member_data_field_guid}/attach")
+        await self._async_new_relationship_request(url, ["MemberDataFieldProperties"], body)
+        logger.info(f"Data field {member_data_field_guid} attached to Data structure {parent_data_struct_guid}.")
+
+    @dynamic_catch
+    def link_member_data_field(self, parent_data_struct_guid: str, member_data_field_guid: str,
+                               body: Optional[dict | NewRelationshipRequestBody] = None) -> None:
+        """
+         Connect a data structure to a data field.
+
+         Parameters
+         ----------
+         parent_data_struct_guid: str
+             - the GUID of the parent data structure the data class will be connected to.
+         member_data_field_guid: str
+             - the GUID of the data class to be connected.
+         body: dict, optional
+             - a dictionary containing additional properties.
+
+         Returns
+         -------
+         None
+
+         Raises
+         ------
+         PyegeriaInvalidParameterException
+             one of the parameters is null or invalid or
+         PyegeriaAPIException
+             There is a problem adding the element properties to the metadata repository or
+         PyegeriaUnauthorizedException
+             the requesting user is not authorized to issue this request.
+
+         Note
+         ----
+
+         Full sample body:
+         {
+           "class" : "NewRelationshipRequestBody",
+           "requestId": "A request id",
+           "properties": {
+             "class": "MemberDataFieldProperties",
+             "dataFieldPosition": 0,
+             "minCardinality": 0,
+             "maxCardinality": 0,
+             "effectiveFrom": "{{$isoTimestamp}}",
+             "effectiveTo": "{{$isoTimestamp}}"
+           },
+           "externalSourceGUID": "add guid here",
+           "externalSourceName": "add qualified name here",
+           "effectiveTime" : "{{$isoTimestamp}}",
+           "forLineage" : false,
+           "forDuplicateProcessing" : false
+         }
+
+         """
+
+        loop = asyncio.get_event_loop()
+        loop.run_until_complete(
+            self._async_link_member_data_field(parent_data_struct_guid, member_data_field_guid, body))
+
+    @dynamic_catch
+    async def _async_detach_member_data_field(self, parent_data_struct_guid: str, member_data_field_guid: str,
+                                              body: Optional[dict | DeleteRelationshipRequestBody] = None,
+                                              cascade_delete: bool = False) -> None:
+        """
+        Detach a data class from a data structure. Request body is optional. Async version.
+
+        Parameters
+        ----------
+        parent_data_struct_guid: str
+            - the GUID of the parent data structure the data class will be detached from..
+        member_data_field_guid: str
+            - the GUID of the data class to be disconnected.
+        body: dict, optional
+            - a dictionary containing additional properties.
+
+
+        Returns
+        -------
+        None
+
+        Raises
+        ------
+        PyegeriaInvalidParameterException
+            one of the parameters is null or invalid or
+        PyegeriaAPIException
+            There is a problem adding the element properties to the metadata repository or
+        PyegeriaUnauthorizedException
+            the requesting user is not authorized to issue this request.
+
+        Note
+        ----
+
+        Full sample body:
+        {
+          "class": "DeleteRelationshipRequestBody",
+          "requestId": "A request id",
+          "cascadedDelete": false,
+          "deleteMethod": "LOOK_FOR_LINEAGE",
+          "externalSourceGUID": "add guid here",
+          "externalSourceName": "add qualified name here",
+          "effectiveTime": "{{$isoTimestamp}}",
+          "forLineage": false,
+          "forDuplicateProcessing": false
+        }
+
+
+        """
+
+        url = (f"{self.data_designer_root}/data-structures/{parent_data_struct_guid}"
+               f"/member-data-fields/{member_data_field_guid}/detach")
+
+        await self._async_delete_relationship_request(url, body, cascade_delete)
+        logger.info(f"Data field {member_data_field_guid} detached from data structure {parent_data_struct_guid}.")
+
+    @dynamic_catch
+    def detach_member_data_field(self, parent_data_struct_guid: str, member_data_field_guid: str,
+                                 body: dict = None | DeleteRelationshipRequestBody, cascade_delete: bool = False) -> None:
+        """
+        Detach a data class from a data structure. Request body is optional.
+
+        Parameters
+        ----------
+        parent_data_struct_guid: str
+            - the GUID of the parent data structure the data class will be detached from..
+        member_data_field_guid: str
+            - the GUID of the data class to be disconnected.
+        body: dict, optional
+            - a dictionary containing additional properties.
+
+        Returns
+        -------
+        None
+
+        Raises
+        ------
+        PyegeriaInvalidParameterException
+            one of the parameters is null or invalid or
+        PyegeriaAPIException
+            There is a problem adding the element properties to the metadata repository or
+        PyegeriaUnauthorizedException
+            the requesting user is not authorized to issue this request.
+
+        Note
+        ----
+
+        Full sample body:
+        {
+          "class": "DeleteRelationshipRequestBody",
+          "requestId": "A request id",
+          "cascadedDelete": false,
+          "deleteMethod": "LOOK_FOR_LINEAGE",
+          "externalSourceGUID": "add guid here",
+          "externalSourceName": "add qualified name here",
+          "effectiveTime": "{{$isoTimestamp}}",
+          "forLineage": false,
+          "forDuplicateProcessing": false
+        }
+
+
+        """
+
+        loop = asyncio.get_event_loop()
+        loop.run_until_complete(
+            self._async_detach_member_data_field(parent_data_struct_guid, member_data_field_guid, body, cascade_delete))
+
+
+    @dynamic_catch
+    async def _async_link_nested_data_field(self, parent_data_field_guid: str, nested_data_field_guid: str,
+                                             body: Optional[dict | NewRelationshipRequestBody] = None) -> None:
+        """Link a nested data field to a parent data field (NestedDataField relationship). Async version."""
         url = (f"{base_path(self, self.view_server)}/data-fields/{parent_data_field_guid}"
                f"/nested-data-fields/{nested_data_field_guid}/attach")
-
-        await self._async_new_relationship_request(url, ["NestedDataFieldProperties"], body)
-        logger.info(f"Data field {parent_data_field_guid} attached to Data structure {nested_data_field_guid}.")
+        await self._async_new_relationship_request(url, ["NestedDataFieldProperties", "MemberDataFieldProperties"], body)
+        logger.info(f"Nested data field {nested_data_field_guid} linked to parent {parent_data_field_guid}.")
 
     @dynamic_catch
     def link_nested_data_field(self, parent_data_field_guid: str, nested_data_field_guid: str,
                                body: Optional[dict | NewRelationshipRequestBody] = None) -> None:
-        """
-        Connect a nested data class to a data class. Request body is optional.
-
-        Parameters
-        ----------
-        parent_data_field_guid: str
-            - the GUID of the parent data field the nested data field will be connected to.
-        nested_data_field_guid: str
-            - the GUID of the nested data field to be connected.
-        body: dict, optional
-            - a dictionary containing additional properties.
-
-        Returns
-        -------
-        None
-
-        Raises
-        ------
-        PyegeriaInvalidParameterException
-            one of the parameters is null or invalid or
-        PyegeriaAPIException
-            There is a problem adding the element properties to the metadata repository or
-        PyegeriaUnauthorizedException
-            the requesting user is not authorized to issue this request.
-
-        Note
-        ----
-
-        Full sample body:
-
-        {
-          "class" : "NewRelationshipRequestBody",
-          "requestId": "add optional request id here",
-          "externalSourceGUID": "add guid here",
-          "externalSourceName": "add qualified name here",
-          "effectiveTime" : "{{$isoTimestamp}}",
-          "forLineage" : false,
-          "forDuplicateProcessing" : false,
-          "properties": {
-            "class": "NestedDataFieldProperties",
-            "dataFieldPosition": 0,
-            "minCardinality": 0,
-            "maxCardinality": 0,
-            "effectiveFrom": "{{$isoTimestamp}}",
-            "effectiveTo": "{{$isoTimestamp}}"
-          }
-        }
-
-        """
-
+        """Link a nested data field to a parent data field (NestedDataField relationship)."""
         loop = asyncio.get_event_loop()
-        loop.run_until_complete(
-            self._async_link_nested_data_field(parent_data_field_guid, nested_data_field_guid, body))
+        loop.run_until_complete(self._async_link_nested_data_field(parent_data_field_guid, nested_data_field_guid, body))
 
     @dynamic_catch
     async def _async_detach_nested_data_field(self, parent_data_field_guid: str, nested_data_field_guid: str,
-                                              body: Optional[dict | DeleteRelationshipRequestBody] = None) -> None:
-        """
-        Detach a nested data class from a data class. Request body is optional. Async version.
-
-        Parameters
-        ----------
-        parent_data_field_guid: str
-            - the GUID of the parent data class the data class will be detached from..
-        nested_data_field_guid: str
-            - the GUID of the data class to be disconnected.
-        body: dict, optional
-            - a dictionary containing additional properties.
-
-        Returns
-        -------
-        None
-
-        Raises
-        ------
-        PyegeriaInvalidParameterException
-            one of the parameters is null or invalid or
-        PyegeriaAPIException
-            There is a problem adding the element properties to the metadata repository or
-        PyegeriaUnauthorizedException
-            the requesting user is not authorized to issue this request.
-
-        Note
-        ----
-
-        Full sample body:
-
-       {
-          "class": "DeleteRelationshipRequestBody",
-          "requestId": "add optional request id here",
-          "cascadedDelete": false,
-          "externalSourceGUID": "add guid here",
-          "externalSourceName": "add qualified name here",
-          "effectiveTime": "{{$isoTimestamp}}",
-          "forLineage": false,
-          "forDuplicateProcessing": false
-        }
-
-
-        """
-
+                                               body: Optional[dict] = None, cascade_delete: bool = False) -> None:
+        """Detach a nested data field from its parent data field. Async version."""
         url = (f"{base_path(self, self.view_server)}/data-fields/{parent_data_field_guid}"
                f"/nested-data-fields/{nested_data_field_guid}/detach")
-
-        await self._async_delete_relationship_request(url, body)
-        logger.info(f"Data field {parent_data_field_guid} detached from data structure {nested_data_field_guid}.")
+        await self._async_delete_relationship_request(url, body, cascade_delete)
+        logger.info(f"Nested data field {nested_data_field_guid} detached from parent {parent_data_field_guid}.")
 
     @dynamic_catch
     def detach_nested_data_field(self, parent_data_field_guid: str, nested_data_field_guid: str,
-                                 body: Optional[dict | DeleteRelationshipRequestBody] = None) -> None:
+                                  body: Optional[dict] = None, cascade_delete: bool = False) -> None:
+        """Detach a nested data field from its parent data field."""
+        loop = asyncio.get_event_loop()
+        loop.run_until_complete(self._async_detach_nested_data_field(
+            parent_data_field_guid, nested_data_field_guid, body, cascade_delete))
+
+    @dynamic_catch
+    async def _async_delete_data_structure(self, data_struct_guid: str, body: dict = None,
+                                           cascade_delete: bool = False) -> None:
         """
-        Detach a nested data class from a data class. Request body is optional.
+        Delete a data structure. Request body is optional. Async version.
 
         Parameters
         ----------
-        parent_data_field_guid: str
-            - the GUID of the parent data structure the data class will be detached fromo.
-        nested_data_field_guid: str
-            - the GUID of the data class to be disconnected.
+        data_struct_guid: str
+            - the GUID of the parent data structure to delete.
         body: dict, optional
             - a dictionary containing additional properties.
+        cascade_delete: bool, optional
+            - if True, then all child data structures will be deleted as well. Otherwise, only the data structure
 
         Returns
         -------
@@ -2254,58 +2643,9 @@ class DataDesigner(ServerClient):
 
         {
           "class": "DeleteRelationshipRequestBody",
-          "requestId": "add optional request id here",
-          "externalSourceGUID": "add guid here",
-          "externalSourceName": "add qualified name here",
-          "effectiveTime": "{{$isoTimestamp}}",
-          "forLineage": false,
-          "forDuplicateProcessing": false
-        }
-
-        """
-
-        loop = asyncio.get_event_loop()
-        loop.run_until_complete(
-            self._async_detach_nested_data_field(parent_data_field_guid, nested_data_field_guid, body))
-
-    @dynamic_catch
-    async def _async_delete_data_field(self, data_field_guid: str, body: Optional[dict | DeleteElementRequestBody] = None,
-                                       cascade_delete: bool = False) -> None:
-        """
-        Delete a data class. Request body is optional. Async version.
-
-        Parameters
-        ----------
-        data_field_guid: str
-            - the GUID of the data class to delete.
-        body: dict| DeleteElementRequestBody, optional
-            - a dictionary containing additional properties.
-        cascade: bool, optional
-            - if True, then all child data fields will be deleted as well.
-
-
-        Returns
-        -------
-        None
-
-        Raises
-        ------
-        PyegeriaInvalidParameterException
-            one of the parameters is null or invalid or
-        PyegeriaAPIException
-            There is a problem adding the element properties to the metadata repository or
-        PyegeriaUnauthorizedException
-            the requesting user is not authorized to issue this request.
-
-        Note
-        ----
-
-        Full sample body:
-
-       {
-          "class": "DeleteElementRequestBody",
-          "requestId": "add optional request id here",
+          "requestId": "A request id",
           "cascadedDelete": false,
+          "deleteMethod": "LOOK_FOR_LINEAGE",
           "externalSourceGUID": "add guid here",
           "externalSourceName": "add qualified name here",
           "effectiveTime": "{{$isoTimestamp}}",
@@ -2313,29 +2653,26 @@ class DataDesigner(ServerClient):
           "forDuplicateProcessing": false
         }
 
-
         """
 
-        url = f"{base_path(self, self.view_server)}/data-fields/{data_field_guid}/delete"
+        url = f"{self.data_designer_root}/data-structures/{data_struct_guid}/delete"
 
         await self._async_delete_element_request(url, body, cascade_delete)
-        logger.info(f"Data Field {data_field_guid} deleted.")
+        logger.info(f"Data structure {data_struct_guid} deleted.")
 
     @dynamic_catch
-    def delete_data_field(self, data_field_guid: str, body: Optional[dict | DeleteElementRequestBody] = None,
-                          cascade_delete: bool = False) -> None:
+    def delete_data_structure(self, data_struct_guid: str, body: dict = None, cascade_delete: bool = False) -> None:
         """
-        Delete a data class. Request body is optional.
+        Delete a data structure. Request body is optional. Async version.
 
         Parameters
         ----------
-        data_field_guid: str
-            - the GUID of the data class the data class to delete.
-        body: dict | DeleteElementRequestBody, optional
+        data_struct_guid: str
+            - the GUID of the parent data structure to delete.
+        body: dict, optional
             - a dictionary containing additional properties.
-        cascade: bool, optional
-            - if True, then all child data fields will be deleted as well.
-
+        cascade_delete: bool, optional
+            - if True, then all child data structures will be deleted as well. Otherwise, only the data structure
 
         Returns
         -------
@@ -2356,9 +2693,10 @@ class DataDesigner(ServerClient):
         Full sample body:
 
         {
-          "class": "DeleteElementRequestBody",
-          "requestId": "add optional request id here",
+          "class": "DeleteRelationshipRequestBody",
+          "requestId": "A request id",
           "cascadedDelete": false,
+          "deleteMethod": "LOOK_FOR_LINEAGE",
           "externalSourceGUID": "add guid here",
           "externalSourceName": "add qualified name here",
           "effectiveTime": "{{$isoTimestamp}}",
@@ -2369,7 +2707,7 @@ class DataDesigner(ServerClient):
         """
 
         loop = asyncio.get_event_loop()
-        loop.run_until_complete(self._async_delete_data_field(data_field_guid, body, cascade_delete))
+        loop.run_until_complete(self._async_delete_data_structure(data_struct_guid, body, cascade_delete))
 
     @dynamic_catch
     async def _async_find_all_data_fields(self, output_format: str = 'JSON',
@@ -2524,11 +2862,11 @@ class DataDesigner(ServerClient):
         Raises
         ------
         PyegeriaInvalidParameterException
-            one of the parameters is null or invalid or
+            one of the parameters is null or invalid.
         PyegeriaAPIException
-            There is a problem adding the element properties to the metadata repository or
+            There is a problem adding the element properties to the metadata repository.
         PyegeriaUnauthorizedException
-            the requesting user is not authorized to issue this request.
+            If the requesting user is not authorized to issue this request.
 
         """
 
@@ -2572,7 +2910,7 @@ class DataDesigner(ServerClient):
                          output_format: str = "JSON", report_spec: str | dict = None,
                          start_from: int = 0, page_size: int = 100,
                          property_names: Optional[list[str]] = None,
-                         body: Optional[dict | SearchStringRequestBody] = None) -> list | str:
+                         body: Optional[dict | SearchStringRequestBody] = None, **kwargs) -> list | str:
         """ Retrieve the list of data fields elements that contain the search string filter.
 
         Parameters
@@ -2635,41 +2973,34 @@ class DataDesigner(ServerClient):
         Returns
         -------
         [dict] | str
-            Returns a string if no elements are found and a list of dict  with the results.
+            Returns a string if no elements are found and a list of dict with the results.
 
         Raises
         ------
         PyegeriaInvalidParameterException
-            one of the parameters is null or invalid or
+            one of the parameters is null or invalid.
         PyegeriaAPIException
-            There is a problem adding the element properties to the metadata repository or
+            There is a problem adding the element properties to the metadata repository.
         PyegeriaUnauthorizedException
-            the requesting user is not authorized to issue this request.
+            If the requesting user is not authorized to issue this request.
 
-
-    """
+        """
 
         loop = asyncio.get_event_loop()
         response = loop.run_until_complete(
-            self._async_find_data_fields(search_string,
-                                         starts_with=starts_with, ends_with=ends_with, ignore_case=ignore_case,
-                                         anchor_domain=anchor_domain,
-                                         metadata_element_type=metadata_element_type,
-                                         metadata_element_subtypes=metadata_element_subtypes,
-                                         skip_relationships=skip_relationships,
-                                         include_only_relationships=include_only_relationships,
-                                         skip_classified_elements=skip_classified_elements,
-                                         include_only_classified_elements=include_only_classified_elements,
-                                         graph_query_depth=graph_query_depth,
-                                         governance_zone_filter=governance_zone_filter,
-                                         as_of_time=as_of_time, effective_time=effective_time,
-                                         relationship_page_size=relationship_page_size,
-                                         limit_results_by_status=limit_results_by_status,
-                                         sequencing_order=sequencing_order,
-                                         sequencing_property=sequencing_property,
-                                         output_format=output_format, report_spec=report_spec,
-                                         start_from=start_from, page_size=page_size,
-                                         property_names=property_names, body=body))
+            self._async_find_data_fields(
+                search_string,
+                body=body,
+                starts_with=starts_with,
+                ends_with=ends_with,
+                ignore_case=ignore_case,
+                start_from=start_from,
+                page_size=page_size,
+                output_format=output_format,
+                report_spec=report_spec,
+                **kwargs
+            )
+        )
         return response
 
     @dynamic_catch
@@ -2692,14 +3023,14 @@ class DataDesigner(ServerClient):
         page_size
             - maximum number of elements to return.
         output_format: str, default = "DICT"
-            - output format of the data structure. Possible values: "DICT", "JSON", "MERMAID".
-        report_spec: str|dict, optional, default = None
+            - one of "DICT", "MERMAID" or "JSON"
+        report_spec: str | dict, optional, default = None
             - The desired output columns/field options.
 
         Returns
         -------
         [dict] | str
-            Returns a string if no elements are found and a list of dict with the results.
+            Returns a string if no elements are found and a list of dict  with the results.
 
         Raises
         ------
@@ -2709,13 +3040,11 @@ class DataDesigner(ServerClient):
             There is a problem adding the element properties to the metadata repository or
         PyegeriaUnauthorizedException
             the requesting user is not authorized to issue this request.
+
         Notes
         -----
-
         {
           "class": "FilterRequestBody",
-          "startFrom": 0,
-          "pageSize": 100,
           "asOfTime": "{{$isoTimestamp}}",
           "effectiveTime": "{{$isoTimestamp}}",
           "forLineage": false,
@@ -2756,14 +3085,14 @@ class DataDesigner(ServerClient):
         page_size
             - maximum number of elements to return.
         output_format: str, default = "DICT"
-            - output format of the data structure. Possible values: "DICT", "JSON", "MERMAID".
-        report_spec: str|dict, optional, default = None
+         - one of "DICT", "MERMAID" or "JSON"
+        report_spec: str | dict, optional, default = None
             - The desired output columns/field options.
 
         Returns
         -------
         [dict] | str
-            Returns a string if no elements are found and a list of dict with the results.
+            Returns a string if no elements are found and a list of dict  with the results.
 
         Raises
         ------
@@ -2774,20 +3103,6 @@ class DataDesigner(ServerClient):
         PyegeriaUnauthorizedException
             the requesting user is not authorized to issue this request.
 
-        Notes
-        -----
-        {
-          "class": "FilterRequestBody",
-          "asOfTime": "{{$isoTimestamp}}",
-          "effectiveTime": "{{$isoTimestamp}}",
-          "forLineage": false,
-          "forDuplicateProcessing": false,
-          "limitResultsByStatus": ["ACTIVE"],
-          "sequencingOrder": "PROPERTY_ASCENDING",
-          "sequencingProperty": "qualifiedName",
-          "filter": "Add name here"
-        }
-
 
     """
 
@@ -2796,1466 +3111,37 @@ class DataDesigner(ServerClient):
             self._async_get_data_fields_by_name(filter_string, classification_names, body, start_from, page_size,
                                                 output_format, report_spec))
         return response
+
 
     @dynamic_catch
     async def _async_get_data_field_by_guid(self, guid: str, element_type: Optional[str] = None,
-                                            body: Optional[dict | GetRequestBody] = None,
-                                            output_format: str = 'JSON',
-                                            report_spec: str | dict = None) -> list | str:
-        """ Get the  data class elements for the specified GUID.
-            Async version.
-
-        Parameters
-        ----------
-        guid: str
-            - unique identifier of the data class metadata element.
-        body: dict, optional
-            - optional request body.
-        output_format: str, default = "DICT"
-            - output format of the data structure. Possible values: "DICT", "JSON", "MERMAID".
-        report_spec: str|dict, optional, default = None
-            - The desired output columns/field options.
-
-        Returns
-        -------
-        [dict] | str
-            Returns a string if no elements are found and a list of dict  with the results.
-
-        Raises
-        ------
-        PyegeriaInvalidParameterException
-            one of the parameters is null or invalid or
-        PyegeriaAPIException
-            There is a problem adding the element properties to the metadata repository or
-        PyegeriaUnauthorizedException
-            the requesting user is not authorized to issue this request.
-
-
-        Notes
-        ----
-
-        Optional request body:
-        {
-          "class": "AnyTimeRequestBody",
-          "asOfTime": "{{$isoTimestamp}}",
-          "effectiveTime": "{{$isoTimestamp}}",
-          "forLineage": false,
-          "forDuplicateProcessing": false
-        }
-
-        """
-
-        url = (f"{base_path(self, self.view_server)}/data-fields/{guid}/retrieve")
-        type = element_type if element_type else "DataField"
-        response = await self._async_get_guid_request(url, _type=type,
-                                                      _gen_output=self._generate_data_field_output,
-                                                      output_format=output_format, report_spec=report_spec,
-                                                      body=body)
-
-        return response
+                                             body: Optional[dict] = None,
+                                             output_format: str = 'JSON',
+                                             report_spec: str | dict = None) -> list | str:
+        """Get a data field by its GUID. Async version."""
+        url = f"{base_path(self, self.view_server)}/data-fields/{guid}/retrieve"
+        _type = element_type if element_type else "DataField"
+        return await self._async_get_guid_request(url, _type=_type,
+                                                   _gen_output=self._generate_data_field_output,
+                                                   output_format=output_format, report_spec=report_spec,
+                                                   body=body)
 
     @dynamic_catch
     def get_data_field_by_guid(self, guid: str, element_type: Optional[str] = None,
-                               body: Optional[dict | GetRequestBody] = None,
-                               output_format: str = 'JSON', report_spec: str | dict = None) -> list | str:
-        """ Get the  data structure metadata element with the specified unique identifier..
-
-        Parameters
-        ----------
-        guid: str
-            - unique identifier of the data structure metadata element.
-        body: dict, optional
-            - optional request body.
-        output_format: str, default = "DICT"
-            - output format of the data structure. Possible values: "DICT", "JSON", "MERMAID".
-        report_spec: str|dict, optional, default = None
-            - The desired output columns/field options.
-
-        Returns
-        -------
-        [dict] | str
-            Returns a string if no elements are found and a list of dict  with the results.
-
-        Raises
-        ------
-        PyegeriaInvalidParameterException
-            one of the parameters is null or invalid or
-        PyegeriaAPIException
-            There is a problem adding the element properties to the metadata repository or
-        PyegeriaUnauthorizedException
-            the requesting user is not authorized to issue this request.
-
-        Notes
-        ----
-
-        Optional request body:
-        {
-          "class": "AnyTimeRequestBody",
-          "asOfTime": "{{$isoTimestamp}}",
-          "effectiveTime": "{{$isoTimestamp}}",
-          "forLineage": false,
-          "forDuplicateProcessing": false
-        }
-
-    """
-
+                                body: Optional[dict] = None,
+                                output_format: str = 'JSON', report_spec: str | dict = None) -> list | str:
+        """Get a data field by its GUID."""
         loop = asyncio.get_event_loop()
-        response = loop.run_until_complete(self._async_get_data_field_by_guid(guid, element_type,
-                                                                              body, output_format, report_spec))
-        return response
-
-    ###
-    # =====================================================================================================================
-    # Work with Data Classes
-    # https://egeria-project.org/concepts/data-class
-    #
-    #
-    @dynamic_catch
-    async def _async_create_data_class(self, body: dict | NewElementRequestBody) -> str:
-        """
-        Create a new data class with parameters defined in the body. Async version.
-
-        Parameters
-        ----------
-        body: dict
-            - a dictionary containing the properties of the data class to be created.
-
-        Returns
-        -------
-        str
-            The GUID of the element - or "No element found"
-
-        Raises
-        ------
-        PyegeriaInvalidParameterException
-            one of the parameters is null or invalid or
-        PyegeriaAPIException
-            There is a problem adding the element properties to the metadata repository or
-        PyegeriaUnauthorizedException
-            the requesting user is not authorized to issue this request.
-
-        Note
-        ----
-        Sample bodies:
-
-        {
-          "class" : "NewDataClassRequestBody",
-          "externalSourceGUID": "add guid here",
-          "externalSourceName": "add qualified name here",
-          "effectiveTime" : "{{$isoTimestamp}}",
-          "forLineage" : false,
-          "forDuplicateProcessing" : false,
-          "anchorGUID" : "add guid here",
-          "isOwnAnchor": false,
-          "parentGUID": "add guid here",
-          "parentRelationshipTypeName": "add type name here",
-          "parentRelationshipProperties": {
-            "class": "ElementProperties",
-            "propertyValueMap" : {
-              "description" : {
-                "class": "PrimitiveTypePropertyValue",
-                "typeName": "string",
-                "primitiveValue" : "New description"
-              }
-            }
-          },
-          "parentAtEnd1": false,
-          "properties": {
-            "class" : "DataClassProperties",
-            "qualifiedName": "add unique name here",
-            "displayName": "add short name here",
-            "description": "add description here",
-            "namespacePath": "add scope of this data class's applicability.",
-            "matchPropertyNames": ["name1", "name2"],
-            "matchThreshold": 0,
-            "specification": "",
-            "specificationDetails": {
-              "property1" : "propertyValue1",
-              "property2" : "propertyValue2"
-            },
-            "dataType": "",
-            "allowsDuplicateValues": true,
-            "isNullable": false,
-            "defaultValue": "",
-            "averageValue": "",
-            "valueList": [],
-            "valueRangeFrom": "",
-            "valueRangeTo": "",
-            "sampleValues": [],
-            "dataPatterns" : [],
-            "additionalProperties": {
-              "property1" : "propertyValue1",
-              "property2" : "propertyValue2"
-            },
-            "effectiveFrom": "{{$isoTimestamp}}",
-            "effectiveTo": "{{$isoTimestamp}}"
-          }
-        }
-        or
-        {
-          "properties": {
-            "class": "DataClassProperties",
-            "qualifiedName": "add unique name here",
-            "displayName": "add short name here",
-            "description": "add description here",
-            "namespacePath": "add scope of this data class's applicability.",
-            "matchPropertyNames": [
-              "name1",
-              "name2"
-            ],
-            "matchThreshold": 0,
-            "specification": "",
-            "specificationDetails": {
-              "property1": "propertyValue1",
-              "property2": "propertyValue2"
-            },
-            "dataType": "",
-            "allowsDuplicateValues": true,
-            "isNullable": false,
-            "defaultValue": "",
-            "averageValue": "",
-            "valueList": [],
-            "valueRangeFrom": "",
-            "valueRangeTo": "",
-            "sampleValues": [],
-            "dataPatterns": [],
-            "additionalProperties": {
-              "property1": "propertyValue1",
-              "property2": "propertyValue2"
-            }
-          }
-        }
-
-        """
-
-        url = f"{base_path(self, self.view_server)}/data-value-specifications"
-
-        return await self._async_create_element_body_request(url, ["DataClass"], body)
+        return loop.run_until_complete(
+            self._async_get_data_field_by_guid(guid, element_type, body, output_format, report_spec))
 
     @dynamic_catch
-    def create_data_class(self, body: dict | NewElementRequestBody) -> str:
-        """
-        Create a new data class with parameters defined in the body..
-
-        Parameters
-        ----------
-        body: dict
-            - a dictionary containing the properties of the data class to be created.
-
-        Returns
-        -------
-        str
-            The GUID of the element - or "No element found"
-
-        Raises
-        ------
-        PyegeriaInvalidParameterException
-            one of the parameters is null or invalid or
-        PyegeriaAPIException
-            There is a problem adding the element properties to the metadata repository or
-        PyegeriaUnauthorizedException
-            the requesting user is not authorized to issue this request.
-
-        Note
-        ----
-
-        {
-          "class" : "NewDataClassRequestBody",
-          "externalSourceGUID": "add guid here",
-          "externalSourceName": "add qualified name here",
-          "effectiveTime" : "{{$isoTimestamp}}",
-          "forLineage" : false,
-          "forDuplicateProcessing" : false,
-          "anchorGUID" : "add guid here",
-          "isOwnAnchor": false,
-          "parentGUID": "add guid here",
-          "parentRelationshipTypeName": "add type name here",
-          "parentRelationshipProperties": {
-            "class": "ElementProperties",
-            "propertyValueMap" : {
-              "description" : {
-                "class": "PrimitiveTypePropertyValue",
-                "typeName": "string",
-                "primitiveValue" : "New description"
-              }
-            }
-          },
-          "parentAtEnd1": false,
-          "properties": {
-            "class" : "DataClassProperties",
-            "qualifiedName": "add unique name here",
-            "displayName": "add short name here",
-            "description": "add description here",
-            "namespacePath": "add scope of this data class's applicability.",
-            "matchPropertyNames": ["name1", "name2"],
-            "matchThreshold": 0,
-            "specification": "",
-            "specificationDetails": {
-              "property1" : "propertyValue1",
-              "property2" : "propertyValue2"
-            },
-            "dataType": "",
-            "allowsDuplicateValues": true,
-            "isNullable": false,
-            "defaultValue": "",
-            "averageValue": "",
-            "valueList": [],
-            "valueRangeFrom": "",
-            "valueRangeTo": "",
-            "sampleValues": [],
-            "dataPatterns" : [],
-            "additionalProperties": {
-              "property1" : "propertyValue1",
-              "property2" : "propertyValue2"
-            },
-            "effectiveFrom": "{{$isoTimestamp}}",
-            "effectiveTo": "{{$isoTimestamp}}"
-          }
-        }
-
-        or
-        {
-          "properties": {
-            "class": "DataClassProperties",
-            "qualifiedName": "add unique name here",
-            "displayName": "add short name here",
-            "description": "add description here",
-            "namespacePath": "add scope of this data class's applicability.",
-            "matchPropertyNames": [
-              "name1",
-              "name2"
-            ],
-            "matchThreshold": 0,
-            "specification": "",
-            "specificationDetails": {
-              "property1": "propertyValue1",
-              "property2": "propertyValue2"
-            },
-            "dataType": "",
-            "allowsDuplicateValues": true,
-            "isNullable": false,
-            "defaultValue": "",
-            "averageValue": "",
-            "valueList": [],
-            "valueRangeFrom": "",
-            "valueRangeTo": "",
-            "sampleValues": [],
-            "dataPatterns": [],
-            "additionalProperties": {
-              "property1": "propertyValue1",
-              "property2": "propertyValue2"
-            }
-          }
-        }
-
-        """
-
-        loop = asyncio.get_event_loop()
-        response = loop.run_until_complete(self._async_create_data_class(body))
-        return response
-
-    @dynamic_catch
-    async def _async_create_data_class_from_template(self, body: dict | TemplateRequestBody) -> str:
-        """
-        Create a new metadata element to represent a data class using an existing metadata element as a template.
-        The template defines additional classifications and relationships that should be added to the new element.
-        Async version.
-
-        Parameters
-        ----------
-        body: dict
-            - a dictionary containing the properties of the data class to be created.
-
-        Returns
-        -------
-        str
-            The GUID of the element - or "No element found"
-
-        Raises
-        ------
-        PyegeriaInvalidParameterException
-            one of the parameters is null or invalid or
-        PyegeriaAPIException
-            There is a problem adding the element properties to the metadata repository or
-        PyegeriaUnauthorizedException
-            the requesting user is not authorized to issue this request.
-
-        Note
-        ----
-        {
-          "class" : "TemplateRequestBody",
-          "externalSourceGUID": "add guid here",
-          "externalSourceName": "add qualified name here",
-          "effectiveTime" : "{{$isoTimestamp}}",
-          "forLineage" : false,
-          "forDuplicateProcessing" : false,
-          "anchorGUID" : "add guid here",
-          "isOwnAnchor": false,
-          "parentGUID": "add guid here",
-          "parentRelationshipTypeName": "add type name here",
-          "parentRelationshipProperties": {
-            "class": "ElementProperties",
-            "propertyValueMap" : {
-              "description" : {
-                "class": "PrimitiveTypePropertyValue",
-                "typeName": "string",
-                "primitiveValue" : "New description"
-              }
-            }
-          },
-          "parentAtEnd1": false,
-          "templateGUID": "add guid here",
-          "replacementProperties": {
-            "class": "ElementProperties",
-            "propertyValueMap" : {
-              "description" : {
-                "class": "PrimitiveTypePropertyValue",
-                "typeName": "string",
-                "primitiveValue" : "New description"
-              }
-            }
-          },
-          "placeholderPropertyValues":  {
-            "placeholder1" : "propertyValue1",
-            "placeholder2" : "propertyValue2"
-          }
-        }
-
-        """
-
-        url = f"{base_path(self, self.view_server)}/data-value-specifications/from-template"
-        return await self._async_create_element_from_template(url, body)
-
-    @dynamic_catch
-    def create_data_class_from_template(self, body: dict | TemplateRequestBody) -> str:
-        """
-        Create a new metadata element to represent a data class using an existing metadata element as a template.
-        The template defines additional classifications and relationships that should be added to the new element.
-        Async version.
-
-        Parameters
-        ----------
-        body: dict
-            - a dictionary containing the properties of the data class to be created.
-
-        Returns
-        -------
-        str
-            The GUID of the element - or "No element found"
-
-        Raises
-        ------
-        PyegeriaInvalidParameterException
-            one of the parameters is null or invalid or
-        PyegeriaAPIException
-            There is a problem adding the element properties to the metadata repository or
-        PyegeriaUnauthorizedException
-            the requesting user is not authorized to issue this request.
-
-        Note
-        ----
-        {
-          "class" : "TemplateRequestBody",
-          "externalSourceGUID": "add guid here",
-          "externalSourceName": "add qualified name here",
-          "effectiveTime" : "{{$isoTimestamp}}",
-          "forLineage" : false,
-          "forDuplicateProcessing" : false,
-          "anchorGUID" : "add guid here",
-          "isOwnAnchor": false,
-          "parentGUID": "add guid here",
-          "parentRelationshipTypeName": "add type name here",
-          "parentRelationshipProperties": {
-            "class": "ElementProperties",
-            "propertyValueMap" : {
-              "description" : {
-                "class": "PrimitiveTypePropertyValue",
-                "typeName": "string",
-                "primitiveValue" : "New description"
-              }
-            }
-          },
-          "parentAtEnd1": false,
-          "templateGUID": "add guid here",
-          "replacementProperties": {
-            "class": "ElementProperties",
-            "propertyValueMap" : {
-              "description" : {
-                "class": "PrimitiveTypePropertyValue",
-                "typeName": "string",
-                "primitiveValue" : "New description"
-              }
-            }
-          },
-          "placeholderPropertyValues":  {
-            "placeholder1" : "propertyValue1",
-            "placeholder2" : "propertyValue2"
-          }
-        }
-        """
-
-        loop = asyncio.get_event_loop()
-        response = loop.run_until_complete(self._async_create_data_class_from_template(body))
-        return response
-
-    @dynamic_catch
-    async def _async_update_data_class(self, data_class_guid: str, body: dict | UpdateElementRequestBody,
-                                       ) -> None:
-        """
-        Update the properties of a data class. Async version.
-
-        Parameters
-        ----------
-        data_class_guid: str
-            - the GUID of the data class to be updated.
-        body: dict
-            - a dictionary containing the properties of the data structure to be created.
-
-        Returns
-        -------
-        None
-
-        Raises
-        ------
-        PyegeriaInvalidParameterException
-            one of the parameters is null or invalid or
-        PyegeriaAPIException
-            There is a problem adding the element properties to the metadata repository or
-        PyegeriaUnauthorizedException
-            the requesting user is not authorized to issue this request.
-
-        Note
-        ----
-        Full sample body:
-        {
-          "class" : "UpdateDataClassRequestBody",
-          "externalSourceGUID": "add guid here",
-          "externalSourceName": "add qualified name here",
-          "effectiveTime" : "{{$isoTimestamp}}",
-          "forLineage" : false,
-          "forDuplicateProcessing" : false,
-          "properties": {
-            "class" : "DataClassProperties",
-            "qualifiedName": "add unique name here",
-            "displayName": "add short name here",
-            "description": "add description here",
-            "namespacePath": "add scope of this data class's applicability.",
-            "matchPropertyNames": ["name1", "name2"],
-            "matchThreshold": 0,
-            "specification": "",
-            "specificationDetails": {
-              "property1" : "propertyValue1",
-              "property2" : "propertyValue2"
-            },
-            "dataType": "",
-            "allowsDuplicateValues": true,
-            "isNullable": false,
-            "defaultValue": "",
-            "averageValue": "",
-            "valueList": [],
-            "valueRangeFrom": "",
-            "valueRangeTo": "",
-            "sampleValues": [],
-            "dataPatterns" : [],
-            "additionalProperties": {
-              "property1" : "propertyValue1",
-              "property2" : "propertyValue2"
-            }
-          }
-        }
-        """
-
-        url = f"{base_path(self, self.view_server)}/data-value-specifications/{data_class_guid}/update"
-        await self._async_update_element_body_request(url, ["DataClass"], body)
-        logger.info(f"Data class {data_class_guid} updated.")
-
-    @dynamic_catch
-    def update_data_class(self, data_class_guid: str, body: dict | UpdateElementRequestBody) -> None:
-        """
-        Update the properties of a data class.
-
-        Parameters
-        ----------
-        data_class_guid: str
-            - the GUID of the data class to be updated.
-        body: dict
-            - a dictionary containing the properties of the data structure to be created.
-
-        Returns
-        -------
-        None
-
-        Raises
-        ------
-        PyegeriaInvalidParameterException
-            one of the parameters is null or invalid or
-        PyegeriaAPIException
-            There is a problem adding the element properties to the metadata repository or
-        PyegeriaUnauthorizedException
-            the requesting user is not authorized to issue this request.
-
-        Note
-        ----
-
-        {
-          "class" : "UpdateDataClassRequestBody",
-          "externalSourceGUID": "add guid here",
-          "externalSourceName": "add qualified name here",
-          "effectiveTime" : "{{$isoTimestamp}}",
-          "forLineage" : false,
-          "forDuplicateProcessing" : false,
-          "properties": {
-            "class" : "DataClassProperties",
-            "qualifiedName": "add unique name here",
-            "displayName": "add short name here",
-            "description": "add description here",
-            "namespacePath": "add scope of this data class's applicability.",
-            "matchPropertyNames": ["name1", "name2"],
-            "matchThreshold": 0,
-            "specification": "",
-            "specificationDetails": {
-              "property1" : "propertyValue1",
-              "property2" : "propertyValue2"
-            },
-            "dataType": "",
-            "allowsDuplicateValues": true,
-            "isNullable": false,
-            "defaultValue": "",
-            "averageValue": "",
-            "valueList": [],
-            "valueRangeFrom": "",
-            "valueRangeTo": "",
-            "sampleValues": [],
-            "dataPatterns" : [],
-            "additionalProperties": {
-              "property1" : "propertyValue1",
-              "property2" : "propertyValue2"
-            }
-          }
-        }
-        """
-
-        loop = asyncio.get_event_loop()
-        loop.run_until_complete(self._async_update_data_class(data_class_guid, body))
-
-    @dynamic_catch
-    async def _async_link_nested_data_class(self, parent_data_class_guid: str, child_data_class_guid: str,
-                                            body: Optional[dict | NewRelationshipRequestBody] = None) -> None:
-        """
-        Connect two data classes to show that one is used by the other when it is validating (typically a complex
-        data item). Request body is optional. Async version.
-
-        Parameters
-        ----------
-        parent_data_class_guid: str
-            - the GUID of the parent data class the nested data class will be connected to.
-        child_data_class_guid: str
-            - the GUID of the nested data class to be connected.
-        body: dict, optional
-            - a dictionary containing additional properties.
-
-        Returns
-        -------
-        None
-
-        Raises
-        ------
-        PyegeriaInvalidParameterException
-            one of the parameters is null or invalid or
-        PyegeriaAPIException
-            There is a problem adding the element properties to the metadata repository or
-        PyegeriaUnauthorizedException
-            the requesting user is not authorized to issue this request.
-
-        Note
-        ----
-
-        Sample body:
-
-        {
-          "class": "MetadataSourceRequestBody",
-          "externalSourceGUID": "add guid here",
-          "externalSourceName": "add qualified name here",
-          "effectiveTime": "{{$isoTimestamp}}",
-          "forLineage": false,
-          "forDuplicateProcessing": false
-        }
-
-        """
-
-        url = (f"{base_path(self, self.view_server)}/data-classes/{parent_data_class_guid}"
-               f"/nested-data-classes/{child_data_class_guid}/attach")
-
-        await self._async_new_relationship_request(url, ["DataClassCompositionProperties"], body)
-        logger.info(f"Data field {child_data_class_guid} attached to Data structure {parent_data_class_guid}.")
-
-    @dynamic_catch
-    def link_nested_data_class(self, parent_data_class_guid: str, child_data_class_guid: str,
-                               body: Optional[dict | NewRelationshipRequestBody] = None) -> None:
-        """
-        Connect a nested data class to a data class. Request body is optional.
-
-        Parameters
-        ----------
-        parent_data_class_guid: str
-            - the GUID of the parent data class the nested data class will be connected to.
-        child_data_class_guid: str
-            - the GUID of the nested data class to be connected.
-        body: dict, optional
-            - a dictionary containing additional properties.
-
-        Returns
-        -------
-        None
-
-        Raises
-        ------
-        PyegeriaInvalidParameterException
-            one of the parameters is null or invalid or
-        PyegeriaAPIException
-            There is a problem adding the element properties to the metadata repository or
-        PyegeriaUnauthorizedException
-            the requesting user is not authorized to issue this request.
-
-        Note
-        ----
-
-        Sample body:
-
-            {
-              "class": "MetadataSourceRequestBody",
-              "externalSourceGUID": "add guid here",
-              "externalSourceName": "add qualified name here",
-              "effectiveTime": "{{$isoTimestamp}}",
-              "forLineage": false,
-              "forDuplicateProcessing": false
-            }
-
-        """
-
-        loop = asyncio.get_event_loop()
-        loop.run_until_complete(self._async_link_nested_data_class(parent_data_class_guid, child_data_class_guid, body))
-
-    @dynamic_catch
-    async def _async_detach_nested_data_class(self, parent_data_class_guid: str, child_data_class_guid: str,
-                                              body: Optional[dict | DeleteRelationshipRequestBody] = None,
-                                              cascade_delete: bool = False) -> None:
-        """
-        Detach two nested data classes from each other. Request body is optional. Async version.
-
-        Parameters
-        ----------
-        parent_data_class_guid: str
-            - the GUID of the parent data class the data class will be detached from..
-        child_data_class_guid: str
-            - the GUID of the data class to be disconnected.
-        body: dict, optional
-            - a dictionary containing additional properties.
-
-        Returns
-        -------
-        None
-
-        Raises
-        ------
-        PyegeriaInvalidParameterException
-            one of the parameters is null or invalid or
-        PyegeriaAPIException
-            There is a problem adding the element properties to the metadata repository or
-        PyegeriaUnauthorizedException
-            the requesting user is not authorized to issue this request.
-
-        Note
-        ----
-
-        Sample body:
-
-       {
-          "class": "MetadataSourceRequestBody",
-          "externalSourceGUID": "add guid here",
-          "externalSourceName": "add qualified name here",
-          "effectiveTime": "{{$isoTimestamp}}",
-          "forLineage": false,
-          "forDuplicateProcessing": false
-        }
-
-
-        """
-
-        url = (f"{base_path(self, self.view_server)}/data-classes/{parent_data_class_guid}"
-               f"/nested-data-classes/{child_data_class_guid}/detach")
-
-        await self._async_delete_relationship_request(url, body, cascade_delete)
-        logger.info(f"Data Class {child_data_class_guid} detached from data structure {parent_data_class_guid}.")
-
-    @dynamic_catch
-    def detach_nested_data_class(self, parent_data_class_guid: str, child_data_class_guid: str,
-                                 body: Optional[dict | DeleteRelationshipRequestBody] = None, cascade_delete: bool = False) -> None:
-        """
-        Detach two nested data classes from each other. Request body is optional.
-
-        Parameters
-        ----------
-        parent_data_class_guid: str
-            - the GUID of the parent data structure the data class will be detached fromo.
-        child_data_class_guid: str
-            - the GUID of the data class to be disconnected.
-        body: dict, optional
-            - a dictionary containing additional properties.
-
-        Returns
-        -------
-        None
-
-        Raises
-        ------
-        PyegeriaInvalidParameterException
-            one of the parameters is null or invalid or
-        PyegeriaAPIException
-            There is a problem adding the element properties to the metadata repository or
-        PyegeriaUnauthorizedException
-            the requesting user is not authorized to issue this request.
-
-        Note
-        ----
-
-        Full sample body:
-
-        {
-          "class": "MetadataSourceRequestBody",
-          "externalSourceGUID": "add guid here",
-          "externalSourceName": "add qualified name here",
-          "effectiveTime": "{{$isoTimestamp}}",
-          "forLineage": false,
-          "forDuplicateProcessing": false
-        }
-
-        """
-
-        loop = asyncio.get_event_loop()
-        loop.run_until_complete(
-            self._async_detach_nested_data_class(parent_data_class_guid, child_data_class_guid, body, cascade_delete))
-
-    @dynamic_catch
-    async def _async_link_specialized_data_class(self, parent_data_class_guid: str, child_data_class_guid: str,
-                                                 body: Optional[dict | NewRelationshipRequestBody] = None, ) -> None:
-        """
-        Connect two data classes to show that one provides a more specialist evaluation. Request body is optional.
-        Async version.
-
-        Parameters
-        ----------
-        parent_data_class_guid: str
-            - the GUID of the parent data class the nested data class will be connected to.
-        child_data_class_guid: str
-            - the GUID of the nested data class to be connected.
-        body: dict, optional
-            - a dictionary containing additional properties.
-
-        Returns
-        -------
-        None
-
-        Raises
-        ------
-        PyegeriaInvalidParameterException
-            one of the parameters is null or invalid or
-        PyegeriaAPIException
-            There is a problem adding the element properties to the metadata repository or
-        PyegeriaUnauthorizedException
-            the requesting user is not authorized to issue this request.
-
-        Note
-        ----
-
-        Sample body:
-
-        {
-          "class": "MetadataSourceRequestBody",
-          "externalSourceGUID": "add guid here",
-          "externalSourceName": "add qualified name here",
-          "effectiveTime": "{{$isoTimestamp}}",
-          "forLineage": false,
-          "forDuplicateProcessing": false
-        }
-
-        """
-
-        url = (f"{base_path(self, self.view_server)}/data-value-specifications/{parent_data_class_guid}"
-               f"/specialized-data-value-specifications/{child_data_class_guid}/attach")
-
-        await self._async_new_relationship_request(url, ["DataValueHierarchyProperties"], body)
-        logger.info(f"Data field {child_data_class_guid} attached to Data structure {parent_data_class_guid}.")
-
-    @dynamic_catch
-    def link_specialized_data_class(self, parent_data_class_guid: str, child_data_class_guid: str,
-                                    body: Optional[dict | NewRelationshipRequestBody] = None) -> None:
-        """
-        Connect two data classes to show that one provides a more specialist evaluation. Request body is optional.
-
-        Parameters
-        ----------
-        parent_data_class_guid: str
-            - the GUID of the parent data class the nested data class will be connected to.
-        child_data_class_guid: str
-            - the GUID of the nested data class to be connected.
-        body: dict, optional
-            - a dictionary containing additional properties.
-
-        Returns
-        -------
-        None
-
-        Raises
-        ------
-        PyegeriaInvalidParameterException
-            one of the parameters is null or invalid or
-        PyegeriaAPIException
-            There is a problem adding the element properties to the metadata repository or
-        PyegeriaUnauthorizedException
-            the requesting user is not authorized to issue this request.
-
-        Note
-        ----
-
-        Sample body:
-
-        {
-          "class": "MetadataSourceRequestBody",
-          "externalSourceGUID": "add guid here",
-          "externalSourceName": "add qualified name here",
-          "effectiveTime": "{{$isoTimestamp}}",
-          "forLineage": false,
-          "forDuplicateProcessing": false
-        }
-
-        """
-
-        loop = asyncio.get_event_loop()
-        loop.run_until_complete(
-            self._async_link_specialized_data_class(parent_data_class_guid, child_data_class_guid, body))
-
-    @dynamic_catch
-    async def _async_detach_specialized_data_class(self, parent_data_class_guid: str, child_data_class_guid: str,
-                                                   body: Optional[dict | DeleteRelationshipRequestBody] = None,
-                                                   cascade_delete: bool = False) -> None:
-        """
-        Detach two data classes from each other. Request body is optional. Async version.
-
-        Parameters
-        ----------
-        parent_data_class_guid: str
-            - the GUID of the parent data class the data class will be detached from..
-        child_data_class_guid: str
-            - the GUID of the data class to be disconnected.
-        body: dict, optional
-            - a dictionary containing additional properties.
-
-        Returns
-        -------
-        None
-
-        Raises
-        ------
-        PyegeriaInvalidParameterException
-            one of the parameters is null or invalid or
-        PyegeriaAPIException
-            There is a problem adding the element properties to the metadata repository or
-        PyegeriaUnauthorizedException
-            the requesting user is not authorized to issue this request.
-
-        Note
-        ----
-
-        Sample body:
-
-       {
-          "class": "MetadataSourceRequestBody",
-          "externalSourceGUID": "add guid here",
-          "externalSourceName": "add qualified name here",
-          "effectiveTime": "{{$isoTimestamp}}",
-          "forLineage": false,
-          "forDuplicateProcessing": false
-        }
-
-
-        """
-
-        url = (f"{base_path(self, self.view_server)}/data-value-specifications/{parent_data_class_guid}"
-               f"/specialized-data-value-specifications/{child_data_class_guid}/detach")
-
-        await self._async_delete_relationship_request(url, body, cascade_delete)
-        logger.info(f"Data field {child_data_class_guid} detached from data structure {parent_data_class_guid}.")
-
-    @dynamic_catch
-    def detach_specialized_data_class(self, parent_data_class_guid: str, child_data_class_guid: str,
-                                      body: Optional[dict | DeleteRelationshipRequestBody] = None, cascade_delete: bool = False) -> None:
-        """
-        Detach two data classes from each other. Request body is optional.
-
-        Parameters
-        ----------
-        parent_data_class_guid: str
-            - the GUID of the parent data structure the data class will be detached from.
-        child_data_class_guid: str
-            - the GUID of the data class to be disconnected.
-        body: dict, optional
-            - a dictionary containing additional properties.
-
-        Returns
-        -------
-        None
-
-        Raises
-        ------
-        PyegeriaInvalidParameterException
-            one of the parameters is null or invalid or
-        PyegeriaAPIException
-            There is a problem adding the element properties to the metadata repository or
-        PyegeriaUnauthorizedException
-            the requesting user is not authorized to issue this request.
-
-        Note
-        ----
-
-        Full sample body:
-
-        {
-          "class": "MetadataSourceRequestBody",
-          "externalSourceGUID": "add guid here",
-          "externalSourceName": "add qualified name here",
-          "effectiveTime": "{{$isoTimestamp}}",
-          "forLineage": false,
-          "forDuplicateProcessing": false
-        }
-
-        """
-
-        loop = asyncio.get_event_loop()
-        loop.run_until_complete(
-            self._async_detach_specialized_data_class(parent_data_class_guid, child_data_class_guid, body,
-                                                      cascade_delete))
-
-    @dynamic_catch
-    async def _async_delete_data_class(self, data_class_guid: str, body: Optional[dict | DeleteElementRequestBody] = None,
-                                       cascade_delete: bool = False) -> None:
-        """
-        Delete a data class. Request body is optional. Async version.
-
-        Parameters
-        ----------
-        data_class_guid: str
-            - the GUID of the data class to delete.
-        body: dict, optional
-            - a dictionary containing additional properties.
-        cascade: bool, optional
-            - if True, then the delete cascades to dependents
-
-
-        Returns
-        -------
-        None
-
-        Raises
-        ------
-        PyegeriaInvalidParameterException
-            one of the parameters is null or invalid or
-        PyegeriaAPIException
-            There is a problem adding the element properties to the metadata repository or
-        PyegeriaUnauthorizedException
-            the requesting user is not authorized to issue this request.
-
-        Note
-        ----
-
-        Full sample body:
-
-       {
-          "class": "MetadataSourceRequestBody",
-          "externalSourceGUID": "add guid here",
-          "externalSourceName": "add qualified name here",
-          "effectiveTime": "{{$isoTimestamp}}",
-          "forLineage": false,
-          "forDuplicateProcessing": false
-        }
-
-
-        """
-
-        url = f"{base_path(self, self.view_server)}/data-value-specifications/{data_class_guid}/delete"
-
-        await self._async_delete_element_request(url, body, cascade_delete)
-        logger.info(f"Data structure {data_class_guid} deleted.")
-
-    @dynamic_catch
-    def delete_data_class(self,
-                          data_class_guid: str,
-                          body: Optional[dict | DeleteElementRequestBody] = None,
-                          cascade_delete: bool = False) -> None:
-        """
-        Delete a data class. Request body is optional.
-
-        Parameters
-        ----------
-        data_class_guid: str
-            - the GUID of the data class the data class to delete.
-        body: dict, optional
-            - a dictionary containing additional properties.
-        cascade: bool, optional
-            - if True, then the delete cascades to dependents
-
-
-        Returns
-        -------
-        None
-
-        Raises
-        ------
-        PyegeriaInvalidParameterException
-            one of the parameters is null or invalid or
-        PyegeriaAPIException
-            There is a problem adding the element properties to the metadata repository or
-        PyegeriaUnauthorizedException
-            the requesting user is not authorized to issue this request.
-
-        Note
-        ----
-
-        Full sample body:
-
-        {
-          "class": "MetadataSourceRequestBody",
-          "externalSourceGUID": "add guid here",
-          "externalSourceName": "add qualified name here",
-          "effectiveTime": "{{$isoTimestamp}}",
-          "forLineage": false,
-          "forDuplicateProcessing": false
-        }
-
-        """
-
-        loop = asyncio.get_event_loop()
-        loop.run_until_complete(self._async_delete_data_class(data_class_guid, body, cascade_delete))
-
-    @dynamic_catch
-    async def _async_find_all_data_classes(self,
-                                           output_format: str = 'JSON',
-                                           report_spec: str | dict = None) -> list | str:
-        """ Returns a list of all data classes. Async version.
-
-        Parameters
-        ----------
-        start_from: int, default = 0
-            - index of the list to start from (0 for start).
-        page_size
-            - maximum number of elements to return.
-        output_format: str, default = "DICT"
-            - output format of the data structure. Possible values: "DICT", "JSON", "MERMAID".
-        report_spec: str|dict, optional, default = None
-            - The desired output columns/field options.
-
-
-        Returns
-        -------
-        [dict] | str
-            Returns a string if no elements are found and a list of dict elements with the results.
-
-        Raises
-        ------
-        PyegeriaInvalidParameterException
-            one of the parameters is null or invalid or
-        PyegeriaAPIException
-            There is a problem adding the element properties to the metadata repository or
-        PyegeriaUnauthorizedException
-            the requesting user is not authorized to issue this request.
-
-        """
-
-        return await self._async_find_data_classes(search_string="*",
-                                                   metadata_element_type="DataClass",
-                                                   output_format=output_format,
-                                                   report_spec=report_spec)
-
-    @dynamic_catch
-    def find_all_data_classes(self,
-                              output_format: str = 'JSON', report_spec: str | dict = None) -> list | str:
-        """ Returns a list of all data classes.
-
-        Parameters
-        ----------
-        start_from: int, default = 0
-            - index of the list to start from (0 for start).
-        page_size
-            - maximum number of elements to return.
-        output_format: str, default = "DICT"
-            - output format of the data structure. Possible values: "DICT", "JSON", "MERMAID".
-        report_spec: str|dict, optional, default = None
-            - The desired output columns/field options.
-
-        Returns
-        -------
-        [dict] | str
-            Returns a string if no elements are found and a list of dict elements with the results.
-
-        Raises
-        ------
-        PyegeriaInvalidParameterException
-            one of the parameters is null or invalid or
-        PyegeriaAPIException
-            There is a problem adding the element properties to the metadata repository or
-        PyegeriaUnauthorizedException
-            the requesting user is not authorized to issue this request.
-
-        """
-
-        loop = asyncio.get_event_loop()
-        response = loop.run_until_complete(
-            self._async_find_all_data_classes(output_format, report_spec))
-        return response
-
-    @dynamic_catch
-    async def _async_find_data_classes(self, search_string: str,
-                                       starts_with: bool = True, ends_with: bool = False,
-                                       ignore_case: bool = False,
-                                       anchor_domain: Optional[str] = None,
-                                       metadata_element_type: Optional[str] = None,
-                                       metadata_element_subtypes: Optional[list[str]] = None,
-                                       skip_relationships: Optional[list[str]] = None,
-                                       include_only_relationships: Optional[list[str]] = None,
-                                       skip_classified_elements: Optional[list[str]] = None,
-                                       include_only_classified_elements: Optional[list[str]] = None,
-                                       graph_query_depth: int = 3,
-                                       governance_zone_filter: Optional[list[str]] = None, as_of_time: Optional[str] = None,
-                                       effective_time: Optional[str] = None, relationship_page_size: int = 0,
-                                       limit_results_by_status: Optional[list[str]] = None, sequencing_order: Optional[str] = None,
-                                       sequencing_property: Optional[str] = None,
-                                       output_format: str = "JSON", report_spec: str | dict = None,
-                                       start_from: int = 0, page_size: int = 100,
-                                       property_names: Optional[list[str]] = None,
-                                       body: Optional[dict | SearchStringRequestBody] = None) -> list | str:
-        """ Find the list of data class elements that contain the search string.
-            Async version.
-
-        Parameters
-        ----------
-        search_string: str
-            - search string to filter on.
-        starts_with : bool, [default=True], optional
-            Starts with the supplied string.
-        ends_with : bool, [default=False], optional
-            Ends with the supplied string
-        ignore_case : bool, [default=False], optional
-            Ignore case when searching
-        anchor_domain: str, optional
-            The anchor domain to search in.
-        metadata_element_type: str, optional
-            The type of metadata element to search for.
-        metadata_element_subtypes: list[str], optional
-            The subtypes of metadata element to search for.
-        skip_relationships: list[str], optional
-            The types of relationships to skip.
-        include_only_relationships: list[str], optional
-            The types of relationships to include.
-        skip_classified_elements: list[str], optional
-            The types of classified elements to skip.
-        include_only_classified_elements: list[str], optional
-            The types of classified elements to include.
-        graph_query_depth: int, [default=3], optional
-            The depth of the graph query.
-        governance_zone_filter: list[str], optional
-            The governance zones to search in.
-        as_of_time: str, optional
-            The time to search as of.
-        effective_time: str, optional
-            The effective time to search at.
-        relationship_page_size: int, [default=0], optional
-            The page size for relationships.
-        limit_results_by_status: list[str], optional
-            The statuses to limit results by.
-        sequencing_order: str, optional
-            The order to sequence results by.
-        sequencing_property: str, optional
-            The property to sequence results by.
-        output_format: str, default = 'JSON'
-            Type of output to produce:
-                JSON - output standard json
-                MD - output standard markdown with no preamble
-                FORM - output markdown with a preamble for a form
-                REPORT - output markdown with a preamble for a report
-        report_spec: str | dict, optional
-            The report specification to use.
-        start_from: int, [default=0], optional
-            The page number to start from.
-        page_size: int, [default=100], optional
-            The number of items to return in a single page.
-        property_names: list[str], optional
-            The names of properties to search for.
-        body: dict, optional, default = None
-            - additional optional specifications for the search.
-
-        Returns
-        -------
-        [dict] | str
-            Returns a string if no elements are found and a list of dict with the results.
-
-        Raises
-        ------
-        PyegeriaInvalidParameterException
-            one of the parameters is null or invalid or
-        PyegeriaAPIException
-            There is a problem adding the element properties to the metadata repository or
-        PyegeriaUnauthorizedException
-            the requesting user is not authorized to issue this request.
-
-        """
-
-        url = f"{base_path(self, self.view_server)}/data-value-specifications/by-search-string"
-
-        return await self._async_find_request(url, "DataClass", self._generate_data_class_output, search_string,
-                                              starts_with=starts_with, ends_with=ends_with, ignore_case=ignore_case,
-                                              anchor_domain=anchor_domain, metadata_element_type=metadata_element_type,
-                                              metadata_element_subtypes=metadata_element_subtypes,
-                                              skip_relationships=skip_relationships,
-                                              include_only_relationships=include_only_relationships,
-                                              skip_classified_elements=skip_classified_elements,
-                                              include_only_classified_elements=include_only_classified_elements,
-                                              graph_query_depth=graph_query_depth,
-                                              governance_zone_filter=governance_zone_filter, as_of_time=as_of_time,
-                                              effective_time=effective_time,
-                                              relationship_page_size=relationship_page_size,
-                                              limit_results_by_status=limit_results_by_status,
-                                              sequencing_order=sequencing_order,
-                                              sequencing_property=sequencing_property, output_format=output_format,
-                                              report_spec=report_spec, start_from=start_from, page_size=page_size,
-                                              property_names=property_names, body=body)
-
-    @dynamic_catch
-    def find_data_classes(self, search_string: str,
-                          starts_with: bool = True, ends_with: bool = False,
-                          ignore_case: bool = False,
-                          anchor_domain: Optional[str] = None,
-                          metadata_element_type: Optional[str] = None,
-                          metadata_element_subtypes: Optional[list[str]] = None,
-                          skip_relationships: Optional[list[str]] = None,
-                          include_only_relationships: Optional[list[str]] = None,
-                          skip_classified_elements: Optional[list[str]] = None,
-                          include_only_classified_elements: Optional[list[str]] = None,
-                          graph_query_depth: int = 3,
-                          governance_zone_filter: Optional[list[str]] = None, as_of_time: Optional[str] = None,
-                          effective_time: Optional[str] = None, relationship_page_size: int = 0,
-                          limit_results_by_status: Optional[list[str]] = None, sequencing_order: Optional[str] = None,
-                          sequencing_property: Optional[str] = None,
-                          output_format: str = "JSON", report_spec: str | dict = None,
-                          start_from: int = 0, page_size: int = 100,
-                          property_names: Optional[list[str]] = None,
-                          body: Optional[dict | SearchStringRequestBody] = None) -> list | str:
-        """ Retrieve the list of data classes elements that contain the search string filter.
-
-        Parameters
-        ----------
-        search_string: str
-            - search string to filter on.
-        starts_with : bool, [default=True], optional
-            Starts with the supplied string.
-        ends_with : bool, [default=False], optional
-            Ends with the supplied string
-        ignore_case : bool, [default=False], optional
-            Ignore case when searching
-        anchor_domain: str, optional
-            The anchor domain to search in.
-        metadata_element_type: str, optional
-            The type of metadata element to search for.
-        metadata_element_subtypes: list[str], optional
-            The subtypes of metadata element to search for.
-        skip_relationships: list[str], optional
-            The types of relationships to skip.
-        include_only_relationships: list[str], optional
-            The types of relationships to include.
-        skip_classified_elements: list[str], optional
-            The types of classified elements to skip.
-        include_only_classified_elements: list[str], optional
-            The types of classified elements to include.
-        graph_query_depth: int, [default=3], optional
-            The depth of the graph query.
-        governance_zone_filter: list[str], optional
-            The governance zones to search in.
-        as_of_time: str, optional
-            The time to search as of.
-        effective_time: str, optional
-            The effective time to search at.
-        relationship_page_size: int, [default=0], optional
-            The page size for relationships.
-        limit_results_by_status: list[str], optional
-            The statuses to limit results by.
-        sequencing_order: str, optional
-            The order to sequence results by.
-        sequencing_property: str, optional
-            The property to sequence results by.
-        output_format: str, default = 'JSON'
-            Type of output to produce:
-                JSON - output standard json
-                MD - output standard markdown with no preamble
-                FORM - output markdown with a preamble for a form
-                REPORT - output markdown with a preamble for a report
-        report_spec: str | dict, optional
-            The report specification to use.
-        start_from: int, [default=0], optional
-            The page number to start from.
-        page_size: int, [default=100], optional
-            The number of items to return in a single page.
-        property_names: list[str], optional
-            The names of properties to search for.
-        body: dict, optional, default = None
-            - additional optional specifications for the search.
-
-        Returns
-        -------
-        [dict] | str
-            Returns a string if no elements are found and a list of dict  with the results.
-
-        Raises
-        ------
-        PyegeriaInvalidParameterException
-            one of the parameters is null or invalid or
-        PyegeriaAPIException
-            There is a problem adding the element properties to the metadata repository or
-        PyegeriaUnauthorizedException
-            the requesting user is not authorized to issue this request.
-
-
-    """
-
-        loop = asyncio.get_event_loop()
-        response = loop.run_until_complete(
-            self._async_find_data_classes(search_string,
-                                          starts_with=starts_with, ends_with=ends_with, ignore_case=ignore_case,
-                                          anchor_domain=anchor_domain,
-                                          metadata_element_type=metadata_element_type,
-                                          metadata_element_subtypes=metadata_element_subtypes,
-                                          skip_relationships=skip_relationships,
-                                          include_only_relationships=include_only_relationships,
-                                          skip_classified_elements=skip_classified_elements,
-                                          include_only_classified_elements=include_only_classified_elements,
-                                          graph_query_depth=graph_query_depth,
-                                          governance_zone_filter=governance_zone_filter,
-                                          as_of_time=as_of_time, effective_time=effective_time,
-                                          relationship_page_size=relationship_page_size,
-                                          limit_results_by_status=limit_results_by_status,
-                                          sequencing_order=sequencing_order,
-                                          sequencing_property=sequencing_property,
-                                          output_format=output_format, report_spec=report_spec,
-                                          start_from=start_from, page_size=page_size,
-                                          property_names=property_names, body=body))
-        return response
-
-    @dynamic_catch
-    async def _async_get_data_classes_by_name(self, filter_string: str, classification_names: list[str],
-                                              body: Optional[dict | FilterRequestBody] = None, start_from: int = 0,
-                                              page_size: int = 0,
-                                              output_format: str = 'JSON',
-                                              report_spec: str | dict = None) -> list | str:
-        """ Get the list of data class metadata elements with a matching name to the search string filter.
-            Async version.
+    async def _async_get_data_value_specifications_by_name(self, filter_string: str, classification_names: list[str],
+                                                           body: Optional[dict | FilterRequestBody] = None, start_from: int = 0,
+                                                           page_size: int = 0,
+                                                           output_format: str = 'JSON',
+                                                           report_spec: str | dict = None) -> list | str:
+        """ Get data value specifications by name. Async version.
 
         Parameters
         ----------
@@ -4269,7 +3155,7 @@ class DataDesigner(ServerClient):
             - maximum number of elements to return.
         output_format: str, default = "DICT"
             - output format of the data structure. Possible values: "DICT", "JSON", "MERMAID".
-        report_spec: str|dict, optional, default = None
+        report_spec: str | dict, optional, default = None
             - The desired output columns/field options.
 
         Returns
@@ -4303,8 +3189,8 @@ class DataDesigner(ServerClient):
 
         url = f"{base_path(self, self.view_server)}/data-value-specifications/by-name"
 
-        response = await self._async_get_name_request(url, _type="DataClass",
-                                                      _gen_output=self._generate_data_class_output,
+        response = await self._async_get_name_request(url, _type="DataValueSpecification",
+                                                      _gen_output=self._generate_data_value_specification_output,
                                                       filter_string=filter_string,
                                                       classification_names=classification_names, start_from=start_from,
                                                       page_size=page_size, output_format=output_format,
@@ -4313,11 +3199,11 @@ class DataDesigner(ServerClient):
         return response
 
     @dynamic_catch
-    def get_data_classes_by_name(self, filter_string: str, classification_names: Optional[list[str]] = None,
-                                 body: Optional[dict | FilterRequestBody] = None, start_from: int = 0,
-                                 page_size: int = max_paging_size, output_format: str = 'JSON',
-                                 report_spec: str | dict = None) -> list | str:
-        """ Get the list of data class elements with a matching name to the search string filter.
+    def get_data_value_specifications_by_name(self, filter_string: str, classification_names: Optional[list[str]] = None, body: dict = None,
+                                              start_from: int = 0,
+                                              page_size: int = max_paging_size, output_format: str = 'JSON',
+                                              report_spec: str | dict = None) -> list | str:
+        """ Get data value specifications by name.
 
         Parameters
         ----------
@@ -4330,8 +3216,8 @@ class DataDesigner(ServerClient):
         page_size
             - maximum number of elements to return.
         output_format: str, default = "DICT"
-            - output format of the data structure. Possible values: "DICT", "JSON", "MERMAID".
-        report_spec: str|dict, optional, default = None
+         - one of "DICT", "MERMAID" or "JSON"
+        report_spec: str | dict, optional, default = None
             - The desired output columns/field options.
 
 
@@ -4349,46 +3235,34 @@ class DataDesigner(ServerClient):
         PyegeriaUnauthorizedException
             the requesting user is not authorized to issue this request.
 
-        Notes
-        -----
-        {
-          "class": "FilterRequestBody",
-          "asOfTime": "{{$isoTimestamp}}",
-          "effectiveTime": "{{$isoTimestamp}}",
-          "forLineage": false,
-          "forDuplicateProcessing": false,
-          "limitResultsByStatus": ["ACTIVE"],
-          "sequencingOrder": "PROPERTY_ASCENDING",
-          "sequencingProperty": "qualifiedName",
-          "filter": "Add name here"
-        }
 
     """
 
         loop = asyncio.get_event_loop()
         response = loop.run_until_complete(
-            self._async_get_data_classes_by_name(filter_string, classification_names, body,
-                                                 start_from, page_size, output_format, report_spec
-                                                 ))
+            self._async_get_data_value_specifications_by_name(filter_string, classification_names, body, start_from, page_size,
+                                                             output_format, report_spec))
         return response
 
     @dynamic_catch
-    async def _async_get_data_class_by_guid(self, guid: str, element_type: Optional[str] = None,
-                                            body: Optional[dict | GetRequestBody] = None,
-                                            output_format: str = 'JSON',
-                                            report_spec: str | dict = None) -> list | str:
-        """ Get the  data class elements for the specified GUID.
+    async def _async_get_data_value_specification_by_guid(self, guid: str, element_type: Optional[str] = None,
+                                                           body: Optional[dict | GetRequestBody] = None,
+                                                           output_format: str = 'JSON',
+                                                           report_spec: str | dict = None) -> list | str:
+        """ Get the  data value specification metadata elements for the specified GUID.
             Async version.
 
         Parameters
         ----------
         guid: str
-            - unique identifier of the data class metadata element.
-        body: dict, optional
+            - unique identifier of the data value specification metadata element.
+        element_type: str, optional
+            - optional element type.
+        body: dict | GetRequestBody, optional
             - optional request body.
         output_format: str, default = "DICT"
-            - output format of the data structure. Possible values: "DICT", "JSON", "MERMAID".
-        report_spec: str|dict, optional, default = None
+         - one of "DICT", "MERMAID" or "JSON"
+        report_spec: str | dict, optional, default = None
             - The desired output columns/field options.
 
         Returns
@@ -4410,40 +3284,43 @@ class DataDesigner(ServerClient):
 
         Optional request body:
         {
-          "class": "AnyTimeRequestBody",
-          "asOfTime": "{{$isoTimestamp}}",
-          "effectiveTime": "{{$isoTimestamp}}",
-          "forLineage": false,
-          "forDuplicateProcessing": false
+          "class" : "AnyTimeRequestBody",
+          "asOfTime" : "{{$isoTimestamp}}",
+          "effectiveTime" : "{{$isoTimestamp}}",
+          "forLineage" : false,
+          "forDuplicateProcessing" : false
         }
+
 
         """
 
         url = (f"{base_path(self, self.view_server)}/data-value-specifications/{guid}/retrieve")
-        type = element_type if element_type else "DataClass"
+        type = element_type if element_type else "DataValueSpecification"
 
         response = await self._async_get_guid_request(url, _type=type,
-                                                      _gen_output=self._generate_data_class_output,
+                                                      _gen_output=self._generate_data_value_specification_output,
                                                       output_format=output_format, report_spec=report_spec,
                                                       body=body)
+
         return response
 
     @dynamic_catch
-    def get_data_class_by_guid(self, guid: str, element_type: Optional[str] = None,
-                               body: Optional[dict | GetRequestBody] = None,
-                               output_format: str = 'JSON',
-                               report_spec: str | dict = None) -> list | str:
-        """ Get the  data structure metadata element with the specified unique identifier..
+    def get_data_value_specification_by_guid(self, guid: str, element_type: Optional[str] = None,
+                                             body: Optional[dict | GetRequestBody] = None,
+                                             output_format: str = 'JSON', report_spec: str | dict = None) -> list | str:
+        """ Get the data value specification metadata element with the specified unique identifier..
 
         Parameters
         ----------
         guid: str
-            - unique identifier of the data structure metadata element.
+            - unique identifier of the data value specification metadata element.
+        element_type: str, optional
+            - optional element type.
         body: dict, optional
             - optional request body.
         output_format: str, default = "DICT"
-            - output format of the data structure. Possible values: "DICT", "JSON", "MERMAID".
-        report_spec: str|dict, optional, default = None
+         - one of "DICT", "MERMAID" or "JSON"
+        report_spec: str | dict, optional, default = None
             - The desired output columns/field options.
 
         Returns
@@ -4469,40 +3346,81 @@ class DataDesigner(ServerClient):
           "asOfTime": "{{$isoTimestamp}}",
           "effectiveTime": "{{$isoTimestamp}}",
           "forLineage": false,
-          "forDuplicateProcessing": false
+          "forDuplicateProcessing" : false
         }
 
     """
 
         loop = asyncio.get_event_loop()
         response = loop.run_until_complete(
-            self._async_get_data_class_by_guid(guid, element_type, body, output_format, report_spec))
+            self._async_get_data_value_specification_by_guid(guid, element_type, body, output_format, report_spec))
         return response
 
-    ###
-    # =====================================================================================================================
-    # Work with Data Value Specifications (Data Classes or Data Grains)
-    # https://egeria-project.org/concepts/data-value-specification
-    #
+
     @dynamic_catch
-    async def _async_create_data_value_specification(self, body: dict | NewElementRequestBody) -> str:
+    async def _async_get_data_class_by_guid(self, guid: str, element_type: Optional[str] = None,
+                                             body: Optional[dict | GetRequestBody] = None,
+                                             output_format: str = 'JSON',
+                                             report_spec: str | dict = None) -> list | str:
+        """Get a data class by its GUID. Async version.
+        Uses the data-value-specifications parent endpoint since DataClass is a subtype.
         """
-        Create a new data value specification with parameters defined in the body. Async version.
+        url = f"{base_path(self, self.view_server)}/data-value-specifications/{guid}/retrieve"
+        _type = element_type if element_type else "DataClass"
+        return await self._async_get_guid_request(url, _type=_type,
+                                                   _gen_output=self._generate_data_class_output,
+                                                   output_format=output_format, report_spec=report_spec,
+                                                   body=body)
+
+    @dynamic_catch
+    def get_data_class_by_guid(self, guid: str, element_type: Optional[str] = None,
+                                body: Optional[dict | GetRequestBody] = None,
+                                output_format: str = 'JSON', report_spec: str | dict = None) -> list | str:
+        """Get a data class by its GUID."""
+        loop = asyncio.get_event_loop()
+        return loop.run_until_complete(
+            self._async_get_data_class_by_guid(guid, element_type, body, output_format, report_spec))
+
+    @dynamic_catch
+    def get_data_grain_by_guid(self, guid: str, element_type: Optional[str] = None,
+                                body: Optional[dict] = None,
+                                output_format: str = 'JSON', report_spec: str | dict = None) -> list | str:
+        """Get a data grain by its GUID. Alias for get_data_value_specification_by_guid with DataGrain type."""
+        loop = asyncio.get_event_loop()
+        return loop.run_until_complete(
+            self._async_get_data_value_specification_by_guid(
+                guid, element_type or "DataGrain", body, output_format, report_spec))
+
+    @dynamic_catch
+    async def _async_create_data_classification(self, body: dict | NewElementRequestBody) -> str:
+        """
+        Create a new data classification with parameters defined in the body. Async version.
 
         Parameters
         ----------
         body: dict
-            - a dictionary containing the properties of the data value specification to be created.
+            - a dictionary containing the properties of the data classification to be created.
 
         Returns
         -------
         str
             The GUID of the element - or "No element found"
-        Notes
-        _____
-        Optional request body:
+
+        Raises
+        ------
+        PyegeriaInvalidParameterException
+            one of the parameters is null or invalid or
+        PyegeriaAPIException
+            There is a problem adding the element properties to the metadata repository or
+        PyegeriaUnauthorizedException
+            the requesting user is not authorized to issue this request.
+
+        Note
+        ----
+        Sample body:
         {
           "class" : "NewElementRequestBody",
+          "requestId": "a request id",
           "anchorGUID" : "add guid here",
           "isOwnAnchor": false,
           "parentGUID": "add guid here",
@@ -4519,7 +3437,7 @@ class DataDesigner(ServerClient):
           },
           "parentAtEnd1": false,
           "properties": {
-            "class" : "DataValueSpecificationProperties",
+            "class" : "DataClassificationProperties",
             "qualifiedName": "add unique name here",
             "displayName": "add short name here",
             "description": "add description here",
@@ -4532,43 +3450,61 @@ class DataDesigner(ServerClient):
               "property2" : "propertyValue2"
             },
             "dataType": "",
-            "units" : "",
-            "absoluteUncertainty" : 0,
-            "relativeUncertainty" : 0,
+            "allowsDuplicateValues": true,
+            "isNullable": false,
+            "defaultValue": "",
+            "averageValue": "",
+            "valueList": [],
+            "valueRangeFrom": "",
+            "valueRangeTo": "",
+            "sampleValues": [],
+            "dataPatterns" : [],
             "additionalProperties": {
               "property1" : "propertyValue1",
               "property2" : "propertyValue2"
-            }
-          },
-          "externalSourceGUID": "add guid here",
-          "externalSourceName": "add qualified name here",
-          "effectiveTime" : "{{$isoTimestamp}}",
-          "forLineage" : false,
-          "forDuplicateProcessing" : false
+            },
+            "effectiveFrom": "{{$isoTimestamp}}",
+            "effectiveTo": "{{$isoTimestamp}}"
+          }
         }
+
         """
-        url = f"{base_path(self, self.view_server)}/data-value-specifications"
-        return await self._async_create_element_body_request(url, ["DataValueSpecification"], body)
+
+        url = f"{base_path(self, self.view_server)}/data-classifications"
+
+        return await self._async_create_element_body_request(url, ["DataClassification"], body)
 
     @dynamic_catch
-    def create_data_value_specification(self, body: dict | NewElementRequestBody) -> str:
+    def create_data_classification(self, body: dict | NewElementRequestBody) -> str:
         """
-        Create a new data value specification with parameters defined in the body.
+        Create a new data classification with parameters defined in the body.
 
         Parameters
         ----------
         body: dict
-            - a dictionary containing the properties of the data value specification to be created.
+            - a dictionary containing the properties of the data classification to be created.
 
         Returns
         -------
         str
             The GUID of the element - or "No element found"
-        Notes
-        _____
-        Optional request body:
+
+        Raises
+        ------
+        PyegeriaInvalidParameterException
+            one of the parameters is null or invalid or
+        PyegeriaAPIException
+            There is a problem adding the element properties to the metadata repository or
+        PyegeriaUnauthorizedException
+            the requesting user is not authorized to issue this request.
+
+        Note
+        ----
+
+        Sample body:
         {
           "class" : "NewElementRequestBody",
+          "requestId": "a request id",
           "anchorGUID" : "add guid here",
           "isOwnAnchor": false,
           "parentGUID": "add guid here",
@@ -4585,7 +3521,7 @@ class DataDesigner(ServerClient):
           },
           "parentAtEnd1": false,
           "properties": {
-            "class" : "DataValueSpecificationProperties",
+            "class" : "DataClassificationProperties",
             "qualifiedName": "add unique name here",
             "displayName": "add short name here",
             "description": "add description here",
@@ -4598,305 +3534,375 @@ class DataDesigner(ServerClient):
               "property2" : "propertyValue2"
             },
             "dataType": "",
-            "units" : "",
-            "absoluteUncertainty" : 0,
-            "relativeUncertainty" : 0,
+            "allowsDuplicateValues": true,
+            "isNullable": false,
+            "defaultValue": "",
+            "averageValue": "",
+            "valueList": [],
+            "valueRangeFrom": "",
+            "valueRangeTo": "",
+            "sampleValues": [],
+            "dataPatterns" : [],
+            "additionalProperties": {
+              "property1" : "propertyValue1",
+              "property2" : "propertyValue2"
+            },
+            "effectiveFrom": "{{$isoTimestamp}}",
+            "effectiveTo": "{{$isoTimestamp}}"
+          }
+        }
+
+        """
+
+        loop = asyncio.get_event_loop()
+        response = loop.run_until_complete(self._async_create_data_classification(body))
+        return response
+
+    @dynamic_catch
+    async def _async_update_data_classification(self, data_classification_guid: str, body: dict | UpdateElementRequestBody) -> None:
+        """
+        Update the properties of a data classification. Async version.
+
+        Parameters
+        ----------
+        data_classification_guid: str
+            - the GUID of the data classification to be updated.
+        body: dict
+            - a dictionary containing the properties of the data structure to be created.
+
+        Returns
+        -------
+        None
+
+        Raises
+        ------
+        PyegeriaInvalidParameterException
+            one of the parameters is null or invalid or
+        PyegeriaAPIException
+            There is a problem adding the element properties to the metadata repository or
+        PyegeriaUnauthorizedException
+            the requesting user is not authorized to issue this request.
+
+        Note
+        ----
+        Full sample body:
+        {
+          "class" : "UpdateElementRequestBody",
+          "requestId": "A request id",
+          "mergeUpdate": true,
+          "properties": {
+            "class" : "DataClassificationProperties",
+            "qualifiedName": "add unique name here",
+            "displayName": "add short name here",
+            "description": "add description here",
+            "namespacePath": "add scope of this data class's applicability.",
+            "matchPropertyNames": ["name1", "name2"],
+            "matchThreshold": 0,
+            "specification": "",
+            "specificationDetails": {
+              "property1" : "propertyValue1",
+              "property2" : "propertyValue2"
+            },
+            "dataType": "",
+            "allowsDuplicateValues": true,
+            "isNullable": false,
+            "defaultValue": "",
+            "averageValue": "",
+            "valueList": [],
+            "valueRangeFrom": "",
+            "valueRangeTo": "",
+            "sampleValues": [],
+            "dataPatterns" : [],
             "additionalProperties": {
               "property1" : "propertyValue1",
               "property2" : "propertyValue2"
             }
-          },
+          }
+        }
+
+        """
+
+        url = f"{base_path(self, self.view_server)}/data-classifications/{data_classification_guid}/update"
+        await self._async_update_element_body_request(url, ["DataClassification"], body)
+        logger.info(f"Data classification {data_classification_guid} updated.")
+
+    @dynamic_catch
+    def update_data_classification(self, data_classification_guid: str, body: dict | UpdateElementRequestBody) -> None:
+        """
+        Update the properties of a data classification.
+
+        Parameters
+        ----------
+        data_classification_guid: str
+            - the GUID of the data classification to be updated.
+        body: dict
+            - a dictionary containing the properties of the data structure to be created.
+
+        Returns
+        -------
+        None
+
+        Raises
+        ------
+        PyegeriaInvalidParameterException
+            one of the parameters is null or invalid or
+        PyegeriaAPIException
+            There is a problem adding the element properties to the metadata repository or
+        PyegeriaUnauthorizedException
+            the requesting user is not authorized to issue this request.
+
+        Note
+        ----
+
+        Full sample body:
+        {
+          "class" : "UpdateElementRequestBody",
+          "requestId": "A request id",
+          "mergeUpdate": true,
+          "properties": {
+            "class" : "DataClassificationProperties",
+            "qualifiedName": "add unique name here",
+            "displayName": "add short name here",
+            "description": "add description here",
+            "namespacePath": "add scope of this data class's applicability.",
+            "matchPropertyNames": ["name1", "name2"],
+            "matchThreshold": 0,
+            "specification": "",
+            "specificationDetails": {
+              "property1" : "propertyValue1",
+              "property2" : "propertyValue2"
+            },
+            "dataType": "",
+            "allowsDuplicateValues": true,
+            "isNullable": false,
+            "defaultValue": "",
+            "averageValue": "",
+            "valueList": [],
+            "valueRangeFrom": "",
+            "valueRangeTo": "",
+            "sampleValues": [],
+            "dataPatterns" : [],
+            "additionalProperties": {
+              "property1" : "propertyValue1",
+              "property2" : "propertyValue2"
+            }
+          }
+        }
+
+        """
+
+        loop = asyncio.get_event_loop()
+        loop.run_until_complete(self._async_update_data_classification(data_classification_guid, body))
+
+    @dynamic_catch
+    async def _async_link_data_classification_to_data_field(self, data_classification_guid: str, data_field_guid: str,
+                                                             body: Optional[dict | NewRelationshipRequestBody] = None) -> None:
+        """
+         Connect a data classification to a data field to guide the survey action service (that checks the data
+         quality of a data resource as part of certifying it with the supplied certification type) to the definition
+         of the data field to use as a specification of how the data should be both structured and (if data
+        classes are attached to the associated data fields using the DataClassDefinition relationship) contain the
+        valid values. Request body is optional.
+         Async version
+
+        Parameters
+        ----------
+        data_classification_guid: str
+            - the GUID of the data classification to link.
+        data_field_guid: str
+            - the GUID of the data field to be connected.
+        body: dict, optional
+            - a dictionary containing additional properties.
+
+        Returns
+        -------
+        None
+
+        Raises
+        ------
+        PyegeriaInvalidParameterException
+            one of the parameters is null or invalid or
+        PyegeriaAPIException
+            There is a problem adding the element properties to the metadata repository or
+        PyegeriaUnauthorizedException
+            the requesting user is not authorized to issue this request.
+
+        Note
+        ----
+
+        Sample body:
+
+        {
+          "class": "MetadataSourceRequestBody",
           "externalSourceGUID": "add guid here",
           "externalSourceName": "add qualified name here",
-          "effectiveTime" : "{{$isoTimestamp}}",
-          "forLineage" : false,
+          "effectiveTime": "{{$isoTimestamp}}",
+          "forLineage": false,
           "forDuplicateProcessing" : false
         }
+
         """
-        loop = asyncio.get_event_loop()
-        return loop.run_until_complete(self._async_create_data_value_specification(body))
+
+        url = (f"{base_path(self, self.view_server)}/data-classifications/{data_classification_guid}"
+               f"/data-fields/{data_field_guid}/attach")
+        await self._async_new_relationship_request(url, ["DataFieldClassificationProperties"], body)
+        logger.info(f"Data classification {data_classification_guid} linked to data field {data_field_guid}.")
+
 
     @dynamic_catch
-    async def _async_create_data_grain(self, body: dict | NewElementRequestBody) -> str:
+    def link_data_classification_to_data_field(self, data_classification_guid: str, data_field_guid: str,
+                                               body: Optional[dict | NewRelationshipRequestBody] = None) -> None:
         """
-        Create a new data grain with parameters defined in the body. Async version.
+        Connect a data classification to a data field to guide the survey action service (that checks the data
+         quality of a data resource as part of certifying it with the supplied certification type) to the definition
+         of the data field to use as a specification of how the data should be both structured and (if data
+        classes are attached to the associated data fields using the DataClassDefinition relationship) contain the
+        valid values. Request body is optional.
+         Async version
 
         Parameters
         ----------
-        body: dict
-            - a dictionary containing the properties of the data grain to be created.
+        data_classification_guid: str
+            - the GUID of the data classification to link.
+        data_field_guid: str
+            - the GUID of the data field to be connected.
+        body: dict, optional
+            - a dictionary containing additional properties.
 
         Returns
         -------
-        str
-            The GUID of the element - or "No element found"
+        None
+
+        Raises
+        ------
+        PyegeriaInvalidParameterException
+            one of the parameters is null or invalid or
+        PyegeriaAPIException
+            There is a problem adding the element properties to the metadata repository or
+        PyegeriaUnauthorizedException
+            the requesting user is not authorized to issue this request.
+
+        Note
+        ----
+
+        Sample body:
+
+        {
+          "class": "MetadataSourceRequestBody",
+          "externalSourceGUID": "add guid here",
+          "externalSourceName": "add qualified name here",
+          "effectiveTime": "{{$isoTimestamp}}",
+          "forLineage": false,
+          "forDuplicateProcessing" : false
+        }
+
         """
-        url = f"{base_path(self, self.view_server)}/data-value-specifications"
-        return await self._async_create_element_body_request(url, ["DataGrain"], body)
+
+        loop = asyncio.get_event_loop()
+        loop.run_until_complete(
+            self._async_link_data_classification_to_data_field(data_classification_guid, data_field_guid, body))
 
     @dynamic_catch
-    def create_data_grain(self, body: dict | NewElementRequestBody) -> str:
+    async def _async_detach_data_classification_from_data_field(self, data_classification_guid: str, data_field_guid: str,
+                                                                 body: Optional[dict | DeleteRelationshipRequestBody] = None,
+                                                                 cascade_delete: bool = False) -> None:
         """
-        Create a new data grain with parameters defined in the body.
+        Detach a data field from a data classification. Request body is optional. Async version.
 
         Parameters
         ----------
-        body: dict
-            - a dictionary containing the properties of the data grain to be created.
+        data_classification_guid: str
+            - the GUID of the data classification to link.
+        data_field_guid: str
+            - the GUID of the data field to be connected.
+        body: dict, optional
+            - a dictionary containing additional properties.
 
         Returns
         -------
-        str
-            The GUID of the element - or "No element found"
+        None
+
+        Raises
+        ------
+        PyegeriaInvalidParameterException
+            one of the parameters is null or invalid or
+        PyegeriaAPIException
+            There is a problem adding the element properties to the metadata repository or
+        PyegeriaUnauthorizedException
+            the requesting user is not authorized to issue this request.
+
+        Note
+        ----
+
+        Sample body:
+
+        {
+          "class": "MetadataSourceRequestBody",
+          "externalSourceGUID": "add guid here",
+          "externalSourceName": "add qualified name here",
+          "effectiveTime": "{{$isoTimestamp}}",
+          "forLineage": false,
+          "forDuplicateProcessing": false
+        }
+
+
         """
+
+        url = (f"{base_path(self, self.view_server)}/data-classifications/{data_classification_guid}"
+               f"/data-fields/{data_field_guid}/detach")
+
+        await self._async_delete_relationship_request(url, body, cascade_delete)
+        logger.info(f"Data classification {data_classification_guid} detached from data field {data_field_guid}.")
+
+
+    @dynamic_catch
+    def detach_data_classification_from_data_field(self, data_classification_guid: str, data_field_guid: str,
+                                                   body: Optional[dict | DeleteRelationshipRequestBody] = None, cascade_delete: bool = False) -> None:
+        """
+        Detach a data field from a data classification. Request body is optional.
+
+        Parameters
+        ----------
+        data_classification_guid: str
+            - the GUID of the data classification to link.
+        data_field_guid: str
+            - the GUID of the data field to be connected.
+        body: dict, optional
+            - a dictionary containing additional properties.
+
+        Returns
+        -------
+        None
+
+        Raises
+        ------
+        PyegeriaInvalidParameterException
+            one of the parameters is null or invalid or
+        PyegeriaAPIException
+            There is a problem adding the element properties to the metadata repository or
+        PyegeriaUnauthorizedException
+            the requesting user is not authorized to issue this request.
+
+        Note
+        ----
+
+        Sample body:
+
+        {
+          "class": "MetadataSourceRequestBody",
+          "externalSourceGUID": "add guid here",
+          "externalSourceName": "add qualified name here",
+          "effectiveTime": "{{$isoTimestamp}}",
+          "forLineage": false,
+          "forDuplicateProcessing": false
+        }
+
+
+        """
+
         loop = asyncio.get_event_loop()
-        return loop.run_until_complete(self._async_create_data_grain(body))
-
-    @dynamic_catch
-    async def _async_create_data_value_specification_from_template(self, body: dict | TemplateRequestBody) -> str:
-        """
-        Create a new data value specification using a template. Async version.
-        """
-        url = f"{base_path(self, self.view_server)}/data-value-specifications/from-template"
-        return await self._async_create_element_from_template_request(url, "DataValueSpecification", body)
-
-    @dynamic_catch
-    def create_data_value_specification_from_template(self, body: dict | TemplateRequestBody) -> str:
-        """
-        Create a new data value specification using a template.
-        """
-        loop = asyncio.get_event_loop()
-        return loop.run_until_complete(self._async_create_data_value_specification_from_template(body))
-
-    @dynamic_catch
-    async def _async_update_data_value_specification(self, guid: str, body: dict | UpdateElementRequestBody) -> str:
-        """
-        Update the properties of a data value specification. Async version.
-        """
-        url = f"{base_path(self, self.view_server)}/data-value-specifications/{guid}/update"
-        return await self._async_update_element_request(url, ["DataValueSpecification"], body)
-
-    @dynamic_catch
-    def update_data_value_specification(self, guid: str, body: dict | UpdateElementRequestBody) -> str:
-        """
-        Update the properties of a data value specification.
-        """
-        loop = asyncio.get_event_loop()
-        return loop.run_until_complete(self._async_update_data_value_specification(guid, body))
-
-    @dynamic_catch
-    async def _async_delete_data_value_specification(self, guid: str,
-                                                     body: Optional[dict | DeleteElementRequestBody] = None) -> None:
-        """
-        Delete a data value specification. Async version.
-        """
-        url = f"{base_path(self, self.view_server)}/data-value-specifications/{guid}/delete"
-        await self._async_delete_element_request(url, body)
-
-    @dynamic_catch
-    def delete_data_value_specification(self, guid: str, body: Optional[dict | DeleteElementRequestBody] = None) -> None:
-        """
-        Delete a data value specification.
-        """
-        loop = asyncio.get_event_loop()
-        loop.run_until_complete(self._async_delete_data_value_specification(guid, body))
-
-    @dynamic_catch
-    async def _async_find_data_value_specifications(self, search_string: str, **kwargs) -> list | str:
-        """
-        Find data value specifications by search string. Async version.
-        """
-        url = f"{base_path(self, self.view_server)}/data-value-specifications/by-search-string"
-        return await self._async_find_request(url, "DataValueSpecification",
-                                              self._generate_data_value_specification_output, search_string, **kwargs)
-
-    @dynamic_catch
-    def find_data_value_specifications(self, search_string: str, **kwargs) -> list | str:
-        """
-        Find data value specifications by search string.
-        """
-        loop = asyncio.get_event_loop()
-        return loop.run_until_complete(self._async_find_data_value_specifications(search_string, **kwargs))
-
-    @dynamic_catch
-    async def _async_find_all_data_grains(self, **kwargs) -> list | str:
-        """
-        Retrieve all data grains. Async version.
-        """
-        return await self._async_find_data_value_specifications(search_string="*", metadata_element_type="DataGrain",
-                                                               **kwargs)
-
-    @dynamic_catch
-    def find_all_data_grains(self, **kwargs) -> list | str:
-        """
-        Retrieve all data grains.
-        """
-        loop = asyncio.get_event_loop()
-        return loop.run_until_complete(self._async_find_all_data_grains(**kwargs))
-
-    @dynamic_catch
-    async def _async_get_data_value_specifications_by_name(self, filter_string: str, **kwargs) -> list | str:
-        """
-        Get data value specifications by name. Async version.
-        """
-        url = f"{base_path(self, self.view_server)}/data-value-specifications/by-name"
-        return await self._async_get_name_request(url, "DataValueSpecification",
-                                                  self._generate_data_value_specification_output, filter_string,
-                                                  **kwargs)
-
-    @dynamic_catch
-    def get_data_value_specifications_by_name(self, filter_string: str, **kwargs) -> list | str:
-        """
-        Get data value specifications by name.
-        """
-        loop = asyncio.get_event_loop()
-        return loop.run_until_complete(self._async_get_data_value_specifications_by_name(filter_string, **kwargs))
-
-    @dynamic_catch
-    async def _async_get_data_value_specification_by_guid(self, guid: str, **kwargs) -> dict | str:
-        """
-        Get data value specification by unique identifier. Async version.
-        """
-        url = f"{base_path(self, self.view_server)}/data-value-specifications/{guid}/retrieve"
-        return await self._async_get_guid_request(url, "DataValueSpecification",
-                                                 self._generate_data_value_specification_output, **kwargs)
-
-    @dynamic_catch
-    def get_data_value_specification_by_guid(self, guid: str, **kwargs) -> dict | str:
-        """
-        Get data value specification by unique identifier.
-        """
-        loop = asyncio.get_event_loop()
-        return loop.run_until_complete(self._async_get_data_value_specification_by_guid(guid, **kwargs))
-
-    @dynamic_catch
-    async def _async_get_data_grain_by_guid(self, guid: str, **kwargs) -> dict | str:
-        """
-        Get data grain by unique identifier. Async version.
-        """
-        url = f"{base_path(self, self.view_server)}/data-value-specifications/{guid}/retrieve"
-        return await self._async_get_guid_request(url, "DataGrain", self._generate_data_grain_output, **kwargs)
-
-    @dynamic_catch
-    def get_data_grain_by_guid(self, guid: str, **kwargs) -> dict | str:
-        """
-        Get data grain by unique identifier.
-        """
-        loop = asyncio.get_event_loop()
-        return loop.run_until_complete(self._async_get_data_grain_by_guid(guid, **kwargs))
-
-    @dynamic_catch
-    async def _async_link_specialized_data_value_specification(self, parent_guid: str, child_guid: str,
-                                                               body: Optional[
-                                                                   dict | NewRelationshipRequestBody] = None) -> None:
-        """
-        Connect two data value specifications. Async version.
-        """
-        url = f"{base_path(self, self.view_server)}/data-value-specifications/{parent_guid}/specialized-data-value-specifications/{child_guid}/attach"
-        await self._async_new_relationship_request(url, ["DataValueHierarchyProperties"], body)
-
-    @dynamic_catch
-    def link_specialized_data_value_specification(self, parent_guid: str, child_guid: str,
-                                                  body: Optional[dict | NewRelationshipRequestBody] = None) -> None:
-        """
-        Connect two data value specifications.
-        """
-        loop = asyncio.get_event_loop()
-        loop.run_until_complete(self._async_link_specialized_data_value_specification(parent_guid, child_guid, body))
-
-    @dynamic_catch
-    async def _async_detach_specialized_data_value_specification(self, parent_guid: str, child_guid: str,
-                                                                 body: Optional[
-                                                                     dict | DeleteRelationshipRequestBody] = None) -> None:
-        """
-        Detach two data value specifications. Async version.
-        """
-        url = f"{base_path(self, self.view_server)}/data-value-specifications/{parent_guid}/specialized-data-value-specifications/{child_guid}/detach"
-        await self._async_delete_relationship_request(url, body)
-
-    @dynamic_catch
-    def detach_specialized_data_value_specification(self, parent_guid: str, child_guid: str,
-                                                    body: Optional[dict | DeleteRelationshipRequestBody] = None) -> None:
-        """
-        Detach two data value specifications.
-        """
-        loop = asyncio.get_event_loop()
-        loop.run_until_complete(self._async_detach_specialized_data_value_specification(parent_guid, child_guid, body))
-
-    @dynamic_catch
-    async def _async_assign_data_value_specification(self, element_guid: str, spec_guid: str,
-                                                     body: Optional[dict | NewRelationshipRequestBody] = None) -> None:
-        """
-        Assign a data value specification to an element. Async version.
-        """
-        url = f"{base_path(self, self.view_server)}/elements/{element_guid}/data-value-specifications/{spec_guid}/attach"
-        await self._async_new_relationship_request(url, ["DataValueAssignmentProperties"], body)
-
-    @dynamic_catch
-    def assign_data_value_specification(self, element_guid: str, spec_guid: str,
-                                        body: Optional[dict | NewRelationshipRequestBody] = None) -> None:
-        """
-        Assign a data value specification to an element.
-        """
-        loop = asyncio.get_event_loop()
-        loop.run_until_complete(self._async_assign_data_value_specification(element_guid, spec_guid, body))
-
-    @dynamic_catch
-    async def _async_detach_data_value_specification_assignment(self, element_guid: str, spec_guid: str,
-                                                                body: Optional[
-                                                                    dict | DeleteRelationshipRequestBody] = None) -> None:
-        """
-        Detach a data value specification assignment. Async version.
-        """
-        url = f"{base_path(self, self.view_server)}/elements/{element_guid}/data-value-specifications/{spec_guid}/detach"
-        await self._async_delete_relationship_request(url, body)
-
-    @dynamic_catch
-    def detach_data_value_specification_assignment(self, element_guid: str, spec_guid: str,
-                                                    body: Optional[dict | DeleteRelationshipRequestBody] = None) -> None:
-        """
-        Detach a data value specification assignment.
-        """
-        loop = asyncio.get_event_loop()
-        loop.run_until_complete(self._async_detach_data_value_specification_assignment(element_guid, spec_guid, body))
-
-    @dynamic_catch
-    async def _async_link_data_value_specification_definition(self, definition_guid: str, spec_guid: str,
-                                                              body: Optional[
-                                                                  dict | NewRelationshipRequestBody] = None) -> None:
-        """
-        Connect a data definition to a data value specification. Async version.
-        """
-        url = f"{base_path(self, self.view_server)}/data-definitions/{definition_guid}/data-value-specification-definition/{spec_guid}/attach"
-        await self._async_new_relationship_request(url, ["DataValueDefinitionProperties"], body)
-
-    @dynamic_catch
-    def link_data_value_specification_definition(self, definition_guid: str, spec_guid: str,
-                                                 body: Optional[dict | NewRelationshipRequestBody] = None) -> None:
-        """
-        Connect a data definition to a data value specification.
-        """
-        loop = asyncio.get_event_loop()
-        loop.run_until_complete(self._async_link_data_value_specification_definition(definition_guid, spec_guid, body))
-
-    @dynamic_catch
-    async def _async_detach_data_value_specification_definition(self, definition_guid: str, spec_guid: str,
-                                                                body: Optional[
-                                                                    dict | DeleteRelationshipRequestBody] = None) -> None:
-        """
-        Detach a data definition from a data value specification. Async version.
-        """
-        url = f"{base_path(self, self.view_server)}/data-definitions/{definition_guid}/data-value-specification-definition/{spec_guid}/detach"
-        await self._async_delete_relationship_request(url, body)
-
-    @dynamic_catch
-    def detach_data_value_specification_definition(self, definition_guid: str, spec_guid: str,
-                                                   body: Optional[dict | DeleteRelationshipRequestBody] = None) -> None:
-        """
-        Detach a data definition from a data value specification.
-        """
-        loop = asyncio.get_event_loop()
-        loop.run_until_complete(self._async_detach_data_value_specification_definition(definition_guid, spec_guid, body))
+        loop.run_until_complete(
+            self._async_detach_data_classification_from_data_field(data_classification_guid, data_field_guid, body, cascade_delete))
 
     ###
     # =====================================================================================================================
@@ -4910,6 +3916,7 @@ class DataDesigner(ServerClient):
          Connect an element that is part of a data design to a data class to show that the data class should be used as
          the specification for the data values when interpreting the data definition. Request body is optional.
          Async version
+
         Parameters
         ----------
         data_definition_guid: str
@@ -4943,7 +3950,7 @@ class DataDesigner(ServerClient):
           "externalSourceName": "add qualified name here",
           "effectiveTime": "{{$isoTimestamp}}",
           "forLineage": false,
-          "forDuplicateProcessing": false
+          "forDuplicateProcessing" : false
         }
 
         """
@@ -4961,6 +3968,7 @@ class DataDesigner(ServerClient):
          Connect an element that is part of a data design to a data class to show that the data class should be used as
          the specification for the data values when interpreting the data definition. Request body is optional.
          Async version
+
         Parameters
         ----------
         data_definition_guid: str
@@ -4994,7 +4002,7 @@ class DataDesigner(ServerClient):
           "externalSourceName": "add qualified name here",
           "effectiveTime": "{{$isoTimestamp}}",
           "forLineage": false,
-          "forDuplicateProcessing": false
+          "forDuplicateProcessing" : false
         }
 
         """
@@ -5103,6 +4111,74 @@ class DataDesigner(ServerClient):
         loop.run_until_complete(
             self._async_detach_data_class_definition(data_definition_guid, data_class_guid, body, cascade_delete))
 
+
+    @dynamic_catch
+    async def _async_link_nested_data_class(self, parent_data_class_guid: str, child_data_class_guid: str,
+                                             body: Optional[dict | NewRelationshipRequestBody] = None) -> None:
+        """Link a child data class to a parent via DataClassComposition relationship. Async version."""
+        url = (f"{base_path(self, self.view_server)}/data-classes/{parent_data_class_guid}"
+               f"/nested-data-classes/{child_data_class_guid}/attach")
+        await self._async_new_relationship_request(url, ["DataClassCompositionProperties"], body)
+        logger.info(f"Nested data class {child_data_class_guid} linked to parent {parent_data_class_guid}.")
+
+    @dynamic_catch
+    def link_nested_data_class(self, parent_data_class_guid: str, child_data_class_guid: str,
+                               body: Optional[dict | NewRelationshipRequestBody] = None) -> None:
+        """Link a child data class to a parent via DataClassComposition relationship."""
+        loop = asyncio.get_event_loop()
+        loop.run_until_complete(self._async_link_nested_data_class(parent_data_class_guid, child_data_class_guid, body))
+
+    @dynamic_catch
+    async def _async_detach_nested_data_class(self, parent_data_class_guid: str, child_data_class_guid: str,
+                                               body: Optional[dict] = None, cascade_delete: bool = False) -> None:
+        """Detach a child data class from its parent (DataClassComposition). Async version."""
+        url = (f"{base_path(self, self.view_server)}/data-classes/{parent_data_class_guid}"
+               f"/nested-data-classes/{child_data_class_guid}/detach")
+        await self._async_delete_relationship_request(url, body, cascade_delete)
+        logger.info(f"Nested data class {child_data_class_guid} detached from parent {parent_data_class_guid}.")
+
+    @dynamic_catch
+    def detach_nested_data_class(self, parent_data_class_guid: str, child_data_class_guid: str,
+                                  body: Optional[dict] = None, cascade_delete: bool = False) -> None:
+        """Detach a child data class from its parent (DataClassComposition)."""
+        loop = asyncio.get_event_loop()
+        loop.run_until_complete(self._async_detach_nested_data_class(
+            parent_data_class_guid, child_data_class_guid, body, cascade_delete))
+
+    @dynamic_catch
+    async def _async_link_specialist_data_class(self, parent_data_class_guid: str, child_data_class_guid: str,
+                                                 body: Optional[dict | NewRelationshipRequestBody] = None) -> None:
+        """Link a specialized (child) data class to a parent via SpecializedDataClass relationship. Async version."""
+        url = (f"{base_path(self, self.view_server)}/data-classes/{parent_data_class_guid}"
+               f"/specialized-data-classes/{child_data_class_guid}/attach")
+        await self._async_new_relationship_request(url, ["SpecializedDataClassProperties"], body)
+        logger.info(f"Specialized data class {child_data_class_guid} linked to parent {parent_data_class_guid}.")
+
+    @dynamic_catch
+    def link_specialist_data_class(self, parent_data_class_guid: str, child_data_class_guid: str,
+                                   body: Optional[dict | NewRelationshipRequestBody] = None) -> None:
+        """Link a specialized (child) data class to a parent via SpecializedDataClass relationship."""
+        loop = asyncio.get_event_loop()
+        loop.run_until_complete(
+            self._async_link_specialist_data_class(parent_data_class_guid, child_data_class_guid, body))
+
+    @dynamic_catch
+    async def _async_detach_specialist_data_class(self, parent_data_class_guid: str, child_data_class_guid: str,
+                                                   body: Optional[dict] = None, cascade_delete: bool = False) -> None:
+        """Detach a specialized (child) data class from its parent. Async version."""
+        url = (f"{base_path(self, self.view_server)}/data-classes/{parent_data_class_guid}"
+               f"/specialized-data-classes/{child_data_class_guid}/detach")
+        await self._async_delete_relationship_request(url, body, cascade_delete)
+        logger.info(f"Specialized data class {child_data_class_guid} detached from parent {parent_data_class_guid}.")
+
+    @dynamic_catch
+    def detach_specialist_data_class(self, parent_data_class_guid: str, child_data_class_guid: str,
+                                     body: Optional[dict] = None, cascade_delete: bool = False) -> None:
+        """Detach a specialized (child) data class from its parent."""
+        loop = asyncio.get_event_loop()
+        loop.run_until_complete(self._async_detach_specialist_data_class(
+            parent_data_class_guid, child_data_class_guid, body, cascade_delete))
+
     @dynamic_catch
     async def _async_link_semantic_definition(self, data_definition_guid: str, glossary_term_guid: str,
                                               body: Optional[dict | NewRelationshipRequestBody] = None) -> None:
@@ -5144,7 +4220,7 @@ class DataDesigner(ServerClient):
           "externalSourceName": "add qualified name here",
           "effectiveTime": "{{$isoTimestamp}}",
           "forLineage": false,
-          "forDuplicateProcessing": false
+          "forDuplicateProcessing" : false
         }
 
         """
@@ -5196,7 +4272,7 @@ class DataDesigner(ServerClient):
           "externalSourceName": "add qualified name here",
           "effectiveTime": "{{$isoTimestamp}}",
           "forLineage": false,
-          "forDuplicateProcessing": false
+          "forDuplicateProcessing" : false
         }
 
         """
@@ -5306,6 +4382,7 @@ class DataDesigner(ServerClient):
 
 
 
+
     async def _async_link_certification_type_to_data_structure(self, certification_type_guid: str,
                                                                data_structure_guid: str, body: Optional[dict | NewRelationshipRequestBody] = None) -> None:
         """
@@ -5349,7 +4426,7 @@ class DataDesigner(ServerClient):
           "externalSourceName": "add qualified name here",
           "effectiveTime": "{{$isoTimestamp}}",
           "forLineage": false,
-          "forDuplicateProcessing": false
+          "forDuplicateProcessing" : false
         }
 
         """
@@ -5368,6 +4445,7 @@ class DataDesigner(ServerClient):
          of the data structure to use as a specification of how the data should be both structured and (if data
         classes are attached to the associated data fields using the DataClassDefinition relationship) contain the
         valid values. Request body is optional.
+         Async version
 
         Parameters
         ----------
@@ -5402,7 +4480,7 @@ class DataDesigner(ServerClient):
           "externalSourceName": "add qualified name here",
           "effectiveTime": "{{$isoTimestamp}}",
           "forLineage": false,
-          "forDuplicateProcessing": false
+          "forDuplicateProcessing" : false
         }
 
         """
@@ -5462,7 +4540,7 @@ class DataDesigner(ServerClient):
 
 
     def detach_certification_type_from_data_structure(self, certification_type_guid: str, data_structure_guid: str,
-                                                      body: dict | DeleteRelationshipRequestBody= None, cascade_delete: bool = False) -> None:
+                                                      body: dict | DeleteElementRequestBody= None, cascade_delete: bool = False) -> None:
         """
         Detach a data structure from a certification type. Request body is optional.
 
@@ -5578,6 +4656,11 @@ class DataDesigner(ServerClient):
                 if isinstance(formats, list):
                     targets = formats
                 elif isinstance(formats, dict):
+                    # Handle dict variant. It may be a single format dict or a wrapper containing 'formats'.
+                    # Examples seen:
+                    #   { 'attributes': [...] }
+                    #   { 'types': 'ALL', 'attributes': [...] }
+                    #   { 'formats': { 'attributes': [...] } }
                     inner = formats.get("formats") if isinstance(formats.get("formats"), (dict, list)) else None
                     if isinstance(inner, list):
                         targets = inner
@@ -5596,6 +4679,7 @@ class DataDesigner(ServerClient):
                             if key and key in related_map:
                                 col["value"] = related_map.get(key)
                 else:
+                    # If attributes are on the top-level (non-standard), attempt to handle gracefully
                     cols = col_data.get("attributes", []) if isinstance(col_data, dict) else []
                     for col in cols:
                         key = col.get("key") if isinstance(col, dict) else None
@@ -5858,6 +4942,79 @@ class DataDesigner(ServerClient):
 
     def _extract_additional_data_grain_properties(self, element, columns_struct):
         return None
+
+    @dynamic_catch
+    async def _async_link_data_value_assignment(self, element_guid: str, spec_guid: str, body: dict = None) -> None:
+        """
+        Link a Data Value Specification to an element (DataValueAssignment relationship). Async version.
+        """
+        url = f"{base_path(self, self.view_server)}/elements/{element_guid}/data-value-specifications/{spec_guid}/attach"
+        await self._async_new_relationship_request(url, ["DataValueAssignmentProperties"], body)
+        logger.info(f"Data Value Specification {spec_guid} assigned to element {element_guid}.")
+
+    @dynamic_catch
+    def link_data_value_assignment(self, element_guid: str, spec_guid: str, body: dict = None) -> None:
+        """
+        Link a Data Value Specification to an element (DataValueAssignment relationship). Sync version.
+        """
+        loop = asyncio.get_event_loop()
+        loop.run_until_complete(self._async_link_data_value_assignment(element_guid, spec_guid, body))
+
+    @dynamic_catch
+    async def _async_update_data_field(self, data_field_guid: str, body: dict | UpdateElementRequestBody) -> None:
+        """
+        Update the properties of a data field. Async version.
+
+        Parameters
+        ----------
+        data_field_guid: str
+            - the GUID of the data field to be updated.
+        body: dict | UpdateElementRequestBody
+            - a dictionary containing the properties to update.
+        """
+        url = f"{base_path(self, self.view_server)}/data-fields/{data_field_guid}/update"
+        await self._async_update_element_body_request(url, ["DataField"], body)
+        logger.info(f"Data field {data_field_guid} updated.")
+
+    @dynamic_catch
+    def update_data_field(self, data_field_guid: str, body: dict | UpdateElementRequestBody) -> None:
+        """Update the properties of a data field."""
+        loop = asyncio.get_event_loop()
+        loop.run_until_complete(self._async_update_data_field(data_field_guid, body))
+
+    @dynamic_catch
+    async def _async_update_data_value_specification(self, guid: str, body: dict | UpdateElementRequestBody) -> None:
+        """
+        Update the properties of a data value specification. Async version.
+        Parameters
+        ----------
+        guid: str
+            - the GUID of the data value specification to be updated.
+        body: dict | UpdateElementRequestBody
+            - a dictionary containing the properties to update.
+        Returns
+        -------
+        None
+        """
+        url = f"{base_path(self, self.view_server)}/data-value-specifications/{guid}/update"
+        await self._async_update_element_body_request(url, ["DataValueSpecification"], body)
+
+    @dynamic_catch
+    def update_data_value_specification(self, guid: str, body: dict | UpdateElementRequestBody) -> None:
+        """
+        Update the properties of a data value specification.
+        Parameters
+        ----------
+        guid: str
+            - the GUID of the data value specification to be updated.
+        body: dict | UpdateElementRequestBody
+            - a dictionary containing the properties to update.
+        Returns
+        -------
+        None
+        """
+        loop = asyncio.get_event_loop()
+        loop.run_until_complete(self._async_update_data_value_specification(guid, body))
 
 if __name__ == "__main__":
     print("Data Designer")

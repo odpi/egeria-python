@@ -36,14 +36,17 @@ class ProjectProcessor(AsyncBaseCommandProcessor):
         display_name = attributes.get('Display Name', {}).get('value', qualified_name)
         journal_entry = attributes.get('Journal Entry', {}).get('value')
         
+        spec = self.get_command_spec()
+        om_type = spec.get("OM_TYPE")
+        
         # Ensure we use "Project" as the base type for the property package
-        base_type = "Project"
+        base_type = om_type or "Project"
         project_types = ["Campaign", "Task", "Personal Project", "Study Project"]
         
         # 1. Properties
         # ProjectManager expects 'name' instead of 'displayName' and 'plannedEndDate' instead of 'endDate'
         prop_body = {
-            "class": "ProjectProperties",
+            "class": f"{base_type}Properties",
             # "typeName": self.command.object_type.replace(" ", ""),
             "qualifiedName": qualified_name,
             "displayName": display_name,
@@ -69,7 +72,7 @@ class ProjectProcessor(AsyncBaseCommandProcessor):
                  return self.command.raw_block
             self.parsed_output["guid"] = guid
 
-            body = set_update_body(base_type, attributes)
+            self.last_body = body = set_update_body(base_type, attributes)
             body['properties'] = self.filter_update_properties(prop_body, body.get('mergeUpdate', True))
             await self.client._async_update_project(project_guid=guid, body=body)
             
@@ -86,12 +89,13 @@ class ProjectProcessor(AsyncBaseCommandProcessor):
             return await self.render_result_markdown(guid)
 
         elif verb == "Create":
-            body = set_create_body(base_type, attributes)
+            self.last_body = body = set_create_body(base_type, attributes)
             # Apply classifications based on the actual object_type (e.g., Campaign)
             body["initialClassifications"] = set_object_classifications(object_type, attributes, project_types)
             body["properties"] = prop_body
             
-            guid = await self.client._async_create_project(body=body_slimmer(body))
+            raw_guid = await self.client._async_create_project(body=body_slimmer(body))
+            guid = self.extract_guid_or_raise(raw_guid, "Create Project")
             if guid:
                 self.parsed_output["guid"] = guid
 
@@ -124,6 +128,9 @@ class ProjectLinkProcessor(AsyncBaseCommandProcessor):
         object_type = getattr(self, 'canonical_object_type', self.command.object_type)
         attributes = self.parsed_output["attributes"]
         
+        spec = self.get_command_spec()
+        om_type = spec.get("OM_TYPE")
+
         parent_guid = attributes.get('Parent Project', {}).get('guid')
         child_guid = attributes.get('Child Project', {}).get('guid')
         label = attributes.get('Link Label', {}).get('value', "")
@@ -133,18 +140,18 @@ class ProjectLinkProcessor(AsyncBaseCommandProcessor):
 
         if verb in ["Link", "Attach", "Add"]:
             if "Hierarchy" in object_type:
-                body = set_rel_request_body_for_type("ProjectHierarchy", attributes)
+                self.last_body = body = set_rel_request_body_for_type(om_type or "ProjectHierarchy", attributes)
 
                 await self.client._async_set_project_hierarchy(project_guid=child_guid, parent_project_guid=parent_guid, body=body_slimmer(body))
             else:
-                body = set_rel_request_body_for_type("ProjectDependency", attributes)
+                self.last_body = body = set_rel_request_body_for_type(om_type or "ProjectDependency", attributes)
                 await self.client._async_set_project_dependency(project_guid=child_guid, upstream_project_guid=parent_guid, body=body_slimmer(body))
             
             logger.success(f"Linked Project {object_type}")
             return f"\n\n# {verb} {object_type}\n\nLinked {child_guid} to {parent_guid} ({label})"
 
         elif verb in ["Detach", "Unlink", "Remove"]:
-            body = set_delete_rel_request_body(object_type, attributes)
+            self.last_body = body = set_delete_rel_request_body(object_type, attributes)
             if "Hierarchy" in object_type:
                 await self.client._async_clear_project_hierarchy(child_guid, parent_guid, body)
             else:

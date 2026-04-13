@@ -17,6 +17,8 @@ STANDARD_VERBS = {
 class DrECommand:
     verb: str
     object_type: str
+    source_verb: str = ""
+    source_object_type: str = ""
     attributes: Dict[str, str] = field(default_factory=dict)
     raw_block: str = ""
     start_line: int = 0
@@ -32,20 +34,29 @@ class UniversalExtractor:
     """
     def __init__(self, text: str):
         self.text = text
-        # Regex to find command start: Match # <Verb> <Object> or a headless line starting with a verb
-        # Accounts for horizontal rules or whitespace that might be the actual first characters of the block text
+        # Regex for a command header line: # <Verb> <Object> or headless <Verb> <Object>
         verbs_pattern = "|".join(STANDARD_VERBS)
         self.cmd_header_rx = re.compile(
-            rf"^(?:\s*_+|[-]+\s*\n)?(?:#\s+)?(?P<verb>{verbs_pattern})\s+(?P<object>[^#\n_]+)", 
-            re.MULTILINE | re.IGNORECASE
+            rf"^\s*(?P<header>#+\s+)?(?P<verb>{verbs_pattern})\s+(?P<object>[^#\n_]+)\s*$",
+            re.IGNORECASE,
         )
+
+    def _match_command_header(self, block_text: str) -> Optional[re.Match[str]]:
+        """Return a command match only when the first meaningful line is a command header."""
+        for line in block_text.splitlines():
+            if not line.strip():
+                continue
+            if re.match(r'^\s*___+\s*$', line) or re.match(r'^\s*---+\s*$', line):
+                continue
+            return self.cmd_header_rx.match(line)
+        return None
 
     def extract_commands(self) -> List[DrECommand]:
         blocks = self._split_into_blocks()
         commands = []
         
         for block_text, start_line in blocks:
-            match = self.cmd_header_rx.search(block_text)
+            match = self._match_command_header(block_text)
             if match:
                 verb = match.group("verb").strip().capitalize()
                 obj = match.group("object").strip()
@@ -58,6 +69,8 @@ class UniversalExtractor:
                 commands.append(DrECommand(
                     verb=verb,
                     object_type=obj,
+                    source_verb=verb,
+                    source_object_type=obj,
                     attributes=attributes,
                     raw_block=block_text,
                     start_line=start_line,
@@ -69,6 +82,8 @@ class UniversalExtractor:
                 commands.append(DrECommand(
                     verb="",
                     object_type="",
+                    source_verb="",
+                    source_object_type="",
                     attributes={},
                     raw_block=block_text,
                     start_line=start_line,

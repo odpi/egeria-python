@@ -8,9 +8,9 @@ This common file is used to set some global values and enumerations used by the 
 
 """
 from enum import Enum
-from typing import Any, Type
+from typing import Any
 
-def resolve_enum(enum_class: Type[Any], value: str | int) -> int | None:
+def resolve_enum(enum_class: type[Enum], value: str | int) -> int | None:
     """
     Resolves a string or integer to its corresponding Egeria enum integer value.
     Example: resolve_enum(ContentStatus, 'Draft') -> 0
@@ -26,7 +26,7 @@ def resolve_enum(enum_class: Type[Any], value: str | int) -> int | None:
         # Normalized case-insensitive search through enum members
         # Replace separators with spaces and collapse multiple spaces
         v_clean = ' '.join(v.replace('_', ' ').replace('-', ' ').split())
-        for member in enum_class:
+        for member in enum_class.__members__.values():
             m_name = ' '.join(member.name.upper().replace('_', ' ').replace('-', ' ').split())
             if v_clean == m_name:
                 return member.value
@@ -71,15 +71,15 @@ star_ratings = (
 #     Corporate= 6
 #     Asset Management= 7
 #     Other= 99
-GovernanceDomains = Enum('GovernanceDomains', [('Unclassified', 0),
-                                               ('Data', 1),
-                                               ('Privacy',2),
-                                               ('Security',3),
-                                               ('IT Infrastructure',4),
-                                               ('Software Development',5),
-                                               ('Corporate',6),
-                                               ('Asset Management',7),
-                                               ('Other',99)])
+GovernanceDomains = Enum('GovernanceDomains', [('ALL', 0),
+                                               ('DATA', 1),
+                                               ('PRIVACY', 2),
+                                               ('SECURITY', 3),
+                                               ('IT_INFRASTRUCTURE', 4),
+                                               ('SOFTWARE_DEVELOPMENT', 5),
+                                               ('CORPORATE', 6),
+                                               ('ASSET_MANAGEMENT', 7),
+                                               ('OTHER', 99)])
 
 # Default status values for fallback if dynamic fetching fails
 CONTENT_STATUS = ["DRAFT", "PREPARED", "PROPOSED", "APPROVED", "REJECTED", "ACTIVE", "DEPRECATED", "OTHER"]
@@ -91,7 +91,6 @@ MEMBERSHIP_STATUS = ["UNKNOWN", "DISCOVERED", "PROPOSED", "IMPORTED", "VALIDATED
 
 RELATIONSHIP_TYPES = ["RelatedTerm", "Synonym", "Antonym", "PreferredTerm", "ReplacementTerm", "Translation", "IsA", "ValidValue"]
 PROJECT_TYPES=["Project","Campaign","Task","PersonalProject","StudyProject","Experiment"]
-# RELATIONSHIP_TYPES_MAP = {rel_type: i for i, rel_type in enumerate(RELATIONSHIP_TYPES)}
 
 TEMPLATE_GUIDS: dict[str, str] = {}
 INTEGRATION_GUIDS: dict[str, str] = {}
@@ -118,4 +117,4 @@ MERMAID_GRAPH_TITLES = ["Anchor Mermaid Graph", "Information Supply Chain Mermai
                   "Specification Mermaid Graph", "Solution Blueprint Mermaid Graph","Mermaid Graph",
                   "Solution Subcomponent Mermaid Graph","Governance Action Process Mermaid Graph" ]
 TERM_STATUS = ["DRAFT", "PREPARED","PROPOSED","APPROVED", "REJECTED", "ACTIVE", "DEPRECATED", "DELETED", "OTHER"]
-REPORT_ACRONYMS = ["GUID", "URL", "ID", "QN", "API", "UI"]
+REPORT_ACRONYMS = ["GUID", "ID", "QN", "API", "UI"]

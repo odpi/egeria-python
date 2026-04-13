@@ -8,6 +8,7 @@ from loguru import logger
 
 from pyegeria import EgeriaTech, NO_ELEMENTS_FOUND
 from pyegeria.view.format_set_executor import _async_run_report
+from pyegeria.view.base_report_formats import select_report_spec
 from md_processing.v2.processors import AsyncBaseCommandProcessor
 from md_processing.v2.extraction import DrECommand
 
@@ -96,6 +97,11 @@ class ViewProcessor(AsyncBaseCommandProcessor):
         # 3. Validation
         if self.command.object_type == "Report" and not attributes.get("Report Spec"):
             raise ValueError("No Report Spec given. Please provide a 'Report Spec' attribute.")
+        
+        # Validate that the report spec exists before attempting to execute
+        spec_exists = select_report_spec(report_spec_name, "ANY")
+        if not spec_exists:
+            raise ValueError(f"Unknown or invalid report spec: '{report_spec_name}'. Please use a valid report spec name.")
 
         # 4. Call the report executor
         # _async_run_report handles both fetching and formatting (via generate_output)

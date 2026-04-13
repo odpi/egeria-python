@@ -32,11 +32,16 @@ from pyegeria.models import (GetRequestBody, SearchStringRequestBody, FilterRequ
 from pyegeria.core.utils import dynamic_catch
 
 GOV_DEF_PROPERTIES_LIST = ["GovernanceDefinitionProperties", "GovernanceStrategyProperties", "RegulationProperties",
-                           "GovernanceControlProperties", "SecurityGroupProperties", "NamingStandardRuleProperties",
+                           "GovernanceControlProperties", "SecurityAccessControlProperties", "NamingStandardRuleProperties",
                            "CertificationTypeProperties", "LicenseTypeProperties", "GovernanceApproachProperties",
-                           "GovernanceStrategyProperties", "GovernanceProcessingPurposeProperties",
+                            "GovernanceProcessingPurposeProperties","RegulationProperties","GovernanceControlProperties",
                            "BusinessImperativeProperties", "RegulationArticleProperties", "ThreatProperties",
-                           "DataLensProperties","NotificationTypeProperties"]
+                           "DataLensProperties","NotificationTypeProperties", "ServiceAccessControlProperties",
+                           "GovernanceZoneProperties", "GovernancePolicyProperties", "GovernancePrincipleProperties",
+                           "GovernanceObligationProperties", "GovernanceApproachProperties", "RequirementProperties",
+                           "GovernanceActionProcessProperties", "GovernanceActionTypeProperties","ResearchQuestionProperties",
+                           "TermsAndConditionsProperties", "GovernanceRuleProperties","GovernanceMetricProperties",
+                           "ServiceLevelObjectiveProperties", "MethodologyProperties"]
 
 GOV_BASIC_TYPES = ["BusinessImperative", "RegulationArticle", "Threat", "GovernancePrinciple", "GovernanceObligation",
                    "GovernanceApproach", "GovernanceProcessingPurpose"]
@@ -317,7 +322,6 @@ class GovernanceOfficer(ServerClient):
         GovernanceStrategyProperties   | GovernanceStrategy
         RegulationProperties           | Regulation
         GovernanceControlProperties    | GovernanceControl
-        SecurityGroupProperties        | SecurityGroup
         NamingStandardRuleProperties   | NamingStandardRule
         CertificationTypeProperties    | CertificationType
         LicenseTyoeProperties          | LicenseType
@@ -447,7 +451,6 @@ class GovernanceOfficer(ServerClient):
         GovernanceStrategyProperties   | GovernanceStrategy
         RegulationProperties           | Regulation
         GovernanceControlProperties    | GovernanceControl
-        SecurityGroupProperties        | SecurityGroup
         NamingStandardRuleProperties   | NamingStandardRule
         CertificationTypeProperties    | CertificationType
         LicenseTyoeProperties          | LicenseType
@@ -1112,7 +1115,7 @@ class GovernanceOfficer(ServerClient):
         * GovernancePolicyLink between governance policies (GovernancePrinciple, GovernanceObligation,
         GovernanceApproach).
         * GovernanceControlLink between governance controls (GovernanceRule, GovernanceProcess,
-        GovernanceResponsibility, GovernanceProcedure, SecurityAccessControl, SecurityGroup).
+        GovernanceResponsibility, GovernanceProcedure, SecurityAccessControl).
 
         Body structure:
         {
@@ -1175,7 +1178,7 @@ class GovernanceOfficer(ServerClient):
         * GovernancePolicyLink between governance policies (GovernancePrinciple, GovernanceObligation,
         GovernanceApproach).
         * GovernanceControlLink between governance controls (GovernanceRule, GovernanceProcess,
-        GovernanceResponsibility, GovernanceProcedure, SecurityAccessControl, SecurityGroup).
+        GovernanceResponsibility, GovernanceProcedure, SecurityAccessControl).
 
         Body structure:
         {
@@ -1305,7 +1308,7 @@ class GovernanceOfficer(ServerClient):
             GovernanceApproach).
             * GovernanceImplementation between governance policies (GovernancePrinciple, GovernanceObligation,
             GovernanceApproach) and governance controls (GovernanceRule, GovernanceProcess, GovernanceResponsibility,
-            GovernanceProcedure, SecurityAccessControl, SecurityGroup).
+            GovernanceProcedure, SecurityAccessControl).
 
         Async Version.
 
@@ -1369,7 +1372,7 @@ class GovernanceOfficer(ServerClient):
             GovernanceApproach).
             * GovernanceImplementation between governance policies (GovernancePrinciple, GovernanceObligation,
             GovernanceApproach) and governance controls (GovernanceRule, GovernanceProcess, GovernanceResponsibility,
-            GovernanceProcedure, SecurityAccessControl, SecurityGroup).
+            GovernanceProcedure, SecurityAccessControl).
 
         Parameters
         ----------
@@ -1656,7 +1659,7 @@ class GovernanceOfficer(ServerClient):
         """
         url = (
             f"{self.platform_url}/servers/{self.view_server}/api/open-metadata/"
-            f"{self.url_marker}/elements/{element_guid}/governed-by/{definition_guid}/detach"
+            f"{self.url_marker}/elements/{element_guid}/governed-by/definition/{definition_guid}/detach"
         )
         await self._async_delete_relationship_request(url, body)
         logger.info(f"Detached governed-by relationshup between: {definition_guid} -> {element_guid}")

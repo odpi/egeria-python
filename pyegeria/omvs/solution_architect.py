@@ -1255,205 +1255,6 @@ class SolutionArchitect(ServerClient):
         loop.run_until_complete(self._async_unlink_peer_info_supply_chains(peer1_guid,peer2_guid, body))
 
     @dynamic_catch
-    async def _async_compose_info_supply_chains(self, chain_guid: str, nested_chain_guid: str,
-                                                body: Optional[dict | NewRelationshipRequestBody] = None) -> None:
-        """ Connect a nested information supply chain to its parent. Request body is optional.
-            Async Version.
-
-        Parameters
-        ----------
-        chain_guid: str
-            guid of the first information supply chain  to link.
-        nested_chain_guid: str
-            guid of the second information supply chain to link.
-        body: dict | NewRelationshipRequestBody, optional
-            The body describing the link between the two chains.
-
-        Returns
-        -------
-        None
-
-        Raises
-        ------
-        PyegeriaInvalidParameterException
-            one of the parameters is null or invalid or
-        PyegeriaAPIException
-            There is a problem adding the element properties to the metadata repository or
-        PyegeriaUnauthorizedException
-            the requesting user is not authorized to issue this request.
-
-        Notes
-        ----
-
-        Body structure:
-        {
-          "class" : "NewRelationshipRequestBody",
-          "externalSourceGUID": "add guid here",
-          "externalSourceName": "add qualified name here",
-          "effectiveTime" : "{{$isoTimestamp}}",
-          "forLineage" : false,
-          "forDuplicateProcessing" : false,
-          "properties": {
-            "class": "InformationSupplyChainLinkProperties",
-            "label": "add label here",
-            "description": "add description here",
-            "effectiveFrom": "{{$isoTimestamp}}",
-            "effectiveTo": "{{$isoTimestamp}}"
-          }
-        }
-        """
-        validate_guid(chain_guid)
-        validate_guid(nested_chain_guid)
-        url = (f"{self.platform_url}/servers/{self.view_server}/api/open-metadata/solution-architect/"
-               f"information-supply-chains/{chain_guid}/compositions/{nested_chain_guid}/attach")
-
-        await self._async_new_relationship_request(url, ["InformationSupplyChainCompositionProperties"], body)
-        logger.info(f"Linked {chain_guid} -> {nested_chain_guid}")
-
-    @dynamic_catch
-    def compose_info_supply_chains(self, chain_guid: str, nested_chain_guid: str, body: Optional[dict | NewRelationshipRequestBody] = None) -> None:
-        """ Connect a nested information supply chain to its parent. Request body is optional.
-
-        Parameters
-        ----------
-        chain_guid: str
-            guid of the first information supply chain to link.
-        nested_chain_guid: str
-            guid of the second information supply chain to link.
-        body: dict | NewRelationshipRequestBody, optional
-            The body describing the link between the two chains.
-
-        Returns
-        -------
-        None
-
-        Raises
-        ------
-        PyegeriaInvalidParameterException
-            one of the parameters is null or invalid or
-        PyegeriaAPIException
-            There is a problem adding the element properties to the metadata repository or
-        PyegeriaUnauthorizedException
-            the requesting user is not authorized to issue this request.
-
-        Notes
-        ----
-
-        Body structure:
-        {
-          "class" : "NewRelationshipRequestBody",
-          "externalSourceGUID": "add guid here",
-          "externalSourceName": "add qualified name here",
-          "effectiveTime" : "{{$isoTimestamp}}",
-          "forLineage" : false,
-          "forDuplicateProcessing" : false,
-          "properties": {
-            "class": "InformationSupplyChainLinkProperties",
-            "label": "add label here",
-            "description": "add description here",
-            "effectiveFrom": "{{$isoTimestamp}}",
-            "effectiveTo": "{{$isoTimestamp}}"
-            }
-        }
-        """
-        loop = asyncio.get_event_loop()
-        loop.run_until_complete(self._async_compose_info_supply_chains(chain_guid, nested_chain_guid, body))
-
-
-    @dynamic_catch
-    async def _async_decompose_info_supply_chains(self, chain_guid: str, nested_chain_guid: str,
-                                                       body: dict = None) -> None:
-        """ Detach two peers in an information supply chain from one another.  Request body is optional. Async Version.
-
-        Parameters
-        ----------
-        chain_guid: str
-            guid of the first information supply chain to link.
-        nested_chain_guid: str
-            guid of the second information supply chain to link.
-        body: dict, optional
-            The body describing the link between the two segments.
-
-        Returns
-        -------
-        None
-
-        Raises
-        ------
-        PyegeriaInvalidParameterException
-            one of the parameters is null or invalid or
-        PyegeriaAPIException
-            There is a problem adding the element properties to the metadata repository or
-        PyegeriaUnauthorizedException
-            the requesting user is not authorized to issue this request.
-
-        Notes
-        ----
-
-        Body structure:
-        {
-          "class": "MetadataSourceRequestBody",
-          "externalSourceGUID": "add guid here",
-          "externalSourceName": "add qualified name here",
-          "effectiveTime": {{isotime}},
-          "forLineage": false,
-          "forDuplicateProcessing": false
-        }
-
-        """
-        validate_guid(chain_guid)
-        validate_guid(nested_chain_guid)
-        url = (f"{self.platform_url}/servers/{self.view_server}/api/open-metadata/solution-architect/"
-               f"information-supply-chains/{chain_guid}/compositions/{nested_chain_guid}/detach")
-
-        await self._async_delete_relationship_request(url, body)
-        logger.info(f"Removed composition of {nested_chain_guid} -> {chain_guid}")
-
-    @dynamic_catch
-    def decompose_info_supply_chains(self, chain_guid: str, nested_chain_guid: str,
-                                                       body: Optional[dict | DeleteRelationshipRequestBody] = None) -> None:
-        """ Detach two peers in an information supply chain from one another.  Request body is optional.
-
-        Parameters
-        ----------
-        chain_guid: str
-            guid of the first information supply chain to link.
-        nested_chain_guid: str
-            guid of the second information supply chain to link.
-        body: dict | DeleteRelationshipRequestBody, optional
-            The body describing the link between the two segments.
-
-        Returns
-        -------
-        None
-
-        Raises
-        ------
-        PyegeriaInvalidParameterException
-            one of the parameters is null or invalid or
-        PyegeriaAPIException
-            There is a problem adding the element properties to the metadata repository or
-        PyegeriaUnauthorizedException
-            the requesting user is not authorized to issue this request.
-
-        Notes
-        ----
-
-        Body structure:
-        {
-          "class": "DeleteRelationshipRequestBody",
-          "externalSourceGUID": "add guid here",
-          "externalSourceName": "add qualified name here",
-          "effectiveTime": {{isotime}},
-          "forLineage": false,
-          "forDuplicateProcessing": false
-        }
-        """
-        loop = asyncio.get_event_loop()
-        loop.run_until_complete(self._async_decompose_info_supply_chains(chain_guid,
-                                                                         nested_chain_guid, body))
-
-    @dynamic_catch
     async def _async_delete_info_supply_chain(self, guid: str, body: Optional[dict | DeleteElementRequestBody] = None, cascade_delete: bool = False) -> None:
         """Delete an information supply chain. Async Version.
 
@@ -2770,16 +2571,16 @@ class SolutionArchitect(ServerClient):
 
 
     @dynamic_catch
-    async def _async_link_solution_component_to_blueprint(self, blueprint_guid: str, component_guid: str,
-                                                          body: dict | NewRelationshipRequestBody) -> None:
-        """ Connect a solution component to a blueprint. Async Version.
+    async def _async_link_solution_design(self, blueprint_guid: str, element_guid: str,
+                                              body: dict | NewRelationshipRequestBody) -> None:
+        """ Connect a solution blueprint to a referenceable element. Async Version.
 
         Parameters
         ----------
         blueprint_guid: str
             guid of the blueprint to connect to.
-        component_guid: str
-            guid of the component to link.
+        element_guid: str
+            guid of the referenceable element to link.
         body: dict | NewRelationshipRequestBody
             The body describing the link.
 
@@ -2803,9 +2604,9 @@ class SolutionArchitect(ServerClient):
         {
           "class" : "NewRelationshipRequestBody",
           "properties": {
-            "class": "SolutionBlueprintCompositionProperties",
-            "role": "Add role that the component plays in the solution blueprint here",
-            "description": "Add description of the solution component in the context of the solution blueprint.",
+            "class": "SolutionDesignProperties",
+            "role": "Add role that the element plays in the solution blueprint here",
+            "description": "Add description of the element in the context of the solution blueprint.",
             "effectiveFrom": "{{$isoTimestamp}}",
             "effectiveTo": "{{$isoTimestamp}}"
           },
@@ -2819,21 +2620,21 @@ class SolutionArchitect(ServerClient):
         """
 
         url = (f"{self.platform_url}/servers/{self.view_server}/api/open-metadata/solution-architect/"
-               f"solution-blueprints/{blueprint_guid}/solution-components/{component_guid}/attach")
+               f"elements/{blueprint_guid}/solution-designs/{element_guid}/attach")
 
-        await self._async_new_relationship_request(url, ["SolutionBlueprintCompositionProperties"], body)
-        logger.info(f"Linked component to blueprint {component_guid} -> {blueprint_guid}")
+        await self._async_new_relationship_request(url, ["SolutionDesignProperties"], body)
+        logger.info(f"Linked referenceable element to blueprint {element_guid} -> {blueprint_guid}")
 
     @dynamic_catch
-    def link_solution_component_to_blueprint(self, blueprint_guid: str, component_guid: str, body: dict | NewRelationshipRequestBody) -> None:
-        """ Connect a solution component to a blueprint.
+    def link_solution_design(self, blueprint_guid: str, element_guid: str, body: dict | NewRelationshipRequestBody) -> None:
+        """ Connect a solution blueprint to a referenceable element.
 
         Parameters
         ----------
         blueprint_guid: str
             guid of the blueprint to connect to.
-        component_guid: str
-            guid of the component to link.
+        element_guid: str
+            guid of the referenceable element to link.
         body: dict | NewRelationshipRequestBody
             The body describing the link.
 
@@ -2857,9 +2658,9 @@ class SolutionArchitect(ServerClient):
          {
           "class" : "RelationshipRequestBody",
           "properties": {
-            "class": "SolutionBlueprintCompositionProperties",
-            "role": "Add role that the component plays in the solution blueprint here",
-            "description": "Add description of the solution component in the context of the solution blueprint.",
+            "class": "SolutionDesignProperties",
+            "role": "Add role that the element plays in the solution blueprint here",
+            "description": "Add description of the element in the context of the solution blueprint.",
             "effectiveFrom": "{{$isoTimestamp}}",
             "effectiveTo": "{{$isoTimestamp}}"
           },
@@ -2871,22 +2672,22 @@ class SolutionArchitect(ServerClient):
         }
         """
         loop = asyncio.get_event_loop()
-        loop.run_until_complete(self._async_link_solution_component_to_blueprint(blueprint_guid, component_guid, body))
+        loop.run_until_complete(self._async_link_solution_design(blueprint_guid, element_guid, body))
 
     @dynamic_catch
-    async def _async_detach_solution_component_from_blueprint(self, blueprint_guid: str, component_guid: str,
-                                                              body: Optional[dict | DeleteRelationshipRequestBody] = None) -> None:
-        """ Detach a solution component from a solution blueprint.
+    async def _async_detach_solution_design(self, blueprint_guid: str, element_guid: str,
+                                                body: Optional[dict | DeleteRelationshipRequestBody] = None) -> None:
+        """ Detach a referenceable element from a solution blueprint.
             Async Version.
 
         Parameters
         ----------
         blueprint_guid: str
-            guid of the blueprint to disconnect from.
-        component_guid: str
-            guid of the component to disconnect.
-        body: dict
-            The body describing the request.
+            The GUID of the blueprint.
+        element_guid: str
+            The GUID of the element to detach.
+        body: dict | DeleteRelationshipRequestBody
+             The body describing the deletion.
 
         Returns
         -------
@@ -2900,42 +2701,28 @@ class SolutionArchitect(ServerClient):
             There is a problem adding the element properties to the metadata repository or
         PyegeriaUnauthorizedException
             the requesting user is not authorized to issue this request.
-
-        Notes
-        ----
-
-        Body structure:
-        {
-          "class": "MetadataSourceRequestBody",
-          "externalSourceGUID": "add guid here",
-          "externalSourceName": "add qualified name here",
-          "effectiveTime": {{isotime}},
-          "forLineage": false,
-          "forDuplicateProcessing": false
-        }
 
         """
 
         url = (f"{self.platform_url}/servers/{self.view_server}/api/open-metadata/solution-architect/"
-               f"solution-blueprints/{blueprint_guid}/solution-components/{component_guid}/detach")
+               f"solution-blueprints/{blueprint_guid}/referenceable/{element_guid}/detach")
 
         await self._async_delete_relationship_request(url, body)
-        logger.info(
-            f"Detached component from blueprint  {component_guid} -> {blueprint_guid}")
+        logger.info(f"Detached element {element_guid} from blueprint {blueprint_guid}")
 
     @dynamic_catch
-    def detach_solution_component_from_blueprint(self, blueprint_guid: str, component_guid: str,
-                                                 body: Optional[dict | DeleteRelationshipRequestBody] = None) -> None:
-        """ Detach a solution component from a solution blueprint.
+    def detach_solution_design(self, blueprint_guid: str, element_guid: str,
+                                   body: Optional[dict | DeleteRelationshipRequestBody] = None) -> None:
+        """ Detach a referenceable element from a solution blueprint.
 
         Parameters
         ----------
         blueprint_guid: str
-            guid of the blueprint to disconnect from.
-        component_guid: str
-            guid of the component to disconnect.
-        body: dict
-            The body describing the request.
+            The GUID of the blueprint.
+        element_guid: str
+            The GUID of the element to detach.
+        body: dict | DeleteRelationshipRequestBody
+             The body describing the deletion.
 
         Returns
         -------
@@ -2950,23 +2737,9 @@ class SolutionArchitect(ServerClient):
         PyegeriaUnauthorizedException
             the requesting user is not authorized to issue this request.
 
-        Notes
-        ----
-
-        Body structure:
-        {
-          "class": "MetadataSourceRequestBody",
-          "externalSourceGUID": "add guid here",
-          "externalSourceName": "add qualified name here",
-          "effectiveTime": {{isotime}},
-          "forLineage": false,
-          "forDuplicateProcessing": false
-        }
-
         """
         loop = asyncio.get_event_loop()
-        loop.run_until_complete(
-            self._async_detach_solution_component_from_blueprint(blueprint_guid, component_guid, body))
+        loop.run_until_complete(self._async_detach_solution_design(blueprint_guid, element_guid, body))
 
 
     @dynamic_catch
@@ -5590,7 +5363,7 @@ class SolutionArchitect(ServerClient):
         """
 
         url = (f"{self.platform_url}/servers/{self.view_server}/api/open-metadata/solution-architect/"
-               f"solution-roles/{role_guid}/solution-roles/{component_guid}/attach")
+               f"solution-roles/{role_guid}/solution-component-actors/{component_guid}/attach")
 
         await self._async_new_relationship_request(url, ["InformationSupplyChainLinkProperties"], body)
         logger.info(f"Linked Role to Component {role_guid} -> {component_guid}")

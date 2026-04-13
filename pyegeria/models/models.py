@@ -366,7 +366,7 @@ class TemplateRequestBody(PyegeriaModel):
     parent_relationship_type_name: str | None = None
     parent_at_end_1: bool | None = True
     template_guid: str
-    replacement_properties: dict[str, Any] = {}
+    replacement_properties: dict[str, Any] | None = None
     placeholder_property_values: dict[str, Any] = {}
     deep_copy: bool | None = False
     effective_from: datetime | None = None

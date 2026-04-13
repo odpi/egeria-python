@@ -26,7 +26,7 @@ from pyegeria.omvs.data_discovery import DataDiscovery
 from pyegeria.omvs.data_engineer import DataEngineer
 from pyegeria.omvs.digital_business import DigitalBusiness
 from pyegeria.omvs.external_links import ExternalReferences
-from pyegeria.deprecated.feedback_manager import FeedbackManager
+from pyegeria.core._server_client import ServerClient
 from pyegeria.omvs.full_omag_server_config import FullServerConfig
 from pyegeria.omvs.glossary_manager import GlossaryManager
 from pyegeria.omvs.governance_officer import GovernanceOfficer
@@ -95,8 +95,8 @@ class Egeria:
             "metadata_expert": MetadataExpert,
             "external_refs": ExternalReferences,
             "external_references": ExternalReferences,
-            "feedback": FeedbackManager,
-            "feedback_manager": FeedbackManager,
+            "feedback": ServerClient,
+            "feedback_manager": ServerClient,
             "full_server_config": FullServerConfig,
             "glossary": GlossaryManager,
             "glossary_manager": GlossaryManager,

@@ -1,6 +1,5 @@
 from __future__ import annotations
 
-import json
 import os
 from typing import Dict, Any, Iterable
 
@@ -35,6 +34,9 @@ def _command_to_spec(name: str, cdef: Dict[str, Any], expanded: Dict[str, Any]) 
         "extra_find",
         "extra_constraints",
         "Journal Entry",
+        "OM_TYPE",
+        "bundle",
+        "custom_attributes",
     ):
         if key in cdef:
             spec[key] = cdef[key]
@@ -58,6 +60,15 @@ def _command_to_spec(name: str, cdef: Dict[str, Any], expanded: Dict[str, Any]) 
         spec["Attributes"] = add_default_link_attributes(attrs)
     else:
         spec["Attributes"] = attrs
+
+    # Keep a by-name view for processors that need fast lookup of attribute metadata.
+    attr_defs: Dict[str, Any] = {}
+    for attr in spec.get("Attributes", []):
+        if isinstance(attr, dict):
+            attr_name = attr.get("name")
+            if isinstance(attr_name, str) and attr_name.strip():
+                attr_defs[attr_name] = attr
+    spec["attribute_definitions"] = attr_defs
 
     return spec
 

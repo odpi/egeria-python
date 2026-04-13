@@ -11,7 +11,8 @@ from md_processing.md_processing_utils.md_processing_constants import get_comman
 from md_processing.md_processing_utils.common_md_utils import (
     set_element_prop_body, set_create_body, set_update_body, 
     set_rel_request_body, set_rel_prop_body,
-    update_element_dictionary, add_note_in_dr_e, async_add_note_in_dr_e
+    update_element_dictionary, add_note_in_dr_e, async_add_note_in_dr_e,
+    set_delete_request_body, set_delete_rel_request_body
 )
 from pyegeria.core.utils import body_slimmer
 
@@ -20,24 +21,9 @@ class BlueprintProcessor(AsyncBaseCommandProcessor):
     Processor for Solution Blueprints.
     """
 
-    def get_command_spec(self) -> Dict[str, Any]:
-        return get_command_spec("Solution Blueprint")
-
     async def fetch_element(self, guid: str) -> Optional[Dict[str, Any]]:
         try:
             return await self.client._async_get_solution_blueprint_by_guid(guid)
-        except PyegeriaException:
-            return None
-
-    async def fetch_as_is(self) -> Optional[Dict[str, Any]]:
-        qualified_name = self.parsed_output.get("qualified_name")
-        if not qualified_name:
-            return None
-        try:
-            res = await self.client._async_get_solution_blueprints_by_name(qualified_name)
-            if isinstance(res, list) and len(res) > 0:
-                return res[0]
-            return res if isinstance(res, dict) else None
         except PyegeriaException:
             return None
 
@@ -52,13 +38,16 @@ class BlueprintProcessor(AsyncBaseCommandProcessor):
         
         comp_guids = set(attributes.get('Solution Components', {}).get('guid_list', []))
 
+        spec = self.get_command_spec()
+        om_type = spec.get("OM_TYPE")
+
         if verb == "Update":
             guid = self.parsed_output.get("guid") or (self.as_is_element['elementHeader']['guid'] if self.as_is_element else None)
             if not guid:
                 return self.command.raw_block
 
-            body = set_update_body("Solution Blueprint", attributes)
-            prop_body = set_element_prop_body("Solution Blueprint", qualified_name, attributes)
+            body = set_update_body(om_type or "Solution Blueprint", attributes)
+            prop_body = set_element_prop_body(om_type or "Solution Blueprint", qualified_name, attributes)
             body['properties'] = self.filter_update_properties(prop_body, body.get('mergeUpdate', True))
             
             await self.client._async_update_solution_blueprint(guid, body)
@@ -85,11 +74,12 @@ class BlueprintProcessor(AsyncBaseCommandProcessor):
             return await self.render_result_markdown(guid)
 
         elif verb == "Create":
-            body = set_create_body("Solution Blueprint", attributes)
-            body['properties'] = set_element_prop_body("Solution Blueprint", qualified_name, attributes)
+            body = set_create_body(om_type or "Solution Blueprint", attributes)
+            body['properties'] = set_element_prop_body(om_type or "Solution Blueprint", qualified_name, attributes)
             body = body_slimmer(body)
             
-            guid = await self.client._async_create_solution_blueprint(body)
+            raw_guid = await self.client._async_create_solution_blueprint(body)
+            guid = self.extract_guid_or_raise(raw_guid, "Create Solution Blueprint")
             if guid:
                 self.parsed_output["guid"] = guid
                 sync_res = await self._sync_components(guid, comp_guids, replace_all=True)
@@ -130,24 +120,9 @@ class ComponentProcessor(AsyncBaseCommandProcessor):
     Processor for Solution Components.
     """
 
-    def get_command_spec(self) -> Dict[str, Any]:
-        return get_command_spec("Solution Component")
-
     async def fetch_element(self, guid: str) -> Optional[Dict[str, Any]]:
         try:
             return await self.client._async_get_solution_component_by_guid(guid)
-        except PyegeriaException:
-            return None
-
-    async def fetch_as_is(self) -> Optional[Dict[str, Any]]:
-        qualified_name = self.parsed_output.get("qualified_name")
-        if not qualified_name:
-            return None
-        try:
-            res = await self.client._async_get_solution_components_by_name(qualified_name)
-            if isinstance(res, list) and len(res) > 0:
-                return res[0]
-            return res if isinstance(res, dict) else None
         except PyegeriaException:
             return None
 
@@ -159,28 +134,12 @@ class ComponentProcessor(AsyncBaseCommandProcessor):
         merge_update = attributes.get('Merge Update', {}).get('value', True)
         journal_entry = attributes.get('Journal Entry', {}).get('value')
         
-        # 1. Properties
-        prop_body = {
-            "class": "SolutionComponentProperties",
-            "typeName": "SolutionComponent",
-            "qualifiedName": qualified_name,
-            "displayName": display_name,
-            "description": attributes.get('Description', {}).get('value'),
-            "solutionComponentType": attributes.get('Solution Component Type', {}).get('value'),
-            "versionIdentifier": attributes.get('Version Identifier', {}).get('value'),
-            "plannedDeployedImplementationType": attributes.get('Planned Deployed Implementation Type', {}).get('value'),
-            "userDefinedStatus": attributes.get('User Defined Status', {}).get('value'),
-            "URL": attributes.get('URL', {}).get('value'),
-            "effectiveFrom": attributes.get('Effective From', {}).get('value'),
-            "effectiveTo": attributes.get('Effective To', {}).get('value')
-        }
-        
-        # Additional/Extended
-        for key in ['Additional Properties', 'Extended Properties']:
-            val = attributes.get(key, {}).get('value')
-            if val:
-                prop_body[key.lower().replace(' ', '')] = json.loads(val) if isinstance(val, str) else val
+        spec = self.get_command_spec()
+        om_type = spec.get("OM_TYPE")
 
+        # 1. Properties
+        prop_body = set_element_prop_body(om_type or "SolutionComponent", qualified_name, attributes)
+        
         # 2. Relationships
         actor_guids = set(attributes.get('Actors', {}).get('guid_list', []))
         blueprint_guids = set(attributes.get('In Solution Blueprints', {}).get('guid_list', []))
@@ -229,7 +188,8 @@ class ComponentProcessor(AsyncBaseCommandProcessor):
             body["parentRelationshipTypeName"] = attributes.get('Parent Relationship Type Name', {}).get('value')
             body["isOwnAnchor"] = attributes.get('Is Own Anchor', {}).get('value', body["parentGUID"] is None)
 
-            guid = await self.client._async_create_solution_component(body)
+            raw_guid = await self.client._async_create_solution_component(body)
+            guid = self.extract_guid_or_raise(raw_guid, "Create Solution Component")
             if guid:
                 self.parsed_output["guid"] = guid
                 sync_res = await self._sync_all_rels(guid, supply_chain_guids, parent_comp_guids, actor_guids, blueprint_guids, keywords, replace_all=True)
@@ -357,24 +317,9 @@ class SupplyChainProcessor(AsyncBaseCommandProcessor):
     Processor for Information Supply Chains.
     """
 
-    def get_command_spec(self) -> Dict[str, Any]:
-        return get_command_spec("Information Supply Chain")
-
     async def fetch_element(self, guid: str) -> Optional[Dict[str, Any]]:
         try:
             return await self.client._async_get_info_supply_chain_by_guid(guid)
-        except PyegeriaException:
-            return None
-
-    async def fetch_as_is(self) -> Optional[Dict[str, Any]]:
-        qualified_name = self.parsed_output.get("qualified_name")
-        if not qualified_name:
-            return None
-        try:
-            res = await self.client._async_get_info_supply_chain_by_name(qualified_name)
-            if isinstance(res, list) and len(res) > 0:
-                return res[0]
-            return res if isinstance(res, dict) else None
         except PyegeriaException:
             return None
 
@@ -386,18 +331,10 @@ class SupplyChainProcessor(AsyncBaseCommandProcessor):
         merge_update = attributes.get('Merge Update', {}).get('value', True)
         journal_entry = attributes.get('Journal Entry', {}).get('value')
         
-        prop_body = {
-            "class": "InformationSupplyChainProperties",
-            "typeName": "InformationSupplyChain",
-            "qualifiedName": qualified_name,
-            "displayName": display_name,
-            "description": attributes.get('Description', {}).get('value'),
-            "scope": attributes.get('Scope', {}).get('value'),
-            "purposes": attributes.get('Purposes', {}).get('value'),
-            "version": attributes.get('Version Identifier', {}).get('value'),
-            "effectiveFrom": attributes.get('Effective From', {}).get('value'),
-            "effectiveTo": attributes.get('Effective To', {}).get('value')
-        }
+        spec = self.get_command_spec()
+        om_type = spec.get("OM_TYPE")
+
+        prop_body = set_element_prop_body(om_type or "InformationSupplyChain", qualified_name, attributes)
 
         in_sc_guids = set(attributes.get('In Information Supply Chain', {}).get('guid_list', []))
         nested_sc_guids = set(attributes.get('Nested Information Supply Chains', {}).get('guid_list', []))
@@ -407,7 +344,7 @@ class SupplyChainProcessor(AsyncBaseCommandProcessor):
             if not guid:
                 return self.command.raw_block
 
-            body = set_update_body("InformationSupplyChain", attributes)
+            body = set_update_body(om_type or "InformationSupplyChain", attributes)
             body['properties'] = self.filter_update_properties(prop_body, body.get('mergeUpdate', True))
             await self.client._async_update_info_supply_chain(guid, body)
             self.parsed_output["guid"] = guid
@@ -430,10 +367,11 @@ class SupplyChainProcessor(AsyncBaseCommandProcessor):
             return await self.render_result_markdown(guid)
 
         elif verb == "Create":
-            body = set_create_body("InformationSupplyChain", attributes)
+            body = set_create_body(om_type or "InformationSupplyChain", attributes)
             body['properties'] = prop_body
             
-            guid = await self.client._async_create_info_supply_chain(body)
+            raw_guid = await self.client._async_create_info_supply_chain(body)
+            guid = self.extract_guid_or_raise(raw_guid, "Create Information Supply Chain")
             if guid:
                 self.parsed_output["guid"] = guid
                 sync_res = await self._sync_rels(guid, in_sc_guids, nested_sc_guids, replace_all=True)
@@ -511,13 +449,95 @@ class SupplyChainProcessor(AsyncBaseCommandProcessor):
 
         return res
 
-class SolutionLinkProcessor(AsyncBaseCommandProcessor):
+class SolutionArchitectProcessor(AsyncBaseCommandProcessor):
     """
-    Processor for Component and Supply Chain Peer Linking.
+    Generic Processor for Solution Architect elements (Supply Chain, Blueprint, Component, Role).
     """
 
-    def get_command_spec(self) -> Dict[str, Any]:
-        return get_command_spec(self.command.object_type)
+    async def fetch_element(self, guid: str) -> Optional[Dict[str, Any]]:
+        spec = self.get_command_spec()
+        om_type = spec.get("OM_TYPE")
+        try:
+            if om_type == "InformationSupplyChain":
+                return await self.client._async_get_info_supply_chain_by_guid(guid)
+            elif om_type == "SolutionBlueprint":
+                return await self.client._async_get_solution_blueprint_by_guid(guid)
+            elif om_type == "SolutionComponent":
+                return await self.client._async_get_solution_component_by_guid(guid)
+            elif om_type == "SolutionRole" or om_type == "SolutionActorRole":
+                return await self.client._async_get_solution_role_by_guid(guid)
+            return None
+        except PyegeriaException:
+            return None
+
+    async def apply_changes(self) -> str:
+        verb = self.command.verb
+        attributes = self.parsed_output["attributes"]
+        qualified_name = self.parsed_output["qualified_name"]
+        display_name = attributes.get('Display Name', {}).get('value', qualified_name)
+        journal_entry = attributes.get('Journal Entry', {}).get('value')
+        
+        spec = self.get_command_spec()
+        om_type = spec.get("OM_TYPE")
+
+        if verb == "Update":
+            guid = self.parsed_output.get("guid") or (self.as_is_element['elementHeader']['guid'] if self.as_is_element else None)
+            if not guid:
+                return self.command.raw_block
+
+            body = set_update_body(om_type, attributes)
+            prop_body = set_element_prop_body(om_type, qualified_name, attributes)
+            body['properties'] = self.filter_update_properties(prop_body, body.get('mergeUpdate', True))
+            
+            if om_type == "InformationSupplyChain":
+                await self.client._async_update_info_supply_chain(guid, body)
+            elif om_type == "SolutionBlueprint":
+                await self.client._async_update_solution_blueprint(guid, body)
+            elif om_type == "SolutionComponent":
+                await self.client._async_update_solution_component(guid, body)
+            elif om_type == "SolutionActorRole":
+                await self.client._async_update_solution_role(guid, body)
+            
+            self.parsed_output["guid"] = guid
+            
+            if journal_entry:
+                await async_add_note_in_dr_e(self.client, qualified_name, display_name, journal_entry)
+
+            logger.success(f"Updated {om_type} '{display_name}' with GUID {guid}")
+            update_element_dictionary(qualified_name, {'guid': guid, 'display_name': display_name})
+            return await self.render_result_markdown(guid)
+
+        elif verb == "Create":
+            body = set_create_body(om_type, attributes)
+            body['properties'] = set_element_prop_body(om_type, qualified_name, attributes)
+            body = body_slimmer(body)
+            
+            raw_guid = None
+            if om_type == "InformationSupplyChain":
+                raw_guid = await self.client._async_create_info_supply_chain(body)
+            elif om_type == "SolutionBlueprint":
+                raw_guid = await self.client._async_create_solution_blueprint(body)
+            elif om_type == "SolutionComponent":
+                raw_guid = await self.client._async_create_solution_component(body)
+            elif om_type == "SolutionActorRole":
+                raw_guid = await self.client._async_create_solution_role(body)
+            
+            guid = self.extract_guid_or_raise(raw_guid, f"Create {om_type}")
+            if guid:
+                self.parsed_output["guid"] = guid
+                if journal_entry:
+                    await async_add_note_in_dr_e(self.client, qualified_name, display_name, journal_entry)
+
+                update_element_dictionary(qualified_name, {'guid': guid, 'display_name': display_name})
+                logger.success(f"Created {om_type} '{display_name}' with GUID {guid}")
+                return await self.render_result_markdown(guid)
+
+        return self.command.raw_block
+
+class SolutionLinkProcessor(AsyncBaseCommandProcessor):
+    """
+    Processor for Solution Architect relationships (Linking Wire, Supply Chain Link, SubComponent, Actor Link, etc.).
+    """
 
     async def fetch_as_is(self) -> Optional[Dict[str, Any]]:
         return None
@@ -527,41 +547,159 @@ class SolutionLinkProcessor(AsyncBaseCommandProcessor):
         object_type = getattr(self, 'canonical_object_type', self.command.object_type)
         attributes = self.parsed_output["attributes"]
         
-        id1 = attributes.get('Component1', {}).get('guid') or attributes.get('Segment1', {}).get('guid')
-        id2 = attributes.get('Component2', {}).get('guid') or attributes.get('Segment2', {}).get('guid')
-        label = attributes.get('Wire Label', {}).get('value') or attributes.get('Link Label', {}).get('value')
-        description = attributes.get('Description', {}).get('value')
+        spec = self.get_command_spec()
+        om_type = spec.get("OM_TYPE")
+
+        # Determine IDs based on spec custom_attributes or fallbacks
+        custom_attrs = spec.get("custom_attributes", [])
         
+        id1_key = None
+        id2_key = None
+        
+        if len(custom_attrs) >= 2:
+            id1_key = custom_attrs[0]
+            id2_key = custom_attrs[1]
+        else:
+            # Fallback for ID1
+            for k in ["Component1", "Segment1", "Blueprint", "Blueprint Parent", "Parent Blueprint", "Collection Id", "Parent Id", "ISC Parent", "Parent", "Isc Parent", "Element Id"]:
+                if k in attributes:
+                    id1_key = k
+                    break
+            
+            # Fallback for ID2
+            for k in ["Component2", "Segment2", "Element", "Member Id", "Child Id", "ISC Child", "Actor", "Role", "Child", "Blueprint Child", "Child Blueprint", "Element2 Id", "Element Id", "Component Child", "Isc Child", "Solution Role"]:
+                if k in attributes and k != id1_key:
+                    id2_key = k
+                    break
+                    
+            if not (id1_key and id2_key):
+                # Final attempt: just take the first two attributes that have GUIDs
+                candidates = [k for k, v in attributes.items() if v.get('guid')]
+                if len(candidates) >= 2:
+                    id1_key = candidates[0]
+                    id2_key = candidates[1]
+
+        if not (id1_key and id2_key):
+            logger.error(f"Command {object_type} has fewer than 2 attributes for linking - {attributes.keys()}")
+            return self.command.raw_block
+            
+        id1 = attributes.get(id1_key, {}).get('guid')
+        id2 = attributes.get(id2_key, {}).get('guid')
+        
+        # If not GUIDs, attempt resolution from name
+        if not id1 and attributes.get(id1_key, {}).get('value'):
+            # Try to get type constraint for ID1
+            type1 = None
+            spec_attrs = spec.get("attribute_definitions", {})
+            if not spec_attrs:
+                spec_attrs = {
+                    a.get("name"): a
+                    for a in spec.get("Attributes", [])
+                    if isinstance(a, dict) and isinstance(a.get("name"), str)
+                }
+            if id1_key in spec_attrs:
+                type1 = spec_attrs[id1_key].get("existing_element")
+            elif "Collection Id" in id1_key:
+                type1 = "Collection"
+            
+            id1 = await self.resolve_element_guid(attributes[id1_key]['value'], tech_type=type1)
+
+        if not id2 and attributes.get(id2_key, {}).get('value'):
+            # Try to get type constraint for ID2
+            type2 = None
+            spec_attrs = spec.get("attribute_definitions", {})
+            if not spec_attrs:
+                spec_attrs = {
+                    a.get("name"): a
+                    for a in spec.get("Attributes", [])
+                    if isinstance(a, dict) and isinstance(a.get("name"), str)
+                }
+            if id2_key in spec_attrs:
+                type2 = spec_attrs[id2_key].get("existing_element")
+            
+            id2 = await self.resolve_element_guid(attributes[id2_key]['value'], tech_type=type2)
+
         if not (id1 and id2):
+            logger.warning(f"Missing GUIDs for {object_type}: {id1_key}={id1}, {id2_key}={id2}")
             return self.command.raw_block
 
+        label = attributes.get('Wire Label', {}).get('value') or attributes.get('Link Label', {}).get('value') or attributes.get('Label', {}).get('value', "")
+        description = attributes.get('Description', {}).get('value', "")
+        
         if verb in ["Link", "Attach", "Add"]:
+            properties = {
+                "class": f"{om_type}Properties",
+                "description": description,
+                "effectiveFrom": attributes.get('Effective From', {}).get('value'),
+                "effectiveTo": attributes.get('Effective To', {}).get('value')
+            }
+            
+            # Determine which property to use for the 'label/role' field
+            if om_type in ["SolutionLinkingWire", "InformationSupplyChainLink", "InformationSupplyChainComposition"]:
+                 properties["label"] = label
+            elif om_type == "CollectionMembership":
+                 properties["membershipRationale"] = attributes.get('Membership Rationale', {}).get('value') or description
+                 # Additional CollectionMembership properties
+                 properties["expression"] = attributes.get('Expression', {}).get('value')
+                 properties["membershipStatus"] = attributes.get('Membership Status', {}).get('value', 'ACTIVE').upper()
+            else:
+                 # Composition and Design relationships use 'role'
+                 properties["role"] = attributes.get("Role", {}).get("value") or attributes.get("Solution Role", {}).get("value") or label
+
             body = {
                 "class": "NewRelationshipRequestBody",
-                "properties": {
-                    "class": "SolutionLinkingWireProperties" if "Component" in object_type else "InformationSupplyChainLinkProperties",
-                    "label": label,
-                    "description": description,
-                    "effectiveFrom": attributes.get('Effective From', {}).get('value'),
-                    "effectiveTo": attributes.get('Effective To', {}).get('value')
-                }
+                "properties": properties
             }
-            if "Component" in object_type:
-                await self.client._async_link_solution_linking_wire(id1, id2, body)
-            else:
-                await self.client._async_link_peer_info_supply_chains(id1, id2, body)
             
-            logger.success(f"Linked {object_type} via '{label}'")
-            return f"\n\n# {verb} {object_type}\n\nLinked {id1} to {id2} via {label}"
+            if om_type == "SolutionLinkingWire":
+                await self.client._async_link_solution_linking_wire(id1, id2, body)
+            elif om_type == "InformationSupplyChainLink":
+                await self.client._async_link_peer_info_supply_chains(id1, id2, body)
+            elif om_type == "InformationSupplyChainComposition":
+                await self.client._async_compose_info_supply_chains(id1, id2, body)
+            elif om_type == "SolutionComposition":
+                await self.client._async_link_subcomponent(id1, id2, body)
+            elif om_type == "SolutionComponentActor":
+                # Method signature: role_guid, component_guid
+                # Spec has Component1, Role. Role is id2.
+                await self.client._async_link_component_to_actor(id2, id1, body)
+            elif om_type == "SolutionBlueprintComposition":
+                await self.client._async_link_solution_component_to_blueprint(id1, id2, body)
+            elif om_type == "SolutionDesign":
+                await self.client._async_link_solution_design(id2, id1, body)
+            elif om_type == "CollectionMembership":
+                 from pyegeria.core.utils import body_slimmer
+                 await self.client._async_add_to_collection(id1, id2, body_slimmer(body))
+            else:
+                 logger.warning(f"OM_TYPE {om_type} not yet supported in SolutionLinkProcessor")
+                 return self.command.raw_block
+
+            logger.success(f"Linked {object_type} ({om_type})")
+            return f"\n\n# {verb} {object_type}\n\nLinked {id1} to {id2}"
 
         elif verb in ["Detach", "Unlink", "Remove"]:
             body = {"class": "DeleteRelationshipRequestBody"}
-            if "Component" in object_type:
+            if om_type == "SolutionLinkingWire":
                 await self.client._async_detach_solution_linking_wire(id1, id2, body)
-            else:
+            elif om_type == "InformationSupplyChainLink":
                 await self.client._async_unlink_peer_info_supply_chains(id1, id2, body)
+            elif om_type == "InformationSupplyChainComposition":
+                await self.client._async_decompose_info_supply_chains(id1, id2, body)
+            elif om_type == "SolutionComposition":
+                await self.client._async_detach_sub_component(id1, id2, body)
+            elif om_type == "SolutionComponentActor":
+                await self.client._async_detach_component_actor(id2, id1, body)
+            elif om_type == "SolutionBlueprintComposition":
+                await self.client._async_detach_solution_component_from_blueprint(id1, id2, body)
+            elif om_type == "SolutionDesign":
+                await self.client._async_detach_solution_design(id1, id2, body)
+            elif om_type == "CollectionMembership":
+                await self.client._async_remove_from_collection(id1, id2, body)
+            else:
+                logger.warning(f"OM_TYPE {om_type} not yet supported in SolutionLinkProcessor for detach")
+                return self.command.raw_block
                 
-            logger.success(f"Detached {object_type} via '{label}'")
-            return f"\n\n# {verb} {object_type}\n\nDetached {id1} from {id2} via {label}"
+            logger.success(f"Detached {object_type} ({om_type})")
+            return f"\n\n# {verb} {object_type}\n\nDetached {id1} from {id2}"
 
         return self.command.raw_block

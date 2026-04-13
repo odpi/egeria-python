@@ -249,11 +249,16 @@ class ServerClient(BaseServerClient):
                 f"{self.platform_url}/servers/{self.server_name}/api/open-metadata/classification-explorer/"
                 f"elements/guid-by-unique-name"
             )
-
-            result = await self._async_make_request("POST", url, body_slimmer(body))
-            return result.json().get("guid", NO_ELEMENTS_FOUND)
-# todo put in branch for "resourceName" and "identifier"
-        if (not qualified_name) and display_name:
+        
+            try:
+                result = await self._async_make_request("POST", url, body_slimmer(body))
+                guid_found = result.json().get("guid", NO_ELEMENTS_FOUND)
+                if guid_found != NO_ELEMENTS_FOUND:
+                    return guid_found
+            except Exception:
+                pass
+        
+        if display_name:
             if (tech_type) and (property_name == "qualifiedName"):
                 name = f"{tech_type}::{display_name}"
                 body = {
@@ -268,7 +273,7 @@ class ServerClient(BaseServerClient):
                     f"{self.platform_url}/servers/{view_server}/api/open-metadata/classification-explorer/"
                     f"elements/guid-by-unique-name"
                 )
-
+        
                 result = await self._async_make_request("POST", url, body_slimmer(body))
                 return result.json().get("guid", NO_ELEMENTS_FOUND)
             else:
@@ -284,7 +289,7 @@ class ServerClient(BaseServerClient):
                     f"{self.platform_url}/servers/{view_server}/api/open-metadata/classification-explorer/"
                     f"elements/guid-by-unique-name"
                 )
-
+        
                 result = await self._async_make_request("POST", url, body_slimmer(body))
                 return result.json().get("guid", NO_ELEMENTS_FOUND)
         else:
@@ -1105,7 +1110,6 @@ class ServerClient(BaseServerClient):
                 "properties": {
                     "class": "CommentProperties",
                     "qualifiedName": self.make_feedback_qn("Comment", element_guid),
-                    "commentText": comment,
                     "description": comment,
                     "commentType": comment_type
                 }
@@ -1199,7 +1203,6 @@ class ServerClient(BaseServerClient):
                 "mergeUpdate": merge_update,
                 "properties": {
                     "class": "CommentProperties",
-                    "commentText": comment,
                     "description": comment,
                     "commentType": comment_type
                 }
@@ -3690,6 +3693,7 @@ class ServerClient(BaseServerClient):
             self,
             tag_guid: str,
             description: str,
+            body: Optional[dict | UpdateElementRequestBody] = None,
 
     ) -> None:
         """
@@ -3710,11 +3714,18 @@ class ServerClient(BaseServerClient):
         Raises
         ------
         PyegeriaException
+
+        Args:
+            body ():
         """
         body = {
-            "class": "InformalTagUpdateRequestBody",
-            "description": description
-        }
+            "class": "UpdateElementRequestBody",
+            "mergeUpdate": True,
+            "properties": {
+                "class": "InformalTagProperties",
+                "description": description
+            }
+        } if body is None else body
 
         url = f"{self.command_root}feedback-manager/tags/{tag_guid}/update"
 
@@ -3725,6 +3736,7 @@ class ServerClient(BaseServerClient):
             self,
             tag_guid: str,
             description: str,
+            body: Optional[dict | UpdateElementRequestBody] = None,
 
     ) -> None:
         """
@@ -3744,6 +3756,9 @@ class ServerClient(BaseServerClient):
         Raises
         ------
         PyegeriaException
+
+        Args:
+            body ():
         """
         loop = asyncio.get_event_loop()
         response = loop.run_until_complete(
@@ -6130,6 +6145,9 @@ class ServerClient(BaseServerClient):
                                   body: dict | SearchStringRequestBody | FindPropertyNamesRequestBody = None,
                                   **kwargs) -> Any:
 
+        if isinstance(metadata_element_type, str) and not metadata_element_type.strip():
+            metadata_element_type = None
+
         if isinstance(body, (SearchStringRequestBody, FindPropertyNamesRequestBody)):
             validated_body = body
         elif isinstance(body, dict):
@@ -6169,6 +6187,8 @@ class ServerClient(BaseServerClient):
                     "anchorDomainName": anchor_domain,
                     "anchorScopeGuid": anchor_scope_guid,
                 }
+                if not metadata_element_type:
+                    body.pop("metadataElementTypeName", None)
                 validated_body = FindPropertyNamesRequestBody.model_validate(body)
             else:
                 body = {
@@ -6200,6 +6220,8 @@ class ServerClient(BaseServerClient):
                     "pageSize": page_size
 
                 }
+                if not metadata_element_type:
+                    body.pop("metadataElementTypeName", None)
                 validated_body = SearchStringRequestBody.model_validate(body)
 
         json_body = validated_body.model_dump_json(indent=2, exclude_none=True)

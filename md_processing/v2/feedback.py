@@ -7,7 +7,6 @@ import json
 
 from pyegeria import EgeriaTech, PyegeriaException, COMMENT_TYPES
 from md_processing.v2.processors import AsyncBaseCommandProcessor
-from md_processing.md_processing_utils.md_processing_constants import get_command_spec
 from md_processing.md_processing_utils.common_md_utils import (
     set_element_prop_body, set_create_body, set_update_body, 
     update_element_dictionary, set_delete_request_body,
@@ -21,25 +20,6 @@ class FeedbackProcessor(AsyncBaseCommandProcessor):
     """
     Processor for Comments, Journal Entries, and Notes.
     """
-
-    async def fetch_as_is(self) -> Optional[Dict[str, Any]]:
-        qualified_name = self.parsed_output.get("qualified_name")
-        if not qualified_name:
-            return None
-        try:
-            # Feedback elements are often fetched by GUID in practice, 
-            # but we follow the name pattern if possible.
-            # However, comments/notes don't have a unique 'name' search in the same way.
-            # We rely on the GUID being in the command if it's an update.
-            guid = self.parsed_output.get("guid")
-            if guid:
-                if "Comment" in self.command.object_type:
-                    return await self.client._async_get_comment_by_guid(guid)
-                elif "Note" in self.command.object_type or "Journal" in self.command.object_type:
-                    return await self.client._async_get_note_by_guid(guid)
-        except PyegeriaException:
-            pass
-        return None
 
     async def apply_changes(self) -> str:
         verb = self.command.verb
@@ -61,9 +41,7 @@ class FeedbackProcessor(AsyncBaseCommandProcessor):
             
             prop_body = {
                 "class": "CommentProperties",
-                "displayName": display_name,
                 "qualifiedName": qualified_name,
-                "commentText": comment_text,
                 "description": comment_text,
                 "commentType": comment_type
             }
@@ -73,7 +51,7 @@ class FeedbackProcessor(AsyncBaseCommandProcessor):
                 if not guid: return self.command.raw_block
                 body = set_update_body("Comment", attributes)
                 body['properties'] = self.filter_update_properties(prop_body, body.get('mergeUpdate', True))
-                await self.client._async_update_comment(guid, body)
+                await self.client._async_update_comment(guid, body=body_slimmer(body))
                 self.parsed_output["guid"] = guid
                 logger.success(f"Updated Comment '{display_name}' with GUID {guid}")
                 return await self.client._async_get_comment_by_guid(guid, output_format='MD')
@@ -83,7 +61,7 @@ class FeedbackProcessor(AsyncBaseCommandProcessor):
                 body['class'] = "NewAttachmentRequestBody"
                 body["properties"] = prop_body
                 response = await self.client._async_add_comment_to_element(associated_guid, body=body_slimmer(body))
-                guid = response.get("guid") if isinstance(response, dict) else response
+                guid = self.extract_guid_or_raise(response, "Create Comment")
                 if guid:
                     self.parsed_output["guid"] = guid
                     update_element_dictionary(qualified_name, {'guid': guid, 'display_name': display_name})
@@ -106,6 +84,7 @@ class FeedbackProcessor(AsyncBaseCommandProcessor):
                 note_log_display_name=journal_name,
                 note_entry=note_entry
             )
+            guid = self.extract_guid_or_raise(guid, "Create Journal Entry")
             if guid:
                 self.parsed_output["guid"] = guid
                 logger.success(f"Added Journal Entry to '{journal_name}' with GUID {guid}")
@@ -119,7 +98,7 @@ class FeedbackProcessor(AsyncBaseCommandProcessor):
                 if not guid: return self.command.raw_block
                 body = set_update_body("Note", attributes)
                 body['properties'] = self.filter_update_properties(prop_body, body.get('mergeUpdate', True))
-                await self.client._async_update_note(guid, body)
+                await self.client._async_update_note(guid, body=body_slimmer(body))
                 self.parsed_output["guid"] = guid
                 logger.success(f"Updated Note '{display_name}' with GUID {guid}")
                 return await self.client._async_get_note_by_guid(guid, output_format='MD')
@@ -134,19 +113,6 @@ class TagProcessor(AsyncBaseCommandProcessor):
     Processor for Informal Tags.
     """
 
-    def get_command_spec(self) -> Dict[str, Any]:
-        return get_command_spec("Informal Tag")
-
-    async def fetch_as_is(self) -> Optional[Dict[str, Any]]:
-        qualified_name = self.parsed_output.get("qualified_name")
-        if not qualified_name: return None
-        try:
-            res = await self.client._async_get_tags_by_name(qualified_name)
-            if isinstance(res, list) and len(res) > 0:
-                return res[0]
-            return res if isinstance(res, dict) else None
-        except PyegeriaException:
-            return None
 
     async def apply_changes(self) -> str:
         verb = self.command.verb
@@ -165,7 +131,7 @@ class TagProcessor(AsyncBaseCommandProcessor):
 
         elif verb == "Create":
             response = await self.client._async_create_informal_tag(display_name, description, qualified_name)
-            guid = response.get("guid") if isinstance(response, dict) else response
+            guid = self.extract_guid_or_raise(response, "Create Informal Tag")
             if guid:
                 self.parsed_output["guid"] = guid
                 update_element_dictionary(qualified_name, {'guid': guid, 'display_name': display_name})
@@ -178,17 +144,6 @@ class ExternalReferenceProcessor(AsyncBaseCommandProcessor):
     """
     Processor for External References, Media, and Cited Documents.
     """
-
-    async def fetch_as_is(self) -> Optional[Dict[str, Any]]:
-        qualified_name = self.parsed_output.get("qualified_name")
-        if not qualified_name: return None
-        try:
-            res = await self.client._async_get_external_references_by_name(qualified_name)
-            if isinstance(res, list) and len(res) > 0:
-                return res[0]
-            return res if isinstance(res, dict) else None
-        except PyegeriaException:
-            return None
 
     async def apply_changes(self) -> str:
         verb = self.command.verb
@@ -273,7 +228,9 @@ class ExternalReferenceProcessor(AsyncBaseCommandProcessor):
         elif verb == "Create":
             body = set_create_body(object_type, attributes)
             body["properties"] = prop_body
-            guid = await self.client._async_create_external_reference(body=body_slimmer(body))
+            response = await self.client._async_create_external_reference(body=body_slimmer(body))
+            guid = self.extract_guid_or_raise(response, f"Create {object_type}")
+
             if guid:
                 self.parsed_output["guid"] = guid
 

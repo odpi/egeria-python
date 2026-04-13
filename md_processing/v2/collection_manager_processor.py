@@ -5,9 +5,6 @@ from typing import Dict, Any, Optional
 from loguru import logger
 
 from md_processing.v2.processors import AsyncBaseCommandProcessor
-from md_processing.md_processing_utils.md_processing_constants import (
-    get_command_spec
-)
 from md_processing.md_processing_utils.common_md_utils import (
     set_create_body, set_update_body,
     update_element_dictionary,
@@ -33,13 +30,22 @@ class CollectionManagerProcessor(AsyncBaseCommandProcessor):
         status = attributes.get('Status', {}).get('value', 'ACTIVE')
         journal_entry = attributes.get('Journal Entry', {}).get('value')
 
+        spec = self.get_command_spec()
+        om_type = spec.get("OM_TYPE")
+
         if verb == "Update":
             guid = self.parsed_output.get("guid") or (self.as_is_element['elementHeader']['guid'] if self.as_is_element else None)
             if not guid:
                 return self.command.raw_block
 
-            actual_object_type = "Agreement" if object_type == "Data Sharing Agreement" else object_type
-            body = set_update_body(actual_object_type, attributes)
+            if object_type == "Data Sharing Agreement":
+                actual_object_type = "Agreement"
+            elif om_type:
+                actual_object_type = om_type
+            else:
+                actual_object_type = object_type
+
+            self.last_body = body = set_update_body(actual_object_type, attributes)
             prop_body = set_collection_manager_body(actual_object_type, qualified_name, attributes)
             body['properties'] = self.filter_update_properties(prop_body, body.get('mergeUpdate', True))
             
@@ -81,8 +87,14 @@ class CollectionManagerProcessor(AsyncBaseCommandProcessor):
             return await self.render_result_markdown(guid)
 
         elif verb == "Create":
-            actual_object_type = "Agreement" if object_type == "Data Sharing Agreement" else object_type
-            body = set_create_body(actual_object_type, attributes)
+            if object_type == "Data Sharing Agreement":
+                actual_object_type = "Agreement"
+            elif om_type:
+                actual_object_type = om_type
+            else:
+                actual_object_type = object_type
+
+            self.last_body = body = set_create_body(actual_object_type, attributes)
             body["properties"] = set_collection_manager_body(actual_object_type, qualified_name, attributes)
             
             # Handle classifications if present (e.g. for Taxonomy, CanonicalVocabulary)
@@ -135,15 +147,17 @@ class CollectionManagerProcessor(AsyncBaseCommandProcessor):
                 # Some methods require body=body, others take body as positional
                 try:
                     if "Glossary" == object_type:
-                        guid = await method(display_name=display_name, body=body)
+                        raw_guid = await method(display_name=display_name, body=body)
                     else:
-                        guid = await method(body=body_slimmer(body)) if "Digital Product" in object_type else await method(body=body)
+                        raw_guid = await method(body=body_slimmer(body)) if "Digital Product" in object_type else await method(body=body)
                 except TypeError:
-                    guid = await method(body)
+                    raw_guid = await method(body)
             else:
                 # Generic fallback for any other collection subtype
-                guid = await self.client._async_create_collection(body=body, prop=[object_type.replace(" ", "")])
-                
+                raw_guid = await self.client._async_create_collection(body=body, prop=[object_type.replace(" ", "")])
+
+            guid = self.extract_guid_or_raise(raw_guid, f"Create {object_type}")
+
             if guid:
                 self.parsed_output["guid"] = guid
 
@@ -166,8 +180,6 @@ class CSVElementProcessor(AsyncBaseCommandProcessor):
     Processor for CSV Elements from Template.
     """
 
-    def get_command_spec(self) -> Dict[str, Any]:
-        return get_command_spec("CSV Element")
 
     async def fetch_as_is(self) -> Optional[Dict[str, Any]]:
         return None # Create only for now
@@ -180,7 +192,7 @@ class CSVElementProcessor(AsyncBaseCommandProcessor):
         qualified_name = self.parsed_output["qualified_name"]
         display_name = attributes.get('Display Name', {}).get('value', qualified_name)
         
-        guid = await self.client._async_get_create_csv_data_file_element_from_template(
+        raw_guid = await self.client._async_get_create_csv_data_file_element_from_template(
             attributes.get('File Name', {}).get('value'),
             attributes.get('File Type', {}).get('value'),
             attributes.get('File Path', {}).get('value'),
@@ -190,6 +202,7 @@ class CSVElementProcessor(AsyncBaseCommandProcessor):
             attributes.get('File System Name', {}).get('value'),
             attributes.get('Description', {}).get('value')
         )
+        guid = self.extract_guid_or_raise(raw_guid, "Create CSV Element")
 
         if guid:
             self.parsed_output["guid"] = guid
@@ -204,8 +217,6 @@ class CollectionLinkProcessor(AsyncBaseCommandProcessor):
     Processor for Agreement Items, Collection Membership, product dependencies, etc.
     """
 
-    def get_command_spec(self) -> Dict[str, Any]:
-        return get_command_spec(self.command.object_type)
 
     async def fetch_as_is(self) -> Optional[Dict[str, Any]]:
         return None
@@ -215,9 +226,9 @@ class CollectionLinkProcessor(AsyncBaseCommandProcessor):
         object_type = self.canonical_object_type
         attributes = self.parsed_output["attributes"]
         
+        self.last_body = body = set_rel_request_body(object_type, attributes)
+        
         if verb in ["Link", "Attach", "Add"]:
-            body = set_rel_request_body(object_type, attributes)
-            
             if "Agreement Item" in object_type or "Agreement to Item" in object_type:
                 guid1 = attributes.get('Agreement Name', {}).get('guid')
                 guid2 = attributes.get('Item Name', {}).get('guid')
@@ -337,7 +348,7 @@ class CollectionLinkProcessor(AsyncBaseCommandProcessor):
             return header
 
         elif verb in ["Detach", "Unlink", "Remove"]:
-            body = set_delete_rel_request_body(object_type, attributes)
+            self.last_body = body = set_delete_rel_request_body(object_type, attributes)
             if "Agreement Item" in object_type or "Agreement to Item" in object_type:
                 await self.client._async_detach_agreement_item(attributes.get('Agreement Name', {}).get('guid'), attributes.get('Item Name', {}).get('guid'), body)
             elif "Agreement Actor" in object_type or "Agreement to Actor" in object_type:

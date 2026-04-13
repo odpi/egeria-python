@@ -29,7 +29,7 @@ from pyegeria.core.utils import body_slimmer, dynamic_catch
 
 COLLECTION_PROPERTIES_LIST = ["CollectionProperties", "DataDictionaryProperties",
                               "DataSpecProperties", "DigitalProductProperties",
-                              "AgreementProperties"]
+                              "AgreementProperties","RootCollectionProperties", "HomeCollectionProperties",]
 
 AGREEMENT_PROPERTIES_LIST = ["AgreementProperties", "DigitalSubscriptionProperties",]
 
@@ -98,6 +98,13 @@ class GlossaryProperties(CollectionProperties):
 
 class DataSpecProperties(CollectionProperties):
     class_: Annotated[Literal["DataSpecProperties"], Field(alias="class")]
+
+
+class ReportTypeProperties(CollectionProperties):
+    class_: Annotated[Literal["ReportTypeProperties"], Field(alias="class")]
+    created_time: datetime | None = None
+    lastModifiedTime: datetime | None = None
+    lastModifier: str | None = None
 
 
 class DataDictionaryProperties(CollectionProperties):
@@ -1685,6 +1692,82 @@ class CollectionManager(ServerClient):
         return asyncio.get_event_loop().run_until_complete(
             self._async_create_collection(display_name=display_name, description=description, category=category,
                                           initial_classifications=[], prop=[prop], body=body))
+    @dynamic_catch
+    def create_folio(self, display_name: Optional[str] = None, description: Optional[str] = None,
+                                      category: Optional[str] = None, body: Optional[dict | NewElementRequestBody] = None) -> str:
+        """ Create a new collection of subtype Folio.
+            Create Collections: https://egeria-project.org/concepts/collection
+            Async version.
+
+            Parameters
+            ----------
+            display_name: str
+                The display name of the element. Will also be used as the basis of the qualified_name.
+            description: str
+                A description of the collection.
+            category: str
+                Adds an user supplied valid value for the collection type.
+            body: dict | NewElementRequestBody, Optional = None
+                The body of the collection request. Supersedes other parameters.
+
+            Returns
+            -------
+            str - the guid of the created collection
+
+            Raises
+            ------
+            PyegeriaException
+              Error in the request or response
+            ValueError
+              Pydantic validation error
+            NotAuthorizedException
+              The principle specified by the user_id does not have authorization for the requested action
+
+        """
+        prop = "Folio"
+
+        return asyncio.get_event_loop().run_until_complete(
+            self._async_create_collection(display_name=display_name, description=description, category=category,
+                                          initial_classifications=[], prop=[prop], body=body))
+
+    @dynamic_catch
+    def create_subject_area(self, display_name: Optional[str] = None, description: Optional[str] = None,
+                                category: Optional[str] = None,
+                                body: Optional[dict | NewElementRequestBody] = None) -> str:
+        """ Create a new collection of subtype SubjectArea.
+            Create Collections: https://egeria-project.org/concepts/collection
+            Async version.
+
+            Parameters
+            ----------
+            display_name: str
+                The display name of the element. Will also be used as the basis of the qualified_name.
+            description: str
+                A description of the collection.
+            category: str
+                Adds an user supplied valid value for the collection type.
+            body: dict | NewElementRequestBody, Optional = None
+                The body of the collection request. Supersedes other parameters.
+
+            Returns
+            -------
+            str - the guid of the created collection
+
+            Raises
+            ------
+            PyegeriaException
+              Error in the request or response
+            ValueError
+              Pydantic validation error
+            NotAuthorizedException
+              The principle specified by the user_id does not have authorization for the requested action
+
+        """
+        prop = "SubjectArea"
+
+        return asyncio.get_event_loop().run_until_complete(
+            self._async_create_collection(display_name=display_name, description=description, category=category,
+                                          initial_classifications=[], prop=[prop], body=body))
 
     @dynamic_catch
     def create_reference_list_collection(self, display_name: Optional[str] = None, description: Optional[str] = None,
@@ -2041,6 +2124,495 @@ class CollectionManager(ServerClient):
             self._async_create_data_spec_collection(display_name, description,category,
                                                  classification_name, body))
 
+    @dynamic_catch
+    async def _async_create_report_type_collection(self, display_name: Optional[str] = None, description: Optional[str] = None,
+                                                category: Optional[str] = None, classification_name: Optional[str] = None,
+                                                 body: Optional[dict | NewElementRequestBody] = None) -> str:
+        """ Create a new reportType collection. If the body is not present, the display_name, description, category
+            and classification will be used to create a simple, self-anchored collection.
+            Collections: https://egeria-project.org/concepts/collection
+            Async version.
+
+        Parameters
+        ----------
+        display_name: str, optional
+            The display name of the collection. The display name will be used to manufacture a qualified name. An
+            exception will be raised if a unique qualified name can't be manufactured.
+        description: str, optional
+            The description of the collection.
+        category: str, optional
+            An optional user-assigned category for the collection.
+        classification: str, optional
+            An initial classification for the collection. This can be used to distinguish, for instance, Folders
+            from Root Collections.
+
+        body: dict | NewElementRequestBody, optional
+            A dict or NewElementRequestBody representing the details of the collection to create. If supplied, this
+            information will be used to create the collection and the other attributes will be ignored. The body is
+            validated before being used.
+
+        Returns
+        -------
+        str - the guid of the created collection
+
+        Raises
+        ------
+        PyegeriaException
+            One of the pyegeria exceptions will be raised if there are issues in communications, message format or
+            Egeria errors.
+        ValidationError
+            Pydantic validation errors are raised if the body does not conform to the NewElementRequestBody.
+        NotAuthorizedException
+          The principle specified by the user_id does not have authorization for the requested action
+
+        Notes:
+        -----
+        simple:
+        {
+          "class": "NewElementRequestBody",
+          "isOwnAnchor": true,
+          "properties": {
+            "class": "CollectionProperties",
+            "qualifiedName": "Must provide a unique name here",
+            "displayName": "Add display name here",
+            "description": "Add description of the collection here",
+            "category": "Add appropriate valid value for type"
+          }
+        }
+
+
+
+        """
+        if body:
+            validated_body = self.validate_new_element_request(body,"ReportTypeProperties")
+        elif display_name is not None:
+            qualified_name = self.__create_qualified_name__("ReportType", display_name)
+            logger.info(f"\n\tDisplayName was {display_name}, classification {classification_name}\n")
+            if classification_name:
+                initial_classification_dict = {
+                    classification_name: {
+                    "class" : "ClassificationProperties"
+                    }
+                }
+            else:
+                initial_classification_dict = None
+            collection_properties = ReportTypeProperties( class_ = "ReportTypeProperties",
+                                                             qualified_name = qualified_name,
+                                                             display_name = display_name,
+                                                             description = description,
+                                                             category = category
+                                                             )
+            body = {
+                "class" :"NewElementRequestBody",
+                "isOwnAnchor": True,
+                "initialClassifications": initial_classification_dict,
+                "properties": collection_properties.model_dump()
+                }
+            validated_body = NewElementRequestBody.model_validate(body)
+        else:
+            raise PyegeriaInvalidParameterException(additional_info={"reason": "Invalid input parameters"})
+
+
+        url = f"{self.collection_command_root}"
+        json_body = validated_body.model_dump_json(indent=2, exclude_none=True, by_alias=True)
+        logger.info(json_body)
+        resp = await self._async_make_request("POST", url, json_body, is_json=True)
+        logger.info(f"Create collection with GUID: {resp.json().get('guid')}")
+        return resp.json().get("guid", NO_GUID_RETURNED)
+
+    @dynamic_catch
+    def create_report_type_collection(self, display_name: Optional[str] = None, description: Optional[str] = None,
+                                category: Optional[str] = None, classification_name: Optional[str] = None,
+                                body: Optional[dict | NewElementRequestBody] = None) -> str:
+        """ Create a new report type collection. If the body is not present, the display_name, description, category
+            and classification will be used to create a simple, self-anchored collection.
+            Collections: https://egeria-project.org/concepts/collection
+
+        Parameters
+        ----------
+        display_name: str, optional
+            The display name of the collection. The display name will be used to manufacture a qualified name. An
+            exception will be raised if a unique qualified name can't be manufactured.
+        description: str, optional
+            The description of the collection.
+        category: str, optional
+            An optional user-assigned category for the collection.
+        classification_name: str, optional
+            An initial classification for the collection. This can be used to distinguish, for instance, Folders
+            from Root Collections.
+
+        body: dict | NewElementRequestBody, optional
+            A dict or NewElementRequestBody representing the details of the collection to create. If supplied, this
+            information will be used to create the collection and the other attributes will be ignored. The body is
+            validated before being used.
+
+        Returns
+        -------
+        str - the guid of the created collection
+
+        Raises
+        ------
+        PyegeriaException
+            One of the pyegeria exceptions will be raised if there are issues in communications, message format or
+            Egeria errors.
+        ValidationError
+            Pydantic validation errors are raised if the body does not conform to the NewElementRequestBody.
+        NotAuthorizedException
+          The principle specified by the user_id does not have authorization for the requested action
+
+        Notes:
+        -----
+        simple:
+        {
+          "class": "NewElementRequestBody",
+          "isOwnAnchor": true,
+          "properties": {
+            "class": "CollectionProperties",
+            "qualifiedName": "Must provide a unique name here",
+            "displayName": "Add display name here",
+            "description": "Add description of the collection here",
+            "category": "Add appropriate valid value for type"
+          }
+        }
+
+        anchored:
+        {
+          "class": "NewElementRequestBody",
+          "anchorGUID": "anchor GUID, if set then isOwnAnchor=false",
+          "isOwnAnchor": false,
+          "anchorScopeGUIDs": ["optional GUIDs of search scope"],
+          "parentGUID": "parent GUID, if set, set all parameters beginning 'parent'",
+          "parentRelationshipTypeName": "open metadata type name",
+          "parentAtEnd1": true,
+          "properties": {
+            "class": "CollectionProperties",
+            "qualifiedName": "Must provide a unique name here",
+            "displayName": "Add display name here",
+            "description": "Add description of the collection here",
+            "category": "Add appropriate valid value for type"
+          },
+          "externalSourceGUID": "add guid here",
+          "externalSourceName": "add qualified name here",
+          "effectiveTime": "{{$isoTimestamp}}",
+          "forLineage": false,
+          "forDuplicateProcessing": false
+        }
+
+        a root collection:
+        {
+          "class": "NewElementRequestBody",
+          "anchorGUID": "anchor GUID, if set then isOwnAnchor=false",
+          "isOwnAnchor": false,
+          "anchorScopeGUIDs": ["optional GUIDs of search scope"],
+          "initialClassifications": {
+            "RootCollection": {}
+          },
+          "parentGUID": "parent GUID, if set, set all parameters beginning 'parent'",
+          "parentRelationshipTypeName": "open metadata type name",
+          "parentAtEnd1": true,
+          "properties": {
+            "class": "CollectionProperties",
+            "qualifiedName": "Must provide a unique name here",
+            "displayName": "Add display name here",
+            "description": "Add description of the collection here",
+            "category": "Add appropriate valid value for type"
+          },
+          "externalSourceGUID": "add guid here",
+          "externalSourceName": "add qualified name here",
+          "effectiveTime": "{{$isoTimestamp}}",
+          "forLineage": false,
+          "forDuplicateProcessing": false
+        }
+
+
+             """
+
+        return asyncio.get_event_loop().run_until_complete(
+            self._async_create_report_type_collection(display_name, description,category,
+                                                 classification_name, body))
+    @dynamic_catch
+    async def _async_create_security_list(self, display_name: Optional[str] = None, description: Optional[str] = None,
+                                                category: Optional[str] = None, classification_name: Optional[str] = None, prop:str = "SecurityList",
+                                                 distinguished_name: str = None, body: Optional[dict | NewElementRequestBody] = None) -> str:
+        """ Create a new security list collection.
+
+        Parameters
+        ----------
+        display_name: str, optional
+            The display name of the collection. The display name will be used to manufacture a qualified name. An
+            exception will be raised if a unique qualified name can't be manufactured.
+        description: str, optional
+            The description of the collection.
+        category: str, optional
+            An optional user-assigned category for the collection.
+        classification: str, optional
+            An initial classification for the collection.
+        prop: str, optional
+            The type of collection to create.  This is used to determine the properties class to use and the
+             qualified name prefix.  Default is SecurityList.
+        distinguished_name: str, optional
+            The distinguished name of the security list, used to link to external security list definitions.
+
+        body: dict | NewElementRequestBody, optional
+            A dict or NewElementRequestBody representing the details of the collection to create. If supplied, this
+            information will be used to create the collection and the other attributes will be ignored. The body is
+            validated before being used.
+
+        Returns
+        -------
+        str - the guid of the created collection
+
+        Raises
+        ------
+        PyegeriaException
+            One of the pyegeria exceptions will be raised if there are issues in communications, message format or
+            Egeria errors.
+        ValidationError
+            Pydantic validation errors are raised if the body does not conform to the NewElementRequestBody.
+        NotAuthorizedException
+          The principle specified by the user_id does not have authorization for the requested action
+
+        Notes:
+        -----
+        simple:
+        {
+          "class": "NewElementRequestBody",
+          "isOwnAnchor": true,
+          "properties": {
+            "class": "CollectionProperties",
+            "qualifiedName": "Must provide a unique name here",
+            "displayName": "Add display name here",
+            "description": "Add description of the collection here",
+            "distinguishedName": "Add the distinguished name of the security list here",
+            "category": "Add appropriate valid value for type"
+          }
+        }
+
+
+
+        """
+        if body:
+            validated_body = self.validate_new_element_request(body,"SecurityListProperties")
+        elif display_name is not None:
+            qualified_name = self.__create_qualified_name__(prop, display_name)
+            logger.info(f"\n\tDisplayName was {display_name}, classification {classification_name}\n")
+            if classification_name:
+                initial_classification_dict = {
+                    classification_name: {
+                    "class" : "ClassificationProperties"
+                    }
+                }
+            else:
+                initial_classification_dict = None
+            collection_properties = {
+                "class": prop+"Properties",
+                 "qualifiedName" : qualified_name,
+                 "displayName" : display_name,
+                 "description" : description,
+                 "category" : category,
+                 "distinguishedName" : distinguished_name
+            }
+
+            body = {
+                "class" :"NewElementRequestBody",
+                "isOwnAnchor": True,
+                "initialClassifications": initial_classification_dict,
+                "properties": collection_properties
+                }
+            validated_body = NewElementRequestBody.model_validate(body)
+        else:
+            raise PyegeriaInvalidParameterException(additional_info={"reason": "Invalid input parameters"})
+
+        url = f"{self.collection_command_root}"
+        json_body = validated_body.model_dump_json(indent=2, exclude_none=True, by_alias=True)
+        logger.info(json_body)
+        resp = await self._async_make_request("POST", url, json_body, is_json=True)
+        logger.info(f"Create SecurityList collection with GUID: {resp.json().get('guid')}")
+        return resp.json().get("guid", NO_GUID_RETURNED)
+
+    @dynamic_catch
+    def create_security_list(self, display_name: Optional[str] = None, description: Optional[str] = None,
+                                category: Optional[str] = None, classification_name: Optional[str] = None, prop:str = "SecurityList",
+                                distinguished_name: str= None, body: Optional[dict | NewElementRequestBody] = None) -> str:
+        """ Create a new security list collection. If the body is not present, the display_name, description, category
+            and classification will be used to create a simple, self-anchored collection.
+            Collections: https://egeria-project.org/concepts/collection
+
+        Parameters
+        ----------
+        display_name: str, optional
+            The display name of the collection. The display name will be used to manufacture a qualified name. An
+            exception will be raised if a unique qualified name can't be manufactured.
+        description: str, optional
+            The description of the collection.
+        category: str, optional
+            An optional user-assigned category for the collection.
+        classification_name: str, optional
+            An initial classification for the collection.
+        prop: str, optional
+            The type of collection to create.  This is used to determine the properties class to use and the
+             qualified name prefix. Default is SecurityList.
+        distinguished_name: str, optional
+            The distinguished name of the security list, used to link to external security list definitions.
+
+        body: dict | NewElementRequestBody, optional
+            A dict or NewElementRequestBody representing the details of the collection to create. If supplied, this
+            information will be used to create the collection and the other attributes will be ignored. The body is
+            validated before being used.
+
+        Returns
+        -------
+        str - the guid of the created collection
+
+        Raises
+        ------
+        PyegeriaException
+            One of the pyegeria exceptions will be raised if there are issues in communications, message format or
+            Egeria errors.
+        ValidationError
+            Pydantic validation errors are raised if the body does not conform to the NewElementRequestBody.
+        NotAuthorizedException
+          The principle specified by the user_id does not have authorization for the requested action
+
+        Notes:
+        -----
+        simple:
+        {
+          "class": "NewElementRequestBody",
+          "isOwnAnchor": true,
+          "properties": {
+            "class": "CollectionProperties",
+            "qualifiedName": "Must provide a unique name here",
+            "displayName": "Add display name here",
+            "description": "Add description of the collection here",
+            "category": "Add appropriate valid value for type"
+            "distinguishedName": "Add the distinguished name of the security list here"
+          }
+        }
+             """
+
+        return asyncio.get_event_loop().run_until_complete(
+            self._async_create_security_list(display_name, description,category,
+                                                 classification_name, prop,
+                                             distinguished_name, body))
+
+
+
+    @dynamic_catch
+    async def _async_create_security_group(self, display_name: Optional[str] = None, description: Optional[str] = None,
+                                          category: Optional[str] = None, classification_name: Optional[str] = None,
+                                          distinguished_name: str = None,
+                                          body: Optional[dict | NewElementRequestBody] = None) -> str:
+        """ Create a new security group collection.
+            Async version.
+        """
+        return await self._async_create_security_list(display_name, description, category,
+                                                     classification_name, "SecurityGroup",
+                                                     distinguished_name, body)
+
+    @dynamic_catch
+    def create_security_group(self, display_name: Optional[str] = None, description: Optional[str] = None,
+                              category: Optional[str] = None, classification_name: Optional[str] = None,
+                              distinguished_name: str = None,
+                              body: Optional[dict | NewElementRequestBody] = None) -> str:
+        """ Create a new security group collection.
+
+        Parameters
+        ----------
+       display_name: str, optional
+            The display name of the collection. The display name will be used to manufacture a qualified name. An
+            exception will be raised if a unique qualified name can't be manufactured.
+        description: str, optional
+            The description of the collection.
+        category: str, optional
+            An optional user-assigned category for the collection.
+        classification_name: str, optional
+            An initial classification for the collection.
+
+        distinguished_name: str, optional
+            The distinguished name of the security list, used to link to external security list definitions.
+
+        body: dict | NewElementRequestBody, optional
+            A dict or NewElementRequestBody representing the details of the collection to create. If supplied, this
+            information will be used to create the collection and the other attributes will be ignored. The body is
+            validated before being used.
+
+            Returns
+            -------
+            str - the guid of the created collection
+
+            Raises
+            ------
+            PyegeriaException
+              Error in the request or response
+            ValueError
+              Pydantic validation error
+            NotAuthorizedException
+              The principle specified by the user_id does not have authorization for the requested action
+
+        """
+        return asyncio.get_event_loop().run_until_complete(
+            self._async_create_security_list(display_name, description, category,
+                                             classification_name, "SecurityGroup",
+                                             distinguished_name, body))
+
+    @dynamic_catch
+    async def _async_create_security_role(self, display_name: Optional[str] = None, description: Optional[str] = None,
+                                         category: Optional[str] = None, classification_name: Optional[str] = None,
+                                         distinguished_name: str = None,
+                                         body: Optional[dict | NewElementRequestBody] = None) -> str:
+        """ Create a new security role collection.
+            Async version.
+        """
+        return await self._async_create_security_list(display_name, description, category,
+                                                     classification_name, "SecurityRole",
+                                                     distinguished_name, body)
+
+    @dynamic_catch
+    def create_security_Role(self, display_name: Optional[str] = None, description: Optional[str] = None,
+                              category: Optional[str] = None, classification_name: Optional[str] = None,
+                              distinguished_name: str = None,
+                              body: Optional[dict | NewElementRequestBody] = None) -> str:
+        """ Create a new security role collection.
+
+        Parameters
+        ----------
+       display_name: str, optional
+            The display name of the collection. The display name will be used to manufacture a qualified name. An
+            exception will be raised if a unique qualified name can't be manufactured.
+        description: str, optional
+            The description of the collection.
+        category: str, optional
+            An optional user-assigned category for the collection.
+        classification_name: str, optional
+            An initial classification for the collection.
+
+        distinguished_name: str, optional
+            The distinguished name of the security list, used to link to external security list definitions.
+
+        body: dict | NewElementRequestBody, optional
+            A dict or NewElementRequestBody representing the details of the collection to create. If supplied, this
+            information will be used to create the collection and the other attributes will be ignored. The body is
+            validated before being used.
+
+            Returns
+            -------
+            str - the guid of the created collection
+
+            Raises
+            ------
+            PyegeriaException
+              Error in the request or response
+            ValueError
+              Pydantic validation error
+            NotAuthorizedException
+              The principle specified by the user_id does not have authorization for the requested action
+
+        """
+        return asyncio.get_event_loop().run_until_complete(
+            self._async_create_security_list(display_name, description, category,
+                                             classification_name, "SecurityRole",
+                                             distinguished_name, body))
 
     @dynamic_catch
     async def _async_create_data_dictionary_collection(self, display_name: Optional[str] = None, description: Optional[str] = None,
@@ -4900,6 +5472,34 @@ class CollectionManager(ServerClient):
             f"{parent_guid}/collections/{collection_guid}/attach")
         await self._async_new_relationship_request(url, "ResourceListProperties", body)
         logger.info(f"Attached {collection_guid} to {parent_guid}")
+
+    @dynamic_catch
+    async def _async_attach_data_description(self, element_guid: str, collection_guid: str,
+                                             body: dict | NewRelationshipRequestBody = None):
+        """Attach a data description collection to an element (DataDescription relationship). Async version.
+
+        Parameters
+        ----------
+        element_guid: str
+            The unique identifier of the element to describe.
+        collection_guid: str
+            The identifier of the data description collection being attached.
+        body: dict | NewRelationshipRequestBody, optional, default = None
+            A structure representing the details of the relationship.
+        """
+        url = (
+            f"{self.platform_url}/servers/"
+            f"{self.view_server}/api/open-metadata/collection-manager/metadata-elements/"
+            f"{element_guid}/data-descriptions/{collection_guid}/attach")
+        await self._async_new_relationship_request(url, "DataDescriptionProperties", body)
+        logger.info(f"Attached data description {collection_guid} to element {element_guid}")
+
+    @dynamic_catch
+    def attach_data_description(self, element_guid: str, collection_guid: str,
+                                body: dict | NewRelationshipRequestBody = None):
+        """Attach a data description collection to an element (DataDescription relationship)."""
+        loop = asyncio.get_event_loop()
+        loop.run_until_complete(self._async_attach_data_description(element_guid, collection_guid, body))
 
     @dynamic_catch
     def attach_collection(self, parent_guid: str, collection_guid: str,

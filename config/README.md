@@ -112,6 +112,7 @@ Relevant fields in `config/config.json` (examples):
   - "Egeria Platform URL": `https://localhost:9443`
   - "Egeria View Server": `qs-view-server2`
   - "Egeria Jupyter": `true` or `false` depending on terminal rendering
+  - "Egeria Normalize Mermaid": `true` (default) to normalize Mermaid for broad renderer compatibility
   - "Pyegeria Root": base path used for inbox/outbox/mermaid graphs
 - Logging
   - `enable_logging`: turn logging on/off
@@ -172,6 +173,8 @@ You can override many values via environment variables; `config/env` contains co
   - `EGERIA_PLATFORM_URL`, `EGERIA_VIEW_SERVER`, `EGERIA_INTEGRATION_DAEMON_URL`, etc.
 - Jupyter rendering toggle
   - `EGERIA_JUPYTER` (`True`/`False`)
+- Mermaid normalization toggle
+  - `PYEGERIA_NORMALIZE_MERMAID` (`True`/`False`)
 - Logging
   - `PYEGERIA_ENABLE_LOGGING`, `PYEGERIA_LOG_DIRECTORY`, `PYEGERIA_CONSOLE_LOG_LVL`, `PYEGERIA_FILE_LOG_LVL`, `PYEGERIA_CONSOLE_FILTER_LEVELS`
 
