@@ -1,6 +1,6 @@
 import json
 import time
-
+from datetime import datetime
 import pytest
 import asyncio
 from pyegeria.omvs.my_profile import MyProfile
@@ -33,7 +33,7 @@ class TestMyProfile:
             profile_client = MyProfile(VIEW_SERVER, PLATFORM_URL, USER_ID, USER_PWD)
             token = profile_client.create_egeria_bearer_token(USER_ID, USER_PWD)
 
-            profile = profile_client.get_my_profile(output_format="DICT", report_spec="My-User-MD", graph_query_depth=10)
+            profile = profile_client.get_my_profile(output_format="JSON", report_spec="My-User-MD", graph_query_depth=10)
             if isinstance(profile, dict | list):
                 print(json.dumps(profile, indent=2))
             if isinstance(profile, str):
@@ -115,32 +115,65 @@ class TestMyProfile:
 
     def test_activity_logging(self, profile_client):
         try:
+            # body = {
+            #     "class": "NewAttachmentRequestBody",
+            #     "properties": {
+            #         "class": "NotificationProperties",
+            #         "qualifiedName": "Activity::TestActivity2",
+            #         "displayName": "A new Test Activity",
+            #         "situation": "Testing activity logging",
+            #         "description": "This is a test notification",
+            #     }
+            # }
+            # guid = profile_client.log_my_activity(body)
+            # assert isinstance(guid, str)
+            # print(f"\nLogged activity GUID: {guid}")
+            # body = {
+            #     "class": "NewAttachmentRequestBody",
+            #     "properties": {
+            #         "class": "NotificationProperties",
+            #         "qualifiedName": "JournalActivity::TestActivity2",
+            #         "displayName": "A new Test Activity",
+            #         "situation": "Testing activity logging",
+            #         "description": "This is a test notification",
+            #     }
+            # }
+            # guid = profile_client.journal_my_activity(body)
+            # assert isinstance(guid, str)
+            # print(f"\nJournaled activity GUID: {guid}")
             body = {
                 "class": "NewAttachmentRequestBody",
                 "properties": {
                     "class": "NotificationProperties",
-                    "qualifiedName": "TestActivity",
+                    "qualifiedName": f"Blog::Blog-{datetime.now().isoformat()}",
                     "displayName": "A new Test Activity",
                     "situation": "Testing activity logging",
                     "description": "This is a test notification",
                 }
             }
-            guid = profile_client.log_my_activity(body)
-            assert isinstance(guid, str)
-            print(f"\nLogged activity GUID: {guid}")
-
-            guid = profile_client.journal_my_activity(body)
-            assert isinstance(guid, str)
-            print(f"\nJournaled activity GUID: {guid}")
-
-            guid = profile_client.blog_my_activity(body)
-            assert isinstance(guid, str)
-            print(f"\nBlogged activity GUID: {guid}")
+            response = profile_client.blog_my_activity(body)
+            assert isinstance(response, dict)
+            print(f"\nBlogged activity GUID: {response['guid']}")
+            print(f"\nBlogged activity details: {json.dumps(response, indent=2)}")
 
         except PyegeriaException as e:
             print(f"activity logging failed as expected or due to env: {e}")
         except Exception as e:
             pytest.fail(f"activity logging failed with unexpected exception: {e}")
+
+    def test_get_my_entries(self, profile_client):
+        try:
+            response = profile_client.get_my_entries()
+            assert isinstance(response, (list, dict, str))
+            if isinstance(response, list | dict):
+                print(f"\nRetrieved to-dos: {json.dumps(response, indent=2)}" if isinstance(response, (list,
+                                                                                                       dict)) else f"\nRetrieved to-dos: {response}")
+            else:
+                print(f"\nRetrieved to-dos: {response}")
+        except PyegeriaException as e:
+            print(f"get_my_to_dos failed as expected or due to env: {e}")
+        except Exception as e:
+            pytest.fail(f"get_my_to_dos failed with unexpected exception: {e}")
 
     def test_get_to_dos(self, profile_client):
         try:

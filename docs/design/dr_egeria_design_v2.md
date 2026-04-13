@@ -71,6 +71,7 @@ Before execution, Dr. Egeria must resolve references inside the input string.
 2. **Target State Resolution (`fetch_as_is`):**
    - If the command is an "Update", Dr. Egeria looks up the specific element currently attached to the Egeria instance by GUID or Qualified Name.
    - It explicitly favors `ClassificationExplorer` over `MetadataExplorer/Expert` due to its resilient JSON structures and broader view server compatibility, minimizing unexpected 400 errors during deep fetches.
+   - **Create-to-Update Transition**: If a "Create" command targets an element that already exists (found by GUID or Display Name), Dr. Egeria automatically transitions the command to an "Update". Crucially, if the match is made via Display Name, the engine extracts the found element's Qualified Name and compares it to the command's expected Qualified Name. If they differ, the transition is skipped to prevent hijacking read-only external elements (like those from a Content Pack).
 
 ### Phase 4: Execution / Dry-Run
 1. **Display Mode (`directive == display`):**
@@ -147,16 +148,17 @@ The system is extensible. To support new types or capabilities in Egeria:
 1. One generates a new compact command definition.
 2. The `v2Dispatcher` natively understands the new types without requiring custom hard-coded classes if they follow traditional primitive property architectures. Ensure to map verbs ("Create", "Update", "Setup", "Define") accurately.
 
-## Integration with Report Specs
+## Integration with Report Specs and Documentation
 
-To provide a consistent experience between creating metadata with Dr.Egeria and reporting on it within `pyegeria`, the same compact command definitions are used to automatically generate Report Specs.
+To provide a consistent experience between creating metadata with Dr.Egeria and reporting on it within `pyegeria`, the same compact command definitions are used to automatically generate Report Specs, Markdown command templates, and glossary help documentation.
 
-The tool `hey_egeria tech gen-report-specs` can be used to:
-- Resolve all attributes from command bundles and definitions.
-- Generate standard `FormatSet` objects for each command.
-- Automatically update `pyegeria/view/base_report_formats.py` with the latest generated specs using the `--merge` flag.
+The utility script `refresh_specs.py` (located in `commands/tech/`) executes all generation tools in sequence:
+- Resolves all attributes from command bundles and definitions natively using the `compact_loader`.
+- Generates standard `FormatSet` report specs for each command (updating `pyegeria/view/base_report_formats.py`).
+- Generates Markdown command templates for authors to use.
+- Generates Dr.Egeria Glossary terms that define every recognized command attribute.
 
-This ensures that the `Display Names`, `keys`, and `descriptions` used in Dr.Egeria markdown files are identical to the labels and data fields used in pyegeria reports.
+Running `uv run commands/tech/refresh_specs.py --merge-reports` ensures that the `Display Names`, `keys`, and `descriptions` used in Dr.Egeria markdown files are identical to the labels and data fields used in pyegeria reports and documentation.
 
 ## Debug Mode
 
@@ -211,4 +213,3 @@ python -m md_processing.dr_egeria --input-file MyFile.md --debug
 # Programmatic
 await process_md_file_v2(input_file, output_folder, directive, client, debug=True)
 ```
-

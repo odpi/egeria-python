@@ -49,7 +49,7 @@ PYTHONPATH=. EGERIA_ROOT_PATH=sample-data python commands/cat/dr_egeria_md.py --
 
 - [x] **v2 Baseline**: Core async infrastructure and execution engine.
 - [x] **Command Porting**: All 7+ command families are now registered in the v2 dispatcher.
-- [x] **Rewriter**: Automatic `Create` -> `Update` transition logic integrated into `AsyncBaseCommandProcessor.execute()`.
+- [x] **Rewriter**: Automatic `Create` -> `Update` transition logic integrated into `AsyncBaseCommandProcessor.execute()`. Enhanced with strict Qualified Name matching during Display Name fallbacks to prevent hijacking external (e.g., Content Pack) elements.
 
 ## Phase 5 & 6 Accomplishments
 
@@ -111,7 +111,7 @@ dr_egeria --input-file project.md --directive validate
 
 - [x] **v2 Baseline**: Core async infrastructure and execution engine.
 - [x] **Command Porting**: All 7+ command families ported and registered.
-- [x] **Rewriter**: Automatic `Create` -> `Update` transition logic integrated.
+- [x] **Rewriter**: Automatic `Create` -> `Update` transition logic integrated. Strict Qualified Name integrity enforced.
 - [x] **v1 Legacy Removed**: `md_processing/v1_legacy/` deleted; v2 is the only engine.
 - [x] **Correctness**: Sequential execution engine ensures reliable dependency handling.
 - [x] **Developer Experience**: Unified entry points, consistent arguments, and comprehensive documentation.

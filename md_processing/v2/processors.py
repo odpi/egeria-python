@@ -284,8 +284,15 @@ class AsyncBaseCommandProcessor(ABC):
                     try:
                         element = await self.fetch_element(existing_guid)
                         if element:
-                            self.as_is_element = element
-                            logger.info(f"Element with Display Name '{display_name}' found in Egeria (GUID: {existing_guid}). Transitioning to Update.")
+                            ele_props = element.get("properties", {}) if "properties" in element else element.get("elementProperties", {})
+                            ele_qn = ele_props.get("qualifiedName")
+                            my_qn = self.parsed_output.get("qualified_name")
+                            if ele_qn and my_qn and ele_qn != my_qn:
+                                msg = f"Found element with Display Name '{display_name}' (GUID: {existing_guid}) but different QN ('{ele_qn}'). Skipping Update transition."
+                                logger.info(msg)
+                            else:
+                                self.as_is_element = element
+                                logger.info(f"Element with Display Name '{display_name}' found in Egeria (GUID: {existing_guid}). Transitioning to Update.")
                         else:
                             msg = f"Warning: An element with Display Name '{display_name}' already exists in Egeria (QN or Display Name match) but could not be fetched."
                             logger.warning(msg)
@@ -419,6 +426,8 @@ class AsyncBaseCommandProcessor(ABC):
                             "verb": self.command.verb,
                             "object_type": self.canonical_object_type,
                             "markdown_object_type": self.markdown_object_type,
+                            "display_name": self.parsed_output.get("display_name"),
+                            "qualified_name": self.parsed_output.get("qualified_name"),
                             "found": False,
                             "errors": self.parsed_output["errors"]
                         }
@@ -805,7 +814,7 @@ class AsyncBaseCommandProcessor(ABC):
             unsupported_type_warnings = self.context.setdefault("_unsupported_lookup_types_warned", set())
             try:
                 # Pass 1: Try WITH type constraint (fastest, avoids ambiguity)
-                res = await self.client._async_get_guid_for_name(name_or_guid, type_name=tech_type or None)
+                res = await self.client.__async_get_guid__(qualified_name=name_or_guid, display_name=name_or_guid, property_name="displayName", tech_type=tech_type or None)
             except PyegeriaException as e:
                 # Catch multiple matches error
                 if "Multiple elements found" in str(e):
@@ -834,7 +843,7 @@ class AsyncBaseCommandProcessor(ABC):
             is_not_found = not res or (isinstance(res, str) and (res.startswith("No ") or " found" in res))
             if is_not_found and tech_type:
                 try:
-                    res = await self.client._async_get_guid_for_name(name_or_guid)
+                    res = await self.client.__async_get_guid__(qualified_name=name_or_guid, display_name=name_or_guid, property_name="displayName")
                 except PyegeriaException as e:
                     if "Multiple elements found" in str(e):
                         msg = f"Multiple elements found for name '{name_or_guid}' (Pass 2). Please use a unique Qualified Name."

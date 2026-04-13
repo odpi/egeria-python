@@ -329,6 +329,77 @@ class MyProfile(AssetMaker):
             return self._generate_my_profile_output(elements, "My", "MyProfile", output_format, report_spec)
         return elements
 
+    @dynamic_catch
+    async def _async_get_my_entries(self) -> list[dict]:
+        """Retrieve all activity entries (journal, blog, log) for the user. Async version.
+
+        This method extracts entries from 'noteLogs' (via 'nestedElements') and 'requestedActions'.
+        It focuses on elements of type 'Notification'.
+
+        Returns
+        -------
+        list[dict]
+            A list of dictionaries, each containing 'properties' and 'time' for an entry.
+        """
+        profile = await self._async_get_my_profile(output_format="JSON")
+        if profile == NO_ELEMENTS_FOUND:
+            return []
+
+        entries = []
+
+        def extract_entry(el_summary):
+            rel_el = el_summary.get("relatedElement")
+            if not rel_el:
+                return None
+
+            header = rel_el.get("elementHeader")
+            if not header:
+                return None
+
+            type_info = header.get("type")
+            if not type_info:
+                return None
+
+            type_name = type_info.get("typeName")
+            super_types = type_info.get("superTypeNames") or []
+
+            if type_name != "Notification" and "Notification" not in super_types:
+                return None
+
+            properties = rel_el.get("properties")
+            versions = header.get("versions")
+            create_time = versions.get("createTime") if versions else None
+
+            return {"properties": properties, "time": create_time}
+
+        # 1. Extract from requestedActions
+        requested_actions = profile.get("requestedActions") or []
+        for action in requested_actions:
+            entry = extract_entry(action)
+            if entry:
+                entries.append(entry)
+
+        # 2. Extract from noteLogs -> nestedElements
+        note_logs = profile.get("noteLogs") or []
+        for note_log in note_logs:
+            nested_elements = note_log.get("nestedElements") or []
+            for nested in nested_elements:
+                entry = extract_entry(nested)
+                if entry:
+                    entries.append(entry)
+
+        return entries
+
+    @dynamic_catch
+    def get_my_entries(self) -> list[dict]:
+        """Retrieve all activity entries (journal, blog, log) for the user.
+
+        Returns
+        -------
+        list[dict]
+            A list of dictionaries, each containing 'properties' and 'time' for an entry.
+        """
+        return asyncio.get_event_loop().run_until_complete(self._async_get_my_entries())
 
     @dynamic_catch
     def get_my_profile(

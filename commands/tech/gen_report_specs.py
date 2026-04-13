@@ -270,148 +270,18 @@ def _derive_target_type(cmd_key: str, cmd_obj: dict) -> str:
     return display_name
 
 
-def _resolve_compact_commands(data: dict) -> dict:
-    """Resolve attributes for compact command specifications.
-
-    Compact format has:
-    - attribute_definitions: map of label -> details
-    - bundles: map of bundle_name -> { inherits, own_attributes }
-    - commands: map of cmd_name -> { ..., bundle, custom_attributes }
-
-    This function returns a commands map where each command has an "Attributes"
-    list compatible with the legacy format.
-    """
-    commands = data.get("commands", {})
-    bundles = data.get("bundles", {})
-    attr_defs = data.get("attribute_definitions", {})
-
-    resolved_commands = {}
-    for cmd_key, cmd_obj in commands.items():
-        if not isinstance(cmd_obj, dict):
-            resolved_commands[cmd_key] = cmd_obj
-            continue
-
-        # Resolve attributes
-        resolved_attrs = []
-        seen_attr_names = set()
-
-        def add_attr(name):
-            if name in seen_attr_names:
-                return
-            if name in attr_defs:
-                # Add as a mapping (label -> details) for compatibility with old structure
-                resolved_attrs.append({name: attr_defs[name]})
-                seen_attr_names.add(name)
-
-        # 1. From bundle (and its ancestors)
-        # Collect bundle path: child -> parent -> ...
-        bundle_path = []
-        curr_bundle = cmd_obj.get("bundle")
-        visited = set()
-        while curr_bundle and curr_bundle in bundles and curr_bundle not in visited:
-            visited.add(curr_bundle)
-            bundle_path.append(curr_bundle)
-            curr_bundle = bundles[curr_bundle].get("inherits")
-
-        # Process bundle path in reverse to get base attributes first
-        for b_name in reversed(bundle_path):
-            for attr_name in bundles[b_name].get("own_attributes", []):
-                add_attr(attr_name)
-
-        # 2. From custom_attributes
-        for attr_name in cmd_obj.get("custom_attributes", []):
-            add_attr(attr_name)
-
-        new_cmd = cmd_obj.copy()
-        if resolved_attrs:
-            new_cmd["Attributes"] = resolved_attrs
-        resolved_commands[cmd_key] = new_cmd
-
-    return resolved_commands
-
-
-def _load_command_specs(path: Path) -> dict:
-    if path.is_dir():
-        merged_compact = {"commands": {}, "attribute_definitions": {}, "bundles": {}}
-        legacy_specs = {}
-        has_compact = False
-
-        for spec_path in sorted(path.glob("*.json")):
-            try:
-                data = json.loads(spec_path.read_text(encoding="utf-8"))
-                # If it looks like compact format (any of these keys present)
-                is_compact = isinstance(data, dict) and any(
-                    k in data for k in ["commands", "attribute_definitions", "bundles"]
-                )
-
-                if is_compact:
-                    has_compact = True
-                    if "commands" in data:
-                        for k, v in data["commands"].items():
-                            if k in merged_compact["commands"]:
-                                logger.warning(
-                                    f"Duplicate command {k!r} in {spec_path.name}; overwriting previous"
-                                )
-                            merged_compact["commands"][k] = v
-                    if "attribute_definitions" in data:
-                        merged_compact["attribute_definitions"].update(
-                            data["attribute_definitions"]
-                        )
-                    if "bundles" in data:
-                        merged_compact["bundles"].update(data["bundles"])
-                elif isinstance(data, dict):
-                    # Could be legacy "Command Specifications" or just a dict of commands
-                    specs = data.get("Command Specifications") or data.get("commands")
-                    if specs and isinstance(specs, dict):
-                        legacy_specs.update(specs)
-                    else:
-                        legacy_specs.update(data)
-            except Exception as e:
-                logger.error(f"Failed to load {spec_path}: {e}")
-
-        if has_compact:
-            # Resolve compact commands using the global context across all files
-            resolved = _resolve_compact_commands(merged_compact)
-            # Also include any legacy specs found in the same directory
-            resolved.update(legacy_specs)
-            logger.info(
-                f"Loaded command specs from {path} with {len(resolved)} commands (cross-file compact resolution used)"
-            )
-            return resolved
-        else:
-            logger.info(
-                f"Loaded legacy command specs from {path} with {len(legacy_specs)} commands"
-            )
-            return legacy_specs
-
-    # Handle single file path
-    data = json.loads(path.read_text(encoding="utf-8"))
-    if isinstance(data, dict):
-        # Support both legacy "Command Specifications" and compact "commands"
-        if "commands" in data and "attribute_definitions" in data:
-            data = _resolve_compact_commands(data)
-            items_iter = data.items()
-        else:
-            specs = data.get("Command Specifications") or data.get("commands")
-            if specs is not None and isinstance(specs, dict):
-                items_iter = specs.items()
-            else:
-                # If neither key exists, assume the dict itself IS the command map
-                items_iter = data.items()
-    elif isinstance(data, list):
-        def _key_for(idx, obj):
-            dn = str(obj.get("display_name", "")).strip()
-            return dn or f"cmd_{idx}"
-
-        items_iter = ((_key_for(i, obj), obj) for i, obj in enumerate(data))
-    else:
-        raise ValueError("commands.json root must be an object/dict or an array of command objects")
-
-    data = dict(items_iter)
-    logger.info(
-        f"Loaded commands.json from {path} with {len(data)} commands"
-    )
-    return data
+def _load_command_specs(path: Path | str) -> dict:
+    """Load compact command specifications from a directory using the internal compact loader."""
+    path_str = str(path)
+    try:
+        from md_processing.md_processing_utils.compact_loader import load_compact_specs_from_dir
+        specs = load_compact_specs_from_dir(path_str)
+        if specs:
+            logger.info(f"Loaded compact specs from {path_str} with {len(specs)} commands")
+            return specs
+    except Exception as e:
+        logger.error(f"Failed to use compact_loader on dir {path_str}: {e}")
+    return {}
 
 def build_format_sets_from_commands(
     commands_json_path: str | Path,
@@ -872,7 +742,7 @@ def main(commands_json, output_path, emit, merge, list_names, usage_level):
     try:
         input_file = commands_json or Prompt.ask(
             "Enter commands.json or directory:",
-            default=os.path.join(env.pyegeria_root, "md_processing/data/commands.json"),
+            default=os.path.join(env.pyegeria_root, "md_processing/data/compact_commands"),
         )
 
         sets = build_format_sets_from_commands(input_file, usage_level=usage_level)

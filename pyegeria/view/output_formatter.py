@@ -973,10 +973,6 @@ def generate_entity_md_table(elements: List[Dict],
         except TypeError:
             returned_struct = None
 
-        # For help mode, bypass extraction
-        if output_format == "help":
-            returned_struct = {"formats": {"attributes": columns}}
-
         # Additional props (if any)
         additional_props = {}
         if get_additional_props_func:
@@ -1135,11 +1131,10 @@ def generate_entity_dict(elements: List[Dict],
         if local_columns_struct is not None:
             try:
                 returned_struct = extract_properties_func(element, local_columns_struct)
-            except TypeError as e:
-                logger.info(f"Error - didn't find extractor?: {e}")
+            except TypeError:
                 returned_struct = None
 
-        # Get additional properties if function is provided
+        # Additional props (if any)
         additional_props = {}
         if get_additional_props_func:
             additional_props = get_additional_props_func(element, guid, output_format)

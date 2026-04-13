@@ -9,6 +9,7 @@ The issue where "Create Term" commands resulted in 409 Conflict errors has been 
 2. **Fixed Self-Shadowing**: A bug where a command would "shadow" itself in the planned elements set before checking existence has been fixed by reordering the execution steps.
 3. **Specific Fetch Fallbacks**: Since `MetadataExplorer` was unavailable on some server configurations, I restored domain-specific `fetch_element` overrides that use reliable OMAS methods (e.g., `_async_get_term_by_guid`).
 4. **Robust Name Matching**: Improved the name-matching logic in `resolve_element_guid` to search both `elementHeader` and `properties` for the Qualified Name.
+5. **Strict Qualified Name Verification on Display Name Fallbacks**: If an element is found by Display Name during a Create command, its Qualified Name is strictly compared against the command's expected Qualified Name. If they do not match, the Create-to-Update transition is aborted. This prevents local commands from hijacking external, read-only system elements (e.g., Content Pack entities) that happen to share the same Display Name.
 
 ### Validation Result:
 When running `dr_egeria_intro_part1.md`, the processor now correctly identifies that the Glossary Terms already exist. Instead of failing with a 409 Conflict, it now transitions the command to **Update Term**.

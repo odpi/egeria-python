@@ -109,7 +109,7 @@ class TestCollectionManager:
             c_client = EgeriaTech(self.good_server_2, self.good_platform1_url, user_id=self.good_user_2, )
             token = c_client.create_egeria_bearer_token(self.good_user_2, "secret")
             start_time = time.perf_counter()
-            search_string = "roleType"
+            search_string = "feeback"
             classification_name = None
             # element_type = ["DigitalProductCatalog","DigitalProductFamily"]
             element_type = None
@@ -366,7 +366,7 @@ class TestCollectionManager:
             c_client = CollectionManager(self.good_view_server_1, self.good_platform1_url, user_id=self.good_user_2, )
             token = c_client.create_egeria_bearer_token(self.good_user_2, "secret")
             start_time = time.perf_counter()
-            collection_guid = "4bc1ed51-5319-4efa-8210-88d66a7de8be"
+            collection_guid = "5b346697-ccb7-4464-a84f-13c2d8e76d2e"
             element_type = None
             response = c_client.get_collection_by_guid(collection_guid, element_type,
                                                        output_format="JSON", report_spec="Folders")

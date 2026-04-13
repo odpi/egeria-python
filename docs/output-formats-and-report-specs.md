@@ -416,38 +416,70 @@ Place this JSON file into your user specs directory and call `load_user_report_s
 
 ## Generating Report Specs from Commands
 
-pyegeria includes a powerful tool, `gen-report-specs`, that can automatically generate report specifications from Egeria command definitions (compact commands). This ensures that the metadata you create or update using Dr.Egeria can be consistently reported on using the same attribute names and types.
+pyegeria includes powerful tooling to automatically generate report specifications, markdown templates, and help documentation from Egeria command definitions (compact commands). This ensures that the metadata you create or update using Dr.Egeria can be consistently reported on and documented using the exact same attribute names and types.
 
-### Using the `gen-report-specs` CLI
+### Using the `refresh_specs.py` script (Recommended)
 
-The tool is available as a command within the `hey_egeria tech` group:
+The easiest way to keep your documentation, templates, and report specs fully synchronized with your compact command schemas is to use the `refresh_specs.py` utility. This script executes all three generation steps in sequence.
+
+```bash
+# Run the complete refresh process
+uv run commands/tech/refresh_specs.py
+
+# Automatically persist generated report specs to base_report_formats.py
+uv run commands/tech/refresh_specs.py --merge-reports
+
+# Filter generation by usage level and family (applies to markdown templates)
+uv run commands/tech/refresh_specs.py --usage-level Advanced --family AssetCatalog
+```
+
+The script will automatically pick up all `.json` files inside the `md_processing/data/compact_commands` directory, resolve attributes across inherited bundles, and regenerate all artifacts.
+
+### Using the individual CLI Tools
+
+If you need finer control over a specific generation step, you can run the individual modules:
+
+**1. Generating Report Specs (`gen-report-specs`)**
+Converts compact commands into PyEgeria `FormatSet` specifications.
 
 ```bash
 # Get help and see available options
 hey_egeria tech gen-report-specs --help
 
-# Generate report specs from a directory of compact commands and list them
-hey_egeria tech gen-report-specs md_processing/data/compact_commands --emit dict --list
+# Generate report specs from the default compact_commands directory and list them
+hey_egeria tech gen-report-specs --emit dict --list
+
+# Persist generated specs into pyegeria/view/base_report_formats.py
+hey_egeria tech gen-report-specs --merge
 ```
 
-### Key Features:
-- **Attribute Resolution**: Automatically resolves attributes from inherited `bundles` and `attribute_definitions` across multiple JSON files.
-- **Multiple Output Modes**:
-  - `--emit dict`: Generates an in-memory `FormatSetDict` (useful for quick verification).
-  - `--emit code`: Generates Python code that can be pasted into `base_report_formats.py`.
-  - `--emit json`: Generates a JSON file that can be loaded at runtime.
-- **Persistent Updates (`--merge`)**: When using the `--merge` flag, the tool automatically updates the managed `# --- GENERATED FORMAT SETS ---` section in `pyegeria/view/base_report_formats.py`. This is the easiest way to keep your built-in report specs in sync with your command definitions.
+**2. Generating Markdown Command Templates**
+Creates skeleton `.md` files for writing Dr.Egeria metadata updates. Output files are saved to `sample-data/templates/`.
+
+```bash
+uv run -m commands.tech.generate_md_cmd_templates --usage-level Basic
+```
+
+**3. Generating Dr. Egeria Glossary Help**
+Creates glossary term definitions that describe the Dr.Egeria commands. Optional `--advanced` flag includes advanced attributes and commands. Output files are saved to your configured Egeria Inbox directory (by default, `sample-data/egeria-inbox/`).
+
+```bash
+uv run -m commands.tech.generate_dr_help --advanced
+```
+
+### Key Features of Generation:
+- **Compact Command Exclusivity**: The tooling natively supports Egeria's precise compact command JSON schema.
+- **Attribute Resolution**: Automatically resolves attributes from inherited `bundles` and `attribute_definitions` across all JSON files in the compact commands directory.
+- **Persistent Updates (`--merge`)**: When generating report specs, the tool can automatically update the managed `# --- GENERATED FORMAT SETS ---` section in `pyegeria/view/base_report_formats.py`. This is the easiest way to keep your built-in report specs in sync with your command definitions.
 
 ### Example: Syncing with Dr.Egeria Commands
 
-If you have added new commands to Dr.Egeria and want to be able to run reports on the resulting metadata:
+If you have added new commands or attributes to the JSON files in `md_processing/data/compact_commands` and want them available for immediate use across reporting, templates, and documentation:
 
 ```bash
-# Update base_report_formats.py with all specs found in the compact_commands directory
-hey_egeria tech gen-report-specs md_processing/data/compact_commands --merge
+# Safely regenerate everything and update your python source file
+uv run commands/tech/refresh_specs.py --merge-reports
 ```
-
-The tool will find all `.json` files in the directory, resolve all command attributes, generate matching `FormatSet` objects, and upsert them into the `base_report_formats.py` source file.
 
 ---
 

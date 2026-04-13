@@ -3,7 +3,7 @@
 
 [project]
 name = "pyegeria"
-version = "5.9.9"
+version = "6.0"
 license = 'Apache-2.0'
 license-files = ["LICENSE"]
 authors = [{name = "Dan Wolfson", email = "dan.wolfson@pdr-associates.com"},]
@@ -168,7 +168,7 @@ dependencies = [
     gen_report_specs = "commands.tech.gen_report_specs:main"
     gen_md_cmd_templates = "commands.tech.generate_md_cmd_templates:main"
     gen_dr_help = "commands.tech.generate_dr_help:main"
-
+    refresh_specs = "commands.tech.refresh_specs:main"
 
 
 [dependency-groups]
