@@ -1,6 +1,6 @@
 {
   "family": "Glossary",
-  "exported": "Apr 8, 2026 at 1:34:44 PM",
+  "exported": "Apr 16, 2026 at 9:31:55 AM",
   "attribute_definitions": {
     "Activity Status": {
       "variable_name": "activity_status",
@@ -2001,7 +2001,7 @@
     "Glossary Name": {
       "variable_name": "glossary_names",
       "inUpdate": true,
-      "attr_labels": "Glossary Name; Glossaries; In Glossaries; In Glossary; Glossary Names",
+      "attr_labels": "Glossary; Glossaries; In Glossaries; In Glossary; Glossary Names",
       "examples": "",
       "default_value": "",
       "valid_values": [],

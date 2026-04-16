@@ -1,6 +1,6 @@
 {
   "family": "Solution Architect",
-  "exported": "Apr 6, 2026 at 12:43:57 PM",
+  "exported": "Apr 16, 2026 at 9:33:12 AM",
   "attribute_definitions": {
     "Activity Status": {
       "variable_name": "activity_status",
@@ -2813,7 +2813,7 @@
       "Journal Entry": ""
     },
     "Link Actor to Blueprint": {
-      "display_name": "Actor to Blueprint",
+      "display_name": "Link Actor to Blueprint",
       "qn_prefix": "",
       "alternate_names": [],
       "family": "Solution Architect",
@@ -2861,7 +2861,7 @@
       "qn_prefix": "",
       "alternate_names": [],
       "family": "Solution Architect",
-      "description": "Associates a component to an Actor.",
+      "description": "Links a solution component to an actor role via the SolutionComponentActor relationship.",
       "verb": "Link",
       "upsert": false,
       "attach": false,
