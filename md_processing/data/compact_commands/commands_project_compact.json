@@ -1,6 +1,6 @@
 {
   "family": "Projects",
-  "exported": "Apr 6, 2026 at 12:43:04 PM",
+  "exported": "Apr 16, 2026 at 1:38:23 PM",
   "attribute_definitions": {
     "Activity Status": {
       "variable_name": "activity_status",
@@ -2399,10 +2399,10 @@
       "attach": false,
       "level": "Basic",
       "find_method": "ProjectManager.find_projects",
-      "find_constraints": "{\"classification_names\": [\"StudyProject\"]}",
+      "find_constraints": "{\"include_only_classified_elements\": [\"StudyProject\"]}",
       "extra_find": "",
       "extra_constraints": "",
-      "OM_TYPE": "CLASSIFICATION",
+      "OM_TYPE": "Project",
       "bundle": "Project Base",
       "custom_attributes": [],
       "Journal Entry": ""
@@ -2456,10 +2456,10 @@
       "attach": false,
       "level": "Basic",
       "find_method": "ProjectManager.find_projects",
-      "find_constraints": "{\"classification_names\": [\"PersonalProject\"]}",
+      "find_constraints": "{\"include_only_classified_elements\": [\"PersonalProject\"]}",
       "extra_find": "",
       "extra_constraints": "",
-      "OM_TYPE": "CLASSIFICATION",
+      "OM_TYPE": "Project",
       "bundle": "Project Base",
       "custom_attributes": [],
       "Journal Entry": ""
@@ -2475,10 +2475,10 @@
       "attach": false,
       "level": "Basic",
       "find_method": "ProjectManager.find_projects",
-      "find_constraints": "{\"classification_names\": [\"Task\"]}",
+      "find_constraints": "{\"include_only_classified_elements\": [\"Task\"]}",
       "extra_find": "",
       "extra_constraints": "",
-      "OM_TYPE": "CLASSIFICATION",
+      "OM_TYPE": "Project",
       "bundle": "Project Base",
       "custom_attributes": [],
       "Journal Entry": ""
@@ -2494,10 +2494,10 @@
       "attach": false,
       "level": "Basic",
       "find_method": "ProjectManager.find_projects",
-      "find_constraints": "{\"classification_names\": [\"Campaign\"]}",
+      "find_constraints": "{\"include_only_classified_elements\": [\"Campaign\"]}",
       "extra_find": "",
       "extra_constraints": "",
-      "OM_TYPE": "CLASSIFICATION",
+      "OM_TYPE": "Project",
       "bundle": "Project Base",
       "custom_attributes": [],
       "Journal Entry": ""

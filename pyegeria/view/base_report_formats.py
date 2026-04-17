@@ -582,6 +582,48 @@ base_report_specs = FormatSetDict({
             spec_params={},
         )
     ),
+"Actor-Profiles-Assigned-MD": FormatSet(
+        target_type="Actor Profile",
+        heading="Actor Profile - Assigned Actors",
+        description="Actor Profile Assigned Actor Information",
+        annotations={},  # No specific annotations
+        family="ActorManager",
+        formats=[
+            Format(
+                types=["ALL"],
+                attributes=COMMON_COLUMNS + [
+                    Column(name="Open Metadata Type Name", key='type_name'),
+                    Column(name="GUID", key='GUID'),
+                    Column(name="Assigned Actors", key='sideLinks', detail_spec="Profile-Team-Detail"),
+                ],
+            )
+        ],
+        action=ActionParameter(
+            function="ActorManager.find_actor_profiles",
+            optional_params=OPTIONAL_FILTER_PARAMS + TIME_PARAMETERS,
+            required_params=["search_string"],
+            spec_params={},
+        )
+    ),
+"Profile-Team-Detail": FormatSet(
+    target_type="Actor Profile",
+    heading="Assigned Actors",
+    description="Assigned Actors",
+    family="ActorManager",
+    formats=[
+        Format(
+            types=["LIST", "REPORT", "DICT", "TABLE"],
+            attributes=[
+                Column(name="Name", key="displayName"),
+                Column(name="Qualified Name", key="qualifiedName"),
+                Column(name="Employee Type", key="employeeType"),
+                Column(name="Identifier", key="identifier"),
+                Column(name="Employee Number", key="employeeNumber")
+            ],
+        )
+    ],
+),
+
     "Actor-Roles": FormatSet(
         target_type="Actor Profile",
         heading="Actor Profile",
@@ -602,6 +644,44 @@ base_report_specs = FormatSetDict({
             required_params=["search_string"],
             spec_params={},
         )
+    ),
+    "Team-Members": FormatSet(
+        target_type="Team",
+        heading="Team Members",
+        description="Team Members and Leaders Information",
+        family="ActorManager",
+        formats=[
+            Format(
+                types=["ALL"],
+                attributes=COMMON_COLUMNS + [
+                    Column(name="Team Type", key='team_type'),
+                    Column(name="Members", key="assigned_actors", detail_spec="Team-Member-Role-Detail"),
+                ],
+            )
+        ],
+        action=ActionParameter(
+            function="ActorManager.find_actor_profiles",
+            optional_params=OPTIONAL_FILTER_PARAMS + TIME_PARAMETERS,
+            required_params=["search_string"],
+            spec_params={"metadata_element_type": "Team"},
+        )
+    ),
+    "Team-Member-Role-Detail": FormatSet(
+        target_type="Actor Role",
+        heading="Team Members",
+        description="Assigned Actors and Individuals",
+        family="ActorManager",
+        formats=[
+            Format(
+                types=["LIST", "REPORT", "DICT", "TABLE"],
+                attributes=[
+                    Column(name="Role", key="name"),
+                    Column(name="Assignment Type", key="assignment_type"),
+                    Column(name="Individual", key="individual_name"),
+                    Column(name="Individual GUID", key="individual_guid"),
+                ],
+            )
+        ],
     ),
 
     "User-Identities": FormatSet(

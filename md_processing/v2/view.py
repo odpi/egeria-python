@@ -103,6 +103,41 @@ class ViewProcessor(AsyncBaseCommandProcessor):
         if not spec_exists:
             raise ValueError(f"Unknown or invalid report spec: '{report_spec_name}'. Please use a valid report spec name.")
 
+        # Inject default values for missing required parameters (e.g. search_string = "*")
+        action = spec_exists.get("action") if isinstance(spec_exists, dict) else getattr(spec_exists, "action", None)
+        if action:
+            required_params = action.get("required_params", []) if isinstance(action, dict) else getattr(action, "required_params", [])
+            spec_params = action.get("spec_params", {}) if isinstance(action, dict) else getattr(action, "spec_params", {})
+
+            missing_params = [p for p in required_params if p not in params and p not in spec_params]
+            if missing_params:
+                import md_processing.md_processing_utils.md_processing_constants as constants
+                constants.load_commands()
+                specs = constants.COMMAND_DEFINITIONS.get("Command Specifications", {})
+
+                injected = []
+                for missing_param in missing_params:
+                    # Search global definitions for a default_value corresponding to this variable_name
+                    default_val = None
+                    for cdef in specs.values():
+                        if not isinstance(cdef, dict): continue
+                        attr_defs = cdef.get("attribute_definitions", {})
+                        for attr_def in attr_defs.values():
+                            if attr_def.get("variable_name") == missing_param:
+                                val = attr_def.get("default_value")
+                                if val is not None and str(val).strip():
+                                    default_val = val
+                                    break
+                        if default_val is not None:
+                            break
+
+                    if default_val is not None:
+                        params[missing_param] = default_val
+                        injected.append(missing_param)
+
+                if injected:
+                    logger.debug(f"ViewProcessor injected default values for missing required params: {injected}")
+
         # 4. Call the report executor
         # _async_run_report handles both fetching and formatting (via generate_output)
         result = await _async_run_report(

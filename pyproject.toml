@@ -3,7 +3,7 @@
 
 [project]
 name = "pyegeria"
-version = "6.0"
+version = "6.0.4"
 license = 'Apache-2.0'
 license-files = ["LICENSE"]
 authors = [{name = "Dan Wolfson", email = "dan.wolfson@pdr-associates.com"},]
@@ -186,7 +186,14 @@ include = ["pyegeria", "pyegeria.*", "commands", "commands.*", "md_processing", 
 exclude = ["tests", "config"]
 
 [tool.setuptools.package-data]
-"md_processing" = ["data/*.json", "data/*.py"]
+"md_processing" = [
+    "data/**/*.json",
+    "data/**/*.py",
+    "md_commands/*.py",
+    "md_processing_utils/tests/*.csv",
+    "md_processing_utils/tests/*.md",
+    "md_processing_utils/tests/*.txt"
+]
 
 
 [project.optional-dependencies]

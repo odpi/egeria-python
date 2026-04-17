@@ -19,7 +19,7 @@ from pyegeria.models import (SearchStringRequestBody, FilterRequestBody, GetRequ
                              DeleteElementRequestBody, DeleteRelationshipRequestBody, NewClassificationRequestBody,
                              DeleteClassificationRequestBody)
 from pyegeria.view.output_formatter import (_extract_referenceable_properties, populate_columns_from_properties,
-                                            get_required_relationships)
+                                            get_required_relationships, materialize_egeria_summary)
 from pyegeria.core.utils import dynamic_catch
 
 ACTOR_PROFILE = ["ActorProfile", "PersonRole", "TeamRole", "Organization",
@@ -1167,6 +1167,39 @@ class ActorManager(ServerClient):
             for column in columns_list:
                 if column.get('key') == 'classifications':
                     column['value'] = classification_names[:-2]
+                    break
+
+        # Handle assignedActors specifically for nested Team reports if present
+        assigned_actors = element.get('assignedActors')
+        if assigned_actors:
+            for column in columns_list:
+                if column.get('key') == 'assigned_actors' and column.get('detail_spec'):
+                    # We want to provide a list of dicts for the detail spec
+                    # Each dict should have role info and person info
+                    flattened_actors = []
+                    for aa in assigned_actors:
+                        m_aa = materialize_egeria_summary(aa)
+                        # aa might have sideLinks. Let's pull the first one's name out.
+                        side_links = m_aa.get('sideLinks', [])
+                        if side_links and len(side_links) > 0:
+                            person = side_links[0]
+                            m_aa['individual_name'] = person.get('name')
+                            m_aa['individual_guid'] = person.get('guid')
+                            m_aa['individual_type'] = person.get('type')
+                            # Also copy some common props if they are not there
+                            if not m_aa.get('displayName') and person.get('displayName'):
+                                m_aa['displayName'] = person.get('displayName')
+                        flattened_actors.append(m_aa)
+                    column['value'] = flattened_actors
+                    break
+
+        # Handle sideLinks specifically for nested reports if present at root
+        side_links = element.get('sideLinks')
+        if side_links:
+            for column in columns_list:
+                if column.get('key') == 'side_links' and column.get('detail_spec'):
+                    materialized = [materialize_egeria_summary(sl) for sl in side_links]
+                    column['value'] = materialized
                     break
 
         # Populate requested relationship-based columns generically from top-level keys
@@ -2691,6 +2724,15 @@ class ActorManager(ServerClient):
             for column in columns_list:
                 if column.get('key') == 'classifications':
                     column['value'] = classification_names[:-2]
+                    break
+
+        # Handle sideLinks specifically for nested reports if present at root
+        side_links = element.get('sideLinks')
+        if side_links:
+            for column in columns_list:
+                if column.get('key') == 'side_links' and column.get('detail_spec'):
+                    materialized = [materialize_egeria_summary(sl) for sl in side_links]
+                    column['value'] = materialized
                     break
 
         # Populate requested relationship-based columns generically from top-level keys
