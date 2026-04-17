@@ -162,7 +162,7 @@ class TestActorManager:
             token = actor_client.create_egeria_bearer_token(self.good_user_2, "secret")
             start_time = time.perf_counter()
 
-            search_string = "*"
+            search_string = "Department::3067"
             response = actor_client.find_actor_profiles(
                 search_string,
                 output_format="DICT", report_spec = "Actor-Profiles", metadata_element_type="Organization"
@@ -203,8 +203,8 @@ class TestActorManager:
             token = actor_client.create_egeria_bearer_token(self.good_user_2, "secret")
             start_time = time.perf_counter()
 
-            name = "erinoverview"
-            response = actor_client.get_actor_profiles_by_name(name)
+            name = "Department::3067"
+            response = actor_client.get_actor_profiles_by_name(name, output_format="DICT", report_spec = "Team-Members")
             duration = time.perf_counter() - start_time
 
             print(f"\n\tDuration was {duration} seconds")
@@ -895,6 +895,113 @@ class TestActorManager:
         except Exception as e:
             print(f"Error in contact details link/detach test: {e}")
             assert False
+        finally:
+            if actor_client:
+                actor_client.close_session()
+
+    def test_team_members_report(self):
+        """Test the Team-Members report with dynamically created data"""
+        actor_client = None
+        created_guids = []
+        try:
+            actor_client = ActorManager(self.good_view_server_2, self.good_platform1_url, user_id=self.good_user_2)
+            token = actor_client.create_egeria_bearer_token(self.good_user_2, "secret")
+
+            # 1. Create a Team
+            team_qname = self._unique_qname("TestTeam")
+            team_body = {
+                "class": "NewElementRequestBody",
+                "isOwnAnchor": True,
+                "properties": {
+                    "class": "TeamProperties",
+                    "qualifiedName": team_qname,
+                    "displayName": "Test Team for Report",
+                    "description": "Functional test team",
+                    "teamType": "Project Team"
+                }
+            }
+            team_guid = actor_client.create_actor_profile(team_body)
+            created_guids.append(team_guid)
+            print(f"\n\tCreated Team: {team_guid}")
+
+            # 2. Create a Team Leader Role
+            role_qname = self._unique_qname("TestRole")
+            role_body = {
+                "class": "NewElementRequestBody",
+                "isOwnAnchor": True,
+                "properties": {
+                    "class": "TeamLeaderProperties",
+                    "qualifiedName": role_qname,
+                    "displayName": "Test Team Leader Role"
+                }
+            }
+            role_guid = actor_client.create_actor_role(role_body)
+            created_guids.append(role_guid)
+            print(f"\tCreated Role: {role_guid}")
+
+            # 3. Link Team and Role
+            link_body = {
+                "class": "NewRelationshipRequestBody",
+                "properties": {
+                    "class": "AssignmentScopeProperties",
+                    "assignmentType": "Leader"
+                }
+            }
+            actor_client.link_assignment_scope(role_guid, team_guid, link_body)
+            print(f"\tLinked Role to Team")
+
+            # 4. Create a Person
+            person_qname = self._unique_qname("TestPerson")
+            person_body = {
+                "class": "NewElementRequestBody",
+                "isOwnAnchor": True,
+                "properties": {
+                    "class": "PersonProperties",
+                    "qualifiedName": person_qname,
+                    "displayName": "Test Person for Team"
+                }
+            }
+            person_guid = actor_client.create_actor_profile(person_body)
+            created_guids.append(person_guid)
+            print(f"\tCreated Person: {person_guid}")
+
+            # 5. Link Person and Role
+            person_link_body = {
+                "class": "NewRelationshipRequestBody",
+                "properties": {
+                    "class": "PersonRoleAppointmentProperties"
+                }
+            }
+            actor_client.link_person_role_to_profile(role_guid, person_guid, person_link_body)
+            print(f"\tLinked Person to Role")
+
+            # 6. Run the report
+            start_time = time.perf_counter()
+            response = actor_client.get_actor_profiles_by_name(team_qname, output_format="DICT", report_spec="Team-Members")
+            duration = time.perf_counter() - start_time
+            print(f"\tDuration for report was {duration} seconds")
+
+            print("\nReport Output:")
+            print(json.dumps(response, indent=4))
+
+            assert isinstance(response, list)
+            assert len(response) > 0
+            team_report = response[0]
+            assert team_report.get('displayName') == "Test Team for Report"
+            members = team_report.get('Members')
+            assert isinstance(members, list)
+            assert len(members) > 0
+            found_person = False
+            for member in members:
+                if member.get('Individual') == "Test Person for Team":
+                    found_person = True
+                    assert member.get('Role') == "Test Team Leader Role"
+                    assert member.get('Assignment Type') == "Leader"
+            assert found_person, "Did not find expected person in the report"
+
+        except Exception as e:
+            print(f"\nError in test_team_members_report: {e}")
+            raise e
         finally:
             if actor_client:
                 actor_client.close_session()

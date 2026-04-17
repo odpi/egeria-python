@@ -14,7 +14,7 @@ console = Console(width = 150)
 VIEW_SERVER = "qs-view-server"
 PLATFORM_URL = "https://localhost:9443"
 # USER_ID = "jacquardnpa"
-USER_ID = "erinoverview"
+USER_ID = "garygeeke"
 USER_PWD = "secret"
 
 class TestMyProfile:
@@ -33,7 +33,7 @@ class TestMyProfile:
             profile_client = MyProfile(VIEW_SERVER, PLATFORM_URL, USER_ID, USER_PWD)
             token = profile_client.create_egeria_bearer_token(USER_ID, USER_PWD)
 
-            profile = profile_client.get_my_profile(output_format="JSON", report_spec="My-User-MD", graph_query_depth=10)
+            profile = profile_client.get_my_profile(output_format="DICT", report_spec="My-User-MD", graph_query_depth=10)
             if isinstance(profile, dict | list):
                 print(json.dumps(profile, indent=2))
             if isinstance(profile, str):

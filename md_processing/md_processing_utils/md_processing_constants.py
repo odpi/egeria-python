@@ -164,6 +164,8 @@ def _parse_alternate_names(spec: dict) -> list[str]:
     alt = spec.get("alternate_names", "")
     if not alt:
         return []
+    if isinstance(alt, list):
+        return [_normalize_command(item) for item in alt if item.strip()]
     return [_normalize_command(item) for item in alt.split(";") if item.strip()]
 
 

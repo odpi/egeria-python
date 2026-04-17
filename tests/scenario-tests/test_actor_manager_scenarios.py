@@ -681,6 +681,119 @@ class ActorManagerScenarioTester:
                 created_guids=created_guids
             )
 
+    def scenario_5_team_management(self) -> TestResult:
+        """Scenario 5: Team Management and Reporting"""
+        scenario_name = "Team Management & Reporting"
+        console.print(f"\n[bold magenta]▶ Starting Scenario: {scenario_name}[/bold magenta]")
+        start_time = time.perf_counter()
+        created_guids = []
+
+        try:
+            # 1. Create a Team
+            team_qname = f"scenario5_team_{datetime.now().strftime('%H%M%S')}"
+            team_body = {
+                "class": "NewElementRequestBody",
+                "isOwnAnchor": True,
+                "properties": {
+                    "class": "TeamProperties",
+                    "qualifiedName": team_qname,
+                    "displayName": "Scenario 5 Team",
+                    "description": "Team for scenario testing",
+                    "teamType": "Project Team"
+                }
+            }
+            team_guid = self.client.create_actor_profile(team_body)
+            created_guids.append(team_guid)
+            self.created_actors.append(team_guid)
+            console.print(f"  [green]✓[/green] Created Team: {team_guid}")
+
+            # 2. Create a Team Leader Role
+            role_qname = f"scenario5_role_{datetime.now().strftime('%H%M%S')}"
+            role_body = {
+                "class": "NewElementRequestBody",
+                "isOwnAnchor": True,
+                "properties": {
+                    "class": "TeamLeaderProperties",
+                    "qualifiedName": role_qname,
+                    "displayName": "Scenario 5 Team Leader"
+                }
+            }
+            role_guid = self.client.create_actor_role(role_body)
+            created_guids.append(role_guid)
+            self.created_roles.append(role_guid)
+            console.print(f"  [green]✓[/green] Created Role: {role_guid}")
+
+            # 3. Link Team and Role
+            link_body = {
+                "class": "NewRelationshipRequestBody",
+                "properties": {
+                    "class": "AssignmentScopeProperties",
+                    "assignmentType": "Leader"
+                }
+            }
+            self.client.link_assignment_scope(role_guid, team_guid, link_body)
+            console.print(f"  [green]✓[/green] Linked Role to Team")
+
+            # 4. Create a Person
+            person_qname = f"scenario5_person_{datetime.now().strftime('%H%M%S')}"
+            person_body = {
+                "class": "NewElementRequestBody",
+                "isOwnAnchor": True,
+                "properties": {
+                    "class": "PersonProperties",
+                    "qualifiedName": person_qname,
+                    "displayName": "Scenario 5 Person"
+                }
+            }
+            person_guid = self.client.create_actor_profile(person_body)
+            created_guids.append(person_guid)
+            self.created_actors.append(person_guid)
+            console.print(f"  [green]✓[/green] Created Person: {person_guid}")
+
+            # 5. Link Person and Role
+            person_link_body = {
+                "class": "NewRelationshipRequestBody",
+                "properties": {
+                    "class": "PersonRoleAppointmentProperties"
+                }
+            }
+            self.client.link_person_role_to_profile(role_guid, person_guid, person_link_body)
+            console.print(f"  [green]✓[/green] Linked Person to Role")
+
+            # 6. Run the report and verify
+            response = self.client.get_actor_profiles_by_name(team_qname, output_format="DICT", report_spec="Team-Members")
+            
+            if not isinstance(response, list) or len(response) == 0:
+                raise Exception("Team report returned no data")
+            
+            team_report = response[0]
+            members = team_report.get('Members', [])
+            if not any(m.get('Individual') == "Scenario 5 Person" for m in members):
+                raise Exception("Expected member not found in team report")
+            
+            console.print(f"  [green]✓[/green] Team Members report verified")
+
+            duration = time.perf_counter() - start_time
+            return TestResult(
+                scenario_name=scenario_name,
+                status="PASSED",
+                duration=duration,
+                message="Successfully created team structure and verified members report",
+                created_guids=created_guids
+            )
+
+        except Exception as e:
+            duration = time.perf_counter() - start_time
+            console.print(f"  [red]✗ Scenario failed: {str(e)}[/red]")
+            return TestResult(
+                scenario_name=scenario_name,
+                status="FAILED",
+                duration=duration,
+                message=str(e),
+                error=e,
+                created_guids=created_guids
+            )
+
     def generate_report(self):
         """Generate comprehensive test report"""
         console.print("\n[bold cyan]═══ Test Execution Report ═══[/bold cyan]\n")
@@ -756,6 +869,7 @@ class ActorManagerScenarioTester:
             self.results.append(self.scenario_2_actor_lifecycle())
             self.results.append(self.scenario_3_user_identities())
             self.results.append(self.scenario_4_assignment_and_contact_details())
+            self.results.append(self.scenario_5_team_management())
             
             # Cleanup
             self.cleanup_created_actors()

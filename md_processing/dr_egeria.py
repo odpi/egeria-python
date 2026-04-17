@@ -137,7 +137,157 @@ def register_governance_processors(register_processor: Callable[[str, Type[Async
     # Context retrieval is not in compact command specs; keep explicit registration.
     register_processor("View Governance Definition Context", GovernanceContextProcessor)
 
+
+def normalize_command_key(key: str) -> str:
+    """Collapse whitespace and strip for consistent command matching."""
+    import re
+    return re.sub(r'\s+', ' ', key).strip() if key else key
+
+def register_processor(dispatcher: V2Dispatcher, base_command: str, processor_cls: Type[AsyncBaseCommandProcessor]):
+    """Register a processor for a command and its variants/aliases."""
+    from md_processing.md_processing_utils.md_processing_constants import get_command_spec, build_command_variants
+    
+    spec = get_command_spec(base_command)
+    registered = set()
+    
+    names_to_register = [base_command]
+    if spec:
+        names_to_register.append(spec.get('display_name', ''))
+        alt_names = spec.get('alternate_names', [])
+        if isinstance(alt_names, str):
+            alt_names = [item.strip() for item in alt_names.split(";") if item.strip()]
+        names_to_register.extend(alt_names)
+
+    for name in names_to_register:
+        key = normalize_command_key(name)
+        if key and key not in registered:
+            dispatcher.register(key, processor_cls)
+            registered.add(key)
+            
+    if spec:
+        for variant in build_command_variants(base_command, spec):
+            vkey = normalize_command_key(variant)
+            if vkey and vkey not in registered:
+                dispatcher.register(vkey, processor_cls)
+                registered.add(vkey)
+    if not spec:
+        key = normalize_command_key(base_command)
+        if key:
+            dispatcher.register(key, processor_cls)
+
+def setup_dispatcher(client: EgeriaTech) -> V2Dispatcher:
+    """Create and configure a V2Dispatcher with all registered processors."""
+    dispatcher = V2Dispatcher(client)
+    
+    def reg(base, cls):
+        register_processor(dispatcher, base, cls)
+
+    # Glossary
+    reg("Create Glossary Term", TermProcessor)
+    reg("Link Term-Term Relationship", TermRelationshipProcessor)
+    reg("Unlink Term-Term Relationship", TermRelationshipProcessor)
+    reg("Remove Term-Term Relationship", TermRelationshipProcessor)
+    reg("Detach Term-Term Relationship", TermRelationshipProcessor)
+
+    # Data Designer
+    from md_processing.v2.data_designer import (
+        DataValueSpecificationProcessor, DataClassProcessor, DataStructureProcessor, DataFieldProcessor, DataGrainProcessor,
+        LinkDataFieldProcessor, LinkFieldToStructureProcessor, LinkDataValueDefinitionProcessor, LinkDataValueCompositionProcessor,
+        LinkDataClassCompositionProcessor, LinkCertificationTypeToStructureProcessor, AttachDataDescriptionProcessor,
+        AssignDataValueSpecificationProcessor, AttachDataValueSpecificationProcessor
+    )
+
+    reg("Create Data Specification", DataCollectionProcessor)
+    reg("Create Data Dictionary", DataCollectionProcessor)
+    reg("Create Data Structure", DataStructureProcessor)
+    reg("Create Data Field", DataFieldProcessor)
+    reg("Create Data Class", DataClassProcessor)
+    reg("Create Data Value Specification", DataValueSpecificationProcessor)
+    reg("Update Data Value Specification", DataValueSpecificationProcessor)
+    reg("Create Data Grain", DataGrainProcessor)
+    reg("Link Data Field", LinkDataFieldProcessor)
+    reg("Link Field to Structure", LinkFieldToStructureProcessor)
+    reg("Link Data Value Definition", LinkDataValueDefinitionProcessor)
+    reg("Link Data Value Composition", LinkDataValueCompositionProcessor)
+    reg("Link Data Class Composition", LinkDataClassCompositionProcessor)
+    reg("Link Certification Type to Data Structure", LinkCertificationTypeToStructureProcessor)
+    reg("Attach Data Description to Element", AttachDataDescriptionProcessor)
+    reg("Assign Data Value Specification", AssignDataValueSpecificationProcessor)
+    reg("Attach Data Value Specification to Element", AttachDataValueSpecificationProcessor)
+
+    # Solution Architect (spec-driven to keep coverage aligned with compact commands)
+    register_solution_architect_processors(reg)
+
+    # Project
+    reg("Create Project", ProjectProcessor)
+    reg("Link Project Dependency", ProjectLinkProcessor)
+    reg("Link Project Hierarchy", ProjectLinkProcessor)
+
+    for proj_type in PROJECT_SUBTYPES:
+        reg(f"Create {proj_type}", ProjectProcessor)
+        reg(f"Update {proj_type}", ProjectProcessor)
+
+    # Collection Manager
+    for coll_type in COLLECTION_SUBTYPES:
+        reg(f"Create {coll_type}", CollectionManagerProcessor)
+        reg(f"Update {coll_type}", CollectionManagerProcessor)
+
+    reg("Create CSV Element", CSVElementProcessor)
+    reg("Add Member to Collection", CollectionLinkProcessor)
+    reg("Link Agreement Item", CollectionLinkProcessor)
+    reg("Link Agreement Actor", CollectionLinkProcessor)
+    reg("Link Product Dependency", CollectionLinkProcessor)
+    reg("Link Product-Product", CollectionLinkProcessor)
+    reg("Attach Collection to Resource", CollectionLinkProcessor)
+    reg("Link Digital Subscriber", CollectionLinkProcessor)
+
+    # Governance (spec-driven to keep coverage aligned with compact commands)
+    register_governance_processors(reg)
+    # Reporting / View
+    reg("View Report", ViewProcessor)
+
+    # Feedback / Tags / External References
+    reg("Add Comment", FeedbackProcessor)
+    reg("Update Comment", FeedbackProcessor)
+    reg("Create Journal Entry", FeedbackProcessor)
+    reg("Create Informal Tag", TagProcessor)
+    reg("Update Informal Tag", TagProcessor)
+    reg("Add Informal Tag", FeedbackLinkProcessor)
+    reg("Detach Informal Tag", FeedbackLinkProcessor)
+    reg("Link Tag->Element", FeedbackLinkProcessor)
+    reg("Link Tag", FeedbackLinkProcessor)
+    reg("Detach Tag", FeedbackLinkProcessor)
+    reg("Create External Reference", ExternalReferenceProcessor)
+    reg("Update External Reference", ExternalReferenceProcessor)
+    reg("Link External Reference", FeedbackLinkProcessor)
+    reg("Detach External Reference", FeedbackLinkProcessor)
+    reg("Create Related Media", ExternalReferenceProcessor)
+    reg("Update Related Media", ExternalReferenceProcessor)
+    reg("Link Media Reference", FeedbackLinkProcessor)
+    reg("Detach Media Reference", FeedbackLinkProcessor)
+    reg("Create Cited Document", ExternalReferenceProcessor)
+    reg("Update Cited Document", ExternalReferenceProcessor)
+    reg("Link Cited Document", FeedbackLinkProcessor)
+    reg("Detach Cited Document", FeedbackLinkProcessor)
+    reg("Create External Data Source", ExternalReferenceProcessor)
+    reg("Update External Data Source", ExternalReferenceProcessor)
+    reg("Create External Model Source", ExternalReferenceProcessor)
+    reg("Update External Model Source", ExternalReferenceProcessor)
+    reg("Create External Source Code", ExternalReferenceProcessor)
+    reg("Update External Source Code", ExternalReferenceProcessor)
+    reg("Attach Comment", FeedbackLinkProcessor)
+    reg("Detach Comment", FeedbackLinkProcessor)
+    reg("Attach Rating", FeedbackLinkProcessor)
+    reg("Detach Rating", FeedbackLinkProcessor)
+    reg("Attach Like", FeedbackLinkProcessor)
+    reg("Detach Like", FeedbackLinkProcessor)
+    reg("Link Accept Answer", FeedbackLinkProcessor)
+    reg("Unlink Accept Answer", FeedbackLinkProcessor)
+    
+    return dispatcher
+
 async def process_md_file_v2(input_file: str, output_folder: str, directive: str, client: EgeriaTech,
+
                             parse_summary: str = "none", attribute_logs: str = "info",
                             usage_level: str = None, summary_only: bool = False,
                             debug: bool = False) -> None:
@@ -239,147 +389,7 @@ async def process_md_file_v2(input_file: str, output_folder: str, directive: str
         return
         
     # 2. Setup v2 Dispatcher
-    dispatcher = V2Dispatcher(client)
-    from md_processing.md_processing_utils.md_processing_constants import get_command_spec, build_command_variants
-
-    def normalize_command_key(key: str) -> str:
-        # Collapse all whitespace to single spaces and strip
-        return re.sub(r'\s+', ' ', key).strip() if key else key
-
-    def register_processor(base_command: str, processor_cls: Type[AsyncBaseCommandProcessor]):
-        """Register a processor for a base command and all its variants/alternates, normalizing whitespace and including display/alternate names."""
-        spec = get_command_spec(base_command)
-        registered = set()
-        if spec:
-            # Register main command
-            main_key = normalize_command_key(base_command)
-            if main_key not in registered:
-                dispatcher.register(main_key, processor_cls)
-                registered.add(main_key)
-            # Register display_name
-            display_name = normalize_command_key(spec.get('display_name', ''))
-            if display_name and display_name not in registered:
-                dispatcher.register(display_name, processor_cls)
-                registered.add(display_name)
-            # Register alternate_names
-            for alt in spec.get('alternate_names', []):
-                alt_key = normalize_command_key(alt)
-                if alt_key and alt_key not in registered:
-                    dispatcher.register(alt_key, processor_cls)
-                    registered.add(alt_key)
-            # Register all variants
-            variants = build_command_variants(base_command, spec)
-            for variant in variants:
-                vkey = normalize_command_key(variant)
-                if vkey and vkey not in registered:
-                    dispatcher.register(vkey, processor_cls)
-                    registered.add(vkey)
-        else:
-            dispatcher.register(normalize_command_key(base_command), processor_cls)
-
-    # Glossary
-    register_processor("Create Glossary Term", TermProcessor)
-    register_processor("Link Term-Term Relationship", TermRelationshipProcessor)
-    register_processor("Unlink Term-Term Relationship", TermRelationshipProcessor)
-    register_processor("Remove Term-Term Relationship", TermRelationshipProcessor)
-    register_processor("Detach Term-Term Relationship", TermRelationshipProcessor)
-
-    # Data Designer
-    from md_processing.v2.data_designer import (
-        DataValueSpecificationProcessor, DataClassProcessor, DataStructureProcessor, DataFieldProcessor, DataGrainProcessor,
-        LinkDataFieldProcessor, LinkFieldToStructureProcessor, LinkDataValueDefinitionProcessor, LinkDataValueCompositionProcessor,
-        LinkDataClassCompositionProcessor, LinkCertificationTypeToStructureProcessor, AttachDataDescriptionProcessor,
-        AssignDataValueSpecificationProcessor, AttachDataValueSpecificationProcessor
-    )
-
-    register_processor("Create Data Specification", DataCollectionProcessor)
-    register_processor("Create Data Dictionary", DataCollectionProcessor)
-    register_processor("Create Data Structure", DataStructureProcessor)
-    register_processor("Create Data Field", DataFieldProcessor)
-    register_processor("Create Data Class", DataClassProcessor)
-    register_processor("Create Data Value Specification", DataValueSpecificationProcessor)
-    register_processor("Update Data Value Specification", DataValueSpecificationProcessor)
-    register_processor("Create Data Grain", DataGrainProcessor)
-    register_processor("Link Data Field", LinkDataFieldProcessor)
-    register_processor("Link Field to Structure", LinkFieldToStructureProcessor)
-    register_processor("Link Data Value Definition", LinkDataValueDefinitionProcessor)
-    register_processor("Link Data Value Composition", LinkDataValueCompositionProcessor)
-    register_processor("Link Data Class Composition", LinkDataClassCompositionProcessor)
-    register_processor("Link Certification Type to Data Structure", LinkCertificationTypeToStructureProcessor)
-    # Fix whitespace for Attach Data Description to Element
-    register_processor("Attach Data Description to Element", AttachDataDescriptionProcessor)
-    register_processor("Assign Data Value Specification", AssignDataValueSpecificationProcessor)
-    register_processor("Attach Data Value Specification to Element", AttachDataValueSpecificationProcessor)
-
-    # Solution Architect (spec-driven to keep coverage aligned with compact commands)
-    register_solution_architect_processors(register_processor)
-
-    # Project
-    register_processor("Create Project", ProjectProcessor)
-    register_processor("Link Project Dependency", ProjectLinkProcessor)
-    register_processor("Link Project Hierarchy", ProjectLinkProcessor)
-
-    # Alternate Project Commands (Campaign, Task, etc.)
-    for proj_type in PROJECT_SUBTYPES:
-        register_processor(f"Create {proj_type}", ProjectProcessor)
-        register_processor(f"Update {proj_type}", ProjectProcessor)
-
-    # Collection Manager
-    for coll_type in COLLECTION_SUBTYPES:
-        register_processor(f"Create {coll_type}", CollectionManagerProcessor)
-        register_processor(f"Update {coll_type}", CollectionManagerProcessor)
-
-    register_processor("Create CSV Element", CSVElementProcessor)
-    register_processor("Add Member to Collection", CollectionLinkProcessor)
-    register_processor("Link Agreement Item", CollectionLinkProcessor)
-    register_processor("Link Agreement Actor", CollectionLinkProcessor)
-    register_processor("Link Product Dependency", CollectionLinkProcessor)
-    register_processor("Link Product-Product", CollectionLinkProcessor)
-    register_processor("Attach Collection to Resource", CollectionLinkProcessor)
-    register_processor("Link Digital Subscriber", CollectionLinkProcessor)
-
-    # Governance (spec-driven to keep coverage aligned with compact commands)
-    register_governance_processors(register_processor)
-    # Reporting / View
-    register_processor("View Report", ViewProcessor)
-
-    # Feedback / Tags / External References
-    register_processor("Add Comment", FeedbackProcessor)
-    register_processor("Update Comment", FeedbackProcessor)
-    register_processor("Create Journal Entry", FeedbackProcessor)
-    register_processor("Create Informal Tag", TagProcessor)
-    register_processor("Update Informal Tag", TagProcessor)
-    register_processor("Add Informal Tag", FeedbackLinkProcessor)
-    register_processor("Detach Informal Tag", FeedbackLinkProcessor)
-    register_processor("Link Tag->Element", FeedbackLinkProcessor)
-    register_processor("Link Tag", FeedbackLinkProcessor)
-    register_processor("Detach Tag", FeedbackLinkProcessor)
-    register_processor("Create External Reference", ExternalReferenceProcessor)
-    register_processor("Update External Reference", ExternalReferenceProcessor)
-    register_processor("Link External Reference", FeedbackLinkProcessor)
-    register_processor("Detach External Reference", FeedbackLinkProcessor)
-    register_processor("Create Related Media", ExternalReferenceProcessor)
-    register_processor("Update Related Media", ExternalReferenceProcessor)
-    register_processor("Link Media Reference", FeedbackLinkProcessor)
-    register_processor("Detach Media Reference", FeedbackLinkProcessor)
-    register_processor("Create Cited Document", ExternalReferenceProcessor)
-    register_processor("Update Cited Document", ExternalReferenceProcessor)
-    register_processor("Link Cited Document", FeedbackLinkProcessor)
-    register_processor("Detach Cited Document", FeedbackLinkProcessor)
-    register_processor("Create External Data Source", ExternalReferenceProcessor)
-    register_processor("Update External Data Source", ExternalReferenceProcessor)
-    register_processor("Create External Model Source", ExternalReferenceProcessor)
-    register_processor("Update External Model Source", ExternalReferenceProcessor)
-    register_processor("Create External Source Code", ExternalReferenceProcessor)
-    register_processor("Update External Source Code", ExternalReferenceProcessor)
-    register_processor("Attach Comment", FeedbackLinkProcessor)
-    register_processor("Detach Comment", FeedbackLinkProcessor)
-    register_processor("Attach Rating", FeedbackLinkProcessor)
-    register_processor("Detach Rating", FeedbackLinkProcessor)
-    register_processor("Attach Like", FeedbackLinkProcessor)
-    register_processor("Detach Like", FeedbackLinkProcessor)
-    register_processor("Link Accept Answer", FeedbackLinkProcessor)
-    register_processor("Unlink Accept Answer", FeedbackLinkProcessor)
+    dispatcher = setup_dispatcher(client)
 
     context = {
         "directive": directive,
