@@ -1,6 +1,6 @@
 {
   "family": "Glossary",
-  "exported": "Apr 16, 2026 at 9:31:55 AM",
+  "exported": "Apr 17, 2026 at 4:20:25 PM",
   "attribute_definitions": {
     "Activity Status": {
       "variable_name": "activity_status",
@@ -2534,7 +2534,7 @@
       "find_constraints": "",
       "extra_find": "",
       "extra_constraints": "",
-      "OM_TYPE": "CLASSIFICATION",
+      "OM_TYPE": "Glossary",
       "bundle": "Request Base",
       "custom_attributes": [
         "Glossary Name"
