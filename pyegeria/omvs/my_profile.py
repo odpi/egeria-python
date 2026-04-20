@@ -133,6 +133,59 @@ class MyProfile(AssetMaker):
 
         return found
 
+    def _extract_entry(self, el_summary: dict) -> Optional[dict]:
+        """Extract properties and time from an entry summary."""
+        rel_el = el_summary.get("relatedElement")
+        if not rel_el:
+            return None
+
+        header = rel_el.get("elementHeader")
+        if not header:
+            return None
+
+        type_info = header.get("type")
+        if not type_info:
+            return None
+
+        type_name = type_info.get("typeName")
+        super_types = type_info.get("superTypeNames") or []
+
+        if type_name != "Notification" and "Notification" not in super_types:
+            return None
+
+        properties = rel_el.get("properties") or {}
+        versions = header.get("versions")
+        create_time = versions.get("createTime") if versions else None
+
+        res = properties.copy()
+        res["time"] = create_time
+
+        # Ensure title and text are populated from fallbacks if needed
+        if res.get("title") is None:
+            res["title"] = res.get("displayName")
+        if res.get("text") is None:
+            res["text"] = res.get("description")
+
+        return res
+
+    def _extract_note_log_entries(self, note_logs: list, type_suffix: str = None) -> list[dict]:
+        """Extract entries from note logs, optionally filtered by qualifiedName suffix."""
+        entries = []
+        for nl in note_logs:
+            nl_rel = nl.get("relatedElement") or {}
+            nl_props = nl_rel.get("properties") or {}
+            nl_qn = nl_props.get("qualifiedName", "")
+
+            if type_suffix and not nl_qn.endswith(type_suffix):
+                continue
+
+            nested = nl.get("nestedElements") or []
+            for n in nested:
+                entry = self._extract_entry(n)
+                if entry:
+                    entries.append(entry)
+        return entries
+
     def _extract_my_profile_properties(self, element: dict, columns_struct: dict) -> dict:
         """Extractor for My Profile (Person) elements."""
         contribution_record = element.get("contributionRecord") or []
@@ -142,6 +195,7 @@ class MyProfile(AssetMaker):
         performs_roles = element.get("performsRoles") or []
         contact_details = element.get("contactDetails") or []
         user_identities = element.get("userIdentities") or []
+        note_logs = element.get("noteLogs") or []
 
         try:
             formats = col_data.get("formats")
@@ -215,6 +269,18 @@ class MyProfile(AssetMaker):
                                 )
                             else:
                                 column["value"] = [materialize_egeria_summary(c, spec) for c in contribution_record]
+
+                    elif key == "note_logs":
+                        column["value"] = self._extract_note_log_entries(note_logs)
+
+                    elif key == "activity_entries":
+                        column["value"] = self._extract_note_log_entries(note_logs, "::MyActivity")
+
+                    elif key == "blog_entries":
+                        column["value"] = self._extract_note_log_entries(note_logs, "::MyBlog")
+
+                    elif key == "journal_entries":
+                        column["value"] = self._extract_note_log_entries(note_logs, "::MyJournal")
 
                     # Generic handler for elements nested within roles (e.g., teams, communities, projects)
                     elif column.get("detail_spec") and column.get("value") in (None, "", []):
@@ -347,46 +413,16 @@ class MyProfile(AssetMaker):
 
         entries = []
 
-        def extract_entry(el_summary):
-            rel_el = el_summary.get("relatedElement")
-            if not rel_el:
-                return None
-
-            header = rel_el.get("elementHeader")
-            if not header:
-                return None
-
-            type_info = header.get("type")
-            if not type_info:
-                return None
-
-            type_name = type_info.get("typeName")
-            super_types = type_info.get("superTypeNames") or []
-
-            if type_name != "Notification" and "Notification" not in super_types:
-                return None
-
-            properties = rel_el.get("properties")
-            versions = header.get("versions")
-            create_time = versions.get("createTime") if versions else None
-
-            return {"properties": properties, "time": create_time}
-
         # 1. Extract from requestedActions
         requested_actions = profile.get("requestedActions") or []
         for action in requested_actions:
-            entry = extract_entry(action)
+            entry = self._extract_entry(action)
             if entry:
                 entries.append(entry)
 
         # 2. Extract from noteLogs -> nestedElements
         note_logs = profile.get("noteLogs") or []
-        for note_log in note_logs:
-            nested_elements = note_log.get("nestedElements") or []
-            for nested in nested_elements:
-                entry = extract_entry(nested)
-                if entry:
-                    entries.append(entry)
+        entries.extend(self._extract_note_log_entries(note_logs))
 
         return entries
 

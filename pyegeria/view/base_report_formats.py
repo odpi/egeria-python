@@ -726,6 +726,8 @@ base_report_specs = FormatSetDict({
                     Column(name="Roles", key='roles'),
                     Column(name="Teams", key='teams'),
                     Column(name="Communities", key='communities'),
+                    Column(name="Projects", key='projects'),
+                    Column(name="Note Logs", key='note_logs'),
                 ],
             )
         ],
@@ -758,6 +760,10 @@ base_report_specs = FormatSetDict({
                     Column(name="Communities", key="communities", detail_spec="My-User-Communities-Detail"),
                     Column(name="Projects", key="projects", detail_spec="My-User-Projects-Detail"),
                     Column(name="Contribution Record", key="contribution_record", detail_spec="My-User-Contribution-Record-Detail"),
+                    Column(name="Note Logs", key="note_logs", detail_spec="My-User-Note-Logs-Detail"),
+                    Column(name="Activity", key="activity_entries", detail_spec="My-User-Note-Logs-Detail"),
+                    Column(name="Blogs", key="blog_entries", detail_spec="My-User-Note-Logs-Detail"),
+                    Column(name="Journal", key="journal_entries", detail_spec="My-User-Note-Logs-Detail"),
                 ],
             )
         ],
@@ -781,6 +787,84 @@ base_report_specs = FormatSetDict({
                 ],
             )
         ],
+    ),
+    "My-User-Note-Logs-Detail": FormatSet(
+        target_type="NoteLogEntry",
+        heading="Note Log Entries",
+        description="Detailed Note Log Entries",
+        family="MyProfile",
+        formats=[
+            Format(
+                types=["LIST", "REPORT", "DICT", "TABLE"],
+                attributes=[
+                    Column(name="Title", key="title"),
+                    Column(name="Text", key="text"),
+                    Column(name="Time", key="time"),
+                    Column(name="Priority", key="priority"),
+                    Column(name="Activity Status", key="activityStatus"),
+                ],
+            )
+        ],
+    ),
+    "My-User-Activities": FormatSet(
+        target_type="My-User",
+        heading="My Activities",
+        description="User Activity Entries",
+        family="MyProfile",
+        formats=[
+            Format(
+                types=["DICT", "LIST", "REPORT", "TABLE"],
+                attributes=[
+                    Column(name="Activity Entries", key="activity_entries", detail_spec="My-User-Note-Logs-Detail"),
+                ],
+            )
+        ],
+        action=ActionParameter(
+            function="MyProfile.get_my_profile",
+            optional_params=OPTIONAL_FILTER_PARAMS + TIME_PARAMETERS,
+            required_params=[],
+            spec_params={},
+        )
+    ),
+    "My-User-Blogs": FormatSet(
+        target_type="My-User",
+        heading="My Blogs",
+        description="User Blog Entries",
+        family="MyProfile",
+        formats=[
+            Format(
+                types=["DICT", "LIST", "REPORT", "TABLE"],
+                attributes=[
+                    Column(name="Blog Entries", key="blog_entries", detail_spec="My-User-Note-Logs-Detail"),
+                ],
+            )
+        ],
+        action=ActionParameter(
+            function="MyProfile.get_my_profile",
+            optional_params=OPTIONAL_FILTER_PARAMS + TIME_PARAMETERS,
+            required_params=[],
+            spec_params={},
+        )
+    ),
+    "My-User-Journals": FormatSet(
+        target_type="My-User",
+        heading="My Journals",
+        description="User Journal Entries",
+        family="MyProfile",
+        formats=[
+            Format(
+                types=["DICT", "LIST", "REPORT", "TABLE"],
+                attributes=[
+                    Column(name="Journal Entries", key="journal_entries", detail_spec="My-User-Note-Logs-Detail"),
+                ],
+            )
+        ],
+        action=ActionParameter(
+            function="MyProfile.get_my_profile",
+            optional_params=OPTIONAL_FILTER_PARAMS + TIME_PARAMETERS,
+            required_params=[],
+            spec_params={},
+        )
     ),
     "My-User-Contact-Detail": FormatSet(
     target_type="ContactDetails",

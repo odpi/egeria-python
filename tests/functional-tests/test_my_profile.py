@@ -33,7 +33,7 @@ class TestMyProfile:
             profile_client = MyProfile(VIEW_SERVER, PLATFORM_URL, USER_ID, USER_PWD)
             token = profile_client.create_egeria_bearer_token(USER_ID, USER_PWD)
 
-            profile = profile_client.get_my_profile(output_format="DICT", report_spec="My-User-MD", graph_query_depth=10)
+            profile = profile_client.get_my_profile(output_format="JSON", report_spec="My-User-MD", graph_query_depth=10)
             if isinstance(profile, dict | list):
                 print(json.dumps(profile, indent=2))
             if isinstance(profile, str):
@@ -255,6 +255,31 @@ class TestMyProfile:
             print(f"update_to_do failed as expected or due to env: {e}")
         except Exception as e:
             print(f"update_to_do raised: {type(e).__name__}: {e}")
+
+    def test_log_my_activity(self, profile_client):
+        try:
+            body = {
+                "class": "NewAttachmentRequestBody",
+                "properties": {
+                    "class": "ActivityEntryProperties",
+                    "qualifiedName": f"TestActivity-{datetime.now().isoformat()}",
+                    "displayName": "A new Test Activity",
+                    "situation": "Testing activity logging",
+                    "description": "This is a test notification",
+                }
+            }
+            response = profile_client.log_my_activity(body)
+            assert isinstance(response, (list, dict, str))
+            if isinstance(response, list|dict):
+                print(f"\nRetrieved to-dos: {json.dumps(response, indent=2)}" if isinstance(response, (list, dict)) else f"\nRetrieved to-dos: {response}")
+            else:
+                print(f"\nRetrieved to-dos: {response}")
+        except PyegeriaException as e:
+            print(f"get_my_to_dos failed as expected or due to env: {e}")
+        except Exception as e:
+            pytest.fail(f"get_my_to_dos failed with unexpected exception: {e}")
+
+
 
 if __name__ == "__main__":
     pytest.main([__file__])
