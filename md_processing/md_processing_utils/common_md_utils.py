@@ -61,9 +61,18 @@ ATTRIBUTE_LOG_LEVEL = os.environ.get("EGERIA_ATTRIBUTE_LOG_LEVEL", "debug").lowe
 global COMMAND_DEFINITIONS
 
 def split_tb_string(input: str)-> [Any]:
-    """Split the string and trim the items"""
-    l = [item.strip() for item in re.split(r'[;,\n]+',input)] if input is not None else None
-    return l
+    """Split the string and trim the items, supporting markdown bullets"""
+    if input is None:
+        return None
+    items = re.split(r'[;,\n]+', input)
+    results = []
+    for item in items:
+        item = item.strip()
+        if item:
+            # Strip leading markdown bullet if present
+            item = re.sub(r'^[\-\*\+]\s*', '', item)
+            results.append(item)
+    return results
 
 def str_to_bool(value: str) -> bool:
     """Converts a string to a boolean value."""
@@ -371,10 +380,13 @@ def set_element_prop_body(object_type: str, qualified_name: str, attributes: dic
         "class": prop_name + "Properties",
         "typeName": prop_name,
         "displayName": attributes.get('Display Name', {}).get('value', None),
+        "name": attributes.get('Display Name', {}).get('value', None) if ("Project" in object_type or "Campaign" in object_type or "Task" in object_type or "StudyProject" in object_type) else None,
         "qualifiedName" : qualified_name,
         "description": attributes.get('Description', {}).get('value', None),
         "category": attributes.get('Category', {}).get('value', None),
         "identifier": attributes.get('Identifier', {}).get('value', None),
+        "url": attributes.get('URL', {}).get('value', None),
+        "authors": attributes.get('Authors', {}).get('value', []),
         "contentStatus": attributes.get('Content Status', {}).get('value', None) or attributes.get('Status', {}).get('value', None),
         "userDefinedContentStatus": attributes.get('User Defined Content Status', {}).get('value', None),
         "versionIdentifier": attributes.get('Version Identifier', {}).get('value', None),
@@ -409,6 +421,9 @@ def set_collection_manager_body(object_type: str, qualified_name: str, attribute
         prop_bod.update({
             "agreementType": attributes.get('Agreement Type', {}).get('value', None),
             "agreementStatus": attributes.get('Agreement Status', {}).get('value', None),
+            "agreementIdentifier": attributes.get('Agreement Identifier', {}).get('value', None),
+            "agreementStatusIdentifier": attributes.get('Agreement Status Identifier', {}).get('value', None),
+            "agreementVersionIdentifier": attributes.get('Agreement Version Identifier', {}).get('value', None),
         })
         if "Subscription" in object_type:
             prop_bod.update({
@@ -485,9 +500,13 @@ def set_gov_prop_body(object_type: str, qualified_name: str, attributes: dict)->
 
     prop_bod["scope"] = attributes.get('Scope', {}).get('value', None)
     prop_bod["importance"] = attributes.get('Importance', {}).get('value', None)
-    prop_bod["implications"] = attributes.get('Implication', {}).get('value', [])
+    prop_bod["implications"] = attributes.get('Implications', {}).get('value', [])
     prop_bod["outcomes"] = attributes.get('Outcomes', {}).get('value', [])
     prop_bod["results"] = attributes.get('Results', {}).get('value', []) or []
+    prop_bod["entitlements"] = attributes.get('Entitlements', {}).get('value', [])
+    prop_bod["obligations"] = attributes.get('Obligations', {}).get('value', [])
+    prop_bod["restrictions"] = attributes.get('Restrictions', {}).get('value', [])
+    prop_bod["usage"] = attributes.get('Usage', {}).get('value', None)
     prop_bod["effectiveFrom"] = attributes.get('Effective From', {}).get('value', None)
     prop_bod["effectiveTo"] = attributes.get('Effective To', {}).get('value', None)
     prop_bod["additionalProperties"] = attributes.get('Additional Properties', {}).get('value', None)

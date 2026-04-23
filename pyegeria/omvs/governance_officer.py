@@ -69,6 +69,9 @@ class GovernanceDefinitionProperties(ReferenceableProperties):
     implications: list[str] | None = None
     outcomes: list[str] | None = None
     results: list[str] | None = None
+    entitlements: list[str] | None = None
+    obligations: list[str] | None = None
+    restrictions: list[str] | None = None
     userDefinedStatus: str | None = None
 
 

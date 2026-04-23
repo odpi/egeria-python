@@ -3,6 +3,10 @@ Minimal pytest configuration for framework validation tests.
 """
 
 import pytest
+from md_processing.md_processing_utils.md_processing_constants import load_commands
+
+# Ensure command specifications are loaded for all micro-tests
+load_commands()
 
 
 @pytest.fixture

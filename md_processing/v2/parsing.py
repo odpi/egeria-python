@@ -34,7 +34,13 @@ class AttributeFirstParser:
         if not self.spec:
             logger.error(f"No specification found for command: {self.command.verb} {self.command.object_type}")
             self.errors.append(f"No specification found for command: {self.command.verb} {self.command.object_type}")
-            return {}
+            return {
+                "attributes": {},
+                "valid": False,
+                "errors": self.errors,
+                "warnings": self.warnings,
+                "qualified_name": None
+            }
 
         # Spec can use "Attributes" or "attributes"
         spec_attrs = self.spec.get("Attributes", self.spec.get("attributes", []))
@@ -364,7 +370,15 @@ class AttributeFirstParser:
             return v
             
         elif style in {"List", "NameList", "Simple List", "Reference Name List"}:
-            return [v.strip() for v in re.split(r'[,\n]', value) if v.strip()]
+            items = re.split(r'[;,\n]+', value)
+            results = []
+            for item in items:
+                item = item.strip()
+                if item:
+                    # Strip leading markdown bullet if present
+                    item = re.sub(r'^[\-\*\+]\s*', '', item)
+                    results.append(item)
+            return results
             
         return value
 

@@ -41,8 +41,8 @@ init_logging(True)
 VIEW_SERVER = "qs-view-server"
 PLATFORM_URL = "https://localhost:9443"
 PLATFORM_NAME = "Local OMAG Server Platform"
-USER_ID = "freddiemercury"
-USER_PWD = "magic, magic"
+USER_ID = "dwolfson"
+USER_PWD = "pdr4coco"
 
 
 class TestSecurityOfficer:

@@ -141,6 +141,10 @@ class ReferenceableProperties(OpenMetadataRootProperties):
     version_identifier: str | None = None
     description: str | None = None
     category: str | None = None
+    authors: list[str] | None = None
+    usage: str | None = None
+    url: str | None = None
+    content_status: str | None = None
     additional_properties: dict | None = None
 
 
