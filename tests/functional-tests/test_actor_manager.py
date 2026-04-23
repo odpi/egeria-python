@@ -947,7 +947,7 @@ class TestActorManager:
                     "assignmentType": "Leader"
                 }
             }
-            actor_client.link_assignment_scope(role_guid, team_guid, link_body)
+            actor_client.link_assignment_scope(team_guid, role_guid, link_body)
             print(f"\tLinked Role to Team")
 
             # 4. Create a Person
@@ -988,7 +988,7 @@ class TestActorManager:
             assert len(response) > 0
             team_report = response[0]
             assert team_report.get('displayName') == "Test Team for Report"
-            members = team_report.get('Members')
+            members = team_report.get('Members') or []
             assert isinstance(members, list)
             assert len(members) > 0
             found_person = False
