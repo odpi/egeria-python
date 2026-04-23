@@ -1,3 +1,5 @@
+___
+
 # Create Threat
 > The Threat entity describes a particular threat to the organization
 >
@@ -172,3 +174,5 @@
 
 >	**Description**: The authors.
 
+
+___

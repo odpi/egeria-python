@@ -1,3 +1,5 @@
+___
+
 # Link Term as Context
 > Relates a glossary term as context to a referenceable.
 >
@@ -48,3 +50,5 @@
 
 >	**Description**: A description.
 
+
+___

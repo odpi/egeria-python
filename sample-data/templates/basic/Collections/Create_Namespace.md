@@ -1,3 +1,5 @@
+___
+
 # Create Namespace
 > Create a Namespace collection - a collection of elements organized by namespace.
 
@@ -110,3 +112,5 @@
 
 >	**Description**: The authors.
 
+
+___

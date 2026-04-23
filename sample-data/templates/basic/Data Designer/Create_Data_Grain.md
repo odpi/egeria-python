@@ -1,3 +1,5 @@
+___
+
 # Create Data Grain
 > Creates or updates a data grain — a defined granularity of data that can be associated with a data field or data lens.
 
@@ -103,6 +105,10 @@
 >	**Attribute Type**: Dictionary
 
 >	**Description**: Additional key-value details that extend the formal specification for this data value specification.
+
+>	| Parameter Name | Parameter Value |
+>	|---|---|
+>	| example_key | example_value |
 
 
 ## Units
@@ -228,3 +234,5 @@
 
 >	**Description**: The authors.
 
+
+___

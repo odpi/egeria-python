@@ -1,3 +1,5 @@
+___
+
 # Link Solution Component to Blueprint
 > Link a component to a blueprint.
 
@@ -70,3 +72,5 @@
 
 >	**Description**: A description.
 
+
+___

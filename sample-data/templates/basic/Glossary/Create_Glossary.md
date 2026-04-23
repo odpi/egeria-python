@@ -1,3 +1,5 @@
+___
+
 # Create Glossary
 > Creates or updates a glossary — a collection of related terms for a specific domain or purpose.
 
@@ -126,3 +128,5 @@
 
 >	**Description**: The authors.
 
+
+___

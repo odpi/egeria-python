@@ -1,3 +1,5 @@
+___
+
 # Create External Data Source
 > Create or update an External Data Source - an external reference that refers to an external data source.
 
@@ -71,6 +73,10 @@
 >	**Description**: A map of source strings (e.g. URL, DOI, ISBN).
 
 >	**Alternative Labels**: Reference Sources
+
+>	| Parameter Name | Parameter Value |
+>	|---|---|
+>	| example_key | example_value |
 
 
 ## Journal Entry
@@ -164,3 +170,5 @@
 
 >	**Description**: The authors.
 
+
+___

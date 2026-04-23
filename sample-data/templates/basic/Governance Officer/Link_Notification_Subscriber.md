@@ -1,3 +1,5 @@
+___
+
 # Link Notification Subscriber
 > Links a Referenceable as a subscriber to a NotificationType, defining the subscription parameters.
 
@@ -62,3 +64,5 @@
 
 >	**Default Value**: REQUESTED
 
+
+___

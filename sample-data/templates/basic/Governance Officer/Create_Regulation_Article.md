@@ -1,3 +1,5 @@
+___
+
 # Create Regulation Article
 > A RegulationArticle entity is an article in a regulation. Dividing a regulation  simplifies planning and execution.
 
@@ -170,3 +172,5 @@
 
 >	**Description**: The authors.
 
+
+___

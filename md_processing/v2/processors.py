@@ -1008,6 +1008,25 @@ class AsyncBaseCommandProcessor(ABC):
             
             report.append(f"| {name} | {val} |")
             
+        expanded = []
+        for name, details in attributes.items():
+            raw = details.get("value", "")
+            if isinstance(raw, str) and ("\n" in raw or any(raw.strip().startswith(p) for p in ("- ", "* ", "1.", "#", ">", "```"))):
+                expanded.append(f"##### {name}\n\n{raw}\n")
+            elif isinstance(raw, dict) and details.get("style") in ("Dictionary", "KeyValue"):
+                table_lines = [
+                    f"##### {name}\n",
+                    "| Parameter Name | Parameter Value |",
+                    "| :--- | :--- |"
+                ]
+                for k, v in raw.items():
+                    table_lines.append(f"| {k} | {v} |")
+                expanded.append("\n".join(table_lines) + "\n")
+
+        if expanded:
+            report.append("\n#### Rendered Attribute Details\n")
+            report.extend(expanded)
+
         report.append("\n---")
         return "\n".join(report)
 
@@ -1079,6 +1098,15 @@ class AsyncBaseCommandProcessor(ABC):
             raw = details.get("value", "")
             if isinstance(raw, str) and ("\n" in raw or any(raw.strip().startswith(p) for p in ("- ", "* ", "1.", "#", ">", "```"))):
                 expanded.append(f"##### {name}\n\n{raw}\n")
+            elif isinstance(raw, dict) and details.get("style") in ("Dictionary", "KeyValue"):
+                table_lines = [
+                    f"##### {name}\n",
+                    "| Parameter Name | Parameter Value |",
+                    "| :--- | :--- |"
+                ]
+                for k, v in raw.items():
+                    table_lines.append(f"| {k} | {v} |")
+                expanded.append("\n".join(table_lines) + "\n")
 
         if expanded:
             report.append("\n#### Rendered Attribute Details\n")

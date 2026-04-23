@@ -1,3 +1,5 @@
+___
+
 # Create Data Structure
 > Creates or updates a data structure — a collection of data fields that defines the structure for a data source.
 
@@ -158,3 +160,5 @@
 
 >	**Description**: The authors.
 
+
+___

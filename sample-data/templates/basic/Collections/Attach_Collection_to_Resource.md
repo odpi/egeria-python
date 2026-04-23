@@ -1,3 +1,5 @@
+___
+
 # Attach Collection to Resource
 > Connect an existing collection to an element using the ResourceList relationship.
 >
@@ -46,6 +48,10 @@
 
 >	**Description**: Additional properties needed to use the resource. From the ResourceList relationship (0019).
 
+>	| Parameter Name | Parameter Value |
+>	|---|---|
+>	| example_key | example_value |
+
 
 ## Watch Resource
 >	**Input Required**: False
@@ -88,3 +94,5 @@
 
 >	**Description**: The unique identifier (qualified name or GUID) of the collection.
 
+
+___

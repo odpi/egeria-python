@@ -1,3 +1,5 @@
+___
+
 # Create Collection
 > Create or update a generic collection. While it can be used to create specific kinds of collections, you cannot set the collection-specific properties - so use the appropriate Dr.Egeria command to set all of the properties.
 
@@ -110,3 +112,5 @@
 
 >	**Description**: The authors.
 
+
+___

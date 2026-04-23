@@ -1,3 +1,5 @@
+___
+
 # Create Naming Standard Rule
 > A standard for naming specific kinds of resources.
 
@@ -188,3 +190,5 @@
 
 >	**Description**: The authors.
 
+
+___

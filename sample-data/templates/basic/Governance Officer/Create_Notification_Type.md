@@ -1,3 +1,5 @@
+___
+
 # Create Notification Type
 > A NotificationType defines a type of notification that can be sent as a governance control.
 
@@ -238,3 +240,5 @@
 
 >	**Description**: The authors.
 
+
+___

@@ -1,3 +1,5 @@
+___
+
 # Link Blueprint Child
 > Links or unlinks an blueprint child segment to an parent blueprint using CollectionMembership.
 
@@ -70,3 +72,5 @@
 
 >	**Description**: A description.
 
+
+___

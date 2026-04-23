@@ -1,3 +1,5 @@
+___
+
 # Link Regulation Certification Type
 > A certification type addressing a specific regulation.
 
@@ -42,3 +44,5 @@
 
 >	**Description**: A description.
 
+
+___

@@ -1,3 +1,5 @@
+___
+
 # Create Regulation
 > Defines a relevant legal regulation that the business operation must comply with. Often regulations are divided into regulation articles.
 
@@ -186,3 +188,5 @@
 
 >	**Description**: The authors.
 
+
+___

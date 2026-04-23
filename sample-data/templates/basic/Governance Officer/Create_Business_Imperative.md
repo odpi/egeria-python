@@ -1,3 +1,5 @@
+___
+
 # Create Business Imperative
 > The BusinessImperative entity defines a business goal that is critical to the success of the organization.
 
@@ -170,3 +172,5 @@
 
 >	**Description**: The authors.
 
+
+___

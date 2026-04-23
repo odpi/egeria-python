@@ -1,3 +1,5 @@
+___
+
 # Link Monitored Resource
 > Links a Notification Type to a Referenceable that it monitors.
 
@@ -42,3 +44,5 @@
 
 >	**Description**: A description.
 
+
+___

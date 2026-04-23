@@ -1,3 +1,5 @@
+___
+
 # Link Governance Policies
 > Link peer governance policies with the GovernancePolicyLink relationship. Policies types are: GovernancePrinciple, GovernanceObligation, GovernanceApproach.
 
@@ -42,3 +44,5 @@
 
 >	**Description**: A description.
 
+
+___

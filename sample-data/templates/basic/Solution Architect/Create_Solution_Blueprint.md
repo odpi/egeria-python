@@ -1,3 +1,5 @@
+___
+
 # Create Solution Blueprint
 > Creates or updates a solution blueprint — a description of the architecture of a digital service in terms of solution components.
 
@@ -128,3 +130,5 @@
 
 >	**Description**: The authors.
 
+
+___

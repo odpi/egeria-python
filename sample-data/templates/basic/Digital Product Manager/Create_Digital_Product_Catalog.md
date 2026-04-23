@@ -1,3 +1,5 @@
+___
+
 # Create Digital Product Catalog
 > Create a Digital Product Catalog - a root collection that organizes digital products into a browsable catalog.
 
@@ -110,3 +112,5 @@
 
 >	**Description**: The authors.
 
+
+___

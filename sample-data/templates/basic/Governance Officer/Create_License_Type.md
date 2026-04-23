@@ -1,3 +1,5 @@
+___
+
 # Create License Type
 > A type of license.
 
@@ -88,6 +90,10 @@
 
 >	**Description**: A dictionary of property:value pairs describing obligations.
 
+>	| Parameter Name | Parameter Value |
+>	|---|---|
+>	| example_key | example_value |
+
 
 ## Journal Entry
 >	**Input Required**: False
@@ -150,6 +156,10 @@
 
 >	**Description**: A dictionary of property:value pairs describing entitlements.
 
+>	| Parameter Name | Parameter Value |
+>	|---|---|
+>	| example_key | example_value |
+
 
 ## Restrictions
 >	**Input Required**: False
@@ -157,6 +167,10 @@
 >	**Attribute Type**: Dictionary
 
 >	**Description**: A dictionary of property:value pairs describing restrictions.
+
+>	| Parameter Name | Parameter Value |
+>	|---|---|
+>	| example_key | example_value |
 
 
 ## Search Keywords
@@ -204,3 +218,5 @@
 
 >	**Description**: The authors.
 
+
+___

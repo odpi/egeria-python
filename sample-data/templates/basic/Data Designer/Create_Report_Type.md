@@ -1,3 +1,5 @@
+___
+
 # Create Report Type
 > A type of report that inherits from Data Spec (and Collection)
 
@@ -110,3 +112,5 @@
 
 >	**Description**: The authors.
 
+
+___

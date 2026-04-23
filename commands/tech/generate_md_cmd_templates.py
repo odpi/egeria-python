@@ -77,8 +77,8 @@ logger.add("debug_log", rotation="1 day", retention="1 week", compression="zip",
 # ---------------------------------------------------------------------------
 
 def _write_attr_block(out: io.StringIO, key: str, value: dict, client: Optional[ServerClient] = None) -> None:
-    """Write a single ## attribute block into the StringIO buffer."""
-    out.write(f"\n## {key}\n")
+    """Write a single ### attribute block into the StringIO buffer."""
+    out.write(f"\n### {key}\n")
     out.write(f">\t**Input Required**: {value.get('input_required', 'false')}\n\n")
     
     attr_type = value.get("data_type") or value.get("style") or ""
@@ -124,10 +124,15 @@ def _write_attr_block(out: io.StringIO, key: str, value: dict, client: Optional[
     if str(default_value).strip():
         out.write(f">\t**Default Value**: {default_value}\n\n")
 
+    if attr_type and attr_type.strip().lower() in ("dictionary", "keyvalue", "named dict"):
+        out.write(">\t| Parameter Name | Parameter Value |\n")
+        out.write(">\t|---|---|\n")
+        out.write(">\t| example_key | example_value |\n\n")
+
 
 def _print_attr(key: str, value: dict, client: Optional[ServerClient] = None) -> None:
     """Mirror of _write_attr_block for console output."""
-    print(f"\n## {key}")
+    print(f"\n### {key}")
     print(f">\tInput Required: {value.get('input_required', 'false')}")
     
     attr_type = value.get("data_type") or value.get("style") or ""
@@ -171,6 +176,11 @@ def _print_attr(key: str, value: dict, client: Optional[ServerClient] = None) ->
     default_value = value.get("default_value") or dynamic_default or ""
     if str(default_value).strip():
         print(f">\tDefault Value: {default_value}")
+
+    if attr_type and attr_type.strip().lower() in ("dictionary", "keyvalue", "named dict"):
+        print(">\t| Parameter Name | Parameter Value |")
+        print(">\t|---|---|")
+        print(">\t| example_key | example_value |\n")
 
 
 @logger.catch
@@ -326,13 +336,14 @@ def main():
             # Build the output buffer
             # -----------------------------------------------------------
             command_output = io.StringIO()
-            command_output.write(f"# {command}\n")
+            command_output.write("___\n\n")
+            command_output.write(f"## {command}\n")
             if command_description:
                 command_output.write(f"> {command_description}\n")
             if alternate_names:
                 command_output.write(f">\n>\t**Alternative Names**: {alternate_names}\n")
 
-            print(f"\n# {command}")
+            print(f"\n## {command}")
             if command_description:
                 print(f"> {command_description}")
             if alternate_names:
@@ -352,12 +363,14 @@ def main():
                 if not attr_list:
                     continue   # omit empty sections entirely
 
-                # command_output.write(f"\n# {section_title}\n")
-                # print(f"\n# {section_title}")
+                # command_output.write(f"\n## {section_title}\n")
+                # print(f"\n## {section_title}")
 
                 for key, value in attr_list:
                     _write_attr_block(command_output, key, value, client=client)
                     _print_attr(key, value, client=client)
+
+            command_output.write("\n___\n")
 
             # -----------------------------------------------------------
             # Save to file

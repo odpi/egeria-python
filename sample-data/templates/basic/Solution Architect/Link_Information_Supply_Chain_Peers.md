@@ -1,3 +1,5 @@
+___
+
 # Link Information Supply Chain Peers
 > Links or unlinks two information supply chain segments.
 
@@ -44,3 +46,5 @@
 
 >	**Description**: A description.
 
+
+___

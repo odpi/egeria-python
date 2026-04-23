@@ -1,3 +1,5 @@
+___
+
 # Create Cited Document
 > Create or update a Cited Document - an external reference to a published document with full bibliographic metadata.
 
@@ -71,6 +73,10 @@
 >	**Description**: A map of source strings (e.g. URL, DOI, ISBN).
 
 >	**Alternative Labels**: Reference Sources
+
+>	| Parameter Name | Parameter Value |
+>	|---|---|
+>	| example_key | example_value |
 
 
 ## Edition
@@ -254,3 +260,5 @@
 
 >	**Description**: The authors.
 
+
+___

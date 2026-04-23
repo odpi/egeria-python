@@ -1,3 +1,5 @@
+___
+
 # Link SubComponent
 > Links a child compoent to a parent component.
 
@@ -42,3 +44,5 @@
 
 >	**Description**: A description.
 
+
+___

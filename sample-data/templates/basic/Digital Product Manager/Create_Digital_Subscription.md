@@ -1,3 +1,5 @@
+___
+
 # Create Digital Subscription
 > A type of agreement for a digital subscription.
 >
@@ -136,3 +138,5 @@
 
 >	**Description**: The authors.
 
+
+___

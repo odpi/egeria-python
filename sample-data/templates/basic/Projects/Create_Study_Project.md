@@ -1,3 +1,5 @@
+___
+
 # Create Study Project
 > Creates or updates a study project — a focused analysis of a topic, person, object or situation. Sets the StudyProject classification on the Project entity.
 
@@ -242,3 +244,5 @@
 
 >	**Description**: The authors.
 
+
+___

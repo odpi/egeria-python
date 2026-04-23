@@ -1,3 +1,5 @@
+___
+
 # Create Governance Principle
 > The GovernancePrinciple entity defines a policy that describes an end state that the organization aims to achieve.
 
@@ -170,3 +172,5 @@
 
 >	**Description**: The authors.
 
+
+___

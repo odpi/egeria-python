@@ -34,10 +34,10 @@ class UniversalExtractor:
     """
     def __init__(self, text: str):
         self.text = text
-        # Regex for a command header line: # <Verb> <Object> or headless <Verb> <Object>
+        # Regex for a command header line: ## <Verb> <Object> or headless <Verb> <Object>
         verbs_pattern = "|".join(STANDARD_VERBS)
         self.cmd_header_rx = re.compile(
-            rf"^\s*(?P<header>#+\s+)?(?P<verb>{verbs_pattern})\s+(?P<object>[^#\n_]+)\s*$",
+            rf"^\s*(?P<header>##\s+)?(?P<verb>{verbs_pattern})\s+(?P<object>[^#\n_]+)\s*$",
             re.IGNORECASE,
         )
 
@@ -93,8 +93,8 @@ class UniversalExtractor:
         return commands
 
     def _split_into_blocks(self) -> List[tuple[str, int]]:
-        """Split text into potential command blocks based on H1 headers or horizontal rules."""
-        # Using a lookahead to split by '#' at start of line OR horizontal rules
+        """Split text into potential command blocks based on H2 headers or horizontal rules."""
+        # Using a lookahead to split by '##' at start of line OR horizontal rules
         # Also handles headless blocks by checking if the start is a command
         lines = self.text.splitlines()
         blocks = []
@@ -102,8 +102,8 @@ class UniversalExtractor:
         start_line = 1
         
         for i, line in enumerate(lines):
-            # Check for block boundaries: H1 header or horizontal rule
-            if (line.startswith("# ") or re.match(r'^\s*___+\s*$', line) or re.match(r'^\s*---+\s*$', line)):
+            # Check for block boundaries: H2 header or horizontal rule
+            if (line.startswith("## ") or re.match(r'^\s*___+\s*$', line) or re.match(r'^\s*---+\s*$', line)):
                 if current_block:
                     blocks.append(("\n".join(current_block), start_line))
                 current_block = [line]
@@ -117,10 +117,10 @@ class UniversalExtractor:
         return blocks
 
     def _extract_attributes_from_block(self, block: str) -> Dict[str, str]:
-        """Extracts ## attributes from a block of text."""
+        """Extracts ### attributes from a block of text."""
         attributes = {}
-        # Match ## Header until next ## or end of block
-        attr_rx = re.compile(r"^##\s+(?P<label>[^#\n]+)\n(?P<value>(?:(?!^##).)*)", re.MULTILINE | re.DOTALL)
+        # Match ### Header until next ### or end of block
+        attr_rx = re.compile(r"^###\s+(?P<label>[^#\n]+)\n(?P<value>(?:(?!^###).)*)", re.MULTILINE | re.DOTALL)
         
         for match in attr_rx.finditer(block):
             label = match.group("label").strip()

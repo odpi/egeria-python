@@ -1,3 +1,5 @@
+___
+
 # Create Solution Component
 > Creates or updates a reusable solution component — a building block of a solution blueprint or information supply chain.
 
@@ -158,3 +160,5 @@
 
 >	**Description**: The authors.
 
+
+___

@@ -1,3 +1,5 @@
+___
+
 # Create Root Collection
 > Create a RootCollection - a master collection serving as the starting node for an independent collection hierarchy.
 >
@@ -112,3 +114,5 @@
 
 >	**Description**: The authors.
 
+
+___

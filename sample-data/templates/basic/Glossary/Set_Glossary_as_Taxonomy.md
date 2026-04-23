@@ -1,3 +1,5 @@
+___
+
 # Set Glossary as Taxonomy
 > Classify a glossary as a Taxonomy
 
@@ -8,7 +10,7 @@
 
 >	**Description**: Zero or more existing glossaries that this term is a member of.
 
->	**Alternative Labels**: Glossary Name; Glossaries; In Glossaries; In Glossary; Glossary Names
+>	**Alternative Labels**: Glossary; Glossaries; In Glossaries; In Glossary; Glossary Names
 
 
 ## Journal Entry
@@ -84,3 +86,5 @@
 
 >	**Description**: Keywords to facilitate finding the element
 
+
+___

@@ -1,5 +1,7 @@
+___
+
 # Link Component to Actor
-> Associates a component to an Actor.
+> Links a solution component to an actor role via the SolutionComponentActor relationship.
 
 ## Component1
 >	**Input Required**: True
@@ -42,3 +44,5 @@
 
 >	**Description**: A description.
 
+
+___

@@ -1,3 +1,5 @@
+___
+
 # Create Data Value Specification
 > Creates or updates a data value classification which represents the characteristics of a data value. DataClass and DataGrain are subtypes.
 
@@ -104,6 +106,10 @@
 
 >	**Description**: Additional key-value details that extend the formal specification for this data value specification.
 
+>	| Parameter Name | Parameter Value |
+>	|---|---|
+>	| example_key | example_value |
+
 
 ## Units
 >	**Input Required**: False
@@ -204,3 +210,5 @@
 
 >	**Description**: The authors.
 
+
+___

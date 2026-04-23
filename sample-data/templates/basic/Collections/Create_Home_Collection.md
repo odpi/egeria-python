@@ -1,3 +1,5 @@
+___
+
 # Create Home Collection
 > Create a home collection to store things like favorites.
 
@@ -110,3 +112,5 @@
 
 >	**Description**: The authors.
 
+
+___

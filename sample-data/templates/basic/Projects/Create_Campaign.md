@@ -1,3 +1,5 @@
+___
+
 # Create Campaign
 > Creates or updates a campaign — a collection of related projects working towards a common goal. Sets the Campaign classification on the Project entity.
 
@@ -242,3 +244,5 @@
 
 >	**Description**: The authors.
 
+
+___

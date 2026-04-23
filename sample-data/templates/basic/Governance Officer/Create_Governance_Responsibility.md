@@ -1,3 +1,5 @@
+___
+
 # Create Governance Responsibility
 > A responsibility assigned to an actor or team. It could be a requirement to take a certain action in specific circumstances or to make decisions or give approvals for actions.
 
@@ -180,3 +182,5 @@
 
 >	**Description**: The authors.
 
+
+___

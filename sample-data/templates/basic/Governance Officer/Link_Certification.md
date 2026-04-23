@@ -1,3 +1,5 @@
+___
+
 # Link Certification
 > Links a certification type to a referenceable element, adding details about the certification.
 
@@ -108,6 +110,10 @@
 
 >	**Description**: A dictionary of property:value pairs describing obligations.
 
+>	| Parameter Name | Parameter Value |
+>	|---|---|
+>	| example_key | example_value |
+
 
 ## Recipient
 >	**Input Required**: False
@@ -164,6 +170,10 @@
 
 >	**Description**: A dictionary of property:value pairs describing entitlements.
 
+>	| Parameter Name | Parameter Value |
+>	|---|---|
+>	| example_key | example_value |
+
 
 ## Restrictions
 >	**Input Required**: False
@@ -172,3 +182,9 @@
 
 >	**Description**: A dictionary of property:value pairs describing restrictions.
 
+>	| Parameter Name | Parameter Value |
+>	|---|---|
+>	| example_key | example_value |
+
+
+___

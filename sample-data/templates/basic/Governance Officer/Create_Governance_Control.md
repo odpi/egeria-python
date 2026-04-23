@@ -1,3 +1,5 @@
+___
+
 # Create Governance Control
 > A governance control describes how a particular governance policy should be implemented. There are many types of controls.
 
@@ -180,3 +182,5 @@
 
 >	**Description**: The authors.
 
+
+___

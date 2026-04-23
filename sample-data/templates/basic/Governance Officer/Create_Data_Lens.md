@@ -1,3 +1,5 @@
+___
+
 # Create Data Lens
 > A DataLens defines a geographic, temporal, and element scope for data collection and analysis.
 
@@ -152,6 +154,10 @@
 
 >	**Description**: Map of element identifiers defining the scope of the data lens.
 
+>	| Parameter Name | Parameter Value |
+>	|---|---|
+>	| example_key | example_value |
+
 
 ## Journal Entry
 >	**Input Required**: False
@@ -252,3 +258,5 @@
 
 >	**Description**: The authors.
 
+
+___

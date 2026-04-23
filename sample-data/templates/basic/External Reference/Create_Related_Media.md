@@ -1,3 +1,5 @@
+___
+
 # Create Related Media
 > Create or update Related Media - an external reference to media such as images, audio, video or documents.
 >
@@ -73,6 +75,10 @@
 >	**Description**: A map of source strings (e.g. URL, DOI, ISBN).
 
 >	**Alternative Labels**: Reference Sources
+
+>	| Parameter Name | Parameter Value |
+>	|---|---|
+>	| example_key | example_value |
 
 
 ## Default Media Usage
@@ -202,3 +208,5 @@
 
 >	**Description**: The authors.
 
+
+___

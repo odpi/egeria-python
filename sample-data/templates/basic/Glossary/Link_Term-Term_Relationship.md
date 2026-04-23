@@ -1,3 +1,5 @@
+___
+
 # Link Term-Term Relationship
 > Links or unlinks two glossary terms via a typed semantic relationship (e.g. Synonym, Antonym, PreferredTerm, TranslationOf).
 >
@@ -56,3 +58,5 @@
 
 >	**Description**: A description.
 
+
+___

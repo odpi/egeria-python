@@ -1,3 +1,5 @@
+___
+
 # Create Results Set
 > Create a ResultsSet collection - a collection of elements that are the results from a specific request or query.
 
@@ -110,3 +112,5 @@
 
 >	**Description**: The authors.
 
+
+___

@@ -1,3 +1,5 @@
+___
+
 # Create Data Class
 > Creates or updates a data class — a description of the values that may be stored in data fields. Supports composition via Containing Data Class and specialization via Specializes Data Class. Can be used to configure quality validators and data field classifiers.
 
@@ -103,6 +105,10 @@
 >	**Attribute Type**: Dictionary
 
 >	**Description**: Additional key-value details that extend the formal specification for this data value specification.
+
+>	| Parameter Name | Parameter Value |
+>	|---|---|
+>	| example_key | example_value |
 
 
 ## Units
@@ -298,3 +304,5 @@
 
 >	**Description**: The authors.
 
+
+___

@@ -408,9 +408,29 @@ def materialize_egeria_summary(summary: dict, columns_struct: Optional[dict] = N
 def render_rich_value(value: Any, output_format: str) -> str:
     """Visually format rich nested values for text-based reports.
     - LIST: summarized string (handled elsewhere)
-    - FORM: keep compact summary to preserve editability
-    - REPORT/MD: nested bullet lists
+    - FORM: keep compact summary to preserve editability (or table if flat dict)
+    - REPORT/MD: nested bullet lists (or table if flat dict)
     """
+    def is_flat_dict(d: Any) -> bool:
+        if not isinstance(d, dict):
+            return False
+        for v in d.values():
+            if isinstance(v, (dict, list)):
+                return False
+        return True
+
+    def render_table(d: dict) -> str:
+        table_lines = [
+            "| Parameter Name | Parameter Value |",
+            "| :--- | :--- |"
+        ]
+        for k, v in d.items():
+            table_lines.append(f"| {camel_to_title_case(k) if isinstance(k, str) else k} | {v} |")
+        return "\n".join(table_lines)
+
+    if isinstance(value, dict) and is_flat_dict(value):
+        return render_table(value)
+
     def summarize(v: Any) -> str:
         if isinstance(v, dict):
             return v.get('name') or v.get('displayName') or v.get('qualifiedName') or v.get('type') or str(v)
@@ -1009,7 +1029,11 @@ def generate_entity_md_table(elements: List[Dict],
                             names.append(str(item))
                     cell_value = ", ".join(names)
                 elif isinstance(value, dict):
-                    cell_value = value.get('name') or value.get('displayName') or value.get('qualifiedName') or str(value)
+                    nm = value.get('name') or value.get('displayName') or value.get('qualifiedName')
+                    if nm:
+                        cell_value = nm
+                    else:
+                        cell_value = ", ".join([f"{k}: {v}" for k, v in value.items()])
 
                 # If detail_spec present and we have values to show later, add a link
                 detail_spec = column.get('detail_spec')

@@ -1,3 +1,5 @@
+___
+
 # Link Governance Mechanism
 > Link a governance policy to a governance control that supports it. The GovernanceMechanism relationship is used.
 
@@ -50,3 +52,5 @@
 
 >	**Description**: A description.
 
+
+___

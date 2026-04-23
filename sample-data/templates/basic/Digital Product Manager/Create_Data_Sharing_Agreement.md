@@ -1,3 +1,5 @@
+___
+
 # Create Data Sharing Agreement
 > Create a new collection with the DataSharingAgreement classification.
 
@@ -118,3 +120,5 @@
 
 >	**Description**: The authors.
 
+
+___

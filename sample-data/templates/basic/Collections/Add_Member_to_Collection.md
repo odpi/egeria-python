@@ -1,3 +1,5 @@
+___
+
 # Add Member to Collection
 > Add/Remove a member to/from a collection.
 >
@@ -74,3 +76,5 @@
 
 >	**Description**: The unique identifier (qualified name or GUID) of the collection.
 
+
+___

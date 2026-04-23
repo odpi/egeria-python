@@ -1,3 +1,5 @@
+___
+
 # Create Governance Approach
 > The GovernanceApproach entity defines a policy that describes a method that should be used for a particular activity.
 
@@ -170,3 +172,5 @@
 
 >	**Description**: The authors.
 
+
+___

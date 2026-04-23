@@ -1,3 +1,5 @@
+___
+
 # Link Cited Document
 > Link a cited document to a referenceable via the DocumentCitationLink relationship.
 >
@@ -62,3 +64,5 @@
 
 >	**Description**: A description.
 
+
+___

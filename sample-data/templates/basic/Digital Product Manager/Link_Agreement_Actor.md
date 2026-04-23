@@ -1,3 +1,5 @@
+___
+
 # Link Agreement Actor
 > Link an actor (role or person) to an Agreement, defining their role and responsibilities within it.
 >
@@ -52,3 +54,5 @@
 
 >	**Description**: A description.
 
+
+___

@@ -1,3 +1,5 @@
+___
+
 # Create Governance Rule
 > An executable rule that can be deployed at particular points in the operations.
 
@@ -180,3 +182,5 @@
 
 >	**Description**: The authors.
 
+
+___

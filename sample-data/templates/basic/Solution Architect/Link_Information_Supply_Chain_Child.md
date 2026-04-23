@@ -1,3 +1,5 @@
+___
+
 # Link Information Supply Chain Child
 > Links or unlinks an information supply chain child segment to an Information Supply Chain using CollectionMembership.
 
@@ -70,3 +72,5 @@
 
 >	**Description**: A description.
 
+
+___

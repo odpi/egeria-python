@@ -1,3 +1,5 @@
+___
+
 # Create Digital Product
 > A Digital Product represents artifacts that can be subscribed to and consumed by users.
 >
@@ -184,3 +186,5 @@
 
 >	**Description**: The authors.
 
+
+___

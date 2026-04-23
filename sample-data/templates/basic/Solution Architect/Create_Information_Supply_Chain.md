@@ -1,3 +1,5 @@
+___
+
 # Create Information Supply Chain
 > Creates or updates an information supply chain — a description of the flow of a particular type of data across a digital landscape.
 
@@ -150,3 +152,5 @@
 
 >	**Description**: The authors.
 
+
+___

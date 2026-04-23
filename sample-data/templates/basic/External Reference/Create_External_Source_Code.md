@@ -1,3 +1,5 @@
+___
+
 # Create External Source Code
 > Create or update an External Source Code reference - an external reference that refers to software source code. If the component created from this source code is catalogued, it is linked to the ExternalSourceCode using the ExternalReferenceLink relationship.
 
@@ -71,6 +73,10 @@
 >	**Description**: A map of source strings (e.g. URL, DOI, ISBN).
 
 >	**Alternative Labels**: Reference Sources
+
+>	| Parameter Name | Parameter Value |
+>	|---|---|
+>	| example_key | example_value |
 
 
 ## Journal Entry
@@ -164,3 +170,5 @@
 
 >	**Description**: The authors.
 
+
+___

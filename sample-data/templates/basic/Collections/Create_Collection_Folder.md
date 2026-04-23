@@ -1,3 +1,5 @@
+___
+
 # Create Collection Folder
 > Create a CollectionFolder - a collection used to organize subsets of metadata elements within a larger collection hierarchy.
 >
@@ -112,3 +114,5 @@
 
 >	**Description**: The authors.
 
+
+___

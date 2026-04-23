@@ -1,3 +1,5 @@
+___
+
 # Create Governance Obligation
 > The GovernanceObligation entity defines a policy that describes a requirement that must be met.
 
@@ -170,3 +172,5 @@
 
 >	**Description**: The authors.
 
+
+___

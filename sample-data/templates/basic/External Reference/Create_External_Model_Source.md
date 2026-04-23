@@ -1,3 +1,5 @@
+___
+
 # Create External Model Source
 > Create or update an External Model Source - an external reference that refers to an external analytical or AI model source.
 
@@ -71,6 +73,10 @@
 >	**Description**: A map of source strings (e.g. URL, DOI, ISBN).
 
 >	**Alternative Labels**: Reference Sources
+
+>	| Parameter Name | Parameter Value |
+>	|---|---|
+>	| example_key | example_value |
 
 
 ## Journal Entry
@@ -164,3 +170,5 @@
 
 >	**Description**: The authors.
 
+
+___

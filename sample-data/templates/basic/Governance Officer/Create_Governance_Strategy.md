@@ -1,3 +1,5 @@
+___
+
 # Create Governance Strategy
 > The strategy used in the development of the governance domains activities. How the governance domain supports the business strategy.
 
@@ -178,3 +180,5 @@
 
 >	**Description**: The authors.
 
+
+___

@@ -1,3 +1,5 @@
+___
+
 # Create Recent Access
 > Create a RecentAccess collection - a collection of elements accessed recently by a user.
 
@@ -110,3 +112,5 @@
 
 >	**Description**: The authors.
 
+
+___
