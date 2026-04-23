@@ -702,9 +702,10 @@ class ActorManagerScenarioTester:
                     "teamType": "Project Team"
                 }
             }
-            team_guid = self.client.create_actor_profile(team_body)
+            response = self.client.create_actor_profile(team_body)
+            team_guid = response.get('guid', None)
             created_guids.append(team_guid)
-            self.created_actors.append(team_guid)
+            self.created_profiles.append(team_guid)
             console.print(f"  [green]✓[/green] Created Team: {team_guid}")
 
             # 2. Create a Team Leader Role
@@ -718,7 +719,8 @@ class ActorManagerScenarioTester:
                     "displayName": "Scenario 5 Team Leader"
                 }
             }
-            role_guid = self.client.create_actor_role(role_body)
+            response = self.client.create_actor_role(role_body)
+            role_guid = response.get("guid",None)
             created_guids.append(role_guid)
             self.created_roles.append(role_guid)
             console.print(f"  [green]✓[/green] Created Role: {role_guid}")
@@ -731,7 +733,7 @@ class ActorManagerScenarioTester:
                     "assignmentType": "Leader"
                 }
             }
-            self.client.link_assignment_scope(role_guid, team_guid, link_body)
+            self.client.link_assignment_scope(team_guid, role_guid, link_body)
             console.print(f"  [green]✓[/green] Linked Role to Team")
 
             # 4. Create a Person
@@ -745,9 +747,10 @@ class ActorManagerScenarioTester:
                     "displayName": "Scenario 5 Person"
                 }
             }
-            person_guid = self.client.create_actor_profile(person_body)
+            response = self.client.create_actor_profile(person_body)
+            person_guid = response.get('guid',None)
             created_guids.append(person_guid)
-            self.created_actors.append(person_guid)
+            self.created_profiles.append(person_guid)
             console.print(f"  [green]✓[/green] Created Person: {person_guid}")
 
             # 5. Link Person and Role
@@ -767,7 +770,7 @@ class ActorManagerScenarioTester:
                 raise Exception("Team report returned no data")
             
             team_report = response[0]
-            members = team_report.get('Members', [])
+            members = team_report.get('Members') or []
             if not any(m.get('Individual') == "Scenario 5 Person" for m in members):
                 raise Exception("Expected member not found in team report")
             

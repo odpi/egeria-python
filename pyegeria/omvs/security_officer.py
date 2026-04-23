@@ -69,7 +69,26 @@ class SecurityOfficer(ServerClient):
     async def _async_set_user_account(
         self, platform_name: str, body: Union[dict, Any], platform_guid: str = None
     ) -> None:
-        """Create or update a user account in the platform metadata security connector. Async version."""
+        """Create or update a user account in the platform metadata security connector. Async version.
+        {
+            "class": "UserAccountRequestBody",
+            "userAccount": {
+                "class": "OpenMetadataUserAccount",
+                "userId": "{{accountUserId}}",
+                "userName": "Freddie Mercury",
+                "userAccountType": "EXTERNAL",
+                "employeeNumber": "",
+                "employeeType": "",
+                "givenName": "Freddie",
+                "surname": "Mercury",
+                "email": "freddiemercury@queen.com",
+                "securityRoles": ["serverOperator", "serverInvestigator"],
+                "userAccountStatus": "CREDENTIALS_EXPIRED",
+                "secrets": {
+                    "clearPassword": "itsakindofmagic"
+                }
+            }
+        """
         if not platform_guid:
             platform_guid = await self.__get_platform_guid__(platform_name)
         url = f"{self.security_officer_base_url}/platforms/{platform_guid}/user-accounts"

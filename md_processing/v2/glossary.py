@@ -140,6 +140,13 @@ class TermProcessor(AsyncBaseCommandProcessor):
         prop_body["abbreviation"] = attributes.get('Abbreviation', {}).get('value', None)
         prop_body["usage"] = attributes.get('Usage', {}).get('value', None)
         prop_body["user_defined_status"] = attributes.get('UserDefinedStatus', {}).get('value', None)
+        prop_body["contextDescription"] = attributes.get('Context Description', {}).get('value', None)
+        prop_body["contextScope"] = attributes.get('Context Scope', {}).get('value', None)
+        prop_body["isAbstractConcept"] = attributes.get('Is Abstract Concept', {}).get('value', False)
+        prop_body["isActivityDescription"] = attributes.get('Is Activity Description', {}).get('value', False)
+        prop_body["isContext"] = attributes.get('Is Context', {}).get('value', False)
+        prop_body["isDataValue"] = attributes.get('Is Data Value', {}).get('value', False)
+        prop_body["termActivityType"] = attributes.get('Term Activity Type', {}).get('value', None)
         
         # 2. Extract collection GUIDs
         # We may have one or more collections listed (Glossary Name, Folders)

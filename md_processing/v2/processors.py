@@ -12,7 +12,7 @@ from loguru import logger
 from pyegeria import EgeriaTech, PyegeriaException, NO_ELEMENTS_FOUND, print_basic_exception
 from pyegeria.core.utils import make_format_set_name_from_type
 from pyegeria.view.base_report_formats import select_report_spec
-from pyegeria.view.output_formatter import generate_output, format_for_markdown_table
+from pyegeria.view.output_formatter import generate_output, format_for_markdown_table, populate_columns_from_properties
 
 from md_processing.v2.extraction import DrECommand
 from md_processing.v2.parsing import AttributeFirstParser
@@ -723,7 +723,8 @@ class AsyncBaseCommandProcessor(ABC):
                 search_string=self.parsed_output.get("qualified_name", "Created/Updated Element"),
                 entity_type=self.command.object_type,
                 output_format="MD",
-                columns_struct=columns_struct
+                columns_struct=columns_struct,
+                extract_properties_func=populate_columns_from_properties
             )
             return markdown
         except Exception as e:

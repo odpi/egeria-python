@@ -44,14 +44,8 @@ class ProjectProcessor(AsyncBaseCommandProcessor):
         project_types = ["Campaign", "Task", "Personal Project", "Study Project"]
         
         # 1. Properties
-        # ProjectManager expects 'name' instead of 'displayName' and 'plannedEndDate' instead of 'endDate'
-        prop_body = {
-            "class": f"{base_type}Properties",
-            # "typeName": self.command.object_type.replace(" ", ""),
-            "qualifiedName": qualified_name,
-            "displayName": display_name,
-            "description": attributes.get('Description', {}).get('value'),
-            "identifier": attributes.get('Identifier', {}).get('value'),
+        prop_body = set_element_prop_body(base_type, qualified_name, attributes)
+        prop_body.update({
             "projectStatus": attributes.get('Project Status', {}).get('value'),
             "projectPhase": attributes.get('Project Phase', {}).get('value'),
             "projectHealth": attributes.get('Project Health', {}).get('value'),
@@ -60,11 +54,16 @@ class ProjectProcessor(AsyncBaseCommandProcessor):
             "actualStartDate": attributes.get('Actual Start Date', {}).get('value'),
             "actualCompletionDate": attributes.get('Actual Completion Date', {}).get('value'),
             "mission": attributes.get('Mission', {}).get('value'),
-            "purposes": attributes.get('Purposes', {}).get('value'),
+            "purposes": attributes.get('Purposes', {}).get('value', []),
             "priority": attributes.get('Priority', {}).get('value'),
             "successCriteria": attributes.get('Success Criteria', {}).get('value'),
-            "contentStatus": attributes.get('Content Status', {}).get('value'),
-        }
+            "projectIdentifier": attributes.get('Project Identifier', {}).get('value'),
+            "projectType": attributes.get('Project Type', {}).get('value'),
+            "projectScope": attributes.get('Project Scope', {}).get('value'),
+            "projectApproach": attributes.get('Project Approach', {}).get('value'),
+            "projectManagementStyle": attributes.get('Project Management Style', {}).get('value'),
+            "projectResultsUsage": attributes.get('Project Results Usage', {}).get('value'),
+        })
 
         if verb == "Update":
             guid = self.parsed_output.get("guid") or (self.as_is_element['elementHeader']['guid'] if self.as_is_element else None)

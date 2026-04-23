@@ -54,7 +54,8 @@ def valid_guid(guid):
 
 
 class TestGovernanceOfficer:
-    platform_url = app_config.egeria_view_server_url
+    # platform_url = app_config.egeria_view_server_url
+    platform_url = "https://hedwig.local:9443"
     view_server = app_config.egeria_view_server
     user = os.getenv("EGORIA_USER", "peterprofile")
     password = os.getenv("EGERIA_USER_PASSWORD","secret")
@@ -509,7 +510,7 @@ class TestGovernanceOfficer:
             s_client.close_session()
 
     def test_get_gov_def_by_guid(self):
-        guid = "2ba17e3c-825a-409b-928f-d0e46e741c11"
+        guid = "f2e6ac12-a783-4198-9bc6-db702ff21028"
         try:
             s_client = GovernanceOfficer(
                 self.view_server, self.platform_url, self.user, self.password
@@ -517,7 +518,7 @@ class TestGovernanceOfficer:
 
             s_client.create_egeria_bearer_token()
             start_time = time.perf_counter()
-            response = s_client.get_governance_definition_by_guid(guid, output_format='JSON', report_spec="Governance Definition")
+            response = s_client.get_governance_definition_by_guid(guid, output_format='DICT', report_spec="Business-Imperative-DrE-Basic")
             duration = time.perf_counter() - start_time
             duration = time.perf_counter() - start_time
             print(

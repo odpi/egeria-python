@@ -42,6 +42,13 @@ class GlossaryTermProperties(ReferenceableProperties):
     usage: str = None
     user_defined_status: str = None
     publishVersionIdentifier: str = None
+    contextDescription: str = None
+    contextScope: str = None
+    isAbstractConcept: bool = False
+    isActivityDescription: bool = False
+    isContext: bool = False
+    isDataValue: bool = False
+    termActivityType: str = None
 
 
 class GlossaryManager(CollectionManager):

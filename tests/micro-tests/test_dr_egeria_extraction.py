@@ -184,6 +184,68 @@ async def test_view_report_validation_output_uses_report_context_not_qualified_n
     assert result.get("qualified_name") in (None, "")
 
 
+
+@pytest.mark.asyncio
+async def test_simple_list_with_markdown_bullets():
+    cmd = DrECommand(
+        verb="View",
+        object_type="Report",
+        attributes={
+            "Report Spec": "Collections",
+            "Metadata Element Subtype Names": "- Subtype 1\n* Subtype 2\n+ Subtype 3\nSubtype 4",
+        },
+        raw_block="# View Report",
+    )
+
+    parser = AttributeFirstParser(cmd)
+    parsed = await parser.parse()
+
+    assert parsed["attributes"]["Metadata Element Subtype Names"]["style"] == "Simple List"
+    expected = ["Subtype 1", "Subtype 2", "Subtype 3", "Subtype 4"]
+    assert parsed["attributes"]["Metadata Element Subtype Names"]["value"] == expected
+
+@pytest.mark.asyncio
+async def test_simple_list_with_semicolon_and_bullets():
+    cmd = DrECommand(
+        verb="View",
+        object_type="Report",
+        attributes={
+            "Report Spec": "Collections",
+            "Metadata Element Subtype Names": "- Item 1; - Item 2, Item 3",
+        },
+        raw_block="# View Report",
+    )
+
+    parser = AttributeFirstParser(cmd)
+    parsed = await parser.parse()
+
+    assert parsed["attributes"]["Metadata Element Subtype Names"]["style"] == "Simple List"
+    # Note: re.split(r'[;,\n]+', ...) will split at ; and ,
+    expected = ["Item 1", "Item 2", "Item 3"]
+    assert parsed["attributes"]["Metadata Element Subtype Names"]["value"] == expected
+
+@pytest.mark.asyncio
+async def test_reference_name_list_with_bullets():
+    cmd = DrECommand(
+        verb="Add",
+        object_type="Member",
+        attributes={
+            "Collection Name": "MyCollection",
+            "Member Name": "MyMember",
+            "Anchor Scope IDs": "- Scope 1\n* Scope 2\n+ Scope 3",
+        },
+        raw_block="# Add Member",
+    )
+
+    parser = AttributeFirstParser(cmd)
+    parsed = await parser.parse()
+
+    # Anchor Scope IDs in 'Add Member' spec (from commands_collections_compact.json) 
+    # should be 'Reference Name List' style.
+    assert parsed["attributes"]["Anchor Scope IDs"]["style"] == "Reference Name List"
+    expected = ["Scope 1", "Scope 2", "Scope 3"]
+    assert parsed["attributes"]["Anchor Scope IDs"]["value"] == expected
+
 @pytest.mark.asyncio
 async def test_view_report_anchor_scope_id_resolves_when_declared_reference_style(monkeypatch):
     async def _fake_run_report(**kwargs):
