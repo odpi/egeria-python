@@ -13,7 +13,7 @@ async def test_parser_unknown_label_suggests_closest_canonical_name():
             "Agreement Name": "Agreement::SalesForecast::Finance::DataSharing::1.0",
             "Terms and Conditions Id": "TermsAndConditions::SalesForecast::DataSharing::1.0",
         },
-        raw_block="# Link Agreement T&C",
+        raw_block="## Link Agreement T&C",
     )
 
     result = await AttributeFirstParser(cmd, directive="process").parse()
@@ -31,7 +31,7 @@ async def test_parser_missing_required_attribute_includes_provided_labels_contex
             "Agreement Name": "Agreement::SalesForecast::Finance::DataSharing::1.0",
             "Terms and Conditions Id": "TermsAndConditions::SalesForecast::DataSharing::1.0",
         },
-        raw_block="# Link Agreement T&C",
+        raw_block="## Link Agreement T&C",
     )
 
     result = await AttributeFirstParser(cmd, directive="process").parse()

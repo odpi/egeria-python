@@ -151,20 +151,20 @@ class ViewProcessor(AsyncBaseCommandProcessor):
         # Expected shapes: {"kind": "empty"}, {"kind": "text", "content": ...}, {"kind": "json", "data": ...}
         kind = result.get("kind")
         if kind == "empty":
-            return f"\n\n# {self.command.verb} {self.command.object_type}\n\nNo elements found"
+            return f"\n\n## {self.command.verb} {self.command.object_type}\n\nNo elements found"
         
         elif kind == "text":
             content = result.get("content", "")
             # Ensure there's a heading if it's not already in the content
             if not content.strip().startswith("#"):
-                return f"\n\n# {self.command.verb} {self.command.object_type}\n\n{content}"
+                return f"\n\n## {self.command.verb} {self.command.object_type}\n\n{content}"
             return f"\n\n{content}"
         
         elif kind == "json":
             data = result.get("data")
             formatted_json = json.dumps(data, indent=4)
-            return f"\n\n# {self.command.verb} {self.command.object_type}\n\n```json\n{formatted_json}\n```"
+            return f"\n\n## {self.command.verb} {self.command.object_type}\n\n```json\n{formatted_json}\n```"
         
         else:
             raw_result = result.get("raw", "Unknown result from report executor")
-            return f"\n\n# {self.command.verb} {self.command.object_type}\n\n{raw_result}"
+            return f"\n\n## {self.command.verb} {self.command.object_type}\n\n{raw_result}"

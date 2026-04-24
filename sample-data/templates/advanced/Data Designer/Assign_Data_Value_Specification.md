@@ -3,7 +3,7 @@
 >
 >	**Alternative Names**: Link Data Value Specification; Attach Data Value Specification to Element
 
-## Data Value Specification
+### Data Value Specification
 >	**Input Required**: True
 
 >	**Attribute Type**: Reference Name
@@ -11,7 +11,7 @@
 >	**Description**: The data value specification to use in a relationship. Preferable to use a qualified name.
 
 
-## Element Id
+### Element Id
 >	**Input Required**: True
 
 >	**Attribute Type**: Reference Name
@@ -21,7 +21,7 @@
 >	**Alternative Labels**: Element Name; Member Id
 
 
-## Label
+### Label
 >	**Input Required**: False
 
 >	**Attribute Type**: Simple
@@ -31,7 +31,7 @@
 >	**Alternative Labels**: Wire Label
 
 
-## Assignment Status
+### Assignment Status
 >	**Input Required**: False
 
 >	**Attribute Type**: Valid Value
@@ -43,7 +43,7 @@
 >	**Default Value**: DISCOVERED
 
 
-## Method
+### Method
 >	**Input Required**: False
 
 >	**Attribute Type**: Simple List
@@ -51,7 +51,7 @@
 >	**Description**: A method for value assignment.
 
 
-## Threshold
+### Threshold
 >	**Input Required**: False
 
 >	**Attribute Type**: Simple Int
@@ -59,7 +59,7 @@
 >	**Description**: Threshold  for assignment.
 
 
-## Journal Entry
+### Journal Entry
 >	**Input Required**: False
 
 >	**Attribute Type**: Simple
@@ -67,7 +67,7 @@
 >	**Description**: A text entry into a journal.
 
 
-## Description
+### Description
 >	**Input Required**: False
 
 >	**Attribute Type**: Simple
@@ -75,7 +75,7 @@
 >	**Description**: A description.
 
 
-## Effective From
+### Effective From
 >	**Input Required**: False
 
 >	**Attribute Type**: Simple
@@ -83,7 +83,7 @@
 >	**Description**: The beginning of when an element is viewable.
 
 
-## Effective Time
+### Effective Time
 >	**Input Required**: False
 
 >	**Attribute Type**: Simple
@@ -91,7 +91,7 @@
 >	**Description**: The time at which an element must be effective in order to be returned by the request.
 
 
-## Effective To
+### Effective To
 >	**Input Required**: False
 
 >	**Attribute Type**: Simple
@@ -99,7 +99,7 @@
 >	**Description**: The ending time at which an element is visible.
 
 
-## External Source GUID
+### External Source GUID
 >	**Input Required**: False
 
 >	**Attribute Type**: GUID
@@ -107,7 +107,7 @@
 >	**Description**: The unique identifier of an external source.
 
 
-## External Source Name
+### External Source Name
 >	**Input Required**: False
 
 >	**Attribute Type**: Simple
@@ -115,7 +115,7 @@
 >	**Description**: The name of an external source
 
 
-## For Duplicate Processing
+### For Duplicate Processing
 >	**Input Required**: False
 
 >	**Attribute Type**: Bool
@@ -123,7 +123,7 @@
 >	**Description**: Flag indicating if the request is to support duplicate processing.
 
 
-## For Lineage
+### For Lineage
 >	**Input Required**: False
 
 >	**Attribute Type**: Bool
@@ -131,7 +131,7 @@
 >	**Description**: Flag indicating if the request is to support lineage.
 
 
-## Request ID
+### Request ID
 >	**Input Required**: False
 
 >	**Attribute Type**: Simple
@@ -139,7 +139,7 @@
 >	**Description**: A user provided or system generated request id for a conversation.
 
 
-## Anchor Scope IDs
+### Anchor Scope IDs
 >	**Input Required**: False
 
 >	**Attribute Type**: Reference Name List
@@ -147,7 +147,7 @@
 >	**Description**: A list of IDs that are anchor scopes for this element.
 
 
-## Make Anchor
+### Make Anchor
 >	**Input Required**: False
 
 >	**Attribute Type**: Bool
@@ -157,7 +157,7 @@
 >	**Default Value**: false
 
 
-## Confidence
+### Confidence
 >	**Input Required**: False
 
 >	**Attribute Type**: Simple Int
@@ -165,7 +165,7 @@
 >	**Description**: A percent confidence in the proposed adding of the member.
 
 
-## Source
+### Source
 >	**Input Required**: False
 
 >	**Attribute Type**: Simple
@@ -173,7 +173,7 @@
 >	**Description**: The source of the information.
 
 
-## Steward
+### Steward
 >	**Input Required**: False
 
 >	**Attribute Type**: Simple
@@ -181,7 +181,7 @@
 >	**Description**: The identifier of the steward responsible for the element.
 
 
-## Steward Property Name
+### Steward Property Name
 >	**Input Required**: False
 
 >	**Attribute Type**: Simple
@@ -189,7 +189,7 @@
 >	**Description**: Property name used to identify the type of the steward.
 
 
-## Steward Type Name
+### Steward Type Name
 >	**Input Required**: False
 
 >	**Attribute Type**: Simple

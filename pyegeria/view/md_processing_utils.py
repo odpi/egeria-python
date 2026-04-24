@@ -1,6 +1,6 @@
 """
 
-This file contains functions to parse and process Egeria Markdown (Freddie)
+This file contains functions to parse and process Egeria Markdown (Dr.Egeria)
 
 
 """
@@ -462,7 +462,7 @@ def process_provenance_command(file_path: str, txt: [str]) -> str:
     output"""
     output = (f"* Derived from processing file {file_path} on "
               f"{get_current_datetime_string()}\n")
-    pattern = rf"# {re.escape('Provenance')}\n(.*?)(?:#|---|$)"
+    pattern = rf"## {re.escape('Provenance')}\n(.*?)(?:#|---|$)"
     match = re.search(pattern, txt, re.DOTALL)
     if match:
         # Extract matched text and replace consecutive \n with a single \n
@@ -473,7 +473,7 @@ def process_provenance_command(file_path: str, txt: [str]) -> str:
             existing_prov = None
 
     existing_prov = existing_prov if existing_prov else " "
-    return f"\n# Provenance:\n{existing_prov}\n{output}\n"
+    return f"\n## Provenance:\n{existing_prov}\n{output}\n"
 
 
 def process_element_identifiers(egeria_client: EgeriaTech, element_type: str, element_labels: list[str], txt: str,

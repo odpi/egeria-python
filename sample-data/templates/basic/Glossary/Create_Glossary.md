@@ -1,9 +1,9 @@
 ___
 
-# Create Glossary
+## Create Glossary
 > Creates or updates a glossary — a collection of related terms for a specific domain or purpose.
 
-## Display Name
+### Display Name
 >	**Input Required**: True
 
 >	**Attribute Type**: Simple
@@ -13,7 +13,7 @@ ___
 >	**Alternative Labels**: "Term Name"
 
 
-## Language
+### Language
 >	**Input Required**: False
 
 >	**Attribute Type**: Simple
@@ -21,7 +21,7 @@ ___
 >	**Description**: The primary language of the glossary. Note that multilingual descriptions are supported.
 
 
-## Usage
+### Usage
 >	**Input Required**: False
 
 >	**Attribute Type**: Simple
@@ -29,7 +29,7 @@ ___
 >	**Description**: The usage guidance for this element — how it is intended to be used in context.
 
 
-## Journal Entry
+### Journal Entry
 >	**Input Required**: False
 
 >	**Attribute Type**: Simple
@@ -37,7 +37,7 @@ ___
 >	**Description**: A text entry into a journal.
 
 
-## Category
+### Category
 >	**Input Required**: False
 
 >	**Attribute Type**: Simple
@@ -47,7 +47,7 @@ ___
 >	**Alternative Labels**: Category Name
 
 
-## Description
+### Description
 >	**Input Required**: False
 
 >	**Attribute Type**: Simple
@@ -55,7 +55,7 @@ ___
 >	**Description**: A description.
 
 
-## Qualified Name
+### Qualified Name
 >	**Input Required**: False
 
 >	**Attribute Type**: QN
@@ -63,7 +63,7 @@ ___
 >	**Description**: The unique, text name of an element.
 
 
-## Content Status
+### Content Status
 >	**Input Required**: False
 
 >	**Attribute Type**: Valid Value
@@ -75,7 +75,7 @@ ___
 >	**Default Value**: ACTIVE
 
 
-## Purpose
+### Purpose
 >	**Input Required**: False
 
 >	**Attribute Type**: Simple
@@ -83,7 +83,7 @@ ___
 >	**Description**: The purpose of this collection — a short description of why it exists or what it is used for.
 
 
-## Search Keywords
+### Search Keywords
 >	**Input Required**: False
 
 >	**Attribute Type**: Simple List
@@ -91,7 +91,7 @@ ___
 >	**Description**: A list of search keywords.
 
 
-## GUID
+### GUID
 >	**Input Required**: False
 
 >	**Attribute Type**: GUID
@@ -101,7 +101,7 @@ ___
 >	**Alternative Labels**: guid; Guid
 
 
-## URL
+### URL
 >	**Input Required**: False
 
 >	**Attribute Type**: Simple
@@ -109,7 +109,7 @@ ___
 >	**Description**: URL for further information.
 
 
-## Version Identifier
+### Version Identifier
 >	**Input Required**: False
 
 >	**Attribute Type**: Simple
@@ -121,7 +121,7 @@ ___
 >	**Default Value**: 1.0
 
 
-## Authors
+### Authors
 >	**Input Required**: False
 
 >	**Attribute Type**: Simple List

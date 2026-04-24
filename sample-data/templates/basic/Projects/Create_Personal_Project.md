@@ -1,6 +1,6 @@
 ___
 
-# Create Personal Project
+## Create Personal Project
 > Creates or updates a personal project — an informal project created by a single person to organize part of their work. Sets the PersonalProject classification on the Project entity.
 
 ## Display Name
@@ -13,7 +13,7 @@ ___
 >	**Alternative Labels**: "Term Name"
 
 
-## Actual Completion Date
+### Actual Completion Date
 >	**Input Required**: False
 
 >	**Attribute Type**: Simple
@@ -21,7 +21,7 @@ ___
 >	**Description**: The actual date the project completed as an ISO 8601 string.
 
 
-## Actual Start Date
+### Actual Start Date
 >	**Input Required**: False
 
 >	**Attribute Type**: Simple
@@ -29,7 +29,7 @@ ___
 >	**Description**: The actual date the project started as an ISO 8601 string.
 
 
-## Mission
+### Mission
 >	**Input Required**: False
 
 >	**Attribute Type**: Simple
@@ -37,7 +37,7 @@ ___
 >	**Description**: The project mission statement.
 
 
-## Planned Completion Date
+### Planned Completion Date
 >	**Input Required**: False
 
 >	**Attribute Type**: Simple
@@ -45,7 +45,7 @@ ___
 >	**Description**: Planned project end date as an ISO 8601 string.
 
 
-## Planned Start Date
+### Planned Start Date
 >	**Input Required**: False
 
 >	**Attribute Type**: Simple
@@ -53,7 +53,7 @@ ___
 >	**Description**: Planned project start date as an ISO 8601 string.
 
 
-## Priority
+### Priority
 >	**Input Required**: False
 
 >	**Attribute Type**: Simple Int
@@ -61,7 +61,7 @@ ___
 >	**Description**: An integer priority for the project.
 
 
-## Project Approach
+### Project Approach
 >	**Input Required**: False
 
 >	**Attribute Type**: Simple
@@ -69,7 +69,7 @@ ___
 >	**Description**: The methodology or approach used to achieve the project's goals (ProjectClassification attribute).
 
 
-## Project Health
+### Project Health
 >	**Input Required**: False
 
 >	**Attribute Type**: Simple
@@ -77,7 +77,7 @@ ___
 >	**Description**: A string representing the health of the project.
 
 
-## Project Identifier
+### Project Identifier
 >	**Input Required**: False
 
 >	**Attribute Type**: Simple
@@ -85,7 +85,7 @@ ___
 >	**Description**: A user-assigned identifier for the project.
 
 
-## Project Management Style
+### Project Management Style
 >	**Input Required**: False
 
 >	**Attribute Type**: Simple
@@ -93,7 +93,7 @@ ___
 >	**Description**: The management style for the project (ProjectClassification attribute). For example, experimental vs. formal product development.
 
 
-## Project Phase
+### Project Phase
 >	**Input Required**: False
 
 >	**Attribute Type**: Simple
@@ -101,7 +101,7 @@ ___
 >	**Description**: A string describing the current phase of the project.
 
 
-## Project Results Usage
+### Project Results Usage
 >	**Input Required**: False
 
 >	**Attribute Type**: Simple
@@ -109,7 +109,7 @@ ___
 >	**Description**: How the results of the project are intended to be used (ProjectClassification attribute). For example: inform future projects, test a theory, develop a product.
 
 
-## Project Scope
+### Project Scope
 >	**Input Required**: False
 
 >	**Attribute Type**: Simple
@@ -117,7 +117,7 @@ ___
 >	**Description**: The scope of the project — what is in and out of scope.
 
 
-## Project Status
+### Project Status
 >	**Input Required**: False
 
 >	**Attribute Type**: Simple
@@ -125,7 +125,7 @@ ___
 >	**Description**: A string representing the current status of the project.
 
 
-## Project Type
+### Project Type
 >	**Input Required**: False
 
 >	**Attribute Type**: Enum
@@ -137,7 +137,7 @@ ___
 >	**Default Value**: Project
 
 
-## Success Criteria
+### Success Criteria
 >	**Input Required**: False
 
 >	**Attribute Type**: Simple List
@@ -145,7 +145,7 @@ ___
 >	**Description**: A list of criteria used to evaluate the success of the project.
 
 
-## Journal Entry
+### Journal Entry
 >	**Input Required**: False
 
 >	**Attribute Type**: Simple
@@ -153,7 +153,7 @@ ___
 >	**Description**: A text entry into a journal.
 
 
-## Category
+### Category
 >	**Input Required**: False
 
 >	**Attribute Type**: Simple
@@ -163,7 +163,7 @@ ___
 >	**Alternative Labels**: Category Name
 
 
-## Description
+### Description
 >	**Input Required**: False
 
 >	**Attribute Type**: Simple
@@ -171,7 +171,7 @@ ___
 >	**Description**: A description.
 
 
-## Qualified Name
+### Qualified Name
 >	**Input Required**: False
 
 >	**Attribute Type**: QN
@@ -179,7 +179,7 @@ ___
 >	**Description**: The unique, text name of an element.
 
 
-## Content Status
+### Content Status
 >	**Input Required**: False
 
 >	**Attribute Type**: Valid Value
@@ -191,7 +191,7 @@ ___
 >	**Default Value**: ACTIVE
 
 
-## Purposes
+### Purposes
 >	**Input Required**: False
 
 >	**Attribute Type**: Simple List
@@ -207,7 +207,7 @@ ___
 >	**Description**: A list of search keywords.
 
 
-## GUID
+### GUID
 >	**Input Required**: False
 
 >	**Attribute Type**: GUID
@@ -217,7 +217,7 @@ ___
 >	**Alternative Labels**: guid; Guid
 
 
-## URL
+### URL
 >	**Input Required**: False
 
 >	**Attribute Type**: Simple
@@ -225,7 +225,7 @@ ___
 >	**Description**: URL for further information.
 
 
-## Version Identifier
+### Version Identifier
 >	**Input Required**: False
 
 >	**Attribute Type**: Simple
@@ -237,7 +237,7 @@ ___
 >	**Default Value**: 1.0
 
 
-## Authors
+### Authors
 >	**Input Required**: False
 
 >	**Attribute Type**: Simple List

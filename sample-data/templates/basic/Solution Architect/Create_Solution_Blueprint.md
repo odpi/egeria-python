@@ -1,6 +1,6 @@
 ___
 
-# Create Solution Blueprint
+## Create Solution Blueprint
 > Creates or updates a solution blueprint — a description of the architecture of a digital service in terms of solution components.
 
 ## Display Name
@@ -13,7 +13,7 @@ ___
 >	**Alternative Labels**: "Term Name"
 
 
-## Role List
+### Role List
 >	**Input Required**: False
 
 >	**Attribute Type**: Reference Name List
@@ -23,7 +23,7 @@ ___
 >	**Alternative Labels**: Actor Role List
 
 
-## Solution Components
+### Solution Components
 >	**Input Required**: False
 
 >	**Attribute Type**: Reference Name List
@@ -31,7 +31,7 @@ ___
 >	**Description**: Solution components that make up this blueprint.
 
 
-## Journal Entry
+### Journal Entry
 >	**Input Required**: False
 
 >	**Attribute Type**: Simple
@@ -39,7 +39,7 @@ ___
 >	**Description**: A text entry into a journal.
 
 
-## Category
+### Category
 >	**Input Required**: False
 
 >	**Attribute Type**: Simple
@@ -49,7 +49,7 @@ ___
 >	**Alternative Labels**: Category Name
 
 
-## Description
+### Description
 >	**Input Required**: False
 
 >	**Attribute Type**: Simple
@@ -57,7 +57,7 @@ ___
 >	**Description**: A description.
 
 
-## Qualified Name
+### Qualified Name
 >	**Input Required**: False
 
 >	**Attribute Type**: QN
@@ -65,7 +65,7 @@ ___
 >	**Description**: The unique, text name of an element.
 
 
-## Content Status
+### Content Status
 >	**Input Required**: False
 
 >	**Attribute Type**: Valid Value
@@ -77,7 +77,7 @@ ___
 >	**Default Value**: ACTIVE
 
 
-## Purpose
+### Purpose
 >	**Input Required**: False
 
 >	**Attribute Type**: Simple
@@ -93,7 +93,7 @@ ___
 >	**Description**: A list of search keywords.
 
 
-## GUID
+### GUID
 >	**Input Required**: False
 
 >	**Attribute Type**: GUID
@@ -103,7 +103,7 @@ ___
 >	**Alternative Labels**: guid; Guid
 
 
-## URL
+### URL
 >	**Input Required**: False
 
 >	**Attribute Type**: Simple
@@ -111,7 +111,7 @@ ___
 >	**Description**: URL for further information.
 
 
-## Version Identifier
+### Version Identifier
 >	**Input Required**: False
 
 >	**Attribute Type**: Simple
@@ -123,7 +123,7 @@ ___
 >	**Default Value**: 1.0
 
 
-## Authors
+### Authors
 >	**Input Required**: False
 
 >	**Attribute Type**: Simple List

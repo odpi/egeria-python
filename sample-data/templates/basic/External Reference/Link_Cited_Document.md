@@ -1,11 +1,11 @@
 ___
 
-# Link Cited Document
+## Link Cited Document
 > Link a cited document to a referenceable via the DocumentCitationLink relationship.
 >
 >	**Alternative Names**: Link Referenceable->Cited Document; Link Cited Document
 
-## Cited Document
+### Cited Document
 >	**Input Required**: True
 
 >	**Attribute Type**: Reference Name
@@ -13,7 +13,7 @@ ___
 >	**Description**: The cited document to link to.
 
 
-## Element Name
+### Element Name
 >	**Input Required**: True
 
 >	**Attribute Type**: Reference Name
@@ -23,7 +23,7 @@ ___
 >	**Alternative Labels**: Referenceable
 
 
-## Label
+### Label
 >	**Input Required**: False
 
 >	**Attribute Type**: Simple
@@ -33,7 +33,7 @@ ___
 >	**Alternative Labels**: Wire Label
 
 
-## Pages
+### Pages
 >	**Input Required**: False
 
 >	**Attribute Type**: Simple
@@ -41,7 +41,7 @@ ___
 >	**Description**: The specific pages referenced in the cited document.
 
 
-## Reference Id
+### Reference Id
 >	**Input Required**: False
 
 >	**Attribute Type**: Simple
@@ -49,7 +49,7 @@ ___
 >	**Description**: An identifier of the cited document in the link context.
 
 
-## Journal Entry
+### Journal Entry
 >	**Input Required**: False
 
 >	**Attribute Type**: Simple
@@ -57,7 +57,7 @@ ___
 >	**Description**: A text entry into a journal.
 
 
-## Description
+### Description
 >	**Input Required**: False
 
 >	**Attribute Type**: Simple

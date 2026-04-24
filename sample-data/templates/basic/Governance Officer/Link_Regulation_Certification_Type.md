@@ -1,9 +1,9 @@
 ___
 
-# Link Regulation Certification Type
+## Link Regulation Certification Type
 > A certification type addressing a specific regulation.
 
-## Certification Type
+### Certification Type
 >	**Input Required**: True
 
 >	**Attribute Type**: Reference Name
@@ -11,7 +11,7 @@ ___
 >	**Description**: The license type being used for the license.
 
 
-## Regulation
+### Regulation
 >	**Input Required**: True
 
 >	**Attribute Type**: Reference Name
@@ -19,7 +19,7 @@ ___
 >	**Description**: The Regulation entity to link to the certification type.
 
 
-## Label
+### Label
 >	**Input Required**: False
 
 >	**Attribute Type**: Simple
@@ -29,7 +29,7 @@ ___
 >	**Alternative Labels**: Wire Label
 
 
-## Journal Entry
+### Journal Entry
 >	**Input Required**: False
 
 >	**Attribute Type**: Simple
@@ -37,7 +37,7 @@ ___
 >	**Description**: A text entry into a journal.
 
 
-## Description
+### Description
 >	**Input Required**: False
 
 >	**Attribute Type**: Simple

@@ -1,6 +1,6 @@
 ___
 
-# Create Terms and Conditions
+## Create Terms and Conditions
 > A defined set of terms and conditions.
 >
 >	**Alternative Names**: T&C; Terms & Conditions
@@ -15,7 +15,7 @@ ___
 >	**Alternative Labels**: "Term Name"
 
 
-## Domain Identifier
+### Domain Identifier
 >	**Input Required**: False
 
 >	**Attribute Type**: Enum
@@ -27,7 +27,7 @@ ___
 >	**Default Value**: ALL
 
 
-## Implications
+### Implications
 >	**Input Required**: False
 
 >	**Attribute Type**: Simple List
@@ -35,7 +35,7 @@ ___
 >	**Description**: List of implications.
 
 
-## Importance
+### Importance
 >	**Input Required**: False
 
 >	**Attribute Type**: Simple
@@ -43,7 +43,7 @@ ___
 >	**Description**: Importance of the definition.
 
 
-## Outcomes
+### Outcomes
 >	**Input Required**: False
 
 >	**Attribute Type**: Simple List
@@ -51,7 +51,7 @@ ___
 >	**Description**: List of desired outcomes.
 
 
-## Results
+### Results
 >	**Input Required**: False
 
 >	**Attribute Type**: Simple List
@@ -59,7 +59,7 @@ ___
 >	**Description**: A list of expected results.
 
 
-## Summary
+### Summary
 >	**Input Required**: False
 
 >	**Attribute Type**: Simple
@@ -67,7 +67,7 @@ ___
 >	**Description**: A short summary of the element's meaning or purpose.
 
 
-## Usage
+### Usage
 >	**Input Required**: False
 
 >	**Attribute Type**: Simple
@@ -75,7 +75,7 @@ ___
 >	**Description**: The usage guidance for this element — how it is intended to be used in context.
 
 
-## Implementation Description
+### Implementation Description
 >	**Input Required**: False
 
 >	**Attribute Type**: Simple
@@ -85,7 +85,7 @@ ___
 >	**Alternative Labels**: Implementation
 
 
-## Obligations
+### Obligations
 >	**Input Required**: False
 
 >	**Attribute Type**: Dictionary
@@ -97,7 +97,7 @@ ___
 >	| example_key | example_value |
 
 
-## Journal Entry
+### Journal Entry
 >	**Input Required**: False
 
 >	**Attribute Type**: Simple
@@ -105,7 +105,7 @@ ___
 >	**Description**: A text entry into a journal.
 
 
-## Category
+### Category
 >	**Input Required**: False
 
 >	**Attribute Type**: Simple
@@ -115,7 +115,7 @@ ___
 >	**Alternative Labels**: Category Name
 
 
-## Description
+### Description
 >	**Input Required**: False
 
 >	**Attribute Type**: Simple
@@ -123,7 +123,7 @@ ___
 >	**Description**: A description.
 
 
-## Qualified Name
+### Qualified Name
 >	**Input Required**: False
 
 >	**Attribute Type**: QN
@@ -131,7 +131,7 @@ ___
 >	**Description**: The unique, text name of an element.
 
 
-## Content Status
+### Content Status
 >	**Input Required**: False
 
 >	**Attribute Type**: Valid Value
@@ -143,7 +143,7 @@ ___
 >	**Default Value**: ACTIVE
 
 
-## Scope
+### Scope
 >	**Input Required**: False
 
 >	**Attribute Type**: Simple
@@ -151,7 +151,7 @@ ___
 >	**Description**: Scope of the definition or element.
 
 
-## Entitlements
+### Entitlements
 >	**Input Required**: False
 
 >	**Attribute Type**: Dictionary
@@ -163,7 +163,7 @@ ___
 >	| example_key | example_value |
 
 
-## Restrictions
+### Restrictions
 >	**Input Required**: False
 
 >	**Attribute Type**: Dictionary
@@ -183,7 +183,7 @@ ___
 >	**Description**: A list of search keywords.
 
 
-## GUID
+### GUID
 >	**Input Required**: False
 
 >	**Attribute Type**: GUID
@@ -193,7 +193,7 @@ ___
 >	**Alternative Labels**: guid; Guid
 
 
-## URL
+### URL
 >	**Input Required**: False
 
 >	**Attribute Type**: Simple
@@ -201,7 +201,7 @@ ___
 >	**Description**: URL for further information.
 
 
-## Version Identifier
+### Version Identifier
 >	**Input Required**: False
 
 >	**Attribute Type**: Simple
@@ -213,7 +213,7 @@ ___
 >	**Default Value**: 1.0
 
 
-## Authors
+### Authors
 >	**Input Required**: False
 
 >	**Attribute Type**: Simple List

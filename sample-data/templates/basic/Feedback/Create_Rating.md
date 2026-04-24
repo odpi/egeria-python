@@ -1,7 +1,7 @@
-# Create Rating
+## Create Rating
 > Creates a star rating on a metadata element.
 
-## Stars
+### Stars
 >	**Input Required**: False
 
 >	**Attribute Type**: Valid Value
@@ -11,7 +11,7 @@
 >	**Valid Values**: NO_RECOMMENDATION,ONE_STAR,TWO_STARS,THREE_STARS,FOUR_STARS,FIVE_STARS
 
 
-## Review
+### Review
 >	**Input Required**: False
 
 >	**Attribute Type**: Simple
@@ -19,7 +19,7 @@
 >	**Description**: Text review accompanying a star rating.
 
 
-## Journal Entry
+### Journal Entry
 >	**Input Required**: False
 
 >	**Attribute Type**: Simple
@@ -27,7 +27,7 @@
 >	**Description**: A text entry into a journal.
 
 
-## Category
+### Category
 >	**Input Required**: False
 
 >	**Attribute Type**: Simple
@@ -37,7 +37,7 @@
 >	**Alternative Labels**: Category Name
 
 
-## Qualified Name
+### Qualified Name
 >	**Input Required**: False
 
 >	**Attribute Type**: QN
@@ -45,7 +45,7 @@
 >	**Description**: A unique qualified name for the element. Generated using the qualified name pattern  if not user specified.
 
 
-## Version Identifier
+### Version Identifier
 >	**Input Required**: False
 
 >	**Attribute Type**: Simple
@@ -57,7 +57,7 @@
 >	**Default Value**: 1.0
 
 
-## Identifier
+### Identifier
 >	**Input Required**: False
 
 >	**Attribute Type**: Simple
@@ -67,7 +67,7 @@
 >	**Alternative Labels**: ID
 
 
-## GUID
+### GUID
 >	**Input Required**: False
 
 >	**Attribute Type**: GUID
@@ -77,7 +77,7 @@
 >	**Alternative Labels**: Guid; guid
 
 
-## URL
+### URL
 >	**Input Required**: False
 
 >	**Attribute Type**: Simple

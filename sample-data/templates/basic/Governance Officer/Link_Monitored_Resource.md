@@ -1,9 +1,9 @@
 ___
 
-# Link Monitored Resource
+## Link Monitored Resource
 > Links a Notification Type to a Referenceable that it monitors.
 
-## Monitored Resource
+### Monitored Resource
 >	**Input Required**: True
 
 >	**Attribute Type**: Reference Name
@@ -11,7 +11,7 @@ ___
 >	**Description**: The monitored referenceable endpoint in a MonitoredResource relationship.
 
 
-## Notification Type
+### Notification Type
 >	**Input Required**: True
 
 >	**Attribute Type**: Reference Name
@@ -19,7 +19,7 @@ ___
 >	**Description**: The NotificationType entity to link the subscriber to or for a monitored resource.
 
 
-## Label
+### Label
 >	**Input Required**: False
 
 >	**Attribute Type**: Simple
@@ -29,7 +29,7 @@ ___
 >	**Alternative Labels**: Wire Label
 
 
-## Journal Entry
+### Journal Entry
 >	**Input Required**: False
 
 >	**Attribute Type**: Simple
@@ -37,7 +37,7 @@ ___
 >	**Description**: A text entry into a journal.
 
 
-## Description
+### Description
 >	**Input Required**: False
 
 >	**Attribute Type**: Simple

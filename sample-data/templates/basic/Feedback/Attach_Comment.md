@@ -1,7 +1,7 @@
-# Attach Comment
+## Attach Comment
 > Attach a comment to a referenceable element via the AttachedComment relationship.
 
-## Label
+### Label
 >	**Input Required**: False
 
 >	**Attribute Type**: Simple
@@ -11,7 +11,7 @@
 >	**Alternative Labels**: Wire Label
 
 
-## Journal Entry
+### Journal Entry
 >	**Input Required**: False
 
 >	**Attribute Type**: Simple
@@ -19,7 +19,7 @@
 >	**Description**: A text entry into a journal.
 
 
-## Description
+### Description
 >	**Input Required**: False
 
 >	**Attribute Type**: Simple

@@ -1,9 +1,9 @@
 ___
 
-# Link Data Value Composition
+## Link Data Value Composition
 > Link a data value specification, DataClass, DataGrain,  to a referenceable element providing a definition.
 
-## Data Value Specification
+### Data Value Specification
 >	**Input Required**: True
 
 >	**Attribute Type**: Reference Name
@@ -11,7 +11,7 @@ ___
 >	**Description**: The data value specification to use in a relationship. Preferable to use a qualified name.
 
 
-## Data Value Specification Child
+### Data Value Specification Child
 >	**Input Required**: True
 
 >	**Attribute Type**: Reference Name
@@ -19,7 +19,7 @@ ___
 >	**Description**: The data value specification to use in a relationship. Preferable to use a qualified name.
 
 
-## Label
+### Label
 >	**Input Required**: False
 
 >	**Attribute Type**: Simple
@@ -29,7 +29,7 @@ ___
 >	**Alternative Labels**: Wire Label
 
 
-## Journal Entry
+### Journal Entry
 >	**Input Required**: False
 
 >	**Attribute Type**: Simple
@@ -37,7 +37,7 @@ ___
 >	**Description**: A text entry into a journal.
 
 
-## Description
+### Description
 >	**Input Required**: False
 
 >	**Attribute Type**: Simple

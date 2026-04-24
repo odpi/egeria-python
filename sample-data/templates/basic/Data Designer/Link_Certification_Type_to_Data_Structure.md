@@ -1,9 +1,9 @@
 ___
 
-# Link Certification Type to Data Structure
+## Link Certification Type to Data Structure
 > Link a data structure to a certification type. In defining a certification type,  this assigns the data structure to this type of certification.
 
-## Data Structure
+### Data Structure
 >	**Input Required**: True
 
 >	**Attribute Type**: Reference Name
@@ -11,7 +11,7 @@ ___
 >	**Description**: A data structure name. Preferably a qualified name.
 
 
-## Certification Type
+### Certification Type
 >	**Input Required**: True
 
 >	**Attribute Type**: Reference Name
@@ -19,7 +19,7 @@ ___
 >	**Description**: The license type being used for the license.
 
 
-## Label
+### Label
 >	**Input Required**: False
 
 >	**Attribute Type**: Simple
@@ -29,7 +29,7 @@ ___
 >	**Alternative Labels**: Wire Label
 
 
-## Journal Entry
+### Journal Entry
 >	**Input Required**: False
 
 >	**Attribute Type**: Simple
@@ -37,7 +37,7 @@ ___
 >	**Description**: A text entry into a journal.
 
 
-## Description
+### Description
 >	**Input Required**: False
 
 >	**Attribute Type**: Simple

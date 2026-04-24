@@ -1,9 +1,9 @@
 ___
 
-# Link Component to Actor
+## Link Component to Actor
 > Links a solution component to an actor role via the SolutionComponentActor relationship.
 
-## Component1
+### Component1
 >	**Input Required**: True
 
 >	**Attribute Type**: Reference Name
@@ -11,7 +11,7 @@ ___
 >	**Description**: The first solution component to link.
 
 
-## Label
+### Label
 >	**Input Required**: False
 
 >	**Attribute Type**: Simple
@@ -21,7 +21,7 @@ ___
 >	**Alternative Labels**: Wire Label
 
 
-## Solution Role
+### Solution Role
 >	**Input Required**: False
 
 >	**Attribute Type**: Reference Name
@@ -29,7 +29,7 @@ ___
 >	**Description**: The role that an actor or component plays in the context of a relationship (e.g. in SolutionBlueprintComposition or SolutionComponentActor).
 
 
-## Journal Entry
+### Journal Entry
 >	**Input Required**: False
 
 >	**Attribute Type**: Simple
@@ -37,7 +37,7 @@ ___
 >	**Description**: A text entry into a journal.
 
 
-## Description
+### Description
 >	**Input Required**: False
 
 >	**Attribute Type**: Simple

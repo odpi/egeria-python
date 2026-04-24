@@ -1,6 +1,6 @@
 # Dr.Egeria v2 (Async Architecture)
 
-Dr.Egeria v2 is a complete re-architecture of the Egeria Markdown (Freddie) processing engine. It adopts an **Async-First** approach, natively integrating with the `pyegeria` SDK's asynchronous methods to provide a more efficient and extensible command processor.
+Dr.Egeria v2 is a complete re-architecture of the Egeria Markdown (Dr.Egeria) processing engine. It adopts an **Async-First** approach, natively integrating with the `pyegeria` SDK's asynchronous methods to provide a more efficient and extensible command processor.
 
 ## Design Goals
 
@@ -25,6 +25,7 @@ Dr.Egeria v2 is a complete re-architecture of the Egeria Markdown (Freddie) proc
 - **Reference Candidate Heuristic**: The processor is smarter about identifying which attributes are actually element references. It avoids attempting to resolve GUIDs for attributes that are clearly data fields (like Enums, Valid Values, Dictionaries, or Integers).
 - **Multi-Step Result Reporting**: Complex commands that perform multiple Egeria operations (e.g., creating a blueprint and attaching a journal entry) now track and report all secondary outcomes. This ensures users receive feedback on partial successes and all generated GUIDs.
 - **Standardized Verbs for Relationship Management**: Dr. Egeria v2 standardizes the verbs used for managing relationships. Creating or adding relationships can use `Link`, `Attach`, or `Add`. Removing or detaching relationships can use `Detach`, `Unlink`, or `Remove`. These verbs are equivalent within their respective groups and are normalized by the parser.
+- **Relationship Alias Mapping**: Certain processors (like `TermRelationshipProcessor`) automatically map user-friendly relationship aliases to canonical Egeria names. Supported mappings include `ISA` or `IS A` for `ISARelationship`, `HASA` or `HAS A` for `TermHASARelationship`, `TYPED BY` for `TermTYPEDBYRelationship`, and `TYPE OF` for `TermISATYPEOFRelationship`.
 - **Dynamic Subtype Registration**: The v2 engine automatically handles various subtypes for **Collections** and **Projects**. If a new subtype is added to Egeria (e.g., a new type of `Collection`), adding it to the `COLLECTION_SUBTYPES` list in `md_processing_constants.py` will automatically enable support with the correct unified processor (`CollectionManagerProcessor`).
 - **Unified Collection Management**: All collection subtypes (Root Collections, Folders, Products, Agreements, and even Glossaries) are handled by a single, robust `CollectionManagerProcessor`. This processor automatically manages subtype-specific properties, parent relationships, status updates, and journal entries.
 - **Document Preservation**: Dr.Egeria now preserves all non-command text in the input Markdown file, copying it to the output file along with processed command blocks. A `# Provenance:` section is appended at the end to track the document's processing history.
@@ -34,13 +35,13 @@ Dr.Egeria v2 is a complete re-architecture of the Egeria Markdown (Freddie) proc
 
 ### 1. Extraction (`extraction.py`)
 
-The `UniversalExtractor` identifies DrE command blocks (`# Verb Object`) and their attributes (`## Label`). It handles various delimiters including horizontal rules (`---`, `___`).
+The `UniversalExtractor` identifies DrE command blocks (`## Verb Object`) and their attributes (`### Label`). It handles various delimiters including horizontal rules (`---`, `___`).
 
 ### 2. Parsing (`parsing.py`)
 
 The `AttributeFirstParser` maps raw Markdown attributes to the canonical command specification.
 
-- **KeyValue Parsing**: Supports tables (`| Key | Value |`), lists (`* Key: Value`), and inline maps.
+- **KeyValue Parsing**: Supports tables (`| Key | Value |`), lists (`- Key: Value`), and inline maps.
 - **Enum and Valid Value Resolution**: Maps user-friendly labels (e.g., 'Draft') to Egeria internal values or integers. The resolution is case-insensitive and normalizes spaces, underscores, and dashes (e.g., `in progress`, `IN_PROGRESS`, and `in-progress` all resolve to the same value).
 - **Automatic Transformation**: User input is automatically transformed to match the canonical form if a case-insensitive match is found, ensuring data consistency even with loose input.
 - **Improved Property Handling**: Uses safe access for optional fields (like `Description`) and prevents runtime crashes if metadata is missing from the input document.
@@ -80,21 +81,21 @@ The v2 engine is integrated into the `dr_egeria` script (located in `commands/ca
 # --- Directive shortcuts (recommended) ---
 
 # Validate the file against Egeria (default if no flag is given)
-dr_egeria --input-file report.md --validate
+dr_egeria report.md --validate
 
 # Execute all commands and make permanent changes to Egeria
-dr_egeria --input-file report.md --process
+dr_egeria report.md --process
 
 # --- Full --directive option (for display mode or explicit control) ---
 
 # Display the file contents (parse-only, no Egeria lookup)
-dr_egeria --input-file report.md --directive display
+dr_egeria report.md --directive display
 
 # Validate (equivalent to --validate)
-dr_egeria --input-file report.md --directive validate
+dr_egeria report.md --directive validate
 
 # Process (equivalent to --process)
-dr_egeria --input-file report.md --directive process
+dr_egeria report.md --directive process
 
 # --- Directive resolution order (highest priority first) ---
 # 1. --process flag  → "process"
@@ -104,13 +105,13 @@ dr_egeria --input-file report.md --directive process
 # --- Other flags ---
 
 # Advanced usage level (shows extra attributes; default is Basic)
-dr_egeria --input-file report.md --validate --advanced
+dr_egeria report.md --validate --advanced
 
 # Debug: print every Egeria API request URL and body to the console
-dr_egeria --input-file report.md --process --debug
+dr_egeria report.md --process --debug
 
 # Show only the summary table (suppress per-command analysis output)
-dr_egeria --input-file report.md --process --summary-only
+dr_egeria report.md --process --summary-only
 ```
 
 ### Debug Mode (`--debug`)
@@ -134,7 +135,7 @@ Debug mode is implemented as a temporary monkey-patch of `BaseServerClient._asyn
 The flag is also available when running the module directly:
 
 ```bash
-python -m md_processing.dr_egeria --input-file MyFile.md --debug
+python -m md_processing.dr_egeria MyFile.md --debug
 ```
 
 And can be passed programmatically:

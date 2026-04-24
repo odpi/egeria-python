@@ -1,9 +1,9 @@
 ___
 
-# Link Actor to Blueprint
+## Link Actor to Blueprint
 > Link an actor to a Blueprint.
 
-## Blueprint
+### Blueprint
 >	**Input Required**: True
 
 >	**Attribute Type**: Reference Name
@@ -11,7 +11,7 @@ ___
 >	**Description**: A named solution blueprint.
 
 
-## Label
+### Label
 >	**Input Required**: False
 
 >	**Attribute Type**: Simple
@@ -21,7 +21,7 @@ ___
 >	**Alternative Labels**: Wire Label
 
 
-## Membership Rationale
+### Membership Rationale
 >	**Input Required**: False
 
 >	**Attribute Type**: Simple
@@ -29,7 +29,7 @@ ___
 >	**Description**: Rationale for membership.
 
 
-## Membership Status
+### Membership Status
 >	**Input Required**: False
 
 >	**Attribute Type**: Valid Value
@@ -41,7 +41,7 @@ ___
 >	**Default Value**: PROPOSED
 
 
-## Notes
+### Notes
 >	**Input Required**: False
 
 >	**Attribute Type**: Simple
@@ -49,7 +49,7 @@ ___
 >	**Description**: Notes and observations about the element.
 
 
-## Solution Role
+### Solution Role
 >	**Input Required**: False
 
 >	**Attribute Type**: Reference Name
@@ -57,7 +57,7 @@ ___
 >	**Description**: The role that an actor or component plays in the context of a relationship (e.g. in SolutionBlueprintComposition or SolutionComponentActor).
 
 
-## Journal Entry
+### Journal Entry
 >	**Input Required**: False
 
 >	**Attribute Type**: Simple
@@ -65,7 +65,7 @@ ___
 >	**Description**: A text entry into a journal.
 
 
-## Description
+### Description
 >	**Input Required**: False
 
 >	**Attribute Type**: Simple

@@ -1,9 +1,9 @@
 ___
 
-# Link Information Supply Chain Peers
+## Link Information Supply Chain Peers
 > Links or unlinks two information supply chain segments.
 
-## Element Id
+### Element Id
 >	**Input Required**: True
 
 >	**Attribute Type**: Reference Name
@@ -13,7 +13,7 @@ ___
 >	**Alternative Labels**: Element Name; Member Id
 
 
-## Element2 Id
+### Element2 Id
 >	**Input Required**: True
 
 >	**Attribute Type**: Reference Name
@@ -21,7 +21,7 @@ ___
 >	**Description**: The unique identifier (qualified name or GUID) of a second element being referenced.
 
 
-## Label
+### Label
 >	**Input Required**: False
 
 >	**Attribute Type**: Simple
@@ -31,7 +31,7 @@ ___
 >	**Alternative Labels**: Wire Label
 
 
-## Journal Entry
+### Journal Entry
 >	**Input Required**: False
 
 >	**Attribute Type**: Simple
@@ -39,7 +39,7 @@ ___
 >	**Description**: A text entry into a journal.
 
 
-## Description
+### Description
 >	**Input Required**: False
 
 >	**Attribute Type**: Simple

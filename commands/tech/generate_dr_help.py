@@ -180,10 +180,10 @@ def create_help_terms(client: Optional[ServerClient] = None, advanced: bool = Fa
                                         "attributes": columns}
                       }
 
-    term_entry = f"""# Create Glossary\n
-## Display Name\n\n{glossary_name}\n
-## Qualified Name\n\n{glossary_qn}\n
-## Description\n\nDr.Egeria command help glossary.\n\n___\n\n"""
+    term_entry = f"""## Create Glossary\n
+### Display Name\n\n{glossary_name}\n
+### Qualified Name\n\n{glossary_qn}\n
+### Description\n\nDr.Egeria command help glossary.\n\n___\n\n"""
 
     families = set()
     for command, values in commands.items():
@@ -194,7 +194,7 @@ def create_help_terms(client: Optional[ServerClient] = None, advanced: bool = Fa
 
     for family in families:
         family_qn = f"CollectionFolder::dr-egeria:{family.lower().replace(' ', '-')}"
-        term_entry += f"# Create Collection Folder\n## Display Name\n\n{family}\n\n## Qualified Name\n\n{family_qn}\n\n## Purpose\n\nDr-Egeria Definitions\n\n## Parent ID\n\n{glossary_qn}\n\n## Parent Relationship Type Name\n\nCollectionMembership\n\n___\n\n"
+        term_entry += f"## Create Collection Folder\n### Display Name\n\n{family}\n\n### Qualified Name\n\n{family_qn}\n\n### Purpose\n\nDr-Egeria Definitions\n\n### Parent ID\n\n{glossary_qn}\n\n### Parent Relationship Type Name\n\nCollectionMembership\n\n___\n\n"
 
     for command, values in commands.items():
         if command == "exported":
@@ -206,17 +206,17 @@ def create_help_terms(client: Optional[ServerClient] = None, advanced: bool = Fa
         family = commands[command].get("family", "General")
         family_qn = f"CollectionFolder::dr-egeria:{family.lower().replace(' ', '-')}"
 
-        term_entry+= "# Create Term\n"
-        term_entry+= f"## Display Name\n\n{command}\n\n"
-        term_entry+= f"## Description\n\n{command_description}\n\n"
-        term_entry+= f"## Glossary Name\n\n{glossary_qn}\n\n"
-        term_entry+= f"## Folders\n\n{family_qn}\n\n"
+        term_entry+= "## Create Term\n"
+        term_entry+= f"### Display Name\n\n{command}\n\n"
+        term_entry+= f"### Description\n\n{command_description}\n\n"
+        term_entry+= f"### Glossary Name\n\n{glossary_qn}\n\n"
+        term_entry+= f"### Folders\n\n{family_qn}\n\n"
 
 
         du = _extract_help_fields(command, client=client, advanced=advanced)
         output = generate_entity_md_table(du, "", "", _extract_help_function, columns_struct, None, "help" )
 
-        term_entry+= f"## Usage\n\n{output}\n\n___\n\n"
+        term_entry+= f"### Usage\n\n{output}\n\n___\n\n"
 
     print(term_entry)
     # Generate filename with current date and time in ISO 8601 format

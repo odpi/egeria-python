@@ -1,6 +1,6 @@
 {
   "family": "Glossary",
-  "exported": "Apr 17, 2026 at 4:20:25 PM",
+  "exported": "Apr 23, 2026 at 7:13:33 PM",
   "attribute_definitions": {
     "Activity Status": {
       "variable_name": "activity_status",
@@ -2182,8 +2182,14 @@
         "PreferredTerm",
         "ReplacementTerm",
         "Translation",
-        "IsA",
-        "ValidValue"
+        "ISA",
+        "ValidValue",
+        "ISARelationship",
+        "TermHASARelationship",
+        "TYPED BY",
+        "TermTYPEDBYRelationship",
+        "TYPE OF",
+        "TermISATYPEOFRelationship"
       ],
       "existing_element": "",
       "description": "The type of relationship connecting the two terms. E.g. Synonym, Antonym, PreferredTerm, ReplacedByTerm, TranslationOf, etc.",
@@ -2394,12 +2400,10 @@
     "Resource List": {
       "inherits": "Link Command Base",
       "own_attributes": [
+        "Additional Properties",
         "Element Id",
-        "Resource Description",
         "Resource Id",
-        "Resource Properties",
-        "Resource Use",
-        "Watch Resource"
+        "Resource Use"
       ]
     },
     "Link Command Base": {
@@ -2421,10 +2425,12 @@
       ]
     },
     "Collection Membership": {
-      "inherits": "Link Command Base",
+      "inherits": null,
       "own_attributes": [
+        "Anchor Scope IDs",
         "Confidence",
         "Expression",
+        "Make Anchor",
         "Membership Rationale",
         "Membership Status",
         "Notes",
@@ -2466,15 +2472,13 @@
       ]
     },
     "Term-Term Link Base": {
-      "inherits": "Link Command Base",
+      "inherits": null,
       "own_attributes": [
         "Confidence",
         "Expression",
         "Relationship Type",
         "Source",
         "Steward",
-        "Term 1",
-        "Term 2",
         "Term Relationship Status"
       ]
     }
@@ -2559,7 +2563,7 @@
       "extra_find": "",
       "extra_constraints": "",
       "OM_TYPE": "UsedInContext",
-      "bundle": "Link Command Base",
+      "bundle": "Term-Term Link Base",
       "custom_attributes": [
         "Term 1",
         "Element Id"

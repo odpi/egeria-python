@@ -1,11 +1,11 @@
 ___
 
-# Link Data Field to Data Structure
+## Link Data Field to Data Structure
 > Links a data field to a data structure via the MemberDataField relationship.
 >
 >	**Alternative Names**: Link Data Field to Structure; Link Field to Structure
 
-## Data Field
+### Data Field
 >	**Input Required**: True
 
 >	**Attribute Type**: Reference Name
@@ -13,7 +13,7 @@ ___
 >	**Description**: A data field  name. Preferably a qualified name.
 
 
-## Data Structure
+### Data Structure
 >	**Input Required**: True
 
 >	**Attribute Type**: Reference Name
@@ -21,7 +21,7 @@ ___
 >	**Description**: A data structure name. Preferably a qualified name.
 
 
-## Label
+### Label
 >	**Input Required**: False
 
 >	**Attribute Type**: Simple
@@ -31,7 +31,7 @@ ___
 >	**Alternative Labels**: Wire Label
 
 
-## Journal Entry
+### Journal Entry
 >	**Input Required**: False
 
 >	**Attribute Type**: Simple
@@ -39,7 +39,7 @@ ___
 >	**Description**: A text entry into a journal.
 
 
-## Description
+### Description
 >	**Input Required**: False
 
 >	**Attribute Type**: Simple

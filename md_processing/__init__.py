@@ -1,5 +1,5 @@
 """
-This package contains functions to parse and process Egeria Markdown (Freddie)
+This package contains functions to parse and process Egeria Markdown (Dr.Egeria)
 """
 # Re-export all functions from the original md_processing_utils.py to maintain backward compatibility
 from md_processing.md_processing_utils.common_md_utils import (render_markdown, is_valid_iso_date, set_debug_level,

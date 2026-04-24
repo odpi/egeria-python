@@ -1,9 +1,9 @@
 ___
 
-# Link License
+## Link License
 > Links a license type to a referenceable element, adding details about the license.
 
-## License Type
+### License Type
 >	**Input Required**: True
 
 >	**Attribute Type**: Reference Name
@@ -11,7 +11,7 @@ ___
 >	**Description**: The license type being used for the license.
 
 
-## Referenceable
+### Referenceable
 >	**Input Required**: True
 
 >	**Attribute Type**: Reference Name
@@ -21,7 +21,7 @@ ___
 >	**Alternative Labels**: element
 
 
-## Label
+### Label
 >	**Input Required**: False
 
 >	**Attribute Type**: Simple
@@ -31,7 +31,7 @@ ___
 >	**Alternative Labels**: Wire Label
 
 
-## Conditions
+### Conditions
 >	**Input Required**: False
 
 >	**Attribute Type**: Simple
@@ -39,7 +39,7 @@ ___
 >	**Description**: Conditions for certifications or licenses.
 
 
-## Custodian
+### Custodian
 >	**Input Required**: False
 
 >	**Attribute Type**: Simple
@@ -47,7 +47,7 @@ ___
 >	**Description**: Custodian of the license or certification.
 
 
-## Custodian Property Name
+### Custodian Property Name
 >	**Input Required**: False
 
 >	**Attribute Type**: Simple
@@ -55,7 +55,7 @@ ___
 >	**Description**: The property name used to identify the custodian element (used with Custodian Type Name).
 
 
-## Custodian Type Name
+### Custodian Type Name
 >	**Input Required**: False
 
 >	**Attribute Type**: Simple
@@ -63,7 +63,7 @@ ___
 >	**Description**: The open metadata type name of the element acting as custodian (used with Custodian Property Name to identify the custodian).
 
 
-## End Date
+### End Date
 >	**Input Required**: False
 
 >	**Attribute Type**: Simple
@@ -71,7 +71,7 @@ ___
 >	**Description**: Date at which the license or certification expires.
 
 
-## License GUID
+### License GUID
 >	**Input Required**: False
 
 >	**Attribute Type**: Simple
@@ -79,7 +79,7 @@ ___
 >	**Description**: Unique identifier of the license.
 
 
-## Licensed By
+### Licensed By
 >	**Input Required**: False
 
 >	**Attribute Type**: Simple
@@ -87,7 +87,7 @@ ___
 >	**Description**: The name of the person or organization that granted the license.
 
 
-## Licensed By Property Name
+### Licensed By Property Name
 >	**Input Required**: False
 
 >	**Attribute Type**: Simple
@@ -95,7 +95,7 @@ ___
 >	**Description**: The property name used to identify the licensor element (used with Licensed By Type Name).
 
 
-## Licensed By Type Name
+### Licensed By Type Name
 >	**Input Required**: False
 
 >	**Attribute Type**: Simple
@@ -103,7 +103,7 @@ ___
 >	**Description**: The open metadata type name of the element that granted the license (used with Licensed By Property Name).
 
 
-## Licensee
+### Licensee
 >	**Input Required**: False
 
 >	**Attribute Type**: Simple
@@ -111,7 +111,7 @@ ___
 >	**Description**: The licensee.
 
 
-## Licensee Property Name
+### Licensee Property Name
 >	**Input Required**: False
 
 >	**Attribute Type**: Simple
@@ -119,7 +119,7 @@ ___
 >	**Description**: The property name used to identify the licensee element (used with Licensee Type Name).
 
 
-## Licensee Type Name
+### Licensee Type Name
 >	**Input Required**: False
 
 >	**Attribute Type**: Simple
@@ -127,7 +127,7 @@ ___
 >	**Description**: The open metadata type name of the element receiving the license (used with Licensee Property Name).
 
 
-## Obligations
+### Obligations
 >	**Input Required**: False
 
 >	**Attribute Type**: Dictionary
@@ -139,7 +139,7 @@ ___
 >	| example_key | example_value |
 
 
-## Start Date
+### Start Date
 >	**Input Required**: False
 
 >	**Attribute Type**: Simple
@@ -147,7 +147,7 @@ ___
 >	**Description**: Date at which the license or certification takes effect.
 
 
-## Journal Entry
+### Journal Entry
 >	**Input Required**: False
 
 >	**Attribute Type**: Simple
@@ -155,7 +155,7 @@ ___
 >	**Description**: A text entry into a journal.
 
 
-## Description
+### Description
 >	**Input Required**: False
 
 >	**Attribute Type**: Simple
@@ -163,7 +163,7 @@ ___
 >	**Description**: A description.
 
 
-## Entitlements
+### Entitlements
 >	**Input Required**: False
 
 >	**Attribute Type**: Dictionary
@@ -175,7 +175,7 @@ ___
 >	| example_key | example_value |
 
 
-## Restrictions
+### Restrictions
 >	**Input Required**: False
 
 >	**Attribute Type**: Dictionary

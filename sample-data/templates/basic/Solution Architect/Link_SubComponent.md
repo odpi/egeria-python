@@ -1,9 +1,9 @@
 ___
 
-# Link SubComponent
+## Link SubComponent
 > Links a child compoent to a parent component.
 
-## Component1
+### Component1
 >	**Input Required**: True
 
 >	**Attribute Type**: Reference Name
@@ -11,7 +11,7 @@ ___
 >	**Description**: The first solution component to link.
 
 
-## Component Child
+### Component Child
 >	**Input Required**: True
 
 >	**Attribute Type**: Reference Name
@@ -19,7 +19,7 @@ ___
 >	**Description**: The child solution component to link.
 
 
-## Label
+### Label
 >	**Input Required**: False
 
 >	**Attribute Type**: Simple
@@ -29,7 +29,7 @@ ___
 >	**Alternative Labels**: Wire Label
 
 
-## Journal Entry
+### Journal Entry
 >	**Input Required**: False
 
 >	**Attribute Type**: Simple
@@ -37,7 +37,7 @@ ___
 >	**Description**: A text entry into a journal.
 
 
-## Description
+### Description
 >	**Input Required**: False
 
 >	**Attribute Type**: Simple

@@ -1,11 +1,11 @@
 ___
 
-# Link Agreement Item
+## Link Agreement Item
 > Attach or detach an agreement to an element referenced in its definition. Agreement item can be any referenceable element.
 >
 >	**Alternative Names**: Agreement from Item; Agreement to Item
 
-## Agreement Name
+### Agreement Name
 >	**Input Required**: True
 
 >	**Attribute Type**: Reference Name
@@ -13,7 +13,7 @@ ___
 >	**Description**: The name of the agreement to add an item to. Using qualified names is recommended.
 
 
-## Item Name
+### Item Name
 >	**Input Required**: True
 
 >	**Attribute Type**: Reference Name
@@ -21,7 +21,7 @@ ___
 >	**Description**: The name of the referenceable item to add to an agreement. Using qualified names is recommended.
 
 
-## Label
+### Label
 >	**Input Required**: False
 
 >	**Attribute Type**: Simple
@@ -31,7 +31,7 @@ ___
 >	**Alternative Labels**: Wire Label
 
 
-## Agreement End Date
+### Agreement End Date
 >	**Input Required**: False
 
 >	**Attribute Type**: Simple
@@ -39,7 +39,7 @@ ___
 >	**Description**: Date when the agreement expires or was terminated, in ISO 8601 format.
 
 
-## Agreement Item Id
+### Agreement Item Id
 >	**Input Required**: False
 
 >	**Attribute Type**: Simple
@@ -47,7 +47,7 @@ ___
 >	**Description**: A user specified agreement item identifier.
 
 
-## Agreement Start Date
+### Agreement Start Date
 >	**Input Required**: False
 
 >	**Attribute Type**: Simple
@@ -55,7 +55,7 @@ ___
 >	**Description**: Date when the agreement becomes effective, in ISO 8601 format.
 
 
-## Obligations
+### Obligations
 >	**Input Required**: False
 
 >	**Attribute Type**: Dictionary
@@ -67,7 +67,7 @@ ___
 >	| example_key | example_value |
 
 
-## Journal Entry
+### Journal Entry
 >	**Input Required**: False
 
 >	**Attribute Type**: Simple
@@ -75,7 +75,7 @@ ___
 >	**Description**: A text entry into a journal.
 
 
-## Description
+### Description
 >	**Input Required**: False
 
 >	**Attribute Type**: Simple
@@ -83,7 +83,7 @@ ___
 >	**Description**: A description.
 
 
-## Entitlements
+### Entitlements
 >	**Input Required**: False
 
 >	**Attribute Type**: Dictionary
@@ -95,7 +95,7 @@ ___
 >	| example_key | example_value |
 
 
-## Restrictions
+### Restrictions
 >	**Input Required**: False
 
 >	**Attribute Type**: Dictionary
@@ -107,7 +107,7 @@ ___
 >	| example_key | example_value |
 
 
-## Usage Measurements
+### Usage Measurements
 >	**Input Required**: False
 
 >	**Attribute Type**: Dictionary

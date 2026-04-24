@@ -1,9 +1,9 @@
 ___
 
-# Create Data Structure
+## Create Data Structure
 > Creates or updates a data structure — a collection of data fields that defines the structure for a data source.
 
-## Display Name
+### Display Name
 >	**Input Required**: True
 
 >	**Attribute Type**: Simple
@@ -13,7 +13,7 @@ ___
 >	**Alternative Labels**: "Term Name"
 
 
-## In Data Dictionary
+### In Data Dictionary
 >	**Input Required**: False
 
 >	**Attribute Type**: Reference Name
@@ -21,7 +21,7 @@ ___
 >	**Description**: The data dictionary that contains this data structure.
 
 
-## In Data Specification
+### In Data Specification
 >	**Input Required**: False
 
 >	**Attribute Type**: Reference Name
@@ -29,7 +29,7 @@ ___
 >	**Description**: The data specification that contains this data structure.
 
 
-## In Data Structure
+### In Data Structure
 >	**Input Required**: False
 
 >	**Attribute Type**: Reference Name
@@ -37,7 +37,7 @@ ___
 >	**Description**: The data structure that contains this data field (MemberDataField relationship).
 
 
-## Name Patterns
+### Name Patterns
 >	**Input Required**: False
 
 >	**Attribute Type**: Simple List
@@ -45,7 +45,7 @@ ___
 >	**Description**: Name patterns for naming standard rules.
 
 
-## Namespace Path
+### Namespace Path
 >	**Input Required**: False
 
 >	**Attribute Type**: Simple
@@ -53,7 +53,7 @@ ___
 >	**Description**: The namespace path that qualifies the element's name within a larger naming hierarchy.
 
 
-## In Data Dictionary
+### In Data Dictionary
 >	**Input Required**: False
 
 >	**Attribute Type**: Reference Name
@@ -61,7 +61,7 @@ ___
 >	**Description**: The data dictionary that contains this data structure.
 
 
-## In Data Specification
+### In Data Specification
 >	**Input Required**: False
 
 >	**Attribute Type**: Reference Name
@@ -69,7 +69,7 @@ ___
 >	**Description**: The data specification that contains this data structure.
 
 
-## Journal Entry
+### Journal Entry
 >	**Input Required**: False
 
 >	**Attribute Type**: Simple
@@ -77,7 +77,7 @@ ___
 >	**Description**: A text entry into a journal.
 
 
-## Category
+### Category
 >	**Input Required**: False
 
 >	**Attribute Type**: Simple
@@ -87,7 +87,7 @@ ___
 >	**Alternative Labels**: Category Name
 
 
-## Description
+### Description
 >	**Input Required**: False
 
 >	**Attribute Type**: Simple
@@ -95,7 +95,7 @@ ___
 >	**Description**: A description.
 
 
-## Qualified Name
+### Qualified Name
 >	**Input Required**: False
 
 >	**Attribute Type**: QN
@@ -103,7 +103,7 @@ ___
 >	**Description**: The unique, text name of an element.
 
 
-## Content Status
+### Content Status
 >	**Input Required**: False
 
 >	**Attribute Type**: Valid Value
@@ -115,7 +115,7 @@ ___
 >	**Default Value**: ACTIVE
 
 
-## Search Keywords
+### Search Keywords
 >	**Input Required**: False
 
 >	**Attribute Type**: Simple List
@@ -123,7 +123,7 @@ ___
 >	**Description**: A list of search keywords.
 
 
-## GUID
+### GUID
 >	**Input Required**: False
 
 >	**Attribute Type**: GUID
@@ -133,7 +133,7 @@ ___
 >	**Alternative Labels**: guid; Guid
 
 
-## URL
+### URL
 >	**Input Required**: False
 
 >	**Attribute Type**: Simple
@@ -141,7 +141,7 @@ ___
 >	**Description**: URL for further information.
 
 
-## Version Identifier
+### Version Identifier
 >	**Input Required**: False
 
 >	**Attribute Type**: Simple
@@ -153,7 +153,7 @@ ___
 >	**Default Value**: 1.0
 
 
-## Authors
+### Authors
 >	**Input Required**: False
 
 >	**Attribute Type**: Simple List

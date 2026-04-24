@@ -189,23 +189,23 @@ def main():
 
     Each command file is structured as:
 
-        # <Command Name>
+        ## <Command Name>
         > <description>
 
-        # Required
-        ## <attr>  ...   (input_required=true, any visible level)
+        ## Required
+        ### <attr>  ...   (input_required=true, any visible level)
 
-        # Common Properties
-        ## <attr>  ...   (level=Common, optional)
+        ## Common Properties
+        ### <attr>  ...   (level=Common, optional)
 
-        # <DisplayName> Properties
-        ## <attr>  ...   (level=Domain, optional; heading uses command display_name)
+        ## <DisplayName> Properties
+        ### <attr>  ...   (level=Domain, optional; heading uses command display_name)
 
-        # Additional Properties
-        ## <attr>  ...   (level=Basic, optional)
+        ## Additional Properties
+        ### <attr>  ...   (level=Basic, optional)
 
-        # Advanced Properties
-        ## <attr>  ...   (level=Advanced, optional)
+        ## Advanced Properties
+        ### <attr>  ...   (level=Advanced, optional)
 
     Sections with no attributes are omitted entirely.
     Link commands only ever produce Required and Advanced sections from defaults;
@@ -268,7 +268,7 @@ def main():
 
         family_dir = os.path.join(base_output_dir, family)
         os.makedirs(family_dir, exist_ok=True)
-        print(f"\n# Family: {family}\n")
+        print(f"\n## Family: {family}\n")
 
         for command in sorted(command_list):
             values = commands[command]

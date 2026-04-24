@@ -1,6 +1,6 @@
 ___
 
-# Create Governance Strategy
+## Create Governance Strategy
 > The strategy used in the development of the governance domains activities. How the governance domain supports the business strategy.
 
 ## Display Name
@@ -13,7 +13,7 @@ ___
 >	**Alternative Labels**: "Term Name"
 
 
-## Domain Identifier
+### Domain Identifier
 >	**Input Required**: False
 
 >	**Attribute Type**: Enum
@@ -25,7 +25,7 @@ ___
 >	**Default Value**: ALL
 
 
-## Implications
+### Implications
 >	**Input Required**: False
 
 >	**Attribute Type**: Simple List
@@ -33,7 +33,7 @@ ___
 >	**Description**: List of implications.
 
 
-## Importance
+### Importance
 >	**Input Required**: False
 
 >	**Attribute Type**: Simple
@@ -41,7 +41,7 @@ ___
 >	**Description**: Importance of the definition.
 
 
-## Outcomes
+### Outcomes
 >	**Input Required**: False
 
 >	**Attribute Type**: Simple List
@@ -49,7 +49,7 @@ ___
 >	**Description**: List of desired outcomes.
 
 
-## Results
+### Results
 >	**Input Required**: False
 
 >	**Attribute Type**: Simple List
@@ -57,7 +57,7 @@ ___
 >	**Description**: A list of expected results.
 
 
-## Summary
+### Summary
 >	**Input Required**: False
 
 >	**Attribute Type**: Simple
@@ -65,7 +65,7 @@ ___
 >	**Description**: A short summary of the element's meaning or purpose.
 
 
-## Usage
+### Usage
 >	**Input Required**: False
 
 >	**Attribute Type**: Simple
@@ -73,7 +73,7 @@ ___
 >	**Description**: The usage guidance for this element — how it is intended to be used in context.
 
 
-## Business Imperatives
+### Business Imperatives
 >	**Input Required**: False
 
 >	**Attribute Type**: Reference Name List
@@ -81,7 +81,7 @@ ___
 >	**Description**: Defines the list of business imperatives the strategy supports.
 
 
-## Journal Entry
+### Journal Entry
 >	**Input Required**: False
 
 >	**Attribute Type**: Simple
@@ -89,7 +89,7 @@ ___
 >	**Description**: A text entry into a journal.
 
 
-## Category
+### Category
 >	**Input Required**: False
 
 >	**Attribute Type**: Simple
@@ -99,7 +99,7 @@ ___
 >	**Alternative Labels**: Category Name
 
 
-## Description
+### Description
 >	**Input Required**: False
 
 >	**Attribute Type**: Simple
@@ -107,7 +107,7 @@ ___
 >	**Description**: A description.
 
 
-## Qualified Name
+### Qualified Name
 >	**Input Required**: False
 
 >	**Attribute Type**: QN
@@ -115,7 +115,7 @@ ___
 >	**Description**: The unique, text name of an element.
 
 
-## Content Status
+### Content Status
 >	**Input Required**: False
 
 >	**Attribute Type**: Valid Value
@@ -127,7 +127,7 @@ ___
 >	**Default Value**: ACTIVE
 
 
-## Scope
+### Scope
 >	**Input Required**: False
 
 >	**Attribute Type**: Simple
@@ -143,7 +143,7 @@ ___
 >	**Description**: A list of search keywords.
 
 
-## GUID
+### GUID
 >	**Input Required**: False
 
 >	**Attribute Type**: GUID
@@ -153,7 +153,7 @@ ___
 >	**Alternative Labels**: guid; Guid
 
 
-## URL
+### URL
 >	**Input Required**: False
 
 >	**Attribute Type**: Simple
@@ -161,7 +161,7 @@ ___
 >	**Description**: URL for further information.
 
 
-## Version Identifier
+### Version Identifier
 >	**Input Required**: False
 
 >	**Attribute Type**: Simple
@@ -173,7 +173,7 @@ ___
 >	**Default Value**: 1.0
 
 
-## Authors
+### Authors
 >	**Input Required**: False
 
 >	**Attribute Type**: Simple List

@@ -70,11 +70,24 @@ class AttributeFirstParser:
                 # Fallback: if it's not in the spec but contains a GUID or is a link command, preserve it anyway
                 # This is useful for link commands with flexible attributes like "Blueprint Parent".
                 is_link_cmd = self.command.verb.lower() in {"link", "attach", "add", "unlink", "detach", "remove"}
-                if is_link_cmd or "(guid:" in raw_value or re.search(r'[0-9a-f]{8}-[0-9a-f]{4}', raw_value, re.I):
-                    details = {"style": "ID", "variable_name": raw_label.lower().replace(" ", "_")}
+                
+                close_keys = get_close_matches(raw_label.lower(), list(label_map.keys()), n=3, cutoff=0.72)
+                
+                # Check if it's a common non-ref name (copied from processors.py non_ref_names)
+                non_ref_labels = {
+                    "display name", "qualified name", "description", "label",
+                    "reference abstract", "reference title", "reference description",
+                    "abstract", "title", "category", "organization", "url", "license", "copyright",
+                    "identifier", "domain", "summary"
+                }
+                
+                if not close_keys and (is_link_cmd or "(guid:" in raw_value or re.search(r'[0-9a-f]{8}-[0-9a-f]{4}', raw_value, re.I)):
+                    if raw_label.lower() in non_ref_labels:
+                        details = {"style": "Simple", "variable_name": raw_label.lower().replace(" ", "_")}
+                    else:
+                        details = {"style": "ID", "variable_name": raw_label.lower().replace(" ", "_")}
                     canonical_name = raw_label
                 else:
-                    close_keys = get_close_matches(raw_label.lower(), list(label_map.keys()), n=3, cutoff=0.72)
                     suggestions = []
                     for key in close_keys:
                         canonical = label_map[key][0]

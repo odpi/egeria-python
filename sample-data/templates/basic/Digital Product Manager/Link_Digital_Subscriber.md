@@ -1,11 +1,11 @@
 ___
 
-# Link Digital Subscriber
+## Link Digital Subscriber
 > Attach or detach a subscriber to a subscription. Subscriber can be any type of element.
 >
 >	**Alternative Names**: Subscriber to Subscription; Subscribers; Subscribers from Subscription
 
-## Subscriber Id
+### Subscriber Id
 >	**Input Required**: True
 
 >	**Attribute Type**: Reference Name
@@ -15,7 +15,7 @@ ___
 >	**Alternative Labels**: Subscriber; Subscriber ID
 
 
-## Label
+### Label
 >	**Input Required**: False
 
 >	**Attribute Type**: Simple
@@ -25,7 +25,7 @@ ___
 >	**Alternative Labels**: Wire Label
 
 
-## Subscription Id
+### Subscription Id
 >	**Input Required**: False
 
 >	**Attribute Type**: Reference Name
@@ -35,7 +35,7 @@ ___
 >	**Alternative Labels**: Subscription;Subscription ID
 
 
-## Journal Entry
+### Journal Entry
 >	**Input Required**: False
 
 >	**Attribute Type**: Simple
@@ -43,7 +43,7 @@ ___
 >	**Description**: A text entry into a journal.
 
 
-## Description
+### Description
 >	**Input Required**: False
 
 >	**Attribute Type**: Simple

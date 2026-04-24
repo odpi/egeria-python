@@ -1,11 +1,11 @@
 ___
 
-# Assign Data Value Specification
+## Assign Data Value Specification
 > Link a data value specification, DataClass, DataGrain,  to a referenceable element providing a definition.
 >
 >	**Alternative Names**: Link Data Value Specification; Attach Data Value Specification to Element
 
-## Data Value Specification
+### Data Value Specification
 >	**Input Required**: True
 
 >	**Attribute Type**: Reference Name
@@ -13,7 +13,7 @@ ___
 >	**Description**: The data value specification to use in a relationship. Preferable to use a qualified name.
 
 
-## Element Id
+### Element Id
 >	**Input Required**: True
 
 >	**Attribute Type**: Reference Name
@@ -23,7 +23,7 @@ ___
 >	**Alternative Labels**: Element Name; Member Id
 
 
-## Label
+### Label
 >	**Input Required**: False
 
 >	**Attribute Type**: Simple
@@ -33,7 +33,7 @@ ___
 >	**Alternative Labels**: Wire Label
 
 
-## Assignment Status
+### Assignment Status
 >	**Input Required**: False
 
 >	**Attribute Type**: Valid Value
@@ -45,7 +45,7 @@ ___
 >	**Default Value**: DISCOVERED
 
 
-## Method
+### Method
 >	**Input Required**: False
 
 >	**Attribute Type**: Simple List
@@ -53,7 +53,7 @@ ___
 >	**Description**: A method for value assignment.
 
 
-## Threshold
+### Threshold
 >	**Input Required**: False
 
 >	**Attribute Type**: Simple Int
@@ -61,7 +61,7 @@ ___
 >	**Description**: Threshold  for assignment.
 
 
-## Journal Entry
+### Journal Entry
 >	**Input Required**: False
 
 >	**Attribute Type**: Simple
@@ -69,7 +69,7 @@ ___
 >	**Description**: A text entry into a journal.
 
 
-## Description
+### Description
 >	**Input Required**: False
 
 >	**Attribute Type**: Simple

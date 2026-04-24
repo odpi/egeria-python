@@ -1,7 +1,7 @@
-# Attach Tag
+## Attach Tag
 > Attach an informal tag to a referenceable element via the AttachedTag relationship.
 
-## Label
+### Label
 >	**Input Required**: False
 
 >	**Attribute Type**: Simple
@@ -11,7 +11,7 @@
 >	**Alternative Labels**: Wire Label
 
 
-## Informal Tag
+### Informal Tag
 >	**Input Required**: False
 
 >	**Attribute Type**: Reference Name
@@ -19,7 +19,7 @@
 >	**Description**: The informal tag being attached.
 
 
-## Tagged Element
+### Tagged Element
 >	**Input Required**: False
 
 >	**Attribute Type**: Reference Name
@@ -27,7 +27,7 @@
 >	**Description**: The element being tagged.
 
 
-## Journal Entry
+### Journal Entry
 >	**Input Required**: False
 
 >	**Attribute Type**: Simple
@@ -35,7 +35,7 @@
 >	**Description**: A text entry into a journal.
 
 
-## Description
+### Description
 >	**Input Required**: False
 
 >	**Attribute Type**: Simple

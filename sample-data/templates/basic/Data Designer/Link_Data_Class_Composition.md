@@ -1,9 +1,9 @@
 ___
 
-# Link Data Class Composition
+## Link Data Class Composition
 > Link a child data class to a parent data class. 
 
-## Data Class Child
+### Data Class Child
 >	**Input Required**: True
 
 >	**Attribute Type**: Reference Name
@@ -11,7 +11,7 @@ ___
 >	**Description**: The data class that specifies the valid values or patterns for this data field (DataValueDefinition relationship).
 
 
-## Label
+### Label
 >	**Input Required**: False
 
 >	**Attribute Type**: Simple
@@ -21,7 +21,7 @@ ___
 >	**Alternative Labels**: Wire Label
 
 
-## Data Class
+### Data Class
 >	**Input Required**: False
 
 >	**Attribute Type**: Reference Name
@@ -29,7 +29,7 @@ ___
 >	**Description**: The data class that specifies the valid values or patterns for this data field (DataValueDefinition relationship).
 
 
-## Journal Entry
+### Journal Entry
 >	**Input Required**: False
 
 >	**Attribute Type**: Simple
@@ -37,7 +37,7 @@ ___
 >	**Description**: A text entry into a journal.
 
 
-## Description
+### Description
 >	**Input Required**: False
 
 >	**Attribute Type**: Simple

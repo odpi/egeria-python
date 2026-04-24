@@ -1,9 +1,9 @@
-# Link Agreement Actor
+## Link Agreement Actor
 > Link an actor (role or person) to an Agreement, defining their role and responsibilities within it.
 >
 >	**Alternative Names**: Agreement to Actor; Agreement from Actor
 
-## Agreement Name
+### Agreement Name
 >	**Input Required**: True
 
 >	**Attribute Type**: Reference Name
@@ -11,7 +11,7 @@
 >	**Description**: The name of the agreement to add an item to. Using qualified names is recommended.
 
 
-## Label
+### Label
 >	**Input Required**: False
 
 >	**Attribute Type**: Simple
@@ -21,7 +21,7 @@
 >	**Alternative Labels**: Wire Label
 
 
-## Actor Name
+### Actor Name
 >	**Input Required**: False
 
 >	**Attribute Type**: Simple
@@ -29,7 +29,7 @@
 >	**Description**: The name of the actor (role or person) associated with this agreement relationship.
 
 
-## Actors
+### Actors
 >	**Input Required**: False
 
 >	**Attribute Type**: Reference Name List
@@ -37,7 +37,7 @@
 >	**Description**: Actors or Solution Roles related to this element.
 
 
-## Journal Entry
+### Journal Entry
 >	**Input Required**: False
 
 >	**Attribute Type**: Simple
@@ -45,7 +45,7 @@
 >	**Description**: A text entry into a journal.
 
 
-## Description
+### Description
 >	**Input Required**: False
 
 >	**Attribute Type**: Simple
@@ -53,7 +53,7 @@
 >	**Description**: A description.
 
 
-## Effective From
+### Effective From
 >	**Input Required**: False
 
 >	**Attribute Type**: Simple
@@ -61,7 +61,7 @@
 >	**Description**: The beginning of when an element is viewable.
 
 
-## Effective Time
+### Effective Time
 >	**Input Required**: False
 
 >	**Attribute Type**: Simple
@@ -69,7 +69,7 @@
 >	**Description**: The time at which an element must be effective in order to be returned by the request.
 
 
-## Effective To
+### Effective To
 >	**Input Required**: False
 
 >	**Attribute Type**: Simple
@@ -77,7 +77,7 @@
 >	**Description**: The ending time at which an element is visible.
 
 
-## External Source GUID
+### External Source GUID
 >	**Input Required**: False
 
 >	**Attribute Type**: GUID
@@ -85,7 +85,7 @@
 >	**Description**: The unique identifier of an external source.
 
 
-## External Source Name
+### External Source Name
 >	**Input Required**: False
 
 >	**Attribute Type**: Simple
@@ -93,7 +93,7 @@
 >	**Description**: The name of an external source
 
 
-## For Duplicate Processing
+### For Duplicate Processing
 >	**Input Required**: False
 
 >	**Attribute Type**: Bool
@@ -101,7 +101,7 @@
 >	**Description**: Flag indicating if the request is to support duplicate processing.
 
 
-## For Lineage
+### For Lineage
 >	**Input Required**: False
 
 >	**Attribute Type**: Bool
@@ -109,7 +109,7 @@
 >	**Description**: Flag indicating if the request is to support lineage.
 
 
-## Request ID
+### Request ID
 >	**Input Required**: False
 
 >	**Attribute Type**: Simple
@@ -117,7 +117,7 @@
 >	**Description**: A user provided or system generated request id for a conversation.
 
 
-## Anchor Scope IDs
+### Anchor Scope IDs
 >	**Input Required**: False
 
 >	**Attribute Type**: Reference Name List
@@ -125,7 +125,7 @@
 >	**Description**: A list of IDs that are anchor scopes for this element.
 
 
-## Make Anchor
+### Make Anchor
 >	**Input Required**: False
 
 >	**Attribute Type**: Bool

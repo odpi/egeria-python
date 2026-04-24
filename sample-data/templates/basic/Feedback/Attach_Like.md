@@ -1,7 +1,7 @@
-# Attach Like
+## Attach Like
 > Attach a like to a referenceable element via the AttachedLike relationship.
 
-## Label
+### Label
 >	**Input Required**: False
 
 >	**Attribute Type**: Simple
@@ -11,7 +11,7 @@
 >	**Alternative Labels**: Wire Label
 
 
-## Emoji
+### Emoji
 >	**Input Required**: False
 
 >	**Attribute Type**: Simple
@@ -19,7 +19,7 @@
 >	**Description**: An emoji associated with a Like.
 
 
-## Liked Element
+### Liked Element
 >	**Input Required**: False
 
 >	**Attribute Type**: Reference Name
@@ -27,7 +27,7 @@
 >	**Description**: The element being liked.
 
 
-## Journal Entry
+### Journal Entry
 >	**Input Required**: False
 
 >	**Attribute Type**: Simple
@@ -35,7 +35,7 @@
 >	**Description**: A text entry into a journal.
 
 
-## Description
+### Description
 >	**Input Required**: False
 
 >	**Attribute Type**: Simple

@@ -1,9 +1,9 @@
 ___
 
-# Link Governance Mechanism
+## Link Governance Mechanism
 > Link a governance policy to a governance control that supports it. The GovernanceMechanism relationship is used.
 
-## Mechanism
+### Mechanism
 >	**Input Required**: True
 
 >	**Attribute Type**: Reference Name
@@ -11,7 +11,7 @@ ___
 >	**Description**: The GovernanceControl that implements the governance mechanism.
 
 
-## Policy
+### Policy
 >	**Input Required**: True
 
 >	**Attribute Type**: Reference Name
@@ -19,7 +19,7 @@ ___
 >	**Description**: The governance policy endpoint in a GovernanceResponse or GovernanceMechanism relationship.
 
 
-## Label
+### Label
 >	**Input Required**: False
 
 >	**Attribute Type**: Simple
@@ -29,7 +29,7 @@ ___
 >	**Alternative Labels**: Wire Label
 
 
-## Rationale
+### Rationale
 >	**Input Required**: False
 
 >	**Attribute Type**: Simple
@@ -37,7 +37,7 @@ ___
 >	**Description**: The rationale for using this control to  support this policy.
 
 
-## Journal Entry
+### Journal Entry
 >	**Input Required**: False
 
 >	**Attribute Type**: Simple
@@ -45,7 +45,7 @@ ___
 >	**Description**: A text entry into a journal.
 
 
-## Description
+### Description
 >	**Input Required**: False
 
 >	**Attribute Type**: Simple

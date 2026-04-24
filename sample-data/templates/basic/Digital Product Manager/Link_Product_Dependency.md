@@ -1,11 +1,11 @@
 ___
 
-# Link Product Dependency
+## Link Product Dependency
 > Link digital product dependency between two digital products.
 >
 >	**Alternative Names**: Digital Product - Digital Product; Digital Product to Digital Product; Digital Products
 
-## Digital Product 1
+### Digital Product 1
 >	**Input Required**: True
 
 >	**Attribute Type**: Reference Name
@@ -13,7 +13,7 @@ ___
 >	**Description**: The first Digital Product in a DigitalProductDependency relationship.
 
 
-## Digital Product 2
+### Digital Product 2
 >	**Input Required**: True
 
 >	**Attribute Type**: Reference Name
@@ -21,7 +21,7 @@ ___
 >	**Description**: The second Digital Product in a DigitalProductDependency relationship.
 
 
-## Label
+### Label
 >	**Input Required**: False
 
 >	**Attribute Type**: Simple
@@ -31,7 +31,7 @@ ___
 >	**Alternative Labels**: Wire Label
 
 
-## Dependency Description
+### Dependency Description
 >	**Input Required**: False
 
 >	**Attribute Type**: Simple
@@ -39,7 +39,7 @@ ___
 >	**Description**: Description of the dependency between two digital products.
 
 
-## Dependency Description
+### Dependency Description
 >	**Input Required**: False
 
 >	**Attribute Type**: Simple
@@ -47,7 +47,7 @@ ___
 >	**Description**: Description of the dependency between two digital products.
 
 
-## Journal Entry
+### Journal Entry
 >	**Input Required**: False
 
 >	**Attribute Type**: Simple
@@ -55,7 +55,7 @@ ___
 >	**Description**: A text entry into a journal.
 
 
-## Description
+### Description
 >	**Input Required**: False
 
 >	**Attribute Type**: Simple

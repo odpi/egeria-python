@@ -1,9 +1,9 @@
 ___
 
-# Set Glossary as Taxonomy
+## Set Glossary as Taxonomy
 > Classify a glossary as a Taxonomy
 
-## Glossary Name
+### Glossary Name
 >	**Input Required**: False
 
 >	**Attribute Type**: Reference Name List
@@ -13,7 +13,7 @@ ___
 >	**Alternative Labels**: Glossary; Glossaries; In Glossaries; In Glossary; Glossary Names
 
 
-## Journal Entry
+### Journal Entry
 >	**Input Required**: False
 
 >	**Attribute Type**: Simple
@@ -21,7 +21,7 @@ ___
 >	**Description**: A text entry into a journal.
 
 
-## Category
+### Category
 >	**Input Required**: False
 
 >	**Attribute Type**: Simple
@@ -31,7 +31,7 @@ ___
 >	**Alternative Labels**: Category Name
 
 
-## Qualified Name
+### Qualified Name
 >	**Input Required**: False
 
 >	**Attribute Type**: QN
@@ -39,7 +39,7 @@ ___
 >	**Description**: A unique qualified name for the element. Generated using the qualified name pattern  if not user specified.
 
 
-## Version Identifier
+### Version Identifier
 >	**Input Required**: False
 
 >	**Attribute Type**: Simple
@@ -51,7 +51,7 @@ ___
 >	**Default Value**: 1.0
 
 
-## Identifier
+### Identifier
 >	**Input Required**: False
 
 >	**Attribute Type**: Simple
@@ -61,7 +61,7 @@ ___
 >	**Alternative Labels**: ID
 
 
-## GUID
+### GUID
 >	**Input Required**: False
 
 >	**Attribute Type**: GUID
@@ -71,7 +71,7 @@ ___
 >	**Alternative Labels**: Guid; guid
 
 
-## URL
+### URL
 >	**Input Required**: False
 
 >	**Attribute Type**: Simple
@@ -79,7 +79,7 @@ ___
 >	**Description**: Link to supporting information
 
 
-## Search Keywords
+### Search Keywords
 >	**Input Required**: False
 
 >	**Attribute Type**: Simple List

@@ -1,5 +1,5 @@
 """
-This is an ongoing experiment in parsing and playing with Freddie docs
+This is an ongoing experiment in parsing and playing with Dr.Egeria docs
 """
 import json
 import os

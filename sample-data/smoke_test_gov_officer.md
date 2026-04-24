@@ -1,16 +1,16 @@
-# Create Governance Policy
+## Create Governance Policy
 >
 > Creates a new test governance policy to test dictionary and list inputs.
 
-## Display Name
+### Display Name
 
 Sample Data Security Policy
 
-## Description
+### Description
 
 A sample governance policy for testing dictionary and list support in Dr.Egeria.
 
-## Additional Properties
+### Additional Properties
 
 | Parameter Name | Parameter Value |
 | :--- | :--- |
@@ -18,7 +18,7 @@ A sample governance policy for testing dictionary and list support in Dr.Egeria.
 | Risk Level | High |
 | Policy Status | Draft |
 
-## Outcomes
+### Outcomes
 
 - Improve overall data security posture
 - Ensure compliance with local regulations
@@ -26,23 +26,23 @@ A sample governance policy for testing dictionary and list support in Dr.Egeria.
 
 ---
 
-# Create Governance Metric
+## Create Governance Metric
 >
 > Creates a sample metric to track compliance.
 
-## Display Name
+### Display Name
 
 Security Incident Count
 
-## Description
+### Description
 
 Tracks the number of security incidents per month.
 
-## Measurement
+### Measurement
 
 Monthly count of incidents.
 
-## Additional Properties
+### Additional Properties
 
 | Parameter Name | Parameter Value |
 | :--- | :--- |
@@ -50,7 +50,7 @@ Monthly count of incidents.
 | Warning Threshold | 2 |
 | Critical Threshold | 5 |
 
-## Outcomes
+### Outcomes
 
 - Maintain low incident rates
 - Prompt investigation of anomalies

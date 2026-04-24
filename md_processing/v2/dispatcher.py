@@ -78,9 +78,6 @@ class V2Dispatcher:
             }
         try:
             processor = processor_cls(self.client, command, context)
-            # --- Upsert logic: rewrite command if needed before execution ---
-            if hasattr(processor, 'parsed_output') and processor.parsed_output:
-                command = await self.command_rewriter.rewrite(command, processor.parsed_output)
             return await processor.execute()
         except PyegeriaException as e:
             logger.exception(f"Error executing command '{command_key}'")

@@ -1,11 +1,11 @@
 ___
 
-# Link Term-Term Relationship
+## Link Term-Term Relationship
 > Links or unlinks two glossary terms via a typed semantic relationship (e.g. Synonym, Antonym, PreferredTerm, TranslationOf).
 >
 >	**Alternative Names**: Term-Term Relationship; Term to Term Relationship
 
-## Relationship Type
+### Relationship Type
 >	**Input Required**: True
 
 >	**Attribute Type**: Enum
@@ -15,7 +15,7 @@ ___
 >	**Valid Values**: RelatedTerm,Synonym,Antonym,PreferredTerm,ReplacementTerm,Translation,IsA,ValidValue
 
 
-## Term 1
+### Term 1
 >	**Input Required**: True
 
 >	**Attribute Type**: Reference Name
@@ -25,7 +25,7 @@ ___
 >	**Alternative Labels**: Term; Term Name
 
 
-## Term 2
+### Term 2
 >	**Input Required**: True
 
 >	**Attribute Type**: Reference Name
@@ -33,7 +33,7 @@ ___
 >	**Description**: The name of the second term to connect.
 
 
-## Label
+### Label
 >	**Input Required**: False
 
 >	**Attribute Type**: Simple
@@ -43,7 +43,7 @@ ___
 >	**Alternative Labels**: Wire Label
 
 
-## Journal Entry
+### Journal Entry
 >	**Input Required**: False
 
 >	**Attribute Type**: Simple
@@ -51,7 +51,7 @@ ___
 >	**Description**: A text entry into a journal.
 
 
-## Description
+### Description
 >	**Input Required**: False
 
 >	**Attribute Type**: Simple

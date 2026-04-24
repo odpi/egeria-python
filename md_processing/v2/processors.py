@@ -78,7 +78,11 @@ class AsyncBaseCommandProcessor(ABC):
         def _find_guid(payload: Any) -> Optional[str]:
             if isinstance(payload, str):
                 candidate = payload.strip()
-                return candidate if candidate else None
+                # Egeria GUIDs are typically UUIDs (36 chars) or at least 8+ chars of hex/dashes
+                # We want to avoid returning "GUIDResponse" or other descriptive strings.
+                if re.match(r"^[a-fA-F0-9-]{8,}$", candidate):
+                    return candidate
+                return None
 
             if isinstance(payload, dict):
                 for key in ("guid", "elementGUID", "elementGuid"):
@@ -302,16 +306,37 @@ class AsyncBaseCommandProcessor(ABC):
                         logger.warning(f"{msg} Fetch error: {fetch_err}")
                         self._add_warning(msg)
 
+        # 5. Determine element existence and handle Upsert (Create <-> Update) transitions
+        current_qn = self.parsed_output.get("qualified_name")
+        planned = self.context.get("planned_elements")
+        
+        # Check if it was already planned by a previous command in the same file
+        is_already_planned = False
+        if isinstance(planned, set) and current_qn:
+            is_already_planned = current_qn in planned
+
         if self.as_is_element:
-            # Transition to Update
-            self.command.verb = "Update"
+            # Transition Create -> Update if it already exists in Egeria
+            if self.command.verb in ["Create", "Define", "Register", "Add", "Upsert"]:
+                logger.info(f"Rewriting '{self.command.verb} {self.command.object_type}' to 'Update' as it already exists.")
+                self.command.verb = "Update"
+            
             self.parsed_output["exists"] = True
             header = self.as_is_element.get('elementHeader', {})
             self.parsed_output["guid"] = header.get('guid')
+        elif not is_already_planned:
+            # Transition Update -> Create if it doesn't exist anywhere
+            if self.command.verb in ["Update", "Modify", "Upsert"]:
+                logger.info(f"Rewriting '{self.command.verb} {self.command.object_type}' to 'Create' as it does not exist.")
+                self.command.verb = "Create"
+            self.parsed_output["exists"] = False
+        else:
+            # Found in planned_elements (planned by previous command)
+            self.parsed_output["exists"] = True
+            self.parsed_output["is_planned"] = True
+            # Note: Step 7 will resolve the (Planned: ...) GUID
 
-        # 5. Record this element in the shared 'planned_elements' set
-        current_qn = self.parsed_output.get("qualified_name")
-        planned = self.context.get("planned_elements")
+        # Record this element in the shared 'planned_elements' set for subsequent commands
         if isinstance(planned, set) and current_qn and self.command.verb in ["Create", "Define", "Register", "Add", "Update", "Modify", "Upsert"]:
             planned.add(current_qn)
 
@@ -338,7 +363,7 @@ class AsyncBaseCommandProcessor(ABC):
                 # Heuristics for identifying what attributes represent references to other elements
                 # We exclude common string attributes that might contain keywords like "Reference" or "Name"
                 non_ref_names = [
-                    "Display Name", "Qualified Name", "Description", 
+                    "Display Name", "Qualified Name", "Description", "Label",
                     "Reference Abstract", "Reference Title", "Reference Description",
                     "Abstract", "Title", "Category", "Organization", "URL", "License", "Copyright",
                     "Identifier", "Domain", "Summary"
@@ -402,12 +427,15 @@ class AsyncBaseCommandProcessor(ABC):
                 logger.debug(f"Element found! GUID: {self.parsed_output.get('guid')}")
             else:
                 # Check if it's planned (defined earlier in the document)
-                guid = await self.resolve_element_guid(current_qn)
-                if guid and guid.startswith("(Planned:"):
-                    logger.debug(f"Element is Planned! GUID: {guid}")
-                    self.parsed_output["exists"] = True
-                    self.parsed_output["guid"] = guid
-                    self.parsed_output["is_planned"] = True
+                # We only allow resolution to (Planned: ...) if it was already planned 
+                # BEFORE this command added itself to planned_elements.
+                if is_already_planned:
+                    guid = await self.resolve_element_guid(current_qn)
+                    if guid and guid.startswith("(Planned:"):
+                        logger.debug(f"Element is Planned! GUID: {guid}")
+                        self.parsed_output["exists"] = True
+                        self.parsed_output["guid"] = guid
+                        self.parsed_output["is_planned"] = True
                 else:
                     logger.debug(f"Element NOT found for QN: '{current_qn}'")
                     self.parsed_output["exists"] = False

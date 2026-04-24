@@ -7,10 +7,10 @@ from md_processing.v2.view import ViewProcessor
 
 def test_standard_command_extraction():
     text = """
-# Create Glossary
-## Display Name
+## Create Glossary
+### Display Name
 My New Glossary
-## Description
+### Description
 A glossary for testing.
 """
     extractor = UniversalExtractor(text)
@@ -29,14 +29,14 @@ def test_mixed_markdown_extraction():
     text = """
 Some introductory text.
 
-# Create Term
-## Display Name
+## Create Term
+### Display Name
 Test Term
 
 Some more text in between.
 
-# Update Glossary
-## Description
+## Update Glossary
+### Description
 Updated description.
 
 Footer text.
@@ -59,8 +59,8 @@ Footer text.
     assert any("Footer text" in c.raw_block for c in commands)
 
 def test_headless_command_extraction():
-    # Headless command (no leading #)
-    text = "Create Project\n## Display Name\nHeadless Project"
+    # Headless command (no leading ##)
+    text = "Create Project\n### Display Name\nHeadless Project"
     extractor = UniversalExtractor(text)
     commands = extractor.extract_commands()
     
@@ -74,8 +74,8 @@ def test_headless_command_extraction():
 def test_attribute_preservation():
     # Test that provenance lines (>) are filtered out but newlines are preserved
     text = """
-# Create Glossary
-## Description
+## Create Glossary
+### Description
 Line 1
 > This is a provenance line to ignore
 Line 2
@@ -117,10 +117,10 @@ def test_parse_key_value():
 @pytest.mark.asyncio
 async def test_extract_and_parse_integration():
     text = """
-# Create Glossary
-## Display Name
+## Create Glossary
+### Display Name
 Integrated Glossary
-## Description
+### Description
 Testing integration.
 """
     results = await parse_dr_egeria_content(text)
@@ -142,7 +142,7 @@ async def test_view_report_keeps_metadata_name_filters_as_simple_attributes():
             "Metadata Element Subtype Names": "RootCollection\nCollectionFolder",
             "Output Format": "LIST",
         },
-        raw_block="# View Report",
+        raw_block="## View Report",
     )
 
     parser = AttributeFirstParser(cmd)
@@ -170,7 +170,7 @@ async def test_view_report_validation_output_uses_report_context_not_qualified_n
             "Output Format": "LIST",
             "Metadata Element Type Name": "DigitalProduct",
         },
-        raw_block="# View Report",
+        raw_block="## View Report",
     )
 
     processor = ViewProcessor(client=cast(Any, object()), command=cmd, context={"directive": "validate"})
@@ -194,7 +194,7 @@ async def test_simple_list_with_markdown_bullets():
             "Report Spec": "Collections",
             "Metadata Element Subtype Names": "- Subtype 1\n* Subtype 2\n+ Subtype 3\nSubtype 4",
         },
-        raw_block="# View Report",
+        raw_block="## View Report",
     )
 
     parser = AttributeFirstParser(cmd)
@@ -213,7 +213,7 @@ async def test_simple_list_with_semicolon_and_bullets():
             "Report Spec": "Collections",
             "Metadata Element Subtype Names": "- Item 1; - Item 2, Item 3",
         },
-        raw_block="# View Report",
+        raw_block="## View Report",
     )
 
     parser = AttributeFirstParser(cmd)
@@ -234,7 +234,7 @@ async def test_reference_name_list_with_bullets():
             "Member Name": "MyMember",
             "Anchor Scope IDs": "- Scope 1\n* Scope 2\n+ Scope 3",
         },
-        raw_block="# Add Member",
+        raw_block="## Add Member",
     )
 
     parser = AttributeFirstParser(cmd)
@@ -262,7 +262,7 @@ async def test_view_report_anchor_scope_id_resolves_when_declared_reference_styl
             "Output Format": "LIST",
             "Anchor Scope ID": "Collection::SalesForecast::Root::1.0",
         },
-        raw_block="# View Report",
+        raw_block="## View Report",
     )
 
     processor = ViewProcessor(client=cast(Any, object()), command=cmd, context={"directive": "validate"})

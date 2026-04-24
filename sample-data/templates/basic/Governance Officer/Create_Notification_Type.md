@@ -1,6 +1,6 @@
 ___
 
-# Create Notification Type
+## Create Notification Type
 > A NotificationType defines a type of notification that can be sent as a governance control.
 
 ## Display Name
@@ -13,7 +13,7 @@ ___
 >	**Alternative Labels**: "Term Name"
 
 
-## Domain Identifier
+### Domain Identifier
 >	**Input Required**: False
 
 >	**Attribute Type**: Enum
@@ -25,7 +25,7 @@ ___
 >	**Default Value**: ALL
 
 
-## Implications
+### Implications
 >	**Input Required**: False
 
 >	**Attribute Type**: Simple List
@@ -33,7 +33,7 @@ ___
 >	**Description**: List of implications.
 
 
-## Importance
+### Importance
 >	**Input Required**: False
 
 >	**Attribute Type**: Simple
@@ -41,7 +41,7 @@ ___
 >	**Description**: Importance of the definition.
 
 
-## Outcomes
+### Outcomes
 >	**Input Required**: False
 
 >	**Attribute Type**: Simple List
@@ -49,7 +49,7 @@ ___
 >	**Description**: List of desired outcomes.
 
 
-## Results
+### Results
 >	**Input Required**: False
 
 >	**Attribute Type**: Simple List
@@ -57,7 +57,7 @@ ___
 >	**Description**: A list of expected results.
 
 
-## Summary
+### Summary
 >	**Input Required**: False
 
 >	**Attribute Type**: Simple
@@ -65,7 +65,7 @@ ___
 >	**Description**: A short summary of the element's meaning or purpose.
 
 
-## Usage
+### Usage
 >	**Input Required**: False
 
 >	**Attribute Type**: Simple
@@ -73,7 +73,7 @@ ___
 >	**Description**: The usage guidance for this element — how it is intended to be used in context.
 
 
-## Implementation Description
+### Implementation Description
 >	**Input Required**: False
 
 >	**Attribute Type**: Simple
@@ -83,7 +83,7 @@ ___
 >	**Alternative Labels**: Implementation
 
 
-## Planned Completion Date
+### Planned Completion Date
 >	**Input Required**: False
 
 >	**Attribute Type**: Simple
@@ -91,7 +91,7 @@ ___
 >	**Description**: Planned project end date as an ISO 8601 string.
 
 
-## Multiple Notifications Permitted
+### Multiple Notifications Permitted
 >	**Input Required**: False
 
 >	**Attribute Type**: Bool
@@ -101,7 +101,7 @@ ___
 >	**Default Value**: True
 
 
-## Next Scheduled Notification
+### Next Scheduled Notification
 >	**Input Required**: False
 
 >	**Attribute Type**: Simple
@@ -109,7 +109,7 @@ ___
 >	**Description**: The date of the next scheduled notification.
 
 
-## Notification Count
+### Notification Count
 >	**Input Required**: False
 
 >	**Attribute Type**: Simple Int
@@ -117,7 +117,7 @@ ___
 >	**Description**: The number of notifications sent so far.
 
 
-## Notification Interval
+### Notification Interval
 >	**Input Required**: False
 
 >	**Attribute Type**: Simple Int
@@ -125,7 +125,7 @@ ___
 >	**Description**: The interval between scheduled notifications in milliseconds.
 
 
-## Minimum Notification Interval
+### Minimum Notification Interval
 >	**Input Required**: False
 
 >	**Attribute Type**: Simple Int
@@ -133,7 +133,7 @@ ___
 >	**Description**: The minimum interval between notifications in milliseconds.
 
 
-## Planned Start Date
+### Planned Start Date
 >	**Input Required**: False
 
 >	**Attribute Type**: Simple
@@ -141,7 +141,7 @@ ___
 >	**Description**: Planned project start date as an ISO 8601 string.
 
 
-## Journal Entry
+### Journal Entry
 >	**Input Required**: False
 
 >	**Attribute Type**: Simple
@@ -149,7 +149,7 @@ ___
 >	**Description**: A text entry into a journal.
 
 
-## Category
+### Category
 >	**Input Required**: False
 
 >	**Attribute Type**: Simple
@@ -159,7 +159,7 @@ ___
 >	**Alternative Labels**: Category Name
 
 
-## Description
+### Description
 >	**Input Required**: False
 
 >	**Attribute Type**: Simple
@@ -167,7 +167,7 @@ ___
 >	**Description**: A description.
 
 
-## Qualified Name
+### Qualified Name
 >	**Input Required**: False
 
 >	**Attribute Type**: QN
@@ -175,7 +175,7 @@ ___
 >	**Description**: The unique, text name of an element.
 
 
-## Content Status
+### Content Status
 >	**Input Required**: False
 
 >	**Attribute Type**: Valid Value
@@ -187,7 +187,7 @@ ___
 >	**Default Value**: ACTIVE
 
 
-## Scope
+### Scope
 >	**Input Required**: False
 
 >	**Attribute Type**: Simple
@@ -203,7 +203,7 @@ ___
 >	**Description**: A list of search keywords.
 
 
-## GUID
+### GUID
 >	**Input Required**: False
 
 >	**Attribute Type**: GUID
@@ -213,7 +213,7 @@ ___
 >	**Alternative Labels**: guid; Guid
 
 
-## URL
+### URL
 >	**Input Required**: False
 
 >	**Attribute Type**: Simple
@@ -221,7 +221,7 @@ ___
 >	**Description**: URL for further information.
 
 
-## Version Identifier
+### Version Identifier
 >	**Input Required**: False
 
 >	**Attribute Type**: Simple
@@ -233,7 +233,7 @@ ___
 >	**Default Value**: 1.0
 
 
-## Authors
+### Authors
 >	**Input Required**: False
 
 >	**Attribute Type**: Simple List

@@ -1,6 +1,6 @@
 ___
 
-# Create Solution Component
+## Create Solution Component
 > Creates or updates a reusable solution component — a building block of a solution blueprint or information supply chain.
 
 ## Display Name
@@ -13,7 +13,7 @@ ___
 >	**Alternative Labels**: "Term Name"
 
 
-## Actors
+### Actors
 >	**Input Required**: False
 
 >	**Attribute Type**: Reference Name List
@@ -21,7 +21,7 @@ ___
 >	**Description**: Actors or Solution Roles related to this element.
 
 
-## In Information Supply Chain
+### In Information Supply Chain
 >	**Input Required**: False
 
 >	**Attribute Type**: Reference Name List
@@ -29,7 +29,7 @@ ___
 >	**Description**: Supply chains that this supply chain is a segment of.
 
 
-## In Solution Blueprints
+### In Solution Blueprints
 >	**Input Required**: False
 
 >	**Attribute Type**: Reference Name List
@@ -37,7 +37,7 @@ ___
 >	**Description**: Solution blueprints that contain this component.
 
 
-## In Solution Components
+### In Solution Components
 >	**Input Required**: False
 
 >	**Attribute Type**: Reference Name List
@@ -45,7 +45,7 @@ ___
 >	**Description**: Solution components that include this one.
 
 
-## Planned Deployed Implementation Type
+### Planned Deployed Implementation Type
 >	**Input Required**: False
 
 >	**Attribute Type**: Simple
@@ -53,7 +53,7 @@ ___
 >	**Description**: The planned implementation type for deployment.
 
 
-## Solution Component Type
+### Solution Component Type
 >	**Input Required**: False
 
 >	**Attribute Type**: Simple
@@ -61,7 +61,7 @@ ___
 >	**Description**: Type of solution component.
 
 
-## Solution SubComponents
+### Solution SubComponents
 >	**Input Required**: False
 
 >	**Attribute Type**: Reference Name List
@@ -69,7 +69,7 @@ ___
 >	**Description**: Solution sub-components of this component. In current approach the parent does not specify sub-components; components specify their parents instead.
 
 
-## Journal Entry
+### Journal Entry
 >	**Input Required**: False
 
 >	**Attribute Type**: Simple
@@ -77,7 +77,7 @@ ___
 >	**Description**: A text entry into a journal.
 
 
-## Category
+### Category
 >	**Input Required**: False
 
 >	**Attribute Type**: Simple
@@ -87,7 +87,7 @@ ___
 >	**Alternative Labels**: Category Name
 
 
-## Description
+### Description
 >	**Input Required**: False
 
 >	**Attribute Type**: Simple
@@ -95,7 +95,7 @@ ___
 >	**Description**: A description.
 
 
-## Qualified Name
+### Qualified Name
 >	**Input Required**: False
 
 >	**Attribute Type**: QN
@@ -103,7 +103,7 @@ ___
 >	**Description**: The unique, text name of an element.
 
 
-## Content Status
+### Content Status
 >	**Input Required**: False
 
 >	**Attribute Type**: Valid Value
@@ -123,7 +123,7 @@ ___
 >	**Description**: A list of search keywords.
 
 
-## GUID
+### GUID
 >	**Input Required**: False
 
 >	**Attribute Type**: GUID
@@ -133,7 +133,7 @@ ___
 >	**Alternative Labels**: guid; Guid
 
 
-## URL
+### URL
 >	**Input Required**: False
 
 >	**Attribute Type**: Simple
@@ -141,7 +141,7 @@ ___
 >	**Description**: URL for further information.
 
 
-## Version Identifier
+### Version Identifier
 >	**Input Required**: False
 
 >	**Attribute Type**: Simple
@@ -153,7 +153,7 @@ ___
 >	**Default Value**: 1.0
 
 
-## Authors
+### Authors
 >	**Input Required**: False
 
 >	**Attribute Type**: Simple List

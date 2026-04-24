@@ -28,7 +28,7 @@ class DrECommand:
 class UniversalExtractor:
     """
     Extracts Dr.Egeria commands from various text formats:
-    - Standard Markdown (# Verb Object)
+    - Standard Markdown (## Verb Object)
     - Jupyter Notebooks (Markdown cells)
     - LLM prompts (Headless or Markdown)
     """
@@ -93,8 +93,8 @@ class UniversalExtractor:
         return commands
 
     def _split_into_blocks(self) -> List[tuple[str, int]]:
-        """Split text into potential command blocks based on H2 headers or horizontal rules."""
-        # Using a lookahead to split by '##' at start of line OR horizontal rules
+        """Split text into potential command blocks based on H1/H2 headers or horizontal rules."""
+        # Using a lookahead to split by '#' or '##' at start of line OR horizontal rules
         # Also handles headless blocks by checking if the start is a command
         lines = self.text.splitlines()
         blocks = []
@@ -102,8 +102,8 @@ class UniversalExtractor:
         start_line = 1
         
         for i, line in enumerate(lines):
-            # Check for block boundaries: H2 header or horizontal rule
-            if (line.startswith("## ") or re.match(r'^\s*___+\s*$', line) or re.match(r'^\s*---+\s*$', line)):
+            # Check for block boundaries: H1/H2 header or horizontal rule
+            if (line.startswith("# ") or line.startswith("## ") or re.match(r'^\s*___+\s*$', line) or re.match(r'^\s*---+\s*$', line)):
                 if current_block:
                     blocks.append(("\n".join(current_block), start_line))
                 current_block = [line]

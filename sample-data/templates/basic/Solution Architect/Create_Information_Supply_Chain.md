@@ -1,6 +1,6 @@
 ___
 
-# Create Information Supply Chain
+## Create Information Supply Chain
 > Creates or updates an information supply chain — a description of the flow of a particular type of data across a digital landscape.
 
 ## Display Name
@@ -13,7 +13,7 @@ ___
 >	**Alternative Labels**: "Term Name"
 
 
-## In Information Supply Chain
+### In Information Supply Chain
 >	**Input Required**: False
 
 >	**Attribute Type**: Reference Name List
@@ -21,7 +21,7 @@ ___
 >	**Description**: Supply chains that this supply chain is a segment of.
 
 
-## Integration Style
+### Integration Style
 >	**Input Required**: False
 
 >	**Attribute Type**: Simple
@@ -29,7 +29,7 @@ ___
 >	**Description**: The integration style of the information supply chain (e.g. how data flows between segments).
 
 
-## Nested Information Supply Chains
+### Nested Information Supply Chains
 >	**Input Required**: False
 
 >	**Attribute Type**: Reference Name List
@@ -37,7 +37,7 @@ ___
 >	**Description**: A list of supply chains that compose this supply chain.
 
 
-## Journal Entry
+### Journal Entry
 >	**Input Required**: False
 
 >	**Attribute Type**: Simple
@@ -45,7 +45,7 @@ ___
 >	**Description**: A text entry into a journal.
 
 
-## Category
+### Category
 >	**Input Required**: False
 
 >	**Attribute Type**: Simple
@@ -55,7 +55,7 @@ ___
 >	**Alternative Labels**: Category Name
 
 
-## Description
+### Description
 >	**Input Required**: False
 
 >	**Attribute Type**: Simple
@@ -63,7 +63,7 @@ ___
 >	**Description**: A description.
 
 
-## Qualified Name
+### Qualified Name
 >	**Input Required**: False
 
 >	**Attribute Type**: QN
@@ -71,7 +71,7 @@ ___
 >	**Description**: The unique, text name of an element.
 
 
-## Content Status
+### Content Status
 >	**Input Required**: False
 
 >	**Attribute Type**: Valid Value
@@ -83,7 +83,7 @@ ___
 >	**Default Value**: ACTIVE
 
 
-## Purpose
+### Purpose
 >	**Input Required**: False
 
 >	**Attribute Type**: Simple
@@ -91,7 +91,7 @@ ___
 >	**Description**: The purpose of this collection — a short description of why it exists or what it is used for.
 
 
-## Purposes
+### Purposes
 >	**Input Required**: False
 
 >	**Attribute Type**: Simple List
@@ -99,7 +99,7 @@ ___
 >	**Description**: A list of purposes for this project (array&lt;string&gt;). Note: distinct from Collection.purpose (string, singular) which is a separate attribute on Collection Base.
 
 
-## Scope
+### Scope
 >	**Input Required**: False
 
 >	**Attribute Type**: Simple
@@ -115,7 +115,7 @@ ___
 >	**Description**: A list of search keywords.
 
 
-## GUID
+### GUID
 >	**Input Required**: False
 
 >	**Attribute Type**: GUID
@@ -125,7 +125,7 @@ ___
 >	**Alternative Labels**: guid; Guid
 
 
-## URL
+### URL
 >	**Input Required**: False
 
 >	**Attribute Type**: Simple
@@ -133,7 +133,7 @@ ___
 >	**Description**: URL for further information.
 
 
-## Version Identifier
+### Version Identifier
 >	**Input Required**: False
 
 >	**Attribute Type**: Simple
@@ -145,7 +145,7 @@ ___
 >	**Default Value**: 1.0
 
 
-## Authors
+### Authors
 >	**Input Required**: False
 
 >	**Attribute Type**: Simple List

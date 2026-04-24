@@ -5,7 +5,7 @@
 
 This guide provides an overview of how to use the `pyegeria` Python library to interact with Egeria.
 
-## Core Concepts
+### Core Concepts
 
 `pyegeria` is designed around a set of client classes that correspond to Egeria's Open Metadata View Services (OMVS). These clients handle communication with the Egeria platform, authentication, and provide high-level Pythonic APIs for working with metadata.
 
@@ -16,7 +16,7 @@ This guide provides an overview of how to use the `pyegeria` Python library to i
 3.  **OMVS Clients**: Individual classes for each Egeria service (e.g., `GlossaryManager`, `AssetCatalog`, `DataDesigner`). These contain the actual business logic.
 4.  **Role-Based Facades**: Convenient entry points that group multiple OMVS clients by user role (e.g., `EgeriaTech`, `EgeriaCat`).
 
-## Configuration System
+### Configuration System
 
 `pyegeria` features a centralized configuration system that allows you to set defaults for all clients in one place.
 
@@ -51,7 +51,7 @@ EGERIA_USER_PASSWORD=secret
 EGERIA_LOCAL_QUALIFIER=PDR
 ```
 
-## Using the Clients
+### Using the Clients
 
 ### Automatic Initialization
 
@@ -63,7 +63,7 @@ from pyegeria import EgeriaTech
 # Automatically picks up server, url, user, etc. from configuration
 client = EgeriaTech()
 
-# Create a bearer token (uses credentials from config)
+## Create a bearer token (uses credentials from config)
 client.create_egeria_bearer_token()
 
 # Use any of the available methods
@@ -91,7 +91,7 @@ client.list_glossaries()
 # GlossaryManager is now instantiated and cached
 ```
 
-## Naming Conventions and Helpers
+### Naming Conventions and Helpers
 
 ### Qualified Names
 
@@ -108,7 +108,7 @@ The helper:
 2.  Uses the provided type name.
 3.  Cleans the display name (strips whitespace, replaces spaces with hyphens).
 
-## Advanced Usage
+### Advanced Usage
 
 ### Direct OMVS Client Usage
 
@@ -140,7 +140,7 @@ async def main():
 asyncio.run(main())
 ```
 
-## Error Handling
+### Error Handling
 
 `pyegeria` defines a hierarchy of exceptions in `pyegeria.core._exceptions`. It is recommended to catch `PyegeriaException` for general error handling:
 

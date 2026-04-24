@@ -1,11 +1,11 @@
 ___
 
-# Create Glossary Term
+## Create Glossary Term
 > Creates or updates a glossary term — a concept, phrase, or word defined within a glossary.
 >
 >	**Alternative Names**: Term
 
-## Display Name
+### Display Name
 >	**Input Required**: True
 
 >	**Attribute Type**: Simple
@@ -15,7 +15,7 @@ ___
 >	**Alternative Labels**: "Term Name"
 
 
-## Abbreviation
+### Abbreviation
 >	**Input Required**: False
 
 >	**Attribute Type**: Simple
@@ -23,7 +23,7 @@ ___
 >	**Description**: An abbreviation for the glossary term.
 
 
-## Example
+### Example
 >	**Input Required**: False
 
 >	**Attribute Type**: Simple
@@ -33,7 +33,7 @@ ___
 >	**Alternative Labels**: Examples
 
 
-## Folders
+### Folders
 >	**Input Required**: False
 
 >	**Attribute Type**: Reference Name List
@@ -43,7 +43,7 @@ ___
 >	**Alternative Labels**: Folders; Collection Folders
 
 
-## Glossary Name
+### Glossary Name
 >	**Input Required**: False
 
 >	**Attribute Type**: Reference Name List
@@ -53,7 +53,7 @@ ___
 >	**Alternative Labels**: Glossary; Glossaries; In Glossaries; In Glossary; Glossary Names
 
 
-## Summary
+### Summary
 >	**Input Required**: False
 
 >	**Attribute Type**: Simple
@@ -61,7 +61,7 @@ ___
 >	**Description**: A short summary of the element's meaning or purpose.
 
 
-## Usage
+### Usage
 >	**Input Required**: False
 
 >	**Attribute Type**: Simple
@@ -69,7 +69,7 @@ ___
 >	**Description**: The usage guidance for this element — how it is intended to be used in context.
 
 
-## Journal Entry
+### Journal Entry
 >	**Input Required**: False
 
 >	**Attribute Type**: Simple
@@ -77,7 +77,7 @@ ___
 >	**Description**: A text entry into a journal.
 
 
-## Category
+### Category
 >	**Input Required**: False
 
 >	**Attribute Type**: Simple
@@ -87,7 +87,7 @@ ___
 >	**Alternative Labels**: Category Name
 
 
-## Description
+### Description
 >	**Input Required**: False
 
 >	**Attribute Type**: Simple
@@ -95,7 +95,7 @@ ___
 >	**Description**: A description.
 
 
-## Qualified Name
+### Qualified Name
 >	**Input Required**: False
 
 >	**Attribute Type**: QN
@@ -103,7 +103,7 @@ ___
 >	**Description**: The unique, text name of an element.
 
 
-## Content Status
+### Content Status
 >	**Input Required**: False
 
 >	**Attribute Type**: Valid Value
@@ -115,7 +115,7 @@ ___
 >	**Default Value**: ACTIVE
 
 
-## Aliases
+### Aliases
 >	**Input Required**: False
 
 >	**Attribute Type**: Simple List
@@ -125,7 +125,7 @@ ___
 >	**Alternative Labels**: Alias
 
 
-## Search Keywords
+### Search Keywords
 >	**Input Required**: False
 
 >	**Attribute Type**: Simple List
@@ -133,7 +133,7 @@ ___
 >	**Description**: A list of search keywords.
 
 
-## GUID
+### GUID
 >	**Input Required**: False
 
 >	**Attribute Type**: GUID
@@ -143,7 +143,7 @@ ___
 >	**Alternative Labels**: guid; Guid
 
 
-## URL
+### URL
 >	**Input Required**: False
 
 >	**Attribute Type**: Simple
@@ -151,7 +151,7 @@ ___
 >	**Description**: URL for further information.
 
 
-## Version Identifier
+### Version Identifier
 >	**Input Required**: False
 
 >	**Attribute Type**: Simple
@@ -163,7 +163,7 @@ ___
 >	**Default Value**: 1.0
 
 
-## Authors
+### Authors
 >	**Input Required**: False
 
 >	**Attribute Type**: Simple List

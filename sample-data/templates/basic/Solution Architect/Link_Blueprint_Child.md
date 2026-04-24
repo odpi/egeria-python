@@ -1,9 +1,9 @@
 ___
 
-# Link Blueprint Child
+## Link Blueprint Child
 > Links or unlinks an blueprint child segment to an parent blueprint using CollectionMembership.
 
-## Blueprint
+### Blueprint
 >	**Input Required**: True
 
 >	**Attribute Type**: Reference Name
@@ -11,7 +11,7 @@ ___
 >	**Description**: A named solution blueprint.
 
 
-## Blueprint Child
+### Blueprint Child
 >	**Input Required**: True
 
 >	**Attribute Type**: Reference Name
@@ -19,7 +19,7 @@ ___
 >	**Description**: A named solution blueprint.
 
 
-## Label
+### Label
 >	**Input Required**: False
 
 >	**Attribute Type**: Simple
@@ -29,7 +29,7 @@ ___
 >	**Alternative Labels**: Wire Label
 
 
-## Membership Rationale
+### Membership Rationale
 >	**Input Required**: False
 
 >	**Attribute Type**: Simple
@@ -37,7 +37,7 @@ ___
 >	**Description**: Rationale for membership.
 
 
-## Membership Status
+### Membership Status
 >	**Input Required**: False
 
 >	**Attribute Type**: Valid Value
@@ -49,7 +49,7 @@ ___
 >	**Default Value**: PROPOSED
 
 
-## Notes
+### Notes
 >	**Input Required**: False
 
 >	**Attribute Type**: Simple
@@ -57,7 +57,7 @@ ___
 >	**Description**: Notes and observations about the element.
 
 
-## Journal Entry
+### Journal Entry
 >	**Input Required**: False
 
 >	**Attribute Type**: Simple
@@ -65,7 +65,7 @@ ___
 >	**Description**: A text entry into a journal.
 
 
-## Description
+### Description
 >	**Input Required**: False
 
 >	**Attribute Type**: Simple

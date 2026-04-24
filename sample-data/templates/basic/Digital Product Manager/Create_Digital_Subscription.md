@@ -1,11 +1,11 @@
 ___
 
-# Create Digital Subscription
+## Create Digital Subscription
 > A type of agreement for a digital subscription.
 >
 >	**Alternative Names**: Create Product Subscription
 
-## Display Name
+### Display Name
 >	**Input Required**: True
 
 >	**Attribute Type**: Simple
@@ -15,7 +15,7 @@ ___
 >	**Alternative Labels**: "Term Name"
 
 
-## Agreement Type
+### Agreement Type
 >	**Input Required**: False
 
 >	**Attribute Type**: Simple
@@ -23,7 +23,7 @@ ___
 >	**Description**: Type of agreement (e.g., service level agreement, licensing agreement, data sharing agreement).
 
 
-## Subscription Level
+### Subscription Level
 >	**Input Required**: False
 
 >	**Attribute Type**: Simple
@@ -31,7 +31,7 @@ ___
 >	**Description**: Level or tier of the subscription (e.g., basic, premium, enterprise).
 
 
-## Support Level
+### Support Level
 >	**Input Required**: False
 
 >	**Attribute Type**: Simple
@@ -39,7 +39,7 @@ ___
 >	**Description**: Level of support provided with the subscription (e.g., community, business hours, 24/7).
 
 
-## Journal Entry
+### Journal Entry
 >	**Input Required**: False
 
 >	**Attribute Type**: Simple
@@ -47,7 +47,7 @@ ___
 >	**Description**: A text entry into a journal.
 
 
-## Category
+### Category
 >	**Input Required**: False
 
 >	**Attribute Type**: Simple
@@ -57,7 +57,7 @@ ___
 >	**Alternative Labels**: Category Name
 
 
-## Description
+### Description
 >	**Input Required**: False
 
 >	**Attribute Type**: Simple
@@ -65,7 +65,7 @@ ___
 >	**Description**: A description.
 
 
-## Qualified Name
+### Qualified Name
 >	**Input Required**: False
 
 >	**Attribute Type**: QN
@@ -73,7 +73,7 @@ ___
 >	**Description**: The unique, text name of an element.
 
 
-## Content Status
+### Content Status
 >	**Input Required**: False
 
 >	**Attribute Type**: Valid Value
@@ -85,7 +85,7 @@ ___
 >	**Default Value**: ACTIVE
 
 
-## Purpose
+### Purpose
 >	**Input Required**: False
 
 >	**Attribute Type**: Simple
@@ -93,7 +93,7 @@ ___
 >	**Description**: The purpose of this collection — a short description of why it exists or what it is used for.
 
 
-## Search Keywords
+### Search Keywords
 >	**Input Required**: False
 
 >	**Attribute Type**: Simple List
@@ -101,7 +101,7 @@ ___
 >	**Description**: A list of search keywords.
 
 
-## GUID
+### GUID
 >	**Input Required**: False
 
 >	**Attribute Type**: GUID
@@ -111,7 +111,7 @@ ___
 >	**Alternative Labels**: guid; Guid
 
 
-## URL
+### URL
 >	**Input Required**: False
 
 >	**Attribute Type**: Simple
@@ -119,7 +119,7 @@ ___
 >	**Description**: URL for further information.
 
 
-## Version Identifier
+### Version Identifier
 >	**Input Required**: False
 
 >	**Attribute Type**: Simple
@@ -131,7 +131,7 @@ ___
 >	**Default Value**: 1.0
 
 
-## Authors
+### Authors
 >	**Input Required**: False
 
 >	**Attribute Type**: Simple List

@@ -1,9 +1,9 @@
 ___
 
-# Create External Source Code
+## Create External Source Code
 > Create or update an External Source Code reference - an external reference that refers to software source code. If the component created from this source code is catalogued, it is linked to the ExternalSourceCode using the ExternalReferenceLink relationship.
 
-## Display Name
+### Display Name
 >	**Input Required**: True
 
 >	**Attribute Type**: Simple
@@ -13,7 +13,7 @@ ___
 >	**Alternative Labels**: "Term Name"
 
 
-## Attribution
+### Attribution
 >	**Input Required**: False
 
 >	**Attribute Type**: Simple
@@ -21,7 +21,7 @@ ___
 >	**Description**: Attribution string to describe the external reference.
 
 
-## Copyright
+### Copyright
 >	**Input Required**: False
 
 >	**Attribute Type**: Simple
@@ -29,7 +29,7 @@ ___
 >	**Description**: The copyright associated with the external reference.
 
 
-## License
+### License
 >	**Input Required**: False
 
 >	**Attribute Type**: Simple
@@ -37,7 +37,7 @@ ___
 >	**Description**: The license associated with the external reference.
 
 
-## Organization
+### Organization
 >	**Input Required**: False
 
 >	**Attribute Type**: Simple
@@ -45,7 +45,7 @@ ___
 >	**Description**: Organization owning the external reference.
 
 
-## Reference Abstract
+### Reference Abstract
 >	**Input Required**: False
 
 >	**Attribute Type**: Simple
@@ -55,7 +55,7 @@ ___
 >	**Alternative Labels**: Abstract
 
 
-## Reference Title
+### Reference Title
 >	**Input Required**: False
 
 >	**Attribute Type**: Simple
@@ -65,7 +65,7 @@ ___
 >	**Alternative Labels**: Title
 
 
-## Sources
+### Sources
 >	**Input Required**: False
 
 >	**Attribute Type**: Dictionary
@@ -79,7 +79,7 @@ ___
 >	| example_key | example_value |
 
 
-## Journal Entry
+### Journal Entry
 >	**Input Required**: False
 
 >	**Attribute Type**: Simple
@@ -87,7 +87,7 @@ ___
 >	**Description**: A text entry into a journal.
 
 
-## Category
+### Category
 >	**Input Required**: False
 
 >	**Attribute Type**: Simple
@@ -97,7 +97,7 @@ ___
 >	**Alternative Labels**: Category Name
 
 
-## Description
+### Description
 >	**Input Required**: False
 
 >	**Attribute Type**: Simple
@@ -105,7 +105,7 @@ ___
 >	**Description**: A description.
 
 
-## Qualified Name
+### Qualified Name
 >	**Input Required**: False
 
 >	**Attribute Type**: QN
@@ -113,7 +113,7 @@ ___
 >	**Description**: The unique, text name of an element.
 
 
-## Content Status
+### Content Status
 >	**Input Required**: False
 
 >	**Attribute Type**: Valid Value
@@ -125,7 +125,7 @@ ___
 >	**Default Value**: ACTIVE
 
 
-## Search Keywords
+### Search Keywords
 >	**Input Required**: False
 
 >	**Attribute Type**: Simple List
@@ -133,7 +133,7 @@ ___
 >	**Description**: A list of search keywords.
 
 
-## GUID
+### GUID
 >	**Input Required**: False
 
 >	**Attribute Type**: GUID
@@ -143,7 +143,7 @@ ___
 >	**Alternative Labels**: guid; Guid
 
 
-## URL
+### URL
 >	**Input Required**: False
 
 >	**Attribute Type**: Simple
@@ -151,7 +151,7 @@ ___
 >	**Description**: URL for further information.
 
 
-## Version Identifier
+### Version Identifier
 >	**Input Required**: False
 
 >	**Attribute Type**: Simple
@@ -163,7 +163,7 @@ ___
 >	**Default Value**: 1.0
 
 
-## Authors
+### Authors
 >	**Input Required**: False
 
 >	**Attribute Type**: Simple List

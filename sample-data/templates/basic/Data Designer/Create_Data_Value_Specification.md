@@ -1,9 +1,9 @@
 ___
 
-# Create Data Value Specification
+## Create Data Value Specification
 > Creates or updates a data value classification which represents the characteristics of a data value. DataClass and DataGrain are subtypes.
 
-## Display Name
+### Display Name
 >	**Input Required**: True
 
 >	**Attribute Type**: Simple
@@ -13,7 +13,7 @@ ___
 >	**Alternative Labels**: "Term Name"
 
 
-## Absolute Uncertainty
+### Absolute Uncertainty
 >	**Input Required**: False
 
 >	**Attribute Type**: Simple Float
@@ -21,7 +21,7 @@ ___
 >	**Description**: The absolute margin of error for numeric values in this data value specification (in the same units as the value).
 
 
-## Data Type
+### Data Type
 >	**Input Required**: False
 
 >	**Attribute Type**: Simple
@@ -33,7 +33,7 @@ ___
 >	**Default Value**: string
 
 
-## In Data Value Specification
+### In Data Value Specification
 >	**Input Required**: False
 
 >	**Attribute Type**: Reference Name
@@ -43,7 +43,7 @@ ___
 >	**Alternative Labels**: In Data Class; In Data Grain
 
 
-## Match Property Names
+### Match Property Names
 >	**Input Required**: False
 
 >	**Attribute Type**: Simple List
@@ -51,7 +51,7 @@ ___
 >	**Description**: The names of the properties used when matching values against this data value specification.
 
 
-## Match Threshold
+### Match Threshold
 >	**Input Required**: False
 
 >	**Attribute Type**: Simple Int
@@ -59,7 +59,7 @@ ___
 >	**Description**: The confidence threshold (0-100) required for a value to be considered a match for this data value specification.
 
 
-## Name Patterns
+### Name Patterns
 >	**Input Required**: False
 
 >	**Attribute Type**: Simple List
@@ -67,7 +67,7 @@ ___
 >	**Description**: Name patterns for naming standard rules.
 
 
-## Namespace Path
+### Namespace Path
 >	**Input Required**: False
 
 >	**Attribute Type**: Simple
@@ -75,7 +75,7 @@ ___
 >	**Description**: The namespace path that qualifies the element's name within a larger naming hierarchy.
 
 
-## Relative Uncertainty
+### Relative Uncertainty
 >	**Input Required**: False
 
 >	**Attribute Type**: Simple Float
@@ -83,7 +83,7 @@ ___
 >	**Description**: The relative margin of error for values in this data value specification, expressed as a percentage (0-100).
 
 
-## Specializes Data Value Specification
+### Specializes Data Value Specification
 >	**Input Required**: False
 
 >	**Attribute Type**: Reference Name
@@ -91,7 +91,7 @@ ___
 >	**Description**: The parent data value specification that this one specializes or refines.
 
 
-## Specification
+### Specification
 >	**Input Required**: False
 
 >	**Attribute Type**: Simple
@@ -99,7 +99,7 @@ ___
 >	**Description**: A formal or technical specification string that describes the valid values or format for this data value specification.
 
 
-## Specification Details
+### Specification Details
 >	**Input Required**: False
 
 >	**Attribute Type**: Dictionary
@@ -111,7 +111,7 @@ ___
 >	| example_key | example_value |
 
 
-## Units
+### Units
 >	**Input Required**: False
 
 >	**Attribute Type**: Simple
@@ -119,7 +119,7 @@ ___
 >	**Description**: The unit of measure for numeric values in this field or specification (e.g. metres, kg, USD).
 
 
-## Journal Entry
+### Journal Entry
 >	**Input Required**: False
 
 >	**Attribute Type**: Simple
@@ -127,7 +127,7 @@ ___
 >	**Description**: A text entry into a journal.
 
 
-## Category
+### Category
 >	**Input Required**: False
 
 >	**Attribute Type**: Simple
@@ -137,7 +137,7 @@ ___
 >	**Alternative Labels**: Category Name
 
 
-## Description
+### Description
 >	**Input Required**: False
 
 >	**Attribute Type**: Simple
@@ -145,7 +145,7 @@ ___
 >	**Description**: A description.
 
 
-## Qualified Name
+### Qualified Name
 >	**Input Required**: False
 
 >	**Attribute Type**: QN
@@ -153,7 +153,7 @@ ___
 >	**Description**: The unique, text name of an element.
 
 
-## Content Status
+### Content Status
 >	**Input Required**: False
 
 >	**Attribute Type**: Valid Value
@@ -165,7 +165,7 @@ ___
 >	**Default Value**: ACTIVE
 
 
-## Search Keywords
+### Search Keywords
 >	**Input Required**: False
 
 >	**Attribute Type**: Simple List
@@ -173,7 +173,7 @@ ___
 >	**Description**: A list of search keywords.
 
 
-## GUID
+### GUID
 >	**Input Required**: False
 
 >	**Attribute Type**: GUID
@@ -183,7 +183,7 @@ ___
 >	**Alternative Labels**: guid; Guid
 
 
-## URL
+### URL
 >	**Input Required**: False
 
 >	**Attribute Type**: Simple
@@ -191,7 +191,7 @@ ___
 >	**Description**: URL for further information.
 
 
-## Version Identifier
+### Version Identifier
 >	**Input Required**: False
 
 >	**Attribute Type**: Simple
@@ -203,7 +203,7 @@ ___
 >	**Default Value**: 1.0
 
 
-## Authors
+### Authors
 >	**Input Required**: False
 
 >	**Attribute Type**: Simple List

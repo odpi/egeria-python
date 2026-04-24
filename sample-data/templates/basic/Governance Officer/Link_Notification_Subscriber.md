@@ -1,9 +1,9 @@
 ___
 
-# Link Notification Subscriber
+## Link Notification Subscriber
 > Links a Referenceable as a subscriber to a NotificationType, defining the subscription parameters.
 
-## Notification Type
+### Notification Type
 >	**Input Required**: True
 
 >	**Attribute Type**: Reference Name
@@ -11,7 +11,7 @@ ___
 >	**Description**: The NotificationType entity to link the subscriber to or for a monitored resource.
 
 
-## Subscriber
+### Subscriber
 >	**Input Required**: True
 
 >	**Attribute Type**: Reference Name
@@ -19,7 +19,7 @@ ___
 >	**Description**: The Referenceable entity subscribing to the notification type.
 
 
-## Label
+### Label
 >	**Input Required**: False
 
 >	**Attribute Type**: Simple
@@ -29,7 +29,7 @@ ___
 >	**Alternative Labels**: Wire Label
 
 
-## Last Notification
+### Last Notification
 >	**Input Required**: False
 
 >	**Attribute Type**: Simple
@@ -37,7 +37,7 @@ ___
 >	**Description**: The date of the last notification sent to this subscriber.
 
 
-## Journal Entry
+### Journal Entry
 >	**Input Required**: False
 
 >	**Attribute Type**: Simple
@@ -45,7 +45,7 @@ ___
 >	**Description**: A text entry into a journal.
 
 
-## Description
+### Description
 >	**Input Required**: False
 
 >	**Attribute Type**: Simple
@@ -53,7 +53,7 @@ ___
 >	**Description**: A description.
 
 
-## Activity Status
+### Activity Status
 >	**Input Required**: False
 
 >	**Attribute Type**: Valid Value

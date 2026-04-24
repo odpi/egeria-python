@@ -1,11 +1,11 @@
 ___
 
-# Link Solution Design
+## Link Solution Design
 > Link a solution blueprint to a referenceable element.
 >
 >	**Alternative Names**: Blueprint to Element
 
-## Blueprint
+### Blueprint
 >	**Input Required**: True
 
 >	**Attribute Type**: Reference Name
@@ -13,7 +13,7 @@ ___
 >	**Description**: A named solution blueprint.
 
 
-## Element Id
+### Element Id
 >	**Input Required**: True
 
 >	**Attribute Type**: Reference Name
@@ -23,7 +23,7 @@ ___
 >	**Alternative Labels**: Element Name; Member Id
 
 
-## Label
+### Label
 >	**Input Required**: False
 
 >	**Attribute Type**: Simple
@@ -33,7 +33,7 @@ ___
 >	**Alternative Labels**: Wire Label
 
 
-## Journal Entry
+### Journal Entry
 >	**Input Required**: False
 
 >	**Attribute Type**: Simple
@@ -41,7 +41,7 @@ ___
 >	**Description**: A text entry into a journal.
 
 
-## Description
+### Description
 >	**Input Required**: False
 
 >	**Attribute Type**: Simple

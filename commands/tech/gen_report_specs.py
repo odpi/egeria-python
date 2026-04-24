@@ -275,12 +275,26 @@ def _load_command_specs(path: Path | str) -> dict:
     path_str = str(path)
     try:
         from md_processing.md_processing_utils.compact_loader import load_compact_specs_from_dir
-        specs = load_compact_specs_from_dir(path_str)
-        if specs:
-            logger.info(f"Loaded compact specs from {path_str} with {len(specs)} commands")
-            return specs
+        if os.path.isdir(path_str):
+            specs = load_compact_specs_from_dir(path_str)
+            if specs:
+                logger.info(f"Loaded compact specs from {path_str} with {len(specs)} commands")
+                return specs
+        elif os.path.isfile(path_str):
+            # Fallback for single file (used in tests)
+            from md_processing.md_processing_utils.parse_compact_export import load_compact_json, expand_command
+            from md_processing.md_processing_utils.compact_loader import _command_to_spec
+            data = load_compact_json(path_str)
+            all_attr_defs = data.get("attribute_definitions", {})
+            all_bundles = data.get("bundles", {})
+            specs = {}
+            for cname, cdef in data.get("commands", {}).items():
+                expanded = expand_command(cdef, all_bundles, all_attr_defs)
+                specs[cname] = _command_to_spec(cname, cdef, expanded)
+            if specs:
+                return specs
     except Exception as e:
-        logger.error(f"Failed to use compact_loader on dir {path_str}: {e}")
+        logger.error(f"Failed to load specs from {path_str}: {e}")
     return {}
 
 def build_format_sets_from_commands(

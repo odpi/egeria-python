@@ -1,15 +1,15 @@
-# Create Terms and Conditions
+## Create Terms and Conditions
 > Creates sample terms and conditions to test multiple dictionary inputs.
 
-## Display Name
+### Display Name
 
 Data Usage Terms and Conditions
 
-## Description
+### Description
 
 Standard terms and conditions for accessing internal financial data.
 
-## Entitlements
+### Entitlements
 
 | Parameter Name | Parameter Value |
 | :--- | :--- |
@@ -17,14 +17,14 @@ Standard terms and conditions for accessing internal financial data.
 | Read Only | True |
 | API Access | Permitted |
 
-## Obligations
+### Obligations
 
 | Parameter Name | Parameter Value |
 | :--- | :--- |
 | Reporting | Monthly usage reports required |
 | Security | Must use VPN for access |
 
-## Restrictions
+### Restrictions
 
 | Parameter Name | Parameter Value |
 | :--- | :--- |

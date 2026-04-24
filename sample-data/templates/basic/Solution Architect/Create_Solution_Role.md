@@ -1,6 +1,6 @@
 ___
 
-# Create Solution Role
+## Create Solution Role
 > Creates or updates a solution role — a collection of responsibilities associated with a solution component.
 
 ## Display Name
@@ -13,7 +13,7 @@ ___
 >	**Alternative Labels**: "Term Name"
 
 
-## Role Domain Identifier
+### Role Domain Identifier
 >	**Input Required**: False
 
 >	**Attribute Type**: Enum
@@ -25,7 +25,7 @@ ___
 >	**Default Value**: ALL
 
 
-## Role Identifier
+### Role Identifier
 >	**Input Required**: False
 
 >	**Attribute Type**: Simple
@@ -33,7 +33,7 @@ ___
 >	**Description**: A user-assigned identifier for the solution role.
 
 
-## Role Type
+### Role Type
 >	**Input Required**: False
 
 >	**Attribute Type**: Simple
@@ -43,7 +43,7 @@ ___
 >	**Default Value**: GovernanceRole
 
 
-## Title
+### Title
 >	**Input Required**: False
 
 >	**Attribute Type**: Simple
@@ -51,7 +51,7 @@ ___
 >	**Description**: Title of the solution role.
 
 
-## Journal Entry
+### Journal Entry
 >	**Input Required**: False
 
 >	**Attribute Type**: Simple
@@ -59,7 +59,7 @@ ___
 >	**Description**: A text entry into a journal.
 
 
-## Category
+### Category
 >	**Input Required**: False
 
 >	**Attribute Type**: Simple
@@ -69,7 +69,7 @@ ___
 >	**Alternative Labels**: Category Name
 
 
-## Description
+### Description
 >	**Input Required**: False
 
 >	**Attribute Type**: Simple
@@ -77,7 +77,7 @@ ___
 >	**Description**: A description.
 
 
-## Qualified Name
+### Qualified Name
 >	**Input Required**: False
 
 >	**Attribute Type**: QN
@@ -85,7 +85,7 @@ ___
 >	**Description**: The unique, text name of an element.
 
 
-## Content Status
+### Content Status
 >	**Input Required**: False
 
 >	**Attribute Type**: Valid Value
@@ -97,7 +97,7 @@ ___
 >	**Default Value**: ACTIVE
 
 
-## Scope
+### Scope
 >	**Input Required**: False
 
 >	**Attribute Type**: Simple
@@ -113,7 +113,7 @@ ___
 >	**Description**: A list of search keywords.
 
 
-## GUID
+### GUID
 >	**Input Required**: False
 
 >	**Attribute Type**: GUID
@@ -123,7 +123,7 @@ ___
 >	**Alternative Labels**: guid; Guid
 
 
-## URL
+### URL
 >	**Input Required**: False
 
 >	**Attribute Type**: Simple
@@ -131,7 +131,7 @@ ___
 >	**Description**: URL for further information.
 
 
-## Version Identifier
+### Version Identifier
 >	**Input Required**: False
 
 >	**Attribute Type**: Simple
@@ -143,7 +143,7 @@ ___
 >	**Default Value**: 1.0
 
 
-## Authors
+### Authors
 >	**Input Required**: False
 
 >	**Attribute Type**: Simple List

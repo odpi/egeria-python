@@ -11,6 +11,8 @@ def reset_config():
     """Reset the loaded configuration to force reloading."""
     import pyegeria.core.load_config
     pyegeria.core.load_config._app_config = None
+    import pyegeria.core.config
+    pyegeria.core.config._app_config = None
 
 def test_env_settings():
     """Test that environment variables are correctly loaded and used in the configuration."""
@@ -18,7 +20,7 @@ def test_env_settings():
     
     # Save the original environment variables
     original_env = {}
-    for var in ["PYEGERIA_ROOT_PATH", "PYEGERIA_CONFIG_FILE", "PYEGERIA_CONSOLE_WIDTH", "EGERIA_USER_NAME", "EGERIA_USER_PASSWORD"]:
+    for var in ["PYEGERIA_ROOT_PATH", "PYEGERIA_CONFIG_FILE", "PYEGERIA_CONSOLE_WIDTH", "EGERIA_USER", "EGERIA_USER_NAME", "EGERIA_USER_PASSWORD"]:
         if var in os.environ:
             original_env[var] = os.environ[var]
     
@@ -27,6 +29,7 @@ def test_env_settings():
         os.environ["PYEGERIA_ROOT_PATH"] = "/test/env/path"
         os.environ["PYEGERIA_CONFIG_FILE"] = "test_config.json"
         os.environ["PYEGERIA_CONSOLE_WIDTH"] = "300"
+        os.environ["EGERIA_USER"] = "test_user"
         os.environ["EGERIA_USER_NAME"] = "test_user"
         os.environ["EGERIA_USER_PASSWORD"] = "test_password"
         
@@ -83,7 +86,7 @@ def test_env_settings():
         
     finally:
         # Restore the original environment variables
-        for var in ["PYEGERIA_ROOT_PATH", "PYEGERIA_CONFIG_FILE", "PYEGERIA_CONSOLE_WIDTH", "EGERIA_USER_NAME", "EGERIA_USER_PASSWORD"]:
+        for var in ["PYEGERIA_ROOT_PATH", "PYEGERIA_CONFIG_FILE", "PYEGERIA_CONSOLE_WIDTH", "EGERIA_USER", "EGERIA_USER_NAME", "EGERIA_USER_PASSWORD"]:
             if var in original_env:
                 os.environ[var] = original_env[var]
             elif var in os.environ:
