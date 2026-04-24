@@ -45,7 +45,7 @@ The architecture is built around several decoupled components that work in tande
 
 ## Execution Flow
 
-The typical execution flow when a user runs `dr_egeria --input-file myfile.md --process` is as follows:
+The typical execution flow when a user runs `dr_egeria myfile.md --process` is as follows:
 
 ### Phase 1: Initialization and Parsing
 1. `dr_egeria` CLI receives the request, sets up environment variables, and instantiates the `ServerClient`.
@@ -203,10 +203,10 @@ Additionally, just before each command's `apply_changes()` is called the process
 
 ```bash
 # CLI
-hey_egeria cat process-markdown-file --input-file MyFile.md --debug
+dr_egeria MyFile.md --debug
 
 # __main__
-python -m md_processing.dr_egeria --input-file MyFile.md --debug
+python -m md_processing.dr_egeria MyFile.md --debug
 ```
 
 ```python

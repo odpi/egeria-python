@@ -1,4 +1,6 @@
-# Create Solution Role
+___
+
+## Create Solution Role
 > Creates or updates a solution role — a collection of responsibilities associated with a solution component.
 
 ## Display Name
@@ -11,7 +13,7 @@
 >	**Alternative Labels**: "Term Name"
 
 
-## Role Domain Identifier
+### Role Domain Identifier
 >	**Input Required**: False
 
 >	**Attribute Type**: Enum
@@ -23,7 +25,7 @@
 >	**Default Value**: ALL
 
 
-## Role Identifier
+### Role Identifier
 >	**Input Required**: False
 
 >	**Attribute Type**: Simple
@@ -31,7 +33,7 @@
 >	**Description**: A user-assigned identifier for the solution role.
 
 
-## Role Type
+### Role Type
 >	**Input Required**: False
 
 >	**Attribute Type**: Simple
@@ -41,7 +43,7 @@
 >	**Default Value**: GovernanceRole
 
 
-## Title
+### Title
 >	**Input Required**: False
 
 >	**Attribute Type**: Simple
@@ -49,7 +51,7 @@
 >	**Description**: Title of the solution role.
 
 
-## Journal Entry
+### Journal Entry
 >	**Input Required**: False
 
 >	**Attribute Type**: Simple
@@ -57,7 +59,7 @@
 >	**Description**: A text entry into a journal.
 
 
-## Category
+### Category
 >	**Input Required**: False
 
 >	**Attribute Type**: Simple
@@ -67,7 +69,7 @@
 >	**Alternative Labels**: Category Name
 
 
-## Description
+### Description
 >	**Input Required**: False
 
 >	**Attribute Type**: Simple
@@ -75,7 +77,7 @@
 >	**Description**: A description.
 
 
-## Qualified Name
+### Qualified Name
 >	**Input Required**: False
 
 >	**Attribute Type**: QN
@@ -83,7 +85,7 @@
 >	**Description**: The unique, text name of an element.
 
 
-## Content Status
+### Content Status
 >	**Input Required**: False
 
 >	**Attribute Type**: Valid Value
@@ -95,7 +97,7 @@
 >	**Default Value**: ACTIVE
 
 
-## Scope
+### Scope
 >	**Input Required**: False
 
 >	**Attribute Type**: Simple
@@ -111,7 +113,7 @@
 >	**Description**: A list of search keywords.
 
 
-## GUID
+### GUID
 >	**Input Required**: False
 
 >	**Attribute Type**: GUID
@@ -121,7 +123,7 @@
 >	**Alternative Labels**: guid; Guid
 
 
-## URL
+### URL
 >	**Input Required**: False
 
 >	**Attribute Type**: Simple
@@ -129,7 +131,7 @@
 >	**Description**: URL for further information.
 
 
-## Version Identifier
+### Version Identifier
 >	**Input Required**: False
 
 >	**Attribute Type**: Simple
@@ -141,10 +143,12 @@
 >	**Default Value**: 1.0
 
 
-## Authors
+### Authors
 >	**Input Required**: False
 
 >	**Attribute Type**: Simple List
 
 >	**Description**: The authors.
 
+
+___

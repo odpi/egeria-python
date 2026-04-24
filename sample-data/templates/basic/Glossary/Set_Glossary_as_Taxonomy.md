@@ -1,17 +1,19 @@
-# Set Glossary as Taxonomy
+___
+
+## Set Glossary as Taxonomy
 > Classify a glossary as a Taxonomy
 
-## Glossary Name
+### Glossary Name
 >	**Input Required**: False
 
 >	**Attribute Type**: Reference Name List
 
 >	**Description**: Zero or more existing glossaries that this term is a member of.
 
->	**Alternative Labels**: Glossary Name; Glossaries; In Glossaries; In Glossary; Glossary Names
+>	**Alternative Labels**: Glossary; Glossaries; In Glossaries; In Glossary; Glossary Names
 
 
-## Journal Entry
+### Journal Entry
 >	**Input Required**: False
 
 >	**Attribute Type**: Simple
@@ -19,7 +21,7 @@
 >	**Description**: A text entry into a journal.
 
 
-## Category
+### Category
 >	**Input Required**: False
 
 >	**Attribute Type**: Simple
@@ -29,7 +31,7 @@
 >	**Alternative Labels**: Category Name
 
 
-## Qualified Name
+### Qualified Name
 >	**Input Required**: False
 
 >	**Attribute Type**: QN
@@ -37,7 +39,7 @@
 >	**Description**: A unique qualified name for the element. Generated using the qualified name pattern  if not user specified.
 
 
-## Version Identifier
+### Version Identifier
 >	**Input Required**: False
 
 >	**Attribute Type**: Simple
@@ -49,7 +51,7 @@
 >	**Default Value**: 1.0
 
 
-## Identifier
+### Identifier
 >	**Input Required**: False
 
 >	**Attribute Type**: Simple
@@ -59,7 +61,7 @@
 >	**Alternative Labels**: ID
 
 
-## GUID
+### GUID
 >	**Input Required**: False
 
 >	**Attribute Type**: GUID
@@ -69,7 +71,7 @@
 >	**Alternative Labels**: Guid; guid
 
 
-## URL
+### URL
 >	**Input Required**: False
 
 >	**Attribute Type**: Simple
@@ -77,10 +79,12 @@
 >	**Description**: Link to supporting information
 
 
-## Search Keywords
+### Search Keywords
 >	**Input Required**: False
 
 >	**Attribute Type**: Simple List
 
 >	**Description**: Keywords to facilitate finding the element
 
+
+___

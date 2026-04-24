@@ -3,7 +3,7 @@ from md_processing.md_processing_utils.md_processing_constants import load_comma
 # Ensure compact command specs are loaded before any v2 processing
 load_commands()
 """
-This is an ongoing experiment in parsing and playing with Freddie docs
+This is an ongoing experiment in parsing and playing with Dr.Egeria docs
 """
 import os
 import sys
@@ -194,7 +194,7 @@ def setup_dispatcher(client: EgeriaTech) -> V2Dispatcher:
         DataValueSpecificationProcessor, DataClassProcessor, DataStructureProcessor, DataFieldProcessor, DataGrainProcessor,
         LinkDataFieldProcessor, LinkFieldToStructureProcessor, LinkDataValueDefinitionProcessor, LinkDataValueCompositionProcessor,
         LinkDataClassCompositionProcessor, LinkCertificationTypeToStructureProcessor, AttachDataDescriptionProcessor,
-        AssignDataValueSpecificationProcessor, AttachDataValueSpecificationProcessor
+        AssignDataValueSpecificationProcessor
     )
 
     reg("Create Data Specification", DataCollectionProcessor)
@@ -213,7 +213,6 @@ def setup_dispatcher(client: EgeriaTech) -> V2Dispatcher:
     reg("Link Certification Type to Data Structure", LinkCertificationTypeToStructureProcessor)
     reg("Attach Data Description to Element", AttachDataDescriptionProcessor)
     reg("Assign Data Value Specification", AssignDataValueSpecificationProcessor)
-    reg("Attach Data Value Specification to Element", AttachDataValueSpecificationProcessor)
 
     # Solution Architect (spec-driven to keep coverage aligned with compact commands)
     register_solution_architect_processors(reg)
@@ -519,7 +518,7 @@ async def process_md_file_v2(input_file: str, output_folder: str, directive: str
             if errors:
                 console.print(f"[red]-- {res['verb']} {res['object_type']} ({res.get('qualified_name', 'Unknown')}) --[/red]")
                 for e in errors:
-                    console.print(f"   [red]* {e}[/red]")
+                    console.print(f"   [red]- {e}[/red]")
         console.print("\n")
 
     if has_warnings:
@@ -529,7 +528,7 @@ async def process_md_file_v2(input_file: str, output_folder: str, directive: str
             if warnings:
                 console.print(f"[yellow]-- {res['verb']} {res['object_type']} ({res.get('qualified_name', 'Unknown')}) --[/yellow]")
                 for w in warnings:
-                    console.print(f"   [yellow]* {w}[/yellow]")
+                    console.print(f"   [yellow]- {w}[/yellow]")
         console.print("\n")
 
     # Finally, print the summary table last
@@ -594,7 +593,8 @@ if __name__ == "__main__":
     import argparse
     import asyncio
     parser = argparse.ArgumentParser(description="Process Dr. Egeria Markdown files using v2.")
-    parser.add_argument("--input-file", required=True, help="Input markdown file name (in Inbox)")
+    parser.add_argument("input_file", nargs='?', default="dr_egeria_intro_part1.md",
+                        help="Input markdown file name (in Inbox)")
     parser.add_argument("--output-folder", default="", help="Optional output subfolder (in Outbox)")
     parser.add_argument("--directive", default="validate",
                         choices=["display", "validate", "process"],

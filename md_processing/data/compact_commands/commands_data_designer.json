@@ -1,6 +1,6 @@
 {
   "family": "Data Designer",
-  "exported": "Apr 16, 2026 at 9:30:11 AM",
+  "exported": "Apr 23, 2026 at 4:22:22 PM",
   "attribute_definitions": {
     "Activity Status": {
       "variable_name": "activity_status",
@@ -3006,12 +3006,10 @@
     "Resource List": {
       "inherits": "Link Command Base",
       "own_attributes": [
+        "Additional Properties",
         "Element Id",
-        "Resource Description",
         "Resource Id",
-        "Resource Properties",
-        "Resource Use",
-        "Watch Resource"
+        "Resource Use"
       ]
     },
     "Link Command Base": {
@@ -3033,10 +3031,12 @@
       ]
     },
     "Collection Membership": {
-      "inherits": "Link Command Base",
+      "inherits": null,
       "own_attributes": [
+        "Anchor Scope IDs",
         "Confidence",
         "Expression",
+        "Make Anchor",
         "Membership Rationale",
         "Membership Status",
         "Notes",
@@ -3122,7 +3122,7 @@
       ]
     },
     "Data Value Assignment Base": {
-      "inherits": "Link Command Base",
+      "inherits": null,
       "own_attributes": [
         "Assignment Status",
         "Confidence",

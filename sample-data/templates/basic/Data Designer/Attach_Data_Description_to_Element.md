@@ -1,10 +1,12 @@
-# Attach Data Description to Element
+___
+
+## Attach Data Description to Element
 > Connect an existing data describing collection to an element using the DataDescription relationship (0580).
 
 >
 >	**Alternative Names**: Attach Data Description->Element
 
-## Element Id
+### Element Id
 >	**Input Required**: True
 
 >	**Attribute Type**: Reference Name
@@ -14,7 +16,7 @@
 >	**Alternative Labels**: Element Name; Member Id
 
 
-## Label
+### Label
 >	**Input Required**: False
 
 >	**Attribute Type**: Simple
@@ -24,7 +26,7 @@
 >	**Alternative Labels**: Wire Label
 
 
-## Journal Entry
+### Journal Entry
 >	**Input Required**: False
 
 >	**Attribute Type**: Simple
@@ -32,7 +34,7 @@
 >	**Description**: A text entry into a journal.
 
 
-## Description
+### Description
 >	**Input Required**: False
 
 >	**Attribute Type**: Simple
@@ -40,10 +42,12 @@
 >	**Description**: A description.
 
 
-## Collection Id
+### Collection Id
 >	**Input Required**: False
 
 >	**Attribute Type**: Reference Name
 
 >	**Description**: The unique identifier (qualified name or GUID) of the collection.
 
+
+___

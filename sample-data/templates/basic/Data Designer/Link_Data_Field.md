@@ -1,7 +1,9 @@
-# Link Data Field
+___
+
+## Link Data Field
 > Links or unlinks two data fields via the LinkedDataField relationship, with an optional relationship type name to describe the nature of the association (e.g. ForeignKey, DerivedFrom).
 
-## Linked Data Field 1
+### Linked Data Field 1
 >	**Input Required**: True
 
 >	**Attribute Type**: Reference Name
@@ -9,7 +11,7 @@
 >	**Description**: The first data field in a LinkedDataField peer relationship.
 
 
-## Linked Data Field 2
+### Linked Data Field 2
 >	**Input Required**: True
 
 >	**Attribute Type**: Reference Name
@@ -17,7 +19,7 @@
 >	**Description**: The second data field in a LinkedDataField peer relationship.
 
 
-## Label
+### Label
 >	**Input Required**: False
 
 >	**Attribute Type**: Simple
@@ -27,7 +29,7 @@
 >	**Alternative Labels**: Wire Label
 
 
-## Link Relationship Type Name
+### Link Relationship Type Name
 >	**Input Required**: False
 
 >	**Attribute Type**: Simple
@@ -35,7 +37,7 @@
 >	**Description**: The open metadata type name of the relationship used in a LinkedDataField connection.
 
 
-## Link Relationship Type Name
+### Link Relationship Type Name
 >	**Input Required**: False
 
 >	**Attribute Type**: Simple
@@ -43,7 +45,7 @@
 >	**Description**: The open metadata type name of the relationship used in a LinkedDataField connection.
 
 
-## Journal Entry
+### Journal Entry
 >	**Input Required**: False
 
 >	**Attribute Type**: Simple
@@ -51,10 +53,12 @@
 >	**Description**: A text entry into a journal.
 
 
-## Description
+### Description
 >	**Input Required**: False
 
 >	**Attribute Type**: Simple
 
 >	**Description**: A description.
 
+
+___

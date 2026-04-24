@@ -1,4 +1,6 @@
-# Create Data Lens
+___
+
+## Create Data Lens
 > A DataLens defines a geographic, temporal, and element scope for data collection and analysis.
 
 ## Display Name
@@ -11,7 +13,7 @@
 >	**Alternative Labels**: "Term Name"
 
 
-## Domain Identifier
+### Domain Identifier
 >	**Input Required**: False
 
 >	**Attribute Type**: Enum
@@ -23,7 +25,7 @@
 >	**Default Value**: ALL
 
 
-## Implications
+### Implications
 >	**Input Required**: False
 
 >	**Attribute Type**: Simple List
@@ -31,7 +33,7 @@
 >	**Description**: List of implications.
 
 
-## Importance
+### Importance
 >	**Input Required**: False
 
 >	**Attribute Type**: Simple
@@ -39,7 +41,7 @@
 >	**Description**: Importance of the definition.
 
 
-## Outcomes
+### Outcomes
 >	**Input Required**: False
 
 >	**Attribute Type**: Simple List
@@ -47,7 +49,7 @@
 >	**Description**: List of desired outcomes.
 
 
-## Results
+### Results
 >	**Input Required**: False
 
 >	**Attribute Type**: Simple List
@@ -55,7 +57,7 @@
 >	**Description**: A list of expected results.
 
 
-## Summary
+### Summary
 >	**Input Required**: False
 
 >	**Attribute Type**: Simple
@@ -63,7 +65,7 @@
 >	**Description**: A short summary of the element's meaning or purpose.
 
 
-## Usage
+### Usage
 >	**Input Required**: False
 
 >	**Attribute Type**: Simple
@@ -71,7 +73,7 @@
 >	**Description**: The usage guidance for this element — how it is intended to be used in context.
 
 
-## Implementation Description
+### Implementation Description
 >	**Input Required**: False
 
 >	**Attribute Type**: Simple
@@ -81,7 +83,7 @@
 >	**Alternative Labels**: Implementation
 
 
-## Max Height
+### Max Height
 >	**Input Required**: False
 
 >	**Attribute Type**: Simple Float
@@ -89,7 +91,7 @@
 >	**Description**: Maximum height of the vertical scope.
 
 
-## Data Collection End Time
+### Data Collection End Time
 >	**Input Required**: False
 
 >	**Attribute Type**: Simple
@@ -97,7 +99,7 @@
 >	**Description**: End time for the data collection period.
 
 
-## Data Collection Start Time
+### Data Collection Start Time
 >	**Input Required**: False
 
 >	**Attribute Type**: Simple
@@ -105,7 +107,7 @@
 >	**Description**: Start time for the data collection period.
 
 
-## Max Latitude
+### Max Latitude
 >	**Input Required**: False
 
 >	**Attribute Type**: Simple Float
@@ -113,7 +115,7 @@
 >	**Description**: Maximum latitude of the geographic scope.
 
 
-## Max Longitude
+### Max Longitude
 >	**Input Required**: False
 
 >	**Attribute Type**: Simple Float
@@ -121,7 +123,7 @@
 >	**Description**: Maximum longitude of the geographic scope.
 
 
-## Min Height
+### Min Height
 >	**Input Required**: False
 
 >	**Attribute Type**: Simple Float
@@ -129,7 +131,7 @@
 >	**Description**: Minimum height of the vertical scope.
 
 
-## Min Latitude
+### Min Latitude
 >	**Input Required**: False
 
 >	**Attribute Type**: Simple Float
@@ -137,7 +139,7 @@
 >	**Description**: Minimum latitude of the geographic scope.
 
 
-## Min Longitude
+### Min Longitude
 >	**Input Required**: False
 
 >	**Attribute Type**: Simple Float
@@ -145,15 +147,19 @@
 >	**Description**: Minimum longitude of the geographic scope.
 
 
-## Scope Elements
+### Scope Elements
 >	**Input Required**: False
 
 >	**Attribute Type**: Dictionary
 
 >	**Description**: Map of element identifiers defining the scope of the data lens.
 
+>	| Parameter Name | Parameter Value |
+>	|---|---|
+>	| example_key | example_value |
 
-## Journal Entry
+
+### Journal Entry
 >	**Input Required**: False
 
 >	**Attribute Type**: Simple
@@ -161,7 +167,7 @@
 >	**Description**: A text entry into a journal.
 
 
-## Category
+### Category
 >	**Input Required**: False
 
 >	**Attribute Type**: Simple
@@ -171,7 +177,7 @@
 >	**Alternative Labels**: Category Name
 
 
-## Description
+### Description
 >	**Input Required**: False
 
 >	**Attribute Type**: Simple
@@ -179,7 +185,7 @@
 >	**Description**: A description.
 
 
-## Qualified Name
+### Qualified Name
 >	**Input Required**: False
 
 >	**Attribute Type**: QN
@@ -187,7 +193,7 @@
 >	**Description**: The unique, text name of an element.
 
 
-## Content Status
+### Content Status
 >	**Input Required**: False
 
 >	**Attribute Type**: Valid Value
@@ -199,7 +205,7 @@
 >	**Default Value**: ACTIVE
 
 
-## Scope
+### Scope
 >	**Input Required**: False
 
 >	**Attribute Type**: Simple
@@ -215,7 +221,7 @@
 >	**Description**: A list of search keywords.
 
 
-## GUID
+### GUID
 >	**Input Required**: False
 
 >	**Attribute Type**: GUID
@@ -225,7 +231,7 @@
 >	**Alternative Labels**: guid; Guid
 
 
-## URL
+### URL
 >	**Input Required**: False
 
 >	**Attribute Type**: Simple
@@ -233,7 +239,7 @@
 >	**Description**: URL for further information.
 
 
-## Version Identifier
+### Version Identifier
 >	**Input Required**: False
 
 >	**Attribute Type**: Simple
@@ -245,10 +251,12 @@
 >	**Default Value**: 1.0
 
 
-## Authors
+### Authors
 >	**Input Required**: False
 
 >	**Attribute Type**: Simple List
 
 >	**Description**: The authors.
 
+
+___

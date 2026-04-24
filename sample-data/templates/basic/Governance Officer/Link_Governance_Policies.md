@@ -1,7 +1,9 @@
-# Link Governance Policies
+___
+
+## Link Governance Policies
 > Link peer governance policies with the GovernancePolicyLink relationship. Policies types are: GovernancePrinciple, GovernanceObligation, GovernanceApproach.
 
-## Governance Policy 1
+### Governance Policy 1
 >	**Input Required**: True
 
 >	**Attribute Type**: Reference Name
@@ -9,7 +11,7 @@
 >	**Description**: First GovernancePolicy entity in the peer relationship.
 
 
-## Governance Policy 2
+### Governance Policy 2
 >	**Input Required**: True
 
 >	**Attribute Type**: Reference Name
@@ -17,7 +19,7 @@
 >	**Description**: Second GovernancePolicy entity in the peer relationship.
 
 
-## Label
+### Label
 >	**Input Required**: False
 
 >	**Attribute Type**: Simple
@@ -27,7 +29,7 @@
 >	**Alternative Labels**: Wire Label
 
 
-## Journal Entry
+### Journal Entry
 >	**Input Required**: False
 
 >	**Attribute Type**: Simple
@@ -35,10 +37,12 @@
 >	**Description**: A text entry into a journal.
 
 
-## Description
+### Description
 >	**Input Required**: False
 
 >	**Attribute Type**: Simple
 
 >	**Description**: A description.
 
+
+___

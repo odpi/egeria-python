@@ -8,7 +8,7 @@ If you are new to pyegeria, start with the README for installation and configura
 
 ---
 
-## Quick Start
+### Quick Start
 
 - Show a user profile with master–detail output (table + linked detail sections):
 
@@ -31,14 +31,14 @@ profile = client.get_my_profile(output_format="DICT", report_spec="My-User-MD")
 
 ---
 
-## Output Formats
+### Output Formats
 
 pyegeria supports multiple output types. Each report spec declares which types it supports.
 
 - DICT: Python list/dict structures — best for programmatic use and tests. This format provides a "materialized" view where properties are cleaned up and nested elements are promoted to logical keys.
 - JSON: Raw Egeria response dictionary — ideal for advanced users who need to process the exact response from the Egeria platform without any pyegeria-specific transformations.
 - LIST: Markdown table (horizontal). Good for compact overviews. Nested values are automatically summarized (names/display names). If a `detail_spec` is configured, master rows include `[details]` links to rich detail sections appended below the table.
-- REPORT: Rich Markdown (vertical). Ideal for deep dives. Renders nested dict/list values as hierarchical bullet lists and includes vertical detail sections for master-detail columns.
+- REPORT: Rich Markdown (vertical). Ideal for deep dives. Renders nested dict/list values as hierarchical bullet lists (using the hyphen `-` as the default bullet character) and includes vertical detail sections for master-detail columns.
 - REPORT-GRAPH: Recursive, linked Markdown report. Builds anchor-linked sections per element (by GUID), and adds link lists for peer and child/nested elements; recurses while avoiding cycles.
 - FORM: Markdown suitable for Dr.Egeria editable forms. Complex values are summarized to keep the form concise and manageable.
 - MD: Plain Markdown (legacy simple rendering).
@@ -50,7 +50,7 @@ Tip: Use DICT for APIs and automation; use LIST for dashboards/browsing; use REP
 
 ---
 
-## Method Parameter Consistency
+### Method Parameter Consistency
 
 All `find_*` and `get_*` methods in `pyegeria` that support formatted output follow a consistent parameter pattern:
 
@@ -71,7 +71,7 @@ All `find_*` and `get_*` methods in `pyegeria` that support formatted output fol
 - Column `key` names in report specs can be snake_case or camelCase. The formatter tries exact key, then `to_camel_case`, then uppercase for well‑known IDs. Prefer snake_case for consistency.
 - CLI flags like `--param page_size=50` or `--params-json '{"metadata_element_subtypes":["Asset"],"page_size":100}'` must use snake_case.
 
-## The Report Spec Model
+### The Report Spec Model
 
 Report specs are defined using Pydantic models in `pyegeria/view/_output_format_models.py` and registered in `pyegeria/view/base_report_formats.py`.
 
@@ -114,7 +114,7 @@ My_User_MD = FormatSet(
 
 ---
 
-## Selecting Specs and Generating Output
+### Selecting Specs and Generating Output
 
 Most client methods already call the output pipeline for you. Under the hood, the following helpers are used (in `pyegeria/view/output_formatter.py` and `pyegeria/view/base_report_formats.py`):
 
@@ -165,7 +165,7 @@ In practice you will call a client method (e.g., `MyProfile.get_my_profile`) and
 
 ---
 
-## Nested Data and the Master–Detail Pattern
+### Nested Data and the Master–Detail Pattern
 
 Egeria OMVS responses often include related elements and nested hierarchies. pyegeria preserves this richness and makes it navigable across all primary output formats (`LIST`, `REPORT`, `DICT`, and CLI `TABLE`).
 
@@ -181,7 +181,7 @@ Egeria OMVS responses often include related elements and nested hierarchies. pye
 - DICT: returns full nested dict/lists for downstream processing (materialized).
 - JSON: returns the raw Egeria response structure.
 - LIST: shows a compact summary (names/identifiers) in the master row and adds a `[details]` link if a `detail_spec` is configured. A detail section is appended below using the linked spec.
-- REPORT: renders nested dicts/lists as hierarchical markdown bullet lists (read‑only view).
+- REPORT: renders nested dicts/lists as hierarchical markdown bullet lists (using the hyphen `-` as the default bullet character) for a clean read-only view.
 - FORM: shows summarized values only to keep the form updateable and concise.
 
 ### Example: Roles → Projects
@@ -265,7 +265,7 @@ Column(name="Target Name", key="relatedElement.properties.displayName")
 
 ---
 
-## Linked Graph REPORTs (REPORT-GRAPH)
+### Linked Graph REPORTs (REPORT-GRAPH)
 
 The `REPORT-GRAPH` output type produces a recursive, wiki-style Markdown document with working intra-document links. It is ideal for exploring networks of related metadata (peers and nested/child elements) from a `find_*` response.
 
@@ -292,7 +292,7 @@ Notes
 
 ---
 
-## Mermaid Graphs and Normalization
+### Mermaid Graphs and Normalization
 
 Many Egeria elements include Mermaid graph definitions to visualize relationships. pyegeria automatically detects and renders these in Markdown reports (`REPORT`, `REPORT-GRAPH`, `MERMAID`).
 
@@ -329,7 +329,7 @@ Invalid env values are ignored and fall back to config/default.
 
 ---
 
-## Deep Nesting and Recursive Aggregation
+### Deep Nesting and Recursive Aggregation
 
 When generating output for complex entities like User Profiles, pyegeria can recursively search through the relationship hierarchy to find and aggregate nested elements.
 
@@ -351,7 +351,7 @@ client.aggregation_depth = 1  # Only look at immediate children of roles
 
 ---
 
-## Writing Your Own Report Specs
+### Writing Your Own Report Specs
 
 You can add/override report specs without changing pyegeria’s source by providing JSON files and loading them at runtime.
 
@@ -414,7 +414,7 @@ Place this JSON file into your user specs directory and call `load_user_report_s
 
 ---
 
-## Generating Report Specs from Commands
+### Generating Report Specs from Commands
 
 pyegeria includes powerful tooling to automatically generate report specifications, markdown templates, and help documentation from Egeria command definitions (compact commands). This ensures that the metadata you create or update using Dr.Egeria can be consistently reported on and documented using the exact same attribute names and types.
 
@@ -423,7 +423,7 @@ pyegeria includes powerful tooling to automatically generate report specificatio
 The easiest way to keep your documentation, templates, and report specs fully synchronized with your compact command schemas is to use the `refresh_specs.py` utility. This script executes all three generation steps in sequence.
 
 ```bash
-# Run the complete refresh process
+## Run the complete refresh process
 uv run commands/tech/refresh_specs.py
 
 # Automatically persist generated report specs to base_report_formats.py
@@ -483,7 +483,7 @@ uv run commands/tech/refresh_specs.py --merge-reports
 
 ---
 
-## Discoverability & Introspection
+### Discoverability & Introspection
 
 - List all spec names (optionally grouped): `report_spec_list(show_family=True, sort_by_family=True)`
 - Get a spec by name and match a type: `select_report_format("Collections", "TABLE")`
@@ -494,7 +494,7 @@ uv run commands/tech/refresh_specs.py --merge-reports
 
 ---
 
-## Report Commands (CLI)
+### Report Commands (CLI)
 
 pyegeria provides ready-to-use CLI commands to discover and run report specs.
 
@@ -514,10 +514,10 @@ poetry run list_reports
 # Filter by keyword (matches name, family, description, aliases)
 poetry run list_reports --search glossary
 
-# Run a report as a table (Rich table in terminal)
+## Run a report as a table (Rich table in terminal)
 poetry run run_report --report "Digital-Products" --output-format TABLE --param search_string="*"
 
-# Run a report and save Markdown to the outbox
+## Run a report and save Markdown to the outbox
 poetry run run_report --report "My-User-MD" --output-format REPORT --param search_string="*"
 
 # Pass multiple parameters in snake_case
@@ -547,7 +547,7 @@ Notes
 
 ---
 
-## MCP tools for reports
+### MCP tools for reports
 
 If you use an MCP-compatible client, pyegeria exposes report-related tools via a lightweight server at `pyegeria/core/mcp_server.py`.
 
@@ -583,7 +583,7 @@ Tip: You can combine `find_report_specs` to discover candidates and then `run_re
 
 ---
 
-## Troubleshooting
+### Troubleshooting
 
 - Cell shows `---` in LIST: the value is empty or the key didn’t match. Check your column `key` (snake vs camel), and confirm your extractor/materializer emits that key.
 - Detail link not shown: the master column has `detail_spec` but the value is empty. Ensure nested elements are materialized and (for generic promotion) that the linked spec’s `target_type` matches the nested element’s `type`.
@@ -593,7 +593,7 @@ Tip: You can combine `find_report_specs` to discover candidates and then `run_re
 
 ---
 
-## References
+### References
 
 - Specs registry and helpers: `pyegeria/view/base_report_formats.py`
 - Output engine and materializer: `pyegeria/view/output_formatter.py`

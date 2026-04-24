@@ -350,6 +350,18 @@ class TermRelationshipProcessor(AsyncBaseCommandProcessor):
         if not relationship:
             # Fallback for old templates
             relationship = attributes.get('Relationship', {}).get('value', None)
+
+        # Standardize common relationship names
+        rel_mapping = {
+            "ISA": "ISARelationship",
+            "IS A": "ISARelationship",
+            "HASA": "TermHASARelationship",
+            "HAS A": "TermHASARelationship",
+            "TYPED BY": "TermTYPEDBYRelationship",
+            "TYPE OF": "TermISATYPEOFRelationship",
+        }
+        if relationship and relationship.upper() in rel_mapping:
+            relationship = rel_mapping[relationship.upper()]
         
         if not (term1_guid and term2_guid and relationship):
             msg = f"TermRelationshipProcessor: Missing required identifiers (Term 1 GUID: {bool(term1_guid)}, Term 2 GUID: {bool(term2_guid)}, Relationship: {bool(relationship)})"
@@ -369,10 +381,10 @@ class TermRelationshipProcessor(AsyncBaseCommandProcessor):
                 logger.success(f"Linked terms via {relationship}")
             
             # Standard v2 relationship output
-            return (f"\n\n# {self.command.verb} Term-Term Relationship\n\n"
-                    f"## Term 1 Name:\n\n{term1_qname}\n\n"
-                    f"## Term 2 Name:\n\n{term2_qname}\n\n"
-                    f"## Term Relationship:\n\n{relationship}")
+            return (f"\n\n## {self.command.verb} Term-Term Relationship\n\n"
+                    f"### Term 1 Name:\n\n{term1_qname}\n\n"
+                    f"### Term 2 Name:\n\n{term2_qname}\n\n"
+                    f"### Term Relationship:\n\n{relationship}")
         except PyegeriaException as e:
             logger.error(f"Failed to link terms: {e}")
             self.parsed_output['valid'] = False

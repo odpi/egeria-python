@@ -1,9 +1,11 @@
-# Add Member to Collection
+___
+
+## Add Member to Collection
 > Add/Remove a member to/from a collection.
 >
 >	**Alternative Names**: Member; Member to Collection; Member to Folder; Member->Collection; Member from Collection; Member from Folder
 
-## Element Id
+### Element Id
 >	**Input Required**: True
 
 >	**Attribute Type**: Reference Name
@@ -13,7 +15,7 @@
 >	**Alternative Labels**: Element Name; Member Id
 
 
-## Label
+### Label
 >	**Input Required**: False
 
 >	**Attribute Type**: Simple
@@ -23,7 +25,7 @@
 >	**Alternative Labels**: Wire Label
 
 
-## Membership Rationale
+### Membership Rationale
 >	**Input Required**: False
 
 >	**Attribute Type**: Simple
@@ -31,7 +33,7 @@
 >	**Description**: Rationale for membership.
 
 
-## Membership Status
+### Membership Status
 >	**Input Required**: False
 
 >	**Attribute Type**: Valid Value
@@ -43,7 +45,7 @@
 >	**Default Value**: PROPOSED
 
 
-## Notes
+### Notes
 >	**Input Required**: False
 
 >	**Attribute Type**: Simple
@@ -51,7 +53,7 @@
 >	**Description**: Notes and observations about the element.
 
 
-## Journal Entry
+### Journal Entry
 >	**Input Required**: False
 
 >	**Attribute Type**: Simple
@@ -59,7 +61,7 @@
 >	**Description**: A text entry into a journal.
 
 
-## Description
+### Description
 >	**Input Required**: False
 
 >	**Attribute Type**: Simple
@@ -67,10 +69,12 @@
 >	**Description**: A description.
 
 
-## Collection Id
+### Collection Id
 >	**Input Required**: False
 
 >	**Attribute Type**: Reference Name
 
 >	**Description**: The unique identifier (qualified name or GUID) of the collection.
 
+
+___

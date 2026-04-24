@@ -1,4 +1,4 @@
-# Create Comment
+## Create Comment
 > Creates a comment on a metadata element.
 >
 >	**Alternative Names**: Add Comment
@@ -13,7 +13,7 @@
 >	**Alternative Labels**: "Term Name"
 
 
-## Commented On Element
+### Commented On Element
 >	**Input Required**: True
 
 >	**Attribute Type**: Reference Name
@@ -23,7 +23,7 @@
 >	**Alternative Labels**: Associated Element
 
 
-## Comment Type
+### Comment Type
 >	**Input Required**: False
 
 >	**Attribute Type**: Valid Value
@@ -33,7 +33,7 @@
 >	**Valid Values**: STANDARD_COMMENT,QUESTION,ANSWER,SUGGESTION,USAGE_EXPERIENCE,REQUIREMENT,OTHER
 
 
-## Journal Entry
+### Journal Entry
 >	**Input Required**: False
 
 >	**Attribute Type**: Simple
@@ -41,7 +41,7 @@
 >	**Description**: A text entry into a journal.
 
 
-## Category
+### Category
 >	**Input Required**: False
 
 >	**Attribute Type**: Simple
@@ -51,7 +51,7 @@
 >	**Alternative Labels**: Category Name
 
 
-## Description
+### Description
 >	**Input Required**: False
 
 >	**Attribute Type**: Simple
@@ -59,7 +59,7 @@
 >	**Description**: A description.
 
 
-## Qualified Name
+### Qualified Name
 >	**Input Required**: False
 
 >	**Attribute Type**: QN
@@ -75,7 +75,7 @@
 >	**Description**: A list of search keywords.
 
 
-## GUID
+### GUID
 >	**Input Required**: False
 
 >	**Attribute Type**: GUID
@@ -85,7 +85,7 @@
 >	**Alternative Labels**: guid; Guid
 
 
-## URL
+### URL
 >	**Input Required**: False
 
 >	**Attribute Type**: Simple
@@ -93,7 +93,7 @@
 >	**Description**: URL for further information.
 
 
-## Version Identifier
+### Version Identifier
 >	**Input Required**: False
 
 >	**Attribute Type**: Simple

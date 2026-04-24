@@ -1,4 +1,4 @@
-# Create Informal Tag
+## Create Informal Tag
 > Creates an informal tag — a user-defined label that can be attached to any referenceable element.
 
 ## Display Name
@@ -11,7 +11,7 @@
 >	**Alternative Labels**: "Term Name"
 
 
-## Journal Entry
+### Journal Entry
 >	**Input Required**: False
 
 >	**Attribute Type**: Simple
@@ -19,7 +19,7 @@
 >	**Description**: A text entry into a journal.
 
 
-## Category
+### Category
 >	**Input Required**: False
 
 >	**Attribute Type**: Simple
@@ -29,7 +29,7 @@
 >	**Alternative Labels**: Category Name
 
 
-## Description
+### Description
 >	**Input Required**: False
 
 >	**Attribute Type**: Simple
@@ -37,7 +37,7 @@
 >	**Description**: A description.
 
 
-## Qualified Name
+### Qualified Name
 >	**Input Required**: False
 
 >	**Attribute Type**: QN
@@ -53,7 +53,7 @@
 >	**Description**: A list of search keywords.
 
 
-## GUID
+### GUID
 >	**Input Required**: False
 
 >	**Attribute Type**: GUID
@@ -63,7 +63,7 @@
 >	**Alternative Labels**: guid; Guid
 
 
-## URL
+### URL
 >	**Input Required**: False
 
 >	**Attribute Type**: Simple
@@ -71,7 +71,7 @@
 >	**Description**: URL for further information.
 
 
-## Version Identifier
+### Version Identifier
 >	**Input Required**: False
 
 >	**Attribute Type**: Simple
@@ -83,7 +83,7 @@
 >	**Default Value**: 1.0
 
 
-## Effective From
+### Effective From
 >	**Input Required**: False
 
 >	**Attribute Type**: Simple
@@ -91,7 +91,7 @@
 >	**Description**: The beginning of when an element is viewable.
 
 
-## Effective Time
+### Effective Time
 >	**Input Required**: False
 
 >	**Attribute Type**: Simple
@@ -99,7 +99,7 @@
 >	**Description**: The time at which an element must be effective in order to be returned by the request.
 
 
-## Effective To
+### Effective To
 >	**Input Required**: False
 
 >	**Attribute Type**: Simple
@@ -107,7 +107,7 @@
 >	**Description**: The ending time at which an element is visible.
 
 
-## External Source GUID
+### External Source GUID
 >	**Input Required**: False
 
 >	**Attribute Type**: GUID
@@ -115,7 +115,7 @@
 >	**Description**: The unique identifier of an external source.
 
 
-## External Source Name
+### External Source Name
 >	**Input Required**: False
 
 >	**Attribute Type**: Simple
@@ -123,7 +123,7 @@
 >	**Description**: The name of an external source
 
 
-## For Duplicate Processing
+### For Duplicate Processing
 >	**Input Required**: False
 
 >	**Attribute Type**: Bool
@@ -131,7 +131,7 @@
 >	**Description**: Flag indicating if the request is to support duplicate processing.
 
 
-## For Lineage
+### For Lineage
 >	**Input Required**: False
 
 >	**Attribute Type**: Bool
@@ -139,7 +139,7 @@
 >	**Description**: Flag indicating if the request is to support lineage.
 
 
-## Request ID
+### Request ID
 >	**Input Required**: False
 
 >	**Attribute Type**: Simple
@@ -147,7 +147,7 @@
 >	**Description**: A user provided or system generated request id for a conversation.
 
 
-## Anchor ID
+### Anchor ID
 >	**Input Required**: False
 
 >	**Attribute Type**: Reference Name
@@ -155,7 +155,7 @@
 >	**Description**: Name of the anchoring element.
 
 
-## Anchor Scope ID
+### Anchor Scope ID
 >	**Input Required**: False
 
 >	**Attribute Type**: Reference Name
@@ -165,7 +165,7 @@
 >	**Alternative Labels**: Anchor Scope
 
 
-## Glossary Term
+### Glossary Term
 >	**Input Required**: False
 
 >	**Attribute Type**: Reference Name
@@ -175,7 +175,7 @@
 >	**Alternative Labels**: Term
 
 
-## Is Own Anchor
+### Is Own Anchor
 >	**Input Required**: False
 
 >	**Attribute Type**: Bool
@@ -187,7 +187,7 @@
 >	**Default Value**: true
 
 
-## Merge Update
+### Merge Update
 >	**Input Required**: False
 
 >	**Attribute Type**: Bool
@@ -199,7 +199,7 @@
 >	**Default Value**: true
 
 
-## Parent at End1
+### Parent at End1
 >	**Input Required**: False
 
 >	**Attribute Type**: Bool
@@ -209,7 +209,7 @@
 >	**Default Value**: true
 
 
-## Parent ID
+### Parent ID
 >	**Input Required**: False
 
 >	**Attribute Type**: Reference Name
@@ -219,7 +219,7 @@
 >	**Alternative Labels**: Parent;
 
 
-## Parent Relationship Attributes
+### Parent Relationship Attributes
 >	**Input Required**: False
 
 >	**Attribute Type**: Dictionary
@@ -227,7 +227,7 @@
 >	**Description**: A dictionary of relationship attributes to establish the parent relationship.
 
 
-## Parent Relationship Type Name
+### Parent Relationship Type Name
 >	**Input Required**: False
 
 >	**Attribute Type**: Simple
@@ -235,7 +235,7 @@
 >	**Description**: The type of parent relationship.
 
 
-## Status
+### Status
 >	**Input Required**: False
 
 >	**Attribute Type**: Simple
@@ -245,7 +245,7 @@
 >	**Default Value**: ACTIVE
 
 
-## Zone Membership
+### Zone Membership
 >	**Input Required**: False
 
 >	**Attribute Type**: Simple
@@ -253,7 +253,7 @@
 >	**Description**: Zones scope visibility of elements to different users.
 
 
-## Additional Properties
+### Additional Properties
 >	**Input Required**: False
 
 >	**Attribute Type**: Dictionary
@@ -261,7 +261,7 @@
 >	**Description**: Additional Properties  allow arbitrary properties not defined in the type definitions to be added to any referenceable element.
 
 
-## Class Word Classification
+### Class Word Classification
 >	**Input Required**: False
 
 >	**Attribute Type**: Bool
@@ -271,7 +271,7 @@
 >	**Default Value**: False
 
 
-## Confidence Classification
+### Confidence Classification
 >	**Input Required**: False
 
 >	**Attribute Type**: Valid Value
@@ -281,7 +281,7 @@
 >	**Valid Values**: UNCLASSIFIED,AD_HOC,TRANSACTIONAL,AUTHORITATIVE,DERIVED,OBSOLETE,OTHER
 
 
-## Confidentiality Classification
+### Confidentiality Classification
 >	**Input Required**: False
 
 >	**Attribute Type**: Valid Value
@@ -291,7 +291,7 @@
 >	**Valid Values**: UNCLASSIFIED,INTERNAL,CONFIDENTIAL,SENSITIVE,RESTRICTED,OTHER
 
 
-## Criticality Classification
+### Criticality Classification
 >	**Input Required**: False
 
 >	**Attribute Type**: Valid Value
@@ -301,7 +301,7 @@
 >	**Valid Values**: UNCLASSIFIED,MARGINAL,IMPORTANT,CRITICAL,CATASTROPHIC,OTHER
 
 
-## Identifier
+### Identifier
 >	**Input Required**: False
 
 >	**Attribute Type**: Simple
@@ -311,7 +311,7 @@
 >	**Alternative Labels**: ID
 
 
-## Impact Classification
+### Impact Classification
 >	**Input Required**: False
 
 >	**Attribute Type**: Valid Value
@@ -321,7 +321,7 @@
 >	**Valid Values**: UNCLASSIFIED,LOW,MEDIUM,HIGH,OTHER
 
 
-## Modifier Classification
+### Modifier Classification
 >	**Input Required**: False
 
 >	**Attribute Type**: Bool
@@ -331,7 +331,7 @@
 >	**Default Value**: False
 
 
-## Policy Management Point
+### Policy Management Point
 >	**Input Required**: False
 
 >	**Attribute Type**: Dictionary
@@ -339,7 +339,7 @@
 >	**Description**: Combined classification from 0435. Applied to Referenceable. Structure: {point_type: str, name: str, description: str}. point_type is one of: PolicyAdministrationPoint, PolicyDecisionPoint, PolicyEnforcementPoint, PolicyInformationPoint, PolicyRetrievalPoint. A Referenceable may have multiple policy management point classifications simultaneously.
 
 
-## Prime Word Classification
+### Prime Word Classification
 >	**Input Required**: False
 
 >	**Attribute Type**: Bool
@@ -349,7 +349,7 @@
 >	**Default Value**: False
 
 
-## Retention Classification
+### Retention Classification
 >	**Input Required**: False
 
 >	**Attribute Type**: Valid Value
@@ -359,7 +359,7 @@
 >	**Valid Values**: UNCLASSIFIED,TEMPORARY,PROJECT_LIFETIME,TEAM_LIFETIME,CONTRACT_LIFETIME,REGULATED_LIFETIME,TIMEBOXED_LIFETIME,OTHER
 
 
-## Security Tags
+### Security Tags
 >	**Input Required**: False
 
 >	**Attribute Type**: Simple List
@@ -367,7 +367,7 @@
 >	**Description**: Optional security tags for security processing.
 
 
-## User Defined Status
+### User Defined Status
 >	**Input Required**: False
 
 >	**Attribute Type**: Simple
@@ -375,7 +375,7 @@
 >	**Description**: Only valid if  Status is set to OTHER. User defined & managed status values.
 
 
-## Classifications
+### Classifications
 >	**Input Required**: false
 
 >	**Attribute Type**: Named DICT
@@ -385,7 +385,7 @@
 >	**Alternative Labels**: classification
 
 
-## Anchor Scope Name
+### Anchor Scope Name
 >	**Input Required**: False
 
 >	**Attribute Type**: Reference Name
@@ -393,7 +393,7 @@
 >	**Description**: Optional qualified name of an anchor scope.
 
 
-## Supplementary Properties
+### Supplementary Properties
 >	**Input Required**: False
 
 >	**Attribute Type**: Named DICT

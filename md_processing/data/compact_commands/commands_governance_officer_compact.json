@@ -1,6 +1,6 @@
 {
   "family": "Governance Officer",
-  "exported": "Apr 16, 2026 at 9:32:20 AM",
+  "exported": "Apr 23, 2026 at 3:31:29 PM",
   "attribute_definitions": {
     "Activity Status": {
       "variable_name": "activity_status",
@@ -3383,12 +3383,10 @@
     "Resource List": {
       "inherits": "Link Command Base",
       "own_attributes": [
+        "Additional Properties",
         "Element Id",
-        "Resource Description",
         "Resource Id",
-        "Resource Properties",
-        "Resource Use",
-        "Watch Resource"
+        "Resource Use"
       ]
     },
     "Link Command Base": {
@@ -3410,10 +3408,12 @@
       ]
     },
     "Collection Membership": {
-      "inherits": "Link Command Base",
+      "inherits": null,
       "own_attributes": [
+        "Anchor Scope IDs",
         "Confidence",
         "Expression",
+        "Make Anchor",
         "Membership Rationale",
         "Membership Status",
         "Notes",

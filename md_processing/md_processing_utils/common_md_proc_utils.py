@@ -252,7 +252,7 @@ def process_provenance_command(file_path: str, txt: [str]) -> str:
     """
     now = get_current_datetime_string()
     file_name = os.path.basename(file_path)
-    provenance = f"\n\n\n# Provenance:\n \n* Derived from processing file {file_name} on {now}\n"
+    provenance = f"\n\n\n## Provenance:\n \n- Derived from processing file {file_name} on {now}\n"
     return provenance
 
 
@@ -485,17 +485,17 @@ def parse_upsert_command(egeria_client: EgeriaTech, object_type: str, object_act
 
                 if value is not None:
                     if isinstance(value, list):
-                        list_out = f"\n\t* {key}:\n\n"
+                        list_out = f"\n\t- {key}:\n\n"
                         for item in value:
                             list_out += f"\t{item}\n"
                         parsed_output['display'] += list_out
                     elif isinstance(value, dict):
-                        list_out = f"\n\t* {key}:\n\n"
+                        list_out = f"\n\t- {key}:\n\n"
                         for k, v in value.items():
                             list_out += f"\t{k}: \n\t\t{v}\n"
                         parsed_output['display'] += list_out
                     else:
-                        parsed_output['display'] += f"\n\t* {key}: \n`{value}`\n\t"
+                        parsed_output['display'] += f"\n\t- {key}: \n`{value}`\n\t"
             except PyegeriaException as e:
                 logger.error(f"PyegeriaException occurred: {e}")
 
@@ -552,10 +552,10 @@ def parse_upsert_command(egeria_client: EgeriaTech, object_type: str, object_act
             _attribute_msg("INFO", msg)
 
 
-    if parsed_output.get('qualified_name',None) and "* Qualified Name" not in parsed_output['display']:
-        parsed_output['display'] += f"\n\t* Qualified Name: `{parsed_output['qualified_name']}`\n\t"
+    if parsed_output.get('qualified_name',None) and "- Qualified Name" not in parsed_output['display']:
+        parsed_output['display'] += f"\n\t- Qualified Name: `{parsed_output['qualified_name']}`\n\t"
     if parsed_output.get('guid',None):
-        parsed_output['display'] += f"\n\t* GUID: `{parsed_output['guid']}`\n\t"
+        parsed_output['display'] += f"\n\t- GUID: `{parsed_output['guid']}`\n\t"
 
     if summary["errors"]:
         summary["status"] = "ERROR"
@@ -786,7 +786,7 @@ def parse_view_command(egeria_client: EgeriaTech, object_type: str, object_actio
             if value is not None:
                 # if the value is a dict or list, get the stringifiedt
                 value = parsed_attributes[key].get('name_list', None) if isinstance(value, (dict, list)) else value
-                parsed_output['display'] += f"\n\t* {key}: `{value}`\n\t"
+                parsed_output['display'] += f"\n\t- {key}: `{value}`\n\t"
 
     parsed_output['attributes'] = parsed_attributes
 

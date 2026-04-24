@@ -1,9 +1,11 @@
-# Create Related Media
+___
+
+## Create Related Media
 > Create or update Related Media - an external reference to media such as images, audio, video or documents.
 >
 >	**Alternative Names**: Media
 
-## Display Name
+### Display Name
 >	**Input Required**: True
 
 >	**Attribute Type**: Simple
@@ -13,7 +15,7 @@
 >	**Alternative Labels**: "Term Name"
 
 
-## Attribution
+### Attribution
 >	**Input Required**: False
 
 >	**Attribute Type**: Simple
@@ -21,7 +23,7 @@
 >	**Description**: Attribution string to describe the external reference.
 
 
-## Copyright
+### Copyright
 >	**Input Required**: False
 
 >	**Attribute Type**: Simple
@@ -29,7 +31,7 @@
 >	**Description**: The copyright associated with the external reference.
 
 
-## License
+### License
 >	**Input Required**: False
 
 >	**Attribute Type**: Simple
@@ -37,7 +39,7 @@
 >	**Description**: The license associated with the external reference.
 
 
-## Organization
+### Organization
 >	**Input Required**: False
 
 >	**Attribute Type**: Simple
@@ -45,7 +47,7 @@
 >	**Description**: Organization owning the external reference.
 
 
-## Reference Abstract
+### Reference Abstract
 >	**Input Required**: False
 
 >	**Attribute Type**: Simple
@@ -55,7 +57,7 @@
 >	**Alternative Labels**: Abstract
 
 
-## Reference Title
+### Reference Title
 >	**Input Required**: False
 
 >	**Attribute Type**: Simple
@@ -65,7 +67,7 @@
 >	**Alternative Labels**: Title
 
 
-## Sources
+### Sources
 >	**Input Required**: False
 
 >	**Attribute Type**: Dictionary
@@ -74,8 +76,12 @@
 
 >	**Alternative Labels**: Reference Sources
 
+>	| Parameter Name | Parameter Value |
+>	|---|---|
+>	| example_key | example_value |
 
-## Default Media Usage
+
+### Default Media Usage
 >	**Input Required**: False
 
 >	**Attribute Type**: Valid Value
@@ -85,7 +91,7 @@
 >	**Valid Values**: ICON,THUMBNAIL,ILLUSTRATION,USAGE_GUIDANCE,OTHER
 
 
-## Default Media Usage Other Id
+### Default Media Usage Other Id
 >	**Input Required**: False
 
 >	**Attribute Type**: Simple
@@ -93,7 +99,7 @@
 >	**Description**: An id associated with the default media usage when not using a standard valid value.
 
 
-## Media Type
+### Media Type
 >	**Input Required**: False
 
 >	**Attribute Type**: Valid Value
@@ -103,7 +109,7 @@
 >	**Valid Values**: IMAGE,AUDIO,DOCUMENT,VIDEO,OTHER
 
 
-## Media Type Other Id
+### Media Type Other Id
 >	**Input Required**: False
 
 >	**Attribute Type**: Simple
@@ -111,7 +117,7 @@
 >	**Description**: An id associated with the media type when not using a standard valid value.
 
 
-## Journal Entry
+### Journal Entry
 >	**Input Required**: False
 
 >	**Attribute Type**: Simple
@@ -119,7 +125,7 @@
 >	**Description**: A text entry into a journal.
 
 
-## Category
+### Category
 >	**Input Required**: False
 
 >	**Attribute Type**: Simple
@@ -129,7 +135,7 @@
 >	**Alternative Labels**: Category Name
 
 
-## Description
+### Description
 >	**Input Required**: False
 
 >	**Attribute Type**: Simple
@@ -137,7 +143,7 @@
 >	**Description**: A description.
 
 
-## Qualified Name
+### Qualified Name
 >	**Input Required**: False
 
 >	**Attribute Type**: QN
@@ -145,7 +151,7 @@
 >	**Description**: The unique, text name of an element.
 
 
-## Content Status
+### Content Status
 >	**Input Required**: False
 
 >	**Attribute Type**: Valid Value
@@ -157,7 +163,7 @@
 >	**Default Value**: ACTIVE
 
 
-## Search Keywords
+### Search Keywords
 >	**Input Required**: False
 
 >	**Attribute Type**: Simple List
@@ -165,7 +171,7 @@
 >	**Description**: A list of search keywords.
 
 
-## GUID
+### GUID
 >	**Input Required**: False
 
 >	**Attribute Type**: GUID
@@ -175,7 +181,7 @@
 >	**Alternative Labels**: guid; Guid
 
 
-## URL
+### URL
 >	**Input Required**: False
 
 >	**Attribute Type**: Simple
@@ -183,7 +189,7 @@
 >	**Description**: URL for further information.
 
 
-## Version Identifier
+### Version Identifier
 >	**Input Required**: False
 
 >	**Attribute Type**: Simple
@@ -195,10 +201,12 @@
 >	**Default Value**: 1.0
 
 
-## Authors
+### Authors
 >	**Input Required**: False
 
 >	**Attribute Type**: Simple List
 
 >	**Description**: The authors.
 
+
+___

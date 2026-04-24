@@ -968,78 +968,26 @@ class AssignDataValueSpecificationProcessor(AsyncBaseCommandProcessor):
             return "Assignment already exists. No action taken."
 
         try:
-            body = {
-                "class": "NewRelationshipRequestBody",
-                "properties": {
-                    "class": "DataValueAssignmentProperties"
-                }
+            body = set_rel_request_body("DataValueAssignment", attributes)
+            body["properties"] = {
+                "class": "DataValueAssignmentProperties",
+                "assignmentStatus": attributes.get("Assignment Status", {}).get("value"),
+                "confidence": attributes.get("Confidence", {}).get("value"),
+                "method": attributes.get("Method", {}).get("value"),
+                "source": attributes.get("Source", {}).get("value"),
+                "steward": attributes.get("Steward", {}).get("value"),
+                "stewardPropertyName": attributes.get("Steward Property Name", {}).get("value"),
+                "stewardTypeName": attributes.get("Steward Type Name", {}).get("value"),
+                "threshold": attributes.get("Threshold", {}).get("value"),
             }
-            if description:
-                body['properties']['description'] = description
 
-            await self.client.data_designer._async_link_data_value_assignment(elem_guid, spec_guid, body)
+            await self.client.data_designer._async_link_data_value_assignment(
+                elem_guid, spec_guid, body_slimmer(body)
+            )
             logger.success(f"Assigned Data Value Specification {spec_guid} to element {elem_guid}")
             return "Assignment created successfully"
         except Exception as e:
             logger.error(f"Error assigning data value specification: {e}")
-            return self.command.raw_block
-
-    async def fetch_element(self, guid: str) -> Optional[Dict[str, Any]]:
-        return None
-
-
-class AttachDataValueSpecificationProcessor(AsyncBaseCommandProcessor):
-    """
-    Processor for Attach Data Value Specification to Element commands.
-    Follows the same pattern as AssignDataValueSpecificationProcessor.
-    """
-    def get_command_spec(self) -> Dict[str, Any]:
-        # Use the full normalized command (verb + object_type) for spec lookup
-        return get_command_spec(f"{self.command.verb} {self.command.object_type}")
-
-    async def apply_changes(self) -> str:
-        attributes = self.parsed_output["attributes"]
-        spec_guid = attributes.get('Data Value Specification', {}).get('guid')
-        elem_guid = attributes.get('Element Id', {}).get('guid')
-        description = attributes.get('Description', {}).get('value')
-
-        if not spec_guid or not elem_guid:
-            logger.error("Both Data Value Specification and Element Id are required")
-            return self.command.raw_block
-
-        # Upsert logic: check if attachment already exists
-        exists = False
-        try:
-            rels = []  # TODO: implement get_data_value_assignments_for_element when SDK supports it
-            if rels and isinstance(rels, list):
-                for rel in rels:
-                    rel_props = rel.get('relationshipProperties', {})
-                    rel_spec_guid = rel_props.get('dataValueSpecificationGUID') or rel_props.get('specificationGUID')
-                    if rel_spec_guid == spec_guid:
-                        exists = True
-                        break
-        except Exception as e:
-            logger.warning(f"Could not check for existing Data Value Assignment: {e}")
-
-        if exists:
-            logger.info(f"Attachment already exists for element {elem_guid} and spec {spec_guid}. Skipping create.")
-            return "Assignment already exists. No action taken."
-
-        try:
-            body = {
-                "class": "NewRelationshipRequestBody",
-                "properties": {
-                    "class": "DataValueAssignmentProperties"
-                }
-            }
-            if description:
-                body['properties']['description'] = description
-
-            await self.client.data_designer._async_link_data_value_assignment(elem_guid, spec_guid, body)
-            logger.success(f"Attached Data Value Specification {spec_guid} to element {elem_guid}")
-            return "Assignment created successfully"
-        except Exception as e:
-            logger.error(f"Error attaching data value specification: {e}")
             return self.command.raw_block
 
     async def fetch_element(self, guid: str) -> Optional[Dict[str, Any]]:

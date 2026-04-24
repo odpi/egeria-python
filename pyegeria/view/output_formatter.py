@@ -408,9 +408,29 @@ def materialize_egeria_summary(summary: dict, columns_struct: Optional[dict] = N
 def render_rich_value(value: Any, output_format: str) -> str:
     """Visually format rich nested values for text-based reports.
     - LIST: summarized string (handled elsewhere)
-    - FORM: keep compact summary to preserve editability
-    - REPORT/MD: nested bullet lists
+    - FORM: keep compact summary to preserve editability (or table if flat dict)
+    - REPORT/MD: nested bullet lists (or table if flat dict)
     """
+    def is_flat_dict(d: Any) -> bool:
+        if not isinstance(d, dict):
+            return False
+        for v in d.values():
+            if isinstance(v, (dict, list)):
+                return False
+        return True
+
+    def render_table(d: dict) -> str:
+        table_lines = [
+            "| Parameter Name | Parameter Value |",
+            "| :--- | :--- |"
+        ]
+        for k, v in d.items():
+            table_lines.append(f"| {camel_to_title_case(k) if isinstance(k, str) else k} | {v} |")
+        return "\n".join(table_lines)
+
+    if isinstance(value, dict) and is_flat_dict(value):
+        return render_table(value)
+
     def summarize(v: Any) -> str:
         if isinstance(v, dict):
             return v.get('name') or v.get('displayName') or v.get('qualifiedName') or v.get('type') or str(v)
@@ -432,20 +452,20 @@ def render_rich_value(value: Any, output_format: str) -> str:
             for item in v:
                 if isinstance(item, dict):
                     name = item.get('name') or item.get('type', 'Item')
-                    out.append(f"{prefix}* **{name}**")
+                    out.append(f"{prefix}- **{name}**")
                     for k, val in item.items():
                         if k in ('name', 'nested_elements'): continue
-                        out.append(f"{prefix}  * {camel_to_title_case(k)}: {val}")
+                        out.append(f"{prefix}  - {camel_to_title_case(k)}: {val}")
                     if item.get('nested_elements'):
                         out.append(bullets(item['nested_elements'], indent + 2))
                 else:
-                    out.append(f"{prefix}* {item}")
+                    out.append(f"{prefix}- {item}")
         else:  # dict
             for k, val in v.items():
                 if k == 'nested_elements':
                     out.append(bullets(val, indent + 1))
                 else:
-                    out.append(f"{prefix}* **{camel_to_title_case(k)}**: {val}")
+                    out.append(f"{prefix}- **{camel_to_title_case(k)}**: {val}")
         return "\n".join(out)
 
     return bullets(value, 0)
@@ -474,7 +494,7 @@ def make_md_attribute(attribute_name: str, attribute_value: str|list|dict, outpu
     if isinstance(attribute_value, (dict, list)):
         rendered = render_rich_value(attribute_value, output_type)
         if rendered:
-            return f"## {attribute_title}\n{rendered}\n\n"
+            return f"### {attribute_title}\n{rendered}\n\n"
         else:
             return "\n"
 
@@ -482,13 +502,13 @@ def make_md_attribute(attribute_name: str, attribute_value: str|list|dict, outpu
         if attribute_name.lower() in [ "mermaid", "solutionBlueprintMermaidGraph", "links", "implemented by", "sub_components"]:
             return '\n'
 
-        output = f"## {attribute_title}\n{attribute_value}\n\n"
+        output = f"### {attribute_title}\n{attribute_value}\n\n"
     elif output_type in ["REPORT", "MERMAID"]:
         if attribute_title in MERMAID_GRAPH_TITLES + ["Mermaid Graph", "Mermaid"]:
             norm_mermaid = _normalize_mermaid_graph(attribute_value)
-            output = f"## {attribute_title}\n\n```mermaid\n{norm_mermaid}\n```\n"
+            output = f"### {attribute_title}\n\n```mermaid\n{norm_mermaid}\n```\n"
         elif attribute_value:
-            output = f"## {attribute_title}\n{attribute_value}\n\n"
+            output = f"### {attribute_title}\n{attribute_value}\n\n"
     return output
 
 def format_for_markdown_table(text: str, guid: str = None) -> str:
@@ -775,7 +795,7 @@ def generate_entity_md(elements: List[Dict],
     """
     heading = columns_struct.get("heading")
     if heading == "Default Base Attributes":
-        elements_md = "## Reporting on Default Base Attributes - Perhaps couldn't find a valid combination of report_spec and output_format?\n\n"
+        elements_md = "### Reporting on Default Base Attributes - Perhaps couldn't find a valid combination of report_spec and output_format?\n\n"
     else:
         elements_md = ""
     base_columns = columns_struct['formats'].get('attributes') if columns_struct else None
@@ -826,12 +846,12 @@ def generate_entity_md(elements: List[Dict],
 
         # Format header based on output format
         if output_format in ['FORM', 'MD']:
-            elements_md += f"# {elements_action}\n\n"
-            elements_md += f"## {entity_type} Name \n\n{display_name}\n\n"
+            elements_md += f"## {elements_action}\n\n"
+            elements_md += f"### {entity_type} Name \n\n{display_name}\n\n"
         elif output_format == 'REPORT':
-            elements_md += f'<a id="{(guid or props.get("GUID") or "No GUID" )}"></a>\n# {entity_type} Name: {display_name}\n\n'
+            elements_md += f'<a id="{(guid or props.get("GUID") or "No GUID" )}"></a>\n## {entity_type} Name: {display_name}\n\n'
         else:
-            elements_md += f"## {entity_type} Name \n\n{display_name}\n\n"
+            elements_md += f"### {entity_type} Name \n\n{display_name}\n\n"
 
         # Add attributes based on column spec if available, otherwise, add all (legacy)
         if returned_struct is not None:
@@ -856,7 +876,7 @@ def generate_entity_md(elements: List[Dict],
                         # Resolve the linked spec
                         detail_struct = select_report_format(detail_spec, 'REPORT')
                         if detail_struct:
-                            elements_md += f"\n### {name} Details\n\n"
+                            elements_md += f"\n#### {name} Details\n\n"
                             elements_md += generate_output(
                                 elements=values_list,
                                 search_string="",
@@ -935,12 +955,12 @@ def generate_entity_md_table(elements: List[Dict],
     columns = columns_struct['formats'].get('attributes', [])
     heading = columns_struct.get("heading")
     if heading == "Default Base Attributes":
-        elements_md = "## Reporting on Default Base Attributes - Perhaps couldn't find a valid combination of report_spec and output_format?\n\n"
+        elements_md = "### Reporting on Default Base Attributes - Perhaps couldn't find a valid combination of report_spec and output_format?\n\n"
     else:
         elements_md = ""
 
     if output_format == "LIST":
-        elements_md = f"# {entity_type_plural} Table\n\n"
+        elements_md = f"### {entity_type_plural} Table\n\n"
         elements_md += f"{entity_type_plural} found from the search string: `{search_string}`\n\n"
 
     # Add column headers
@@ -1009,7 +1029,11 @@ def generate_entity_md_table(elements: List[Dict],
                             names.append(str(item))
                     cell_value = ", ".join(names)
                 elif isinstance(value, dict):
-                    cell_value = value.get('name') or value.get('displayName') or value.get('qualifiedName') or str(value)
+                    nm = value.get('name') or value.get('displayName') or value.get('qualifiedName')
+                    if nm:
+                        cell_value = nm
+                    else:
+                        cell_value = ", ".join([f"{k}: {v}" for k, v in value.items()])
 
                 # If detail_spec present and we have values to show later, add a link
                 detail_spec = column.get('detail_spec')

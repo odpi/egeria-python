@@ -1,7 +1,9 @@
-# Link Governance Controls
+___
+
+## Link Governance Controls
 > Link peer governance controls with the GovernanceControlLink relationship. Controls types are: GovernanceRule, GovernanceProcess, GovernanceResponsibility, GovernanceProcedure, SecurityAccessControl, SecurityGroup.
 
-## Governance Control 1
+### Governance Control 1
 >	**Input Required**: True
 
 >	**Attribute Type**: Reference Name
@@ -9,7 +11,7 @@
 >	**Description**: First GovernanceControl entity in the peer relationship.
 
 
-## Governance Control 2
+### Governance Control 2
 >	**Input Required**: True
 
 >	**Attribute Type**: Reference Name
@@ -17,7 +19,7 @@
 >	**Description**: Second GovernanceControl entity in the peer relationship.
 
 
-## Label
+### Label
 >	**Input Required**: False
 
 >	**Attribute Type**: Simple
@@ -27,7 +29,7 @@
 >	**Alternative Labels**: Wire Label
 
 
-## Journal Entry
+### Journal Entry
 >	**Input Required**: False
 
 >	**Attribute Type**: Simple
@@ -35,10 +37,12 @@
 >	**Description**: A text entry into a journal.
 
 
-## Description
+### Description
 >	**Input Required**: False
 
 >	**Attribute Type**: Simple
 
 >	**Description**: A description.
 
+
+___

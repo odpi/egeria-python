@@ -1,7 +1,7 @@
-# Create Rating
+## Create Rating
 > Creates a star rating on a metadata element.
 
-## Stars
+### Stars
 >	**Input Required**: False
 
 >	**Attribute Type**: Valid Value
@@ -11,7 +11,7 @@
 >	**Valid Values**: NO_RECOMMENDATION,ONE_STAR,TWO_STARS,THREE_STARS,FOUR_STARS,FIVE_STARS
 
 
-## Review
+### Review
 >	**Input Required**: False
 
 >	**Attribute Type**: Simple
@@ -19,7 +19,7 @@
 >	**Description**: Text review accompanying a star rating.
 
 
-## Journal Entry
+### Journal Entry
 >	**Input Required**: False
 
 >	**Attribute Type**: Simple
@@ -27,7 +27,7 @@
 >	**Description**: A text entry into a journal.
 
 
-## Category
+### Category
 >	**Input Required**: False
 
 >	**Attribute Type**: Simple
@@ -37,7 +37,7 @@
 >	**Alternative Labels**: Category Name
 
 
-## Qualified Name
+### Qualified Name
 >	**Input Required**: False
 
 >	**Attribute Type**: QN
@@ -45,7 +45,7 @@
 >	**Description**: A unique qualified name for the element. Generated using the qualified name pattern  if not user specified.
 
 
-## Version Identifier
+### Version Identifier
 >	**Input Required**: False
 
 >	**Attribute Type**: Simple
@@ -57,7 +57,7 @@
 >	**Default Value**: 1.0
 
 
-## Identifier
+### Identifier
 >	**Input Required**: False
 
 >	**Attribute Type**: Simple
@@ -67,7 +67,7 @@
 >	**Alternative Labels**: ID
 
 
-## GUID
+### GUID
 >	**Input Required**: False
 
 >	**Attribute Type**: GUID
@@ -77,7 +77,7 @@
 >	**Alternative Labels**: Guid; guid
 
 
-## URL
+### URL
 >	**Input Required**: False
 
 >	**Attribute Type**: Simple
@@ -93,7 +93,7 @@
 >	**Description**: Keywords to facilitate finding the element
 
 
-## Effective From
+### Effective From
 >	**Input Required**: False
 
 >	**Attribute Type**: Simple
@@ -101,7 +101,7 @@
 >	**Description**: The beginning of when an element is viewable.
 
 
-## Effective Time
+### Effective Time
 >	**Input Required**: False
 
 >	**Attribute Type**: Simple
@@ -109,7 +109,7 @@
 >	**Description**: The time at which an element must be effective in order to be returned by the request.
 
 
-## Effective To
+### Effective To
 >	**Input Required**: False
 
 >	**Attribute Type**: Simple
@@ -117,7 +117,7 @@
 >	**Description**: The ending time at which an element is visible.
 
 
-## External Source GUID
+### External Source GUID
 >	**Input Required**: False
 
 >	**Attribute Type**: GUID
@@ -125,7 +125,7 @@
 >	**Description**: The unique identifier of an external source.
 
 
-## External Source Name
+### External Source Name
 >	**Input Required**: False
 
 >	**Attribute Type**: Simple
@@ -133,7 +133,7 @@
 >	**Description**: The name of an external source
 
 
-## For Duplicate Processing
+### For Duplicate Processing
 >	**Input Required**: False
 
 >	**Attribute Type**: Bool
@@ -141,7 +141,7 @@
 >	**Description**: Flag indicating if the request is to support duplicate processing.
 
 
-## For Lineage
+### For Lineage
 >	**Input Required**: False
 
 >	**Attribute Type**: Bool
@@ -149,7 +149,7 @@
 >	**Description**: Flag indicating if the request is to support lineage.
 
 
-## Request ID
+### Request ID
 >	**Input Required**: False
 
 >	**Attribute Type**: Simple
@@ -157,7 +157,7 @@
 >	**Description**: A user provided or system generated request id for a conversation.
 
 
-## Status
+### Status
 >	**Input Required**: False
 
 >	**Attribute Type**: Valid Value
@@ -167,7 +167,7 @@
 >	**Default Value**: ACTIVE
 
 
-## User Defined Status
+### User Defined Status
 >	**Input Required**: False
 
 >	**Attribute Type**: Simple
@@ -175,7 +175,7 @@
 >	**Description**: Only valid if  Status is set to OTHER. User defined & managed status values.
 
 
-## Classifications
+### Classifications
 >	**Input Required**: false
 
 >	**Attribute Type**: Named DICT
@@ -185,7 +185,7 @@
 >	**Alternative Labels**: classification
 
 
-## Is Own Anchor
+### Is Own Anchor
 >	**Input Required**: False
 
 >	**Attribute Type**: Bool
@@ -197,7 +197,7 @@
 >	**Default Value**: True
 
 
-## Anchor ID
+### Anchor ID
 >	**Input Required**: False
 
 >	**Attribute Type**: Reference Name
@@ -205,7 +205,7 @@
 >	**Description**: Anchor identity for the collection. Typically a qualified name but if display name is unique then it could be used (not recommended)
 
 
-## Parent ID
+### Parent ID
 >	**Input Required**: False
 
 >	**Attribute Type**: Reference Name
@@ -215,7 +215,7 @@
 >	**Alternative Labels**: Parent;
 
 
-## Parent Relationship Type Name
+### Parent Relationship Type Name
 >	**Input Required**: False
 
 >	**Attribute Type**: Simple
@@ -223,7 +223,7 @@
 >	**Description**: The kind of the relationship to the parent element.
 
 
-## Anchor Scope Name
+### Anchor Scope Name
 >	**Input Required**: False
 
 >	**Attribute Type**: Reference Name
@@ -231,7 +231,7 @@
 >	**Description**: Optional qualified name of an anchor scope.
 
 
-## Parent at End1
+### Parent at End1
 >	**Input Required**: False
 
 >	**Attribute Type**: Bool
@@ -241,7 +241,7 @@
 >	**Default Value**: True
 
 
-## Merge Update
+### Merge Update
 >	**Input Required**: False
 
 >	**Attribute Type**: Bool
@@ -253,7 +253,7 @@
 >	**Default Value**: True
 
 
-## Additional Properties
+### Additional Properties
 >	**Input Required**: False
 
 >	**Attribute Type**: Dictionary
@@ -261,7 +261,7 @@
 >	**Description**: Additional user defined values organized as name value pairs in a dictionary.
 
 
-## Supplementary Properties
+### Supplementary Properties
 >	**Input Required**: False
 
 >	**Attribute Type**: Named DICT

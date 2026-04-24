@@ -1,7 +1,9 @@
-# Create Agreement
+___
+
+## Create Agreement
 > A kind of collection that represents an Agreement. This is for generic agreements. Specific kinds of agreements have their own commands.
 
-## Display Name
+### Display Name
 >	**Input Required**: True
 
 >	**Attribute Type**: Simple
@@ -11,7 +13,7 @@
 >	**Alternative Labels**: "Term Name"
 
 
-## Agreement Type
+### Agreement Type
 >	**Input Required**: False
 
 >	**Attribute Type**: Simple
@@ -19,7 +21,7 @@
 >	**Description**: Type of agreement (e.g., service level agreement, licensing agreement, data sharing agreement).
 
 
-## Journal Entry
+### Journal Entry
 >	**Input Required**: False
 
 >	**Attribute Type**: Simple
@@ -27,7 +29,7 @@
 >	**Description**: A text entry into a journal.
 
 
-## Category
+### Category
 >	**Input Required**: False
 
 >	**Attribute Type**: Simple
@@ -37,7 +39,7 @@
 >	**Alternative Labels**: Category Name
 
 
-## Description
+### Description
 >	**Input Required**: False
 
 >	**Attribute Type**: Simple
@@ -45,7 +47,7 @@
 >	**Description**: A description.
 
 
-## Qualified Name
+### Qualified Name
 >	**Input Required**: False
 
 >	**Attribute Type**: QN
@@ -53,7 +55,7 @@
 >	**Description**: The unique, text name of an element.
 
 
-## Content Status
+### Content Status
 >	**Input Required**: False
 
 >	**Attribute Type**: Valid Value
@@ -65,7 +67,7 @@
 >	**Default Value**: ACTIVE
 
 
-## Purpose
+### Purpose
 >	**Input Required**: False
 
 >	**Attribute Type**: Simple
@@ -73,7 +75,7 @@
 >	**Description**: The purpose of this collection — a short description of why it exists or what it is used for.
 
 
-## Search Keywords
+### Search Keywords
 >	**Input Required**: False
 
 >	**Attribute Type**: Simple List
@@ -81,7 +83,7 @@
 >	**Description**: A list of search keywords.
 
 
-## GUID
+### GUID
 >	**Input Required**: False
 
 >	**Attribute Type**: GUID
@@ -91,7 +93,7 @@
 >	**Alternative Labels**: guid; Guid
 
 
-## URL
+### URL
 >	**Input Required**: False
 
 >	**Attribute Type**: Simple
@@ -99,7 +101,7 @@
 >	**Description**: URL for further information.
 
 
-## Version Identifier
+### Version Identifier
 >	**Input Required**: False
 
 >	**Attribute Type**: Simple
@@ -111,10 +113,12 @@
 >	**Default Value**: 1.0
 
 
-## Authors
+### Authors
 >	**Input Required**: False
 
 >	**Attribute Type**: Simple List
 
 >	**Description**: The authors.
 
+
+___

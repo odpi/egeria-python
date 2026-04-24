@@ -1,7 +1,7 @@
-# Link Accept Answer
+## Link Accept Answer
 > Link a question comment to the comment that answers it via the AcceptedAnswer relationship.
 
-## Label
+### Label
 >	**Input Required**: False
 
 >	**Attribute Type**: Simple
@@ -11,7 +11,7 @@
 >	**Alternative Labels**: Wire Label
 
 
-## Accepted Answer Comment
+### Accepted Answer Comment
 >	**Input Required**: False
 
 >	**Attribute Type**: Reference Name
@@ -19,7 +19,7 @@
 >	**Description**: The question comment that has been answered.
 
 
-## Answering Comment
+### Answering Comment
 >	**Input Required**: False
 
 >	**Attribute Type**: Reference Name
@@ -27,7 +27,7 @@
 >	**Description**: The comment accepted as an answer.
 
 
-## Journal Entry
+### Journal Entry
 >	**Input Required**: False
 
 >	**Attribute Type**: Simple
@@ -35,7 +35,7 @@
 >	**Description**: A text entry into a journal.
 
 
-## Description
+### Description
 >	**Input Required**: False
 
 >	**Attribute Type**: Simple

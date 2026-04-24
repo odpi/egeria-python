@@ -1,5 +1,5 @@
 """
-This is an ongoing experiment in parsing and playing with Freddie docs
+This is an ongoing experiment in parsing and playing with Dr.Egeria docs
 """
 import os
 import sys
@@ -35,8 +35,7 @@ EGERIA_JUPYTER = os.environ.get("EGERIA_JUPYTER", str(app_config.egeria_jupyter)
 console = Console(width=EGERIA_WIDTH)
 
 @click.command("process_markdown_file", help="Process a markdown file and return the output as a string.")
-@click.option("--input-file", help="Markdown file to process.", default="dr_egeria_intro_part1.md",
-              prompt="Markdown file to process")
+@click.argument("input_file", default="dr_egeria_intro_part1.md", required=False)
 @click.option("--output-folder", help="Output folder.", default="", required=False)
 @click.option("--directive", default="validate", help="How to process the file (display/validate/process). "
               "Overridden by --validate or --process flags.",
@@ -109,14 +108,4 @@ def _running_in_pycharm_debugger() -> bool:
     return sys.gettrace() is not None or os.environ.get("PYCHARM_HOSTED") is not None
 
 if __name__ == "__main__":
-    # if _running_in_pycharm_debugger():
-    input_file = Prompt.ask("Markdown File name to process:", default="dr_egeria_intro_part1.md")
-    directive = Prompt.ask("Directive (display/validate/process):", default="validate")
-    advanced = Prompt.ask("Use advanced usage level? [y/N]:", default="N").strip().lower() in ("y", "yes")
-    process_markdown_file.callback(input_file, "", directive,
-                            do_validate=False, do_process=False,
-                            server=EGERIA_VIEW_SERVER, url=EGERIA_VIEW_SERVER_URL, userid=EGERIA_USER,
-                            user_pass=EGERIA_USER_PASSWORD, parse_summary="all", attribute_logs="debug",
-                            advanced=advanced, summary_only=False, debug=False)
-    # else:
-    #     process_markdown_file()
+    process_markdown_file()

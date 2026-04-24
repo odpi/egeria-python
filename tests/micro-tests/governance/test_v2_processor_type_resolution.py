@@ -23,9 +23,9 @@ class _FallbackClient:
     def __init__(self):
         self.calls = []
 
-    async def _async_get_guid_for_name(self, name: str, type_name: str = None):
-        self.calls.append((name, type_name))
-        if type_name:
+    async def __async_get_guid__(self, qualified_name: str = None, display_name: str = None, property_name: str = "qualifiedName", tech_type: str = None):
+        self.calls.append((qualified_name, tech_type))
+        if tech_type:
             raise Exception(
                 "OMAG-COMMON-400-018 The type name ThreatDefinition passed on method findMetadataElements of service Open Metadata Store Services is not recognized"
             )

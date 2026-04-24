@@ -1,7 +1,9 @@
-# Link Governed By
+___
+
+## Link Governed By
 > A referenceable element can be governed by one or more governance definitions.
 
-## Governance Definition
+### Governance Definition
 >	**Input Required**: True
 
 >	**Attribute Type**: Reference Name
@@ -9,7 +11,7 @@
 >	**Description**: The definition governing the referenceable.
 
 
-## Referenceable
+### Referenceable
 >	**Input Required**: True
 
 >	**Attribute Type**: Reference Name
@@ -19,7 +21,7 @@
 >	**Alternative Labels**: element
 
 
-## Label
+### Label
 >	**Input Required**: False
 
 >	**Attribute Type**: Simple
@@ -29,7 +31,7 @@
 >	**Alternative Labels**: Wire Label
 
 
-## Journal Entry
+### Journal Entry
 >	**Input Required**: False
 
 >	**Attribute Type**: Simple
@@ -37,10 +39,12 @@
 >	**Description**: A text entry into a journal.
 
 
-## Description
+### Description
 >	**Input Required**: False
 
 >	**Attribute Type**: Simple
 
 >	**Description**: A description.
 
+
+___

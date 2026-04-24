@@ -42,7 +42,7 @@ I verified the v2 engine's compatibility with legacy DrE markdown samples using 
 - **Infrastructure Fixes**: Resolved bugs in `processors.py` regarding parser initialization and `DrECommand.raw_block` attribute naming.
 
 ```bash
-PYTHONPATH=. EGERIA_ROOT_PATH=sample-data python commands/cat/dr_egeria_md.py --input-file Simple-Data-Lens.md --directive validate
+PYTHONPATH=. EGERIA_ROOT_PATH=sample-data python commands/cat/dr_egeria.py Simple-Data-Lens.md --directive validate
 ```
 
 ## Phase Status Summary
@@ -78,7 +78,7 @@ PYTHONPATH=. EGERIA_ROOT_PATH=sample-data python commands/cat/dr_egeria_md.py --
 
 ```bash
 # Sequential execution of multiple commands in feedback.md
-PYTHONPATH=. EGERIA_ROOT_PATH=sample-data python commands/cat/dr_egeria_md.py --input-file feedback.md --directive validate
+PYTHONPATH=. EGERIA_ROOT_PATH=sample-data python commands/cat/dr_egeria.py feedback.md --directive validate
 ```
 
 ### 5. Invocation & Dependency Fixes
@@ -86,14 +86,14 @@ PYTHONPATH=. EGERIA_ROOT_PATH=sample-data python commands/cat/dr_egeria_md.py --
 - **Unified Entry Point**: Renamed the CLI script to `commands/cat/dr_egeria.py` and added a `dr_egeria` script alias in `pyproject.toml`.
 - **Direct Execution**: Restored the `if __name__ == "__main__"` block in `md_processing/dr_egeria.py` for manual invocation.
 - **Dependency Management**: Updated the `v2/README.md` with explicit installation instructions (`pip install -e .`) to ensure all dependencies like `loguru` are correctly resolved.
-- **Consistency**: Standardized command-line arguments to use `--input-file` across all entry points.
+- **Consistency**: Standardized command-line arguments to use a positional input file across all entry points.
 
 ```bash
 # Correct usage with installed script
-EGERIA_ROOT_PATH=sample-data dr_egeria --input-file project.md --directive validate
+EGERIA_ROOT_PATH=sample-data dr_egeria project.md --directive validate
 
 # Direct execution of the command in /commands/cat
-EGERIA_ROOT_PATH=sample-data python commands/cat/dr_egeria.py --input-file project.md --directive validate
+EGERIA_ROOT_PATH=sample-data python commands/cat/dr_egeria.py project.md --directive validate
 ```
 
 ### 6. Configuration & Path Robustness
@@ -104,7 +104,7 @@ EGERIA_ROOT_PATH=sample-data python commands/cat/dr_egeria.py --input-file proje
 
 ```bash
 # Works out of the box from the project root
-dr_egeria --input-file project.md --directive validate
+dr_egeria project.md --directive validate
 ```
 
 ## Final Status Summary

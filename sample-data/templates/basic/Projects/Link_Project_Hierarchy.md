@@ -1,7 +1,9 @@
-# Link Project Hierarchy
+___
+
+## Link Project Hierarchy
 > Links or unlinks a parent project and a child project via the ProjectHierarchy relationship.
 
-## Child Project
+### Child Project
 >	**Input Required**: True
 
 >	**Attribute Type**: Reference Name
@@ -9,7 +11,7 @@
 >	**Description**: The name of the child project.
 
 
-## Parent Project
+### Parent Project
 >	**Input Required**: True
 
 >	**Attribute Type**: Reference Name
@@ -17,7 +19,7 @@
 >	**Description**: The name of the parent project.
 
 
-## Label
+### Label
 >	**Input Required**: False
 
 >	**Attribute Type**: Simple
@@ -27,7 +29,7 @@
 >	**Alternative Labels**: Wire Label
 
 
-## Journal Entry
+### Journal Entry
 >	**Input Required**: False
 
 >	**Attribute Type**: Simple
@@ -35,10 +37,12 @@
 >	**Description**: A text entry into a journal.
 
 
-## Description
+### Description
 >	**Input Required**: False
 
 >	**Attribute Type**: Simple
 
 >	**Description**: A description.
 
+
+___

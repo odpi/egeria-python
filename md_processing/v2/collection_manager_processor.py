@@ -208,7 +208,7 @@ class CSVElementProcessor(AsyncBaseCommandProcessor):
             self.parsed_output["guid"] = guid
             update_element_dictionary(qualified_name, {'guid': guid, 'display_name': display_name})
             logger.success(f"Created CSV Element '{display_name}' with GUID {guid}")
-            return f"# Created CSV Element\n\nGUID: {guid}\nQualified Name: {qualified_name}"
+            return f"## Created CSV Element\n\nGUID: {guid}\nQualified Name: {qualified_name}"
 
         return self.command.raw_block
 
@@ -331,13 +331,13 @@ class CollectionLinkProcessor(AsyncBaseCommandProcessor):
             logger.success(f"Linked {object_type}")
             
             # Format the output with attributes for better feedback
-            header = f"\n\n# {verb} {object_type}\n\nOperation completed.\n\n"
+            header = f"\n\n## {verb} {object_type}\n\nOperation completed.\n\n"
             if "Member to Collection" in object_type or "Collection Member" in object_type:
-                header += "## Associated Elements\n"
+                header += "### Associated Elements\n"
                 header += f"- **Collection Id**: `{attributes.get('Collection Id', {}).get('value')}`\n"
                 header += f"- **Element Id**: `{attributes.get('Element Id', {}).get('value')}`\n\n"
             
-            header += "## Link Properties\n"
+            header += "### Link Properties\n"
             # Exclude standard command identifiers when dumping properties
             for k, v in attributes.items():
                 if k not in ["Collection Id", "Element Id", "Digital Product 1", "Digital Product 2", "Subscriber Id", "Subscription", "Resource Id", "Agreement Name", "Item Name", "Qualified Name", "Display Name"]:
@@ -368,6 +368,6 @@ class CollectionLinkProcessor(AsyncBaseCommandProcessor):
                 await self.client._async_detach_subscriber(attributes.get('Subscriber Id', {}).get('guid'), attributes.get('Subscription Id', {}).get('guid'), body)
                 
             logger.success(f"Detached {object_type}")
-            return f"\n\n# {verb} {object_type}\n\nOperation completed."
+            return f"\n\n## {verb} {object_type}\n\nOperation completed."
 
         return self.command.raw_block

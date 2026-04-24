@@ -147,7 +147,7 @@ class ProjectLinkProcessor(AsyncBaseCommandProcessor):
                 await self.client._async_set_project_dependency(project_guid=child_guid, upstream_project_guid=parent_guid, body=body_slimmer(body))
             
             logger.success(f"Linked Project {object_type}")
-            return f"\n\n# {verb} {object_type}\n\nLinked {child_guid} to {parent_guid} ({label})"
+            return f"\n\n## {verb} {object_type}\n\nLinked {child_guid} to {parent_guid} ({label})"
 
         elif verb in ["Detach", "Unlink", "Remove"]:
             self.last_body = body = set_delete_rel_request_body(object_type, attributes)
@@ -157,6 +157,6 @@ class ProjectLinkProcessor(AsyncBaseCommandProcessor):
                 await self.client._async_clear_project_dependency(child_guid, parent_guid, body)
                 
             logger.success(f"Detached Project {object_type}")
-            return f"\n\n# {verb} {object_type}\n\nDetached {child_guid} from {parent_guid} ({label})"
+            return f"\n\n## {verb} {object_type}\n\nDetached {child_guid} from {parent_guid} ({label})"
 
         return self.command.raw_block

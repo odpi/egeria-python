@@ -179,7 +179,7 @@ def process_provenance_command(file_path: str, txt: [str]) -> str:
     """
     now = get_current_datetime_string()
     file_name = os.path.basename(file_path)
-    provenance = f"\n\n\n# Provenance:\n \n* Derived from processing file {file_name} on {now}\n"
+    provenance = f"\n\n\n## Provenance:\n \n- Derived from processing file {file_name} on {now}\n"
     return provenance
 
 

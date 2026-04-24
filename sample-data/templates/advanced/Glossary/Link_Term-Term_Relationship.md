@@ -1,9 +1,9 @@
-# Link Term-Term Relationship
+## Link Term-Term Relationship
 > Links or unlinks two glossary terms via a typed semantic relationship (e.g. Synonym, Antonym, PreferredTerm, TranslationOf).
 >
 >	**Alternative Names**: Term-Term Relationship; Term to Term Relationship
 
-## Relationship Type
+### Relationship Type
 >	**Input Required**: True
 
 >	**Attribute Type**: Enum
@@ -13,7 +13,7 @@
 >	**Valid Values**: RelatedTerm,Synonym,Antonym,PreferredTerm,ReplacementTerm,Translation,IsA,ValidValue
 
 
-## Term 1
+### Term 1
 >	**Input Required**: True
 
 >	**Attribute Type**: Reference Name
@@ -23,7 +23,7 @@
 >	**Alternative Labels**: Term; Term Name
 
 
-## Term 2
+### Term 2
 >	**Input Required**: True
 
 >	**Attribute Type**: Reference Name
@@ -31,7 +31,7 @@
 >	**Description**: The name of the second term to connect.
 
 
-## Label
+### Label
 >	**Input Required**: False
 
 >	**Attribute Type**: Simple
@@ -41,7 +41,7 @@
 >	**Alternative Labels**: Wire Label
 
 
-## Journal Entry
+### Journal Entry
 >	**Input Required**: False
 
 >	**Attribute Type**: Simple
@@ -49,7 +49,7 @@
 >	**Description**: A text entry into a journal.
 
 
-## Description
+### Description
 >	**Input Required**: False
 
 >	**Attribute Type**: Simple
@@ -57,7 +57,7 @@
 >	**Description**: A description.
 
 
-## Effective From
+### Effective From
 >	**Input Required**: False
 
 >	**Attribute Type**: Simple
@@ -65,7 +65,7 @@
 >	**Description**: The beginning of when an element is viewable.
 
 
-## Effective Time
+### Effective Time
 >	**Input Required**: False
 
 >	**Attribute Type**: Simple
@@ -73,7 +73,7 @@
 >	**Description**: The time at which an element must be effective in order to be returned by the request.
 
 
-## Effective To
+### Effective To
 >	**Input Required**: False
 
 >	**Attribute Type**: Simple
@@ -81,7 +81,7 @@
 >	**Description**: The ending time at which an element is visible.
 
 
-## External Source GUID
+### External Source GUID
 >	**Input Required**: False
 
 >	**Attribute Type**: GUID
@@ -89,7 +89,7 @@
 >	**Description**: The unique identifier of an external source.
 
 
-## External Source Name
+### External Source Name
 >	**Input Required**: False
 
 >	**Attribute Type**: Simple
@@ -97,7 +97,7 @@
 >	**Description**: The name of an external source
 
 
-## For Duplicate Processing
+### For Duplicate Processing
 >	**Input Required**: False
 
 >	**Attribute Type**: Bool
@@ -105,7 +105,7 @@
 >	**Description**: Flag indicating if the request is to support duplicate processing.
 
 
-## For Lineage
+### For Lineage
 >	**Input Required**: False
 
 >	**Attribute Type**: Bool
@@ -113,7 +113,7 @@
 >	**Description**: Flag indicating if the request is to support lineage.
 
 
-## Request ID
+### Request ID
 >	**Input Required**: False
 
 >	**Attribute Type**: Simple
@@ -121,7 +121,7 @@
 >	**Description**: A user provided or system generated request id for a conversation.
 
 
-## Anchor Scope IDs
+### Anchor Scope IDs
 >	**Input Required**: False
 
 >	**Attribute Type**: Reference Name List
@@ -129,7 +129,7 @@
 >	**Description**: A list of IDs that are anchor scopes for this element.
 
 
-## Make Anchor
+### Make Anchor
 >	**Input Required**: False
 
 >	**Attribute Type**: Bool
@@ -139,7 +139,7 @@
 >	**Default Value**: false
 
 
-## Confidence
+### Confidence
 >	**Input Required**: False
 
 >	**Attribute Type**: Simple Int
@@ -147,7 +147,7 @@
 >	**Description**: A percent confidence in the proposed adding of the member.
 
 
-## Expression
+### Expression
 >	**Input Required**: False
 
 >	**Attribute Type**: Simple
@@ -155,7 +155,7 @@
 >	**Description**: An expression describing a membership, relationship or classification.
 
 
-## Source
+### Source
 >	**Input Required**: False
 
 >	**Attribute Type**: Simple
@@ -163,7 +163,7 @@
 >	**Description**: The source of the information.
 
 
-## Steward
+### Steward
 >	**Input Required**: False
 
 >	**Attribute Type**: Simple
@@ -171,7 +171,7 @@
 >	**Description**: The identifier of the steward responsible for the element.
 
 
-## Term Relationship Status
+### Term Relationship Status
 >	**Input Required**: False
 
 >	**Attribute Type**: Valid Value

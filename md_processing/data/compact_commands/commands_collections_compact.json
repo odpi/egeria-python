@@ -1,6 +1,6 @@
 {
   "family": "Collections",
-  "exported": "Apr 16, 2026 at 9:29:32 AM",
+  "exported": "Apr 23, 2026 at 7:44:36 PM",
   "attribute_definitions": {
     "Activity Status": {
       "variable_name": "activity_status",
@@ -1449,6 +1449,25 @@
       "level": "Common",
       "Journal Entry": ""
     },
+    "Resource Use Description": {
+      "variable_name": "resource_use_description",
+      "inUpdate": true,
+      "attr_labels": "",
+      "examples": "",
+      "default_value": "",
+      "valid_values": [],
+      "existing_element": "",
+      "description": "Describes how the resource is being used. From the ResourceList relationship (0019).",
+      "generated": false,
+      "style": "Simple",
+      "user_specified": true,
+      "unique": false,
+      "input_required": false,
+      "min_cardinality": 1,
+      "max_cardinality": 1,
+      "level": "Common",
+      "Journal Entry": ""
+    },
     "Restrictions": {
       "variable_name": "restrictions",
       "inUpdate": true,
@@ -2014,12 +2033,8 @@
     "Resource List": {
       "inherits": "Link Command Base",
       "own_attributes": [
-        "Element Id",
-        "Resource Description",
-        "Resource Id",
-        "Resource Properties",
-        "Resource Use",
-        "Watch Resource"
+        "Additional Properties",
+        "Resource Use"
       ]
     },
     "Link Command Base": {
@@ -2041,10 +2056,12 @@
       ]
     },
     "Collection Membership": {
-      "inherits": "Link Command Base",
+      "inherits": null,
       "own_attributes": [
+        "Anchor Scope IDs",
         "Confidence",
         "Expression",
+        "Make Anchor",
         "Membership Rationale",
         "Membership Status",
         "Notes",

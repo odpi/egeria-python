@@ -39,7 +39,7 @@ may require a GUID to be specified, but in general we will use the **Qualified N
 
 ___ 
 
-# Adding Glossary Structure
+### Adding Glossary Structure
 
 Sometimes it can be useful to provide more structure to the glossary. One way to do this is by creating a
 *Collection Folders* as members of the Glossary (which is also a type of collection).  A collection folder itself is a type 
@@ -52,8 +52,8 @@ flexibility, we can create a well-organized glossary that is easy to navigate an
 
 Ok, now let's create a couple of collection folders. They will be:
 
-* **Writing Dr.Egeria Markdown** - where we describe elements of the Dr.Egeria language as terms within the category.
-* **Processing Dr.Egeria Markdown** - where we describe the commands for processing Dr.Egeria.
+- **Writing Dr.Egeria Markdown** - where we describe elements of the Dr.Egeria language as terms within the category.
+- **Processing Dr.Egeria Markdown** - where we describe the commands for processing Dr.Egeria.
  
 
 Collection folders have the same attributes as base Collections:
@@ -80,40 +80,40 @@ Ok, here we go:
 
 ___
 
-# Create Collection Folder  
+## Create Collection Folder  
   
-## Display Name  
+### Display Name  
   
 Writing Dr.Egeria Markdown  
   
-## Parent ID
+### Parent ID
   
 Egeria-Markdown  
 
-## Parent Relationship Type Name
+### Parent Relationship Type Name
 CollectionMembership
 
-## Description  
+### Description  
   
 Terms in this Folder describe the elements of the Dr.Egeria Markdown language and how to use them.   
 
 
 ___
 
-# Create Collection Folder  
+## Create Collection Folder  
   
-## Display Name  
+### Display Name  
   
 Processing Dr.Egeria Markdown  
   
-## Parent ID  
+### Parent ID  
   
 Egeria-Markdown  
 
-## Parent Relationship Type Name
+### Parent Relationship Type Name
 CollectionMembership
   
-## Description  
+### Description  
   
 Terms in this Folder describe commands to process Dr.Egeria Markdown.  
    
@@ -157,131 +157,131 @@ from the previous process step.
 
 ___  
 
-# Update Term
+## Update Term
 
-## Display Name 
+### Display Name 
 
 Command
 
-## Summary
+### Summary
 Commands are how a user of the Dr.Egeria markdown language requests an action.
 
-## Glossary Name
+### Glossary Name
 Egeria-Markdown
 
-## Folders
+### Folders
 
 Writing Dr.Egeria Markdown, Processing Dr.Egeria Markdown
 
-## Status
+### Status
 ACTIVE
 
-## Description
-Commands are how a user can request Egeria to take an action such as Create or Update an Egeria element. Freddie
+### Description
+Commands are how a user can request Egeria to take an action such as Create or Update an Egeria element. Dr.Egeria
 provides
 a limited (but growing) set of commands. Dr.Egeria commands align with the pyegeria 'hey-egeria' command line interface.
 
-## Examples
+### Examples
 Create Glossary or
 Update Glossary or
 Create Term or
 Update Term
 
-## Usage
+### Usage
 Commands are used in the Dr.Egeria markdown language.
 
-## Version Identifier
+### Version Identifier
 0.2
 
-## Merge Update
+### Merge Update
 True
 
-## GUID
+### GUID
 20dae482-f8d0-43b9-935a-e025cf4eeb16
 
-## Qualified Name
+### Qualified Name
 PDR::GlossaryTerm::Command::0.2 
 
 
 ___
 
-# Update Term
+## Update Term
 
-## Display Name 
+### Display Name 
 
 Markdown Source
 
-## Summary
+### Summary
 Source of the markdown content.
 
-## Glossary Name
+### Glossary Name
 Egeria-Markdown
 
-## Folders
+### Folders
 
 CollectionFolder::Writing Dr.Egeria Markdown, Processing Dr.Egeria Markdown 
 
-## Status
+### Status
 ACTIVE
 
-## Description
+### Description
 Source of the markdown content - could be jupyter or plain markdown file.
 
-## Examples
+### Examples
 
-## Usage
+### Usage
 
 
-## Version Identifier
+### Version Identifier
 
 0.2
 
-## GUID
+### GUID
 ecc004d8-1ec9-44d5-840a-a61ad5ff51d9
 
-## Qualified Name
+### Qualified Name
 PDR::GlossaryTerm::Markdown-Source::0.2
 
 ___
 
-# Update Term
+## Update Term
 
-## Display Name  
+### Display Name  
 
 Directive  
 
-## Glossary Name
+### Glossary Name
   
 Egeria-Markdown  
 
-## Folders
+### Folders
   
 Processing Dr.Egeria Markdown  
   
-## Summary  
+### Summary  
   
 A directive defines how the command is to be processed.  
   
-## Description  
+### Description  
   
 Directives are one of:  
   
-* display - just display what we've found  
-* validate - check the validity of the requested action  
-* process - process the requested action
+- display - just display what we've found  
+- validate - check the validity of the requested action  
+- process - process the requested action
   
-## Version  
+### Version  
   
 0.1 
   
-## Content Status  
+### Content Status  
   
 ACTIVE
   
-## GUID
+### GUID
 77c11a22-f017-449e-9043-70c283980cf6
 
-## Qualified Name
+### Qualified Name
 PDR::GlossaryTerm::Directive::0.1
 
 
@@ -300,10 +300,10 @@ We will start with the `List Glossaries` command. This command will list all the
 
 ___
 
-# View Report
-## Report Spec
+## View Report
+### Report Spec
 Glossaries
-## Search String
+#### Search String
 ___
 
 This will return a markdown table of all known glossaries based on the defaults set for the optional attributes. Here 
@@ -316,11 +316,11 @@ is a more detailed specification of the attributes:
 
 Lets describe the output formats a bit further:
 
-* LIST - This is the default format. It returns a markdown table of the glossaries.
-* DICT - This returns a python dictionary (or JSON representation) of the glossaries. 
-* MD - This returns markdown text of the glossaries.
-* FORM - This returns a Dr.Egeria markdown form designed to be used as a starting point for updating the glossary definitions.
-* REPORT - This returns markdown text of the glossaries that is designed to be more readable and perhaps suitable to be used in a report.
+- LIST - This is the default format. It returns a markdown table of the glossaries.
+- DICT - This returns a python dictionary (or JSON representation) of the glossaries. 
+- MD - This returns markdown text of the glossaries.
+- FORM - This returns a Dr.Egeria markdown form designed to be used as a starting point for updating the glossary definitions.
+- REPORT - This returns markdown text of the glossaries that is designed to be more readable and perhaps suitable to be used in a report.
 
 Going further, we can issue similar commands to list categories and terms:
 
@@ -342,16 +342,16 @@ Lets go ahead and give these commands a try:
 ___
 
 #View Report
-## Output Format
+### Output Format
 REPORT
-## Report Spec
+### Report Spec
 Collection-Folders-DrE
 ___
-# View Report
-## Output Format
+## View Report
+### Output Format
 LIST
 
-## Report Spec
+### Report Spec
 Glossary-Terms
 
 ___

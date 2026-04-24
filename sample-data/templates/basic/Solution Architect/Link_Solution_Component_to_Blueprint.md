@@ -1,7 +1,9 @@
-# Link Solution Component to Blueprint
+___
+
+## Link Solution Component to Blueprint
 > Link a component to a blueprint.
 
-## Blueprint
+### Blueprint
 >	**Input Required**: True
 
 >	**Attribute Type**: Reference Name
@@ -9,7 +11,7 @@
 >	**Description**: A named solution blueprint.
 
 
-## Component1
+### Component1
 >	**Input Required**: True
 
 >	**Attribute Type**: Reference Name
@@ -17,7 +19,7 @@
 >	**Description**: The first solution component to link.
 
 
-## Label
+### Label
 >	**Input Required**: False
 
 >	**Attribute Type**: Simple
@@ -27,7 +29,7 @@
 >	**Alternative Labels**: Wire Label
 
 
-## Membership Rationale
+### Membership Rationale
 >	**Input Required**: False
 
 >	**Attribute Type**: Simple
@@ -35,7 +37,7 @@
 >	**Description**: Rationale for membership.
 
 
-## Membership Status
+### Membership Status
 >	**Input Required**: False
 
 >	**Attribute Type**: Valid Value
@@ -47,7 +49,7 @@
 >	**Default Value**: PROPOSED
 
 
-## Notes
+### Notes
 >	**Input Required**: False
 
 >	**Attribute Type**: Simple
@@ -55,7 +57,7 @@
 >	**Description**: Notes and observations about the element.
 
 
-## Journal Entry
+### Journal Entry
 >	**Input Required**: False
 
 >	**Attribute Type**: Simple
@@ -63,10 +65,12 @@
 >	**Description**: A text entry into a journal.
 
 
-## Description
+### Description
 >	**Input Required**: False
 
 >	**Attribute Type**: Simple
 
 >	**Description**: A description.
 
+
+___

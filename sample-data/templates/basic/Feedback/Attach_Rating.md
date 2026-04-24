@@ -1,7 +1,7 @@
-# Attach Rating
+## Attach Rating
 > Attach a star rating to a referenceable element via the AttachedRating relationship.
 
-## Label
+### Label
 >	**Input Required**: False
 
 >	**Attribute Type**: Simple
@@ -11,7 +11,7 @@
 >	**Alternative Labels**: Wire Label
 
 
-## Reviewed Element
+### Reviewed Element
 >	**Input Required**: False
 
 >	**Attribute Type**: Reference Name
@@ -19,7 +19,7 @@
 >	**Description**: The element being rated.
 
 
-## Review
+### Review
 >	**Input Required**: False
 
 >	**Attribute Type**: Simple
@@ -27,7 +27,7 @@
 >	**Description**: Text review accompanying a star rating.
 
 
-## Stars
+### Stars
 >	**Input Required**: False
 
 >	**Attribute Type**: Valid Value
@@ -37,7 +37,7 @@
 >	**Valid Values**: NO_RECOMMENDATION,ONE_STAR,TWO_STARS,THREE_STARS,FOUR_STARS,FIVE_STARS
 
 
-## Journal Entry
+### Journal Entry
 >	**Input Required**: False
 
 >	**Attribute Type**: Simple
@@ -45,7 +45,7 @@
 >	**Description**: A text entry into a journal.
 
 
-## Description
+### Description
 >	**Input Required**: False
 
 >	**Attribute Type**: Simple

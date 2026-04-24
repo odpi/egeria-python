@@ -1,7 +1,9 @@
-# Link Governance Drivers
+___
+
+## Link Governance Drivers
 > Link peer governance drivers with the GovernanceDriverLink relationship. Drivers are: GovernanceStrategy, BusinessImperitive, Regulation, RegulationArticle, Threat.
 
-## Governance Driver 1
+### Governance Driver 1
 >	**Input Required**: True
 
 >	**Attribute Type**: Reference Name
@@ -9,7 +11,7 @@
 >	**Description**: First GovernanceDriver entity in the peer relationship.
 
 
-## Governance Driver 2
+### Governance Driver 2
 >	**Input Required**: True
 
 >	**Attribute Type**: Reference Name
@@ -17,7 +19,7 @@
 >	**Description**: Second GovernanceDriver entity in the peer relationship.
 
 
-## Label
+### Label
 >	**Input Required**: False
 
 >	**Attribute Type**: Simple
@@ -27,7 +29,7 @@
 >	**Alternative Labels**: Wire Label
 
 
-## Journal Entry
+### Journal Entry
 >	**Input Required**: False
 
 >	**Attribute Type**: Simple
@@ -35,10 +37,12 @@
 >	**Description**: A text entry into a journal.
 
 
-## Description
+### Description
 >	**Input Required**: False
 
 >	**Attribute Type**: Simple
 
 >	**Description**: A description.
 
+
+___

@@ -1,7 +1,9 @@
-# Create Certification Type
+___
+
+## Create Certification Type
 > A type of certification.
 
-## Display Name
+### Display Name
 >	**Input Required**: True
 
 >	**Attribute Type**: Simple
@@ -11,7 +13,7 @@
 >	**Alternative Labels**: "Term Name"
 
 
-## Domain Identifier
+### Domain Identifier
 >	**Input Required**: False
 
 >	**Attribute Type**: Enum
@@ -23,7 +25,7 @@
 >	**Default Value**: ALL
 
 
-## Implications
+### Implications
 >	**Input Required**: False
 
 >	**Attribute Type**: Simple List
@@ -31,7 +33,7 @@
 >	**Description**: List of implications.
 
 
-## Importance
+### Importance
 >	**Input Required**: False
 
 >	**Attribute Type**: Simple
@@ -39,7 +41,7 @@
 >	**Description**: Importance of the definition.
 
 
-## Outcomes
+### Outcomes
 >	**Input Required**: False
 
 >	**Attribute Type**: Simple List
@@ -47,7 +49,7 @@
 >	**Description**: List of desired outcomes.
 
 
-## Results
+### Results
 >	**Input Required**: False
 
 >	**Attribute Type**: Simple List
@@ -55,7 +57,7 @@
 >	**Description**: A list of expected results.
 
 
-## Summary
+### Summary
 >	**Input Required**: False
 
 >	**Attribute Type**: Simple
@@ -63,7 +65,7 @@
 >	**Description**: A short summary of the element's meaning or purpose.
 
 
-## Usage
+### Usage
 >	**Input Required**: False
 
 >	**Attribute Type**: Simple
@@ -71,7 +73,7 @@
 >	**Description**: The usage guidance for this element — how it is intended to be used in context.
 
 
-## Implementation Description
+### Implementation Description
 >	**Input Required**: False
 
 >	**Attribute Type**: Simple
@@ -81,15 +83,19 @@
 >	**Alternative Labels**: Implementation
 
 
-## Obligations
+### Obligations
 >	**Input Required**: False
 
 >	**Attribute Type**: Dictionary
 
 >	**Description**: A dictionary of property:value pairs describing obligations.
 
+>	| Parameter Name | Parameter Value |
+>	|---|---|
+>	| example_key | example_value |
 
-## Journal Entry
+
+### Journal Entry
 >	**Input Required**: False
 
 >	**Attribute Type**: Simple
@@ -97,7 +103,7 @@
 >	**Description**: A text entry into a journal.
 
 
-## Category
+### Category
 >	**Input Required**: False
 
 >	**Attribute Type**: Simple
@@ -107,7 +113,7 @@
 >	**Alternative Labels**: Category Name
 
 
-## Description
+### Description
 >	**Input Required**: False
 
 >	**Attribute Type**: Simple
@@ -115,7 +121,7 @@
 >	**Description**: A description.
 
 
-## Qualified Name
+### Qualified Name
 >	**Input Required**: False
 
 >	**Attribute Type**: QN
@@ -123,7 +129,7 @@
 >	**Description**: The unique, text name of an element.
 
 
-## Content Status
+### Content Status
 >	**Input Required**: False
 
 >	**Attribute Type**: Valid Value
@@ -135,7 +141,7 @@
 >	**Default Value**: ACTIVE
 
 
-## Scope
+### Scope
 >	**Input Required**: False
 
 >	**Attribute Type**: Simple
@@ -143,23 +149,31 @@
 >	**Description**: Scope of the definition or element.
 
 
-## Entitlements
+### Entitlements
 >	**Input Required**: False
 
 >	**Attribute Type**: Dictionary
 
 >	**Description**: A dictionary of property:value pairs describing entitlements.
 
+>	| Parameter Name | Parameter Value |
+>	|---|---|
+>	| example_key | example_value |
 
-## Restrictions
+
+### Restrictions
 >	**Input Required**: False
 
 >	**Attribute Type**: Dictionary
 
 >	**Description**: A dictionary of property:value pairs describing restrictions.
 
+>	| Parameter Name | Parameter Value |
+>	|---|---|
+>	| example_key | example_value |
 
-## Search Keywords
+
+### Search Keywords
 >	**Input Required**: False
 
 >	**Attribute Type**: Simple List
@@ -167,7 +181,7 @@
 >	**Description**: A list of search keywords.
 
 
-## GUID
+### GUID
 >	**Input Required**: False
 
 >	**Attribute Type**: GUID
@@ -177,7 +191,7 @@
 >	**Alternative Labels**: guid; Guid
 
 
-## URL
+### URL
 >	**Input Required**: False
 
 >	**Attribute Type**: Simple
@@ -185,7 +199,7 @@
 >	**Description**: URL for further information.
 
 
-## Version Identifier
+### Version Identifier
 >	**Input Required**: False
 
 >	**Attribute Type**: Simple
@@ -197,10 +211,12 @@
 >	**Default Value**: 1.0
 
 
-## Authors
+### Authors
 >	**Input Required**: False
 
 >	**Attribute Type**: Simple List
 
 >	**Description**: The authors.
 
+
+___

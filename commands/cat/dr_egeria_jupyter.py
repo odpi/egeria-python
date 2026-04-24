@@ -1,5 +1,5 @@
 """
-This is an ongoing experiment in parsing and playing with Freddie docs
+This is an ongoing experiment in parsing and playing with Dr.Egeria docs
 """
 
 import nbformat
@@ -45,8 +45,7 @@ console = Console(width=int(EGERIA_WIDTH))
 
 
 @click.command("process-jupyter")
-@click.option("--file-path", help="File path to notebook",
-              default="glossary_creation_experiment.ipynb")
+@click.argument("input_file", default="glossary_creation_experiment.ipynb", required=False)
 @click.option("--directive", default="display-only", help="How to process the file")
 @click.option("--server", default=EGERIA_VIEW_SERVER, help="Egeria view server to use.")
 @click.option(
@@ -55,7 +54,7 @@ console = Console(width=int(EGERIA_WIDTH))
 @click.option("--userid", default=EGERIA_USER, help="Egeria user")
 @click.option("--user_pass", default=EGERIA_USER_PASSWORD, help="Egeria user password")
 def process_jupyter_notebook(
-        file_path: str,
+        input_file: str,
         directive: str,
         server: str,
         url: str,
@@ -69,7 +68,7 @@ def process_jupyter_notebook(
 
     try:
         updated = False
-        full_file_path = os.path.join(EGERIA_ROOT_PATH, EGERIA_INBOX_PATH, file_path)
+        full_file_path = os.path.join(EGERIA_ROOT_PATH, EGERIA_INBOX_PATH, input_file)
         click.echo(f"Processing notebook: {full_file_path}")
         with open(full_file_path, 'r') as f:
             nb = nbformat.read(f, as_version=4)
@@ -101,7 +100,7 @@ def process_jupyter_notebook(
 
 
         if updated:
-            path, filename = os.path.split(file_path)  # Get both parts
+            path, filename = os.path.split(input_file)  # Get both parts
             new_filename = f"processed-{get_current_datetime_string()}-{filename}"  # Create the new filename
             new_file_path = os.path.join(EGERIA_ROOT_PATH, EGERIA_OUTBOX_PATH, new_filename)  # Construct the new path
             os.makedirs(os.path.dirname(new_file_path), exist_ok=True)

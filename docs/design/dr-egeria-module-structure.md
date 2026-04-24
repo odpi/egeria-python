@@ -79,7 +79,7 @@ sequenceDiagram
     participant SDK  as EgeriaTech / OMVS
     participant EGERIA as Egeria Server
 
-    User->>CLI: hey_egeria cat process-markdown-file --input-file X.md [--validate|--process] [--advanced] [--debug]
+    User->>CLI: dr_egeria X.md [--validate|--process] [--advanced] [--debug]
     CLI->>ORCH: asyncio.run(process_md_file_v2(..., debug=...))
 
     opt debug=True
@@ -244,7 +244,7 @@ flowchart LR
 
 | File | Role |
 |------|------|
-| `commands/cat/dr_egeria.py` | Click CLI entry-point; `--validate` / `--process` shortcut flags, `--advanced`, `--debug` |
+| `commands/cat/dr_egeria.py` | Click CLI entry-point: `dr_egeria <file.md>`. Shortcuts: `--validate` / `--process`, `--advanced`, `--debug` |
 | `md_processing/dr_egeria.py` | Async orchestrator: extraction → dispatch → output; owns debug patch/restore |
 | `md_processing/v2/extraction.py` | `UniversalExtractor` — produces `DrECommand` list from raw Markdown |
 | `md_processing/v2/parsing.py` | `AttributeFirstParser` — async, spec-driven, with server-side validation cache |

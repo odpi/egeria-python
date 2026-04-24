@@ -38,7 +38,14 @@ class FakeClient:
 def test_modes_md_and_mdhtml(tmp_path, monkeypatch):
     # Redirect outbox to temp dir
     monkeypatch.setenv("EGERIA_ROOT_PATH", str(tmp_path))
-    monkeypatch.setenv("EGERIA_OUTBOX_PATH", ".")
+    monkeypatch.setenv("EGERIA_OUTBOX", ".")
+
+    # Reset config and patch the module's env
+    import pyegeria.core.config
+    pyegeria.core.config._app_config = None
+    from pyegeria.core.config import get_app_config
+    new_cfg = get_app_config()
+    monkeypatch.setattr(mod, "env", new_cfg.Environment)
 
     # Patch EgeriaTech with fake
     monkeypatch.setattr(mod, "EgeriaTech", FakeClient)
