@@ -48,11 +48,12 @@ Commands are initiated with a double-hash header that follows the `## Verb Objec
 ## Verb Object
 ```
 
-- **Verb**: The action to perform (e.g., `Create`, `Update`, `Link`, `View`, `Delete`).
+- **Verb**: The action to perform (e.g., `Create`, `Update`, `Link`, `View`, `Delete`, `Provenance`, `Run`).
 - **Object**: The Egeria element type (e.g., `Glossary`, `Term`, `Project`, `Asset`).
 
 **Notes**:
 - Headers starting with `##` that do not match a valid `Verb Object` pattern are treated as narrative text and preserved in the output.
+- **Fuzzy Preposition Stripping**: Dr.Egeria automatically ignores prepositions like `to`, `from`, `in`, `with`, or `on` in command headers. This allows for more natural language headers such as `## Link Term to Category` which is internally treated as `## Link Term Category`.
 - Standard verbs for relationship management include `Link`, `Attach`, `Add` (for creation) and `Detach`, `Unlink`, `Remove` (for removal).
 - **Relationship Mapping**: For certain commands, Dr.Egeria automatically maps common aliases to canonical Egeria relationship types. For example, `ISA` or `IS A` maps to `ISARelationship`, and `HASA` or `HAS A` maps to `TermHASARelationship`.
 
@@ -100,6 +101,12 @@ When running Dr.Egeria, you specify a **directive** that determines how the file
 - **validate**: Parses the file and validates the commands against Egeria (e.g., checks if referenced elements exist) without making any changes.
 - **process**: Validates and executes the commands, making permanent changes in Egeria.
 
+### Automatic Command Rewriting (Upsert)
+
+Dr.Egeria implements "Upsert" logic to make metadata scripts more robust and idempotent:
+- **Create → Update**: If a `Create` command is issued but the element already exists (matched by Qualified Name), Dr.Egeria automatically rewrites the command to `Update`.
+- **Update → Create**: If an `Update` command is issued but the element does not exist and hasn't been "Planned" by a previous command, it is rewritten to `Create`.
+
 ### Planned Elements
 
 Dr.Egeria supports inter-command dependencies within a single file. If a command creates a new element (e.g., a Glossary), subsequent commands in the same file (e.g., creating a Term in that Glossary) can resolve the new element's GUID even before the first command is fully committed to Egeria. These are tracked as "Planned" elements.
@@ -108,8 +115,9 @@ Dr.Egeria supports inter-command dependencies within a single file. If a command
 
 Dr.Egeria attempts to resolve element references (like a parent Glossary for a Term) using:
 1. **GUID**: A unique identifier.
-2. **Qualified Name**: The unique string path for the element.
-3. **Display Name**: The human-readable name (ambiguous matches will result in warnings/errors).
+2. **Reference Name**: A structured name in the format `Type::QualifiedName` (e.g., `Glossary::PDR::SalesGlossary`). This is the preferred way to refer to elements in Link commands.
+3. **Qualified Name**: The unique string path for the element.
+4. **Display Name**: The human-readable name (ambiguous matches will result in warnings/errors).
 
 ---
 
@@ -119,10 +127,11 @@ The primary interface for processing Markdown files is the `dr_egeria` command.
 
 **Usage**:
 ```bash
-dr_egeria <file.md> [OPTIONS]
+dr_egeria [OPTIONS] [INPUT_FILE]
 ```
 
 **Key Options**:
+- `INPUT_FILE`: The Markdown file to process (defaults to `dr_egeria_intro_part1.md` if omitted).
 - `--validate`: Shortcut for `--directive validate`.
 - `--process`: Shortcut for `--directive process`.
 - `--advanced`: Enables advanced usage level, exposing additional attributes in templates and validation.
@@ -202,7 +211,7 @@ Dr.Egeria also supports processing commands within Jupyter Notebooks (.ipynb).
 
 **Usage**:
 ```bash
-dr_egeria_jupyter <notebook.ipynb>
+dr_egeria_jupyter [OPTIONS] [INPUT_FILE]
 ```
 
 The processor extracts Markdown cells from the notebook, processes them similarly to standard Markdown files, and generates a new notebook containing the results.

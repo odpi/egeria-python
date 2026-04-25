@@ -349,7 +349,7 @@ def main():
             output_format = "TABLE"
 
         display_command_terms(
-            search_string, guid, 'Egeria-Markdown', server, url,
+            search_string, guid, 'Glossary::dr-egeria', server, url,
             userid, user_pass, output_format=output_format, mode=args.mode
         )
 

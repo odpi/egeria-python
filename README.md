@@ -130,16 +130,16 @@ print(cfg.Logging.enable_logging)
 By default, running pytest executes unit tests that use monkeypatching/fakes and do not contact a live Egeria.
 
 - Run unit tests (recommended default):
-  poetry install
-  poetry run pytest -v
+  uv sync
+  pytest -v
 
 You can also run tests live against a local Egeria instance. Enable live mode with either a CLI flag or an environment variable. In live mode, tests marked as `unit` are skipped and live tests run using a real Client2 connection.
 
 - Enable live mode via CLI:
-  poetry run pytest -q --live-egeria
+  pytest -q --live-egeria
 
 - Or enable via environment variable:
-  PYEG_LIVE_EGERIA=1 poetry run pytest -q
+  PYEG_LIVE_EGERIA=1 pytest -q
 
 Default live connection parameters (can be overridden via env):
 - server_name = "qs-view-server"           (override with PYEG_SERVER_NAME)

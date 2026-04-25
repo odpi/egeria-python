@@ -600,6 +600,20 @@ def populate_columns_from_properties(element: dict, columns_struct: dict) -> dic
             
             # Helper to set value in col
             def set_col_value(val):
+                # Apply Enum mapping if valid_values is present
+                valid_values = col.get('valid_values') if isinstance(col, dict) else getattr(col, 'valid_values', None)
+                if valid_values and isinstance(val, int):
+                    if isinstance(valid_values, list):
+                        if 0 <= val < len(valid_values):
+                            val = valid_values[val]
+                    elif isinstance(valid_values, dict):
+                        # Try string key first (JSON usually has string keys)
+                        mapped = valid_values.get(str(val))
+                        if mapped is None:
+                            mapped = valid_values.get(val)
+                        if mapped is not None:
+                            val = mapped
+
                 if isinstance(col, dict):
                     col['value'] = val
                 else:
