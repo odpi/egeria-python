@@ -308,9 +308,10 @@ class CollectionLinkProcessor(AsyncBaseCommandProcessor):
                 body['properties'] = {
                     "class": "ResourceListProperties",
                     "typeName": "ResourceList",
+                    "label": attributes.get('Label', {}).get('value'),
                     "resourceUse": attributes.get('Resource Use', {}).get('value'),
-                    "resourceDescription": attributes.get('Resource Description', {}).get('value'),
-                    "resourceProperties": attributes.get('Resource Properties', {}).get('value'),
+                    "description": attributes.get('Description', {}).get('value'),
+                    "additionalProperties": attributes.get('Additional Properties', {}).get('value'),
                     "effectiveFrom": attributes.get('Effective From', {}).get('value'),
                     "effectiveTo": attributes.get('Effective To', {}).get('value')
                 }

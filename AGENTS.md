@@ -29,7 +29,7 @@
 - `pyegeria/core/mcp_server.py` + `pyegeria/core/mcp_adapter.py`: MCP server entry point and its thin adapter helpers (`list_reports`, `describe_report`, `run_report`, `run_find_report_specs`); keep adapter logic in `mcp_adapter.py`, server wiring in `mcp_server.py`.
 - `commands/cli/*`: `hey_egeria` command groups and TUI entrypoints over SDK operations.
 - `md_processing/` + `commands/cat/dr_egeria.py`: Dr.Egeria v2 parser/dispatcher/processor pipeline over SDK operations; `commands/cat/dr_egeria.py` is the CLI wrapper only.
-- `md_processing/v2/extraction.py` (`UniversalExtractor`): identifies DrE command blocks (`# Verb Object`) and their `## Label` attributes; handles horizontal-rule delimiters (`---`, `___`).
+- `md_processing/v2/extraction.py` (`UniversalExtractor`): identifies DrE command blocks (`## Verb Object`) and their `### Label` attributes; handles horizontal-rule delimiters (`---`, `___`).
 - `md_processing/v2/parsing.py`: `AttributeFirstParser.parse()` is asynchronous and utilizes a class-level cache (`_valid_values_cache`) for metadata validation results from Egeria.
 - `md_processing/v2/dispatcher.py` (`V2Dispatcher`): routes `DrECommand` objects to `AsyncBaseCommandProcessor` subclasses; uses fuzzy preposition-stripping and dynamic fallback to `CollectionManagerProcessor`/`ProjectProcessor` for registered subtypes.
 - `md_processing/v2/processors.py` (`AsyncBaseCommandProcessor`): base class for all v2 processors; standard flow is Parse → Validate → Fetch-As-Is → Action Dispatch.
@@ -46,7 +46,7 @@
 - Generate Markdown command templates: `gen_md_cmd_templates` (basic) or `gen_md_cmd_templates --advanced` → outputs to `sample-data/templates/`.
 - Generate Dr.Egeria help docs: `gen_dr_help` → writes to configured Egeria Inbox path.
 - Validate compact command JSON specs: `validate_compact_specs`.
-- Debug Dr.Egeria API calls: `dr_egeria --input-file <file> --process --debug` (monkey-patches `_async_make_request` for the duration of the call; auto-restored on exit).
+- Debug Dr.Egeria API calls: `dr_egeria <file> --process --debug` (monkey-patches `_async_make_request` for the duration of the call; auto-restored on exit).
 - Dr.Egeria directive shortcuts: `--validate` and `--process` are shorthand for `--directive validate/process`; `--summary-only` suppresses per-command diagnostic output; `--advanced` shows non-Basic attributes. Resolution order: `--process` > `--validate` > `--directive` > default (`"validate"`).
 - Async tests: `asyncio_mode = auto` in `tests/pytest.ini` — write `async def test_*` functions without explicit event-loop boilerplate.
 - Docstrings: use NumPy/SciPy format; every public OMVS method must have a `Notes` section with a sample JSON body where the wire format is non-obvious.
@@ -67,6 +67,7 @@
 - [HIGH SIGNAL] Keep CLI/report params in snake_case (`page_size`, `start_from`); adapters handle wire camelCase.
 - [HIGH SIGNAL] Preserve lazy-loading behavior in facade clients; do not eagerly instantiate all subclients unless clearly justified.
 - [HIGH SIGNAL] For config-sensitive changes, respect precedence: explicit args > env vars > `.env` > JSON config > defaults.
+- [HIGH SIGNAL] Use the hyphen (`-`) as the default Markdown bullet character for all generated output and documentation to ensure compatibility across editors.
 - [HIGH SIGNAL] When changing command attributes, verify both markdown processing (`dr_egeria`) and generated report specs still agree on keys/labels.
 - [HIGH SIGNAL] Use the fuzzy-matching preposition stripping rule in `v2/dispatcher.py` to allow natural Markdown headers without adding redundant `alternate_names` to the JSON spec.
 - [HIGH SIGNAL] To prevent command mis-mapping, always check that the header verb matches its intended verb group (CREATE, LINK, VIEW) in `find_alternate_names`.
@@ -74,6 +75,7 @@
 - [HIGH SIGNAL] New "View" commands need only a report spec (FormatSet) — the `ViewProcessor` auto-routes any `View` verb to the report engine; no custom processor required.
 - [HIGH SIGNAL] `CommandRewriter` auto-rewrites `Create→Update` when an element already exists and `Update→Create` when it is absent, before the processor fires; do not re-implement this upsert logic inside individual processors.
 - [HIGH SIGNAL] Processors that create new elements must register their GUID in `context["planned_elements"]` so subsequent commands in the same `dispatch_batch` call can resolve them without requiring a multi-pass workflow.
+- [HIGH SIGNAL] Use the relationship mapping layer in `md_processing/v2/glossary.py` (and similar processors) to bridge user-friendly Markdown aliases (like `ISA`, `HASA`) to canonical Egeria relationship names.
 
 ## Integration constraints before refactors
 - Many flows assume a live HTTPS Egeria view server; self-signed localhost behavior is common in this repo.

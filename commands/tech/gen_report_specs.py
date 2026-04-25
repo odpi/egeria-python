@@ -229,7 +229,10 @@ def _extract_columns_from_attributes(attributes: Iterable[dict], usage_level: st
         if not key or key in seen:
             return
         seen.add(key)
-        cols.append(Column(name=str(label), key=str(key)))
+        valid_values = details.get("valid_values")
+        if not isinstance(valid_values, (list, dict)):
+            valid_values = None
+        cols.append(Column(name=str(label), key=str(key), valid_values=valid_values))
 
     for entry in attributes or []:
         if not isinstance(entry, dict) or not entry:
@@ -506,6 +509,11 @@ def _format_column(col: Column) -> str:
     fmt = getattr(col, 'format', None)
     if fmt not in (None, False):
         parts.append(f"format={_py_literal(bool(fmt))}")
+    
+    valid_values = getattr(col, "valid_values", None)
+    if valid_values:
+        parts.append(f"valid_values={_py_literal(valid_values)}")
+        
     return "Column(" + ", ".join(parts) + ")"
 
 

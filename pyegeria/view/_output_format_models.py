@@ -137,11 +137,15 @@ class Column(BaseModel):
         name: The display name of the attribute
         key: The key used to access the attribute's value in the data
         format: Whether the attribute's value should be formatted
+        detail_spec: Optional report spec to use for detailed rendering of this column
+        valid_values: Optional list or dict of valid values for Enum mapping
     """
     name: str
     key: str
+    value: Any = None
     format: bool = False
     detail_spec: Optional[str] = None
+    valid_values: Optional[Union[List[str], Dict[str, str]]] = None
 
 # New preferred alias for Column
 Attribute = Column

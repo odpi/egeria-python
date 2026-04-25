@@ -528,15 +528,13 @@ Collection::SalesForecast::Master::1.0
 ### Element Id
 Campaign:Clinical Trials Management
 
-### Resource Description
+### Description
 Clinical Trials Management project linked as a downstream consumer of Sales Forecast
 governance definitions for cross-domain reporting purposes.
 
 ### Resource Use
 Related Information
 
-### Watch Resource
-True
 
 ___
 
@@ -552,7 +550,7 @@ Collection::SalesForecast::Master::1.0
 ### Element Id
 Campaign:Clinical Trials Management
 
-### Resource Description
+### Description
 Enterprise data catalog providing lineage and provenance for all Sales Forecast
 domain metadata elements.
 
@@ -562,10 +560,7 @@ Collection::SalesForecast::Master::1.0
 ### Resource Use
 Related Information
 
-### Watch Resource
-True
-
-### Resource Properties
+### Additional Properties
 {"catalog_version": "3.2", "refresh_schedule": "daily", "owner_team": "Sales Analytics"}
 
 ___

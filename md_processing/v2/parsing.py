@@ -109,6 +109,7 @@ class AttributeFirstParser:
                 # Use canonical_name for compatibility with legacy helpers (e.g. 'Description')
                 self.parsed_attributes[canonical_name] = {
                     "value": parsed_value,
+                    "raw_value": raw_value,
                     "valid": True,
                     "exists": True,
                     "style": details.get("style", "Simple"),
@@ -188,6 +189,7 @@ class AttributeFirstParser:
                     if parsed_default is not None:
                          self.parsed_attributes[canonical_name] = {
                             "value": parsed_default,
+                            "raw_value": str(default_value),
                             "valid": True,
                             "exists": canonical_name in self.parsed_attributes,
                             "style": details.get("style", "Simple"),

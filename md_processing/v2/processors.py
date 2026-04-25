@@ -657,7 +657,14 @@ class AsyncBaseCommandProcessor(ABC):
             if basis_attr:
                 display_name = attributes.get(basis_attr, {}).get("value")
 
+        spec = self.get_command_spec()
+        is_attach = spec.get("attach", False) if spec else False
+        
         if not display_name:
+            if is_attach:
+                # For link commands, don't guess the QN from other elements' IDs/Names
+                return ""
+                
             # Look for ANY attribute ending in ' Name', ' ID', or ' Id' (e.g., 'Glossary Name', 'Term ID')
             for k, v in attributes.items():
                 if any(k.endswith(s) for s in [" Name", " ID", " Id"]) and k != "Qualified Name":
@@ -673,22 +680,24 @@ class AsyncBaseCommandProcessor(ABC):
             # Return empty if no basis found - will fail validation if required
             return ""
 
-        spec = self.get_command_spec()
-        qn_prefix = (spec.get("qn_prefix") if spec else None) or self.command.object_type
+        if spec and "qn_prefix" in spec:
+            qn_prefix = spec.get("qn_prefix")
+        else:
+            qn_prefix = self.command.object_type
         
         # Strip trailing colon and sanitize spaces if present (Egeria types cannot have spaces)
         if qn_prefix:
-            qn_prefix = qn_prefix.replace(" ", "")
+            qn_prefix = str(qn_prefix).replace(" ", "")
             if qn_prefix.endswith(':'):
                 qn_prefix = qn_prefix[:-1]
-
+        
         # Extract local qualifier (Namespace Path) and Version Identifier if present 
         local_qualifier = attributes.get("Namespace Path", {}).get("value")
         version_identifier = attributes.get("Version Identifier", {}).get("value")
 
         # Reach into 'collections' subclient which is guaranteed to have the helper
         helper = getattr(self.client, 'collections', self.client)
-        if hasattr(helper, "__create_qualified_name__"):
+        if hasattr(helper, "__create_qualified_name__") and qn_prefix:
             return helper.__create_qualified_name__(
                 type_name=qn_prefix,
                 display_name=display_name,
@@ -696,8 +705,12 @@ class AsyncBaseCommandProcessor(ABC):
                 version_identifier=version_identifier or ""
             )
         else:
-            # Basic fallback if SDK helper unavailable
-            q_name = f"{qn_prefix}::{display_name}"
+            # Basic fallback if SDK helper unavailable or if prefix is empty
+            if qn_prefix:
+                q_name = f"{qn_prefix}::{display_name}"
+            else:
+                q_name = display_name
+                
             if local_qualifier:
                 q_name = f"{local_qualifier}::{q_name}"
             if version_identifier:
@@ -1031,7 +1044,7 @@ class AsyncBaseCommandProcessor(ABC):
         ])
 
         for name, details in attributes.items():
-            raw = details.get("value", "")
+            raw = details.get("raw_value", details.get("value", ""))
             val = format_for_markdown_table(raw)
             
             report.append(f"| {name} | {val} |")
@@ -1039,8 +1052,9 @@ class AsyncBaseCommandProcessor(ABC):
         expanded = []
         for name, details in attributes.items():
             raw = details.get("value", "")
-            if isinstance(raw, str) and ("\n" in raw or any(raw.strip().startswith(p) for p in ("- ", "* ", "1.", "#", ">", "```"))):
-                expanded.append(f"##### {name}\n\n{raw}\n")
+            display_raw = details.get("raw_value", raw)
+            if isinstance(display_raw, str) and ("\n" in display_raw or any(display_raw.strip().startswith(p) for p in ("- ", "* ", "1.", "#", ">", "```"))):
+                expanded.append(f"##### {name}\n\n{display_raw}\n")
             elif isinstance(raw, dict) and details.get("style") in ("Dictionary", "KeyValue"):
                 table_lines = [
                     f"##### {name}\n",
@@ -1106,7 +1120,7 @@ class AsyncBaseCommandProcessor(ABC):
         ])
 
         for name, details in attributes.items():
-            raw = details.get("value", "")
+            raw = details.get("raw_value", details.get("value", ""))
             val = format_for_markdown_table(raw)
             
             # Visual feedback for validation
@@ -1124,8 +1138,9 @@ class AsyncBaseCommandProcessor(ABC):
         expanded = []
         for name, details in attributes.items():
             raw = details.get("value", "")
-            if isinstance(raw, str) and ("\n" in raw or any(raw.strip().startswith(p) for p in ("- ", "* ", "1.", "#", ">", "```"))):
-                expanded.append(f"##### {name}\n\n{raw}\n")
+            display_raw = details.get("raw_value", raw)
+            if isinstance(display_raw, str) and ("\n" in display_raw or any(display_raw.strip().startswith(p) for p in ("- ", "* ", "1.", "#", ">", "```"))):
+                expanded.append(f"##### {name}\n\n{display_raw}\n")
             elif isinstance(raw, dict) and details.get("style") in ("Dictionary", "KeyValue"):
                 table_lines = [
                     f"##### {name}\n",
