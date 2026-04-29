@@ -2904,6 +2904,7 @@ class GlossaryManager(CollectionManager):
             page_size=page_size,
             output_format=output_format,
             report_spec=report_spec,
+            metadata_element_type = "Glossary",
             **kwargs
         )
         return response

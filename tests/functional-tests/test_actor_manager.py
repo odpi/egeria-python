@@ -162,10 +162,10 @@ class TestActorManager:
             token = actor_client.create_egeria_bearer_token(self.good_user_2, "secret")
             start_time = time.perf_counter()
 
-            search_string = "team-hr"
+            search_string = "Coco"
             response = actor_client.find_actor_profiles(
                 search_string,
-                output_format="MERMAID", report_spec = "Org-Chart",graph_depth=10
+                output_format="REPORT", report_spec = "Org-Chart",graph_depth=10
             )
             duration = time.perf_counter() - start_time
 
