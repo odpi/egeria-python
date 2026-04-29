@@ -54,6 +54,8 @@ TERM_RELATIONSHPS = ["Synonym", "Translation", "PreferredTerm", "TermISATYPEOFRe
 GOV_LINK_LIST = ["Link Governance Drivers", "Link Drivers", "Detach Governance Drivers", "Detach Drivers",
                  "Link Governance Policies", "Link Policies", "Detach Governance Policies", "Detach Policies",
                  "Link Governance Controls", "Link Controls", "Detach Governance Controls", "Detach Controls",
+                 "Link Regulator", "Detach Regulator",
+                 "Link Regulation", "Detach Regulation",
                  ]
 
 GOV_COM_LIST = ["Create Business Imperative", "Update Business Imperative",

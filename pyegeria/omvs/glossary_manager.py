@@ -2894,6 +2894,8 @@ class GlossaryManager(CollectionManager):
           The principle specified by the user_id does not have authorization for the requested action
 
         """
+        metadata_element_type = kwargs.pop("metadata_element_type", "Glossary")
+
         response = await self._async_find_collections(
             search_string=search_string,
             body=body,
@@ -2904,7 +2906,7 @@ class GlossaryManager(CollectionManager):
             page_size=page_size,
             output_format=output_format,
             report_spec=report_spec,
-            metadata_element_type = "Glossary",
+            metadata_element_type=metadata_element_type,
             **kwargs
         )
         return response

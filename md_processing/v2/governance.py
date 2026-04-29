@@ -376,6 +376,19 @@ class GovernanceLinkProcessor(AsyncBaseCommandProcessor):
                 body = set_peer_gov_def_request_body(om_type or object_type, attributes)
                 await self.client._async_link_peer_definitions(left_guid, rel_type, right_guid, body)
 
+            elif object_type == "Regulator":
+                body = body_slimmer({
+                    "class": "NewRelationshipRequestBody",
+                    "properties": {
+                        "class": "RegulatorProperties",
+                        "description": attributes.get("Description", {}).get("value"),
+                        "scope": attributes.get("Scope", {}).get("value"),
+                        "effectiveFrom": attributes.get("Effective From", {}).get("value"),
+                        "effectiveTo": attributes.get("Effective To", {}).get("value"),
+                    },
+                })
+                await self.client._async_add_regulator_to_regulation(left_guid, right_guid, body)
+
             elif object_type in {"Governance Response", "Governance Mechanism"}:
                 rel_type = om_type or {
                     "Governance Response": "GovernanceResponse",
@@ -533,6 +546,9 @@ class GovernanceLinkProcessor(AsyncBaseCommandProcessor):
 
             elif object_type == "Agreement T&C":
                 await self.client._async_detach_agreement_item(left_guid, right_guid, body)
+
+            elif object_type == "Regulator":
+                await self.client._async_detach_regulator_from_regulation(left_guid, right_guid, body)
 
             elif object_type in {"Associated Group", "Regulation Certification Type"}:
                 rel_map = {

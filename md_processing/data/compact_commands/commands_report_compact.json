@@ -1,6 +1,6 @@
 {
   "family": "Report",
-  "exported": "Apr 23, 2026 at 3:32:08 PM",
+  "exported": "Apr 29, 2026 at 4:26:10 PM",
   "attribute_definitions": {
     "Search String": {
       "variable_name": "search_string",
@@ -442,7 +442,7 @@
   },
   "commands": {
     "Report": {
-      "display_name": "Report",
+      "display_name": "View Report",
       "qn_prefix": "",
       "alternate_names": [],
       "family": "Report",
