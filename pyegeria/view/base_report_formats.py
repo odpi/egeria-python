@@ -303,7 +303,7 @@ PROJECT_COLUMNS = COMMON_COLUMNS + [
 GLOSSARY_COLUMNS = COMMON_COLUMNS + [
     Column(name="Language", key='language'),
     Column(name='Usage', key='usage'),
-    Column(name='Folders', key='collection_members'),
+    Column(name='Folders', key='folder_display_names'),
 ]
 
 COLLECTIONS_COLUMNS = COMMON_COLUMNS + [

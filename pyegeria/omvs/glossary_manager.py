@@ -2625,24 +2625,28 @@ class GlossaryManager(CollectionManager):
         extra: dict = {}
         if guid:
             try:
-                categories = self.get_categories_for_glossary(guid)
+                collection_members = element['collectionMembers']
+                target_type='CollectionFolder'
+                folder_qn = [
+                                m['relatedElement']['properties']['qualifiedName']
+                                for m in collection_members
+                                if m['relatedElement']['elementHeader']['type']['typeName'] == target_type
+                            ]
+                folder_qn_list = ", \n".join(folder_qn)
+                extra['folder_qualified_names'] = folder_qn_list
+
+                folder_dn = [
+                    m['relatedElement']['properties']['displayName']
+                    for m in collection_members
+                    if m['relatedElement']['elementHeader']['type']['typeName'] == target_type
+                ]
+                folder_dn_list = ", \n".join(folder_dn)
+                extra['folder_display_names'] = folder_dn_list
+
+
             except Exception:
-                categories = None
-            if isinstance(categories, list):
-                cat_display_list = []
-                cat_qn_list = []
-                for category in categories:
-                    gcp = category.get('glossaryCategoryProperties', {})
-                    dn = (gcp.get('displayName') or '')
-                    qn = (gcp.get('qualifiedName') or '')
-                    if dn:
-                        cat_display_list.append(dn)
-                    if qn:
-                        cat_qn_list.append(qn)
-                if cat_display_list:
-                    extra['categories_names'] = ", \n".join(cat_display_list)
-                if cat_qn_list:
-                    extra['categories_qualified_names'] = ", \n".join(cat_qn_list)
+                collection_members = None
+
         return overlay_additional_values(col_data, extra)
 
     @dynamic_catch
