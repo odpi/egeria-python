@@ -852,8 +852,11 @@ def generate_entity_md(elements: List[Dict],
                     display_name = col.get('value')
                     if display_name:
                         break
-        else:
-            display_name = props.get('display_name') or props.get('title') or props.get('keyword') or props.get('full_name') or props.get('fullName')
+        
+        if display_name is None:
+            # Fallback: get from element properties directly
+            header_props = _extract_referenceable_properties(element)
+            display_name = header_props.get('display_name') or header_props.get('title') or header_props.get('keyword') or header_props.get('full_name') or header_props.get('qualified_name')
 
         if display_name is None and (keyword:= element.get('properties',{}).get('keyword',None)) is not None:
             display_name = keyword

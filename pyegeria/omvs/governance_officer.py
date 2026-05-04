@@ -168,6 +168,19 @@ class GovernanceOfficer(ServerClient):
                                            include_subject_area=True,
                                            mermaid_source_key='mermaidGraph',
                                            mermaid_dest_key='mermaid')
+        
+        element_header = element.get("elementHeader", {})
+        zone_profile = element_header.get("zoneMembershipProfile") or element_header.get("zoneMemberShipProfile")
+        
+        if zone_profile:
+            col_data['total_membership'] = zone_profile.get("totalMembership")
+            col_data['type_membership'] = zone_profile.get("typeMembership")
+            col_data['anchored_total_membership'] = zone_profile.get("anchoredTotalMembership")
+            col_data['anchored_type_membership'] = zone_profile.get("anchoredTypeMembership")
+            col_data['all_total_membership'] = zone_profile.get("allTotalMembership")
+            col_data['all_type_membership'] = zone_profile.get("allTypeMembership")
+            col_data['analysis_time'] = zone_profile.get("analysisTime")
+
         return col_data
 
     def _extract_gov_def_list(self, element: Union[Dict, List[Dict]]) -> List[Dict]:
@@ -2994,135 +3007,193 @@ class GovernanceOfficer(ServerClient):
          """
         loop = asyncio.get_event_loop()
         loop.run_until_complete(self._async_detach_governance_results(gov_metric_guid, data_asset_guid, data_asset_guid, body))
+    @dynamic_catch
+    async def _async_add_regulator_to_regulation(self, regulation_guid: str, regulator_guid,
+                                                  body: Optional[dict | NewRelationshipRequestBody] = None) -> None:
+        """ Attach a regulation to a regulator (usually an organization) using the Regulator relationship.
+            Request body is optional. https://egeria-project.org/egeria-solutions/assessing-new-regulation/overview
 
-    # async def _async_get_gov_def_in_context(self, guid: str, body: dict = None, output_format: str = "JSON",
-    # start_from: int = 0,
-    #                                         page_size: int = 0) -> list[dict] | str:
-    #     """ Get governance definition in context. Brings back the graph.
-    #         Async version.
-    #
-    #         Parameters
-    #         ----------
-    #         guid: str
-    #             GUID of the governance definition to get.
-    #
-    #         body: dict
-    #             A dictionary containing the definition of the governance definition to get.
-    #         output_format: str
-    #             The output format to use.
-    #         start_from: int, default= 0
-    #             Indicates the start of the page range.
-    #         page_size: int, default = 0
-    #             The page size to use.
-    #
-    #         Returns
-    #         -------
-    #
-    #         list[dict] | str
-    #                 A list of information governance definition structures or a string if there are no elements found.
-    #
-    #
-    #         Raises
-    #         ------
-    #         PyegeriaInvalidParameterException
-    #             one of the parameters is null or invalid or
-    #         PyegeriaAPIException
-    #             There is a problem adding the element properties to the metadata repository or
-    #         PyegeriaUnauthorizedException
-    #             the requesting user is not authorized to issue this request.
-    #
-    #         Notes
-    #         ----
-    #         https://egeria-project.org/concepts/governance-definition
-    #
-    #         Body structure:
-    #         {
-    #           "forLineage": true,
-    #           "forDuplicateProcessing": true,
-    #           "effectiveTime": "2025-06-13T14:12:44.896Z",
-    #           "limitResultsByStatus": [
-    #             "InstanceStatus{ordinal=0, name='<Unknown>', description='Unknown instance status.'}"
-    #           ],
-    #           "asOfTime": "2025-06-13T14:12:44.896Z",
-    #           "sequencingOrder": "SequencingOrder{Any Order}",
-    #           "sequencingProperty": "string"
-    #         }
-    #
-    #        """
-    #     possible_query_params = query_string([("startFrom", start_from), ("pageSize", page_size)])
-    #
-    #     url = (
-    #         f"{self.platform_url}/servers/{self.view_server}/api/open-metadata/"
-    #         f"{self.url_marker}/governance-definitions/"
-    #         f"{guid}/in-context{possible_query_params}")
-    #
-    #     if body:
-    #         response = await self._async_make_request("POST", url, body_slimmer(body))
-    #     else:
-    #         response = await self._async_make_request("POST", url)
-    #
-    #     element = response.json().get("element", NO_ELEMENTS_FOUND)
-    #     if output_format != 'JSON':  # return a simplified markdown representation
-    #         return self.generate_governance_definition_output(element, "", output_format)
-    #     return response.json().get("element", NO_ELEMENTS_FOUND)
-    #
-    # def get_gov_def_in_context(self, guid: str, body: dict = None, output_format: str = "JSON", start_from: int = 0,
-    #                            page_size: int = 0) -> list[dict] | str:
-    #     """ Get governance definition in context. Brings back the graph.
-    #
-    #         Parameters
-    #         ----------
-    #         guid: str
-    #             GUID of the governance definition to get.
-    #
-    #         body: dict
-    #             A dictionary containing the definition of the governance definition to get.
-    #         output_format: str
-    #             The output format to use.
-    #         start_from: int, default= 0
-    #             Indicates the start of the page range.
-    #         page_size: int, default = 0
-    #             The page size to use.
-    #
-    #         Returns
-    #         -------
-    #
-    #         list[dict] | str
-    #                 A list of information governance definition structures or a string if there are no elements found.
-    #
-    #
-    #         Raises
-    #         ------
-    #         PyegeriaInvalidParameterException
-    #             one of the parameters is null or invalid or
-    #         PyegeriaAPIException
-    #             There is a problem adding the element properties to the metadata repository or
-    #         PyegeriaUnauthorizedException
-    #             the requesting user is not authorized to issue this request.
-    #
-    #         Notes
-    #         ----
-    #         https://egeria-project.org/concepts/governance-definition
-    #
-    #         Body structure:
-    #         {
-    #           "forLineage": true,
-    #           "forDuplicateProcessing": true,
-    #           "effectiveTime": "2025-06-13T14:12:44.896Z",
-    #           "limitResultsByStatus": [
-    #             "InstanceStatus{ordinal=0, name='<Unknown>', description='Unknown instance status.'}"
-    #           ],
-    #           "asOfTime": "2025-06-13T14:12:44.896Z",
-    #           "sequencingOrder": "SequencingOrder{Any Order}",
-    #           "sequencingProperty": "string"
-    #         }
-    #
-    #        """
-    #
-    #     loop = asyncio.get_event_loop()
-    #     response = loop.run_until_complete(
-    #         self._async_get_gov_def_in_context(guid, body, output_format, start_from, page_size))
-    #     return response
+            Async Version.
+
+        Parameters
+        ----------
+        regulation_guid: str
+            guid of the regulation to link.
+        regulator_guid
+            guid of the organization to link.
+        body: dict, optional
+            The body describing the link between the two elements.
+
+        Returns
+        -------
+        None
+
+        Raises
+        ------
+        PyegeriaException
+        ValidationError
+
+        Notes
+        ----
+
+        Body structure:
+        {
+          "class" : "NewRelationshipRequestBody",
+          "properties": {
+            "class": "RegulatorProperties",
+            "label": "",
+            "description": "",
+            "scope": "",
+            "effectiveFrom": "{{$isoTimestamp}}",
+            "effectiveTo": "{{$isoTimestamp}}"
+          },
+          "externalSourceGUID": "add guid here",
+          "externalSourceName": "add qualified name here",
+          "effectiveTime" : "{{$isoTimestamp}}",
+          "forLineage" : false,
+          "forDuplicateProcessing" : false
+        }
+
+        """
+
+        url = (f"{self.platform_url}/servers/{self.view_server}/api/open-metadata/{self.url_marker}/governance-officer/"
+               f"{regulation_guid}/organizations/{regulator_guid}/attach"
+               )
+        await self._async_new_relationship_request(url, "GovernanceResultsProperties", body)
+        logger.info(f"Linked governance metric to a data asset containing its measurements.: {regulation_guid} -> {regulator_guid}")
+
+    @dynamic_catch
+    def add_regulator_to_regulation(self, regulation_guid: str, regulator_guid,
+                                                  body: Optional[dict | NewRelationshipRequestBody] = None) -> None:
+        """ Attach a regulation to a regulator (usually an organization) using the Regulator relationship.
+            Request body is optional. https://egeria-project.org/egeria-solutions/assessing-new-regulation/overview
+
+
+        Parameters
+        ----------
+        regulation_guid: str
+            guid of the regulation to link.
+        regulator_guid
+            guid of the organization to link.
+        body: dict, optional
+            The body describing the link between the two elements.
+
+        Returns
+        -------
+        None
+
+        Raises
+        ------
+        PyegeriaException
+        ValidationError
+
+        Notes
+        ----
+
+        Body structure:
+        {
+          "class" : "NewRelationshipRequestBody",
+          "properties": {
+            "class": "RegulatorProperties",
+            "label": "",
+            "description": "",
+            "scope": "",
+            "effectiveFrom": "{{$isoTimestamp}}",
+            "effectiveTo": "{{$isoTimestamp}}"
+          },
+          "externalSourceGUID": "add guid here",
+          "externalSourceName": "add qualified name here",
+          "effectiveTime" : "{{$isoTimestamp}}",
+          "forLineage" : false,
+          "forDuplicateProcessing" : false
+        }
+
+        """
+        loop = asyncio.get_event_loop()
+        loop.run_until_complete(self._async_link_governance_results(regulation_guid, regulator_guid, body))
+
+    @dynamic_catch
+    async def _async_detach_regulator_from_regulation(self, regulation_guid: str, regulator_guid, body: Optional[dict | DeleteRelationshipRequestBody] = None) -> None:
+        """ Detach a regulation to a regulator (usually an organization) using the Regulator relationship.
+            https://egeria-project.org/egeria-solutions/assessing-new-regulation/overview Async version.
+
+        Parameters
+        ----------
+        regulation_guid: str
+            guid of the regulation to unlink.
+        regulator_guid
+            guid of the organization to unlink.
+        body: dict, optional
+            The body describing the link between the two elements.
+
+        Returns
+        -------
+        None
+
+        Raises
+        ------
+        PyegeriaException
+        ValidationError
+
+        Notes
+        ----
+
+        Body structure:
+        {
+          "class" : "DeleteRelationshipRequestBody",
+          "externalSourceGUID": "add guid here",
+          "externalSourceName": "add qualified name here",
+          "effectiveTime" : "{{$isoTimestamp}}",
+          "forLineage" : false,
+          "forDuplicateProcessing" : false
+        }
+        """
+
+        url = (f"{self.platform_url}/servers/{self.view_server}/api/open-metadata/{self.url_marker}/governance-officer/"
+               f"{regulation_guid}/organizations/{regulator_guid}/detach")
+        await self._async_delete_relationship_request(url, body)
+        logger.info(
+            f"Detached regulator from the regulation: {regulation_guid} -> {regulator_guid}")
+
+    def detach_regulator_from_regulation(self, regulation_guid: str, regulator_guid,
+                                  body: Optional[dict | DeleteRelationshipRequestBody] = None) -> None:
+        """ Detach a regulation to a regulator (usually an organization) using the Regulator relationship. Request body is optional.
+            https://egeria-project.org/egeria-solutions/assessing-new-regulation/overview
+
+         Parameters
+         ----------
+         regulation_guid: str
+             guid of the regulation to unlink.
+         regulator_guid
+             guid of the organization to unlink.
+         body: dict, optional
+             The body describing the link between the two elements.
+
+         Returns
+         -------
+         None
+
+         Raises
+         ------
+         PyegeriaException
+         ValidationError
+
+         Notes
+         ----
+
+         Body structure:
+        {
+          "class" : "DeleteRelationshipRequestBody",
+          "externalSourceGUID": "add guid here",
+          "externalSourceName": "add qualified name here",
+          "effectiveTime" : "{{$isoTimestamp}}",
+          "forLineage" : false,
+          "forDuplicateProcessing" : false
+        }
+         """
+        loop = asyncio.get_event_loop()
+        loop.run_until_complete(self._async_detach_regulator_from_regulation(regulation_guid, regulator_guid, body))
+
 
 
 if __name__ == "__main__":

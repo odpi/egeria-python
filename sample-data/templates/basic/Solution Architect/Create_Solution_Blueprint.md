@@ -3,7 +3,7 @@ ___
 ## Create Solution Blueprint
 > Creates or updates a solution blueprint — a description of the architecture of a digital service in terms of solution components.
 
-## Display Name
+### Display Name
 >	**Input Required**: True
 
 >	**Attribute Type**: Simple
@@ -85,7 +85,7 @@ ___
 >	**Description**: The purpose of this collection — a short description of why it exists or what it is used for.
 
 
-## Search Keywords
+### Search Keywords
 >	**Input Required**: False
 
 >	**Attribute Type**: Simple List

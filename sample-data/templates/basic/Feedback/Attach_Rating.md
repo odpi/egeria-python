@@ -1,3 +1,5 @@
+___
+
 ## Attach Rating
 > Attach a star rating to a referenceable element via the AttachedRating relationship.
 
@@ -52,3 +54,5 @@
 
 >	**Description**: A description.
 
+
+___

@@ -1,7 +1,9 @@
+___
+
 ## Create Informal Tag
 > Creates an informal tag — a user-defined label that can be attached to any referenceable element.
 
-## Display Name
+### Display Name
 >	**Input Required**: True
 
 >	**Attribute Type**: Simple
@@ -45,7 +47,7 @@
 >	**Description**: The unique, text name of an element.
 
 
-## Search Keywords
+### Search Keywords
 >	**Input Required**: False
 
 >	**Attribute Type**: Simple List
@@ -82,3 +84,5 @@
 
 >	**Default Value**: 1.0
 
+
+___

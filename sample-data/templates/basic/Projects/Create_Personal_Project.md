@@ -3,7 +3,7 @@ ___
 ## Create Personal Project
 > Creates or updates a personal project — an informal project created by a single person to organize part of their work. Sets the PersonalProject classification on the Project entity.
 
-## Display Name
+### Display Name
 >	**Input Required**: True
 
 >	**Attribute Type**: Simple
@@ -199,7 +199,7 @@ ___
 >	**Description**: A list of purposes for this project (array&lt;string&gt;). Note: distinct from Collection.purpose (string, singular) which is a separate attribute on Collection Base.
 
 
-## Search Keywords
+### Search Keywords
 >	**Input Required**: False
 
 >	**Attribute Type**: Simple List

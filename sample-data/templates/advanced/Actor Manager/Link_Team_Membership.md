@@ -2,6 +2,8 @@ ___
 
 ## Link Team Membership
 > Links a team to a TeamMember role (a PersonRole subtype) representing membership in the team using the AssignmentScope relationship.
+>
+>	**Alternative Names**: Link Team Member
 
 ### Team
 >	**Input Required**: False

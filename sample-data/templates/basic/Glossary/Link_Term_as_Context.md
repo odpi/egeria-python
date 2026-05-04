@@ -5,6 +5,16 @@ ___
 >
 >	**Alternative Names**: Used in Context; Term as Context
 
+### Relationship Type
+>	**Input Required**: True
+
+>	**Attribute Type**: Enum
+
+>	**Description**: The type of relationship connecting the two terms. E.g. Synonym, Antonym, PreferredTerm, ReplacedByTerm, TranslationOf, etc.
+
+>	**Valid Values**: RelatedTerm,Synonym,Antonym,PreferredTerm,ReplacementTerm,Translation,ISA,ValidValue,ISARelationship,TermHASARelationship,TYPED BY,TermTYPEDBYRelationship,TYPE OF,TermISATYPEOFRelationship
+
+
 ### Term 1
 >	**Input Required**: True
 
@@ -23,32 +33,6 @@ ___
 >	**Description**: The unique identifier (qualified name or GUID) of the element being referenced.
 
 >	**Alternative Labels**: Element Name; Member Id
-
-
-### Label
->	**Input Required**: False
-
->	**Attribute Type**: Simple
-
->	**Description**: A label used to identify or categorise a relationship link.
-
->	**Alternative Labels**: Wire Label
-
-
-### Journal Entry
->	**Input Required**: False
-
->	**Attribute Type**: Simple
-
->	**Description**: A text entry into a journal.
-
-
-### Description
->	**Input Required**: False
-
->	**Attribute Type**: Simple
-
->	**Description**: A description.
 
 
 ___

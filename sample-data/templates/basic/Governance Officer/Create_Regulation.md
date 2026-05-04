@@ -3,7 +3,7 @@ ___
 ## Create Regulation
 > Defines a relevant legal regulation that the business operation must comply with. Often regulations are divided into regulation articles.
 
-## Display Name
+### Display Name
 >	**Input Required**: True
 
 >	**Attribute Type**: Simple
@@ -143,7 +143,7 @@ ___
 >	**Description**: Scope of the definition or element.
 
 
-## Search Keywords
+### Search Keywords
 >	**Input Required**: False
 
 >	**Attribute Type**: Simple List

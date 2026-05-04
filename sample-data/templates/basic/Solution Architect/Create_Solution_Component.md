@@ -3,7 +3,7 @@ ___
 ## Create Solution Component
 > Creates or updates a reusable solution component — a building block of a solution blueprint or information supply chain.
 
-## Display Name
+### Display Name
 >	**Input Required**: True
 
 >	**Attribute Type**: Simple
@@ -115,7 +115,7 @@ ___
 >	**Default Value**: ACTIVE
 
 
-## Search Keywords
+### Search Keywords
 >	**Input Required**: False
 
 >	**Attribute Type**: Simple List

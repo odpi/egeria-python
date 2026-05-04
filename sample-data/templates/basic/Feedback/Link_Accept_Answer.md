@@ -1,3 +1,5 @@
+___
+
 ## Link Accept Answer
 > Link a question comment to the comment that answers it via the AcceptedAnswer relationship.
 
@@ -42,3 +44,5 @@
 
 >	**Description**: A description.
 
+
+___

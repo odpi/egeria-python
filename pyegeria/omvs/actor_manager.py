@@ -32,7 +32,7 @@ ACTOR_PROFILE_PROPERTIES_LIST = ["ActorProfileProperties", "PersonProperties", "
 ACTOR_ROLE = ["ActorRole", "PersonRole", "TeamRole", "ITProfileRole", "TeamMember", "TeamLeader"]
 
 ACTOR_ROLE_PROPERTIES_LIST = ["ActorRoleProperties", "PersonRoleProperties", "TeamRoleProperties",
-                              "ITProfileRoleProperties"]
+                              "ITProfileRoleProperties", "GovernanceRoleProperties","SolutionActorRoleProperties"]
 
 from pyegeria.core._server_client import ServerClient
 
@@ -1265,7 +1265,7 @@ class ActorManager(ServerClient):
 
     @dynamic_catch
     async def _async_create_actor_role(self, body: Optional[dict | NewElementRequestBody] = None) -> str:
-        """ Create a new actor role. Async version.
+        """ Create a new actor role. There are GovernanceRole, PersonRole, ITProfileRole, SolutionActorRole. Async version.
 
         Parameters
         ----------
@@ -1296,6 +1296,7 @@ class ActorManager(ServerClient):
           "properties": {
             "class" : "ActorRoleProperties",
             "typeName" : "enter the type of the element",
+            "actorProfileGroups" : ["group1", "group2"],
             "qualifiedName": "add unique name here",
             "displayName": "add short name here",
             "description": "add description here",
@@ -1318,7 +1319,7 @@ class ActorManager(ServerClient):
 
     @dynamic_catch
     def create_actor_role(self, body: Optional[dict | NewElementRequestBody] = None) -> str:
-        """ Create a new actor role.
+        """ Create a new actor role. There are GovernanceRole, PersonRole, ITProfileRole, SolutionActorRole.
 
            Parameters
            ----------
@@ -1349,6 +1350,7 @@ class ActorManager(ServerClient):
              "properties": {
                "class" : "ActorRoleProperties",
                "typeName" : "enter the type of the element",
+               "actorProfileGroups" : ["group1", "group2"],
                "qualifiedName": "add unique name here",
                "displayName": "add short name here",
                "description": "add description here",

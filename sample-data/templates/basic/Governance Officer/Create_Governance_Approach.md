@@ -3,7 +3,7 @@ ___
 ## Create Governance Approach
 > The GovernanceApproach entity defines a policy that describes a method that should be used for a particular activity.
 
-## Display Name
+### Display Name
 >	**Input Required**: True
 
 >	**Attribute Type**: Simple
@@ -127,7 +127,7 @@ ___
 >	**Description**: Scope of the definition or element.
 
 
-## Search Keywords
+### Search Keywords
 >	**Input Required**: False
 
 >	**Attribute Type**: Simple List

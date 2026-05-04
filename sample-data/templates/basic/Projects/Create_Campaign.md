@@ -3,7 +3,7 @@ ___
 ## Create Campaign
 > Creates or updates a campaign — a collection of related projects working towards a common goal. Sets the Campaign classification on the Project entity.
 
-## Display Name
+### Display Name
 >	**Input Required**: True
 
 >	**Attribute Type**: Simple
@@ -199,7 +199,7 @@ ___
 >	**Description**: A list of purposes for this project (array&lt;string&gt;). Note: distinct from Collection.purpose (string, singular) which is a separate attribute on Collection Base.
 
 
-## Search Keywords
+### Search Keywords
 >	**Input Required**: False
 
 >	**Attribute Type**: Simple List

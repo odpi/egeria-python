@@ -432,8 +432,8 @@ class TestGovernanceOfficer:
     def test_find_governance_definitions(self):
         filter_string= "PostgreSQLServer:CreateAndSurveyGovernanceActionProcess"
         try:
-            self.user = "freddiemercury"
-            self.password = "magic, magic"
+            self.user = "peterprofile"
+            self.password = "secret"
             s_client = GovernanceOfficer(
                 self.view_server, self.platform_url, self.user, self.password
             )
@@ -447,14 +447,13 @@ class TestGovernanceOfficer:
                 # "metadataElementTypeName": ["BusinessImperative", "Regulation", "LicenseType", "GovernanceResponsibility",
                 #                             "GovernanceApproach", "Certification Type", "Governance Principle"],
                 # "metadataElementSubtypeNames": ["GovernancePrinciple","GovernanceStrategy","Regulation", "BusinessImperative"],
-                "metadataElementSubtypeNames": ["GovernanceStrategy"],
+                "metadataElementSubtypeNames": ["GovernanceZone"],
                 "sequencingOrder": None,
-                "sequencingProperty": None,
-                "searchString": "sustainable"
+                "sequencingProperty": None
                 }
 
             start_time = time.perf_counter()
-            response = s_client.find_governance_definitions(search_string="*", body=body, output_format="DICT", report_spec="Governance Policies")
+            response = s_client.find_governance_definitions(search_string="*", body=body, output_format="JSON", report_spec="Governance Policies")
             duration = time.perf_counter() - start_time
             print(
                 f"\n\tDuration was {duration:.2f} seconds, Type: {type(response)}, Element count is {len(response)}"

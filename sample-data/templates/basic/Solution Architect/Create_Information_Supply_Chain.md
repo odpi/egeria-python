@@ -3,7 +3,7 @@ ___
 ## Create Information Supply Chain
 > Creates or updates an information supply chain — a description of the flow of a particular type of data across a digital landscape.
 
-## Display Name
+### Display Name
 >	**Input Required**: True
 
 >	**Attribute Type**: Simple
@@ -107,7 +107,7 @@ ___
 >	**Description**: Scope of the definition or element.
 
 
-## Search Keywords
+### Search Keywords
 >	**Input Required**: False
 
 >	**Attribute Type**: Simple List

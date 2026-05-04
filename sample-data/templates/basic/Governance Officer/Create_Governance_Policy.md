@@ -3,7 +3,7 @@ ___
 ## Create Governance Policy
 > Policies  created in response to governance drivers. There are several types of policies.
 
-## Display Name
+### Display Name
 >	**Input Required**: True
 
 >	**Attribute Type**: Simple
@@ -127,7 +127,7 @@ ___
 >	**Description**: Scope of the definition or element.
 
 
-## Search Keywords
+### Search Keywords
 >	**Input Required**: False
 
 >	**Attribute Type**: Simple List

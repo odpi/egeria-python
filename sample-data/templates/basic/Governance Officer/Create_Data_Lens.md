@@ -3,7 +3,7 @@ ___
 ## Create Data Lens
 > A DataLens defines a geographic, temporal, and element scope for data collection and analysis.
 
-## Display Name
+### Display Name
 >	**Input Required**: True
 
 >	**Attribute Type**: Simple
@@ -213,7 +213,7 @@ ___
 >	**Description**: Scope of the definition or element.
 
 
-## Search Keywords
+### Search Keywords
 >	**Input Required**: False
 
 >	**Attribute Type**: Simple List

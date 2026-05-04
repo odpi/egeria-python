@@ -1,6 +1,6 @@
 {
   "family": "Governance Officer",
-  "exported": "Apr 23, 2026 at 3:31:29 PM",
+  "exported": "Apr 29, 2026 at 3:34:51 PM",
   "attribute_definitions": {
     "Activity Status": {
       "variable_name": "activity_status",
@@ -1441,6 +1441,25 @@
       "description": "Describes how the resource is being used. From the ResourceList relationship (0019).",
       "generated": false,
       "style": "Valid Value",
+      "user_specified": true,
+      "unique": false,
+      "input_required": false,
+      "min_cardinality": 1,
+      "max_cardinality": 1,
+      "level": "Common",
+      "Journal Entry": ""
+    },
+    "Resource Use Description": {
+      "variable_name": "resource_use_description",
+      "inUpdate": true,
+      "attr_labels": "",
+      "examples": "",
+      "default_value": "",
+      "valid_values": [],
+      "existing_element": "",
+      "description": "Describes how the resource is being used. From the ResourceList relationship (0019).",
+      "generated": false,
+      "style": "Simple",
       "user_specified": true,
       "unique": false,
       "input_required": false,
@@ -3129,6 +3148,25 @@
       "level": "Domain",
       "Journal Entry": ""
     },
+    "Regulator": {
+      "variable_name": "regulator",
+      "inUpdate": false,
+      "attr_labels": "",
+      "examples": "",
+      "default_value": "",
+      "valid_values": [],
+      "existing_element": "Organization",
+      "description": "The Regulator (usually an organization) to link to the regulation.",
+      "generated": false,
+      "style": "Reference Name",
+      "user_specified": true,
+      "unique": false,
+      "input_required": true,
+      "min_cardinality": 1,
+      "max_cardinality": 1,
+      "level": "Domain",
+      "Journal Entry": ""
+    },
     "Regulation Source": {
       "variable_name": "regulation_source",
       "inUpdate": true,
@@ -3384,8 +3422,6 @@
       "inherits": "Link Command Base",
       "own_attributes": [
         "Additional Properties",
-        "Element Id",
-        "Resource Id",
         "Resource Use"
       ]
     },
@@ -4358,6 +4394,77 @@
       "custom_attributes": [
         "Certification Type",
         "Regulation"
+      ],
+      "Journal Entry": ""
+    },
+    "Link Regulation to Regulator": {
+      "display_name": "regulation_to_regulator",
+      "qn_prefix": "",
+      "alternate_names": [],
+      "family": "Governance Officer",
+      "description": "Use the Regulator relationship to link a regulation to a regulator organization.",
+      "verb": "Link",
+      "upsert": false,
+      "attach": false,
+      "level": "Basic",
+      "find_method": "",
+      "find_constraints": "",
+      "extra_find": "",
+      "extra_constraints": "",
+      "OM_TYPE": "Regulator",
+      "bundle": "Link Command Base",
+      "custom_attributes": [
+        "Governance Definition",
+        "Scope",
+        "Referenceable"
+      ],
+      "Journal Entry": ""
+    },
+    "Link Regulator": {
+      "display_name": "Regulator",
+      "qn_prefix": "",
+      "alternate_names": [],
+      "family": "Governance Officer",
+      "description": "Links a regulator (usually an organization) to a regulation using the Regulator relationship.",
+      "verb": "Link",
+      "upsert": false,
+      "attach": true,
+      "level": "Basic",
+      "find_method": "",
+      "find_constraints": "",
+      "extra_find": "",
+      "extra_constraints": "",
+      "OM_TYPE": "Regulator",
+      "bundle": "Link Command Base",
+      "custom_attributes": [
+        "Regulation",
+        "Regulator",
+        "Description",
+        "Scope",
+        "Effective From",
+        "Effective To"
+      ],
+      "Journal Entry": ""
+    },
+    "Detach Regulator": {
+      "display_name": "Regulator",
+      "qn_prefix": "",
+      "alternate_names": [],
+      "family": "Governance Officer",
+      "description": "Detaches a regulator (usually an organization) from a regulation.",
+      "verb": "Detach",
+      "upsert": false,
+      "attach": true,
+      "level": "Basic",
+      "find_method": "",
+      "find_constraints": "",
+      "extra_find": "",
+      "extra_constraints": "",
+      "OM_TYPE": "Regulator",
+      "bundle": "Link Command Base",
+      "custom_attributes": [
+        "Regulation",
+        "Regulator"
       ],
       "Journal Entry": ""
     },

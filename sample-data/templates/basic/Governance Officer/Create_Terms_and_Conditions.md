@@ -5,7 +5,7 @@ ___
 >
 >	**Alternative Names**: T&C; Terms & Conditions
 
-## Display Name
+### Display Name
 >	**Input Required**: True
 
 >	**Attribute Type**: Simple
@@ -175,7 +175,7 @@ ___
 >	| example_key | example_value |
 
 
-## Search Keywords
+### Search Keywords
 >	**Input Required**: False
 
 >	**Attribute Type**: Simple List

@@ -23,16 +23,6 @@ ___
 >	**Description**: The related media reference to link to.
 
 
-### Label
->	**Input Required**: False
-
->	**Attribute Type**: Simple
-
->	**Description**: A label used to identify or categorise a relationship link.
-
->	**Alternative Labels**: Wire Label
-
-
 ### Media Id
 >	**Input Required**: False
 
@@ -57,22 +47,6 @@ ___
 >	**Attribute Type**: Simple
 
 >	**Description**: An id associated with the media usage when not using a standard valid value.
-
-
-### Journal Entry
->	**Input Required**: False
-
->	**Attribute Type**: Simple
-
->	**Description**: A text entry into a journal.
-
-
-### Description
->	**Input Required**: False
-
->	**Attribute Type**: Simple
-
->	**Description**: A description.
 
 
 ___

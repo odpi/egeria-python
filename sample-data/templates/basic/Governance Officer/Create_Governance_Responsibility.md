@@ -3,7 +3,7 @@ ___
 ## Create Governance Responsibility
 > A responsibility assigned to an actor or team. It could be a requirement to take a certain action in specific circumstances or to make decisions or give approvals for actions.
 
-## Display Name
+### Display Name
 >	**Input Required**: True
 
 >	**Attribute Type**: Simple
@@ -137,7 +137,7 @@ ___
 >	**Description**: Scope of the definition or element.
 
 
-## Search Keywords
+### Search Keywords
 >	**Input Required**: False
 
 >	**Attribute Type**: Simple List

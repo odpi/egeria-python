@@ -1,3 +1,5 @@
+___
+
 ## Create Rating
 > Creates a star rating on a metadata element.
 
@@ -85,10 +87,12 @@
 >	**Description**: Link to supporting information
 
 
-## Search Keywords
+### Search Keywords
 >	**Input Required**: False
 
 >	**Attribute Type**: Simple List
 
 >	**Description**: Keywords to facilitate finding the element
 
+
+___

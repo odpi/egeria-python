@@ -3,7 +3,7 @@ ___
 ## Create Notification Type
 > A NotificationType defines a type of notification that can be sent as a governance control.
 
-## Display Name
+### Display Name
 >	**Input Required**: True
 
 >	**Attribute Type**: Simple
@@ -195,7 +195,7 @@ ___
 >	**Description**: Scope of the definition or element.
 
 
-## Search Keywords
+### Search Keywords
 >	**Input Required**: False
 
 >	**Attribute Type**: Simple List

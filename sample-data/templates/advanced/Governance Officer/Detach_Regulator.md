@@ -1,22 +1,32 @@
 ___
 
-## Link Team Leadership
-> Links a team to a TeamLeader role (a PersonRole subtype) that leads it using AssignmentScope relationship.
+## Detach Regulator
+> Detaches a regulator (usually an organization) from a regulation.
 
-### Team
->	**Input Required**: False
-
->	**Attribute Type**: Reference Name
-
->	**Description**: Qualified name of the team.
-
-
-### Team Leader Role
->	**Input Required**: False
+### Regulation
+>	**Input Required**: True
 
 >	**Attribute Type**: Reference Name
 
->	**Description**: Qualified name of the TeamLeader role (a PersonRole subtype).
+>	**Description**: The Regulation entity to link to the certification type.
+
+
+### Regulator
+>	**Input Required**: True
+
+>	**Attribute Type**: Reference Name
+
+>	**Description**: The Regulator (usually an organization) to link to the regulation.
+
+
+### Label
+>	**Input Required**: False
+
+>	**Attribute Type**: Simple
+
+>	**Description**: A label used to identify or categorise a relationship link.
+
+>	**Alternative Labels**: Wire Label
 
 
 ### Journal Entry
@@ -25,6 +35,14 @@ ___
 >	**Attribute Type**: Simple
 
 >	**Description**: A text entry into a journal.
+
+
+### Description
+>	**Input Required**: False
+
+>	**Attribute Type**: Simple
+
+>	**Description**: A description.
 
 
 ### Effective From
@@ -89,6 +107,24 @@ ___
 >	**Attribute Type**: Simple
 
 >	**Description**: A user provided or system generated request id for a conversation.
+
+
+### Anchor Scope IDs
+>	**Input Required**: False
+
+>	**Attribute Type**: Reference Name List
+
+>	**Description**: A list of IDs that are anchor scopes for this element.
+
+
+### Make Anchor
+>	**Input Required**: False
+
+>	**Attribute Type**: Bool
+
+>	**Description**: Is the element at end2 an anchor to end1?
+
+>	**Default Value**: false
 
 
 ___

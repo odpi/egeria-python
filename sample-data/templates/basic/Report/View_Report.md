@@ -1,9 +1,9 @@
 ___
 
-# Report
+## View Report
 > Runs a named pyegeria report spec (FormatSet) via hey_egeria run_report. Returns formatted output from the Egeria repository — not an element creation command.
 
-## Report Spec
+### Report Spec
 >	**Input Required**: True
 
 >	**Attribute Type**: Simple
@@ -13,7 +13,7 @@ ___
 >	**Default Value**: Referenceable
 
 
-## Search String
+### Search String
 >	**Input Required**: False
 
 >	**Attribute Type**: Simple
@@ -23,7 +23,7 @@ ___
 >	**Default Value**: *
 
 
-## Output Format
+### Output Format
 >	**Input Required**: False
 
 >	**Attribute Type**: Valid Value
@@ -35,7 +35,7 @@ ___
 >	**Default Value**: JSON
 
 
-## Starts With
+### Starts With
 >	**Input Required**: False
 
 >	**Attribute Type**: Bool
@@ -45,7 +45,7 @@ ___
 >	**Default Value**: True
 
 
-## Ends With
+### Ends With
 >	**Input Required**: False
 
 >	**Attribute Type**: Bool
@@ -55,7 +55,7 @@ ___
 >	**Default Value**: False
 
 
-## Ignore Case
+### Ignore Case
 >	**Input Required**: False
 
 >	**Attribute Type**: Bool
@@ -65,7 +65,7 @@ ___
 >	**Default Value**: False
 
 
-## Metadata Element Type Name
+### Metadata Element Type Name
 >	**Input Required**: False
 
 >	**Attribute Type**: Simple
@@ -73,7 +73,7 @@ ___
 >	**Description**: Optionally filter results by the type of metadata element.
 
 
-## Metadata Element Subtype Names
+### Metadata Element Subtype Names
 >	**Input Required**: False
 
 >	**Attribute Type**: Simple List
@@ -81,7 +81,7 @@ ___
 >	**Description**: Filter results by the list of metadata elements. If none are provided, then no status filtering will be performed.
 
 
-## Page Size
+### Page Size
 >	**Input Required**: False
 
 >	**Attribute Type**: Simple Int
@@ -91,7 +91,7 @@ ___
 >	**Default Value**: 0
 
 
-## Start From
+### Start From
 >	**Input Required**: False
 
 >	**Attribute Type**: Simple Int

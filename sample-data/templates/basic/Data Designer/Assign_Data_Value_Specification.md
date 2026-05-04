@@ -23,16 +23,6 @@ ___
 >	**Alternative Labels**: Element Name; Member Id
 
 
-### Label
->	**Input Required**: False
-
->	**Attribute Type**: Simple
-
->	**Description**: A label used to identify or categorise a relationship link.
-
->	**Alternative Labels**: Wire Label
-
-
 ### Assignment Status
 >	**Input Required**: False
 
@@ -59,22 +49,6 @@ ___
 >	**Attribute Type**: Simple Int
 
 >	**Description**: Threshold  for assignment.
-
-
-### Journal Entry
->	**Input Required**: False
-
->	**Attribute Type**: Simple
-
->	**Description**: A text entry into a journal.
-
-
-### Description
->	**Input Required**: False
-
->	**Attribute Type**: Simple
-
->	**Description**: A description.
 
 
 ___

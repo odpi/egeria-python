@@ -3,7 +3,7 @@ ___
 ## Create Governance Action
 > An executable action, or sequence of actions to support a governance requirement.
 
-## Display Name
+### Display Name
 >	**Input Required**: True
 
 >	**Attribute Type**: Simple
@@ -137,7 +137,7 @@ ___
 >	**Description**: Scope of the definition or element.
 
 
-## Search Keywords
+### Search Keywords
 >	**Input Required**: False
 
 >	**Attribute Type**: Simple List

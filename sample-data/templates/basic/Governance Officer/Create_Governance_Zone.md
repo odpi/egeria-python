@@ -3,7 +3,7 @@ ___
 ## Create Governance Zone
 > A collection of assets that are used or processed in a specific way. Policies and controls can be attached to zones using the GovernedBy relationship.
 
-## Display Name
+### Display Name
 >	**Input Required**: True
 
 >	**Attribute Type**: Simple
@@ -145,7 +145,7 @@ ___
 >	**Description**: Scope of the definition or element.
 
 
-## Search Keywords
+### Search Keywords
 >	**Input Required**: False
 
 >	**Attribute Type**: Simple List

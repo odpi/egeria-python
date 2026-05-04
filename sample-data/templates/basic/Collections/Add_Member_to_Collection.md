@@ -15,16 +15,6 @@ ___
 >	**Alternative Labels**: Element Name; Member Id
 
 
-### Label
->	**Input Required**: False
-
->	**Attribute Type**: Simple
-
->	**Description**: A label used to identify or categorise a relationship link.
-
->	**Alternative Labels**: Wire Label
-
-
 ### Membership Rationale
 >	**Input Required**: False
 
@@ -51,22 +41,6 @@ ___
 >	**Attribute Type**: Simple
 
 >	**Description**: Notes and observations about the element.
-
-
-### Journal Entry
->	**Input Required**: False
-
->	**Attribute Type**: Simple
-
->	**Description**: A text entry into a journal.
-
-
-### Description
->	**Input Required**: False
-
->	**Attribute Type**: Simple
-
->	**Description**: A description.
 
 
 ### Collection Id

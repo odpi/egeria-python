@@ -3,7 +3,7 @@ ___
 ## Create Solution Role
 > Creates or updates a solution role — a collection of responsibilities associated with a solution component.
 
-## Display Name
+### Display Name
 >	**Input Required**: True
 
 >	**Attribute Type**: Simple
@@ -105,7 +105,7 @@ ___
 >	**Description**: Scope of the definition or element.
 
 
-## Search Keywords
+### Search Keywords
 >	**Input Required**: False
 
 >	**Attribute Type**: Simple List
