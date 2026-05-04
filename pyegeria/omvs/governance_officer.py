@@ -168,6 +168,19 @@ class GovernanceOfficer(ServerClient):
                                            include_subject_area=True,
                                            mermaid_source_key='mermaidGraph',
                                            mermaid_dest_key='mermaid')
+        
+        element_header = element.get("elementHeader", {})
+        zone_profile = element_header.get("zoneMembershipProfile") or element_header.get("zoneMemberShipProfile")
+        
+        if zone_profile:
+            col_data['total_membership'] = zone_profile.get("totalMembership")
+            col_data['type_membership'] = zone_profile.get("typeMembership")
+            col_data['anchored_total_membership'] = zone_profile.get("anchoredTotalMembership")
+            col_data['anchored_type_membership'] = zone_profile.get("anchoredTypeMembership")
+            col_data['all_total_membership'] = zone_profile.get("allTotalMembership")
+            col_data['all_type_membership'] = zone_profile.get("allTypeMembership")
+            col_data['analysis_time'] = zone_profile.get("analysisTime")
+
         return col_data
 
     def _extract_gov_def_list(self, element: Union[Dict, List[Dict]]) -> List[Dict]:
