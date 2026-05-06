@@ -62,11 +62,13 @@ class ConnectionMaker(ServerClient):
 
     async def _async_get_connections_by_name(self, body: Union[FilterRequestBody, dict]) -> List[dict]:
         url = f"{self.base_url}/connections/by-name"
-        return await self._async_find_request(url, body)
+        resp = await self._async_make_request("POST", url, payload=body)
+        return resp.json().get("elements", [])
 
     async def _async_find_connections(self, body: Union[SearchStringRequestBody, dict]) -> List[dict]:
         url = f"{self.base_url}/connections/by-search-string"
-        return await self._async_find_request(url, body)
+        resp = await self._async_make_request("POST", url, payload=body)
+        return resp.json().get("elements", [])
 
     # --- Connector Types ---
 
@@ -93,11 +95,13 @@ class ConnectionMaker(ServerClient):
 
     async def _async_get_connector_types_by_name(self, body: Union[FilterRequestBody, dict]) -> List[dict]:
         url = f"{self.base_url}/connector-types/by-name"
-        return await self._async_find_request(url, body)
+        resp = await self._async_make_request("POST", url, payload=body)
+        return resp.json().get("elements", [])
 
     async def _async_find_connector_types(self, body: Union[SearchStringRequestBody, dict]) -> List[dict]:
         url = f"{self.base_url}/connector-types/by-search-string"
-        return await self._async_find_request(url, body)
+        resp = await self._async_make_request("POST", url, payload=body)
+        return resp.json().get("elements", [])
 
     # --- Endpoints ---
 
@@ -124,19 +128,23 @@ class ConnectionMaker(ServerClient):
 
     async def _async_get_endpoints_by_name(self, body: Union[FilterRequestBody, dict]) -> List[dict]:
         url = f"{self.base_url}/endpoints/by-name"
-        return await self._async_find_request(url, body)
+        resp = await self._async_make_request("POST", url, payload=body)
+        return resp.json().get("elements", [])
 
     async def _async_get_endpoints_by_network_address(self, body: Union[FilterRequestBody, dict]) -> List[dict]:
         url = f"{self.base_url}/endpoints/by-network-address"
-        return await self._async_find_request(url, body)
+        resp = await self._async_make_request("POST", url, payload=body)
+        return resp.json().get("elements", [])
 
     async def _async_find_endpoints(self, body: Union[SearchStringRequestBody, dict]) -> List[dict]:
         url = f"{self.base_url}/endpoints/by-search-string"
-        return await self._async_find_request(url, body)
+        resp = await self._async_make_request("POST", url, payload=body)
+        return resp.json().get("elements", [])
 
     async def _async_get_endpoints_for_asset(self, asset_guid: str, body: Union[FilterRequestBody, dict]) -> List[dict]:
         url = f"{self.base_url}/assets/{asset_guid}/endpoints/retrieve"
-        return await self._async_find_request(url, body)
+        resp = await self._async_make_request("POST", url, payload=body)
+        return resp.json().get("elements", [])
 
     # --- Relationships ---
 

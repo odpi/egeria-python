@@ -55,7 +55,7 @@ def valid_guid(guid):
 
 class TestGovernanceOfficer:
     # platform_url = app_config.egeria_view_server_url
-    platform_url = "https://hedwig.local:9443"
+    platform_url = "https://localhost:9443"
     view_server = app_config.egeria_view_server
     user = os.getenv("EGORIA_USER", "peterprofile")
     password = os.getenv("EGERIA_USER_PASSWORD","secret")
@@ -453,7 +453,7 @@ class TestGovernanceOfficer:
                 }
 
             start_time = time.perf_counter()
-            response = s_client.find_governance_definitions(search_string="*", body=body, output_format="JSON", report_spec="Governance Policies")
+            response = s_client.find_governance_definitions(search_string="*", body=body, output_format="DICT", report_spec="Governance Zones")
             duration = time.perf_counter() - start_time
             print(
                 f"\n\tDuration was {duration:.2f} seconds, Type: {type(response)}, Element count is {len(response)}"

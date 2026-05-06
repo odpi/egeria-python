@@ -19,6 +19,7 @@ from pyegeria.core._server_client import ServerClient
 from pyegeria.view.base_report_formats import select_report_spec, get_report_spec_match
 from pyegeria.view.output_formatter import (
     extract_mermaid_only,
+    overlay_additional_values,
     populate_common_columns,
 )
 
@@ -170,16 +171,20 @@ class GovernanceOfficer(ServerClient):
                                            mermaid_dest_key='mermaid')
         
         element_header = element.get("elementHeader", {})
-        zone_profile = element_header.get("zoneMembershipProfile") or element_header.get("zoneMemberShipProfile")
+        zone_profile = element_header.get("zoneMembershipProfile", None )
         
         if zone_profile:
-            col_data['total_membership'] = zone_profile.get("totalMembership")
-            col_data['type_membership'] = zone_profile.get("typeMembership")
-            col_data['anchored_total_membership'] = zone_profile.get("anchoredTotalMembership")
-            col_data['anchored_type_membership'] = zone_profile.get("anchoredTypeMembership")
-            col_data['all_total_membership'] = zone_profile.get("allTotalMembership")
-            col_data['all_type_membership'] = zone_profile.get("allTypeMembership")
-            col_data['analysis_time'] = zone_profile.get("analysisTime")
+            cp = zone_profile.get('classificationProperties', {})
+            zone_extra = {
+                'total_membership': cp.get("totalMembership"),
+                'type_membership': cp.get("typeMembership"),
+                'anchored_total_membership': cp.get("anchoredTotalMembership"),
+                'anchored_type_membership': cp.get("anchoredTypeMembership"),
+                'all_total_membership': cp.get("allTotalMembership"),
+                'all_type_membership': cp.get("allTypeMembership"),
+                'analysis_time': cp.get("analysisTime"),
+            }
+            col_data = overlay_additional_values(col_data, zone_extra)
 
         return col_data
 
