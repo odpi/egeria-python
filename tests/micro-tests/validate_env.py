@@ -37,7 +37,7 @@ def validate_settings(settings: "PyegeriaSettings") -> list[str]:
     errors: list[str] = []
 
     # Basic type validations
-    if not isinstance(settings.pyegeria_width, int):
+    if not isinstance(settings.egeria_width, int):
         errors.append("EGERIA_WIDTH must parse as an integer")
 
     # If URLs are provided, ensure they are non-empty strings
