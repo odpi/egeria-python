@@ -6145,6 +6145,15 @@ class ServerClient(BaseServerClient):
                                   body: dict | SearchStringRequestBody | FindPropertyNamesRequestBody = None,
                                   **kwargs) -> Any:
 
+        if kwargs:
+            invalid_keys = ", ".join(kwargs.keys())
+            raise PyegeriaInvalidParameterException(
+                additional_info={
+                    "reason": f"Invalid find parameter(s) provided: {invalid_keys}. "
+                              f"Please check the Pyegeria documentation for valid find property parameters."
+                }
+            )
+
         if isinstance(metadata_element_type, str) and not metadata_element_type.strip():
             metadata_element_type = None
 

@@ -9,8 +9,8 @@ def test_pyegeria_settings_instantiation():
 
 def test_environment_config_defaults():
     env = EnvironmentConfig()
-    assert isinstance(env.console_width, int)
-    assert env.console_width > 0
+    assert isinstance(env.egeria_width, int)
+    assert env.egeria_width > 0
 
 
 def test_app_config_basic_structure():
@@ -18,4 +18,4 @@ def test_app_config_basic_structure():
     env = EnvironmentConfig()
     from pyegeria.core.config import DebugConfig, LoggingConfig, UserProfileConfig
     app = AppConfig(Environment=env, Debug=DebugConfig(), Logging=LoggingConfig(), **{"User Profile": UserProfileConfig()})
-    assert app.Environment.console_width == env.console_width
+    assert app.Environment.egeria_width == env.egeria_width

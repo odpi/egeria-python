@@ -47,8 +47,8 @@ def _matches(needle: str, haystack: Iterable[str]) -> bool:
     return False
 
 
-def display_reports(*, search: str | None = None, width: int = app_config.console_width,
-                    jupyter: bool = app_config.egeria_jupyter) -> None:
+def display_reports(*, search: str | None = None, width: int = settings.Environment.egeria_width,
+                    jupyter: bool = settings.Environment.egeria_jupyter) -> None:
     registry = get_report_registry()
 
     def generate_table() -> Table:

@@ -330,7 +330,7 @@ BASIC_COLLECTIONS_COLUMNS = [
     Column(name='Qualified Name', key='qualified_name', format=False),
     Column(name='GUID', key='guid', format=True),
     Column(name='Type Name', key='type_name'),
-    Column(name="Containing Members", key='collection_members'),
+    Column(name="Containing Members", key='collection_members', format='bulleted-list'),
     Column(name="Member Of", key='member_of_collections')
 ]
 

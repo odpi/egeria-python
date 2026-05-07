@@ -18,6 +18,10 @@ from rich.console import Console
 from rich.table import Table
 
 from pyegeria import (
+    PyegeriaException,
+    settings,
+    settings,
+    settings,
     ClassificationExplorer,
     PyegeriaException, settings
 )
@@ -35,8 +39,8 @@ def display_certifications(
     username: str,
     user_password: str,
     time_out: int = 60,
-    jupyter: bool = app_config.egeria_jupyter,
-    width: int = app_config.console_width,
+    jupyter: bool = settings.Environment.egeria_jupyter,
+    width: int = settings.Environment.egeria_width,
 ):
     console = Console(width=width, force_terminal=not jupyter, soft_wrap=True)
 

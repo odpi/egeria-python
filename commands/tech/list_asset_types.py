@@ -17,10 +17,16 @@ from rich.console import Console
 from rich.table import Table
 
 from pyegeria import (
+    PyegeriaException,
+    print_basic_exception,
+    config_logging,
+    load_app_config,
+    settings,
+    settings,
+    settings,
     RegisteredInfo,
     print_basic_exception,
     PyegeriaException,
-    settings, load_app_config, pretty_print_config,
     config_logging,
     save_mermaid_html,
 )
@@ -33,7 +39,7 @@ EGERIA_USER_PASSWORD = os.environ.get("EGERIA_USER_PASSWORD", "secret")
 EGERIA_MERMAID_FOLDER = os.path.join(app_config.pyegeria_root, app_config.egeria_mermaid_folder)
 conf = load_app_config(config_path)
 # print(f"Loading config from {config_path} and mermaid folder is {EGERIA_MERMAID_FOLDER}")
-console = Console(width=app_config.console_width)
+console = Console(width=settings.Environment.egeria_width)
 config_logging()
 
 
@@ -42,8 +48,8 @@ def display_asset_types(
     url: str,
     username: str,
     user_password: str,
-    jupyter: bool = app_config.egeria_jupyter,
-    width: int = app_config.console_width,
+    jupyter: bool = settings.Environment.egeria_jupyter,
+    width: int = settings.Environment.egeria_width,
 ):
     r_client = RegisteredInfo(server, url, username)
     token = r_client.create_egeria_bearer_token(username, user_password)

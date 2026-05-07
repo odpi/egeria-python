@@ -19,9 +19,14 @@ from rich.table import Table
 
 from pyegeria import (
     PyegeriaException,
+    print_basic_exception,
+    config_logging,
+    settings,
+    settings,
+    settings,
+    PyegeriaException,
     ValidMetadataManager,
     print_basic_exception,
-    settings,
     config_logging
 )
 
@@ -30,7 +35,7 @@ EGERIA_USER_PASSWORD = os.environ.get("EGERIA_USER_PASSWORD", "secret")
 
 app_config = settings.Environment
 config_logging()
-console = Console(width=app_config.console_width)
+console = Console(width=settings.Environment.egeria_width)
 
 
 def display_relationship_types(
@@ -40,8 +45,8 @@ def display_relationship_types(
     username: str,
     user_pass: str,
     save_output: bool = False,
-    jupyter: bool = app_config.egeria_jupyter,
-    width: int = app_config.console_width,
+    jupyter: bool = settings.Environment.egeria_jupyter,
+    width: int = settings.Environment.egeria_width,
 ):
     p_client = ValidMetadataManager(server, url, user_id=username, user_pwd=user_pass)
     token = p_client.create_egeria_bearer_token(username, user_pass)

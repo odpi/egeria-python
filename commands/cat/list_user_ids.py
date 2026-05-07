@@ -12,6 +12,9 @@ from rich.prompt import Prompt
 from rich.table import Table
 
 from pyegeria import (
+    print_basic_exception,
+    EgeriaTech,
+    EgeriaTech,
     ClassificationExplorer,
     PyegeriaAPIException, PyegeriaClientException, print_basic_exception, print_exception_table, ActorManager,
     EgeriaTech

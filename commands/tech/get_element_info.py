@@ -21,10 +21,15 @@ from rich.text import Text
 from rich.tree import Tree
 
 from pyegeria import (
+    PyegeriaException,
+    print_basic_exception,
+    config_logging,
+    settings,
+    settings,
+    settings,
     ClassificationExplorer,
     PyegeriaException,
     print_basic_exception,
-    settings,
     config_logging, PyegeriaAPIException, print_exception_table
 )
 
@@ -33,7 +38,7 @@ EGERIA_USER_PASSWORD = os.environ.get("EGERIA_USER_PASSWORD", "secret")
 
 app_config = settings.Environment
 config_logging()
-console = Console(width=app_config.console_width)
+console = Console(width=settings.Environment.egeria_width)
 
 
 def display_elements(
@@ -42,8 +47,8 @@ def display_elements(
     url: str,
     username: str,
     user_password: str,
-    jupyter: bool = app_config.egeria_jupyter,
-    width: int = app_config.console_width,
+    jupyter: bool = settings.Environment.egeria_jupyter,
+    width: int = settings.Environment.egeria_width,
 ):
     c = ClassificationExplorer(server, url, user_id=username, user_pwd=user_password)
 

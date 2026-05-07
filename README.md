@@ -89,7 +89,7 @@ For more details on setting up your configuration and available variables, see [
 # EGERIA_VIEW_SERVER_URL=https://localhost:9443
 # EGERIA_USER=myuser
 # EGERIA_USER_PASSWORD=mypassword
-# PYEGERIA_CONSOLE_WIDTH=280
+# EGERIA_WIDTH=280
 
 Lines starting with # are comments. Quotes are optional; python-dotenv/pydantic-settings handle both.
 

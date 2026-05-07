@@ -15,6 +15,10 @@ from rich.prompt import Prompt
 from commands.cat.run_report import list_generic
 from pyegeria.core.config import settings
 from pyegeria import (
+    PyegeriaException,
+    print_basic_exception,
+    settings,
+    settings,
     PyegeriaAPIException, PyegeriaClientException, print_basic_exception, print_exception_table, PyegeriaException
 )
 
@@ -26,13 +30,13 @@ app_config = settings.Environment
 
 guid_list = []
 
-console = Console(width=app_config.console_width, force_terminal=(not app_config.egeria_jupyter))
+console = Console(width=settings.Environment.egeria_width, force_terminal=(not app_config.egeria_jupyter))
 
 
 def asset_viewer(asset_guid: str, output_format: str = "TABLE", view_server: str = app_config.egeria_view_server,
                  view_url: str = app_config.egeria_view_server_url, user: str = EGERIA_USER,
-                 user_pass: str = EGERIA_USER_PASSWORD, jupyter: bool = app_config.egeria_jupyter,
-                 width: int = app_config.console_width, prompt_missing: bool = False, write_file: bool = False,
+                 user_pass: str = EGERIA_USER_PASSWORD, jupyter: bool = settings.Environment.egeria_jupyter,
+                 width: int = settings.Environment.egeria_width, prompt_missing: bool = False, write_file: bool = False,
                  render_table: bool = False, table_caption: str | None = None, use_pager: bool = True):
     try:
         list_generic(report_spec="Asset-Graph", output_format=output_format, view_server=view_server,

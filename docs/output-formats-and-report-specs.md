@@ -48,6 +48,17 @@ pyegeria supports multiple output types. Each report spec declares which types i
 
 Tip: Use DICT for APIs and automation; use LIST for dashboards/browsing; use REPORT for deep, readable details; use FORM when producing updateable forms.
 
+### Custom Column Formatting
+
+You can customize how column data is rendered in `LIST` format (Markdown tables) by setting the `format` attribute to a string, such as `"bulleted-list"`.
+
+- `bulleted-list`: Renders list values as a vertical bulleted list using HTML line breaks (`<br>`) within the Markdown table cell. This is useful for improving the readability of long lists.
+
+Example:
+```python
+Column(name="Containing Members", key="collection_members", format="bulleted-list"),
+```
+
 ---
 
 ### Method Parameter Consistency

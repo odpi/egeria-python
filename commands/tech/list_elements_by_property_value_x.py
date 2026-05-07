@@ -12,10 +12,18 @@ from rich.prompt import Prompt
 from rich.table import Table
 
 from pyegeria import (
+    PyegeriaException,
+    print_basic_exception,
+    config_logging,
+    load_app_config,
+    EgeriaTech,
+    settings,
+    EgeriaTech,
+    settings,
+    settings,
     EgeriaTech,
     print_basic_exception,
     PyegeriaException,
-    settings, load_app_config, pretty_print_config,
     config_logging,
     save_mermaid_html,
 )
@@ -28,7 +36,7 @@ EGERIA_USER_PASSWORD = os.environ.get("EGERIA_USER_PASSWORD", "secret")
 EGERIA_MERMAID_FOLDER = os.path.join(app_config.pyegeria_root, app_config.egeria_mermaid_folder)
 conf = load_app_config(config_path)
 # print(f"Loading config from {config_path} and mermaid folder is {EGERIA_MERMAID_FOLDER}")
-console = Console(width=app_config.console_width)
+console = Console(width=settings.Environment.egeria_width)
 config_logging()
 
 
@@ -40,8 +48,8 @@ def find_elements_by_prop_value_x(
     url: str,
     username: str,
     password: str,
-    jupyter: bool = app_config.egeria_jupyter,
-    width: int = app_config.console_width,
+    jupyter: bool = settings.Environment.egeria_jupyter,
+    width: int = settings.Environment.egeria_width,
 ):
     c_client = EgeriaTech(server, url, user_id=username, user_pwd=password)
     token = c_client.create_egeria_bearer_token()

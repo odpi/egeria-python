@@ -17,6 +17,7 @@ from rich.table import Table
 from textual.widgets import DataTable
 
 from pyegeria import (
+    print_basic_exception,
     AutomatedCuration,
     PyegeriaAPIException as PropertyServerException,
     PyegeriaClientException,

@@ -17,7 +17,7 @@ from rich import box
 from rich.table import Table
 from textual.widgets import DataTable
 
-from pyegeria import EgeriaTech
+from pyegeria import print_basic_exception, EgeriaTech
 from pyegeria.core._exceptions import (
     PyegeriaInvalidParameterException,
     PyegeriaAPIException as PropertyServerException,

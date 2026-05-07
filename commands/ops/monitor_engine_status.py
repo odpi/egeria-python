@@ -20,6 +20,9 @@ from rich.prompt import Prompt
 from rich.table import Table
 
 from pyegeria import (
+    print_basic_exception,
+    EgeriaTech,
+    EgeriaTech,
     EgeriaTech,
 )
 from pyegeria.core._exceptions import (

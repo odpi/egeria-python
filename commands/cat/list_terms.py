@@ -19,7 +19,13 @@ from rich.table import Table
 from rich.text import Text
 
 from pyegeria import (
-    EgeriaTech, settings,
+    print_basic_exception,
+    config_logging,
+    EgeriaTech,
+    settings,
+    EgeriaTech,
+    settings,
+    settings,
     PyegeriaAPIException, PyegeriaClientException, print_basic_exception, print_exception_table
 )
 from pyegeria.core._globals import NO_GLOSSARIES_FOUND
@@ -40,8 +46,8 @@ def display_glossary_terms(
     view_url: str = app_config.egeria_view_server_url,
     user_id: str = EGERIA_USER,
     user_pass: str = EGERIA_USER_PASSWORD,
-    jupyter: bool = app_config.egeria_jupyter,
-    width: int = app_config.console_width,
+    jupyter: bool = settings.Environment.egeria_jupyter,
+    width: int = settings.Environment.egeria_width,
     output_format: str = "TABLE",
 ):
     """Display a table of glossary terms filtered by search_string and glossary, if specified. If no

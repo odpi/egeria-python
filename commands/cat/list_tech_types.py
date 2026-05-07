@@ -19,8 +19,13 @@ from rich.prompt import Prompt
 from rich.table import Table
 
 from pyegeria import (
-    AutomatedCuration,
+    PyegeriaException,
+    print_basic_exception,
+    config_logging,
     settings,
+    settings,
+    settings,
+    AutomatedCuration,
     PyegeriaAPIException, PyegeriaClientException,
     print_basic_exception
 )
@@ -41,8 +46,8 @@ def display_tech_types(
     url: str,
     username: str,
     user_pass: str,
-    jupyter: bool = app_config.egeria_jupyter,
-        width: int = app_config.console_width,
+    jupyter: bool = settings.Environment.egeria_jupyter,
+        width: int = settings.Environment.egeria_width,
 ):
     a_client = AutomatedCuration(server, url, username)
     token = a_client.create_egeria_bearer_token(username, user_pass)

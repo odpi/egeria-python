@@ -54,8 +54,8 @@ def list_generic(
     view_url: str = app_config.egeria_view_server_url,
     user: str = EGERIA_USER,
     user_pass: str = EGERIA_USER_PASSWORD,
-    jupyter: bool = app_config.egeria_jupyter,
-    width: int = app_config.console_width,
+    jupyter: bool = settings.Environment.egeria_jupyter,
+    width: int = settings.Environment.egeria_width,
     prompt_missing: bool = False,
     write_file: bool = False,
     render_table: bool = False,
@@ -420,7 +420,7 @@ def main():
 
     console = Console(
         style="bold bright_white on black",
-        width=app_config.console_width,
+        width=settings.Environment.egeria_width,
         force_terminal=not app_config.egeria_jupyter,
     )
 
@@ -429,7 +429,7 @@ def main():
         write_file = output_format in TEXT_FILE_FORMATS
         result = list_generic(report_spec, output_format=output_format, params=params, view_server=args.server,
                               view_url=args.url, user=args.user, user_pass=args.password, jupyter=app_config.egeria_jupyter,
-                              width=app_config.console_width, prompt_missing=True, write_file=write_file)
+                              width=settings.Environment.egeria_width, prompt_missing=True, write_file=write_file)
 
         if result.get("kind") == "empty":
             console.print("No results found.")

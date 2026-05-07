@@ -13,11 +13,17 @@ from rich.table import Table
 
 
 from pyegeria import (
+    PyegeriaException,
+    print_basic_exception,
+    config_logging,
+    load_app_config,
+    settings,
+    settings,
+    settings,
     Egeria,
     PyegeriaException,
     print_basic_exception,
     SolutionArchitect,
-    settings, load_app_config, pretty_print_config,
     config_logging, PyegeriaAPIException,
 )
 
@@ -38,8 +44,8 @@ def list_elements_x(
     url: str,
     username: str,
     password: str,
-    jupyter: bool = app_config.egeria_jupyter,
-    width: int = app_config.console_width,
+    jupyter: bool = settings.Environment.egeria_jupyter,
+    width: int = settings.Environment.egeria_width,
 ):
     c_client = Egeria(server, url, user_id=username, user_pwd=password)
     token = c_client.create_egeria_bearer_token()

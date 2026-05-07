@@ -10,13 +10,13 @@ Execute Glossary actions.
 
 import json
 import os
-import sys
 
 import click
 
 from pyegeria import (
-    EgeriaTech, body_slimmer, settings, NO_ELEMENTS_FOUND, TERM_STATUS,
-    PyegeriaAPIException, PyegeriaClientException, print_basic_exception, print_exception_table
+    TERM_STATUS, EgeriaTech, NO_ELEMENTS_FOUND, body_slimmer,
+    settings,
+    PyegeriaAPIException, PyegeriaClientException, print_basic_exception
 )
 
 app_config = settings.Environment

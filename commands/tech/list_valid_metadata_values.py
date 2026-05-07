@@ -26,6 +26,11 @@ from rich.table import Table
 
 from pyegeria import (
     PyegeriaException,
+    print_basic_exception,
+    settings,
+    settings,
+    settings,
+    PyegeriaException,
     ValidMetadataManager, print_basic_exception,
 
 )
@@ -173,7 +178,7 @@ def main():
 
         display_metadata_values(
             property_name, type_name, server, url, userid, user_pass, save_output, 
-            jupyter=env.egeria_jupyter, width=env.console_width
+            jupyter=env.egeria_jupyter, width=settings.Environment.egeria_width
         )
     except PyegeriaException as e:
         print_basic_exception(e)

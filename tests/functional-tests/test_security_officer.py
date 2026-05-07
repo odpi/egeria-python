@@ -33,7 +33,7 @@ from pyegeria.models import (
 
 disable_ssl_warnings = True
 
-console = Console(width=250)
+console = Console(width=120)
 
 config_logging()
 init_logging(True)
@@ -41,8 +41,8 @@ init_logging(True)
 VIEW_SERVER = "qs-view-server"
 PLATFORM_URL = "https://localhost:9443"
 PLATFORM_NAME = "Local OMAG Server Platform"
-USER_ID = "dwolfson"
-USER_PWD = "pdr4coco"
+USER_ID = "garygeeke"
+USER_PWD = "secret"
 
 
 class TestSecurityOfficer:

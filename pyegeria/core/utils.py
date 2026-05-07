@@ -13,7 +13,7 @@ from rich.markdown import Markdown
 
 from pyegeria.core.config import settings as app_settings
 from pyegeria.core._globals import REPORT_ACRONYMS
-from typing import Callable, TypeVar
+from typing import Any, Callable, TypeVar
 
 T = TypeVar('T', bound=Callable)
 
@@ -87,6 +87,13 @@ def body_slimmer(body: dict) -> dict:
             else:
                 slimmed[key] = value
     return slimmed
+
+
+def get_item_display_name(item: Any) -> str:
+    """Helper to extract a display name from an item."""
+    if isinstance(item, dict):
+        return item.get('displayName') or item.get('name') or item.get('qualifiedName') or item.get('type') or str(item)
+    return str(item)
 
 
 def camel_to_title_case(input_string):
@@ -287,7 +294,17 @@ def transform_json_to_tabular(json_data: Dict[str, Any], output_format: str = 'r
 
             for row in rows:
                 # Convert all items to string for Rich
-                str_row = [str(item) if item is not None else "" for item in row]
+                str_row = []
+                for i, item in enumerate(row):
+                    if item is None:
+                        str_row.append("")
+                        continue
+
+                    col_desc = column_descriptions[i]
+                    if col_desc.get('format') == 'bulleted-list' and isinstance(item, list):
+                        str_row.append("\n - " + "\n - ".join([get_item_display_name(x) for x in item]))
+                    else:
+                        str_row.append(str(item))
                 table.add_row(*str_row)
 
             console.print(table)
@@ -425,7 +442,7 @@ def parse_to_dict(input_str: str) -> dict | None:
 
 
 def dynamic_catch(func: T) -> T:
-    if app_settings.get("enable_logger_catchh", False):
+    if getattr(app_settings.Debug, "enable_logger_catch", False):
         return logger.catch(func)  # Apply the logger.catch decorator
     else:
         return func  # Return the function unwrapped

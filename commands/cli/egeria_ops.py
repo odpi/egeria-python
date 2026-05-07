@@ -14,9 +14,7 @@ import os
 import click
 from trogon import tui
 from loguru import logger
-from pyegeria import config_logging,  settings
 
-# from pyegeria import ServerOps
 from commands.cli.ops_config import Config
 from commands.ops.gov_server_actions import (
     add_catalog_target,
@@ -116,7 +114,7 @@ app_config = app_settings.Environment
 )
 @click.option(
     "--width",
-    default=app_config.console_width,
+    default=settings.Environment.egeria_width,
     type=int,
     help="Screen width, in characters, to use",
 )

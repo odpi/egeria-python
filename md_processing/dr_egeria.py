@@ -35,7 +35,7 @@ from md_processing.v2 import (
     ViewProcessor, ActorManagerProcessor, ActorManagerLinkProcessor
 )
 
-from pyegeria import EgeriaTech, PyegeriaException, print_basic_exception, print_validation_error
+from pyegeria import settings, EgeriaTech, PyegeriaException, print_basic_exception, print_validation_error
 from pyegeria.core.config import settings
 
 # Configure logging - module level default
@@ -59,9 +59,9 @@ EGERIA_VIEW_SERVER = app_config.egeria_view_server
 EGERIA_VIEW_SERVER_URL = app_config.egeria_view_server_url
 EGERIA_INTEGRATION_DAEMON = app_config.egeria_integration_daemon
 EGERIA_INTEGRATION_DAEMON_URL = app_config.egeria_integration_daemon_url
-EGERIA_WIDTH = int(app_config.console_width or 220)
+EGERIA_WIDTH = int(settings.Environment.egeria_width or 220)
 console = Console(width=EGERIA_WIDTH)
-EGERIA_JUPYTER = bool(app_config.egeria_jupyter)
+EGERIA_JUPYTER = bool(settings.Environment.egeria_jupyter)
 EGERIA_GLOSSARY_PATH = app_config.egeria_glossary_path
 EGERIA_ROOT_PATH = app_config.pyegeria_root
 EGERIA_INBOX_PATH = app_config.dr_egeria_inbox

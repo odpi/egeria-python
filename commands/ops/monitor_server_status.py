@@ -22,6 +22,8 @@ from rich.live import Live
 from rich.table import Table
 
 from pyegeria import (
+    PyegeriaException,
+    print_basic_exception,
     PyegeriaException, print_basic_exception,
     RuntimeManager,
     print_exception_table,

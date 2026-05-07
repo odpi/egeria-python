@@ -22,10 +22,17 @@ from rich.live import Live
 from rich.table import Table
 
 from pyegeria import (
+    PyegeriaException,
+    print_basic_exception,
+    config_logging,
+    EgeriaTech,
+    settings,
+    EgeriaTech,
+    settings,
+    settings,
     EgeriaTech,
     PyegeriaException,
     print_basic_exception,
-    settings,
     config_logging
 )
 
@@ -35,7 +42,7 @@ EGERIA_USER_PASSWORD = os.environ.get("EGERIA_USER_PASSWORD", "secret")
 
 app_config = settings.Environment
 config_logging()
-console = Console(width = app_config.console_width)
+console = Console(width = settings.Environment.egeria_width)
 
 
 def display_engine_activity(
@@ -45,8 +52,8 @@ def display_engine_activity(
     user: str = EGERIA_USER,
     user_pass: str = EGERIA_USER_PASSWORD,
     paging: bool = True,
-    jupyter: bool = app_config.egeria_jupyter,
-    width: int = app_config.console_width,
+    jupyter: bool = settings.Environment.egeria_jupyter,
+    width: int = settings.Environment.egeria_width,
 ):
     """Display governance engine activity as a table.
 

@@ -11,10 +11,17 @@ from rich.markdown import Markdown
 from rich.table import Table
 
 from pyegeria import (
+    PyegeriaException,
+    print_basic_exception,
+    config_logging,
+    EgeriaTech,
+    settings,
+    EgeriaTech,
+    settings,
+    settings,
     EgeriaTech,
     PyegeriaAPIException, PyegeriaClientException,
     print_basic_exception,
-    settings,
     config_logging, PyegeriaException
 )
 
@@ -22,7 +29,7 @@ EGERIA_USER = os.environ.get("EGERIA_USER", "erinoverview")
 EGERIA_USER_PASSWORD = os.environ.get("EGERIA_USER_PASSWORD", "secret")
 
 app_config = settings.Environment
-console = Console(width = app_config.console_width)
+console = Console(width = settings.Environment.egeria_width)
 config_logging()
 
 def check_if_template(header: dict) -> bool:
@@ -41,8 +48,8 @@ def list_deployed_databases(
     view_url: str = app_config.egeria_view_server_url,
     user: str = EGERIA_USER,
     user_pass: str = EGERIA_USER_PASSWORD,
-    jupyter: bool = app_config.egeria_jupyter,
-    width: int = app_config.console_width,
+    jupyter: bool = settings.Environment.egeria_jupyter,
+    width: int = settings.Environment.egeria_width,
 ):
     """
     Parameters

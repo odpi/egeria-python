@@ -27,7 +27,6 @@ PYEGERIA_ROOT_PATH="~/localGit/egeria-python/sample-data"
 PYEGERIA_USER_REPORT_SPECS_DIR="~/.pyegeria/report_specs"
 # Deprecated: kept for backward compatibility if set in external environments
 # PYEGERIA_USER_FORMAT_SETS_DIR="~/.pyegeria/format_sets"
-CONSOLE_WIDTH=200
 EGERIA_WIDTH=130
 # Preferred variable name
 EGERIA_USER=erinoverview
@@ -36,7 +35,7 @@ EGERIA_USER=erinoverview
 EGERIA_USER_PASSWORD=secret
 EGERIA_HOME_COLLECTION="myHome"
 EGERIA_HOME_GLOSSARY_NAME="Egeria-Markdown"
-EGERIA_LOCAL_QUALIFIER="myLocal"
+EGERIA_LOCAL_QUALIFIER="CocoPharma"
 
 
 PYEGERIA_CONSOLE_FILTER_LEVELS="ERROR"

@@ -17,6 +17,7 @@ from rich.text import Text
 from rich.tree import Tree
 
 from pyegeria import (
+    print_basic_exception,
     CollectionManager,
     NO_ELEMENTS_FOUND,
     PyegeriaAPIException, PyegeriaClientException, print_basic_exception, print_exception_table

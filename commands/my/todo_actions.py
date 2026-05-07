@@ -14,7 +14,7 @@ from datetime import datetime, timezone
 
 import click
 
-from pyegeria import EgeriaTech, ACTIVITY_STATUS
+from pyegeria import PyegeriaException, print_basic_exception, EgeriaTech, ACTIVITY_STATUS
 from pyegeria.core._exceptions import (
     PyegeriaAPIException as PropertyServerException,
     print_basic_exception as print_exception_response, PyegeriaException, print_basic_exception,

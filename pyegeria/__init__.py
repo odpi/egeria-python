@@ -214,4 +214,6 @@ __all__ = [
     "config_logging",
     "init_logging",
     "exec_report_spec",
+    "body_slimmer",
+    "print_basic_exception",
 ]

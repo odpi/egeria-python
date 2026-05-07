@@ -18,7 +18,7 @@ from rich.live import Live
 from rich.prompt import Prompt
 from rich.table import Table
 
-from pyegeria import EgeriaTech, PyegeriaException, settings, config_logging, \
+from pyegeria import print_basic_exception, settings, EgeriaTech, PyegeriaException, settings, config_logging, \
     PyegeriaClientException, print_basic_exception
 
 EGERIA_USER = os.environ.get("EGERIA_USER", "erinoverview")
@@ -42,10 +42,10 @@ def display_integration_daemon_status(
     user: str = EGERIA_USER,
     user_pass: str = EGERIA_USER_PASSWORD,
 
-    width: int = app_config.console_width,
+    width: int = settings.Environment.egeria_width,
     paging: bool = False,
 
-    jupyter: bool = app_config.egeria_jupyter,
+    jupyter: bool = settings.Environment.egeria_jupyter,
     sort: bool = True,
 ) -> None:
     """Display the status of connectors running on the specified Integration Daemon OMAG Server.

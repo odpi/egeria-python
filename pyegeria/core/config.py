@@ -56,7 +56,7 @@ class PyegeriaSettings(BaseSettings):
     pyegeria_config_file: str = "config.json"
     
     # Additional settings that can be loaded from .env
-    pyegeria_console_width: int = 200
+    egeria_width: int = 200
     # Renamed: format_sets -> report_specs
     pyegeria_user_report_specs_dir: str = "~/.pyegeria/report_specs"
     egeria_user_name: str = ""
@@ -99,7 +99,7 @@ class PyegeriaSettings(BaseSettings):
 class EnvironmentConfig(BaseModel):
     """Runtime environment parameters that influence formatting and behavior."""
     """Environment configuration settings"""
-    console_width: int = Field(default=200, alias="Console Width")
+    egeria_width: int = Field(default=200, alias="Egeria Width")
     egeria_outbox: str = Field(default="egeria-outbox", alias="Egeria Outbox")
     egeria_inbox: str = Field(default="egeria-inbox", alias="Egeria Inbox")
     dr_egeria_inbox: str = Field(default="egeria-inbox/dr-egeria-inbox", alias="Dr.Egeria Inbox")
@@ -328,8 +328,8 @@ def load_app_config(env_file: str | None = None):
     env["Egeria Config File"] = env_config_file
     env["pyegeria_config_file"] = env_config_file
 
-    env["Console Width"] = int(os.getenv("CONSOLE_WIDTH", env.get("Console Width", env_settings.pyegeria_console_width)))
-    env["console_width"] = env["Console Width"]
+    env["Egeria Width"] = int(os.getenv("EGERIA_WIDTH", env.get("Egeria Width", env_settings.egeria_width)))
+    env["egeria_width"] = env["Egeria Width"]
     # Egeria Outbox (new)
     env["Egeria Outbox"] = os.getenv("EGERIA_OUTBOX", env.get("Egeria Outbox", "egeria-outbox"))
     env["Egeria Inbox"] = os.getenv("EGERIA_INBOX", env.get("Egeria Inbox", "egeria-inbox"))
@@ -522,7 +522,7 @@ def pretty_print_config(env_file: str | None = None, safe: bool = True, to_conso
         from rich.console import Console
         from rich.table import Table
         from rich import box
-        console = Console(width=getattr(cfg.Environment, 'console_width', 200))
+        console = Console(width=getattr(cfg.Environment, 'egeria_width', 200))
         use_rich = True
     except Exception:
         console = None
@@ -554,8 +554,9 @@ def pretty_print_config(env_file: str | None = None, safe: bool = True, to_conso
         ("Debug", "enable_logger_catch"): "PYEGERIA_ENABLE_LOGGER_CATCH",
         ("Debug", "timeout_seconds"): "PYEGERIA_TIMEOUT_SECONDS",
         # Environment
-        ("Environment", "Console Width"): "CONSOLE_WIDTH",
+        ("Environment", "Egeria Width"): "EGERIA_WIDTH",
         ("Environment", "Egeria Outbox"): "EGERIA_OUTBOX",
+        ("Environment", "Egeria Inbox"): "EGERIA_INBOX",
         ("Environment", "Dr.Egeria Inbox"): "DR_EGERIA_INBOX_PATH",
         ("Environment", "Dr.Egeria Outbox"): "DR_EGERIA_OUTBOX_PATH",
         ("Environment", "Egeria Engine Host"): "EGERIA_ENGINE_HOST",
@@ -681,3 +682,4 @@ def pretty_print_config(env_file: str | None = None, safe: bool = True, to_conso
             print(f"feature_x_enabled: {ff['value']} (source: {ff['source']})")
 
     return result
+

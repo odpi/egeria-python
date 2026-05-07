@@ -12,11 +12,19 @@ from rich.prompt import Prompt
 from rich.table import Table
 
 from pyegeria import (
+    PyegeriaException,
+    print_basic_exception,
+    config_logging,
+    load_app_config,
+    EgeriaTech,
+    settings,
+    EgeriaTech,
+    settings,
+    settings,
     EgeriaTech,
     PyegeriaException,
     print_basic_exception,
     SolutionArchitect,
-    settings, load_app_config, pretty_print_config,
     config_logging,
     save_mermaid_html,
 )
@@ -39,8 +47,8 @@ def list_elements(
     url: str,
     username: str,
     password: str,
-    jupyter: bool = app_config.egeria_jupyter,
-    width: int = app_config.console_width,
+    jupyter: bool = settings.Environment.egeria_jupyter,
+    width: int = settings.Environment.egeria_width,
 ):
     c_client = EgeriaTech(server, url, user_id=username, user_pwd=password)
     token = c_client.create_egeria_bearer_token()

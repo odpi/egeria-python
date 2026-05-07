@@ -10,7 +10,7 @@ This script restarts an integration daemon.
 
 import click
 
-from pyegeria import AutomatedCuration, EgeriaTech
+from pyegeria import print_basic_exception, AutomatedCuration, EgeriaTech
 from pyegeria.core._exceptions import (
     PyegeriaInvalidParameterException as PyegeriaInvalidParameterException,
     PyegeriaAPIException as PyegeriaAPIException,

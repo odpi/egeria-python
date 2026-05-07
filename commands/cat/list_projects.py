@@ -20,6 +20,8 @@ from rich.prompt import Prompt
 from rich.table import Table
 
 from pyegeria import (
+    PyegeriaException,
+    print_basic_exception,
     ClassificationExplorer,
     ProjectManager,
     PyegeriaAPIException, PyegeriaClientException,

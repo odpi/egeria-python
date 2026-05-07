@@ -21,7 +21,7 @@ from md_processing.md_processing_utils.common_md_utils import update_element_dic
     set_product_body
 from md_processing.md_processing_utils.extraction_utils import (extract_command_plus, update_a_command)
 from md_processing.md_processing_utils.md_processing_constants import (load_commands)
-from pyegeria import DEBUG_LEVEL, body_slimmer, PyegeriaException, print_basic_exception, print_exception_table
+from pyegeria import settings, DEBUG_LEVEL, body_slimmer, PyegeriaException, print_basic_exception, print_exception_table
 from pyegeria.egeria_tech_client import EgeriaTech
 from pyegeria.core.utils import make_format_set_name_from_type
 
@@ -36,8 +36,8 @@ EGERIA_ADMIN_USER = os.environ.get("ADMIN_USER", "garygeeke")
 EGERIA_ADMIN_PASSWORD = os.environ.get("ADMIN_PASSWORD", "secret")
 EGERIA_USER = os.environ.get("EGERIA_USER", "erinoverview")
 EGERIA_USER_PASSWORD = os.environ.get("EGERIA_USER_PASSWORD", "secret")
-EGERIA_WIDTH = os.environ.get("EGERIA_WIDTH", 220)
-EGERIA_JUPYTER = os.environ.get("EGERIA_JUPYTER", False)
+EGERIA_WIDTH = settings.Environment.egeria_width
+EGERIA_JUPYTER = settings.Environment.egeria_jupyter
 EGERIA_HOME_GLOSSARY_GUID = os.environ.get("EGERIA_HOME_GLOSSARY_GUID", None)
 EGERIA_GLOSSARY_PATH = os.environ.get("EGERIA_GLOSSARY_PATH", None)
 EGERIA_ROOT_PATH = os.environ.get("EGERIA_ROOT_PATH", "../../")

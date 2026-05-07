@@ -109,14 +109,14 @@ class TestCollectionManager:
             c_client = EgeriaTech(self.good_server_2, self.good_platform1_url, user_id=self.good_user_2, )
             token = c_client.create_egeria_bearer_token(self.good_user_2, "secret")
             start_time = time.perf_counter()
-            search_string = "feeback"
+            search_string = "Open Metadata Digital"
             classification_name = None
-            # element_type = ["DigitalProductCatalog","DigitalProductFamily"]
+            element_type = ["DigitalProductCatalog","DigitalProductFamily"]
             element_type = None
             output_format = "JSON"
             report_spec = "BasicCollections"
 
-            response = c_client.find_collections(search_string = search_string, classification_names = classification_name
+            response = c_client.find_collections(search_string = search_string
                                                  ,metadata_element_subtypes=element_type, max_mermaid_node_count=5,
                                                  include_only_relationships = [""]
                                                  ,output_format=output_format, report_spec=report_spec)
@@ -462,37 +462,37 @@ class TestCollectionManager:
         finally:
             c_client.close_session()
 
-    def test_create_glossary(self):
-        try:
-            c_client = CollectionManager(self.good_view_server_1, self.good_platform1_url, user_id=self.good_user_2, )
-
-            token = c_client.create_egeria_bearer_token(self.good_user_2, "secret")
-            start_time = time.perf_counter()
-
-            display_name = "Ham Glossary"
-            description = "Collection of Ham Terms"
-            language = "English"
-            usage = "Amateur Radio"
-            category = "Hobby"
-
-            response = c_client.create_glossary(display_name, description, language, usage, category)
-
-            duration = time.perf_counter() - start_time
-            # resp_str = json.loads(response)
-            print(f"\n\tDuration was {duration} seconds\n")
-            if type(response) is dict:
-                print_json(json.dumps(response, indent=4))
-            elif type(response) is str:
-                print("\n\nGUID is: " + response)
-            assert True
-
-        except (PyegeriaInvalidParameterException,  PyegeriaConnectionException, PyegeriaAPIException, PyegeriaUnknownException,) as e:
-            print_basic_exception(e)
-            # assert False, "Invalid request"
-        except ValidationError as e:
-            print_validation_error(e)
-        finally:
-            c_client.close_session()
+##    def test_create_glossary(self):
+##        try:
+##            c_client = CollectionManager(self.good_view_server_1, self.good_platform1_url, user_id=self.good_user_2, )
+##
+##            token = c_client.create_egeria_bearer_token(self.good_user_2, "secret")
+##            start_time = time.perf_counter()
+##
+##            display_name = "Ham Glossary"
+##            description = "Collection of Ham Terms"
+##            language = "English"
+##            usage = "Amateur Radio"
+##            category = "Hobby"
+##
+##            response = c_client.create_glossary(display_name, description, language, usage, category)
+##
+##            duration = time.perf_counter() - start_time
+##            # resp_str = json.loads(response)
+##            print(f"\n\tDuration was {duration} seconds\n")
+##            if type(response) is dict:
+##                print_json(json.dumps(response, indent=4))
+##            elif type(response) is str:
+##                print("\n\nGUID is: " + response)
+##            assert True
+##
+##        except (PyegeriaInvalidParameterException,  PyegeriaConnectionException, PyegeriaAPIException, PyegeriaUnknownException,) as e:
+##            print_basic_exception(e)
+##            # assert False, "Invalid request"
+##        except ValidationError as e:
+##            print_validation_error(e)
+##        finally:
+##            c_client.close_session()
 
     def test_create_collection(self):
         try:
@@ -628,7 +628,7 @@ class TestCollectionManager:
                     },
             }
             validated_body = NewElementRequestBody.model_validate(body)
-            response = c_client.create_collection_w_body(body=validated_body)
+            response = c_client.create_collection(body=validated_body)
             duration = time.perf_counter() - start_time
 
             print(f"\n\tDuration was {duration} seconds\n")
@@ -1423,30 +1423,6 @@ class TestCollectionManager:
         finally:
             c_client.close_session()
 
-    def test_link_digital_product_dependency(self):
-        upstream_prod = "a8a3e785-f305-4e67-9114-224f1874cafe"
-        downstream_prod = "e02695bc-ed83-49cf-afb9-0d822c4f1f5b"
-
-        try:
-            c_client = CollectionManager(self.good_view_server_1, self.good_platform1_url, user_id=self.good_user_2, )
-
-            token = c_client.create_egeria_bearer_token(self.good_user_2, "secret")
-            start_time = time.perf_counter()
-
-            c_client.link_digital_product_dependency(upstream_prod, downstream_prod)
-            duration = time.perf_counter() - start_time
-
-
-            print(f"\n\tDuration was {duration} seconds\n")
-
-            assert True
-
-        except (PyegeriaInvalidParameterException,  PyegeriaConnectionException, PyegeriaAPIException, PyegeriaUnknownException,) as e:
-            print_exception_table(e)
-            assert False, "Invalid request"
-        finally:
-            c_client.close_session()
-
     def test_get_member_list(self):
         try:
             c_client = CollectionManager(self.good_view_server_1, self.good_platform1_url, user_id=self.good_user_2, )
@@ -1478,7 +1454,7 @@ class TestCollectionManager:
         finally:
             c_client.close_session()
 
-    def test_update_collection_membership(self):
+    def test_update_collection_membership_prop(self):
         try:
             c_client = CollectionManager(self.good_view_server_1, self.good_platform1_url, user_id=self.good_user_2, )
 
@@ -1492,7 +1468,7 @@ class TestCollectionManager:
                 "confidence": 100, "status": "PROPOSED", "userDefinedStatus": "Validation required",
                 "source": "archive", "notes": "arbitrary notes",
                 }
-            c_client.update_collection_membership(collection_guid, element_guid, body, replace_all_props=False)
+            c_client.update_collection_membership_prop(collection_guid, element_guid, body, replace_all_props=False)
 
             duration = time.perf_counter() - start_time
             print(f"\n\tDuration was {duration} seconds\n")

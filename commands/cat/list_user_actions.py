@@ -18,6 +18,9 @@ from rich.prompt import Prompt
 from rich.table import Table
 
 from pyegeria import (
+    print_basic_exception,
+    EgeriaTech,
+    EgeriaTech,
     PyegeriaAPIException, PyegeriaClientException, print_basic_exception, ACTIVITY_STATUS, EgeriaTech,
 )
 from pyegeria.core.utils import list_actors

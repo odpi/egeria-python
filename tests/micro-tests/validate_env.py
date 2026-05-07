@@ -37,8 +37,8 @@ def validate_settings(settings: "PyegeriaSettings") -> list[str]:
     errors: list[str] = []
 
     # Basic type validations
-    if not isinstance(settings.pyegeria_console_width, int):
-        errors.append("PYEGERIA_CONSOLE_WIDTH must parse as an integer")
+    if not isinstance(settings.egeria_width, int):
+        errors.append("EGERIA_WIDTH must parse as an integer")
 
     # If URLs are provided, ensure they are non-empty strings
     for name in [
@@ -78,7 +78,7 @@ def main(argv=None) -> int:
         "pyegeria_root_path": settings.pyegeria_root_path,
         "pyegeria_config_directory": settings.pyegeria_config_directory,
         "pyegeria_config_file": settings.pyegeria_config_file,
-        "pyegeria_console_width": settings.pyegeria_console_width,
+        "pyegeria_console_width": settings.pyegeria_width,
         "egeria_user_name": settings.egeria_user_name,
         "egeria_user_password": "***" if settings.egeria_user_password else "",
     }

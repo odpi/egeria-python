@@ -21,12 +21,20 @@ from rich.text import Text
 from rich.tree import Tree
 
 from pyegeria import (
+    PyegeriaException,
+    print_basic_exception,
+    config_logging,
+    load_app_config,
+    EgeriaTech,
+    settings,
+    EgeriaTech,
+    settings,
+    settings,
     EgeriaTech,
     save_mermaid_graph,
     save_mermaid_html,
     print_basic_exception,
     PyegeriaException,
-    settings, load_app_config, pretty_print_config,
     config_logging,
     save_mermaid_html,
 )
@@ -39,7 +47,7 @@ EGERIA_USER_PASSWORD = os.environ.get("EGERIA_USER_PASSWORD", "secret")
 EGERIA_MERMAID_FOLDER = os.path.join(app_config.pyegeria_root, app_config.egeria_mermaid_folder)
 conf = load_app_config(config_path)
 # print(f"Loading config from {config_path} and mermaid folder is {EGERIA_MERMAID_FOLDER}")
-console = Console(width=app_config.console_width)
+console = Console(width=settings.Environment.egeria_width)
 config_logging()
 
 def supply_chain_viewer(
@@ -48,8 +56,8 @@ def supply_chain_viewer(
     platform_url: str,
     user: str,
     user_password: str,
-    jupyter: bool = app_config.egeria_jupyter,
-    width: int = app_config.console_width,
+    jupyter: bool = settings.Environment.egeria_jupyter,
+    width: int = settings.Environment.egeria_width,
     timeout: int = 30,
 ):
     """A Supply Chain viewer"""
