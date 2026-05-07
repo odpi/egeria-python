@@ -22,6 +22,9 @@ from rich.text import Text
 
 
 from pyegeria import (
+    print_basic_exception,
+    EgeriaTech,
+    EgeriaTech,
     EgeriaTech,
 PyegeriaAPIException, PyegeriaClientException, print_basic_exception, print_exception_table
 )

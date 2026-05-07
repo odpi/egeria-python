@@ -26,6 +26,13 @@ except Exception:
     MarkdownIt = None
 
 from pyegeria import (
+    PyegeriaException,
+    print_basic_exception,
+    EgeriaTech,
+    settings,
+    EgeriaTech,
+    settings,
+    settings,
     EgeriaTech,
     PyegeriaException, print_basic_exception, print_validation_error,
 )
@@ -45,7 +52,7 @@ EGERIA_HOME_GLOSSARY_GUID = user_profile.egeria_home_glossary_name
 # Let's check config.py for the exact attribute name.
 
 EGERIA_HOME_GLOSSARY_GUID = user_profile.egeria_home_glossary_name 
-EGERIA_WIDTH = env.console_width
+EGERIA_WIDTH = settings.Environment.egeria_width
 EGERIA_PLATFORM_URL = env.egeria_platform_url
 EGERIA_VIEW_SERVER = env.egeria_view_server
 EGERIA_VIEW_SERVER_URL = env.egeria_view_server_url
@@ -54,7 +61,7 @@ EGERIA_USER_PASSWORD = user_profile.user_pwd
 EGERIA_JUPYTER = env.egeria_jupyter
 
 def _get_console_width_from_config(default_width: int = EGERIA_WIDTH) -> int:
-    return env.console_width
+    return settings.Environment.egeria_width
 
 def _get_outbox_dir() -> str:
     root = env.pyegeria_root

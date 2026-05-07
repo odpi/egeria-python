@@ -21,10 +21,17 @@ from rich.table import Table
 
 
 from pyegeria import (
+    PyegeriaException,
+    print_basic_exception,
+    config_logging,
+    EgeriaTech,
+    settings,
+    EgeriaTech,
+    settings,
+    settings,
     EgeriaTech,
     PyegeriaException,
     print_basic_exception,
-    settings,
     config_logging
 )
 
@@ -33,7 +40,7 @@ EGERIA_USER_PASSWORD = os.environ.get("EGERIA_USER_PASSWORD", "secret")
 
 app_config = settings.Environment
 config_logging()
-console = Console(width = app_config.console_width)
+console = Console(width = settings.Environment.egeria_width)
 
 
 def display_catalog_targets(
@@ -43,8 +50,8 @@ def display_catalog_targets(
     user: str = EGERIA_USER,
     user_pass: str = EGERIA_USER_PASSWORD,
     paging: bool = True,
-    jupyter: bool = app_config.egeria_jupyter,
-    width: int = app_config.console_width,
+    jupyter: bool = settings.Environment.egeria_jupyter,
+    width: int = settings.Environment.egeria_width,
 ):
     """Display catalog targets for the specified connector as a table.
 
@@ -182,7 +189,7 @@ def main():
     userid = args.userid if args.userid is not None else EGERIA_USER
     user_pass = args.password if args.password is not None else EGERIA_USER_PASSWORD
     jupyter = args.jupyter if args.jupyter is not None else app_config.egeria_jupyter
-    width = args.width if args.width is not None else app_config.console_width
+    width = args.width if args.width is not None else settings.Environment.egeria_width
 
     try:
         connector = Prompt.ask(

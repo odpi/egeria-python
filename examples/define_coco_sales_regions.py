@@ -19,7 +19,7 @@ EGERIA_USER_PASSWORD = os.environ.get("EGERIA_USER_PASSWORD", "secret")
 
 app_config = settings.Environment
 config_logging()
-console = Console(width=app_config.console_width)
+console = Console(width=app_config.egeria_width)
 
 client = EgeriaTech(app_config.egeria_view_server,
                       app_config.egeria_view_server_url,

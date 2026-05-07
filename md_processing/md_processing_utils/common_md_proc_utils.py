@@ -30,7 +30,7 @@ from md_processing.md_processing_utils.extraction_utils import (extract_command_
 from md_processing.md_processing_utils.md_processing_constants import (get_command_spec, add_default_upsert_attributes,
                                                                        add_default_link_attributes)
 from md_processing.md_processing_utils.message_constants import (ERROR, INFO, WARNING, EXISTS_REQUIRED)
-from pyegeria import EgeriaTech, PyegeriaException
+from pyegeria import settings, EgeriaTech, PyegeriaException
 from pyegeria.view.base_report_formats import select_report_spec
 from pyegeria.core._exceptions import print_basic_exception, print_validation_error, print_basic_exception
 from pyegeria.core._globals import DEBUG_LEVEL, GovernanceDomains
@@ -41,7 +41,7 @@ global COMMAND_DEFINITIONS
 user_config = settings.User_Profile
 
 # Constants
-EGERIA_WIDTH = int(os.environ.get("EGERIA_WIDTH", "200"))
+EGERIA_WIDTH = settings.Environment.egeria_width
 EGERIA_USAGE_LEVEL = os.environ.get("EGERIA_USAGE_LEVEL", user_config.egeria_usage_level)
 LOCAL_QUALIFIER = os.environ.get("EGERIA_LOCAL_QUALIFIER", None)
 _force_rich = os.environ.get("EGERIA_RICH_FORCE", "false").strip().lower() in {"1", "true", "yes"}

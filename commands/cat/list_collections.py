@@ -12,6 +12,10 @@ from jsonschema import ValidationError
 from rich.console import Console
 from rich.prompt import Prompt
 from pyegeria import (
+    print_basic_exception,
+    config_logging,
+    settings,
+    settings,
     settings,
     get_app_config, config_logging, print_basic_exception, PyegeriaAPIException, PyegeriaClientException, )
 from commands.cat.run_report import list_generic
@@ -24,7 +28,7 @@ app_settings = get_app_config(app_config.pyegeria_root+"/.env")
 
 config_logging()
 
-console = Console(width=app_config.console_width, force_terminal=(not app_config.egeria_jupyter))
+console = Console(width=settings.Environment.egeria_width, force_terminal=(not app_config.egeria_jupyter))
 
 def display_collections(
     search_string: str = "*",
@@ -32,8 +36,8 @@ def display_collections(
     view_url: str = app_config.egeria_view_server_url,
     user: str = app_settings.User_Profile.user_name,
     user_pass: str = app_settings.User_Profile.user_pwd,
-    jupyter: bool = app_config.egeria_jupyter,
-    width: int = app_config.console_width,
+    jupyter: bool = settings.Environment.egeria_jupyter,
+    width: int = settings.Environment.egeria_width,
     output_format: str = "TABLE"
 ):
     """Display either a specified glossary or all collections if the search_string is '*'.

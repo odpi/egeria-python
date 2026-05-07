@@ -10,7 +10,7 @@ from rich import print
 from rich.console import Console
 from rich.markdown import Markdown
 
-from pyegeria import ServerClient, PyegeriaException
+from pyegeria import settings, ServerClient, PyegeriaException
 from pyegeria.core.utils import (camel_to_title_case)
 from pyegeria.core._globals import DEBUG_LEVEL, GovernanceDomains, resolve_enum
 from md_processing.md_processing_utils.message_constants import message_types
@@ -27,8 +27,8 @@ EGERIA_ADMIN_USER = os.environ.get("ADMIN_USER", "garygeeke")
 EGERIA_ADMIN_PASSWORD = os.environ.get("ADMIN_PASSWORD", "secret")
 EGERIA_USER = os.environ.get("EGERIA_USER", "erinoverview")
 EGERIA_USER_PASSWORD = os.environ.get("EGERIA_USER_PASSWORD", "secret")
-EGERIA_WIDTH = int(os.environ.get("EGERIA_WIDTH", 220))
-EGERIA_JUPYTER = os.environ.get("EGERIA_JUPYTER", False)
+EGERIA_WIDTH = settings.Environment.egeria_width
+EGERIA_JUPYTER = settings.Environment.egeria_jupyter
 EGERIA_HOME_GLOSSARY_GUID = os.environ.get("EGERIA_HOME_GLOSSARY_GUID", None)
 EGERIA_GLOSSARY_PATH = os.environ.get("EGERIA_GLOSSARY_PATH", None)
 EGERIA_ROOT_PATH = os.environ.get("EGERIA_ROOT_PATH", "../../")

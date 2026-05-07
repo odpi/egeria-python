@@ -849,7 +849,7 @@ class TestAutomatedCuration:
 
             start_time = time.perf_counter()
             # response = a_client.get_tech_type_detail("CSV Data File", True)
-            response = a_client.get_tech_type_detail("PostgreSQL Relational Database", output_format="DICT",
+            response = a_client.get_tech_type_detail("Unity Catalog Server", output_format="JSON",
                                                      report_spec="Tech-Type-Details-MD")
             duration = time.perf_counter() - start_time
             print(f"\n\tDuration was {duration} seconds")

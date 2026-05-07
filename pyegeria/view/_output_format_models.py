@@ -143,7 +143,7 @@ class Column(BaseModel):
     name: str
     key: str
     value: Any = None
-    format: bool = False
+    format: Union[bool, str] = False
     detail_spec: Optional[str] = None
     valid_values: Optional[Union[List[str], Dict[str, str]]] = None
 

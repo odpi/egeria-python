@@ -19,6 +19,7 @@ from rich.table import Table
 from rich.text import Text
 
 from pyegeria import (
+    print_basic_exception,
     AssetCatalog,
 PyegeriaAPIException, PyegeriaClientException, print_basic_exception, print_exception_table
 )

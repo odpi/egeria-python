@@ -23,10 +23,15 @@ from rich.table import Table
 from rich.text import Text
 
 from pyegeria import (
+    PyegeriaException,
+    print_basic_exception,
+    config_logging,
+    settings,
+    settings,
+    settings,
     PyegeriaAPIException, PyegeriaClientException,
     RuntimeManager,
     print_basic_exception,
-    settings,
     config_logging, PyegeriaException
 )
 
@@ -39,8 +44,8 @@ app_config = settings.Environment
 
 def display_servers_by_dep_imp(search_string: str = "*", view_server: str = app_config.egeria_view_server,
                                view_url: str = app_config.egeria_view_server_url, user: str = EGERIA_USER,
-                               user_pass: str = EGERIA_USER_PASSWORD, jupyter: bool = app_config.egeria_jupyter,
-                               width: int = app_config.console_width):
+                               user_pass: str = EGERIA_USER_PASSWORD, jupyter: bool = settings.Environment.egeria_jupyter,
+                               width: int = settings.Environment.egeria_width):
     p_client = RuntimeManager(view_server, view_url, user, user_pass)
     token = p_client.create_egeria_bearer_token()
 

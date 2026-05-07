@@ -12,7 +12,7 @@ import os
 import sys
 
 import click
-from pyegeria import EgeriaTech, PyegeriaAPIException
+from pyegeria import PyegeriaException, print_basic_exception, settings, EgeriaTech, PyegeriaAPIException
 from pyegeria.core.config import settings
 from pyegeria.core.logging_configuration import config_logging
 from pyegeria.core._exceptions import (

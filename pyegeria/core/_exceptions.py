@@ -17,11 +17,12 @@ from rich.table import Table
 from rich.text import Text
 from rich import print, box
 from rich.console import Console
+from pyegeria import settings
 
 
-# Standardize on CONSOLE_WIDTH with backward-compatible fallback
+# Standardize on EGERIA_WIDTH via settings
 try:
-    _width_val = int(os.getenv("CONSOLE_WIDTH", os.getenv("PYEGERIA_CONSOLE_WIDTH", 190)))
+    _width_val = int(settings.Environment.egeria_width)
 except Exception:
     _width_val = 250
 console = Console(width=_width_val)

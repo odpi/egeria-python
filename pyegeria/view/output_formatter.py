@@ -22,7 +22,7 @@ import re
 from typing import Any, Callable, Dict, List, Optional, Tuple, Union
 
 from pyegeria.core._globals import MERMAID_GRAPH_TITLES, MERMAID_GRAPHS
-from pyegeria.core.utils import (camel_to_title_case)
+from pyegeria.core.utils import (camel_to_title_case, get_item_display_name)
 from markdown_it import MarkdownIt
 from rich.console import Console
 from loguru import logger
@@ -82,7 +82,7 @@ This function and related data structures have been moved back to _output_format
 Please import select_report_spec from pyegeria._output_formats instead of from this module.
 """
 # Todo - put this back after testing
-# console = Console(width=settings.Environment.console_width)
+# console = Console(width=settings.Environment.egeria_width)
 console = Console(width=300)
 
 
@@ -511,13 +511,15 @@ def make_md_attribute(attribute_name: str, attribute_value: str|list|dict, outpu
             output = f"### {attribute_title}\n{attribute_value}\n\n"
     return output
 
-def format_for_markdown_table(text: str, guid: str = None) -> str:
+def format_for_markdown_table(text: str, guid: str = None, format_type: str = None) -> str:
     """
     Format text for markdown tables by joining list items with commas, replacing newlines with spaces, and escaping pipe characters.
     No truncation is applied to allow full-length text display regardless of console width.
 
     Args:
         text (str|list): The text or list of items to format
+        guid (str): Optional GUID to link to
+        format_type (str): Optional formatting style (e.g., "bulleted-list")
 
     Returns:
         str: Formatted text safe for markdown tables
@@ -525,7 +527,10 @@ def format_for_markdown_table(text: str, guid: str = None) -> str:
     if text is None:
         return ""
     if isinstance(text, list):
-        text = ", ".join([str(i) for i in text])
+        if format_type == "bulleted-list":
+            text = "<br> - " + "<br> - ".join([get_item_display_name(i) for i in text])
+        else:
+            text = ", ".join([str(i) for i in text])
     if not isinstance(text, str):
         text = str(text)
 
@@ -940,6 +945,12 @@ def generate_entity_md(elements: List[Dict],
 
     return elements_md
 
+def _get_column_attribute(column: Union[dict, Any], attribute_name: str, default: Any = None) -> Any:
+    """Helper to safely access column attributes from either dict or Column object."""
+    if isinstance(column, dict):
+        return column.get(attribute_name, default)
+    return getattr(column, attribute_name, default)
+
 def generate_entity_md_table(elements: List[Dict],
                             search_string: str,
                             entity_type: str,
@@ -986,7 +997,7 @@ def generate_entity_md_table(elements: List[Dict],
     header_row = "| "
     separator_row = "|"
     for column in columns:
-        header_row += f"{column['name']} | "
+        header_row += f"{_get_column_attribute(column, 'name')} | "
         separator_row += "-------------|"
 
     elements_md += header_row + "\n"
@@ -1023,8 +1034,8 @@ def generate_entity_md_table(elements: List[Dict],
         display_name_for_row = None
         if returned_struct is not None:
             for col in returned_struct.get('formats', {}).get('attributes', []):
-                if col.get('key') in ('display_name', 'title', 'keyword', 'full_name') and col.get('value'):
-                    display_name_for_row = col['value']
+                if _get_column_attribute(col, 'key') in ('display_name', 'title', 'keyword', 'full_name') and _get_column_attribute(col, 'value'):
+                    display_name_for_row = _get_column_attribute(col, 'value')
                     break
 
         # Build row
@@ -1033,14 +1044,15 @@ def generate_entity_md_table(elements: List[Dict],
 
         if returned_struct is not None:
             for column in returned_struct.get('formats', {}).get('attributes', []):
-                key = column.get('key')
-                value = column.get('value')
+                key = _get_column_attribute(column, 'key')
+                value = _get_column_attribute(column, 'value')
                 if (value in (None, "")) and key in additional_props:
                     value = additional_props[key]
 
                 # Summarize for LIST
+                col_format = _get_column_attribute(column, 'format')
                 cell_value = value
-                if isinstance(value, list):
+                if isinstance(value, list) and not isinstance(col_format, str):
                     names = []
                     for item in value:
                         if isinstance(item, dict):
@@ -1049,7 +1061,7 @@ def generate_entity_md_table(elements: List[Dict],
                         elif item is not None:
                             names.append(str(item))
                     cell_value = ", ".join(names)
-                elif isinstance(value, dict):
+                elif isinstance(value, dict) and not isinstance(col_format, str):
                     nm = value.get('name') or value.get('displayName') or value.get('qualifiedName')
                     if nm:
                         cell_value = nm
@@ -1057,7 +1069,7 @@ def generate_entity_md_table(elements: List[Dict],
                         cell_value = ", ".join([f"{k}: {v}" for k, v in value.items()])
 
                 # If detail_spec present and we have values to show later, add a link
-                detail_spec = column.get('detail_spec')
+                detail_spec = _get_column_attribute(column, 'detail_spec')
                 if detail_spec and value not in (None, "", [], {}):
                     anchor_id = f"{guid or 'noguid'}_{key}"
                     # show compact + link
@@ -1067,13 +1079,17 @@ def generate_entity_md_table(elements: List[Dict],
 
                     # queue rendering of the detail section (values are already materialized dicts)
                     values_list = value if isinstance(value, list) else [value]
-                    pending_details.append((anchor_id, column.get('name', key), detail_spec, values_list))
+                    pending_details.append((anchor_id, _get_column_attribute(column, 'name', key), detail_spec, values_list))
 
                 if value in (None, "", [], {}):
                     cell_value = " --- "
 
-                if column.get('format'):
-                    cell_value = format_for_markdown_table(cell_value, guid)
+                col_format = _get_column_attribute(column, 'format')
+                if col_format:
+                    if isinstance(col_format, str):
+                        cell_value = format_for_markdown_table(cell_value, guid, format_type=col_format)
+                    else:
+                        cell_value = format_for_markdown_table(cell_value, guid)
                 elif isinstance(cell_value, str):
                     cell_value = cell_value.replace("\n", " ").replace("|", "\\|")
 
@@ -1082,7 +1098,7 @@ def generate_entity_md_table(elements: List[Dict],
             # Legacy fallback: read from props dict
             props = extract_properties_func(element)
             for column in columns:
-                key = column['key']
+                key = _get_column_attribute(column, 'key')
                 value = " "
                 if key in props:
                     value = props[key]
@@ -1092,8 +1108,12 @@ def generate_entity_md_table(elements: List[Dict],
                 if value in (None, "", " "):
                     value = " --- "
 
-                if column.get('format'):
-                    value = format_for_markdown_table(value, guid or props.get('GUID'))
+                col_format = _get_column_attribute(column, 'format')
+                if col_format:
+                    if isinstance(col_format, str):
+                        value = format_for_markdown_table(value, guid or props.get('GUID'), format_type=col_format)
+                    else:
+                        value = format_for_markdown_table(value, guid or props.get('GUID'))
                 elif isinstance(value, str):
                     value = value.replace("\n", " ").replace("|", "\\|")
 
@@ -1473,7 +1493,7 @@ def populate_common_columns(
                             names.append(str(item))
                     else:
                         names.append(str(item))
-                column['value'] = ", ".join(names)
+                column['value'] = "\n, ".join(names)
             elif isinstance(h_val, dict):
                 # Generic fallback for dicts in header
                 column['value'] = h_val.get('name') or h_val.get('displayName') or h_val.get('qualifiedName') or str(h_val)

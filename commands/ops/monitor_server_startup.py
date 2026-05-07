@@ -16,6 +16,8 @@ from rich.live import Live
 from rich.table import Table
 
 from pyegeria import (
+    PyegeriaException,
+    print_basic_exception,
     ServerOps,
     PyegeriaException, print_basic_exception,
 )

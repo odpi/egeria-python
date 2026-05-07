@@ -11,7 +11,7 @@ Execute engine actions.
 import click
 
 # from ops_config import Config, pass_config
-from pyegeria import EgeriaTech
+from pyegeria import print_basic_exception, EgeriaTech
 from pyegeria.core._exceptions import (
     PyegeriaInvalidParameterException,
     PyegeriaAPIException as PropertyServerException,

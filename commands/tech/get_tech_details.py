@@ -19,10 +19,15 @@ from rich.text import Text
 from rich.tree import Tree
 
 from pyegeria import (
+    PyegeriaException,
+    print_basic_exception,
+    config_logging,
+    settings,
+    settings,
+    settings,
     AutomatedCuration,
     PyegeriaException,
     print_basic_exception,
-    settings,
     config_logging
 )
 
@@ -31,7 +36,7 @@ EGERIA_USER_PASSWORD = os.environ.get("EGERIA_USER_PASSWORD", "secret")
 
 app_config = settings.Environment
 config_logging()
-console = Console(width = app_config.console_width)
+console = Console(width = settings.Environment.egeria_width)
 
 
 
@@ -41,8 +46,8 @@ def tech_details_viewer(
     platform_url: str,
     user: str,
     user_password: str,
-    jupyter: bool = app_config.egeria_jupyter,
-    width: int = app_config.console_width,
+    jupyter: bool = settings.Environment.egeria_jupyter,
+    width: int = settings.Environment.egeria_width,
 ):
     console = Console(width=width, force_terminal=not jupyter)
 

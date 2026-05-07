@@ -14,7 +14,12 @@ import click
 
 
 from pyegeria import (
-    EgeriaTech, body_slimmer, settings,
+    print_basic_exception,
+    EgeriaTech,
+    settings,
+    EgeriaTech,
+    settings,
+    settings,
     PyegeriaAPIException, PyegeriaClientException, print_basic_exception, print_exception_table
 )
 app_config = settings.Environment

@@ -16,7 +16,7 @@ import click
 from trogon import tui
 from loguru import logger
 
-from pyegeria import config_logging,  settings, ACTIVITY_STATUS
+from pyegeria import settings, config_logging,  settings, ACTIVITY_STATUS
 
 from commands.cat.my_reports import start_exp2
 from commands.cat.run_report import list_generic
@@ -231,7 +231,7 @@ TUI_RUN_STRING = f"{sys.executable} -m commands.cli.egeria"
 )
 @click.option(
     "--width",
-    default=app_config.console_width,
+    default=settings.Environment.egeria_width,
     type=int,
     help="Screen width, in characters, to use",
 )

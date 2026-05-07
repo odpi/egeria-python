@@ -15,6 +15,7 @@ from rich import print
 from rich.console import Console
 from rich.markdown import Markdown
 
+from pyegeria.core.config import settings
 from pyegeria.core.utils import body_slimmer
 from pyegeria.core._globals import (NO_GLOSSARIES_FOUND, NO_ELEMENTS_FOUND, NO_PROJECTS_FOUND, NO_CATEGORIES_FOUND, DEBUG_LEVEL)
 from pyegeria.egeria_tech_client import EgeriaTech
@@ -32,8 +33,8 @@ pre_command = "\n---\n==> Processing object_action:"
 command_seperator = Markdown("\n---\n")
 EXISTS_REQUIRED = "Exists Required"
 
-
-EGERIA_WIDTH = int(os.environ.get("EGERIA_WIDTH", "170"))
+app_config = settings.Environment
+EGERIA_WIDTH = int(app_config.egeria_width or 170)
 console = Console(width=EGERIA_WIDTH)
 
 command_list = ["Provenance", "Create Glossary", "Update Glossary", "Create Term", "Update Term", "List Terms", "List Term Details",
@@ -985,6 +986,7 @@ Optional[str]:
             return None
     else:
         return None
+
 
 def process_glossary_upsert_command(egeria_client: EgeriaTech, txt: str, directive: str = "display") -> Optional[str]:
     """

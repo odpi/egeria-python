@@ -29,8 +29,8 @@ EGERIA_VIEW_SERVER_URL = os.environ.get("EGERIA_VIEW_SERVER_URL", app_config.ege
 # User credentials are only from environment variables or command line (not stored in config for security)
 EGERIA_USER = os.environ.get("EGERIA_USER", "erinoverview")
 EGERIA_USER_PASSWORD = os.environ.get("EGERIA_USER_PASSWORD", "secret")
-EGERIA_WIDTH = int(os.environ.get("EGERIA_WIDTH", app_config.console_width or 190))
-EGERIA_JUPYTER = os.environ.get("EGERIA_JUPYTER", str(app_config.egeria_jupyter)).lower() in ("true", "1", "yes")
+EGERIA_WIDTH = int(os.environ.get("EGERIA_WIDTH", settings.Environment.egeria_width or 190))
+EGERIA_JUPYTER = os.environ.get("EGERIA_JUPYTER", str(settings.Environment.egeria_jupyter)).lower() in ("true", "1", "yes")
 
 console = Console(width=EGERIA_WIDTH)
 
@@ -80,7 +80,7 @@ def process_markdown_file(input_file: str, output_folder: str, directive: str,
     usage_level = "Advanced" if advanced else "Basic"
     try:
         # Instantiate the client
-        from pyegeria import EgeriaTech
+        from pyegeria import settings, EgeriaTech
         client = EgeriaTech(server, url, userid, user_pass)
         client.create_egeria_bearer_token()
         asyncio.run(process_md_file_v2(

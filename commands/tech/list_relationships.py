@@ -20,10 +20,15 @@ from rich.prompt import Prompt
 from rich.table import Table
 
 from pyegeria import (
+    PyegeriaException,
+    print_basic_exception,
+    config_logging,
+    settings,
+    settings,
+    settings,
     ClassificationExplorer,
     PyegeriaException,
     print_basic_exception,
-    settings,
     config_logging
 )
 
@@ -32,7 +37,7 @@ EGERIA_USER_PASSWORD = os.environ.get("EGERIA_USER_PASSWORD", "secret")
 
 app_config = settings.Environment
 config_logging()
-console = Console(width=app_config.console_width)
+console = Console(width=settings.Environment.egeria_width)
 
 
 def list_relationships(
@@ -42,8 +47,8 @@ def list_relationships(
     username: str,
     user_password: str,
     time_out: int = 60,
-    jupyter: bool = app_config.egeria_jupyter,
-    width: int = app_config.console_width,
+    jupyter: bool = settings.Environment.egeria_jupyter,
+    width: int = settings.Environment.egeria_width,
 ):
     console = Console(width=width, force_terminal=not jupyter, soft_wrap=True)
     if (search_string is None) or (len(search_string) < 3) and (search_string != "*"):

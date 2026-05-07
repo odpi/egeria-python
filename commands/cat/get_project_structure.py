@@ -19,6 +19,7 @@ from rich.prompt import Prompt
 from rich.tree import Tree
 
 from pyegeria import (
+    print_basic_exception,
     ProjectManager,
     PyegeriaAPIException, PyegeriaClientException, print_basic_exception, print_exception_table, print_validation_error
 )

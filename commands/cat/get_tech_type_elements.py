@@ -13,6 +13,10 @@ from rich.prompt import Prompt
 
 from commands.cat.run_report import list_generic
 from pyegeria import (
+    print_basic_exception,
+    config_logging,
+    settings,
+    settings,
     settings,
     config_logging, print_basic_exception, PyegeriaAPIException, PyegeriaClientException
 )
@@ -22,7 +26,7 @@ EGERIA_USER_PASSWORD = os.environ.get("EGERIA_USER_PASSWORD", "secret")
 
 app_config = settings.Environment
 config_logging()
-console = Console(width=app_config.console_width)
+console = Console(width=settings.Environment.egeria_width)
 
 guid_list = []
 
@@ -33,8 +37,8 @@ def tech_viewer(
     platform_url: str,
     user: str,
     user_pass: str,
-    jupyter: bool = app_config.egeria_jupyter,
-    width: int = app_config.console_width,
+    jupyter: bool = settings.Environment.egeria_jupyter,
+    width: int = settings.Environment.egeria_width,
 ):
     try:
         list_generic(report_spec = "Tech-Type-Elements", output_format = "TABLE", view_server = server_name,

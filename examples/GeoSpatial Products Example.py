@@ -27,7 +27,7 @@ app_settings = get_app_config()
 app_config = app_settings.Environment
 config_logging()
 logger.enable("pyegeria")
-logger.info(f"Console width is {app_config.console_width}")
+logger.info(f"Console width is {app_config.egeria_width}")
 
 view_server = app_config.egeria_view_server
 view_url = app_config.egeria_view_server_url
@@ -37,7 +37,7 @@ user_pass = EGERIA_USER_PASSWORD
 
 console = Console(
     style="bold bright_white on black",
-    width=app_config.console_width,
+    width=app_config.egeria_width,
     force_terminal=not app_config.egeria_jupyter,
     )
 

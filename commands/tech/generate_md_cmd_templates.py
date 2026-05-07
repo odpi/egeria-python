@@ -17,7 +17,7 @@ from md_processing.md_processing_utils.md_processing_constants import (load_comm
                                                                        add_default_link_attributes,
                                                                        add_default_upsert_attributes)
 
-from pyegeria import ServerClient, EgeriaTech
+from pyegeria import settings, ServerClient, EgeriaTech
 from pyegeria.core.config import get_app_config
 
 
@@ -26,7 +26,7 @@ config = get_app_config()
 env = config.Environment
 user_profile = config.User_Profile
 
-EGERIA_WIDTH = env.console_width
+EGERIA_WIDTH = settings.Environment.egeria_width
 EGERIA_ROOT_PATH = env.pyegeria_root
 EGERIA_INBOX_PATH = env.egeria_inbox
 
