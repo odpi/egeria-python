@@ -15,15 +15,18 @@ Dr.Egeria is a Markdown-based processing engine for Egeria. It allows users to i
     - [Reference Resolution](#reference-resolution)
 4. [Supported Command Families](#supported-command-families)
 5. [CLI Utility: dr_egeria](#cli-utility-dr_egeria)
-6. [Supporting Utilities](#supporting-utilities)
+6. [Python API](#python-api)
+    - [process_md_file (synchronous)](#process_md_file-synchronous)
+    - [process_md_file_v2 (async)](#process_md_file_v2-async)
+7. [Supporting Utilities](#supporting-utilities)
     - [Template Generation (`gen_md_cmd_templates`)](#template-generation-gen_md_cmd_templates)
     - [Help Documentation (`gen_dr_help`)](#help-documentation-gen_dr_help)
     - [Command Search (`dr_egeria_help`)](#command-search-dr_egeria_help)
     - [Report Specification (`gen_report_specs`)](#report-specification-gen_report_specs)
     - [Spec Validation (`validate_compact_specs`)](#spec-validation-validate_compact_specs)
     - [Migration Tool (`migrate_dr_egeria.py`)](#migration-tool-migrate_dr_egeriapy)
-7. [Advanced Configuration](#advanced-configuration)
-8. [Jupyter Notebook Support](#jupyter-notebook-support)
+8. [Advanced Configuration](#advanced-configuration)
+9. [Jupyter Notebook Support](#jupyter-notebook-support)
 
 ---
 
@@ -163,6 +166,226 @@ dr_egeria [OPTIONS] [INPUT_FILE]
 
 ---
 
+## Python API
+
+In addition to the CLI, Dr.Egeria exposes two Python functions in `md_processing.dr_egeria` that let you drive processing programmatically — useful for scripting, testing, or embedding in a larger workflow or Jupyter Notebook.
+
+### Configuration module
+
+Both functions read connection details and paths from the `pyegeria` configuration system rather than requiring you to hard-code values. Call `load_app_config()` once at startup to load the appropriate `config.json` (or `config_workspaces.json`), then read values from `settings.Environment`.
+
+```python
+from pyegeria.core.config import load_app_config, settings, pretty_print_config
+
+load_app_config()                              # reads config.json via env vars / .env
+env = settings.Environment
+
+print(env.egeria_view_server)                  # e.g. "qs-view-server"
+print(env.egeria_view_server_url)              # e.g. "https://localhost:9443"
+```
+
+**Configuration precedence** (last wins):
+1. Built-in defaults in Pydantic models
+2. `config.json` (or `config_workspaces.json`) located via `PYEGERIA_CONFIG_DIRECTORY` + `PYEGERIA_CONFIG_FILE`
+3. Environment variables (including a `.env` file in the working directory)
+
+**Key environment variables for file discovery:**
+
+| Variable                    | Purpose                                       |
+|-----------------------------|-----------------------------------------------|
+| `PYEGERIA_CONFIG_DIRECTORY` | Directory that contains your JSON config file |
+| `PYEGERIA_CONFIG_FILE`      | Filename to load (default `config.json`)      |
+| `PYEGERIA_ROOT_PATH`        | Base path for inbox/outbox/mermaid folders    |
+
+**Use case 1 — local development / PyCharm (egeria-python repo)**
+
+Point to `config/config.json` in the repo:
+
+```bash
+export PYEGERIA_CONFIG_DIRECTORY="/path/to/egeria-python/config"
+export PYEGERIA_CONFIG_FILE="config.json"
+export PYEGERIA_ROOT_PATH="/path/to/egeria-python/sample-data"
+```
+
+Or put the same lines in a `.env` file at the project root.
+
+**Use case 2 — Egeria Workspaces (JupyterLab container)**
+
+Switch to `config_workspaces.json`, which pre-sets `host.docker.internal` URLs and `/home/jovyan` paths:
+
+```python
+import os
+os.environ["PYEGERIA_CONFIG_FILE"] = "config_workspaces.json"
+# PYEGERIA_CONFIG_DIRECTORY should already point to the config folder in your workspace
+```
+
+Or export `PYEGERIA_CONFIG_FILE=config_workspaces.json` in the container's environment.
+
+**Inspecting the effective configuration:**
+
+```python
+from pyegeria.core.config import load_app_config, pretty_print_config
+
+load_app_config()
+pretty_print_config(safe=True)   # prints a table showing every value and its source
+```
+
+---
+
+### process_md_file (synchronous)
+
+```python
+from md_processing.dr_egeria import process_md_file
+
+process_md_file(
+    input_file,        # path to the .md file (absolute, or relative to EGERIA_INBOX_PATH)
+    output_folder,     # subfolder inside EGERIA_OUTBOX_PATH for the receipt file; "" for root
+    directive,         # "display" | "validate" | "process"
+    server,            # Egeria view-server name
+    url,               # Egeria platform URL
+    userid,            # Egeria user id
+    user_pass,         # Egeria user password
+    parse_summary,     # "all" | "errors" | "none"  (default "none")
+    attribute_logs,    # "debug" | "info" | "none"  (default "debug")
+    usage_level,       # "Basic" | "Advanced"  (default None → "Basic")
+    summary_only,      # True → suppress per-command output, show only summary table (default False)
+    debug,             # True → log every Egeria API call URL + body (default False)
+)
+```
+
+This is the simplest entry point. It creates the `EgeriaTech` client internally from the connection parameters you supply, then runs the async v2 engine synchronously via `asyncio.run()`.
+
+**Example — validate a file (reading connection details from config):**
+
+```python
+import os
+from pyegeria.core.config import load_app_config, settings
+from md_processing.dr_egeria import process_md_file
+
+load_app_config()
+env = settings.Environment
+
+process_md_file(
+    input_file="my_glossary.md",
+    output_folder="",
+    directive="validate",
+    server=env.egeria_view_server,
+    url=env.egeria_view_server_url,
+    userid=os.environ.get("EGERIA_USER", "erinoverview"),
+    user_pass=os.environ.get("EGERIA_USER_PASSWORD", "secret"),
+)
+```
+
+**Example — execute commands and write a receipt:**
+
+```python
+import os
+from pyegeria.core.config import load_app_config, settings
+from md_processing.dr_egeria import process_md_file
+
+load_app_config()
+env = settings.Environment
+
+process_md_file(
+    input_file="my_glossary.md",
+    output_folder="receipts",
+    directive="process",
+    server=env.egeria_view_server,
+    url=env.egeria_view_server_url,
+    userid=os.environ.get("EGERIA_USER", "erinoverview"),
+    user_pass=os.environ.get("EGERIA_USER_PASSWORD", "secret"),
+    summary_only=True,
+)
+```
+
+---
+
+### process_md_file_v2 (async)
+
+```python
+import asyncio
+from pyegeria import EgeriaTech
+from md_processing.dr_egeria import process_md_file_v2
+
+client = EgeriaTech(server, url, user_id=userid)
+client.create_egeria_bearer_token(userid, user_pass)
+
+asyncio.run(
+    process_md_file_v2(
+        input_file,        # path to the .md file
+        output_folder,     # output subfolder inside EGERIA_OUTBOX_PATH; "" for root
+        directive,         # "display" | "validate" | "process"
+        client,            # pre-built EgeriaTech client
+        parse_summary,     # "all" | "errors" | "none"  (default "none")
+        attribute_logs,    # "debug" | "info" | "none"  (default "info")
+        usage_level,       # "Basic" | "Advanced"  (default None → "Basic")
+        summary_only,      # True → suppress per-command output (default False)
+        debug,             # True → log every Egeria API call URL + body (default False)
+    )
+)
+```
+
+Use this form when you already have an `EgeriaTech` client (e.g., reusing a shared connection across multiple calls) or when you are working inside an existing `async` context such as a Jupyter Notebook cell using `await`.
+
+**Example — reuse a client across multiple files:**
+
+```python
+import asyncio, os
+from pyegeria import EgeriaTech
+from pyegeria.core.config import load_app_config, settings
+from md_processing.dr_egeria import process_md_file_v2
+
+load_app_config()
+env = settings.Environment
+
+client = EgeriaTech(env.egeria_view_server, env.egeria_view_server_url,
+                    user_id=os.environ.get("EGERIA_USER", "erinoverview"))
+client.create_egeria_bearer_token(os.environ.get("EGERIA_USER", "erinoverview"),
+                                  os.environ.get("EGERIA_USER_PASSWORD", "secret"))
+
+files = ["glossary.md", "projects.md", "data_structures.md"]
+
+for md_file in files:
+    asyncio.run(
+        process_md_file_v2(
+            input_file=md_file,
+            output_folder="batch-run",
+            directive="process",
+            client=client,
+        )
+    )
+```
+
+**Example — inside an async function or Jupyter cell (using `await`):**
+
+```python
+import os
+from pyegeria import EgeriaTech
+from pyegeria.core.config import load_app_config, settings
+from md_processing.dr_egeria import process_md_file_v2
+
+load_app_config()
+env = settings.Environment
+
+client = EgeriaTech(env.egeria_view_server, env.egeria_view_server_url,
+                    user_id=os.environ.get("EGERIA_USER", "erinoverview"))
+client.create_egeria_bearer_token(os.environ.get("EGERIA_USER", "erinoverview"),
+                                  os.environ.get("EGERIA_USER_PASSWORD", "secret"))
+
+# In a Jupyter cell, the event loop is already running — use await directly
+await process_md_file_v2(
+    input_file="my_glossary.md",
+    output_folder="",
+    directive="validate",
+    client=client,
+    usage_level="Advanced",
+)
+```
+
+> **Note**: Jupyter kernels run their own event loop, so `asyncio.run()` will raise a `RuntimeError` inside a notebook cell. Use `await` directly (as shown above) or install `nest_asyncio` and call `nest_asyncio.apply()` once at the top of your notebook if you need to keep `asyncio.run()` calls.
+
+---
+
 ## Supporting Utilities
 
 ### Template Generation (`gen_md_cmd_templates`)
@@ -214,16 +437,100 @@ A utility to convert old Dr.Egeria files (using `#` for commands) to the new hie
 
 ## Advanced Configuration
 
-Dr.Egeria respects the standard `pyegeria` configuration precedence:
-1. Explicit CLI arguments.
-2. Environment variables (e.g., `EGERIA_PLATFORM_URL`).
-3. `.env` file in the current directory.
-4. `config/config.json`.
+### Configuration precedence
 
-**Key Environment Variables**:
-- `EGERIA_INBOX_PATH`: Where Dr.Egeria looks for input files.
-- `EGERIA_OUTBOX_PATH`: Where processed "receipt" documents are saved.
-- `PYEGERIA_NORMALIZE_MERMAID`: Set to `false` to preserve native Egeria graph syntax in reports.
+pyegeria resolves settings in the following order — **later sources win**:
+
+1. Built-in Pydantic model defaults
+2. JSON config file (`config.json` or `config_workspaces.json`)
+3. OS environment variables and `.env` file in the working directory
+
+CLI `--server`/`--url`/`--userid` flags (when using the `dr_egeria` CLI) override the above for that run only.
+
+### Config file selection
+
+The JSON file to load is located using two environment variables:
+
+| Variable | Default | Purpose |
+|---|---|---|
+| `PYEGERIA_CONFIG_DIRECTORY` | `""` | Directory containing the JSON config files |
+| `PYEGERIA_CONFIG_FILE` | `config.json` | Filename to load |
+| `PYEGERIA_ROOT_PATH` | `sample-data` (if present) | Base path for inbox/outbox/mermaid folders |
+
+**Local development (PyCharm / egeria-python repo)** — use `config/config.json`:
+```bash
+export PYEGERIA_CONFIG_DIRECTORY="/path/to/egeria-python/config"
+export PYEGERIA_CONFIG_FILE="config.json"
+export PYEGERIA_ROOT_PATH="/path/to/egeria-python/sample-data"
+```
+
+**Egeria Workspaces (JupyterLab container)** — use `config/config_workspaces.json`:
+```bash
+export PYEGERIA_CONFIG_FILE="config_workspaces.json"
+# PYEGERIA_CONFIG_DIRECTORY should already point to the config folder in your workspace
+```
+
+The file `config/env` in the repository is a **reference template** listing every supported environment variable with its default value. It is **not** a `.env` file — copy and rename it to `.env` (or source it in your shell) if you want to use it directly.
+
+### Key environment variables
+
+**Config discovery**
+
+| Variable | Maps to JSON key | Purpose |
+|---|---|---|
+| `PYEGERIA_CONFIG_DIRECTORY` | `Pyegeria Config Directory` | Directory containing the JSON config file |
+| `PYEGERIA_CONFIG_FILE` | `Egeria Config File` | JSON filename to load |
+| `PYEGERIA_ROOT_PATH` | `Pyegeria Root` | Base path for inbox/outbox/mermaid folders |
+
+**Egeria endpoints**
+
+| Variable | Maps to JSON key | Purpose |
+|---|---|---|
+| `EGERIA_PLATFORM_URL` | `Egeria Platform URL` | Platform URL |
+| `EGERIA_VIEW_SERVER` | `Egeria View Server` | View-server name |
+| `EGERIA_VIEW_SERVER_URL` | `Egeria View Server URL` | View-server URL |
+| `EGERIA_INTEGRATION_DAEMON` | `Egeria Integration Daemon` | Integration daemon name |
+| `EGERIA_INTEGRATION_DAEMON_URL` | `Egeria Integration Daemon URL` | Integration daemon URL |
+| `EGERIA_ENGINE_HOST` | `Egeria Engine Host` | Engine host name |
+| `EGERIA_ENGINE_HOST_URL` | `Egeria Engine Host URL` | Engine host URL |
+| `EGERIA_METADATA_STORE` | `Egeria Metadata Store` | Metadata store name |
+| `EGERIA_KAFKA` | `Egeria Kafka Endpoint` | Kafka broker endpoint |
+
+**Inbox / Outbox paths**
+
+| Variable | Maps to JSON key | Purpose |
+|---|---|---|
+| `EGERIA_INBOX` | `Egeria Inbox` | General inbox base folder |
+| `EGERIA_OUTBOX` | `Egeria Outbox` | General outbox base folder |
+| `DR_EGERIA_INBOX_PATH` | `Dr.Egeria Inbox` | Dr.Egeria input folder (primary) |
+| `DR_EGERIA_OUTBOX_PATH` | `Dr.Egeria Outbox` | Dr.Egeria output/receipt folder (primary) |
+| `EGERIA_GLOSSARY_PATH` | `Egeria Glossary Path` | Glossary folder |
+| `EGERIA_MERMAID_FOLDER` | `Egeria Mermaid Folder` | Mermaid graph output folder |
+
+> **Note**: `EGERIA_INBOX_PATH` and `EGERIA_OUTBOX_PATH` are accepted as fallbacks for `DR_EGERIA_INBOX_PATH` / `DR_EGERIA_OUTBOX_PATH` for backward compatibility, but the `DR_EGERIA_*` names are preferred.
+
+**User and display**
+
+| Variable | Maps to JSON key | Purpose |
+|---|---|---|
+| `EGERIA_USER` | `user_name` (User Profile) | Egeria user id |
+| `EGERIA_USER_PASSWORD` | `user_pwd` (User Profile) | Egeria user password |
+| `EGERIA_USAGE_LEVEL` | `Egeria Usage Level` | `Basic` or `Advanced` |
+| `EGERIA_JUPYTER` | `Egeria Jupyter` | `True` for notebook-friendly Rich output |
+| `PYEGERIA_NORMALIZE_MERMAID` | `Egeria Normalize Mermaid` | `False` to preserve native Egeria Mermaid syntax |
+| `CONSOLE_WIDTH` | `Console Width` | Console output width (characters) |
+
+**Logging**
+
+| Variable | Maps to JSON key | Purpose |
+|---|---|---|
+| `PYEGERIA_ENABLE_LOGGING` | `enable_logging` | `True` to enable file logging |
+| `PYEGERIA_LOG_DIRECTORY` | `log_directory` | Directory for log files |
+| `PYEGERIA_CONSOLE_LOG_LVL` | `console_logging_level` | Console log level (`ERROR`, `WARNING`, etc.) |
+| `PYEGERIA_FILE_LOG_LVL` | `file_logging_level` | File log level |
+| `PYEGERIA_CONSOLE_FILTER_LEVELS` | `console_filter_levels` | Comma-separated levels to display |
+
+Call `pretty_print_config(safe=True)` from `pyegeria.core.config` to see the effective value and source (`default`, `config`, or `env`) of every setting at runtime.
 
 ---
 
