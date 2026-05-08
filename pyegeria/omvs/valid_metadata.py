@@ -232,17 +232,36 @@ class ValidMetadataManager(ServerClient):
     @staticmethod
     def _extract_typedef_list(payload: Any) -> list[dict]:
         """Normalize valid-metadata typedef payload variants to a list of typedef dicts."""
-        if isinstance(payload, list):
-            return [item for item in payload if isinstance(item, dict)]
-        if not isinstance(payload, dict):
-            return []
+        entries: list[dict] = []
+        seen_guids = set()
 
-        for key in ("typeDefList", "typeDefs", "elements"):
-            value = payload.get(key)
-            if isinstance(value, list):
-                return [item for item in value if isinstance(item, dict)]
+        def _collect(node: Any):
+            if isinstance(node, list):
+                for item in node:
+                    _collect(item)
+            elif isinstance(node, dict):
+                # A TypeDef usually has a name and either category or guid
+                if "name" in node and isinstance(node.get("name"), str) and ("category" in node or "guid" in node):
+                    guid = node.get("guid", node.get("name"))
+                    if guid not in seen_guids:
+                        entries.append(node)
+                        seen_guids.add(guid)
+                else:
+                    # Look for known containers
+                    found_container = False
+                    for key in ("typeDefList", "typeDefs", "elements", "typeDef"):
+                        if key in node:
+                            _collect(node[key])
+                            found_container = True
 
-        return []
+                    # If no known containers, maybe it's a map or a generic wrapper
+                    if not found_container:
+                        for v in node.values():
+                            if isinstance(v, (list, dict)):
+                                _collect(v)
+
+        _collect(payload)
+        return entries
 
     async def _async_setup_valid_metadata_value(
         self, property_name: str, type_name: str, body: dict
@@ -1950,7 +1969,7 @@ class ValidMetadataManager(ServerClient):
         url = f"{self.platform_url}/servers/{self.view_server}{self.valid_m_command_base}/open-metadata-types/classification-defs"
 
         resp = await self._async_make_request("GET", url)
-        elements = resp.json().get("typeDefList", NO_ELEMENTS_FOUND)
+        elements = self._extract_typedef_list(resp.json())
         if elements == NO_ELEMENTS_FOUND or elements is None or elements == []:
             return NO_ELEMENTS_FOUND
         if output_format != "JSON":

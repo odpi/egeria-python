@@ -56,13 +56,13 @@ def test_env_settings():
                 # Check that the settings were loaded correctly from environment variables
                 print(f"Root path from env: {settings.pyegeria_root_path}")
                 print(f"Config file from env: {settings.pyegeria_config_file}")
-                print(f"Console width from env: {settings.pyegeria_width}")
+                print(f"Console width from env: {settings.egeria_width}")
                 print(f"User name from env: {settings.egeria_user_name}")
                 print(f"User password from env: {settings.egeria_user_password}")
                 
                 assert settings.pyegeria_root_path == "/test/env/path", f"Expected '/test/env/path', got '{settings.pyegeria_root_path}'"
                 assert settings.pyegeria_config_file == "test_config.json", f"Expected 'test_config.json', got '{settings.pyegeria_config_file}'"
-                assert settings.pyegeria_width == 300, f"Expected 300, got '{settings.pyegeria_width}'"
+                assert settings.egeria_width == 300, f"Expected 300, got '{settings.egeria_width}'"
                 assert settings.egeria_user_name == "test_user", f"Expected 'test_user', got '{settings.egeria_user_name}'"
                 assert settings.egeria_user_password == "test_password", f"Expected 'test_password', got '{settings.egeria_user_password}'"
                 

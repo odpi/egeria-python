@@ -117,8 +117,7 @@ class TestCollectionManager:
             report_spec = "BasicCollections"
 
             response = c_client.find_collections(search_string = search_string
-                                                 ,metadata_element_subtypes=element_type, max_mermaid_node_count=5,
-                                                 include_only_relationships = [""]
+                                                 ,metadata_element_subtypes=element_type, max_mermaid_node_count=10
                                                  ,output_format=output_format, report_spec=report_spec)
             duration = time.perf_counter() - start_time
             if response:

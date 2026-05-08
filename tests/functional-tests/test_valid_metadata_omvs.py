@@ -517,7 +517,7 @@ class TestValidMetadataOMVs:
             m_client = ValidMetadataManager(
                 self.good_view_server_2,
                 self.good_platform1_url,
-                user_id=self.good_user_2,
+                user_id=self.good_user_1,
             )
             token = m_client.create_egeria_bearer_token(self.good_user_2, "secret")
             start_time = time.perf_counter()
@@ -582,7 +582,7 @@ class TestValidMetadataOMVs:
             token = m_client.create_egeria_bearer_token(self.good_user_2, "secret")
             start_time = time.perf_counter()
 
-            response = m_client.get_all_classification_defs(output_format="LIST", report_spec="TypeDef")
+            response = m_client.get_all_classification_defs(output_format="JSON", report_spec="TypeDef")
             duration = time.perf_counter() - start_time
             duration = time.perf_counter() - start_time
 

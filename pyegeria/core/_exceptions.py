@@ -17,15 +17,6 @@ from rich.table import Table
 from rich.text import Text
 from rich import print, box
 from rich.console import Console
-from pyegeria import settings
-
-
-# Standardize on EGERIA_WIDTH via settings
-try:
-    _width_val = int(settings.Environment.egeria_width)
-except Exception:
-    _width_val = 250
-console = Console(width=_width_val)
 
 """
 
@@ -190,8 +181,8 @@ class PyegeriaException(Exception):
             self.http_status_code = None
             self.response_egeria_msg_id = ""
             self.response_egeria_msg = ""
-        self.error_code = error_code
-        self.error_details = error_code.value
+        self.error_code = error_code if error_code is not None else PyegeriaErrorCode.CLIENT_ERROR
+        self.error_details = self.error_code.value
         self.pyegeria_code = self.error_details.get("message_id", "UNKNOWN_ERROR")
 
         self.message = self.error_details["message_template"].format(self.response_url, self.response_code)
@@ -509,3 +500,12 @@ def print_validation_error(e: ValidationError):
 
 
     console.print(table)
+
+
+# Standardize on EGERIA_WIDTH via settings
+try:
+    from pyegeria.core.config import settings
+    _width_val = int(settings.Environment.egeria_width)
+except Exception:
+    _width_val = 250
+console = Console(width=_width_val)

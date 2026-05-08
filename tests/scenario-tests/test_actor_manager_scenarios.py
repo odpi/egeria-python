@@ -197,7 +197,11 @@ class ActorManagerScenarioTester:
             }
         }
         response= self.client.create_actor_profile(body)
-        guid = response.get('guid',None)
+        if isinstance(response, dict):
+            guid = response.get('guid', None)
+        else:
+            guid = response if isinstance(response, str) else None
+            
         if guid:
             self.created_profiles.append(guid)
             profile_data.guid = guid
@@ -219,7 +223,11 @@ class ActorManagerScenarioTester:
             body["properties"]["scope"] = role_data.scope
             
         response =  self.client.create_actor_role(body)
-        guid = response.get('guid',None)
+        if isinstance(response, dict):
+            guid = response.get('guid', None)
+        else:
+            guid = response if isinstance(response, str) else None
+            
         if guid:
             self.created_roles.append(guid)
             role_data.guid = guid
@@ -237,7 +245,11 @@ class ActorManagerScenarioTester:
             }
         }
         response =  self.client.create_user_identity(body)
-        guid = response.get('guid',None)
+        if isinstance(response, dict):
+            guid = response.get('guid', None)
+        else:
+            guid = response if isinstance(response, str) else None
+            
         if guid:
             self.created_identities.append(guid)
             identity_data.guid = guid
@@ -616,7 +628,11 @@ class ActorManagerScenarioTester:
                 }
             }
             response = self.client.create_contact_details(contact_body)
-            contact_guid = response.get('guid',None)
+            if isinstance(response, dict):
+                contact_guid = response.get('guid', None)
+            else:
+                contact_guid = response if isinstance(response, str) else None
+            
             created_guids.append(contact_guid)
             console.print(f"  [green]✓[/green] Created Contact Details: {contact_guid}")
 
@@ -703,7 +719,11 @@ class ActorManagerScenarioTester:
                 }
             }
             response = self.client.create_actor_profile(team_body)
-            team_guid = response.get('guid', None)
+            if isinstance(response, dict):
+                team_guid = response.get('guid', None)
+            else:
+                team_guid = response if isinstance(response, str) else None
+            
             created_guids.append(team_guid)
             self.created_profiles.append(team_guid)
             console.print(f"  [green]✓[/green] Created Team: {team_guid}")
@@ -714,13 +734,17 @@ class ActorManagerScenarioTester:
                 "class": "NewElementRequestBody",
                 "isOwnAnchor": True,
                 "properties": {
-                    "class": "TeamLeaderProperties",
+                    "class": "PersonRoleProperties",
                     "qualifiedName": role_qname,
                     "displayName": "Scenario 5 Team Leader"
                 }
             }
             response = self.client.create_actor_role(role_body)
-            role_guid = response.get("guid",None)
+            if isinstance(response, dict):
+                role_guid = response.get("guid", None)
+            else:
+                role_guid = response if isinstance(response, str) else None
+            
             created_guids.append(role_guid)
             self.created_roles.append(role_guid)
             console.print(f"  [green]✓[/green] Created Role: {role_guid}")
@@ -748,7 +772,11 @@ class ActorManagerScenarioTester:
                 }
             }
             response = self.client.create_actor_profile(person_body)
-            person_guid = response.get('guid',None)
+            if isinstance(response, dict):
+                person_guid = response.get('guid', None)
+            else:
+                person_guid = response if isinstance(response, str) else None
+            
             created_guids.append(person_guid)
             self.created_profiles.append(person_guid)
             console.print(f"  [green]✓[/green] Created Person: {person_guid}")
@@ -892,7 +920,7 @@ class ActorManagerScenarioTester:
             self.teardown()
 
 
-def test_actora_manager_scenarios():
+def test_actor_manager_scenarios():
     """Main entry point"""
     console.print(Panel.fit(
         "[bold cyan]Actor Manager Scenario Testing[/bold cyan]\n"
