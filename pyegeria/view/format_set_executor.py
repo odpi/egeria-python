@@ -113,7 +113,6 @@ def _normalize_report_params(params: Dict[str, Any], action_mode: str = "generic
     search_alias_target = "filter_string" if action_mode == "get" else "search_string"
     aliases = {
         search_alias_target: ["search_string"],
-        "property_value": ["search_string"],
         "metadata_element_type": ["metadata_element_type_name", "metadata_element_name"],
         "metadata_element_subtypes": ["metadata_element_subtype_names"],
         "limit_results_by_status": ["limit_result_by_status"],

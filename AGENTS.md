@@ -3,7 +3,8 @@
 ## Contributor scope
 - This file is for code contributors to `pyegeria` (SDK + CLI), not end users.
 - Start with `CONTRIBUTING.md`, then use this as a repo-specific implementation map.
-
+- Always use signed commits.
+- 
 ## Sub-project map (dependency order)
 - `pyegeria/`: foundational Python SDK for Egeria; includes transport/auth/config, OMVS clients, and report generation/spec registry.
 - `commands/` (`hey_egeria`): CLI + simple textual UI layer that invokes `pyegeria` clients and reporting utilities.

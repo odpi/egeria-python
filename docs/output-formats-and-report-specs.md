@@ -79,7 +79,7 @@ All `find_*` and `get_*` methods in `pyegeria` that support formatted output fol
 
 - For method/CLI parameters and action specs, prefer snake_case names (e.g., `metadata_element_subtypes`, `page_size`, `start_from`, `effective_time`, `sequencing_order`).
 - The report executor (`exec_report_spec`/`run_report`) and CLI adaptors expect snake_case; underlying clients convert to on‑wire camelCase when calling Egeria.
-- Column `key` names in report specs can be snake_case or camelCase. The formatter tries exact key, then `to_camel_case`, then uppercase for well‑known IDs. Prefer snake_case for consistency.
+- Column `key` names in report specs: **use camelCase**. While the formatter tries exact key, then `to_camel_case`, then uppercase for value *lookup*, the mermaid detection system only recognises camelCase keys (see [Mermaid Graphs](#mermaid-graphs-and-normalization) below for details).
 - CLI flags like `--param page_size=50` or `--params-json '{"metadata_element_subtypes":["Asset"],"page_size":100}'` must use snake_case.
 
 ### The Report Spec Model
@@ -307,6 +307,52 @@ Notes
 
 Many Egeria elements include Mermaid graph definitions to visualize relationships. pyegeria automatically detects and renders these in Markdown reports (`REPORT`, `REPORT-GRAPH`, `MERMAID`).
 
+### Column `key` naming for Mermaid attributes — use camelCase
+
+When a column in a report spec holds a Mermaid graph or pie chart, pyegeria must detect it as such so it can wrap the content in the correct ` ```mermaid ``` ` code fence. Detection works via two routes, tried in order:
+
+1. **Key-based (primary)**: the column `key` is checked against the built-in `MERMAID_ATTRIBUTE_KEYS` set. These are all **camelCase**. If the key matches, the attribute is fenced regardless of the column `name`.
+2. **Name-based (fallback)**: if no key match, the column `name` is title-cased and checked against `MERMAID_GRAPH_TITLES`. Only a small number of generic names are in this list (e.g. "Mermaid Graph", "Anchor Mermaid Graph").
+
+**Consequence**: if you use `snake_case` for a mermaid column key, value *lookup* still works (the formatter converts it to camelCase internally), but mermaid *detection* fails and the raw graph text is output as plain text instead of a rendered diagram.
+
+**Rule: always use camelCase for the `key` field of any column that contains Mermaid content.**
+
+```python
+# Correct — key matches MERMAID_ATTRIBUTE_KEYS, pie charts render properly
+Column(name='Zone Profiles',       key='zoneProfileMermaidPieChart'),
+Column(name='Zone Profile Anchored', key='zoneProfileAnchoredMermaidPieChart'),
+Column(name='Zone Profile All',    key='zoneProfileAllMermaidPieChart'),
+
+# Wrong — value is retrieved but the mermaid fence is not added
+Column(name='Zone Profiles',       key='zone_profile_mermaid_pie_chart'),
+```
+
+The `name` field has no effect on detection for pie chart or custom graph columns — only the `key` matters. For the generic flowchart case (`key='mermaidGraph'`, `name='Mermaid Graph'`) both routes happen to match, which is why it appears to work with either case.
+
+#### Recognised camelCase mermaid keys (`MERMAID_ATTRIBUTE_KEYS`)
+
+| Key | Typical content |
+| :--- | :--- |
+| `mermaidGraph` | General-purpose flowchart |
+| `anchorMermaidGraph` | Anchor graph |
+| `informationSupplyChainMermaidGraph` | Information supply chain |
+| `fieldLevelLineageGraph` | Field-level lineage |
+| `actionMermaidGraph` | Governance action graph |
+| `localLineageGraph` | Local lineage |
+| `edgeMermaidGraph` | Edge graph |
+| `iscImplementationGraph` | ISC implementation graph |
+| `specificationMermaidGraph` | Specification graph |
+| `solutionBlueprintMermaidGraph` | Solution blueprint |
+| `solutionSubcomponentMermaidGraph` | Solution sub-components |
+| `governanceActionProcessMermaidGraph` | Governance action process |
+| `collectionMermaidMindMap` | Collection mind map |
+| `zoneProfileMermaidPieChart` | Zone membership profile |
+| `zoneProfileAnchoredMermaidPieChart` | Zone anchored-elements profile |
+| `zoneProfileAllMermaidPieChart` | Zone all-elements profile |
+
+If you add a new mermaid attribute not in this table, add its camelCase key to `MERMAID_ATTRIBUTE_KEYS` in `pyegeria/view/output_formatter.py`.
+
 ### Syntax Compatibility
 Egeria often produces Mermaid output using newer syntax features (like `@ { shape: ... }`) or YAML frontmatter that some Markdown renderers (e.g., Obsidian, PyCharm) do not yet support.
 
@@ -419,8 +465,8 @@ Place this JSON file into your user specs directory and call `load_user_report_s
 
 ### Notes on keys and labels
 
-- Column `key` can be snake_case or camelCase. The formatter tries exact, then `to_camel_case`, then uppercase (useful for `GUID`).
-- Display labels are prettified (camel/snake → Title Case) and respect common acronyms (GUID, ID, QN, API, UI).
+- Column `key` **should be camelCase**. Both cases work for value lookup (the formatter tries exact, then `to_camel_case`, then uppercase for `GUID`), but camelCase is required for Mermaid detection — snake_case keys will not be recognised as Mermaid content and the graph will not be fenced. See the [Mermaid Graphs](#mermaid-graphs-and-normalization) section for details.
+- Display labels (`name`) are prettified (camel/snake → Title Case) and respect common acronyms (GUID, ID, QN, API, UI). The `name` does not affect mermaid detection except for a small list of generic titles ("Mermaid Graph", "Anchor Mermaid Graph", etc.).
 - Use `detail_spec` to implement master–detail links. The linked spec’s `target_type` drives automatic promotion of nested elements when possible.
 
 ---

@@ -94,3 +94,7 @@ assets = client.catalog.list_assets()
    - Register new commands in pyproject.toml
    - Follow the existing command structure and naming conventions
    - Provide helpful error messages and documentation
+
+## Contribution Guidelines
+- Fork the repository and create a new branch for your feature or bug fix
+- Always use signed commits.

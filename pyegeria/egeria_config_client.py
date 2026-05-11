@@ -8,6 +8,7 @@ Client to configure the Egeria platform and servers
 from pyegeria.omvs.core_omag_server_config import CoreServerConfig
 from pyegeria.omvs.full_omag_server_config import FullServerConfig
 from pyegeria.omvs.server_operations import  ServerOps
+from pyegeria.core.config import settings
 
 
 class EgeriaConfig:
@@ -23,10 +24,10 @@ class EgeriaConfig:
         user_pwd: str = None,
         token: str = None,
     ):
-        self.view_server = view_server
-        self.platform_url = platform_url
-        self.user_id = user_id
-        self.user_pwd = user_pwd
+        self.view_server = view_server or settings.Environment.egeria_view_server
+        self.platform_url = platform_url or settings.Environment.egeria_platform_url
+        self.user_id = user_id or settings.User_Profile.user_name
+        self.user_pwd = user_pwd or settings.User_Profile.user_pwd
         self.token = token
 
         self._subclient_map = {

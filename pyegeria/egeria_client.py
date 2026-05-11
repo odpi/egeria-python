@@ -51,6 +51,7 @@ from pyegeria.omvs.time_keeper import TimeKeeper
 from pyegeria.omvs.valid_metadata import ValidMetadataManager
 from pyegeria.omvs.valid_metadata_lists import ValidMetadataLists
 from pyegeria.omvs.valid_type_lists import ValidTypeLists
+from pyegeria.core.config import settings
 
 
 class Egeria:
@@ -66,10 +67,10 @@ class Egeria:
         user_pwd: str = None,
         token: str = None,
     ):
-        self.view_server = view_server
-        self.platform_url = platform_url
-        self.user_id = user_id
-        self.user_pwd = user_pwd
+        self.view_server = view_server or settings.Environment.egeria_view_server
+        self.platform_url = platform_url or settings.Environment.egeria_platform_url
+        self.user_id = user_id or settings.User_Profile.user_name
+        self.user_pwd = user_pwd or settings.User_Profile.user_pwd
         self.token = token
 
         self._subclient_map = {

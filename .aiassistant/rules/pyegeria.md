@@ -9,7 +9,7 @@ Pyegeria is an Open Source python library supporting Egeria. There are 3 sub-pro
 3. Dr.Egeria - A markdown processor that allows Egeria commands to be written in markdown documents and then interpreted and executed by Dr.Egeria.
 
 Raw sample HTTP requests can be seen in pyegeria/http clients - this is useful to see example payloads and URLs
-
+Always use signed commits.
 There are common patterns we try to follow across the different element types. location_arena.py is one good example but there are many others.
 Most of the common patterns use common helper functions in _server_client.py. 
 

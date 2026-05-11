@@ -221,13 +221,28 @@ def validate_url(url: str) -> bool:
                            "input_parameters": f"URL: {url}"}
         raise PyegeriaInvalidParameterException(None,context, additional_info)
 
-    # The following hack allows localhost to be used as a hostname - which is disallowed by the
-    # validations package
+    # The following hack allows localhost and other simple hostnames to be used as a hostname 
+    # - which is disallowed by the validations package
     if ("localhost" in url) and ("localhost." not in url):
         url = url.replace("localhost", "127.0.0.1")
-
+    
+    # If the URL looks valid but lacks a dot in the hostname (common in Docker), 
+    # we skip the strict validators.url check or we could try to make it pass.
+    # For now, let's just use a simpler check if validators.url fails.
+    
     result = validators.url(url)
     if result is not True:
+        # Fallback for Docker hostnames (no dots in hostname)
+        from urllib.parse import urlparse
+        try:
+            parsed = urlparse(url)
+            if parsed.scheme in ('http', 'https') and parsed.netloc:
+                # If it has a scheme and a netloc, it's good enough for us
+                # especially if it's a simple hostname like 'egeria-main'
+                return True
+        except Exception:
+            pass
+
         additional_info = {
             "reason": "The provided URL is invalid",
             "input_parameters": f"URL: {url}"

@@ -18,17 +18,20 @@ This guide provides an overview of how to use the `pyegeria` Python library to i
 
 ### Configuration System
 
-`pyegeria` features a centralized configuration system that allows you to set defaults for all clients in one place.
+`pyegeria` features a centralized configuration system that allows you to set defaults for all clients in one place. **You do not need to call any configuration function explicitly for the common case** — configuration is loaded automatically the first time a client is instantiated.
 
-### Configuration Precedence
+### How Configuration Loads
 
-When a client is initialized, it resolves its settings (like `platform_url` or `user_id`) using the following precedence:
+Under the hood, `config.py` exposes a module-level `settings` proxy. When any client (e.g. `EgeriaTech`) is instantiated, its `__init__` accesses `settings.Environment.egeria_platform_url` and similar values. That first access triggers a lazy load of the full configuration from your environment and config files.
 
-1.  **Explicit Arguments**: Values passed directly to the class constructor.
-2.  **Environment Variables**: OS environment variables (prefixed with `PYEGERIA_` or as standard Egeria names).
-3.  **`.env` File**: Variables defined in a `.env` file in the current working directory.
-4.  **`config.json`**: A JSON configuration file.
-5.  **Built-in Defaults**: Hardcoded safe defaults.
+The load order (highest wins):
+1.  **Explicit constructor arguments** — values passed directly override everything.
+2.  **OS environment variables** — take priority over config file values.
+3.  **`.env` file** — loaded from the current working directory (or the path in `PYEGERIA_ROOT_PATH`).
+4.  **`config.json`** — a JSON configuration file located via `PYEGERIA_ROOT_PATH` / `PYEGERIA_CONFIG_FILE`.
+5.  **Built-in defaults** — hardcoded safe fallbacks.
+
+Once loaded, the configuration is cached for the lifetime of the process — subsequent client instantiations reuse it without re-reading files.
 
 ### Common Configuration Variables
 
@@ -39,16 +42,69 @@ When a client is initialized, it resolves its settings (like `platform_url` or `
 | `EGERIA_USER` | The default user ID for authentication. |
 | `EGERIA_USER_PASSWORD` | The password for the default user. |
 | `EGERIA_LOCAL_QUALIFIER` | A prefix used when generating `qualifiedNames`. |
+| `PYEGERIA_ROOT_PATH` | Directory where `config.json` and `.env` are located. |
+| `PYEGERIA_CONFIG_FILE` | Override the config filename (default: `config.json`). |
 
-### Setup Example
+### Setup Examples
 
-**`.env` file:**
+**Default case — no code required.**  
+Place a `.env` in your **working directory** (where you run the script from, not necessarily where the script file lives) or set OS environment variables, then just instantiate a client:
+
 ```bash
+# .env
 EGERIA_PLATFORM_URL=https://localhost:9443
 EGERIA_VIEW_SERVER=view-server
 EGERIA_USER=erinoverview
 EGERIA_USER_PASSWORD=secret
 EGERIA_LOCAL_QUALIFIER=PDR
+```
+
+```python
+from pyegeria import EgeriaTech
+
+# Config is loaded automatically on first instantiation
+client = EgeriaTech()
+client.create_egeria_bearer_token()
+assets = client.list_assets()
+```
+
+**Providing explicit credentials** — config still loads for any unspecified values:
+
+```python
+from pyegeria import EgeriaTech
+
+client = EgeriaTech(user_id="IvorPadlock", user_pwd="secret")
+client.create_egeria_bearer_token()
+```
+
+**Custom `.env` file** — the only case where an explicit call is needed.  
+Call `load_app_config` *before* any client is instantiated, otherwise the auto-load will already have run:
+
+```python
+from pyegeria import load_app_config, EgeriaTech
+
+load_app_config(env_file="/path/to/my-project.env")
+
+client = EgeriaTech()
+client.create_egeria_bearer_token()
+```
+
+**Inspecting the active configuration** — useful for debugging:
+
+```python
+from pyegeria import pretty_print_config
+
+pretty_print_config()  # prints a table showing each value and its source
+```
+
+**Accessing config values directly in code:**
+
+```python
+from pyegeria import get_app_config
+
+cfg = get_app_config()
+print(cfg.Environment.egeria_platform_url)
+print(cfg.User_Profile.user_name)
 ```
 
 ### Using the Clients

@@ -30,8 +30,6 @@ from loguru import logger
 from pydantic import BaseModel, Field, ConfigDict
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
-from pyegeria.core._exceptions import PyegeriaInvalidParameterException
-
 logger.disable("pyegeria")
 # --- Pydantic Settings for Environment Variables ---
 
@@ -409,6 +407,7 @@ def load_app_config(env_file: str | None = None):
         logger.info(f"DEBUG ENV SECTION: {config_dict.get('Environment')}")
         _app_config = AppConfig(**config_dict)
     except Exception as e:
+        from pyegeria.core._exceptions import PyegeriaInvalidParameterException
         context = {"caller method": inspect.currentframe().f_back.f_code.co_name}
         additional_info = {"reason": str(e)}
         raise PyegeriaInvalidParameterException(None, context, additional_info)
